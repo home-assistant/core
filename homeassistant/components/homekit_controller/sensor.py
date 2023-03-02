@@ -23,20 +23,20 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
     PERCENTAGE,
-    POWER_WATT,
-    PRESSURE_HPA,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    SOUND_PRESSURE_DB,
-    TEMP_CELSIUS,
+    EntityCategory,
     Platform,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfPressure,
+    UnitOfSoundPressure,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
@@ -55,8 +55,7 @@ class HomeKitSensorEntityDescription(SensorEntityDescription):
 
 
 def thread_node_capability_to_str(char: Characteristic) -> str:
-    """
-    Return the thread device type as a string.
+    """Return the thread device type as a string.
 
     The underlying value is a bitmask, but we want to turn that to
     a human readable string. Some devices will have multiple capabilities.
@@ -93,8 +92,7 @@ def thread_node_capability_to_str(char: Characteristic) -> str:
 
 
 def thread_status_to_str(char: Characteristic) -> str:
-    """
-    Return the thread status as a string.
+    """Return the thread status as a string.
 
     The underlying value is a bitmask, but we want to turn that to
     a human readable string. So we check the flags in order. E.g. BORDER_ROUTER implies
@@ -146,91 +144,91 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         name="Power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
     ),
     CharacteristicsTypes.VENDOR_CONNECTSENSE_ENERGY_AMPS: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.VENDOR_CONNECTSENSE_ENERGY_AMPS,
         name="Current",
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
     ),
     CharacteristicsTypes.VENDOR_CONNECTSENSE_ENERGY_AMPS_20: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.VENDOR_CONNECTSENSE_ENERGY_AMPS_20,
         name="Current",
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
     ),
     CharacteristicsTypes.VENDOR_CONNECTSENSE_ENERGY_KW_HOUR: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.VENDOR_CONNECTSENSE_ENERGY_KW_HOUR,
         name="Energy kWh",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     ),
     CharacteristicsTypes.VENDOR_EVE_ENERGY_WATT: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.VENDOR_EVE_ENERGY_WATT,
         name="Power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
     ),
     CharacteristicsTypes.VENDOR_EVE_ENERGY_KW_HOUR: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.VENDOR_EVE_ENERGY_KW_HOUR,
         name="Energy kWh",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     ),
     CharacteristicsTypes.VENDOR_EVE_ENERGY_VOLTAGE: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.VENDOR_EVE_ENERGY_VOLTAGE,
         name="Volts",
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
     ),
     CharacteristicsTypes.VENDOR_EVE_ENERGY_AMPERE: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.VENDOR_EVE_ENERGY_AMPERE,
         name="Amps",
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
     ),
     CharacteristicsTypes.VENDOR_KOOGEEK_REALTIME_ENERGY: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.VENDOR_KOOGEEK_REALTIME_ENERGY,
         name="Power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
     ),
     CharacteristicsTypes.VENDOR_KOOGEEK_REALTIME_ENERGY_2: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.VENDOR_KOOGEEK_REALTIME_ENERGY_2,
         name="Power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
     ),
     CharacteristicsTypes.VENDOR_EVE_DEGREE_AIR_PRESSURE: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.VENDOR_EVE_DEGREE_AIR_PRESSURE,
         name="Air Pressure",
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
     ),
     CharacteristicsTypes.VENDOR_VOCOLINC_OUTLET_ENERGY: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.VENDOR_VOCOLINC_OUTLET_ENERGY,
         name="Power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
     ),
     CharacteristicsTypes.TEMPERATURE_CURRENT: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.TEMPERATURE_CURRENT,
         name="Current Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         # This sensor is only for temperature characteristics that are not part
         # of a temperature sensor service.
         probe=(lambda char: char.service.type != ServicesTypes.TEMPERATURE_SENSOR),
@@ -330,7 +328,14 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         key=CharacteristicsTypes.VENDOR_NETATMO_NOISE,
         name="Noise",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=SOUND_PRESSURE_DB,
+        native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
+        device_class=SensorDeviceClass.SOUND_PRESSURE,
+    ),
+    CharacteristicsTypes.FILTER_LIFE_LEVEL: HomeKitSensorEntityDescription(
+        key=CharacteristicsTypes.FILTER_LIFE_LEVEL,
+        name="Filter Life",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
     ),
 }
 
@@ -379,7 +384,7 @@ class HomeKitTemperatureSensor(HomeKitSensor):
     """Representation of a Homekit temperature sensor."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_native_unit_of_measurement = TEMP_CELSIUS
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
@@ -500,8 +505,7 @@ class HomeKitBatterySensor(HomeKitSensor):
 
 
 class SimpleSensor(CharacteristicEntity, SensorEntity):
-    """
-    A simple sensor for a single characteristic.
+    """A simple sensor for a single characteristic.
 
     This may be an additional secondary entity that is part of another service. An
     example is a switch that has an energy sensor.

@@ -23,6 +23,9 @@ class SupportedModels(StrEnum):
     CONTACT = "contact"
     PLUG = "plug"
     MOTION = "motion"
+    HUMIDIFIER = "humidifier"
+    LOCK = "lock"
+    BLIND_TILT = "blind_tilt"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -32,6 +35,9 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.COLOR_BULB: SupportedModels.BULB,
     SwitchbotModel.LIGHT_STRIP: SupportedModels.LIGHT_STRIP,
     SwitchbotModel.CEILING_LIGHT: SupportedModels.CEILING_LIGHT,
+    SwitchbotModel.HUMIDIFIER: SupportedModels.HUMIDIFIER,
+    SwitchbotModel.LOCK: SupportedModels.LOCK,
+    SwitchbotModel.BLIND_TILT: SupportedModels.BLIND_TILT,
 }
 
 NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -54,6 +60,8 @@ DEFAULT_RETRY_COUNT = 3
 
 # Config Options
 CONF_RETRY_COUNT = "retry_count"
+CONF_KEY_ID = "key_id"
+CONF_ENCRYPTION_KEY = "encryption_key"
 
 # Deprecated config Entry Options to be removed in 2023.4
 CONF_TIME_BETWEEN_UPDATE_COMMAND = "update_time"

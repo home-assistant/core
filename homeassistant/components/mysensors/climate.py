@@ -12,7 +12,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_system import METRIC_SYSTEM
@@ -213,7 +213,8 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateEntity):
             self._values[self.value_type] = hvac_mode
             self.async_write_ha_state()
 
-    async def async_update(self) -> None:
+    @callback
+    def _async_update(self) -> None:
         """Update the controller with the latest value from a sensor."""
-        await super().async_update()
+        super()._async_update()
         self._values[self.value_type] = DICT_MYS_TO_HA[self._values[self.value_type]]

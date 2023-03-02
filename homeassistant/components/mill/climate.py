@@ -28,6 +28,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import MillDataUpdateCoordinator
 from .const import (
     ATTR_AWAY_TEMP,
     ATTR_COMFORT_TEMP,
@@ -86,7 +87,7 @@ async def async_setup_entry(
     )
 
 
-class MillHeater(CoordinatorEntity, ClimateEntity):
+class MillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntity):
     """Representation of a Mill Thermostat device."""
 
     _attr_fan_modes = [FAN_ON, FAN_OFF]
@@ -94,7 +95,9 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
     _attr_min_temp = MIN_TEMP
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(self, coordinator, heater):
+    def __init__(
+        self, coordinator: MillDataUpdateCoordinator, heater: mill.Heater
+    ) -> None:
         """Initialize the thermostat."""
 
         super().__init__(coordinator)
@@ -196,7 +199,7 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
             self._attr_hvac_mode = HVACMode.OFF
 
 
-class LocalMillHeater(CoordinatorEntity, ClimateEntity):
+class LocalMillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntity):
     """Representation of a Mill Thermostat device."""
 
     _attr_hvac_mode = HVACMode.HEAT
@@ -207,7 +210,7 @@ class LocalMillHeater(CoordinatorEntity, ClimateEntity):
     _attr_target_temperature_step = PRECISION_HALVES
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(self, coordinator):
+    def __init__(self, coordinator: MillDataUpdateCoordinator) -> None:
         """Initialize the thermostat."""
         super().__init__(coordinator)
         self._attr_name = coordinator.mill_data_connection.name

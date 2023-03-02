@@ -11,7 +11,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.freeze_time("2021-12-03 00:00:00+00:00")
-async def test_binary_sensors(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
+async def test_binary_sensors(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Test for binary sensor values."""
     await setup_integration(hass, aioclient_mock)
 

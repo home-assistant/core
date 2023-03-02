@@ -85,7 +85,7 @@ class SleepIQFlowHandler(ConfigFlow, domain=DOMAIN):
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
-        return await self.async_step_reauth_confirm(dict(entry_data))
+        return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None

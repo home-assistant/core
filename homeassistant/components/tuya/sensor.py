@@ -14,15 +14,15 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
     PERCENTAGE,
-    POWER_KILO_WATT,
-    TIME_MINUTES,
+    EntityCategory,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfPower,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -437,7 +437,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         TuyaSensorEntityDescription(
             key=DPCode.REMAIN_TIME,
             name="Remaining time",
-            native_unit_of_measurement=TIME_MINUTES,
+            native_unit_of_measurement=UnitOfTime.MINUTES,
             icon="mdi:timer",
         ),
     ),
@@ -666,7 +666,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             key=DPCode.PHASE_A,
             name="Phase A current",
             device_class=SensorDeviceClass.CURRENT,
-            native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             state_class=SensorStateClass.MEASUREMENT,
             subkey="electriccurrent",
         ),
@@ -675,7 +675,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             name="Phase A power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=POWER_KILO_WATT,
+            native_unit_of_measurement=UnitOfPower.KILO_WATT,
             subkey="power",
         ),
         TuyaSensorEntityDescription(
@@ -683,14 +683,14 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             name="Phase A voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
             subkey="voltage",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PHASE_B,
             name="Phase B current",
             device_class=SensorDeviceClass.CURRENT,
-            native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             state_class=SensorStateClass.MEASUREMENT,
             subkey="electriccurrent",
         ),
@@ -699,7 +699,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             name="Phase B power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=POWER_KILO_WATT,
+            native_unit_of_measurement=UnitOfPower.KILO_WATT,
             subkey="power",
         ),
         TuyaSensorEntityDescription(
@@ -707,14 +707,14 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             name="Phase B voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
             subkey="voltage",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PHASE_C,
             name="Phase C current",
             device_class=SensorDeviceClass.CURRENT,
-            native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             state_class=SensorStateClass.MEASUREMENT,
             subkey="electriccurrent",
         ),
@@ -723,7 +723,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             name="Phase C power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=POWER_KILO_WATT,
+            native_unit_of_measurement=UnitOfPower.KILO_WATT,
             subkey="power",
         ),
         TuyaSensorEntityDescription(
@@ -731,7 +731,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             name="Phase C voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
             subkey="voltage",
         ),
     ),
@@ -748,7 +748,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             key=DPCode.PHASE_A,
             name="Phase A current",
             device_class=SensorDeviceClass.CURRENT,
-            native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             state_class=SensorStateClass.MEASUREMENT,
             subkey="electriccurrent",
         ),
@@ -757,7 +757,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             name="Phase A power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=POWER_KILO_WATT,
+            native_unit_of_measurement=UnitOfPower.KILO_WATT,
             subkey="power",
         ),
         TuyaSensorEntityDescription(
@@ -765,14 +765,14 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             name="Phase A voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
             subkey="voltage",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PHASE_B,
             name="Phase B current",
             device_class=SensorDeviceClass.CURRENT,
-            native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             state_class=SensorStateClass.MEASUREMENT,
             subkey="electriccurrent",
         ),
@@ -781,7 +781,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             name="Phase B power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=POWER_KILO_WATT,
+            native_unit_of_measurement=UnitOfPower.KILO_WATT,
             subkey="power",
         ),
         TuyaSensorEntityDescription(
@@ -789,14 +789,14 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             name="Phase B voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
             subkey="voltage",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PHASE_C,
             name="Phase C current",
             device_class=SensorDeviceClass.CURRENT,
-            native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             state_class=SensorStateClass.MEASUREMENT,
             subkey="electriccurrent",
         ),
@@ -805,7 +805,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             name="Phase C power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=POWER_KILO_WATT,
+            native_unit_of_measurement=UnitOfPower.KILO_WATT,
             subkey="power",
         ),
         TuyaSensorEntityDescription(
@@ -813,7 +813,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             name="Phase C voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
             subkey="voltage",
         ),
     ),
@@ -981,6 +981,37 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             key=DPCode.TEMP_CURRENT,
             name="Temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+    ),
+    # eMylo Smart WiFi IR Remote
+    "wnykq": (
+        TuyaSensorEntityDescription(
+            key=DPCode.VA_TEMPERATURE,
+            name="Temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.VA_HUMIDITY,
+            name="Humidity",
+            device_class=SensorDeviceClass.HUMIDITY,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+    ),
+    # Dehumidifier
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48r6jke8e
+    "cs": (
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP_INDOOR,
+            name="Temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.HUMIDITY_INDOOR,
+            name="Humidity",
+            device_class=SensorDeviceClass.HUMIDITY,
             state_class=SensorStateClass.MEASUREMENT,
         ),
     ),

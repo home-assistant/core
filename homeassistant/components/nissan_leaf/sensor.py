@@ -6,7 +6,7 @@ import logging
 from voluptuous.validators import Number
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.const import LENGTH_KILOMETERS, LENGTH_MILES, PERCENTAGE
+from homeassistant.const import PERCENTAGE, UnitOfLength
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
@@ -117,7 +117,9 @@ class LeafRangeSensor(LeafEntity, SensorEntity):
             return None
 
         if self.car.hass.config.units is US_CUSTOMARY_SYSTEM or self.car.force_miles:
-            ret = DistanceConverter.convert(ret, LENGTH_KILOMETERS, LENGTH_MILES)
+            ret = DistanceConverter.convert(
+                ret, UnitOfLength.KILOMETERS, UnitOfLength.MILES
+            )
 
         return round(ret)
 
@@ -125,5 +127,5 @@ class LeafRangeSensor(LeafEntity, SensorEntity):
     def native_unit_of_measurement(self) -> str:
         """Battery range unit."""
         if self.car.hass.config.units is US_CUSTOMARY_SYSTEM or self.car.force_miles:
-            return LENGTH_MILES
-        return LENGTH_KILOMETERS
+            return UnitOfLength.MILES
+        return UnitOfLength.KILOMETERS

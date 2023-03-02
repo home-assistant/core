@@ -154,7 +154,10 @@ class RachioPerson:
             if isinstance(webhooks, dict):
                 if webhooks.get("code") == PERMISSION_ERROR:
                     _LOGGER.info(
-                        "Not adding controller '%s', only controllers owned by '%s' may be added",
+                        (
+                            "Not adding controller '%s', only controllers owned by '%s'"
+                            " may be added"
+                        ),
                         controller[KEY_NAME],
                         self.username,
                     )

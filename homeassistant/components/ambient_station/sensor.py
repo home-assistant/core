@@ -15,9 +15,9 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
-    IRRADIATION_WATTS_PER_SQUARE_METER,
     LIGHT_LUX,
     PERCENTAGE,
+    UnitOfIrradiance,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
@@ -128,7 +128,6 @@ SENSOR_DESCRIPTIONS = (
         key=TYPE_AQI_PM25_24H,
         name="AQI PM2.5 24h avg",
         device_class=SensorDeviceClass.AQI,
-        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key=TYPE_AQI_PM25_IN,
@@ -140,7 +139,6 @@ SENSOR_DESCRIPTIONS = (
         key=TYPE_AQI_PM25_IN_24H,
         name="AQI PM2.5 indoor 24h avg",
         device_class=SensorDeviceClass.AQI,
-        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key=TYPE_BAROMABSIN,
@@ -182,7 +180,7 @@ SENSOR_DESCRIPTIONS = (
         name="Event rain",
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key=TYPE_FEELSLIKE,
@@ -287,7 +285,6 @@ SENSOR_DESCRIPTIONS = (
         name="Last rain",
         icon="mdi:water",
         device_class=SensorDeviceClass.TIMESTAMP,
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_LIGHTNING_PER_DAY,
@@ -315,7 +312,7 @@ SENSOR_DESCRIPTIONS = (
         name="Monthly rain",
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key=TYPE_PM25_24H,
@@ -486,8 +483,8 @@ SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_SOLARRADIATION,
         name="Solar rad",
-        native_unit_of_measurement=IRRADIATION_WATTS_PER_SQUARE_METER,
-        device_class=SensorDeviceClass.ILLUMINANCE,
+        native_unit_of_measurement=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
+        device_class=SensorDeviceClass.IRRADIANCE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -586,13 +583,12 @@ SENSOR_DESCRIPTIONS = (
         name="Lifetime rain",
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key=TYPE_UV,
         name="UV index",
         native_unit_of_measurement="Index",
-        device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -600,7 +596,7 @@ SENSOR_DESCRIPTIONS = (
         name="Weekly rain",
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key=TYPE_WINDDIR,

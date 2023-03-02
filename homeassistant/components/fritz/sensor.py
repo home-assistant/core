@@ -18,13 +18,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    DATA_GIGABYTES,
-    DATA_RATE_KILOBITS_PER_SECOND,
-    DATA_RATE_KILOBYTES_PER_SECOND,
     SIGNAL_STRENGTH_DECIBELS,
+    EntityCategory,
+    UnitOfDataRate,
+    UnitOfInformation,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
@@ -186,7 +185,8 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         key="kb_s_sent",
         name="Upload Throughput",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         icon="mdi:upload",
         value_fn=_retrieve_kb_s_sent_state,
     ),
@@ -194,14 +194,16 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         key="kb_s_received",
         name="Download Throughput",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         icon="mdi:download",
         value_fn=_retrieve_kb_s_received_state,
     ),
     FritzSensorEntityDescription(
         key="max_kb_s_sent",
         name="Max Connection Upload Throughput",
-        native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         icon="mdi:upload",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_max_kb_s_sent_state,
@@ -209,7 +211,8 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
     FritzSensorEntityDescription(
         key="max_kb_s_received",
         name="Max Connection Download Throughput",
-        native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         icon="mdi:download",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_max_kb_s_received_state,
@@ -218,7 +221,8 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         key="gb_sent",
         name="GB sent",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=DATA_GIGABYTES,
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:upload",
         value_fn=_retrieve_gb_sent_state,
     ),
@@ -226,21 +230,24 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         key="gb_received",
         name="GB received",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=DATA_GIGABYTES,
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:download",
         value_fn=_retrieve_gb_received_state,
     ),
     FritzSensorEntityDescription(
         key="link_kb_s_sent",
         name="Link Upload Throughput",
-        native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         icon="mdi:upload",
         value_fn=_retrieve_link_kb_s_sent_state,
     ),
     FritzSensorEntityDescription(
         key="link_kb_s_received",
         name="Link Download Throughput",
-        native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         icon="mdi:download",
         value_fn=_retrieve_link_kb_s_received_state,
     ),

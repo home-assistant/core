@@ -34,8 +34,8 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
     DEGREE,
-    IRRADIATION_WATTS_PER_SQUARE_METER,
     PERCENTAGE,
+    UnitOfIrradiance,
     UnitOfLength,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
@@ -188,8 +188,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="irradiance",
         name="Irradiance",
-        native_unit_of_measurement=IRRADIATION_WATTS_PER_SQUARE_METER,
-        icon="mdi:sunglasses",
+        device_class=SensorDeviceClass.IRRADIANCE,
+        native_unit_of_measurement=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -692,7 +692,9 @@ class BrSensor(SensorEntity):
     _attr_entity_registry_enabled_default = False
     _attr_should_poll = False
 
-    def __init__(self, client_name, coordinates, description: SensorEntityDescription):
+    def __init__(
+        self, client_name, coordinates, description: SensorEntityDescription
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self._attr_name = f"{client_name} {description.name}"
@@ -735,7 +737,6 @@ class BrSensor(SensorEntity):
             or sensor_type.endswith("_4d")
             or sensor_type.endswith("_5d")
         ):
-
             # update forecasting sensors:
             fcday = 0
             if sensor_type.endswith("_2d"):

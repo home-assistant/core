@@ -6,9 +6,8 @@ from collections.abc import Awaitable, Callable, Iterable
 import dataclasses
 from functools import partial, wraps
 import logging
-from typing import TYPE_CHECKING, Any, TypedDict, TypeVar
+from typing import TYPE_CHECKING, Any, TypedDict, TypeGuard, TypeVar
 
-from typing_extensions import TypeGuard
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
@@ -371,7 +370,8 @@ def async_extract_referenced_entity_ids(
         return selected
 
     for ent_entry in ent_reg.entities.values():
-        # Do not add entities which are hidden or which are config or diagnostic entities
+        # Do not add entities which are hidden or which are config
+        # or diagnostic entities.
         if ent_entry.entity_category is not None or ent_entry.hidden_by is not None:
             continue
 
@@ -489,7 +489,10 @@ async def async_get_all_descriptions(
             # Cache missing descriptions
             if description is None:
                 domain_yaml = loaded[domain]
-                yaml_description = domain_yaml.get(service, {})  # type: ignore[union-attr]
+
+                yaml_description = domain_yaml.get(  # type: ignore[union-attr]
+                    service, {}
+                )
 
                 # Don't warn for missing services, because it triggers false
                 # positives for things like scripts, that register as a service
@@ -508,6 +511,16 @@ async def async_get_all_descriptions(
             descriptions[domain][service] = description
 
     return descriptions
+
+
+@callback
+def remove_entity_service_fields(call: ServiceCall) -> dict[Any, Any]:
+    """Remove entity service fields."""
+    return {
+        key: val
+        for key, val in call.data.items()
+        if key not in cv.ENTITY_SERVICE_FIELDS
+    }
 
 
 @callback
@@ -564,11 +577,7 @@ async def entity_service_call(  # noqa: C901
 
     # If the service function is a string, we'll pass it the service call data
     if isinstance(func, str):
-        data: dict | ServiceCall = {
-            key: val
-            for key, val in call.data.items()
-            if key not in cv.ENTITY_SERVICE_FIELDS
-        }
+        data: dict | ServiceCall = remove_entity_service_fields(call)
     # If the service function is not a string, we pass the service call
     else:
         data = call
@@ -610,7 +619,6 @@ async def entity_service_call(  # noqa: C901
         for platform in platforms:
             platform_entities = []
             for entity in platform.entities.values():
-
                 if entity.entity_id not in all_referenced:
                     continue
 
@@ -706,17 +714,23 @@ async def _handle_entity_call(
     entity.async_set_context(context)
 
     if isinstance(func, str):
-        result = hass.async_run_job(partial(getattr(entity, func), **data))  # type: ignore[arg-type]
+        result = hass.async_run_job(
+            partial(getattr(entity, func), **data)  # type: ignore[arg-type]
+        )
     else:
         result = hass.async_run_job(func, entity, data)
 
-    # Guard because callback functions do not return a task when passed to async_run_job.
+    # Guard because callback functions do not return a task when passed to
+    # async_run_job.
     if result is not None:
         await result
 
     if asyncio.iscoroutine(result):
         _LOGGER.error(
-            "Service %s for %s incorrectly returns a coroutine object. Await result instead in service handler. Report bug to integration author",
+            (
+                "Service %s for %s incorrectly returns a coroutine object. Await result"
+                " instead in service handler. Report bug to integration author"
+            ),
             func,
             entity.entity_id,
         )

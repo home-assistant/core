@@ -10,10 +10,14 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_BATTERY_LEVEL, PERCENTAGE, TIME_MINUTES
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL,
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import Trackables
@@ -152,14 +156,14 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         key=ATTR_MINUTES_ACTIVE,
         name="Minutes active",
         icon="mdi:clock-time-eight-outline",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         entity_class=TractiveActivitySensor,
     ),
     TractiveSensorEntityDescription(
         key=ATTR_DAILY_GOAL,
         name="Daily goal",
         icon="mdi:flag-checkered",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         entity_class=TractiveActivitySensor,
     ),
 )
