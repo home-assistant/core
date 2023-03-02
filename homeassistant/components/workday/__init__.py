@@ -69,7 +69,7 @@ WORKDAY_SCHEMA = vol.Schema(
             cv.ensure_list, [DATE_VALIDATOR]
         ),
         vol.Optional(CONF_REMOVE_HOLIDAYS, default=[]): vol.All(
-            cv.ensure_list, [DATE_VALIDATOR]
+            cv.ensure_list, [cv.string]
         ),
     }
 )
