@@ -31,7 +31,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import Event, HomeAssistant, State
-from homeassistant.helpers import device_registry, entity_registry
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -86,12 +86,13 @@ async def _async_mock_logbook_platform(hass: HomeAssistant) -> None:
     await logbook._process_logbook_platform(hass, "test", MockLogbookPlatform)
 
 
-async def _async_mock_entity_with_logbook_platform(hass):
+async def _async_mock_entity_with_logbook_platform(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> er.RegistryEntry:
     """Mock an integration that provides an entity that are described by the logbook."""
     entry = MockConfigEntry(domain="test", data={"first": True}, options=None)
     entry.add_to_hass(hass)
-    ent_reg = entity_registry.async_get(hass)
-    entry = ent_reg.async_get_or_create(
+    entry = entity_registry.async_get_or_create(
         platform="test",
         domain="sensor",
         config_entry=entry,
@@ -102,14 +103,15 @@ async def _async_mock_entity_with_logbook_platform(hass):
     return entry
 
 
-async def _async_mock_devices_with_logbook_platform(hass):
+async def _async_mock_devices_with_logbook_platform(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> list[dr.DeviceEntry]:
     """Mock an integration that provides a device that are described by the logbook."""
     entry = MockConfigEntry(domain="test", data={"first": True}, options=None)
     entry.add_to_hass(hass)
-    dev_reg = device_registry.async_get(hass)
-    device = dev_reg.async_get_or_create(
+    device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
         sw_version="sw-version",
         name="device name",
@@ -117,9 +119,9 @@ async def _async_mock_devices_with_logbook_platform(hass):
         model="model",
         suggested_area="Game Room",
     )
-    device2 = dev_reg.async_get_or_create(
+    device2 = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:CC")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:CC")},
         identifiers={("bridgeid", "4567")},
         sw_version="sw-version",
         name="device name",
@@ -413,7 +415,10 @@ async def test_get_events_invalid_filters(
 
 
 async def test_get_events_with_device_ids(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test logbook get_events for device ids."""
     now = dt_util.utcnow()
@@ -424,7 +429,7 @@ async def test_get_events_with_device_ids(
         ]
     )
 
-    devices = await _async_mock_devices_with_logbook_platform(hass)
+    devices = await _async_mock_devices_with_logbook_platform(hass, device_registry)
     device = devices[0]
     device2 = devices[1]
 
@@ -1797,7 +1802,10 @@ async def test_subscribe_unsubscribe_logbook_stream_big_query(
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
 async def test_subscribe_unsubscribe_logbook_stream_device(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test subscribe/unsubscribe logbook stream with a device."""
     now = dt_util.utcnow()
@@ -1807,7 +1815,7 @@ async def test_subscribe_unsubscribe_logbook_stream_device(
             for comp in ("homeassistant", "logbook", "automation", "script")
         ]
     )
-    devices = await _async_mock_devices_with_logbook_platform(hass)
+    devices = await _async_mock_devices_with_logbook_platform(hass, device_registry)
     device = devices[0]
     device2 = devices[1]
 
@@ -1923,7 +1931,10 @@ async def test_event_stream_bad_start_time(
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
 async def test_logbook_stream_match_multiple_entities(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test logbook stream with a described integration that uses multiple entities."""
     now = dt_util.utcnow()
@@ -1933,7 +1944,7 @@ async def test_logbook_stream_match_multiple_entities(
             for comp in ("homeassistant", "logbook", "automation", "script")
         ]
     )
-    entry = await _async_mock_entity_with_logbook_platform(hass)
+    entry = await _async_mock_entity_with_logbook_platform(hass, entity_registry)
     entity_id = entry.entity_id
     hass.states.async_set(entity_id, STATE_ON)
 
@@ -2066,6 +2077,7 @@ async def test_live_stream_with_one_second_commit_interval(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test the recorder with a 1s commit interval."""
     config = {recorder.CONF_COMMIT_INTERVAL: 0.5}
@@ -2077,7 +2089,7 @@ async def test_live_stream_with_one_second_commit_interval(
             for comp in ("homeassistant", "logbook", "automation", "script")
         ]
     )
-    devices = await _async_mock_devices_with_logbook_platform(hass)
+    devices = await _async_mock_devices_with_logbook_platform(hass, device_registry)
     device = devices[0]
 
     await hass.async_block_till_done()
@@ -2281,6 +2293,7 @@ async def test_recorder_is_far_behind(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test we still start live streaming if the recorder is far behind."""
     now = dt_util.utcnow()
@@ -2291,7 +2304,7 @@ async def test_recorder_is_far_behind(
         ]
     )
     await async_wait_recording_done(hass)
-    devices = await _async_mock_devices_with_logbook_platform(hass)
+    devices = await _async_mock_devices_with_logbook_platform(hass, device_registry)
     device = devices[0]
     await async_wait_recording_done(hass)
 
@@ -2705,7 +2718,10 @@ async def test_logbook_stream_ignores_forced_updates(
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
 async def test_subscribe_all_entities_are_continuous_with_device(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test subscribe/unsubscribe logbook stream with entities that are always filtered and a device."""
     now = dt_util.utcnow()
@@ -2716,7 +2732,7 @@ async def test_subscribe_all_entities_are_continuous_with_device(
         ]
     )
     await async_wait_recording_done(hass)
-    devices = await _async_mock_devices_with_logbook_platform(hass)
+    devices = await _async_mock_devices_with_logbook_platform(hass, device_registry)
     device = devices[0]
     device2 = devices[1]
 

@@ -871,7 +871,7 @@ class Event:
         self.origin = origin
         self.time_fired = time_fired or dt_util.utcnow()
         self.context: Context = context or Context(
-            id=ulid_util.ulid(dt_util.utc_to_timestamp(self.time_fired))
+            id=ulid_util.ulid_at_time(dt_util.utc_to_timestamp(self.time_fired))
         )
 
     def as_dict(self) -> dict[str, Any]:
@@ -1533,7 +1533,7 @@ class StateMachine:
         now = dt_util.utcnow()
 
         if context is None:
-            context = Context(id=ulid_util.ulid(dt_util.utc_to_timestamp(now)))
+            context = Context(id=ulid_util.ulid_at_time(dt_util.utc_to_timestamp(now)))
         state = State(
             entity_id,
             new_state,
