@@ -1,6 +1,4 @@
 """Test the BTHome sensors."""
-
-
 import logging
 
 import pytest
@@ -8,6 +6,7 @@ import pytest
 from homeassistant.components.bthome.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.core import HomeAssistant
 
 from . import make_bthome_v1_adv, make_bthome_v2_adv, make_encrypted_bthome_v1_adv
 
@@ -19,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # Tests for BTHome v1
 @pytest.mark.parametrize(
-    "mac_address, advertisement, bind_key, result",
+    ("mac_address", "advertisement", "bind_key", "result"),
     [
         (
             "A4:C1:38:8D:18:B2",
@@ -278,7 +277,9 @@ _LOGGER = logging.getLogger(__name__)
             None,
             [
                 {
-                    "sensor_entity": "sensor.test_device_18b2_volatile_organic_compounds",
+                    "sensor_entity": (
+                        "sensor.test_device_18b2_volatile_organic_compounds"
+                    ),
                     "friendly_name": "Test Device 18B2 Volatile Organic Compounds",
                     "unit_of_measurement": "µg/m³",
                     "state_class": "measurement",
@@ -330,12 +331,12 @@ _LOGGER = logging.getLogger(__name__)
     ],
 )
 async def test_v1_sensors(
-    hass,
+    hass: HomeAssistant,
     mac_address,
     advertisement,
     bind_key,
     result,
-):
+) -> None:
     """Test the different BTHome V1 sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -371,7 +372,7 @@ async def test_v1_sensors(
 
 # Tests for BTHome V2
 @pytest.mark.parametrize(
-    "mac_address, advertisement, bind_key, result",
+    ("mac_address", "advertisement", "bind_key", "result"),
     [
         (
             "A4:C1:38:8D:18:B2",
@@ -630,7 +631,9 @@ async def test_v1_sensors(
             None,
             [
                 {
-                    "sensor_entity": "sensor.test_device_18b2_volatile_organic_compounds",
+                    "sensor_entity": (
+                        "sensor.test_device_18b2_volatile_organic_compounds"
+                    ),
                     "friendly_name": "Test Device 18B2 Volatile Organic Compounds",
                     "unit_of_measurement": "µg/m³",
                     "state_class": "measurement",
@@ -845,6 +848,23 @@ async def test_v1_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
+                b"\x40\x4b\x13\x8a\x14",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_gas",
+                    "friendly_name": "Test Device 18B2 Gas",
+                    "unit_of_measurement": "m³",
+                    "state_class": "total_increasing",
+                    "expected_state": "1346.067",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
                 b"\x40\x02\xca\x09\x02\xcf\x09",
             ),
             None,
@@ -944,12 +964,12 @@ async def test_v1_sensors(
     ],
 )
 async def test_v2_sensors(
-    hass,
+    hass: HomeAssistant,
     mac_address,
     advertisement,
     bind_key,
     result,
-):
+) -> None:
     """Test the different BTHome V2 sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,

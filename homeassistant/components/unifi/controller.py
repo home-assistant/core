@@ -198,26 +198,26 @@ class UniFiController:
         @callback
         def async_load_entities(description: UnifiEntityDescription) -> None:
             """Load and subscribe to UniFi endpoints."""
-            entities: list[UnifiEntity] = []
             api_handler = description.api_handler_fn(self.api)
 
             @callback
+            def async_add_unifi_entity(obj_ids: list[str]) -> None:
+                """Add UniFi entity."""
+                async_add_entities(
+                    [
+                        unifi_platform_entity(obj_id, self, description)
+                        for obj_id in obj_ids
+                        if description.allowed_fn(self, obj_id)
+                        if description.supported_fn(self, obj_id)
+                    ]
+                )
+
+            async_add_unifi_entity(list(api_handler))
+
+            @callback
             def async_create_entity(event: ItemEvent, obj_id: str) -> None:
-                """Create UniFi entity."""
-                if not description.allowed_fn(
-                    self, obj_id
-                ) or not description.supported_fn(self.api, obj_id):
-                    return
-
-                entity = unifi_platform_entity(obj_id, self, description)
-                if event == ItemEvent.ADDED:
-                    async_add_entities([entity])
-                    return
-                entities.append(entity)
-
-            for obj_id in api_handler:
-                async_create_entity(ItemEvent.CHANGED, obj_id)
-            async_add_entities(entities)
+                """Create new UniFi entity on event."""
+                async_add_unifi_entity([obj_id])
 
             api_handler.subscribe(async_create_entity, ItemEvent.ADDED)
 
@@ -228,7 +228,6 @@ class UniFiController:
     def async_unifi_signalling_callback(self, signal, data):
         """Handle messages back from UniFi library."""
         if signal == WebsocketSignal.CONNECTION_STATE:
-
             if data == WebsocketState.DISCONNECTED and self.available:
                 LOGGER.warning("Lost connection to UniFi Network")
 
@@ -244,14 +243,12 @@ class UniFiController:
                     LOGGER.info("Connected to UniFi Network")
 
         elif signal == WebsocketSignal.DATA and data:
-
             if DATA_EVENT in data:
                 clients_connected = set()
                 devices_connected = set()
                 wireless_clients_connected = False
 
                 for event in data[DATA_EVENT]:
-
                     if event.key in CLIENT_CONNECTED:
                         clients_connected.add(event.mac)
 
@@ -484,12 +481,12 @@ async def get_unifi_controller(
     config: MappingProxyType[str, Any],
 ) -> aiounifi.Controller:
     """Create a controller object and verify authentication."""
-    sslcontext = None
+    ssl_context = False
 
     if verify_ssl := bool(config.get(CONF_VERIFY_SSL)):
         session = aiohttp_client.async_get_clientsession(hass)
         if isinstance(verify_ssl, str):
-            sslcontext = ssl.create_default_context(cafile=verify_ssl)
+            ssl_context = ssl.create_default_context(cafile=verify_ssl)
     else:
         session = aiohttp_client.async_create_clientsession(
             hass, verify_ssl=verify_ssl, cookie_jar=CookieJar(unsafe=True)
@@ -502,7 +499,7 @@ async def get_unifi_controller(
         port=config[CONF_PORT],
         site=config[CONF_SITE_ID],
         websession=session,
-        sslcontext=sslcontext,
+        ssl_context=ssl_context,
     )
 
     try:

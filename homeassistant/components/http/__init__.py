@@ -7,7 +7,7 @@ import logging
 import os
 import ssl
 from tempfile import NamedTemporaryFile
-from typing import Any, Final, TypedDict, Union, cast
+from typing import Any, Final, TypedDict, cast
 
 from aiohttp import web
 from aiohttp.typedefs import StrOrURL
@@ -74,6 +74,7 @@ DEFAULT_CORS: Final[list[str]] = ["https://cast.home-assistant.io"]
 NO_LOGIN_ATTEMPT_THRESHOLD: Final = -1
 
 MAX_CLIENT_SIZE: Final = 1024**2 * 16
+MAX_LINE_SIZE: Final = 24570
 
 STORAGE_KEY: Final = DOMAIN
 STORAGE_VERSION: Final = 1
@@ -234,7 +235,14 @@ class HomeAssistantHTTP:
         ssl_profile: str,
     ) -> None:
         """Initialize the HTTP Home Assistant server."""
-        self.app = web.Application(middlewares=[], client_max_size=MAX_CLIENT_SIZE)
+        self.app = web.Application(
+            middlewares=[],
+            client_max_size=MAX_CLIENT_SIZE,
+            handler_args={
+                "max_line_size": MAX_LINE_SIZE,
+                "max_field_size": MAX_LINE_SIZE,
+            },
+        )
         self.hass = hass
         self.ssl_certificate = ssl_certificate
         self.ssl_peer_certificate = ssl_peer_certificate
@@ -451,7 +459,7 @@ class HomeAssistantHTTP:
         # However in Home Assistant components can be discovered after boot.
         # This will now raise a RunTimeError.
         # To work around this we now prevent the router from getting frozen
-        # pylint: disable=protected-access
+        # pylint: disable-next=protected-access
         self.app._router.freeze = lambda: None  # type: ignore[assignment]
 
         self.runner = web.AppRunner(self.app)
@@ -490,7 +498,7 @@ async def start_http_server_and_save_config(
 
     if CONF_TRUSTED_PROXIES in conf:
         conf[CONF_TRUSTED_PROXIES] = [
-            str(cast(Union[IPv4Network, IPv6Network], ip).network_address)
+            str(cast(IPv4Network | IPv6Network, ip).network_address)
             for ip in conf[CONF_TRUSTED_PROXIES]
         ]
 

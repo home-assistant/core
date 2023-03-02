@@ -5,6 +5,7 @@ from collections.abc import Callable, Mapping, Sequence
 from typing import Any, Generic, Literal, TypedDict, TypeVar, cast
 from uuid import UUID
 
+from typing_extensions import Required
 import voluptuous as vol
 
 from homeassistant.backports.enum import StrEnum
@@ -78,27 +79,27 @@ class Selector(Generic[_T]):
         return {"selector": {self.selector_type: self.config}}
 
 
-SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA = vol.Schema(
+ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
     {
         # Integration that provided the entity
         vol.Optional("integration"): str,
         # Domain the entity belongs to
-        vol.Optional("domain"): vol.Any(str, [str]),
+        vol.Optional("domain"): vol.All(cv.ensure_list, [str]),
         # Device class of the entity
-        vol.Optional("device_class"): str,
+        vol.Optional("device_class"): vol.All(cv.ensure_list, [str]),
     }
 )
 
 
-class SingleEntitySelectorConfig(TypedDict, total=False):
+class EntityFilterSelectorConfig(TypedDict, total=False):
     """Class to represent a single entity selector config."""
 
     integration: str
     domain: str | list[str]
-    device_class: str
+    device_class: str | list[str]
 
 
-SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA = vol.Schema(
+DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
     {
         # Integration linked to it with a config entry
         vol.Optional("integration"): str,
@@ -107,18 +108,21 @@ SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA = vol.Schema(
         # Model of device
         vol.Optional("model"): str,
         # Device has to contain entities matching this selector
-        vol.Optional("entity"): SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA,
+        vol.Optional("entity"): vol.All(
+            cv.ensure_list, [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA]
+        ),
     }
 )
 
 
-class SingleDeviceSelectorConfig(TypedDict, total=False):
+class DeviceFilterSelectorConfig(TypedDict, total=False):
     """Class to represent a single device selector config."""
 
     integration: str
     manufacturer: str
     model: str
-    entity: SingleEntitySelectorConfig
+    entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
+    filter: DeviceFilterSelectorConfig | list[DeviceFilterSelectorConfig]
 
 
 class ActionSelectorConfig(TypedDict):
@@ -175,8 +179,8 @@ class AddonSelector(Selector[AddonSelectorConfig]):
 class AreaSelectorConfig(TypedDict, total=False):
     """Class to represent an area selector config."""
 
-    entity: SingleEntitySelectorConfig
-    device: SingleDeviceSelectorConfig
+    entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
+    device: DeviceFilterSelectorConfig | list[DeviceFilterSelectorConfig]
     multiple: bool
 
 
@@ -188,8 +192,14 @@ class AreaSelector(Selector[AreaSelectorConfig]):
 
     CONFIG_SCHEMA = vol.Schema(
         {
-            vol.Optional("entity"): SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA,
-            vol.Optional("device"): SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA,
+            vol.Optional("entity"): vol.All(
+                cv.ensure_list,
+                [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
+            ),
+            vol.Optional("device"): vol.All(
+                cv.ensure_list,
+                [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
+            ),
             vol.Optional("multiple", default=False): cv.boolean,
         }
     )
@@ -211,7 +221,7 @@ class AreaSelector(Selector[AreaSelectorConfig]):
 class AttributeSelectorConfig(TypedDict, total=False):
     """Class to represent an attribute selector config."""
 
-    entity_id: str
+    entity_id: Required[str]
     hide_attributes: list[str]
 
 
@@ -398,7 +408,7 @@ class DeviceSelectorConfig(TypedDict, total=False):
     integration: str
     manufacturer: str
     model: str
-    entity: SingleEntitySelectorConfig
+    entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
     multiple: bool
 
 
@@ -408,8 +418,14 @@ class DeviceSelector(Selector[DeviceSelectorConfig]):
 
     selector_type = "device"
 
-    CONFIG_SCHEMA = SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA.extend(
-        {vol.Optional("multiple", default=False): cv.boolean}
+    CONFIG_SCHEMA = DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA.extend(
+        {
+            vol.Optional("multiple", default=False): cv.boolean,
+            vol.Optional("filter"): vol.All(
+                cv.ensure_list,
+                [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
+            ),
+        },
     )
 
     def __init__(self, config: DeviceSelectorConfig | None = None) -> None:
@@ -456,7 +472,7 @@ class DurationSelector(Selector[DurationSelectorConfig]):
         return cast(dict[str, float], data)
 
 
-class EntitySelectorConfig(SingleEntitySelectorConfig, total=False):
+class EntitySelectorConfig(EntityFilterSelectorConfig, total=False):
     """Class to represent an entity selector config."""
 
     exclude_entities: list[str]
@@ -470,11 +486,15 @@ class EntitySelector(Selector[EntitySelectorConfig]):
 
     selector_type = "entity"
 
-    CONFIG_SCHEMA = SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA.extend(
+    CONFIG_SCHEMA = ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA.extend(
         {
             vol.Optional("exclude_entities"): [str],
             vol.Optional("include_entities"): [str],
             vol.Optional("multiple", default=False): cv.boolean,
+            vol.Optional("filter"): vol.All(
+                cv.ensure_list,
+                [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
+            ),
         }
     )
 
@@ -728,10 +748,11 @@ class SelectSelectorMode(StrEnum):
 class SelectSelectorConfig(TypedDict, total=False):
     """Class to represent a select selector config."""
 
-    options: Sequence[SelectOptionDict] | Sequence[str]  # required
+    options: Required[Sequence[SelectOptionDict] | Sequence[str]]
     multiple: bool
     custom_value: bool
     mode: SelectSelectorMode
+    translation_key: str
 
 
 @SELECTORS.register("select")
@@ -748,6 +769,7 @@ class SelectSelector(Selector[SelectSelectorConfig]):
             vol.Optional("mode"): vol.All(
                 vol.Coerce(SelectSelectorMode), lambda val: val.value
             ),
+            vol.Optional("translation_key"): cv.string,
         }
     )
 
@@ -781,14 +803,14 @@ class SelectSelector(Selector[SelectSelectorConfig]):
 class TargetSelectorConfig(TypedDict, total=False):
     """Class to represent a target selector config."""
 
-    entity: SingleEntitySelectorConfig
-    device: SingleDeviceSelectorConfig
+    entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
+    device: DeviceFilterSelectorConfig | list[DeviceFilterSelectorConfig]
 
 
 class StateSelectorConfig(TypedDict, total=False):
     """Class to represent an state selector config."""
 
-    entity_id: str
+    entity_id: Required[str]
 
 
 @SELECTORS.register("state")
@@ -829,8 +851,14 @@ class TargetSelector(Selector[TargetSelectorConfig]):
 
     CONFIG_SCHEMA = vol.Schema(
         {
-            vol.Optional("entity"): SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA,
-            vol.Optional("device"): SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA,
+            vol.Optional("entity"): vol.All(
+                cv.ensure_list,
+                [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
+            ),
+            vol.Optional("device"): vol.All(
+                cv.ensure_list,
+                [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
+            ),
         }
     )
 

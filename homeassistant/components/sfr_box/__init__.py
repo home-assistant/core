@@ -1,31 +1,54 @@
 """SFR Box."""
 from __future__ import annotations
 
+import asyncio
+
 from sfrbox_api.bridge import SFRBox
-from sfrbox_api.exceptions import SFRBoxError
+from sfrbox_api.exceptions import SFRBoxAuthenticationError, SFRBoxError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import DOMAIN, PLATFORMS
-from .coordinator import DslDataUpdateCoordinator
+from .const import DOMAIN, PLATFORMS, PLATFORMS_WITH_AUTH
+from .coordinator import SFRDataUpdateCoordinator
+from .models import DomainData
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SFR box as config entry."""
     box = SFRBox(ip=entry.data[CONF_HOST], client=get_async_client(hass))
-    try:
-        system_info = await box.system_get_info()
-    except SFRBoxError as err:
-        raise ConfigEntryNotReady(
-            f"Unable to connect to {entry.data[CONF_HOST]}"
-        ) from err
-    hass.data.setdefault(DOMAIN, {})
+    platforms = PLATFORMS
+    if (username := entry.data.get(CONF_USERNAME)) and (
+        password := entry.data.get(CONF_PASSWORD)
+    ):
+        try:
+            await box.authenticate(username=username, password=password)
+        except SFRBoxAuthenticationError as err:
+            raise ConfigEntryAuthFailed() from err
+        except SFRBoxError as err:
+            raise ConfigEntryNotReady() from err
+        platforms = PLATFORMS_WITH_AUTH
 
+    data = DomainData(
+        box=box,
+        dsl=SFRDataUpdateCoordinator(hass, box, "dsl", lambda b: b.dsl_get_info()),
+        system=SFRDataUpdateCoordinator(
+            hass, box, "system", lambda b: b.system_get_info()
+        ),
+    )
+    tasks = [
+        data.dsl.async_config_entry_first_refresh(),
+        data.system.async_config_entry_first_refresh(),
+    ]
+    await asyncio.gather(*tasks)
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data
+
+    system_info = data.system.data
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -36,12 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         configuration_url=f"http://{entry.data[CONF_HOST]}",
     )
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        "box": box,
-        "dsl_coordinator": DslDataUpdateCoordinator(hass, box),
-    }
-
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
     return True
 

@@ -112,7 +112,7 @@ class EcobeeSensor(SensorEntity):
         sensor_name,
         sensor_index,
         description: EcobeeSensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.data = data

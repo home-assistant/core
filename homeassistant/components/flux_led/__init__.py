@@ -87,14 +87,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, STARTUP_SCAN_TIMEOUT
     )
 
+    @callback
+    def _async_start_background_discovery(*_: Any) -> None:
+        """Run discovery in the background."""
+        hass.async_create_background_task(_async_discovery(), "flux_led-discovery")
+
     async def _async_discovery(*_: Any) -> None:
         async_trigger_discovery(
             hass, await async_discover_devices(hass, DISCOVER_SCAN_TIMEOUT)
         )
 
     async_trigger_discovery(hass, domain_data[FLUX_LED_DISCOVERY])
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_discovery)
-    async_track_time_interval(hass, _async_discovery, DISCOVERY_INTERVAL)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STARTED, _async_start_background_discovery
+    )
+    async_track_time_interval(
+        hass, _async_start_background_discovery, DISCOVERY_INTERVAL
+    )
     return True
 
 
@@ -111,7 +120,7 @@ async def _async_migrate_unique_ids(hass: HomeAssistant, entry: ConfigEntry) -> 
         new_unique_id = None
         if entity_unique_id.startswith(entry_id):
             # Old format {entry_id}....., New format {unique_id}....
-            new_unique_id = f"{unique_id}{entity_unique_id[len(entry_id):]}"
+            new_unique_id = f"{unique_id}{entity_unique_id.removeprefix(entry_id)}"
         elif (
             ":" in entity_mac
             and entity_mac != unique_id

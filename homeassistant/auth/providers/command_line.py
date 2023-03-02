@@ -68,6 +68,7 @@ class CommandLineAuthProvider(AuthProvider):
                 *self.config[CONF_ARGS],
                 env=env,
                 stdout=asyncio.subprocess.PIPE if self.config[CONF_META] else None,
+                close_fds=False,  # required for posix_spawn
             )
             stdout, _ = await process.communicate()
         except OSError as err:

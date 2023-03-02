@@ -98,6 +98,10 @@ DHCP: list[dict[str, str | bool]] = [
         "macaddress": "C8F742*",
     },
     {
+        "domain": "dlink",
+        "hostname": "dsp-w215",
+    },
+    {
         "domain": "elkm1",
         "registered_devices": True,
     },
@@ -241,6 +245,11 @@ DHCP: list[dict[str, str | bool]] = [
     },
     {
         "domain": "isy994",
+        "hostname": "eisy*",
+        "macaddress": "0021B9*",
+    },
+    {
+        "domain": "isy994",
         "hostname": "polisy*",
         "macaddress": "000DB9*",
     },
@@ -376,6 +385,11 @@ DHCP: list[dict[str, str | bool]] = [
         "macaddress": "D8D5B9*",
     },
     {
+        "domain": "reolink",
+        "hostname": "reolink*",
+        "macaddress": "EC71DB*",
+    },
+    {
         "domain": "ring",
         "hostname": "ring*",
         "macaddress": "0CAE7D*",
@@ -399,6 +413,10 @@ DHCP: list[dict[str, str | bool]] = [
         "domain": "roomba",
         "hostname": "roomba-*",
         "macaddress": "204EF6*",
+    },
+    {
+        "domain": "ruuvi_gateway",
+        "hostname": "ruuvigateway*",
     },
     {
         "domain": "samsungtv",

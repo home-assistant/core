@@ -121,7 +121,10 @@ class PurgeEntitiesTask(RecorderTask):
 
 @dataclass
 class PerodicCleanupTask(RecorderTask):
-    """An object to insert into the recorder to trigger cleanup tasks when auto purge is disabled."""
+    """An object to insert into the recorder to trigger cleanup tasks.
+
+    Trigger cleanup tasks when auto purge is disabled.
+    """
 
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
@@ -195,7 +198,10 @@ class AdjustStatisticsTask(RecorderTask):
 
 @dataclass
 class WaitTask(RecorderTask):
-    """An object to insert into the recorder queue to tell it set the _queue_watch event."""
+    """An object to insert into the recorder queue.
+
+    Tell it set the _queue_watch event.
+    """
 
     commit_before = False
 
@@ -297,3 +303,39 @@ class SynchronizeTask(RecorderTask):
         # Does not use a tracked task to avoid
         # blocking shutdown if the recorder is broken
         instance.hass.loop.call_soon_threadsafe(self.event.set)
+
+
+@dataclass
+class PostSchemaMigrationTask(RecorderTask):
+    """Post migration task to update schema."""
+
+    old_version: int
+    new_version: int
+
+    def run(self, instance: Recorder) -> None:
+        """Handle the task."""
+        instance._post_schema_migration(  # pylint: disable=[protected-access]
+            self.old_version, self.new_version
+        )
+
+
+@dataclass
+class StatisticsTimestampMigrationCleanupTask(RecorderTask):
+    """An object to insert into the recorder queue to run a statistics migration cleanup task."""
+
+    def run(self, instance: Recorder) -> None:
+        """Run statistics timestamp cleanup task."""
+        if not statistics.cleanup_statistics_timestamp_migration(instance):
+            # Schedule a new statistics migration task if this one didn't finish
+            instance.queue_task(StatisticsTimestampMigrationCleanupTask())
+
+
+@dataclass
+class AdjustLRUSizeTask(RecorderTask):
+    """An object to insert into the recorder queue to adjust the LRU size."""
+
+    commit_before = False
+
+    def run(self, instance: Recorder) -> None:
+        """Handle the task to adjust the size."""
+        instance._adjust_lru_size()  # pylint: disable=[protected-access]

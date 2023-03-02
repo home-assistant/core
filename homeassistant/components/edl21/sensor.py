@@ -1,8 +1,9 @@
 """Support for EDL21 Smart Meters."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import timedelta
-import logging
+from typing import Any
 
 from sml import SmlGetListResponse
 from sml.asyncio import SmlProtocol
@@ -15,6 +16,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     DEGREE,
@@ -31,15 +33,13 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utcnow
 
-_LOGGER = logging.getLogger(__name__)
+from .const import CONF_SERIAL_PORT, DOMAIN, LOGGER, SIGNAL_EDL21_TELEGRAM
 
-DOMAIN = "edl21"
-CONF_SERIAL_PORT = "serial_port"
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
-SIGNAL_EDL21_TELEGRAM = "edl21_telegram"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -270,8 +270,32 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
+    """Set up EDL21 sensors via configuration.yaml and show deprecation warning."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2023.2.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the EDL21 sensor."""
-    hass.data[DOMAIN] = EDL21(hass, config, async_add_entities)
+    hass.data[DOMAIN] = EDL21(hass, config_entry.data, async_add_entities)
     await hass.data[DOMAIN].connect()
 
 
@@ -292,16 +316,21 @@ class EDL21:
         "129-129:199.130.5*255",  # Iskraemeco: Public Key
     }
 
-    def __init__(self, hass, config, async_add_entities) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: Mapping[str, Any],
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
         """Initialize an EDL21 object."""
         self._registered_obis: set[tuple[str, str]] = set()
         self._hass = hass
         self._async_add_entities = async_add_entities
-        self._name = config[CONF_NAME]
+        self._name = config.get(CONF_NAME)
         self._proto = SmlProtocol(config[CONF_SERIAL_PORT])
         self._proto.add_listener(self.event, ["SmlGetListResponse"])
 
-    async def connect(self):
+    async def connect(self) -> None:
         """Connect to an EDL21 reader."""
         await self._proto.connect(self._hass.loop)
 
@@ -319,7 +348,7 @@ class EDL21:
             return
         electricity_id = electricity_id.replace(" ", "")
 
-        new_entities = []
+        new_entities: list[EDL21Entity] = []
         for telegram in message_body.get("valList", []):
             if not (obis := telegram.get("objName")):
                 continue
@@ -342,7 +371,7 @@ class EDL21:
                     )
                     self._registered_obis.add((electricity_id, obis))
                 elif obis not in self._OBIS_BLACKLIST:
-                    _LOGGER.warning(
+                    LOGGER.warning(
                         "Unhandled sensor %s detected. Please report at %s",
                         obis,
                         "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+edl21%22",
@@ -352,7 +381,7 @@ class EDL21:
         if new_entities:
             self._hass.loop.create_task(self.add_entities(new_entities))
 
-    async def add_entities(self, new_entities) -> None:
+    async def add_entities(self, new_entities: list[EDL21Entity]) -> None:
         """Migrate old unique IDs, then add entities to hass."""
         registry = er.async_get(self._hass)
 
@@ -361,7 +390,7 @@ class EDL21:
                 "sensor", DOMAIN, entity.old_unique_id
             )
             if old_entity_id is not None:
-                _LOGGER.debug(
+                LOGGER.debug(
                     "Migrating unique_id from [%s] to [%s]",
                     entity.old_unique_id,
                     entity.unique_id,

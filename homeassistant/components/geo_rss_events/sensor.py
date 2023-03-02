@@ -1,5 +1,4 @@
-"""
-Generic GeoRSS events service.
+"""Generic GeoRSS events service.
 
 Retrieves current events (typically incidents or alerts) in GeoRSS format, and
 shows information on events filtered by distance to the HA instance's location
