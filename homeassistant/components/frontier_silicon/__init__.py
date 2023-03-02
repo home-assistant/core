@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from afsapi import AFSAPI, ConnectionError as FSConnectionError, InvalidPinException
+from afsapi import AFSAPI, ConnectionError as FSConnectionError
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -15,7 +15,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, PlatformNotReady
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 
