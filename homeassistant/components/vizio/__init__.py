@@ -128,8 +128,9 @@ class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]
             # Reset the fail count and threshold when the data is successfully retrieved
             self.fail_count = 0
             self.fail_threshold = 10
-            # Store the new data so we have it for the next restart
-            await self.store.async_save(data)
+            # Store the new data if it has changed so we have it for the next restart
+            if data != self.data:
+                await self.store.async_save(data)
             return data
         # For every failure, increase the fail count until we reach the threshold.
         # We then log a warning, increase the threshold, and reset the fail count.
