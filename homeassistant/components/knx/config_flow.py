@@ -4,6 +4,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import AsyncGenerator
 from pathlib import Path
+import shutil
 from typing import Any, Final
 
 import voluptuous as vol
@@ -712,7 +713,7 @@ class KNXCommonFlow(ABC, FlowHandler):
                     dest_path = Path(self.hass.config.path(STORAGE_DIR, DOMAIN))
                     dest_path.mkdir(exist_ok=True)
                     dest_file = dest_path / DEFAULT_KNX_KEYRING_FILENAME
-                    dest_file.write_bytes(file_path.read_bytes())
+                    shutil.move(file_path, dest_file)
             return keyring, errors
 
         keyring, errors = await self.hass.async_add_executor_job(_process_upload)
