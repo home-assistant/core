@@ -23,7 +23,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DEFAULT_MAX_RECORDS, DOMAIN, LOGGER
 
-T = TypeVar("T", bound=SystemStatus | list[RootFolder] | list[Health] | int)
+T = TypeVar(
+    "T", bound=RadarrQueue | SystemStatus | list[RootFolder] | list[Health] | int
+)
 
 
 class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], Generic[T], ABC):
