@@ -12,6 +12,7 @@ from homeassistant.components.gios.const import (
     DOMAIN,
 )
 from homeassistant.components.sensor import (
+    ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     DOMAIN as PLATFORM,
     SensorDeviceClass,
@@ -165,6 +166,14 @@ async def test_sensor(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
     assert state.attributes.get(ATTR_STATE_CLASS) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+    assert state.attributes.get(ATTR_OPTIONS) == [
+        "very_bad",
+        "bad",
+        "sufficient",
+        "moderate",
+        "good",
+        "very_good",
+    ]
 
     entry = registry.async_get("sensor.home_aqi")
     assert entry
