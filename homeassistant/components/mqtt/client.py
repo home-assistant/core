@@ -377,6 +377,7 @@ class MQTT:
             SUBSCRIBE_COOLDOWN, self._async_perform_subscriptions
         )
         self._pending_subscriptions: dict[str, int] = {}  # topic, max qos
+        self._pending_subscriptions_lock = asyncio.Lock()
 
         if self.hass.state == CoreState.running:
             self._ha_started.set()
@@ -556,7 +557,7 @@ class MQTT:
         self, subscriptions: Iterable[tuple[str, int]], queue_only: bool = False
     ) -> None:
         """Queue requested subscriptions."""
-        async with self._paho_lock:
+        async with self._pending_subscriptions_lock:
             for subscription in subscriptions:
                 topic, qos = subscription
                 if self._pending_subscriptions.setdefault(topic, qos) < qos:
@@ -615,13 +616,14 @@ class MQTT:
             _raise_on_error(result)
             return mid
 
-        async with self._paho_lock:
-            if self._is_active_subscription(topic):
-                # Other subscriptions on topic remaining - don't unsubscribe.
-                return
+        if self._is_active_subscription(topic):
+            # Other subscriptions on topic remaining - don't unsubscribe.
+            return
+        async with self._pending_subscriptions_lock:
             if topic in self._pending_subscriptions:
                 # avoid any pending subscription to be executed
                 del self._pending_subscriptions[topic]
+        async with self._paho_lock:
             mid = await self.hass.async_add_executor_job(_client_unsubscribe, topic)
             await self._register_mid(mid)
 
@@ -652,10 +654,11 @@ class MQTT:
             self._pending_subscriptions.clear()
             return subscribe_result_list
 
-        async with self._paho_lock:
-            results = await self.hass.async_add_executor_job(
-                _process_client_subscriptions
-            )
+        async with self._pending_subscriptions_lock:
+            async with self._paho_lock:
+                results = await self.hass.async_add_executor_job(
+                    _process_client_subscriptions
+                )
 
         tasks: list[Coroutine[Any, Any, None]] = []
         errors: list[int] = []
