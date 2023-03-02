@@ -236,8 +236,7 @@ _ENTITY_IMAGE_CACHE = _ImageCache(images=collections.OrderedDict(), maxsize=16)
 
 @bind_hass
 def is_on(hass: HomeAssistant, entity_id: str | None = None) -> bool:
-    """
-    Return true if specified media player entity_id is on.
+    """Return true if specified media player entity_id is on.
 
     Check all media player if no entity_id specified.
     """
@@ -393,12 +392,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         elif value[ATTR_MEDIA_ENQUEUE] is True:
             value[ATTR_MEDIA_ENQUEUE] = MediaPlayerEnqueue.ADD
             _LOGGER.warning(
-                "Playing media with enqueue set to True is deprecated. Use 'add' instead"
+                "Playing media with enqueue set to True is deprecated. Use 'add'"
+                " instead"
             )
         elif value[ATTR_MEDIA_ENQUEUE] is False:
             value[ATTR_MEDIA_ENQUEUE] = MediaPlayerEnqueue.PLAY
             _LOGGER.warning(
-                "Playing media with enqueue set to False is deprecated. Use 'play' instead"
+                "Playing media with enqueue set to False is deprecated. Use 'play'"
+                " instead"
             )
 
         return value
@@ -589,8 +590,7 @@ class MediaPlayerEntity(Entity):
         media_content_id: str,
         media_image_id: str | None = None,
     ) -> tuple[bytes | None, str | None]:
-        """
-        Optionally fetch internally accessible image for media browser.
+        """Optionally fetch internally accessible image for media browser.
 
         Must be implemented by integration.
         """
@@ -1196,10 +1196,10 @@ async def websocket_browse_media(
     connection: websocket_api.connection.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """
-    Browse media available to the media_player entity.
+    """Browse media available to the media_player entity.
 
-    To use, media_player integrations can implement MediaPlayerEntity.async_browse_media()
+    To use, media_player integrations can implement
+    MediaPlayerEntity.async_browse_media()
     """
     component: EntityComponent[MediaPlayerEntity] = hass.data[DOMAIN]
     player = component.get_entity(msg["entity_id"])

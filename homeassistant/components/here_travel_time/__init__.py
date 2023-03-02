@@ -32,16 +32,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     """Set up HERE Travel Time from a config entry."""
     api_key = config_entry.data[CONF_API_KEY]
 
-    arrival = (
-        dt.parse_time(config_entry.options[CONF_ARRIVAL_TIME])
-        if config_entry.options[CONF_ARRIVAL_TIME] is not None
-        else None
-    )
-    departure = (
-        dt.parse_time(config_entry.options[CONF_DEPARTURE_TIME])
-        if config_entry.options[CONF_DEPARTURE_TIME] is not None
-        else None
-    )
+    arrival = dt.parse_time(config_entry.options.get(CONF_ARRIVAL_TIME, ""))
+    departure = dt.parse_time(config_entry.options.get(CONF_DEPARTURE_TIME, ""))
 
     here_travel_time_config = HERETravelTimeConfig(
         destination_latitude=config_entry.data.get(CONF_DESTINATION_LATITUDE),

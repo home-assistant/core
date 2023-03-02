@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import cast
 
 from pyunifiprotect import ProtectApiClient
@@ -15,6 +16,8 @@ from homeassistant.helpers.issue_registry import async_get as async_get_issue_re
 
 from .const import CONF_ALLOW_EA
 from .utils import async_create_api_client
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class EAConfirm(RepairsFlow):

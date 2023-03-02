@@ -9,10 +9,9 @@ from homeassistant.components.number import (
     NumberEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TIME_MINUTES
+from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
@@ -146,7 +145,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             key=DPCode.COOK_TIME,
             name="Cook time",
             icon="mdi:timer",
-            native_unit_of_measurement=TIME_MINUTES,
+            native_unit_of_measurement=UnitOfTime.MINUTES,
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
@@ -372,7 +371,6 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
             and not self.device_class.startswith(DOMAIN)
             and description.native_unit_of_measurement is None
         ):
-
             # We cannot have a device class, if the UOM isn't set or the
             # device class cannot be found in the validation mapping.
             if (

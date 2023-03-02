@@ -122,7 +122,9 @@ SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
         entity_registry_enabled_default=False,
         value_fn=len,
         attributes_fn=lambda data: {
-            i.title: f"{getattr(i.statistics,'episodeFileCount', 0)}/{getattr(i.statistics, 'episodeCount', 0)} Episodes"
+            i.title: (
+                f"{getattr(i.statistics,'episodeFileCount', 0)}/{getattr(i.statistics, 'episodeCount', 0)} Episodes"
+            )
             for i in data
         },
     ),

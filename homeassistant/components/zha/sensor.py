@@ -1,10 +1,13 @@
 """Sensors on Zigbee Home Automation networks."""
 from __future__ import annotations
 
+import enum
 import functools
 import numbers
-from typing import TYPE_CHECKING, Any, TypeVar
+import sys
+from typing import TYPE_CHECKING, Any
 
+from typing_extensions import Self
 from zigpy import types
 
 from homeassistant.components.climate import HVACAction
@@ -20,8 +23,8 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
-    VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
-    VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
     Platform,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
@@ -34,10 +37,10 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfTime,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -66,13 +69,6 @@ from .entity import ZhaEntity
 if TYPE_CHECKING:
     from .core.channels.base import ZigbeeChannel
     from .core.device import ZHADevice
-
-_SensorSelfT = TypeVar("_SensorSelfT", bound="Sensor")
-_BatterySelfT = TypeVar("_BatterySelfT", bound="Battery")
-_ThermostatHVACActionSelfT = TypeVar(
-    "_ThermostatHVACActionSelfT", bound="ThermostatHVACAction"
-)
-_RSSISensorSelfT = TypeVar("_RSSISensorSelfT", bound="RSSISensor")
 
 PARALLEL_UPDATES = 5
 
@@ -138,12 +134,12 @@ class Sensor(ZhaEntity, SensorEntity):
 
     @classmethod
     def create_entity(
-        cls: type[_SensorSelfT],
+        cls,
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
         **kwargs: Any,
-    ) -> _SensorSelfT | None:
+    ) -> Self | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
@@ -175,7 +171,7 @@ class Sensor(ZhaEntity, SensorEntity):
         """Handle state update from channel."""
         self.async_write_ha_state()
 
-    def formatter(self, value: int) -> int | float | None:
+    def formatter(self, value: int | enum.IntEnum) -> int | float | str | None:
         """Numeric pass-through formatter."""
         if self._decimals > 0:
             return round(
@@ -184,12 +180,6 @@ class Sensor(ZhaEntity, SensorEntity):
         return round(float(value * self._multiplier) / self._divisor)
 
 
-@MULTI_MATCH(
-    channel_names=CHANNEL_ANALOG_INPUT,
-    manufacturers="LUMI",
-    models={"lumi.plug", "lumi.plug.maus01", "lumi.plug.mmeu01"},
-    stop_on_match_group=CHANNEL_ANALOG_INPUT,
-)
 @MULTI_MATCH(
     channel_names=CHANNEL_ANALOG_INPUT,
     manufacturers="Digi",
@@ -214,12 +204,12 @@ class Battery(Sensor):
 
     @classmethod
     def create_entity(
-        cls: type[_BatterySelfT],
+        cls,
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
         **kwargs: Any,
-    ) -> _BatterySelfT | None:
+    ) -> Self | None:
         """Entity Factory.
 
         Unlike any other entity, PowerConfiguration cluster may not support
@@ -325,7 +315,7 @@ class ElectricalMeasurementRMSVoltage(ElectricalMeasurement, id_suffix="rms_volt
     """RMS Voltage measurement."""
 
     SENSOR_ATTR = "rms_voltage"
-    _attr_device_class: SensorDeviceClass = SensorDeviceClass.CURRENT
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.VOLTAGE
     _attr_should_poll = False  # Poll indirectly by ElectricalMeasurementSensor
     _attr_name: str = "RMS voltage"
     _attr_native_unit_of_measurement = UnitOfElectricPotential.VOLT
@@ -404,9 +394,9 @@ class Illuminance(Sensor):
     _attr_name: str = "Illuminance"
     _attr_native_unit_of_measurement = LIGHT_LUX
 
-    def formatter(self, value: int) -> float:
+    def formatter(self, value: int) -> int:
         """Convert illumination data."""
-        return round(pow(10, ((value - 1) / 10000)), 1)
+        return round(pow(10, ((value - 1) / 10000)))
 
 
 @MULTI_MATCH(
@@ -423,9 +413,9 @@ class SmartEnergyMetering(Sensor):
 
     unit_of_measure_map = {
         0x00: UnitOfPower.WATT,
-        0x01: VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
-        0x02: VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
-        0x03: f"100 {VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR}",
+        0x01: UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        0x02: UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+        0x03: f"100 {UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR}",
         0x04: f"US {UnitOfVolume.GALLONS}/{UnitOfTime.HOURS}",
         0x05: f"IMP {UnitOfVolume.GALLONS}/{UnitOfTime.HOURS}",
         0x06: UnitOfPower.BTU_PER_HOUR,
@@ -453,7 +443,12 @@ class SmartEnergyMetering(Sensor):
         if self._channel.device_type is not None:
             attrs["device_type"] = self._channel.device_type
         if (status := self._channel.status) is not None:
-            attrs["status"] = str(status)[len(status.__class__.__name__) + 1 :]
+            if isinstance(status, enum.IntFlag) and sys.version_info >= (3, 11):
+                attrs["status"] = str(
+                    status.name if status.name is not None else status.value
+                )
+            else:
+                attrs["status"] = str(status)[len(status.__class__.__name__) + 1 :]
         return attrs
 
 
@@ -496,7 +491,7 @@ class SmartEnergySummation(SmartEnergyMetering, id_suffix="summation_delivered")
 
 @MULTI_MATCH(
     channel_names=CHANNEL_SMARTENERGY_METERING,
-    models={"TS011F"},
+    models={"TS011F", "ZLinky_TIC"},
     stop_on_match_group=CHANNEL_SMARTENERGY_METERING,
 )
 class PolledSmartEnergySummation(SmartEnergySummation):
@@ -509,6 +504,84 @@ class PolledSmartEnergySummation(SmartEnergySummation):
         if not self.available:
             return
         await self._channel.async_force_update()
+
+
+@MULTI_MATCH(
+    channel_names=CHANNEL_SMARTENERGY_METERING,
+    models={"ZLinky_TIC"},
+)
+class Tier1SmartEnergySummation(
+    PolledSmartEnergySummation, id_suffix="tier1_summation_delivered"
+):
+    """Tier 1 Smart Energy Metering summation sensor."""
+
+    SENSOR_ATTR: int | str = "current_tier1_summ_delivered"
+    _attr_name: str = "Tier 1 summation delivered"
+
+
+@MULTI_MATCH(
+    channel_names=CHANNEL_SMARTENERGY_METERING,
+    models={"ZLinky_TIC"},
+)
+class Tier2SmartEnergySummation(
+    PolledSmartEnergySummation, id_suffix="tier2_summation_delivered"
+):
+    """Tier 2 Smart Energy Metering summation sensor."""
+
+    SENSOR_ATTR: int | str = "current_tier2_summ_delivered"
+    _attr_name: str = "Tier 2 summation delivered"
+
+
+@MULTI_MATCH(
+    channel_names=CHANNEL_SMARTENERGY_METERING,
+    models={"ZLinky_TIC"},
+)
+class Tier3SmartEnergySummation(
+    PolledSmartEnergySummation, id_suffix="tier3_summation_delivered"
+):
+    """Tier 3 Smart Energy Metering summation sensor."""
+
+    SENSOR_ATTR: int | str = "current_tier3_summ_delivered"
+    _attr_name: str = "Tier 3 summation delivered"
+
+
+@MULTI_MATCH(
+    channel_names=CHANNEL_SMARTENERGY_METERING,
+    models={"ZLinky_TIC"},
+)
+class Tier4SmartEnergySummation(
+    PolledSmartEnergySummation, id_suffix="tier4_summation_delivered"
+):
+    """Tier 4 Smart Energy Metering summation sensor."""
+
+    SENSOR_ATTR: int | str = "current_tier4_summ_delivered"
+    _attr_name: str = "Tier 4 summation delivered"
+
+
+@MULTI_MATCH(
+    channel_names=CHANNEL_SMARTENERGY_METERING,
+    models={"ZLinky_TIC"},
+)
+class Tier5SmartEnergySummation(
+    PolledSmartEnergySummation, id_suffix="tier5_summation_delivered"
+):
+    """Tier 5 Smart Energy Metering summation sensor."""
+
+    SENSOR_ATTR: int | str = "current_tier5_summ_delivered"
+    _attr_name: str = "Tier 5 summation delivered"
+
+
+@MULTI_MATCH(
+    channel_names=CHANNEL_SMARTENERGY_METERING,
+    models={"ZLinky_TIC"},
+)
+class Tier6SmartEnergySummation(
+    PolledSmartEnergySummation, id_suffix="tier6_summation_delivered"
+):
+    """Tier 6 Smart Energy Metering summation sensor."""
+
+    SENSOR_ATTR: int | str = "current_tier6_summ_delivered"
+    _attr_name: str = "Tier 6 summation delivered"
 
 
 @MULTI_MATCH(channel_names=CHANNEL_PRESSURE)
@@ -637,12 +710,12 @@ class ThermostatHVACAction(Sensor, id_suffix="hvac_action"):
 
     @classmethod
     def create_entity(
-        cls: type[_ThermostatHVACActionSelfT],
+        cls,
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
         **kwargs: Any,
-    ) -> _ThermostatHVACActionSelfT | None:
+    ) -> Self | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
@@ -756,7 +829,8 @@ class RSSISensor(Sensor, id_suffix="rssi"):
     """RSSI sensor for a device."""
 
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_device_class: SensorDeviceClass = SensorDeviceClass.SIGNAL_STRENGTH
+    _attr_device_class: SensorDeviceClass | None = SensorDeviceClass.SIGNAL_STRENGTH
+    _attr_native_unit_of_measurement: str | None = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
     _attr_should_poll = True  # BaseZhaEntity defaults to False
@@ -765,12 +839,12 @@ class RSSISensor(Sensor, id_suffix="rssi"):
 
     @classmethod
     def create_entity(
-        cls: type[_RSSISensorSelfT],
+        cls,
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
         **kwargs: Any,
-    ) -> _RSSISensorSelfT | None:
+    ) -> Self | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
@@ -791,6 +865,8 @@ class LQISensor(RSSISensor, id_suffix="lqi"):
     """LQI sensor for a device."""
 
     _attr_name: str = "LQI"
+    _attr_device_class = None
+    _attr_native_unit_of_measurement = None
 
 
 @MULTI_MATCH(
@@ -872,7 +948,7 @@ class AqaraPetFeederPortionsDispensed(Sensor, id_suffix="portions_dispensed"):
 
 @MULTI_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
 class AqaraPetFeederWeightDispensed(Sensor, id_suffix="weight_dispensed"):
-    """Sensor that displays the weight weight dispensed by the pet feeder."""
+    """Sensor that displays the weight dispensed by the pet feeder."""
 
     SENSOR_ATTR = "weight_dispensed"
     _attr_name: str = "Weight dispensed today"

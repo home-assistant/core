@@ -1,7 +1,10 @@
 """The tests for the Ring component."""
 from datetime import timedelta
 
+import requests_mock
+
 import homeassistant.components.ring as ring
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import load_fixture
@@ -13,7 +16,7 @@ VALID_CONFIG = {
 }
 
 
-async def test_setup(hass, requests_mock):
+async def test_setup(hass: HomeAssistant, requests_mock: requests_mock.Mocker) -> None:
     """Test the setup."""
     await async_setup_component(hass, ring.DOMAIN, {})
 

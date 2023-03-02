@@ -221,7 +221,10 @@ class LIFXLight(LIFXEntity, LightEntity):
                     Platform.SELECT, INFRARED_BRIGHTNESS
                 )
                 _LOGGER.warning(
-                    "The 'infrared' attribute of 'lifx.set_state' is deprecated: call 'select.select_option' targeting '%s' instead",
+                    (
+                        "The 'infrared' attribute of 'lifx.set_state' is deprecated:"
+                        " call 'select.select_option' targeting '%s' instead"
+                    ),
                     infrared_entity_id,
                 )
                 bulb.set_infrared(convert_8_to_16(kwargs[ATTR_INFRARED]))

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
+from typing import Any
 
 from energyflip.const import (
     SOURCE_TYPE_ELECTRICITY,
@@ -20,7 +21,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ID, UnitOfEnergy, UnitOfPower, UnitOfVolume
+from homeassistant.const import (
+    CONF_ID,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfVolume,
+    UnitOfVolumeFlowRate,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -31,7 +38,6 @@ from homeassistant.helpers.update_coordinator import (
 from .const import (
     DATA_COORDINATOR,
     DOMAIN,
-    FLOW_CUBIC_METERS_PER_HOUR,
     SENSOR_TYPE_RATE,
     SENSOR_TYPE_THIS_DAY,
     SENSOR_TYPE_THIS_MONTH,
@@ -178,7 +184,7 @@ SENSORS_INFO = [
     ),
     HuisbaasjeSensorEntityDescription(
         name="Huisbaasje Current Gas",
-        native_unit_of_measurement=FLOW_CUBIC_METERS_PER_HOUR,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         sensor_type=SENSOR_TYPE_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         key=SOURCE_TYPE_GAS,
@@ -234,7 +240,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
+    coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]] = hass.data[DOMAIN][
+        config_entry.entry_id
+    ][DATA_COORDINATOR]
     user_id = config_entry.data[CONF_ID]
 
     async_add_entities(
@@ -243,14 +251,16 @@ async def async_setup_entry(
     )
 
 
-class HuisbaasjeSensor(CoordinatorEntity, SensorEntity):
+class HuisbaasjeSensor(
+    CoordinatorEntity[DataUpdateCoordinator[dict[str, dict[str, Any]]]], SensorEntity
+):
     """Defines a Huisbaasje sensor."""
 
     entity_description: HuisbaasjeSensorEntityDescription
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
         user_id: str,
         description: HuisbaasjeSensorEntityDescription,
     ) -> None:
@@ -278,7 +288,7 @@ class HuisbaasjeSensor(CoordinatorEntity, SensorEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return (
+        return bool(
             super().available
             and self.coordinator.data
             and self._source_type in self.coordinator.data

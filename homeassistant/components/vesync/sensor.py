@@ -18,14 +18,14 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
+    EntityCategory,
     UnitOfElectricPotential,
+    UnitOfEnergy,
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -115,7 +115,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         key="energy",
         name="energy use today",
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda device: device.energy_today,
         update_fn=update_energy,
@@ -125,7 +125,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         key="energy-weekly",
         name="energy use weekly",
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda device: device.weekly_energy_total,
         update_fn=update_energy,
@@ -135,7 +135,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         key="energy-monthly",
         name="energy use monthly",
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda device: device.monthly_energy_total,
         update_fn=update_energy,
@@ -145,7 +145,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         key="energy-yearly",
         name="energy use yearly",
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda device: device.yearly_energy_total,
         update_fn=update_energy,

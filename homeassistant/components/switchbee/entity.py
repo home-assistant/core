@@ -98,7 +98,10 @@ class SwitchBeeDeviceEntity(SwitchBeeEntity[_DeviceTypeT]):
 
         if self._is_online:
             _LOGGER.warning(
-                "%s device is not responding, check the status in the SwitchBee mobile app",
+                (
+                    "%s device is not responding, check the status in the SwitchBee"
+                    " mobile app"
+                ),
                 self.name,
             )
             self._is_online = False

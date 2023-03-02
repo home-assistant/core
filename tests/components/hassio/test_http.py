@@ -6,9 +6,15 @@ from aiohttp import StreamReader
 import pytest
 
 from homeassistant.components.hassio.http import _need_auth
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockUser
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_forward_request(hassio_client, aioclient_mock):
+async def test_forward_request(
+    hassio_client, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test fetching normal path."""
     aioclient_mock.post("http://127.0.0.1/beer", text="response")
 
@@ -26,7 +32,7 @@ async def test_forward_request(hassio_client, aioclient_mock):
 @pytest.mark.parametrize(
     "build_type", ["supervisor/info", "homeassistant/update", "host/info"]
 )
-async def test_auth_required_forward_request(hassio_noauth_client, build_type):
+async def test_auth_required_forward_request(hassio_noauth_client, build_type) -> None:
     """Test auth required for normal request."""
     resp = await hassio_noauth_client.post(f"/api/hassio/{build_type}")
 
@@ -46,8 +52,8 @@ async def test_auth_required_forward_request(hassio_noauth_client, build_type):
     ],
 )
 async def test_forward_request_no_auth_for_panel(
-    hassio_client, build_type, aioclient_mock
-):
+    hassio_client, build_type, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test no auth needed for ."""
     aioclient_mock.get(f"http://127.0.0.1/{build_type}", text="response")
 
@@ -62,7 +68,9 @@ async def test_forward_request_no_auth_for_panel(
     assert len(aioclient_mock.mock_calls) == 1
 
 
-async def test_forward_request_no_auth_for_logo(hassio_client, aioclient_mock):
+async def test_forward_request_no_auth_for_logo(
+    hassio_client, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test no auth needed for logo."""
     aioclient_mock.get("http://127.0.0.1/addons/bl_b392/logo", text="response")
 
@@ -77,7 +85,9 @@ async def test_forward_request_no_auth_for_logo(hassio_client, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 1
 
 
-async def test_forward_request_no_auth_for_icon(hassio_client, aioclient_mock):
+async def test_forward_request_no_auth_for_icon(
+    hassio_client, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test no auth needed for icon."""
     aioclient_mock.get("http://127.0.0.1/addons/bl_b392/icon", text="response")
 
@@ -92,7 +102,9 @@ async def test_forward_request_no_auth_for_icon(hassio_client, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 1
 
 
-async def test_forward_log_request(hassio_client, aioclient_mock):
+async def test_forward_log_request(
+    hassio_client, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test fetching normal log path doesn't remove ANSI color escape codes."""
     aioclient_mock.get("http://127.0.0.1/beer/logs", text="\033[32mresponse\033[0m")
 
@@ -107,7 +119,9 @@ async def test_forward_log_request(hassio_client, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 1
 
 
-async def test_bad_gateway_when_cannot_find_supervisor(hassio_client, aioclient_mock):
+async def test_bad_gateway_when_cannot_find_supervisor(
+    hassio_client, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test we get a bad gateway error if we can't find supervisor."""
     aioclient_mock.get("http://127.0.0.1/addons/test/info", exc=asyncio.TimeoutError)
 
@@ -115,7 +129,9 @@ async def test_bad_gateway_when_cannot_find_supervisor(hassio_client, aioclient_
     assert resp.status == HTTPStatus.BAD_GATEWAY
 
 
-async def test_forwarding_user_info(hassio_client, hass_admin_user, aioclient_mock):
+async def test_forwarding_user_info(
+    hassio_client, hass_admin_user: MockUser, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that we forward user info correctly."""
     aioclient_mock.get("http://127.0.0.1/hello")
 
@@ -131,7 +147,9 @@ async def test_forwarding_user_info(hassio_client, hass_admin_user, aioclient_mo
     assert req_headers["X-Hass-Is-Admin"] == "1"
 
 
-async def test_backup_upload_headers(hassio_client, aioclient_mock, caplog):
+async def test_backup_upload_headers(
+    hassio_client, aioclient_mock: AiohttpClientMocker, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that we forward the full header for backup upload."""
     content_type = "multipart/form-data; boundary='--webkit'"
     aioclient_mock.get("http://127.0.0.1/backups/new/upload")
@@ -149,7 +167,9 @@ async def test_backup_upload_headers(hassio_client, aioclient_mock, caplog):
     assert req_headers["Content-Type"] == content_type
 
 
-async def test_backup_download_headers(hassio_client, aioclient_mock):
+async def test_backup_download_headers(
+    hassio_client, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that we forward the full header for backup download."""
     content_disposition = "attachment; filename=test.tar"
     aioclient_mock.get(
@@ -170,7 +190,7 @@ async def test_backup_download_headers(hassio_client, aioclient_mock):
     assert resp.headers["Content-Disposition"] == content_disposition
 
 
-def test_need_auth(hass):
+def test_need_auth(hass: HomeAssistant) -> None:
     """Test if the requested path needs authentication."""
     assert not _need_auth(hass, "addons/test/logo")
     assert _need_auth(hass, "backups/new/upload")
@@ -181,14 +201,16 @@ def test_need_auth(hass):
     assert not _need_auth(hass, "supervisor/logs")
 
 
-async def test_stream(hassio_client, aioclient_mock):
+async def test_stream(hassio_client, aioclient_mock: AiohttpClientMocker) -> None:
     """Verify that the request is a stream."""
     aioclient_mock.get("http://127.0.0.1/test")
     await hassio_client.get("/api/hassio/test", data="test")
     assert isinstance(aioclient_mock.mock_calls[-1][2], StreamReader)
 
 
-async def test_entrypoint_cache_control(hassio_client, aioclient_mock):
+async def test_entrypoint_cache_control(
+    hassio_client, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that we return cache control for requests to the entrypoint only."""
     aioclient_mock.get("http://127.0.0.1/app/entrypoint.js")
     aioclient_mock.get("http://127.0.0.1/app/entrypoint.fdhkusd8y43r.js")

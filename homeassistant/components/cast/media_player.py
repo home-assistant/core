@@ -1,7 +1,6 @@
 """Provide functionality to interact with Cast devices on the network."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 from contextlib import suppress
 from datetime import datetime
@@ -43,6 +42,7 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CAST_APP_ID_HOMEASSISTANT_LOVELACE,
+    CONF_UUID,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
@@ -59,7 +59,6 @@ from .const import (
     ADDED_CAST_DEVICES_KEY,
     CAST_MULTIZONE_MANAGER_KEY,
     CONF_IGNORE_CEC,
-    CONF_UUID,
     DOMAIN as CAST_DOMAIN,
     SIGNAL_CAST_DISCOVERED,
     SIGNAL_CAST_REMOVED,
@@ -186,10 +185,11 @@ class CastDevice:
             self.hass, SIGNAL_CAST_REMOVED, self._async_cast_removed
         )
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_stop)
-        # asyncio.create_task is used to avoid delaying startup wrapup if the device
+        # async_create_background_task is used to avoid delaying startup wrapup if the device
         # is discovered already during startup but then fails to respond
-        asyncio.create_task(
-            async_create_catching_coro(self._async_connect_to_chromecast())
+        self.hass.async_create_background_task(
+            async_create_catching_coro(self._async_connect_to_chromecast()),
+            "cast-connect",
         )
 
     async def _async_tear_down(self) -> None:
@@ -375,7 +375,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             tts_base_url = None
             url_description = ""
             if "tts" in self.hass.config.components:
-                # pylint: disable=[import-outside-toplevel]
+                # pylint: disable-next=[import-outside-toplevel]
                 from homeassistant.components import tts
 
                 with suppress(KeyError):  # base_url not configured
@@ -396,9 +396,11 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
                     url_description = f" from internal_url ({internal_url})"
 
             _LOGGER.error(
-                "Failed to cast media %s%s. Please make sure the URL is: "
-                "Reachable from the cast device and either a publicly resolvable "
-                "hostname or an IP address",
+                (
+                    "Failed to cast media %s%s. Please make sure the URL is: "
+                    "Reachable from the cast device and either a publicly resolvable "
+                    "hostname or an IP address"
+                ),
                 media_status.content_id,
                 url_description,
             )
@@ -474,8 +476,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
 
     # ========== Service Calls ==========
     def _media_controller(self):
-        """
-        Return media controller.
+        """Return media controller.
 
         First try from our own cast, then groups which our cast is a member in.
         """
@@ -751,8 +752,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         )
 
     def _media_status(self):
-        """
-        Return media status.
+        """Return media status.
 
         First try from our own cast, then groups which our cast is a member in.
         """

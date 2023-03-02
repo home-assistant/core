@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_PORT,
+    CONF_UUID,
     UnitOfEnergy,
     UnitOfPower,
 )
@@ -31,8 +32,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_UUID = "uuid"
 
 DEFAULT_HOST = "localhost"
 DEFAULT_NAME = "Volkszaehler"

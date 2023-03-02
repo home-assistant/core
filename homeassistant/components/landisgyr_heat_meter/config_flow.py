@@ -122,7 +122,8 @@ async def get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
     ports = await hass.async_add_executor_job(list_ports.comports)
     port_descriptions = {}
     for port in ports:
-        # this prevents an issue with usb_device_from_port not working for ports without vid on RPi
+        # this prevents an issue with usb_device_from_port
+        # not working for ports without vid on RPi
         if port.vid:
             usb_device = usb.usb_device_from_port(port)
             dev_path = usb.get_serial_by_id(usb_device.device)

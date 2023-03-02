@@ -7,7 +7,12 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, PRESSURE_PSI, TEMP_FAHRENHEIT, UnitOfVolume
+from homeassistant.const import (
+    PERCENTAGE,
+    UnitOfPressure,
+    UnitOfTemperature,
+    UnitOfVolume,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -120,7 +125,7 @@ class FloTemperatureSensor(FloEntity, SensorEntity):
     """Monitors the temperature."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_native_unit_of_measurement = TEMP_FAHRENHEIT
+    _attr_native_unit_of_measurement = UnitOfTemperature.FAHRENHEIT
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
 
     def __init__(self, name, device):
@@ -160,7 +165,7 @@ class FloPressureSensor(FloEntity, SensorEntity):
     """Monitors the water pressure."""
 
     _attr_device_class = SensorDeviceClass.PRESSURE
-    _attr_native_unit_of_measurement = PRESSURE_PSI
+    _attr_native_unit_of_measurement = UnitOfPressure.PSI
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
 
     def __init__(self, device):

@@ -1,7 +1,7 @@
 """Sensor for Risco Events."""
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Collection, Mapping
 from typing import Any
 
 from homeassistant.components.binary_sensor import DOMAIN as BS_DOMAIN
@@ -63,10 +63,17 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class RiscoSensor(CoordinatorEntity, SensorEntity):
+class RiscoSensor(CoordinatorEntity[RiscoEventsDataUpdateCoordinator], SensorEntity):
     """Sensor for Risco events."""
 
-    def __init__(self, coordinator, category_id, excludes, name, entry_id) -> None:
+    def __init__(
+        self,
+        coordinator: RiscoEventsDataUpdateCoordinator,
+        category_id: int | None,
+        excludes: Collection[int] | None,
+        name: str,
+        entry_id: str,
+    ) -> None:
         """Initialize sensor."""
         super().__init__(coordinator)
         self._event = None

@@ -10,9 +10,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TIME_SECONDS, UnitOfDataRate, UnitOfInformation
+from homeassistant.const import (
+    EntityCategory,
+    UnitOfDataRate,
+    UnitOfInformation,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -90,7 +94,7 @@ SENSOR_DESCRIPTIONS: tuple[UpnpSensorEntityDescription, ...] = (
         key=ROUTER_UPTIME,
         name="Uptime",
         icon="mdi:server-network",
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         entity_registry_enabled_default=False,
         format="d",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -178,7 +182,8 @@ class UpnpSensor(UpnpEntity, SensorEntity):
     @property
     def native_value(self) -> str | None:
         """Return the state of the device."""
-        value = self.coordinator.data[self.entity_description.value_key]
-        if value is None:
+        if (key := self.entity_description.value_key) is None:
+            return None
+        if (value := self.coordinator.data[key]) is None:
             return None
         return format(value, self.entity_description.format)

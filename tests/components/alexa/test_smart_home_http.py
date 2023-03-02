@@ -4,9 +4,12 @@ import json
 
 from homeassistant.components.alexa import DOMAIN, smart_home_http
 from homeassistant.const import CONTENT_TYPE_JSON
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .test_common import get_new_request
+
+from tests.typing import ClientSessionGenerator
 
 
 async def do_http_discovery(config, hass, hass_client):
@@ -23,7 +26,9 @@ async def do_http_discovery(config, hass, hass_client):
     return response
 
 
-async def test_http_api(hass, hass_client):
+async def test_http_api(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """With `smart_home:` HTTP API is exposed."""
     config = {"alexa": {"smart_home": None}}
 
@@ -35,7 +40,9 @@ async def test_http_api(hass, hass_client):
     assert response_data["event"]["header"]["name"] == "Discover.Response"
 
 
-async def test_http_api_disabled(hass, hass_client):
+async def test_http_api_disabled(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Without `smart_home:`, the HTTP API is disabled."""
     config = {"alexa": {}}
     response = await do_http_discovery(config, hass, hass_client)

@@ -17,15 +17,15 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
-    TEMP_CELSIUS,
+    EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfEnergy,
     UnitOfPower,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utc_from_timestamp
@@ -103,7 +103,7 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
     FritzSensorEntityDescription(
         key="temperature",
         name="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -158,7 +158,7 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
     FritzSensorEntityDescription(
         key="total_energy",
         name="Total Energy",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suitable=lambda device: device.has_powermeter,  # type: ignore[no-any-return]
@@ -168,7 +168,7 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
     FritzSensorEntityDescription(
         key="comfort_temperature",
         name="Comfort Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         suitable=suitable_comfort_temperature,
         native_value=lambda device: device.comfort_temperature,  # type: ignore[no-any-return]
@@ -176,7 +176,7 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
     FritzSensorEntityDescription(
         key="eco_temperature",
         name="Eco Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         suitable=suitable_eco_temperature,
         native_value=lambda device: device.eco_temperature,  # type: ignore[no-any-return]
@@ -184,7 +184,7 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
     FritzSensorEntityDescription(
         key="nextchange_temperature",
         name="Next Scheduled Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         suitable=suitable_nextchange_temperature,
         native_value=lambda device: device.nextchange_temperature,  # type: ignore[no-any-return]

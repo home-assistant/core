@@ -256,7 +256,6 @@ def _async_setup_keypads(
     leap_to_keypad_button_names: dict[int, dict[int, str]] = {}
 
     for bridge_button in bridge_buttons.values():
-
         parent_device = cast(str, bridge_button["parent_device"])
         bridge_keypad = bridge_devices[parent_device]
         keypad_lutron_device_id = cast(int, bridge_keypad["device_id"])
@@ -499,7 +498,7 @@ def _async_subscribe_keypad_events(
 async def async_unload_entry(
     hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
-    """Unload the bridge bridge from a config entry."""
+    """Unload the bridge from a config entry."""
     data: LutronCasetaData = hass.data[DOMAIN][entry.entry_id]
     await data.bridge.close()
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
@@ -538,7 +537,12 @@ class LutronCasetaDevice(Entity):
             # here. Since it would be a breaking change to change the identifier
             # we are ignoring the type error here until it can be migrated to
             # a string in a future release.
-            identifiers={(DOMAIN, self._handle_none_serial(self.serial))},  # type: ignore[arg-type]
+            identifiers={
+                (
+                    DOMAIN,
+                    self._handle_none_serial(self.serial),  # type: ignore[arg-type]
+                )
+            },
             manufacturer=MANUFACTURER,
             model=f"{device['model']} ({device['type']})",
             name=full_name,

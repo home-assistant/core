@@ -19,18 +19,18 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DISKS,
     PERCENTAGE,
-    TEMP_CELSIUS,
+    EntityCategory,
     UnitOfDataRate,
     UnitOfInformation,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.dt import utcnow
 
 from . import SynoApi
 from .const import CONF_VOLUMES, DOMAIN, ENTITY_UNIT_LOAD
+from .coordinator import SynologyDSMCentralUpdateCoordinator
 from .entity import (
     SynologyDSMBaseEntity,
     SynologyDSMDeviceEntity,
@@ -223,7 +223,7 @@ STORAGE_VOL_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         api_key=SynoStorage.API_KEY,
         key="volume_disk_temp_avg",
         name="Average Disk Temp",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -231,7 +231,7 @@ STORAGE_VOL_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         api_key=SynoStorage.API_KEY,
         key="volume_disk_temp_max",
         name="Maximum Disk Temp",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -257,7 +257,7 @@ STORAGE_DISK_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         api_key=SynoStorage.API_KEY,
         key="disk_temp",
         name="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -269,7 +269,7 @@ INFORMATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         api_key=SynoDSMInformation.API_KEY,
         key="temperature",
         name="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -328,7 +328,9 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SynoDSMSensor(SynologyDSMBaseEntity, SensorEntity):
+class SynoDSMSensor(
+    SynologyDSMBaseEntity[SynologyDSMCentralUpdateCoordinator], SensorEntity
+):
     """Mixin for sensor specific attributes."""
 
     entity_description: SynologyDSMSensorEntityDescription
@@ -336,7 +338,7 @@ class SynoDSMSensor(SynologyDSMBaseEntity, SensorEntity):
     def __init__(
         self,
         api: SynoApi,
-        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
+        coordinator: SynologyDSMCentralUpdateCoordinator,
         description: SynologyDSMSensorEntityDescription,
     ) -> None:
         """Initialize the Synology DSM sensor entity."""
@@ -383,7 +385,7 @@ class SynoDSMStorageSensor(SynologyDSMDeviceEntity, SynoDSMSensor):
     def __init__(
         self,
         api: SynoApi,
-        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
+        coordinator: SynologyDSMCentralUpdateCoordinator,
         description: SynologyDSMSensorEntityDescription,
         device_id: str | None = None,
     ) -> None:
@@ -410,7 +412,7 @@ class SynoDSMInfoSensor(SynoDSMSensor):
     def __init__(
         self,
         api: SynoApi,
-        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
+        coordinator: SynologyDSMCentralUpdateCoordinator,
         description: SynologyDSMSensorEntityDescription,
     ) -> None:
         """Initialize the Synology SynoDSMInfoSensor entity."""

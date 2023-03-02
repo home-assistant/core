@@ -11,18 +11,17 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ENERGY_WATT_HOUR,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
-    TEMP_CELSIUS,
-    TIME_MINUTES,
-    TIME_SECONDS,
+    EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfEnergy,
     UnitOfPower,
+    UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -64,7 +63,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="whOut",
         name="Wh out",
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
@@ -72,7 +71,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="whStored",
         name="Wh stored",
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -92,13 +91,13 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="timeToEmptyFull",
         name="Time to empty/full",
         device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
     ),
     SensorEntityDescription(
         key="temperature",
         name="Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
@@ -112,7 +111,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="timestamp",
         name="Total run time",
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),

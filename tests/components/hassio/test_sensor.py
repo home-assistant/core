@@ -1,15 +1,16 @@
 """The tests for the hassio sensors."""
-
 import os
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.hassio import DOMAIN
-from homeassistant.helpers import entity_registry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
@@ -142,7 +143,7 @@ def mock_all(aioclient_mock, request):
 
 
 @pytest.mark.parametrize(
-    "entity_id,expected",
+    ("entity_id", "expected"),
     [
         ("sensor.home_assistant_operating_system_version", "1.0.0"),
         ("sensor.home_assistant_operating_system_newest_version", "1.0.0"),
@@ -156,7 +157,13 @@ def mock_all(aioclient_mock, request):
         ("sensor.test2_memory_percent", "unavailable"),
     ],
 )
-async def test_sensor(hass, entity_id, expected, aioclient_mock):
+async def test_sensor(
+    hass: HomeAssistant,
+    entity_id,
+    expected,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test hassio OS and addons sensor."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -174,8 +181,7 @@ async def test_sensor(hass, entity_id, expected, aioclient_mock):
     assert hass.states.get(entity_id) is None
 
     # Enable the entity.
-    ent_reg = entity_registry.async_get(hass)
-    ent_reg.async_update_entity(entity_id, disabled_by=None)
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 

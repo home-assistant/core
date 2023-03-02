@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
-    TEMP_CELSIUS,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
+    UnitOfTemperature,
 )
 
 from .sensor_entity_description import GrowattSensorEntityDescription
@@ -18,7 +18,7 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         key="inverter_energy_today",
         name="Energy today",
         api_key="powerToday",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         precision=1,
     ),
@@ -26,7 +26,7 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         key="inverter_energy_total",
         name="Lifetime energy output",
         api_key="powerTotal",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         precision=1,
         state_class=SensorStateClass.TOTAL,
@@ -155,7 +155,7 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         key="inverter_ipm_temperature",
         name="Intelligent Power Management temperature",
         api_key="ipmTemperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         precision=1,
     ),
@@ -163,7 +163,7 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         key="inverter_temperature",
         name="Temperature",
         api_key="temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         precision=1,
     ),

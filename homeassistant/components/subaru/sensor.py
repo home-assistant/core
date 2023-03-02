@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 import subarulink.const as sc
 
@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, PRESSURE_HPA, UnitOfLength, UnitOfVolume
+from homeassistant.const import PERCENTAGE, UnitOfLength, UnitOfPressure, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -84,28 +84,28 @@ API_GEN_2_SENSORS = [
         key=sc.TIRE_PRESSURE_FL,
         device_class=SensorDeviceClass.PRESSURE,
         name="Tire pressure FL",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.TIRE_PRESSURE_FR,
         device_class=SensorDeviceClass.PRESSURE,
         name="Tire pressure FR",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.TIRE_PRESSURE_RL,
         device_class=SensorDeviceClass.PRESSURE,
         name="Tire pressure RL",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.TIRE_PRESSURE_RR,
         device_class=SensorDeviceClass.PRESSURE,
         name="Tire pressure RR",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 ]
@@ -131,7 +131,6 @@ EV_SENSORS = [
         key=sc.EV_TIME_TO_FULLY_CHARGED_UTC,
         device_class=SensorDeviceClass.TIMESTAMP,
         name="EV time to full charge",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
 ]
 
@@ -208,11 +207,11 @@ class SubaruSensor(
             return None
 
         if unit in LENGTH_UNITS:
-            return round(unit_system.length(current_value, unit), 1)
+            return round(unit_system.length(current_value, cast(str, unit)), 1)
 
         if unit in PRESSURE_UNITS and unit_system == US_CUSTOMARY_SYSTEM:
             return round(
-                unit_system.pressure(current_value, unit),
+                unit_system.pressure(current_value, cast(str, unit)),
                 1,
             )
 
@@ -269,7 +268,8 @@ async def _async_migrate_entries(
     all_sensors.extend(API_GEN_2_SENSORS)
     all_sensors.extend(SAFETY_SENSORS)
 
-    # Old unique_id is (previously title-cased) sensor name (e.g. "VIN_Avg Fuel Consumption")
+    # Old unique_id is (previously title-cased) sensor name
+    # (e.g. "VIN_Avg Fuel Consumption")
     replacements = {str(s.name).upper(): s.key for s in all_sensors}
 
     @callback

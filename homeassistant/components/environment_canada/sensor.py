@@ -228,7 +228,6 @@ AQHI_SENSOR = ECSensorEntityDescription(
     key="aqhi",
     name="AQHI",
     device_class=SensorDeviceClass.AQI,
-    native_unit_of_measurement="AQI",
     state_class=SensorStateClass.MEASUREMENT,
     value_fn=_get_aqhi_value,
 )

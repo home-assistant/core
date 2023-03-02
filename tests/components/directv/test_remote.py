@@ -19,8 +19,6 @@ CLIENT_ENTITY_ID = f"{REMOTE_DOMAIN}.client"
 MAIN_ENTITY_ID = f"{REMOTE_DOMAIN}.host"
 UNAVAILABLE_ENTITY_ID = f"{REMOTE_DOMAIN}.unavailable_client"
 
-# pylint: disable=redefined-outer-name
-
 
 async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Test setup with basic config."""

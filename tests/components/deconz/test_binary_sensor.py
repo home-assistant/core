@@ -1,5 +1,4 @@
 """deCONZ binary sensor platform tests."""
-
 from unittest.mock import patch
 
 import pytest
@@ -17,9 +16,10 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    EntityCategory,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 
 from .test_gateway import (
@@ -28,8 +28,12 @@ from .test_gateway import (
     setup_deconz_integration,
 )
 
+from tests.test_util.aiohttp import AiohttpClientMocker
 
-async def test_no_binary_sensors(hass, aioclient_mock):
+
+async def test_no_binary_sensors(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that no sensors in deconz results in no sensor entities."""
     await setup_deconz_integration(hass, aioclient_mock)
     assert len(hass.states.async_all()) == 0
@@ -473,10 +477,14 @@ TEST_DATA = [
 ]
 
 
-@pytest.mark.parametrize("sensor_data, expected", TEST_DATA)
+@pytest.mark.parametrize(("sensor_data", "expected"), TEST_DATA)
 async def test_binary_sensors(
-    hass, aioclient_mock, mock_deconz_websocket, sensor_data, expected
-):
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_deconz_websocket,
+    sensor_data,
+    expected,
+) -> None:
     """Test successful creation of binary sensor entities."""
     ent_reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)
@@ -541,7 +549,9 @@ async def test_binary_sensors(
     assert len(hass.states.async_all()) == 0
 
 
-async def test_not_allow_clip_sensor(hass, aioclient_mock):
+async def test_not_allow_clip_sensor(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that CLIP sensors are not allowed."""
     data = {
         "sensors": {
@@ -563,7 +573,9 @@ async def test_not_allow_clip_sensor(hass, aioclient_mock):
     assert len(hass.states.async_all()) == 0
 
 
-async def test_allow_clip_sensor(hass, aioclient_mock):
+async def test_allow_clip_sensor(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that CLIP sensors can be allowed."""
     data = {
         "sensors": {
@@ -628,7 +640,9 @@ async def test_allow_clip_sensor(hass, aioclient_mock):
     assert hass.states.get("binary_sensor.clip_flag_boot_time").state == STATE_ON
 
 
-async def test_add_new_binary_sensor(hass, aioclient_mock, mock_deconz_websocket):
+async def test_add_new_binary_sensor(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test that adding a new binary sensor works."""
     event_added_sensor = {
         "t": "event",
@@ -656,8 +670,8 @@ async def test_add_new_binary_sensor(hass, aioclient_mock, mock_deconz_websocket
 
 
 async def test_add_new_binary_sensor_ignored_load_entities_on_service_call(
-    hass, aioclient_mock, mock_deconz_websocket
-):
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test that adding a new binary sensor is not allowed."""
     sensor = {
         "name": "Presence sensor",
@@ -705,8 +719,8 @@ async def test_add_new_binary_sensor_ignored_load_entities_on_service_call(
 
 
 async def test_add_new_binary_sensor_ignored_load_entities_on_options_change(
-    hass, aioclient_mock, mock_deconz_websocket
-):
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test that adding a new binary sensor is not allowed."""
     sensor = {
         "name": "Presence sensor",

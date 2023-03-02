@@ -24,7 +24,7 @@ from homeassistant.components.withings import async_unload_entry
 from homeassistant.components.withings.common import (
     ConfigEntryWithingsApi,
     DataManager,
-    WithingsAttribute,
+    WithingsEntityDescription,
     get_all_data_managers,
     get_attribute_unique_id,
 )
@@ -198,7 +198,7 @@ class ComponentFactory:
             const.DOMAIN, context={"source": SOURCE_USER}
         )
         assert result
-        # pylint: disable=protected-access
+
         state = config_entry_oauth2_flow._encode_jwt(
             self._hass,
             {
@@ -325,10 +325,13 @@ def get_data_manager_by_user_id(
 
 
 async def async_get_entity_id(
-    hass: HomeAssistant, attribute: WithingsAttribute, user_id: int, platform: str
+    hass: HomeAssistant,
+    description: WithingsEntityDescription,
+    user_id: int,
+    platform: str,
 ) -> str | None:
     """Get an entity id for a user's attribute."""
     entity_registry = er.async_get(hass)
-    unique_id = get_attribute_unique_id(attribute, user_id)
+    unique_id = get_attribute_unique_id(description, user_id)
 
     return entity_registry.async_get_entity_id(platform, const.DOMAIN, unique_id)

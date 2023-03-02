@@ -25,9 +25,8 @@ from homeassistant.const import (
     CONF_TEMPERATURE_UNIT,
     CONF_USERNAME,
     CONF_ZONE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
     Platform,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
@@ -188,7 +187,7 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
             hass, await async_discover_devices(hass, DISCOVER_SCAN_TIMEOUT)
         )
 
-    asyncio.create_task(_async_discovery())
+    hass.async_create_background_task(_async_discovery(), "elkm1 setup discovery")
     async_track_time_interval(hass, _async_discovery, DISCOVERY_INTERVAL)
 
     if DOMAIN not in hass_config:
@@ -298,7 +297,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(f"Timed out connecting to {conf[CONF_HOST]}") from exc
 
     elk_temp_unit = elk.panel.temperature_units
-    temperature_unit = TEMP_CELSIUS if elk_temp_unit == "C" else TEMP_FAHRENHEIT
+    if elk_temp_unit == "C":
+        temperature_unit = UnitOfTemperature.CELSIUS
+    else:
+        temperature_unit = UnitOfTemperature.FAHRENHEIT
     config["temperature_unit"] = temperature_unit
     hass.data[DOMAIN][entry.entry_id] = {
         "elk": elk,
