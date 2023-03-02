@@ -1,8 +1,10 @@
 """Config flow to configure the Obihai integration."""
 from __future__ import annotations
 
+from socket import gaierror, gethostbyname
 from typing import Any
 
+from getmac import get_mac_address
 import voluptuous as vol
 
 from homeassistant.components import dhcp
@@ -55,15 +57,19 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_HOST])
-            self._abort_if_unique_id_configured()
+            try:
+                ip = gethostbyname(user_input[CONF_HOST])
+                await self.async_set_unique_id(get_mac_address(ip=ip))
+                self._abort_if_unique_id_configured()
 
-            if await async_validate_creds(self.hass, user_input):
-                return self.async_create_entry(
-                    title=user_input[CONF_HOST],
-                    data=user_input,
-                )
-            errors["base"] = "cannot_connect"
+                if await async_validate_creds(self.hass, user_input):
+                    return self.async_create_entry(
+                        title=user_input[CONF_HOST],
+                        data=user_input,
+                    )
+                errors["base"] = "invalid_auth"
+            except gaierror:
+                errors["base"] = "cannot_connect"
 
         user_input = {CONF_HOST: self._host if self._host else ""}
         data_schema = self.add_suggested_values_to_schema(DATA_SCHEMA, user_input)
@@ -78,7 +84,7 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         self._host = discovery_info.ip
 
-        await self.async_set_unique_id(self._host)
+        await self.async_set_unique_id(discovery_info.macaddress)
         self._abort_if_unique_id_configured()
 
         user_input = {
@@ -92,7 +98,7 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
                 title=user_input[CONF_HOST],
                 data=user_input,
             )
-        errors["base"] = "cannot_connect"
+        errors["base"] = "invalid_auth"
 
         data_schema = self.add_suggested_values_to_schema(DATA_SCHEMA, user_input)
         return self.async_show_form(
@@ -104,16 +110,21 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
     # DEPRECATED
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Handle a flow initialized by importing a config."""
-        await self.async_set_unique_id(config[CONF_HOST])
-        self._abort_if_unique_id_configured()
-        if await async_validate_creds(self.hass, config):
-            return self.async_create_entry(
-                title=config.get(CONF_NAME, config[CONF_HOST]),
-                data={
-                    CONF_HOST: config[CONF_HOST],
-                    CONF_PASSWORD: config[CONF_PASSWORD],
-                    CONF_USERNAME: config[CONF_USERNAME],
-                },
-            )
+        try:
+            ip = gethostbyname(config[CONF_HOST])
+            await self.async_set_unique_id(get_mac_address(ip=ip))
+            self._abort_if_unique_id_configured()
 
-        return self.async_abort(reason="cannot_connect")
+            if await async_validate_creds(self.hass, config):
+                return self.async_create_entry(
+                    title=config.get(CONF_NAME, config[CONF_HOST]),
+                    data={
+                        CONF_HOST: config[CONF_HOST],
+                        CONF_PASSWORD: config[CONF_PASSWORD],
+                        CONF_USERNAME: config[CONF_USERNAME],
+                    },
+                )
+
+            return self.async_abort(reason="invalid_auth")
+        except gaierror:
+            return self.async_abort(reason="cannot_connect")

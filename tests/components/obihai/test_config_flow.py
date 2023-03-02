@@ -1,4 +1,5 @@
 """Test the Obihai config flow."""
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -12,7 +13,7 @@ from . import DHCP_SERVICE_INFO, USER_INPUT
 
 VALIDATE_AUTH_PATCH = "homeassistant.components.obihai.config_flow.validate_auth"
 
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+pytestmark = pytest.mark.usefixtures("mock_setup_entry", "mock_get_mac_address")
 
 
 async def test_user_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -25,7 +26,7 @@ async def test_user_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch("pyobihai.PyObihai.check_account"):
+    with patch(VALIDATE_AUTH_PATCH):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             USER_INPUT,
@@ -40,7 +41,7 @@ async def test_user_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
 
 
 async def test_auth_failure(hass: HomeAssistant) -> None:
-    """Test we get the authentication error."""
+    """Test we get the authentication error for user flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -51,6 +52,23 @@ async def test_auth_failure(hass: HomeAssistant) -> None:
             USER_INPUT,
         )
         await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"]["base"] == "invalid_auth"
+
+
+async def test_connect_failure(hass: HomeAssistant, mock_gaierror: Generator) -> None:
+    """Test we get the connection error for user flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -71,7 +89,7 @@ async def test_yaml_import(hass: HomeAssistant) -> None:
     assert "errors" not in result
 
 
-async def test_yaml_import_fail(hass: HomeAssistant) -> None:
+async def test_yaml_import_auth_fail(hass: HomeAssistant) -> None:
     """Test the YAML import fails."""
     with patch(VALIDATE_AUTH_PATCH, return_value=False):
         result = await hass.config_entries.flow.async_init(
@@ -80,6 +98,22 @@ async def test_yaml_import_fail(hass: HomeAssistant) -> None:
             data=USER_INPUT,
         )
         await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "invalid_auth"
+    assert "errors" not in result
+
+
+async def test_yaml_import_connect_fail(
+    hass: HomeAssistant, mock_gaierror: Generator
+) -> None:
+    """Test the YAML import fails with invalid host."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data=USER_INPUT,
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
@@ -117,4 +151,4 @@ async def test_dhcp_flow_auth_failure(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"]["base"] == "cannot_connect"
+    assert result["errors"]["base"] == "invalid_auth"
