@@ -125,7 +125,7 @@ def session_scope(
             need_rollback = True
             session.commit()
     except Exception as err:  # pylint: disable=broad-except
-        _LOGGER.error("Error executing query: %s", err)
+        _LOGGER.error("Error executing query: %s", err, exc_info=True)
         if need_rollback:
             session.rollback()
         if not exception_filter or not exception_filter(err):
