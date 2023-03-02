@@ -215,7 +215,7 @@ class NukiEntity(CoordinatorEntity[NukiCoordinator], Generic[_NukiDeviceT]):
             "identifiers": {(DOMAIN, parse_id(self._nuki_device.nuki_id))},
             "name": self._nuki_device.name,
             "manufacturer": "Nuki Home Solutions GmbH",
-            "model": self._nuki_device.device_type_str.capitalize(),
+            "model": self._nuki_device.device_model_str.capitalize(),
             "sw_version": self._nuki_device.firmware_version,
             "via_device": (DOMAIN, self.coordinator.bridge_id),
         }
