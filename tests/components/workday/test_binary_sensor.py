@@ -212,6 +212,8 @@ class TestWorkdaySetup:
             setup_component(self.hass, "workday", self.config_province_domain)
             self.hass.block_till_done()
 
+        self.hass.start()
+
         entity = self.hass.states.get("binary_sensor.workday_sensor")
         assert entity is not None
 
@@ -355,6 +357,7 @@ class TestWorkdaySetup:
         """Test if public holidays are reported correctly."""
         with assert_setup_component(1, "workday"):
             setup_component(self.hass, "workday", self.config_state_domain)
+            self.hass.block_till_done()
 
         self.hass.start()
 
@@ -379,6 +382,7 @@ class TestWorkdaySetup:
         """Test if public holidays are reported correctly."""
         with assert_setup_component(1, "workday"):
             setup_component(self.hass, "workday", self.config_nostate_domain)
+            self.hass.block_till_done()
 
         self.hass.start()
 
@@ -419,6 +423,7 @@ class TestWorkdaySetup:
         """Test if public holidays are reported correctly."""
         with assert_setup_component(1, "workday"):
             setup_component(self.hass, "workday", self.config_includeholiday_domain)
+            self.hass.block_till_done()
 
         self.hass.start()
 
@@ -443,6 +448,7 @@ class TestWorkdaySetup:
         """Test if tomorrow are reported correctly."""
         with assert_setup_component(1, "workday"):
             setup_component(self.hass, "workday", self.config_tomorrow_domain)
+            self.hass.block_till_done()
 
         self.hass.start()
 
@@ -467,6 +473,7 @@ class TestWorkdaySetup:
         """Test if the day after tomorrow are reported correctly."""
         with assert_setup_component(1, "workday"):
             setup_component(self.hass, "workday", self.config_day_after_tomorrow_domain)
+            self.hass.block_till_done()
 
         self.hass.start()
 
@@ -491,6 +498,7 @@ class TestWorkdaySetup:
         """Test if yesterday are reported correctly."""
         with assert_setup_component(1, "workday"):
             setup_component(self.hass, "workday", self.config_yesterday_domain)
+            self.hass.block_till_done()
 
         self.hass.start()
 
@@ -517,6 +525,7 @@ class TestWorkdaySetup:
         """Test if public holidays are reported correctly."""
         with assert_setup_component(1, "workday"):
             setup_component(self.hass, "workday", self.config_example1_domain)
+            self.hass.block_till_done()
 
         self.hass.start()
 
@@ -541,6 +550,7 @@ class TestWorkdaySetup:
         """Test if public holidays are reported correctly."""
         with assert_setup_component(1, "workday"):
             setup_component(self.hass, "workday", self.config_example2_domain)
+            self.hass.block_till_done()
 
         self.hass.start()
 
@@ -565,6 +575,7 @@ class TestWorkdaySetup:
         """Test if public holidays are reported correctly."""
         with assert_setup_component(1, "workday"):
             setup_component(self.hass, "workday", self.config_example2_domain)
+            self.hass.block_till_done()
 
         self.hass.start()
 
@@ -596,6 +607,7 @@ class TestWorkdaySetup:
         """Test if removed holidays are reported correctly."""
         with assert_setup_component(1, "workday"):
             setup_component(self.hass, "workday", self.config_remove_holidays_domain)
+            self.hass.block_till_done()
 
         self.hass.start()
 
@@ -624,8 +636,9 @@ class TestWorkdaySetup:
             setup_component(
                 self.hass, "workday", self.config_remove_named_holidays_domain
             )
+            self.hass.block_till_done()
 
         self.hass.start()
 
-    #     entity = self.hass.states.get("binary_sensor.workday_sensor")
-    #     assert entity.state == "on"
+        entity = self.hass.states.get("binary_sensor.workday_sensor")
+        assert entity.state == "on"
