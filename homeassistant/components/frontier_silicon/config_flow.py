@@ -8,18 +8,10 @@ from afsapi import AFSAPI, ConnectionError as FSConnectionError, InvalidPinExcep
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import ssdp
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import (
-    CONF_PIN,
-    CONF_WEBFSAPI_URL,
-    DEFAULT_PIN,
-    DEFAULT_PORT,
-    DOMAIN,
-    SSDP_ATTR_SPEAKER_NAME,
-)
+from .const import CONF_PIN, CONF_WEBFSAPI_URL, DEFAULT_PIN, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,40 +95,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 return await self._async_step_device_config_if_needed()
 
-        data_schema = self.add_suggested_values_to_schema(STEP_USER_DATA_SCHEMA, user_input)
+        data_schema = self.add_suggested_values_to_schema(
+            STEP_USER_DATA_SCHEMA, user_input
+        )
         return self.async_show_form(
             step_id="user", data_schema=data_schema, errors=errors
         )
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
-        """Process entity discovered via SSDP."""
-
-        device_url = discovery_info.ssdp_location
-
-        speaker_name = discovery_info.ssdp_headers.get(SSDP_ATTR_SPEAKER_NAME)
-        self.context["title_placeholders"] = {"name": speaker_name}
-
-        try:
-            self._webfsapi_url = await AFSAPI.get_webfsapi_endpoint(device_url)
-        except FSConnectionError:
-            return self.async_abort(reason="cannot_connect")
-        except Exception as exception:  # pylint: disable=broad-except
-            _LOGGER.exception(exception)
-            return self.async_abort(reason="unknown")
-
-        # For manually added devices the unique_id is the radio_id,
-        # for devices discovered through SSDP it is the UDN
-        self._unique_id = discovery_info.ssdp_udn
-        await self.async_set_unique_id(self._unique_id)
-        self._abort_if_unique_id_configured(
-            updates={CONF_WEBFSAPI_URL: self._webfsapi_url}, reload_on_update=True
-        )
-
-        return await self._async_step_device_config_if_needed(show_confirm=True)
-
-    async def _async_step_device_config_if_needed(
-        self
-    ) -> FlowResult:
+    async def _async_step_device_config_if_needed(self) -> FlowResult:
         """Most users will not have changed the default PIN on their radio.
 
         We try to use this default PIN, and only if this fails ask for it via `async_step_device_config`
@@ -159,17 +125,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             pass  # Ask for a PIN
 
         return await self.async_step_device_config()
-
-    async def async_step_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Allow the user to confirm adding the device. Used when the default PIN could successfully be used."""
-
-        if user_input is not None:
-            return await self._create_entry()
-
-        self._set_confirm_only()
-        return self.async_show_form(step_id="confirm")
 
     async def async_step_device_config(
         self, user_input: dict[str, Any] | None = None
@@ -210,10 +165,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             return await self._create_entry(pin=user_input[CONF_PIN])
 
-        data_schema = self.add_suggested_values_to_schema(STEP_DEVICE_CONFIG_DATA_SCHEMA, user_input)
+        data_schema = self.add_suggested_values_to_schema(
+            STEP_DEVICE_CONFIG_DATA_SCHEMA, user_input
+        )
         return self.async_show_form(
             step_id="device_config",
-            data_schema=STEP_DEVICE_CONFIG_DATA_SCHEMA,
+            data_schema=data_schema,
             errors=errors,
         )
 
