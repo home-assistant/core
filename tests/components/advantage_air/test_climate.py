@@ -172,6 +172,9 @@ async def test_climate_async_setup_entry(
     )
     assert aioclient_mock.mock_calls[-2][0] == "GET"
     assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
+    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
+
+    assert data["ac1"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_OPEN
     assert aioclient_mock.mock_calls[-1][0] == "GET"
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
@@ -183,6 +186,8 @@ async def test_climate_async_setup_entry(
     )
     assert aioclient_mock.mock_calls[-2][0] == "GET"
     assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
+    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
+    assert data["ac1"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_CLOSE
     assert aioclient_mock.mock_calls[-1][0] == "GET"
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
