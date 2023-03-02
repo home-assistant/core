@@ -1,7 +1,8 @@
 {
   "domain": "obihai",
   "name": "Obihai",
-  "codeowners": ["@dshokouhi"],
+  "codeowners": ["@dshokouhi", "@ejpenney"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/obihai",
   "iot_class": "local_polling",
   "loggers": ["pyobihai"],

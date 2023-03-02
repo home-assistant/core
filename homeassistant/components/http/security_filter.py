@@ -5,6 +5,7 @@ from collections.abc import Awaitable, Callable
 import logging
 import re
 from typing import Final
+from urllib.parse import unquote
 
 from aiohttp.web import Application, HTTPBadRequest, Request, StreamResponse, middleware
 
@@ -39,18 +40,24 @@ FILTERS: Final = re.compile(
 def setup_security_filter(app: Application) -> None:
     """Create security filter middleware for the app."""
 
+    def _recursive_unquote(value: str) -> str:
+        """Handle values that are encoded multiple times."""
+        if (unquoted := unquote(value)) != value:
+            unquoted = _recursive_unquote(unquoted)
+        return unquoted
+
     @middleware
     async def security_filter_middleware(
         request: Request, handler: Callable[[Request], Awaitable[StreamResponse]]
     ) -> StreamResponse:
-        """Process request and tblock commonly known exploit attempts."""
-        if FILTERS.search(request.path):
+        """Process request and block commonly known exploit attempts."""
+        if FILTERS.search(_recursive_unquote(request.path)):
             _LOGGER.warning(
                 "Filtered a potential harmful request to: %s", request.raw_path
             )
             raise HTTPBadRequest
 
-        if FILTERS.search(request.query_string):
+        if FILTERS.search(_recursive_unquote(request.query_string)):
             _LOGGER.warning(
                 "Filtered a request with a potential harmful query string: %s",
                 request.raw_path,

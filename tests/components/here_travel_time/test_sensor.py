@@ -84,7 +84,7 @@ from tests.common import (
 
 
 @pytest.mark.parametrize(
-    "mode,icon,arrival_time,departure_time",
+    ("mode", "icon", "arrival_time", "departure_time"),
     [
         (
             TRAVEL_MODE_CAR,
@@ -614,7 +614,7 @@ async def test_restore_state(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "exception,expected_message",
+    ("exception", "expected_message"),
     [
         (
             HERETransitNoRouteFoundError,

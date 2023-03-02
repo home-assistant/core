@@ -1101,7 +1101,7 @@ async def test_temperature_control(hass: HomeAssistant) -> None:
         BASIC_CONFIG,
     )
     assert trt.sync_attributes() == {
-        "queryOnlyTemperatureSetting": True,
+        "queryOnlyTemperatureControl": True,
         "temperatureUnitForUX": "C",
         "temperatureRange": {"maxThresholdCelsius": 100, "minThresholdCelsius": -100},
     }
@@ -1647,7 +1647,7 @@ async def test_fan_speed_without_percentage_step(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "percentage,percentage_step, speed, speeds, percentage_result",
+    ("percentage", "percentage_step", "speed", "speeds", "percentage_result"),
     [
         (
             33,
@@ -1758,7 +1758,7 @@ async def test_fan_speed_ordered(
 
 
 @pytest.mark.parametrize(
-    "direction_state,direction_call",
+    ("direction_state", "direction_call"),
     [
         (fan.DIRECTION_FORWARD, fan.DIRECTION_REVERSE),
         (fan.DIRECTION_REVERSE, fan.DIRECTION_FORWARD),
@@ -1935,7 +1935,7 @@ async def test_inputselector(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "sources,source,source_next,source_prev",
+    ("sources", "source", "source_next", "source_prev"),
     [
         (["a"], "a", "a", "a"),
         (["a", "b"], "a", "b", "b"),
@@ -1990,7 +1990,7 @@ async def test_inputselector_nextprev(
 
 
 @pytest.mark.parametrize(
-    "sources,source", [(None, "a"), (["a", "b"], None), (["a", "b"], "c")]
+    ("sources", "source"), [(None, "a"), (["a", "b"], None), (["a", "b"], "c")]
 )
 async def test_inputselector_nextprev_invalid(
     hass: HomeAssistant, sources, source
@@ -2916,7 +2916,7 @@ async def test_temperature_control_sensor(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "unit_in,unit_out,state,ambient",
+    ("unit_in", "unit_out", "state", "ambient"),
     [
         (UnitOfTemperature.FAHRENHEIT, "F", "70", 21.1),
         (UnitOfTemperature.CELSIUS, "C", "21.1", 21.1),
@@ -2941,7 +2941,7 @@ async def test_temperature_control_sensor_data(
     )
 
     assert trt.sync_attributes() == {
-        "queryOnlyTemperatureSetting": True,
+        "queryOnlyTemperatureControl": True,
         "temperatureUnitForUX": unit_out,
         "temperatureRange": {"maxThresholdCelsius": 100, "minThresholdCelsius": -100},
     }
@@ -2971,7 +2971,7 @@ async def test_humidity_setting_sensor(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "state,ambient", [("70", 70), ("unavailable", None), ("unknown", None)]
+    ("state", "ambient"), [("70", 70), ("unavailable", None), ("unknown", None)]
 )
 async def test_humidity_setting_sensor_data(
     hass: HomeAssistant, state, ambient

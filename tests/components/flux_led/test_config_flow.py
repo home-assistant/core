@@ -563,7 +563,7 @@ async def test_discovered_by_dhcp_no_udp_response_or_tcp_response(
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
         (config_entries.SOURCE_INTEGRATION_DISCOVERY, FLUX_DISCOVERY),
@@ -633,7 +633,7 @@ async def test_mac_address_off_by_one_not_updated_from_dhcp(
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
         (config_entries.SOURCE_INTEGRATION_DISCOVERY, FLUX_DISCOVERY),
@@ -700,7 +700,7 @@ async def test_options(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
         (config_entries.SOURCE_INTEGRATION_DISCOVERY, FLUX_DISCOVERY),

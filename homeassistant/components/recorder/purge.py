@@ -3,10 +3,9 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable
 from datetime import datetime
-from functools import partial
-from itertools import islice, zip_longest
+from itertools import zip_longest
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from sqlalchemy.engine.row import Row
 from sqlalchemy.orm.session import Session
@@ -15,7 +14,7 @@ from sqlalchemy.sql.expression import distinct
 from homeassistant.const import EVENT_STATE_CHANGED
 import homeassistant.util.dt as dt_util
 
-from .const import MAX_ROWS_TO_PURGE
+from .const import SQLITE_MAX_BIND_VARS
 from .db_schema import Events, StateAttributes, States
 from .models import DatabaseEngine
 from .queries import (
@@ -40,7 +39,7 @@ from .queries import (
     find_statistics_runs_to_purge,
 )
 from .repack import repack_database
-from .util import retryable_database_job, session_scope
+from .util import chunked, retryable_database_job, session_scope
 
 if TYPE_CHECKING:
     from . import Recorder
@@ -50,22 +49,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_STATES_BATCHES_PER_PURGE = 20  # We expect ~95% de-dupe rate
 DEFAULT_EVENTS_BATCHES_PER_PURGE = 15  # We expect ~92% de-dupe rate
-
-
-def take(take_num: int, iterable: Iterable) -> list[Any]:
-    """Return first n items of the iterable as a list.
-
-    From itertools recipes
-    """
-    return list(islice(iterable, take_num))
-
-
-def chunked(iterable: Iterable, chunked_num: int) -> Iterable[Any]:
-    """Break *iterable* into lists of length *n*.
-
-    From more-itertools
-    """
-    return iter(partial(take, chunked_num, iter(iterable)), [])
 
 
 @retryable_database_job("purge")
@@ -86,7 +69,7 @@ def purge_old_data(
         purge_before.isoformat(sep=" ", timespec="seconds"),
     )
     with session_scope(session=instance.get_session()) as session:
-        # Purge a max of MAX_ROWS_TO_PURGE, based on the oldest states or events record
+        # Purge a max of SQLITE_MAX_BIND_VARS, based on the oldest states or events record
         has_more_to_purge = False
         if _purging_legacy_format(session):
             _LOGGER.debug(
@@ -174,7 +157,7 @@ def _purge_states_and_attributes_ids(
     # There are more states relative to attributes_ids so
     # we purge enough state_ids to try to generate a full
     # size batch of attributes_ids that will be around the size
-    # MAX_ROWS_TO_PURGE
+    # SQLITE_MAX_BIND_VARS
     attributes_ids_batch: set[int] = set()
     for _ in range(states_batch_size):
         state_ids, attributes_ids = _select_state_attributes_ids_to_purge(
@@ -208,7 +191,7 @@ def _purge_events_and_data_ids(
     # There are more events relative to data_ids so
     # we purge enough event_ids to try to generate a full
     # size batch of data_ids that will be around the size
-    # MAX_ROWS_TO_PURGE
+    # SQLITE_MAX_BIND_VARS
     data_ids_batch: set[int] = set()
     for _ in range(events_batch_size):
         event_ids, data_ids = _select_event_data_ids_to_purge(session, purge_before)
@@ -310,7 +293,7 @@ def _select_unused_attributes_ids(
         #
         # We used to generate a query based on how many attribute_ids to find but
         # that meant sqlalchemy Transparent SQL Compilation Caching was working against
-        # us by cached up to MAX_ROWS_TO_PURGE different statements which could be
+        # us by cached up to SQLITE_MAX_BIND_VARS different statements which could be
         # up to 500MB for large database due to the complexity of the ORM objects.
         #
         # We now break the query into groups of 100 and use a lambda_stmt to ensure
@@ -525,8 +508,8 @@ def _evict_purged_attributes_from_attributes_cache(
 def _purge_batch_attributes_ids(
     instance: Recorder, session: Session, attributes_ids: set[int]
 ) -> None:
-    """Delete old attributes ids in batches of MAX_ROWS_TO_PURGE."""
-    for attributes_ids_chunk in chunked(attributes_ids, MAX_ROWS_TO_PURGE):
+    """Delete old attributes ids in batches of SQLITE_MAX_BIND_VARS."""
+    for attributes_ids_chunk in chunked(attributes_ids, SQLITE_MAX_BIND_VARS):
         deleted_rows = session.execute(
             delete_states_attributes_rows(attributes_ids_chunk)
         )
@@ -539,8 +522,8 @@ def _purge_batch_attributes_ids(
 def _purge_batch_data_ids(
     instance: Recorder, session: Session, data_ids: set[int]
 ) -> None:
-    """Delete old event data ids in batches of MAX_ROWS_TO_PURGE."""
-    for data_ids_chunk in chunked(data_ids, MAX_ROWS_TO_PURGE):
+    """Delete old event data ids in batches of SQLITE_MAX_BIND_VARS."""
+    for data_ids_chunk in chunked(data_ids, SQLITE_MAX_BIND_VARS):
         deleted_rows = session.execute(delete_event_data_rows(data_ids_chunk))
         _LOGGER.debug("Deleted %s data events", deleted_rows)
 
@@ -624,7 +607,7 @@ def _purge_filtered_states(
         *(
             session.query(States.state_id, States.attributes_id, States.event_id)
             .filter(States.entity_id.in_(excluded_entity_ids))
-            .limit(MAX_ROWS_TO_PURGE)
+            .limit(SQLITE_MAX_BIND_VARS)
             .all()
         )
     )
@@ -650,7 +633,7 @@ def _purge_filtered_events(
         *(
             session.query(Events.event_id, Events.data_id)
             .filter(Events.event_type.in_(excluded_event_types))
-            .limit(MAX_ROWS_TO_PURGE)
+            .limit(SQLITE_MAX_BIND_VARS)
             .all()
         )
     )
@@ -685,7 +668,7 @@ def purge_entity_data(instance: Recorder, entity_filter: Callable[[str], bool]) 
         ]
         _LOGGER.debug("Purging entity data for %s", selected_entity_ids)
         if len(selected_entity_ids) > 0:
-            # Purge a max of MAX_ROWS_TO_PURGE, based on the oldest states
+            # Purge a max of SQLITE_MAX_BIND_VARS, based on the oldest states
             # or events record.
             _purge_filtered_states(
                 instance, session, selected_entity_ids, database_engine

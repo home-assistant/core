@@ -25,7 +25,7 @@ from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa:
 
 
 @pytest.mark.parametrize(
-    "set_state,features_reg,features_state,expected_action_types",
+    ("set_state", "features_reg", "features_state", "expected_action_types"),
     [
         (False, 0, 0, []),
         (False, const.HumidifierEntityFeature.MODES, 0, ["set_mode"]),
@@ -89,7 +89,7 @@ async def test_get_actions(
 
 
 @pytest.mark.parametrize(
-    "hidden_by,entity_category",
+    ("hidden_by", "entity_category"),
     (
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
@@ -267,7 +267,13 @@ async def test_action(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "set_state,capabilities_reg,capabilities_state,action,expected_capabilities",
+    (
+        "set_state",
+        "capabilities_reg",
+        "capabilities_state",
+        "action",
+        "expected_capabilities",
+    ),
     [
         (
             False,
@@ -405,7 +411,7 @@ async def test_capabilities(
 
 
 @pytest.mark.parametrize(
-    "action,capability_name,extra",
+    ("action", "capability_name", "extra"),
     [
         ("set_humidity", "humidity", {"type": "integer"}),
         ("set_mode", "mode", {"type": "select", "options": []}),

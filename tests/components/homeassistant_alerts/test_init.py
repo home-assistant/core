@@ -33,7 +33,7 @@ async def setup_repairs(hass):
 
 
 @pytest.mark.parametrize(
-    "ha_version, supervisor_info, expected_alerts",
+    ("ha_version", "supervisor_info", "expected_alerts"),
     (
         (
             "2022.7.0",
@@ -166,7 +166,7 @@ async def test_alerts(
 
 
 @pytest.mark.parametrize(
-    "ha_version, fixture, expected_alerts",
+    ("ha_version", "fixture", "expected_alerts"),
     (
         (
             "2022.7.0",
@@ -270,7 +270,7 @@ async def test_no_alerts(
 
 
 @pytest.mark.parametrize(
-    "ha_version, fixture_1, expected_alerts_1, fixture_2, expected_alerts_2",
+    ("ha_version", "fixture_1", "expected_alerts_1", "fixture_2", "expected_alerts_2"),
     (
         (
             "2022.7.0",

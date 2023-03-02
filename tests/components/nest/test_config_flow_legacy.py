@@ -228,7 +228,7 @@ async def test_step_import(hass: HomeAssistant) -> None:
 async def test_step_import_with_token_cache(hass: HomeAssistant) -> None:
     """Test that we import existing token cache."""
     with patch("os.path.isfile", return_value=True), patch(
-        "homeassistant.components.nest.config_flow.load_json",
+        "homeassistant.components.nest.config_flow.load_json_object",
         return_value={"access_token": "yo"},
     ), patch(
         "homeassistant.components.nest.async_setup_legacy_entry", return_value=True

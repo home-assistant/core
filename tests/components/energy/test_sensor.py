@@ -1,7 +1,6 @@
 """Test the Energy sensors."""
 import copy
 from datetime import timedelta
-import gc
 from typing import Any
 from unittest.mock import patch
 
@@ -31,18 +30,6 @@ from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from tests.components.recorder.common import async_wait_recording_done
 from tests.typing import WebSocketGenerator
-
-
-@pytest.fixture(autouse=True)
-def garbage_collection():
-    """Make sure garbage collection is run between all tests.
-
-    There are unknown issues with GC triggering during a test
-    case, leading to the test breaking down. Make sure we
-    clean up between each testcase to avoid this issue.
-    """
-    yield
-    gc.collect()
 
 
 @pytest.fixture
@@ -134,12 +121,14 @@ async def test_cost_sensor_attributes(
     assert entry.hidden_by == er.RegistryEntryHider.INTEGRATION
 
 
-@pytest.mark.parametrize("initial_energy,initial_cost", [(0, "0.0"), (None, "unknown")])
 @pytest.mark.parametrize(
-    "price_entity,fixed_price", [("sensor.energy_price", None), (None, 1)]
+    ("initial_energy", "initial_cost"), [(0, "0.0"), (None, "unknown")]
 )
 @pytest.mark.parametrize(
-    "usage_sensor_entity_id,cost_sensor_entity_id,flow_type",
+    ("price_entity", "fixed_price"), [("sensor.energy_price", None), (None, 1)]
+)
+@pytest.mark.parametrize(
+    ("usage_sensor_entity_id", "cost_sensor_entity_id", "flow_type"),
     [
         ("sensor.energy_consumption", "sensor.energy_consumption_cost", "flow_from"),
         (
@@ -336,12 +325,14 @@ async def test_cost_sensor_price_entity_total_increasing(
     assert statistics["stat"]["sum"] == 38.0
 
 
-@pytest.mark.parametrize("initial_energy,initial_cost", [(0, "0.0"), (None, "unknown")])
 @pytest.mark.parametrize(
-    "price_entity,fixed_price", [("sensor.energy_price", None), (None, 1)]
+    ("initial_energy", "initial_cost"), [(0, "0.0"), (None, "unknown")]
 )
 @pytest.mark.parametrize(
-    "usage_sensor_entity_id,cost_sensor_entity_id,flow_type",
+    ("price_entity", "fixed_price"), [("sensor.energy_price", None), (None, 1)]
+)
+@pytest.mark.parametrize(
+    ("usage_sensor_entity_id", "cost_sensor_entity_id", "flow_type"),
     [
         ("sensor.energy_consumption", "sensor.energy_consumption_cost", "flow_from"),
         (
@@ -542,12 +533,14 @@ async def test_cost_sensor_price_entity_total(
     assert statistics["stat"]["sum"] == 38.0
 
 
-@pytest.mark.parametrize("initial_energy,initial_cost", [(0, "0.0"), (None, "unknown")])
 @pytest.mark.parametrize(
-    "price_entity,fixed_price", [("sensor.energy_price", None), (None, 1)]
+    ("initial_energy", "initial_cost"), [(0, "0.0"), (None, "unknown")]
 )
 @pytest.mark.parametrize(
-    "usage_sensor_entity_id,cost_sensor_entity_id,flow_type",
+    ("price_entity", "fixed_price"), [("sensor.energy_price", None), (None, 1)]
+)
+@pytest.mark.parametrize(
+    ("usage_sensor_entity_id", "cost_sensor_entity_id", "flow_type"),
     [
         ("sensor.energy_consumption", "sensor.energy_consumption_cost", "flow_from"),
         (
@@ -724,7 +717,7 @@ async def test_cost_sensor_price_entity_total_no_reset(
 
 
 @pytest.mark.parametrize(
-    "energy_unit,factor",
+    ("energy_unit", "factor"),
     [
         (UnitOfEnergy.WATT_HOUR, 1000),
         (UnitOfEnergy.KILO_WATT_HOUR, 1),
@@ -794,7 +787,7 @@ async def test_cost_sensor_handle_energy_units(
 
 
 @pytest.mark.parametrize(
-    "price_unit,factor",
+    ("price_unit", "factor"),
     [
         (f"EUR/{UnitOfEnergy.WATT_HOUR}", 0.001),
         (f"EUR/{UnitOfEnergy.KILO_WATT_HOUR}", 1),
@@ -973,7 +966,7 @@ async def test_cost_sensor_handle_gas_kwh(
 
 
 @pytest.mark.parametrize(
-    "unit_system,usage_unit,growth",
+    ("unit_system", "usage_unit", "growth"),
     (
         # 1 cubic foot = 7.47 gl, 100 ft3 growth @ 0.5/ft3:
         (US_CUSTOMARY_SYSTEM, UnitOfVolume.CUBIC_FEET, 374.025974025974),
