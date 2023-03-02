@@ -45,7 +45,6 @@ async def test_flow_user(hass: HomeAssistant, connection) -> None:
     assert result["step_id"] == "user"
 
     with _mock_skybell(hass), _patch_setup_entry():
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=CONF_DATA,
@@ -120,7 +119,6 @@ async def test_step_reauth(
     assert result["step_id"] == "reauth_confirm"
 
     with mock_skybell(hass), _mock_skybell(hass):
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_PASSWORD: PASSWORD},
