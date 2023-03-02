@@ -29,6 +29,7 @@ async def test_entry_diagnostics(hass, hass_client, aioclient_mock):
         "wired-tx_bytes": 5678000000,
     }
     device = {
+        "board_rev": "1.2.3",
         "ethernet_table": [
             {
                 "mac": "22:22:22:22:22:22",
@@ -112,7 +113,6 @@ async def test_entry_diagnostics(hass, hass_client, aioclient_mock):
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "config": {
             "data": {
-                "controller": REDACTED,
                 "host": REDACTED,
                 "password": REDACTED,
                 "port": 1234,
@@ -154,6 +154,7 @@ async def test_entry_diagnostics(hass, hass_client, aioclient_mock):
         },
         "devices": {
             "00:00:00:00:00:01": {
+                "board_rev": "1.2.3",
                 "ethernet_table": [
                     {
                         "mac": "00:00:00:00:00:02",

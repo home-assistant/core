@@ -591,8 +591,7 @@ async def test_flux_before_sunrise_stop_next_day(hass, enable_custom_integration
 async def test_flux_after_sunrise_before_sunset_stop_next_day(
     hass, enable_custom_integrations
 ):
-    """
-    Test the flux switch after sunrise and before sunset.
+    """Test the flux switch after sunrise and before sunset.
 
     This test has the stop_time on the next day (after midnight).
     """

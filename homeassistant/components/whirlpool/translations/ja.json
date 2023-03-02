@@ -13,5 +13,14 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "whirlpool_tank": {
+                "state": {
+                    "50": "50%"
+                }
+            }
+        }
     }
 }

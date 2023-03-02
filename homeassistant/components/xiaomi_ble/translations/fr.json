@@ -18,5 +18,10 @@
                 "description": "S\u00e9lectionnez l'appareil \u00e0 configurer"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "motion_detected": "Mouvement d\u00e9tect\u00e9"
+        }
     }
 }

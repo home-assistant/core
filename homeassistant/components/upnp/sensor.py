@@ -178,7 +178,8 @@ class UpnpSensor(UpnpEntity, SensorEntity):
     @property
     def native_value(self) -> str | None:
         """Return the state of the device."""
-        value = self.coordinator.data[self.entity_description.value_key]
-        if value is None:
+        if (key := self.entity_description.value_key) is None:
+            return None
+        if (value := self.coordinator.data[key]) is None:
             return None
         return format(value, self.entity_description.format)

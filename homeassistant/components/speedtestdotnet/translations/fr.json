@@ -13,8 +13,6 @@
         "step": {
             "init": {
                 "data": {
-                    "manual": "D\u00e9sactiver la mise \u00e0 jour automatique",
-                    "scan_interval": "Fr\u00e9quence de mise \u00e0 jour (minutes)",
                     "server_name": "S\u00e9lectionner le serveur de test"
                 }
             }

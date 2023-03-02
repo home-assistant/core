@@ -22,7 +22,9 @@
     "options": {
         "error": {
             "int": "El campo siguiente debe ser un n\u00famero entero.",
-            "loop_range": "El bucle de RF debe ser un n\u00famero entero entre 1 y 4."
+            "loop_range": "El bucle de RF debe ser un n\u00famero entero entre 1 y 4.",
+            "loop_rfid": "RF Loop no se puede utilizar sin RF Serial.",
+            "relay_inclusive": "La direcci\u00f3n de retransmisi\u00f3n y el canal de retransmisi\u00f3n son codependientes y deben incluirse juntos."
         },
         "step": {
             "arm_settings": {

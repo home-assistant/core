@@ -31,5 +31,20 @@
             }
         }
     },
+    "selector": {
+        "cycle": {
+            "options": {
+                "bimonthly": "Cada dos meses",
+                "daily": "Diariamente",
+                "hourly": "Cada hora",
+                "monthly": "Mensualmente",
+                "none": "Sin ciclo",
+                "quarter-hourly": "Cada 15 minutos",
+                "quarterly": "Trimestral",
+                "weekly": "Semanalmente",
+                "yearly": "Anualmente"
+            }
+        }
+    },
     "title": "Contador"
 }

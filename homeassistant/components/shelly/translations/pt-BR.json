@@ -71,5 +71,14 @@
                 "description": "A varredura Bluetooth pode ser ativa ou passiva. Com ativo, o Shelly solicita dados de dispositivos pr\u00f3ximos; com passivo, o Shelly recebe dados n\u00e3o solicitados de dispositivos pr\u00f3ximos."
             }
         }
+    },
+    "selector": {
+        "ble_scanner_mode": {
+            "options": {
+                "active": "Ativo",
+                "disabled": "Desabilitado",
+                "passive": "Passiva"
+            }
+        }
     }
 }

@@ -30,14 +30,6 @@
                 "description": "Haszn\u00e1lja az AirVisual felh\u0151 API-t egy v\u00e1ros / \u00e1llam / orsz\u00e1g figyel\u00e9s\u00e9hez.",
                 "title": "Konfigur\u00e1lja a geogr\u00e1fi\u00e1t"
             },
-            "node_pro": {
-                "data": {
-                    "ip_address": "C\u00edm",
-                    "password": "Jelsz\u00f3"
-                },
-                "description": "Szem\u00e9lyes AirVisual egys\u00e9g figyel\u00e9se. A jelsz\u00f3 lek\u00e9rhet\u0151 a k\u00e9sz\u00fcl\u00e9k felhaszn\u00e1l\u00f3i fel\u00fclet\u00e9r\u0151l.",
-                "title": "AirVisual Node/Pro konfigur\u00e1l\u00e1sa"
-            },
             "reauth_confirm": {
                 "data": {
                     "api_key": "API kulcs"

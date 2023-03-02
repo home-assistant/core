@@ -359,9 +359,12 @@ async def test_if_fires_on_state_change(hass, calls):
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "opened - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                                "opened "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.entity_id }} "
+                                "- {{ trigger.from_state.state }} "
+                                "- {{ trigger.to_state.state }} "
+                                "- {{ trigger.for }}"
                             )
                         },
                     },
@@ -378,9 +381,12 @@ async def test_if_fires_on_state_change(hass, calls):
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "closed - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                                "closed "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.entity_id }} "
+                                "- {{ trigger.from_state.state }} "
+                                "- {{ trigger.to_state.state }} "
+                                "- {{ trigger.for }}"
                             )
                         },
                     },
@@ -397,9 +403,12 @@ async def test_if_fires_on_state_change(hass, calls):
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "opening - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                                "opening "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.entity_id }} "
+                                "- {{ trigger.from_state.state }} "
+                                "- {{ trigger.to_state.state }} "
+                                "- {{ trigger.for }}"
                             )
                         },
                     },
@@ -416,9 +425,12 @@ async def test_if_fires_on_state_change(hass, calls):
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "closing - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                                "closing "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.entity_id }} "
+                                "- {{ trigger.from_state.state }} "
+                                "- {{ trigger.to_state.state }} "
+                                "- {{ trigger.for }}"
                             )
                         },
                     },
@@ -543,9 +555,12 @@ async def test_if_fires_on_position(hass, calls, enable_custom_integrations):
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "is_pos_gt_45 - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                                "is_pos_gt_45 "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.entity_id }} "
+                                "- {{ trigger.from_state.state }} "
+                                "- {{ trigger.to_state.state }} "
+                                "- {{ trigger.for }}"
                             )
                         },
                     },
@@ -565,9 +580,12 @@ async def test_if_fires_on_position(hass, calls, enable_custom_integrations):
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "is_pos_lt_90 - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                                "is_pos_lt_90 "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.entity_id }} "
+                                "- {{ trigger.from_state.state }} "
+                                "- {{ trigger.to_state.state }} "
+                                "- {{ trigger.for }}"
                             )
                         },
                     },
@@ -588,9 +606,12 @@ async def test_if_fires_on_position(hass, calls, enable_custom_integrations):
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "is_pos_gt_45_lt_90 - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                                "is_pos_gt_45_lt_90 "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.entity_id }} "
+                                "- {{ trigger.from_state.state }} "
+                                "- {{ trigger.to_state.state }} "
+                                "- {{ trigger.for }}"
                             )
                         },
                     },
@@ -611,7 +632,10 @@ async def test_if_fires_on_position(hass, calls, enable_custom_integrations):
         [calls[0].data["some"], calls[1].data["some"], calls[2].data["some"]]
     ) == sorted(
         [
-            "is_pos_gt_45_lt_90 - device - cover.set_position_cover - closed - open - None",
+            (
+                "is_pos_gt_45_lt_90 - device - cover.set_position_cover - closed - open"
+                " - None"
+            ),
             "is_pos_lt_90 - device - cover.set_position_cover - closed - open - None",
             "is_pos_gt_45 - device - cover.set_position_cover - open - closed - None",
         ]
@@ -670,9 +694,12 @@ async def test_if_fires_on_tilt_position(hass, calls, enable_custom_integrations
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "is_pos_gt_45 - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                                "is_pos_gt_45 "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.entity_id }} "
+                                "- {{ trigger.from_state.state }} "
+                                "- {{ trigger.to_state.state }} "
+                                "- {{ trigger.for }}"
                             )
                         },
                     },
@@ -692,9 +719,12 @@ async def test_if_fires_on_tilt_position(hass, calls, enable_custom_integrations
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "is_pos_lt_90 - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                                "is_pos_lt_90 "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.entity_id }} "
+                                "- {{ trigger.from_state.state }} "
+                                "- {{ trigger.to_state.state }} "
+                                "- {{ trigger.for }}"
                             )
                         },
                     },
@@ -715,9 +745,12 @@ async def test_if_fires_on_tilt_position(hass, calls, enable_custom_integrations
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "is_pos_gt_45_lt_90 - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                                "is_pos_gt_45_lt_90 "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.entity_id }} "
+                                "- {{ trigger.from_state.state }} "
+                                "- {{ trigger.to_state.state }} "
+                                "- {{ trigger.for }}"
                             )
                         },
                     },
@@ -740,7 +773,10 @@ async def test_if_fires_on_tilt_position(hass, calls, enable_custom_integrations
         [calls[0].data["some"], calls[1].data["some"], calls[2].data["some"]]
     ) == sorted(
         [
-            "is_pos_gt_45_lt_90 - device - cover.set_position_cover - closed - open - None",
+            (
+                "is_pos_gt_45_lt_90 - device - cover.set_position_cover - closed - open"
+                " - None"
+            ),
             "is_pos_lt_90 - device - cover.set_position_cover - closed - open - None",
             "is_pos_gt_45 - device - cover.set_position_cover - open - closed - None",
         ]

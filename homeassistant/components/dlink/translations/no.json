@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Kunne ikke koble til/autentisere",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "confirm_discovery": {
+                "data": {
+                    "password": "Passord (standard: PIN-kode p\u00e5 baksiden)",
+                    "use_legacy_protocol": "Bruk eldre protokoll",
+                    "username": "Brukernavn"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Vert",
+                    "password": "Passord (standard: PIN-kode p\u00e5 baksiden)",
+                    "use_legacy_protocol": "Bruk eldre protokoll",
+                    "username": "Brukernavn"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Konfigurering av D-Link Smart Plug med YAML blir fjernet. \n\n Din eksisterende YAML-konfigurasjon har blitt importert til brukergrensesnittet automatisk. \n\n Fjern D-Link Power Plug YAML-konfigurasjonen fra configuration.yaml-filen og start Home Assistant p\u00e5 nytt for \u00e5 fikse dette problemet.",
+            "title": "D-Link Smart Plug YAML-konfigurasjonen blir fjernet"
+        }
+    }
+}

@@ -52,7 +52,6 @@ CONF_MIN = "min"
 CONF_PATTERN = "pattern"
 
 DEFAULT_NAME = "MQTT Text"
-DEFAULT_OPTIMISTIC = False
 DEFAULT_PAYLOAD_RESET = "None"
 
 MQTT_TEXT_ATTRIBUTES_BLOCKED = frozenset(
@@ -84,7 +83,6 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
         vol.Optional(CONF_MODE, default=text.TextMode.TEXT): vol.In(
             [text.TextMode.TEXT, text.TextMode.PASSWORD]
         ),
-        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_PATTERN): cv.is_regex,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },
@@ -104,7 +102,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT text through configuration.yaml and dynamically through MQTT discovery."""
+    """Set up MQTT text through YAML and through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )

@@ -137,9 +137,11 @@ async def test_icon_template(hass):
                         "test_template_switch": {
                             **OPTIMISTIC_SWITCH_CONFIG,
                             "value_template": "{{ states.switch.test_state.state }}",
-                            "icon_template": "{% if states.switch.test_state.state %}"
-                            "mdi:check"
-                            "{% endif %}",
+                            "icon_template": (
+                                "{% if states.switch.test_state.state %}"
+                                "mdi:check"
+                                "{% endif %}"
+                            ),
                         }
                     },
                 }
@@ -173,9 +175,11 @@ async def test_entity_picture_template(hass):
                         "test_template_switch": {
                             **OPTIMISTIC_SWITCH_CONFIG,
                             "value_template": "{{ states.switch.test_state.state }}",
-                            "entity_picture_template": "{% if states.switch.test_state.state %}"
-                            "/local/switch.png"
-                            "{% endif %}",
+                            "entity_picture_template": (
+                                "{% if states.switch.test_state.state %}"
+                                "/local/switch.png"
+                                "{% endif %}"
+                            ),
                         }
                     },
                 }
@@ -564,7 +568,9 @@ async def test_available_template_with_entities(hass):
                     "test_template_switch": {
                         **OPTIMISTIC_SWITCH_CONFIG,
                         "value_template": "{{ 1 == 1 }}",
-                        "availability_template": "{{ is_state('availability_state.state', 'on') }}",
+                        "availability_template": (
+                            "{{ is_state('availability_state.state', 'on') }}"
+                        ),
                     }
                 },
             }
@@ -610,7 +616,7 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
     await hass.async_block_till_done()
 
     assert hass.states.get("switch.test_template_switch").state != STATE_UNAVAILABLE
-    assert ("UndefinedError: 'x' is undefined") in caplog.text
+    assert "UndefinedError: 'x' is undefined" in caplog.text
 
 
 async def test_unique_id(hass):

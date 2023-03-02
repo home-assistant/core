@@ -80,11 +80,18 @@
                 },
                 "description": "Muutda Insteon Hubi \u00fchenduse teavet. P\u00e4rast selle muudatuse tegemist pead Home Assistanti taask\u00e4ivitama. See ei muuda jaoturi enda konfiguratsiooni. Hubis muudatuste tegemiseks kasuta rakendust Hub."
             },
+            "change_plm_config": {
+                "data": {
+                    "device": "USB-seadme asukoha rada"
+                },
+                "description": "Muuda Insteon PLMi \u00fchendusandmeid. P\u00e4rast selle muudatuse tegemist pead Home Assistant'i uuesti k\u00e4ivitama. See ei muuda PLM-i enda konfiguratsiooni."
+            },
             "init": {
                 "data": {
                     "add_override": "Lisa seadme alistamine.",
                     "add_x10": "Lisa X10 seade.",
                     "change_hub_config": "Muuda jaoturi konfiguratsiooni.",
+                    "change_plm_config": "Muuda PLMi konfiguratsiooni.",
                     "remove_override": "Seadme alistamise eemaldamine.",
                     "remove_x10": "Eemalda X10 seade."
                 }

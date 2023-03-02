@@ -31,5 +31,16 @@
                 "title": "Felfedezett nyomtat\u00f3"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "printer": {
+                "state": {
+                    "idle": "K\u00e9szenl\u00e9t",
+                    "printing": "Nyomtat\u00e1s",
+                    "stopped": "Meg\u00e1llt"
+                }
+            }
+        }
     }
 }

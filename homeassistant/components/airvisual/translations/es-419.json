@@ -22,14 +22,6 @@
                 "description": "Utilice la API en la nube de AirVisual para monitorear una ciudad/estado/pa\u00eds.",
                 "title": "Configurar una geograf\u00eda"
             },
-            "node_pro": {
-                "data": {
-                    "ip_address": "Direcci\u00f3n IP/nombre de host de la unidad",
-                    "password": "Contrase\u00f1a de la unidad"
-                },
-                "description": "Monitoree una unidad AirVisual personal. La contrase\u00f1a se puede recuperar de la interfaz de usuario de la unidad.",
-                "title": "Configurar un AirVisual Node/Pro"
-            },
             "reauth_confirm": {
                 "title": "Vuelva a autenticar AirVisual"
             },
@@ -37,6 +29,35 @@
                 "description": "Monitoree la calidad del aire en una ubicaci\u00f3n geogr\u00e1fica.",
                 "title": "Configurar AirVisual"
             }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "pollutant_label": {
+                "state": {
+                    "n2": "Dioxido de nitrogeno",
+                    "o3": "Ozono",
+                    "p1": "PM10",
+                    "p2": "PM2.5",
+                    "s2": "Di\u00f3xido de azufre"
+                }
+            },
+            "pollutant_level": {
+                "state": {
+                    "good": "Bueno",
+                    "hazardous": "Peligroso",
+                    "moderate": "Moderado",
+                    "unhealthy": "Insalubre",
+                    "unhealthy_sensitive": "Insalubre para grupos sensibles",
+                    "very_unhealthy": "Muy insalubre"
+                }
+            }
+        }
+    },
+    "issues": {
+        "airvisual_pro_migration": {
+            "description": "Las unidades AirVisual Pro ahora son su propia integraci\u00f3n de Home Assistant (en lugar de estar incluidas con la integraci\u00f3n original de AirVisual que usa la API en la nube de AirVisual). El dispositivo Pro ubicado en `{ip_address}` se ha migrado autom\u00e1ticamente. \n\n Como parte de esa migraci\u00f3n, la identificaci\u00f3n del dispositivo Pro ha cambiado de `{old_device_id}` a `{new_device_id}`. Actualice estas automatizaciones para usar el nuevo ID de dispositivo: {device_automations_string}.",
+            "title": "{ip_address} ahora es parte de la integraci\u00f3n de AirVisual Pro"
         }
     },
     "options": {

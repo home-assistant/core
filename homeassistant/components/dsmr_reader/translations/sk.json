@@ -5,7 +5,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Uistite sa, \u017ee ste nakonfigurovali zdroje \u00fadajov \u201erozdelen\u00e1 t\u00e9ma\u201c v aplik\u00e1cii DSMR Reader."
+                "description": "Uistite sa, \u017ee ste nakonfigurovali zdroje \u00fadajov 'rozdelen\u00e1 t\u00e9ma' v aplik\u00e1cii DSMR Reader."
             }
         }
     },

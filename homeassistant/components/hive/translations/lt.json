@@ -1,0 +1,26 @@
+{
+    "config": {
+        "step": {
+            "configuration": {
+                "data": {
+                    "device_name": "\u012erenginio pavadinimas"
+                },
+                "description": "\u012eveskite \u201eHive\u201c konfig\u016bracij\u0105",
+                "title": "Hive konfig\u016bracija"
+            },
+            "user": {
+                "title": "Prisijungimas prie Hive"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "scan_interval": "Nuskaitymo intervalas (sekund\u0117mis)"
+                },
+                "title": "Hive parinktys"
+            }
+        }
+    }
+}

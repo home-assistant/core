@@ -7,6 +7,7 @@
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
+            "firmware_not_fully_provisioned": "Apparaat kon niet ingesteld worden. Neem contact op met de Shelly klantenservice",
             "invalid_auth": "Ongeldige authenticatie",
             "unknown": "Onverwachte fout"
         },
@@ -67,6 +68,15 @@
                     "ble_scanner_mode": "Bluetooth scannermodus"
                 },
                 "description": "Het scannen van Bluetooth kan actief of passief worden ingesteld. In de actieve modus zal Shelly de gegevens opvragen van apparaten van dichtbij. In de passieve modus zal Shelly ongevraagd gegevens van apparaten dichtbij opvragen."
+            }
+        }
+    },
+    "selector": {
+        "ble_scanner_mode": {
+            "options": {
+                "active": "Actief",
+                "disabled": "Uitgeschakeld",
+                "passive": "Passief"
             }
         }
     }

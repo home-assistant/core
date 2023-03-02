@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Teenus on juba seadistatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "url": "URL"
+                },
+                "description": "Sisesta Open Thread Border Routeri REST API URL"
+            }
+        }
+    }
+}

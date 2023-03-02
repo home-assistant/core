@@ -13,8 +13,6 @@
         "step": {
             "init": {
                 "data": {
-                    "manual": "Zak\u00e1za\u0165 automatick\u00fa aktualiz\u00e1ciu",
-                    "scan_interval": "Frekvencia aktualiz\u00e1cie (min\u00faty)",
                     "server_name": "Vyberte testovac\u00ed server"
                 }
             }

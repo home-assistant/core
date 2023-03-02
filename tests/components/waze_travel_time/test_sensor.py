@@ -39,7 +39,6 @@ def mock_update_wrcerror_fixture(mock_wrc):
     """Mock an update to the sensor failed with WRCError."""
     obj = mock_wrc.return_value
     obj.calc_all_routes_info.side_effect = WRCError("test")
-    yield
 
 
 @pytest.fixture(name="mock_update_keyerror")
@@ -47,7 +46,6 @@ def mock_update_keyerror_fixture(mock_wrc):
     """Mock an update to the sensor failed with KeyError."""
     obj = mock_wrc.return_value
     obj.calc_all_routes_info.side_effect = KeyError("test")
-    yield
 
 
 @pytest.mark.parametrize(

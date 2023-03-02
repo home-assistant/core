@@ -30,7 +30,7 @@
                     "include_associated": "Pou\u017ei\u0165 \u00fadaje o pridru\u017een\u00ed WiFi AP (ignorovan\u00e9, ak sa pou\u017e\u00edvaj\u00fa \u00fadaje hotspotu)",
                     "interfaces": "Vyberte rozhrania na skenovanie",
                     "scan_interval": "Interval skenovania",
-                    "try_hotspot": "Pou\u017ei\u0165 \u00fadaje \u201eip hotspot\u201c (najpresnej\u0161ie)"
+                    "try_hotspot": "Pou\u017ei\u0165 \u00fadaje `ip hotspot` (najpresnej\u0161ie)"
                 }
             }
         }

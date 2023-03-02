@@ -24,6 +24,18 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
+    LIGHT_LUX,
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfPressure,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
@@ -76,96 +88,205 @@ STATUS_ICON: dict[NodeStatus, str] = {
 }
 
 
-ENTITY_DESCRIPTION_KEY_MAP: dict[str, SensorEntityDescription] = {
-    ENTITY_DESC_KEY_BATTERY: SensorEntityDescription(
+# These descriptions should include device class.
+ENTITY_DESCRIPTION_KEY_DEVICE_CLASS_MAP: dict[
+    tuple[str, str], SensorEntityDescription
+] = {
+    (ENTITY_DESC_KEY_BATTERY, PERCENTAGE): SensorEntityDescription(
         ENTITY_DESC_KEY_BATTERY,
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
     ),
-    ENTITY_DESC_KEY_CURRENT: SensorEntityDescription(
+    (ENTITY_DESC_KEY_CURRENT, UnitOfElectricCurrent.AMPERE): SensorEntityDescription(
         ENTITY_DESC_KEY_CURRENT,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
     ),
-    ENTITY_DESC_KEY_VOLTAGE: SensorEntityDescription(
+    (ENTITY_DESC_KEY_VOLTAGE, UnitOfElectricPotential.VOLT): SensorEntityDescription(
         ENTITY_DESC_KEY_VOLTAGE,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
     ),
-    ENTITY_DESC_KEY_ENERGY_MEASUREMENT: SensorEntityDescription(
-        ENTITY_DESC_KEY_ENERGY_MEASUREMENT,
-        device_class=SensorDeviceClass.ENERGY,
+    (
+        ENTITY_DESC_KEY_VOLTAGE,
+        UnitOfElectricPotential.MILLIVOLT,
+    ): SensorEntityDescription(
+        ENTITY_DESC_KEY_VOLTAGE,
+        device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
     ),
-    ENTITY_DESC_KEY_ENERGY_TOTAL_INCREASING: SensorEntityDescription(
+    (
+        ENTITY_DESC_KEY_ENERGY_TOTAL_INCREASING,
+        UnitOfEnergy.KILO_WATT_HOUR,
+    ): SensorEntityDescription(
         ENTITY_DESC_KEY_ENERGY_TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     ),
-    ENTITY_DESC_KEY_POWER: SensorEntityDescription(
+    (ENTITY_DESC_KEY_POWER, UnitOfPower.WATT): SensorEntityDescription(
         ENTITY_DESC_KEY_POWER,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
     ),
-    ENTITY_DESC_KEY_POWER_FACTOR: SensorEntityDescription(
+    (ENTITY_DESC_KEY_POWER_FACTOR, PERCENTAGE): SensorEntityDescription(
         ENTITY_DESC_KEY_POWER_FACTOR,
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
     ),
-    ENTITY_DESC_KEY_CO: SensorEntityDescription(
+    (ENTITY_DESC_KEY_CO, CONCENTRATION_PARTS_PER_MILLION): SensorEntityDescription(
         ENTITY_DESC_KEY_CO,
         device_class=SensorDeviceClass.CO,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
     ),
-    ENTITY_DESC_KEY_CO2: SensorEntityDescription(
+    (ENTITY_DESC_KEY_CO2, CONCENTRATION_PARTS_PER_MILLION): SensorEntityDescription(
         ENTITY_DESC_KEY_CO2,
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
     ),
-    ENTITY_DESC_KEY_HUMIDITY: SensorEntityDescription(
+    (ENTITY_DESC_KEY_HUMIDITY, PERCENTAGE): SensorEntityDescription(
         ENTITY_DESC_KEY_HUMIDITY,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
     ),
-    ENTITY_DESC_KEY_ILLUMINANCE: SensorEntityDescription(
+    (ENTITY_DESC_KEY_ILLUMINANCE, LIGHT_LUX): SensorEntityDescription(
         ENTITY_DESC_KEY_ILLUMINANCE,
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=LIGHT_LUX,
     ),
-    ENTITY_DESC_KEY_PRESSURE: SensorEntityDescription(
+    (ENTITY_DESC_KEY_PRESSURE, UnitOfPressure.KPA): SensorEntityDescription(
         ENTITY_DESC_KEY_PRESSURE,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPressure.KPA,
     ),
-    ENTITY_DESC_KEY_SIGNAL_STRENGTH: SensorEntityDescription(
+    (ENTITY_DESC_KEY_PRESSURE, UnitOfPressure.PSI): SensorEntityDescription(
+        ENTITY_DESC_KEY_PRESSURE,
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPressure.PSI,
+    ),
+    (ENTITY_DESC_KEY_PRESSURE, UnitOfPressure.INHG): SensorEntityDescription(
+        ENTITY_DESC_KEY_PRESSURE,
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPressure.INHG,
+    ),
+    (ENTITY_DESC_KEY_PRESSURE, UnitOfPressure.MMHG): SensorEntityDescription(
+        ENTITY_DESC_KEY_PRESSURE,
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPressure.MMHG,
+    ),
+    (
+        ENTITY_DESC_KEY_SIGNAL_STRENGTH,
+        SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    ): SensorEntityDescription(
         ENTITY_DESC_KEY_SIGNAL_STRENGTH,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     ),
-    ENTITY_DESC_KEY_TEMPERATURE: SensorEntityDescription(
+    (ENTITY_DESC_KEY_TEMPERATURE, UnitOfTemperature.CELSIUS): SensorEntityDescription(
         ENTITY_DESC_KEY_TEMPERATURE,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
-    ENTITY_DESC_KEY_TARGET_TEMPERATURE: SensorEntityDescription(
+    (
+        ENTITY_DESC_KEY_TEMPERATURE,
+        UnitOfTemperature.FAHRENHEIT,
+    ): SensorEntityDescription(
+        ENTITY_DESC_KEY_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+    ),
+    (
+        ENTITY_DESC_KEY_TARGET_TEMPERATURE,
+        UnitOfTemperature.CELSIUS,
+    ): SensorEntityDescription(
         ENTITY_DESC_KEY_TARGET_TEMPERATURE,
         device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=None,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    (
+        ENTITY_DESC_KEY_TARGET_TEMPERATURE,
+        UnitOfTemperature.FAHRENHEIT,
+    ): SensorEntityDescription(
+        ENTITY_DESC_KEY_TARGET_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+    ),
+}
+
+# These descriptions are without device class.
+ENTITY_DESCRIPTION_KEY_MAP = {
+    ENTITY_DESC_KEY_CO: SensorEntityDescription(
+        ENTITY_DESC_KEY_CO,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_ENERGY_MEASUREMENT: SensorEntityDescription(
+        ENTITY_DESC_KEY_ENERGY_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_HUMIDITY: SensorEntityDescription(
+        ENTITY_DESC_KEY_HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_ILLUMINANCE: SensorEntityDescription(
+        ENTITY_DESC_KEY_ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_POWER_FACTOR: SensorEntityDescription(
+        ENTITY_DESC_KEY_POWER_FACTOR,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_SIGNAL_STRENGTH: SensorEntityDescription(
+        ENTITY_DESC_KEY_SIGNAL_STRENGTH,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_MEASUREMENT: SensorEntityDescription(
         ENTITY_DESC_KEY_MEASUREMENT,
-        device_class=None,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_TOTAL_INCREASING: SensorEntityDescription(
         ENTITY_DESC_KEY_TOTAL_INCREASING,
-        device_class=None,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 }
+
+
+def get_entity_description(
+    data: NumericSensorDataTemplateData,
+) -> SensorEntityDescription:
+    """Return the entity description for the given data."""
+    data_description_key = data.entity_description_key or ""
+    data_unit = data.unit_of_measurement or ""
+    return ENTITY_DESCRIPTION_KEY_DEVICE_CLASS_MAP.get(
+        (data_description_key, data_unit),
+        ENTITY_DESCRIPTION_KEY_MAP.get(
+            data_description_key,
+            SensorEntityDescription(
+                "base_sensor", native_unit_of_measurement=data.unit_of_measurement
+            ),
+        ),
+    )
 
 
 async def async_setup_entry(
@@ -187,9 +308,8 @@ async def async_setup_entry(
             data: NumericSensorDataTemplateData = info.platform_data
         else:
             data = NumericSensorDataTemplateData()
-        entity_description = ENTITY_DESCRIPTION_KEY_MAP.get(
-            data.entity_description_key or "", SensorEntityDescription("base_sensor")
-        )
+
+        entity_description = get_entity_description(data)
 
         if info.platform_hint == "string_sensor":
             entities.append(
@@ -308,11 +428,9 @@ class ZWaveNumericSensor(ZwaveSensorBase):
     @callback
     def on_value_update(self) -> None:
         """Handle scale changes for this value on value updated event."""
-        self._attr_native_unit_of_measurement = (
-            NumericSensorDataTemplate()
-            .resolve_data(self.info.primary_value)
-            .unit_of_measurement
-        )
+        data = NumericSensorDataTemplate().resolve_data(self.info.primary_value)
+        self.entity_description = get_entity_description(data)
+        self._attr_native_unit_of_measurement = data.unit_of_measurement
 
     @property
     def native_value(self) -> float:
@@ -324,6 +442,8 @@ class ZWaveNumericSensor(ZwaveSensorBase):
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return unit of measurement the value is expressed in."""
+        if self.entity_description.native_unit_of_measurement is not None:
+            return self.entity_description.native_unit_of_measurement
         if self._attr_native_unit_of_measurement is not None:
             return self._attr_native_unit_of_measurement
         if self.info.primary_value.metadata.unit is None:
@@ -445,8 +565,8 @@ class ZWaveConfigParameterSensor(ZwaveSensorBase):
         if (
             self._primary_value.configuration_value_type == ConfigurationValueType.RANGE
             or (
-                not str(self.info.primary_value.value)
-                in self.info.primary_value.metadata.states
+                str(self.info.primary_value.value)
+                not in self.info.primary_value.metadata.states
             )
         ):
             return str(self.info.primary_value.value)
@@ -490,8 +610,8 @@ class ZWaveNodeStatusSensor(SensorEntity):
     async def async_poll_value(self, _: bool) -> None:
         """Poll a value."""
         LOGGER.error(
-            "There is no value to refresh for this entity so the zwave_js.refresh_value "
-            "service won't work for it"
+            "There is no value to refresh for this entity so the zwave_js.refresh_value"
+            " service won't work for it"
         )
 
     @callback

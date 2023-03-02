@@ -58,10 +58,10 @@
             },
             "zone_sleep": {
                 "state": {
-                    "120 min": "120 minut",
-                    "30 min": "30 minut",
-                    "60 min": "60 minut",
-                    "90 min": "90 minut",
+                    "120_min": "120 minut",
+                    "30_min": "30 minut",
+                    "60_min": "60 minut",
+                    "90_min": "90 minut",
                     "off": "wy\u0142\u0105czone"
                 }
             },

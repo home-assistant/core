@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Dienst is al ingesteld"
+        },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
             "invalid_api_key": "Ongeldige API-sleutel",
@@ -21,13 +24,16 @@
         "sensor": {
             "health_concern": {
                 "state": {
-                    "good": "Goed"
+                    "good": "Goed",
+                    "hazardous": "Gevaarlijk",
+                    "unhealthy": "Ongezond"
                 }
             },
             "pollen_index": {
                 "state": {
                     "high": "Hoog",
                     "low": "Laag",
+                    "medium": "Medium",
                     "none": "Geen"
                 }
             },

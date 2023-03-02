@@ -6,15 +6,7 @@ import pytest
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .conftest import (
-    RAIN_DELAY,
-    RAIN_SENSOR_OFF,
-    RAIN_SENSOR_ON,
-    ComponentSetup,
-    mock_response,
-)
-
-from tests.test_util.aiohttp import AiohttpClientMockResponse
+from .conftest import RAIN_DELAY, RAIN_DELAY_OFF, ComponentSetup
 
 
 @pytest.fixture
@@ -24,26 +16,22 @@ def platforms() -> list[str]:
 
 
 @pytest.mark.parametrize(
-    "sensor_payload,expected_state",
-    [(RAIN_SENSOR_OFF, "False"), (RAIN_SENSOR_ON, "True")],
+    "rain_delay_response,expected_state",
+    [(RAIN_DELAY, "16"), (RAIN_DELAY_OFF, "0")],
 )
 async def test_sensors(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
-    responses: list[AiohttpClientMockResponse],
-    sensor_payload: str,
-    expected_state: bool,
+    expected_state: str,
 ) -> None:
     """Test sensor platform."""
 
-    responses.extend([mock_response(sensor_payload), mock_response(RAIN_DELAY)])
-
     assert await setup_integration()
-
-    rainsensor = hass.states.get("sensor.rainsensor")
-    assert rainsensor is not None
-    assert rainsensor.state == expected_state
 
     raindelay = hass.states.get("sensor.raindelay")
     assert raindelay is not None
-    assert raindelay.state == "16"
+    assert raindelay.state == expected_state
+    assert raindelay.attributes == {
+        "friendly_name": "Raindelay",
+        "icon": "mdi:water-off",
+    }

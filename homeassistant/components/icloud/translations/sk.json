@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "\u00da\u010det je u\u017e nakonfigurovan\u00fd",
-            "no_device": "\u017diadne z va\u0161ich zariaden\u00ed nem\u00e1 aktivovan\u00fa funkciu \u201eN\u00e1js\u0165 m\u00f4j iPhone\u201c.",
+            "no_device": "\u017diadne z va\u0161ich zariaden\u00ed nem\u00e1 aktivovan\u00fa funkciu \"N\u00e1js\u0165 m\u00f4j iPhone\".",
             "reauth_successful": "Op\u00e4tovn\u00e9 overenie bolo \u00faspe\u0161n\u00e9"
         },
         "error": {

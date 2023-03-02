@@ -1,5 +1,8 @@
 {
     "config": {
+        "error": {
+            "no_site": "No se ha proporcionado ning\u00fan sitio"
+        },
         "step": {
             "site": {
                 "data": {

@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "confirm": {
+                "description": "Ar norite nustatyti \u201eSonos\u201c?"
+            }
+        }
+    }
+}

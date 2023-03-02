@@ -31,13 +31,13 @@
                     "port": "Port",
                     "ssl": "Pou\u017e\u00edva SSL certifik\u00e1t"
                 },
-                "description": "Inform\u00e1cie o pripojen\u00ed Kodi. Nezabudnite povoli\u0165 \u201ePovoli\u0165 ovl\u00e1danie Kodi cez HTTP\u201c v \u010dasti Syst\u00e9m/Nastavenia/Sie\u0165/Slu\u017eby."
+                "description": "Inform\u00e1cie o pripojen\u00ed Kodi. Nezabudnite povoli\u0165 \"Povoli\u0165 ovl\u00e1danie Kodi cez HTTP\" v \u010dasti Syst\u00e9m/Nastavenia/Sie\u0165/Slu\u017eby."
             },
             "ws_port": {
                 "data": {
                     "ws_port": "Port"
                 },
-                "description": "Port WebSocket (niekedy naz\u00fdvan\u00fd TCP port v Kodi). Ak sa chcete pripoji\u0165 cez WebSocket, mus\u00edte povoli\u0165 \u201ePovoli\u0165 programom ... ovl\u00e1da\u0165 Kodi\u201c v \u010dasti Syst\u00e9m/Nastavenia/Sie\u0165/Slu\u017eby. Ak WebSocket nie je povolen\u00fd, odstr\u00e1\u0148te port a nechajte ho pr\u00e1zdny."
+                "description": "Port WebSocket (niekedy naz\u00fdvan\u00fd TCP port v Kodi). Ak sa chcete pripoji\u0165 cez WebSocket, mus\u00edte povoli\u0165 \"Povoli\u0165 programom ... ovl\u00e1da\u0165 Kodi\" v \u010dasti Syst\u00e9m/Nastavenia/Sie\u0165/Slu\u017eby. Ak WebSocket nie je povolen\u00fd, odstr\u00e1\u0148te port a nechajte ho pr\u00e1zdny."
             }
         }
     },

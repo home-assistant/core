@@ -41,7 +41,6 @@ def test_binary_sensor(hass: HomeAssistant):
     assert len(hass_devices) == 3
 
     for device in hass_devices:
-
         # Test pre data retrieval
         if device.subscription == "555555":
             assert device.name == "Vultr {}"

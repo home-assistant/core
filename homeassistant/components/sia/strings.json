@@ -24,6 +24,9 @@
         "title": "Add another account to the current port."
       }
     },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
     "error": {
       "invalid_key_format": "The key is not a hex value, please use only 0-9 and A-F.",
       "invalid_key_length": "The key is not the right length, it has to be 16, 24 or 32 hex characters.",

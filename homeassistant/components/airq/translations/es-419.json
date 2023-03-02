@@ -1,0 +1,10 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Proporcione la direcci\u00f3n IP o mDNS del dispositivo y su contrase\u00f1a",
+                "title": "Identificar el dispositivo"
+            }
+        }
+    }
+}

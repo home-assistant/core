@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "no_mac_address": "Falta l'adre\u00e7a MAC al registre zeroconf",
             "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament",
             "reconfigure_successful": "Re-configuraci\u00f3 realitzada correctament"
         },

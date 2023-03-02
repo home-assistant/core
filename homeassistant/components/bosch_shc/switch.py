@@ -95,7 +95,6 @@ async def async_setup_entry(
     session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
 
     for switch in session.device_helper.smart_plugs:
-
         entities.append(
             SHCSwitch(
                 device=switch,
@@ -113,7 +112,6 @@ async def async_setup_entry(
         )
 
     for switch in session.device_helper.light_switches:
-
         entities.append(
             SHCSwitch(
                 device=switch,
@@ -124,7 +122,6 @@ async def async_setup_entry(
         )
 
     for switch in session.device_helper.smart_plugs_compact:
-
         entities.append(
             SHCSwitch(
                 device=switch,
@@ -135,7 +132,6 @@ async def async_setup_entry(
         )
 
     for switch in session.device_helper.camera_eyes:
-
         entities.append(
             SHCSwitch(
                 device=switch,
@@ -146,7 +142,6 @@ async def async_setup_entry(
         )
 
     for switch in session.device_helper.camera_360:
-
         entities.append(
             SHCSwitch(
                 device=switch,

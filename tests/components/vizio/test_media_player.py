@@ -7,7 +7,6 @@ from typing import Any
 from unittest.mock import call, patch
 
 import pytest
-from pytest import raises
 from pyvizio.api.apps import AppConfig
 from pyvizio.const import (
     APPS,
@@ -658,10 +657,10 @@ async def test_setup_with_apps_additional_apps_config(
 
 def test_invalid_apps_config(hass: HomeAssistant):
     """Test that schema validation fails on certain conditions."""
-    with raises(vol.Invalid):
+    with pytest.raises(vol.Invalid):
         vol.Schema(vol.All(VIZIO_SCHEMA, validate_apps))(MOCK_TV_APPS_FAILURE)
 
-    with raises(vol.Invalid):
+    with pytest.raises(vol.Invalid):
         vol.Schema(vol.All(VIZIO_SCHEMA, validate_apps))(MOCK_SPEAKER_APPS_FAILURE)
 
 

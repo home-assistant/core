@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "title": "A szinkroniz\u00e1l\u00e1s integr\u00e1ci\u00f3j\u00e1nak be\u00e1ll\u00edt\u00e1sa",
+                    "title": "A Syncthing integr\u00e1ci\u00f3 be\u00e1ll\u00edt\u00e1sa",
                     "token": "Token",
                     "url": "URL",
                     "verify_ssl": "Ellen\u0151rizze az SSL tan\u00fas\u00edtv\u00e1nyt"

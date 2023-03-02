@@ -10,7 +10,7 @@
         "flow_title": "{name} {model} ({host})",
         "step": {
             "discovery_confirm": {
-                "description": "{name} {model} ( {host} ) kurulumu yapmak istiyor musunuz?"
+                "description": "{name} {model} ( {host} ) kurmak istiyor musunuz?"
             },
             "pick_device": {
                 "data": {

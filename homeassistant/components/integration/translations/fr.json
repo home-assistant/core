@@ -32,5 +32,22 @@
             }
         }
     },
+    "selector": {
+        "method": {
+            "options": {
+                "left": "M\u00e9thode des rectangles \u00e0 gauche",
+                "right": "M\u00e9thode des rectangles \u00e0 droite",
+                "trapezoidal": "M\u00e9thode des trap\u00e8zes"
+            }
+        },
+        "unit_time": {
+            "options": {
+                "d": "Jours",
+                "h": "Heures",
+                "min": "Minutes",
+                "s": "Secondes"
+            }
+        }
+    },
     "title": "Int\u00e9grale \u2013\u00a0Capteur d'int\u00e9grale de Riemann"
 }

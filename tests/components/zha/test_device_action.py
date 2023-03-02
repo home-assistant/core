@@ -1,4 +1,4 @@
-"""The test for zha device automation actions."""
+"""The test for ZHA device automation actions."""
 from unittest.mock import call, patch
 
 import pytest
@@ -32,7 +32,7 @@ COMMAND_SINGLE = "single"
 
 @pytest.fixture(autouse=True)
 def required_platforms_only():
-    """Only setup the required platforms and required base platforms to speed up tests."""
+    """Only set up the required platforms and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (
@@ -102,7 +102,7 @@ async def device_inovelli(hass, zigpy_device_mock, zha_device_joined):
 
 
 async def test_get_actions(hass, device_ias):
-    """Test we get the expected actions from a zha device."""
+    """Test we get the expected actions from a ZHA device."""
 
     ieee_address = str(device_ias[0].ieee)
 
@@ -121,41 +121,37 @@ async def test_get_actions(hass, device_ias):
             "metadata": {},
         },
         {"domain": DOMAIN, "type": "warn", "device_id": reg_device.id, "metadata": {}},
-        {
-            "domain": Platform.SELECT,
-            "type": "select_option",
-            "device_id": reg_device.id,
-            "entity_id": "select.fakemanufacturer_fakemodel_default_siren_tone",
-            "metadata": {"secondary": True},
-        },
-        {
-            "domain": Platform.SELECT,
-            "type": "select_option",
-            "device_id": reg_device.id,
-            "entity_id": "select.fakemanufacturer_fakemodel_default_siren_level",
-            "metadata": {"secondary": True},
-        },
-        {
-            "domain": Platform.SELECT,
-            "type": "select_option",
-            "device_id": reg_device.id,
-            "entity_id": "select.fakemanufacturer_fakemodel_default_strobe_level",
-            "metadata": {"secondary": True},
-        },
-        {
-            "domain": Platform.SELECT,
-            "type": "select_option",
-            "device_id": reg_device.id,
-            "entity_id": "select.fakemanufacturer_fakemodel_default_strobe",
-            "metadata": {"secondary": True},
-        },
     ]
+    expected_actions.extend(
+        [
+            {
+                "domain": Platform.SELECT,
+                "type": action,
+                "device_id": reg_device.id,
+                "entity_id": entity_id,
+                "metadata": {"secondary": True},
+            }
+            for action in [
+                "select_first",
+                "select_last",
+                "select_next",
+                "select_option",
+                "select_previous",
+            ]
+            for entity_id in [
+                "select.fakemanufacturer_fakemodel_default_siren_level",
+                "select.fakemanufacturer_fakemodel_default_siren_tone",
+                "select.fakemanufacturer_fakemodel_default_strobe_level",
+                "select.fakemanufacturer_fakemodel_default_strobe",
+            ]
+        ]
+    )
 
     assert_lists_same(actions, expected_actions)
 
 
 async def test_get_inovelli_actions(hass, device_inovelli):
-    """Test we get the expected actions from a zha device."""
+    """Test we get the expected actions from a ZHA device."""
 
     inovelli_ieee_address = str(device_inovelli[0].ieee)
     ha_device_registry = dr.async_get(hass)
@@ -235,7 +231,7 @@ async def test_get_inovelli_actions(hass, device_inovelli):
 
 
 async def test_action(hass, device_ias, device_inovelli):
-    """Test for executing a zha device action."""
+    """Test for executing a ZHA device action."""
     zigpy_device, zha_device = device_ias
     inovelli_zigpy_device, inovelli_zha_device = device_inovelli
 

@@ -197,7 +197,7 @@ class TestInsight:
             "ontotal": 0,
             "powerthreshold": 0,
         }
-        yield pywemo_device
+        return pywemo_device
 
     @pytest.mark.parametrize(
         "subscribed,state,expected_calls",

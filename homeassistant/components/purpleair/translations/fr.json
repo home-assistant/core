@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "by_coordinates": {
+                "data": {
+                    "distance": "Rayon de recherche"
+                }
+            }
+        }
+    }
+}

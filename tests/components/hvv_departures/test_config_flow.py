@@ -42,7 +42,6 @@ async def test_user_flow(hass):
         "homeassistant.components.hvv_departures.async_setup_entry",
         return_value=True,
     ):
-
         # step: user
 
         result_user = await hass.config_entries.flow.async_init(
@@ -103,7 +102,6 @@ async def test_user_flow_no_results(hass):
         "homeassistant.components.hvv_departures.async_setup_entry",
         return_value=True,
     ):
-
         # step: user
 
         result_user = await hass.config_entries.flow.async_init(
@@ -139,7 +137,6 @@ async def test_user_flow_invalid_auth(hass):
             "Authentication failed!",
         ),
     ):
-
         # step: user
         result_user = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -162,7 +159,6 @@ async def test_user_flow_cannot_connect(hass):
         "homeassistant.components.hvv_departures.hub.GTI.init",
         side_effect=CannotConnect(),
     ):
-
         # step: user
         result_user = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -188,7 +184,6 @@ async def test_user_flow_station(hass):
         "homeassistant.components.hvv_departures.hub.GTI.checkName",
         return_value={"returnCode": "OK", "results": []},
     ):
-
         # step: user
 
         result_user = await hass.config_entries.flow.async_init(

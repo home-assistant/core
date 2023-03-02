@@ -31,5 +31,16 @@
                 "title": "Imprimante trouv\u00e9e"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "printer": {
+                "state": {
+                    "idle": "Inactive",
+                    "printing": "Impression",
+                    "stopped": "Arr\u00eat\u00e9e"
+                }
+            }
+        }
     }
 }

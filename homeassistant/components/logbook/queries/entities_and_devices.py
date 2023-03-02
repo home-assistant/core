@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import datetime as dt
 
 import sqlalchemy
 from sqlalchemy import lambda_stmt, select, union_all
@@ -29,8 +28,8 @@ from .entities import (
 
 
 def _select_entities_device_id_context_ids_sub_query(
-    start_day: dt,
-    end_day: dt,
+    start_day: float,
+    end_day: float,
     event_types: tuple[str, ...],
     entity_ids: list[str],
     json_quoted_entity_ids: list[str],
@@ -44,7 +43,9 @@ def _select_entities_device_id_context_ids_sub_query(
             )
         ),
         apply_entities_hints(select(States.context_id))
-        .filter((States.last_updated > start_day) & (States.last_updated < end_day))
+        .filter(
+            (States.last_updated_ts > start_day) & (States.last_updated_ts < end_day)
+        )
         .where(States.entity_id.in_(entity_ids)),
     )
     return select(union.c.context_id).group_by(union.c.context_id)
@@ -52,8 +53,8 @@ def _select_entities_device_id_context_ids_sub_query(
 
 def _apply_entities_devices_context_union(
     query: Query,
-    start_day: dt,
-    end_day: dt,
+    start_day: float,
+    end_day: float,
     event_types: tuple[str, ...],
     entity_ids: list[str],
     json_quoted_entity_ids: list[str],
@@ -88,8 +89,8 @@ def _apply_entities_devices_context_union(
 
 
 def entities_devices_stmt(
-    start_day: dt,
-    end_day: dt,
+    start_day: float,
+    end_day: float,
     event_types: tuple[str, ...],
     entity_ids: list[str],
     json_quoted_entity_ids: list[str],
@@ -109,7 +110,7 @@ def entities_devices_stmt(
             entity_ids,
             json_quoted_entity_ids,
             json_quoted_device_ids,
-        ).order_by(Events.time_fired)
+        ).order_by(Events.time_fired_ts)
     )
     return stmt
 

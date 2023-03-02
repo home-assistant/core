@@ -26,7 +26,7 @@
                 "description": "{device} kurulumunu yapmak istiyor musunuz? Home Assistant'\u0131 daha \u00f6nce hi\u00e7 ba\u011flamad\u0131ysan\u0131z, TV'nizde yetki isteyen bir a\u00e7\u0131l\u0131r pencere g\u00f6rmelisiniz."
             },
             "reauth_confirm": {
-                "description": "G\u00f6nderdikten sonra, 30 saniye i\u00e7inde yetkilendirme isteyen {device} \u00fczerindeki a\u00e7\u0131l\u0131r pencereyi kabul edin veya PIN'i girin."
+                "description": "G\u00f6nderdikten sonra, {device} \u00fczerindeki yetkilendirme isteyen a\u00e7\u0131l\u0131r pencereyi 30 saniye i\u00e7inde kabul edin veya PIN'i girin."
             },
             "reauth_confirm_encrypted": {
                 "description": "L\u00fctfen {device} \u00fczerinde g\u00f6r\u00fcnt\u00fclenen PIN'i girin."

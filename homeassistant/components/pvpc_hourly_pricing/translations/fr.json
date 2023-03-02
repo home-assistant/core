@@ -19,8 +19,7 @@
             "init": {
                 "data": {
                     "power": "Puissance souscrite (kW)",
-                    "power_p3": "Puissance souscrite pour la p\u00e9riode de vall\u00e9e P3 (kW)",
-                    "tariff": "Tarif applicable par zone g\u00e9ographique"
+                    "power_p3": "Puissance souscrite pour la p\u00e9riode de vall\u00e9e P3 (kW)"
                 }
             }
         }

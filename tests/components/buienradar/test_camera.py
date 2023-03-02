@@ -233,6 +233,6 @@ async def test_retries_after_error(aioclient_mock, hass, hass_client):
     resp_2 = await client.get("/api/camera_proxy/camera.buienradar_51_5288505_400216")
     assert aioclient_mock.call_count == 1
 
-    # Binary text can not be added as body to `aioclient_mock.get(text=...)`,
+    # Binary text cannot be added as body to `aioclient_mock.get(text=...)`,
     # while `resp.read()` returns bytes, encode the value.
     assert (await resp_2.read()) == b"DEADBEEF"

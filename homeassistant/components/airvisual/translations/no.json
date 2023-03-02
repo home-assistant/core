@@ -30,14 +30,6 @@
                 "description": "Bruk AirVisual cloud API til \u00e5 overv\u00e5ke en by/stat/land.",
                 "title": "Konfigurer en Geography"
             },
-            "node_pro": {
-                "data": {
-                    "ip_address": "Vert",
-                    "password": "Passord"
-                },
-                "description": "Overv\u00e5ke en personlig AirVisual-enhet. Passordet kan hentes fra enhetens brukergrensesnitt.",
-                "title": "Konfigurer en AirVisual Node / Pro"
-            },
             "reauth_confirm": {
                 "data": {
                     "api_key": "API-n\u00f8kkel"

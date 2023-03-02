@@ -11,7 +11,7 @@
         "flow_title": "{model} {id} ({ipaddr})",
         "step": {
             "discovery_confirm": {
-                "description": "{model} {id} ( {ipaddr} ) kurulumu yapmak istiyor musunuz?"
+                "description": "{model} {id} ( {ipaddr} ) kurmak istiyor musunuz?"
             },
             "user": {
                 "data": {

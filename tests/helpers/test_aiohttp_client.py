@@ -45,7 +45,7 @@ def camera_client_fixture(hass, hass_client):
     )
     hass.loop.run_until_complete(hass.async_block_till_done())
 
-    yield hass.loop.run_until_complete(hass_client())
+    return hass.loop.run_until_complete(hass_client())
 
 
 async def test_get_clientsession_with_ssl(hass):
@@ -182,9 +182,9 @@ async def test_warning_close_session_custom(hass, caplog):
         session = client.async_get_clientsession(hass)
         await session.close()
     assert (
-        "Detected integration that closes the Home Assistant aiohttp session. "
-        "Please report issue to the custom integration author for hue using this method at "
-        "custom_components/hue/light.py, line 23: await session.close()" in caplog.text
+        "Detected integration that closes the Home Assistant aiohttp session. Please"
+        " report issue to the custom integration author for hue using this method at"
+        " custom_components/hue/light.py, line 23: await session.close()" in caplog.text
     )
 
 

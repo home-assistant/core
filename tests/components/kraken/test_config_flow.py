@@ -29,7 +29,7 @@ async def test_config_flow(hass):
 
 
 async def test_already_configured(hass):
-    """Test we can not add a second config flow."""
+    """Test we cannot add a second config flow."""
     MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(

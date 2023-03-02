@@ -51,6 +51,21 @@
                 },
                 "title": "Tambahkan Grup"
             },
+            "sensor": {
+                "data": {
+                    "device_class": "Kelas perangkat",
+                    "entities": "Anggota",
+                    "hide_members": "Sembunyikan anggota",
+                    "ignore_non_numeric": "Abaikan non-numerik",
+                    "name": "Nama",
+                    "round_digits": "Bulatkan nilai ke bilangan desimal",
+                    "state_class": "Kelas status",
+                    "type": "Jenis",
+                    "unit_of_measurement": "Satuan Pengukuran"
+                },
+                "description": "Jika \"abaikan non-numerik\" diaktifkan, status grup dihitung jika setidaknya satu anggota memiliki nilai numerik. Jika \"abaikan non-numerik\" dinonaktifkan, status grup dihitung hanya jika semua anggota grup memiliki nilai numerik.",
+                "title": "Tambahkan Grup"
+            },
             "switch": {
                 "data": {
                     "entities": "Anggota",
@@ -68,6 +83,7 @@
                     "light": "Grup lampu",
                     "lock": "Grup kunci",
                     "media_player": "Grup pemutar media",
+                    "sensor": "Grup sensor",
                     "switch": "Ganti sakelar"
                 },
                 "title": "Tambahkan Grup"
@@ -115,6 +131,19 @@
                     "entities": "Anggota",
                     "hide_members": "Sembunyikan anggota"
                 }
+            },
+            "sensor": {
+                "data": {
+                    "device_class": "Kelas perangkat",
+                    "entities": "Anggota",
+                    "hide_members": "Sembunyikan anggota",
+                    "ignore_non_numeric": "Abaikan non-numerik",
+                    "round_digits": "Bulatkan nilai ke bilangan desimal",
+                    "state_class": "Kelas status",
+                    "type": "Jenis",
+                    "unit_of_measurement": "Satuan Pengukuran"
+                },
+                "description": "Jika \"abaikan non-numerik\" diaktifkan, status grup dihitung jika setidaknya satu anggota memiliki nilai numerik. Jika \"abaikan non-numerik\" dinonaktifkan, status grup dihitung hanya jika semua anggota grup memiliki nilai numerik."
             },
             "switch": {
                 "data": {

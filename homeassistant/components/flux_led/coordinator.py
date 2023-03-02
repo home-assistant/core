@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 REQUEST_REFRESH_DELAY: Final = 2.0
 
 
-class FluxLedUpdateCoordinator(DataUpdateCoordinator):
+class FluxLedUpdateCoordinator(DataUpdateCoordinator[None]):
     """DataUpdateCoordinator to gather data for a specific flux_led device."""
 
     def __init__(

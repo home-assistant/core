@@ -39,5 +39,15 @@
             }
         }
     },
+    "selector": {
+        "time_unit": {
+            "options": {
+                "d": "Dies",
+                "h": "Hores",
+                "min": "Minuts",
+                "s": "Segons"
+            }
+        }
+    },
     "title": "Sensor derivatiu"
 }

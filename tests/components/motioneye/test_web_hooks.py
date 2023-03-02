@@ -47,6 +47,7 @@ from . import (
 )
 
 from tests.common import async_capture_events, async_fire_time_changed
+from tests.typing import ClientSessionGenerator
 
 WEB_HOOK_MOTION_DETECTED_QUERY_STRING = (
     "camera_id=%t&changed_pixels=%D&despeckle_labels=%Q&event=%v&fps=%{fps}"
@@ -277,7 +278,9 @@ async def test_setup_camera_with_no_home_assistant_urls(
     assert entity_state
 
 
-async def test_good_query(hass: HomeAssistant, hass_client_no_auth: Any) -> None:
+async def test_good_query(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
     """Test good callbacks."""
     await async_setup_component(hass, "http", {"http": {}})
 
@@ -320,7 +323,7 @@ async def test_good_query(hass: HomeAssistant, hass_client_no_auth: Any) -> None
 
 
 async def test_bad_query_missing_parameters(
-    hass: HomeAssistant, hass_client_no_auth: Any
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
 ) -> None:
     """Test a query with missing parameters."""
     await async_setup_component(hass, "http", {"http": {}})
@@ -335,7 +338,7 @@ async def test_bad_query_missing_parameters(
 
 
 async def test_bad_query_no_such_device(
-    hass: HomeAssistant, hass_client_no_auth: Any
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
 ) -> None:
     """Test a correct query with incorrect device."""
     await async_setup_component(hass, "http", {"http": {}})
@@ -354,7 +357,7 @@ async def test_bad_query_no_such_device(
 
 
 async def test_bad_query_cannot_decode(
-    hass: HomeAssistant, hass_client_no_auth: Any
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
 ) -> None:
     """Test a correct query with incorrect device."""
     await async_setup_component(hass, "http", {"http": {}})
@@ -374,7 +377,9 @@ async def test_bad_query_cannot_decode(
     assert not storage_events
 
 
-async def test_event_media_data(hass: HomeAssistant, hass_client_no_auth: Any) -> None:
+async def test_event_media_data(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
     """Test an event with a file path generates media data."""
     await async_setup_component(hass, "http", {"http": {}})
 

@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+        },
         "error": {
             "invalid_account_format": "\u00da\u010det nie je hexadecim\u00e1lna hodnota, pou\u017e\u00edvajte len 0-9 a A-F.",
             "invalid_account_length": "\u00da\u010det nem\u00e1 spr\u00e1vnu d\u013a\u017eku, mus\u00ed ma\u0165 od 3 do 16 znakov.",

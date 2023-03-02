@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
+            "no_mac_address": "MAC-adressen mangler fra zeroconf-posten",
             "reauth_successful": "Re-autentisering var vellykket",
             "reconfigure_successful": "Omkonfigurasjonen var vellykket"
         },

@@ -1,0 +1,23 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "location": "Posizione"
+                },
+                "description": "Seleziona la localit\u00e0 per la quale desideri ricevere le informazioni di Stookwijzer."
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "stookwijzer": {
+                "state": {
+                    "blauw": "Blu",
+                    "oranje": "Arancione",
+                    "rood": "Rosso"
+                }
+            }
+        }
+    }
+}

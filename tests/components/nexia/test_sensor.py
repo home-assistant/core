@@ -1,6 +1,6 @@
 """The sensor tests for the nexia platform."""
 
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import PERCENTAGE, UnitOfTemperature
 
 from .util import async_init_integration
 
@@ -17,7 +17,7 @@ async def test_create_sensors(hass):
         "attribution": "Data provided by Trane Technologies",
         "device_class": "temperature",
         "friendly_name": "Nick Office Temperature",
-        "unit_of_measurement": TEMP_CELSIUS,
+        "unit_of_measurement": UnitOfTemperature.CELSIUS,
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
@@ -84,7 +84,7 @@ async def test_create_sensors(hass):
         "attribution": "Data provided by Trane Technologies",
         "device_class": "temperature",
         "friendly_name": "Master Suite Outdoor Temperature",
-        "unit_of_measurement": TEMP_CELSIUS,
+        "unit_of_measurement": UnitOfTemperature.CELSIUS,
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears

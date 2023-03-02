@@ -578,20 +578,20 @@ def delete_recorder_runs_rows(
     )
 
 
-def find_events_to_purge(purge_before: datetime) -> StatementLambdaElement:
+def find_events_to_purge(purge_before: float) -> StatementLambdaElement:
     """Find events to purge."""
     return lambda_stmt(
         lambda: select(Events.event_id, Events.data_id)
-        .filter(Events.time_fired < purge_before)
+        .filter(Events.time_fired_ts < purge_before)
         .limit(MAX_ROWS_TO_PURGE)
     )
 
 
-def find_states_to_purge(purge_before: datetime) -> StatementLambdaElement:
+def find_states_to_purge(purge_before: float) -> StatementLambdaElement:
     """Find states to purge."""
     return lambda_stmt(
         lambda: select(States.state_id, States.attributes_id)
-        .filter(States.last_updated < purge_before)
+        .filter(States.last_updated_ts < purge_before)
         .limit(MAX_ROWS_TO_PURGE)
     )
 
@@ -624,7 +624,7 @@ def find_latest_statistics_runs_run_id() -> StatementLambdaElement:
 
 
 def find_legacy_event_state_and_attributes_and_data_ids_to_purge(
-    purge_before: datetime,
+    purge_before: float,
 ) -> StatementLambdaElement:
     """Find the latest row in the legacy format to purge."""
     return lambda_stmt(
@@ -632,7 +632,7 @@ def find_legacy_event_state_and_attributes_and_data_ids_to_purge(
             Events.event_id, Events.data_id, States.state_id, States.attributes_id
         )
         .outerjoin(States, Events.event_id == States.event_id)
-        .filter(Events.time_fired < purge_before)
+        .filter(Events.time_fired_ts < purge_before)
         .limit(MAX_ROWS_TO_PURGE)
     )
 

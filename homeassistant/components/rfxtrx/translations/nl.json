@@ -5,9 +5,13 @@
             "cannot_connect": "Kan geen verbinding maken"
         },
         "error": {
-            "cannot_connect": "Kan geen verbinding maken"
+            "cannot_connect": "Kan geen verbinding maken",
+            "one": "een",
+            "other": "overige"
         },
         "step": {
+            "one": "een",
+            "other": "overige",
             "setup_network": {
                 "data": {
                     "host": "Host",
@@ -45,6 +49,7 @@
             "status": "Ontvangen status: {subtype}"
         }
     },
+    "one": "een",
     "options": {
         "error": {
             "already_configured_device": "Apparaat is al geconfigureerd",
@@ -78,5 +83,6 @@
                 "title": "Configureer apparaatopties"
             }
         }
-    }
+    },
+    "other": "overige"
 }

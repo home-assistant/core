@@ -201,7 +201,7 @@
             "on": "Problem"
         },
         "running": {
-            "off": "Nicht ausgef\u00fchrt",
+            "off": "L\u00e4uft nicht",
             "on": "L\u00e4uft"
         },
         "safety": {

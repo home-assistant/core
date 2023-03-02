@@ -30,5 +30,18 @@
             }
         }
     },
+    "selector": {
+        "type": {
+            "options": {
+                "last": "Zuletzt aktualisiert",
+                "max": "Maximum",
+                "mean": "Arithmetisches Mittel",
+                "median": "Median",
+                "min": "Minimum",
+                "range": "Statistischer Bereich",
+                "sum": "Summe"
+            }
+        }
+    },
     "title": "Kombiniere den Zustand mehrerer Sensoren"
 }

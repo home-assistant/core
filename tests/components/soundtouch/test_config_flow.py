@@ -25,7 +25,6 @@ async def test_user_flow_create_entry(
 
     assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == "user"
-    assert "flow_id" in result
 
     with patch(
         "homeassistant.components.soundtouch.async_setup_entry", return_value=True

@@ -31,7 +31,9 @@ async def test_user_step_success(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch("homeassistant.components.led_ble.config_flow.LEDBLE.update",), patch(
+    with patch(
+        "homeassistant.components.led_ble.config_flow.LEDBLE.update",
+    ), patch(
         "homeassistant.components.led_ble.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -115,7 +117,9 @@ async def test_user_step_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "cannot_connect"}
 
-    with patch("homeassistant.components.led_ble.config_flow.LEDBLE.update",), patch(
+    with patch(
+        "homeassistant.components.led_ble.config_flow.LEDBLE.update",
+    ), patch(
         "homeassistant.components.led_ble.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -165,7 +169,9 @@ async def test_user_step_unknown_exception(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "unknown"}
 
-    with patch("homeassistant.components.led_ble.config_flow.LEDBLE.update",), patch(
+    with patch(
+        "homeassistant.components.led_ble.config_flow.LEDBLE.update",
+    ), patch(
         "homeassistant.components.led_ble.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -197,7 +203,9 @@ async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch("homeassistant.components.led_ble.config_flow.LEDBLE.update",), patch(
+    with patch(
+        "homeassistant.components.led_ble.config_flow.LEDBLE.update",
+    ), patch(
         "homeassistant.components.led_ble.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:

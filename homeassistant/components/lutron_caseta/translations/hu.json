@@ -11,7 +11,7 @@
         "flow_title": "{name} ({host})",
         "step": {
             "import_failed": {
-                "description": "Nem siker\u00fclt be\u00e1ll\u00edtani a bridge-t ({host}) a configuration.yaml f\u00e1jlb\u00f3l import\u00e1lva.",
+                "description": "Nem siker\u00fclt be\u00e1ll\u00edtani a configuration.yaml f\u00e1jlb\u00f3l import\u00e1lt bridge-t ({host} c\u00edmen).",
                 "title": "Nem siker\u00fclt import\u00e1lni a Cas\u00e9ta h\u00edd konfigur\u00e1ci\u00f3j\u00e1t."
             },
             "link": {

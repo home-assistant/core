@@ -71,5 +71,14 @@
                 "description": "La scansione Bluetooth pu\u00f2 essere attiva o passiva. In caso di scansione attiva, lo Shelly richiede dati ai dispositivi vicini; in caso di scansione passiva, lo Shelly riceve dati non richiesti dai dispositivi vicini."
             }
         }
+    },
+    "selector": {
+        "ble_scanner_mode": {
+            "options": {
+                "active": "Attivo",
+                "disabled": "Disabilitato",
+                "passive": "Passivo"
+            }
+        }
     }
 }

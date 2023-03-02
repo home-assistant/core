@@ -27,7 +27,7 @@
             },
             "advanced": {
                 "data": {
-                    "devices": "Dispositivos (Disparadores)"
+                    "devices": "Dispositivos (Desencadenantes)"
                 },
                 "description": "Se crean interruptores programables para cada dispositivo seleccionado. Cuando se dispara un dispositivo, HomeKit se puede configurar para ejecutar una automatizaci\u00f3n o una escena.",
                 "title": "Configuraci\u00f3n avanzada"

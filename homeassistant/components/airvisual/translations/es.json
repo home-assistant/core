@@ -30,14 +30,6 @@
                 "description": "Usar la API de la nube de AirVisual para supervisar una ciudad/estado/pa\u00eds.",
                 "title": "Configurar una geograf\u00eda"
             },
-            "node_pro": {
-                "data": {
-                    "ip_address": "Host",
-                    "password": "Contrase\u00f1a"
-                },
-                "description": "Supervisar una unidad AirVisual personal. La contrase\u00f1a se puede recuperar desde la IU de la unidad.",
-                "title": "Configurar un AirVisual Node/Pro"
-            },
             "reauth_confirm": {
                 "data": {
                     "api_key": "Clave API"

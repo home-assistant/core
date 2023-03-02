@@ -13,7 +13,7 @@ def init_config_flow(hass, side_effect=None):
     """Init a configuration flow."""
     config_flow.register_flow_implementation(hass, DOMAIN, "id", "secret")
     flow = config_flow.PointFlowHandler()
-    flow._get_authorization_url = AsyncMock(  # pylint: disable=protected-access
+    flow._get_authorization_url = AsyncMock(
         return_value="https://example.com", side_effect=side_effect
     )
     flow.hass = hass
@@ -27,7 +27,7 @@ def is_authorized():
 
 
 @pytest.fixture
-def mock_pypoint(is_authorized):  # pylint: disable=redefined-outer-name
+def mock_pypoint(is_authorized):
     """Mock pypoint."""
     with patch(
         "homeassistant.components.point.config_flow.PointSession"
@@ -67,9 +67,7 @@ async def test_abort_if_already_setup(hass):
     assert result["reason"] == "already_setup"
 
 
-async def test_full_flow_implementation(
-    hass, mock_pypoint  # pylint: disable=redefined-outer-name
-):
+async def test_full_flow_implementation(hass, mock_pypoint):
     """Test registering an implementation and finishing flow works."""
     config_flow.register_flow_implementation(hass, "test-other", None, None)
     flow = init_config_flow(hass)
@@ -95,7 +93,7 @@ async def test_full_flow_implementation(
     assert result["data"]["token"] == {"access_token": "boo"}
 
 
-async def test_step_import(hass, mock_pypoint):  # pylint: disable=redefined-outer-name
+async def test_step_import(hass, mock_pypoint):
     """Test that we trigger import when configuring with client."""
     flow = init_config_flow(hass)
 
@@ -105,9 +103,7 @@ async def test_step_import(hass, mock_pypoint):  # pylint: disable=redefined-out
 
 
 @pytest.mark.parametrize("is_authorized", [False])
-async def test_wrong_code_flow_implementation(
-    hass, mock_pypoint
-):  # pylint: disable=redefined-outer-name
+async def test_wrong_code_flow_implementation(hass, mock_pypoint):
     """Test wrong code."""
     flow = init_config_flow(hass)
 

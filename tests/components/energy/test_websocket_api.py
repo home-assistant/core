@@ -163,7 +163,9 @@ async def test_save_preferences(
     assert msg["result"] == {
         "cost_sensors": {
             "sensor.heat_pump_meter_2": "sensor.heat_pump_meter_2_cost",
-            "sensor.return_to_grid_offpeak": "sensor.return_to_grid_offpeak_compensation",
+            "sensor.return_to_grid_offpeak": (
+                "sensor.return_to_grid_offpeak_compensation"
+            ),
         },
         "solar_forecast_domains": ["some_domain"],
     }

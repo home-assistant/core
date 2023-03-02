@@ -48,7 +48,6 @@
             "carbon_monoxide": "{entity_name} wykryje zmian\u0119 st\u0119\u017cenia tlenku w\u0119gla",
             "current": "zmieni si\u0119 nat\u0119\u017cenie pr\u0105du w {entity_name}",
             "data_rate": "zmieni si\u0119 rozmiar danych {entity_name}",
-            "data_size": "zmieni si\u0119 rozmiar danych {entity_name}",
             "distance": "zmieni si\u0119 odleg\u0142o\u015b\u0107 {entity_name}",
             "energy": "zmieni si\u0119 energia {entity_name}",
             "frequency": "zmieni si\u0119 cz\u0119stotliwo\u015b\u0107 w {entity_name}",

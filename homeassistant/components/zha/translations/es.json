@@ -22,7 +22,8 @@
                 "description": "Elige la configuraci\u00f3n de red para tu radio.",
                 "menu_options": {
                     "choose_automatic_backup": "Restaurar una copia de seguridad autom\u00e1tica",
-                    "form_new_network": "Borrar la configuraci\u00f3n de red y formar una nueva red",
+                    "form_initial_network": "Crear una red",
+                    "form_new_network": "Borrar la configuraci\u00f3n de red y crear una nueva red",
                     "reuse_settings": "Mantener la configuraci\u00f3n de red de la radio",
                     "upload_manual_backup": "Subir una copia de seguridad manual"
                 },
@@ -87,6 +88,7 @@
             "default_light_transition": "Tiempo de transici\u00f3n de luz predeterminado (segundos)",
             "enable_identify_on_join": "Habilitar el efecto de identificaci\u00f3n cuando los dispositivos se unan a la red",
             "enhanced_light_transition": "Habilitar la transici\u00f3n mejorada de color de luz/temperatura desde un estado apagado",
+            "group_members_assume_state": "Los miembros del grupo asumen el estado del grupo",
             "light_transitioning_flag": "Habilitar el control deslizante de brillo mejorado durante la transici\u00f3n de luz",
             "title": "Opciones globales"
         }
@@ -100,6 +102,7 @@
         },
         "trigger_subtype": {
             "both_buttons": "Ambos botones",
+            "button": "Bot\u00f3n",
             "button_1": "Primer bot\u00f3n",
             "button_2": "Segundo bot\u00f3n",
             "button_3": "Tercer bot\u00f3n",
@@ -131,22 +134,22 @@
             "device_shaken": "Dispositivo agitado",
             "device_slid": "Dispositivo deslizado \"{subtype}\"",
             "device_tilted": "Dispositivo inclinado",
-            "remote_button_alt_double_press": "Bot\u00f3n \"{subtype}\" doble pulsaci\u00f3n (modo Alternativo)",
-            "remote_button_alt_long_press": "Bot\u00f3n \"{subtype}\" pulsado continuamente (modo Alternativo)",
-            "remote_button_alt_long_release": "Bot\u00f3n \"{subtype}\" soltado despu\u00e9s de una pulsaci\u00f3n larga (modo Alternativo)",
-            "remote_button_alt_quadruple_press": "Bot\u00f3n \"{subtype}\" cu\u00e1druple pulsaci\u00f3n (modo Alternativo)",
-            "remote_button_alt_quintuple_press": "Bot\u00f3n \"{subtype}\" qu\u00edntuple pulsaci\u00f3n (modo Alternativo)",
-            "remote_button_alt_short_press": "Bot\u00f3n \"{subtype}\" pulsado (modo Alternativo)",
-            "remote_button_alt_short_release": "Bot\u00f3n \"{subtype}\" soltado (modo Alternativo)",
-            "remote_button_alt_triple_press": "Bot\u00f3n \"{subtype}\" triple pulsaci\u00f3n (modo Alternativo)",
-            "remote_button_double_press": "Bot\u00f3n \"{subtype}\" pulsado dos veces",
-            "remote_button_long_press": "Bot\u00f3n \"{subtype}\" pulsado continuamente",
-            "remote_button_long_release": "Bot\u00f3n \"{subtype}\" soltado despu\u00e9s de una pulsaci\u00f3n larga",
-            "remote_button_quadruple_press": "Bot\u00f3n \"{subtype}\" pulsado cuatro veces",
-            "remote_button_quintuple_press": "Bot\u00f3n \"{subtype}\" pulsado cinco veces",
-            "remote_button_short_press": "Bot\u00f3n \"{subtype}\" pulsado",
-            "remote_button_short_release": "Bot\u00f3n \"{subtype}\" soltado",
-            "remote_button_triple_press": "Bot\u00f3n \"{subtype}\" pulsado tres veces"
+            "remote_button_alt_double_press": "\"{subtype}\" pulsado dos veces (modo alternativo)",
+            "remote_button_alt_long_press": "\"{subtype}\" pulsado continuamente (modo alternativo)",
+            "remote_button_alt_long_release": "\"{subtype}\" soltado despu\u00e9s de una pulsaci\u00f3n larga (modo alternativo)",
+            "remote_button_alt_quadruple_press": "\"{subtype}\" cu\u00e1druple pulsaci\u00f3n (modo alternativo)",
+            "remote_button_alt_quintuple_press": "\"{subtype}\" qu\u00edntuple pulsaci\u00f3n (modo alternativo)",
+            "remote_button_alt_short_press": "\"{subtype}\" pulsado (modo alternativo)",
+            "remote_button_alt_short_release": "\"{subtype}\" soltado (modo alternativo)",
+            "remote_button_alt_triple_press": "\"{subtype}\" pulsado tres veces (modo alternativo)",
+            "remote_button_double_press": "\"{subtype}\" pulsado dos veces",
+            "remote_button_long_press": "\"{subtype}\" pulsado continuamente",
+            "remote_button_long_release": "\"{subtype}\" soltado despu\u00e9s de una pulsaci\u00f3n larga",
+            "remote_button_quadruple_press": "\"{subtype}\" pulsado cuatro veces",
+            "remote_button_quintuple_press": "\"{subtype}\" pulsado cinco veces",
+            "remote_button_short_press": "\"{subtype}\" pulsado",
+            "remote_button_short_release": "\"{subtype}\" soltado",
+            "remote_button_triple_press": "\"{subtype}\" pulsado tres veces"
         }
     },
     "options": {
@@ -172,7 +175,8 @@
                 "description": "Elige la configuraci\u00f3n de red para tu radio.",
                 "menu_options": {
                     "choose_automatic_backup": "Restaurar una copia de seguridad autom\u00e1tica",
-                    "form_new_network": "Borrar la configuraci\u00f3n de red y formar una nueva red",
+                    "form_initial_network": "Crear una red",
+                    "form_new_network": "Borrar la configuraci\u00f3n de red y crear una nueva red",
                     "reuse_settings": "Mantener la configuraci\u00f3n de red de la radio",
                     "upload_manual_backup": "Subir una copia de seguridad manual"
                 },
@@ -190,11 +194,11 @@
                 "title": "Reconfigurar ZHA"
             },
             "instruct_unplug": {
-                "description": "Tu antigua radio ha sido reiniciada. Si ya no necesitas el hardware, puedes desconectarlo ahora.",
+                "description": "Tu antigua radio ha sido reiniciada. Si ya no necesitas el hardware, puedes desconectarlo ahora. \n\nPuedes conectar tu nueva radio ahora.",
                 "title": "Desconecta tu antigua radio"
             },
             "intent_migrate": {
-                "description": "Tu antigua radio se restablecer\u00e1 de f\u00e1brica. Si est\u00e1s utilizando un adaptador combinado de Z-Wave y Zigbee como el HUSBZB-1, esto solo restablecer\u00e1 la parte de Zigbee. \n\n\u00bfDeseas continuar?",
+                "description": "Antes de conectar tu nueva radio, tu vieja radio necesita ser reiniciada. Se realizar\u00e1 una copia de seguridad autom\u00e1tica. Si est\u00e1s utilizando un adaptador combinado de Z-Wave y Zigbee como el HUSBZB-1, esto solo restablecer\u00e1 la parte de Zigbee. \n\n*Nota: si est\u00e1s migrando desde un **ConBee/RaspBee**, \u00a1aseg\u00farate de que est\u00e9 ejecutando el firmware `0x26720700` o m\u00e1s reciente! De lo contrario, es posible que algunos dispositivos no se puedan controlar despu\u00e9s de la migraci\u00f3n hasta que se apaguen y enciendan.* \n\n\u00bfDeseas continuar?",
                 "title": "Migrar a una nueva radio"
             },
             "manual_pick_radio_type": {

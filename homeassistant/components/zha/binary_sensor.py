@@ -92,7 +92,7 @@ class BinarySensor(ZhaEntity, BinarySensorEntity):
     @callback
     def async_set_state(self, attr_id, attr_name, value):
         """Set the state."""
-        if self.SENSOR_ATTR is None or self.SENSOR_ATTR != attr_name:
+        if self.SENSOR_ATTR is None or attr_name != self.SENSOR_ATTR:
             return
         self._state = bool(value)
         self.async_write_ha_state()

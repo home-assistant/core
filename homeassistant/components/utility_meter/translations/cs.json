@@ -31,5 +31,20 @@
             }
         }
     },
+    "selector": {
+        "cycle": {
+            "options": {
+                "bimonthly": "Ka\u017ed\u00e9 dva m\u011bs\u00edce",
+                "daily": "Denn\u011b",
+                "hourly": "Hodinov\u011b",
+                "monthly": "M\u011bs\u00ed\u010dn\u011b",
+                "none": "\u017d\u00e1dn\u00fd cyklus",
+                "quarter-hourly": "Ka\u017ed\u00fdch 15 minut",
+                "quarterly": "\u010ctvrtletn\u011b",
+                "weekly": "T\u00fddn\u011b",
+                "yearly": "Ro\u010dn\u011b"
+            }
+        }
+    },
     "title": "M\u011b\u0159i\u010d"
 }

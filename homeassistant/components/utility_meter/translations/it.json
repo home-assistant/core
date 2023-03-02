@@ -31,5 +31,20 @@
             }
         }
     },
+    "selector": {
+        "cycle": {
+            "options": {
+                "bimonthly": "Ogni due mesi",
+                "daily": "Quotidiano",
+                "hourly": "Orario",
+                "monthly": "Mensile",
+                "none": "Nessun ciclo",
+                "quarter-hourly": "Ogni 15 minuti",
+                "quarterly": "Trimestrale",
+                "weekly": "Settimanale",
+                "yearly": "Annuale"
+            }
+        }
+    },
     "title": "Misuratore di utilit\u00e0"
 }

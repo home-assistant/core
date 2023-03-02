@@ -1,6 +1,7 @@
 """Tests for ZHA config flow."""
 
 import copy
+from datetime import timedelta
 import json
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, create_autospec, patch
 import uuid
@@ -67,12 +68,27 @@ def mock_app():
 
 
 @pytest.fixture
-def backup():
-    """Zigpy network backup with non-default settings."""
-    backup = zigpy.backups.NetworkBackup()
-    backup.node_info.ieee = zigpy.types.EUI64.convert("AA:BB:CC:DD:11:22:33:44")
+def make_backup():
+    """Zigpy network backup factory that creates unique backups with each call."""
+    num_calls = 0
 
-    return backup
+    def inner(*, backup_time_offset=0):
+        nonlocal num_calls
+
+        backup = zigpy.backups.NetworkBackup()
+        backup.backup_time += timedelta(seconds=backup_time_offset)
+        backup.node_info.ieee = zigpy.types.EUI64.convert(f"AABBCCDDEE{num_calls:06X}")
+        num_calls += 1
+
+        return backup
+
+    return inner
+
+
+@pytest.fixture
+def backup(make_backup):
+    """Zigpy network backup with non-default settings."""
+    return make_backup()
 
 
 def mock_detect_radio_type(radio_type=RadioType.ezsp, ret=True):
@@ -1101,6 +1117,56 @@ async def test_formation_strategy_form_new_network(pick_radio, mock_app, hass):
     assert result2["type"] == FlowResultType.CREATE_ENTRY
 
 
+async def test_formation_strategy_form_initial_network(pick_radio, mock_app, hass):
+    """Test forming a new network, with no previous settings on the radio."""
+    mock_app.load_network_info = AsyncMock(side_effect=NetworkNotFormed())
+
+    result, port = await pick_radio(RadioType.ezsp)
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"next_step_id": config_flow.FORMATION_FORM_INITIAL_NETWORK},
+    )
+    await hass.async_block_till_done()
+
+    # A new network will be formed
+    mock_app.form_network.assert_called_once()
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+
+
+@patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
+async def test_onboarding_auto_formation_new_hardware(mock_app, hass):
+    """Test auto network formation with new hardware during onboarding."""
+    mock_app.load_network_info = AsyncMock(side_effect=NetworkNotFormed())
+    discovery_info = usb.UsbServiceInfo(
+        device="/dev/ttyZIGBEE",
+        pid="AAAA",
+        vid="AAAA",
+        serial_number="1234",
+        description="zigbee radio",
+        manufacturer="test",
+    )
+
+    with patch(
+        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "zigbee radio"
+    assert result["data"] == {
+        "device": {
+            "baudrate": 115200,
+            "flow_control": None,
+            "path": "/dev/ttyZIGBEE",
+        },
+        CONF_RADIO_TYPE: "znp",
+    }
+
+
 async def test_formation_strategy_reuse_settings(pick_radio, mock_app, hass):
     """Test reusing existing network settings."""
     result, port = await pick_radio(RadioType.ezsp)
@@ -1298,13 +1364,13 @@ def test_format_backup_choice():
 )
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 async def test_formation_strategy_restore_automatic_backup_ezsp(
-    pick_radio, mock_app, hass
+    pick_radio, mock_app, make_backup, hass
 ):
     """Test restoring an automatic backup (EZSP radio)."""
     mock_app.backups.backups = [
-        MagicMock(),
-        MagicMock(),
-        MagicMock(),
+        make_backup(),
+        make_backup(),
+        make_backup(),
     ]
     backup = mock_app.backups.backups[1]  # pick the second one
     backup.is_compatible_with = MagicMock(return_value=False)
@@ -1347,13 +1413,13 @@ async def test_formation_strategy_restore_automatic_backup_ezsp(
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 @pytest.mark.parametrize("is_advanced", [True, False])
 async def test_formation_strategy_restore_automatic_backup_non_ezsp(
-    is_advanced, pick_radio, mock_app, hass
+    is_advanced, pick_radio, mock_app, make_backup, hass
 ):
     """Test restoring an automatic backup (non-EZSP radio)."""
     mock_app.backups.backups = [
-        MagicMock(),
-        MagicMock(),
-        MagicMock(),
+        make_backup(backup_time_offset=5),
+        make_backup(backup_time_offset=-3),
+        make_backup(backup_time_offset=2),
     ]
     backup = mock_app.backups.backups[1]  # pick the second one
     backup.is_compatible_with = MagicMock(return_value=False)
@@ -1375,13 +1441,20 @@ async def test_formation_strategy_restore_automatic_backup_non_ezsp(
     assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "choose_automatic_backup"
 
-    # We must prompt for overwriting the IEEE address
+    # We don't prompt for overwriting the IEEE address, since only EZSP needs this
     assert config_flow.OVERWRITE_COORDINATOR_IEEE not in result2["data_schema"].schema
+
+    # The backup choices are ordered by date
+    assert result2["data_schema"].schema["choose_automatic_backup"].container == [
+        f"choice:{mock_app.backups.backups[0]!r}",
+        f"choice:{mock_app.backups.backups[2]!r}",
+        f"choice:{mock_app.backups.backups[1]!r}",
+    ]
 
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
         user_input={
-            config_flow.CHOOSE_AUTOMATIC_BACKUP: "choice:" + repr(backup),
+            config_flow.CHOOSE_AUTOMATIC_BACKUP: f"choice:{backup!r}",
         },
     )
 

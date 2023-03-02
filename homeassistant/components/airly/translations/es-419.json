@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "La integraci\u00f3n a\u00e9rea para estas coordenadas ya est\u00e1 configurada."
+            "already_configured": "La integraci\u00f3n a\u00e9rea para estas coordenadas ya est\u00e1 configurada.",
+            "wrong_location": "No hay estaciones de medici\u00f3n Airly en esta \u00e1rea."
         },
         "error": {
             "wrong_location": "No hay estaciones de medici\u00f3n Airly en esta \u00e1rea."

@@ -41,7 +41,10 @@ async def test_form(hass: HomeAssistant) -> None:
     )
     assert result2["type"] == FlowResultType.FORM
 
-    with patch("adax.get_adax_token", return_value="test_token",), patch(
+    with patch(
+        "adax.get_adax_token",
+        return_value="test_token",
+    ), patch(
         "homeassistant.components.adax.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:

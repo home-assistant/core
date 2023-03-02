@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
-            "api_not_enabled": "API \u672a\u958b\u555f\u3002\u8acb\u65bc HomeWizard Energy App \u8a2d\u5b9a\u5167\u555f\u7528 API",
             "device_not_supported": "\u4e0d\u652f\u63f4\u6b64\u88dd\u7f6e",
             "invalid_discovery_parameters": "\u5075\u6e2c\u5230\u4e0d\u652f\u63f4 API \u7248\u672c",
             "reauth_successful": "\u555f\u7528 API \u6210\u529f",

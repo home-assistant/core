@@ -1,5 +1,4 @@
 """Tests for the AndroidTV config flow."""
-import json
 from unittest.mock import patch
 
 import pytest
@@ -126,7 +125,6 @@ async def test_user_adbkey(hass):
         CONNECT_METHOD,
         return_value=(MockConfigDevice(), None),
     ), PATCH_ISFILE, PATCH_ACCESS, PATCH_SETUP_ENTRY as mock_setup_entry:
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER, "show_advanced_options": True},
@@ -410,7 +408,7 @@ async def test_options_flow(hass):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
-                CONF_RULE_VALUES: json.dumps({"a": "b"}),
+                CONF_RULE_VALUES: {"a": "b"},
             },
         )
         assert result["type"] == data_entry_flow.FlowResultType.FORM
@@ -421,7 +419,7 @@ async def test_options_flow(hass):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
-                CONF_RULE_VALUES: json.dumps(["standby"]),
+                CONF_RULE_VALUES: ["standby"],
             },
         )
         assert result["type"] == data_entry_flow.FlowResultType.FORM
@@ -442,7 +440,7 @@ async def test_options_flow(hass):
             result["flow_id"],
             user_input={
                 CONF_RULE_ID: "rule2",
-                CONF_RULE_VALUES: json.dumps(VALID_DETECT_RULE),
+                CONF_RULE_VALUES: VALID_DETECT_RULE,
             },
         )
         assert result["type"] == data_entry_flow.FlowResultType.FORM

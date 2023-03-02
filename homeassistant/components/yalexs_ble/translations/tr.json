@@ -16,7 +16,7 @@
         "flow_title": "{name}",
         "step": {
             "integration_discovery_confirm": {
-                "description": "{address} adresiyle Bluetooth \u00fczerinden {name} kurmak istiyor musunuz?"
+                "description": "{name} adresini Bluetooth \u00fczerinden {address} adresiyle kurmak istiyor musunuz?"
             },
             "user": {
                 "data": {

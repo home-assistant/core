@@ -154,8 +154,8 @@ async def test_getting_backup_that_does_not_exist(
 
         assert (
             f"Removing tracked backup ({TEST_BACKUP.slug}) that "
-            f"does not exists on the expected path {TEST_BACKUP.path}" in caplog.text
-        )
+            f"does not exists on the expected path {TEST_BACKUP.path}"
+        ) in caplog.text
 
 
 async def test_generate_backup_when_backing_up(hass: HomeAssistant) -> None:

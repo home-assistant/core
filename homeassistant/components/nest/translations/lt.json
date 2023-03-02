@@ -10,5 +10,12 @@
                 }
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "Aptiktas judesys",
+            "camera_person": "Aptiktas asmuo",
+            "camera_sound": "Aptiktas garsas"
+        }
     }
 }

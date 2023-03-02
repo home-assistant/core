@@ -140,8 +140,8 @@ async def test_source_list(player, state):
 @pytest.mark.parametrize(
     "mode",
     [
-        ("STEREO"),
-        ("DOLBY_PL"),
+        "STEREO",
+        "DOLBY_PL",
     ],
 )
 async def test_select_sound_mode(player, state, mode):

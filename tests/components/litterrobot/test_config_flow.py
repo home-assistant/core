@@ -140,7 +140,6 @@ async def test_step_reauth(hass: HomeAssistant, mock_account: Account) -> None:
         "homeassistant.components.litterrobot.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_PASSWORD: CONFIG[litterrobot.DOMAIN][CONF_PASSWORD]},
@@ -190,7 +189,6 @@ async def test_step_reauth_failed(hass: HomeAssistant, mock_account: Account) ->
         "homeassistant.components.litterrobot.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_PASSWORD: CONFIG[litterrobot.DOMAIN][CONF_PASSWORD]},

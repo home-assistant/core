@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable, Coroutine, Sequence
 import contextlib
 from datetime import datetime, timedelta
 import functools
-from typing import Any, TypeVar
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from async_upnp_client.client import UpnpService, UpnpStateVariable
 from async_upnp_client.const import NotificationSubType
@@ -14,7 +14,6 @@ from async_upnp_client.exceptions import UpnpError, UpnpResponseError
 from async_upnp_client.profiles.dlna import DmrDevice, PlayMode, TransportState
 from async_upnp_client.utils import async_get_local_ip
 from didl_lite import didl_lite
-from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant import config_entries
 from homeassistant.components import media_source, ssdp

@@ -12,13 +12,13 @@
                 "data": {
                     "path": "Caminho de dongle USB"
                 },
-                "title": "Selecione o caminho para seu dongle ENOcean"
+                "title": "Selecione o caminho para o seu dongle ENOcean"
             },
             "manual": {
                 "data": {
                     "path": "caminho do dongle USB"
                 },
-                "title": "Digite o caminho para voc\u00ea dongle ENOcean"
+                "title": "Digite o caminho para o seu dongle ENOcean"
             }
         }
     }

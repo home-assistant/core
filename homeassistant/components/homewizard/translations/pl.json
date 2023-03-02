@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
-            "api_not_enabled": "Interfejs API nie jest w\u0142\u0105czony. W\u0142\u0105cz API w ustawieniach aplikacji HomeWizard Energy.",
             "device_not_supported": "To urz\u0105dzenie nie jest obs\u0142ugiwane",
             "invalid_discovery_parameters": "Wykryto nieobs\u0142ugiwan\u0105 wersj\u0119 API",
             "reauth_successful": "W\u0142\u0105czenie interfejsu API powiod\u0142o si\u0119",

@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "La contrase\u00f1a se puede recuperar desde la interfaz de usuario de AirVisual Pro."
+            }
+        }
+    }
+}

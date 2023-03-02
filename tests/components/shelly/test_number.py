@@ -11,7 +11,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import State
 from homeassistant.exceptions import HomeAssistantError
 
@@ -65,6 +65,40 @@ async def test_block_restored_number(hass, mock_block_device, device_reg, monkey
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == "40"
+
+    # Make device online
+    monkeypatch.setattr(mock_block_device, "initialized", True)
+    mock_block_device.mock_update()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "50"
+
+
+async def test_block_restored_number_no_last_state(
+    hass, mock_block_device, device_reg, monkeypatch
+):
+    """Test block restored number missing last state."""
+    entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
+    register_device(device_reg, entry)
+    capabilities = {
+        "min": 0,
+        "max": 100,
+        "step": 1,
+        "mode": "slider",
+    }
+    entity_id = register_entity(
+        hass,
+        NUMBER_DOMAIN,
+        "test_name_valve_position",
+        "device_0-valvePos",
+        entry,
+        capabilities,
+    )
+    monkeypatch.setattr(mock_block_device, "initialized", False)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
     # Make device online
     monkeypatch.setattr(mock_block_device, "initialized", True)

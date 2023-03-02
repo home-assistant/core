@@ -63,8 +63,8 @@ class ZWaveNodePingButton(ButtonEntity):
     async def async_poll_value(self, _: bool) -> None:
         """Poll a value."""
         LOGGER.error(
-            "There is no value to refresh for this entity so the zwave_js.refresh_value "
-            "service won't work for it"
+            "There is no value to refresh for this entity so the zwave_js.refresh_value"
+            " service won't work for it"
         )
 
     async def async_added_to_hass(self) -> None:

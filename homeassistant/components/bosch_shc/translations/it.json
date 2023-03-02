@@ -14,7 +14,7 @@
         "flow_title": "Bosch SHC: {name}",
         "step": {
             "confirm_discovery": {
-                "description": "Premi il pulsante sul lato anteriore del controller Bosch Smart Home finch\u00e9 il LED non inizia a lampeggiare.\nSei pronto per continuare a configurare {model} @ {host} con Home Assistant?"
+                "description": "Smart Home Controller I: premere il pulsante frontale finch\u00e9 il LED non inizia a lampeggiare.\nSmart Home Controller II: premere brevemente il pulsante funzione. Le spie del cloud e della rete iniziano a lampeggiare in arancione.\nIl dispositivo \u00e8 ora pronto per essere associato. \n\nPronto per continuare a configurare {model} @ {host} con Home Assistant?"
             },
             "credentials": {
                 "data": {
@@ -22,6 +22,9 @@
                 }
             },
             "reauth_confirm": {
+                "data": {
+                    "host": "Host"
+                },
                 "description": "L'integrazione bosch_shc deve autenticare nuovamente il tuo account",
                 "title": "Autentica nuovamente l'integrazione"
             },

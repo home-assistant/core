@@ -39,5 +39,15 @@
             }
         }
     },
+    "selector": {
+        "time_unit": {
+            "options": {
+                "d": "Dias",
+                "h": "Horas",
+                "min": "Minutos",
+                "s": "Segundos"
+            }
+        }
+    },
     "title": "Sensor derivativo"
 }

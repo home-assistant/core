@@ -3,7 +3,9 @@
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
-            "error_pairing": "Koblet til LG webOS TV, men ikke sammenkoblet"
+            "error_pairing": "Koblet til LG webOS TV, men ikke sammenkoblet",
+            "reauth_successful": "Re-autentisering var vellykket",
+            "reauth_unsuccessful": "Re-autentisering mislyktes. Sl\u00e5 p\u00e5 TV-en og pr\u00f8v igjen."
         },
         "error": {
             "cannot_connect": "Kunne ikke koble til. Sl\u00e5 p\u00e5 TV-en eller sjekk IP-adressen"
@@ -12,6 +14,10 @@
         "step": {
             "pairing": {
                 "description": "Klikk p\u00e5 send og godta sammenkoblingsforesp\u00f8rselen p\u00e5 TV-en. \n\n ![Image](/static/images/config_webos.png)",
+                "title": "webOS TV-sammenkobling"
+            },
+            "reauth_confirm": {
+                "description": "Klikk p\u00e5 send inn og godta sammenkoblingsforesp\u00f8rselen p\u00e5 TV-en. \n\n ![Image](/static/images/config_webos.png)",
                 "title": "webOS TV-sammenkobling"
             },
             "user": {
@@ -31,8 +37,7 @@
     },
     "options": {
         "error": {
-            "cannot_retrieve": "Kan ikke hente listen over kilder. S\u00f8rg for at enheten er sl\u00e5tt p\u00e5",
-            "script_not_found": "Skriptet ikke funnet"
+            "cannot_retrieve": "Kan ikke hente listen over kilder. S\u00f8rg for at enheten er sl\u00e5tt p\u00e5"
         },
         "step": {
             "init": {

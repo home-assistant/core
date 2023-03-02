@@ -80,11 +80,18 @@
                 },
                 "description": "Canvia la informaci\u00f3 de connexi\u00f3 de l'Insteon Hub. Has de reiniciar Home Assistant si fas canvis. Aix\u00f2 no canvia la configuraci\u00f3 del Hub en si. Per canviar la configuraci\u00f3 del Hub, utilitza la seva aplicaci\u00f3."
             },
+            "change_plm_config": {
+                "data": {
+                    "device": "Ruta del dispositiu USB"
+                },
+                "description": "Canvia la informaci\u00f3 de connexi\u00f3 d'Insteon PLM. Has de reiniciar Home Assistant si fas canvis. Aix\u00f2 no canvia la configuraci\u00f3 del PLM en si."
+            },
             "init": {
                 "data": {
                     "add_override": "Afegeix una substituci\u00f3 de dispositiu.",
                     "add_x10": "Afegeix un dispositiu X10.",
                     "change_hub_config": "Canvia la configuraci\u00f3 del Hub.",
+                    "change_plm_config": "Canvia la configuraci\u00f3 de PLM.",
                     "remove_override": "Elimina una substituci\u00f3 de dispositiu.",
                     "remove_x10": "Elimina un dispositiu X10."
                 }

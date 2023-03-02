@@ -1,16 +1,25 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato"
+            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi"
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida"
         },
         "step": {
             "api_key": {
                 "data": {
                     "api_key": "Chiave API"
                 }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Chiave API"
+                },
+                "description": "Inserisci una nuova chiave API per PI-Hole in {host}/{location}",
+                "title": "Autentica nuovamente l'integrazione PI-Hole"
             },
             "user": {
                 "data": {
@@ -20,7 +29,6 @@
                     "name": "Nome",
                     "port": "Porta",
                     "ssl": "Utilizza un certificato SSL",
-                    "statistics_only": "Solo Statistiche",
                     "verify_ssl": "Verifica il certificato SSL"
                 }
             }

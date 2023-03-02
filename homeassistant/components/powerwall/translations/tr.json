@@ -14,7 +14,7 @@
         "flow_title": "{name} ({ip_address})",
         "step": {
             "confirm_discovery": {
-                "description": "{name} ( {ip_address} ) kurulumu yapmak istiyor musunuz?",
+                "description": "{name} ( {ip_address} ) kurmak istiyor musunuz?",
                 "title": "Powerwall'a ba\u011flan\u0131n"
             },
             "reauth_confim": {

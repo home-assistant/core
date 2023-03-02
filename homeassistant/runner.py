@@ -90,11 +90,18 @@ def _async_loop_exception_handler(_: Any, context: dict[str, Any]) -> None:
     if source_traceback := context.get("source_traceback"):
         stack_summary = "".join(traceback.format_list(source_traceback))
         logger.error(
-            "Error doing job: %s: %s", context["message"], stack_summary, **kwargs  # type: ignore[arg-type]
+            "Error doing job: %s: %s",
+            context["message"],
+            stack_summary,
+            **kwargs,  # type: ignore[arg-type]
         )
         return
 
-    logger.error("Error doing job: %s", context["message"], **kwargs)  # type: ignore[arg-type]
+    logger.error(
+        "Error doing job: %s",
+        context["message"],
+        **kwargs,  # type: ignore[arg-type]
+    )
 
 
 async def setup_and_run_hass(runtime_config: RuntimeConfig) -> int:
@@ -105,7 +112,8 @@ async def setup_and_run_hass(runtime_config: RuntimeConfig) -> int:
         return 1
 
     # threading._shutdown can deadlock forever
-    threading._shutdown = deadlock_safe_shutdown  # type: ignore[attr-defined] # pylint: disable=protected-access
+    # pylint: disable-next=protected-access
+    threading._shutdown = deadlock_safe_shutdown  # type: ignore[attr-defined]
 
     return await hass.async_run()
 

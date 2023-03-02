@@ -23,7 +23,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     STATE_UNAVAILABLE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -84,7 +84,7 @@ async def test_awair_gen1_sensors(hass: HomeAssistant, user, cloud_devices, gen1
         "sensor.living_room_temperature",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_TEMP].unique_id_tag}",
         "21.8",
-        {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS, "awair_index": 1.0},
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS, "awair_index": 1.0},
     )
 
     assert_expected_properties(

@@ -396,11 +396,12 @@ class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
     options = ()
 
     def __init__(self, linter: PyLinter | None = None) -> None:
+        """Initialize the HassImportsFormatChecker."""
         super().__init__(linter)
         self.current_package: str | None = None
 
     def visit_module(self, node: nodes.Module) -> None:
-        """Called when a Module node is visited."""
+        """Determine current package."""
         if node.package:
             self.current_package = node.name
         else:
@@ -408,7 +409,7 @@ class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
             self.current_package = node.name[: node.name.rfind(".")]
 
     def visit_import(self, node: nodes.Import) -> None:
-        """Called when a Import node is visited."""
+        """Check for improper `import _` invocations."""
         if self.current_package is None:
             return
         for module, _alias in node.names:
@@ -430,7 +431,7 @@ class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
     def _visit_importfrom_relative(
         self, current_package: str, node: nodes.ImportFrom
     ) -> None:
-        """Called when a ImportFrom node is visited."""
+        """Check for improper 'from ._ import _' invocations."""
         if (
             node.level <= 1
             or not current_package.startswith("homeassistant.components.")
@@ -449,7 +450,7 @@ class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
             self.add_message("hass-absolute-import", node=node)
 
     def visit_importfrom(self, node: nodes.ImportFrom) -> None:
-        """Called when a ImportFrom node is visited."""
+        """Check for improper 'from _ import _' invocations."""
         if not self.current_package:
             return
         if node.level is not None:

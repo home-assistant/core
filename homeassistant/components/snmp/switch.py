@@ -210,7 +210,6 @@ class SnmpSwitch(SwitchEntity):
         self._payload_off = payload_off
 
         if version == "3":
-
             if not authkey:
                 authproto = "none"
             if not privkey:

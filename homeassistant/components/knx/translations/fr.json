@@ -6,10 +6,8 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "file_not_found": "Le fichier `.knxkeys` sp\u00e9cifi\u00e9 n'a pas \u00e9t\u00e9 trouv\u00e9 dans config/.storage/knx/",
             "invalid_individual_address": "La valeur de l'adresse individuelle KNX ne correspond pas au mod\u00e8le.\n'area.line.device'",
-            "invalid_ip_address": "Adresse IPv4 non valide.",
-            "invalid_signature": "Le mot de passe pour d\u00e9chiffrer le fichier `.knxkeys` est erron\u00e9."
+            "invalid_ip_address": "Adresse IPv4 non valide."
         },
         "step": {
             "connection_type": {
@@ -82,10 +80,8 @@
     "options": {
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "file_not_found": "Le fichier `.knxkeys` sp\u00e9cifi\u00e9 n'a pas \u00e9t\u00e9 trouv\u00e9 dans config/.storage/knx/",
             "invalid_individual_address": "La valeur de l'adresse individuelle KNX ne correspond pas au mod\u00e8le.\n'area.line.device'",
-            "invalid_ip_address": "Adresse IPv4 non valide.",
-            "invalid_signature": "Le mot de passe pour d\u00e9chiffrer le fichier `.knxkeys` est erron\u00e9."
+            "invalid_ip_address": "Adresse IPv4 non valide."
         },
         "step": {
             "connection_type": {

@@ -9,7 +9,11 @@
         "step": {
             "user": {
                 "data": {
-                    "name": "Naam"
+                    "device_key": "De apparaatsleutel van uw apparaat",
+                    "event": "De gebeurtenis voor de gebeurtenissen",
+                    "name": "Naam",
+                    "password": "Het wachtwoord voor de encryptie gebruikt door jouw apparaat",
+                    "salt": "De salt gebruikt door jouw apparaat."
                 }
             }
         }

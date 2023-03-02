@@ -30,14 +30,6 @@
                 "description": "Pou\u017eite cloudov\u00e9 API AirVisual na monitorovanie mesta/\u0161t\u00e1tu/krajiny.",
                 "title": "Konfigur\u00e1cia geografie"
             },
-            "node_pro": {
-                "data": {
-                    "ip_address": "Hostite\u013e",
-                    "password": "Heslo"
-                },
-                "description": "Monitorujte osobn\u00fa jednotku AirVisual. Heslo je mo\u017en\u00e9 z\u00edska\u0165 z pou\u017e\u00edvate\u013esk\u00e9ho rozhrania jednotky.",
-                "title": "Nastavenie AirVisual Node/Pro"
-            },
             "reauth_confirm": {
                 "data": {
                     "api_key": "API k\u013e\u00fa\u010d"

@@ -1,0 +1,38 @@
+{
+    "config": {
+        "error": {
+            "need_lower_upper": "Spodn\u00ed a horn\u00ed limit nemohou b\u00fdt oba pr\u00e1zdn\u00e9"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "entity_id": "Vstupn\u00ed senzor",
+                    "hysteresis": "Hystereze",
+                    "lower": "Spodn\u00ed limit",
+                    "name": "Jm\u00e9no",
+                    "upper": "Horn\u00ed limit"
+                },
+                "description": "Vytvo\u0159en\u00ed bin\u00e1rn\u00edho senzoru, kter\u00fd se zap\u00edn\u00e1 a vyp\u00edn\u00e1 v z\u00e1vislosti na hodnot\u011b vstupn\u00edho senzoru\n\nNastaven pouze doln\u00ed limit - Zapne se, kdy\u017e je hodnota vstupn\u00edho senzoru ni\u017e\u0161\u00ed ne\u017e spodn\u00ed limit.\nNastaven pouze horn\u00ed limit - Zapne se, kdy\u017e je hodnota vstupn\u00edho senzoru v\u011bt\u0161\u00ed ne\u017e horn\u00ed limit.\nNastaven doln\u00ed i horn\u00ed limit - Zapne se, kdy\u017e je hodnota vstupn\u00edho senzoru v rozsahu [spodn\u00ed limit .. horn\u00ed limit].",
+                "title": "P\u0159idat senzor Pr\u00e1h"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "need_lower_upper": "Spodn\u00ed a horn\u00ed limit nemohou b\u00fdt oba pr\u00e1zdn\u00e9"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "entity_id": "Vstupn\u00ed senzor",
+                    "hysteresis": "Hystereze",
+                    "lower": "Spodn\u00ed limit",
+                    "name": "Jm\u00e9no",
+                    "upper": "Horn\u00ed limit"
+                },
+                "description": "Nastaven pouze doln\u00ed limit - Zapne se, kdy\u017e je hodnota vstupn\u00edho senzoru ni\u017e\u0161\u00ed ne\u017e spodn\u00ed limit.\nNastaven pouze horn\u00ed limit - Zapne se, kdy\u017e je hodnota vstupn\u00edho senzoru v\u011bt\u0161\u00ed ne\u017e horn\u00ed limit.\nNastaven doln\u00ed i horn\u00ed limit - Zapne se, kdy\u017e je hodnota vstupn\u00edho senzoru v rozsahu [spodn\u00ed limit .. horn\u00ed limit]."
+            }
+        }
+    },
+    "title": "Senzor Pr\u00e1h"
+}

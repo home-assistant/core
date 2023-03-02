@@ -36,13 +36,18 @@ from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
+    DataRateConverter,
     DistanceConverter,
+    ElectricCurrentConverter,
+    ElectricPotentialConverter,
     EnergyConverter,
+    InformationConverter,
     MassConverter,
     PowerConverter,
     PressureConverter,
     SpeedConverter,
     TemperatureConverter,
+    UnitlessRatioConverter,
     VolumeConverter,
 )
 
@@ -127,13 +132,21 @@ QUERY_STATISTIC_META = [
 
 
 STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
+    **{unit: DataRateConverter for unit in DataRateConverter.VALID_UNITS},
     **{unit: DistanceConverter for unit in DistanceConverter.VALID_UNITS},
+    **{unit: ElectricCurrentConverter for unit in ElectricCurrentConverter.VALID_UNITS},
+    **{
+        unit: ElectricPotentialConverter
+        for unit in ElectricPotentialConverter.VALID_UNITS
+    },
     **{unit: EnergyConverter for unit in EnergyConverter.VALID_UNITS},
+    **{unit: InformationConverter for unit in InformationConverter.VALID_UNITS},
     **{unit: MassConverter for unit in MassConverter.VALID_UNITS},
     **{unit: PowerConverter for unit in PowerConverter.VALID_UNITS},
     **{unit: PressureConverter for unit in PressureConverter.VALID_UNITS},
     **{unit: SpeedConverter for unit in SpeedConverter.VALID_UNITS},
     **{unit: TemperatureConverter for unit in TemperatureConverter.VALID_UNITS},
+    **{unit: UnitlessRatioConverter for unit in UnitlessRatioConverter.VALID_UNITS},
     **{unit: VolumeConverter for unit in VolumeConverter.VALID_UNITS},
 }
 
@@ -154,9 +167,6 @@ def get_display_unit(
     statistic_unit: str | None,
 ) -> str | None:
     """Return the unit which the statistic will be displayed in."""
-
-    if statistic_unit is None:
-        return None
 
     if (converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistic_unit)) is None:
         return statistic_unit
@@ -182,9 +192,6 @@ def _get_statistic_to_display_unit_converter(
     def no_conversion(val: float | None) -> float | None:
         """Return val."""
         return val
-
-    if statistic_unit is None:
-        return no_conversion
 
     if (converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistic_unit)) is None:
         return no_conversion
@@ -225,9 +232,6 @@ def _get_display_to_statistic_unit_converter(
     def no_conversion(val: float) -> float:
         """Return val."""
         return val
-
-    if statistic_unit is None:
-        return no_conversion
 
     if (converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistic_unit)) is None:
         return no_conversion
@@ -1555,17 +1559,10 @@ def statistic_during_period(
             else:
                 result["change"] = None
 
-    def no_conversion(val: float | None) -> float | None:
-        """Return val."""
-        return val
-
     state_unit = unit = metadata[statistic_id][1]["unit_of_measurement"]
     if state := hass.states.get(statistic_id):
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-    if unit is not None:
-        convert = _get_statistic_to_display_unit_converter(unit, state_unit, units)
-    else:
-        convert = no_conversion
+    convert = _get_statistic_to_display_unit_converter(unit, state_unit, units)
 
     return {key: convert(value) for key, value in result.items()}
 
@@ -1686,7 +1683,10 @@ def _get_last_statistics_short_term_stmt(
     metadata_id: int,
     number_of_stats: int,
 ) -> StatementLambdaElement:
-    """Generate a statement for number_of_stats short term statistics for a given statistic_id."""
+    """Generate a statement for number_of_stats short term statistics.
+
+    For a given statistic_id.
+    """
     return lambda_stmt(
         lambda: select(*QUERY_STATISTICS_SHORT_TERM)
         .filter_by(metadata_id=metadata_id)
@@ -1895,7 +1895,10 @@ def _sorted_statistics_to_dict(
             result[stat_id] = []
 
     # Identify metadata IDs for which no data was available at the requested start time
-    for meta_id, group in groupby(stats, lambda stat: stat.metadata_id):  # type: ignore[no-any-return]
+    for meta_id, group in groupby(
+        stats,
+        lambda stat: stat.metadata_id,  # type: ignore[no-any-return]
+    ):
         first_start_time = process_timestamp(next(group).start)
         if start_time and first_start_time > start_time:
             need_stat_at_start_time.add(meta_id)
@@ -1911,12 +1914,15 @@ def _sorted_statistics_to_dict(
                 stats_at_start_time[stat.metadata_id] = (stat,)
 
     # Append all statistic entries, and optionally do unit conversion
-    for meta_id, group in groupby(stats, lambda stat: stat.metadata_id):  # type: ignore[no-any-return]
+    for meta_id, group in groupby(
+        stats,
+        lambda stat: stat.metadata_id,  # type: ignore[no-any-return]
+    ):
         state_unit = unit = metadata[meta_id]["unit_of_measurement"]
         statistic_id = metadata[meta_id]["statistic_id"]
         if state := hass.states.get(statistic_id):
             state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        if unit is not None and convert_units:
+        if convert_units:
             convert = _get_statistic_to_display_unit_converter(unit, state_unit, units)
         else:
             convert = no_conversion
@@ -1978,7 +1984,7 @@ def _async_import_statistics(
     metadata: StatisticMetaData,
     statistics: Iterable[StatisticData],
 ) -> None:
-    """Validate timestamps and insert an import_statistics job in the recorder's queue."""
+    """Validate timestamps and insert an import_statistics job in the queue."""
     for statistic in statistics:
         start = statistic["start"]
         if start.tzinfo is None or start.tzinfo.utcoffset(start) is None:
@@ -2427,17 +2433,18 @@ def correct_db_schema(
             ),
             "statistics_meta",
         )
-        with contextlib.suppress(SQLAlchemyError):
-            with session_scope(session=session_maker()) as session:
-                connection = session.connection()
-                connection.execute(
-                    # Using LOCK=EXCLUSIVE to prevent the database from corrupting
-                    # https://github.com/home-assistant/core/issues/56104
-                    text(
-                        "ALTER TABLE statistics_meta CONVERT TO CHARACTER SET utf8mb4"
-                        " COLLATE utf8mb4_unicode_ci, LOCK=EXCLUSIVE"
-                    )
+        with contextlib.suppress(SQLAlchemyError), session_scope(
+            session=session_maker()
+        ) as session:
+            connection = session.connection()
+            connection.execute(
+                # Using LOCK=EXCLUSIVE to prevent the database from corrupting
+                # https://github.com/home-assistant/core/issues/56104
+                text(
+                    "ALTER TABLE statistics_meta CONVERT TO CHARACTER SET utf8mb4"
+                    " COLLATE utf8mb4_unicode_ci, LOCK=EXCLUSIVE"
                 )
+            )
 
     tables: tuple[type[Statistics | StatisticsShortTerm], ...] = (
         Statistics,

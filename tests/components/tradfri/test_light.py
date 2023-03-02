@@ -72,7 +72,7 @@ TRANSITION_CASES_FOR_TESTS = [None, 0, 1]
 
 
 @pytest.fixture(autouse=True, scope="module")
-def setup(request):
+def setup():
     """Set up patches for pytradfri methods."""
     p_1 = patch(
         "pytradfri.device.LightControl.raw",
@@ -83,12 +83,10 @@ def setup(request):
     p_1.start()
     p_2.start()
 
-    def teardown():
-        """Remove patches for pytradfri methods."""
-        p_1.stop()
-        p_2.stop()
+    yield
 
-    request.addfinalizer(teardown)
+    p_1.stop()
+    p_2.stop()
 
 
 async def generate_psk(self, code):

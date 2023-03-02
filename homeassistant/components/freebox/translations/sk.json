@@ -10,7 +10,7 @@
         },
         "step": {
             "link": {
-                "description": "Kliknite na \u201eOdosla\u0165\u201c a potom sa dotknite \u0161\u00edpky doprava na smerova\u010di a zaregistrujte Freebox s Home Assistant. \n\n ![Umiestnenie tla\u010didla na smerova\u010di](/static/images/config_freebox.png)",
+                "description": "Kliknite na \"Odosla\u0165\" a potom sa dotknite \u0161\u00edpky doprava na smerova\u010di a zaregistrujte Freebox s Home Assistant. \n\n ![Umiestnenie tla\u010didla na smerova\u010di](/static/images/config_freebox.png)",
                 "title": "Prepoji\u0165 router Freebox"
             },
             "user": {

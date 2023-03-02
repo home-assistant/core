@@ -154,7 +154,8 @@ PLATFORM_SCHEMA_STATE_MODERN = (
     .extend(MQTT_VACUUM_SCHEMA.schema)
 )
 
-# Configuring MQTT Vacuums under the vacuum platform key was deprecated in HA Core 2022.6
+# Configuring MQTT Vacuums under the vacuum platform key was deprecated in
+# HA Core 2022.6
 PLATFORM_SCHEMA_STATE = vol.All(
     cv.PLATFORM_SCHEMA.extend(PLATFORM_SCHEMA_STATE_MODERN.schema),
     warn_for_legacy_schema(VACUUM_DOMAIN),

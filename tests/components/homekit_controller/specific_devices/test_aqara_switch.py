@@ -1,5 +1,4 @@
-"""
-Regression tests for Aqara AR004.
+"""Regression tests for Aqara AR004.
 
 This device has a non-standard programmable stateless switch service that has a
 service-label-index despite not being linked to a service-label.

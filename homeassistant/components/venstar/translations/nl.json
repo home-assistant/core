@@ -19,5 +19,18 @@
                 "title": "Maak verbinding met de Venstar-thermostaat"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "schedule_part": {
+                "state": {
+                    "day": "Dag",
+                    "evening": "Avond",
+                    "inactive": "Inactief",
+                    "morning": "Ochtend",
+                    "night": "Nacht"
+                }
+            }
+        }
     }
 }

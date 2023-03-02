@@ -10,7 +10,7 @@
     }
   ],
   "requirements": ["kegtron-ble==0.4.0"],
-  "dependencies": ["bluetooth"],
+  "dependencies": ["bluetooth_adapters"],
   "codeowners": ["@Ernst79"],
   "iot_class": "local_push"
 }

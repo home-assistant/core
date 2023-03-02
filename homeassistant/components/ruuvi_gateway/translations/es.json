@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La cuenta ya est\u00e1 configurada"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host (direcci\u00f3n IP o nombre DNS)",
+                    "token": "Token de portador (configurado durante la configuraci\u00f3n de la puerta de enlace)"
+                }
+            }
+        }
+    }
+}

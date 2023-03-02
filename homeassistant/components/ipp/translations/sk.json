@@ -31,5 +31,16 @@
                 "title": "Objaven\u00e1 tla\u010diare\u0148"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "printer": {
+                "state": {
+                    "idle": "Ne\u010dinn\u00fd",
+                    "printing": "Tla\u010d",
+                    "stopped": "Zastaven\u00e9"
+                }
+            }
+        }
     }
 }

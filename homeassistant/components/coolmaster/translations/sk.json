@@ -13,7 +13,8 @@
                     "heat": "Podpora re\u017eimu vykurovania",
                     "heat_cool": "Podpora automatick\u00e9ho re\u017eimu vykurovania/chladenia",
                     "host": "Hostite\u013e",
-                    "off": "Mo\u017en\u00e9 vypn\u00fa\u0165"
+                    "off": "Mo\u017en\u00e9 vypn\u00fa\u0165",
+                    "swing_support": "Re\u017eim ovl\u00e1dania v\u00fdkyvu"
                 },
                 "title": "Nastavte podrobnosti pripojenia CoolMasterNet."
             }

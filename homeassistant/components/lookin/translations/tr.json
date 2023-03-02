@@ -19,7 +19,7 @@
                 }
             },
             "discovery_confirm": {
-                "description": "{name} ( {host} ) kurulumu yapmak istiyor musunuz?"
+                "description": "{name} ( {host} ) kurmak istiyor musunuz?"
             },
             "user": {
                 "data": {

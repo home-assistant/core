@@ -1,5 +1,4 @@
-"""
-A sensor platform which detects underruns and capped status from the official Raspberry Pi Kernel.
+"""A sensor platform which detects underruns and capped status from the official Raspberry Pi Kernel.
 
 Minimal Kernel needed is 4.14+
 """

@@ -37,5 +37,18 @@
                 "description": "Nettigo Air Monitor entegrasyonunu kurun."
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "caqi_level": {
+                "state": {
+                    "high": "Y\u00fcksek",
+                    "low": "D\u00fc\u015f\u00fck",
+                    "medium": "Orta",
+                    "very_high": "\u00c7ok y\u00fcksek",
+                    "very_low": "\u00c7ok d\u00fc\u015f\u00fck"
+                }
+            }
+        }
     }
 }

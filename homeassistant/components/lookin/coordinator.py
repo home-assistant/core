@@ -5,12 +5,13 @@ from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
 import time
-from typing import cast
+from typing import TypeVar
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+_DataT = TypeVar("_DataT")
 
 NEVER_TIME = -120.0  # Time that will never match time.monotonic()
 ACTIVE_UPDATES_INTERVAL = 3  # Consider active for 3x the update interval
@@ -43,7 +44,7 @@ class LookinPushCoordinator:
         return is_active
 
 
-class LookinDataUpdateCoordinator(DataUpdateCoordinator):
+class LookinDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
     """DataUpdateCoordinator to gather data for a specific lookin devices."""
 
     def __init__(
@@ -52,7 +53,7 @@ class LookinDataUpdateCoordinator(DataUpdateCoordinator):
         push_coordinator: LookinPushCoordinator,
         name: str,
         update_interval: timedelta | None = None,
-        update_method: Callable[[], Awaitable[dict]] | None = None,
+        update_method: Callable[[], Awaitable[_DataT]] | None = None,
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific device."""
         self.push_coordinator = push_coordinator
@@ -65,12 +66,12 @@ class LookinDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
     @callback
-    def async_set_updated_data(self, data: dict) -> None:
+    def async_set_updated_data(self, data: _DataT) -> None:
         """Manually update data, notify listeners and reset refresh interval, and remember."""
         self.push_coordinator.update()
         super().async_set_updated_data(data)
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self) -> _DataT:
         """Fetch data only if we have not received a push inside the interval."""
         interval = self.update_interval
         if (
@@ -82,4 +83,4 @@ class LookinDataUpdateCoordinator(DataUpdateCoordinator):
             data = self.data
         else:
             data = await super()._async_update_data()
-        return cast(dict, data)
+        return data

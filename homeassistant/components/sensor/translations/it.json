@@ -48,7 +48,6 @@
             "carbon_monoxide": "Variazioni nella concentrazione di monossido di carbonio di {entity_name}",
             "current": "Variazioni di corrente di {entity_name}",
             "data_rate": "{entity_name} modifiche alla velocit\u00e0 dei dati",
-            "data_size": "{entity_name} cambia la dimensione dei dati",
             "distance": "Variazioni di distanza di {entity_name}",
             "energy": "Variazioni di energia di {entity_name}",
             "frequency": "{entity_name} cambiamenti di frequenza",

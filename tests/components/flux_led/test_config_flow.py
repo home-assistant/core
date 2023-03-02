@@ -101,7 +101,6 @@ async def test_discovery(hass: HomeAssistant):
         CONF_REMOTE_ACCESS_ENABLED: True,
         CONF_REMOTE_ACCESS_HOST: "the.cloud",
         CONF_REMOTE_ACCESS_PORT: 8816,
-        CONF_MINOR_VERSION: 0x04,
     }
     mock_setup.assert_called_once()
     mock_setup_entry.assert_called_once()
@@ -176,7 +175,6 @@ async def test_discovery_legacy(hass: HomeAssistant):
         CONF_REMOTE_ACCESS_ENABLED: True,
         CONF_REMOTE_ACCESS_HOST: "the.cloud",
         CONF_REMOTE_ACCESS_PORT: 8816,
-        CONF_MINOR_VERSION: 0x04,
     }
     mock_setup.assert_called_once()
     mock_setup_entry.assert_called_once()
@@ -258,7 +256,6 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant):
             CONF_REMOTE_ACCESS_ENABLED: True,
             CONF_REMOTE_ACCESS_HOST: "the.cloud",
             CONF_REMOTE_ACCESS_PORT: 8816,
-            CONF_MINOR_VERSION: 0x04,
         }
         await hass.async_block_till_done()
 
@@ -334,7 +331,6 @@ async def test_manual_working_discovery(hass: HomeAssistant):
         CONF_REMOTE_ACCESS_ENABLED: True,
         CONF_REMOTE_ACCESS_HOST: "the.cloud",
         CONF_REMOTE_ACCESS_PORT: 8816,
-        CONF_MINOR_VERSION: 0x04,
     }
 
     # Duplicate
@@ -447,7 +443,6 @@ async def test_discovered_by_discovery(hass):
         CONF_REMOTE_ACCESS_ENABLED: True,
         CONF_REMOTE_ACCESS_HOST: "the.cloud",
         CONF_REMOTE_ACCESS_PORT: 8816,
-        CONF_MINOR_VERSION: 0x04,
     }
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
@@ -484,7 +479,6 @@ async def test_discovered_by_dhcp_udp_responds(hass):
         CONF_REMOTE_ACCESS_ENABLED: True,
         CONF_REMOTE_ACCESS_HOST: "the.cloud",
         CONF_REMOTE_ACCESS_PORT: 8816,
-        CONF_MINOR_VERSION: 0x04,
     }
     assert mock_async_setup.called
     assert mock_async_setup_entry.called

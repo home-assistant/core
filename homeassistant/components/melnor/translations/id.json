@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
             "no_devices_found": "Tidak ada perangkat Bluetooth Melnor di sekitar."
         },
         "step": {

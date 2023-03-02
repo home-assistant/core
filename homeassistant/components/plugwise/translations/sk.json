@@ -26,6 +26,21 @@
         }
     },
     "entity": {
+        "climate": {
+            "plugwise": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "asleep": "Noc",
+                            "away": "Pre\u010d",
+                            "home": "Doma",
+                            "no_frost": "Ochrana proti mrazu",
+                            "vacation": "Dovolenka"
+                        }
+                    }
+                }
+            }
+        },
         "select": {
             "dhw_mode": {
                 "state": {

@@ -48,7 +48,6 @@
             "carbon_monoxide": "Altera\u00e7\u00f5es na concentra\u00e7\u00e3o de mon\u00f3xido de carbono de {entity_name}",
             "current": "Mudan\u00e7a na corrente de {entity_name}",
             "data_rate": "Altera\u00e7\u00f5es na taxa de dados de {entity_name}",
-            "data_size": "{entity_name} altera\u00e7\u00f5es no tamanho dos dados",
             "distance": "Mudan\u00e7as da dist\u00e2ncia de {entity_name}",
             "energy": "Mudan\u00e7as na energia de {entity_name}",
             "frequency": "Altera\u00e7\u00f5es de frequ\u00eancia de {entity_name}",

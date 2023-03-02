@@ -5,10 +5,10 @@
                 "state_attributes": {
                     "fan_mode": {
                         "state": {
-                            "auto_high": "Autom\u00e0tic alt",
-                            "auto_low": "Autom\u00e0tic baix",
-                            "on_high": "ON alt",
-                            "on_low": "ON baix"
+                            "auto_high": "Autom\u00e0tic (alt)",
+                            "auto_low": "Autom\u00e0tic (baix)",
+                            "on_high": "Engegat (alt)",
+                            "on_low": "Engegat (baix)"
                         }
                     },
                     "swing_mode": {
@@ -17,7 +17,7 @@
                             "2": "2",
                             "3": "3",
                             "auto": "Autom\u00e0tic",
-                            "off": "OFF"
+                            "off": "Desactivat"
                         }
                     }
                 }
@@ -27,7 +27,7 @@
             "speed": {
                 "state": {
                     "light_speed": "Velocitat de la llum",
-                    "ludicrous_speed": "Velocitat Ludicrous",
+                    "ludicrous_speed": "Velocitat insensata",
                     "ridiculous_speed": "Velocitat rid\u00edcula"
                 }
             }

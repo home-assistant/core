@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from typing import cast
 
 import async_timeout
 from matter_server.client import MatterClient
@@ -70,8 +69,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(
             "Unknown error connecting to the Matter server"
         ) from err
-    else:
-        async_delete_issue(hass, DOMAIN, "invalid_server_version")
+
+    async_delete_issue(hass, DOMAIN, "invalid_server_version")
 
     async def on_hass_stop(event: Event) -> None:
         """Handle incoming stop event from Home Assistant."""
@@ -245,7 +244,7 @@ def _async_init_services(hass: HomeAssistant) -> None:
         # This could be more efficient
         for node in await matter_client.get_nodes():
             if node.unique_id == unique_id:
-                return cast(int, node.node_id)
+                return node.node_id
 
         return None
 

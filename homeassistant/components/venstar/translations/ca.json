@@ -19,5 +19,18 @@
                 "title": "Connexi\u00f3 amb term\u00f2stat Venstar"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "schedule_part": {
+                "state": {
+                    "day": "Dia",
+                    "evening": "Vespre",
+                    "inactive": "Inactiu",
+                    "morning": "Mat\u00ed",
+                    "night": "Nit"
+                }
+            }
+        }
     }
 }

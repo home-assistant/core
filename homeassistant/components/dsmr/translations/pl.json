@@ -48,6 +48,16 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "electricity_tariff": {
+                "state": {
+                    "low": "niska",
+                    "normal": "normalna"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

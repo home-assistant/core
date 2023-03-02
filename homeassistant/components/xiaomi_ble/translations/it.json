@@ -38,5 +38,10 @@
                 "description": "Scegli un dispositivo da configurare"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "motion_detected": "Movimento rilevato"
+        }
     }
 }

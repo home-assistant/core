@@ -10,10 +10,9 @@ import functools as ft
 import logging
 from random import randint
 import time
-from typing import Any, Union, cast
+from typing import Any, Concatenate, ParamSpec, cast
 
 import attr
-from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -710,8 +709,8 @@ def async_track_state_change_filtered(
 
     Returns
     -------
-    Object used to update the listeners (async_update_listeners) with a new TrackStates or
-    cancel the tracking (async_remove).
+    Object used to update the listeners (async_update_listeners) with a new
+    TrackStates or cancel the tracking (async_remove).
 
     """
     tracker = _TrackStateChangeFiltered(hass, track_states, action)
@@ -884,7 +883,10 @@ class TrackTemplateResultInfo:
         )
         self._update_time_listeners()
         _LOGGER.debug(
-            "Template group %s listens for %s, first render blocker by super template: %s",
+            (
+                "Template group %s listens for %s, first render blocker by super"
+                " template: %s"
+            ),
             self._track_templates,
             self.listeners,
             block_render,
@@ -1106,7 +1108,10 @@ class TrackTemplateResultInfo:
                 )
             )
             _LOGGER.debug(
-                "Template group %s listens for %s, re-render blocker by super template: %s",
+                (
+                    "Template group %s listens for %s, re-render blocker by super"
+                    " template: %s"
+                ),
                 self._track_templates,
                 self.listeners,
                 block_updates,
@@ -1123,7 +1128,7 @@ class TrackTemplateResultInfo:
 
 TrackTemplateResultListener = Callable[
     [
-        Union[Event, None],
+        Event | None,
         list[TrackTemplateResult],
     ],
     None,
@@ -1320,7 +1325,7 @@ def async_track_point_in_utc_time(
         hass.async_run_hass_job(job, utc_point_in_time)
 
     job = action if isinstance(action, HassJob) else HassJob(action)
-    delta = utc_point_in_time.timestamp() - time.time()
+    delta = expected_fire_timestamp - time.time()
     cancel_callback = hass.loop.call_later(delta, run_action, job)
 
     @callback

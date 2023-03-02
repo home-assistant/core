@@ -34,8 +34,10 @@
         "step": {
             "init": {
                 "data": {
+                    "enable_conversation_agent": "A besz\u00e9lget\u00e9si \u00fcgyn\u00f6k enged\u00e9lyez\u00e9se",
                     "language_code": "Nyelvi k\u00f3d"
-                }
+                },
+                "description": "\u00c1ll\u00edtsa be a Google Asszisztenssel folytatott interakci\u00f3k nyelv\u00e9t, \u00e9s azt, hogy szeretn\u00e9-e enged\u00e9lyezni a besz\u00e9lget\u00e9si \u00fcgyn\u00f6k\u00f6t."
             }
         }
     }

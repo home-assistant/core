@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Location is already configured"
+            "already_configured": "Location is already configured",
+            "wrong_location": "No Airly measuring stations in this area."
         },
         "error": {
             "invalid_api_key": "Invalid API key",

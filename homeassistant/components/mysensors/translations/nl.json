@@ -71,7 +71,8 @@
             "select_gateway_type": {
                 "menu_options": {
                     "gw_mqtt": "Configureer een MQTT-gateway",
-                    "gw_serial": "Configureer een seri\u00eble gateway"
+                    "gw_serial": "Configureer een seri\u00eble gateway",
+                    "gw_tcp": "Configureer een TCP-gateway"
                 }
             },
             "user": {
@@ -80,6 +81,30 @@
                 },
                 "description": "Kies de verbindingsmethode met de gateway"
             }
+        }
+    },
+    "issues": {
+        "deprecated_entity": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Update huidige automatiseringen of scripts die deze entiteit gebruiken met service `{deprecated_service}` door service `{alternate_service}` met een entiteit ID van `{alternate_target}`.",
+                        "title": "De {deprecated_entity} entiteit wordt verwijderd"
+                    }
+                }
+            },
+            "title": "De {deprecated_entity} entiteit wordt verwijderd"
+        },
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Werk automatiseringen of scripts bij die deze dienst gebruiken en gebruik in plaats daarvan de `{alternate_service}` dienst met doel entiteit ID `{alternate_target}`.",
+                        "title": "De {deprecated_service} service zal worden verwijderd"
+                    }
+                }
+            },
+            "title": "De {deprecated_service} service zal worden verwijderd"
         }
     }
 }

@@ -1,7 +1,7 @@
 {
     "issues": {
         "country_not_configured": {
-            "description": "Nebola nakonfigurovan\u00e1 \u017eiadna krajina, aktualizujte konfigur\u00e1ciu kliknut\u00edm na tla\u010didlo \u201eviac inform\u00e1ci\u00ed\u201c ni\u017e\u0161ie.",
+            "description": "Nebola nakonfigurovan\u00e1 \u017eiadna krajina, aktualizujte konfigur\u00e1ciu kliknut\u00edm na tla\u010didlo \"viac inform\u00e1ci\u00ed\" ni\u017e\u0161ie.",
             "title": "Krajina nebola nakonfigurovan\u00e1"
         },
         "historic_currency": {

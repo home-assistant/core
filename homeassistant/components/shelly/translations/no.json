@@ -71,5 +71,14 @@
                 "description": "Bluetooth-skanning kan v\u00e6re aktiv eller passiv. Med aktiv ber Shelly om data fra enheter i n\u00e6rheten; med passiv, mottar Shelly u\u00f8nsket data fra enheter i n\u00e6rheten."
             }
         }
+    },
+    "selector": {
+        "ble_scanner_mode": {
+            "options": {
+                "active": "Aktiv",
+                "disabled": "Deaktivert",
+                "passive": "Passiv"
+            }
+        }
     }
 }

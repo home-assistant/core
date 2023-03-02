@@ -5,7 +5,6 @@ import homeassistant.components.time_date.sensor as time_date
 import homeassistant.util.dt as dt_util
 
 
-# pylint: disable=protected-access
 async def test_intervals(hass):
     """Test timing intervals of sensors."""
     device = time_date.TimeDateSensor(hass, "time")

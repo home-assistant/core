@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "not_huawei_lte": "Inte en Huawei LTE-enhet",
             "reauth_successful": "\u00c5terautentisering lyckades"
         },
         "error": {

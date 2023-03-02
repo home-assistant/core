@@ -17,5 +17,17 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "tracker_state": {
+                "state": {
+                    "not_reporting": "Rapor edilmiyor",
+                    "operational": "Operasyonel",
+                    "system_shutdown_user": "Sistem kapatma kullan\u0131c\u0131s\u0131",
+                    "system_startup": "Sistem ba\u015flatma"
+                }
+            }
+        }
     }
 }

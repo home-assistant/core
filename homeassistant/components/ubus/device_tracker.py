@@ -68,8 +68,7 @@ def _refresh_on_access_denied(func):
 
 
 class UbusDeviceScanner(DeviceScanner):
-    """
-    This class queries a wireless router running OpenWrt firmware.
+    """This class queries a wireless router running OpenWrt firmware.
 
     Adapted from Tomato scanner.
     """

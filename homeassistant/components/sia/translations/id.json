@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi"
+        },
         "error": {
             "invalid_account_format": "Format akun ini tidak dalam nilai heksadesimal, gunakan hanya karakter 0-9 dan A-F.",
             "invalid_account_length": "Panjang format akun tidak tepat, harus antara 3 dan 16 karakter.",

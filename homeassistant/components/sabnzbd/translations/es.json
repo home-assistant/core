@@ -9,7 +9,6 @@
                 "data": {
                     "api_key": "Clave API",
                     "name": "Nombre",
-                    "path": "Ruta",
                     "url": "URL"
                 }
             }

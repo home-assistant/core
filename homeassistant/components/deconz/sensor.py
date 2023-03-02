@@ -112,7 +112,6 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
         update_key="airquality",
         value_fn=lambda device: device.air_quality,
         instance_check=AirQuality,
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     DeconzSensorDescription[AirQuality](
         key="air_quality_ppb",
@@ -373,7 +372,6 @@ class DeconzSensor(DeconzDevice[SensorResources], SensorEntity):
             attr[ATTR_DAYLIGHT] = self._device.daylight
 
         elif isinstance(self._device, LightLevel):
-
             if self._device.dark is not None:
                 attr[ATTR_DARK] = self._device.dark
 

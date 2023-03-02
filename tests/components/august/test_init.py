@@ -95,9 +95,9 @@ async def test_unlock_throws_august_api_http_error(hass):
         await hass.services.async_call(LOCK_DOMAIN, SERVICE_UNLOCK, data, blocking=True)
     except HomeAssistantError as err:
         last_err = err
-    assert (
-        str(last_err)
-        == "A6697750D607098BAE8D6BAA11EF8063 Name: This should bubble up as its user consumable"
+    assert str(last_err) == (
+        "A6697750D607098BAE8D6BAA11EF8063 Name: This should bubble up as its user"
+        " consumable"
     )
 
 
@@ -121,9 +121,9 @@ async def test_lock_throws_august_api_http_error(hass):
         await hass.services.async_call(LOCK_DOMAIN, SERVICE_LOCK, data, blocking=True)
     except HomeAssistantError as err:
         last_err = err
-    assert (
-        str(last_err)
-        == "A6697750D607098BAE8D6BAA11EF8063 Name: This should bubble up as its user consumable"
+    assert str(last_err) == (
+        "A6697750D607098BAE8D6BAA11EF8063 Name: This should bubble up as its user"
+        " consumable"
     )
 
 

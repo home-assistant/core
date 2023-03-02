@@ -5,6 +5,8 @@ from datetime import timedelta
 import pathlib
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components import automation
 from homeassistant.components.blueprint import models
 from homeassistant.core import callback
@@ -24,7 +26,7 @@ def patch_blueprint(blueprint_path: str, data_path):
     @callback
     def mock_load_blueprint(self, path):
         if path != blueprint_path:
-            assert False, f"Unexpected blueprint {path}"
+            pytest.fail(f"Unexpected blueprint {path}")
             return orig_load(self, path)
 
         return models.Blueprint(

@@ -57,6 +57,7 @@ class NinaWarningData:
     description: str
     sender: str
     severity: str
+    recommended_actions: str
     sent: str
     start: str
     expires: str
@@ -98,7 +99,6 @@ class NINADataUpdateCoordinator(
         all_filtered_warnings: dict[str, list[Any]] = {}
 
         for region_id, raw_warnings in warnings.items():
-
             filtered_warnings: list[Any] = []
             processed_details: list[tuple[str, str]] = []
 
@@ -134,6 +134,7 @@ class NINADataUpdateCoordinator(
                     raw_warn.description,
                     raw_warn.sender,
                     raw_warn.severity,
+                    " ".join([str(action) for action in raw_warn.recommended_actions]),
                     raw_warn.sent or "",
                     raw_warn.start or "",
                     raw_warn.expires or "",

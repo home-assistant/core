@@ -5,8 +5,13 @@
             "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible."
         },
         "error": {
+            "bad_certificate": "Le certificat CA n'est pas valide",
+            "bad_client_cert": "Certificat client non valide, assurez-vous qu'un fichier PEM est fourni",
+            "bad_client_cert_key": "Le certificat client et la cl\u00e9 priv\u00e9e ne forment pas une paire valide",
+            "bad_client_key": "Cl\u00e9 priv\u00e9e non valide, assurez-vous qu'un fichier PEM est fourni sans mot de passe",
             "bad_discovery_prefix": "Pr\u00e9fixe de d\u00e9couverte non valide",
-            "cannot_connect": "\u00c9chec de connexion"
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_inclusion": "Le certificat client et la cl\u00e9 priv\u00e9e doivent \u00eatre configur\u00e9s ensemble"
         },
         "step": {
             "broker": {
@@ -15,11 +20,15 @@
                     "broker": "Broker",
                     "certificate": "T\u00e9l\u00e9verser le certificat de l\u2019autorit\u00e9 de certification personnalis\u00e9",
                     "client_cert": "T\u00e9l\u00e9verser le certificat client",
+                    "client_id": "ID client (laisser vide pouren g\u00e9n\u00e9r\u00e9 un al\u00e9atoirement)",
                     "client_key": "T\u00e9l\u00e9verser la cl\u00e9 priv\u00e9e",
+                    "keepalive": "Le temps entre l'envoi de messages Keep Alive",
                     "password": "Mot de passe",
                     "port": "Port",
                     "protocol": "Protocole MQTT",
+                    "set_ca_cert": "Validation du certificat du courtier",
                     "set_client_cert": "Utiliser un certificat client",
+                    "tls_insecure": "Ignorer la validation du certificat du courtier",
                     "transport": "Transport MQTT",
                     "username": "Nom d'utilisateur",
                     "ws_headers": "En-t\u00eates WebSocket au format JSON",
@@ -61,12 +70,20 @@
     "issues": {
         "deprecated_yaml": {
             "title": "Un\u00b7e ou plusieurs {plateform}\u00b7e\u00b7s MQTT configur\u00e9\u00b7e\u00b7s manuellement requi\u00e8rent votre attention"
+        },
+        "deprecated_yaml_broker_settings": {
+            "title": "Param\u00e8tres MQTT obsol\u00e8tes trouv\u00e9s dans `configuration.yaml`"
         }
     },
     "options": {
         "error": {
+            "bad_certificate": "Le certificat CA n'est pas valide",
+            "bad_client_cert": "Certificat client non valide, assurez-vous qu'un fichier PEM est fourni",
+            "bad_client_cert_key": "Le certificat client et la cl\u00e9 priv\u00e9e ne forment pas une paire valide",
+            "bad_client_key": "Cl\u00e9 priv\u00e9e non valide, assurez-vous qu'un fichier PEM est fourni sans mot de passe",
             "bad_discovery_prefix": "Pr\u00e9fixe de d\u00e9couverte non valide",
-            "cannot_connect": "\u00c9chec de connexion"
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_inclusion": "Le certificat client et la cl\u00e9 priv\u00e9e doivent \u00eatre configur\u00e9s ensemble"
         },
         "step": {
             "broker": {
@@ -75,11 +92,15 @@
                     "broker": "Broker",
                     "certificate": "T\u00e9l\u00e9verser le certificat de l\u2019autorit\u00e9 de certification personnalis\u00e9",
                     "client_cert": "T\u00e9l\u00e9verser le certificat client",
+                    "client_id": "ID client (laisser vide pouren g\u00e9n\u00e9r\u00e9 un al\u00e9atoirement)",
                     "client_key": "T\u00e9l\u00e9verser la cl\u00e9 priv\u00e9e",
+                    "keepalive": "Le temps entre l'envoi de messages Keep Alive",
                     "password": "Mot de passe",
                     "port": "Port",
                     "protocol": "Protocole MQTT",
+                    "set_ca_cert": "Validation du certificat du courtier",
                     "set_client_cert": "Utiliser un certificat client",
+                    "tls_insecure": "Ignorer la validation du certificat du courtier",
                     "transport": "Transport MQTT",
                     "username": "Nom d'utilisateur",
                     "ws_headers": "En-t\u00eates WebSocket au format JSON",

@@ -358,8 +358,7 @@ async def test_threshold(hass):
 
 
 async def test_multiple_observations(hass):
-    """
-    Test sensor with multiple observations of same entity.
+    """Test sensor with multiple observations of same entity.
 
     these entries should be labelled as 'multi_state' and negative observations ignored - as the outcome is not known to be binary.
     Before the merge of #67631 this practice was a common work-around for bayesian's ignoring of negative observations,
@@ -678,7 +677,10 @@ async def test_observed_entities(hass):
                 },
                 {
                     "platform": "template",
-                    "value_template": "{{is_state('sensor.test_monitored1','on') and is_state('sensor.test_monitored','off')}}",
+                    "value_template": (
+                        "{{is_state('sensor.test_monitored1','on') and"
+                        " is_state('sensor.test_monitored','off')}}"
+                    ),
                     "prob_given_true": 0.9,
                     "prob_given_false": 0.1,
                 },
@@ -734,7 +736,10 @@ async def test_state_attributes_are_serializable(hass):
                 },
                 {
                     "platform": "template",
-                    "value_template": "{{is_state('sensor.test_monitored1','on') and is_state('sensor.test_monitored','off')}}",
+                    "value_template": (
+                        "{{is_state('sensor.test_monitored1','on') and"
+                        " is_state('sensor.test_monitored','off')}}"
+                    ),
                     "prob_given_true": 0.9,
                     "prob_given_false": 0.1,
                 },

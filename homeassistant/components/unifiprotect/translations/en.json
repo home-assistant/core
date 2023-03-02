@@ -52,8 +52,19 @@
     },
     "issues": {
         "deprecate_smart_sensor": {
-            "description": "The unified \"Detected Object\" sensor for smart detections is now deprecated. It has been replaced with individual smart detection binary sensors for each smart detection type. Please update any templates or automations accordingly.",
+            "description": "The unified \"Detected Object\" sensor for smart detections is now deprecated. It has been replaced with individual smart detection binary sensors for each smart detection type.\n\nBelow are the detected automations or scripts that use one or more of the deprecated entities:\n{items}\nThe above list may be incomplete and it does not include any template usages inside of dashboards. Please update any templates, automations or scripts accordingly.",
             "title": "Smart Detection Sensor Deprecated"
+        },
+        "deprecated_service_set_doorbell_message": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "The `unifiprotect.set_doorbell_message` service is deprecated in favor of the new Doorbell Text entity added to each Doorbell device. It will be removed in v2023.3.0. Please update to use the [`text.set_value` service]({link}).",
+                        "title": "set_doorbell_message is Deprecated"
+                    }
+                }
+            },
+            "title": "set_doorbell_message is Deprecated"
         },
         "ea_setup_failed": {
             "description": "You are using v{version} of UniFi Protect which is an Early Access version. An unrecoverable error occurred while trying to load the integration. Please [downgrade to a stable version](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) of UniFi Protect to continue using the integration.\n\nError: {error}",

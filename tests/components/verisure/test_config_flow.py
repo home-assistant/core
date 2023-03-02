@@ -34,7 +34,6 @@ async def test_full_user_flow_single_installation(
     assert result.get("step_id") == "user"
     assert result.get("type") == FlowResultType.FORM
     assert result.get("errors") == {}
-    assert "flow_id" in result
 
     mock_verisure_config_flow.installations = [
         mock_verisure_config_flow.installations[0]
@@ -73,7 +72,6 @@ async def test_full_user_flow_multiple_installations(
     assert result.get("step_id") == "user"
     assert result.get("type") == FlowResultType.FORM
     assert result.get("errors") == {}
-    assert "flow_id" in result
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -87,7 +85,6 @@ async def test_full_user_flow_multiple_installations(
     assert result2.get("step_id") == "installation"
     assert result2.get("type") == FlowResultType.FORM
     assert result2.get("errors") is None
-    assert "flow_id" in result2
 
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"], {"giid": "54321"}
@@ -118,7 +115,6 @@ async def test_full_user_flow_single_installation_with_mfa(
     assert result.get("step_id") == "user"
     assert result.get("type") == FlowResultType.FORM
     assert result.get("errors") == {}
-    assert "flow_id" in result
 
     mock_verisure_config_flow.login.side_effect = VerisureLoginError(
         "Multifactor authentication enabled, disable or create MFA cookie"
@@ -135,7 +131,6 @@ async def test_full_user_flow_single_installation_with_mfa(
 
     assert result2.get("type") == FlowResultType.FORM
     assert result2.get("step_id") == "mfa"
-    assert "flow_id" in result2
 
     mock_verisure_config_flow.login.side_effect = None
     mock_verisure_config_flow.installations = [
@@ -176,7 +171,6 @@ async def test_full_user_flow_multiple_installations_with_mfa(
     assert result.get("step_id") == "user"
     assert result.get("type") == FlowResultType.FORM
     assert result.get("errors") == {}
-    assert "flow_id" in result
 
     mock_verisure_config_flow.login.side_effect = VerisureLoginError(
         "Multifactor authentication enabled, disable or create MFA cookie"
@@ -193,7 +187,6 @@ async def test_full_user_flow_multiple_installations_with_mfa(
 
     assert result2.get("type") == FlowResultType.FORM
     assert result2.get("step_id") == "mfa"
-    assert "flow_id" in result2
 
     mock_verisure_config_flow.login.side_effect = None
 
@@ -208,7 +201,6 @@ async def test_full_user_flow_multiple_installations_with_mfa(
     assert result3.get("step_id") == "installation"
     assert result3.get("type") == FlowResultType.FORM
     assert result3.get("errors") is None
-    assert "flow_id" in result2
 
     result4 = await hass.config_entries.flow.async_configure(
         result3["flow_id"], {"giid": "54321"}
@@ -248,8 +240,6 @@ async def test_verisure_errors(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert "flow_id" in result
-
     mock_verisure_config_flow.login.side_effect = side_effect
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -263,7 +253,6 @@ async def test_verisure_errors(
     assert result2.get("type") == FlowResultType.FORM
     assert result2.get("step_id") == "user"
     assert result2.get("errors") == {"base": error}
-    assert "flow_id" in result2
 
     mock_verisure_config_flow.login.side_effect = VerisureLoginError(
         "Multifactor authentication enabled, disable or create MFA cookie"
@@ -284,7 +273,6 @@ async def test_verisure_errors(
     assert result3.get("type") == FlowResultType.FORM
     assert result3.get("step_id") == "user"
     assert result3.get("errors") == {"base": "unknown_mfa"}
-    assert "flow_id" in result3
 
     result4 = await hass.config_entries.flow.async_configure(
         result3["flow_id"],
@@ -297,7 +285,6 @@ async def test_verisure_errors(
 
     assert result4.get("type") == FlowResultType.FORM
     assert result4.get("step_id") == "mfa"
-    assert "flow_id" in result4
 
     mock_verisure_config_flow.mfa_validate.side_effect = side_effect
 
@@ -310,7 +297,6 @@ async def test_verisure_errors(
     assert result5.get("type") == FlowResultType.FORM
     assert result5.get("step_id") == "mfa"
     assert result5.get("errors") == {"base": error}
-    assert "flow_id" in result5
 
     mock_verisure_config_flow.installations = [
         mock_verisure_config_flow.installations[0]
@@ -376,7 +362,6 @@ async def test_reauth_flow(
     assert result.get("step_id") == "reauth_confirm"
     assert result.get("type") == FlowResultType.FORM
     assert result.get("errors") == {}
-    assert "flow_id" in result
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -420,7 +405,6 @@ async def test_reauth_flow_with_mfa(
     assert result.get("step_id") == "reauth_confirm"
     assert result.get("type") == FlowResultType.FORM
     assert result.get("errors") == {}
-    assert "flow_id" in result
 
     mock_verisure_config_flow.login.side_effect = VerisureLoginError(
         "Multifactor authentication enabled, disable or create MFA cookie"
@@ -437,7 +421,6 @@ async def test_reauth_flow_with_mfa(
 
     assert result2.get("type") == FlowResultType.FORM
     assert result2.get("step_id") == "reauth_mfa"
-    assert "flow_id" in result2
 
     mock_verisure_config_flow.login.side_effect = None
 
@@ -491,8 +474,6 @@ async def test_reauth_flow_errors(
         data=mock_config_entry.data,
     )
 
-    assert "flow_id" in result
-
     mock_verisure_config_flow.login.side_effect = side_effect
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -506,7 +487,6 @@ async def test_reauth_flow_errors(
     assert result2.get("step_id") == "reauth_confirm"
     assert result2.get("type") == FlowResultType.FORM
     assert result2.get("errors") == {"base": error}
-    assert "flow_id" in result2
 
     mock_verisure_config_flow.login.side_effect = VerisureLoginError(
         "Multifactor authentication enabled, disable or create MFA cookie"
@@ -525,7 +505,6 @@ async def test_reauth_flow_errors(
     assert result3.get("type") == FlowResultType.FORM
     assert result3.get("step_id") == "reauth_confirm"
     assert result3.get("errors") == {"base": "unknown_mfa"}
-    assert "flow_id" in result3
 
     mock_verisure_config_flow.login_mfa.side_effect = None
 
@@ -540,7 +519,6 @@ async def test_reauth_flow_errors(
 
     assert result4.get("type") == FlowResultType.FORM
     assert result4.get("step_id") == "reauth_mfa"
-    assert "flow_id" in result4
 
     mock_verisure_config_flow.mfa_validate.side_effect = side_effect
 
@@ -553,7 +531,6 @@ async def test_reauth_flow_errors(
     assert result5.get("type") == FlowResultType.FORM
     assert result5.get("step_id") == "reauth_mfa"
     assert result5.get("errors") == {"base": error}
-    assert "flow_id" in result5
 
     mock_verisure_config_flow.mfa_validate.side_effect = None
     mock_verisure_config_flow.login.side_effect = None
@@ -627,7 +604,6 @@ async def test_options_flow(
 
     assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == "init"
-    assert "flow_id" in result
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -659,7 +635,6 @@ async def test_options_flow_code_format_mismatch(hass: HomeAssistant) -> None:
     assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == "init"
     assert result.get("errors") == {}
-    assert "flow_id" in result
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],

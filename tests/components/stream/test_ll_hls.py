@@ -115,8 +115,7 @@ def make_hint(segment, part):
 
 
 async def test_ll_hls_stream(hass, hls_stream, stream_worker_sync):
-    """
-    Test hls stream.
+    """Test hls stream.
 
     Purposefully not mocking anything here to test full
     integration with the stream component.

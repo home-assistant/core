@@ -1,5 +1,5 @@
 """Test the UniFi Protect select platform."""
-# pylint: disable=protected-access
+
 from __future__ import annotations
 
 from copy import copy

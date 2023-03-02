@@ -345,8 +345,7 @@ async def test_import_discovery_integration(
     nanoleaf_conf_file: dict[str, dict[str, str]],
     remove_config: bool,
 ) -> None:
-    """
-    Test discovery integration import.
+    """Test discovery integration import.
 
     Test with different discovery flow sources and corresponding types.
     Test with different .nanoleaf_conf files with device_id (>= 2021.4), host (< 2021.4) and combination.

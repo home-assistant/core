@@ -13,7 +13,8 @@
                     "heat": "Suporta o modo de aquecimento",
                     "heat_cool": "Suporta o modo de aquecimento/resfriamento autom\u00e1tico",
                     "host": "Nome do host",
-                    "off": "Pode ser desligado"
+                    "off": "Pode ser desligado",
+                    "swing_support": "Modo de balan\u00e7o de controle"
                 },
                 "title": "Configure seus detalhes de conex\u00e3o CoolMasterNet."
             }

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from contextlib import suppress
 import datetime as dt
 import json
 from typing import Any, cast
@@ -94,7 +95,7 @@ def handle_subscribe_events(
 ) -> None:
     """Handle subscribe events command."""
     # Circular dep
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from .permissions import SUBSCRIBE_ALLOWLIST
 
     event_type = msg["event_type"]
@@ -112,18 +113,14 @@ def handle_subscribe_events(
             ):
                 return
 
-            connection.send_message(
-                lambda: messages.cached_event_message(msg["id"], event)
-            )
+            connection.send_message(messages.cached_event_message(msg["id"], event))
 
     else:
 
         @callback
         def forward_events(event: Event) -> None:
             """Forward events to websocket."""
-            connection.send_message(
-                lambda: messages.cached_event_message(msg["id"], event)
-            )
+            connection.send_message(messages.cached_event_message(msg["id"], event))
 
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
         event_type, forward_events, run_immediately=True
@@ -262,11 +259,9 @@ def handle_get_states(
     # If we can't serialize, we'll filter out unserializable states
     serialized = []
     for state in states:
-        try:
+        # Error is already logged above
+        with suppress(ValueError, TypeError):
             serialized.append(JSON_DUMP(state))
-        except (ValueError, TypeError):
-            # Error is already logged above
-            pass
 
     # We now have partially serialized states. Craft some JSON.
     response2 = JSON_DUMP(messages.result_message(msg["id"], ["TO_REPLACE"]))
@@ -297,9 +292,7 @@ def handle_subscribe_entities(
         if entity_ids and event.data["entity_id"] not in entity_ids:
             return
 
-        connection.send_message(
-            lambda: messages.cached_state_diff_message(msg["id"], event)
-        )
+        connection.send_message(messages.cached_state_diff_message(msg["id"], event))
 
     # We must never await between sending the states and listening for
     # state changed events or we will introduce a race condition
@@ -311,7 +304,7 @@ def handle_subscribe_entities(
     connection.send_result(msg["id"])
     data: dict[str, dict[str, dict]] = {
         messages.ENTITY_EVENT_ADD: {
-            state.entity_id: messages.compressed_state_dict_add(state)
+            state.entity_id: state.as_compressed_state()
             for state in states
             if not entity_ids or state.entity_id in entity_ids
         }
@@ -561,7 +554,7 @@ async def handle_subscribe_trigger(
 ) -> None:
     """Handle subscribe trigger command."""
     # Circular dep
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from homeassistant.helpers import trigger
 
     trigger_config = await trigger.async_validate_trigger_config(hass, msg["trigger"])
@@ -612,7 +605,7 @@ async def handle_test_condition(
 ) -> None:
     """Handle test condition command."""
     # Circular dep
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from homeassistant.helpers import condition
 
     # Do static + dynamic validation of the condition
@@ -638,7 +631,7 @@ async def handle_execute_script(
 ) -> None:
     """Handle execute script command."""
     # Circular dep
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from homeassistant.helpers.script import Script
 
     context = connection.context(msg)
@@ -680,7 +673,7 @@ async def handle_validate_config(
 ) -> None:
     """Handle validate config command."""
     # Circular dep
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from homeassistant.helpers import condition, script, trigger
 
     result = {}

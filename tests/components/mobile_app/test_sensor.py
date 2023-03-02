@@ -9,8 +9,7 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
@@ -19,8 +18,8 @@ from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 @pytest.mark.parametrize(
     "unit_system, state_unit, state1, state2",
     (
-        (METRIC_SYSTEM, TEMP_CELSIUS, "100", "123"),
-        (US_CUSTOMARY_SYSTEM, TEMP_FAHRENHEIT, "212", "253"),
+        (METRIC_SYSTEM, UnitOfTemperature.CELSIUS, "100", "123"),
+        (US_CUSTOMARY_SYSTEM, UnitOfTemperature.FAHRENHEIT, "212", "253"),
     ),
 )
 async def test_sensor(
@@ -46,7 +45,7 @@ async def test_sensor(
                 "entity_category": "diagnostic",
                 "unique_id": "battery_temp",
                 "state_class": "total",
-                "unit_of_measurement": TEMP_CELSIUS,
+                "unit_of_measurement": UnitOfTemperature.CELSIUS,
             },
         },
     )
@@ -123,10 +122,22 @@ async def test_sensor(
 @pytest.mark.parametrize(
     "unique_id, unit_system, state_unit, state1, state2",
     (
-        ("battery_temperature", METRIC_SYSTEM, TEMP_CELSIUS, "100", "123"),
-        ("battery_temperature", US_CUSTOMARY_SYSTEM, TEMP_FAHRENHEIT, "212", "253"),
+        ("battery_temperature", METRIC_SYSTEM, UnitOfTemperature.CELSIUS, "100", "123"),
+        (
+            "battery_temperature",
+            US_CUSTOMARY_SYSTEM,
+            UnitOfTemperature.FAHRENHEIT,
+            "212",
+            "253",
+        ),
         # The unique_id doesn't match that of the mobile app's battery temperature sensor
-        ("battery_temp", US_CUSTOMARY_SYSTEM, TEMP_FAHRENHEIT, "212", "123"),
+        (
+            "battery_temp",
+            US_CUSTOMARY_SYSTEM,
+            UnitOfTemperature.FAHRENHEIT,
+            "212",
+            "123",
+        ),
     ),
 )
 async def test_sensor_migration(
@@ -159,7 +170,7 @@ async def test_sensor_migration(
                 "entity_category": "diagnostic",
                 "unique_id": unique_id,
                 "state_class": "total",
-                "unit_of_measurement": TEMP_CELSIUS,
+                "unit_of_measurement": UnitOfTemperature.CELSIUS,
             },
         },
     )

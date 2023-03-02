@@ -83,5 +83,29 @@
                 "description": "Scegli il metodo di connessione al gateway"
             }
         }
+    },
+    "issues": {
+        "deprecated_entity": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Aggiorna tutte le automazioni o gli script che usano questa entit\u00e0 nelle chiamate di servizio che utilizzano il servizio `{deprecated_service}` per usare invece il servizio `{alternate_service}` con un ID entit\u00e0 di destinazione di `{alternate_target}`.",
+                        "title": "L'entit\u00e0 {deprecated_entity} sar\u00e0 rimossa"
+                    }
+                }
+            },
+            "title": "L'entit\u00e0 {deprecated_entity} sar\u00e0 rimossa"
+        },
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Aggiornare tutte le automazioni o gli script che utilizzano questo servizio per utilizzare invece il servizio `{alternate_service}` con un ID entit\u00e0 di destinazione `{alternate_target}`.",
+                        "title": "Il servizio {deprecated_service} sar\u00e0 rimosso"
+                    }
+                }
+            },
+            "title": "Il servizio {deprecated_service} sar\u00e0 rimosso"
+        }
     }
 }

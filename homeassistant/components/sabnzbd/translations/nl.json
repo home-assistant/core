@@ -9,7 +9,6 @@
                 "data": {
                     "api_key": "API-sleutel",
                     "name": "Naam",
-                    "path": "Pad",
                     "url": "URL"
                 }
             }

@@ -21,7 +21,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_FAHRENHEIT
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 
 from . import init_integration
@@ -130,7 +130,9 @@ async def test_spa_temperature(hass: HomeAssistant, client: MagicMock) -> None:
 async def test_spa_temperature_unit(hass: HomeAssistant, client: MagicMock) -> None:
     """Test temperature unit conversions."""
 
-    with patch.object(hass.config.units, "temperature_unit", TEMP_FAHRENHEIT):
+    with patch.object(
+        hass.config.units, "temperature_unit", UnitOfTemperature.FAHRENHEIT
+    ):
         config_entry = await init_integration(hass)
 
         state = await _patch_spa_settemp(hass, config_entry, 0, 15.4, client)

@@ -93,10 +93,13 @@ class Filters:
         """Return human readable excludes/includes."""
         return (
             "<Filters"
-            f" excluded_entities={self.excluded_entities} excluded_domains={self.excluded_domains} "
-            f"excluded_entity_globs={self.excluded_entity_globs} "
-            f"included_entities={self.included_entities} included_domains={self.included_domains} "
-            f"included_entity_globs={self.included_entity_globs}>"
+            f" excluded_entities={self.excluded_entities}"
+            f" excluded_domains={self.excluded_domains}"
+            f" excluded_entity_globs={self.excluded_entity_globs}"
+            f" included_entities={self.included_entities}"
+            f" included_domains={self.included_domains}"
+            f" included_entity_globs={self.included_entity_globs}"
+            ">"
         )
 
     @property

@@ -30,5 +30,18 @@
             }
         }
     },
+    "selector": {
+        "type": {
+            "options": {
+                "last": "Aggiornato pi\u00f9 di recente",
+                "max": "Massimo",
+                "mean": "Media aritmetica",
+                "median": "Mediana",
+                "min": "Minimo",
+                "range": "Intervallo statistico",
+                "sum": "Somma"
+            }
+        }
+    },
     "title": "Combina lo stato di diversi sensori"
 }

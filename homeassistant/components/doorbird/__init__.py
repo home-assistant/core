@@ -301,8 +301,7 @@ class ConfiguredDoorBird:
         return self.get_webhook_id(url, favs) is not None
 
     def get_webhook_id(self, url, favs=None) -> str | None:
-        """
-        Return the device favorite ID for the given URL.
+        """Return the device favorite ID for the given URL.
 
         The favorite must exist or there will be problems.
         """

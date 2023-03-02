@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 from pyprosegur.installation import Status
-from pytest import fixture, mark
+import pytest
 
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
 from homeassistant.const import (
@@ -25,7 +25,7 @@ from .common import CONTRACT, setup_platform
 PROSEGUR_ALARM_ENTITY = f"alarm_control_panel.contract_{CONTRACT}"
 
 
-@fixture
+@pytest.fixture
 def mock_auth():
     """Setups authentication."""
 
@@ -33,7 +33,7 @@ def mock_auth():
         yield
 
 
-@fixture(params=list(Status))
+@pytest.fixture(params=list(Status))
 def mock_status(request):
     """Mock the status of the alarm."""
 
@@ -73,7 +73,6 @@ async def test_connection_error(hass, mock_auth):
     install.status = Status.ARMED
 
     with patch("pyprosegur.installation.Installation.retrieve", return_value=install):
-
         await setup_platform(hass)
 
         await hass.async_block_till_done()
@@ -81,14 +80,13 @@ async def test_connection_error(hass, mock_auth):
     with patch(
         "pyprosegur.installation.Installation.retrieve", side_effect=ConnectionError
     ):
-
         await entity_component.async_update_entity(hass, PROSEGUR_ALARM_ENTITY)
 
         state = hass.states.get(PROSEGUR_ALARM_ENTITY)
         assert state.state == STATE_UNAVAILABLE
 
 
-@mark.parametrize(
+@pytest.mark.parametrize(
     "code, alarm_service, alarm_state",
     [
         (Status.ARMED, SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),

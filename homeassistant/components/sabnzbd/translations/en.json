@@ -9,7 +9,6 @@
                 "data": {
                     "api_key": "API Key",
                     "name": "Name",
-                    "path": "Path",
                     "url": "URL"
                 }
             }

@@ -13,8 +13,6 @@
         "step": {
             "init": {
                 "data": {
-                    "manual": "\u95dc\u9589\u81ea\u52d5\u66f4\u65b0",
-                    "scan_interval": "\u66f4\u65b0\u983b\u7387\uff08\u5206\u9418\uff09",
                     "server_name": "\u9078\u64c7\u6e2c\u8a66\u4f3a\u670d\u5668"
                 }
             }

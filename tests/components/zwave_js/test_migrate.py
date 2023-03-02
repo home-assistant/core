@@ -67,9 +67,9 @@ async def test_unique_id_migration_dupes(
 @pytest.mark.parametrize(
     "id",
     [
-        ("52.52-49-00-Air temperature-00"),
-        ("52.52-49-0-Air temperature-00-00"),
-        ("52-49-0-Air temperature-00-00"),
+        "52.52-49-00-Air temperature-00",
+        "52.52-49-0-Air temperature-00-00",
+        "52-49-0-Air temperature-00-00",
     ],
 )
 async def test_unique_id_migration(hass, multisensor_6_state, client, integration, id):
@@ -109,9 +109,9 @@ async def test_unique_id_migration(hass, multisensor_6_state, client, integratio
 @pytest.mark.parametrize(
     "id",
     [
-        ("32.32-50-00-value-W_Consumed"),
-        ("32.32-50-0-value-66049-W_Consumed"),
-        ("32-50-0-value-66049-W_Consumed"),
+        "32.32-50-00-value-W_Consumed",
+        "32.32-50-0-value-66049-W_Consumed",
+        "32-50-0-value-66049-W_Consumed",
     ],
 )
 async def test_unique_id_migration_property_key(
@@ -159,7 +159,10 @@ async def test_unique_id_migration_notification_binary_sensor(
     entity_name = NOTIFICATION_MOTION_BINARY_SENSOR.split(".")[1]
 
     # Create entity RegistryEntry using old unique ID format
-    old_unique_id = f"{client.driver.controller.home_id}.52.52-113-00-Home Security-Motion sensor status.8"
+    old_unique_id = (
+        f"{client.driver.controller.home_id}.52.52-113-00-Home Security-Motion sensor"
+        " status.8"
+    )
     entity_entry = ent_reg.async_get_or_create(
         "binary_sensor",
         DOMAIN,
@@ -180,7 +183,10 @@ async def test_unique_id_migration_notification_binary_sensor(
 
     # Check that new RegistryEntry is using new unique ID format
     entity_entry = ent_reg.async_get(NOTIFICATION_MOTION_BINARY_SENSOR)
-    new_unique_id = f"{client.driver.controller.home_id}.52-113-0-Home Security-Motion sensor status.8"
+    new_unique_id = (
+        f"{client.driver.controller.home_id}.52-113-0-Home Security-Motion sensor"
+        " status.8"
+    )
     assert entity_entry.unique_id == new_unique_id
     assert ent_reg.async_get_entity_id("binary_sensor", DOMAIN, old_unique_id) is None
 

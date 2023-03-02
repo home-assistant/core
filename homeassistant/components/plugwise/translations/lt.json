@@ -1,0 +1,19 @@
+{
+    "entity": {
+        "climate": {
+            "plugwise": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "asleep": "Naktis",
+                            "away": "I\u0161vyk\u0119s",
+                            "home": "Namuose",
+                            "no_frost": "Apsauga nuo \u0161al\u010dio",
+                            "vacation": "U\u017erakinti - atostog\u0173 re\u017eime"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,6 +1,7 @@
 {
     "config": {
         "error": {
+            "cannot_connect": "No se pudo conectar",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida"
         },
         "step": {

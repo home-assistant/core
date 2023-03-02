@@ -7,7 +7,7 @@
         "error": {
             "connection_refused": "Connection refused when connecting to host",
             "connection_timeout": "Timeout when connecting to this host",
-            "resolve_failed": "This host can not be resolved"
+            "resolve_failed": "This host cannot be resolved"
         },
         "step": {
             "user": {

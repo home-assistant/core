@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
         "error": {
             "invalid_account_format": "The account is not a hex value, please use only 0-9 and A-F.",
             "invalid_account_length": "The account is not the right length, it has to be between 3 and 16 characters.",

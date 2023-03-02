@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "not_huawei_lte": "Ni naprava Huawei LTE"
-        },
         "error": {
             "connection_timeout": "\u010casovna omejitev povezave",
             "incorrect_password": "Nepravilno geslo",

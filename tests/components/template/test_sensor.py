@@ -305,6 +305,8 @@ async def test_template_attribute_missing(hass, start_ha):
 )
 async def test_setup_valid_device_class(hass, start_ha):
     """Test setup with valid device_class."""
+    hass.states.async_set("sensor.test_sensor", "75")
+    await hass.async_block_till_done()
     assert hass.states.get("sensor.test1").attributes["device_class"] == "temperature"
     assert "device_class" not in hass.states.get("sensor.test2").attributes
 
@@ -607,7 +609,7 @@ async def test_sun_renders_once_per_sensor(hass, start_ha):
     def _record_async_render(self, *args, **kwargs):
         """Catch async_render."""
         async_render_calls.append(self.template)
-        return "mocked"
+        return "75"
 
     later = dt_util.utcnow()
 
@@ -615,8 +617,8 @@ async def test_sun_renders_once_per_sensor(hass, start_ha):
         hass.states.async_set("sun.sun", {"elevation": 50, "next_rising": later})
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.solar_angle").state == "mocked"
-    assert hass.states.get("sensor.sunrise").state == "mocked"
+    assert hass.states.get("sensor.solar_angle").state == "75"
+    assert hass.states.get("sensor.sunrise").state == "75"
 
     assert len(async_render_calls) == 2
     assert set(async_render_calls) == {

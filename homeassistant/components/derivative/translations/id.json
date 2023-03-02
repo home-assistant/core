@@ -39,5 +39,15 @@
             }
         }
     },
+    "selector": {
+        "time_unit": {
+            "options": {
+                "d": "Hari",
+                "h": "Jam",
+                "min": "Menit",
+                "s": "Detik"
+            }
+        }
+    },
     "title": "Sensor Turunan"
 }

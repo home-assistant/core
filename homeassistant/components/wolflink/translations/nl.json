@@ -30,8 +30,11 @@
                 "state": {
                     "aktiviert": "Geactiveerd",
                     "aus": "Uitgeschakeld",
+                    "automatik_aus": "Automatisch UIT",
+                    "automatik_ein": "Automatisch AAN",
                     "deaktiviert": "Inactief",
-                    "ein": "Ingeschakeld"
+                    "ein": "Ingeschakeld",
+                    "storung": "Fout"
                 }
             }
         }

@@ -294,7 +294,6 @@ async def test_options(hass):
     with patch(
         "homeassistant.components.plaato.async_setup_entry", return_value=True
     ) as mock_setup_entry:
-
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -329,7 +328,6 @@ async def test_options_webhook(hass, webhook_id):
     with patch(
         "homeassistant.components.plaato.async_setup_entry", return_value=True
     ) as mock_setup_entry:
-
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 

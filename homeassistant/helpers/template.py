@@ -13,23 +13,32 @@ from functools import cache, lru_cache, partial, wraps
 import json
 import logging
 import math
-from operator import attrgetter
+from operator import attrgetter, contains
 import random
 import re
 import statistics
 from struct import error as StructError, pack, unpack_from
 import sys
 from types import CodeType
-from typing import Any, Literal, NoReturn, TypeVar, cast, overload
+from typing import (
+    Any,
+    Concatenate,
+    Literal,
+    NoReturn,
+    ParamSpec,
+    TypeVar,
+    cast,
+    overload,
+)
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
+import async_timeout
 from awesomeversion import AwesomeVersion
 import jinja2
 from jinja2 import pass_context, pass_environment, pass_eval_context
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
-from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -255,20 +264,39 @@ class RenderInfo:
 
     def __repr__(self) -> str:
         """Representation of RenderInfo."""
-        return f"<RenderInfo {self.template} all_states={self.all_states} all_states_lifecycle={self.all_states_lifecycle} domains={self.domains} domains_lifecycle={self.domains_lifecycle} entities={self.entities} rate_limit={self.rate_limit}> has_time={self.has_time}"
+        return (
+            f"<RenderInfo {self.template}"
+            f" all_states={self.all_states}"
+            f" all_states_lifecycle={self.all_states_lifecycle}"
+            f" domains={self.domains}"
+            f" domains_lifecycle={self.domains_lifecycle}"
+            f" entities={self.entities}"
+            f" rate_limit={self.rate_limit}"
+            f" has_time={self.has_time}"
+            ">"
+        )
 
     def _filter_domains_and_entities(self, entity_id: str) -> bool:
-        """Template should re-render if the entity state changes when we match specific domains or entities."""
+        """Template should re-render if the entity state changes.
+
+        Only when we match specific domains or entities.
+        """
         return (
             split_entity_id(entity_id)[0] in self.domains or entity_id in self.entities
         )
 
     def _filter_entities(self, entity_id: str) -> bool:
-        """Template should re-render if the entity state changes when we match specific entities."""
+        """Template should re-render if the entity state changes.
+
+        Only when we match specific entities.
+        """
         return entity_id in self.entities
 
     def _filter_lifecycle_domains(self, entity_id: str) -> bool:
-        """Template should re-render if the entity is added or removed with domains watched."""
+        """Template should re-render if the entity is added or removed.
+
+        Only with domains watched.
+        """
         return split_entity_id(entity_id)[0] in self.domains_lifecycle
 
     def result(self) -> str:
@@ -359,7 +387,11 @@ class Template:
             wanted_env = _ENVIRONMENT
         ret: TemplateEnvironment | None = self.hass.data.get(wanted_env)
         if ret is None:
-            ret = self.hass.data[wanted_env] = TemplateEnvironment(self.hass, self._limited, self._strict)  # type: ignore[no-untyped-call]
+            ret = self.hass.data[wanted_env] = TemplateEnvironment(
+                self.hass,
+                self._limited,  # type: ignore[no-untyped-call]
+                self._strict,
+            )
         return ret
 
     def ensure_valid(self) -> None:
@@ -382,7 +414,8 @@ class Template:
     ) -> Any:
         """Render given template.
 
-        If limited is True, the template is not allowed to access any function or filter depending on hass or the state machine.
+        If limited is True, the template is not allowed to access any function
+        or filter depending on hass or the state machine.
         """
         if self.is_static:
             if not parse_result or self.hass and self.hass.config.legacy_templates:
@@ -407,7 +440,8 @@ class Template:
 
         This method must be run in the event loop.
 
-        If limited is True, the template is not allowed to access any function or filter depending on hass or the state machine.
+        If limited is True, the template is not allowed to access any function
+        or filter depending on hass or the state machine.
         """
         if self.is_static:
             if not parse_result or self.hass and self.hass.config.legacy_templates:
@@ -509,7 +543,8 @@ class Template:
         try:
             template_render_thread = ThreadWithException(target=_render_template)
             template_render_thread.start()
-            await asyncio.wait_for(finish_event.wait(), timeout=timeout)
+            async with async_timeout.timeout(timeout):
+                await finish_event.wait()
             if self._exc_info:
                 raise TemplateError(self._exc_info[1].with_traceback(self._exc_info[2]))
         except asyncio.TimeoutError:
@@ -1039,11 +1074,11 @@ def device_entities(hass: HomeAssistant, _device_id: str) -> Iterable[str]:
 
 
 def integration_entities(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
-    """
-    Get entity ids for entities tied to an integration/domain.
+    """Get entity ids for entities tied to an integration/domain.
 
     Provide entry_name as domain to get all entity id's for a integration/domain
-    or provide a config entry title for filtering between instances of the same integration.
+    or provide a config entry title for filtering between instances of the same
+    integration.
     """
     # first try if this is a config entry match
     conf_entry = next(
@@ -1060,7 +1095,7 @@ def integration_entities(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
         return [entry.entity_id for entry in entries]
 
     # fallback to just returning all entities for a domain
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from .entity import entity_sources
 
     return [
@@ -1409,8 +1444,8 @@ def raise_no_default(function: str, value: Any) -> NoReturn:
     """Log warning if no default is specified."""
     template, action = template_cv.get() or ("", "rendering or compiling")
     raise ValueError(
-        f"Template error: {function} got invalid input '{value}' when {action} template '{template}' "
-        "but no default was specified"
+        f"Template error: {function} got invalid input '{value}' when {action} template"
+        f" '{template}' but no default was specified"
     )
 
 
@@ -1643,8 +1678,7 @@ def fail_when_undefined(value):
 
 
 def min_max_from_filter(builtin_filter: Any, name: str) -> Any:
-    """
-    Convert a built-in min/max Jinja filter to a global function.
+    """Convert a built-in min/max Jinja filter to a global function.
 
     The parameters may be passed as an iterable or as separate arguments.
     """
@@ -1667,16 +1701,17 @@ def min_max_from_filter(builtin_filter: Any, name: str) -> Any:
 
 
 def average(*args: Any, default: Any = _SENTINEL) -> Any:
-    """
-    Filter and function to calculate the arithmetic mean of an iterable or of two or more arguments.
+    """Filter and function to calculate the arithmetic mean.
+
+    Calculates of an iterable or of two or more arguments.
 
     The parameters may be passed as an iterable or as separate arguments.
     """
     if len(args) == 0:
         raise TypeError("average expected at least 1 argument, got 0")
 
-    # If first argument is iterable and more than 1 argument provided but not a named default,
-    # then use 2nd argument as default.
+    # If first argument is iterable and more than 1 argument provided but not a named
+    # default, then use 2nd argument as default.
     if isinstance(args[0], Iterable):
         average_list = args[0]
         if len(args) > 1 and default is _SENTINEL:
@@ -1800,7 +1835,11 @@ def struct_pack(value: Any | None, format_string: str) -> bytes | None:
         return pack(format_string, value)
     except StructError:
         _LOGGER.warning(
-            "Template warning: 'pack' unable to pack object '%s' with type '%s' and format_string '%s' see https://docs.python.org/3/library/struct.html for more information",
+            (
+                "Template warning: 'pack' unable to pack object '%s' with type '%s' and"
+                " format_string '%s' see https://docs.python.org/3/library/struct.html"
+                " for more information"
+            ),
             str(value),
             type(value).__name__,
             format_string,
@@ -1814,7 +1853,11 @@ def struct_unpack(value: bytes, format_string: str, offset: int = 0) -> Any | No
         return unpack_from(format_string, value, offset)[0]
     except StructError:
         _LOGGER.warning(
-            "Template warning: 'unpack' unable to unpack object '%s' with format_string '%s' and offset %s see https://docs.python.org/3/library/struct.html for more information",
+            (
+                "Template warning: 'unpack' unable to unpack object '%s' with"
+                " format_string '%s' and offset %s see"
+                " https://docs.python.org/3/library/struct.html for more information"
+            ),
             value,
             format_string,
             offset,
@@ -1876,8 +1919,7 @@ def today_at(time_str: str = "") -> datetime:
 
 
 def relative_time(value):
-    """
-    Take a datetime and return its "age" as a string.
+    """Take a datetime and return its "age" as a string.
 
     The age can be in second, minute, hour, day, month or year. Only the
     biggest unit is considered, e.g. if it's 2 days and 3 hours, "2 days" will
@@ -1945,7 +1987,7 @@ def _render_with_context(
 class LoggingUndefined(jinja2.Undefined):
     """Log on undefined variables."""
 
-    def _log_message(self):
+    def _log_message(self) -> None:
         template, action = template_cv.get() or ("", "rendering or compiling")
         _LOGGER.warning(
             "Template variable warning: %s when %s '%s'",
@@ -1967,7 +2009,7 @@ class LoggingUndefined(jinja2.Undefined):
             )
             raise ex
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Log undefined __str___."""
         self._log_message()
         return super().__str__()
@@ -1977,7 +2019,7 @@ class LoggingUndefined(jinja2.Undefined):
         self._log_message()
         return super().__iter__()
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         """Log undefined __bool___."""
         self._log_message()
         return super().__bool__()
@@ -1988,13 +2030,16 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
     def __init__(self, hass, limited=False, strict=False):
         """Initialise template environment."""
+        undefined: type[LoggingUndefined] | type[jinja2.StrictUndefined]
         if not strict:
             undefined = LoggingUndefined
         else:
             undefined = jinja2.StrictUndefined
         super().__init__(undefined=undefined)
         self.hass = hass
-        self.template_cache = weakref.WeakValueDictionary()
+        self.template_cache: weakref.WeakValueDictionary[
+            str | jinja2.nodes.Template, CodeType | str | None
+        ] = weakref.WeakValueDictionary()
         self.filters["round"] = forgiving_round
         self.filters["multiply"] = multiply
         self.filters["log"] = logarithm
@@ -2040,6 +2085,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["iif"] = iif
         self.filters["bool"] = forgiving_boolean
         self.filters["version"] = version
+        self.filters["contains"] = contains
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
@@ -2076,6 +2122,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.tests["is_number"] = is_number
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search
+        self.tests["contains"] = contains
 
         if hass is None:
             return
@@ -2130,8 +2177,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         if limited:
             # Only device_entities is available to limited templates, mark other
             # functions and filters as unsupported.
-            def unsupported(name):
-                def warn_unsupported(*args, **kwargs):
+            def unsupported(name: str) -> Callable[[], NoReturn]:
+                def warn_unsupported(*args: Any, **kwargs: Any) -> NoReturn:
                     raise TemplateError(
                         f"Use of '{name}' is not supported in limited templates"
                     )
@@ -2239,7 +2286,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 defer_init,
             )
 
-        cached: CodeType | str | None
         if (cached := self.template_cache.get(source)) is None:
             cached = self.template_cache[source] = super().compile(source)
 

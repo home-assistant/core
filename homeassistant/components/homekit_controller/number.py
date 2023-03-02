@@ -1,5 +1,4 @@
-"""
-Support for Homekit number ranges.
+"""Support for Homekit number ranges.
 
 These are mostly used where a HomeKit accessory exposes additional non-standard
 characteristics that don't map to a Home Assistant feature.

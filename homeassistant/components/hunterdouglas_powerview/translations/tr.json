@@ -10,7 +10,7 @@
         "flow_title": "{name} ({host})",
         "step": {
             "link": {
-                "description": "{name} ( {host} ) kurulumu yapmak istiyor musunuz?",
+                "description": "{name} ( {host} ) kurmak istiyor musunuz?",
                 "title": "PowerView Hub'a ba\u011flan\u0131n"
             },
             "user": {

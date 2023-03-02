@@ -2,7 +2,7 @@
   "domain": "lupusec",
   "name": "Lupus Electronics LUPUSEC",
   "documentation": "https://www.home-assistant.io/integrations/lupusec",
-  "requirements": ["lupupy==0.2.4"],
+  "requirements": ["lupupy==0.2.5"],
   "codeowners": ["@majuss"],
   "iot_class": "local_polling",
   "loggers": ["lupupy"]

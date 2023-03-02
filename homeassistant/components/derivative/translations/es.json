@@ -39,5 +39,15 @@
             }
         }
     },
+    "selector": {
+        "time_unit": {
+            "options": {
+                "d": "D\u00edas",
+                "h": "Horas",
+                "min": "Minutos",
+                "s": "Segundos"
+            }
+        }
+    },
     "title": "Sensor de derivaci\u00f3n"
 }

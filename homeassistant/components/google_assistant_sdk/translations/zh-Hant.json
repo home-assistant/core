@@ -34,8 +34,10 @@
         "step": {
             "init": {
                 "data": {
+                    "enable_conversation_agent": "\u555f\u7528\u5c0d\u8a71\u52a9\u7406",
                     "language_code": "\u8a9e\u8a00\u4ee3\u78bc"
-                }
+                },
+                "description": "\u8a2d\u5b9a\u8207 Google Assistant \u4e92\u52d5\u8a9e\u8a00\u4ee5\u53ca\u662f\u5426\u8981\u555f\u7528\u5c0d\u8a71\u52a9\u7406\u3002"
             }
         }
     }

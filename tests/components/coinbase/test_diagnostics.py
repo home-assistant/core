@@ -2,8 +2,6 @@
 
 from unittest.mock import patch
 
-from aiohttp import ClientSession
-
 from .common import (
     init_mock_coinbase,
     mock_get_current_user,
@@ -13,9 +11,10 @@ from .common import (
 from .const import MOCK_ACCOUNTS_RESPONSE_REDACTED, MOCK_ENTRY_REDACTED
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
-async def test_entry_diagnostics(hass, hass_client: ClientSession):
+async def test_entry_diagnostics(hass, hass_client: ClientSessionGenerator):
     """Test we handle a and redact a diagnostics request."""
 
     with patch(
@@ -27,7 +26,6 @@ async def test_entry_diagnostics(hass, hass_client: ClientSession):
         "coinbase.wallet.client.Client.get_exchange_rates",
         return_value=mock_get_exchange_rates(),
     ):
-
         config_entry = await init_mock_coinbase(hass)
         await hass.async_block_till_done()
 

@@ -47,8 +47,7 @@ async def test_migration_creates_new_flow(hass, smartthings_mock, config_entry):
 async def test_unrecoverable_api_errors_create_new_flow(
     hass, config_entry, smartthings_mock
 ):
-    """
-    Test a new config flow is initiated when there are API errors.
+    """Test a new config flow is initiated when there are API errors.
 
     401 (unauthorized): Occurs when the access token is no longer valid.
     403 (forbidden/not found): Occurs when the app or installed app could
@@ -451,7 +450,6 @@ async def test_event_handler_dispatches_updated_devices(
     broker = smartthings.DeviceBroker(hass, config_entry, Mock(), Mock(), devices, [])
     broker.connect()
 
-    # pylint:disable=protected-access
     await broker._event_handler(request, None, None)
     await hass.async_block_till_done()
 
@@ -478,7 +476,6 @@ async def test_event_handler_ignores_other_installed_app(
     broker = smartthings.DeviceBroker(hass, config_entry, Mock(), Mock(), [device], [])
     broker.connect()
 
-    # pylint:disable=protected-access
     await broker._event_handler(request, None, None)
     await hass.async_block_till_done()
 
@@ -516,7 +513,6 @@ async def test_event_handler_fires_button_events(
     broker = smartthings.DeviceBroker(hass, config_entry, Mock(), Mock(), [device], [])
     broker.connect()
 
-    # pylint:disable=protected-access
     await broker._event_handler(request, None, None)
     await hass.async_block_till_done()
 

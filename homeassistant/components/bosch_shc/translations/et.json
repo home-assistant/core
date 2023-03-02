@@ -14,7 +14,7 @@
         "flow_title": "Bosch SHC: {name}",
         "step": {
             "confirm_discovery": {
-                "description": "Vajuta palun Bosch Smart Home Controlleri esik\u00fclje nuppu kuni LED hakkab vilkuma.\n Kas oled valmis j\u00e4tkama {model} @ {host} seadistamist Home Assistanti abil?"
+                "description": "Smart Home Controller I: vajuta esik\u00fclje nuppu kuni LED hakkab vilkuma.\nSmart Home Controller II: vajuta l\u00fchidalt funktsiooninuppu. Pilve- ja v\u00f5rgutuled hakkavad oran\u017eilt vilkuma.\nSeade on n\u00fc\u00fcd sidumiseks valmis.\n\nKas oled valmis j\u00e4tkama {model} @ {host} seadistamist Home Assistantiga?"
             },
             "credentials": {
                 "data": {
@@ -22,6 +22,9 @@
                 }
             },
             "reauth_confirm": {
+                "data": {
+                    "host": "Host"
+                },
                 "description": "Bosch_shc sidumine peab konto uuesti autentima.",
                 "title": "Taastuvastamine"
             },

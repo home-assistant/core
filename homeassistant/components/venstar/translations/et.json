@@ -19,5 +19,18 @@
                 "title": "Loo \u00fchendus Venstari termostaadiga"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "schedule_part": {
+                "state": {
+                    "day": "P\u00e4ev",
+                    "evening": "\u00d5htu",
+                    "inactive": "Passiivne",
+                    "morning": "Hommik",
+                    "night": "\u00d6\u00f6"
+                }
+            }
+        }
     }
 }

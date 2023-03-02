@@ -302,7 +302,10 @@ async def test_dhcp_invalid(hass, aioclient_mock):
     """Test starting a flow from discovery."""
     with patch(
         "homeassistant.components.fronius.config_flow.DHCP_REQUEST_DELAY", 0
-    ), patch("pyfronius.Fronius.current_logger_info", side_effect=FroniusError,), patch(
+    ), patch(
+        "pyfronius.Fronius.current_logger_info",
+        side_effect=FroniusError,
+    ), patch(
         "pyfronius.Fronius.inverter_info",
         side_effect=FroniusError,
     ):

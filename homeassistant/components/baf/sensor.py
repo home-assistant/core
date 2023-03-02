@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Optional, cast
+from typing import cast
 
 from aiobafi6 import Device
 
@@ -46,7 +46,7 @@ AUTO_COMFORT_SENSORS = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda device: cast(Optional[float], device.temperature),
+        value_fn=lambda device: cast(float | None, device.temperature),
     ),
 )
 
@@ -57,7 +57,7 @@ DEFINED_ONLY_SENSORS = (
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda device: cast(Optional[float], device.humidity),
+        value_fn=lambda device: cast(float | None, device.humidity),
     ),
 )
 
@@ -68,7 +68,7 @@ FAN_SENSORS = (
         native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda device: cast(Optional[int], device.current_rpm),
+        value_fn=lambda device: cast(int | None, device.current_rpm),
     ),
     BAFSensorDescription(
         key="target_rpm",
@@ -76,21 +76,21 @@ FAN_SENSORS = (
         native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda device: cast(Optional[int], device.target_rpm),
+        value_fn=lambda device: cast(int | None, device.target_rpm),
     ),
     BAFSensorDescription(
         key="wifi_ssid",
         name="WiFi SSID",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda device: cast(Optional[int], device.wifi_ssid),
+        value_fn=lambda device: cast(int | None, device.wifi_ssid),
     ),
     BAFSensorDescription(
         key="ip_address",
         name="IP Address",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda device: cast(Optional[str], device.ip_address),
+        value_fn=lambda device: cast(str | None, device.ip_address),
     ),
 )
 

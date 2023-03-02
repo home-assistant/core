@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Teenus on juba seadistatud"
+        },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
             "unknown_license_plate": "Tundmatu numbrim\u00e4rk"

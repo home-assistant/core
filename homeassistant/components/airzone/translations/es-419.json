@@ -2,6 +2,13 @@
     "config": {
         "error": {
             "invalid_system_id": "ID del sistema Airzone no v\u00e1lido"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "id": "ID del sistema"
+                }
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Apparaat is al ingesteld",
             "cannot_connect": "Kan geen verbinding maken met controller met url {base_url}"
         },
         "step": {

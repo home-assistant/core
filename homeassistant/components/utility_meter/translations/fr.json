@@ -31,5 +31,20 @@
             }
         }
     },
+    "selector": {
+        "cycle": {
+            "options": {
+                "bimonthly": "Tous les deux mois",
+                "daily": "Quotidien",
+                "hourly": "Horaire",
+                "monthly": "Mensuel",
+                "none": "Pas de cycle",
+                "quarter-hourly": "Toutes les 15 minutes",
+                "quarterly": "Trimestriel",
+                "weekly": "Hebdomadaire",
+                "yearly": "Annuel"
+            }
+        }
+    },
     "title": "Compteur de services publics (eau, gaz, \u00e9lectricit\u00e9\u2026)"
 }

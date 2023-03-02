@@ -7,7 +7,7 @@
             "webhook_not_internet_accessible": "Webhook mesajlar\u0131n\u0131 alabilmek i\u00e7in Home Assistant \u00f6rne\u011finize internetten eri\u015filebilmelidir."
         },
         "create_entry": {
-            "default": "Plaato {device_type} ad\u0131 ** ile {device_name} ** ba\u015far\u0131yla kurulum oldu!"
+            "default": "** {device_name} {device_type} ba\u015far\u0131yla kuruldu!"
         },
         "error": {
             "invalid_webhook_device": "Webhook veri g\u00f6ndermeyi desteklemeyen bir cihaz se\u00e7tiniz. Yaln\u0131zca Airlock i\u00e7in kullan\u0131labilir",
@@ -28,11 +28,11 @@
                     "device_name": "Cihaz\u0131n\u0131z\u0131 adland\u0131r\u0131n",
                     "device_type": "Plaato cihaz\u0131n\u0131n t\u00fcr\u00fc"
                 },
-                "description": "Kuruluma ba\u015flamak ister misiniz?",
+                "description": "Kurulumu ba\u015flatmak istiyor musunuz?",
                 "title": "Plaato cihazlar\u0131n\u0131 kurun"
             },
             "webhook": {
-                "description": "Olaylar\u0131 Home Assistant'a g\u00f6ndermek i\u00e7in Plaato Airlock'ta webhook \u00f6zelli\u011fini kurman\u0131z gerekir. \n\n A\u015fa\u011f\u0131daki bilgileri doldurun: \n\n - URL: ` {webhook_url} `\n - Y\u00f6ntem: POST \n\n Daha fazla ayr\u0131nt\u0131 i\u00e7in [belgelere]( {docs_url}",
+                "description": "Etkinlikleri Home Assistant'a g\u00f6ndermek i\u00e7in Plaato Airlock'ta webhook \u00f6zelli\u011fini ayarlaman\u0131z gerekir. \n\n A\u015fa\u011f\u0131daki bilgileri doldurun: \n\n - URL: ` {webhook_url} `\n - Y\u00f6ntem: POST \n\n Daha fazla ayr\u0131nt\u0131 i\u00e7in [belgelere]( {docs_url} ) bak\u0131n.",
                 "title": "Webhook kullanmak i\u00e7in"
             }
         }

@@ -20,7 +20,7 @@
                 "data": {
                     "ip_address": "IP Adresi"
                 },
-                "description": "Kuruluma ba\u015flamak ister misiniz?"
+                "description": "Kurulumu ba\u015flatmak istiyor musunuz?"
             },
             "zeroconf_confirm": {
                 "description": "{host_name} ` ana bilgisayar ad\u0131na sahip devolo ev a\u011f\u0131 cihaz\u0131n\u0131 Home Assistant'a eklemek ister misiniz?",

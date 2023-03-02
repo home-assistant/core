@@ -160,7 +160,7 @@ class SwitchGroup(ZhaGroupEntity, SwitchEntity):
         self.async_write_ha_state()
 
     async def async_update(self) -> None:
-        """Query all members and determine the light group state."""
+        """Query all members and determine the switch group state."""
         all_states = [self.hass.states.get(x) for x in self._entity_ids]
         states: list[State] = list(filter(None, all_states))
         on_states = [state for state in states if state.state == STATE_ON]
@@ -372,12 +372,24 @@ class InovelliSmartBulbMode(ZHASwitchConfigurationEntity, id_suffix="smart_bulb_
     channel_names=CHANNEL_INOVELLI,
 )
 class InovelliDoubleTapForFullBrightness(
-    ZHASwitchConfigurationEntity, id_suffix="double_tap_up_for_full_brightness"
+    ZHASwitchConfigurationEntity, id_suffix="double_tap_up_for_max_brightness"
 ):
     """Inovelli double tap for full brightness control."""
 
-    _zcl_attribute: str = "double_tap_up_for_full_brightness"
+    _zcl_attribute: str = "double_tap_up_for_max_brightness"
     _attr_name: str = "Double tap full brightness"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_INOVELLI,
+)
+class InovelliDoubleTapForMinBrightness(
+    ZHASwitchConfigurationEntity, id_suffix="double_tap_down_for_min_brightness"
+):
+    """Inovelli double tap down for minimum brightness control."""
+
+    _zcl_attribute: str = "double_tap_down_for_min_brightness"
+    _attr_name: str = "Double tap minimum brightness"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(

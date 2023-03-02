@@ -52,8 +52,19 @@
     },
     "issues": {
         "deprecate_smart_sensor": {
-            "description": "El sensor unificado \"Objeto detectado\" para detecciones inteligentes ahora est\u00e1 obsoleto. Ha sido reemplazado por sensores binarios de detecci\u00f3n inteligente individuales para cada tipo de detecci\u00f3n inteligente. Actualiza cualquier plantilla o automatizaci\u00f3n en consecuencia.",
+            "description": "El sensor unificado de \"Objeto detectado\" para detecciones inteligentes ahora est\u00e1 obsoleto. Ha sido reemplazado por sensores binarios de detecci\u00f3n inteligente individuales para cada tipo de detecci\u00f3n inteligente. \n\nA continuaci\u00f3n se muestran las automatizaciones o secuencias de comandos detectadas que usan una o m\u00e1s de las entidades obsoletas:\n{items}\nLa lista anterior puede estar incompleta y no incluye ning\u00fan uso de plantilla dentro de los paneles. Por favor, actualiza las plantillas, automatizaciones o scripts en consecuencia.",
             "title": "Sensor de detecci\u00f3n inteligente obsoleto"
+        },
+        "deprecated_service_set_doorbell_message": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "El servicio `unifiprotect.set_doorbell_message` est\u00e1 en desuso en favor de la nueva entidad Doorbell Text agregada a cada dispositivo Doorbell. Se eliminar\u00e1 en v2023.3.0. Por favor, actualiza para usar el servicio [`text.set_value`]({link}).",
+                        "title": "set_doorbell_message est\u00e1 obsoleto"
+                    }
+                }
+            },
+            "title": "set_doorbell_message est\u00e1 obsoleto"
         },
         "ea_setup_failed": {
             "description": "Est\u00e1s utilizando v{version} de UniFi Protect, que es una versi\u00f3n de Early Access. Se produjo un error irrecuperable al intentar cargar la integraci\u00f3n. Por favor, [cambia a una versi\u00f3n estable](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) de UniFi Protect para continuar usando la integraci\u00f3n. \n\nError: {error}",

@@ -29,19 +29,6 @@
             }
         }
     },
-    "issues": {
-        "deprecated_key": {
-            "fix_flow": {
-                "step": {
-                    "confirm": {
-                        "description": "Zaktualizuj wszystkie automatyzacje lub skrypty korzystaj\u0105ce z tej us\u0142ugi i zast\u0105p klucz nazwy kluczem entry_id.",
-                        "title": "Klucz nazwy w us\u0142ugach Transmission zostanie usuni\u0119ty"
-                    }
-                }
-            },
-            "title": "Klucz nazwy w us\u0142ugach Transmission zostanie usuni\u0119ty"
-        }
-    },
     "options": {
         "step": {
             "init": {

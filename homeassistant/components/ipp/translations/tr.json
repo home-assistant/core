@@ -31,5 +31,16 @@
                 "title": "Ke\u015ffedilen yaz\u0131c\u0131"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "printer": {
+                "state": {
+                    "idle": "Bo\u015fta",
+                    "printing": "Yazd\u0131r\u0131l\u0131yor",
+                    "stopped": "Durduruldu"
+                }
+            }
+        }
     }
 }

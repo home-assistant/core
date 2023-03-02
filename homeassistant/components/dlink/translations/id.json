@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung/autentikasi",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "confirm_discovery": {
+                "data": {
+                    "password": "Kata sandi (default: kode PIN di belakang)",
+                    "use_legacy_protocol": "Gunakan protokol lawas",
+                    "username": "Nama Pengguna"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Kata sandi (default: kode PIN di belakang)",
+                    "use_legacy_protocol": "Gunakan protokol lawas",
+                    "username": "Nama Pengguna"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Proses konfigurasi integrasi D-Link Smart Plug lewat YAML dalam proses penghapusan.\n\nKonfigurasi YAML yang ada telah diimpor ke antarmuka secara otomatis.\n\nHapus konfigurasi YAML integrasi D-Link Smart Plug dari file configuration.yaml dan mulai ulang Home Assistant untuk memperbaiki masalah ini.",
+            "title": "Konfigurasi YAML D-Link Smart Plug dalam proses penghapusan"
+        }
+    }
+}

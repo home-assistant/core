@@ -51,6 +51,21 @@
                 },
                 "title": "Gruppe hinzuf\u00fcgen"
             },
+            "sensor": {
+                "data": {
+                    "device_class": "Ger\u00e4teklasse",
+                    "entities": "Mitglieder",
+                    "hide_members": "Mitglieder ausblenden",
+                    "ignore_non_numeric": "Nicht-numerisch ignorieren",
+                    "name": "Name",
+                    "round_digits": "Wert auf die Anzahl der Dezimalstellen runden",
+                    "state_class": "Zustandsklasse",
+                    "type": "Typ",
+                    "unit_of_measurement": "Ma\u00dfeinheit"
+                },
+                "description": "Wenn \u201enicht numerisch ignorieren\u201c aktiviert ist, wird der Status der Gruppe berechnet, wenn mindestens ein Mitglied einen numerischen Wert hat. Wenn \u201enicht numerisch ignorieren\u201c deaktiviert ist, wird der Status der Gruppe nur berechnet, wenn alle Gruppenmitglieder numerische Werte haben.",
+                "title": "Gruppe hinzuf\u00fcgen"
+            },
             "switch": {
                 "data": {
                     "entities": "Mitglieder",
@@ -68,6 +83,7 @@
                     "light": "Licht-Gruppe",
                     "lock": "Schloss-Gruppe",
                     "media_player": "Media-Player-Gruppe",
+                    "sensor": "Sensorgruppe",
                     "switch": "Schalter-Gruppe"
                 },
                 "title": "Gruppe hinzuf\u00fcgen"
@@ -115,6 +131,19 @@
                     "entities": "Mitglieder",
                     "hide_members": "Mitglieder ausblenden"
                 }
+            },
+            "sensor": {
+                "data": {
+                    "device_class": "Ger\u00e4teklasse",
+                    "entities": "Mitglieder",
+                    "hide_members": "Mitglieder ausblenden",
+                    "ignore_non_numeric": "Nicht-numerisch ignorieren",
+                    "round_digits": "Wert auf die Anzahl der Dezimalstellen runden",
+                    "state_class": "Zustandsklasse",
+                    "type": "Typ",
+                    "unit_of_measurement": "Ma\u00dfeinheit"
+                },
+                "description": "Wenn \u201enicht numerisch ignorieren\u201c aktiviert ist, wird der Status der Gruppe berechnet, wenn mindestens ein Mitglied einen numerischen Wert hat. Wenn \u201enicht numerisch ignorieren\u201c deaktiviert ist, wird der Status der Gruppe nur berechnet, wenn alle Gruppenmitglieder numerische Werte haben."
             },
             "switch": {
                 "data": {

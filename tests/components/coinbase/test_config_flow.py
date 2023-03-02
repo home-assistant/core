@@ -196,7 +196,6 @@ async def test_option_form(hass):
     ), patch(
         "homeassistant.components.coinbase.update_listener"
     ) as mock_update_listener:
-
         config_entry = await init_mock_coinbase(hass)
         await hass.async_block_till_done()
         result = await hass.config_entries.options.async_init(config_entry.entry_id)

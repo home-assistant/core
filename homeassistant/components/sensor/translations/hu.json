@@ -48,7 +48,6 @@
             "carbon_monoxide": "{entity_name} sz\u00e9n-monoxid koncentr\u00e1ci\u00f3ja megv\u00e1ltozik",
             "current": "{entity_name} aktu\u00e1lis v\u00e1ltoz\u00e1sai",
             "data_rate": "{entity_name} adat\u00e1tviteli sebess\u00e9g v\u00e1ltoz\u00e1sa",
-            "data_size": "{entity_name} adatmennyis\u00e9g v\u00e1ltoz\u00e1s",
             "distance": "{entity_name} t\u00e1vols\u00e1g v\u00e1ltoz\u00e1s",
             "energy": "{entity_name} energiav\u00e1ltoz\u00e1sa",
             "frequency": "{entity_name} gyakoris\u00e1gi v\u00e1ltoz\u00e1sok",

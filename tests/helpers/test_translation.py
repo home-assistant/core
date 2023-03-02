@@ -42,7 +42,11 @@ async def test_component_translation_path(hass, enable_custom_integrations):
     )
     assert await async_setup_component(hass, "test_package", {"test_package"})
 
-    (int_test, int_test_embedded, int_test_package,) = await asyncio.gather(
+    (
+        int_test,
+        int_test_embedded,
+        int_test_package,
+    ) = await asyncio.gather(
         async_get_integration(hass, "test"),
         async_get_integration(hass, "test_embedded"),
         async_get_integration(hass, "test_package"),
@@ -270,9 +274,9 @@ async def test_translation_merging(hass, caplog):
         assert "component.sensor.state.moon__phase.first_quarter" in translations
 
     assert (
-        "An integration providing translations for sensor provided invalid data: bad data"
-        in caplog.text
-    )
+        "An integration providing translations for sensor provided invalid data:"
+        " bad data"
+    ) in caplog.text
 
 
 async def test_translation_merging_loaded_apart(hass, caplog):

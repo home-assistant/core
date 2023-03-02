@@ -363,7 +363,6 @@ async def test_entry_created_with_cloudhook(
         "async_create_cloudhook",
         AsyncMock(return_value="http://cloud.test"),
     ) as mock_create_cloudhook:
-
         await smartapp.setup_smartapp_endpoint(hass)
 
         # Webhook confirmation shown

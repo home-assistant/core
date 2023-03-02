@@ -32,5 +32,22 @@
             }
         }
     },
+    "selector": {
+        "method": {
+            "options": {
+                "left": "Linker Riemann som",
+                "right": "Rechter Riemann som",
+                "trapezoidal": "Trapeziumregel"
+            }
+        },
+        "unit_time": {
+            "options": {
+                "d": "Dagen",
+                "h": "Uren",
+                "min": "Minuten",
+                "s": "Seconden"
+            }
+        }
+    },
     "title": "Integratie - Riemann som integrale sensor"
 }

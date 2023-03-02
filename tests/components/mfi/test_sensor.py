@@ -9,7 +9,7 @@ import requests
 import homeassistant.components.mfi.sensor as mfi
 import homeassistant.components.sensor as sensor_component
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import UnitOfTemperature
 from homeassistant.setup import async_setup_component
 
 PLATFORM = mfi
@@ -134,7 +134,7 @@ async def test_name(port, sensor):
 async def test_uom_temp(port, sensor):
     """Test the UOM temperature."""
     port.tag = "temperature"
-    assert sensor.unit_of_measurement == TEMP_CELSIUS
+    assert sensor.unit_of_measurement == UnitOfTemperature.CELSIUS
     assert sensor.device_class is SensorDeviceClass.TEMPERATURE
 
 
@@ -148,7 +148,7 @@ async def test_uom_power(port, sensor):
 async def test_uom_digital(port, sensor):
     """Test the UOM digital input."""
     port.model = "Input Digital"
-    assert sensor.unit_of_measurement == "State"
+    assert sensor.unit_of_measurement is None
     assert sensor.device_class is None
 
 
@@ -162,7 +162,7 @@ async def test_uom_unknown(port, sensor):
 async def test_uom_uninitialized(port, sensor):
     """Test that the UOM defaults if not initialized."""
     type(port).tag = mock.PropertyMock(side_effect=ValueError)
-    assert sensor.unit_of_measurement == "State"
+    assert sensor.unit_of_measurement is None
     assert sensor.device_class is None
 
 
@@ -170,11 +170,11 @@ async def test_state_digital(port, sensor):
     """Test the digital input."""
     port.model = "Input Digital"
     port.value = 0
-    assert mfi.STATE_OFF == sensor.state
+    assert sensor.state == mfi.STATE_OFF
     port.value = 1
-    assert mfi.STATE_ON == sensor.state
+    assert sensor.state == mfi.STATE_ON
     port.value = 2
-    assert mfi.STATE_ON == sensor.state
+    assert sensor.state == mfi.STATE_ON
 
 
 async def test_state_digits(port, sensor):
@@ -190,7 +190,7 @@ async def test_state_digits(port, sensor):
 async def test_state_uninitialized(port, sensor):
     """Test the state of uninitialized sensorfs."""
     type(port).tag = mock.PropertyMock(side_effect=ValueError)
-    assert mfi.STATE_OFF == sensor.state
+    assert sensor.state == mfi.STATE_OFF
 
 
 async def test_update(port, sensor):

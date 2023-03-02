@@ -10,8 +10,8 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "{name} ( {host} ) kurulumu yapmak istiyor musunuz?",
-                "title": "SiteSage Emonitor Kurulumu"
+                "description": "{name} ( {host} ) kurmak istiyor musunuz?",
+                "title": "SiteSage Emonitor'u kurun"
             },
             "user": {
                 "data": {

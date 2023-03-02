@@ -30,5 +30,18 @@
             }
         }
     },
+    "selector": {
+        "type": {
+            "options": {
+                "last": "ostatnio zaktualizowane",
+                "max": "maksimum",
+                "mean": "\u015brednia arytmetyczna",
+                "median": "mediana",
+                "min": "minimum",
+                "range": "zakres statystyczny",
+                "sum": "suma"
+            }
+        }
+    },
     "title": "Po\u0142\u0105czenie stanu kilku sensor\u00f3w"
 }

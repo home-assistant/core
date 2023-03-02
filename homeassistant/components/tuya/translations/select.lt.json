@@ -1,0 +1,13 @@
+{
+    "state": {
+        "tuya__vacuum_cistern": {
+            "closed": "U\u017edaryta",
+            "high": "Auk\u0161tas",
+            "low": "\u017demas",
+            "middle": "Vidurio"
+        },
+        "tuya__vacuum_collection": {
+            "large": "Didelis"
+        }
+    }
+}

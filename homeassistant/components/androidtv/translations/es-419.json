@@ -1,5 +1,12 @@
 {
     "config": {
+        "abort": {
+            "invalid_unique_id": "Imposible determinar una identificaci\u00f3n \u00fanica v\u00e1lida para el dispositivo"
+        },
+        "error": {
+            "adbkey_not_file": "Archivo de clave ADB no encontrado",
+            "key_and_server": "Solo proporcione la clave ADB o el servidor ADB"
+        },
         "step": {
             "user": {
                 "data": {

@@ -31,5 +31,20 @@
             }
         }
     },
+    "selector": {
+        "cycle": {
+            "options": {
+                "bimonthly": "Setiap dua bulan",
+                "daily": "Harian",
+                "hourly": "Per jam",
+                "monthly": "Bulanan",
+                "none": "Tanpa siklus",
+                "quarter-hourly": "Setiap 15 menit",
+                "quarterly": "Triwulanan",
+                "weekly": "Mingguan",
+                "yearly": "Tahunan"
+            }
+        }
+    },
     "title": "Meter Utilitas"
 }

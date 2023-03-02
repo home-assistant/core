@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Kasutaja on juba seadistatud",
             "single_instance_allowed": "Juba seadistatud, lubatud on ainult \u00fcks seadistus."
         },
         "error": {

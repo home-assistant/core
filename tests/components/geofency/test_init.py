@@ -1,7 +1,5 @@
 """The tests for the Geofency device tracker platform."""
 from http import HTTPStatus
-
-# pylint: disable=redefined-outer-name
 from unittest.mock import patch
 
 import pytest

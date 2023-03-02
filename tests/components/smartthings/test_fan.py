@@ -1,5 +1,4 @@
-"""
-Test for the SmartThings fan platform.
+"""Test for the SmartThings fan platform.
 
 The only mocking required is of the underlying SmartThings API object so
 real HTTP calls are not initiated during testing.

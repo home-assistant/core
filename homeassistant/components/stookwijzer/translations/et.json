@@ -1,0 +1,23 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "location": "Asukoht"
+                },
+                "description": "Vali asukoht, mille kohta soovid Stookwijzeri teavet saada."
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "stookwijzer": {
+                "state": {
+                    "blauw": "Sinine",
+                    "oranje": "Oran\u017e",
+                    "rood": "Punane"
+                }
+            }
+        }
+    }
+}

@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "not_huawei_lte": "Keen Huawei LTE Apparat"
-        },
         "error": {
             "connection_timeout": "Z\u00e4it Iwwerschreidung beim verbannen",
             "incorrect_password": "Ong\u00ebltegt Passwuert",

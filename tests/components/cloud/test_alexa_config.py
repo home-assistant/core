@@ -13,7 +13,7 @@ from homeassistant.helpers.entity import EntityCategory
 from tests.common import async_fire_time_changed, mock_registry
 
 
-@pytest.fixture()
+@pytest.fixture
 def cloud_stub():
     """Stub the cloud."""
     return Mock(is_logged_in=True, subscription_expired=False)

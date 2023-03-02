@@ -4,7 +4,7 @@ from unittest.mock import call, patch
 
 import pytest
 import requests
-from uvcclient import camera as camera, nvr
+from uvcclient import camera, nvr
 
 from homeassistant.components.camera import (
     DEFAULT_CONTENT_TYPE,

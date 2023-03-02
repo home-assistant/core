@@ -9,7 +9,6 @@
                 "data": {
                     "api_key": "Chiave API",
                     "name": "Nome",
-                    "path": "Percorso",
                     "url": "URL"
                 }
             }

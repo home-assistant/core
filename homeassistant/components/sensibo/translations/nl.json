@@ -31,6 +31,14 @@
         }
     },
     "entity": {
+        "select": {
+            "light": {
+                "state": {
+                    "off": "Uit",
+                    "on": "Aan"
+                }
+            }
+        },
         "sensor": {
             "sensitivity": {
                 "state": {

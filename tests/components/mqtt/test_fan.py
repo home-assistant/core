@@ -415,7 +415,7 @@ async def test_controlling_state_via_topic_and_json_message(
     assert state.attributes.get(fan.ATTR_PERCENTAGE) is None
 
     async_fire_mqtt_message(hass, "percentage-state-topic", '{"otherval": 100}')
-    assert "Ignoring empty speed from" in caplog.text
+    assert state.attributes.get(fan.ATTR_PERCENTAGE) is None
     caplog.clear()
 
     async_fire_mqtt_message(hass, "preset-mode-state-topic", '{"val": "low"}')
@@ -439,8 +439,7 @@ async def test_controlling_state_via_topic_and_json_message(
     assert state.attributes.get("preset_mode") is None
 
     async_fire_mqtt_message(hass, "preset-mode-state-topic", '{"otherval": 100}')
-    assert "Ignoring empty preset_mode from" in caplog.text
-    caplog.clear()
+    assert state.attributes.get("preset_mode") is None
 
 
 async def test_controlling_state_via_topic_and_json_message_shared_topic(
@@ -528,9 +527,6 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
     state = hass.states.get("fan.test")
     assert state.attributes.get(fan.ATTR_PERCENTAGE) == 100
     assert state.attributes.get("preset_mode") == "auto"
-    assert "Ignoring empty preset_mode from" in caplog.text
-    assert "Ignoring empty state from" in caplog.text
-    assert "Ignoring empty oscillation from" in caplog.text
     caplog.clear()
 
 

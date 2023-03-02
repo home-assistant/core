@@ -198,7 +198,7 @@ async def async_start(  # noqa: C901
         if discovery_hash in mqtt_data.discovery_pending_discovered:
             pending = mqtt_data.discovery_pending_discovered[discovery_hash]["pending"]
             pending.appendleft(discovery_payload)
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Component has already been discovered: %s %s, queuing update",
                 component,
                 discovery_id,
@@ -279,7 +279,7 @@ async def async_start(  # noqa: C901
     mqtt_data.last_discovery = time.time()
     mqtt_integrations = await async_get_mqtt(hass)
 
-    for (integration, topics) in mqtt_integrations.items():
+    for integration, topics in mqtt_integrations.items():
 
         async def async_integration_message_received(
             integration: str, msg: ReceiveMessage

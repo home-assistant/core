@@ -41,7 +41,8 @@ OPTIONS = "options"
 
 async def async_get_device_config(hass, config_entry):
     """Initiate the connection and services."""
-    # Make a copy of addresses due to edge case where the list of devices could change during status update
+    # Make a copy of addresses due to edge case where the list of devices could
+    # change during status update
     # Cannot be done concurrently due to issues with the underlying protocol.
     for address in list(devices):
         if devices[address].is_battery:
@@ -51,7 +52,7 @@ async def async_get_device_config(hass, config_entry):
 
     load_aldb = 2 if devices.modem.aldb.read_write_mode == ReadWriteMode.UNKNOWN else 1
     await devices.async_load(id_devices=1, load_modem_aldb=load_aldb)
-    for addr in devices:
+    for addr in list(devices):
         device = devices[addr]
         flags = True
         for name in device.operating_flags:

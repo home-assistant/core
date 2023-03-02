@@ -8,8 +8,8 @@
       "manufacturer_id": 220
     }
   ],
-  "requirements": ["oralb-ble==0.14.3"],
-  "dependencies": ["bluetooth"],
-  "codeowners": ["@bdraco"],
+  "requirements": ["oralb-ble==0.17.2"],
+  "dependencies": ["bluetooth_adapters"],
+  "codeowners": ["@bdraco", "@Lash-L"],
   "iot_class": "local_push"
 }

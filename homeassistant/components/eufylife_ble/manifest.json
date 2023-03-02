@@ -1,0 +1,28 @@
+{
+  "domain": "eufylife_ble",
+  "name": "EufyLife",
+  "integration_type": "device",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/eufylife_ble",
+  "bluetooth": [
+    {
+      "local_name": "eufy T9140"
+    },
+    {
+      "local_name": "eufy T9146"
+    },
+    {
+      "local_name": "eufy T9147"
+    },
+    {
+      "local_name": "eufy T9148"
+    },
+    {
+      "local_name": "eufy T9149"
+    }
+  ],
+  "requirements": ["eufylife_ble_client==0.1.7"],
+  "dependencies": ["bluetooth_adapters"],
+  "codeowners": ["@bdr99"],
+  "iot_class": "local_push"
+}

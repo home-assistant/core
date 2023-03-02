@@ -372,7 +372,6 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
             and not self.device_class.startswith(DOMAIN)
             and description.native_unit_of_measurement is None
         ):
-
             # We cannot have a device class, if the UOM isn't set or the
             # device class cannot be found in the validation mapping.
             if (

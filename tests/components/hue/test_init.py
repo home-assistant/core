@@ -151,7 +151,6 @@ async def test_security_vuln_check(hass):
             )
         ),
     ):
-
         assert await async_setup_component(hass, "hue", {})
 
     await hass.async_block_till_done()

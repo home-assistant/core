@@ -119,7 +119,7 @@ async def test_desired_fan_mode(ecobee_fixture, thermostat):
 
 async def test_fan(ecobee_fixture, thermostat):
     """Test fan property."""
-    assert const.STATE_ON == thermostat.fan
+    assert thermostat.fan == const.STATE_ON
     ecobee_fixture["equipmentStatus"] = ""
     assert thermostat.fan == STATE_OFF
     ecobee_fixture["equipmentStatus"] = "heatPump, heatPump2"

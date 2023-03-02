@@ -26,7 +26,6 @@ async def test_full_user_flow_implementation(
 
     assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 9123}
@@ -69,7 +68,6 @@ async def test_full_zeroconf_flow_implementation(
     assert result.get("description_placeholders") == {"serial_number": "CN11A1A00001"}
     assert result.get("step_id") == "zeroconf_confirm"
     assert result.get("type") == FlowResultType.FORM
-    assert "flow_id" in result
 
     progress = hass.config_entries.flow.async_progress()
     assert len(progress) == 1

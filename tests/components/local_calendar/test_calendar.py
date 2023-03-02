@@ -8,7 +8,7 @@ from typing import Any
 from unittest.mock import patch
 import urllib
 
-from aiohttp import ClientSession, ClientWebSocketResponse
+from aiohttp import ClientWebSocketResponse
 import pytest
 
 from homeassistant.components.local_calendar import LocalCalendarStore
@@ -20,6 +20,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry
+from tests.typing import ClientSessionGenerator
 
 CALENDAR_NAME = "Light Schedule"
 FRIENDLY_NAME = "Light schedule"
@@ -90,9 +91,7 @@ GetEventsFn = Callable[[str, str], Awaitable[dict[str, Any]]]
 
 
 @pytest.fixture(name="get_events")
-def get_events_fixture(
-    hass_client: Callable[..., Awaitable[ClientSession]]
-) -> GetEventsFn:
+def get_events_fixture(hass_client: ClientSessionGenerator) -> GetEventsFn:
     """Fetch calendar events from the HTTP API."""
 
     async def _fetch(start: str, end: str) -> None:
@@ -174,7 +173,7 @@ async def test_empty_calendar(
     assert state.state == STATE_OFF
     assert dict(state.attributes) == {
         "friendly_name": FRIENDLY_NAME,
-        "supported_features": 3,
+        "supported_features": 7,
     }
 
 
@@ -292,7 +291,7 @@ async def test_active_event(
         "location": "",
         "start_time": start.strftime(DATE_STR_FORMAT),
         "end_time": end.strftime(DATE_STR_FORMAT),
-        "supported_features": 3,
+        "supported_features": 7,
     }
 
 
@@ -326,10 +325,9 @@ async def test_upcoming_event(
         "all_day": False,
         "description": "",
         "location": "",
-        "message": "Evening lights",
         "start_time": start.strftime(DATE_STR_FORMAT),
         "end_time": end.strftime(DATE_STR_FORMAT),
-        "supported_features": 3,
+        "supported_features": 7,
     }
 
 
@@ -522,6 +520,238 @@ async def test_websocket_delete_recurring(
     ]
 
 
+async def test_websocket_update(
+    ws_client: ClientFixture, setup_integration: None, get_events: GetEventsFn
+):
+    """Test websocket update command."""
+    client = await ws_client()
+    await client.cmd_result(
+        "create",
+        {
+            "entity_id": TEST_ENTITY,
+            "event": {
+                "summary": "Bastille Day Party",
+                "dtstart": "1997-07-14T17:00:00+00:00",
+                "dtend": "1997-07-15T04:00:00+00:00",
+            },
+        },
+    )
+
+    events = await get_events("1997-07-14T00:00:00", "1997-07-16T00:00:00")
+    assert list(map(event_fields, events)) == [
+        {
+            "summary": "Bastille Day Party",
+            "start": {"dateTime": "1997-07-14T11:00:00-06:00"},
+            "end": {"dateTime": "1997-07-14T22:00:00-06:00"},
+        }
+    ]
+    uid = events[0]["uid"]
+
+    # Update the event
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": uid,
+            "event": {
+                "summary": "Bastille Day Party [To be rescheduled]",
+                "dtstart": "1997-07-14",
+                "dtend": "1997-07-15",
+            },
+        },
+    )
+    events = await get_events("1997-07-14T00:00:00", "1997-07-16T00:00:00")
+    assert list(map(event_fields, events)) == [
+        {
+            "summary": "Bastille Day Party [To be rescheduled]",
+            "start": {"date": "1997-07-14"},
+            "end": {"date": "1997-07-15"},
+        }
+    ]
+
+
+async def test_websocket_update_recurring_this_and_future(
+    ws_client: ClientFixture, setup_integration: None, get_events: GetEventsFn
+):
+    """Test updating a recurring event."""
+    client = await ws_client()
+    await client.cmd_result(
+        "create",
+        {
+            "entity_id": TEST_ENTITY,
+            "event": {
+                "summary": "Morning Routine",
+                "dtstart": "2022-08-22T08:30:00",
+                "dtend": "2022-08-22T09:00:00",
+                "rrule": "FREQ=DAILY",
+            },
+        },
+    )
+
+    events = await get_events("2022-08-22T00:00:00", "2022-08-26T00:00:00")
+    assert list(map(event_fields, events)) == [
+        {
+            "summary": "Morning Routine",
+            "start": {"dateTime": "2022-08-22T08:30:00-06:00"},
+            "end": {"dateTime": "2022-08-22T09:00:00-06:00"},
+            "recurrence_id": "20220822T083000",
+        },
+        {
+            "summary": "Morning Routine",
+            "start": {"dateTime": "2022-08-23T08:30:00-06:00"},
+            "end": {"dateTime": "2022-08-23T09:00:00-06:00"},
+            "recurrence_id": "20220823T083000",
+        },
+        {
+            "summary": "Morning Routine",
+            "start": {"dateTime": "2022-08-24T08:30:00-06:00"},
+            "end": {"dateTime": "2022-08-24T09:00:00-06:00"},
+            "recurrence_id": "20220824T083000",
+        },
+        {
+            "summary": "Morning Routine",
+            "start": {"dateTime": "2022-08-25T08:30:00-06:00"},
+            "end": {"dateTime": "2022-08-25T09:00:00-06:00"},
+            "recurrence_id": "20220825T083000",
+        },
+    ]
+    uid = events[0]["uid"]
+    assert [event["uid"] for event in events] == [uid] * 4
+
+    # Update a single instance and confirm the change is reflected
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": uid,
+            "recurrence_id": "20220824T083000",
+            "recurrence_range": "THISANDFUTURE",
+            "event": {
+                "summary": "Morning Routine [Adjusted]",
+                "dtstart": "2022-08-24T08:00:00",
+                "dtend": "2022-08-24T08:30:00",
+            },
+        },
+    )
+    events = await get_events("2022-08-22T00:00:00", "2022-08-26T00:00:00")
+    assert list(map(event_fields, events)) == [
+        {
+            "summary": "Morning Routine",
+            "start": {"dateTime": "2022-08-22T08:30:00-06:00"},
+            "end": {"dateTime": "2022-08-22T09:00:00-06:00"},
+            "recurrence_id": "20220822T083000",
+        },
+        {
+            "summary": "Morning Routine",
+            "start": {"dateTime": "2022-08-23T08:30:00-06:00"},
+            "end": {"dateTime": "2022-08-23T09:00:00-06:00"},
+            "recurrence_id": "20220823T083000",
+        },
+        {
+            "summary": "Morning Routine [Adjusted]",
+            "start": {"dateTime": "2022-08-24T08:00:00-06:00"},
+            "end": {"dateTime": "2022-08-24T08:30:00-06:00"},
+            "recurrence_id": "20220824T080000",
+        },
+        {
+            "summary": "Morning Routine [Adjusted]",
+            "start": {"dateTime": "2022-08-25T08:00:00-06:00"},
+            "end": {"dateTime": "2022-08-25T08:30:00-06:00"},
+            "recurrence_id": "20220825T080000",
+        },
+    ]
+
+
+async def test_websocket_update_recurring(
+    ws_client: ClientFixture, setup_integration: None, get_events: GetEventsFn
+):
+    """Test updating a recurring event."""
+    client = await ws_client()
+    await client.cmd_result(
+        "create",
+        {
+            "entity_id": TEST_ENTITY,
+            "event": {
+                "summary": "Morning Routine",
+                "dtstart": "2022-08-22T08:30:00",
+                "dtend": "2022-08-22T09:00:00",
+                "rrule": "FREQ=DAILY",
+            },
+        },
+    )
+
+    events = await get_events("2022-08-22T00:00:00", "2022-08-26T00:00:00")
+    assert list(map(event_fields, events)) == [
+        {
+            "summary": "Morning Routine",
+            "start": {"dateTime": "2022-08-22T08:30:00-06:00"},
+            "end": {"dateTime": "2022-08-22T09:00:00-06:00"},
+            "recurrence_id": "20220822T083000",
+        },
+        {
+            "summary": "Morning Routine",
+            "start": {"dateTime": "2022-08-23T08:30:00-06:00"},
+            "end": {"dateTime": "2022-08-23T09:00:00-06:00"},
+            "recurrence_id": "20220823T083000",
+        },
+        {
+            "summary": "Morning Routine",
+            "start": {"dateTime": "2022-08-24T08:30:00-06:00"},
+            "end": {"dateTime": "2022-08-24T09:00:00-06:00"},
+            "recurrence_id": "20220824T083000",
+        },
+        {
+            "summary": "Morning Routine",
+            "start": {"dateTime": "2022-08-25T08:30:00-06:00"},
+            "end": {"dateTime": "2022-08-25T09:00:00-06:00"},
+            "recurrence_id": "20220825T083000",
+        },
+    ]
+    uid = events[0]["uid"]
+    assert [event["uid"] for event in events] == [uid] * 4
+
+    # Update a single instance and confirm the change is reflected
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": uid,
+            "recurrence_id": "20220824T083000",
+            "event": {
+                "summary": "Morning Routine [Adjusted]",
+                "dtstart": "2022-08-24T08:00:00",
+                "dtend": "2022-08-24T08:30:00",
+            },
+        },
+    )
+    events = await get_events("2022-08-22T00:00:00", "2022-08-26T00:00:00")
+    assert list(map(event_fields, events)) == [
+        {
+            "summary": "Morning Routine",
+            "start": {"dateTime": "2022-08-22T08:30:00-06:00"},
+            "end": {"dateTime": "2022-08-22T09:00:00-06:00"},
+            "recurrence_id": "20220822T083000",
+        },
+        {
+            "summary": "Morning Routine",
+            "start": {"dateTime": "2022-08-23T08:30:00-06:00"},
+            "end": {"dateTime": "2022-08-23T09:00:00-06:00"},
+            "recurrence_id": "20220823T083000",
+        },
+        {
+            "summary": "Morning Routine [Adjusted]",
+            "start": {"dateTime": "2022-08-24T08:00:00-06:00"},
+            "end": {"dateTime": "2022-08-24T08:30:00-06:00"},
+        },
+        {
+            "summary": "Morning Routine",
+            "start": {"dateTime": "2022-08-25T08:30:00-06:00"},
+            "end": {"dateTime": "2022-08-25T09:00:00-06:00"},
+            "recurrence_id": "20220825T083000",
+        },
+    ]
+
+
 @pytest.mark.parametrize(
     "rrule",
     [
@@ -705,3 +935,63 @@ async def test_invalid_date_formats(
     assert "error" in result
     assert "code" in result.get("error")
     assert result["error"]["code"] == "invalid_format"
+
+
+async def test_update_invalid_event_id(
+    ws_client: ClientFixture,
+    setup_integration: None,
+    hass: HomeAssistant,
+):
+    """Test updating an event with an invalid event uid."""
+    client = await ws_client()
+    resp = await client.cmd(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "uid-does-not-exist",
+            "event": {
+                "summary": "Bastille Day Party [To be rescheduled]",
+                "dtstart": "1997-07-14",
+                "dtend": "1997-07-15",
+            },
+        },
+    )
+    assert not resp.get("success")
+    assert "error" in resp
+    assert resp.get("error").get("code") == "failed"
+
+
+async def test_create_event_service(
+    hass: HomeAssistant, setup_integration: None, get_events: GetEventsFn
+):
+    """Test creating an event using the create_event service."""
+
+    await hass.services.async_call(
+        "calendar",
+        "create_event",
+        {
+            "start_date_time": "1997-07-14T17:00:00+00:00",
+            "end_date_time": "1997-07-15T04:00:00+00:00",
+            "summary": "Bastille Day Party",
+        },
+        target={"entity_id": TEST_ENTITY},
+        blocking=True,
+    )
+
+    events = await get_events("1997-07-14T00:00:00Z", "1997-07-16T00:00:00Z")
+    assert list(map(event_fields, events)) == [
+        {
+            "summary": "Bastille Day Party",
+            "start": {"dateTime": "1997-07-14T11:00:00-06:00"},
+            "end": {"dateTime": "1997-07-14T22:00:00-06:00"},
+        }
+    ]
+
+    events = await get_events("1997-07-13T00:00:00Z", "1997-07-14T18:00:00Z")
+    assert list(map(event_fields, events)) == [
+        {
+            "summary": "Bastille Day Party",
+            "start": {"dateTime": "1997-07-14T11:00:00-06:00"},
+            "end": {"dateTime": "1997-07-14T22:00:00-06:00"},
+        }
+    ]

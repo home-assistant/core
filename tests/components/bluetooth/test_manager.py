@@ -282,7 +282,9 @@ async def test_switching_adapters_based_on_stale(
     )
 
 
-async def test_restore_history_from_dbus(hass, one_adapter):
+async def test_restore_history_from_dbus(
+    hass, one_adapter, disable_new_discovery_flows
+):
     """Test we can restore history from dbus."""
     address = "AA:BB:CC:CC:CC:FF"
 
@@ -304,7 +306,7 @@ async def test_restore_history_from_dbus(hass, one_adapter):
 
 
 async def test_restore_history_from_dbus_and_remote_adapters(
-    hass, one_adapter, hass_storage
+    hass, one_adapter, hass_storage, disable_new_discovery_flows
 ):
     """Test we can restore history from dbus along with remote adapters."""
     address = "AA:BB:CC:CC:CC:FF"
@@ -337,10 +339,11 @@ async def test_restore_history_from_dbus_and_remote_adapters(
     assert (
         bluetooth.async_ble_device_from_address(hass, "EB:0B:36:35:6F:A4") is not None
     )
+    assert disable_new_discovery_flows.call_count > 1
 
 
 async def test_restore_history_from_dbus_and_corrupted_remote_adapters(
-    hass, one_adapter, hass_storage
+    hass, one_adapter, hass_storage, disable_new_discovery_flows
 ):
     """Test we can restore history from dbus when the remote adapters data is corrupted."""
     address = "AA:BB:CC:CC:CC:FF"
@@ -371,6 +374,7 @@ async def test_restore_history_from_dbus_and_corrupted_remote_adapters(
 
     assert bluetooth.async_ble_device_from_address(hass, address) is not None
     assert bluetooth.async_ble_device_from_address(hass, "EB:0B:36:35:6F:A4") is None
+    assert disable_new_discovery_flows.call_count >= 1
 
 
 async def test_switching_adapters_based_on_rssi_connectable_to_non_connectable(

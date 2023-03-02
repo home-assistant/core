@@ -31,5 +31,20 @@
             }
         }
     },
+    "selector": {
+        "cycle": {
+            "options": {
+                "bimonthly": "Iga kahe kuu tagant",
+                "daily": "P\u00e4evas",
+                "hourly": "Tunnis",
+                "monthly": "Kuus",
+                "none": "Ts\u00fckkel puudub",
+                "quarter-hourly": "Iga 15 minuti j\u00e4rel",
+                "quarterly": "Kvartalis",
+                "weekly": "N\u00e4dalas",
+                "yearly": "Aastas"
+            }
+        }
+    },
     "title": "Kommunaalarvesti"
 }

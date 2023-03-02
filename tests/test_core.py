@@ -1,7 +1,6 @@
 """Test to verify that Home Assistant core works."""
 from __future__ import annotations
 
-# pylint: disable=protected-access
 import array
 import asyncio
 from datetime import datetime, timedelta
@@ -44,7 +43,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from tests.common import async_capture_events, async_mock_service
+from .common import async_capture_events, async_mock_service
 
 PST = dt_util.get_time_zone("America/Los_Angeles")
 
@@ -332,7 +331,7 @@ def test_event_eq():
         ha.Event("some_type", data, time_fired=now, context=context) for _ in range(2)
     )
 
-    assert event1 == event2
+    assert event1.as_dict() == event2.as_dict()
 
 
 def test_event_repr():
@@ -398,6 +397,58 @@ def test_state_as_dict():
     # 2nd time to verify cache
     assert state.as_dict() == expected
     assert state.as_dict() is as_dict_1
+
+
+def test_state_as_compressed_state():
+    """Test a State as compressed state."""
+    last_time = datetime(1984, 12, 8, 12, 0, 0, tzinfo=dt_util.UTC)
+    state = ha.State(
+        "happy.happy",
+        "on",
+        {"pig": "dog"},
+        last_updated=last_time,
+        last_changed=last_time,
+    )
+    expected = {
+        "a": {"pig": "dog"},
+        "c": state.context.id,
+        "lc": last_time.timestamp(),
+        "s": "on",
+    }
+    as_compressed_state = state.as_compressed_state()
+    # We are not too concerned about these being ReadOnlyDict
+    # since we don't expect them to be called by external callers
+    assert as_compressed_state == expected
+    # 2nd time to verify cache
+    assert state.as_compressed_state() == expected
+    assert state.as_compressed_state() is as_compressed_state
+
+
+def test_state_as_compressed_state_unique_last_updated():
+    """Test a State as compressed state where last_changed is not last_updated."""
+    last_changed = datetime(1984, 12, 8, 11, 0, 0, tzinfo=dt_util.UTC)
+    last_updated = datetime(1984, 12, 8, 12, 0, 0, tzinfo=dt_util.UTC)
+    state = ha.State(
+        "happy.happy",
+        "on",
+        {"pig": "dog"},
+        last_updated=last_updated,
+        last_changed=last_changed,
+    )
+    expected = {
+        "a": {"pig": "dog"},
+        "c": state.context.id,
+        "lc": last_changed.timestamp(),
+        "lu": last_updated.timestamp(),
+        "s": "on",
+    }
+    as_compressed_state = state.as_compressed_state()
+    # We are not too concerned about these being ReadOnlyDict
+    # since we don't expect them to be called by external callers
+    assert as_compressed_state == expected
+    # 2nd time to verify cache
+    assert state.as_compressed_state() == expected
+    assert state.as_compressed_state() is as_compressed_state
 
 
 async def test_eventbus_add_remove_listener(hass):
@@ -634,7 +685,7 @@ def test_state_name_if_friendly_name_attr():
 def test_state_dict_conversion():
     """Test conversion of dict."""
     state = ha.State("domain.hello", "world", {"some": "attr"})
-    assert state == ha.State.from_dict(state.as_dict())
+    assert state.as_dict() == ha.State.from_dict(state.as_dict()).as_dict()
 
 
 def test_state_dict_conversion_with_wrong_data():
@@ -670,8 +721,7 @@ def test_state_repr():
                 datetime(1984, 12, 8, 12, 0, 0),
             )
         )
-        == "<state happy.happy=on; brightness=144 @ "
-        "1984-12-08T12:00:00+00:00>"
+        == "<state happy.happy=on; brightness=144 @ 1984-12-08T12:00:00+00:00>"
     )
 
 
@@ -1128,7 +1178,12 @@ async def test_service_executed_with_subservices(hass):
         call2 = hass.services.async_call(
             "test", "inner", blocking=True, context=call.context
         )
-        await asyncio.wait([call1, call2])
+        await asyncio.wait(
+            [
+                hass.async_create_task(call1),
+                hass.async_create_task(call2),
+            ]
+        )
         calls.append(call)
 
     hass.services.async_register("test", "outer", handle_outer)

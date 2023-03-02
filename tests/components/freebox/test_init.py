@@ -2,7 +2,7 @@
 from unittest.mock import Mock, patch
 
 from homeassistant.components.device_tracker import DOMAIN as DT_DOMAIN
-from homeassistant.components.freebox.const import DOMAIN as DOMAIN, SERVICE_REBOOT
+from homeassistant.components.freebox.const import DOMAIN, SERVICE_REBOOT
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState

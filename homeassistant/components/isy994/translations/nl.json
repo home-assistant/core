@@ -32,6 +32,17 @@
             }
         }
     },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "deprecated_yaml": {
+                        "title": "De ISY/IoX YAML configuratie wordt verwijderd"
+                    }
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

@@ -1,5 +1,5 @@
 """Test component helpers."""
-# pylint: disable=protected-access
+
 from collections import OrderedDict
 
 from homeassistant import helpers

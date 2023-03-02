@@ -186,7 +186,7 @@ class Recorder(threading.Thread):
         self.run_history = RunHistory()
 
         self.entity_filter = entity_filter
-        self.exclude_t = exclude_t
+        self.exclude_t = set(exclude_t)
 
         self.schema_version = 0
         self._commits_without_expire = 0
@@ -377,7 +377,8 @@ class Recorder(threading.Thread):
         # Unknown what it is.
         return True
 
-    def _empty_queue(self, event: Event) -> None:
+    @callback
+    def _async_empty_queue(self, event: Event) -> None:
         """Empty the queue if its still present at final write."""
 
         # If the queue is full of events to be processed because
@@ -411,7 +412,7 @@ class Recorder(threading.Thread):
     def async_register(self) -> None:
         """Post connection initialize."""
         bus = self.hass.bus
-        bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, self._empty_queue)
+        bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, self._async_empty_queue)
         bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
         async_at_started(self.hass, self._async_hass_started)
 
@@ -769,7 +770,7 @@ class Recorder(threading.Thread):
                     _LOGGER.warning(
                         "Database queue backlog reached more than 90% of maximum queue "
                         "length while waiting for backup to finish; recorder will now "
-                        "resume writing to database. The backup can not be trusted and "
+                        "resume writing to database. The backup cannot be trusted and "
                         "must be restarted"
                     )
                     task.queue_overflow = True
@@ -835,7 +836,9 @@ class Recorder(threading.Thread):
             return
 
         try:
-            shared_data_bytes = EventData.shared_data_bytes_from_event(event)
+            shared_data_bytes = EventData.shared_data_bytes_from_event(
+                event, self.dialect_name
+            )
         except JSON_ENCODE_EXCEPTIONS as ex:
             _LOGGER.warning("Event is not JSON serializable: %s: %s", event, ex)
             return
@@ -868,7 +871,7 @@ class Recorder(threading.Thread):
         try:
             dbstate = States.from_event(event)
             shared_attrs_bytes = StateAttributes.shared_attrs_bytes_from_event(
-                event, self._exclude_attributes_by_domain
+                event, self._exclude_attributes_by_domain, self.dialect_name
             )
         except JSON_ENCODE_EXCEPTIONS as ex:
             _LOGGER.warning(
@@ -1021,6 +1024,12 @@ class Recorder(threading.Thread):
         self.event_session = self.get_session()
         self.event_session.expire_on_commit = False
 
+    def _post_schema_migration(self, old_version: int, new_version: int) -> None:
+        """Run post schema migration tasks."""
+        migration.post_schema_migration(
+            self.engine, self.event_session, old_version, new_version
+        )
+
     def _send_keep_alive(self) -> None:
         """Send a keep alive to keep the db connection open."""
         assert self.event_session is not None
@@ -1035,6 +1044,8 @@ class Recorder(threading.Thread):
 
     async def async_block_till_done(self) -> None:
         """Async version of block_till_done."""
+        if self._queue.empty() and not self._event_session_has_pending_writes():
+            return
         event = asyncio.Event()
         self.queue_task(SynchronizeTask(event))
         await event.wait()

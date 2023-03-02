@@ -1,0 +1,9 @@
+{
+    "config": {
+        "abort": {
+            "integrations_diabled": "Este dispositivo no tiene integraciones habilitadas. Habilite las integraciones de hogares inteligentes usando la aplicaci\u00f3n y vuelva a intentarlo.",
+            "no_devices_found": "No se han encontrado dispositivos Aranet no configurados.",
+            "outdated_version": "Este dispositivo est\u00e1 utilizando firmware obsoleto. Actual\u00edcelo al menos a v1.2.0 y vuelva a intentarlo."
+        }
+    }
+}

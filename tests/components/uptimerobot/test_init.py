@@ -1,7 +1,7 @@
 """Test the UptimeRobot init."""
 from unittest.mock import patch
 
-from pytest import LogCaptureFixture
+import pytest
 from pyuptimerobot import UptimeRobotAuthenticationException, UptimeRobotException
 
 from homeassistant import config_entries
@@ -28,7 +28,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_reauthentication_trigger_in_setup(
-    hass: HomeAssistant, caplog: LogCaptureFixture
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ):
     """Test reauthentication trigger."""
     mock_config_entry = MockConfigEntry(**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA)
@@ -38,7 +38,6 @@ async def test_reauthentication_trigger_in_setup(
         "pyuptimerobot.UptimeRobot.async_get_monitors",
         side_effect=UptimeRobotAuthenticationException,
     ):
-
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -61,7 +60,7 @@ async def test_reauthentication_trigger_in_setup(
 
 
 async def test_reauthentication_trigger_key_read_only(
-    hass: HomeAssistant, caplog: LogCaptureFixture
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ):
     """Test reauthentication trigger."""
     mock_config_entry = MockConfigEntry(
@@ -94,7 +93,7 @@ async def test_reauthentication_trigger_key_read_only(
 
 
 async def test_reauthentication_trigger_after_setup(
-    hass: HomeAssistant, caplog: LogCaptureFixture
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ):
     """Test reauthentication trigger."""
     mock_config_entry = await setup_uptimerobot_integration(hass)
@@ -107,7 +106,6 @@ async def test_reauthentication_trigger_after_setup(
         "pyuptimerobot.UptimeRobot.async_get_monitors",
         side_effect=UptimeRobotAuthenticationException,
     ):
-
         async_fire_time_changed(hass, dt.utcnow() + COORDINATOR_UPDATE_INTERVAL)
         await hass.async_block_till_done()
 
@@ -144,7 +142,7 @@ async def test_integration_reload(hass: HomeAssistant):
     assert hass.states.get(UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY).state == STATE_ON
 
 
-async def test_update_errors(hass: HomeAssistant, caplog: LogCaptureFixture):
+async def test_update_errors(hass: HomeAssistant, caplog: pytest.LogCaptureFixture):
     """Test errors during updates."""
     await setup_uptimerobot_integration(hass)
 
@@ -219,6 +217,7 @@ async def test_device_management(hass: HomeAssistant):
         return_value=mock_uptimerobot_api_response(),
     ):
         async_fire_time_changed(hass, dt.utcnow() + COORDINATOR_UPDATE_INTERVAL)
+        await hass.async_block_till_done()
         await hass.async_block_till_done()
 
     devices = dr.async_entries_for_config_entry(dev_reg, mock_entry.entry_id)

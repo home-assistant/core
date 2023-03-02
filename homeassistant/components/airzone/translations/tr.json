@@ -8,9 +8,17 @@
             "invalid_system_id": "Ge\u00e7ersiz Airzone Sistem Kimli\u011fi"
         },
         "step": {
+            "discovered_connection": {
+                "data": {
+                    "host": "Sunucu",
+                    "id": "Sistem ID",
+                    "port": "Port"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Sunucu",
+                    "id": "Sistem ID",
                     "port": "Port"
                 }
             }

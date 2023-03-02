@@ -1,7 +1,5 @@
 """The tests for the Google Assistant component."""
 from http import HTTPStatus
-
-# pylint: disable=protected-access
 import json
 
 from aiohttp.hdrs import AUTHORIZATION
@@ -20,7 +18,7 @@ from homeassistant.components import (
     media_player,
     switch,
 )
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
+from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, UnitOfTemperature
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
 
@@ -125,9 +123,6 @@ def hass_fixture(event_loop, hass):
     )
 
     return hass
-
-
-# pylint: disable=redefined-outer-name
 
 
 async def test_sync_request(hass_fixture, assistant_client, auth_header):
@@ -293,7 +288,7 @@ async def test_query_climate_request(hass_fixture, assistant_client, auth_header
 async def test_query_climate_request_f(hass_fixture, assistant_client, auth_header):
     """Test a query request."""
     # Mock demo devices as fahrenheit to see if we convert to celsius
-    hass_fixture.config.units.temperature_unit = const.TEMP_FAHRENHEIT
+    hass_fixture.config.units.temperature_unit = UnitOfTemperature.FAHRENHEIT
     for entity_id in ("climate.hvac", "climate.heatpump", "climate.ecobee"):
         state = hass_fixture.states.get(entity_id)
         attr = dict(state.attributes)
@@ -347,7 +342,7 @@ async def test_query_climate_request_f(hass_fixture, assistant_client, auth_head
         "thermostatHumidityAmbient": 54,
         "currentFanSpeedSetting": "On High",
     }
-    hass_fixture.config.units.temperature_unit = const.TEMP_CELSIUS
+    hass_fixture.config.units.temperature_unit = UnitOfTemperature.CELSIUS
 
 
 async def test_query_humidifier_request(hass_fixture, assistant_client, auth_header):

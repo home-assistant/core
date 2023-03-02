@@ -104,10 +104,10 @@ async def test_diagnostics(
                 "org.bluez": {
                     "/org/bluez/hci0": {
                         "org.bluez.Adapter1": {
-                            "Alias": "BlueZ " "5.63",
+                            "Alias": "BlueZ 5.63",
                             "Discovering": False,
                             "Modalias": "usb:v1D6Bp0246d0540",
-                            "Name": "BlueZ " "5.63",
+                            "Name": "BlueZ 5.63",
                         },
                         "org.bluez.AdvertisementMonitorManager1": {
                             "SupportedFeatures": [],
@@ -323,7 +323,7 @@ async def test_diagnostics_macos(
                         "address": "44:44:33:11:23:45",
                         "advertisement": [
                             "wohand",
-                            {"1": {"__type": "<class " "'bytes'>", "repr": "b'\\x01'"}},
+                            {"1": {"__type": "<class 'bytes'>", "repr": "b'\\x01'"}},
                             {},
                             [],
                             -127,
@@ -331,12 +331,12 @@ async def test_diagnostics_macos(
                             [[]],
                         ],
                         "device": {
-                            "__type": "<class " "'bleak.backends.device.BLEDevice'>",
-                            "repr": "BLEDevice(44:44:33:11:23:45, " "wohand)",
+                            "__type": "<class 'bleak.backends.device.BLEDevice'>",
+                            "repr": "BLEDevice(44:44:33:11:23:45, wohand)",
                         },
                         "connectable": True,
                         "manufacturer_data": {
-                            "1": {"__type": "<class " "'bytes'>", "repr": "b'\\x01'"}
+                            "1": {"__type": "<class 'bytes'>", "repr": "b'\\x01'"}
                         },
                         "name": "wohand",
                         "rssi": -127,
@@ -351,7 +351,7 @@ async def test_diagnostics_macos(
                         "address": "44:44:33:11:23:45",
                         "advertisement": [
                             "wohand",
-                            {"1": {"__type": "<class " "'bytes'>", "repr": "b'\\x01'"}},
+                            {"1": {"__type": "<class 'bytes'>", "repr": "b'\\x01'"}},
                             {},
                             [],
                             -127,
@@ -359,12 +359,12 @@ async def test_diagnostics_macos(
                             [[]],
                         ],
                         "device": {
-                            "__type": "<class " "'bleak.backends.device.BLEDevice'>",
-                            "repr": "BLEDevice(44:44:33:11:23:45, " "wohand)",
+                            "__type": "<class 'bleak.backends.device.BLEDevice'>",
+                            "repr": "BLEDevice(44:44:33:11:23:45, wohand)",
                         },
                         "connectable": True,
                         "manufacturer_data": {
-                            "1": {"__type": "<class " "'bytes'>", "repr": "b'\\x01'"}
+                            "1": {"__type": "<class 'bytes'>", "repr": "b'\\x01'"}
                         },
                         "name": "wohand",
                         "rssi": -127,
@@ -384,7 +384,7 @@ async def test_diagnostics_macos(
                                     "wohand",
                                     {
                                         "1": {
-                                            "__type": "<class " "'bytes'>",
+                                            "__type": "<class 'bytes'>",
                                             "repr": "b'\\x01'",
                                         }
                                     },
@@ -450,7 +450,6 @@ async def test_diagnostics_remote_adapter(
         "homeassistant.components.bluetooth.diagnostics.get_dbus_managed_objects",
         return_value={},
     ):
-
         entry1 = MockConfigEntry(
             domain=bluetooth.DOMAIN, data={}, unique_id="00:00:00:00:00:01"
         )
@@ -515,7 +514,7 @@ async def test_diagnostics_remote_adapter(
                         "address": "44:44:33:11:23:45",
                         "advertisement": [
                             "wohand",
-                            {"1": {"__type": "<class " "'bytes'>", "repr": "b'\\x01'"}},
+                            {"1": {"__type": "<class 'bytes'>", "repr": "b'\\x01'"}},
                             {},
                             [],
                             -127,
@@ -524,11 +523,11 @@ async def test_diagnostics_remote_adapter(
                         ],
                         "connectable": False,
                         "device": {
-                            "__type": "<class " "'bleak.backends.device.BLEDevice'>",
-                            "repr": "BLEDevice(44:44:33:11:23:45, " "wohand)",
+                            "__type": "<class 'bleak.backends.device.BLEDevice'>",
+                            "repr": "BLEDevice(44:44:33:11:23:45, wohand)",
                         },
                         "manufacturer_data": {
-                            "1": {"__type": "<class " "'bytes'>", "repr": "b'\\x01'"}
+                            "1": {"__type": "<class 'bytes'>", "repr": "b'\\x01'"}
                         },
                         "name": "wohand",
                         "rssi": -127,
@@ -543,7 +542,7 @@ async def test_diagnostics_remote_adapter(
                         "address": "44:44:33:11:23:45",
                         "advertisement": [
                             "wohand",
-                            {"1": {"__type": "<class " "'bytes'>", "repr": "b'\\x01'"}},
+                            {"1": {"__type": "<class 'bytes'>", "repr": "b'\\x01'"}},
                             {},
                             [],
                             -127,
@@ -552,11 +551,11 @@ async def test_diagnostics_remote_adapter(
                         ],
                         "connectable": True,
                         "device": {
-                            "__type": "<class " "'bleak.backends.device.BLEDevice'>",
-                            "repr": "BLEDevice(44:44:33:11:23:45, " "wohand)",
+                            "__type": "<class 'bleak.backends.device.BLEDevice'>",
+                            "repr": "BLEDevice(44:44:33:11:23:45, wohand)",
                         },
                         "manufacturer_data": {
-                            "1": {"__type": "<class " "'bytes'>", "repr": "b'\\x01'"}
+                            "1": {"__type": "<class 'bytes'>", "repr": "b'\\x01'"}
                         },
                         "name": "wohand",
                         "rssi": -127,
@@ -600,7 +599,7 @@ async def test_diagnostics_remote_adapter(
                                     "wohand",
                                     {
                                         "1": {
-                                            "__type": "<class " "'bytes'>",
+                                            "__type": "<class 'bytes'>",
                                             "repr": "b'\\x01'",
                                         }
                                     },

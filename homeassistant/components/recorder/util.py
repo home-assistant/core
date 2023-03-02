@@ -8,7 +8,7 @@ import functools
 import logging
 import os
 import time
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, Concatenate, NoReturn, ParamSpec, TypeVar
 
 from awesomeversion import (
     AwesomeVersion,
@@ -23,14 +23,13 @@ from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
-from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 import homeassistant.util.dt as dt_util
 
-from .const import DATA_INSTANCE, SQLITE_URL_PREFIX, SupportedDialect
+from .const import DATA_INSTANCE, DOMAIN, SQLITE_URL_PREFIX, SupportedDialect
 from .db_schema import (
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
@@ -52,8 +51,34 @@ QUERY_RETRY_WAIT = 0.1
 SQLITE3_POSTFIXES = ["", "-wal", "-shm"]
 DEFAULT_YIELD_STATES_ROWS = 32768
 
+# Our minimum versions for each database
+#
+# Older MariaDB suffers https://jira.mariadb.org/browse/MDEV-25020
+# which is fixed in 10.5.17, 10.6.9, 10.7.5, 10.8.4
+#
 MIN_VERSION_MARIA_DB = AwesomeVersion(
     "10.3.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
+)
+RECOMMENDED_MIN_VERSION_MARIA_DB = AwesomeVersion(
+    "10.5.17", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
+)
+MARIA_DB_106 = AwesomeVersion(
+    "10.6.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
+)
+RECOMMENDED_MIN_VERSION_MARIA_DB_106 = AwesomeVersion(
+    "10.6.9", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
+)
+MARIA_DB_107 = AwesomeVersion(
+    "10.7.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
+)
+RECOMMENDED_MIN_VERSION_MARIA_DB_107 = AwesomeVersion(
+    "10.7.5", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
+)
+MARIA_DB_108 = AwesomeVersion(
+    "10.8.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
+)
+RECOMMENDED_MIN_VERSION_MARIA_DB_108 = AwesomeVersion(
+    "10.8.4", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
 )
 MIN_VERSION_MYSQL = AwesomeVersion(
     "8.0.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
@@ -173,7 +198,8 @@ def execute(
                 raise
             time.sleep(QUERY_RETRY_WAIT)
 
-    assert False  # unreachable # pragma: no cover
+    # Unreachable
+    raise RuntimeError  # pragma: no cover
 
 
 def execute_stmt_lambda_element(
@@ -196,16 +222,19 @@ def execute_stmt_lambda_element(
     """
     executed = session.execute(stmt)
     use_all = not start_time or ((end_time or dt_util.utcnow()) - start_time).days <= 1
-    for tryno in range(0, RETRIES):
+    for tryno in range(RETRIES):
         try:
-            return executed.all() if use_all else executed.yield_per(yield_per)  # type: ignore[no-any-return]
+            if use_all:
+                return executed.all()  # type: ignore[no-any-return]
+            return executed.yield_per(yield_per)  # type: ignore[no-any-return]
         except SQLAlchemyError as err:
             _LOGGER.error("Error executing query: %s", err)
             if tryno == RETRIES - 1:
                 raise
             time.sleep(QUERY_RETRY_WAIT)
 
-    assert False  # unreachable # pragma: no cover
+    # Unreachable
+    raise RuntimeError  # pragma: no cover
 
 
 def validate_or_move_away_sqlite_database(dburl: str) -> bool:
@@ -225,7 +254,7 @@ def validate_or_move_away_sqlite_database(dburl: str) -> bool:
 
 def dburl_to_path(dburl: str) -> str:
     """Convert the db url into a filesystem path."""
-    return dburl[len(SQLITE_URL_PREFIX) :]
+    return dburl.removeprefix(SQLITE_URL_PREFIX)
 
 
 def last_run_was_recently_clean(cursor: CursorFetchStrategy) -> bool:
@@ -341,7 +370,7 @@ def query_on_connection(dbapi_connection: Any, statement: str) -> Any:
     return result
 
 
-def _fail_unsupported_dialect(dialect_name: str) -> None:
+def _fail_unsupported_dialect(dialect_name: str) -> NoReturn:
     """Warn about unsupported database version."""
     _LOGGER.error(
         (
@@ -357,7 +386,7 @@ def _fail_unsupported_dialect(dialect_name: str) -> None:
 
 def _fail_unsupported_version(
     server_version: str, dialect_name: str, minimum_version: str
-) -> None:
+) -> NoReturn:
     """Warn about unsupported database version."""
     _LOGGER.error(
         (
@@ -400,14 +429,39 @@ def _datetime_or_none(value: str) -> datetime | None:
 def build_mysqldb_conv() -> dict:
     """Build a MySQLDB conv dict that uses cisco8601 to parse datetimes."""
     # Late imports since we only call this if they are using mysqldb
-    from MySQLdb.constants import (  # pylint: disable=import-outside-toplevel,import-error
-        FIELD_TYPE,
-    )
-    from MySQLdb.converters import (  # pylint: disable=import-outside-toplevel,import-error
-        conversions,
-    )
+    # pylint: disable=import-outside-toplevel,import-error
+    from MySQLdb.constants import FIELD_TYPE
+    from MySQLdb.converters import conversions
 
     return {**conversions, FIELD_TYPE.DATETIME: _datetime_or_none}
+
+
+@callback
+def _async_create_mariadb_range_index_regression_issue(
+    hass: HomeAssistant, version: AwesomeVersion
+) -> None:
+    """Create an issue for the index range regression in older MariaDB.
+
+    The range scan issue was fixed in MariaDB 10.5.17, 10.6.9, 10.7.5, 10.8.4 and later.
+    """
+    if version >= MARIA_DB_108:
+        min_version = RECOMMENDED_MIN_VERSION_MARIA_DB_108
+    elif version >= MARIA_DB_107:
+        min_version = RECOMMENDED_MIN_VERSION_MARIA_DB_107
+    elif version >= MARIA_DB_106:
+        min_version = RECOMMENDED_MIN_VERSION_MARIA_DB_106
+    else:
+        min_version = RECOMMENDED_MIN_VERSION_MARIA_DB
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "maria_db_range_index_regression",
+        is_fixable=False,
+        severity=ir.IssueSeverity.CRITICAL,
+        learn_more_url="https://jira.mariadb.org/browse/MDEV-25020",
+        translation_key="maria_db_range_index_regression",
+        translation_placeholders={"min_version": str(min_version)},
+    )
 
 
 def setup_connection_for_dialect(
@@ -444,7 +498,8 @@ def setup_connection_for_dialect(
         # or NORMAL if they do not.
         #
         # https://sqlite.org/pragma.html#pragma_synchronous
-        # The synchronous=NORMAL setting is a good choice for most applications running in WAL mode.
+        # The synchronous=NORMAL setting is a good choice for most applications
+        # running in WAL mode.
         #
         synchronous = "NORMAL" if instance.commit_interval else "FULL"
         execute_on_connection(dbapi_connection, f"PRAGMA synchronous={synchronous}")
@@ -465,6 +520,18 @@ def setup_connection_for_dialect(
                     _fail_unsupported_version(
                         version or version_string, "MariaDB", MIN_VERSION_MARIA_DB
                     )
+                if version and (
+                    (version < RECOMMENDED_MIN_VERSION_MARIA_DB)
+                    or (MARIA_DB_106 <= version < RECOMMENDED_MIN_VERSION_MARIA_DB_106)
+                    or (MARIA_DB_107 <= version < RECOMMENDED_MIN_VERSION_MARIA_DB_107)
+                    or (MARIA_DB_108 <= version < RECOMMENDED_MIN_VERSION_MARIA_DB_108)
+                ):
+                    instance.hass.add_job(
+                        _async_create_mariadb_range_index_regression_issue,
+                        instance.hass,
+                        version,
+                    )
+
             else:
                 if not version or version < MIN_VERSION_MYSQL:
                     _fail_unsupported_version(

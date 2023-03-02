@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Layanan sudah dikonfigurasi"
+        },
         "error": {
             "bad_station_id": "ID Stasiun tidak valid, tidak ada, atau tidak ditemukan di basis data ID stasiun",
             "cannot_connect": "Gagal terhubung",

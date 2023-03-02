@@ -59,7 +59,7 @@ def test_blueprint_schema(blueprint):
         schemas.BLUEPRINT_SCHEMA(blueprint)
     except vol.Invalid:
         _LOGGER.exception("%s", blueprint)
-        assert False, "Expected schema to be valid"
+        pytest.fail("Expected schema to be valid")
 
 
 @pytest.mark.parametrize(

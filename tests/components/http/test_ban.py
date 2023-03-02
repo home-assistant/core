@@ -1,7 +1,5 @@
 """The tests for the Home Assistant HTTP component."""
 from http import HTTPStatus
-
-# pylint: disable=protected-access
 from ipaddress import ip_address
 import os
 from unittest.mock import Mock, mock_open, patch

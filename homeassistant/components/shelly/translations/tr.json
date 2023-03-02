@@ -33,7 +33,7 @@
                 "data": {
                     "host": "Sunucu"
                 },
-                "description": "Kurulumdan \u00f6nce pille \u00e7al\u0131\u015fan cihazlar uyand\u0131r\u0131lmal\u0131d\u0131r, art\u0131k \u00fczerindeki bir d\u00fc\u011fmeyi kullanarak cihaz\u0131 uyand\u0131rabilirsiniz."
+                "description": "Kurulumdan \u00f6nce pille \u00e7al\u0131\u015fan cihazlar\u0131n uyand\u0131r\u0131lmas\u0131 gerekir, art\u0131k cihaz\u0131 \u00fczerindeki bir d\u00fc\u011fmeyi kullanarak uyand\u0131rabilirsiniz."
             }
         }
     },
@@ -57,6 +57,19 @@
             "single_long": "{subtype} tek t\u0131kland\u0131 ve ard\u0131ndan uzun t\u0131kland\u0131",
             "single_push": "{subtype} tek basma",
             "triple": "{subtype} \u00fc\u00e7 kez t\u0131kland\u0131"
+        }
+    },
+    "options": {
+        "abort": {
+            "ble_unsupported": "Bluetooth deste\u011fi, donan\u0131m yaz\u0131l\u0131m\u0131 s\u00fcr\u00fcm\u00fc {ble_min_version} veya daha yenisini gerektirir."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "ble_scanner_mode": "Bluetooth taray\u0131c\u0131 modu"
+                },
+                "description": "Bluetooth taramas\u0131 aktif veya pasif olabilir. Etkin oldu\u011funda, Shelly yak\u0131ndaki cihazlardan veri ister; pasif ile, Shelly yak\u0131ndaki cihazlardan istenmeyen verileri al\u0131r."
+            }
         }
     }
 }

@@ -116,7 +116,10 @@ async def test_node_status_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "alive - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "alive - {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -134,7 +137,10 @@ async def test_node_status_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "awake - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "awake - {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -152,7 +158,10 @@ async def test_node_status_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "asleep - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "asleep - {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -170,7 +179,10 @@ async def test_node_status_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "dead - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "dead - {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -267,7 +279,10 @@ async def test_config_parameter_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "Beeper - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "Beeper - {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -287,7 +302,10 @@ async def test_config_parameter_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "User Slot Status - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "User Slot Status - {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -377,7 +395,10 @@ async def test_value_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "value - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "value - {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },

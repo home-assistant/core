@@ -11,12 +11,12 @@ from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import NodeStatus
 from zwave_js_server.exceptions import BaseZwaveJSServerError, FailedZWaveCommand
 from zwave_js_server.model.driver import Driver
-from zwave_js_server.model.firmware import (
-    FirmwareUpdateInfo,
-    FirmwareUpdateProgress,
-    FirmwareUpdateResult,
-)
 from zwave_js_server.model.node import Node as ZwaveNode
+from zwave_js_server.model.node.firmware import (
+    NodeFirmwareUpdateInfo,
+    NodeFirmwareUpdateProgress,
+    NodeFirmwareUpdateResult,
+)
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -84,13 +84,13 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         self.driver = driver
         self.node = node
         self.semaphore = semaphore
-        self._latest_version_firmware: FirmwareUpdateInfo | None = None
+        self._latest_version_firmware: NodeFirmwareUpdateInfo | None = None
         self._status_unsub: Callable[[], None] | None = None
         self._poll_unsub: Callable[[], None] | None = None
         self._progress_unsub: Callable[[], None] | None = None
         self._finished_unsub: Callable[[], None] | None = None
         self._finished_event = asyncio.Event()
-        self._result: FirmwareUpdateResult | None = None
+        self._result: NodeFirmwareUpdateResult | None = None
 
         # Entity class attributes
         self._attr_name = "Firmware"
@@ -109,7 +109,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
     @callback
     def _update_progress(self, event: dict[str, Any]) -> None:
         """Update install progress on event."""
-        progress: FirmwareUpdateProgress = event["firmware_update_progress"]
+        progress: NodeFirmwareUpdateProgress = event["firmware_update_progress"]
         if not self._latest_version_firmware:
             return
         self._attr_in_progress = int(progress.progress)
@@ -118,7 +118,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
     @callback
     def _update_finished(self, event: dict[str, Any]) -> None:
         """Update install progress on event."""
-        result: FirmwareUpdateResult = event["firmware_update_finished"]
+        result: NodeFirmwareUpdateResult = event["firmware_update_finished"]
         self._result = result
         self._finished_event.set()
 
@@ -232,7 +232,8 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         await self._finished_event.wait()
         assert self._result is not None
 
-        # If the update was not successful, we should throw an error to let the user know
+        # If the update was not successful, we should throw an error
+        # to let the user know
         if not self._result.success:
             error_msg = self._result.status.name.replace("_", " ").title()
             self._unsub_firmware_events_and_reset_progress()
@@ -246,8 +247,8 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
     async def async_poll_value(self, _: bool) -> None:
         """Poll a value."""
         LOGGER.error(
-            "There is no value to refresh for this entity so the zwave_js.refresh_value "
-            "service won't work for it"
+            "There is no value to refresh for this entity so the zwave_js.refresh_value"
+            " service won't work for it"
         )
 
     async def async_added_to_hass(self) -> None:

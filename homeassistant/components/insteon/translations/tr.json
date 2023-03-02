@@ -12,7 +12,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm_usb": {
-                "description": "{name} kurulumunu yapmak istiyor musunuz?"
+                "description": "{name} 'i kurmak istiyor musunuz?"
             },
             "hubv1": {
                 "data": {

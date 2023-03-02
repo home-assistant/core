@@ -81,64 +81,84 @@ DEFAULT_VALUES = {
 PLATFORM_CONFIG_SCHEMA_BASE = vol.Schema(
     {
         Platform.ALARM_CONTROL_PANEL.value: vol.All(
-            cv.ensure_list, [alarm_control_panel_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+            cv.ensure_list,
+            [alarm_control_panel_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type] # noqa: E501
         ),
         Platform.BINARY_SENSOR.value: vol.All(
-            cv.ensure_list, [binary_sensor_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+            cv.ensure_list,
+            [binary_sensor_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
         Platform.BUTTON.value: vol.All(
-            cv.ensure_list, [button_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+            cv.ensure_list,
+            [button_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
         Platform.CAMERA.value: vol.All(
-            cv.ensure_list, [camera_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+            cv.ensure_list,
+            [camera_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
         Platform.CLIMATE.value: vol.All(
-            cv.ensure_list, [climate_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+            cv.ensure_list,
+            [climate_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
         Platform.COVER.value: vol.All(
-            cv.ensure_list, [cover_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+            cv.ensure_list,
+            [cover_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
         Platform.DEVICE_TRACKER.value: vol.All(
-            cv.ensure_list, [device_tracker_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+            cv.ensure_list,
+            [device_tracker_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
         Platform.FAN.value: vol.All(
-            cv.ensure_list, [fan_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+            cv.ensure_list,
+            [fan_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
         Platform.HUMIDIFIER.value: vol.All(
-            cv.ensure_list, [humidifier_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+            cv.ensure_list,
+            [humidifier_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
         Platform.LOCK.value: vol.All(
-            cv.ensure_list, [lock_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+            cv.ensure_list,
+            [lock_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
         Platform.LIGHT.value: vol.All(
-            cv.ensure_list, [light_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+            cv.ensure_list,
+            [light_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
         Platform.NUMBER.value: vol.All(
-            cv.ensure_list, [number_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+            cv.ensure_list,
+            [number_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
         Platform.SCENE.value: vol.All(
-            cv.ensure_list, [scene_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+            cv.ensure_list,
+            [scene_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
         Platform.SELECT.value: vol.All(
-            cv.ensure_list, [select_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+            cv.ensure_list,
+            [select_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
         Platform.SENSOR.value: vol.All(
-            cv.ensure_list, [sensor_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+            cv.ensure_list,
+            [sensor_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
         Platform.SIREN.value: vol.All(
-            cv.ensure_list, [siren_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+            cv.ensure_list,
+            [siren_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
         Platform.SWITCH.value: vol.All(
-            cv.ensure_list, [switch_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+            cv.ensure_list,
+            [switch_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
         Platform.TEXT.value: vol.All(
-            cv.ensure_list, [text_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+            cv.ensure_list,
+            [text_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
         Platform.UPDATE.value: vol.All(
-            cv.ensure_list, [update_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+            cv.ensure_list,
+            [update_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
         Platform.VACUUM.value: vol.All(
-            cv.ensure_list, [vacuum_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+            cv.ensure_list,
+            [vacuum_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
     }
 )

@@ -29,6 +29,7 @@ from .test_common import (
     help_test_default_availability_payload,
     help_test_discovery_broken,
     help_test_discovery_removal,
+    help_test_discovery_setup,
     help_test_discovery_update,
     help_test_discovery_update_attr,
     help_test_discovery_update_unchanged,
@@ -455,7 +456,7 @@ async def test_discovery_update_select(hass, mqtt_mock_entry_no_yaml_config, cap
         "name": "Milk",
         "state_topic": "test-topic",
         "command_topic": "test-topic",
-        "options": ["milk", "beer"],
+        "options": ["milk"],
     }
 
     await help_test_discovery_update(
@@ -701,3 +702,27 @@ async def test_unload_entry(hass, mqtt_mock_entry_with_yaml_config, tmp_path):
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry_with_yaml_config, tmp_path, domain, config
     )
+
+
+async def test_persistent_state_after_reconfig(
+    hass: ha.HomeAssistant, mqtt_mock_entry_no_yaml_config
+) -> None:
+    """Test of the state is persistent after reconfiguring the select options."""
+    await mqtt_mock_entry_no_yaml_config()
+    discovery_data = '{ "name": "Milk", "state_topic": "test-topic", "command_topic": "test-topic", "options": ["milk", "beer"]}'
+    await help_test_discovery_setup(hass, SELECT_DOMAIN, discovery_data, "milk")
+
+    # assign an initial state
+    async_fire_mqtt_message(hass, "test-topic", "beer")
+    state = hass.states.get("select.milk")
+    assert state.state == "beer"
+    assert state.attributes["options"] == ["milk", "beer"]
+
+    # remove "milk" option
+    discovery_data = '{ "name": "Milk", "state_topic": "test-topic", "command_topic": "test-topic", "options": ["beer"]}'
+    await help_test_discovery_setup(hass, SELECT_DOMAIN, discovery_data, "milk")
+
+    # assert the state persistent
+    state = hass.states.get("select.milk")
+    assert state.state == "beer"
+    assert state.attributes["options"] == ["beer"]

@@ -1,4 +1,5 @@
 """Tests for Renault sensors."""
+from collections.abc import Generator
 from types import MappingProxyType
 from unittest.mock import patch
 
@@ -23,7 +24,7 @@ pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicle
 
 
 @pytest.fixture(autouse=True)
-def override_platforms():
+def override_platforms() -> Generator[None, None, None]:
     """Override PLATFORMS."""
     with patch("homeassistant.components.renault.PLATFORMS", [Platform.SENSOR]):
         yield
@@ -45,7 +46,7 @@ def _check_and_enable_disabled_entities(
 @pytest.mark.usefixtures("fixtures_with_data")
 async def test_sensors(
     hass: HomeAssistant, config_entry: ConfigEntry, vehicle_type: str
-):
+) -> None:
     """Test for Renault sensors."""
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
@@ -69,7 +70,7 @@ async def test_sensors(
 @pytest.mark.usefixtures("fixtures_with_no_data")
 async def test_sensor_empty(
     hass: HomeAssistant, config_entry: ConfigEntry, vehicle_type: str
-):
+) -> None:
     """Test for Renault sensors with empty data from Renault."""
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
@@ -93,7 +94,7 @@ async def test_sensor_empty(
 @pytest.mark.usefixtures("fixtures_with_invalid_upstream_exception")
 async def test_sensor_errors(
     hass: HomeAssistant, config_entry: ConfigEntry, vehicle_type: str
-):
+) -> None:
     """Test for Renault sensors with temporary failure."""
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
@@ -118,7 +119,7 @@ async def test_sensor_errors(
 @pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
 async def test_sensor_access_denied(
     hass: HomeAssistant, config_entry: ConfigEntry, vehicle_type: str
-):
+) -> None:
     """Test for Renault sensors with access denied failure."""
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
@@ -136,7 +137,7 @@ async def test_sensor_access_denied(
 @pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
 async def test_sensor_not_supported(
     hass: HomeAssistant, config_entry: ConfigEntry, vehicle_type: str
-):
+) -> None:
     """Test for Renault sensors with access denied failure."""
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)

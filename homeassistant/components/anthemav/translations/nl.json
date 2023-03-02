@@ -4,7 +4,8 @@
             "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
-            "cannot_connect": "Kan geen verbinding maken"
+            "cannot_connect": "Kan geen verbinding maken",
+            "cannot_receive_deviceinfo": "Kon het MAC adres niet ophalen. Zorg ervoor dat het apparaat aanstaat"
         },
         "step": {
             "user": {

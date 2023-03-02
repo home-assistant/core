@@ -14,6 +14,9 @@
                 "description": "G\u00f6nder'e t\u0131klay\u0131n ve TV'nizdeki e\u015fle\u015ftirme iste\u011fini kabul edin. \n\n ![Resim](/static/images/config_webos.png)",
                 "title": "webOS TV E\u015fle\u015ftirme"
             },
+            "reauth_confirm": {
+                "title": "webOS TV E\u015fle\u015ftirme"
+            },
             "user": {
                 "data": {
                     "host": "Sunucu",
@@ -31,8 +34,7 @@
     },
     "options": {
         "error": {
-            "cannot_retrieve": "Kaynak listesi al\u0131namad\u0131. Cihaz\u0131n a\u00e7\u0131k oldu\u011fundan emin olun",
-            "script_not_found": "Senaryo bulunamad\u0131"
+            "cannot_retrieve": "Kaynak listesi al\u0131namad\u0131. Cihaz\u0131n a\u00e7\u0131k oldu\u011fundan emin olun"
         },
         "step": {
             "init": {

@@ -54,8 +54,7 @@ async def async_setup_test_fixture(hass, mock_get_station, initial_value):
 
 
 async def test_reading_measures_not_list(hass, mock_get_station):
-    """
-    Test that a measure can be a dict not a list.
+    """Test that a measure can be a dict not a list.
 
     E.g. https://environment.data.gov.uk/flood-monitoring/id/stations/751110
     """
@@ -80,8 +79,7 @@ async def test_reading_measures_not_list(hass, mock_get_station):
 
 
 async def test_reading_no_unit(hass, mock_get_station):
-    """
-    Test that a sensor functions even if its unit is not known.
+    """Test that a sensor functions even if its unit is not known.
 
     E.g. https://environment.data.gov.uk/flood-monitoring/id/stations/L0410
     """
@@ -108,8 +106,7 @@ async def test_reading_no_unit(hass, mock_get_station):
 
 
 async def test_ignore_invalid_latest_reading(hass, mock_get_station):
-    """
-    Test that a sensor functions even if its unit is not known.
+    """Test that a sensor functions even if its unit is not known.
 
     E.g. https://environment.data.gov.uk/flood-monitoring/id/stations/L0410
     """

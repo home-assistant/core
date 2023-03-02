@@ -5,8 +5,6 @@ import pytest
 
 from . import GATEWAY_ID, TRADFRI_PATH
 
-# pylint: disable=protected-access
-
 
 @pytest.fixture
 def mock_gateway_info():
@@ -80,8 +78,7 @@ def mock_api_factory(mock_api):
 
 @pytest.fixture(autouse=True)
 def setup(request):
-    """
-    Set up patches for pytradfri methods for the fan platform.
+    """Set up patches for pytradfri methods for the fan platform.
 
     This is used in test_fan as well as in test_sensor.
     """

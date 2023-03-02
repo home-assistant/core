@@ -80,11 +80,18 @@
                 },
                 "description": "\u8b8a\u66f4 Insteon Hub \u9023\u7dda\u8cc7\u8a0a\u3002\u65bc\u8b8a\u66f4\u4e4b\u5f8c\u3001\u5fc5\u9808\u91cd\u555f Home Assistant\u3002\u6b64\u4e9b\u8a2d\u5b9a\u4e0d\u6703\u8b8a\u66f4 Hub \u88dd\u7f6e\u672c\u8eab\u7684\u8a2d\u5b9a\uff0c\u5982\u6b32\u8b8a\u66f4 Hub \u8a2d\u5b9a\u3001\u5247\u8acb\u4f7f\u7528 Hub app\u3002"
             },
+            "change_plm_config": {
+                "data": {
+                    "device": "USB \u88dd\u7f6e\u8def\u5f91"
+                },
+                "description": "\u8b8a\u66f4 PLM \u9023\u7dda\u8cc7\u8a0a\u3002\u65bc\u8b8a\u66f4\u4e4b\u5f8c\u3001\u5fc5\u9808\u91cd\u555f Home Assistant\u3002\u6b64\u4e9b\u8a2d\u5b9a\u4e0d\u6703\u8b8a\u66f4 PLM \u88dd\u7f6e\u672c\u8eab\u7684\u8a2d\u5b9a\u3002"
+            },
             "init": {
                 "data": {
                     "add_override": "\u65b0\u589e\u88dd\u7f6e\u8986\u5beb\u3002",
                     "add_x10": "\u65b0\u589e X10 \u88dd\u7f6e\u3002",
                     "change_hub_config": "\u8b8a\u66f4 Hub \u8a2d\u5b9a\u3002",
+                    "change_plm_config": "\u8b8a\u66f4 PLM \u8a2d\u5b9a\u3002",
                     "remove_override": "\u79fb\u9664\u88dd\u7f6e\u8986\u5beb",
                     "remove_x10": "\u79fb\u9664 X10 \u88dd\u7f6e\u3002"
                 }

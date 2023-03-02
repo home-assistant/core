@@ -33,18 +33,19 @@ async def test_media_lookups(hass, mock_plex_server, requests_mock, playqueue_cr
         },
         True,
     )
-    with pytest.raises(MediaNotFound) as excinfo:
-        with patch("plexapi.server.PlexServer.fetchItem", side_effect=NotFound):
-            assert await hass.services.async_call(
-                MEDIA_PLAYER_DOMAIN,
-                SERVICE_PLAY_MEDIA,
-                {
-                    ATTR_ENTITY_ID: media_player_id,
-                    ATTR_MEDIA_CONTENT_TYPE: DOMAIN,
-                    ATTR_MEDIA_CONTENT_ID: 123,
-                },
-                True,
-            )
+    with pytest.raises(MediaNotFound) as excinfo, patch(
+        "plexapi.server.PlexServer.fetchItem", side_effect=NotFound
+    ):
+        assert await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: media_player_id,
+                ATTR_MEDIA_CONTENT_TYPE: DOMAIN,
+                ATTR_MEDIA_CONTENT_ID: 123,
+            },
+            True,
+        )
     assert "Media for key 123 not found" in str(excinfo.value)
 
     # TV show searches

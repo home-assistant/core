@@ -307,7 +307,7 @@ async def test_install_addon(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
-    assert addon_store_info.call_count == 2
+    assert addon_store_info.call_count == 3
     assert install_addon.call_count == 1
     assert install_addon.call_args == call(hass, "core_matter_server")
     assert start_addon.call_count == 1

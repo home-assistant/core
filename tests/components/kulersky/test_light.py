@@ -3,7 +3,6 @@ from unittest.mock import MagicMock, patch
 
 import pykulersky
 import pytest
-from pytest import approx
 
 from homeassistant.components.kulersky.const import (
     DATA_ADDRESSES,
@@ -219,10 +218,10 @@ async def test_light_update(hass, mock_light):
         ATTR_SUPPORTED_FEATURES: 0,
         ATTR_COLOR_MODE: ColorMode.RGBW,
         ATTR_BRIGHTNESS: 255,
-        ATTR_HS_COLOR: (approx(212.571), approx(68.627)),
+        ATTR_HS_COLOR: (pytest.approx(212.571), pytest.approx(68.627)),
         ATTR_RGB_COLOR: (80, 160, 255),
         ATTR_RGBW_COLOR: (80, 160, 255, 0),
-        ATTR_XY_COLOR: (approx(0.17), approx(0.193)),
+        ATTR_XY_COLOR: (pytest.approx(0.17), pytest.approx(0.193)),
     }
 
     mock_light.get_color.side_effect = None
@@ -239,10 +238,10 @@ async def test_light_update(hass, mock_light):
         ATTR_SUPPORTED_FEATURES: 0,
         ATTR_COLOR_MODE: ColorMode.RGBW,
         ATTR_BRIGHTNESS: 255,
-        ATTR_HS_COLOR: (approx(199.701), approx(26.275)),
+        ATTR_HS_COLOR: (pytest.approx(199.701), pytest.approx(26.275)),
         ATTR_RGB_COLOR: (188, 233, 255),
         ATTR_RGBW_COLOR: (80, 160, 200, 255),
-        ATTR_XY_COLOR: (approx(0.259), approx(0.306)),
+        ATTR_XY_COLOR: (pytest.approx(0.259), pytest.approx(0.306)),
     }
 
     mock_light.get_color.side_effect = None
@@ -259,8 +258,8 @@ async def test_light_update(hass, mock_light):
         ATTR_SUPPORTED_FEATURES: 0,
         ATTR_COLOR_MODE: ColorMode.RGBW,
         ATTR_BRIGHTNESS: 240,
-        ATTR_HS_COLOR: (approx(200.0), approx(27.059)),
+        ATTR_HS_COLOR: (pytest.approx(200.0), pytest.approx(27.059)),
         ATTR_RGB_COLOR: (186, 232, 255),
         ATTR_RGBW_COLOR: (85, 170, 212, 255),
-        ATTR_XY_COLOR: (approx(0.257), approx(0.305)),
+        ATTR_XY_COLOR: (pytest.approx(0.257), pytest.approx(0.305)),
     }

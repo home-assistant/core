@@ -11,7 +11,7 @@
         },
         "step": {
             "bluetooth_confirm": {
-                "description": "{name} kurulumunu yapmak istiyor musunuz?"
+                "description": "{name} 'i kurmak istiyor musunuz?"
             },
             "pairing_timeout": {
                 "description": "Cihaz e\u015fle\u015ftirme moduna girmedi. Tekrar denemek i\u00e7in G\u00f6nder'i t\u0131klay\u0131n. \n\n ### Sorun giderme\n 1. Cihaz\u0131n mobil uygulamaya ba\u011fl\u0131 olmad\u0131\u011f\u0131n\u0131 kontrol edin.\n 2. Ayg\u0131t\u0131n fi\u015fini 5 saniyeli\u011fine \u00e7ekin, ard\u0131ndan tekrar tak\u0131n."
@@ -20,7 +20,7 @@
                 "data": {
                     "address": "Cihaz"
                 },
-                "description": "Kurulum i\u00e7in bir cihaz se\u00e7in"
+                "description": "Kurmak i\u00e7in bir cihaz se\u00e7in"
             }
         }
     }

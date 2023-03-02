@@ -30,5 +30,18 @@
             }
         }
     },
+    "selector": {
+        "type": {
+            "options": {
+                "last": "Terakhir diperbarui",
+                "max": "Maksimum",
+                "mean": "Rata-rata aritmatika",
+                "median": "Median",
+                "min": "Minimum",
+                "range": "Rentang statistik",
+                "sum": "Jumlah"
+            }
+        }
+    },
     "title": "Gabungkan status beberapa sensor"
 }

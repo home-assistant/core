@@ -13,8 +13,6 @@
         "step": {
             "init": {
                 "data": {
-                    "manual": "Zak\u00e1zat automatickou aktualizaci",
-                    "scan_interval": "Frekvence aktualizac\u00ed (v minut\u00e1ch)",
                     "server_name": "Vyberte testovac\u00ed server"
                 }
             }

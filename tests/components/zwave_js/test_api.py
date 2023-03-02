@@ -3661,10 +3661,10 @@ async def test_subscribe_firmware_update_status_failures(
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
-async def test_get_firmware_update_capabilities(
+async def test_get_node_firmware_update_capabilities(
     hass, client, multisensor_6, integration, hass_ws_client
 ):
-    """Test that the get_firmware_update_capabilities WS API call works."""
+    """Test that the get_node_firmware_update_capabilities WS API call works."""
     entry = integration
     ws_client = await hass_ws_client(hass)
     device = get_device(hass, multisensor_6)
@@ -3680,7 +3680,7 @@ async def test_get_firmware_update_capabilities(
     await ws_client.send_json(
         {
             ID: 1,
-            TYPE: "zwave_js/get_firmware_update_capabilities",
+            TYPE: "zwave_js/get_node_firmware_update_capabilities",
             DEVICE_ID: device.id,
         }
     )
@@ -3706,7 +3706,7 @@ async def test_get_firmware_update_capabilities(
         await ws_client.send_json(
             {
                 ID: 2,
-                TYPE: "zwave_js/get_firmware_update_capabilities",
+                TYPE: "zwave_js/get_node_firmware_update_capabilities",
                 DEVICE_ID: device.id,
             }
         )
@@ -3723,7 +3723,7 @@ async def test_get_firmware_update_capabilities(
     await ws_client.send_json(
         {
             ID: 3,
-            TYPE: "zwave_js/get_firmware_update_capabilities",
+            TYPE: "zwave_js/get_node_firmware_update_capabilities",
             DEVICE_ID: device.id,
         }
     )
@@ -3736,7 +3736,7 @@ async def test_get_firmware_update_capabilities(
     await ws_client.send_json(
         {
             ID: 4,
-            TYPE: "zwave_js/get_firmware_update_capabilities",
+            TYPE: "zwave_js/get_node_firmware_update_capabilities",
             DEVICE_ID: "fake_device",
         }
     )

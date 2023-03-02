@@ -761,8 +761,7 @@ async def test_heater_cooler_change_thermostat_state(hass, utcnow):
 
 
 async def test_can_turn_on_after_off(hass, utcnow):
-    """
-    Test that we always force device from inactive to active when setting mode.
+    """Test that we always force device from inactive to active when setting mode.
 
     This is a regression test for #81863.
     """
