@@ -226,7 +226,10 @@ def _create_index(
 
 
 def _drop_index(
-    session_maker: Callable[[], Session], table_name: str, index_name: str
+    session_maker: Callable[[], Session],
+    table_name: str,
+    index_name: str,
+    quiet: bool | None = None,
 ) -> None:
     """Drop an index from a specified table.
 
@@ -289,33 +292,37 @@ def _drop_index(
         _LOGGER.debug(
             "Finished dropping index %s from table %s", index_name, table_name
         )
-    else:
-        if index_name in (
-            "ix_states_entity_id",
-            "ix_states_context_parent_id",
-            "ix_statistics_short_term_statistic_id_start",
-            "ix_statistics_statistic_id_start",
-        ):
-            # ix_states_context_parent_id was only there on nightly so we do not want
-            # to generate log noise or issues about it.
-            #
-            # ix_states_entity_id was only there for users who upgraded from schema
-            # version 8 or earlier. Newer installs will not have it so we do not
-            # want to generate log noise or issues about it.
-            #
-            # ix_statistics_short_term_statistic_id_start and ix_statistics_statistic_id_start
-            # were only there for users who upgraded from schema version 23 or earlier.
-            return
+        return
 
-        _LOGGER.warning(
-            (
-                "Failed to drop index %s from table %s. Schema "
-                "Migration will continue; this is not a "
-                "critical operation"
-            ),
-            index_name,
-            table_name,
-        )
+    if quiet:
+        return
+
+    if index_name in (
+        "ix_states_entity_id",
+        "ix_states_context_parent_id",
+        "ix_statistics_short_term_statistic_id_start",
+        "ix_statistics_statistic_id_start",
+    ):
+        # ix_states_context_parent_id was only there on nightly so we do not want
+        # to generate log noise or issues about it.
+        #
+        # ix_states_entity_id was only there for users who upgraded from schema
+        # version 8 or earlier. Newer installs will not have it so we do not
+        # want to generate log noise or issues about it.
+        #
+        # ix_statistics_short_term_statistic_id_start and ix_statistics_statistic_id_start
+        # were only there for users who upgraded from schema version 23 or earlier.
+        return
+
+    _LOGGER.warning(
+        (
+            "Failed to drop index %s from table %s. Schema "
+            "Migration will continue; this is not a "
+            "critical operation"
+        ),
+        index_name,
+        table_name,
+    )
 
 
 def _add_columns(
@@ -1227,6 +1234,7 @@ def migrate_context_ids(instance: Recorder) -> bool:
     """Migrate context_ids to use binary format."""
     _to_bytes = _context_id_to_bytes
     session_maker = instance.get_session
+    _LOGGER.debug("Migrating context_ids to binary format")
     with session_scope(session=session_maker()) as session:
         if events := session.execute(find_events_context_ids_to_migrate()).all():
             session.execute(
@@ -1261,17 +1269,10 @@ def migrate_context_ids(instance: Recorder) -> bool:
         is_done = not (events or states)
 
     if is_done:
-        _drop_index(
-            session_maker,
-            "events",
-            "ix_events_context_id",
-        )
-        _drop_index(
-            session_maker,
-            "states",
-            "ix_states_context_id",
-        )
+        _drop_index(session_maker, "events", "ix_events_context_id", quiet=True)
+        _drop_index(session_maker, "states", "ix_states_context_id", quiet=True)
 
+    _LOGGER.debug("Migrating context_ids to binary format: done=%s", is_done)
     return is_done
 
 
