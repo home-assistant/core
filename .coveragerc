@@ -809,6 +809,7 @@ omit =
     homeassistant/components/nx584/alarm_control_panel.py
     homeassistant/components/oasa_telematics/sensor.py
     homeassistant/components/obihai/__init__.py
+    homeassistant/components/obihai/button.py
     homeassistant/components/obihai/connectivity.py
     homeassistant/components/obihai/sensor.py
     homeassistant/components/octoprint/__init__.py
