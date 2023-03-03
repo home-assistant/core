@@ -188,7 +188,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
 
         @callback
         def _async_on_template_update(event, updates):
-            """Update ha state when dependencies update."""
+            """Update state when template state changes."""
             for data in updates:
                 template = data.template
                 result = data.result
