@@ -27,8 +27,8 @@ from .entity import ReolinkCoordinatorEntity
 class ReolinkSirenEntityDescriptionMixin:
     """Mixin values for Reolink siren entities."""
 
-    method: Callable[[Host, int | None, bool, int], Any]
-    volume: Callable[[Host, int | None, int], Any]
+    method: Callable[[Host, int, bool, int], Any]
+    volume: Callable[[Host, int, int], Any]
 
 
 @dataclass
@@ -37,7 +37,7 @@ class ReolinkSirenEntityDescription(
 ):
     """A class that describes siren entities."""
 
-    supported: Callable[[Host, int | None], bool] = lambda api, ch: True
+    supported: Callable[[Host, int], bool] = lambda api, ch: True
 
 
 SIREN_ENTITIES = (
