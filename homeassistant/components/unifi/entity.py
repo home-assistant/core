@@ -121,11 +121,11 @@ class UnifiEntity(Entity, Generic[HandlerT, DataT]):
         handler = description.api_handler_fn(self.controller.api)
 
         @callback
-        def unlist_object() -> None:
-            """Remove entity from known_objects when unloaded."""
+        def unregister_object() -> None:
+            """Remove object ID from known_objects when unloaded."""
             self.controller.known_objects.discard((description.key, self._obj_id))
 
-        self.async_on_remove(unlist_object)
+        self.async_on_remove(unregister_object)
 
         # New data from handler
         self.async_on_remove(
