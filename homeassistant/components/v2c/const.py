@@ -1,5 +1,4 @@
-"""Constants for the V2C integration."""
-
+"""Constants for the Trydan integration."""
 DOMAIN = "v2c"
 
 CHARGE_STATES = [
