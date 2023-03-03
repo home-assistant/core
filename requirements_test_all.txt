@@ -393,7 +393,7 @@ boschshcpy==0.2.35
 broadlink==0.18.3
 
 # homeassistant.components.brother
-brother==2.2.0
+brother==2.3.0
 
 # homeassistant.components.brunt
 brunt==1.2.0
@@ -1435,7 +1435,7 @@ pysmartthings==0.7.6
 pysml==0.0.8
 
 # homeassistant.components.snmp
-pysnmplib==5.0.20
+pysnmplib==5.0.21
 
 # homeassistant.components.snooz
 pysnooz==0.8.3
