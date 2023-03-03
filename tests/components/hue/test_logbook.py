@@ -10,7 +10,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from .conftest import setup_platform
@@ -35,7 +35,9 @@ SAMPLE_V2_EVENT = {
 }
 
 
-async def test_humanify_hue_events(hass: HomeAssistant, mock_bridge_v2) -> None:
+async def test_humanify_hue_events(
+    hass: HomeAssistant, mock_bridge_v2, device_registry: dr.DeviceRegistry
+) -> None:
     """Test hue events when the devices are present in the registry."""
     await setup_platform(hass, mock_bridge_v2, "sensor")
     hass.config.components.add("recorder")
@@ -43,11 +45,10 @@ async def test_humanify_hue_events(hass: HomeAssistant, mock_bridge_v2) -> None:
     await hass.async_block_till_done()
     entry: ConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    dev_reg = device_registry.async_get(hass)
-    v1_device = dev_reg.async_get_or_create(
+    v1_device = device_registry.async_get_or_create(
         identifiers={(DOMAIN, "v1")}, name="Remote 1", config_entry_id=entry.entry_id
     )
-    v2_device = dev_reg.async_get_or_create(
+    v2_device = device_registry.async_get_or_create(
         identifiers={(DOMAIN, "v2")}, name="Remote 2", config_entry_id=entry.entry_id
     )
 

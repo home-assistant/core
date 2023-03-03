@@ -10,7 +10,7 @@ from homeassistant.components.sonos.binary_sensor import ATTR_BATTERY_POWER_SOUR
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as ent_reg
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .conftest import SonosMockEvent
@@ -19,14 +19,12 @@ from tests.common import async_fire_time_changed
 
 
 async def test_entity_registry_unsupported(
-    hass: HomeAssistant, async_setup_sonos, soco
+    hass: HomeAssistant, async_setup_sonos, soco, entity_registry: er.EntityRegistry
 ) -> None:
     """Test sonos device without battery registered in the device registry."""
     soco.get_battery_info.side_effect = NotSupportedException
 
     await async_setup_sonos()
-
-    entity_registry = ent_reg.async_get(hass)
 
     assert "media_player.zone_a" in entity_registry.entities
     assert "sensor.zone_a_battery" not in entity_registry.entities
@@ -34,22 +32,18 @@ async def test_entity_registry_unsupported(
 
 
 async def test_entity_registry_supported(
-    hass: HomeAssistant, async_autosetup_sonos, soco
+    hass: HomeAssistant, async_autosetup_sonos, soco, entity_registry: er.EntityRegistry
 ) -> None:
     """Test sonos device with battery registered in the device registry."""
-    entity_registry = ent_reg.async_get(hass)
-
     assert "media_player.zone_a" in entity_registry.entities
     assert "sensor.zone_a_battery" in entity_registry.entities
     assert "binary_sensor.zone_a_power" in entity_registry.entities
 
 
 async def test_battery_attributes(
-    hass: HomeAssistant, async_autosetup_sonos, soco
+    hass: HomeAssistant, async_autosetup_sonos, soco, entity_registry: er.EntityRegistry
 ) -> None:
     """Test sonos device with battery state."""
-    entity_registry = ent_reg.async_get(hass)
-
     battery = entity_registry.entities["sensor.zone_a_battery"]
     battery_state = hass.states.get(battery.entity_id)
     assert battery_state.state == "100"
@@ -64,7 +58,11 @@ async def test_battery_attributes(
 
 
 async def test_battery_on_s1(
-    hass: HomeAssistant, async_setup_sonos, soco, device_properties_event
+    hass: HomeAssistant,
+    async_setup_sonos,
+    soco,
+    device_properties_event,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test battery state updates on a Sonos S1 device."""
     soco.get_battery_info.return_value = {}
@@ -73,8 +71,6 @@ async def test_battery_on_s1(
 
     subscription = soco.deviceProperties.subscribe.return_value
     sub_callback = subscription.callback
-
-    entity_registry = ent_reg.async_get(hass)
 
     assert "sensor.zone_a_battery" not in entity_registry.entities
     assert "binary_sensor.zone_a_power" not in entity_registry.entities
@@ -142,11 +138,14 @@ async def test_device_payload_without_battery_and_ignored_keys(
 
 
 async def test_audio_input_sensor(
-    hass: HomeAssistant, async_autosetup_sonos, soco, tv_event, no_media_event
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    soco,
+    tv_event,
+    no_media_event,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test audio input sensor."""
-    entity_registry = ent_reg.async_get(hass)
-
     subscription = soco.avTransport.subscribe.return_value
     sub_callback = subscription.callback
     sub_callback(tv_event)
@@ -183,10 +182,13 @@ async def test_audio_input_sensor(
 
 
 async def test_microphone_binary_sensor(
-    hass: HomeAssistant, async_autosetup_sonos, soco, device_properties_event
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    soco,
+    device_properties_event,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test microphone binary sensor."""
-    entity_registry = ent_reg.async_get(hass)
     assert "binary_sensor.zone_a_microphone" in entity_registry.entities
 
     mic_binary_sensor = entity_registry.entities["binary_sensor.zone_a_microphone"]
@@ -203,10 +205,13 @@ async def test_microphone_binary_sensor(
 
 
 async def test_favorites_sensor(
-    hass: HomeAssistant, async_autosetup_sonos, soco, fire_zgs_event
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    soco,
+    fire_zgs_event,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test Sonos favorites sensor."""
-    entity_registry = ent_reg.async_get(hass)
     favorites = entity_registry.entities["sensor.sonos_favorites"]
     assert hass.states.get(favorites.entity_id) is None
 

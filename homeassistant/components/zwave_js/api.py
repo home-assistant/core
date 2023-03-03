@@ -120,9 +120,6 @@ OPTED_IN = "opted_in"
 SECURITY_CLASSES = "security_classes"
 CLIENT_SIDE_AUTH = "client_side_auth"
 
-# constants for migration
-DRY_RUN = "dry_run"
-
 # constants for inclusion
 INCLUSION_STRATEGY = "inclusion_strategy"
 
