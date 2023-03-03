@@ -130,7 +130,7 @@ async def test_get_events(
 
 
 @pytest.mark.parametrize(
-    "freeze_time,expected_state",
+    ("freeze_time", "expected_state"),
     [
         (
             datetime.datetime(2023, 1, 23, 3, 50, tzinfo=ZoneInfo("America/Regina")),
