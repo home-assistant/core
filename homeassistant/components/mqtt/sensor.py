@@ -286,10 +286,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
                 return
             try:
                 if (payload_datetime := dt_util.parse_datetime(new_value)) is None:
-                    _LOGGER.warning(
-                        "Invalid state message '%s' from '%s'", msg.payload, msg.topic
-                    )
-                    return
+                    raise ValueError
             except ValueError:
                 _LOGGER.warning(
                     "Invalid state message '%s' from '%s'", msg.payload, msg.topic
