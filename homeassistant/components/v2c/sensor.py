@@ -1,4 +1,5 @@
 """Support for V2C sensors."""
+
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
@@ -214,7 +215,7 @@ TRYDAN_SENSOR_TYPES: tuple[SensorEntityDescriptionV2C, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:play-pause",
         value="0",
-        func=lambda self: PAUSE_DAYNAMIC[int(self.charger.getPauseDynamic())],  # cosas
+        func=lambda self: PAUSE_DAYNAMIC[int(self.charger.getPauseDynamic())],
     ),
     SensorEntityDescriptionV2C(
         key=DYNAMIC_POWER_MODE_READ_KEY,
@@ -225,7 +226,7 @@ TRYDAN_SENSOR_TYPES: tuple[SensorEntityDescriptionV2C, ...] = (
     ),
     SensorEntityDescriptionV2C(
         key=CONTRACTED_POWER_READ_KEY,
-        name="Contractedd Power state",
+        name="Contracted Power state",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
@@ -257,16 +258,85 @@ class SensorV2C(SensorEntity):
         self.entity_description = description
         self.charger = charger
         self.value = self.entity_description.value
+        self.input_entities = {
+            "text": "input_text.my_input_text",
+            "list": "input_select.my_list",
+            "number": "input_number.my_input_number",
+            "lock": "input_boolean.lock_switch",
+            "pause": "input_boolean.pause_switch",
+        }
 
     @property
     def native_value(self) -> float | int | str | None:
         """Return the state of the sensor."""
+        self.value = self.entity_description.func(self)
         return self.value
 
     def update(self) -> None:
-        """Get the monitored data from the charger."""
+        """Update the entities with new values, that the user has written."""
+        self.send_intensity()
+        self.send_lock()
+        self.send_pause_state()
+        self.send_data()
+
+    def send_intensity(self):
+        """Allow us to send the value of the intensity with the input number slider."""
         try:
-            self.value = self.entity_description.func(self)
+            value_intensity = self.hass.states.get(self.input_entities["number"]).state
+            value_intensity = value_intensity.split(".")[0]
+            if int(value_intensity) > 6:
+                self.charger.postIntensity(int(value_intensity))
 
         except (RequestException, ValueError, KeyError):
-            _LOGGER.warning("Could not update status for %s", self.name)
+            _LOGGER.warning("Could not update status for Intensity")
+
+    def send_lock(self):
+        """Allow us to send the lock state with the button in the dashboard."""
+        try:
+            lock_value = str(self.hass.states.get(self.input_entities["lock"]).state)
+            if lock_value == "off":
+                self.charger.postLock(0)
+            elif lock_value == "on":
+                self.charger.postLock(1)
+        except (RequestException, ValueError, KeyError):
+            _LOGGER.warning(
+                "Could not update status for Lock",
+            )
+
+    def send_pause_state(self):
+        """Allow us to send the pause state with the button in the dashboard."""
+        try:
+            pause_value = str(self.hass.states.get(self.input_entities["pause"]).state)
+            if pause_value == "off":
+                self.charger.postPauseState(0)
+            elif pause_value == "on":
+                self.charger.postPauseState(1)
+        except (RequestException, ValueError, KeyError):
+            _LOGGER.warning("Could not update status for Pause state")
+
+    def send_data(self):
+        """Allow us to send the data that is written by the users in their specific entity."""
+        list_value = self.hass.states.get(self.input_entities["list"]).state
+        state_value = self.hass.states.get(self.input_entities["text"]).state
+
+        functions_dict = {
+            "Program:": self.charger.postPromgram,
+            "Dynamic:": self.charger.postDynamic,
+            "Payment:": self.charger.postPayment,
+            "OCPP:": self.charger.postOcpp,
+            "Min Intensity:": self.charger.postMinIntensity,
+            "Max Intensity:": self.charger.postMaxIntensity,
+            "Pause Dynamic:": self.charger.postPauseDynamic,
+            "Dynamic Power Mode:": self.charger.postDynamicPowerMode,
+            "Contracted Power:": self.charger.postContractedPower,
+        }
+
+        if state_value != "":
+            state_value = int(state_value)
+            if list_value in functions_dict:
+                functions_dict[list_value](state_value)
+            else:
+                print("Nothing")
+
+            del list_value
+            self.hass.states.set(self.input_entities["text"], "")
