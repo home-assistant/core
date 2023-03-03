@@ -164,6 +164,64 @@ async def test_create_service(
     assert scene.attributes.get("entity_id") == ["light.kitchen"]
 
 
+async def test_delete_service(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the delete service."""
+    assert await async_setup_component(
+        hass,
+        "scene",
+        {"scene": {"name": "hallo_2", "entities": {"light.kitchen": "on"}}},
+    )
+    assert await hass.services.async_call(
+        "scene",
+        "create",
+        {
+            "scene_id": "hallo",
+            "entities": {"light.bed_light": {"state": "on", "brightness": 50}},
+        },
+        blocking=True,
+    )
+
+    assert await hass.services.async_call(
+        "scene",
+        "delete",
+        {
+            "entity_id": "scene.hallo_3",
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert "The scene scene.hallo_3 does not exist" in caplog.text
+
+    assert await hass.services.async_call(
+        "scene",
+        "delete",
+        {
+            "entity_id": "scene.hallo_2",
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert (
+        "The scene scene.hallo_2 is not created with service `scene.create`"
+        in caplog.text
+    )
+    assert hass.states.get("scene.hallo_2") is not None
+
+    assert await hass.services.async_call(
+        "scene",
+        "delete",
+        {
+            "entity_id": "scene.hallo",
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("state.hallo") is None
+
+
 async def test_snapshot_service(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:

@@ -84,6 +84,7 @@ def _ensure_no_intersection(value: dict[str, Any]) -> dict[str, Any]:
 
 
 CONF_SCENE_ID = "scene_id"
+CONF_ENTITY_ID = "entity_id"
 CONF_SNAPSHOT = "snapshot_entities"
 DATA_PLATFORM = "homeassistant_scene"
 EVENT_SCENE_RELOADED = "scene_reloaded"
@@ -123,8 +124,18 @@ CREATE_SCENE_SCHEMA = vol.All(
     ),
 )
 
+DELETE_SCENE_SCHEMA = vol.All(
+    _ensure_no_intersection,
+    vol.Schema(
+        {
+            vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        }
+    ),
+)
+
 SERVICE_APPLY = "apply"
 SERVICE_CREATE = "create"
+SERVICE_DELETE = "delete"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -271,6 +282,25 @@ async def async_setup_platform(
 
     hass.services.async_register(
         SCENE_DOMAIN, SERVICE_CREATE, create_service, CREATE_SCENE_SCHEMA
+    )
+
+    async def delete_service(call: ServiceCall) -> None:
+        """Delete a dynamically created scene."""
+        entity_id = call.data[CONF_ENTITY_ID]
+        scene = platform.entities.get(entity_id)
+        if scene is None:
+            _LOGGER.error("The scene %s does not exist", entity_id)
+            return
+        if not isinstance(scene, HomeAssistantScene) or not scene.from_service:
+            _LOGGER.error(
+                "The scene %s is not created with service `scene.create`", entity_id
+            )
+            return
+
+        await platform.async_remove_entity(entity_id)
+
+    hass.services.async_register(
+        SCENE_DOMAIN, SERVICE_DELETE, delete_service, DELETE_SCENE_SCHEMA
     )
 
 
