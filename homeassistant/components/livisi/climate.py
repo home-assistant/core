@@ -75,17 +75,13 @@ class LivisiClimate(LivisiEntity, ClimateEntity):
         device: dict[str, Any],
     ) -> None:
         """Initialize the Livisi Climate."""
-        super().__init__(config_entry, coordinator, device)
+        super().__init__(
+            config_entry, coordinator, device, use_room_as_device_name=True
+        )
 
         self._target_temperature_capability = self.capabilities["RoomSetpoint"]
         self._temperature_capability = self.capabilities["RoomTemperature"]
         self._humidity_capability = self.capabilities["RoomHumidity"]
-
-        # For the livisi climate entities, the device should have the room name from
-        # the livisi setup, as each livisi room gets exactly one VRCC device. The entity
-        # name will always be some localized value of "Climate", so the full element name
-        # in homeassistent will be in the form of "Bedroom Climate"
-        self._attr_device_info["name"] = self._attr_device_info["suggested_area"]
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""

@@ -28,6 +28,7 @@ class LivisiEntity(CoordinatorEntity[LivisiDataUpdateCoordinator], Entity):
         config_entry: ConfigEntry,
         coordinator: LivisiDataUpdateCoordinator,
         device: dict[str, Any],
+        use_room_as_device_name=False,
     ) -> None:
         """Initialize the common properties of a Livisi device."""
         self.config_details: Mapping[str, Any] = device["config"]
@@ -48,13 +49,17 @@ class LivisiEntity(CoordinatorEntity[LivisiDataUpdateCoordinator], Entity):
 
         self._attr_available = False
         self._attr_unique_id = unique_id
-        self._attr_name = name
+
+        device_name = name
+        if use_room_as_device_name and room_name is not None:
+            self._attr_name = name
+            device_name = room_name
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
             manufacturer=manufacturer,
             model=device_type,
-            name=name,
+            name=device_name,
             suggested_area=room_name,
             via_device=(DOMAIN, config_entry.entry_id),
         )
