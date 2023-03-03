@@ -638,15 +638,16 @@ def database_job_retry_wrapper(
                 try:
                     job(instance, *args, **kwargs)
                 except OperationalError as err:
-                    if attempt == attempts - 1:
+                    if attempt == attempts - 1 or not _is_retryable_error(
+                        instance, err
+                    ):
                         raise
-                    if _is_retryable_error(instance, err):
-                        assert isinstance(err.orig, BaseException)
-                        _LOGGER.info(
-                            "%s; %s failed, retrying", err.orig.args[1], description
-                        )
-                        time.sleep(instance.db_retry_wait)
-                        # Failed with retryable error
+                    assert isinstance(err.orig, BaseException)
+                    _LOGGER.info(
+                        "%s; %s failed, retrying", err.orig.args[1], description
+                    )
+                    time.sleep(instance.db_retry_wait)
+                    # Failed with retryable error
 
         return wrapper
 
