@@ -719,14 +719,18 @@ class MQTT:
                     timestamp,
                 ),
             )
-        # pylint: disable-next=expression-not-assigned
-        catch_log_exception(
-            self._mqtt_data.state_write_requests.process_write_state_requests,
-            lambda msg: (
-                "Exception on handling write state requests when handling msg on "
-                f"'{msg.topic}': '{msg.payload}'"
-            ),
-        )()
+        try:
+            self._mqtt_data.state_write_requests.process_write_state_requests()
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.error(
+                (
+                    "Exception on handling write state requests for msg on "
+                    "'%s' with payload: %s"
+                ),
+                msg.topic,
+                msg.payload,
+                exc_info=True,
+            )
 
     def _mqtt_on_callback(
         self,

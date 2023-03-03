@@ -851,7 +851,7 @@ async def test_handle_logging_on_writing_the_entity_state(
     with patch(
         "homeassistant.helpers.entity.Entity.async_write_ha_state",
         side_effect=ValueError("Invalid value for sensor"),
-    ), pytest.raises(ValueError):
+    ):
         async_fire_mqtt_message(hass, "test/state", b"payload causing errors")
         await hass.async_block_till_done()
         state = hass.states.get("sensor.test_sensor")
