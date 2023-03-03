@@ -62,6 +62,8 @@ class SunWEGData:
         _LOGGER.debug("Updating data for plant %s", self.plant_id)
         try:
             self.data = self.api.plant(self.plant_id)
+            for inverter in self.data.inverters:
+                self.api.complete_inverter(inverter)
         except json.decoder.JSONDecodeError:
             _LOGGER.error("Unable to fetch data from SunWEG server")
         _LOGGER.debug("Finished updating data for plant %s", self.plant_id)

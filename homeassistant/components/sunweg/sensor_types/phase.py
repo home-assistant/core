@@ -10,7 +10,7 @@ PHASE_SENSOR_TYPES: tuple[SunWEGSensorEntityDescription, ...] = (
     SunWEGSensorEntityDescription(
         key="voltage",
         name="Voltage",
-        api_variable_key="voltage",
+        api_variable_key="_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         suggested_display_precision=2,
@@ -18,7 +18,7 @@ PHASE_SENSOR_TYPES: tuple[SunWEGSensorEntityDescription, ...] = (
     SunWEGSensorEntityDescription(
         key="amperage",
         name="Amperage",
-        api_variable_key="amperage",
+        api_variable_key="_amperage",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         suggested_display_precision=1,

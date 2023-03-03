@@ -7,6 +7,7 @@ from types import MappingProxyType
 from typing import Any
 
 from sunweg.api import APIHelper
+from sunweg.device import Inverter
 from sunweg.plant import Plant
 
 from homeassistant.components.sensor import SensorEntity
@@ -36,8 +37,11 @@ def get_device_list(api: APIHelper, config: MappingProxyType[str, Any]):
         plant_info: list[Plant] = api.listPlants()
         plant_id = plant_info[0].id
 
+    devices: list[Inverter] = []
     # Get a list of devices for specified plant to add sensors for.
-    devices = api.plant(plant_id).inverters
+    for inverter in api.plant(plant_id).inverters:
+        api.complete_inverter(inverter)
+        devices.append(inverter)
     return [devices, plant_id]
 
 
