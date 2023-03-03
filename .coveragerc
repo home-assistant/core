@@ -249,7 +249,8 @@ omit =
     homeassistant/components/ecowitt/sensor.py
     homeassistant/components/eddystone_temperature/sensor.py
     homeassistant/components/edimax/switch.py
-    homeassistant/components/edl21/*
+    homeassistant/components/edl21/__init__.py
+    homeassistant/components/edl21/sensor.py
     homeassistant/components/egardia/*
     homeassistant/components/eight_sleep/__init__.py
     homeassistant/components/eight_sleep/binary_sensor.py
@@ -811,6 +812,8 @@ omit =
     homeassistant/components/nuki/sensor.py
     homeassistant/components/nx584/alarm_control_panel.py
     homeassistant/components/oasa_telematics/sensor.py
+    homeassistant/components/obihai/__init__.py
+    homeassistant/components/obihai/button.py
     homeassistant/components/obihai/connectivity.py
     homeassistant/components/obihai/sensor.py
     homeassistant/components/octoprint/__init__.py
@@ -1372,7 +1375,6 @@ omit =
     homeassistant/components/verisure/sensor.py
     homeassistant/components/verisure/switch.py
     homeassistant/components/versasense/*
-    homeassistant/components/vesync/__init__.py
     homeassistant/components/vesync/common.py
     homeassistant/components/vesync/fan.py
     homeassistant/components/vesync/light.py
