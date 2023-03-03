@@ -2,6 +2,7 @@
 import json
 from unittest.mock import patch
 
+import pytest
 from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkError
 
 from homeassistant import config_entries, data_entry_flow
@@ -27,6 +28,8 @@ from .conftest import (
 )
 
 from tests.common import MockConfigEntry
+
+pytestmark = pytest.mark.usefixtures("reolink_setup_entry", "reolink_connect")
 
 
 async def test_config_flow_manual_success(hass: HomeAssistant) -> None:
@@ -87,7 +90,9 @@ async def test_config_flow_errors(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_HOST: "cannot_connect"}
 
-    host_mock = get_mock_info(user_level="guest")
+    host_mock = get_mock_info()
+    host_mock.is_admin = False
+    host_mock.user_level = "guest"
     with patch("homeassistant.components.reolink.host.Host", return_value=host_mock):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
