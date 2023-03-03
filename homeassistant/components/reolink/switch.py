@@ -21,8 +21,8 @@ from .entity import ReolinkBaseCoordinatorEntity, ReolinkCoordinatorEntity
 class ReolinkSwitchEntityDescriptionMixin:
     """Mixin values for Reolink switch entities."""
 
-    value: Callable[[Host, int | None], bool]
-    method: Callable[[Host, int | None, bool], Any]
+    value: Callable[[Host, int], bool]
+    method: Callable[[Host, int, bool], Any]
 
 
 @dataclass
@@ -31,7 +31,7 @@ class ReolinkSwitchEntityDescription(
 ):
     """A class that describes switch entities."""
 
-    supported: Callable[[Host, int | None], bool] = lambda api, ch: True
+    supported: Callable[[Host, int], bool] = lambda api, ch: True
 
 
 @dataclass
