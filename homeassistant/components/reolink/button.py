@@ -21,7 +21,7 @@ from .entity import ReolinkCoordinatorEntity
 class ReolinkButtonEntityDescriptionMixin:
     """Mixin values for Reolink button entities."""
 
-    method: Callable[[Host, int | None], Any]
+    method: Callable[[Host, int], Any]
 
 
 @dataclass
@@ -30,7 +30,7 @@ class ReolinkButtonEntityDescription(
 ):
     """A class that describes button entities."""
 
-    supported: Callable[[Host, int | None], bool] = lambda api, ch: True
+    supported: Callable[[Host, int], bool] = lambda api, ch: True
 
 
 BUTTON_ENTITIES = (
