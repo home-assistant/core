@@ -31,8 +31,8 @@ async def validate_input(hass: core.HomeAssistant, data):
     session = aiohttp_client.async_get_clientsession(hass)
     auth = Auth(session, data[CONF_USERNAME], data[CONF_PASSWORD], data[CONF_COUNTRY])
     try:
-        await Installation.list(auth)
-        return auth
+        contracts = await Installation.list(auth)
+        return auth, contracts
     except ConnectionRefusedError:
         raise InvalidAuth from ConnectionRefusedError
     except ConnectionError:
@@ -46,6 +46,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     entry: ConfigEntry
     auth: Auth
     user_input: dict
+    contracts: dict
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -53,7 +54,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input:
             try:
-                self.auth = await validate_input(self.hass, user_input)
+                self.auth, self.contracts = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -82,13 +83,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 title=f"Contract {user_input[CONF_CONTRACT]}", data=self.user_input
             )
 
-        try:
-            list_contracts = await Installation.list(self.auth)
-        except ConnectionRefusedError:
-            raise InvalidAuth from ConnectionRefusedError
-        except ConnectionError:
-            raise CannotConnect from ConnectionError
-
         return self.async_show_form(
             step_id="choose_contract",
             data_schema=vol.Schema(
@@ -101,7 +95,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                                         "value": c["contractId"],
                                         "label": c["description"],
                                     }
-                                    for c in list_contracts
+                                    for c in self.contracts
                                 ]
                             }
                         }
@@ -125,7 +119,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input:
             try:
                 user_input[CONF_COUNTRY] = self.entry.data[CONF_COUNTRY]
-                self.auth = await validate_input(self.hass, user_input)
+                self.auth, self.contracts = await validate_input(self.hass, user_input)
 
             except CannotConnect:
                 errors["base"] = "cannot_connect"
