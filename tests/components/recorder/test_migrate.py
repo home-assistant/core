@@ -69,7 +69,7 @@ async def test_schema_update_calls(recorder_db_url: str, hass: HomeAssistant) ->
     session_maker = instance.get_session
     update.assert_has_calls(
         [
-            call(hass, engine, session_maker, version + 1, 0)
+            call(instance, hass, engine, session_maker, version + 1, 0)
             for version in range(0, db_schema.SCHEMA_VERSION)
         ]
     )
@@ -399,7 +399,7 @@ async def test_schema_migrate(
 def test_invalid_update(hass: HomeAssistant) -> None:
     """Test that an invalid new version raises an exception."""
     with pytest.raises(ValueError):
-        migration._apply_update(hass, Mock(), Mock(), -1, 0)
+        migration._apply_update(Mock(), hass, Mock(), Mock(), -1, 0)
 
 
 @pytest.mark.parametrize(

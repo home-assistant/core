@@ -1169,7 +1169,7 @@ def _migrate_statistics_columns_to_timestamp(
                             "last_reset_ts="
                             "UNIX_TIMESTAMP(last_reset) "
                             "where start_ts is NULL "
-                            "LIMIT 250000;"
+                            "LIMIT 100000;"
                         )
                     )
     elif engine.dialect.name == SupportedDialect.POSTGRESQL:
@@ -1187,7 +1187,7 @@ def _migrate_statistics_columns_to_timestamp(
                             "created_ts=EXTRACT(EPOCH FROM created), "
                             "last_reset_ts=EXTRACT(EPOCH FROM last_reset) "
                             "where id IN ( "
-                            f"SELECT id FROM {table} where start_ts is NULL LIMIT 250000 "
+                            f"SELECT id FROM {table} where start_ts is NULL LIMIT 100000 "
                             " );"
                         )
                     )
