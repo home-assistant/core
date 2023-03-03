@@ -10,12 +10,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    DOMAIN,
-    LIVISI_STATE_CHANGE,
-    LOGGER,
-    PSS_DEVICE_TYPE,
-)
+from .const import DOMAIN, LIVISI_STATE_CHANGE, LOGGER, PSS_DEVICE_TYPE
 from .coordinator import LivisiDataUpdateCoordinator
 from .entity import LivisiEntity
 
