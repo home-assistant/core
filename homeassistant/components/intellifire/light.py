@@ -49,7 +49,7 @@ INTELLIFIRE_LIGHTS: tuple[IntellifireLightEntityDescription, ...] = (
 
 
 class IntellifireLight(IntellifireEntity, LightEntity):
-    """This is a Light entity for the fireplace."""
+    """Light entity for the fireplace."""
 
     entity_description: IntellifireLightEntityDescription
     _attr_color_mode = ColorMode.BRIGHTNESS
