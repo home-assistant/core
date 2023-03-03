@@ -26,8 +26,8 @@ async def async_setup_entry(
     coordinator: IntellifireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     description = NumberEntityDescription(
-        key="flame_control",
-        name="Flame control",
+        key="flame_height",
+        name="Flame height",
         icon="mdi:arrow-expand-vertical",
     )
 

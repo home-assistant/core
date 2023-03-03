@@ -24,7 +24,7 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry, entity_registry
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -321,8 +321,8 @@ class PS4Device(MediaPlayerEntity):
         # If cannot get status on startup, assume info from registry.
         if status is None:
             _LOGGER.info("Assuming status from registry")
-            e_registry = entity_registry.async_get(self.hass)
-            d_registry = device_registry.async_get(self.hass)
+            e_registry = er.async_get(self.hass)
+            d_registry = dr.async_get(self.hass)
             for entity_id, entry in e_registry.entities.items():
                 if entry.config_entry_id == self._entry_id:
                     self._attr_unique_id = entry.unique_id

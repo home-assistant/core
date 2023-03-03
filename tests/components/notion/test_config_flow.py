@@ -12,6 +12,8 @@ from homeassistant.core import HomeAssistant
 
 from .conftest import TEST_PASSWORD, TEST_USERNAME
 
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+
 
 @pytest.mark.parametrize(
     ("get_client_with_exception", "errors"),
@@ -58,7 +60,7 @@ async def test_create_entry(
     }
 
 
-async def test_duplicate_error(hass: HomeAssistant, config, setup_config_entry) -> None:
+async def test_duplicate_error(hass: HomeAssistant, config, config_entry) -> None:
     """Test that errors are shown when duplicates are added."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=config
@@ -81,7 +83,7 @@ async def test_reauth(
     config_entry,
     errors,
     get_client_with_exception,
-    setup_config_entry,
+    mock_aionotion,
 ) -> None:
     """Test that re-auth works."""
     result = await hass.config_entries.flow.async_init(
@@ -109,6 +111,11 @@ async def test_reauth(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_PASSWORD: "password"}
     )
+    # Block to ensure the setup_config_entry fixture does not
+    # get undone before hass is shutdown so we do not try
+    # to setup the config entry via reload.
+    await hass.async_block_till_done()
+
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert len(hass.config_entries.async_entries()) == 1

@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant, State
 from homeassistant.helpers import (
-    area_registry,
+    area_registry as ar,
     config_validation as cv,
     integration_platform,
     intent,
@@ -109,9 +109,9 @@ class GetStateIntentHandler(intent.IntentHandler):
 
         # Look up area first to fail early
         area_name = slots.get("area", {}).get("value")
-        area: area_registry.AreaEntry | None = None
+        area: ar.AreaEntry | None = None
         if area_name is not None:
-            areas = area_registry.async_get(hass)
+            areas = ar.async_get(hass)
             area = areas.async_get_area(area_name) or areas.async_get_area_by_name(
                 area_name
             )

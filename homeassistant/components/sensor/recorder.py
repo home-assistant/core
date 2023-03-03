@@ -588,8 +588,8 @@ def _compile_statistics(  # noqa: C901
                                 ),
                                 entity_id,
                                 new_state,
-                                state.last_updated.isoformat(),
                                 fstate,
+                                state.last_updated.isoformat(),
                             )
                     except HomeAssistantError:
                         continue
