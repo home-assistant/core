@@ -644,7 +644,7 @@ omit =
     homeassistant/components/livisi/climate.py
     homeassistant/components/livisi/coordinator.py
     homeassistant/components/livisi/switch.py
-    homeassistant/components/livisi/livisi_entity.py
+    homeassistant/components/livisi/entity.py
     homeassistant/components/llamalab_automate/notify.py
     homeassistant/components/logi_circle/__init__.py
     homeassistant/components/logi_circle/camera.py
