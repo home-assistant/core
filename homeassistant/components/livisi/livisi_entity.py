@@ -41,7 +41,7 @@ class LivisiEntity(CoordinatorEntity[LivisiDataUpdateCoordinator], Entity):
         manufacturer = device["manufacturer"]
         device_type = device["type"]
 
-        room_id: str = device.get("location")
+        room_id: str | None = device.get("location")
         room_name: str | None = None
         if room_id is not None:
             room_name = coordinator.rooms.get(room_id)
