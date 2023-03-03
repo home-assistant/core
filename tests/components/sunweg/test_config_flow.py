@@ -2,16 +2,14 @@
 from copy import deepcopy
 from unittest.mock import patch
 
+from sunweg.api import APIHelper
+
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.sunweg.const import CONF_PLANT_ID, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .common import (
-    FIXTURE_USER_INPUT,
-    SUNWEG_LOGIN_RESPONSE,
-    SUNWEG_PLANT_LIST_RESPONSE,
-)
+from .common import FIXTURE_USER_INPUT, SUNWEG_LOGIN_RESPONSE, SUNWEG_PLANT_RESPONSE
 
 from tests.common import MockConfigEntry
 
@@ -32,10 +30,7 @@ async def test_incorrect_login(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "sunweg.api.APIHelper.authenticate",
-        return_value=False,
-    ):
+    with patch.object(APIHelper, "authenticate", return_value=False):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], FIXTURE_USER_INPUT
         )
@@ -51,11 +46,10 @@ async def test_no_plants_on_account(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     user_input = FIXTURE_USER_INPUT.copy()
-    plant_list = []
 
-    with patch(
-        "sunweg.api.APIHelper.authenticate", return_value=SUNWEG_LOGIN_RESPONSE
-    ), patch("sunweg.api.APIHelper.listPlants", return_value=plant_list):
+    with patch.object(
+        APIHelper, "authenticate", return_value=SUNWEG_LOGIN_RESPONSE
+    ), patch.object(APIHelper, "listPlants", return_value=[]):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input
         )
@@ -70,14 +64,11 @@ async def test_multiple_plant_ids(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     user_input = FIXTURE_USER_INPUT.copy()
-    plant_list = deepcopy(SUNWEG_PLANT_LIST_RESPONSE)
-    plant_list.append(plant_list[0])
+    plant_list = [deepcopy(SUNWEG_PLANT_RESPONSE), deepcopy(SUNWEG_PLANT_RESPONSE)]
 
-    with patch(
-        "sunweg.api.APIHelper.authenticate", return_value=SUNWEG_LOGIN_RESPONSE
-    ), patch("sunweg.api.APIHelper.listPlants", return_value=plant_list), patch(
-        "homeassistant.components.sunweg.async_setup_entry", return_value=True
-    ):
+    with patch.object(
+        APIHelper, "authenticate", return_value=SUNWEG_LOGIN_RESPONSE
+    ), patch.object(APIHelper, "listPlants", return_value=plant_list):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input
         )
@@ -103,13 +94,12 @@ async def test_one_plant_on_account(hass: HomeAssistant) -> None:
     )
     user_input = FIXTURE_USER_INPUT.copy()
 
-    with patch(
-        "sunweg.api.APIHelper.authenticate", return_value=SUNWEG_LOGIN_RESPONSE
-    ), patch(
-        "sunweg.api.APIHelper.listPlants",
-        return_value=SUNWEG_PLANT_LIST_RESPONSE,
-    ), patch(
-        "homeassistant.components.sunweg.async_setup_entry", return_value=True
+    with patch.object(
+        APIHelper, "authenticate", return_value=SUNWEG_LOGIN_RESPONSE
+    ), patch.object(
+        APIHelper,
+        "listPlants",
+        return_value=[deepcopy(SUNWEG_PLANT_RESPONSE)],
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input
@@ -130,11 +120,12 @@ async def test_existing_plant_configured(hass: HomeAssistant) -> None:
     )
     user_input = FIXTURE_USER_INPUT.copy()
 
-    with patch(
-        "sunweg.api.APIHelper.authenticate", return_value=SUNWEG_LOGIN_RESPONSE
-    ), patch(
-        "sunweg.api.APIHelper.listPlants",
-        return_value=SUNWEG_PLANT_LIST_RESPONSE,
+    with patch.object(
+        APIHelper, "authenticate", return_value=SUNWEG_LOGIN_RESPONSE
+    ), patch.object(
+        APIHelper,
+        "listPlants",
+        return_value=[deepcopy(SUNWEG_PLANT_RESPONSE)],
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input

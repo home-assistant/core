@@ -14,20 +14,18 @@ FIXTURE_USER_INPUT = {
     CONF_PASSWORD: "password",
 }
 
-SUNWEG_PLANT_LIST_RESPONSE = [
-    Plant(
-        123456,
-        "Plant #123",
-        29.5,
-        0.5,
-        0,
-        12.786912,
-        24.0,
-        332.2,
-        0.012296,
-        datetime(2023, 2, 16, 14, 22, 37),
-    )
-]
+SUNWEG_PLANT_RESPONSE = Plant(
+    123456,
+    "Plant #123",
+    29.5,
+    0.5,
+    0,
+    12.786912,
+    24.0,
+    332.2,
+    0.012296,
+    datetime(2023, 2, 16, 14, 22, 37),
+)
 
 SUNWEG_INVERTER_RESPONSE = Inverter(
     21255, "INVERSOR01", "J63T233018RE074", 23.2, 0.0, 0.0, 0, 0.0, 1, 0
