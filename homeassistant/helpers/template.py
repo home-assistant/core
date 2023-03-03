@@ -2166,8 +2166,7 @@ def today_at(hass: HomeAssistant, time_str: str = "") -> datetime:
 def relative_time(
     value: Any | datetime, is_future: bool = False, depth: int = 1
 ) -> Any | str:
-    """
-    Take a datetime and return its "age" as a string.
+    """Take a datetime and return its "age" as a string.
 
     The age can be in second, minute, hour, day, month and year.
 
