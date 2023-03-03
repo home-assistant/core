@@ -719,18 +719,7 @@ class MQTT:
                     timestamp,
                 ),
             )
-        try:
-            self._mqtt_data.state_write_requests.process_write_state_requests()
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.error(
-                (
-                    "Exception on handling write state requests for msg on "
-                    "'%s' with payload: %s"
-                ),
-                msg.topic,
-                msg.payload,
-                exc_info=True,
-            )
+        self._mqtt_data.state_write_requests.process_write_state_requests(msg)
 
     def _mqtt_on_callback(
         self,
