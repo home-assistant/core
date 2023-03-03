@@ -28,6 +28,7 @@ class LivisiEntity(CoordinatorEntity[LivisiDataUpdateCoordinator], Entity):
         config_entry: ConfigEntry,
         coordinator: LivisiDataUpdateCoordinator,
         device: dict[str, Any],
+        *,
         use_room_as_device_name: bool = False,
     ) -> None:
         """Initialize the common properties of a Livisi device."""
