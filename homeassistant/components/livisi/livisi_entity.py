@@ -51,6 +51,11 @@ class LivisiEntity(CoordinatorEntity[LivisiDataUpdateCoordinator], Entity):
         self._attr_unique_id = unique_id
 
         device_name = name
+
+        # For livisi climate entities, the device should have the room name from
+        # the livisi setup, as each livisi room gets exactly one VRCC device. The entity
+        # name will always be some localized value of "Climate", so the full element name
+        # in homeassistent will be in the form of "Bedroom Climate"
         if use_room_as_device_name and room_name is not None:
             self._attr_name = name
             device_name = room_name
