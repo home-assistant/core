@@ -12,8 +12,6 @@ def bypass_api_fixture():
     with patch("homeassistant.components.roborock.RoborockMqttClient.connect"), patch(
         "homeassistant.components.roborock.RoborockMqttClient.send_command"
     ), patch(
-        "roborock.api.mqtt"  # Convert to not be directly on roborock.api
-    ), patch(
         "homeassistant.components.roborock.RoborockMqttClient.get_prop",
         return_value=PROP,
     ):
