@@ -54,7 +54,7 @@ _Device = namedtuple("_Device", ["ip_address", "mac", "host", "status", "name"])
 
 
 class BTSmartHubScanner(DeviceScanner):
-    """This class queries a BT Smart Hub."""
+    """Class which queries a BT Smart Hub."""
 
     def __init__(self, smarthub_client):
         """Initialise the scanner."""

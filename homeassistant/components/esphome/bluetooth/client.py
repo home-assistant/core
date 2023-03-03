@@ -234,6 +234,7 @@ class ESPHomeClient(BaseBleakClient):
         Keyword Args:
             timeout (float): Timeout for required
                 ``BleakScanner.find_device_by_address`` call. Defaults to 10.0.
+
         Returns:
             Boolean representing connection status.
         """
@@ -504,6 +505,7 @@ class ESPHomeClient(BaseBleakClient):
                 The characteristic to read from, specified by either integer
                 handle, UUID or directly by the BleakGATTCharacteristic
                 object representing it.
+
         Returns:
             (bytearray) The read data.
         """
@@ -519,6 +521,7 @@ class ESPHomeClient(BaseBleakClient):
 
         Args:
             handle (int): The handle of the descriptor to read from.
+
         Returns:
             (bytearray) The read data.
         """
@@ -583,6 +586,7 @@ class ESPHomeClient(BaseBleakClient):
             def callback(sender: int, data: bytearray):
                 print(f"{sender}: {data}")
             client.start_notify(char_uuid, callback)
+
         Args:
             characteristic (BleakGATTCharacteristic):
                 The characteristic to activate notifications/indications on a

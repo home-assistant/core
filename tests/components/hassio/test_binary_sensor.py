@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components.hassio import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -157,7 +157,11 @@ def mock_all(aioclient_mock, request):
     ],
 )
 async def test_binary_sensor(
-    hass: HomeAssistant, entity_id, expected, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    entity_id,
+    expected,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test hassio OS and addons binary sensor."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
@@ -176,8 +180,7 @@ async def test_binary_sensor(
     assert hass.states.get(entity_id) is None
 
     # Enable the entity.
-    ent_reg = entity_registry.async_get(hass)
-    ent_reg.async_update_entity(entity_id, disabled_by=None)
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 

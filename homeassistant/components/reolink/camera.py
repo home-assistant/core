@@ -1,4 +1,4 @@
-"""This component provides support for Reolink IP cameras."""
+"""Component providing support for Reolink IP cameras."""
 from __future__ import annotations
 
 import logging
