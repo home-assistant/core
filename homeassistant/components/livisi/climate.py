@@ -24,7 +24,7 @@ from .const import (
     VRCC_DEVICE_TYPE,
 )
 from .coordinator import LivisiDataUpdateCoordinator
-from .livisi_entity import LivisiEntity
+from .entity import LivisiEntity
 
 
 async def async_setup_entry(
