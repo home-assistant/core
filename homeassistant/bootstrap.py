@@ -17,16 +17,17 @@ import voluptuous as vol
 import yarl
 
 from . import config as conf_util, config_entries, core, loader
-from .components import http, persistent_notification
+from .components import http
 from .const import (
     REQUIRED_NEXT_PYTHON_HA_RELEASE,
     REQUIRED_NEXT_PYTHON_VER,
-    SIGNAL_BOOTSTRAP_INTEGRATONS,
+    SIGNAL_BOOTSTRAP_INTEGRATIONS,
 )
 from .exceptions import HomeAssistantError
 from .helpers import (
     area_registry,
     device_registry,
+    entity,
     entity_registry,
     issue_registry,
     recorder,
@@ -53,6 +54,7 @@ ERROR_LOG_FILENAME = "home-assistant.log"
 
 # hass.data key for logging information.
 DATA_LOGGING = "logging"
+DATA_REGISTRIES_LOADED = "bootstrap_registries_loaded"
 
 LOG_SLOW_STARTUP_INTERVAL = 60
 SLOW_STARTUP_CHECK_INTERVAL = 1
@@ -117,7 +119,8 @@ async def async_setup_hass(
     )
 
     hass.config.skip_pip = runtime_config.skip_pip
-    if runtime_config.skip_pip:
+    hass.config.skip_pip_packages = runtime_config.skip_pip_packages
+    if runtime_config.skip_pip or runtime_config.skip_pip_packages:
         _LOGGER.warning(
             "Skipping pip installation of required modules. This may cause issues"
         )
@@ -175,6 +178,7 @@ async def async_setup_hass(
         if old_logging:
             hass.data[DATA_LOGGING] = old_logging
         hass.config.skip_pip = old_config.skip_pip
+        hass.config.skip_pip_packages = old_config.skip_pip_packages
         hass.config.internal_url = old_config.internal_url
         hass.config.external_url = old_config.external_url
         hass.config.config_dir = old_config.config_dir
@@ -216,6 +220,33 @@ def open_hass_ui(hass: core.HomeAssistant) -> None:
         )
 
 
+async def load_registries(hass: core.HomeAssistant) -> None:
+    """Load the registries and cache the result of platform.uname().processor."""
+    if DATA_REGISTRIES_LOADED in hass.data:
+        return
+    hass.data[DATA_REGISTRIES_LOADED] = None
+
+    def _cache_uname_processor() -> None:
+        """Cache the result of platform.uname().processor in the executor.
+
+        Multiple modules call this function at startup which
+        executes a blocking subprocess call. This is a problem for the
+        asyncio event loop. By primeing the cache of uname we can
+        avoid the blocking call in the event loop.
+        """
+        platform.uname().processor  # pylint: disable=expression-not-assigned
+
+    # Load the registries and cache the result of platform.uname().processor
+    entity.async_setup(hass)
+    await asyncio.gather(
+        area_registry.async_load(hass),
+        device_registry.async_load(hass),
+        entity_registry.async_load(hass),
+        issue_registry.async_load(hass),
+        hass.async_add_executor_job(_cache_uname_processor),
+    )
+
+
 async def async_from_config_dict(
     config: ConfigType, hass: core.HomeAssistant
 ) -> core.HomeAssistant | None:
@@ -228,6 +259,7 @@ async def async_from_config_dict(
 
     hass.config_entries = config_entries.ConfigEntries(hass, config)
     await hass.config_entries.async_initialize()
+    await load_registries(hass)
 
     # Set up core.
     _LOGGER.debug("Setting up %s", CORE_INTEGRATIONS)
@@ -254,8 +286,7 @@ async def async_from_config_dict(
         return None
     except HomeAssistantError:
         _LOGGER.error(
-            "Home Assistant core failed to initialize. "
-            "Further initialization aborted"
+            "Home Assistant core failed to initialize. Further initialization aborted"
         )
         return None
 
@@ -268,16 +299,31 @@ async def async_from_config_dict(
         REQUIRED_NEXT_PYTHON_HA_RELEASE
         and sys.version_info[:3] < REQUIRED_NEXT_PYTHON_VER
     ):
-        msg = (
-            "Support for the running Python version "
-            f"{'.'.join(str(x) for x in sys.version_info[:3])} is deprecated and will "
-            f"be removed in Home Assistant {REQUIRED_NEXT_PYTHON_HA_RELEASE}. "
-            "Please upgrade Python to "
-            f"{'.'.join(str(x) for x in REQUIRED_NEXT_PYTHON_VER[:2])}."
+        current_python_version = ".".join(str(x) for x in sys.version_info[:3])
+        required_python_version = ".".join(str(x) for x in REQUIRED_NEXT_PYTHON_VER[:2])
+        _LOGGER.warning(
+            (
+                "Support for the running Python version %s is deprecated and "
+                "will be removed in Home Assistant %s; "
+                "Please upgrade Python to %s"
+            ),
+            current_python_version,
+            REQUIRED_NEXT_PYTHON_HA_RELEASE,
+            required_python_version,
         )
-        _LOGGER.warning(msg)
-        persistent_notification.async_create(
-            hass, msg, "Python version", "python_version"
+        issue_registry.async_create_issue(
+            hass,
+            core.DOMAIN,
+            "python_version",
+            is_fixable=False,
+            severity=issue_registry.IssueSeverity.WARNING,
+            breaks_in_ha_version=REQUIRED_NEXT_PYTHON_HA_RELEASE,
+            translation_key="python_version",
+            translation_placeholders={
+                "current_python_version": current_python_version,
+                "required_python_version": required_python_version,
+                "breaks_in_ha_version": REQUIRED_NEXT_PYTHON_HA_RELEASE,
+            },
         )
 
     return hass
@@ -302,7 +348,7 @@ def async_enable_logging(
 
     if not log_no_color:
         try:
-            # pylint: disable=import-outside-toplevel
+            # pylint: disable-next=import-outside-toplevel
             from colorlog import ColoredFormatter
 
             # basicConfig must be called after importing colorlog in order to
@@ -341,7 +387,11 @@ def async_enable_logging(
     )
     threading.excepthook = lambda args: logging.getLogger(None).exception(
         "Uncaught thread exception",
-        exc_info=(args.exc_type, args.exc_value, args.exc_traceback),  # type: ignore[arg-type]
+        exc_info=(  # type: ignore[arg-type]
+            args.exc_type,
+            args.exc_value,
+            args.exc_traceback,
+        ),
     )
 
     # Log errors to a file if we have write access to file or config dir
@@ -358,8 +408,10 @@ def async_enable_logging(
     if (err_path_exists and os.access(err_log_path, os.W_OK)) or (
         not err_path_exists and os.access(err_dir, os.W_OK)
     ):
-
-        err_handler: logging.handlers.RotatingFileHandler | logging.handlers.TimedRotatingFileHandler
+        err_handler: (
+            logging.handlers.RotatingFileHandler
+            | logging.handlers.TimedRotatingFileHandler
+        )
         if log_rotate_days:
             err_handler = logging.handlers.TimedRotatingFileHandler(
                 err_log_path, when="midnight", backupCount=log_rotate_days
@@ -404,7 +456,7 @@ async def async_mount_local_lib_path(config_dir: str) -> str:
 def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
     """Get domains of components to set up."""
     # Filter out the repeating and common config section [homeassistant]
-    domains = {key.split(" ")[0] for key in config if key != core.DOMAIN}
+    domains = {key.partition(" ")[0] for key in config if key != core.DOMAIN}
 
     # Add config entry domains
     if not hass.config.safe_mode:
@@ -418,7 +470,10 @@ def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
 
 
 async def _async_watch_pending_setups(hass: core.HomeAssistant) -> None:
-    """Periodic log of setups that are pending for longer than LOG_SLOW_STARTUP_INTERVAL."""
+    """Periodic log of setups that are pending.
+
+    Pending for longer than LOG_SLOW_STARTUP_INTERVAL.
+    """
     loop_count = 0
     setup_started: dict[str, datetime] = hass.data[DATA_SETUP_STARTED]
     previous_was_empty = True
@@ -431,7 +486,7 @@ async def _async_watch_pending_setups(hass: core.HomeAssistant) -> None:
         _LOGGER.debug("Integration remaining: %s", remaining_with_setup_started)
         if remaining_with_setup_started or not previous_was_empty:
             async_dispatcher_send(
-                hass, SIGNAL_BOOTSTRAP_INTEGRATONS, remaining_with_setup_started
+                hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, remaining_with_setup_started
             )
         previous_was_empty = not remaining_with_setup_started
         await asyncio.sleep(SLOW_STARTUP_CHECK_INTERVAL)
@@ -514,25 +569,6 @@ async def _async_set_up_integrations(
                 to_resolve.add(dep)
 
     _LOGGER.info("Domains to be set up: %s", domains_to_setup)
-
-    def _cache_uname_processor() -> None:
-        """Cache the result of platform.uname().processor in the executor.
-
-        Multiple modules call this function at startup which
-        executes a blocking subprocess call. This is a problem for the
-        asyncio event loop. By primeing the cache of uname we can
-        avoid the blocking call in the event loop.
-        """
-        platform.uname().processor  # pylint: disable=expression-not-assigned
-
-    # Load the registries and cache the result of platform.uname().processor
-    await asyncio.gather(
-        area_registry.async_load(hass),
-        device_registry.async_load(hass),
-        entity_registry.async_load(hass),
-        issue_registry.async_load(hass),
-        hass.async_add_executor_job(_cache_uname_processor),
-    )
 
     # Initialize recorder
     if "recorder" in domains_to_setup:
@@ -622,7 +658,7 @@ async def _async_set_up_integrations(
         _LOGGER.warning("Setup timed out for bootstrap - moving forward")
 
     watch_task.cancel()
-    async_dispatcher_send(hass, SIGNAL_BOOTSTRAP_INTEGRATONS, {})
+    async_dispatcher_send(hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, {})
 
     _LOGGER.debug(
         "Integration setup times: %s",

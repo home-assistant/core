@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from pyuptimerobot import UptimeRobotAuthenticationException
 
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.uptimerobot.const import COORDINATOR_UPDATE_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -30,6 +31,14 @@ async def test_presentation(hass: HomeAssistant) -> None:
     assert entity.state == STATE_UP
     assert entity.attributes["icon"] == SENSOR_ICON
     assert entity.attributes["target"] == MOCK_UPTIMEROBOT_MONITOR["url"]
+    assert entity.attributes["device_class"] == SensorDeviceClass.ENUM
+    assert entity.attributes["options"] == [
+        "down",
+        "not_checked_yet",
+        "pause",
+        "seems_down",
+        "up",
+    ]
 
 
 async def test_unaviable_on_update_failure(hass: HomeAssistant) -> None:

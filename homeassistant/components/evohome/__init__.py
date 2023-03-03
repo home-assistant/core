@@ -146,19 +146,23 @@ def _handle_exception(err) -> None:
 
     except evohomeasync2.AuthenticationError:
         _LOGGER.error(
-            "Failed to authenticate with the vendor's server. "
-            "Check your username and password. NB: Some special password characters "
-            "that work correctly via the website will not work via the web API. "
-            "Message is: %s",
+            (
+                "Failed to authenticate with the vendor's server. Check your username"
+                " and password. NB: Some special password characters that work"
+                " correctly via the website will not work via the web API. Message"
+                " is: %s"
+            ),
             err,
         )
 
     except aiohttp.ClientConnectionError:
         # this appears to be a common occurrence with the vendor's servers
         _LOGGER.warning(
-            "Unable to connect with the vendor's server. "
-            "Check your network and the vendor's service status page. "
-            "Message is: %s",
+            (
+                "Unable to connect with the vendor's server. "
+                "Check your network and the vendor's service status page. "
+                "Message is: %s"
+            ),
             err,
         )
 
@@ -171,8 +175,10 @@ def _handle_exception(err) -> None:
 
         elif err.status == HTTPStatus.TOO_MANY_REQUESTS:
             _LOGGER.warning(
-                "The vendor's API rate limit has been exceeded. "
-                "If this message persists, consider increasing the %s",
+                (
+                    "The vendor's API rate limit has been exceeded. "
+                    "If this message persists, consider increasing the %s"
+                ),
                 CONF_SCAN_INTERVAL,
             )
 
@@ -188,7 +194,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         tokens = dict(app_storage or {})
 
         if tokens.pop(CONF_USERNAME, None) != config[DOMAIN][CONF_USERNAME]:
-            # any tokens won't be valid, and store might be be corrupt
+            # any tokens won't be valid, and store might be corrupt
             await store.async_save({})
             return ({}, None)
 
@@ -224,8 +230,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         loc_config = client_v2.installation_info[loc_idx]
     except IndexError:
         _LOGGER.error(
-            "Config error: '%s' = %s, but the valid range is 0-%s. "
-            "Unable to continue. Fix any configuration errors and restart HA",
+            (
+                "Config error: '%s' = %s, but the valid range is 0-%s. "
+                "Unable to continue. Fix any configuration errors and restart HA"
+            ),
             CONF_LOCATION_IDX,
             loc_idx,
             len(client_v2.installation_info) - 1,
@@ -397,11 +405,11 @@ class EvoBroker:
 
     def __init__(
         self,
-        hass,
+        hass: HomeAssistant,
         client: evohomeasync2.EvohomeClient,
         client_v1: evohomeasync.EvohomeClient | None,
         store: Store[dict[str, Any]],
-        params,
+        params: ConfigType,
     ) -> None:
         """Initialize the evohome client and its data structure."""
         self.hass = hass
@@ -469,10 +477,12 @@ class EvoBroker:
 
         except aiohttp.ClientError as err:
             _LOGGER.warning(
-                "Unable to obtain the latest high-precision temperatures. "
-                "Check your network and the vendor's service status page. "
-                "Proceeding with low-precision temperatures. "
-                "Message is: %s",
+                (
+                    "Unable to obtain the latest high-precision temperatures. "
+                    "Check your network and the vendor's service status page. "
+                    "Proceeding with low-precision temperatures. "
+                    "Message is: %s"
+                ),
                 err,
             )
             self.temps = None  # these are now stale, will fall back to v2 temps

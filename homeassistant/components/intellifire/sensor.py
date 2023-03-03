@@ -14,9 +14,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
@@ -60,14 +59,15 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
         icon="mdi:fire-circle",
         name="Flame Height",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.flameheight,
+        # UI uses 1-5 for flame height, backing lib uses 0-4
+        value_fn=lambda data: (data.flameheight + 1),
     ),
     IntellifireSensorEntityDescription(
         key="temperature",
         name="Temperature",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda data: data.temperature_c,
     ),
     IntellifireSensorEntityDescription(
@@ -75,7 +75,7 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
         name="Target Temperature",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda data: data.thermostat_setpoint_c,
     ),
     IntellifireSensorEntityDescription(

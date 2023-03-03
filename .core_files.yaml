@@ -38,6 +38,7 @@ base_platforms: &base_platforms
   - homeassistant/components/siren/**
   - homeassistant/components/stt/**
   - homeassistant/components/switch/**
+  - homeassistant/components/text/**
   - homeassistant/components/tts/**
   - homeassistant/components/update/**
   - homeassistant/components/vacuum/**
@@ -46,7 +47,6 @@ base_platforms: &base_platforms
 
 # Extra components that trigger the full suite
 components: &components
-  - homeassistant/components/alert/**
   - homeassistant/components/alexa/**
   - homeassistant/components/application_credentials/**
   - homeassistant/components/auth/**
@@ -114,6 +114,10 @@ tests: &tests
   - tests/auth/**
   - tests/backports/**
   - tests/common.py
+  - tests/components/history/**
+  - tests/components/logbook/**
+  - tests/components/recorder/**
+  - tests/components/sensor/**
   - tests/conftest.py
   - tests/hassfest/**
   - tests/helpers/**

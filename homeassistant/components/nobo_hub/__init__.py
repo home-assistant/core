@@ -1,8 +1,6 @@
 """The Nobø Ecohub integration."""
 from __future__ import annotations
 
-import logging
-
 from pynobo import nobo
 
 from homeassistant.config_entries import ConfigEntry
@@ -13,7 +11,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry as dr
 
 from .const import (
     ATTR_HARDWARE_VERSION,
@@ -25,9 +23,7 @@ from .const import (
     NOBO_MANUFACTURER,
 )
 
-PLATFORMS = [Platform.CLIMATE]
-
-_LOGGER = logging.getLogger(__name__)
+PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -37,12 +33,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     discover = entry.data[CONF_AUTO_DISCOVERED]
     ip_address = None if discover else entry.data[CONF_IP_ADDRESS]
     hub = nobo(serial=serial, ip=ip_address, discover=discover, synchronous=False)
-    await hub.start()
+    await hub.connect()
 
     hass.data.setdefault(DOMAIN, {})
 
     # Register hub as device
-    dev_reg = device_registry.async_get(hass)
+    dev_reg = dr.async_get(hass)
     dev_reg.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, hub.hub_info[ATTR_SERIAL])},
@@ -64,6 +60,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(options_update_listener))
+
+    await hub.start()
 
     return True
 

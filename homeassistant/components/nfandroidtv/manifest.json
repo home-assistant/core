@@ -1,10 +1,11 @@
 {
   "domain": "nfandroidtv",
   "name": "Notifications for Android TV / Fire TV",
-  "documentation": "https://www.home-assistant.io/integrations/nfandroidtv",
-  "requirements": ["notifications-android-tv==0.1.5"],
   "codeowners": ["@tkdrob"],
   "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/nfandroidtv",
+  "integration_type": "service",
   "iot_class": "local_push",
-  "loggers": ["notifications_android_tv"]
+  "loggers": ["notifications_android_tv"],
+  "requirements": ["notifications-android-tv==0.1.5"]
 }

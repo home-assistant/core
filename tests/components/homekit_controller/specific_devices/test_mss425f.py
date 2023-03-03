@@ -1,8 +1,6 @@
 """Tests for the Meross MSS425f power strip."""
-
-
-from homeassistant.const import STATE_ON, STATE_UNKNOWN
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import STATE_ON, STATE_UNKNOWN, EntityCategory
+from homeassistant.core import HomeAssistant
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,
@@ -14,7 +12,7 @@ from ..common import (
 )
 
 
-async def test_meross_mss425f_setup(hass):
+async def test_meross_mss425f_setup(hass: HomeAssistant) -> None:
     """Test that a MSS425f can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "mss425f.json")
     await setup_test_accessories(hass, accessories)
@@ -34,38 +32,38 @@ async def test_meross_mss425f_setup(hass):
                 EntityTestInfo(
                     entity_id="button.mss425f_15cc_identify",
                     friendly_name="MSS425F-15cc Identify",
-                    unique_id="homekit-HH41234-aid:1-sid:1-cid:2",
+                    unique_id="00:00:00:00:00:00_1_1_2",
                     entity_category=EntityCategory.DIAGNOSTIC,
                     state=STATE_UNKNOWN,
                 ),
                 EntityTestInfo(
                     entity_id="switch.mss425f_15cc_outlet_1",
                     friendly_name="MSS425F-15cc Outlet-1",
-                    unique_id="homekit-HH41234-12",
+                    unique_id="00:00:00:00:00:00_1_12",
                     state=STATE_ON,
                 ),
                 EntityTestInfo(
                     entity_id="switch.mss425f_15cc_outlet_2",
                     friendly_name="MSS425F-15cc Outlet-2",
-                    unique_id="homekit-HH41234-15",
+                    unique_id="00:00:00:00:00:00_1_15",
                     state=STATE_ON,
                 ),
                 EntityTestInfo(
                     entity_id="switch.mss425f_15cc_outlet_3",
                     friendly_name="MSS425F-15cc Outlet-3",
-                    unique_id="homekit-HH41234-18",
+                    unique_id="00:00:00:00:00:00_1_18",
                     state=STATE_ON,
                 ),
                 EntityTestInfo(
                     entity_id="switch.mss425f_15cc_outlet_4",
                     friendly_name="MSS425F-15cc Outlet-4",
-                    unique_id="homekit-HH41234-21",
+                    unique_id="00:00:00:00:00:00_1_21",
                     state=STATE_ON,
                 ),
                 EntityTestInfo(
                     entity_id="switch.mss425f_15cc_usb",
                     friendly_name="MSS425F-15cc USB",
-                    unique_id="homekit-HH41234-24",
+                    unique_id="00:00:00:00:00:00_1_24",
                     state=STATE_ON,
                 ),
             ],

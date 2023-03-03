@@ -7,7 +7,7 @@ from math import cos, pi, radians, sin
 import random
 
 from homeassistant.components.geo_location import GeolocationEvent
-from homeassistant.const import LENGTH_KILOMETERS
+from homeassistant.const import UnitOfLength
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import track_time_interval
@@ -80,7 +80,7 @@ class DemoManager:
 
         event_name = random.choice(EVENT_NAMES)
         return DemoGeolocationEvent(
-            event_name, radius_in_km, latitude, longitude, LENGTH_KILOMETERS
+            event_name, radius_in_km, latitude, longitude, UnitOfLength.KILOMETERS
         )
 
     def _init_regular_updates(self) -> None:

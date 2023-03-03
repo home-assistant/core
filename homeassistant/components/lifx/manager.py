@@ -7,6 +7,7 @@ from datetime import timedelta
 from typing import Any
 
 import aiolifx_effects
+from aiolifx_themes.themes import Theme, ThemeLibrary
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -14,45 +15,56 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS_PCT,
     ATTR_COLOR_NAME,
     ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
-    ATTR_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
     COLOR_GROUP,
     VALID_BRIGHTNESS,
     VALID_BRIGHTNESS_PCT,
-    preprocess_turn_on_alternatives,
 )
 from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_extract_referenced_entity_ids
 
-from .const import DATA_LIFX_MANAGER, DOMAIN
+from .const import ATTR_THEME, DATA_LIFX_MANAGER, DOMAIN
 from .coordinator import LIFXUpdateCoordinator, Light
 from .util import convert_8_to_16, find_hsbk
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
-SERVICE_EFFECT_PULSE = "effect_pulse"
 SERVICE_EFFECT_COLORLOOP = "effect_colorloop"
+SERVICE_EFFECT_FLAME = "effect_flame"
+SERVICE_EFFECT_MORPH = "effect_morph"
 SERVICE_EFFECT_MOVE = "effect_move"
+SERVICE_EFFECT_PULSE = "effect_pulse"
 SERVICE_EFFECT_STOP = "effect_stop"
 
+ATTR_CHANGE = "change"
+ATTR_CYCLES = "cycles"
+ATTR_DIRECTION = "direction"
+ATTR_PALETTE = "palette"
+ATTR_PERIOD = "period"
 ATTR_POWER_OFF = "power_off"
 ATTR_POWER_ON = "power_on"
-ATTR_PERIOD = "period"
-ATTR_CYCLES = "cycles"
-ATTR_SPREAD = "spread"
-ATTR_CHANGE = "change"
-ATTR_DIRECTION = "direction"
+ATTR_SATURATION_MAX = "saturation_max"
+ATTR_SATURATION_MIN = "saturation_min"
 ATTR_SPEED = "speed"
+ATTR_SPREAD = "spread"
 
+EFFECT_FLAME = "FLAME"
+EFFECT_MORPH = "MORPH"
 EFFECT_MOVE = "MOVE"
 EFFECT_OFF = "OFF"
 
-EFFECT_MOVE_DEFAULT_SPEED = 3.0
+EFFECT_FLAME_DEFAULT_SPEED = 3
+
+EFFECT_MORPH_DEFAULT_SPEED = 3
+EFFECT_MORPH_DEFAULT_THEME = "exciting"
+
+EFFECT_MOVE_DEFAULT_SPEED = 3
 EFFECT_MOVE_DEFAULT_DIRECTION = "right"
 EFFECT_MOVE_DIRECTION_RIGHT = "right"
 EFFECT_MOVE_DIRECTION_LEFT = "left"
@@ -62,8 +74,8 @@ EFFECT_MOVE_DIRECTIONS = [EFFECT_MOVE_DIRECTION_LEFT, EFFECT_MOVE_DIRECTION_RIGH
 PULSE_MODE_BLINK = "blink"
 PULSE_MODE_BREATHE = "breathe"
 PULSE_MODE_PING = "ping"
-PULSE_MODE_STROBE = "strobe"
 PULSE_MODE_SOLID = "solid"
+PULSE_MODE_STROBE = "strobe"
 
 PULSE_MODES = [
     PULSE_MODE_BLINK,
@@ -80,8 +92,8 @@ LIFX_EFFECT_SCHEMA = {
 LIFX_EFFECT_PULSE_SCHEMA = cv.make_entity_service_schema(
     {
         **LIFX_EFFECT_SCHEMA,
-        ATTR_BRIGHTNESS: VALID_BRIGHTNESS,
-        ATTR_BRIGHTNESS_PCT: VALID_BRIGHTNESS_PCT,
+        vol.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
+        vol.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_PCT,
         vol.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
         vol.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP): vol.All(
             vol.Coerce(tuple), vol.ExactSequence((cv.byte, cv.byte, cv.byte))
@@ -98,10 +110,10 @@ LIFX_EFFECT_PULSE_SCHEMA = cv.make_entity_service_schema(
                 )
             ),
         ),
-        vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP): vol.All(
-            vol.Coerce(int), vol.Range(min=1)
+        vol.Exclusive(ATTR_COLOR_TEMP_KELVIN, COLOR_GROUP): vol.All(
+            vol.Coerce(int), vol.Range(min=1500, max=9000)
         ),
-        vol.Exclusive(ATTR_KELVIN, COLOR_GROUP): cv.positive_int,
+        vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP): cv.positive_int,
         ATTR_PERIOD: vol.All(vol.Coerce(float), vol.Range(min=0.05)),
         ATTR_CYCLES: vol.All(vol.Coerce(float), vol.Range(min=1)),
         ATTR_MODE: vol.In(PULSE_MODES),
@@ -111,8 +123,10 @@ LIFX_EFFECT_PULSE_SCHEMA = cv.make_entity_service_schema(
 LIFX_EFFECT_COLORLOOP_SCHEMA = cv.make_entity_service_schema(
     {
         **LIFX_EFFECT_SCHEMA,
-        ATTR_BRIGHTNESS: VALID_BRIGHTNESS,
-        ATTR_BRIGHTNESS_PCT: VALID_BRIGHTNESS_PCT,
+        vol.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
+        vol.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_PCT,
+        ATTR_SATURATION_MAX: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=100)),
+        ATTR_SATURATION_MIN: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=100)),
         ATTR_PERIOD: vol.All(vol.Coerce(float), vol.Clamp(min=0.05)),
         ATTR_CHANGE: vol.All(vol.Coerce(float), vol.Clamp(min=0, max=360)),
         ATTR_SPREAD: vol.All(vol.Coerce(float), vol.Clamp(min=0, max=360)),
@@ -129,12 +143,44 @@ SERVICES = (
     SERVICE_EFFECT_COLORLOOP,
 )
 
+LIFX_EFFECT_FLAME_SCHEMA = cv.make_entity_service_schema(
+    {
+        **LIFX_EFFECT_SCHEMA,
+        ATTR_SPEED: vol.All(vol.Coerce(int), vol.Clamp(min=1, max=25)),
+    }
+)
+
+HSBK_SCHEMA = vol.All(
+    vol.Coerce(tuple),
+    vol.ExactSequence(
+        (
+            vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
+            vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
+            vol.All(vol.Coerce(float), vol.Clamp(min=0, max=100)),
+            vol.All(vol.Coerce(int), vol.Clamp(min=1500, max=9000)),
+        )
+    ),
+)
+
+LIFX_EFFECT_MORPH_SCHEMA = cv.make_entity_service_schema(
+    {
+        **LIFX_EFFECT_SCHEMA,
+        ATTR_SPEED: vol.All(vol.Coerce(int), vol.Clamp(min=1, max=25)),
+        vol.Exclusive(ATTR_THEME, COLOR_GROUP): vol.Optional(
+            vol.In(ThemeLibrary().themes)
+        ),
+        vol.Exclusive(ATTR_PALETTE, COLOR_GROUP): vol.All(
+            cv.ensure_list, [HSBK_SCHEMA]
+        ),
+    }
+)
 
 LIFX_EFFECT_MOVE_SCHEMA = cv.make_entity_service_schema(
     {
         **LIFX_EFFECT_SCHEMA,
         ATTR_SPEED: vol.All(vol.Coerce(float), vol.Clamp(min=0.1, max=60)),
         ATTR_DIRECTION: vol.In(EFFECT_MOVE_DIRECTIONS),
+        ATTR_THEME: vol.Optional(vol.In(ThemeLibrary().themes)),
     }
 )
 
@@ -195,6 +241,20 @@ class LIFXManager:
 
         self.hass.services.async_register(
             DOMAIN,
+            SERVICE_EFFECT_FLAME,
+            service_handler,
+            schema=LIFX_EFFECT_FLAME_SCHEMA,
+        )
+
+        self.hass.services.async_register(
+            DOMAIN,
+            SERVICE_EFFECT_MORPH,
+            service_handler,
+            schema=LIFX_EFFECT_MORPH_SCHEMA,
+        )
+
+        self.hass.services.async_register(
+            DOMAIN,
             SERVICE_EFFECT_MOVE,
             service_handler,
             schema=LIFX_EFFECT_MOVE_SCHEMA,
@@ -223,7 +283,42 @@ class LIFXManager:
                 coordinators.append(coordinator)
                 bulbs.append(coordinator.device)
 
-        if service == SERVICE_EFFECT_MOVE:
+        if service == SERVICE_EFFECT_FLAME:
+            await asyncio.gather(
+                *(
+                    coordinator.async_set_matrix_effect(
+                        effect=EFFECT_FLAME,
+                        speed=kwargs.get(ATTR_SPEED, EFFECT_FLAME_DEFAULT_SPEED),
+                        power_on=kwargs.get(ATTR_POWER_ON, True),
+                    )
+                    for coordinator in coordinators
+                )
+            )
+
+        elif service == SERVICE_EFFECT_MORPH:
+            theme_name = kwargs.get(ATTR_THEME, "exciting")
+            palette = kwargs.get(ATTR_PALETTE, None)
+
+            if palette is not None:
+                theme = Theme()
+                for hsbk in palette:
+                    theme.add_hsbk(hsbk[0], hsbk[1], hsbk[2], hsbk[3])
+            else:
+                theme = ThemeLibrary().get_theme(theme_name)
+
+            await asyncio.gather(
+                *(
+                    coordinator.async_set_matrix_effect(
+                        effect=EFFECT_MORPH,
+                        speed=kwargs.get(ATTR_SPEED, EFFECT_MORPH_DEFAULT_SPEED),
+                        palette=theme.colors,
+                        power_on=kwargs.get(ATTR_POWER_ON, True),
+                    )
+                    for coordinator in coordinators
+                )
+            )
+
+        elif service == SERVICE_EFFECT_MOVE:
             await asyncio.gather(
                 *(
                     coordinator.async_set_multizone_effect(
@@ -232,6 +327,7 @@ class LIFXManager:
                         direction=kwargs.get(
                             ATTR_DIRECTION, EFFECT_MOVE_DEFAULT_DIRECTION
                         ),
+                        theme_name=kwargs.get(ATTR_THEME, None),
                         power_on=kwargs.get(ATTR_POWER_ON, False),
                     )
                     for coordinator in coordinators
@@ -239,7 +335,6 @@ class LIFXManager:
             )
 
         elif service == SERVICE_EFFECT_PULSE:
-
             effect = aiolifx_effects.EffectPulse(
                 power_on=kwargs.get(ATTR_POWER_ON),
                 period=kwargs.get(ATTR_PERIOD),
@@ -250,11 +345,22 @@ class LIFXManager:
             await self.effects_conductor.start(effect, bulbs)
 
         elif service == SERVICE_EFFECT_COLORLOOP:
-            preprocess_turn_on_alternatives(self.hass, kwargs)
-
             brightness = None
+            saturation_max = None
+            saturation_min = None
+
             if ATTR_BRIGHTNESS in kwargs:
                 brightness = convert_8_to_16(kwargs[ATTR_BRIGHTNESS])
+            elif ATTR_BRIGHTNESS_PCT in kwargs:
+                brightness = convert_8_to_16(
+                    round(255 * kwargs[ATTR_BRIGHTNESS_PCT] / 100)
+                )
+
+            if ATTR_SATURATION_MAX in kwargs:
+                saturation_max = int(kwargs[ATTR_SATURATION_MAX] / 100 * 65535)
+
+            if ATTR_SATURATION_MIN in kwargs:
+                saturation_min = int(kwargs[ATTR_SATURATION_MIN] / 100 * 65535)
 
             effect = aiolifx_effects.EffectColorloop(
                 power_on=kwargs.get(ATTR_POWER_ON),
@@ -263,17 +369,18 @@ class LIFXManager:
                 spread=kwargs.get(ATTR_SPREAD),
                 transition=kwargs.get(ATTR_TRANSITION),
                 brightness=brightness,
+                saturation_max=saturation_max,
+                saturation_min=saturation_min,
             )
             await self.effects_conductor.start(effect, bulbs)
 
         elif service == SERVICE_EFFECT_STOP:
-
             await self.effects_conductor.stop(bulbs)
 
             for coordinator in coordinators:
+                await coordinator.async_set_matrix_effect(
+                    effect=EFFECT_OFF, power_on=False
+                )
                 await coordinator.async_set_multizone_effect(
-                    effect=EFFECT_OFF,
-                    speed=EFFECT_MOVE_DEFAULT_SPEED,
-                    direction=EFFECT_MOVE_DEFAULT_DIRECTION,
-                    power_on=False,
+                    effect=EFFECT_OFF, power_on=False
                 )

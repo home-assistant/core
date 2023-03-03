@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 
+import async_timeout
 import pyotgw
 from pyotgw import vars as gw_vars
 from serial import SerialException
@@ -68,10 +69,8 @@ class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return status[gw_vars.OTGW].get(gw_vars.OTGW_ABOUT)
 
             try:
-                await asyncio.wait_for(
-                    test_connection(),
-                    timeout=CONNECTION_TIMEOUT,
-                )
+                async with async_timeout.timeout(CONNECTION_TIMEOUT):
+                    await test_connection()
             except asyncio.TimeoutError:
                 return self._show_form({"base": "timeout_connect"})
             except (ConnectionError, SerialException):
@@ -86,8 +85,7 @@ class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_init(user_input)
 
     async def async_step_import(self, import_config):
-        """
-        Import an OpenTherm Gateway device as a config entry.
+        """Import an OpenTherm Gateway device as a config entry.
 
         This flow is triggered by `async_setup` for configured devices.
         """

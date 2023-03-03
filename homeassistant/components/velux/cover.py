@@ -40,7 +40,7 @@ class VeluxCover(VeluxEntity, CoverEntity):
     """Representation of a Velux cover."""
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
         supported_features = (
             CoverEntityFeature.OPEN

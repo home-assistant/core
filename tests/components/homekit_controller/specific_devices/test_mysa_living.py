@@ -1,8 +1,8 @@
 """Make sure that Mysa Living is enumerated properly."""
-
 from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,
@@ -14,7 +14,7 @@ from ..common import (
 )
 
 
-async def test_mysa_living_setup(hass):
+async def test_mysa_living_setup(hass: HomeAssistant) -> None:
     """Test that the accessory can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "mysa_living.json")
     await setup_test_accessories(hass, accessories)
@@ -34,7 +34,7 @@ async def test_mysa_living_setup(hass):
                 EntityTestInfo(
                     entity_id="climate.mysa_85dda9_thermostat",
                     friendly_name="Mysa-85dda9 Thermostat",
-                    unique_id="homekit-AAAAAAA000-20",
+                    unique_id="00:00:00:00:00:00_1_20",
                     supported_features=ClimateEntityFeature.TARGET_TEMPERATURE,
                     capabilities={
                         "hvac_modes": ["off", "heat", "cool", "heat_cool"],
@@ -46,7 +46,7 @@ async def test_mysa_living_setup(hass):
                 EntityTestInfo(
                     entity_id="sensor.mysa_85dda9_current_humidity",
                     friendly_name="Mysa-85dda9 Current Humidity",
-                    unique_id="homekit-AAAAAAA000-aid:1-sid:20-cid:27",
+                    unique_id="00:00:00:00:00:00_1_20_27",
                     unit_of_measurement=PERCENTAGE,
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     state="40",
@@ -54,7 +54,7 @@ async def test_mysa_living_setup(hass):
                 EntityTestInfo(
                     entity_id="sensor.mysa_85dda9_current_temperature",
                     friendly_name="Mysa-85dda9 Current Temperature",
-                    unique_id="homekit-AAAAAAA000-aid:1-sid:20-cid:25",
+                    unique_id="00:00:00:00:00:00_1_20_25",
                     unit_of_measurement=TEMP_CELSIUS,
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     state="24.1",
@@ -62,7 +62,7 @@ async def test_mysa_living_setup(hass):
                 EntityTestInfo(
                     entity_id="light.mysa_85dda9_display",
                     friendly_name="Mysa-85dda9 Display",
-                    unique_id="homekit-AAAAAAA000-40",
+                    unique_id="00:00:00:00:00:00_1_40",
                     supported_features=0,
                     capabilities={"supported_color_modes": ["brightness"]},
                     state="off",

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -41,7 +42,7 @@ from homeassistant.core import (
 from homeassistant.helpers import (
     collection,
     config_validation as cv,
-    entity_registry,
+    entity_registry as er,
     service,
 )
 from homeassistant.helpers.entity_component import EntityComponent
@@ -225,7 +226,7 @@ class PersonStorageCollection(collection.StorageCollection):
         """Load the Storage collection."""
         await super().async_load()
         self.hass.bus.async_listen(
-            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED, self._entity_registry_updated
+            er.EVENT_ENTITY_REGISTRY_UPDATED, self._entity_registry_updated
         )
 
     async def _entity_registry_updated(self, event) -> None:
@@ -302,7 +303,8 @@ async def filter_yaml_data(hass: HomeAssistant, persons: list[dict]) -> list[dic
                 person_conf[CONF_ID],
             )
             person_invalid_user.append(
-                f"- Person {person_conf[CONF_NAME]} (id: {person_conf[CONF_ID]}) points at invalid user {user_id}"
+                f"- Person {person_conf[CONF_NAME]} (id: {person_conf[CONF_ID]}) points"
+                f" at invalid user {user_id}"
             )
             continue
 
@@ -546,8 +548,10 @@ class Person(collection.CollectionEntity, RestoreEntity):
 
 @websocket_api.websocket_command({vol.Required(CONF_TYPE): "person/list"})
 def ws_list_person(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg
-):
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """List persons."""
     yaml, storage, _ = hass.data[DOMAIN]
     connection.send_result(

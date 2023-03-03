@@ -6,13 +6,16 @@ from collections.abc import Callable, Hashable
 from contextvars import ContextVar
 from typing import TYPE_CHECKING, Any
 
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.auth.models import RefreshToken, User
+from homeassistant.components.http import current_request
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 
 from . import const, messages
+from .util import describe_request
 
 if TYPE_CHECKING:
     from .http import WebSocketAdapter
@@ -43,7 +46,15 @@ class ActiveConnection:
         self.subscriptions: dict[Hashable, Callable[[], Any]] = {}
         self.last_id = 0
         self.supported_features: dict[str, float] = {}
+        self.handlers = self.hass.data[const.DOMAIN]
         current_connection.set(self)
+
+    def get_description(self, request: web.Request | None) -> str:
+        """Return a description of the connection."""
+        description = self.user.name or ""
+        if request:
+            description += " " + describe_request(request)
+        return description
 
     def context(self, msg: dict[str, Any]) -> Context:
         """Return a context."""
@@ -62,12 +73,17 @@ class ActiveConnection:
     @callback
     def async_handle(self, msg: dict[str, Any]) -> None:
         """Handle a single incoming message."""
-        handlers = self.hass.data[const.DOMAIN]
-
-        try:
-            msg = messages.MINIMAL_MESSAGE_SCHEMA(msg)
-            cur_id = msg["id"]
-        except vol.Invalid:
+        if (
+            # Not using isinstance as we don't care about children
+            # as these are always coming from JSON
+            type(msg) is not dict  # pylint: disable=unidiomatic-typecheck
+            or (
+                not (cur_id := msg.get("id"))
+                or type(cur_id) is not int  # pylint: disable=unidiomatic-typecheck
+                or not (type_ := msg.get("type"))
+                or type(type_) is not str  # pylint: disable=unidiomatic-typecheck
+            )
+        ):
             self.logger.error("Received invalid command", msg)
             self.send_message(
                 messages.error_message(
@@ -86,8 +102,8 @@ class ActiveConnection:
             )
             return
 
-        if msg["type"] not in handlers:
-            self.logger.info("Received unknown command: {}".format(msg["type"]))
+        if not (handler_schema := self.handlers.get(type_)):
+            self.logger.info(f"Received unknown command: {type_}")
             self.send_message(
                 messages.error_message(
                     cur_id, const.ERR_UNKNOWN_COMMAND, "Unknown command."
@@ -95,7 +111,7 @@ class ActiveConnection:
             )
             return
 
-        handler, schema = handlers[msg["type"]]
+        handler, schema = handler_schema
 
         try:
             handler(self.hass, self, schema(msg))
@@ -137,6 +153,10 @@ class ActiveConnection:
             err_message = "Unknown error"
             log_handler = self.logger.exception
 
-        log_handler("Error handling message: %s (%s)", err_message, code)
-
         self.send_message(messages.error_message(msg["id"], code, err_message))
+
+        if code:
+            err_message += f" ({code})"
+        err_message += " " + self.get_description(current_request.get())
+
+        log_handler("Error handling message: %s", err_message)

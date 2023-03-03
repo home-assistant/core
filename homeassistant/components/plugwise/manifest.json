@@ -1,11 +1,12 @@
 {
   "domain": "plugwise",
   "name": "Plugwise",
-  "documentation": "https://www.home-assistant.io/integrations/plugwise",
-  "requirements": ["plugwise==0.21.3"],
   "codeowners": ["@CoMPaTech", "@bouwew", "@brefra", "@frenck"],
-  "zeroconf": ["_plugwise._tcp.local."],
   "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/plugwise",
+  "integration_type": "hub",
   "iot_class": "local_polling",
-  "loggers": ["crcmod", "plugwise"]
+  "loggers": ["crcmod", "plugwise"],
+  "requirements": ["plugwise==0.27.5"],
+  "zeroconf": ["_plugwise._tcp.local."]
 }

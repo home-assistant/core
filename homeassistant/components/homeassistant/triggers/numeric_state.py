@@ -41,7 +41,10 @@ def validate_above_below(value):
 
     if above > below:
         raise vol.Invalid(
-            f"A value can never be above {above} and below {below} at the same time. You probably want two different triggers.",
+            (
+                f"A value can never be above {above} and below {below} at the same"
+                " time. You probably want two different triggers."
+            ),
         )
 
     return value

@@ -11,7 +11,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN, LOGGER
 
 
-class GoalZeroDataUpdateCoordinator(DataUpdateCoordinator):
+class GoalZeroDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Data update coordinator for the Goal zero integration."""
 
     config_entry: ConfigEntry

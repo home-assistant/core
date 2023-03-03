@@ -95,7 +95,11 @@ class ProbeEndpoint:
         if component and component in zha_const.PLATFORMS:
             channels = channel_pool.unclaimed_channels()
             entity_class, claimed = zha_regs.ZHA_ENTITIES.get_entity(
-                component, channel_pool.manufacturer, channel_pool.model, channels
+                component,
+                channel_pool.manufacturer,
+                channel_pool.model,
+                channels,
+                channel_pool.quirk_class,
             )
             if entity_class is None:
                 return
@@ -129,7 +133,7 @@ class ProbeEndpoint:
 
             self.probe_single_cluster(component, channel, channel_pool)
 
-        # until we can get rid off registries
+        # until we can get rid of registries
         self.handle_on_off_output_cluster_exception(channel_pool)
 
     @staticmethod
@@ -145,7 +149,11 @@ class ProbeEndpoint:
         unique_id = f"{ep_channels.unique_id}-{channel.cluster.cluster_id}"
 
         entity_class, claimed = zha_regs.ZHA_ENTITIES.get_entity(
-            component, ep_channels.manufacturer, ep_channels.model, channel_list
+            component,
+            ep_channels.manufacturer,
+            ep_channels.model,
+            channel_list,
+            ep_channels.quirk_class,
         )
         if entity_class is None:
             return
@@ -190,12 +198,14 @@ class ProbeEndpoint:
                 channel_pool.manufacturer,
                 channel_pool.model,
                 list(channel_pool.all_channels.values()),
+                channel_pool.quirk_class,
             )
         else:
             matches, claimed = zha_regs.ZHA_ENTITIES.get_multi_entity(
                 channel_pool.manufacturer,
                 channel_pool.model,
                 channel_pool.unclaimed_channels(),
+                channel_pool.quirk_class,
             )
 
         channel_pool.claim_channels(claimed)
@@ -254,7 +264,7 @@ class GroupProbe:
         )
 
     def cleanup(self) -> None:
-        """Clean up on when zha shuts down."""
+        """Clean up on when ZHA shuts down."""
         for unsub in self._unsubs[:]:
             unsub()
             self._unsubs.remove(unsub)

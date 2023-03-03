@@ -6,6 +6,13 @@ import os
 from typing import Any
 
 from adb_shell.auth.keygen import keygen
+from adb_shell.exceptions import (
+    AdbTimeoutError,
+    InvalidChecksumError,
+    InvalidCommandError,
+    InvalidResponseError,
+    TcpTimeoutException,
+)
 from androidtv.adb_manager.adb_manager_sync import ADBPythonSync, PythonRSASigner
 from androidtv.setup_async import (
     AndroidTVAsync,
@@ -43,6 +50,18 @@ from .const import (
     SIGNAL_CONFIG_ENTITY,
 )
 
+ADB_PYTHON_EXCEPTIONS: tuple = (
+    AdbTimeoutError,
+    BrokenPipeError,
+    ConnectionResetError,
+    ValueError,
+    InvalidChecksumError,
+    InvalidCommandError,
+    InvalidResponseError,
+    TcpTimeoutException,
+)
+ADB_TCP_EXCEPTIONS: tuple = (ConnectionResetError, RuntimeError)
+
 PLATFORMS = [Platform.MEDIA_PLAYER]
 RELOAD_OPTIONS = [CONF_STATE_DETECTION_RULES]
 
@@ -79,7 +98,10 @@ def _setup_androidtv(
     else:
         # Use "pure-python-adb" (communicate with ADB server)
         signer = None
-        adb_log = f"using ADB server at {config[CONF_ADB_SERVER_IP]}:{config[CONF_ADB_SERVER_PORT]}"
+        adb_log = (
+            "using ADB server at"
+            f" {config[CONF_ADB_SERVER_IP]}:{config[CONF_ADB_SERVER_PORT]}"
+        )
 
     return adbkey, signer, adb_log
 
@@ -129,9 +151,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Android TV platform."""
 
     state_det_rules = entry.options.get(CONF_STATE_DETECTION_RULES)
-    aftv, error_message = await async_connect_androidtv(
-        hass, entry.data, state_detection_rules=state_det_rules
-    )
+    if CONF_ADB_SERVER_IP not in entry.data:
+        exceptions = ADB_PYTHON_EXCEPTIONS
+    else:
+        exceptions = ADB_TCP_EXCEPTIONS
+
+    try:
+        aftv, error_message = await async_connect_androidtv(
+            hass, entry.data, state_detection_rules=state_det_rules
+        )
+    except exceptions as exc:
+        raise ConfigEntryNotReady(exc) from exc
+
     if not aftv:
         raise ConfigEntryNotReady(error_message)
 

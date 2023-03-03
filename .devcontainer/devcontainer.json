@@ -5,7 +5,7 @@
   "postCreateCommand": "script/setup",
   "postStartCommand": "script/bootstrap",
   "containerEnv": { "DEVCONTAINER": "1" },
-  "appPort": 8123,
+  "appPort": ["8123:8123"],
   "runArgs": ["-e", "GIT_EDITOR=code --wait"],
   "extensions": [
     "ms-python.vscode-pylance",
@@ -17,8 +17,14 @@
   // Please keep this file in sync with settings in home-assistant/.vscode/settings.default.json
   "settings": {
     "python.pythonPath": "/usr/local/bin/python",
-    "python.linting.pylintEnabled": true,
     "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true,
+    "python.formatting.blackPath": "/usr/local/bin/black",
+    "python.linting.flake8Path": "/usr/local/bin/flake8",
+    "python.linting.pycodestylePath": "/usr/local/bin/pycodestyle",
+    "python.linting.pydocstylePath": "/usr/local/bin/pydocstyle",
+    "python.linting.mypyPath": "/usr/local/bin/mypy",
+    "python.linting.pylintPath": "/usr/local/bin/pylint",
     "python.formatting.provider": "black",
     "python.testing.pytestArgs": ["--no-cov"],
     "editor.formatOnPaste": false,

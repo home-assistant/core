@@ -1,7 +1,10 @@
 """Clicksend platform for notify component."""
+from __future__ import annotations
+
 from http import HTTPStatus
 import json
 import logging
+from typing import Any
 
 import aiohttp
 import voluptuous as vol
@@ -14,7 +17,9 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONTENT_TYPE_JSON,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,12 +57,13 @@ async def get_service(hass, config, discovery_info=None):
 class ClicksendNotificationService(BaseNotificationService):
     """Implementation of a notification service for the ClickSend service."""
 
-    def __init__(self, config):
+    def __init__(self, config: ConfigType) -> None:
         """Initialize the service."""
-        self.username = config[CONF_USERNAME]
-        self.api_key = config[CONF_API_KEY]
-        self.recipients = config[CONF_RECIPIENT]
-        self.sender = config[CONF_SENDER]
+        self.username: str = config[CONF_USERNAME]
+        self.api_key: str = config[CONF_API_KEY]
+        self.recipients: list[str] = config[CONF_RECIPIENT]
+        self.sender: str = config[CONF_SENDER]
+
 
     async def async_send_message(self, message="", **kwargs):
         """Send a message to a user."""

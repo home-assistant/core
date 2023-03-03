@@ -10,8 +10,10 @@ from homeassistant.components.wallbox.const import (
     CHARGER_ADDED_RANGE_KEY,
     CHARGER_CHARGING_POWER_KEY,
     CHARGER_CHARGING_SPEED_KEY,
+    CHARGER_CURRENCY_KEY,
     CHARGER_CURRENT_VERSION_KEY,
     CHARGER_DATA_KEY,
+    CHARGER_ENERGY_PRICE_KEY,
     CHARGER_LOCKED_UNLOCKED_KEY,
     CHARGER_MAX_AVAILABLE_POWER_KEY,
     CHARGER_MAX_CHARGING_CURRENT_KEY,
@@ -42,10 +44,12 @@ test_response = json.loads(
             CHARGER_NAME_KEY: "WallboxName",
             CHARGER_DATA_KEY: {
                 CHARGER_MAX_CHARGING_CURRENT_KEY: 24,
+                CHARGER_ENERGY_PRICE_KEY: 0.4,
                 CHARGER_LOCKED_UNLOCKED_KEY: False,
                 CHARGER_SERIAL_NUMBER_KEY: "20000",
                 CHARGER_PART_NUMBER_KEY: "PLP1-0-2-4-9-002-E",
                 CHARGER_SOFTWARE_KEY: {CHARGER_CURRENT_VERSION_KEY: "5.5.10"},
+                CHARGER_CURRENCY_KEY: {"code": "EUR/kWh"},
             },
         }
     )
@@ -167,6 +171,32 @@ async def setup_integration_read_only(hass: HomeAssistant) -> None:
             "https://api.wall-box.com/v2/charger/12345",
             json=test_response,
             status_code=HTTPStatus.FORBIDDEN,
+        )
+
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+
+async def setup_integration_platform_not_ready(hass: HomeAssistant) -> None:
+    """Test wallbox sensor class setup for read only."""
+
+    with requests_mock.Mocker() as mock_request:
+        mock_request.get(
+            "https://user-api.wall-box.com/users/signin",
+            json=authorisation_response,
+            status_code=HTTPStatus.OK,
+        )
+        mock_request.get(
+            "https://api.wall-box.com/chargers/status/12345",
+            json=test_response,
+            status_code=HTTPStatus.OK,
+        )
+        mock_request.put(
+            "https://api.wall-box.com/v2/charger/12345",
+            json=test_response,
+            status_code=HTTPStatus.NOT_FOUND,
         )
 
         entry.add_to_hass(hass)

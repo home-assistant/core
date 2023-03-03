@@ -1,5 +1,5 @@
 """Test the Switcher climate platform."""
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 from aioswitcher.api import SwitcherBaseResponse
 from aioswitcher.device import (
@@ -24,6 +24,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import slugify
 
@@ -34,7 +35,9 @@ ENTITY_ID = f"{CLIMATE_DOMAIN}.{slugify(DEVICE.name)}"
 
 
 @pytest.mark.parametrize("mock_bridge", [[DEVICE]], indirect=True)
-async def test_climate_hvac_mode(hass, mock_bridge, mock_api, monkeypatch):
+async def test_climate_hvac_mode(
+    hass: HomeAssistant, mock_bridge, mock_api, monkeypatch
+) -> None:
     """Test climate hvac mode service."""
     await init_integration(hass)
     assert mock_bridge
@@ -59,7 +62,9 @@ async def test_climate_hvac_mode(hass, mock_bridge, mock_api, monkeypatch):
         await hass.async_block_till_done()
 
         assert mock_api.call_count == 2
-        mock_control_device.assert_called_once()
+        mock_control_device.assert_called_once_with(
+            ANY, state=DeviceState.ON, mode=ThermostatMode.HEAT
+        )
         state = hass.states.get(ENTITY_ID)
         assert state.state == HVACMode.HEAT
 
@@ -79,13 +84,15 @@ async def test_climate_hvac_mode(hass, mock_bridge, mock_api, monkeypatch):
         await hass.async_block_till_done()
 
         assert mock_api.call_count == 4
-        mock_control_device.assert_called_once()
+        mock_control_device.assert_called_once_with(ANY, state=DeviceState.OFF)
         state = hass.states.get(ENTITY_ID)
         assert state.state == HVACMode.OFF
 
 
 @pytest.mark.parametrize("mock_bridge", [[DEVICE]], indirect=True)
-async def test_climate_temperature(hass, mock_bridge, mock_api, monkeypatch):
+async def test_climate_temperature(
+    hass: HomeAssistant, mock_bridge, mock_api, monkeypatch
+) -> None:
     """Test climate temperature service."""
     await init_integration(hass)
     assert mock_bridge
@@ -110,7 +117,7 @@ async def test_climate_temperature(hass, mock_bridge, mock_api, monkeypatch):
         await hass.async_block_till_done()
 
         assert mock_api.call_count == 2
-        mock_control_device.assert_called_once()
+        mock_control_device.assert_called_once_with(ANY, target_temp=22)
         state = hass.states.get(ENTITY_ID)
         assert state.attributes["temperature"] == 22
 
@@ -135,7 +142,9 @@ async def test_climate_temperature(hass, mock_bridge, mock_api, monkeypatch):
 
 
 @pytest.mark.parametrize("mock_bridge", [[DEVICE]], indirect=True)
-async def test_climate_fan_level(hass, mock_bridge, mock_api, monkeypatch):
+async def test_climate_fan_level(
+    hass: HomeAssistant, mock_bridge, mock_api, monkeypatch
+) -> None:
     """Test climate fan level service."""
     await init_integration(hass)
     assert mock_bridge
@@ -160,13 +169,17 @@ async def test_climate_fan_level(hass, mock_bridge, mock_api, monkeypatch):
         await hass.async_block_till_done()
 
         assert mock_api.call_count == 2
-        mock_control_device.assert_called_once()
+        mock_control_device.assert_called_once_with(
+            ANY, fan_level=ThermostatFanLevel.HIGH
+        )
         state = hass.states.get(ENTITY_ID)
         assert state.attributes["fan_mode"] == "high"
 
 
 @pytest.mark.parametrize("mock_bridge", [[DEVICE]], indirect=True)
-async def test_climate_swing(hass, mock_bridge, mock_api, monkeypatch):
+async def test_climate_swing(
+    hass: HomeAssistant, mock_bridge, mock_api, monkeypatch
+) -> None:
     """Test climate swing service."""
     await init_integration(hass)
     assert mock_bridge
@@ -194,7 +207,7 @@ async def test_climate_swing(hass, mock_bridge, mock_api, monkeypatch):
         await hass.async_block_till_done()
 
         assert mock_api.call_count == 2
-        mock_control_device.assert_called_once()
+        mock_control_device.assert_called_once_with(ANY, swing=ThermostatSwing.ON)
         state = hass.states.get(ENTITY_ID)
         assert state.attributes["swing_mode"] == "vertical"
 
@@ -214,13 +227,15 @@ async def test_climate_swing(hass, mock_bridge, mock_api, monkeypatch):
         await hass.async_block_till_done()
 
         assert mock_api.call_count == 4
-        mock_control_device.assert_called_once()
+        mock_control_device.assert_called_once_with(ANY, swing=ThermostatSwing.OFF)
         state = hass.states.get(ENTITY_ID)
         assert state.attributes["swing_mode"] == "off"
 
 
 @pytest.mark.parametrize("mock_bridge", [[DEVICE]], indirect=True)
-async def test_control_device_fail(hass, mock_bridge, mock_api, monkeypatch):
+async def test_control_device_fail(
+    hass: HomeAssistant, mock_bridge, mock_api, monkeypatch
+) -> None:
     """Test control device fail."""
     await init_integration(hass)
     assert mock_bridge
@@ -243,7 +258,9 @@ async def test_control_device_fail(hass, mock_bridge, mock_api, monkeypatch):
             )
 
         assert mock_api.call_count == 2
-        mock_control_device.assert_called_once()
+        mock_control_device.assert_called_once_with(
+            ANY, state=DeviceState.ON, mode=ThermostatMode.HEAT
+        )
         state = hass.states.get(ENTITY_ID)
         assert state.state == STATE_UNAVAILABLE
 
@@ -268,13 +285,17 @@ async def test_control_device_fail(hass, mock_bridge, mock_api, monkeypatch):
             )
 
         assert mock_api.call_count == 4
-        mock_control_device.assert_called_once()
+        mock_control_device.assert_called_once_with(
+            ANY, state=DeviceState.ON, mode=ThermostatMode.HEAT
+        )
         state = hass.states.get(ENTITY_ID)
         assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize("mock_bridge", [[DEVICE]], indirect=True)
-async def test_bad_update_discard(hass, mock_bridge, mock_api, monkeypatch):
+async def test_bad_update_discard(
+    hass: HomeAssistant, mock_bridge, mock_api, monkeypatch
+) -> None:
     """Test that a bad update from device is discarded."""
     await init_integration(hass)
     assert mock_bridge
@@ -295,7 +316,9 @@ async def test_bad_update_discard(hass, mock_bridge, mock_api, monkeypatch):
 
 
 @pytest.mark.parametrize("mock_bridge", [[DEVICE]], indirect=True)
-async def test_climate_control_errors(hass, mock_bridge, mock_api, monkeypatch):
+async def test_climate_control_errors(
+    hass: HomeAssistant, mock_bridge, mock_api, monkeypatch
+) -> None:
     """Test control with settings not supported by device."""
     await init_integration(hass)
     assert mock_bridge

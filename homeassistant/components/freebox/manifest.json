@@ -1,11 +1,11 @@
 {
   "domain": "freebox",
   "name": "Freebox",
+  "codeowners": ["@hacf-fr", "@Quentame"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/freebox",
-  "requirements": ["freebox-api==0.0.10"],
-  "zeroconf": ["_fbx-api._tcp.local."],
-  "codeowners": ["@hacf-fr", "@Quentame"],
   "iot_class": "local_polling",
-  "loggers": ["freebox_api"]
+  "loggers": ["freebox_api"],
+  "requirements": ["freebox-api==1.1.0"],
+  "zeroconf": ["_fbx-api._tcp.local."]
 }

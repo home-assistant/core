@@ -11,6 +11,7 @@ from homeassistant.components.bmw_connected_drive.const import (
     CONF_REFRESH_TOKEN,
 )
 from homeassistant.const import CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from . import FIXTURE_CONFIG_ENTRY, FIXTURE_REFRESH_TOKEN, FIXTURE_USER_INPUT
 
@@ -25,7 +26,7 @@ def login_sideeffect(self: MyBMWAuthentication):
     self.refresh_token = FIXTURE_REFRESH_TOKEN
 
 
-async def test_show_form(hass):
+async def test_show_form(hass: HomeAssistant) -> None:
     """Test that the form is served with no input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -35,7 +36,7 @@ async def test_show_form(hass):
     assert result["step_id"] == "user"
 
 
-async def test_connection_error(hass):
+async def test_connection_error(hass: HomeAssistant) -> None:
     """Test we show user form on BMW connected drive connection error."""
 
     def _mock_get_oauth_token(*args, **kwargs):
@@ -56,7 +57,7 @@ async def test_connection_error(hass):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_full_user_flow_implementation(hass):
+async def test_full_user_flow_implementation(hass: HomeAssistant) -> None:
     """Test registering an integration and finishing flow works."""
     with patch(
         "bimmer_connected.api.authentication.MyBMWAuthentication.login",
@@ -78,7 +79,7 @@ async def test_full_user_flow_implementation(hass):
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_options_flow_implementation(hass):
+async def test_options_flow_implementation(hass: HomeAssistant) -> None:
     """Test config flow options."""
     with patch(
         "bimmer_connected.account.MyBMWAccount.get_vehicles",
