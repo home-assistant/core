@@ -18,10 +18,8 @@ from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
-    DEVICE_CLASSES as SENSOR_DEVICE_CLASSES,
     DOMAIN as SENSOR_DOMAIN,
     PLATFORM_SCHEMA,
-    STATE_CLASSES as SENSOR_STATE_CLASSES,
     SensorDeviceClass,
     SensorEntity,
 )
@@ -268,25 +266,12 @@ class SensorFilter(SensorEntity):
 
         self._state = temp_state.state
 
-        if self._attr_icon is None:
-            self._attr_icon = new_state.attributes.get(ATTR_ICON, ICON)
-
-        if (
-            self._attr_device_class is None
-            and new_state.attributes.get(ATTR_DEVICE_CLASS) in SENSOR_DEVICE_CLASSES
-        ):
-            self._attr_device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
-
-        if (
-            self._attr_state_class is None
-            and new_state.attributes.get(ATTR_STATE_CLASS) in SENSOR_STATE_CLASSES
-        ):
-            self._attr_state_class = new_state.attributes.get(ATTR_STATE_CLASS)
-
-        if self._attr_native_unit_of_measurement is None:
-            self._attr_native_unit_of_measurement = new_state.attributes.get(
-                ATTR_UNIT_OF_MEASUREMENT
-            )
+        self._attr_icon = new_state.attributes.get(ATTR_ICON, ICON)
+        self._attr_device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
+        self._attr_state_class = new_state.attributes.get(ATTR_STATE_CLASS)
+        self._attr_native_unit_of_measurement = new_state.attributes.get(
+            ATTR_UNIT_OF_MEASUREMENT
+        )
 
         if update_ha:
             self.async_write_ha_state()
