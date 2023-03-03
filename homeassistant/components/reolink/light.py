@@ -26,8 +26,8 @@ from .entity import ReolinkCoordinatorEntity
 class ReolinkLightEntityDescriptionMixin:
     """Mixin values for Reolink light entities."""
 
-    is_on_fn: Callable[[Host, int | None], bool]
-    turn_on_off_fn: Callable[[Host, int | None, bool], Any]
+    is_on_fn: Callable[[Host, int], bool]
+    turn_on_off_fn: Callable[[Host, int, bool], Any]
 
 
 @dataclass
@@ -36,9 +36,9 @@ class ReolinkLightEntityDescription(
 ):
     """A class that describes light entities."""
 
-    supported_fn: Callable[[Host, int | None], bool] = lambda api, ch: True
-    get_brightness_fn: Callable[[Host, int | None], int] | None = None
-    set_brightness_fn: Callable[[Host, int | None, float], Any] | None = None
+    supported_fn: Callable[[Host, int], bool] = lambda api, ch: True
+    get_brightness_fn: Callable[[Host, int], int] | None = None
+    set_brightness_fn: Callable[[Host, int, float], Any] | None = None
 
 
 LIGHT_ENTITIES = (
