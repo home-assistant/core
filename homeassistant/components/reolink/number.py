@@ -26,10 +26,10 @@ from .entity import ReolinkCoordinatorEntity
 class ReolinkNumberEntityDescriptionMixin:
     """Mixin values for Reolink number entities."""
 
-    value: Callable[[Host, int | None], float]
-    get_min_value: Callable[[Host, int | None], float]
-    get_max_value: Callable[[Host, int | None], float]
-    method: Callable[[Host, int | None, float], Any]
+    value: Callable[[Host, int], float]
+    get_min_value: Callable[[Host, int], float]
+    get_max_value: Callable[[Host, int], float]
+    method: Callable[[Host, int, float], Any]
 
 
 @dataclass
@@ -39,7 +39,7 @@ class ReolinkNumberEntityDescription(
     """A class that describes number entities."""
 
     mode: NumberMode = NumberMode.AUTO
-    supported: Callable[[Host, int | None], bool] = lambda api, ch: True
+    supported: Callable[[Host, int], bool] = lambda api, ch: True
 
 
 NUMBER_ENTITIES = (
