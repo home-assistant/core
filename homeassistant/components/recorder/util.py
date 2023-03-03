@@ -637,6 +637,7 @@ def database_job_retry_wrapper(
             for attempt in range(attempts):
                 try:
                     job(instance, *args, **kwargs)
+                    return
                 except OperationalError as err:
                     if attempt == attempts - 1 or not _is_retryable_error(
                         instance, err
