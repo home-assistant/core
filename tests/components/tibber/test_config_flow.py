@@ -1,23 +1,22 @@
 """Tests for Tibber config flow."""
+from asyncio import TimeoutError
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
+from aiohttp import ClientError
 import pytest
+from tibber import FatalHttpException, InvalidLogin, RetryableHttpException
 
 from homeassistant import config_entries
 from homeassistant.components.recorder import Recorder
-from homeassistant.components.tibber.const import DOMAIN
 from homeassistant.components.tibber.config_flow import (
-    ERR_TIMEOUT,
     ERR_CLIENT,
+    ERR_TIMEOUT,
     ERR_TOKEN,
 )
+from homeassistant.components.tibber.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from aiohttp import ClientError
-from asyncio import TimeoutError
-from tibber import InvalidLogin, RetryableHttpException, FatalHttpException
 
 
 @pytest.fixture(name="tibber_setup", autouse=True)
@@ -62,7 +61,7 @@ async def test_create_entry(recorder_mock: Recorder, hass: HomeAssistant) -> Non
 
 
 @pytest.mark.parametrize(
-    "exception,expected_error",
+    ("exception", "expected_error"),
     [
         (TimeoutError, ERR_TIMEOUT),
         (ClientError, ERR_CLIENT),
