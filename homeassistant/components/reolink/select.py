@@ -21,7 +21,7 @@ from .entity import ReolinkCoordinatorEntity
 class ReolinkSelectEntityDescriptionMixin:
     """Mixin values for Reolink select entities."""
 
-    method: Callable[[Host, int | None, str], Any]
+    method: Callable[[Host, int, str], Any]
 
 
 @dataclass
@@ -30,9 +30,9 @@ class ReolinkSelectEntityDescription(
 ):
     """A class that describes select entities."""
 
-    supported: Callable[[Host, int | None], bool] = lambda api, ch: True
-    value: Callable[[Host, int | None], str] | None = None
-    get_options: Callable[[Host, int | None], Any] | None = None
+    supported: Callable[[Host, int], bool] = lambda api, ch: True
+    value: Callable[[Host, int], str] | None = None
+    get_options: Callable[[Host, int], Any] | None = None
 
 
 SELECT_ENTITIES = (
