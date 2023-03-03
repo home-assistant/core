@@ -21,8 +21,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import (
-    device_registry as dev_reg,
-    entity_registry as ent_reg,
+    device_registry as dr,
+    entity_registry as er,
     service,
     template,
 )
@@ -96,10 +96,10 @@ def area_mock(hass):
     hass.states.async_set("light.Ceiling", STATE_OFF)
     hass.states.async_set("light.Kitchen", STATE_OFF)
 
-    device_in_area = dev_reg.DeviceEntry(area_id="test-area")
-    device_no_area = dev_reg.DeviceEntry(id="device-no-area-id")
-    device_diff_area = dev_reg.DeviceEntry(area_id="diff-area")
-    device_area_a = dev_reg.DeviceEntry(id="device-area-a-id", area_id="area-a")
+    device_in_area = dr.DeviceEntry(area_id="test-area")
+    device_no_area = dr.DeviceEntry(id="device-no-area-id")
+    device_diff_area = dr.DeviceEntry(area_id="diff-area")
+    device_area_a = dr.DeviceEntry(id="device-area-a-id", area_id="area-a")
 
     mock_device_registry(
         hass,
@@ -111,94 +111,94 @@ def area_mock(hass):
         },
     )
 
-    entity_in_own_area = ent_reg.RegistryEntry(
+    entity_in_own_area = er.RegistryEntry(
         entity_id="light.in_own_area",
         unique_id="in-own-area-id",
         platform="test",
         area_id="own-area",
     )
-    config_entity_in_own_area = ent_reg.RegistryEntry(
+    config_entity_in_own_area = er.RegistryEntry(
         entity_id="light.config_in_own_area",
         unique_id="config-in-own-area-id",
         platform="test",
         area_id="own-area",
         entity_category=EntityCategory.CONFIG,
     )
-    hidden_entity_in_own_area = ent_reg.RegistryEntry(
+    hidden_entity_in_own_area = er.RegistryEntry(
         entity_id="light.hidden_in_own_area",
         unique_id="hidden-in-own-area-id",
         platform="test",
         area_id="own-area",
-        hidden_by=ent_reg.RegistryEntryHider.USER,
+        hidden_by=er.RegistryEntryHider.USER,
     )
-    entity_in_area = ent_reg.RegistryEntry(
+    entity_in_area = er.RegistryEntry(
         entity_id="light.in_area",
         unique_id="in-area-id",
         platform="test",
         device_id=device_in_area.id,
     )
-    config_entity_in_area = ent_reg.RegistryEntry(
+    config_entity_in_area = er.RegistryEntry(
         entity_id="light.config_in_area",
         unique_id="config-in-area-id",
         platform="test",
         device_id=device_in_area.id,
         entity_category=EntityCategory.CONFIG,
     )
-    hidden_entity_in_area = ent_reg.RegistryEntry(
+    hidden_entity_in_area = er.RegistryEntry(
         entity_id="light.hidden_in_area",
         unique_id="hidden-in-area-id",
         platform="test",
         device_id=device_in_area.id,
-        hidden_by=ent_reg.RegistryEntryHider.USER,
+        hidden_by=er.RegistryEntryHider.USER,
     )
-    entity_in_other_area = ent_reg.RegistryEntry(
+    entity_in_other_area = er.RegistryEntry(
         entity_id="light.in_other_area",
         unique_id="in-area-a-id",
         platform="test",
         device_id=device_in_area.id,
         area_id="other-area",
     )
-    entity_assigned_to_area = ent_reg.RegistryEntry(
+    entity_assigned_to_area = er.RegistryEntry(
         entity_id="light.assigned_to_area",
         unique_id="assigned-area-id",
         platform="test",
         device_id=device_in_area.id,
         area_id="test-area",
     )
-    entity_no_area = ent_reg.RegistryEntry(
+    entity_no_area = er.RegistryEntry(
         entity_id="light.no_area",
         unique_id="no-area-id",
         platform="test",
         device_id=device_no_area.id,
     )
-    config_entity_no_area = ent_reg.RegistryEntry(
+    config_entity_no_area = er.RegistryEntry(
         entity_id="light.config_no_area",
         unique_id="config-no-area-id",
         platform="test",
         device_id=device_no_area.id,
         entity_category=EntityCategory.CONFIG,
     )
-    hidden_entity_no_area = ent_reg.RegistryEntry(
+    hidden_entity_no_area = er.RegistryEntry(
         entity_id="light.hidden_no_area",
         unique_id="hidden-no-area-id",
         platform="test",
         device_id=device_no_area.id,
-        hidden_by=ent_reg.RegistryEntryHider.USER,
+        hidden_by=er.RegistryEntryHider.USER,
     )
-    entity_diff_area = ent_reg.RegistryEntry(
+    entity_diff_area = er.RegistryEntry(
         entity_id="light.diff_area",
         unique_id="diff-area-id",
         platform="test",
         device_id=device_diff_area.id,
     )
-    entity_in_area_a = ent_reg.RegistryEntry(
+    entity_in_area_a = er.RegistryEntry(
         entity_id="light.in_area_a",
         unique_id="in-area-a-id",
         platform="test",
         device_id=device_area_a.id,
         area_id="area-a",
     )
-    entity_in_area_b = ent_reg.RegistryEntry(
+    entity_in_area_b = er.RegistryEntry(
         entity_id="light.in_area_b",
         unique_id="in-area-b-id",
         platform="test",
@@ -403,11 +403,12 @@ class TestServiceHelpers(unittest.TestCase):
         assert mock_log.call_count == 3
 
 
-async def test_service_call_entry_id(hass: HomeAssistant) -> None:
+async def test_service_call_entry_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test service call with entity specified by entity registry ID."""
-    registry = ent_reg.async_get(hass)
     calls = async_mock_service(hass, "test_domain", "test_service")
-    entry = registry.async_get_or_create(
+    entry = entity_registry.async_get_or_create(
         "hello", "hue", "1234", suggested_object_id="world"
     )
 
@@ -946,7 +947,7 @@ async def test_domain_control_unauthorized(
     mock_registry(
         hass,
         {
-            "light.kitchen": ent_reg.RegistryEntry(
+            "light.kitchen": er.RegistryEntry(
                 entity_id="light.kitchen",
                 unique_id="kitchen",
                 platform="test_domain",
@@ -987,7 +988,7 @@ async def test_domain_control_admin(
     mock_registry(
         hass,
         {
-            "light.kitchen": ent_reg.RegistryEntry(
+            "light.kitchen": er.RegistryEntry(
                 entity_id="light.kitchen",
                 unique_id="kitchen",
                 platform="test_domain",
@@ -1025,7 +1026,7 @@ async def test_domain_control_no_user(hass: HomeAssistant) -> None:
     mock_registry(
         hass,
         {
-            "light.kitchen": ent_reg.RegistryEntry(
+            "light.kitchen": er.RegistryEntry(
                 entity_id="light.kitchen",
                 unique_id="kitchen",
                 platform="test_domain",
@@ -1213,9 +1214,7 @@ async def test_async_extract_entities_warn_referenced(
 async def test_async_extract_config_entry_ids(hass: HomeAssistant) -> None:
     """Test we can find devices that have no entities."""
 
-    device_no_entities = dev_reg.DeviceEntry(
-        id="device-no-entities", config_entries={"abc"}
-    )
+    device_no_entities = dr.DeviceEntry(id="device-no-entities", config_entries={"abc"})
 
     call = ServiceCall(
         "homeassistant",

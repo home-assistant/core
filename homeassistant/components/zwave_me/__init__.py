@@ -7,8 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry
-from homeassistant.helpers.device_registry import DeviceRegistry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
@@ -24,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     controller = hass.data[DOMAIN][entry.entry_id] = ZWaveMeController(hass, entry)
     if await controller.async_establish_connection():
         await async_setup_platforms(hass, entry, controller)
-        registry = device_registry.async_get(hass)
+        registry = dr.async_get(hass)
         controller.remove_stale_devices(registry)
         return True
     raise ConfigEntryNotReady()
@@ -83,7 +82,7 @@ class ZWaveMeController:
         """Send signal to update device."""
         dispatcher_send(self._hass, f"ZWAVE_ME_INFO_{new_info.id}", new_info)
 
-    def remove_stale_devices(self, registry: DeviceRegistry):
+    def remove_stale_devices(self, registry: dr.DeviceRegistry):
         """Remove old-format devices in the registry."""
         for device_id in self.device_ids:
             device = registry.async_get_device(

@@ -12,7 +12,13 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
+  },
+  "issues": {
+    "insecure_thread_network": {
+      "title": "Insecure Thread network settings detected",
+      "description": "Your Thread network is using a default network key or pass phrase.\n\nThis is a security risk, please create a new Thread network."
     }
   }
 }
