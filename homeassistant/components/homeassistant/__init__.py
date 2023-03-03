@@ -317,32 +317,22 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
             )
 
         services = hass.services.async_services()
-        tasks = (
-            [
-                hass.services.async_call(
-                    domain, SERVICE_RELOAD, context=call.context, blocking=True
-                )
-                for domain, domain_services in services.items()
-                if domain != "notify" and SERVICE_RELOAD in domain_services
-            ]
-            + [
-                hass.services.async_call(
-                    domain, service, context=call.context, blocking=True
-                )
-                for domain, service in {
-                    ha.DOMAIN: SERVICE_RELOAD_CORE_CONFIG,
-                    "frontend": "reload_themes",
-                }.items()
-            ]
-            + [
-                hass.services.async_call(
-                    ha.DOMAIN,
-                    SERVICE_RELOAD_CUSTOM_JINJA,
-                    context=call.context,
-                    blocking=True,
-                )
-            ]
-        )
+        tasks = [
+            hass.services.async_call(
+                domain, SERVICE_RELOAD, context=call.context, blocking=True
+            )
+            for domain, domain_services in services.items()
+            if domain != "notify" and SERVICE_RELOAD in domain_services
+        ] + [
+            hass.services.async_call(
+                domain, service, context=call.context, blocking=True
+            )
+            for domain, service in (
+                (ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG),
+                ("frontend", "reload_themes"),
+                (ha.DOMAIN, SERVICE_RELOAD_CUSTOM_JINJA),
+            )
+        ]
 
         await asyncio.gather(*tasks)
 

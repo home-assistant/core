@@ -74,6 +74,7 @@ from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.thread import ThreadWithException
 
 from . import area_registry, device_registry, entity_registry, location as loc_helper
+from .singleton import singleton
 from .typing import TemplateVarsType
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -2060,21 +2061,20 @@ def _materialize_hass_loader(hass: HomeAssistant) -> None:
     jinja_path = hass.config.path("custom_jinja")
     all_files = [
         item
-        for item in pathlib.Path(jinja_path).rglob("*")
-        if item.is_file() and item.stat().st_size < 1024 * 1024
+        for item in pathlib.Path(jinja_path).rglob("*.jinja")
+        if item.is_file() and item.stat().st_size < 5 * 1024 * 1024
     ]
     for file in all_files:
-        content = file.open().read()
+        content = file.read_text()
         path = str(file.relative_to(jinja_path))
         result[path] = content
 
     _get_hass_loader(hass).sources = result
 
 
+@singleton(_HASS_LOADER)
 def _get_hass_loader(hass: HomeAssistant) -> HassLoader:
-    if _HASS_LOADER not in hass.data:
-        hass.data[_HASS_LOADER] = HassLoader({})
-    return cast(HassLoader, hass.data[_HASS_LOADER])
+    return HassLoader({})
 
 
 class HassLoader(jinja2.BaseLoader):
@@ -2120,8 +2120,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.template_cache: weakref.WeakValueDictionary[
             str | jinja2.nodes.Template, CodeType | str | None
         ] = weakref.WeakValueDictionary()
-        if hass is not None:
-            self.loader = _get_hass_loader(hass)
         self.add_extension("jinja2.ext.loopcontrols")
         self.filters["round"] = forgiving_round
         self.filters["multiply"] = multiply
@@ -2209,6 +2207,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         if hass is None:
             return
+
+        # If hass is available, attach its loader to enable imports.
+        self.loader = _get_hass_loader(hass)
 
         # We mark these as a context functions to ensure they get
         # evaluated fresh with every execution, rather than executed

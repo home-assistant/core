@@ -60,9 +60,9 @@ update_entity:
     entity: {}
 
 reload_custom_jinja:
-  name: Reload custom Jinja2 code
+  name: Reload custom Jinja2 templates
   description: >-
-    Reload Jinja2 code found in the custom_jinja folder in your config.
+    Reload Jinja2 templates found in the custom_jinja folder in your config.
     New values will be applied on the next render of the template.
 
 reload_config_entry:
