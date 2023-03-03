@@ -73,6 +73,7 @@ class FreeboxRouter:
         self.sensors_temperature: dict[str, int] = {}
         self.sensors_connection: dict[str, float] = {}
         self.call_list: list[dict[str, Any]] = []
+        self.home_granted = True
         self.home_devices: dict[str, Any] = {}
         self.listeners: list[dict[str, Any]] = []
 
@@ -156,12 +157,15 @@ class FreeboxRouter:
         """Update Home devices (light, cover, alarm, sensors ...)."""
         new_device = False
         # Home sensors (alarm, pir, switch, remote ...)
-        try:
-            home_nodes: list[Any] = await self._api.home.get_home_nodes() or []
-        except InsufficientPermissionsError:
-            _LOGGER.warning("Home access is not granted")
+        if self.home_granted is True:
+            try:
+                home_nodes: list[Any] = await self._api.home.get_home_nodes() or []
+            except InsufficientPermissionsError:
+                self.home_granted = False
+                _LOGGER.warning("Home access is not granted")
+                return
+        else:
             return
-
         for home_node in home_nodes:
             if home_node["category"] in [
                 "camera",
@@ -237,6 +241,6 @@ class FreeboxRouter:
         return self._api.wifi
 
     @property
-    def home(self) -> Home:
-        """Return the home."""
-        return self._api.home
+    def api(self) -> Freepybox:
+        """Return the call."""
+        return self._api
