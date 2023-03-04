@@ -81,3 +81,5 @@ MEDIA_CLASS_MAP = {
 
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.SENSOR]
 LOGGER = logging.getLogger(__package__)
+
+JELLYFIN_NEW_SESSION = "jellyfin_new_session"
