@@ -125,7 +125,7 @@ class ReolinkButtonEntity(ReolinkCoordinatorEntity, ButtonEntity):
         self.entity_description = entity_description
 
         self._attr_unique_id = (
-            f"{self._host.unique_id}_{self._channel}_{entity_description.key}"
+            f"{self._host.unique_id}_{channel}_{entity_description.key}"
         )
 
     async def async_press(self) -> None:
