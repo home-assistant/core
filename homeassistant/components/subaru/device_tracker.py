@@ -66,7 +66,7 @@ class SubaruDeviceTracker(
             extra_attributes = {
                 "Position timestamp": self.coordinator.data[self.vin][
                     VEHICLE_STATUS
-                ].get(sc.POSITION_TIMESTAMP)
+                ].get(sc.TIMESTAMP)
             }
         return extra_attributes
 
