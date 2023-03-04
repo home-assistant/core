@@ -13,7 +13,7 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTime
+from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -71,6 +71,7 @@ NUMBER_ENTITIES = (
         key="floodlight_brightness",
         name="Floodlight brightness",
         icon="mdi:spotlight-beam",
+        entity_category=EntityCategory.CONFIG,
         native_step=1,
         get_min_value=lambda api, ch: 1,
         get_max_value=lambda api, ch: 100,
@@ -82,6 +83,7 @@ NUMBER_ENTITIES = (
         key="volume",
         name="Volume",
         icon="mdi:volume-high",
+        entity_category=EntityCategory.CONFIG,
         native_step=1,
         get_min_value=lambda api, ch: 0,
         get_max_value=lambda api, ch: 100,
@@ -93,6 +95,7 @@ NUMBER_ENTITIES = (
         key="guard_return_time",
         name="Guard return time",
         icon="mdi:crosshairs-gps",
+        entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         get_min_value=lambda api, ch: 10,
@@ -105,6 +108,7 @@ NUMBER_ENTITIES = (
         key="motion_sensitivity",
         name="Motion sensitivity",
         icon="mdi:motion-sensor",
+        entity_category=EntityCategory.CONFIG,
         native_step=1,
         get_min_value=lambda api, ch: 1,
         get_max_value=lambda api, ch: 50,
@@ -116,6 +120,7 @@ NUMBER_ENTITIES = (
         key="ai_face_sensititvity",
         name="AI face sensitivity",
         icon="mdi:face-recognition",
+        entity_category=EntityCategory.CONFIG,
         native_step=1,
         get_min_value=lambda api, ch: 0,
         get_max_value=lambda api, ch: 100,
@@ -128,6 +133,7 @@ NUMBER_ENTITIES = (
         key="ai_person_sensititvity",
         name="AI person sensitivity",
         icon="mdi:account",
+        entity_category=EntityCategory.CONFIG,
         native_step=1,
         get_min_value=lambda api, ch: 0,
         get_max_value=lambda api, ch: 100,
@@ -140,6 +146,7 @@ NUMBER_ENTITIES = (
         key="ai_vehicle_sensititvity",
         name="AI vehicle sensitivity",
         icon="mdi:car",
+        entity_category=EntityCategory.CONFIG,
         native_step=1,
         get_min_value=lambda api, ch: 0,
         get_max_value=lambda api, ch: 100,
@@ -152,6 +159,7 @@ NUMBER_ENTITIES = (
         key="ai_pet_sensititvity",
         name="AI pet sensitivity",
         icon="mdi:dog-side",
+        entity_category=EntityCategory.CONFIG,
         native_step=1,
         get_min_value=lambda api, ch: 0,
         get_max_value=lambda api, ch: 100,
@@ -194,15 +202,15 @@ class ReolinkNumberEntity(ReolinkCoordinatorEntity, NumberEntity):
         super().__init__(reolink_data, channel)
         self.entity_description = entity_description
 
-        self._attr_native_min_value = self.entity_description.get_min_value(
-            self._host.api, self._channel
+        self._attr_native_min_value = entity_description.get_min_value(
+            self._host.api, channel
         )
-        self._attr_native_max_value = self.entity_description.get_max_value(
-            self._host.api, self._channel
+        self._attr_native_max_value = entity_description.get_max_value(
+            self._host.api, channel
         )
         self._attr_mode = entity_description.mode
         self._attr_unique_id = (
-            f"{self._host.unique_id}_{self._channel}_{entity_description.key}"
+            f"{self._host.unique_id}_{channel}_{entity_description.key}"
         )
 
     @property
