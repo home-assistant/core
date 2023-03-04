@@ -225,8 +225,10 @@ class SQLSensor(SensorEntity):
             for key, value in res.items():
                 if isinstance(value, decimal.Decimal):
                     value = float(value)
-                if isinstance(value, date):
+                elif isinstance(value, date):
                     value = value.isoformat()
+                elif isinstance(value, (bytes, bytearray)):
+                    value = value.hex()
                 self._attr_extra_state_attributes[key] = value
 
         if data is not None and self._template is not None:
