@@ -49,11 +49,12 @@ async def test_flow_user(hass: HomeAssistant, connection) -> None:
             result["flow_id"],
             user_input=CONF_DATA,
         )
+        await hass.async_block_till_done()
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == "user"
-        assert result["data"] == CONF_DATA
-        assert result["result"].unique_id == USER_ID
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "user"
+    assert result["data"] == CONF_DATA
+    assert result["result"].unique_id == USER_ID
 
 
 async def test_flow_user_already_configured(
