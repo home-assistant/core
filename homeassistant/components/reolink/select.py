@@ -22,6 +22,7 @@ class ReolinkSelectEntityDescriptionMixin:
     """Mixin values for Reolink select entities."""
 
     method: Callable[[Host, int, str], Any]
+    get_options: list[str] | Callable[[Host, int], list[str]]
 
 
 @dataclass
@@ -32,7 +33,6 @@ class ReolinkSelectEntityDescription(
 
     supported: Callable[[Host, int], bool] = lambda api, ch: True
     value: Callable[[Host, int], str] | None = None
-    get_options: Callable[[Host, int], Any] | None = None
 
 
 SELECT_ENTITIES = (
@@ -41,7 +41,7 @@ SELECT_ENTITIES = (
         name="Floodlight mode",
         icon="mdi:spotlight-beam",
         translation_key="floodlight_mode",
-        options=[mode.name for mode in SpotlightModeEnum],
+        get_options=[mode.name for mode in SpotlightModeEnum],
         supported=lambda api, ch: api.supported(ch, "floodLight"),
         value=lambda api, ch: SpotlightModeEnum(api.whiteled_mode(ch)).name,
         method=lambda api, ch, name: api.set_whiteled(ch, mode=name),
@@ -51,7 +51,7 @@ SELECT_ENTITIES = (
         name="Day night mode",
         icon="mdi:theme-light-dark",
         translation_key="day_night_mode",
-        options=[mode.name for mode in DayNightEnum],
+        get_options=[mode.name for mode in DayNightEnum],
         supported=lambda api, ch: api.supported(ch, "dayNight"),
         value=lambda api, ch: DayNightEnum(api.daynight_state(ch)).name,
         method=lambda api, ch, name: api.set_daynight(ch, DayNightEnum[name].value),
@@ -102,10 +102,12 @@ class ReolinkSelectEntity(ReolinkCoordinatorEntity, SelectEntity):
             f"{self._host.unique_id}_{self._channel}_{entity_description.key}"
         )
 
-        if entity_description.get_options is not None:
+        if callable(entity_description.get_options):
             self._attr_options = entity_description.get_options(
                 self._host.api, self._channel
             )
+        else:
+            self._attr_options = entity_description.get_options
 
     @property
     def current_option(self) -> str | None:
