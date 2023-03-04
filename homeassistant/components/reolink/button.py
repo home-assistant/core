@@ -1,4 +1,4 @@
-"""This component provides support for Reolink button entities."""
+"""Component providing support for Reolink button entities."""
 from __future__ import annotations
 
 from collections.abc import Callable
