@@ -141,6 +141,20 @@ def test_async_create_task_schedule_coroutine(event_loop) -> None:
     assert len(hass.add_job.mock_calls) == 0
 
 
+def test_async_create_task_schedule_coroutine_with_name(event_loop) -> None:
+    """Test that we schedule coroutines and add jobs to the job pool with a name."""
+    hass = MagicMock(loop=MagicMock(wraps=event_loop))
+
+    async def job():
+        pass
+
+    task = ha.HomeAssistant.async_create_task(hass, job(), "named task")
+    assert len(hass.loop.call_soon.mock_calls) == 0
+    assert len(hass.loop.create_task.mock_calls) == 1
+    assert len(hass.add_job.mock_calls) == 0
+    assert "named task" in str(task)
+
+
 def test_async_run_hass_job_calls_callback() -> None:
     """Test that the callback annotation is respected."""
     hass = MagicMock()
