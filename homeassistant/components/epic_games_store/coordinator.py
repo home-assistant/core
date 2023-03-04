@@ -59,7 +59,7 @@ class EGSUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             key=lambda g: g["title"],
         )
 
-        return_data = self.data or {}
+        return_data: dict[str, dict[str, Any]] = self.data or {}
         for game in promo_games:
             game_title = game["title"]
             game_publisher = game["seller"]["name"]
@@ -86,19 +86,23 @@ class EGSUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 promotion_data = upcoming_promotions[0]["promotionalOffers"][0]
 
             if promotion_data:
-                suffix = "1"
-                if return_data.get(f"{prefix}free_game_{suffix}"):
-                    suffix = "2"
-
-                return_data[f"{prefix}free_game_{suffix}"] = {
-                    "title": game_title,
-                    "publisher": game_publisher,
-                    "url": game_url,
-                    "img_portrait": game_img_portrait,
-                    "img_landscape": game_img_landscape,
-                    "original_price": game_price,
-                    "start_at": dt.parse_datetime(promotion_data["startDate"]),
-                    "end_at": dt.parse_datetime(promotion_data["endDate"]),
-                }
+                return_data[f"{prefix}free_game"] = return_data.get(
+                    f"{prefix}free_game",
+                    {
+                        "start_at": dt.parse_datetime(promotion_data["startDate"]),
+                        "end_at": dt.parse_datetime(promotion_data["endDate"]),
+                        "games": [],
+                    },
+                )
+                return_data[f"{prefix}free_game"]["games"].append(
+                    {
+                        "title": game_title,
+                        "publisher": game_publisher,
+                        "url": game_url,
+                        "img_portrait": game_img_portrait,
+                        "img_landscape": game_img_landscape,
+                        "original_price": game_price,
+                    }
+                )
 
         return return_data

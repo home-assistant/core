@@ -1,6 +1,9 @@
 """Support for Epic Games Store sensors."""
 from __future__ import annotations
 
+from datetime import datetime
+from typing import Any
+
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -13,20 +16,12 @@ PARALLEL_UPDATES = 1
 
 SENSOR_DESCRIPTIONS: list[SensorEntityDescription] = [
     SensorEntityDescription(
-        key="free_game_1",
-        name="Free game 1",
+        key="free_game",
+        name="Free game",
     ),
     SensorEntityDescription(
-        key="free_game_2",
-        name="Free game 2",
-    ),
-    SensorEntityDescription(
-        key="next_free_game_1",
-        name="Next free game 1",
-    ),
-    SensorEntityDescription(
-        key="next_free_game_2",
-        name="Next free game 2",
+        key="next_free_game",
+        name="Next free game",
     ),
 ]
 
@@ -58,33 +53,15 @@ class EGSSensor(SensorEntity):
         )
 
     @property
-    def native_value(self) -> str | None:
+    def native_value(self) -> datetime | None:
         """Return the state of the sensor."""
         if self.coordinator.data:
-            return self.coordinator.data[self.entity_description.key]["title"]
+            return self.coordinator.data[self.entity_description.key]["end_at"]
         return None
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return additional sensor state attributes."""
         if self.coordinator.data:
-            return {
-                "publisher": self.coordinator.data[self.entity_description.key][
-                    "publisher"
-                ],
-                "original_price": self.coordinator.data[self.entity_description.key][
-                    "original_price"
-                ],
-                "url": self.coordinator.data[self.entity_description.key]["url"],
-                "start_at": self.coordinator.data[self.entity_description.key][
-                    "start_at"
-                ],
-                "end_at": self.coordinator.data[self.entity_description.key]["end_at"],
-                "img_portrait": self.coordinator.data[self.entity_description.key][
-                    "img_portrait"
-                ],
-                "img_landscape": self.coordinator.data[self.entity_description.key][
-                    "img_landscape"
-                ],
-            }
-        return {}
+            return self.coordinator.data[self.entity_description.key]
+        return None
