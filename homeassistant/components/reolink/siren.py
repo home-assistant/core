@@ -40,15 +40,16 @@ class ReolinkSirenEntityDescription(
     supported: Callable[[Host, int], bool] = lambda api, ch: True
 
 
+async def async_set_siren(api, ch, on_off, duration):
+    return await api.set_siren(ch, on_off, int(duration)
+
 SIREN_ENTITIES = (
     ReolinkSirenEntityDescription(
         key="siren",
         name="Siren",
         icon="mdi:alarm-light",
         supported=lambda api, ch: api.supported(ch, "siren"),
-        method=lambda api, ch, on_off, duration: api.set_siren(
-            ch, on_off, int(duration)
-        ),
+        method=async_set_siren,
         volume=lambda api, ch, volume: api.set_volume(ch, int(volume)),
     ),
 )
