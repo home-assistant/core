@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime, timedelta
 import logging
 
@@ -155,4 +154,6 @@ class RainBirdCalendarEntity(
             await self.coordinator.async_request_refresh()
             self._apply_coordinator_update()
 
-        asyncio.create_task(refresh())
+        self.coordinator.config_entry.async_create_background_task(
+            self.hass, refresh(), "rainbird.calendar-refresh"
+        )

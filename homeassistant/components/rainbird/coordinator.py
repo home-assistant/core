@@ -122,6 +122,8 @@ class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
 class RainbirdScheduleUpdateCoordinator(DataUpdateCoordinator[Schedule]):
     """Coordinator for rainbird irrigation schedule calls."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
