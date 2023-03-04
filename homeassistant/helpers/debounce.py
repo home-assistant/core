@@ -38,7 +38,11 @@ class Debouncer(Generic[_R_co]):
         self._execute_at_end_of_timer: bool = False
         self._execute_lock = asyncio.Lock()
         self._job: HassJob[[], _R_co] | None = (
-            None if function is None else HassJob(function)
+            None
+            if function is None
+            else HassJob(
+                function, f"debouncer cooldown={cooldown}, immediate={immediate}"
+            )
         )
 
     @property
@@ -51,7 +55,10 @@ class Debouncer(Generic[_R_co]):
         """Update the function being wrapped by the Debouncer."""
         self._function = function
         if self._job is None or function != self._job.target:
-            self._job = HassJob(function)
+            self._job = HassJob(
+                function,
+                f"debouncer cooldown={self.cooldown}, immediate={self.immediate}",
+            )
 
     async def async_call(self) -> None:
         """Call the function."""

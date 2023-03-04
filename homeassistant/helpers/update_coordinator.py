@@ -87,7 +87,10 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
         )
 
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
-        self._job = HassJob(self._handle_refresh_interval)
+        self._job = HassJob(
+            self._handle_refresh_interval,
+            f"DataUpdateCoordinator {name} {update_method}",
+        )
         self._unsub_refresh: CALLBACK_TYPE | None = None
         self._request_refresh_task: asyncio.TimerHandle | None = None
         self.last_update_success = True
