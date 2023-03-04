@@ -746,7 +746,10 @@ class ConfigEntry:
 
     @callback
     def async_create_task(
-        self, hass: HomeAssistant, target: Coroutine[Any, Any, _R]
+        self,
+        hass: HomeAssistant,
+        target: Coroutine[Any, Any, _R],
+        name: str | None = None,
     ) -> asyncio.Task[_R]:
         """Create a task from within the eventloop.
 
@@ -754,7 +757,7 @@ class ConfigEntry:
 
         target: target to call.
         """
-        task = hass.async_create_task(target)
+        task = hass.async_create_task(target, f"{name} {self.domain} {self.entry_id}")
         self._tasks.add(task)
         task.add_done_callback(self._tasks.remove)
 

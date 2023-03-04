@@ -133,5 +133,8 @@ class Debouncer(Generic[_R_co]):
         """Schedule a timer."""
         self._timer_task = self.hass.loop.call_later(
             self.cooldown,
-            lambda: self.hass.async_create_task(self._handle_timer_finish()),
+            lambda: self.hass.async_create_task(
+                self._handle_timer_finish(),
+                f"debouncer {self._job} finish cooldown={self.cooldown}, immediate={self.immediate}",
+            ),
         )

@@ -116,7 +116,7 @@ class Store(Generic[_T]):
         """
         if self._load_task is None:
             self._load_task = self.hass.async_create_task(
-                self._async_load(), f"load {self.key}"
+                self._async_load(), f"Storage load {self.key}"
             )
 
         return await self._load_task
