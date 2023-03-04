@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
+from matter_server.client.models.node import MatterNode
 from matter_server.common.helpers.util import dataclass_from_dict
-from matter_server.common.models.events import EventType
-from matter_server.common.models.node import MatterNode
+from matter_server.common.models import EventType, MatterNodeData
 import pytest
 
 from homeassistant.components.matter.const import DOMAIN
@@ -124,9 +124,11 @@ async def test_node_added_subscription(
 
     node_added_callback = matter_client.subscribe.call_args[0][0]
     node_data = load_and_parse_node_fixture("onoff-light")
-    node = dataclass_from_dict(
-        MatterNode,
-        node_data,
+    node = MatterNode(
+        dataclass_from_dict(
+            MatterNodeData,
+            node_data,
+        )
     )
 
     entity_state = hass.states.get("light.mock_onoff_light")
