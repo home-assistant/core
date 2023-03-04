@@ -293,7 +293,6 @@ class MqttSensor(MqttEntity, RestoreSensor):
                 )
                 self._attr_native_value = None
                 return
-
             if self.device_class == SensorDeviceClass.DATE:
                 self._attr_native_value = payload_datetime.date()
                 return
