@@ -46,8 +46,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.test_connection(
                     user_input[CONF_HOST], user_input[CONF_PASSWORD]
                 )
-            except (PyVLXException, ConnectionError):
+            except (PyVLXException, ConnectionError) as err:
                 errors["base"] = "cannot_connect"
+                _LOGGER.debug("Cannot connect: %s", err)
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception: %s", err)
                 return self.async_abort(reason="unknown")
