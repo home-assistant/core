@@ -166,11 +166,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         if not self._currently_playing:
             return None
         item = self._currently_playing.get("item") or {}
-        return (
-            MediaType.PODCAST
-            if item.get("type") == MediaType.EPISODE
-            else MediaType.MUSIC
-        )
+        return MediaType.PODCAST if item.get("type") == MediaType.EPISODE else MediaType.MUSIC
 
     @property
     def media_duration(self) -> int | None:
