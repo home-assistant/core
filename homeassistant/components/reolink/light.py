@@ -141,7 +141,7 @@ class ReolinkLightEntity(ReolinkCoordinatorEntity, LightEntity):
         )
         self.async_write_ha_state()
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
         if (
             brightness := kwargs.get(ATTR_BRIGHTNESS)
