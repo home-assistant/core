@@ -9,6 +9,7 @@ from reolink_aio.api import Host
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -56,6 +57,7 @@ SWITCH_ENTITIES = (
         key="record_audio",
         name="Record audio",
         icon="mdi:microphone",
+        entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "audio"),
         value=lambda api, ch: api.audio_record(ch),
         method=lambda api, ch, value: api.set_audio(ch, value),
@@ -64,6 +66,7 @@ SWITCH_ENTITIES = (
         key="siren_on_event",
         name="Siren on event",
         icon="mdi:alarm-light",
+        entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "siren"),
         value=lambda api, ch: api.audio_alarm_enabled(ch),
         method=lambda api, ch, value: api.set_audio_alarm(ch, value),
@@ -72,6 +75,7 @@ SWITCH_ENTITIES = (
         key="auto_tracking",
         name="Auto tracking",
         icon="mdi:target-account",
+        entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "auto_track"),
         value=lambda api, ch: api.auto_track_enabled(ch),
         method=lambda api, ch, value: api.set_auto_tracking(ch, value),
@@ -80,6 +84,7 @@ SWITCH_ENTITIES = (
         key="auto_focus",
         name="Auto focus",
         icon="mdi:focus-field",
+        entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "auto_focus"),
         value=lambda api, ch: api.autofocus_enabled(ch),
         method=lambda api, ch, value: api.set_autofocus(ch, value),
@@ -88,6 +93,7 @@ SWITCH_ENTITIES = (
         key="gaurd_return",
         name="Guard return",
         icon="mdi:crosshairs-gps",
+        entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "ptz_guard"),
         value=lambda api, ch: api.ptz_guard_enabled(ch),
         method=lambda api, ch, value: api.set_ptz_guard(ch, enable=value),
@@ -99,6 +105,7 @@ NVR_SWITCH_ENTITIES = (
         key="email",
         name="Email on event",
         icon="mdi:email",
+        entity_category=EntityCategory.CONFIG,
         supported=lambda api: api.supported(None, "email"),
         value=lambda api: api.email_enabled(),
         method=lambda api, value: api.set_email(None, value),
@@ -107,6 +114,7 @@ NVR_SWITCH_ENTITIES = (
         key="ftp_upload",
         name="FTP upload",
         icon="mdi:swap-horizontal",
+        entity_category=EntityCategory.CONFIG,
         supported=lambda api: api.supported(None, "ftp"),
         value=lambda api: api.ftp_enabled(),
         method=lambda api, value: api.set_ftp(None, value),
@@ -115,6 +123,7 @@ NVR_SWITCH_ENTITIES = (
         key="push_notifications",
         name="Push notifications",
         icon="mdi:message-badge",
+        entity_category=EntityCategory.CONFIG,
         supported=lambda api: api.supported(None, "push"),
         value=lambda api: api.push_enabled(),
         method=lambda api, value: api.set_push(None, value),
@@ -131,6 +140,7 @@ NVR_SWITCH_ENTITIES = (
         key="buzzer",
         name="Buzzer on event",
         icon="mdi:room-service",
+        entity_category=EntityCategory.CONFIG,
         supported=lambda api: api.supported(None, "buzzer"),
         value=lambda api: api.buzzer_enabled(),
         method=lambda api, value: api.set_buzzer(None, value),
@@ -178,7 +188,7 @@ class ReolinkSwitchEntity(ReolinkCoordinatorEntity, SwitchEntity):
         self.entity_description = entity_description
 
         self._attr_unique_id = (
-            f"{self._host.unique_id}_{self._channel}_{entity_description.key}"
+            f"{self._host.unique_id}_{channel}_{entity_description.key}"
         )
 
     @property
