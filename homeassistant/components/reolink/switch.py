@@ -182,16 +182,16 @@ class ReolinkSwitchEntity(ReolinkCoordinatorEntity, SwitchEntity):
         )
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if switch is on."""
         return self.entity_description.value(self._host.api, self._channel)
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.entity_description.method(self._host.api, self._channel, True)
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.entity_description.method(self._host.api, self._channel, False)
         self.async_write_ha_state()
@@ -214,16 +214,16 @@ class ReolinkNVRSwitchEntity(ReolinkBaseCoordinatorEntity, SwitchEntity):
         self._attr_unique_id = f"{self._host.unique_id}_{entity_description.key}"
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if switch is on."""
         return self.entity_description.value(self._host.api)
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.entity_description.method(self._host.api, True)
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.entity_description.method(self._host.api, False)
         self.async_write_ha_state()
