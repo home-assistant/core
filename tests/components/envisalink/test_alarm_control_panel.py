@@ -33,7 +33,7 @@ async def test_alarm_control_panel_state(
 
 
 @pytest.mark.parametrize(
-    "json_key,alarm_state",
+    ("json_key", "alarm_state"),
     [
         ("alarm", STATE_ALARM_TRIGGERED),
         ("armed_zero_entry_delay", STATE_ALARM_ARMED_NIGHT),
@@ -62,16 +62,52 @@ async def test_alarm_control_panel_update(
 
 
 @pytest.mark.parametrize(
-    "service_call,json_key,alarm_state,code",
+    ("service_call", "patch_name", "json_key", "alarm_state", "code"),
     [
-        ("alarm_trigger", "alarm", STATE_ALARM_TRIGGERED, 1234),
-        ("alarm_trigger", "alarm", STATE_ALARM_TRIGGERED, None),
-        ("alarm_arm_night", "armed_zero_entry_delay", STATE_ALARM_ARMED_NIGHT, 1234),
-        ("alarm_arm_night", "armed_zero_entry_delay", STATE_ALARM_ARMED_NIGHT, None),
-        ("alarm_arm_away", "armed_away", STATE_ALARM_ARMED_AWAY, 1234),
-        ("alarm_arm_away", "armed_away", STATE_ALARM_ARMED_AWAY, None),
-        ("alarm_arm_home", "armed_stay", STATE_ALARM_ARMED_HOME, 1234),
-        ("alarm_arm_home", "armed_stay", STATE_ALARM_ARMED_HOME, None),
+        ("alarm_trigger", "panic_alarm", "alarm", STATE_ALARM_TRIGGERED, 1234),
+        ("alarm_trigger", "panic_alarm", "alarm", STATE_ALARM_TRIGGERED, None),
+        (
+            "alarm_arm_night",
+            "arm_night_partition",
+            "armed_zero_entry_delay",
+            STATE_ALARM_ARMED_NIGHT,
+            1234,
+        ),
+        (
+            "alarm_arm_night",
+            "arm_night_partition",
+            "armed_zero_entry_delay",
+            STATE_ALARM_ARMED_NIGHT,
+            None,
+        ),
+        (
+            "alarm_arm_away",
+            "arm_away_partition",
+            "armed_away",
+            STATE_ALARM_ARMED_AWAY,
+            1234,
+        ),
+        (
+            "alarm_arm_away",
+            "arm_away_partition",
+            "armed_away",
+            STATE_ALARM_ARMED_AWAY,
+            None,
+        ),
+        (
+            "alarm_arm_home",
+            "arm_stay_partition",
+            "armed_stay",
+            STATE_ALARM_ARMED_HOME,
+            1234,
+        ),
+        (
+            "alarm_arm_home",
+            "arm_stay_partition",
+            "armed_stay",
+            STATE_ALARM_ARMED_HOME,
+            None,
+        ),
     ],
 )
 async def test_arming_modes(
@@ -79,6 +115,7 @@ async def test_arming_modes(
     mock_config_entry,
     init_integration,
     service_call,
+    patch_name,
     json_key,
     alarm_state,
     code,
@@ -94,7 +131,7 @@ async def test_arming_modes(
 
     with patch.object(
         EnvisalinkAlarmPanel,
-        "arm_away_partition",
+        patch_name,
         autospec=True,
     ):
         # Arm alarm
@@ -135,7 +172,7 @@ async def test_arming_modes(
 
 
 @pytest.mark.parametrize(
-    "service_call,patch_name,fields,should_succeed",
+    ("service_call", "patch_name", "fields", "should_succeed"),
     [
         ("alarm_keypress", "keypresses_to_partition", {}, False),
         ("alarm_keypress", "keypresses_to_partition", {"keypress": "*104#"}, True),

@@ -25,7 +25,7 @@ async def test_binary_sensor_state(
     assert state
     assert state.state == STATE_OFF
     assert state.attributes.get("zone") == 1
-    assert state.attributes.get("last_fault") is None  # TODO
+    assert state.attributes.get("last_tripped_time")
     assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.OPENING
 
 
@@ -37,10 +37,13 @@ async def test_binary_sensor_update(
 
     er.async_get(hass)
 
+    max_ticks = 0xFFFF
+    seconds_per_tick = 5
+    max_seconds = max_ticks * seconds_per_tick
     zone_info = {
         1: 100,
         3: 5000,
-        7: 70000 * 5,  # Make sure we exceed the max zone timer value
+        7: (max_seconds + 10) * 5,  # Exceed the max zone timer value
     }
     for zone, seconds_ago in zone_info.items():
         controller.controller.alarm_state["zone"][zone]["status"]["open"] = True
@@ -55,7 +58,7 @@ async def test_binary_sensor_update(
 
         last_trip_time = state.attributes.get(ATTR_LAST_TRIP_TIME)
 
-        if seconds_ago < (65536 * 5):
+        if seconds_ago < max_seconds:
             now = dt_util.now()
             fault_time = datetime.datetime.fromisoformat(last_trip_time)
             delta = now - fault_time

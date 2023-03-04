@@ -1,4 +1,4 @@
-"""Test the Envisalink binary sensors."""
+"""Test the Envisalink switches."""
 
 from unittest.mock import patch
 
@@ -29,7 +29,7 @@ async def _async_toggle_switch(
 async def test_switch_state(
     hass: HomeAssistant, mock_config_entry, init_integration
 ) -> None:
-    """Test the createion and values of the Envisalink binary sensors."""
+    """Test the creation and values of the Envisalink switches."""
     er.async_get(hass)
 
     state = hass.states.get("switch.test_alarm_name_zone_1_bypass")
@@ -63,3 +63,10 @@ async def test_switch_toggle(
         state = hass.states.get("switch.test_alarm_name_zone_1_bypass")
         assert state
         assert state.state == STATE_OFF
+
+        # And back on
+        await _async_toggle_switch(hass, controller, True)
+
+        state = hass.states.get("switch.test_alarm_name_zone_1_bypass")
+        assert state
+        assert state.state == STATE_ON

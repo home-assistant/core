@@ -1,4 +1,4 @@
-"""Test the Envisalink binary sensors."""
+"""Test the Envisalink sensors."""
 
 from homeassistant.components.envisalink.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -14,6 +14,24 @@ async def test_sensor_state(
     state = hass.states.get("sensor.test_alarm_name_partition_1_keypad")
     assert state
     assert state.state == "N/A"
+    assert state.attributes["ac_present"] is True
+    assert state.attributes["beep"] is False
+    assert state.attributes["armed_bypass"] is False
+    assert state.attributes["chime"] is False
+    assert state.attributes["entry_delay"] is False
+    assert state.attributes["exit_delay"] is False
+    assert state.attributes["last_armed_by_user"] == ""
+    assert state.attributes["last_disarmed_by_user"] == ""
+    assert state.attributes["ready"] is False
+    assert state.attributes["bat_trouble"] is False
+    assert state.attributes["trouble"] is False
+    assert state.attributes["fire"] is False
+    assert state.attributes["alarm"] is False
+    assert state.attributes["alarm_fire_zone"] is False
+    assert state.attributes["alarm_in_memory"] is False
+    assert state.attributes["armed_away"] is False
+    assert state.attributes["armed_stay"] is False
+    assert state.attributes["armed_zero_entry_delay"] is False
 
 
 async def test_sensor_update(

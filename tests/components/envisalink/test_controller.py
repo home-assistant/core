@@ -1,4 +1,4 @@
-"""Test the Envisalink config flow."""
+"""Test the Envisalink controller."""
 
 from functools import partial
 from unittest.mock import patch

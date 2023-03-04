@@ -1,4 +1,4 @@
-"""Test the Envisalink config flow."""
+"""Test the Envisalink initialization."""
 
 from unittest.mock import PropertyMock, patch
 
@@ -13,6 +13,7 @@ from homeassistant.components.envisalink.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -25,7 +26,6 @@ async def test_load_unload_config_entry(hass: HomeAssistant, init_integration) -
 
     assert hass.data[DOMAIN]
     assert hass.data[DOMAIN][entries[0].entry_id]
-    # TODO
 
     # Test a reload
     result = hass.config_entries.async_update_entry(init_integration, options={})
@@ -68,7 +68,7 @@ async def test_async_setup_import_update(
     mock_envisalink_alarm_panel,
     mock_config_entry_yaml_options,
 ) -> None:
-    """Test importing from configuration.yaml."""
+    """Test importing from configuration.yaml with differences from the config entry."""
 
     mock_config_entry_yaml_options.add_to_hass(hass)
 
@@ -79,16 +79,20 @@ async def test_async_setup_import_update(
     assert entries
     assert len(entries) == 1
 
-    config_entry = entries[0]
-    #    assert options == {}
-    #    TODO
+    # Confirm the zone bypass switches don't exit yet
+    state = hass.states.get("switch.family_room_bypass")
+    assert not state
+
+    state = hass.states.get("switch.basement_bypass")
+    assert not state
 
     # Unload the integration
+    config_entry = entries[0]
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
     assert not hass.data.get(DOMAIN)
 
-    # Add the zone bypass switch option
+    # Add the zone bypass switch option to the config entry
     config_entry.add_to_hass(hass)
     options = dict(config_entry.options)
     options[CONF_CREATE_ZONE_BYPASS_SWITCHES] = True
@@ -98,8 +102,13 @@ async def test_async_setup_import_update(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
+    state = hass.states.get("switch.family_room_bypass")
+    assert state
+    assert state.state == STATE_OFF
 
-#   TODO check zone bypass switches
+    state = hass.states.get("switch.basement_bypass")
+    assert state
+    assert state.state == STATE_OFF
 
 
 @pytest.mark.parametrize(
@@ -159,7 +168,7 @@ async def test_mismatched_mac(
 async def test_init_honeywell(
     hass: HomeAssistant, mock_config_entry_honeywell, mock_envisalink_alarm_panel
 ) -> None:
-    """Test initiatlizing the integration as a Honeywell panel."""
+    """Test initializing the integration as a Honeywell panel."""
     with patch.object(
         EnvisalinkAlarmPanel,
         "panel_type",
