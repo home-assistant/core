@@ -41,7 +41,8 @@ class ReolinkSirenEntityDescription(
 
 
 async def async_set_siren(api, ch, on_off, duration):
-    return await api.set_siren(ch, on_off, int(duration)
+    """Control the siren."""
+    return await api.set_siren(ch, on_off, int(duration))
 
 SIREN_ENTITIES = (
     ReolinkSirenEntityDescription(
