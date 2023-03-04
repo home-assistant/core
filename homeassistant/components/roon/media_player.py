@@ -346,7 +346,7 @@ class RoonDevice(MediaPlayerEntity):
 
     def set_volume_level(self, volume: float) -> None:
         """Send new volume_level to device."""
-        volume = int(volume * 100)
+        volume = volume * 100
         self._server.roonapi.set_volume_percent(self.output_id, volume)
 
     def mute_volume(self, mute=True):
