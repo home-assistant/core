@@ -86,8 +86,6 @@ class ReolinkSirenEntity(ReolinkCoordinatorEntity, SirenEntity):
         if (volume := kwargs.get(ATTR_VOLUME_LEVEL)) is not None:
             await self._host.api.set_volume(self._channel, int(volume * 100))
         duration = kwargs.get(ATTR_DURATION)
-        if duration is not None:
-            duration = int(duration)
         await self._host.api.set_siren(self._channel, True, duration)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
