@@ -35,7 +35,7 @@ class EGSUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=SCAN_INTERVAL,
         )
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Update data via library."""
         try:
             data = await self.hass.async_add_executor_job(self._api.get_free_games)
