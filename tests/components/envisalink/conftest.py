@@ -233,9 +233,10 @@ def mock_config_entry_yaml_import(mock_unique_id) -> MockConfigEntry:
     """Return the config data from after a configuration.yaml import."""
     data = _build_yaml_import_data()
     options = {}
-    for key in CONF_PANIC, CONF_EVL_KEEPALIVE, CONF_ZONEDUMP_INTERVAL, CONF_TIMEOUT:
+    for key in CONF_PANIC, CONF_EVL_KEEPALIVE, CONF_TIMEOUT:
         options[key] = data[key]
         data.pop(key)
+    data.pop(CONF_ZONEDUMP_INTERVAL)
     data[CONF_ZONE_SET] = "1-8"
     data[CONF_PARTITION_SET] = "1"
 
@@ -253,7 +254,6 @@ def mock_options_data_dsc():
     return {
         CONF_PANIC: "panic",
         CONF_EVL_KEEPALIVE: 60,
-        CONF_ZONEDUMP_INTERVAL: 30,
         CONF_TIMEOUT: 10,
         CONF_CREATE_ZONE_BYPASS_SWITCHES: True,
     }
@@ -265,7 +265,6 @@ def mock_options_data_honeywell():
     return {
         CONF_PANIC: "panic",
         CONF_EVL_KEEPALIVE: 60,
-        CONF_ZONEDUMP_INTERVAL: 30,
         CONF_TIMEOUT: 10,
         CONF_HONEYWELL_ARM_NIGHT_MODE: DEFAULT_HONEYWELL_ARM_NIGHT_MODE,
     }

@@ -195,7 +195,7 @@ def _transform_yaml_to_config_entry(yaml: dict[str, Any]) -> dict[str, Any]:
     zones = yaml.get(CONF_ZONES)
     if zones:
         zone_set = set()
-        for zone_num in zones.keys():
+        for zone_num in zones:
             zone_set.add(int(zone_num))
         zone_spec = generate_range_string(zone_set)
         if zone_spec is not None:
@@ -208,7 +208,7 @@ def _transform_yaml_to_config_entry(yaml: dict[str, Any]) -> dict[str, Any]:
     partitions = yaml.get(CONF_PARTITIONS)
     if partitions:
         partition_set = set()
-        for part_num in partitions.keys():
+        for part_num in partitions:
             partition_set.add(int(part_num))
         partition_spec = generate_range_string(partition_set)
         if partition_spec is not None:
@@ -227,7 +227,6 @@ def _transform_yaml_to_config_entry(yaml: dict[str, Any]) -> dict[str, Any]:
     for key in (
         CONF_PANIC,
         CONF_EVL_KEEPALIVE,
-        CONF_ZONEDUMP_INTERVAL,
         CONF_TIMEOUT,
         CONF_CREATE_ZONE_BYPASS_SWITCHES,
     ):
@@ -270,7 +269,6 @@ def _async_import_options_from_data_if_missing(
     for importable_option in (
         CONF_PANIC,
         CONF_EVL_KEEPALIVE,
-        CONF_ZONEDUMP_INTERVAL,
         CONF_TIMEOUT,
         CONF_CREATE_ZONE_BYPASS_SWITCHES,
     ):

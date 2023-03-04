@@ -29,7 +29,6 @@ from .const import (
     CONF_PASS,
     CONF_USERNAME,
     CONF_ZONE_SET,
-    CONF_ZONEDUMP_INTERVAL,
     DEFAULT_ALARM_NAME,
     DEFAULT_CREATE_ZONE_BYPASS_SWITCHES,
     DEFAULT_DISCOVERY_PORT,
@@ -40,7 +39,6 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_TIMEOUT,
     DEFAULT_USERNAME,
-    DEFAULT_ZONEDUMP_INTERVAL,
     DOMAIN,
     HONEYWELL_ARM_MODE_INSTANT_LABEL,
     HONEYWELL_ARM_MODE_INSTANT_VALUE,
@@ -188,12 +186,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_EVL_KEEPALIVE, DEFAULT_KEEPALIVE
                 ),
             ): vol.All(vol.Coerce(int), vol.Range(min=15)),
-            vol.Optional(
-                CONF_ZONEDUMP_INTERVAL,
-                default=self.config_entry.options.get(
-                    CONF_ZONEDUMP_INTERVAL, DEFAULT_ZONEDUMP_INTERVAL
-                ),
-            ): vol.Coerce(int),
             vol.Optional(
                 CONF_TIMEOUT,
                 default=self.config_entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),

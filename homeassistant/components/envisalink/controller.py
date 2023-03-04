@@ -21,13 +21,11 @@ from .const import (
     CONF_EVL_PORT,
     CONF_PASS,
     CONF_USERNAME,
-    CONF_ZONEDUMP_INTERVAL,
     DEFAULT_CREATE_ZONE_BYPASS_SWITCHES,
     DEFAULT_DISCOVERY_PORT,
     DEFAULT_KEEPALIVE,
     DEFAULT_PORT,
     DEFAULT_TIMEOUT,
-    DEFAULT_ZONEDUMP_INTERVAL,
     LOGGER,
 )
 
@@ -53,7 +51,6 @@ class EnvisalinkController:
 
         # Options
         keep_alive = entry.options.get(CONF_EVL_KEEPALIVE, DEFAULT_KEEPALIVE)
-        zone_dump = entry.options.get(CONF_ZONEDUMP_INTERVAL, DEFAULT_ZONEDUMP_INTERVAL)
         create_zone_bypass_switches = entry.options.get(
             CONF_CREATE_ZONE_BYPASS_SWITCHES, DEFAULT_CREATE_ZONE_BYPASS_SWITCHES
         )
@@ -66,7 +63,7 @@ class EnvisalinkController:
             port,
             user,
             password,
-            zone_dump,
+            0,  # Disable zone timer dumps
             keep_alive,
             connection_timeout,
             create_zone_bypass_switches,
