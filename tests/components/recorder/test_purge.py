@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta
 import json
 import sqlite3
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError
@@ -192,7 +192,7 @@ async def test_purge_old_states_encounters_temporary_mysql_error(
     await async_wait_recording_done(hass)
 
     mysql_exception = OperationalError("statement", {}, [])
-    mysql_exception.orig = MagicMock(args=(1205, "retryable"))
+    mysql_exception.orig = Exception(1205, "retryable")
 
     with patch(
         "homeassistant.components.recorder.util.time.sleep"
