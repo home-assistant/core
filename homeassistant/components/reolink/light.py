@@ -14,6 +14,7 @@ from homeassistant.components.light import (
     LightEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -51,7 +52,7 @@ LIGHT_ENTITIES = (
         turn_on_off_fn=lambda api, ch, value: api.set_whiteled(ch, state=value),
         get_brightness_fn=lambda api, ch: api.whiteled_brightness(ch),
         set_brightness_fn=lambda api, ch, value: api.set_whiteled(
-            ch, brightness=int(value)
+            ch, brightness=value
         ),
     ),
     ReolinkLightEntityDescription(
@@ -66,6 +67,7 @@ LIGHT_ENTITIES = (
         key="status_led",
         name="Status LED",
         icon="mdi:lightning-bolt-circle",
+        entity_category=EntityCategory.CONFIG,
         supported_fn=lambda api, ch: api.supported(ch, "status_led"),
         is_on_fn=lambda api, ch: api.status_led_enabled(ch),
         turn_on_off_fn=lambda api, ch, value: api.set_status_led(ch, value),
@@ -105,10 +107,10 @@ class ReolinkLightEntity(ReolinkCoordinatorEntity, LightEntity):
         self.entity_description = entity_description
 
         self._attr_unique_id = (
-            f"{self._host.unique_id}_{self._channel}_{entity_description.key}"
+            f"{self._host.unique_id}_{channel}_{entity_description.key}"
         )
 
-        if self.entity_description.set_brightness_fn is None:
+        if entity_description.set_brightness_fn is None:
             self._attr_supported_color_modes = {ColorMode.ONOFF}
             self._attr_color_mode = ColorMode.ONOFF
         else:
