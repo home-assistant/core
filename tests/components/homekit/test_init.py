@@ -16,6 +16,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .util import PATH_HOMEKIT
@@ -71,7 +72,7 @@ async def test_bridge_with_triggers(
     hass: HomeAssistant,
     hk_driver,
     mock_async_zeroconf: None,
-    entity_reg,
+    entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test we can setup a bridge with triggers and we ignore numeric states.
@@ -83,7 +84,7 @@ async def test_bridge_with_triggers(
     assert await async_setup_component(hass, "demo", {"demo": {}})
     await hass.async_block_till_done()
 
-    entry = entity_reg.async_get("cover.living_room_window")
+    entry = entity_registry.async_get("cover.living_room_window")
     assert entry is not None
     device_id = entry.device_id
 

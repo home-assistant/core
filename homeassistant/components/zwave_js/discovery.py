@@ -390,6 +390,53 @@ DISCOVERY_SCHEMAS = [
         product_type={0x0003},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
+    # Merten 507801 Connect Roller Shutter
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="window_shutter",
+        manufacturer_id={0x007A},
+        product_id={0x0001},
+        product_type={0x8003},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SWITCH_MULTILEVEL},
+            property={CURRENT_VALUE_PROPERTY},
+            endpoint={0, 1},
+            type={ValueType.NUMBER},
+        ),
+        assumed_state=True,
+    ),
+    # Merten 507801 Connect Roller Shutter.
+    # Disable endpoint 2, as it has no practical function. CC: Switch_Multilevel
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="window_shutter",
+        manufacturer_id={0x007A},
+        product_id={0x0001},
+        product_type={0x8003},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SWITCH_MULTILEVEL},
+            property={CURRENT_VALUE_PROPERTY},
+            endpoint={2},
+            type={ValueType.NUMBER},
+        ),
+        assumed_state=True,
+        entity_registry_enabled_default=False,
+    ),
+    # Merten 507801 Connect Roller Shutter.
+    # Disable endpoint 2, as it has no practical function. CC: Protection
+    ZWaveDiscoverySchema(
+        platform=Platform.SELECT,
+        manufacturer_id={0x007A},
+        product_id={0x0001},
+        product_type={0x8003},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.PROTECTION},
+            property={LOCAL_PROPERTY, RF_PROPERTY},
+            endpoint={2},
+            type={ValueType.NUMBER},
+        ),
+        entity_registry_enabled_default=False,
+    ),
     # Vision Security ZL7432 In Wall Dual Relay Switch
     ZWaveDiscoverySchema(
         platform=Platform.SWITCH,

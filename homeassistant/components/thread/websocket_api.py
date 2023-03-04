@@ -160,7 +160,7 @@ async def ws_discover_routers(
 
     @callback
     def router_removed(key: str) -> None:
-        """Forward router discovery or update to websocket."""
+        """Forward router removed to websocket."""
 
         connection.send_message(
             websocket_api.event_message(

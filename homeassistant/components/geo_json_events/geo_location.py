@@ -142,7 +142,7 @@ class GeoJsonFeedEntityManager:
 
 
 class GeoJsonLocationEvent(GeolocationEvent):
-    """This represents an external event with GeoJSON data."""
+    """Represents an external event with GeoJSON data."""
 
     _attr_should_poll = False
     _attr_source = SOURCE
