@@ -1161,7 +1161,7 @@ pyevilgenius==2.0.0
 pyezviz==0.2.0.9
 
 # homeassistant.components.fibaro
-pyfibaro==0.6.8
+pyfibaro==0.6.9
 
 # homeassistant.components.fido
 pyfido==2.1.2
