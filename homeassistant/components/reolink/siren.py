@@ -39,9 +39,6 @@ class ReolinkSirenEntityDescription(
     supported: Callable[[Host, int], bool] = lambda api, ch: True
 
 
-
-
-
 SIREN_ENTITIES = (
     ReolinkSirenEntityDescription(
         key="siren",
