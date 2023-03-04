@@ -70,8 +70,10 @@ async def test_invalid_wait_time_select(hass: HomeAssistant, mock_account) -> No
 
 
 async def test_panel_brightness_select(
-    hass: HomeAssistant, mock_account_with_litterrobot_4: MagicMock
-):
+    hass: HomeAssistant,
+    mock_account_with_litterrobot_4: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Tests the wait time select entity."""
     await setup_integration(hass, mock_account_with_litterrobot_4, PLATFORM_DOMAIN)
 
@@ -79,8 +81,7 @@ async def test_panel_brightness_select(
     assert select
     assert len(select.attributes[ATTR_OPTIONS]) == 3
 
-    ent_reg = entity_registry.async_get(hass)
-    entity_entry = ent_reg.async_get(PANEL_BRIGHTNESS_ENTITY_ID)
+    entity_entry = entity_registry.async_get(PANEL_BRIGHTNESS_ENTITY_ID)
     assert entity_entry
     assert entity_entry.entity_category is EntityCategory.CONFIG
 
