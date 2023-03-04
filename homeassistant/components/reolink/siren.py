@@ -27,7 +27,6 @@ from .entity import ReolinkCoordinatorEntity
 class ReolinkSirenEntityDescriptionMixin:
     """Mixin values for Reolink siren entities."""
 
-    method: Callable[[Host, int, bool, int], Any]
     volume: Callable[[Host, int, int], Any]
 
 
@@ -40,9 +39,7 @@ class ReolinkSirenEntityDescription(
     supported: Callable[[Host, int], bool] = lambda api, ch: True
 
 
-async def async_set_siren(api, channel, on_off, duration):
-    """Control the siren."""
-    return await api.set_siren(channel, on_off, int(duration))
+
 
 
 SIREN_ENTITIES = (
@@ -51,7 +48,6 @@ SIREN_ENTITIES = (
         name="Siren",
         icon="mdi:alarm-light",
         supported=lambda api, ch: api.supported(ch, "siren"),
-        method=async_set_siren,
         volume=lambda api, ch, volume: api.set_volume(ch, int(volume)),
     ),
 )
@@ -105,10 +101,10 @@ class ReolinkSirenEntity(ReolinkCoordinatorEntity, SirenEntity):
                 self._host.api, self._channel, volume * 100
             )
         duration = kwargs.get(ATTR_DURATION)
-        await self.entity_description.method(
-            self._host.api, self._channel, True, duration
-        )
+        if duration is not None:
+            duration = int(duration)
+        await self._host.api.set_siren(self._channel, True, duration)
 
     async def async_turn_off(self, **kwargs):
         """Turn off the siren."""
-        await self.entity_description.method(self._host.api, self._channel, False, None)
+        await self._host.api.set_siren(self._channel, False, None)
