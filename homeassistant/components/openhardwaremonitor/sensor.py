@@ -72,6 +72,11 @@ class OpenHardwareMonitorDevice(SensorEntity):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return a unique, Home Assistant friendly identifier for this entity."""
+        return self._name
+ 
+    @property
     def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit_of_measurement
