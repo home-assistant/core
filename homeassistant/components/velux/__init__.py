@@ -1,34 +1,17 @@
 """Support for VELUX KLF 200 devices."""
 import logging
 
-from pyvlx import Node, PyVLX, PyVLXException
 import voluptuous as vol
+from pyvlx import Node, PyVLX, PyVLXException
 
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    EVENT_HOMEASSISTANT_STOP,
-    Platform,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 
-DOMAIN = "velux"
-DATA_VELUX = "data_velux"
-PLATFORMS = [Platform.COVER, Platform.LIGHT, Platform.SCENE]
-_LOGGER = logging.getLogger(__name__)
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {vol.Required(CONF_HOST): cv.string, vol.Required(CONF_PASSWORD): cv.string}
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+from .const import _LOGGER, DATA_VELUX, DOMAIN, PLATFORMS
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -47,6 +30,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             discovery.async_load_platform(hass, platform, DOMAIN, {}, config)
         )
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class VeluxModule:

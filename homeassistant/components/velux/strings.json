@@ -4,5 +4,23 @@
       "name": "Reboot gateway",
       "description": "Reboots the KLF200 Gateway."
     }
+  },
+  "config": {
+    "step": {
+      "user": {
+        "title": "Setup Velux",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
   }
 }
