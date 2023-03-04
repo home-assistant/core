@@ -9,6 +9,7 @@ from reolink_aio.api import DayNightEnum, Host, SpotlightModeEnum
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -40,6 +41,7 @@ SELECT_ENTITIES = (
         key="floodlight_mode",
         name="Floodlight mode",
         icon="mdi:spotlight-beam",
+        entity_category=EntityCategory.CONFIG,
         translation_key="floodlight_mode",
         get_options=[mode.name for mode in SpotlightModeEnum],
         supported=lambda api, ch: api.supported(ch, "floodLight"),
@@ -50,6 +52,7 @@ SELECT_ENTITIES = (
         key="day_night_mode",
         name="Day night mode",
         icon="mdi:theme-light-dark",
+        entity_category=EntityCategory.CONFIG,
         translation_key="day_night_mode",
         get_options=[mode.name for mode in DayNightEnum],
         supported=lambda api, ch: api.supported(ch, "dayNight"),
@@ -99,12 +102,12 @@ class ReolinkSelectEntity(ReolinkCoordinatorEntity, SelectEntity):
         self.entity_description = entity_description
 
         self._attr_unique_id = (
-            f"{self._host.unique_id}_{self._channel}_{entity_description.key}"
+            f"{self._host.unique_id}_{channel}_{entity_description.key}"
         )
 
         if callable(entity_description.get_options):
             self._attr_options = entity_description.get_options(
-                self._host.api, self._channel
+                self._host.api, channel
             )
         else:
             self._attr_options = entity_description.get_options
