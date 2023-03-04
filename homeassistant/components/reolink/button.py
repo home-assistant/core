@@ -9,6 +9,7 @@ from reolink_aio.api import GuardEnum, Host, PtzEnum
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -73,6 +74,7 @@ BUTTON_ENTITIES = (
         key="ptz_calibrate",
         name="PTZ calibrate",
         icon="mdi:pan",
+        entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "ptz_callibrate"),
         method=lambda api, ch: api.ptz_callibrate(ch),
     ),
@@ -87,6 +89,7 @@ BUTTON_ENTITIES = (
         key="guard_set",
         name="Guard set current position",
         icon="mdi:crosshairs-gps",
+        entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "ptz_guard"),
         method=lambda api, ch: api.set_ptz_guard(ch, command=GuardEnum.set.value),
     ),
