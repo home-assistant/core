@@ -7,17 +7,15 @@ from pyvlx import Node, PyVLX, PyVLXException
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import ConfigType
 
 from .const import _LOGGER, DATA_VELUX, DOMAIN, PLATFORMS
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the velux component."""
     try:
-        hass.data[DATA_VELUX] = VeluxModule(hass, config[DOMAIN])
+        hass.data[DATA_VELUX] = VeluxModule(hass, entry.data)
         hass.data[DATA_VELUX].setup()
         await hass.data[DATA_VELUX].async_start()
 
@@ -25,10 +23,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.exception("Can't connect to velux interface: %s", ex)
         return False
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            discovery.async_load_platform(hass, platform, DOMAIN, {}, config)
-        )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     return True
 
 

@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant import data_entry_flow
 from homeassistant.components.velux import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -22,6 +22,11 @@ DUMMY_DATA: dict[str, Any] = {
 
 PYVLX_CONNECT_FUNCTION_PATH = "pyvlx.PyVLX.connect"
 PYVLX_DISCONNECT_FUNCTION_PATH = "pyvlx.PyVLX.disconnect"
+
+
+def patch_async_setup_entry():
+    """Path the async_setup_entry function."""
+    return patch("homeassistant.components.velux.async_setup_entry", return_value=True)
 
 
 async def test_show_form(hass: HomeAssistant) -> None:
@@ -84,7 +89,7 @@ async def test_user_success(hass: HomeAssistant) -> None:
     """Test starting a flow by user with valid values."""
     with patch(PYVLX_CONNECT_FUNCTION_PATH) as connect_mock, patch(
         PYVLX_DISCONNECT_FUNCTION_PATH
-    ) as disconnect_mock:
+    ) as disconnect_mock, patch_async_setup_entry():
         result: dict[str, Any] = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=deepcopy(DUMMY_DATA)
         )
@@ -99,7 +104,9 @@ async def test_user_success(hass: HomeAssistant) -> None:
 async def test_user_already_configured(hass: HomeAssistant) -> None:
     """Test starting a flow by user, but it was already configured."""
 
-    with patch(PYVLX_CONNECT_FUNCTION_PATH), patch(PYVLX_DISCONNECT_FUNCTION_PATH):
+    with patch(PYVLX_CONNECT_FUNCTION_PATH), patch(
+        PYVLX_DISCONNECT_FUNCTION_PATH
+    ), patch_async_setup_entry():
         await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=deepcopy(DUMMY_DATA)
         )
@@ -110,3 +117,16 @@ async def test_user_already_configured(hass: HomeAssistant) -> None:
 
         assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "single_instance_allowed"
+
+
+async def test_import(hass: HomeAssistant) -> None:
+    """Test import initialized flow."""
+    with patch_async_setup_entry():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=DUMMY_DATA,
+        )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == "VELUX"
+    assert result["data"] == DUMMY_DATA

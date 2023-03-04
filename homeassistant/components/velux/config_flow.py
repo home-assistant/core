@@ -24,6 +24,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await pyvlx.connect()
         await pyvlx.disconnect()
 
+    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
+        """Import a config entry."""
+        self._async_abort_entries_match({CONF_HOST: config[CONF_HOST]})
+        return self.async_create_entry(
+            title="VELUX",
+            data=config,
+        )
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
