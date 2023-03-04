@@ -94,7 +94,7 @@ class ReolinkSirenEntity(ReolinkCoordinatorEntity, SirenEntity):
             f"{self._host.unique_id}_{self._channel}_{entity_description.key}"
         )
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the siren."""
         if (volume := kwargs.get(ATTR_VOLUME_LEVEL)) is not None:
             await self.entity_description.volume(
@@ -105,6 +105,6 @@ class ReolinkSirenEntity(ReolinkCoordinatorEntity, SirenEntity):
             duration = int(duration)
         await self._host.api.set_siren(self._channel, True, duration)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the siren."""
         await self._host.api.set_siren(self._channel, False, None)
