@@ -17,3 +17,9 @@ CONF_DATA = "data"
 
 DEFAULT_CAN_ACK = True
 DEFAULT_SKIP_FIRST = False
+
+NOTIFICATION_SNOOZE = "snooze"
+SERVICE_NOTIFICATION_CONTROL = "notification_control"
+ATTR_SNOOZE_UNTIL = "snooze_until"
+SNOOZE_NOTIFICATIONS_ENABLED = "notifications-enabled"
+SNOOZE_NOTIFICATIONS_DISABLED = "notifications-disabled"

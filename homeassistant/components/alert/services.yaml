@@ -18,3 +18,33 @@ turn_on:
   target:
     entity:
       domain: alert
+
+notification_control:
+  name: Notification Control
+  description: Enable/Disable/Snooze notifications (for current and future alerts).
+  target:
+    entity:
+      domain: alert
+  fields:
+    enable:
+      name: Notifications
+      description: Enable, disable or snooze notifications
+      example: true
+      required: true
+      selector:
+        select:
+          options:
+            - label: "On"
+              value: "on"
+            - label: "Off"
+              value: "off"
+            - label: "Snooze"
+              value: "snooze"
+    snooze_hours:
+      name: Snooze for (hours)
+      description: Notifications will only be sent for alerts that fire after this many hours from now.  Should only be set if Notifications is set to "Snooze"
+      required: false
+      selector:
+        number:
+          min: 0
+          mode: box

@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import timedelta
-from typing import Any
+from datetime import datetime, timedelta
+from typing import Any, final
 
 import voluptuous as vol
 
@@ -27,17 +27,18 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_state_change_event,
 )
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.dt import now
+from homeassistant.util.dt import as_local, now, parse_datetime
 
 from .const import (
+    ATTR_SNOOZE_UNTIL,
     CONF_ALERT_MESSAGE,
     CONF_CAN_ACK,
     CONF_DATA,
@@ -49,6 +50,10 @@ from .const import (
     DEFAULT_SKIP_FIRST,
     DOMAIN,
     LOGGER,
+    NOTIFICATION_SNOOZE,
+    SERVICE_NOTIFICATION_CONTROL,
+    SNOOZE_NOTIFICATIONS_DISABLED,
+    SNOOZE_NOTIFICATIONS_ENABLED,
 )
 
 ALERT_SCHEMA = vol.Schema(
@@ -77,6 +82,10 @@ ALERT_SCHEMA = vol.Schema(
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: cv.schema_with_slug_keys(ALERT_SCHEMA)}, extra=vol.ALLOW_EXTRA
 )
+NOTIFICATION_CONTROL_SCHEMA = {
+    vol.Required("enable"): vol.Any(STATE_ON, STATE_OFF, NOTIFICATION_SNOOZE),
+    vol.Optional("snooze_hours"): vol.All(vol.Coerce(float), vol.Range(min=0)),
+}
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -125,13 +134,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
     component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
     component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
+    component.async_register_entity_service(
+        SERVICE_NOTIFICATION_CONTROL,
+        cv.make_entity_service_schema(NOTIFICATION_CONTROL_SCHEMA),
+        "async_notification_control",
+    )
 
     await component.async_add_entities(entities)
 
     return True
 
 
-class Alert(Entity):
+class Alert(RestoreEntity):
     """Representation of an alert."""
 
     _attr_should_poll = False
@@ -174,8 +188,17 @@ class Alert(Entity):
         self._notifiers = notifiers
         self._can_ack = can_ack
 
+        # While an alert is firing, delay and _next_delay represent the time until
+        # the next notification will be sent.
         self._delay = [timedelta(minutes=val) for val in repeat]
         self._next_delay = 0
+
+        # _snooze_until will be either:
+        #   SNOOZE_NOTIFICATIONS_ENABLED
+        #   SNOOZE_NOTIFICATIONS_DISABLED
+        #   a datetime until which no notifications will be sent.
+        self._snooze_until: datetime | str = SNOOZE_NOTIFICATIONS_ENABLED
+        self._snooze_until_cancel: Callable[[], None] | None = None
 
         self._firing = False
         self._ack = False
@@ -213,10 +236,11 @@ class Alert(Entity):
         self._firing = True
         self._next_delay = 0
 
-        if not self._skip_first:
-            await self._notify()
-        else:
-            await self._schedule_notify()
+        if self._snooze_until is SNOOZE_NOTIFICATIONS_ENABLED:
+            if not self._skip_first:
+                await self._notify()
+            else:
+                await self._schedule_notify()
 
         self.async_write_ha_state()
 
@@ -229,9 +253,98 @@ class Alert(Entity):
 
         self._ack = False
         self._firing = False
-        if self._send_done_message:
-            await self._notify_done_message()
+        if self._snooze_until is SNOOZE_NOTIFICATIONS_ENABLED:
+            if self._send_done_message:
+                await self._notify_done_message()
         self.async_write_ha_state()
+
+    async def async_notification_control(
+        self, enable: str, snooze_hours: float | None = None
+    ) -> None:
+        """Enable, disable or snooze notifications, for current and future alerts."""
+        LOGGER.debug(
+            "async_notification_control: %s enable=%s snooze_hours=%s",
+            self._attr_name,
+            enable,
+            snooze_hours,
+        )
+        if (snooze_hours is not None) != (enable == NOTIFICATION_SNOOZE):
+            raise vol.Invalid(
+                "snooze_hours parameter should be present only when 'enable' is "
+                f"set to '{NOTIFICATION_SNOOZE}'"
+            )
+
+        if self._snooze_until_cancel is not None:
+            self._snooze_until_cancel()
+            self._snooze_until_cancel = None
+        if self._cancel is not None:
+            self._cancel()
+            self._cancel = None
+
+        if enable == STATE_OFF:
+            LOGGER.debug("Disabling notifications for alert %s", self._attr_name)
+            self._snooze_until = SNOOZE_NOTIFICATIONS_DISABLED
+            self.async_write_ha_state()
+        elif enable == STATE_ON:
+            LOGGER.debug("Enabling notifications for alert %s", self._attr_name)
+            self._snooze_until = SNOOZE_NOTIFICATIONS_ENABLED
+            if self._firing:
+                await self.begin_alerting()
+            else:
+                self.async_write_ha_state()
+        else:  # enable == NOTIFICATION_SNOOZE, enforced by NOTIFICATION_CONTROL_SCHEMA
+            LOGGER.debug(
+                "Snoozing notifications for alert %s for %f hours",
+                self._attr_name,
+                snooze_hours,
+            )
+            assert isinstance(snooze_hours, float)  # checked above
+            self._snooze_until = now() + timedelta(hours=snooze_hours)
+
+            async def snooze_timeout(adt: datetime) -> None:
+                self._snooze_until_cancel = None
+                await self.async_notification_control(STATE_ON)
+
+            self._snooze_until_cancel = async_track_point_in_time(
+                self.hass, snooze_timeout, self._snooze_until
+            )
+            self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Restore extra state attributes on start-up."""
+        await super().async_added_to_hass()
+
+        # Restore _snooze_until from previous run
+        if not (last_state := await self.async_get_last_state()):
+            return
+        if ATTR_SNOOZE_UNTIL in last_state.attributes:
+            last_snooze_until = last_state.attributes.get(ATTR_SNOOZE_UNTIL)
+            if last_snooze_until == SNOOZE_NOTIFICATIONS_ENABLED:
+                await self.async_notification_control(STATE_ON)
+            elif last_snooze_until == SNOOZE_NOTIFICATIONS_DISABLED:
+                await self.async_notification_control(STATE_OFF)
+            else:
+                # _snooze_until from previous runs should be either
+                # one of the two strings just tested above, or a
+                # stringified datetime.
+                adt = parse_datetime(str(last_snooze_until))
+                if adt is None:
+                    await self.async_notification_control(STATE_ON)
+                else:
+                    adt = as_local(adt)
+                    hours = (adt - now()).total_seconds() / (60 * 60)
+                    if hours <= 0:
+                        await self.async_notification_control(STATE_ON)
+                    else:
+                        await self.async_notification_control(
+                            NOTIFICATION_SNOOZE, hours
+                        )
+
+    @final
+    @property
+    def state_attributes(self) -> dict[str, Any] | None:
+        """Return the state attributes."""
+        return {ATTR_SNOOZE_UNTIL: self._snooze_until}
 
     async def _schedule_notify(self) -> None:
         """Schedule a notification."""
