@@ -106,9 +106,7 @@ class ReolinkSelectEntity(ReolinkCoordinatorEntity, SelectEntity):
         )
 
         if callable(entity_description.get_options):
-            self._attr_options = entity_description.get_options(
-                self._host.api, channel
-            )
+            self._attr_options = entity_description.get_options(self._host.api, channel)
         else:
             self._attr_options = entity_description.get_options
 
