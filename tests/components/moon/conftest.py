@@ -15,7 +15,7 @@ from tests.common import MockConfigEntry
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
-        title="Moon",
+        title="",
         domain=DOMAIN,
     )
 
