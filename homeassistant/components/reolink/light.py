@@ -51,9 +51,7 @@ LIGHT_ENTITIES = (
         is_on_fn=lambda api, ch: api.whiteled_state(ch),
         turn_on_off_fn=lambda api, ch, value: api.set_whiteled(ch, state=value),
         get_brightness_fn=lambda api, ch: api.whiteled_brightness(ch),
-        set_brightness_fn=lambda api, ch, value: api.set_whiteled(
-            ch, brightness=value
-        ),
+        set_brightness_fn=lambda api, ch, value: api.set_whiteled(ch, brightness=value),
     ),
     ReolinkLightEntityDescription(
         key="ir_lights",
