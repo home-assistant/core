@@ -824,7 +824,10 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
             init_done: asyncio.Future[None] = asyncio.Future()
             self._pending_import_flows.setdefault(handler, {})[flow_id] = init_done
 
-        task = asyncio.create_task(self._async_init(flow_id, handler, context, data))
+        task = asyncio.create_task(
+            self._async_init(flow_id, handler, context, data),
+            name=f"config entry flow {handler} {flow_id}",
+        )
         self._initialize_tasks.setdefault(handler, []).append(task)
 
         try:
