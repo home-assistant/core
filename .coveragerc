@@ -643,6 +643,7 @@ omit =
     homeassistant/components/livisi/__init__.py
     homeassistant/components/livisi/climate.py
     homeassistant/components/livisi/coordinator.py
+    homeassistant/components/livisi/entity.py
     homeassistant/components/livisi/switch.py
     homeassistant/components/llamalab_automate/notify.py
     homeassistant/components/logi_circle/__init__.py
@@ -809,6 +810,7 @@ omit =
     homeassistant/components/nx584/alarm_control_panel.py
     homeassistant/components/oasa_telematics/sensor.py
     homeassistant/components/obihai/__init__.py
+    homeassistant/components/obihai/button.py
     homeassistant/components/obihai/connectivity.py
     homeassistant/components/obihai/sensor.py
     homeassistant/components/octoprint/__init__.py
