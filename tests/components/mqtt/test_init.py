@@ -1486,6 +1486,47 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     assert mqtt_client_mock.subscribe.mock_calls == expected
 
 
+@pytest.mark.parametrize(
+    "mqtt_config_entry_data",
+    [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_DISCOVERY: False}],
+)
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 1.0)
+@patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 1.0)
+async def test_subscribed_at_highest_qos(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    record_calls: MessageCallbackType,
+) -> None:
+    """Test the highest qos as assigned when subscribing to the same topic."""
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    # Fake that the client is connected
+    mqtt_mock().connected = True
+
+    await mqtt.async_subscribe(hass, "test/state", record_calls, qos=0)
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))  # cooldown
+    await hass.async_block_till_done()
+    assert mqtt_client_mock.subscribe.mock_calls == [
+        call("test/state", 0),
+    ]
+    mqtt_client_mock.reset_mock()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))  # cooldown
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    await mqtt.async_subscribe(hass, "test/state", record_calls, qos=1)
+    await mqtt.async_subscribe(hass, "test/state", record_calls, qos=2)
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))  # cooldown
+    await hass.async_block_till_done()
+    # the subscribtion with the highest QoS should survive
+    assert mqtt_client_mock.subscribe.mock_calls == [
+        call("test/state", 2),
+    ]
+
+
 async def test_reload_entry_with_restored_subscriptions(
     hass: HomeAssistant,
     tmp_path: Path,
