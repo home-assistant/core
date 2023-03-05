@@ -36,7 +36,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     server_info: dict[str, Any] = connect_result["Servers"][0]
 
     coordinators: dict[str, JellyfinDataUpdateCoordinator[Any]] = {
-        "sessions": SessionsDataUpdateCoordinator(hass, client, server_info, user_id),
+        "sessions": SessionsDataUpdateCoordinator(
+            hass, client, server_info, entry.data[CONF_CLIENT_DEVICE_ID], user_id
+        ),
     }
 
     for coordinator in coordinators.values():

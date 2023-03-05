@@ -25,9 +25,12 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.CAMERA,
     Platform.NUMBER,
     Platform.SELECT,
+    Platform.SIREN,
+    Platform.SWITCH,
     Platform.UPDATE,
 ]
 DEVICE_UPDATE_INTERVAL = timedelta(seconds=60)
@@ -85,6 +88,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     async def async_check_firmware_update():
         """Check for firmware updates."""
+        if not host.api.supported(None, "update"):
+            return False
+
         async with async_timeout.timeout(host.api.timeout):
             try:
                 return await host.api.check_new_firmware()
@@ -109,9 +115,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
     # Fetch initial data so we have data when entities subscribe
     try:
+        # If camera WAN blocked, firmware check fails, do not prevent setup
         await asyncio.gather(
             device_coordinator.async_config_entry_first_refresh(),
-            firmware_coordinator.async_config_entry_first_refresh(),
+            firmware_coordinator.async_refresh(),
         )
     except ConfigEntryNotReady:
         await host.stop()

@@ -29,7 +29,7 @@ import voluptuous as vol
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import Event, HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.storage import STORAGE_DIR
@@ -75,6 +75,7 @@ from .models import (
     datetime_to_timestamp_or_none,
 )
 from .util import (
+    database_job_retry_wrapper,
     execute,
     execute_stmt_lambda_element,
     get_instance,
@@ -338,7 +339,7 @@ def async_setup(hass: HomeAssistant) -> None:
     def setup_entity_registry_event_handler(hass: HomeAssistant) -> None:
         """Subscribe to event registry events."""
         hass.bus.async_listen(
-            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
             _async_entity_id_changed,
             event_filter=entity_registry_changed_filter,
         )
@@ -515,7 +516,10 @@ def _delete_duplicates_from_table(
     return (total_deleted_rows, all_non_identical_duplicates)
 
 
-def delete_statistics_duplicates(hass: HomeAssistant, session: Session) -> None:
+@database_job_retry_wrapper("delete statistics duplicates", 3)
+def delete_statistics_duplicates(
+    instance: Recorder, hass: HomeAssistant, session: Session
+) -> None:
     """Identify and delete duplicated statistics.
 
     A backup will be made of duplicated statistics before it is deleted.

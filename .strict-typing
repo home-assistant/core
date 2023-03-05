@@ -186,6 +186,7 @@ homeassistant.components.ld2410_ble.*
 homeassistant.components.lidarr.*
 homeassistant.components.lifx.*
 homeassistant.components.light.*
+homeassistant.components.litejet.*
 homeassistant.components.litterrobot.*
 homeassistant.components.local_ip.*
 homeassistant.components.lock.*
