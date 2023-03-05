@@ -1282,7 +1282,7 @@ def async_track_point_in_time(
     job = (
         action
         if isinstance(action, HassJob)
-        else HassJob(action, "track point in time {point_in_time}")
+        else HassJob(action, f"track point in time {point_in_time}")
     )
 
     @callback
