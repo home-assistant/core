@@ -1231,8 +1231,9 @@ def test_delete_duplicates_no_duplicates(
     """Test removal of duplicated statistics."""
     hass = hass_recorder()
     wait_recording_done(hass)
+    instance = recorder.get_instance(hass)
     with session_scope(hass=hass) as session:
-        delete_statistics_duplicates(hass, session)
+        delete_statistics_duplicates(instance, hass, session)
     assert "duplicated statistics rows" not in caplog.text
     assert "Found non identical" not in caplog.text
     assert "Found duplicated" not in caplog.text

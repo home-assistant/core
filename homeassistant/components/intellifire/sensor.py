@@ -57,7 +57,7 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
     IntellifireSensorEntityDescription(
         key="flame_height",
         icon="mdi:fire-circle",
-        name="Flame Height",
+        name="Flame height",
         state_class=SensorStateClass.MEASUREMENT,
         # UI uses 1-5 for flame height, backing lib uses 0-4
         value_fn=lambda data: (data.flameheight + 1),
@@ -72,7 +72,7 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
     ),
     IntellifireSensorEntityDescription(
         key="target_temp",
-        name="Target Temperature",
+        name="Target temperature",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -116,7 +116,7 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
     ),
     IntellifireSensorEntityDescription(
         key="ecm_latency",
-        name="ECM Latency",
+        name="ECM latency",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.ecm_latency,
         entity_registry_enabled_default=False,
