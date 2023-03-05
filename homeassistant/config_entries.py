@@ -729,7 +729,8 @@ class ConfigEntry:
                 }
                 | (context or {}),
                 data=self.data | (data or {}),
-            )
+            ),
+            f"config entry reauth {self.title} {self.domain} {self.entry_id}",
         )
 
     @callback
@@ -757,7 +758,9 @@ class ConfigEntry:
 
         target: target to call.
         """
-        task = hass.async_create_task(target, f"{name} {self.domain} {self.entry_id}")
+        task = hass.async_create_task(
+            target, f"{name} {self.title} {self.domain} {self.entry_id}"
+        )
         self._tasks.add(task)
         task.add_done_callback(self._tasks.remove)
 
@@ -1118,7 +1121,8 @@ class ConfigEntries:
                     entry.domain,
                     context={"source": SOURCE_UNIGNORE},
                     data={"unique_id": entry.unique_id},
-                )
+                ),
+                f"config entry unignore {entry.title} {entry.domain} {entry.unique_id}",
             )
 
         self._async_dispatch(ConfigEntryChange.REMOVED, entry)
@@ -1343,7 +1347,10 @@ class ConfigEntries:
 
         for listener_ref in entry.update_listeners:
             if (listener := listener_ref()) is not None:
-                self.hass.async_create_task(listener(self.hass, entry))
+                self.hass.async_create_task(
+                    listener(self.hass, entry),
+                    f"config entry update listener {entry.title} {entry.domain} {entry.domain}",
+                )
 
         self._async_schedule_save()
         self._async_dispatch(ConfigEntryChange.UPDATED, entry)
@@ -1373,7 +1380,10 @@ class ConfigEntries:
             error_if_core=False,
         )
         for platform in platforms:
-            self.hass.async_create_task(self.async_forward_entry_setup(entry, platform))
+            self.hass.async_create_task(
+                self.async_forward_entry_setup(entry, platform),
+                f"config entry forward setup {entry.title} {entry.domain} {entry.entry_id} {platform}",
+            )
 
     async def async_forward_entry_setups(
         self, entry: ConfigEntry, platforms: Iterable[Platform | str]
@@ -1555,7 +1565,8 @@ class ConfigFlow(data_entry_flow.FlowHandler):
                 continue
             if should_reload:
                 self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(entry.entry_id)
+                    self.hass.config_entries.async_reload(entry.entry_id),
+                    f"config entry reload {entry.title} {entry.domain} {entry.entry_id}",
                 )
             raise data_entry_flow.AbortFlow(error)
 
