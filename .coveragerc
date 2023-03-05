@@ -10,6 +10,7 @@ omit =
     homeassistant/scripts/macos/__init__.py
 
     # omit pieces of code that rely on external devices being present
+    homeassistant/components/sma_manager/*
     homeassistant/components/acer_projector/*
     homeassistant/components/acmeda/__init__.py
     homeassistant/components/acmeda/base.py
