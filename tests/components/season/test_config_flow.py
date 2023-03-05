@@ -28,7 +28,7 @@ async def test_full_user_flow(
     )
 
     assert result2.get("type") == FlowResultType.CREATE_ENTRY
-    assert result2.get("title") == ""
+    assert result2.get("title") == "Season"
     assert result2.get("data") == {CONF_TYPE: TYPE_ASTRONOMICAL}
 
 

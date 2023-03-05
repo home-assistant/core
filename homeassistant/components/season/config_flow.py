@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_TYPE
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DOMAIN, TYPE_ASTRONOMICAL, TYPE_METEOROLOGICAL
+from .const import DEFAULT_NAME, DOMAIN, TYPE_ASTRONOMICAL, TYPE_METEOROLOGICAL
 
 
 class SeasonConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -25,7 +25,7 @@ class SeasonConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(user_input[CONF_TYPE])
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title="",
+                title=DEFAULT_NAME,
                 data={CONF_TYPE: user_input[CONF_TYPE]},
             )
 
