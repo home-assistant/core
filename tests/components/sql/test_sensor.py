@@ -9,6 +9,7 @@ from sqlalchemy import text as sql_text
 from sqlalchemy.exc import SQLAlchemyError
 
 from homeassistant.components.recorder import Recorder
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.sql.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import STATE_UNKNOWN
@@ -300,3 +301,19 @@ async def test_invalid_url_setup_from_yaml(
         assert pattern not in caplog.text
     for pattern in expected_patterns:
         assert pattern in caplog.text
+
+
+async def test_attributes_from_yaml_setup(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test attributes from yaml config."""
+
+    assert await async_setup_component(hass, DOMAIN, YAML_CONFIG)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.get_value")
+
+    assert state.state == "5"
+    assert state.attributes["device_class"] == SensorDeviceClass.DATA_RATE
+    assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
+    assert state.attributes["unit_of_measurement"] == "MiB"

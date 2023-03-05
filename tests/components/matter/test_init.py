@@ -7,9 +7,10 @@ from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from aiohttp import ClientWebSocketResponse
 from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
+from matter_server.client.models.node import MatterNode
+from matter_server.common.errors import MatterError
 from matter_server.common.helpers.util import dataclass_from_dict
-from matter_server.common.models.error import MatterError
-from matter_server.common.models.node import MatterNode
+from matter_server.common.models import MatterNodeData
 import pytest
 
 from homeassistant.components.hassio import HassioAPIError
@@ -51,9 +52,11 @@ async def test_entry_setup_unload(
 ) -> None:
     """Test the integration set up and unload."""
     node_data = load_and_parse_node_fixture("onoff-light")
-    node = dataclass_from_dict(
-        MatterNode,
-        node_data,
+    node = MatterNode(
+        dataclass_from_dict(
+            MatterNodeData,
+            node_data,
+        )
     )
     matter_client.get_nodes.return_value = [node]
     matter_client.get_node.return_value = node

@@ -13,6 +13,7 @@ from sqlalchemy import ForeignKeyConstraint, MetaData, Table, func, text
 from sqlalchemy.engine import CursorResult, Engine
 from sqlalchemy.exc import (
     DatabaseError,
+    IntegrityError,
     InternalError,
     OperationalError,
     ProgrammingError,
@@ -49,7 +50,7 @@ from .tasks import (
     PostSchemaMigrationTask,
     StatisticsTimestampMigrationCleanupTask,
 )
-from .util import session_scope
+from .util import database_job_retry_wrapper, session_scope
 
 if TYPE_CHECKING:
     from . import Recorder
@@ -157,7 +158,9 @@ def migrate_schema(
             hass.add_job(instance.async_set_db_ready)
         new_version = version + 1
         _LOGGER.info("Upgrading recorder db schema to version %s", new_version)
-        _apply_update(hass, engine, session_maker, new_version, current_version)
+        _apply_update(
+            instance, hass, engine, session_maker, new_version, current_version
+        )
         with session_scope(session=session_maker()) as session:
             session.add(SchemaChanges(schema_version=new_version))
 
@@ -507,7 +510,9 @@ def _drop_foreign_key_constraints(
                 )
 
 
+@database_job_retry_wrapper("Apply migration update", 10)
 def _apply_update(  # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
@@ -778,9 +783,10 @@ def _apply_update(  # noqa: C901
         # Add name column to StatisticsMeta
         _add_columns(session_maker, "statistics_meta", ["name VARCHAR(255)"])
     elif new_version == 24:
-        _LOGGER.debug("Deleting duplicated statistics entries")
-        with session_scope(session=session_maker()) as session:
-            delete_statistics_duplicates(hass, session)
+        # This used to create the unique indices for start and statistic_id
+        # but we changed the format in schema 34 which will now take care
+        # of removing any duplicate if they still exist.
+        pass
     elif new_version == 25:
         _add_columns(session_maker, "states", [f"attributes_id {big_int}"])
         _create_index(session_maker, "states", "ix_states_attributes_id")
@@ -907,7 +913,26 @@ def _apply_update(  # noqa: C901
             "statistics_short_term",
             "ix_statistics_short_term_statistic_id_start_ts",
         )
-        _migrate_statistics_columns_to_timestamp(session_maker, engine)
+        try:
+            _migrate_statistics_columns_to_timestamp(session_maker, engine)
+        except IntegrityError as ex:
+            _LOGGER.error(
+                "Statistics table contains duplicate entries: %s; "
+                "Cleaning up duplicates and trying again; "
+                "This will take a while; "
+                "Please be patient!",
+                ex,
+            )
+            # There may be duplicated statistics entries, delete duplicates
+            # and try again
+            with session_scope(session=session_maker()) as session:
+                delete_statistics_duplicates(instance, hass, session)
+            _migrate_statistics_columns_to_timestamp(session_maker, engine)
+            # Log at error level to ensure the user sees this message in the log
+            # since we logged the error above.
+            _LOGGER.error(
+                "Statistics migration successfully recovered after statistics table duplicate cleanup"
+            )
     elif new_version == 35:
         # Migration is done in two steps to ensure we can start using
         # the new columns before we wipe the old ones.
@@ -944,7 +969,7 @@ def post_schema_migration(
         # since they are no longer used and take up a significant amount of space.
         assert instance.event_session is not None
         assert instance.engine is not None
-        _wipe_old_string_time_columns(instance.engine, instance.event_session)
+        _wipe_old_string_time_columns(instance, instance.engine, instance.event_session)
     if old_version < 35 <= new_version:
         # In version 34 we migrated all the created, start, and last_reset
         # columns to be timestamps. In version 34 we need to wipe the old columns
@@ -957,7 +982,10 @@ def _wipe_old_string_statistics_columns(instance: Recorder) -> None:
     instance.queue_task(StatisticsTimestampMigrationCleanupTask())
 
 
-def _wipe_old_string_time_columns(engine: Engine, session: Session) -> None:
+@database_job_retry_wrapper("Wipe old string time columns", 3)
+def _wipe_old_string_time_columns(
+    instance: Recorder, engine: Engine, session: Session
+) -> None:
     """Wipe old string time columns to save space."""
     # Wipe Events.time_fired since its been replaced by Events.time_fired_ts
     # Wipe States.last_updated since its been replaced by States.last_updated_ts
@@ -1141,7 +1169,7 @@ def _migrate_statistics_columns_to_timestamp(
                             "last_reset_ts="
                             "UNIX_TIMESTAMP(last_reset) "
                             "where start_ts is NULL "
-                            "LIMIT 250000;"
+                            "LIMIT 100000;"
                         )
                     )
     elif engine.dialect.name == SupportedDialect.POSTGRESQL:
@@ -1159,7 +1187,7 @@ def _migrate_statistics_columns_to_timestamp(
                             "created_ts=EXTRACT(EPOCH FROM created), "
                             "last_reset_ts=EXTRACT(EPOCH FROM last_reset) "
                             "where id IN ( "
-                            f"SELECT id FROM {table} where start_ts is NULL LIMIT 250000 "
+                            f"SELECT id FROM {table} where start_ts is NULL LIMIT 100000 "
                             " );"
                         )
                     )
