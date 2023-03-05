@@ -276,7 +276,7 @@ async def async_setup_platform(
         hass,
         DOMAIN,
         "deprecated_yaml",
-        breaks_in_ha_version="2023.2.0",
+        breaks_in_ha_version="2023.5.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
@@ -390,7 +390,7 @@ class EDL21:
             old_entity_id = registry.async_get_entity_id(
                 "sensor", DOMAIN, entity.old_unique_id
             )
-            if old_entity_id is not None:
+            if old_entity_id is not None and entity.unique_id is not None:
                 LOGGER.debug(
                     "Migrating unique_id from [%s] to [%s]",
                     entity.old_unique_id,
@@ -411,20 +411,10 @@ class EDL21Entity(SensorEntity):
 
     _attr_should_poll = False
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._electricity_id)},
-            name=self._electricity_id,
-        )
-
     def __init__(self, electricity_id, obis, name, entity_description, telegram):
         """Initialize an EDL21Entity."""
         self._electricity_id = electricity_id
         self._obis = obis
-        self._name = name
-        self._unique_id = f"{electricity_id}_{obis}"
         self._telegram = telegram
         self._min_time = MIN_TIME_BETWEEN_UPDATES
         self._last_update = utcnow()
@@ -436,6 +426,12 @@ class EDL21Entity(SensorEntity):
         }
         self._async_remove_dispatcher = None
         self.entity_description = entity_description
+        self._attr_name = name
+        self._attr_unique_id = f"{electricity_id}_{obis}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._electricity_id)},
+            name=self._electricity_id,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -468,19 +464,9 @@ class EDL21Entity(SensorEntity):
             self._async_remove_dispatcher()
 
     @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._unique_id
-
-    @property
     def old_unique_id(self) -> str:
         """Return a less unique ID as used in the first version of edl21."""
         return self._obis
-
-    @property
-    def name(self) -> str | None:
-        """Return a name."""
-        return self._name
 
     @property
     def native_value(self) -> str:
