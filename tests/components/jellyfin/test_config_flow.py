@@ -7,7 +7,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from . import async_load_json_fixture
-from .const import TEST_PASSWORD, TEST_URL, TEST_USERNAME
+from .const import TEST_PASSWORD, TEST_URL, TEST_USERNAME, USER_INPUT
 
 from tests.common import MockConfigEntry
 
@@ -40,11 +40,7 @@ async def test_form(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_URL: TEST_URL,
-            CONF_USERNAME: TEST_USERNAME,
-            CONF_PASSWORD: TEST_PASSWORD,
-        },
+        user_input=USER_INPUT,
     )
     await hass.async_block_till_done()
 
@@ -82,11 +78,7 @@ async def test_form_cannot_connect(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_URL: TEST_URL,
-            CONF_USERNAME: TEST_USERNAME,
-            CONF_PASSWORD: TEST_PASSWORD,
-        },
+        user_input=USER_INPUT,
     )
     await hass.async_block_till_done()
 
@@ -115,11 +107,7 @@ async def test_form_invalid_auth(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_URL: TEST_URL,
-            CONF_USERNAME: TEST_USERNAME,
-            CONF_PASSWORD: TEST_PASSWORD,
-        },
+        user_input=USER_INPUT,
     )
     await hass.async_block_till_done()
 
@@ -128,6 +116,54 @@ async def test_form_invalid_auth(
 
     assert len(mock_client.auth.connect_to_address.mock_calls) == 1
     assert len(mock_client.auth.login.mock_calls) == 1
+
+
+async def test_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_jellyfin: MagicMock,
+    mock_client: MagicMock,
+) -> None:
+    """Test the Jellyfin integration handling invalid credentials."""
+    mock_client.auth.connect_to_address.return_value = await async_load_json_fixture(
+        hass,
+        "auth-connect-address.json",
+    )
+    mock_client.auth.login.return_value = await async_load_json_fixture(
+        hass,
+        "auth-login-failure.json",
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": mock_config_entry.entry_id,
+        },
+        data=USER_INPUT,
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {}
+
+    mock_client.auth.login.return_value = await async_load_json_fixture(
+        hass,
+        "auth-login.json",
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=USER_INPUT,
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
 
 
 async def test_form_exception(
@@ -144,11 +180,7 @@ async def test_form_exception(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_URL: TEST_URL,
-            CONF_USERNAME: TEST_USERNAME,
-            CONF_PASSWORD: TEST_PASSWORD,
-        },
+        user_input=USER_INPUT,
     )
     await hass.async_block_till_done()
 
@@ -178,11 +210,7 @@ async def test_form_persists_device_id_on_error(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_URL: TEST_URL,
-            CONF_USERNAME: TEST_USERNAME,
-            CONF_PASSWORD: TEST_PASSWORD,
-        },
+        user_input=USER_INPUT,
     )
     await hass.async_block_till_done()
 
@@ -196,11 +224,7 @@ async def test_form_persists_device_id_on_error(
 
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
-        {
-            CONF_URL: TEST_URL,
-            CONF_USERNAME: TEST_USERNAME,
-            CONF_PASSWORD: TEST_PASSWORD,
-        },
+        user_input=USER_INPUT,
     )
     await hass.async_block_till_done()
 
