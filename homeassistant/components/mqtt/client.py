@@ -305,12 +305,12 @@ class EnsureJobAfterCooldown:
     """
 
     def __init__(
-        self, timeout: float, subscribe_job: Callable[[], Coroutine[Any, None, None]]
+        self, timeout: float, callback_job: Callable[[], Coroutine[Any, None, None]]
     ) -> None:
         """Initialize the timer."""
         self._loop = asyncio.get_running_loop()
         self._timeout = timeout
-        self._callback = subscribe_job
+        self._callback = callback_job
         self._task: asyncio.Future | None = None
         self._timer: asyncio.TimerHandle | None = None
 
@@ -325,14 +325,17 @@ class EnsureJobAfterCooldown:
         except HomeAssistantError as ha_error:
             _LOGGER.error("%s", ha_error)
 
+    @callback
     def _async_task_done(self, task: asyncio.Future) -> None:
         """Handle task done."""
         self._task = None
 
+    @callback
     def _async_execute(self) -> None:
         """Execute the job."""
         if self._task:
-            # Task we already running, so we schedule another run
+            # Task already running,
+            # so we schedule another run
             self.async_schedule()
             return
 
@@ -340,17 +343,18 @@ class EnsureJobAfterCooldown:
         self._task = asyncio.create_task(self._async_job())
         self._task.add_done_callback(self._async_task_done)
 
+    @callback
     def _async_cancel_timer(self) -> None:
         """Cancel any pending task."""
         if self._timer:
             self._timer.cancel()
             self._timer = None
 
+    @callback
     def async_schedule(self) -> None:
         """Ensure we execute after a cooldown period."""
-        # If you don't want to reschedule the timer in the future
-        # every time this is called you could instead return if
-        # self._timer is set and self._task is None.
+        # We want to reschedule the timer in the future
+        # every time this is called.
         self._async_cancel_timer()
         self._timer = self._loop.call_later(self._timeout, self._async_execute)
 
@@ -365,7 +369,7 @@ class EnsureJobAfterCooldown:
         except asyncio.CancelledError:
             pass
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Error cleaning up task")
+            _LOGGER.exception("Error cleaning up task", exc_info=True)
 
 
 class MQTT:
@@ -398,7 +402,8 @@ class MQTT:
         self._subscribe_debouncer = EnsureJobAfterCooldown(
             SUBSCRIBE_COOLDOWN, self._async_perform_subscriptions
         )
-        self._pending_subscriptions: dict[str, int] = {}  # topic, max qos
+        self._max_qos: dict[str, int] = {}  # topic, max qos
+        self._pending_subscriptions: dict[str, int] = {}  # topic, qos
         self._pending_subscriptions_lock = asyncio.Lock()
 
         if self.hass.state == CoreState.running:
@@ -582,9 +587,13 @@ class MQTT:
         async with self._pending_subscriptions_lock:
             for subscription in subscriptions:
                 topic, qos = subscription
-                if self._pending_subscriptions.setdefault(topic, qos) < qos:
+                old_qos: int = self._max_qos.setdefault(topic, qos) or 0
+                new_qos = max([old_qos, qos])
+                if new_qos > old_qos:
+                    self._max_qos[topic] = new_qos
+                if self._pending_subscriptions.setdefault(topic, new_qos) < new_qos:
                     # update the qos if the existing value has a lower qos
-                    self._pending_subscriptions[topic] = qos
+                    self._pending_subscriptions[topic] = new_qos
         if queue_only:
             return
         self._subscribe_debouncer.async_schedule()
@@ -619,6 +628,11 @@ class MQTT:
             """Remove subscription."""
             self._async_untrack_subscription(subscription)
             self._matching_subscriptions.cache_clear()
+            max_qos: int | None = self._max_qos.get(topic)
+            new_max: int | None = (
+                self._max_qos_from_subscriptions(topic) if max_qos is not None else None
+            )
+            self._max_qos[topic] = new_max or 0
 
             # Only unsubscribe if currently connected
             if self.connected:
@@ -754,6 +768,7 @@ class MQTT:
     async def _async_resubscribe(self) -> None:
         """Resubscribe on reconnect."""
         # Group subscriptions to only re-subscribe once for each topic.
+        self._max_qos.clear()
         keyfunc = attrgetter("topic")
         await self._async_queue_subscriptions(
             [
@@ -782,6 +797,12 @@ class MQTT:
             if subscription.matcher(topic):
                 subscriptions.append(subscription)
         return subscriptions
+
+    def _max_qos_from_subscriptions(self, topic: str) -> int | None:
+        """Get the highest current QoS according to the subscriptions."""
+        subs = self._matching_subscriptions(topic)
+        # pylint: disable-next=[consider-using-generator]
+        return max([sub.qos for sub in subs]) if subs else None
 
     @callback
     def _mqtt_handle_message(self, msg: mqtt.MQTTMessage) -> None:
