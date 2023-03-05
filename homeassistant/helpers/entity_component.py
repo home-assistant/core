@@ -133,7 +133,7 @@ class EntityComponent(Generic[_EntityT]):
             if p_type is not None:
                 self.hass.async_create_task(
                     self.async_setup_platform(p_type, p_config),
-                    "setup platform {p_type} {self.domain}",
+                    f"setup platform {p_type} {self.domain}",
                 )
 
         # Generic discovery listener for loading platform dynamically
