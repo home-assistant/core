@@ -1,4 +1,4 @@
-## Z-Wave JS Integration
+# Z-Wave Integration
 
 This document covers details that new contributors may find helpful when getting started.
 
@@ -6,7 +6,7 @@ This document covers details that new contributors may find helpful when getting
 
 This section can help new contributors learn how to improve Z-Wave device support within Home Assistant.
 
-The Z-Wave JS integration uses a discovery mechanism to create the necessary entities for each of your Z-Wave nodes. To perform this discovery, the integration iterates through each node's [Values](https://zwave-js.github.io/node-zwave-js/#/api/valueid) and compares them to a list of [discovery rules](./discovery.py). If there is a match between a particular discovery rule and the given Value, the integration creates an entity for that value using information sent from the discovery logic to indicate entity platform and instance type.
+The Z-Wave integration uses a discovery mechanism to create the necessary entities for each of your Z-Wave nodes. To perform this discovery, the integration iterates through each node's [Values](https://zwave-js.github.io/node-zwave-js/#/api/valueid) and compares them to a list of [discovery rules](./discovery.py). If there is a match between a particular discovery rule and the given Value, the integration creates an entity for that value using information sent from the discovery logic to indicate entity platform and instance type.
 
 In cases where an entity's functionality requires interaction with multiple Values, the discovery rule for that particular entity type is based on the primary Value, or the Value that must be there to indicate that this entity needs to be created, and then the rest of the Values required are discovered by the class instance for that entity. A good example of this is the discovery logic for the `climate` entity. Currently, the discovery logic is tied to the discovery of a Value with a property of `mode` and a command class of `Thermostat Mode`, but the actual entity uses many more Values than that to be fully functional as evident in the [code](./climate.py).
 
@@ -44,7 +44,7 @@ Forward the state of Z-Wave JS over a WebSocket connection.
 
 Consumes the WebSocket connection and makes the Z-Wave JS state available in Python.
 
-#### Z-Wave JS integration
+#### Z-Wave integration
 
 Represents Z-Wave devices in Home Assistant and allows control.
 
