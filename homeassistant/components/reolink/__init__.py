@@ -28,6 +28,7 @@ PLATFORMS = [
     Platform.BUTTON,
     Platform.CAMERA,
     Platform.NUMBER,
+    Platform.SIREN,
     Platform.SWITCH,
     Platform.UPDATE,
 ]
