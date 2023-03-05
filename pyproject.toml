@@ -268,10 +268,8 @@ ignore = [
     "D202",  # No blank lines allowed after function docstring
     "D203",  # 1 blank line required before class docstring
     "D213",  # Multi-line docstring summary should start at the second line
-    "D404",  # First word of the docstring should not be This
     "D406",  # Section name should end with a newline
     "D407",  # Section name underlining
-    "D411",  # Missing blank line before section
     "E501",  # line too long
     "E731",  # do not assign a lambda expression, use a def
 ]
