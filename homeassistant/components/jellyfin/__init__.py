@@ -2,18 +2,11 @@
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .client_wrapper import CannotConnect, InvalidAuth, create_client, validate_input
-from .const import (
-    CONF_CLIENT_DEVICE_ID,
-    DOMAIN,
-    JELLYFIN_NEW_SESSION,
-    LOGGER,
-    PLATFORMS,
-)
+from .const import CONF_CLIENT_DEVICE_ID, DOMAIN, LOGGER, PLATFORMS
 from .coordinator import JellyfinDataUpdateCoordinator, SessionsDataUpdateCoordinator
 from .models import JellyfinData
 
@@ -42,46 +35,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     server_info: dict[str, Any] = connect_result["Servers"][0]
 
-    sessions_coordinator = SessionsDataUpdateCoordinator(
-        hass, client, server_info, entry.data[CONF_CLIENT_DEVICE_ID], user_id
-    )
-
     coordinators: dict[str, JellyfinDataUpdateCoordinator[Any]] = {
-        "sessions": sessions_coordinator,
+        "sessions": SessionsDataUpdateCoordinator(
+            hass, client, server_info, entry.data[CONF_CLIENT_DEVICE_ID], user_id
+        ),
     }
 
     for coordinator in coordinators.values():
         await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = jellyfin_data = JellyfinData(
+    hass.data[DOMAIN][entry.entry_id] = JellyfinData(
         client_device_id=entry.data[CONF_CLIENT_DEVICE_ID],
         jellyfin_client=client,
         coordinators=coordinators,
-        session_ids=set(sessions_coordinator.data.keys()),
-    )
-
-    @callback
-    def _async_update_entities() -> None:
-        """Process entities and add them after an update."""
-        if not sessions_coordinator.last_update_success:
-            return
-
-        new_ids = set(sessions_coordinator.data.keys()) - jellyfin_data.session_ids
-
-        for session_id in new_ids:
-            LOGGER.debug("New client session detected: %s", session_id)
-
-            async_dispatcher_send(
-                hass,
-                JELLYFIN_NEW_SESSION,
-                session_id,
-                sessions_coordinator,
-            )
-
-            jellyfin_data.session_ids.add(session_id)
-
-    entry.async_on_unload(
-        sessions_coordinator.async_add_listener(_async_update_entities)
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

@@ -15,4 +15,3 @@ class JellyfinData:
     client_device_id: str
     jellyfin_client: JellyfinClient
     coordinators: dict[str, JellyfinDataUpdateCoordinator]
-    session_ids: set[str]

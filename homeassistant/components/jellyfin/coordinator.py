@@ -46,6 +46,8 @@ class JellyfinDataUpdateCoordinator(DataUpdateCoordinator[JellyfinDataT], ABC):
         self.client_device_id: str = client_device_id
         self.user_id: str = user_id
 
+        self.session_ids: set[str] = set()
+
     async def _async_update_data(self) -> JellyfinDataT:
         """Get the latest data from Jellyfin."""
         return await self._fetch_data()

@@ -1,7 +1,6 @@
 """Support for the Jellyfin media player."""
 from __future__ import annotations
 
-from functools import partial
 from typing import Any
 
 from homeassistant.components.media_player import (
@@ -14,28 +13,16 @@ from homeassistant.components.media_player import (
 from homeassistant.components.media_player.browse_media import BrowseMedia
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import parse_datetime
 
 from .browse_media import build_item_response, build_root_response
 from .client_wrapper import get_artwork_url
-from .const import CONTENT_TYPE_MAP, DOMAIN, JELLYFIN_NEW_SESSION
+from .const import CONTENT_TYPE_MAP, DOMAIN, LOGGER
 from .coordinator import JellyfinDataUpdateCoordinator
 from .entity import JellyfinEntity
 from .models import JellyfinData
-
-
-@callback
-def async_create_session_entities(
-    session_id: str,
-    coordinator: JellyfinDataUpdateCoordinator,
-    add_entities: AddEntitiesCallback,
-) -> None:
-    """Handle session discovery and create entities."""
-    session_data: dict[str, Any] = coordinator.data[session_id]
-    add_entities([JellyfinMediaPlayer(coordinator, session_id, session_data)])
 
 
 async def async_setup_entry(
@@ -47,19 +34,22 @@ async def async_setup_entry(
     jellyfin_data: JellyfinData = hass.data[DOMAIN][entry.entry_id]
     coordinator = jellyfin_data.coordinators["sessions"]
 
-    async_add_entities(
-        (
-            JellyfinMediaPlayer(coordinator, session_id, session_data)
-            for session_id, session_data in coordinator.data.items()
-        ),
-    )
+    @callback
+    def handle_coordinator_update() -> None:
+        """Add media player per session."""
+        entities: list[MediaPlayerEntity] = []
+        for session_id, session_data in coordinator.data.items():
+            if (session_id not in coordinator.session_ids):
+                entity: MediaPlayerEntity = JellyfinMediaPlayer(
+                    coordinator, session_id, session_data
+                )
+                LOGGER.debug("Creating media player for session: %s", session_id)
+                coordinator.session_ids.add(session_id)
+                entities.append(entity)
+        async_add_entities(entities)
 
     entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            JELLYFIN_NEW_SESSION,
-            partial(async_create_session_entities, add_entities=async_add_entities),
-        )
+        coordinator.async_add_listener(handle_coordinator_update)
     )
 
 
