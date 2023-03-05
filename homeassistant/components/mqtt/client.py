@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine, Iterable
+import copy
 from functools import lru_cache
 import inspect
 from itertools import chain, groupby
@@ -667,7 +668,7 @@ class MQTT:
 
     async def _async_perform_subscriptions(self) -> None:
         """Perform MQTT client subscriptions."""
-
+        subscriptions: dict[str, int]
         # Section 3.3.1.3 in the specification:
         # http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html
         # When sending a PUBLISH Packet to a Client the Server MUST
@@ -683,18 +684,20 @@ class MQTT:
         def _process_client_subscriptions() -> list[tuple[int, int]]:
             """Initiate all subscriptions on the MQTT client and return the results."""
             subscribe_result_list = []
-            for topic, qos in self._pending_subscriptions.items():
+            for topic, qos in subscriptions.items():
                 result, mid = self._mqttc.subscribe(topic, qos)
                 subscribe_result_list.append((result, mid))
                 _LOGGER.debug("Subscribing to %s, mid: %s, qos: %s", topic, mid, qos)
-            self._pending_subscriptions.clear()
             return subscribe_result_list
 
         async with self._pending_subscriptions_lock:
-            async with self._paho_lock:
-                results = await self.hass.async_add_executor_job(
-                    _process_client_subscriptions
-                )
+            subscriptions = copy.deepcopy(self._pending_subscriptions)
+            self._pending_subscriptions.clear()
+
+        async with self._paho_lock:
+            results = await self.hass.async_add_executor_job(
+                _process_client_subscriptions
+            )
 
         tasks: list[Coroutine[Any, Any, None]] = []
         errors: list[int] = []
