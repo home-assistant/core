@@ -1,6 +1,7 @@
 """Config flow for the Jellyfin integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -38,6 +39,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the Jellyfin config flow."""
         self.client_device_id: str | None = None
+        self._reauth_input: dict[str, Any] | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -82,4 +84,59 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Perform reauth upon an API authentication error."""
+        self._reauth_input = dict(entry_data)
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Dialog that informs the user that reauth is required."""
+        errors: dict[str, str] = {}
+
+        assert self._reauth_input is not None
+
+        if user_input is not None:
+            self._reauth_input.update(user_input)
+            if self.client_device_id is None:
+                self.client_device_id = _generate_client_device_id()
+
+            client = create_client(device_id=self.client_device_id)
+            try:
+                await validate_input(self.hass, user_input, client)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception as ex:  # pylint: disable=broad-except
+                errors["base"] = "unknown"
+                _LOGGER.exception(ex)
+            else:
+                entry = self.hass.config_entries.async_get_entry(
+                    self.context["entry_id"]
+                )
+
+                assert entry is not None
+                self.hass.config_entries.async_update_entry(
+                    entry, data=self._reauth_input
+                )
+
+                await self.hass.config_entries.async_reload(entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
+
+        url = self._reauth_input.get(CONF_URL)
+        username = self._reauth_input.get(CONF_USERNAME)
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONF_URL, default=url): str,
+                vol.Required(CONF_USERNAME, default=username): str,
+                vol.Optional(CONF_PASSWORD, default=""): str,
+            }
+        )
+
+        return self.async_show_form(
+            step_id="reauth_confirm", data_schema=data_schema, errors=errors
         )
