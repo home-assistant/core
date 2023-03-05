@@ -5,8 +5,8 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import dynalite
-from homeassistant.core import HomeAssistant
 from homeassistant.const import CONF_PORT
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
