@@ -1,45 +1,125 @@
 """Tests for VeSync humidifiers."""
+import logging
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from unittest.mock import patch
+import pytest
+from pyvesync.vesyncfan import VeSyncHumid200300S
 
 from homeassistant.components.humidifier import (
+    MODE_AUTO,
+    MODE_NORMAL,
+    MODE_SLEEP,
     HumidifierDeviceClass,
     HumidifierEntityFeature,
 )
 from homeassistant.components.vesync.humidifier import (
+    DOMAIN,
     MAX_HUMIDITY,
     MIN_HUMIDITY,
+    VS_HUMIDIFIERS,
     VeSyncHumidifierEntityDescription,
     VeSyncHumidifierHA,
+    async_setup_entry,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-TEST_CID1 = "humidifier_200s"
-TEST_CID2 = "humidifier_600s"
-TEST_HUMIDIFIER_ENTITIY = f"humidifier.{ TEST_CID1 }"
-
-
-# async def test_discovered_unsupported_humidifier(
-#     hass: HomeAssistant, setup_platform, caplog: pytest.LogCaptureFixture
-# ) -> None:
-#     """Test the discovery mechanism can handle unsupported humidifiers."""
-#     mock_humidifier = MagicMock()
-#     mock_humidifier.device_type = "invalid_type"
-#     mock_humidifier.device_name = "invalid_name"
-#     config_dict = {"module": "invalid_module"}
-#     mock_config_dict = MagicMock()
-#     mock_config_dict.__getitem__.side_effect = config_dict.__getitem__
-#     mock_humidifier.config_dict = mock_config_dict
-
-#     async_dispatcher_send(hass, VS_DISCOVERY.format(VS_HUMIDIFIERS), [mock_humidifier])
-#     assert caplog.records[0].msg == "%s - Unknown device type/module - %s/%s"
-#     assert (
-#         caplog.messages[0]
-#         == "invalid_name - Unknown device type/module - invalid_type/invalid_module"
-#     )
+# TEST_CID1 = "humidifier_200s"
+# TEST_CID2 = "humidifier_600s"
+# TEST_HUMIDIFIER_ENTITIY = f"humidifier.{ TEST_CID1 }"
 
 
-async def test_humidifier_entity(hass: HomeAssistant, humidifier) -> None:
+async def test_async_setup_entry(
+    hass: HomeAssistant,
+    config_entry,
+    features,
+    humidifier: VeSyncHumid200300S,
+    humidifier_nightlight: VeSyncHumid200300S,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the discovery mechanism can handle unsupported humidifiers."""
+    caplog.set_level(logging.INFO)
+
+    callback = AsyncMock(AddEntitiesCallback)
+
+    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][VS_HUMIDIFIERS] = [humidifier, humidifier_nightlight]
+    with patch.object(config_entry, "async_on_unload") as mock_on_unload, patch(
+        "homeassistant.components.vesync.common.humid_features"
+    ) as mock_features:
+        mock_features.values.side_effect = features.values
+        mock_features.keys.side_effect = features.keys
+
+        await async_setup_entry(hass, config_entry, callback)
+        await hass.async_block_till_done()
+
+    callback.assert_called_once()
+    assert len(callback.call_args.args[0]) == 2
+    assert callback.call_args.args[0][0].device == humidifier
+    assert callback.call_args.args[0][1].device == humidifier_nightlight
+    assert callback.call_args.kwargs == {"update_before_add": True}
+    mock_on_unload.assert_called_once()
+    assert len(caplog.records) == 0
+
+
+async def test_async_setup_entry__empty(
+    hass: HomeAssistant, config_entry, features, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the discovery mechanism can handle no devices."""
+    caplog.set_level(logging.INFO)
+
+    callback = AsyncMock(AddEntitiesCallback)
+
+    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][VS_HUMIDIFIERS] = []
+    with patch.object(config_entry, "async_on_unload") as mock_on_unload, patch(
+        "homeassistant.components.vesync.common.humid_features"
+    ) as mock_features:
+        mock_features.values.side_effect = features.values
+        mock_features.keys.side_effect = features.keys
+
+        await async_setup_entry(hass, config_entry, callback)
+        await hass.async_block_till_done()
+
+    callback.assert_called_once()
+    assert callback.call_args.args == ([],)
+    assert callback.call_args.kwargs == {"update_before_add": True}
+    mock_on_unload.assert_called_once()
+    assert len(caplog.records) == 0
+
+
+async def test_async_setup_entry__invalid(
+    hass: HomeAssistant, config_entry, features, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the discovery mechanism can handle no devices."""
+    caplog.set_level(logging.INFO)
+
+    mock_humidifier = MagicMock()
+    mock_humidifier.device_type = "invalid_type"
+    mock_humidifier.device_name = "invalid_name"
+
+    callback = AsyncMock(AddEntitiesCallback)
+
+    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][VS_HUMIDIFIERS] = [mock_humidifier]
+    with patch.object(config_entry, "async_on_unload") as mock_on_unload, patch(
+        "homeassistant.components.vesync.common.humid_features"
+    ) as mock_features:
+        mock_features.values.side_effect = features.values
+        mock_features.keys.side_effect = features.keys
+
+        await async_setup_entry(hass, config_entry, callback)
+        await hass.async_block_till_done()
+
+    callback.assert_called_once()
+    assert callback.call_args.args == ([],)
+    assert callback.call_args.kwargs == {"update_before_add": True}
+    mock_on_unload.assert_called_once()
+    assert caplog.records[0].msg == "%s - Unknown device type - %s"
+    assert caplog.messages[0] == "invalid_name - Unknown device type - invalid_type"
+
+
+async def test_humidifier_entity__init(humidifier: VeSyncHumid200300S) -> None:
     """Test the humidifier entity constructor."""
     description = VeSyncHumidifierEntityDescription()
     entity = VeSyncHumidifierHA(humidifier, description)
@@ -61,35 +141,39 @@ async def test_humidifier_entity(hass: HomeAssistant, humidifier) -> None:
     assert entity.unique_id == "cid1"
 
 
-async def test_humidifier_entity__unique_info(humidifier) -> None:
+async def test_humidifier_entity__unique_info(humidifier: VeSyncHumid200300S) -> None:
     """Test the humidifier unique_info impl."""
     description = VeSyncHumidifierEntityDescription()
     entity = VeSyncHumidifierHA(humidifier, description)
 
+    humidifier.uuid = "uuid"
     assert entity.unique_info == "uuid"
 
 
-async def test_humidifier_entity__extra_state_attributes(humidifier) -> None:
+async def test_humidifier_entity__extra_state_attributes(
+    humidifier: VeSyncHumid200300S,
+) -> None:
     """Test the humidifier extra_state_attributes impl."""
     description = VeSyncHumidifierEntityDescription()
     entity = VeSyncHumidifierHA(humidifier, description)
 
+    humidifier.warm_mist_feature = True
     assert entity.extra_state_attributes == {"warm_mist_feature": True}
 
 
-async def test_humidifier_entity__is_on(humidifier) -> None:
+async def test_humidifier_entity__is_on(humidifier: VeSyncHumid200300S) -> None:
     """Test the humidifier is_on impl."""
     description = VeSyncHumidifierEntityDescription()
     entity = VeSyncHumidifierHA(humidifier, description)
 
+    humidifier.is_on = True
     assert entity.is_on is True
-
     humidifier.is_on = False
     assert entity.is_on is False
 
 
-async def test_humidifier_entity__turn_on(humidifier) -> None:
-    """Test the humidifier is_on impl."""
+async def test_humidifier_entity__turn_on(humidifier: VeSyncHumid200300S) -> None:
+    """Test the humidifier turn_on impl."""
     description = VeSyncHumidifierEntityDescription()
     entity = VeSyncHumidifierHA(humidifier, description)
 
@@ -100,176 +184,186 @@ async def test_humidifier_entity__turn_on(humidifier) -> None:
     assert humidifier.turn_on.call_count == 1
 
 
-# async def test_turn_on(hass: HomeAssistant, setup_platform) -> None:
-#     """Test the humidifier can be turned on."""
-#     with patch("pyvesync.vesyncfan.VeSyncHumid200300S.turn_on") as mock_turn_on:
-#         await hass.services.async_call(
-#             HUMIDIFIER_DOMAIN,
-#             SERVICE_TURN_ON,
-#             {ATTR_ENTITY_ID: TEST_HUMIDIFIER_ENTITIY},
-#             blocking=True,
-#         )
-#         await hass.async_block_till_done()
+async def test_humidifier_entity__mode(humidifier: VeSyncHumid200300S) -> None:
+    """Test the humidifier mode impl."""
+    description = VeSyncHumidifierEntityDescription()
+    entity = VeSyncHumidifierHA(humidifier, description)
 
-#         mock_turn_on.assert_called_once()
-
-
-# async def test_turn_off(hass: HomeAssistant, setup_platform) -> None:
-#     """Test the humidifier can be turned off."""
-#     with patch("pyvesync.vesyncfan.VeSyncHumid200300S.turn_off") as mock_turn_off:
-#         await hass.services.async_call(
-#             HUMIDIFIER_DOMAIN,
-#             SERVICE_TURN_OFF,
-#             {ATTR_ENTITY_ID: TEST_HUMIDIFIER_ENTITIY},
-#             blocking=True,
-#         )
-#         await hass.async_block_till_done()
-
-#         mock_turn_off.assert_called_once()
+    entity._attr_available_modes = None
+    assert entity.mode is None
+    entity._attr_available_modes = ["None"]
+    assert entity.mode is None
+    entity._attr_available_modes = ["None", "normal"]
+    assert entity.mode == "normal"
 
 
-# async def test_get_mode(hass: HomeAssistant, setup_platform) -> None:
-#     """Test the humidifier can change modes."""
-#     with patch(
-#         "pyvesync.vesyncfan.VeSyncHumid200300S.set_humidity_mode"
-#     ) as mock_set_mode:
-#         await hass.services.async_call(
-#             HUMIDIFIER_DOMAIN,
-#             SERVICE_SET_MODE,
-#             {ATTR_ENTITY_ID: TEST_HUMIDIFIER_ENTITIY, ATTR_MODE: MODE_AUTO},
-#             blocking=True,
-#         )
-#         await hass.async_block_till_done()
-#         mock_set_mode.assert_called_with(MODE_AUTO)
+async def test_humidifier_entity__set_mode_normal_when_off(
+    humidifier: VeSyncHumid200300S,
+) -> None:
+    """Test the humidifier mode impl."""
+    description = VeSyncHumidifierEntityDescription()
+    entity = VeSyncHumidifierHA(humidifier, description)
+    humidifier.is_on = False
+
+    entity._attr_available_modes = [MODE_NORMAL]
+    with patch.object(entity, "schedule_update_ha_state") as mock_schedule:
+        entity.set_mode(MODE_NORMAL)
+        mock_schedule.assert_called_once()
+
+    humidifier.turn_on.assert_called_once()
+    humidifier.set_manual_mode.assert_called_once()
+    humidifier.set_humidity_mode.assert_not_called()
+    humidifier.set_auto_mode.assert_not_called()
+    assert entity._attr_mode == MODE_NORMAL
 
 
-# async def test_set_mode(hass: HomeAssistant, setup_platform) -> None:
-#     """Test the humidifier can change modes."""
-#     with patch(
-#         "pyvesync.vesyncfan.VeSyncHumid200300S.set_humidity_mode"
-#     ) as mock_set_mode:
-#         await hass.services.async_call(
-#             HUMIDIFIER_DOMAIN,
-#             SERVICE_SET_MODE,
-#             {ATTR_ENTITY_ID: TEST_HUMIDIFIER_ENTITIY, ATTR_MODE: MODE_AUTO},
-#             blocking=True,
-#         )
-#         await hass.async_block_till_done()
-#         mock_set_mode.assert_called_with(MODE_AUTO)
+async def test_humidifier_entity__set_mode_normal(
+    humidifier: VeSyncHumid200300S,
+) -> None:
+    """Test the humidifier mode impl."""
+    description = VeSyncHumidifierEntityDescription()
+    entity = VeSyncHumidifierHA(humidifier, description)
+    humidifier.is_on = True
 
-#         await hass.services.async_call(
-#             HUMIDIFIER_DOMAIN,
-#             SERVICE_SET_MODE,
-#             {ATTR_ENTITY_ID: TEST_HUMIDIFIER_ENTITIY, ATTR_MODE: MODE_NORMAL},
-#             blocking=True,
-#         )
-#         await hass.async_block_till_done()
-#         mock_set_mode.assert_called_with("manual")
+    entity._attr_available_modes = [MODE_NORMAL]
+    with patch.object(entity, "schedule_update_ha_state") as mock_schedule:
+        entity.set_mode(MODE_NORMAL)
+        mock_schedule.assert_called_once()
 
-#         await hass.services.async_call(
-#             HUMIDIFIER_DOMAIN,
-#             SERVICE_SET_MODE,
-#             {ATTR_ENTITY_ID: TEST_HUMIDIFIER_ENTITIY, ATTR_MODE: MODE_SLEEP},
-#             blocking=True,
-#         )
-#         await hass.async_block_till_done()
-#         mock_set_mode.assert_called_with(MODE_SLEEP)
-
-#         with pytest.raises(ValueError):
-#             await hass.services.async_call(
-#                 HUMIDIFIER_DOMAIN,
-#                 SERVICE_SET_MODE,
-#                 {
-#                     ATTR_ENTITY_ID: TEST_HUMIDIFIER_ENTITIY,
-#                     ATTR_MODE: "ModeThatDoesntExist",
-#                 },
-#                 blocking=True,
-#             )
+    humidifier.turn_on.assert_not_called()
+    humidifier.set_manual_mode.assert_called_once()
+    humidifier.set_humidity_mode.assert_not_called()
+    humidifier.set_auto_mode.assert_not_called()
+    assert entity._attr_mode == MODE_NORMAL
 
 
-# async def test_set_mode_when_off(hass: HomeAssistant, setup_platform) -> None:
-#     """Test the humidifer can set the mode when off."""
-#     with patch(
-#         "pyvesync.vesyncfan.VeSyncHumid200300S.set_humidity_mode"
-#     ) as mock_set_mode, patch(
-#         "pyvesync.vesyncfan.VeSyncHumid200300S.is_on", new_callable=PropertyMock
-#     ) as mock_is_on, patch(
-#         "pyvesync.vesyncfan.VeSyncHumid200300S.turn_on"
-#     ) as mock_turn_on:
-#         mock_is_on.return_value = False
+async def test_humidifier_entity__set_mode_sleep(
+    humidifier: VeSyncHumid200300S,
+) -> None:
+    """Test the humidifier mode impl."""
+    description = VeSyncHumidifierEntityDescription()
+    entity = VeSyncHumidifierHA(humidifier, description)
+    humidifier.is_on = True
 
-#         await hass.services.async_call(
-#             HUMIDIFIER_DOMAIN,
-#             SERVICE_SET_MODE,
-#             {ATTR_ENTITY_ID: TEST_HUMIDIFIER_ENTITIY, ATTR_MODE: MODE_AUTO},
-#             blocking=True,
-#         )
-#         await hass.async_block_till_done()
+    entity._attr_available_modes = [MODE_SLEEP]
+    with patch.object(entity, "schedule_update_ha_state") as mock_schedule:
+        entity.set_mode(MODE_SLEEP)
+        mock_schedule.assert_called_once()
 
-#         mock_set_mode.assert_called_with(MODE_AUTO)
-#         mock_is_on.assert_called()
-#         mock_turn_on.assert_called()
+    humidifier.turn_on.assert_not_called()
+    humidifier.set_manual_mode.assert_not_called()
+    humidifier.set_humidity_mode.assert_called_once()
+    humidifier.set_auto_mode.assert_not_called()
+    assert entity._attr_mode == MODE_SLEEP
 
 
-# async def test_set_mode__no_available_modes(
-#     hass: HomeAssistant, setup_platform
-# ) -> None:
-#     """Test the humidifer can set the mode when off."""
-#     with patch(
-#         "homeassistant.components.vesync.humidifier.VeSyncHumidifierHA.available_modes",
-#         new_callable=PropertyMock,
-#     ) as mock_available_modes:
-#         mock_available_modes.return_value = None
+async def test_humidifier_entity__set_mode_auto(humidifier: VeSyncHumid200300S) -> None:
+    """Test the humidifier mode impl."""
+    description = VeSyncHumidifierEntityDescription()
+    entity = VeSyncHumidifierHA(humidifier, description)
+    humidifier.is_on = True
 
-#         with pytest.raises(ValueError) as ex_info:
-#             await hass.services.async_call(
-#                 HUMIDIFIER_DOMAIN,
-#                 SERVICE_SET_MODE,
-#                 {
-#                     ATTR_ENTITY_ID: TEST_HUMIDIFIER_ENTITIY,
-#                     ATTR_MODE: "ModeThatDoesntExist",
-#                 },
-#                 blocking=True,
-#             )
+    entity._attr_available_modes = [MODE_AUTO]
+    with patch.object(entity, "schedule_update_ha_state") as mock_schedule:
+        entity.set_mode(MODE_AUTO)
+        mock_schedule.assert_called_once()
 
-#         assert ex_info.value.args[0] == "No available modes were specified"
+    humidifier.turn_on.assert_not_called()
+    humidifier.set_manual_mode.assert_not_called()
+    humidifier.set_humidity_mode.assert_not_called()
+    humidifier.set_auto_mode.assert_called_once()
+    assert entity._attr_mode == MODE_AUTO
 
 
-# async def test_set_humidity(hass: HomeAssistant, setup_platform) -> None:
-#     """Test the humidifier can set humidity level."""
-#     with patch(
-#         "pyvesync.vesyncfan.VeSyncHumid200300S.set_humidity"
-#     ) as mock_set_humidity:
-#         await hass.services.async_call(
-#             HUMIDIFIER_DOMAIN,
-#             SERVICE_SET_HUMIDITY,
-#             {ATTR_ENTITY_ID: TEST_HUMIDIFIER_ENTITIY, ATTR_HUMIDITY: 60},
-#             blocking=True,
-#         )
-#         await hass.async_block_till_done()
-#         mock_set_humidity.assert_called_once_with(60)
+async def test_humidifier_entity__set_mode_validation(
+    humidifier: VeSyncHumid200300S,
+) -> None:
+    """Test the humidifier mode impl."""
+    description = VeSyncHumidifierEntityDescription()
+    entity = VeSyncHumidifierHA(humidifier, description)
+
+    entity._attr_available_modes = None
+    with pytest.raises(ValueError) as ex_info:
+        entity.set_mode("normal")
+        assert ex_info.value.args[0] == "No available modes were specified"
+
+    entity._attr_available_modes = ["normal"]
+    with pytest.raises(ValueError) as ex_info:
+        entity.set_mode(None)
+        assert (
+            ex_info.value.args[0]
+            == "None is not one of the available modes: ['normal']"
+        )
+    with pytest.raises(ValueError) as ex_info:
+        entity.set_mode("auto")
+        assert (
+            ex_info.value.args[0]
+            == "auto is not one of the available modes: ['normal']"
+        )
 
 
-# async def test_set_humidity_when_off(hass: HomeAssistant, setup_platform) -> None:
-#     """Test the humidifier will turn on before it sets the humidity."""
+async def test_humidifier_entity__target_humidity(
+    humidifier: VeSyncHumid200300S,
+) -> None:
+    """Test the humidifier is_on impl."""
+    description = VeSyncHumidifierEntityDescription()
+    entity = VeSyncHumidifierHA(humidifier, description)
 
-#     with patch(
-#         "pyvesync.vesyncfan.VeSyncHumid200300S.set_humidity"
-#     ) as mock_set_humidity, patch(
-#         "pyvesync.vesyncfan.VeSyncHumid200300S.is_on", new_callable=PropertyMock
-#     ) as mock_is_on, patch(
-#         "pyvesync.vesyncfan.VeSyncHumid200300S.turn_on"
-#     ) as mock_turn_on:
-#         mock_is_on.return_value = False
+    humidifier.auto_humidity = 20
+    assert entity.target_humidity == 20
 
-#         await hass.services.async_call(
-#             HUMIDIFIER_DOMAIN,
-#             SERVICE_SET_HUMIDITY,
-#             {ATTR_ENTITY_ID: TEST_HUMIDIFIER_ENTITIY, ATTR_HUMIDITY: 60},
-#             blocking=True,
-#         )
-#         await hass.async_block_till_done()
 
-#         mock_is_on.assert_called()
-#         mock_turn_on.assert_called()
-#         mock_set_humidity.assert_called_once_with(60)
+async def test_humidifier_entity__set_humidity(
+    humidifier: VeSyncHumid200300S,
+) -> None:
+    """Test the humidifier mode impl."""
+    description = VeSyncHumidifierEntityDescription()
+    entity = VeSyncHumidifierHA(humidifier, description)
+    humidifier.is_on = True
+
+    entity._attr_min_humidity = 30
+    entity._attr_max_humidity = 80
+    with patch.object(entity, "schedule_update_ha_state") as mock_schedule:
+        entity.set_humidity(50)
+        mock_schedule.assert_called_once()
+
+    humidifier.turn_on.assert_not_called()
+    humidifier.set_humidity.assert_called_once_with(50)
+    assert entity._attr_mode == MODE_NORMAL
+
+
+async def test_humidifier_entity__set_humidity_when_off(
+    humidifier: VeSyncHumid200300S,
+) -> None:
+    """Test the humidifier mode impl."""
+    description = VeSyncHumidifierEntityDescription()
+    entity = VeSyncHumidifierHA(humidifier, description)
+    humidifier.is_on = False
+
+    entity._attr_min_humidity = 30
+    entity._attr_max_humidity = 80
+    with patch.object(entity, "schedule_update_ha_state") as mock_schedule:
+        entity.set_humidity(50)
+        mock_schedule.assert_called_once()
+
+    humidifier.turn_on.assert_called_once()
+    humidifier.set_humidity.assert_called_once_with(50)
+    assert entity._attr_mode == MODE_NORMAL
+
+
+async def test_humidifier_entity__set_humidity_validation(
+    humidifier: VeSyncHumid200300S,
+) -> None:
+    """Test the humidifier mode impl."""
+    description = VeSyncHumidifierEntityDescription()
+    entity = VeSyncHumidifierHA(humidifier, description)
+
+    entity._attr_min_humidity = 30
+    entity._attr_max_humidity = 80
+    with pytest.raises(ValueError) as ex_info:
+        entity.set_humidity(29)
+        assert ex_info.value.args[0] == "29 is not between 30 and 80 (inclusive)"
+
+    with pytest.raises(ValueError) as ex_info:
+        entity.set_humidity(81)
+        assert ex_info.value.args[0] == "81 is not between 30 and 80 (inclusive)"

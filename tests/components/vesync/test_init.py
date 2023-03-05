@@ -127,7 +127,7 @@ async def test_async_setup_entry__with_devices(
     assert hass.data[DOMAIN][VS_MANAGER] == manager_devices
     assert len(hass.data[DOMAIN][VS_FANS]) == 1
     assert len(hass.data[DOMAIN][VS_HUMIDIFIERS]) == 2
-    assert len(hass.data[DOMAIN][VS_LIGHTS]) == 3
+    assert len(hass.data[DOMAIN][VS_LIGHTS]) == 4
     assert len(hass.data[DOMAIN][VS_NUMBERS]) == 2
     assert len(hass.data[DOMAIN][VS_SENSORS]) == 4
     assert len(hass.data[DOMAIN][VS_SWITCHES]) == 4

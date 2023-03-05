@@ -171,9 +171,7 @@ def fan_fixture() -> VeSyncAirBypass:
 @pytest.fixture(name="humidifier")
 def humidifier_fixture() -> VeSyncHumid200300S:
     """Create a mock VeSync humidifier fixture."""
-    mock_fixture = Mock(
-        VeSyncHumid200300S,
-    )
+    mock_fixture = Mock(VeSyncHumid200300S)
     mock_fixture.auto_humidity = 50
     mock_fixture.cid = "cid"
     mock_fixture.connection_status = "online"
@@ -184,6 +182,9 @@ def humidifier_fixture() -> VeSyncHumid200300S:
     mock_fixture.device_type = HUMIDIFIER_MODEL
     mock_fixture.is_on = True
     mock_fixture.night_light = False
+    mock_fixture.set_auto_mode = Mock()
+    mock_fixture.set_humidity_mode = Mock()
+    mock_fixture.set_manual_mode = Mock()
     mock_fixture.sub_device_no = 1
     mock_fixture.turn_on = Mock()
     mock_fixture.turn_off = Mock()
@@ -207,12 +208,12 @@ def humidifier_fixture() -> VeSyncHumid200300S:
 
 
 @pytest.fixture(name="humidifier_nightlight")
-def humidifier_with_nightlight_fixture() -> VeSyncHumid200300S:
+def humidifier_with_nightlight_fixture(
+    humidifier: VeSyncHumid200300S,
+) -> VeSyncHumid200300S:
     """Create a mock VeSync humidifier fixture with night light."""
-    mock_fixture = Mock(VeSyncHumid200300S)
-    mock_fixture.device_type = HUMIDIFIER_MODEL
-    mock_fixture.night_light = True
-    return mock_fixture
+    humidifier.night_light = True
+    return humidifier
 
 
 @pytest.fixture(name="bulb")
