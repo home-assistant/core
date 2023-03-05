@@ -31,7 +31,7 @@ async def test_get_config(hass, hass_ws_client):
 
     await client.send_json(
         {
-            "id": "24",
+            "id": 24,
             "type": "dynalite/get-config",
         }
     )
@@ -86,7 +86,7 @@ async def test_save_config(hass, hass_ws_client):
 
     await client.send_json(
         {
-            "id": "24",
+            "id": 24,
             "type": "dynalite/save-config",
             "entry_id": entry2.entry_id,
             "config": {dynalite.CONF_HOST: host3, CONF_PORT: port3},
@@ -126,7 +126,7 @@ async def test_save_config_invalid_entry(hass, hass_ws_client):
     client = await hass_ws_client(hass)
     await client.send_json(
         {
-            "id": "24",
+            "id": 24,
             "type": "dynalite/save-config",
             "entry_id": "junk",
             "config": {dynalite.CONF_HOST: host2, CONF_PORT: port2},
