@@ -1,13 +1,16 @@
 """Test ZHA registries."""
+import inspect
 from unittest import mock
 
 import pytest
+import zhaquirks
 
 import homeassistant.components.zha.core.registries as registries
 from homeassistant.helpers import entity_registry as er
 
 MANUFACTURER = "mock manufacturer"
 MODEL = "mock model"
+QUIRK_CLASS = "mock.class"
 
 
 @pytest.fixture
@@ -16,6 +19,7 @@ def zha_device():
     dev = mock.MagicMock()
     dev.manufacturer = MANUFACTURER
     dev.model = MODEL
+    dev.quirk_class = QUIRK_CLASS
     return dev
 
 
@@ -70,6 +74,16 @@ def channels(channel):
         (registries.MatchRule(models="no match"), False),
         (registries.MatchRule(models=MODEL, aux_channels="aux_channel"), True),
         (registries.MatchRule(models="no match", aux_channels="aux_channel"), False),
+        (registries.MatchRule(quirk_classes=QUIRK_CLASS), True),
+        (registries.MatchRule(quirk_classes="no match"), False),
+        (
+            registries.MatchRule(quirk_classes=QUIRK_CLASS, aux_channels="aux_channel"),
+            True,
+        ),
+        (
+            registries.MatchRule(quirk_classes="no match", aux_channels="aux_channel"),
+            False,
+        ),
         # match everything
         (
             registries.MatchRule(
@@ -77,6 +91,7 @@ def channels(channel):
                 channel_names={"on_off", "level"},
                 manufacturers=MANUFACTURER,
                 models=MODEL,
+                quirk_classes=QUIRK_CLASS,
             ),
             True,
         ),
@@ -124,11 +139,35 @@ def channels(channel):
             registries.MatchRule(channel_names="on_off", models=lambda x: x != MODEL),
             False,
         ),
+        (
+            registries.MatchRule(
+                channel_names="on_off", quirk_classes={"random quirk", QUIRK_CLASS}
+            ),
+            True,
+        ),
+        (
+            registries.MatchRule(
+                channel_names="on_off", quirk_classes={"random quirk", "another quirk"}
+            ),
+            False,
+        ),
+        (
+            registries.MatchRule(
+                channel_names="on_off", quirk_classes=lambda x: x == QUIRK_CLASS
+            ),
+            True,
+        ),
+        (
+            registries.MatchRule(
+                channel_names="on_off", quirk_classes=lambda x: x != QUIRK_CLASS
+            ),
+            False,
+        ),
     ],
 )
 def test_registry_matching(rule, matched, channels) -> None:
     """Test strict rule matching."""
-    assert rule.strict_matched(MANUFACTURER, MODEL, channels) is matched
+    assert rule.strict_matched(MANUFACTURER, MODEL, channels, QUIRK_CLASS) is matched
 
 
 @pytest.mark.parametrize(
@@ -197,6 +236,8 @@ def test_registry_matching(rule, matched, channels) -> None:
         (registries.MatchRule(manufacturers=MANUFACTURER), True),
         (registries.MatchRule(models=MODEL), True),
         (registries.MatchRule(models="no match"), False),
+        (registries.MatchRule(quirk_classes=QUIRK_CLASS), True),
+        (registries.MatchRule(quirk_classes="no match"), False),
         # match everything
         (
             registries.MatchRule(
@@ -204,6 +245,7 @@ def test_registry_matching(rule, matched, channels) -> None:
                 channel_names={"on_off", "level"},
                 manufacturers=MANUFACTURER,
                 models=MODEL,
+                quirk_classes=QUIRK_CLASS,
             ),
             True,
         ),
@@ -211,7 +253,7 @@ def test_registry_matching(rule, matched, channels) -> None:
 )
 def test_registry_loose_matching(rule, matched, channels) -> None:
     """Test loose rule matching."""
-    assert rule.loose_matched(MANUFACTURER, MODEL, channels) is matched
+    assert rule.loose_matched(MANUFACTURER, MODEL, channels, QUIRK_CLASS) is matched
 
 
 def test_match_rule_claim_channels_color(channel) -> None:
@@ -264,18 +306,24 @@ def entity_registry():
 
 
 @pytest.mark.parametrize(
-    ("manufacturer", "model", "match_name"),
+    ("manufacturer", "model", "quirk_class", "match_name"),
     (
-        ("random manufacturer", "random model", "OnOff"),
-        ("random manufacturer", MODEL, "OnOffModel"),
-        (MANUFACTURER, "random model", "OnOffManufacturer"),
-        (MANUFACTURER, MODEL, "OnOffModelManufacturer"),
-        (MANUFACTURER, "some model", "OnOffMultimodel"),
+        ("random manufacturer", "random model", "random.class", "OnOff"),
+        ("random manufacturer", MODEL, "random.class", "OnOffModel"),
+        (MANUFACTURER, "random model", "random.class", "OnOffManufacturer"),
+        ("random manufacturer", "random model", QUIRK_CLASS, "OnOffQuirk"),
+        (MANUFACTURER, MODEL, "random.class", "OnOffModelManufacturer"),
+        (MANUFACTURER, "some model", "random.class", "OnOffMultimodel"),
     ),
 )
 def test_weighted_match(
-    channel, entity_registry: er.EntityRegistry, manufacturer, model, match_name
-) -> None:
+    channel,
+    entity_registry: er.EntityRegistry,
+    manufacturer,
+    model,
+    quirk_class,
+    match_name,
+):
     """Test weightedd match."""
 
     s = mock.sentinel
@@ -308,11 +356,17 @@ def test_weighted_match(
     class OnOffModelManufacturer:
         pass
 
+    @entity_registry.strict_match(
+        s.component, channel_names="on_off", quirk_classes=QUIRK_CLASS
+    )
+    class OnOffQuirk:
+        pass
+
     ch_on_off = channel("on_off", 6)
     ch_level = channel("level", 8)
 
     match, claimed = entity_registry.get_entity(
-        s.component, manufacturer, model, [ch_on_off, ch_level]
+        s.component, manufacturer, model, [ch_on_off, ch_level], quirk_class
     )
 
     assert match.__name__ == match_name
@@ -335,7 +389,10 @@ def test_multi_sensor_match(channel, entity_registry: er.EntityRegistry) -> None
     ch_illuminati = channel("illuminance", 0x0401)
 
     match, claimed = entity_registry.get_multi_entity(
-        "manufacturer", "model", channels=[ch_se, ch_illuminati]
+        "manufacturer",
+        "model",
+        channels=[ch_se, ch_illuminati],
+        quirk_class="quirk_class",
     )
 
     assert s.binary_sensor in match
@@ -360,7 +417,10 @@ def test_multi_sensor_match(channel, entity_registry: er.EntityRegistry) -> None
         pass
 
     match, claimed = entity_registry.get_multi_entity(
-        "manufacturer", "model", channels={ch_se, ch_illuminati}
+        "manufacturer",
+        "model",
+        channels={ch_se, ch_illuminati},
+        quirk_class="quirk_class",
     )
 
     assert s.binary_sensor in match
@@ -373,3 +433,62 @@ def test_multi_sensor_match(channel, entity_registry: er.EntityRegistry) -> None
     assert {cls.entity_class.__name__ for cls in match[s.component]} == {
         SmartEnergySensor1.__name__
     }
+
+
+def test_quirk_classes():
+    """Make sure that quirk_classes in components matches are valid."""
+
+    def find_quirk_class(base_obj, quirk_mod, quirk_cls):
+        """Find a specific quirk class."""
+        mods = dict(inspect.getmembers(base_obj, inspect.ismodule))
+
+        # Check if we have found the right module
+        if quirk_mod in mods:
+            # If so, look for the class
+            clss = dict(inspect.getmembers(mods[quirk_mod], inspect.isclass))
+            if quirk_cls in clss:
+                # Quirk class found
+                return True
+
+        else:
+            # Recurse into other modules
+            for mod in mods:
+                if not mods[mod].__name__.startswith("zhaquirks."):
+                    continue
+                if find_quirk_class(mods[mod], quirk_mod, quirk_cls):
+                    return True
+        return False
+
+    def quirk_class_validator(value):
+        """Validate quirk classes during self test."""
+        if callable(value):
+            # Callables cannot be tested
+            return
+
+        if isinstance(value, (frozenset, set, list)):
+            for v in value:
+                # Unpack the value if needed
+                quirk_class_validator(v)
+            return
+
+        quirk_tok = value.split(".")
+        if len(quirk_tok) != 2:
+            # quirk_class is always __module__.__class__
+            raise ValueError(f"Invalid quirk class : '{value}'")
+
+        if not find_quirk_class(zhaquirks, quirk_tok[0], quirk_tok[1]):
+            raise ValueError(f"Quirk class '{value}' does not exists.")
+
+    for component in registries.ZHA_ENTITIES._strict_registry.items():
+        for rule in component[1].items():
+            quirk_class_validator(rule[0].quirk_classes)
+
+    for component in registries.ZHA_ENTITIES._multi_entity_registry.items():
+        for item in component[1].items():
+            for rule in item[1].items():
+                quirk_class_validator(rule[0].quirk_classes)
+
+    for component in registries.ZHA_ENTITIES._config_diagnostic_entity_registry.items():
+        for item in component[1].items():
+            for rule in item[1].items():
+                quirk_class_validator(rule[0].quirk_classes)
