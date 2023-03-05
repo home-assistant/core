@@ -4,8 +4,10 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from pysuez import SuezClient
-from pysuez.client import PySuezError
+from toutsurmoneau.toutsurmoneau import (
+    ToutSurMonEau as SuezClient,
+    ToutSurMonEauError as PySuezError,
+)
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -29,7 +31,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_COUNTER_ID): cv.string,
+        vol.Optional(CONF_COUNTER_ID): cv.string,
     }
 )
 
@@ -51,8 +53,8 @@ def setup_platform(
             _LOGGER.warning("Wrong username and/or password")
             return
 
-    except PySuezError:
-        _LOGGER.warning("Unable to create Suez Client")
+    except PySuezError as suez_error:
+        _LOGGER.warning("Unable to create Suez Client: %s", suez_error)
         return
 
     add_entities([SuezSensor(client)], True)
@@ -105,9 +107,9 @@ class SuezSensor(SensorEntity):
                     item
                 ] = self.client.attributes["history"][item]
 
-        except PySuezError:
+        except PySuezError as suez_error:
             self._attr_available = False
-            _LOGGER.warning("Unable to fetch data")
+            _LOGGER.warning("Unable to fetch data: %s", suez_error)
 
     def update(self) -> None:
         """Return the latest collected data from Suez."""

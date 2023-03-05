@@ -1999,9 +1999,6 @@ pysqueezebox==0.6.1
 # homeassistant.components.stiebel_eltron
 pystiebeleltron==0.0.1.dev2
 
-# homeassistant.components.suez_water
-pysuez==0.1.19
-
 # homeassistant.components.switchbee
 pyswitchbee==1.7.19
 
@@ -2519,6 +2516,9 @@ toonapi==0.2.1
 
 # homeassistant.components.totalconnect
 total_connect_client==2023.2
+
+# homeassistant.components.suez_water
+toutsurmoneau==0.0.14
 
 # homeassistant.components.tplink_lte
 tp-connected==0.0.4
