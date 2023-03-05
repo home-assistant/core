@@ -39,7 +39,7 @@ async def async_setup_entry(
         """Add media player per session."""
         entities: list[MediaPlayerEntity] = []
         for session_id, session_data in coordinator.data.items():
-            if (session_id not in coordinator.session_ids):
+            if session_id not in coordinator.session_ids:
                 entity: MediaPlayerEntity = JellyfinMediaPlayer(
                     coordinator, session_id, session_data
                 )
@@ -50,9 +50,7 @@ async def async_setup_entry(
 
     handle_coordinator_update()
 
-    entry.async_on_unload(
-        coordinator.async_add_listener(handle_coordinator_update)
-    )
+    entry.async_on_unload(coordinator.async_add_listener(handle_coordinator_update))
 
 
 class JellyfinMediaPlayer(JellyfinEntity, MediaPlayerEntity):
