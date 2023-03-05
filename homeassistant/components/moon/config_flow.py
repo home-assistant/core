@@ -6,7 +6,7 @@ from typing import Any
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DOMAIN
+from .const import DEFAULT_NAME, DOMAIN
 
 
 class MoonConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -22,6 +22,6 @@ class MoonConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
 
         if user_input is not None:
-            return self.async_create_entry(title="", data={})
+            return self.async_create_entry(title=DEFAULT_NAME, data={})
 
         return self.async_show_form(step_id="user")
