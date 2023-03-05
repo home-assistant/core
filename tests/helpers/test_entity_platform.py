@@ -233,7 +233,7 @@ async def test_platform_error_slow_setup(
 
         async def setup_platform(*args):
             called.append(1)
-            await asyncio.sleep(1)
+            await asyncio.sleep(0.1)
 
         platform = MockPlatform(async_setup_platform=setup_platform)
         component = EntityComponent(_LOGGER, DOMAIN, hass)
@@ -243,6 +243,9 @@ async def test_platform_error_slow_setup(
         assert len(called) == 1
         assert "test_domain.test_platform" not in hass.config.components
         assert "test_platform is taking longer than 0 seconds" in caplog.text
+
+    # Cleanup lingering (setup_platform) task after test is done
+    await asyncio.sleep(0.1)
 
 
 async def test_updated_state_used_for_entity_id(hass: HomeAssistant) -> None:

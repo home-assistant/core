@@ -12,7 +12,7 @@ from homeassistant.components.websocket_api import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN
+from .const import DEFAULT_CHANNEL, DOMAIN
 
 if TYPE_CHECKING:
     from . import OTBRData
@@ -70,6 +70,10 @@ async def websocket_create_network(
         connection.send_error(msg["id"], "not_loaded", "No OTBR API loaded")
         return
 
+    # We currently have no way to know which channel zha is using, assume it's
+    # the default
+    zha_channel = DEFAULT_CHANNEL
+
     data: OTBRData = hass.data[DOMAIN]
 
     try:
@@ -80,7 +84,9 @@ async def websocket_create_network(
 
     try:
         await data.create_active_dataset(
-            python_otbr_api.OperationalDataSet(network_name="home-assistant")
+            python_otbr_api.OperationalDataSet(
+                channel=zha_channel, network_name="home-assistant"
+            )
         )
     except HomeAssistantError as exc:
         connection.send_error(msg["id"], "create_active_dataset_failed", str(exc))

@@ -15,7 +15,7 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -66,7 +66,7 @@ async def async_setup_entry(
 
     # Initialize already tracked entities
     tracked: set[str] = set()
-    registry = entity_registry.async_get(hass)
+    registry = er.async_get(hass)
     known_entities: list[Entity] = []
     track_wired_clients = router.config_entry.options.get(
         CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS

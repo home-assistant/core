@@ -1,4 +1,4 @@
-"""This library brings support for forked_daapd to Home Assistant."""
+"""Support forked_daapd media player."""
 from __future__ import annotations
 
 import asyncio
