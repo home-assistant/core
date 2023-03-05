@@ -314,3 +314,25 @@ async def test_scan_clients_schedule(hass: HomeAssistant, setup_plex_server) -> 
         await hass.async_block_till_done()
 
     assert mock_scan_clients.called
+
+
+async def test_setup_with_limited_credentials(
+    hass: HomeAssistant, entry, setup_plex_server
+) -> None:
+    """Test setup with a user with limited permissions."""
+    with patch(
+        "plexapi.server.PlexServer.systemAccounts",
+        side_effect=plexapi.exceptions.Unauthorized,
+    ) as mock_accounts:
+        mock_plex_server = await setup_plex_server()
+
+    assert mock_accounts.called
+
+    plex_server = hass.data[const.DOMAIN][const.SERVERS][
+        mock_plex_server.machine_identifier
+    ]
+    assert len(plex_server.accounts) == 0
+    assert plex_server.owner is None
+
+    assert len(hass.config_entries.async_entries(const.DOMAIN)) == 1
+    assert entry.state is ConfigEntryState.LOADED
