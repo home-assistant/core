@@ -29,7 +29,7 @@ def async_create_flow(
 
     if not dispatcher or dispatcher.started:
         if init_coro := _async_init_flow(hass, domain, context, data):
-            hass.async_create_task(init_coro, "discovery flow {domain} {context}")
+            hass.async_create_task(init_coro, f"discovery flow {domain} {context}")
         return
 
     return dispatcher.async_create(domain, context, data)
