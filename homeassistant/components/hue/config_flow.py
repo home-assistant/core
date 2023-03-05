@@ -18,8 +18,11 @@ from homeassistant.components import zeroconf
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import aiohttp_client, device_registry
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_validation as cv,
+    device_registry as dr,
+)
 from homeassistant.util.network import is_ipv6_address
 
 from .const import (
@@ -306,10 +309,8 @@ class HueV2OptionsFlowHandler(config_entries.OptionsFlow):
 
         # create a list of Hue device ID's that the user can select
         # to ignore availability status
-        dev_reg = device_registry.async_get(self.hass)
-        entries = device_registry.async_entries_for_config_entry(
-            dev_reg, self.config_entry.entry_id
-        )
+        dev_reg = dr.async_get(self.hass)
+        entries = dr.async_entries_for_config_entry(dev_reg, self.config_entry.entry_id)
         dev_ids = {
             identifier[1]: entry.name
             for entry in entries
