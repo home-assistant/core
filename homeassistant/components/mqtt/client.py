@@ -657,6 +657,8 @@ class MQTT:
             # Other subscriptions on topic remaining - don't unsubscribe.
             return
         async with self._pending_subscriptions_lock:
+            if topic in self._max_qos:
+                del self._max_qos[topic]
             if topic in self._pending_subscriptions:
                 # avoid any pending subscription to be executed
                 del self._pending_subscriptions[topic]
