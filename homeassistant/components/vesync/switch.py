@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import VeSyncBaseEntity, VeSyncDevice, is_humidifier
+from .common import DEVICE_HELPER, VeSyncBaseEntity, VeSyncDevice
 from .const import DEV_TYPE_TO_HA, DOMAIN, VS_DISCOVERY, VS_SWITCHES
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,7 +43,7 @@ def _setup_entities(devices, async_add_entities):
             entities.append(VeSyncSwitchHA(dev))
         elif DEV_TYPE_TO_HA.get(dev.device_type) == "switch":
             entities.append(VeSyncLightSwitch(dev))
-        elif is_humidifier(dev.device_type):
+        elif DEVICE_HELPER.is_humidifier(dev.device_type):
             entities.append(VeSyncHumidifierDisplayHA(dev))
             entities.append(VeSyncHumidifierAutomaticStopHA(dev))
         else:

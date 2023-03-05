@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import VeSyncBaseEntity, VeSyncDevice, is_humidifier
+from .common import DEVICE_HELPER, VeSyncBaseEntity, VeSyncDevice
 from .const import DOMAIN, VS_DISCOVERY, VS_NUMBERS
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ NUMBERS: tuple[VeSyncNumberEntityDescription, ...] = (
         max_fn=lambda device: float(device.config_dict["mist_levels"][-1]),
         value_fn=lambda device: device.details["mist_virtual_level"],
         update_fn=lambda device, value: device.set_mist_level(int(value)),
-        exists_fn=lambda device: is_humidifier(device.device_type),
+        exists_fn=lambda device: DEVICE_HELPER.is_humidifier(device.device_type),
     ),
 )
 

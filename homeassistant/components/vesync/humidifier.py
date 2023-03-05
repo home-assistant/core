@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from pyvesync.vesyncfan import VeSyncHumid200300S
+from pyvesync.vesyncfan import VeSyncHumid200S, VeSyncHumid200300S
 
 from homeassistant.components.humidifier import (
     MODE_AUTO,
@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import VeSyncDevice
+from .common import DEVICE_HELPER, VeSyncDevice
 from .const import DOMAIN, VS_DISCOVERY, VS_HUMIDIFIERS
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,15 +49,11 @@ MODE_MAP = {
 class VeSyncHumidifierEntityDescription(HumidifierEntityDescription):
     """Describe VeSync humidifier entity."""
 
-
-HUMIDIFIERS: dict[str, VeSyncHumidifierEntityDescription] = {
-    "VeSyncHumid200300S": VeSyncHumidifierEntityDescription(
-        key="humidifier",
-        icon="mdi:air-humidifier",
-        device_class=HumidifierDeviceClass.HUMIDIFIER,
-    ),
-    # Need to create EntityDescription objects for each object type from vesync library
-}
+    def __init__(self) -> None:
+        """Initialize the VeSync humidifier entity description."""
+        super().__init__(key="humidifier")
+        self.icon = "mdi:air-humidifier"
+        self.device_class = HumidifierDeviceClass.HUMIDIFIER
 
 
 async def async_setup_entry(
@@ -72,15 +68,13 @@ async def async_setup_entry(
         """Add new devices to platform."""
         entities = []
         for dev in devices:
-            module = dev.config_dict["module"]
-            if description := HUMIDIFIERS.get(module):
-                entities.append(VeSyncHumidifierHA(dev, description))
+            if DEVICE_HELPER.is_humidifier(dev.device_type):
+                entities.append(
+                    VeSyncHumidifierHA(dev, VeSyncHumidifierEntityDescription())
+                )
             else:
                 _LOGGER.warning(
-                    "%s - Unknown device type/module - %s/%s",
-                    dev.device_name,
-                    dev.device_type,
-                    module,
+                    "%s - Unknown device type - %s", dev.device_name, dev.device_type
                 )
                 continue
 
@@ -96,7 +90,7 @@ async def async_setup_entry(
 class VeSyncHumidifierHA(VeSyncDevice, HumidifierEntity):
     """Representation of a VeSync humidifier."""
 
-    device: VeSyncHumid200300S
+    device: VeSyncHumid200300S | VeSyncHumid200S
     entity_description: VeSyncHumidifierEntityDescription
 
     def __init__(
@@ -118,9 +112,6 @@ class VeSyncHumidifierHA(VeSyncDevice, HumidifierEntity):
 
         if mist_modes := humidifier.config_dict["mist_modes"]:
             self._attr_available_modes = [MODE_MAP[mmode] for mmode in mist_modes]
-
-        if target_humidity := humidifier.config["auto_target_humidity"]:
-            self._attr_target_humidity = target_humidity
 
         self._attr_supported_features = HumidifierEntityFeature(0)
         if mode is not None:

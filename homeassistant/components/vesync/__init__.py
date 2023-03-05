@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .common import async_process_devices
+from .common import DEVICE_HELPER
 from .const import (
     DOMAIN,
     SERVICE_UPDATE_DEVS,
@@ -52,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         _LOGGER.error("Unable to login to the VeSync server")
         return False
 
-    device_dict = await async_process_devices(hass, manager)
+    device_dict = await _async_process_devices(hass, manager)
 
     forward_setup = hass.config_entries.async_forward_entry_setup
 
@@ -103,7 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         humidifiers = hass.data[DOMAIN][VS_HUMIDIFIERS]
         numbers = hass.data[DOMAIN][VS_NUMBERS]
 
-        dev_dict = await async_process_devices(hass, manager)
+        dev_dict = await _async_process_devices(hass, manager)
         switch_devs = dev_dict.get(VS_SWITCHES, [])
         fan_devs = dev_dict.get(VS_FANS, [])
         light_devs = dev_dict.get(VS_LIGHTS, [])
@@ -178,6 +178,54 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
 
     return True
+
+
+async def _async_process_devices(hass: HomeAssistant, manager: VeSync):
+    """Assign devices to proper component."""
+    devices: dict = {}
+    devices[VS_SWITCHES] = []
+    devices[VS_FANS] = []
+    devices[VS_LIGHTS] = []
+    devices[VS_SENSORS] = []
+    devices[VS_HUMIDIFIERS] = []
+    devices[VS_NUMBERS] = []
+
+    await hass.async_add_executor_job(manager.update)
+
+    if manager.fans:
+        for fan in manager.fans:
+            # VeSync classifies humidifiers as fans
+            if DEVICE_HELPER.is_humidifier(fan.device_type):
+                devices[VS_HUMIDIFIERS].append(fan)
+                devices[VS_NUMBERS].append(fan)  # for night light and mist level
+                devices[VS_SWITCHES].append(fan)  # for automatic stop and display
+                if fan.night_light:
+                    devices[VS_LIGHTS].append(fan)  # for night light
+            else:
+                devices[VS_FANS].append(fan)
+            devices[VS_SENSORS].append(fan)
+        _LOGGER.info("%d VeSync fans found", len(devices[VS_FANS]))
+        _LOGGER.info("%d VeSync humidifiers found", len(devices[VS_HUMIDIFIERS]))
+
+    if manager.bulbs:
+        devices[VS_LIGHTS].extend(manager.bulbs)
+        _LOGGER.info("%d VeSync lights found", len(manager.bulbs))
+
+    if manager.outlets:
+        devices[VS_SWITCHES].extend(manager.outlets)
+        # Expose outlets' voltage, power & energy usage as separate sensors
+        devices[VS_SENSORS].extend(manager.outlets)
+        _LOGGER.info("%d VeSync outlets found", len(manager.outlets))
+
+    if manager.switches:
+        for switch in manager.switches:
+            if not switch.is_dimmable():
+                devices[VS_SWITCHES].append(switch)
+            else:
+                devices[VS_LIGHTS].append(switch)
+        _LOGGER.info("%d VeSync switches found", len(manager.switches))
+
+    return devices
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

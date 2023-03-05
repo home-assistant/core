@@ -1,0 +1,463 @@
+# serializer version: 1
+# name: test_asynch_setup_entry__loaded_state[bulbs]
+  dict({
+    'dimmable-bulb': list([
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Dimmable Light',
+          'supported_color_modes': list([
+            <ColorMode.BRIGHTNESS: 'brightness'>,
+          ]),
+          'supported_features': 0,
+        }),
+        'entity_id': 'light.dimmable_light',
+        'state': 'unavailable',
+      }),
+    ]),
+    'tunable-bulb': list([
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Temperature Light',
+          'max_color_temp_kelvin': 6493,
+          'max_mireds': 370,
+          'min_color_temp_kelvin': 2702,
+          'min_mireds': 154,
+          'supported_color_modes': list([
+            <ColorMode.COLOR_TEMP: 'color_temp'>,
+          ]),
+          'supported_features': 0,
+        }),
+        'entity_id': 'light.temperature_light',
+        'state': 'off',
+      }),
+    ]),
+  })
+# ---
+# name: test_asynch_setup_entry__loaded_state[fans]
+  dict({
+    '400s-purifier': list([
+      dict({
+        'attributes': ReadOnlyDict({
+          'child_lock': False,
+          'friendly_name': 'Air Purifier 400s',
+          'mode': 'manual',
+          'night_light': 'off',
+          'percentage': 25,
+          'percentage_step': 25.0,
+          'preset_mode': None,
+          'preset_modes': list([
+            'auto',
+            'sleep',
+          ]),
+          'screen_status': True,
+          'supported_features': <FanEntityFeature.SET_SPEED: 1>,
+        }),
+        'entity_id': 'fan.air_purifier_400s',
+        'state': 'on',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Air Purifier 400s Air Quality',
+        }),
+        'entity_id': 'sensor.air_purifier_400s_air_quality',
+        'state': '5',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Air Purifier 400s Filter Life',
+          'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+          'unit_of_measurement': '%',
+        }),
+        'entity_id': 'sensor.air_purifier_400s_filter_life',
+        'state': '99',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'device_class': 'pm25',
+          'friendly_name': 'Air Purifier 400s PM2.5',
+          'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+          'unit_of_measurement': 'µg/m³',
+        }),
+        'entity_id': 'sensor.air_purifier_400s_pm2_5',
+        'state': '1',
+      }),
+    ]),
+    '600s-purifier': list([
+      dict({
+        'attributes': ReadOnlyDict({
+          'child_lock': False,
+          'friendly_name': 'Air Purifier 600s',
+          'mode': 'manual',
+          'night_light': 'off',
+          'percentage': 25,
+          'percentage_step': 25.0,
+          'preset_mode': None,
+          'preset_modes': list([
+            'auto',
+            'sleep',
+          ]),
+          'screen_status': True,
+          'supported_features': <FanEntityFeature.SET_SPEED: 1>,
+        }),
+        'entity_id': 'fan.air_purifier_600s',
+        'state': 'on',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Air Purifier 600s Air Quality',
+        }),
+        'entity_id': 'sensor.air_purifier_600s_air_quality',
+        'state': '5',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Air Purifier 600s Filter Life',
+          'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+          'unit_of_measurement': '%',
+        }),
+        'entity_id': 'sensor.air_purifier_600s_filter_life',
+        'state': '99',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'device_class': 'pm25',
+          'friendly_name': 'Air Purifier 600s PM2.5',
+          'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+          'unit_of_measurement': 'µg/m³',
+        }),
+        'entity_id': 'sensor.air_purifier_600s_pm2_5',
+        'state': '1',
+      }),
+    ]),
+    'air-purifier': list([
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Air Purifier 131s',
+          'preset_modes': list([
+            'auto',
+            'sleep',
+          ]),
+          'supported_features': <FanEntityFeature.SET_SPEED: 1>,
+        }),
+        'entity_id': 'fan.air_purifier_131s',
+        'state': 'unavailable',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Air Purifier 131s Air Quality',
+        }),
+        'entity_id': 'sensor.air_purifier_131s_air_quality',
+        'state': 'unavailable',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Air Purifier 131s Filter Life',
+          'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+          'unit_of_measurement': '%',
+        }),
+        'entity_id': 'sensor.air_purifier_131s_filter_life',
+        'state': 'unavailable',
+      }),
+    ]),
+    'asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55': list([
+      dict({
+        'attributes': ReadOnlyDict({
+          'child_lock': False,
+          'friendly_name': 'Air Purifier 200s',
+          'mode': 'manual',
+          'night_light': 'off',
+          'percentage': 33,
+          'percentage_step': 33.333333333333336,
+          'preset_mode': None,
+          'preset_modes': list([
+            'sleep',
+          ]),
+          'screen_status': True,
+          'supported_features': <FanEntityFeature.SET_SPEED: 1>,
+        }),
+        'entity_id': 'fan.air_purifier_200s',
+        'state': 'on',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Air Purifier 200s Filter Life',
+          'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+          'unit_of_measurement': '%',
+        }),
+        'entity_id': 'sensor.air_purifier_200s_filter_life',
+        'state': '99',
+      }),
+    ]),
+  })
+# ---
+# name: test_asynch_setup_entry__loaded_state[humidifiers]
+  dict({
+    '200s-humidifier': list([
+      dict({
+        'attributes': ReadOnlyDict({
+          'available_modes': list([
+            'auto',
+            'normal',
+          ]),
+          'device_class': 'humidifier',
+          'friendly_name': 'Humidifier 200s',
+          'humidity': 40,
+          'icon': 'mdi:air-humidifier',
+          'max_humidity': 80,
+          'min_humidity': 30,
+          'mode': 'normal',
+          'supported_features': <HumidifierEntityFeature.MODES: 1>,
+          'warm_mist_feature': False,
+        }),
+        'entity_id': 'humidifier.humidifier_200s',
+        'state': 'on',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Humidifier 200s Mist Level',
+          'max': 9.0,
+          'min': 1.0,
+          'mode': <NumberMode.AUTO: 'auto'>,
+          'step': 1,
+        }),
+        'entity_id': 'number.humidifier_200s_mist_level',
+        'state': '6',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Humidifier 200s Empty Water Tank',
+          'icon': 'mdi:water-alert',
+        }),
+        'entity_id': 'sensor.humidifier_200s_empty_water_tank',
+        'state': 'True',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'device_class': 'humidity',
+          'friendly_name': 'Humidifier 200s Humidity',
+          'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+          'unit_of_measurement': '%',
+        }),
+        'entity_id': 'sensor.humidifier_200s_humidity',
+        'state': '35',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Humidifier 200s Humidity High',
+          'icon': 'mdi:water-percent-alert',
+        }),
+        'entity_id': 'sensor.humidifier_200s_humidity_high',
+        'state': 'False',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Humidifier 200s Water Tank Lifted',
+          'icon': 'mdi:water-alert',
+        }),
+        'entity_id': 'sensor.humidifier_200s_water_tank_lifted',
+        'state': 'True',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Humidifier 200s automatic stop',
+        }),
+        'entity_id': 'switch.humidifier_200s_automatic_stop',
+        'state': 'on',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Humidifier 200s display',
+        }),
+        'entity_id': 'switch.humidifier_200s_display',
+        'state': 'on',
+      }),
+    ]),
+    '600s-humidifier': list([
+      dict({
+        'attributes': ReadOnlyDict({
+          'available_modes': list([
+            'auto',
+            'sleep',
+            'normal',
+          ]),
+          'device_class': 'humidifier',
+          'entity_picture': 'https://image.vesync.com/defaultImages/LV_600S_Series/icon_lv600s_humidifier_160.png',
+          'friendly_name': 'Humidifier 600S',
+          'humidity': 40,
+          'icon': 'mdi:air-humidifier',
+          'max_humidity': 80,
+          'min_humidity': 30,
+          'mode': 'normal',
+          'supported_features': <HumidifierEntityFeature.MODES: 1>,
+          'warm_mist_feature': True,
+        }),
+        'entity_id': 'humidifier.humidifier_600s',
+        'state': 'off',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'brightness': 26,
+          'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
+          'friendly_name': 'Humidifier 600S night light',
+          'supported_color_modes': list([
+            <ColorMode.BRIGHTNESS: 'brightness'>,
+          ]),
+          'supported_features': 0,
+        }),
+        'entity_id': 'light.humidifier_600s_night_light',
+        'state': 'on',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Humidifier 600S Mist Level',
+          'max': 9.0,
+          'min': 1.0,
+          'mode': <NumberMode.AUTO: 'auto'>,
+          'step': 1,
+        }),
+        'entity_id': 'number.humidifier_600s_mist_level',
+        'state': '6',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Humidifier 600S Empty Water Tank',
+          'icon': 'mdi:water-alert',
+        }),
+        'entity_id': 'sensor.humidifier_600s_empty_water_tank',
+        'state': 'True',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'device_class': 'humidity',
+          'friendly_name': 'Humidifier 600S Humidity',
+          'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+          'unit_of_measurement': '%',
+        }),
+        'entity_id': 'sensor.humidifier_600s_humidity',
+        'state': '35',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Humidifier 600S Humidity High',
+          'icon': 'mdi:water-percent-alert',
+        }),
+        'entity_id': 'sensor.humidifier_600s_humidity_high',
+        'state': 'False',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Humidifier 600S Water Tank Lifted',
+          'icon': 'mdi:water-alert',
+        }),
+        'entity_id': 'sensor.humidifier_600s_water_tank_lifted',
+        'state': 'True',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Humidifier 600S automatic stop',
+        }),
+        'entity_id': 'switch.humidifier_600s_automatic_stop',
+        'state': 'on',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Humidifier 600S display',
+        }),
+        'entity_id': 'switch.humidifier_600s_display',
+        'state': 'on',
+      }),
+    ]),
+  })
+# ---
+# name: test_asynch_setup_entry__loaded_state[outlets]
+  dict({
+    'outlet': list([
+      dict({
+        'attributes': ReadOnlyDict({
+          'device_class': 'power',
+          'friendly_name': 'Outlet current power',
+          'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+          'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+        }),
+        'entity_id': 'sensor.outlet_current_power',
+        'state': '25.0',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'device_class': 'voltage',
+          'friendly_name': 'Outlet current voltage',
+          'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+          'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+        }),
+        'entity_id': 'sensor.outlet_current_voltage',
+        'state': '120.0',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'device_class': 'energy',
+          'friendly_name': 'Outlet energy use monthly',
+          'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+          'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        }),
+        'entity_id': 'sensor.outlet_energy_use_monthly',
+        'state': '0',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'device_class': 'energy',
+          'friendly_name': 'Outlet energy use today',
+          'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+          'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        }),
+        'entity_id': 'sensor.outlet_energy_use_today',
+        'state': '100',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'device_class': 'energy',
+          'friendly_name': 'Outlet energy use weekly',
+          'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+          'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        }),
+        'entity_id': 'sensor.outlet_energy_use_weekly',
+        'state': '0',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'device_class': 'energy',
+          'friendly_name': 'Outlet energy use yearly',
+          'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+          'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        }),
+        'entity_id': 'sensor.outlet_energy_use_yearly',
+        'state': '0',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Outlet',
+        }),
+        'entity_id': 'switch.outlet',
+        'state': 'on',
+      }),
+    ]),
+  })
+# ---
+# name: test_asynch_setup_entry__loaded_state[switches]
+  dict({
+    'dimmable-switch': list([
+      dict({
+        'attributes': ReadOnlyDict({
+          'brightness': 128,
+          'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
+          'friendly_name': 'Dimmer Switch',
+          'supported_color_modes': list([
+            <ColorMode.BRIGHTNESS: 'brightness'>,
+          ]),
+          'supported_features': 0,
+        }),
+        'entity_id': 'light.dimmer_switch',
+        'state': 'on',
+      }),
+    ]),
+  })
+# ---

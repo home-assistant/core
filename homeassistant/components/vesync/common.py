@@ -8,73 +8,36 @@ from pyvesync.vesyncfan import humid_features
 
 from homeassistant.helpers.entity import DeviceInfo, Entity, ToggleEntity
 
-from .const import (
-    DOMAIN,
-    VS_FANS,
-    VS_HUMIDIFIERS,
-    VS_LIGHTS,
-    VS_NUMBERS,
-    VS_SENSORS,
-    VS_SWITCHES,
-)
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-_HUMIDIFIER_MODELS = set(
-    chain(*[features["models"] for features in humid_features.values()]),
-).union(set(humid_features.keys()))
 
 
-def is_humidifier(device_type: str) -> bool:
-    """Return true if the device type is a humidifier."""
-    return device_type in _HUMIDIFIER_MODELS
+class VeSyncDeviceHelper:
+    """Collection of VeSync device helpers."""
+
+    humidifier_models: set | None = None
+
+    def is_humidifier(self, device_type: str) -> bool:
+        """Return true if the device type is a humidifier."""
+        if self.humidifier_models is None:
+            # cache the model list after the first use
+            self.humidifier_models = set(
+                chain(*[features["models"] for features in humid_features.values()]),
+            ).union(set(humid_features.keys()))
+            _LOGGER.debug(
+                "Initialized humidifier_models cache with %d models",
+                len(self.humidifier_models),
+            )
+
+        return device_type in self.humidifier_models
+
+    def reset_cache(self) -> None:
+        """Reset the helper caches."""
+        self.humidifier_models = None
 
 
-async def async_process_devices(hass, manager):
-    """Assign devices to proper component."""
-    devices = {}
-    devices[VS_SWITCHES] = []
-    devices[VS_FANS] = []
-    devices[VS_LIGHTS] = []
-    devices[VS_SENSORS] = []
-    devices[VS_HUMIDIFIERS] = []
-    devices[VS_NUMBERS] = []
-
-    await hass.async_add_executor_job(manager.update)
-
-    if manager.fans:
-        for fan in manager.fans:
-            # VeSync classifies humidifiers as fans
-            if is_humidifier(fan.device_type):
-                devices[VS_HUMIDIFIERS].append(fan)
-                devices[VS_NUMBERS].append(fan)  # for night light and mist level
-                devices[VS_SWITCHES].append(fan)  # for automatic stop and display
-                if fan.night_light:
-                    devices[VS_LIGHTS].append(fan)  # for night light
-            else:
-                devices[VS_FANS].append(fan)
-            devices[VS_SENSORS].append(fan)
-        _LOGGER.info("%d VeSync fans found", len(devices[VS_FANS]))
-        _LOGGER.info("%d VeSync humidifiers found", len(devices[VS_HUMIDIFIERS]))
-
-    if manager.bulbs:
-        devices[VS_LIGHTS].extend(manager.bulbs)
-        _LOGGER.info("%d VeSync lights found", len(manager.bulbs))
-
-    if manager.outlets:
-        devices[VS_SWITCHES].extend(manager.outlets)
-        # Expose outlets' voltage, power & energy usage as separate sensors
-        devices[VS_SENSORS].extend(manager.outlets)
-        _LOGGER.info("%d VeSync outlets found", len(manager.outlets))
-
-    if manager.switches:
-        for switch in manager.switches:
-            if not switch.is_dimmable():
-                devices[VS_SWITCHES].append(switch)
-            else:
-                devices[VS_LIGHTS].append(switch)
-        _LOGGER.info("%d VeSync switches found", len(manager.switches))
-
-    return devices
+DEVICE_HELPER = VeSyncDeviceHelper()
 
 
 class VeSyncBaseEntity(Entity):
