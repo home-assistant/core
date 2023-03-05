@@ -164,7 +164,35 @@ def veync_base_device_fixture() -> VeSyncBaseDevice:
 def fan_fixture() -> VeSyncAirBypass:
     """Create a mock VeSync fan fixture."""
     mock_fixture = Mock(VeSyncAirBypass)
-    mock_fixture.device_type = "fan device"
+    mock_fixture.active_time = 1
+    mock_fixture.child_lock = True
+    mock_fixture.cid = "cid"
+    mock_fixture.connection_status = "online"
+    mock_fixture.current_firm_version = 0
+    mock_fixture.device_image = "device image"
+    mock_fixture.device_name = "device name"
+    mock_fixture.device_status = "on"
+    mock_fixture.device_type = "LV-PUR131S"
+    mock_fixture.fan_level = 1
+    mock_fixture.is_on = True
+    mock_fixture.night_light = False
+    mock_fixture.mode = "mode"
+    mock_fixture.screen_status = True
+    mock_fixture.sub_device_no = 1
+    mock_fixture.turn_on = Mock()
+    mock_fixture.turn_off = Mock()
+    mock_fixture.update = Mock()
+    mock_fixture.uuid = "uuid"
+
+    config = {}
+    mock_fixture.config = config
+
+    config_dict = {}
+    mock_fixture.config_dict = config_dict
+
+    details = {}
+    mock_fixture.details = details
+
     return mock_fixture
 
 

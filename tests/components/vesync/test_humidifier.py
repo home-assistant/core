@@ -24,10 +24,6 @@ from homeassistant.components.vesync.humidifier import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-# TEST_CID1 = "humidifier_200s"
-# TEST_CID2 = "humidifier_600s"
-# TEST_HUMIDIFIER_ENTITIY = f"humidifier.{ TEST_CID1 }"
-
 
 async def test_async_setup_entry(
     hass: HomeAssistant,
@@ -37,7 +33,7 @@ async def test_async_setup_entry(
     humidifier_nightlight: VeSyncHumid200300S,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the discovery mechanism can handle unsupported humidifiers."""
+    """Test the discovery mechanism can handle supported devices."""
     caplog.set_level(logging.INFO)
 
     callback = AsyncMock(AddEntitiesCallback)
@@ -91,7 +87,7 @@ async def test_async_setup_entry__empty(
 async def test_async_setup_entry__invalid(
     hass: HomeAssistant, config_entry, features, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test the discovery mechanism can handle no devices."""
+    """Test the discovery mechanism can handle unsupported devices."""
     caplog.set_level(logging.INFO)
 
     mock_humidifier = MagicMock()
