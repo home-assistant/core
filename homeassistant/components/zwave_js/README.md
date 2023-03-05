@@ -18,7 +18,7 @@ Sometimes manufacturers don't follow the spec properly and implement functionali
 
 ### Adding feature support to complex entity types
 
-Sometimes the generic Z-Wave entity logic does not provide all of the features a device is capable of. A great example of this is a climate entity where the current temperature could be one of multiple sensors that is configurable by a configuration parameter. In these cases, there is a section in the [discovery rules](./discovery.py) for device specific discovery. By leveraging [discovery_data_template.py](./discovery_data_template.py), it is possible to create the same entity type but with different logic. Generally, we don't like to create entity classes that are device specific, so this mechanism allows us to generalize the implementation.
+Sometimes the generic Z-Wave entity logic does not provide all of the features a device is capable of. A great example of this is a climate entity where the current temperature is determined by one of multiple sensors that is configurable by a configuration parameter. In these cases, there is a section in the [discovery rules](./discovery.py) for device specific discovery. By leveraging [discovery_data_template.py](./discovery_data_template.py), it is possible to create the same entity type but with different logic. Generally, we don't like to create entity classes that are device specific, so this mechanism allows us to generalize the implementation.
 
 ## Architecture
 
