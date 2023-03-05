@@ -48,6 +48,8 @@ async def async_setup_entry(
                 entities.append(entity)
         async_add_entities(entities)
 
+    handle_coordinator_update()
+
     entry.async_on_unload(
         coordinator.async_add_listener(handle_coordinator_update)
     )
