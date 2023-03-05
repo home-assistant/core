@@ -982,6 +982,7 @@ omit =
     homeassistant/components/reolink/entity.py
     homeassistant/components/reolink/host.py
     homeassistant/components/reolink/number.py
+    homeassistant/components/reolink/siren.py
     homeassistant/components/reolink/switch.py
     homeassistant/components/reolink/update.py
     homeassistant/components/repetier/__init__.py
