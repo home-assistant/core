@@ -25,6 +25,7 @@ from .SMA import SMA
 
 _LOGGER = logging.getLogger(__name__)
 
+
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """
     Enables the Integration to be configured in the UI
@@ -38,7 +39,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_NAME: "SMA Manager",
             CONF_HOST: "239.12.255.254",
             CONF_PORT: 9522,
-            CONF_REFRESH_INTERVAL: 10
+            CONF_REFRESH_INTERVAL: 10,
         }
 
     def _get_schema(self) -> Schema:
@@ -51,7 +52,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 Required(CONF_NAME, default=self._data[CONF_NAME]): str,
                 Required(CONF_HOST, default=self._data[CONF_HOST]): str,
                 Required(CONF_PORT, default=self._data[CONF_PORT]): int,
-                Required(CONF_REFRESH_INTERVAL, default=self._data[CONF_REFRESH_INTERVAL]): int,
+                Required(
+                    CONF_REFRESH_INTERVAL, default=self._data[CONF_REFRESH_INTERVAL]
+                ): int,
             }
         )
 
