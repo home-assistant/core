@@ -93,7 +93,7 @@ async def async_setup_component(
         return await setup_tasks[domain]
 
     task = setup_tasks[domain] = hass.async_create_task(
-        _async_setup_component(hass, domain, config)
+        _async_setup_component(hass, domain, config), "setup component {domain}"
     )
 
     try:
