@@ -217,16 +217,17 @@ class HassJob(Generic[_P, _R_co]):
     we run the job.
     """
 
-    __slots__ = ("job_type", "target")
+    __slots__ = ("job_type", "target", "name")
 
-    def __init__(self, target: Callable[_P, _R_co]) -> None:
+    def __init__(self, target: Callable[_P, _R_co], name: str | None = None) -> None:
         """Create a job object."""
         self.target = target
+        self.name = name
         self.job_type = _get_hassjob_callable_job_type(target)
 
     def __repr__(self) -> str:
         """Return the job."""
-        return f"<Job {self.job_type} {self.target}>"
+        return f"<Job {self.name} {self.job_type} {self.target}>"
 
 
 def _get_hassjob_callable_job_type(target: Callable[..., Any]) -> HassJobType:
@@ -488,7 +489,7 @@ class HomeAssistant:
                 hassjob.target = cast(
                     Callable[..., Coroutine[Any, Any, _R]], hassjob.target
                 )
-            task = self.loop.create_task(hassjob.target(*args))
+            task = self.loop.create_task(hassjob.target(*args), name=hassjob.name)
         elif hassjob.job_type == HassJobType.Callback:
             if TYPE_CHECKING:
                 hassjob.target = cast(Callable[..., _R], hassjob.target)
@@ -512,7 +513,9 @@ class HomeAssistant:
         self.loop.call_soon_threadsafe(self.async_create_task, target)
 
     @callback
-    def async_create_task(self, target: Coroutine[Any, Any, _R]) -> asyncio.Task[_R]:
+    def async_create_task(
+        self, target: Coroutine[Any, Any, _R], name: str | None = None
+    ) -> asyncio.Task[_R]:
         """Create a task from within the eventloop.
 
         This method must be run in the event loop. If you are using this in your
@@ -520,7 +523,7 @@ class HomeAssistant:
 
         target: target to call.
         """
-        task = self.loop.create_task(target)
+        task = self.loop.create_task(target, name=name)
         self._tasks.add(task)
         task.add_done_callback(self._tasks.remove)
         return task
@@ -1037,7 +1040,10 @@ class EventBus:
         if run_immediately and not is_callback(listener):
             raise HomeAssistantError(f"Event listener {listener} is not a callback")
         return self._async_listen_filterable_job(
-            event_type, _FilterableJob(HassJob(listener), event_filter, run_immediately)
+            event_type,
+            _FilterableJob(
+                HassJob(listener, "listen {event_type}"), event_filter, run_immediately
+            ),
         )
 
     @callback
@@ -1111,7 +1117,11 @@ class EventBus:
             _onetime_listener, listener, ("__name__", "__qualname__", "__module__"), []
         )
 
-        filterable_job = _FilterableJob(HassJob(_onetime_listener), None, False)
+        filterable_job = _FilterableJob(
+            HassJob(_onetime_listener, "onetime listen {event_type} {listener}"),
+            None,
+            False,
+        )
 
         return self._async_listen_filterable_job(event_type, filterable_job)
 
@@ -1558,16 +1568,18 @@ class StateMachine:
 class Service:
     """Representation of a callable service."""
 
-    __slots__ = ["job", "schema"]
+    __slots__ = ["job", "schema", "domain", "service"]
 
     def __init__(
         self,
         func: Callable[[ServiceCall], Coroutine[Any, Any, None] | None],
         schema: vol.Schema | None,
+        domain: str,
+        service: str,
         context: Context | None = None,
     ) -> None:
         """Initialize a service."""
-        self.job = HassJob(func)
+        self.job = HassJob(func, f"service {domain}.{service}")
         self.schema = schema
 
 
@@ -1659,7 +1671,7 @@ class ServiceRegistry:
         """
         domain = domain.lower()
         service = service.lower()
-        service_obj = Service(service_func, schema)
+        service_obj = Service(service_func, schema, domain, service)
 
         if domain in self._services:
             self._services[domain][service] = service_obj
