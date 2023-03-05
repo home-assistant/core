@@ -87,7 +87,11 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
         )
 
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
-        job_name = f"DataUpdateCoordinator {name}"
+        job_name = "DataUpdateCoordinator"
+        type_name = type(self).__name__
+        if type_name != job_name:
+            job_name += f" {type_name}"
+        job_name += f" {name}"
         if entry := self.config_entry:
             job_name += f" {entry.title} {entry.domain} {entry.entry_id}"
         self._job = HassJob(self._handle_refresh_interval, job_name)
