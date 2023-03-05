@@ -29,6 +29,8 @@ PLATFORMS = [
     Platform.CAMERA,
     Platform.LIGHT,
     Platform.NUMBER,
+    Platform.SIREN,
+    Platform.SWITCH,
     Platform.UPDATE,
 ]
 DEVICE_UPDATE_INTERVAL = timedelta(seconds=60)
