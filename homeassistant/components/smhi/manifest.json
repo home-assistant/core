@@ -1,10 +1,10 @@
 {
   "domain": "smhi",
   "name": "SMHI",
+  "codeowners": ["@gjohansson-ST"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/smhi",
-  "requirements": ["smhi-pkg==1.0.16"],
-  "codeowners": ["@gjohansson-ST"],
   "iot_class": "cloud_polling",
-  "loggers": ["smhi"]
+  "loggers": ["smhi"],
+  "requirements": ["smhi-pkg==1.0.16"]
 }

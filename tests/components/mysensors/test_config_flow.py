@@ -220,7 +220,7 @@ async def test_fail_to_connect(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "gateway_type, expected_step_id, user_input, err_field, err_string",
+    ("gateway_type", "expected_step_id", "user_input", "err_field", "err_string"),
     [
         (
             CONF_GATEWAY_TYPE_TCP,
@@ -380,7 +380,7 @@ async def test_config_invalid(
 
 
 @pytest.mark.parametrize(
-    "first_input, second_input, expected_result",
+    ("first_input", "second_input", "expected_result"),
     [
         (
             {

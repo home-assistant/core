@@ -132,7 +132,7 @@ def signal_device_update(mac_address) -> str:
 
 
 class NmapDeviceScanner:
-    """This class scans for devices using nmap."""
+    """Scanner for devices using nmap."""
 
     def __init__(
         self, hass: HomeAssistant, entry: ConfigEntry, devices: NmapTrackedDevices

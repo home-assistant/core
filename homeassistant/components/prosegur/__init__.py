@@ -11,7 +11,7 @@ from homeassistant.helpers import aiohttp_client
 
 from .const import CONF_COUNTRY, DOMAIN
 
-PLATFORMS = [Platform.ALARM_CONTROL_PANEL]
+PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.CAMERA]
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,11 +1,11 @@
 """Test the melnor config flow."""
-
 import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.melnor.const import DOMAIN
 from homeassistant.const import CONF_ADDRESS, CONF_MAC
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import (
@@ -17,7 +17,7 @@ from .conftest import (
 )
 
 
-async def test_user_step_no_devices(hass):
+async def test_user_step_no_devices(hass: HomeAssistant) -> None:
     """Test we handle no devices found."""
     with patch_async_setup_entry() as mock_setup_entry, patch_async_discovered_service_info(
         []
@@ -33,7 +33,7 @@ async def test_user_step_no_devices(hass):
         assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_user_step_discovered_devices(hass):
+async def test_user_step_discovered_devices(hass: HomeAssistant) -> None:
     """Test we properly handle device picking."""
 
     with patch_async_setup_entry() as mock_setup_entry, patch_async_discovered_service_info():
@@ -60,7 +60,7 @@ async def test_user_step_discovered_devices(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_step_with_existing_device(hass):
+async def test_user_step_with_existing_device(hass: HomeAssistant) -> None:
     """Test we properly handle device picking."""
 
     with patch_async_setup_entry() as mock_setup_entry, patch_async_discovered_service_info(
@@ -98,7 +98,7 @@ async def test_user_step_with_existing_device(hass):
         assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_bluetooth_discovered(hass):
+async def test_bluetooth_discovered(hass: HomeAssistant) -> None:
     """Test we short circuit to config entry creation."""
 
     with patch_async_setup_entry() as mock_setup_entry:
@@ -115,7 +115,7 @@ async def test_bluetooth_discovered(hass):
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_bluetooth_confirm(hass):
+async def test_bluetooth_confirm(hass: HomeAssistant) -> None:
     """Test we short circuit to config entry creation."""
 
     with patch_async_setup_entry() as mock_setup_entry:

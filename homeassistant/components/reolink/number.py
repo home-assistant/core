@@ -1,4 +1,4 @@
-"""This component provides support for Reolink number entities."""
+"""Component providing support for Reolink number entities."""
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -88,7 +88,6 @@ async def async_setup_entry(
 class ReolinkNumberEntity(ReolinkCoordinatorEntity, NumberEntity):
     """Base number entity class for Reolink IP cameras."""
 
-    _attr_has_entity_name = True
     entity_description: ReolinkNumberEntityDescription
 
     def __init__(

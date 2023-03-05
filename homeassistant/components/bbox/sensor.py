@@ -184,7 +184,7 @@ class BboxSensor(SensorEntity):
 class BboxData:
     """Get data from the Bbox."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the data object."""
         self.data = None
         self.router_infos = None

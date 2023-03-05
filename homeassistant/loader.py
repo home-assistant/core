@@ -8,6 +8,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Iterable
 from contextlib import suppress
+from dataclasses import dataclass
 import functools as ft
 import importlib
 import logging
@@ -30,7 +31,7 @@ from .generated.mqtt import MQTT
 from .generated.ssdp import SSDP
 from .generated.usb import USB
 from .generated.zeroconf import HOMEKIT, ZEROCONF
-from .helpers.json import JSON_DECODE_EXCEPTIONS, json_loads
+from .util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
@@ -116,6 +117,14 @@ class USBMatcherOptional(TypedDict, total=False):
 
 class USBMatcher(USBMatcherRequired, USBMatcherOptional):
     """Matcher for the bluetooth integration."""
+
+
+@dataclass
+class HomeKitDiscoveredIntegration:
+    """HomeKit model."""
+
+    domain: str
+    always_discover: bool
 
 
 class Manifest(TypedDict, total=False):
@@ -259,7 +268,7 @@ async def async_get_integration_descriptions(
     config_flow_path = pathlib.Path(base) / "integrations.json"
 
     flow = await hass.async_add_executor_job(config_flow_path.read_text)
-    core_flows: dict[str, Any] = json_loads(flow)
+    core_flows = cast(dict[str, Any], json_loads(flow))
     custom_integrations = await async_get_custom_components(hass)
     custom_flows: dict[str, Any] = {
         "integration": {},
@@ -410,10 +419,30 @@ async def async_get_usb(hass: HomeAssistant) -> list[USBMatcher]:
     return usb
 
 
-async def async_get_homekit(hass: HomeAssistant) -> dict[str, str]:
-    """Return cached list of homekit models."""
+def homekit_always_discover(iot_class: str | None) -> bool:
+    """Return if we should always offer HomeKit control for a device."""
+    #
+    # Since we prefer local control, if the integration that is being
+    # discovered is cloud AND the HomeKit device is UNPAIRED we still
+    # want to discovery it.
+    #
+    # Additionally if the integration is polling, HKC offers a local
+    # push experience for the user to control the device so we want
+    # to offer that as well.
+    #
+    return not iot_class or (iot_class.startswith("cloud") or "polling" in iot_class)
 
-    homekit: dict[str, str] = HOMEKIT.copy()
+
+async def async_get_homekit(
+    hass: HomeAssistant,
+) -> dict[str, HomeKitDiscoveredIntegration]:
+    """Return cached list of homekit models."""
+    homekit: dict[str, HomeKitDiscoveredIntegration] = {
+        model: HomeKitDiscoveredIntegration(
+            cast(str, details["domain"]), cast(bool, details["always_discover"])
+        )
+        for model, details in HOMEKIT.items()
+    }
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
@@ -424,7 +453,10 @@ async def async_get_homekit(hass: HomeAssistant) -> dict[str, str]:
         ):
             continue
         for model in integration.homekit["models"]:
-            homekit[model] = integration.domain
+            homekit[model] = HomeKitDiscoveredIntegration(
+                integration.domain,
+                homekit_always_discover(integration.iot_class),
+            )
 
     return homekit
 
@@ -474,7 +506,7 @@ class Integration:
                 continue
 
             try:
-                manifest = json_loads(manifest_path.read_text())
+                manifest = cast(Manifest, json_loads(manifest_path.read_text()))
             except JSON_DECODE_EXCEPTIONS as err:
                 _LOGGER.error(
                     "Error parsing manifest.json file at %s: %s", manifest_path, err

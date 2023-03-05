@@ -1,4 +1,4 @@
-"""This component provides support for Reolink IP cameras."""
+"""Component providing support for Reolink IP cameras."""
 from __future__ import annotations
 
 import logging
@@ -43,7 +43,6 @@ class ReolinkCamera(ReolinkCoordinatorEntity, Camera):
     """An implementation of a Reolink IP camera."""
 
     _attr_supported_features: CameraEntityFeature = CameraEntityFeature.STREAM
-    _attr_has_entity_name = True
 
     def __init__(
         self,

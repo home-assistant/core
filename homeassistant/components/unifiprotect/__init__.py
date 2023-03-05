@@ -14,6 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.issue_registry import IssueSeverity
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_ALLOW_EA,
@@ -27,7 +28,6 @@ from .const import (
 from .data import ProtectData, async_ufp_instance_for_config_entry_ids
 from .discovery import async_start_discovery
 from .migrate import async_migrate_data
-from .repairs import async_create_repairs
 from .services import async_cleanup_services, async_setup_services
 from .utils import (
     _async_unifi_mac_from_hass,
@@ -41,10 +41,15 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the UniFi Protect."""
+    # Only start discovery once regardless of how many entries they have
+    async_start_discovery(hass)
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the UniFi Protect config entries."""
-
-    async_start_discovery(hass)
     protect = async_create_api_client(hass, entry)
     _LOGGER.debug("Connect to UniFi Protect")
     data_service = ProtectData(hass, protect, SCAN_INTERVAL, entry)
@@ -122,7 +127,6 @@ async def _async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, data_service: ProtectData
 ) -> None:
     await async_migrate_data(hass, entry, data_service.api)
-    await async_create_repairs(hass, entry, data_service.api)
 
     await data_service.async_setup()
     if not data_service.last_update_success:
