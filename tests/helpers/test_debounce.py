@@ -1,8 +1,12 @@
 """Tests for debounce."""
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import debounce
+from homeassistant.util.dt import utcnow
+
+from ..common import async_fire_time_changed
 
 
 async def test_immediate_works(hass: HomeAssistant) -> None:
@@ -41,7 +45,8 @@ async def test_immediate_works(hass: HomeAssistant) -> None:
     # Call and let timer run out
     await debouncer.async_call()
     assert len(calls) == 2
-    await debouncer._handle_timer_finish()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done()
     assert len(calls) == 2
     assert debouncer._timer_task is None
     assert debouncer._execute_at_end_of_timer is False
@@ -89,7 +94,8 @@ async def test_not_immediate_works(hass: HomeAssistant) -> None:
     # Call and let timer run out
     await debouncer.async_call()
     assert len(calls) == 0
-    await debouncer._handle_timer_finish()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done()
     assert len(calls) == 1
     assert debouncer._timer_task is not None
     assert debouncer._execute_at_end_of_timer is False
@@ -150,7 +156,8 @@ async def test_immediate_works_with_function_swapped(hass: HomeAssistant) -> Non
     await debouncer.async_call()
     assert len(calls) == 2
     assert calls == [1, 2]
-    await debouncer._handle_timer_finish()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done()
     assert len(calls) == 2
     assert calls == [1, 2]
     assert debouncer._timer_task is None

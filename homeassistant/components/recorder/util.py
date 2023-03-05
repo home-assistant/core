@@ -125,7 +125,7 @@ def session_scope(
             need_rollback = True
             session.commit()
     except Exception as err:  # pylint: disable=broad-except
-        _LOGGER.error("Error executing query: %s", err)
+        _LOGGER.error("Error executing query: %s", err, exc_info=True)
         if need_rollback:
             session.rollback()
         if not exception_filter or not exception_filter(err):
@@ -568,6 +568,17 @@ def end_incomplete_runs(session: Session, start_time: datetime) -> None:
         session.add(run)
 
 
+def _is_retryable_error(instance: Recorder, err: OperationalError) -> bool:
+    """Return True if the error is retryable."""
+    assert instance.engine is not None
+    return bool(
+        instance.engine.dialect.name == SupportedDialect.MYSQL
+        and isinstance(err.orig, BaseException)
+        and err.orig.args
+        and err.orig.args[0] in RETRYABLE_MYSQL_ERRORS
+    )
+
+
 _FuncType = Callable[Concatenate[_RecorderT, _P], bool]
 
 
@@ -585,12 +596,8 @@ def retryable_database_job(
             try:
                 return job(instance, *args, **kwargs)
             except OperationalError as err:
-                assert instance.engine is not None
-                if (
-                    instance.engine.dialect.name == SupportedDialect.MYSQL
-                    and err.orig
-                    and err.orig.args[0] in RETRYABLE_MYSQL_ERRORS
-                ):
+                if _is_retryable_error(instance, err):
+                    assert isinstance(err.orig, BaseException)
                     _LOGGER.info(
                         "%s; %s not completed, retrying", err.orig.args[1], description
                     )
@@ -602,6 +609,46 @@ def retryable_database_job(
 
             # Failed with permanent error
             return True
+
+        return wrapper
+
+    return decorator
+
+
+_WrappedFuncType = Callable[Concatenate[_RecorderT, _P], None]
+
+
+def database_job_retry_wrapper(
+    description: str, attempts: int = 5
+) -> Callable[[_WrappedFuncType[_RecorderT, _P]], _WrappedFuncType[_RecorderT, _P]]:
+    """Try to execute a database job multiple times.
+
+    This wrapper handles InnoDB deadlocks and lock timeouts.
+
+    This is different from retryable_database_job in that it will retry the job
+    attempts number of times instead of returning False if the job fails.
+    """
+
+    def decorator(
+        job: _WrappedFuncType[_RecorderT, _P]
+    ) -> _WrappedFuncType[_RecorderT, _P]:
+        @functools.wraps(job)
+        def wrapper(instance: _RecorderT, *args: _P.args, **kwargs: _P.kwargs) -> None:
+            for attempt in range(attempts):
+                try:
+                    job(instance, *args, **kwargs)
+                    return
+                except OperationalError as err:
+                    if attempt == attempts - 1 or not _is_retryable_error(
+                        instance, err
+                    ):
+                        raise
+                    assert isinstance(err.orig, BaseException)
+                    _LOGGER.info(
+                        "%s; %s failed, retrying", err.orig.args[1], description
+                    )
+                    time.sleep(instance.db_retry_wait)
+                    # Failed with retryable error
 
         return wrapper
 

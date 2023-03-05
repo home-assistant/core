@@ -1,5 +1,6 @@
 """Test Google Smart Home."""
 import asyncio
+from types import SimpleNamespace
 from unittest.mock import ANY, call, patch
 
 import pytest
@@ -23,30 +24,32 @@ from homeassistant.components.google_assistant import (
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfTemperature, __version__
 from homeassistant.core import EVENT_CALL_SERVICE, HomeAssistant, State
-from homeassistant.helpers import device_registry, entity_platform
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_platform,
+    entity_registry as er,
+)
 from homeassistant.setup import async_setup_component
 
 from . import BASIC_CONFIG, MockConfig
 
-from tests.common import (
-    async_capture_events,
-    mock_area_registry,
-    mock_device_registry,
-    mock_registry,
-)
+from tests.common import async_capture_events
 
 REQ_ID = "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
 
 
 @pytest.fixture
-def registries(hass):
+def registries(
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
+) -> SimpleNamespace:
     """Registry mock setup."""
-    from types import SimpleNamespace
-
     ret = SimpleNamespace()
-    ret.entity = mock_registry(hass)
-    ret.device = mock_device_registry(hass)
-    ret.area = mock_area_registry(hass)
+    ret.entity = entity_registry
+    ret.device = device_registry
+    ret.area = area_registry
     return ret
 
 
@@ -238,7 +241,7 @@ async def test_sync_in_area(area_on_device, hass: HomeAssistant, registries) -> 
         manufacturer="Someone",
         model="Some model",
         sw_version="Some Version",
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     registries.device.async_update_device(
         device.id, area_id=area.id if area_on_device else None
