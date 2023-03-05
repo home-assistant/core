@@ -1916,7 +1916,7 @@ yeelight==0.7.10
 yolink-api==0.2.8
 
 # homeassistant.components.youless
-youless-api==0.16
+youless-api==1.0.1
 
 # homeassistant.components.zamg
 zamg==0.2.2
