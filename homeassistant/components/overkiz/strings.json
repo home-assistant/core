@@ -28,6 +28,34 @@
     }
   },
   "entity": {
+    "climate": {
+      "overkiz": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "Auto",
+              "comfort-1": "Comfort 1",
+              "comfort-2": "Comfort 2",
+              "drying": "Drying",
+              "external": "External",
+              "freeze": "Freeze",
+              "frost_protection": "Frost protection",
+              "manual": "Manual",
+              "night": "Night",
+              "prog": "Prog"
+            }
+          },
+          "fan_mode": {
+            "state": {
+              "away": "Away",
+              "bypass_boost": "Bypass boost",
+              "home_boost": "Home boost",
+              "kitchen_boost": "Kitchen boost"
+            }
+          }
+        }
+      }
+    },
     "select": {
       "open_closed_pedestrian": {
         "state": {

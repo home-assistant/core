@@ -12,7 +12,7 @@ from homeassistant.const import (
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 
 from . import configure_integration
 from .mocks import (
@@ -24,7 +24,9 @@ from .mocks import (
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
-async def test_binary_sensor(hass: HomeAssistant) -> None:
+async def test_binary_sensor(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test setup and state change of a binary sensor device."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockBinarySensor()
@@ -44,9 +46,8 @@ async def test_binary_sensor(hass: HomeAssistant) -> None:
     state = hass.states.get(f"{DOMAIN}.test_overload")
     assert state is not None
     assert state.attributes[ATTR_FRIENDLY_NAME] == "Test Overload"
-    er = entity_registry.async_get(hass)
     assert (
-        er.async_get(f"{DOMAIN}.test_overload").entity_category
+        entity_registry.async_get(f"{DOMAIN}.test_overload").entity_category
         == EntityCategory.DIAGNOSTIC
     )
 

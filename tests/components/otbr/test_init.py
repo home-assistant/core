@@ -10,8 +10,15 @@ import python_otbr_api
 from homeassistant.components import otbr
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import issue_registry as ir
 
-from . import BASE_URL, CONFIG_ENTRY_DATA, DATASET
+from . import (
+    BASE_URL,
+    CONFIG_ENTRY_DATA,
+    DATASET_CH16,
+    DATASET_INSECURE_NW_KEY,
+    DATASET_INSECURE_PASSPHRASE,
+)
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -19,6 +26,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 async def test_import_dataset(hass: HomeAssistant) -> None:
     """Test the active dataset is imported at setup."""
+    issue_registry = ir.async_get(hass)
 
     config_entry = MockConfigEntry(
         data=CONFIG_ENTRY_DATA,
@@ -28,13 +36,46 @@ async def test_import_dataset(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
     with patch(
-        "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET
+        "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
     ), patch(
         "homeassistant.components.thread.dataset_store.DatasetStore.async_add"
     ) as mock_add:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
-    mock_add.assert_called_once_with(config_entry.title, DATASET.hex())
+    mock_add.assert_called_once_with(config_entry.title, DATASET_CH16.hex())
+    assert not issue_registry.async_get_issue(
+        domain=otbr.DOMAIN, issue_id=f"insecure_thread_network_{config_entry.entry_id}"
+    )
+
+
+@pytest.mark.parametrize(
+    "dataset", [DATASET_INSECURE_NW_KEY, DATASET_INSECURE_PASSPHRASE]
+)
+async def test_import_insecure_dataset(hass: HomeAssistant, dataset: bytes) -> None:
+    """Test the active dataset is imported at setup.
+
+    This imports a dataset with insecure settings.
+    """
+    issue_registry = ir.async_get(hass)
+
+    config_entry = MockConfigEntry(
+        data=CONFIG_ENTRY_DATA,
+        domain=otbr.DOMAIN,
+        options={},
+        title="My OTBR",
+    )
+    config_entry.add_to_hass(hass)
+    with patch(
+        "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=dataset
+    ), patch(
+        "homeassistant.components.thread.dataset_store.DatasetStore.async_add"
+    ) as mock_add:
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    mock_add.assert_called_once_with(config_entry.title, dataset.hex())
+    assert issue_registry.async_get_issue(
+        domain=otbr.DOMAIN, issue_id=f"insecure_thread_network_{config_entry.entry_id}"
+    )
 
 
 @pytest.mark.parametrize(
