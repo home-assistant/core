@@ -42,7 +42,7 @@ from .const import (
     PLEX_UPDATE_SENSOR_SIGNAL,
     TRANSIENT_DEVICE_MODELS,
 )
-from .helpers import get_hass_data, get_plex_server
+from .helpers import get_plex_data, get_plex_server
 from .media_browser import browse_media
 from .services import process_plex_payload
 
@@ -85,7 +85,7 @@ async def async_setup_entry(
     unsub = async_dispatcher_connect(
         hass, PLEX_NEW_MP_SIGNAL.format(server_id), async_new_media_players
     )
-    get_hass_data(hass)[DISPATCHERS][server_id].append(unsub)
+    get_plex_data(hass)[DISPATCHERS][server_id].append(unsub)
     _LOGGER.debug("New entity listener created")
 
 

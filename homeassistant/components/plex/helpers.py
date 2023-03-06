@@ -27,14 +27,14 @@ class PlexData(TypedDict):
     gdm_debouncer: Callable[[], Coroutine[Any, Any, None]]
 
 
-def get_hass_data(hass: HomeAssistant) -> PlexData:
+def get_plex_data(hass: HomeAssistant) -> PlexData:
     """Get typed data from hass.data."""
     return hass.data[DOMAIN]
 
 
 def get_plex_server(hass: HomeAssistant, server_id: str) -> PlexServer:
     """Get Plex server from hass.data."""
-    return get_hass_data(hass)[SERVERS][server_id]
+    return get_plex_data(hass)[SERVERS][server_id]
 
 
 def pretty_title(media, short_name=False):

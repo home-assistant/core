@@ -7,7 +7,7 @@ from homeassistant.components.media_player import BrowseError, BrowseMedia, Medi
 
 from .const import DOMAIN, SERVERS
 from .errors import MediaNotFound
-from .helpers import get_hass_data, get_plex_server, pretty_title
+from .helpers import get_plex_data, get_plex_server, pretty_title
 
 
 class UnknownMediaType(BrowseError):
@@ -294,7 +294,7 @@ def root_payload(hass, is_internal, platform=None):
     """Return root payload for Plex."""
     children = []
 
-    for server_id in get_hass_data(hass)[SERVERS]:
+    for server_id in get_plex_data(hass)[SERVERS]:
         children.append(
             browse_media(
                 hass,

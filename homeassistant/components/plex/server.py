@@ -48,7 +48,7 @@ from .errors import (
     ServerNotSpecified,
     ShouldUpdateConfigEntry,
 )
-from .helpers import get_hass_data
+from .helpers import get_plex_data
 from .media_search import search_media
 from .models import PlexSession
 
@@ -318,7 +318,7 @@ class PlexServer:
         """Update the platform entities."""
         _LOGGER.debug("Updating devices")
 
-        await get_hass_data(self.hass)[GDM_DEBOUNCER]()
+        await get_plex_data(self.hass)[GDM_DEBOUNCER]()
 
         available_clients = {}
         ignored_clients = set()
@@ -431,7 +431,7 @@ class PlexServer:
 
         def connect_new_clients():
             """Create connections to newly discovered clients."""
-            for gdm_entry in get_hass_data(self.hass)[GDM_SCANNER].entries:
+            for gdm_entry in get_plex_data(self.hass)[GDM_SCANNER].entries:
                 machine_identifier = gdm_entry["data"]["Resource-Identifier"]
                 if machine_identifier in self._client_device_cache:
                     client = self._client_device_cache[machine_identifier]

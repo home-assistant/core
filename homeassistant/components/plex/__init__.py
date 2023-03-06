@@ -45,7 +45,7 @@ from .const import (
     WEBSOCKETS,
 )
 from .errors import ShouldUpdateConfigEntry
-from .helpers import PlexData, get_hass_data
+from .helpers import PlexData, get_plex_data
 from .media_browser import browse_media
 from .server import PlexServer
 from .services import async_setup_services
@@ -61,7 +61,7 @@ def is_plex_media_id(media_content_id):
 
 async def async_browse_media(hass, media_content_type, media_content_id, platform=None):
     """Browse Plex media."""
-    plex_server = next(iter(get_hass_data(hass)[SERVERS].values()), None)
+    plex_server = next(iter(get_plex_data(hass)[SERVERS].values()), None)
     if not plex_server:
         raise BrowseError("No Plex servers available")
     is_internal = is_internal_request(hass)
@@ -165,7 +165,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "Connected to: %s (%s)", plex_server.friendly_name, plex_server.url_in_use
     )
     server_id = plex_server.machine_identifier
-    hass_data = get_hass_data(hass)
+    hass_data = get_plex_data(hass)
     hass_data[SERVERS][server_id] = plex_server
     hass_data[PLATFORMS_COMPLETED][server_id] = set()
 
@@ -268,7 +268,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     server_id = entry.data[CONF_SERVER_IDENTIFIER]
 
-    hass_data = get_hass_data(hass)
+    hass_data = get_plex_data(hass)
     websocket = hass_data[WEBSOCKETS].pop(server_id)
     websocket.close()
 
@@ -287,7 +287,7 @@ async def async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None
     """Triggered by config entry options updates."""
     server_id = entry.data[CONF_SERVER_IDENTIFIER]
 
-    hass_data = get_hass_data(hass)
+    hass_data = get_plex_data(hass)
     # Guard incomplete setup during reauth flows
     if server_id in hass_data[SERVERS]:
         hass_data[SERVERS][server_id].options = entry.options
