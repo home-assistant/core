@@ -1998,25 +1998,27 @@ def _statistics_at_time(
         columns = columns.add_columns(table.sum)
 
     start_time_ts = start_time.timestamp()
-    stmt = lambda_stmt(lambda: columns).join(
-        (
-            most_recent_statistic_ids := (
-                select(
-                    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-                    # pylint: disable-next=not-callable
-                    func.max(table.start_ts).label("max_start_ts"),
-                    table.metadata_id.label("max_metadata_id"),
+    stmt = lambda_stmt(
+        lambda: columns.join(
+            (
+                most_recent_statistic_ids := (
+                    select(
+                        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+                        # pylint: disable-next=not-callable
+                        func.max(table.start_ts).label("max_start_ts"),
+                        table.metadata_id.label("max_metadata_id"),
+                    )
+                    .filter(table.start_ts < start_time_ts)
+                    .filter(table.metadata_id.in_(metadata_ids))
+                    .group_by(table.metadata_id)
+                    .subquery()
                 )
-                .filter(table.start_ts < start_time_ts)
-                .filter(table.metadata_id.in_(metadata_ids))
-                .group_by(table.metadata_id)
-                .subquery()
-            )
-        ),
-        and_(
-            table.start_ts == most_recent_statistic_ids.c.max_start_ts,
-            table.metadata_id == most_recent_statistic_ids.c.max_metadata_id,
-        ),
+            ),
+            and_(
+                table.start_ts == most_recent_statistic_ids.c.max_start_ts,
+                table.metadata_id == most_recent_statistic_ids.c.max_metadata_id,
+            ),
+        )
     )
 
     return cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
