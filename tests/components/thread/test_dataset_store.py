@@ -31,26 +31,32 @@ async def test_add_invalid_dataset(hass: HomeAssistant) -> None:
 
 async def test_add_dataset_twice(hass: HomeAssistant) -> None:
     """Test adding dataset twice does nothing."""
-    await dataset_store.async_add_dataset(hass, "source", DATASET_1)
+    dataset_id = await dataset_store.async_add_dataset(hass, "source", DATASET_1)
 
     store = await dataset_store.async_get_store(hass)
     assert len(store.datasets) == 1
     created = list(store.datasets.values())[0].created
 
-    await dataset_store.async_add_dataset(hass, "new_source", DATASET_1)
+    assert (
+        await dataset_store.async_add_dataset(hass, "new_source", DATASET_1)
+        == dataset_id
+    )
     assert len(store.datasets) == 1
     assert list(store.datasets.values())[0].created == created
 
 
 async def test_add_dataset_reordered(hass: HomeAssistant) -> None:
     """Test adding dataset with keys in a different order does nothing."""
-    await dataset_store.async_add_dataset(hass, "source", DATASET_1)
+    dataset_id = await dataset_store.async_add_dataset(hass, "source", DATASET_1)
 
     store = await dataset_store.async_get_store(hass)
     assert len(store.datasets) == 1
     created = list(store.datasets.values())[0].created
 
-    await dataset_store.async_add_dataset(hass, "new_source", DATASET_1_REORDERED)
+    assert (
+        await dataset_store.async_add_dataset(hass, "new_source", DATASET_1_REORDERED)
+        == dataset_id
+    )
     assert len(store.datasets) == 1
     assert list(store.datasets.values())[0].created == created
 
@@ -90,6 +96,22 @@ async def test_get_preferred_dataset(hass: HomeAssistant) -> None:
     await dataset_store.async_add_dataset(hass, "source", DATASET_1)
 
     assert (await dataset_store.async_get_preferred_dataset(hass)) == DATASET_1
+
+
+async def test_set_preferred_dataset(hass: HomeAssistant) -> None:
+    """Test set the preferred dataset."""
+    await dataset_store.async_add_dataset(hass, "source", DATASET_1)
+    id_2 = await dataset_store.async_add_dataset(hass, "source", DATASET_2)
+
+    assert (await dataset_store.async_get_preferred_dataset(hass)) == DATASET_1
+
+    await dataset_store.async_set_preferred_dataset(hass, id_2)
+
+    assert (await dataset_store.async_get_preferred_dataset(hass)) == DATASET_2
+
+    with pytest.raises(HomeAssistantError):
+        await dataset_store.async_set_preferred_dataset(hass, "donald_duck")
+    assert (await dataset_store.async_get_preferred_dataset(hass)) == DATASET_2
 
 
 async def test_dataset_properties(hass: HomeAssistant) -> None:
