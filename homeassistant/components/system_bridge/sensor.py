@@ -51,7 +51,7 @@ class SystemBridgeSensorEntityDescription(SensorEntityDescription):
 
 def battery_time_remaining(data: SystemBridgeCoordinatorData) -> datetime | None:
     """Return the battery time remaining."""
-    if value := getattr(data.battery, "sensors_secsleft", None) is not None:
+    if (value := getattr(data.battery, "sensors_secsleft", None)) is not None:
         return utcnow() + timedelta(seconds=value)
     return None
 
@@ -65,28 +65,28 @@ def cpu_speed(data: SystemBridgeCoordinatorData) -> float | None:
 
 def gpu_core_clock_speed(data: SystemBridgeCoordinatorData, key: str) -> float | None:
     """Return the GPU core clock speed."""
-    if value := getattr(data.gpu, f"{key}_core_clock", None) is not None:
+    if (value := getattr(data.gpu, f"{key}_core_clock", None)) is not None:
         return round(value)
     return None
 
 
 def gpu_memory_clock_speed(data: SystemBridgeCoordinatorData, key: str) -> float | None:
     """Return the GPU memory clock speed."""
-    if value := getattr(data.gpu, f"{key}_memory_clock", None) is not None:
+    if (value := getattr(data.gpu, f"{key}_memory_clock", None)) is not None:
         return round(value)
     return None
 
 
 def gpu_memory_free(data: SystemBridgeCoordinatorData, key: str) -> float | None:
     """Return the free GPU memory."""
-    if value := getattr(data.gpu, f"{key}_memory_free", None) is not None:
+    if (value := getattr(data.gpu, f"{key}_memory_free", None)) is not None:
         return round(value)
     return None
 
 
 def gpu_memory_used(data: SystemBridgeCoordinatorData, key: str) -> float | None:
     """Return the used GPU memory."""
-    if value := getattr(data.gpu, f"{key}_memory_used", None) is not None:
+    if (value := getattr(data.gpu, f"{key}_memory_used", None)) is not None:
         return round(value)
     return None
 
@@ -95,8 +95,8 @@ def gpu_memory_used_percentage(
     data: SystemBridgeCoordinatorData, key: str
 ) -> float | None:
     """Return the used GPU memory percentage."""
-    if (used := getattr(data.gpu, f"{key}_memory_used", None) is not None) and (
-        total := getattr(data.gpu, f"{key}_memory_total", None) is not None
+    if ((used := getattr(data.gpu, f"{key}_memory_used", None)) is not None) and (
+        (total := getattr(data.gpu, f"{key}_memory_total", None)) is not None
     ):
         return round(
             used / total * 100,
