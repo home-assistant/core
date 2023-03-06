@@ -228,7 +228,7 @@ class UniFiController:
 
             @callback
             def async_options_updated() -> None:
-                """Load new entities based on changed options.."""
+                """Load new entities based on changed options."""
                 async_add_unifi_entity(list(api_handler))
 
             self.config_entry.async_on_unload(
