@@ -27,8 +27,6 @@ class ReolinkNumberEntityDescriptionMixin:
     """Mixin values for Reolink number entities."""
 
     value: Callable[[Host, int], float]
-    get_min_value: Callable[[Host, int], float]
-    get_max_value: Callable[[Host, int], float]
     method: Callable[[Host, int, float], Any]
 
 
@@ -40,6 +38,8 @@ class ReolinkNumberEntityDescription(
 
     mode: NumberMode = NumberMode.AUTO
     supported: Callable[[Host, int], bool] = lambda api, ch: True
+    get_min_value: Callable[[Host, int], float] | None = None
+    get_max_value: Callable[[Host, int], float] | None = None
 
 
 NUMBER_ENTITIES = (
@@ -73,8 +73,8 @@ NUMBER_ENTITIES = (
         icon="mdi:spotlight-beam",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
-        get_min_value=lambda api, ch: 1,
-        get_max_value=lambda api, ch: 100,
+        native_min_value=1,
+        native_max_value=100,
         supported=lambda api, ch: api.supported(ch, "floodLight"),
         value=lambda api, ch: api.whiteled_brightness(ch),
         method=lambda api, ch, value: api.set_whiteled(ch, brightness=int(value)),
@@ -85,8 +85,8 @@ NUMBER_ENTITIES = (
         icon="mdi:volume-high",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
-        get_min_value=lambda api, ch: 0,
-        get_max_value=lambda api, ch: 100,
+        native_min_value=0,
+        native_max_value=100,
         supported=lambda api, ch: api.supported(ch, "volume"),
         value=lambda api, ch: api.volume(ch),
         method=lambda api, ch, value: api.set_volume(ch, volume=int(value)),
@@ -98,8 +98,8 @@ NUMBER_ENTITIES = (
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_unit_of_measurement=UnitOfTime.SECONDS,
-        get_min_value=lambda api, ch: 10,
-        get_max_value=lambda api, ch: 300,
+        native_min_value=10,
+        native_max_value=300,
         supported=lambda api, ch: api.supported(ch, "ptz_guard"),
         value=lambda api, ch: api.ptz_guard_time(ch),
         method=lambda api, ch, value: api.set_ptz_guard(ch, time=int(value)),
@@ -110,8 +110,8 @@ NUMBER_ENTITIES = (
         icon="mdi:motion-sensor",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
-        get_min_value=lambda api, ch: 1,
-        get_max_value=lambda api, ch: 50,
+        native_min_value=1,
+        native_max_value=50,
         supported=lambda api, ch: api.supported(ch, "md_sensitivity"),
         value=lambda api, ch: api.md_sensitivity(ch),
         method=lambda api, ch, value: api.set_md_sensitivity(ch, int(value)),
@@ -122,8 +122,8 @@ NUMBER_ENTITIES = (
         icon="mdi:face-recognition",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
-        get_min_value=lambda api, ch: 0,
-        get_max_value=lambda api, ch: 100,
+        native_min_value=0,
+        native_max_value=100,
         supported=lambda api, ch: (
             api.supported(ch, "ai_sensitivity") and api.ai_supported(ch, "face")
         ),
@@ -136,8 +136,8 @@ NUMBER_ENTITIES = (
         icon="mdi:account",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
-        get_min_value=lambda api, ch: 0,
-        get_max_value=lambda api, ch: 100,
+        native_min_value=0,
+        native_max_value=100,
         supported=lambda api, ch: (
             api.supported(ch, "ai_sensitivity") and api.ai_supported(ch, "people")
         ),   
@@ -150,8 +150,8 @@ NUMBER_ENTITIES = (
         icon="mdi:car",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
-        get_min_value=lambda api, ch: 0,
-        get_max_value=lambda api, ch: 100,
+        native_min_value=0,
+        native_max_value=100,
         supported=lambda api, ch: (
            api.supported(ch, "ai_sensitivity") and api.ai_supported(ch, "vehicle")
         ),
@@ -164,8 +164,8 @@ NUMBER_ENTITIES = (
         icon="mdi:dog-side",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
-        get_min_value=lambda api, ch: 0,
-        get_max_value=lambda api, ch: 100,
+        native_min_value=0,
+        native_max_value=100,
         supported=lambda api, ch: (
             api.supported(ch, "ai_sensitivity") and api.ai_supported(ch, "dog_cat")
         ),
@@ -206,12 +206,14 @@ class ReolinkNumberEntity(ReolinkCoordinatorEntity, NumberEntity):
         super().__init__(reolink_data, channel)
         self.entity_description = entity_description
 
-        self._attr_native_min_value = entity_description.get_min_value(
-            self._host.api, channel
-        )
-        self._attr_native_max_value = entity_description.get_max_value(
-            self._host.api, channel
-        )
+        if entity_description.get_min_value is not None:
+            self._attr_native_min_value = entity_description.get_min_value(
+                self._host.api, channel
+            )
+        if entity_description.get_max_value is not None:
+            self._attr_native_max_value = entity_description.get_max_value(
+                self._host.api, channel
+            )
         self._attr_mode = entity_description.mode
         self._attr_unique_id = (
             f"{self._host.unique_id}_{channel}_{entity_description.key}"
