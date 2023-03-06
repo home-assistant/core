@@ -202,17 +202,11 @@ class OTBROptionsFlow(OptionsFlowWithConfigEntry):
             dataset_id = await async_add_dataset(
                 self.hass, self._config_entry.title, dataset_tlvs.hex()
             )
-            if user_input["set_as_preferred"]:
-                await async_set_preferred_dataset(self.hass, dataset_id)
+            await async_set_preferred_dataset(self.hass, dataset_id)
 
             return self.async_create_entry(data={})
 
-        return self.async_show_form(
-            step_id="create_network",
-            data_schema=vol.Schema(
-                {vol.Required("set_as_preferred", default=True): bool}
-            ),
-        )
+        return self.async_show_form(step_id="create_network")
 
     async def async_step_prefer_otbr_network(
         self, user_input: dict[str, Any] | None = None

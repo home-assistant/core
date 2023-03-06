@@ -27,9 +27,6 @@
       },
       "create_network": {
         "title": "Reset Thread network",
-        "data": {
-          "set_as_preferred": "Make the new network the preferred network"
-        },
         "description": "This will reset the Home Assistant Border Router to its factory defaults and form a new Thread network.\n\nThe old network may no longer be available, and any devices that were attached to this network may need to be recomissioned."
       },
       "prefer_otbr_network": {
