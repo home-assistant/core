@@ -435,7 +435,7 @@ class Washer(
             "sensor": program_sensors + op_state_sensor,
         }
 
-    
+
 class WasherDryer(
     DeviceWithDoor,
     DeviceWithOpState,
@@ -506,7 +506,7 @@ class WasherDryer(
             "sensor": program_sensors + op_state_sensor,
         }
 
-    
+
 class CoffeeMaker(DeviceWithOpState, DeviceWithPrograms, DeviceWithRemoteStart):
     """Coffee maker class."""
 
