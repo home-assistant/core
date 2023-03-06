@@ -165,12 +165,12 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
                     f"{LIVISI_STATE_CHANGE}_{event_data.source}",
                     event_data.vrccData,
                 )
-        elif event_data.isReachable is not None:
-            async_dispatcher_send(
-                self.hass,
-                f"{LIVISI_REACHABILITY_CHANGE}_{event_data.source}",
-                event_data.isReachable,
-            )
+            if event_data.isReachable is not None:
+                async_dispatcher_send(
+                    self.hass,
+                    f"{LIVISI_REACHABILITY_CHANGE}_{event_data.source}",
+                    event_data.isReachable,
+                )
 
     async def on_close(self) -> None:
         """Define a handler to fire when the websocket is closed."""
