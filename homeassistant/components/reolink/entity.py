@@ -26,7 +26,7 @@ class ReolinkBaseCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[_T]])
         reolink_data: ReolinkData,
         coordinator: DataUpdateCoordinator[_T],
     ) -> None:
-        """Initialize ReolinkBaseCoordinatorEntity for a NVR entity without a channel."""
+        """Initialize ReolinkBaseCoordinatorEntity."""
         super().__init__(coordinator)
 
         self._host = reolink_data.host
