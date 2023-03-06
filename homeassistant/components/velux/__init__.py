@@ -1,19 +1,64 @@
 """Support for VELUX KLF 200 devices."""
-import logging
-
 import voluptuous as vol
 from pyvlx import Node, PyVLX, PyVLXException
 
-from homeassistant.config_entries import ConfigEntry
+import homeassistant.helpers.config_validation as cv
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import _LOGGER, DATA_VELUX, DOMAIN, PLATFORMS
+
+CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the velux component."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2023.7.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the velux component."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2023.9.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
+
     try:
         hass.data[DATA_VELUX] = VeluxModule(hass, entry.data)
         hass.data[DATA_VELUX].setup()
