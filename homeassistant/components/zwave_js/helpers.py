@@ -101,7 +101,7 @@ def get_value_id_from_unique_id(unique_id: str) -> str | None:
     split_unique_id = unique_id.split(".")
     # If the unique ID contains a `-` in its second part, the unique ID contains
     # a value ID and we can return it.
-    if "-" in (value_id := split_unique_id[1]):
+    if len(split_unique_id) > 1 and "-" in (value_id := split_unique_id[1]):
         return value_id
     return None
 
