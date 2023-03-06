@@ -45,6 +45,7 @@ class KNXSystemEntityDescription(SensorEntityDescription):
 
     always_available: bool = True
     entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
+    has_entity_name: bool = True
     should_poll: bool = True
     value_fn: Callable[[KNXModule], StateType | datetime] = lambda knx: None
 
@@ -59,7 +60,7 @@ SYSTEM_ENTITY_DESCRIPTIONS = (
         value_fn=lambda knx: str(knx.xknx.current_address),
     ),
     KNXSystemEntityDescription(
-        key="uptime",
+        key="connected_since",
         name="Connected since",
         always_available=False,
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -106,8 +107,8 @@ SYSTEM_ENTITY_DESCRIPTIONS = (
         value_fn=lambda knx: knx.xknx.connection_manager.cemi_count_outgoing_error,
     ),
     KNXSystemEntityDescription(
-        key="telegram_count_interface",
-        name="Telegrams Bus",
+        key="telegram_count",
+        name="Telegrams",
         icon="mdi:plus-network",
         force_update=True,
         state_class=SensorStateClass.TOTAL_INCREASING,
