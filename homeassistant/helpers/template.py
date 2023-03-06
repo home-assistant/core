@@ -2210,7 +2210,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         if hass is None:
             return
 
-        # When hass is available, attach its loader to enable imports.
+        # This environment has access to hass, attach its loader to enable imports.
         self.loader = _get_hass_loader(hass)
 
         # We mark these as a context functions to ensure they get
