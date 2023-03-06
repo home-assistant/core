@@ -13,7 +13,7 @@ from .const import _LOGGER, DOMAIN
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for NINA."""
+    """Handle a config flow for velux."""
 
     VERSION: int = 1
 
@@ -28,7 +28,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Import a config entry."""
         self._async_abort_entries_match({CONF_HOST: config[CONF_HOST]})
         return self.async_create_entry(
-            title="VELUX",
+            title=config[CONF_HOST],
             data=config,
         )
 
@@ -37,9 +37,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
         errors: dict[str, Any] = {}
-
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
 
         if user_input is not None and not errors:
             try:
@@ -54,7 +51,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="unknown")
             else:
                 return self.async_create_entry(
-                    title="VELUX",
+                    title=user_input[CONF_HOST],
                     data=user_input,
                 )
 

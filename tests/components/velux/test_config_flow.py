@@ -98,25 +98,7 @@ async def test_user_success(hass: HomeAssistant) -> None:
         disconnect_mock.assert_called_once()
 
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-        assert result["title"] == "VELUX"
-
-
-async def test_user_already_configured(hass: HomeAssistant) -> None:
-    """Test starting a flow by user, but it was already configured."""
-
-    with patch(PYVLX_CONNECT_FUNCTION_PATH), patch(
-        PYVLX_DISCONNECT_FUNCTION_PATH
-    ), patch_async_setup_entry():
-        await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=deepcopy(DUMMY_DATA)
-        )
-
-        result: dict[str, Any] = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
-        assert result["reason"] == "single_instance_allowed"
+        assert result["title"] == DUMMY_DATA[CONF_HOST]
 
 
 async def test_import(hass: HomeAssistant) -> None:
@@ -128,5 +110,5 @@ async def test_import(hass: HomeAssistant) -> None:
             data=DUMMY_DATA,
         )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == "VELUX"
+    assert result["title"] == DUMMY_DATA[CONF_HOST]
     assert result["data"] == DUMMY_DATA
