@@ -1,5 +1,6 @@
 """Configuration for frontier_silicon tests."""
-from unittest.mock import patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -27,3 +28,12 @@ def mock_radio_id():
     """Return a valid radio_id."""
     with patch("afsapi.AFSAPI.get_radio_id", return_value="mock_radio_id"):
         yield
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.frontier_silicon.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
