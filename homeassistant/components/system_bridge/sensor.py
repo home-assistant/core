@@ -282,16 +282,16 @@ async def async_setup_entry(
 
     displays = []
     if coordinator.data.display.displays is not None:
-        for display in coordinator.data.display.displays:
-            if hasattr(coordinator.data.display, f"{display}_name"):
-                displays.append(
-                    {
-                        "key": display,
-                        "name": getattr(
-                            coordinator.data.display, f"{display}_name", ""
-                        ).replace("Display ", ""),
-                    },
-                )
+        displays.extend(
+            {
+                "key": display,
+                "name": getattr(
+                    coordinator.data.display, f"{display}_name", ""
+                ).replace("Display ", ""),
+             }
+             for display in coordinator.data.display.displays
+             if hasattr(coordinator.data.display, f"{display}_name")
+        )
     display_count = len(displays)
 
     entities.append(
@@ -358,13 +358,13 @@ async def async_setup_entry(
 
     gpus = []
     if coordinator.data.gpu.gpus is not None:
-        for gpu in coordinator.data.gpu.gpus:
-            gpus.append(
-                {
-                    "key": gpu,
-                    "name": getattr(coordinator.data.gpu, f"{gpu}_name", None),
-                },
-            )
+        gpus.extend(
+            {
+                "key": gpu,
+                "name": getattr(coordinator.data.gpu, f"{gpu}_name", None),
+            },
+            for gpu in coordinator.data.gpu.gpus
+        )
 
     for index, gpu in enumerate(gpus):
         entities = [
