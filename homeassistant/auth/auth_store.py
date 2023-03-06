@@ -223,7 +223,10 @@ class AuthStore:
         access_token_expiration: timedelta = ACCESS_TOKEN_EXPIRATION,
         credential: models.Credentials | None = None,
     ) -> models.RefreshToken:
-        """Create a new token for a user."""
+        """Create a new token for a user.
+
+        Also, schedules a job to clean up expired tokens for the user.
+        """
         kwargs: dict[str, Any] = {
             "user": user,
             "client_id": client_id,
@@ -240,6 +243,7 @@ class AuthStore:
         user.refresh_tokens[refresh_token.id] = refresh_token
 
         self._async_schedule_save()
+        self.hass.async_add_job(self.async_purge_expired_tokens, user)
         return refresh_token
 
     async def async_remove_refresh_token(
@@ -295,6 +299,29 @@ class AuthStore:
         refresh_token.last_used_at = dt_util.utcnow()
         refresh_token.last_used_ip = remote_ip
         self._async_schedule_save()
+
+    async def async_purge_expired_tokens(
+        self, user: models.User, token_retention_time: int = 7
+    ) -> None:
+        """Purge expired tokens for a user.
+
+        Args:
+            user (models.User): user to purge
+            token_retention_time (int, optional): number of days to wait before purging.
+                                                  Defaults to 7.
+        """
+        data_modified: bool = False
+        retention_timedelta = timedelta(days=token_retention_time)
+
+        for token in user.refresh_tokens.values():
+            purge_time = (
+                token.created_at + token.access_token_expiration + retention_timedelta
+            )
+            if purge_time < dt_util.utcnow():
+                user.refresh_tokens.pop(token.id, None)
+                data_modified = True
+        if data_modified:
+            self._async_schedule_save()
 
     async def _async_load(self) -> None:
         """Load the users."""
