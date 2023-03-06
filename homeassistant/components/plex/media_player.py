@@ -40,9 +40,9 @@ from .const import (
     PLEX_UPDATE_MEDIA_PLAYER_SESSION_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
     PLEX_UPDATE_SENSOR_SIGNAL,
-    SERVERS,
     TRANSIENT_DEVICE_MODELS,
 )
+from .helpers import get_hass_data, get_plex_server
 from .media_browser import browse_media
 from .services import process_plex_payload
 
@@ -85,7 +85,7 @@ async def async_setup_entry(
     unsub = async_dispatcher_connect(
         hass, PLEX_NEW_MP_SIGNAL.format(server_id), async_new_media_players
     )
-    hass.data[DOMAIN][DISPATCHERS][server_id].append(unsub)
+    get_hass_data(hass)[DISPATCHERS][server_id].append(unsub)
     _LOGGER.debug("New entity listener created")
 
 
@@ -94,7 +94,7 @@ def _async_add_entities(hass, registry, async_add_entities, server_id, new_entit
     """Set up Plex media_player entities."""
     _LOGGER.debug("New entities: %s", new_entities)
     entities = []
-    plexserver = hass.data[DOMAIN][SERVERS][server_id]
+    plexserver = get_plex_server(hass, server_id)
     for entity_params in new_entities:
         plex_mp = PlexMediaPlayer(plexserver, **entity_params)
         entities.append(plex_mp)

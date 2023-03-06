@@ -1,5 +1,6 @@
 """Constants for the Plex component."""
 from datetime import timedelta
+from typing import Final
 
 from homeassistant.const import Platform, __version__
 
@@ -16,14 +17,14 @@ PLEXTV_THROTTLE = 60
 
 CLIENT_SCAN_INTERVAL = timedelta(minutes=10)
 DEBOUNCE_TIMEOUT = 1
-DISPATCHERS = "dispatchers"
-GDM_DEBOUNCER = "gdm_debouncer"
-GDM_SCANNER = "gdm_scanner"
+DISPATCHERS: Final = "dispatchers"
+GDM_DEBOUNCER: Final = "gdm_debouncer"
+GDM_SCANNER: Final = "gdm_scanner"
 PLATFORMS = frozenset([Platform.BUTTON, Platform.MEDIA_PLAYER, Platform.SENSOR])
-PLATFORMS_COMPLETED = "platforms_completed"
+PLATFORMS_COMPLETED: Final = "platforms_completed"
 PLAYER_SOURCE = "player_source"
-SERVERS = "servers"
-WEBSOCKETS = "websockets"
+SERVERS: Final = "servers"
+WEBSOCKETS: Final = "websockets"
 
 PLEX_SERVER_CONFIG = "server_config"
 
