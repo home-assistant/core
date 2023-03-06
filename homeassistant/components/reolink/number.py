@@ -140,7 +140,7 @@ NUMBER_ENTITIES = (
         native_max_value=100,
         supported=lambda api, ch: (
             api.supported(ch, "ai_sensitivity") and api.ai_supported(ch, "people")
-        ),   
+        ),
         value=lambda api, ch: api.ai_sensitivity(ch, "people"),
         method=lambda api, ch, value: api.set_ai_sensitivity(ch, int(value), "people"),
     ),
@@ -153,7 +153,7 @@ NUMBER_ENTITIES = (
         native_min_value=0,
         native_max_value=100,
         supported=lambda api, ch: (
-           api.supported(ch, "ai_sensitivity") and api.ai_supported(ch, "vehicle")
+            api.supported(ch, "ai_sensitivity") and api.ai_supported(ch, "vehicle")
         ),
         value=lambda api, ch: api.ai_sensitivity(ch, "vehicle"),
         method=lambda api, ch, value: api.set_ai_sensitivity(ch, int(value), "vehicle"),
