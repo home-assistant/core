@@ -23,7 +23,6 @@ from sqlalchemy.exc import OperationalError, SQLAlchemyError, StatementError
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import literal_column, true
 from sqlalchemy.sql.lambdas import StatementLambdaElement
-from sqlalchemy.sql.selectable import Subquery
 import voluptuous as vol
 
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
@@ -650,27 +649,19 @@ def _compile_hourly_statistics_summary_mean_stmt(
     )
 
 
-def _compile_hourly_statistics_last_sum_stmt_subquery(
-    start_time_ts: float, end_time_ts: float
-) -> Subquery:
-    """Generate the summary mean statement for hourly statistics."""
-    return (
-        select(*QUERY_STATISTICS_SUMMARY_SUM)
-        .filter(StatisticsShortTerm.start_ts >= start_time_ts)
-        .filter(StatisticsShortTerm.start_ts < end_time_ts)
-        .subquery()
-    )
-
-
 def _compile_hourly_statistics_last_sum_stmt(
     start_time_ts: float, end_time_ts: float
 ) -> StatementLambdaElement:
     """Generate the summary mean statement for hourly statistics."""
-    subquery = _compile_hourly_statistics_last_sum_stmt_subquery(
-        start_time_ts, end_time_ts
-    )
     return lambda_stmt(
-        lambda: select(subquery)
+        lambda: select(
+            subquery := (
+                select(*QUERY_STATISTICS_SUMMARY_SUM)
+                .filter(StatisticsShortTerm.start_ts >= start_time_ts)
+                .filter(StatisticsShortTerm.start_ts < end_time_ts)
+                .subquery()
+            )
+        )
         .filter(subquery.c.rownum == 1)
         .order_by(subquery.c.metadata_id)
     )
@@ -1919,28 +1910,24 @@ def get_last_short_term_statistics(
     )
 
 
-def _generate_most_recent_statistic_row(metadata_ids: list[int]) -> Subquery:
-    """Generate the subquery to find the most recent statistic row."""
-    return (
-        select(
-            StatisticsShortTerm.metadata_id,
-            # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-            # pylint: disable-next=not-callable
-            func.max(StatisticsShortTerm.start_ts).label("start_max"),
-        )
-        .where(StatisticsShortTerm.metadata_id.in_(metadata_ids))
-        .group_by(StatisticsShortTerm.metadata_id)
-    ).subquery()
-
-
 def _latest_short_term_statistics_stmt(
     metadata_ids: list[int],
 ) -> StatementLambdaElement:
     """Create the statement for finding the latest short term stat rows."""
     stmt = lambda_stmt(lambda: select(*QUERY_STATISTICS_SHORT_TERM))
-    most_recent_statistic_row = _generate_most_recent_statistic_row(metadata_ids)
     stmt += lambda s: s.join(
-        most_recent_statistic_row,
+        (
+            most_recent_statistic_row := (
+                select(
+                    StatisticsShortTerm.metadata_id,
+                    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+                    # pylint: disable-next=not-callable
+                    func.max(StatisticsShortTerm.start_ts).label("start_max"),
+                )
+                .where(StatisticsShortTerm.metadata_id.in_(metadata_ids))
+                .group_by(StatisticsShortTerm.metadata_id)
+            ).subquery()
+        ),
         (
             StatisticsShortTerm.metadata_id  # pylint: disable=comparison-with-callable
             == most_recent_statistic_row.c.metadata_id
@@ -1988,24 +1975,6 @@ def get_latest_short_term_statistics(
         )
 
 
-def _get_most_recent_statistics_subquery(
-    metadata_ids: set[int], table: type[StatisticsBase], start_time_ts: float
-) -> Subquery:
-    """Generate the subquery to find the most recent statistic row."""
-    return (
-        select(
-            # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-            # pylint: disable-next=not-callable
-            func.max(table.start_ts).label("max_start_ts"),
-            table.metadata_id.label("max_metadata_id"),
-        )
-        .filter(table.start_ts < start_time_ts)
-        .filter(table.metadata_id.in_(metadata_ids))
-        .group_by(table.metadata_id)
-        .subquery()
-    )
-
-
 def _statistics_at_time(
     session: Session,
     metadata_ids: set[int],
@@ -2029,11 +1998,21 @@ def _statistics_at_time(
         columns = columns.add_columns(table.sum)
 
     start_time_ts = start_time.timestamp()
-    most_recent_statistic_ids = _get_most_recent_statistics_subquery(
-        metadata_ids, table, start_time_ts
-    )
     stmt = lambda_stmt(lambda: columns).join(
-        most_recent_statistic_ids,
+        (
+            most_recent_statistic_ids := (
+                select(
+                    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+                    # pylint: disable-next=not-callable
+                    func.max(table.start_ts).label("max_start_ts"),
+                    table.metadata_id.label("max_metadata_id"),
+                )
+                .filter(table.start_ts < start_time_ts)
+                .filter(table.metadata_id.in_(metadata_ids))
+                .group_by(table.metadata_id)
+                .subquery()
+            )
+        ),
         and_(
             table.start_ts == most_recent_statistic_ids.c.max_start_ts,
             table.metadata_id == most_recent_statistic_ids.c.max_metadata_id,
