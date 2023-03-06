@@ -144,7 +144,8 @@ pubnub!=6.4.0
 iso4217!=1.10.20220401
 
 # Pandas 1.4.4 has issues with wheels om armhf + Py3.10
-pandas==1.4.3
+# Limit this to Python 3.10, to be able to install Python 3.11 wheels for now
+pandas==1.4.3;python_version<'3.11'
 
 # Matplotlib 3.6.2 has issues building wheels on armhf/armv7
 # We need at least >=2.1.0 (tensorflow integration -> pycocotools)

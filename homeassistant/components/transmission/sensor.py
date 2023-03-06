@@ -20,6 +20,9 @@ from .const import (
     CONF_ORDER,
     DOMAIN,
     STATE_ATTR_TORRENT_INFO,
+    STATE_DOWNLOADING,
+    STATE_SEEDING,
+    STATE_UP_DOWN,
     SUPPORTED_ORDER_MODES,
 )
 
@@ -35,14 +38,14 @@ async def async_setup_entry(
     name = config_entry.data[CONF_NAME]
 
     dev = [
-        TransmissionSpeedSensor(tm_client, name, "Down Speed", "download"),
-        TransmissionSpeedSensor(tm_client, name, "Up Speed", "upload"),
+        TransmissionSpeedSensor(tm_client, name, "Down speed", "download"),
+        TransmissionSpeedSensor(tm_client, name, "Up speed", "upload"),
         TransmissionStatusSensor(tm_client, name, "Status"),
-        TransmissionTorrentsSensor(tm_client, name, "Active Torrents", "active"),
-        TransmissionTorrentsSensor(tm_client, name, "Paused Torrents", "paused"),
-        TransmissionTorrentsSensor(tm_client, name, "Total Torrents", "total"),
-        TransmissionTorrentsSensor(tm_client, name, "Completed Torrents", "completed"),
-        TransmissionTorrentsSensor(tm_client, name, "Started Torrents", "started"),
+        TransmissionTorrentsSensor(tm_client, name, "Active torrents", "active"),
+        TransmissionTorrentsSensor(tm_client, name, "Paused torrents", "paused"),
+        TransmissionTorrentsSensor(tm_client, name, "Total torrents", "total"),
+        TransmissionTorrentsSensor(tm_client, name, "Completed torrents", "completed"),
+        TransmissionTorrentsSensor(tm_client, name, "Started torrents", "started"),
     ]
 
     async_add_entities(dev, True)
@@ -123,17 +126,21 @@ class TransmissionSpeedSensor(TransmissionSensor):
 class TransmissionStatusSensor(TransmissionSensor):
     """Representation of a Transmission status sensor."""
 
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = [STATE_IDLE, STATE_UP_DOWN, STATE_SEEDING, STATE_DOWNLOADING]
+    _attr_translation_key = "transmission_status"
+
     def update(self) -> None:
         """Get the latest data from Transmission and updates the state."""
         if data := self._tm_client.api.data:
             upload = data.uploadSpeed
             download = data.downloadSpeed
             if upload > 0 and download > 0:
-                self._state = "Up/Down"
+                self._state = STATE_UP_DOWN
             elif upload > 0 and download == 0:
-                self._state = "Seeding"
+                self._state = STATE_SEEDING
             elif upload == 0 and download > 0:
-                self._state = "Downloading"
+                self._state = STATE_DOWNLOADING
             else:
                 self._state = STATE_IDLE
         else:
