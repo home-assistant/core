@@ -1805,7 +1805,7 @@ def record_states(hass):
     return zero, four, states
 
 
-def test_cache_key_for_generate_statistics_during_period_stmt(hass):
+def test_cache_key_for_generate_statistics_during_period_stmt():
     """Test cache key for _generate_statistics_during_period_stmt."""
     columns = select(StatisticsShortTerm.metadata_id, StatisticsShortTerm.start_ts)
     stmt = _generate_statistics_during_period_stmt(
@@ -1835,7 +1835,7 @@ def test_cache_key_for_generate_statistics_during_period_stmt(hass):
     assert cache_key_1 != cache_key_3
 
 
-def test_cache_key_for_generate_get_metadata_stmt(hass):
+def test_cache_key_for_generate_get_metadata_stmt():
     """Test cache key for _generate_get_metadata_stmt."""
     stmt_mean = _generate_get_metadata_stmt([0], "mean")
     stmt_mean2 = _generate_get_metadata_stmt([1], "mean")
@@ -1846,7 +1846,7 @@ def test_cache_key_for_generate_get_metadata_stmt(hass):
     assert stmt_mean._generate_cache_key() != stmt_none._generate_cache_key()
 
 
-def test_cache_key_for_generate_max_mean_min_statistic_in_sub_period_stmt(hass):
+def test_cache_key_for_generate_max_mean_min_statistic_in_sub_period_stmt():
     """Test cache key for _generate_max_mean_min_statistic_in_sub_period_stmt."""
     columns = select(StatisticsShortTerm.metadata_id, StatisticsShortTerm.start_ts)
     stmt = _generate_max_mean_min_statistic_in_sub_period_stmt(
@@ -1883,7 +1883,7 @@ def test_cache_key_for_generate_max_mean_min_statistic_in_sub_period_stmt(hass):
     assert cache_key_1 != cache_key_3
 
 
-def test_cache_key_for_generate_statistics_at_time_stmt(hass):
+def test_cache_key_for_generate_statistics_at_time_stmt():
     """Test cache key for _generate_statistics_at_time_stmt."""
     columns = select(StatisticsShortTerm.metadata_id, StatisticsShortTerm.start_ts)
     stmt = _generate_statistics_at_time_stmt(columns, StatisticsShortTerm, {0}, 0.0)
