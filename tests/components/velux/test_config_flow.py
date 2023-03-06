@@ -5,6 +5,7 @@ from copy import deepcopy
 from typing import Any
 from unittest.mock import patch
 
+import pytest
 from pyvlx import PyVLXException
 import voluptuous as vol
 
@@ -24,9 +25,7 @@ PYVLX_CONNECT_FUNCTION_PATH = "pyvlx.PyVLX.connect"
 PYVLX_DISCONNECT_FUNCTION_PATH = "pyvlx.PyVLX.disconnect"
 
 
-def patch_async_setup_entry():
-    """Path the async_setup_entry function."""
-    return patch("homeassistant.components.velux.async_setup_entry", return_value=True)
+pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def test_show_form(hass: HomeAssistant) -> None:
@@ -50,8 +49,7 @@ async def test_user_step_schema(hass: HomeAssistant) -> None:
         {
             vol.Required(CONF_HOST): cv.string,
             vol.Required(CONF_PASSWORD): cv.string,
-        },
-        extra=vol.ALLOW_EXTRA,
+        }
     )
 
 
@@ -89,7 +87,7 @@ async def test_user_success(hass: HomeAssistant) -> None:
     """Test starting a flow by user with valid values."""
     with patch(PYVLX_CONNECT_FUNCTION_PATH) as connect_mock, patch(
         PYVLX_DISCONNECT_FUNCTION_PATH
-    ) as disconnect_mock, patch_async_setup_entry():
+    ) as disconnect_mock:
         result: dict[str, Any] = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=deepcopy(DUMMY_DATA)
         )
@@ -103,12 +101,12 @@ async def test_user_success(hass: HomeAssistant) -> None:
 
 async def test_import(hass: HomeAssistant) -> None:
     """Test import initialized flow."""
-    with patch_async_setup_entry():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=DUMMY_DATA,
-        )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=DUMMY_DATA,
+    )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == DUMMY_DATA[CONF_HOST]
     assert result["data"] == DUMMY_DATA

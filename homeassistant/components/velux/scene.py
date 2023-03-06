@@ -7,7 +7,6 @@ from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import _LOGGER, DATA_VELUX
 
@@ -15,10 +14,7 @@ PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    config: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    hass: HomeAssistant, config: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the scenes for Velux platform."""
     entities = [VeluxScene(scene) for scene in hass.data[DATA_VELUX].pyvlx.scenes]

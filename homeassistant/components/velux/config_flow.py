@@ -11,6 +11,13 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import _LOGGER, DOMAIN
 
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+    }
+)
+
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for velux."""
@@ -55,14 +62,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data=user_input,
                 )
 
+        data_schema = self.add_suggested_values_to_schema(DATA_SCHEMA, user_input)
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST): cv.string,
-                    vol.Required(CONF_PASSWORD): cv.string,
-                },
-                extra=vol.ALLOW_EXTRA,
-            ),
+            data_schema=data_schema,
             errors=errors,
         )
