@@ -123,6 +123,8 @@ template_cv: ContextVar[tuple[str, str] | None] = ContextVar(
 CACHED_TEMPLATE_STATES = 512
 EVAL_CACHE_SIZE = 512
 
+MAX_CUSTOM_JINJA_SIZE = 5 * 1024 * 1024
+
 
 @bind_hass
 def attach(hass: HomeAssistant, obj: Any) -> None:
@@ -2051,18 +2053,18 @@ class LoggingUndefined(jinja2.Undefined):
         return super().__bool__()
 
 
-async def async_materialize_hass_loader(hass: HomeAssistant) -> None:
-    """Load all custom jinja into memory."""
-    return await hass.async_add_executor_job(_materialize_hass_loader, hass)
+async def async_load_custom_jinja(hass: HomeAssistant) -> None:
+    """Load all custom jinja files under 5MiB into memory."""
+    return await hass.async_add_executor_job(_load_custom_jinja, hass)
 
 
-def _materialize_hass_loader(hass: HomeAssistant) -> None:
+def _load_custom_jinja(hass: HomeAssistant) -> None:
     result = {}
     jinja_path = hass.config.path("custom_jinja")
     all_files = [
         item
         for item in pathlib.Path(jinja_path).rglob("*.jinja")
-        if item.is_file() and item.stat().st_size < 5 * 1024 * 1024
+        if item.is_file() and item.stat().st_size <= MAX_CUSTOM_JINJA_SIZE
     ]
     for file in all_files:
         content = file.read_text()
@@ -2208,7 +2210,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         if hass is None:
             return
 
-        # If hass is available, attach its loader to enable imports.
+        # When hass is available, attach its loader to enable imports.
         self.loader = _get_hass_loader(hass)
 
         # We mark these as a context functions to ensure they get

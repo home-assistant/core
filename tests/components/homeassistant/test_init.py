@@ -580,15 +580,15 @@ async def test_reload_custom_jinja(hass: HomeAssistant) -> None:
     """Test we can call reload_custom_jinja."""
     await async_setup_component(hass, "homeassistant", {})
     with patch(
-        "homeassistant.components.homeassistant.async_materialize_hass_loader",
+        "homeassistant.components.homeassistant.async_load_custom_jinja",
         return_value=None,
-    ) as mock_materialize:
+    ) as mock_load_custom_jinja:
         await hass.services.async_call(
             "homeassistant",
             SERVICE_RELOAD_CUSTOM_JINJA,
             blocking=True,
         )
-        assert mock_materialize.called
+        assert mock_load_custom_jinja.called
 
 
 async def test_reload_all(

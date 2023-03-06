@@ -30,7 +30,7 @@ from homeassistant.helpers.service import (
     async_extract_referenced_entity_ids,
     async_register_admin_service,
 )
-from homeassistant.helpers.template import async_materialize_hass_loader
+from homeassistant.helpers.template import async_load_custom_jinja
 from homeassistant.helpers.typing import ConfigType
 
 ATTR_ENTRY_ID = "entry_id"
@@ -262,7 +262,7 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
 
     async def async_handle_reload_jinja(call: ha.ServiceCall) -> None:
         """Service handler to reload custom Jinja."""
-        await async_materialize_hass_loader(hass)
+        await async_load_custom_jinja(hass)
 
     async_register_admin_service(
         hass, ha.DOMAIN, SERVICE_RELOAD_CUSTOM_JINJA, async_handle_reload_jinja
