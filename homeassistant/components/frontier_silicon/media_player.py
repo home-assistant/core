@@ -21,15 +21,17 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .browse_media import browse_node, browse_top_level
-from .const import DEFAULT_PIN, DEFAULT_PORT, DOMAIN, MEDIA_CONTENT_ID_PRESET
+from .const import CONF_PIN, DEFAULT_PIN, DEFAULT_PORT, DOMAIN, MEDIA_CONTENT_ID_PRESET
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,6 +43,46 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME): cv.string,
     }
 )
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the Frontier Silicon platform from SSDP or perform a migration from YAML config to Config Flow entity.."""
+    if discovery_info is not None:
+        webfsapi_url = await AFSAPI.get_webfsapi_endpoint(
+            discovery_info["ssdp_description"]
+        )
+        afsapi = AFSAPI(webfsapi_url, DEFAULT_PIN)
+
+        name = await afsapi.get_friendly_name()
+        async_add_entities(
+            [AFSAPIDevice(name, afsapi)],
+            True,
+        )
+
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "remove_yaml",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="removed_yaml",
+    )
+
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_NAME: config.get(CONF_NAME),
+            CONF_HOST: config.get(CONF_HOST),
+            CONF_PORT: config.get(CONF_PORT, DEFAULT_PORT),
+            CONF_PIN: config.get(CONF_PASSWORD, DEFAULT_PIN),
+        },
+    )
 
 
 async def async_setup_entry(
