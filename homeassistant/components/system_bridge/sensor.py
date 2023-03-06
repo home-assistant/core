@@ -280,7 +280,7 @@ async def async_setup_entry(
                 SystemBridgeSensor(coordinator, description, entry.data[CONF_PORT])
             )
 
-    displays = []
+    displays: list = []
     if coordinator.data.display.displays is not None:
         displays.extend(
             {
@@ -288,9 +288,9 @@ async def async_setup_entry(
                 "name": getattr(
                     coordinator.data.display, f"{display}_name", ""
                 ).replace("Display ", ""),
-             }
-             for display in coordinator.data.display.displays
-             if hasattr(coordinator.data.display, f"{display}_name")
+            }
+            for display in coordinator.data.display.displays
+            if hasattr(coordinator.data.display, f"{display}_name")
         )
     display_count = len(displays)
 
@@ -356,14 +356,15 @@ async def async_setup_entry(
             ),
         ]
 
-    gpus = []
+    gpus: list = []
     if coordinator.data.gpu.gpus is not None:
         gpus.extend(
             {
                 "key": gpu,
                 "name": getattr(coordinator.data.gpu, f"{gpu}_name", None),
-            },
+            }
             for gpu in coordinator.data.gpu.gpus
+            if hasattr(coordinator.data.gpu, f"{gpu}_name")
         )
 
     for index, gpu in enumerate(gpus):
