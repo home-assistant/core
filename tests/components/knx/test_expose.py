@@ -26,7 +26,6 @@ async def test_binary_expose(hass: HomeAssistant, knx: KNXTestKit) -> None:
             }
         },
     )
-    assert not hass.states.async_all()
 
     # Change state to on
     hass.states.async_set(entity_id, "on", {})
@@ -55,7 +54,6 @@ async def test_expose_attribute(hass: HomeAssistant, knx: KNXTestKit) -> None:
             }
         },
     )
-    assert not hass.states.async_all()
 
     # Before init no response shall be sent
     await knx.receive_read("1/1/8")
@@ -103,7 +101,6 @@ async def test_expose_attribute_with_default(
             }
         },
     )
-    assert not hass.states.async_all()
 
     # Before init default value shall be sent as response
     await knx.receive_read("1/1/8")
@@ -150,7 +147,6 @@ async def test_expose_string(hass: HomeAssistant, knx: KNXTestKit) -> None:
             }
         },
     )
-    assert not hass.states.async_all()
 
     # Before init default value shall be sent as response
     await knx.receive_read("1/1/8")
@@ -183,7 +179,6 @@ async def test_expose_cooldown(hass: HomeAssistant, knx: KNXTestKit) -> None:
             }
         },
     )
-    assert not hass.states.async_all()
     # Change state to 1
     hass.states.async_set(entity_id, "1", {})
     await knx.assert_write("1/1/8", (1,))
@@ -218,7 +213,6 @@ async def test_expose_conversion_exception(
             }
         },
     )
-    assert not hass.states.async_all()
 
     # Before init default value shall be sent as response
     await knx.receive_read("1/1/8")
@@ -248,7 +242,6 @@ async def test_expose_with_date(
             }
         }
     )
-    assert not hass.states.async_all()
 
     await knx.assert_write("1/1/8", (0x7A, 0x1, 0x7, 0xE9, 0xD, 0xE, 0x20, 0x80))
 

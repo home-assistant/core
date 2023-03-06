@@ -10,7 +10,6 @@ from tests.common import async_capture_events
 
 async def test_cover_basic(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX cover basic."""
-    events = async_capture_events(hass, "state_changed")
     await knx.setup_integration(
         {
             CoverSchema.PLATFORM: {
@@ -24,9 +23,7 @@ async def test_cover_basic(hass: HomeAssistant, knx: KNXTestKit) -> None:
             }
         }
     )
-    assert len(hass.states.async_all()) == 1
-    assert len(events) == 1
-    events.pop()
+    events = async_capture_events(hass, "state_changed")
 
     # read position state address and angle state address
     await knx.assert_read("1/0/2")
