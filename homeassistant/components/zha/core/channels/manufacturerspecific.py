@@ -159,7 +159,9 @@ class OppleRemote(ZigbeeChannel):
                 "smoke_density": True,
                 "heartbeat_indicator": True,
                 "buzzer_manual_alarm": True,
+                "buzzer": True,
                 "linkage_alarm": True,
+                "linkage_alarm_state": True,
             }
 
     async def async_initialize_channel_specific(self, from_cache: bool) -> None:

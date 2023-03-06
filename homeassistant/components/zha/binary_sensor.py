@@ -240,3 +240,11 @@ class AqaraThermostatExternalSensor(BinarySensor, id_suffix="sensor"):
     SENSOR_ATTR = "sensor"
     _attr_entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
     _attr_name: str = "External sensor"
+
+
+@MULTI_MATCH(channel_names="opple_cluster", models={"lumi.sensor_smoke.acn03"})
+class AqaraLinkageAlarmState(BinarySensor, id_suffix="linkage_alarm_state"):
+    """ZHA Aqara linkage alarm state binary sensor."""
+
+    SENSOR_ATTR = "linkage_alarm_state"
+    _attr_name: str = "Linkage alarm state"
