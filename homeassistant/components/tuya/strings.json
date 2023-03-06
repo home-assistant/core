@@ -187,6 +187,21 @@
           "4": "Mood 4",
           "5": "Mood 5"
         }
+      },
+      "weather_delay": {
+        "state": {
+          "cancel": "Cancel",
+          "24h": "24h",
+          "48h": "48h",
+          "72h": "72h"
+        }
+      },
+      "smart_weather": {
+        "state": {
+          "sunny": "Sunny",
+          "cloudy": "Cloudy",
+          "rainy": "Rainy"
+        }
       }
     },
     "sensor": {
@@ -209,6 +224,13 @@
           "mild": "Mild",
           "good": "Good",
           "severe": "Severe"
+        }
+      },
+      "work_state": {
+        "state": {
+          "auto": "Auto",
+          "manual": "Manual",
+          "idle": "Idle"
         }
       }
     }

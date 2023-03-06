@@ -83,16 +83,16 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             key=DPCode.SMART_WEATHER,
             name="Smart weather",
             icon="mdi:weather-partly-cloudy",
-            device_class=TuyaDeviceClass.SMART_WEATHER,
             entity_category=EntityCategory.CONFIG,
+            translation_key="smart_weather",
         ),
         # Irrigation will not be run within this set delay period
         SelectEntityDescription(
             key=DPCode.WEATHER_DELAY,
             name="Weather delay",
             icon="mdi:weather-cloudy-clock",
-            device_class=TuyaDeviceClass.WEATHER_DELAY,
             entity_category=EntityCategory.CONFIG,
+            translation_key="weather_delay",
         ),
     ),
     # Siren Alarm
