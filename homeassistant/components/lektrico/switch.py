@@ -28,12 +28,12 @@ class LektricoSwitchEntityDescription(SwitchEntityDescription):
         return None
 
     @classmethod
-    async def turn_on(cls, device: lektricowifi.Charger, data: Any) -> bool | None:
+    async def turn_on(cls, device: lektricowifi.Device, data: Any) -> bool | None:
         """Return None."""
         return None
 
     @classmethod
-    async def turn_off(cls, device: lektricowifi.Charger, data: Any) -> bool | None:
+    async def turn_off(cls, device: lektricowifi.Device, data: Any) -> bool | None:
         """Return None."""
         return None
 
@@ -48,7 +48,7 @@ class RequireAuthSwitchEntityDescription(LektricoSwitchEntityDescription):
         return bool(data.require_auth)
 
     @classmethod
-    async def turn_on(cls, device: lektricowifi.Charger, data: Any) -> bool:
+    async def turn_on(cls, device: lektricowifi.Device, data: Any) -> bool:
         """Turn on the RequireAuth switch."""
         return bool(
             await device.send_command(
@@ -57,7 +57,7 @@ class RequireAuthSwitchEntityDescription(LektricoSwitchEntityDescription):
         )
 
     @classmethod
-    async def turn_off(cls, device: lektricowifi.Charger, data: Any) -> bool:
+    async def turn_off(cls, device: lektricowifi.Device, data: Any) -> bool:
         """Turn off the RequireAuth switch."""
         return bool(
             await device.send_command(
@@ -76,7 +76,7 @@ class LockSwitchEntityDescription(LektricoSwitchEntityDescription):
         return str(data.charger_state) == "LOCKED"
 
     @classmethod
-    async def turn_on(cls, device: lektricowifi.Charger, data: Any) -> bool:
+    async def turn_on(cls, device: lektricowifi.Device, data: Any) -> bool:
         """Lock the charger."""
         return bool(
             await device.send_command(
@@ -85,7 +85,7 @@ class LockSwitchEntityDescription(LektricoSwitchEntityDescription):
         )
 
     @classmethod
-    async def turn_off(cls, device: lektricowifi.Charger, data: Any) -> bool:
+    async def turn_off(cls, device: lektricowifi.Device, data: Any) -> bool:
         """Unlock the charger."""
         return bool(
             await device.send_command(
@@ -142,8 +142,8 @@ class LektricoSwitch(CoordinatorEntity, SwitchEntity):
 
         self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.serial_number)},
-            model=f"1P7K {coordinator.serial_number} rev.{coordinator.board_revision}",
+            identifiers={(DOMAIN, str(coordinator.serial_number))},
+            model=f"{coordinator.device_type.upper()} {coordinator.serial_number} rev.{coordinator.board_revision}",
             name=friendly_name,
             manufacturer="Lektrico",
             sw_version=coordinator.data.fw_version,

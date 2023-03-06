@@ -53,7 +53,7 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
             await self._get_lektrico_serial_number_and_treat_unique_id(
                 raise_on_progress=True
             )
-        except lektricowifi.ChargerConnectionError:
+        except lektricowifi.DeviceConnectionError:
             return self._async_show_setup_form({"base": "cannot_connect"})
 
         return self._async_create_entry()
@@ -131,12 +131,12 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> None:
         """Get device's serial number from a Lektrico device."""
         session = async_get_clientsession(self.hass)
-        charger = lektricowifi.Charger(
+        device = lektricowifi.Device(
             _host=self._host,
             session=session,
         )
 
-        settings = await charger.charger_config()
+        settings = await device.device_config()
 
         # Check if already configured
         await self.async_set_unique_id(
@@ -221,10 +221,6 @@ class LektricoOptionsFlowHandler(config_entries.OptionsFlow):
                         entity_entry.entity_id, new_entity_id=_new_entity_id
                     )
 
-                    # dev_reg.async_update_device(
-                    #     entity_entry.device_id, new_identifiers={_new_entity_id}
-                    # )
-
             return self.async_create_entry(title="", data=options)
 
         fields = {}
@@ -250,7 +246,3 @@ class LektricoOptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=vol.Schema(fields),
             errors=errors,
         )
-
-
-# def _add_with_suggestion(fields, key, suggested_value):
-#     fields[vol.Optional(key, description={"suggested_value": suggested_value})] = str

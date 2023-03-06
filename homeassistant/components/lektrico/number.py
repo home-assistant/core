@@ -27,7 +27,7 @@ class LektricoNumberEntityDescription(NumberEntityDescription):
 
     @classmethod
     async def set_native_value(
-        cls, device: lektricowifi.Charger, value: float, data: Any
+        cls, device: lektricowifi.Device, value: float, data: Any
     ) -> bool | None:
         """Return None."""
         return None
@@ -39,7 +39,7 @@ class LedBrightnessNumberEntityDescription(LektricoNumberEntityDescription):
 
     @classmethod
     async def set_native_value(
-        cls, device: lektricowifi.Charger, value: float, data: Any
+        cls, device: lektricowifi.Device, value: float, data: Any
     ) -> bool:
         """Set the value for the led brightness in %, from 20 to 100."""
         # Quick change the value displayed on the entity.
@@ -57,7 +57,7 @@ class DynamicCurrentNumberEntityDescription(LektricoNumberEntityDescription):
 
     @classmethod
     async def set_native_value(
-        cls, device: lektricowifi.Charger, value: float, data: Any
+        cls, device: lektricowifi.Device, value: float, data: Any
     ) -> bool:
         """Set the value of the dynamic current, as int between 0 and 32 A."""
         # Quick change the value displayed on the entity.
@@ -75,7 +75,7 @@ class UserCurrentNumberEntityDescription(LektricoNumberEntityDescription):
 
     @classmethod
     async def set_native_value(
-        cls, device: lektricowifi.Charger, value: float, data: Any
+        cls, device: lektricowifi.Device, value: float, data: Any
     ) -> bool:
         """Set the value of the user current, as int between 6 and 32 A."""
         # Quick change the value displayed on the entity.
@@ -87,7 +87,7 @@ class UserCurrentNumberEntityDescription(LektricoNumberEntityDescription):
         )
 
 
-SENSORS: tuple[LektricoNumberEntityDescription, ...] = (
+NUMBERS: tuple[LektricoNumberEntityDescription, ...] = (
     LedBrightnessNumberEntityDescription(
         key="led_max_brightness",
         name="Led brightness",
@@ -132,7 +132,7 @@ async def async_setup_entry(
             coordinator,
             entry.data[CONF_FRIENDLY_NAME],
         )
-        for description in SENSORS
+        for description in NUMBERS
     )
 
 
@@ -154,8 +154,8 @@ class LektricoNumber(CoordinatorEntity, NumberEntity):
 
         self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.serial_number)},
-            model=f"1P7K {coordinator.serial_number} rev.{coordinator.board_revision}",
+            identifiers={(DOMAIN, str(coordinator.serial_number))},
+            model=f"{coordinator.device_type.upper()} {coordinator.serial_number} rev.{coordinator.board_revision}",
             name=friendly_name,
             manufacturer="Lektrico",
             sw_version=coordinator.data.fw_version,

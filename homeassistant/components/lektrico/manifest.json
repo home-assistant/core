@@ -1,17 +1,17 @@
 {
   "domain": "lektrico",
   "name": "Lektrico Charging Station",
+  "codeowners": ["@mtarjoianu"],
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/lektrico",
-  "requirements": ["lektricowifi==0.0.20"],
   "dependencies": ["zeroconf"],
+  "documentation": "https://www.home-assistant.io/integrations/lektrico",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "requirements": ["lektricowifi==0.0.22"],
   "zeroconf": [
     {
       "type": "_http._tcp.local.",
       "name": "lektrico*"
     }
-  ],
-  "codeowners": ["@mtarjoianu"],
-  "iot_class": "local_polling",
-  "integration_type": "device"
+  ]
 }

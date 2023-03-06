@@ -23,7 +23,7 @@ class LektricoButtonEntityDescription(ButtonEntityDescription):
     """A class that describes the Lektrico button entities."""
 
     @classmethod
-    async def get_async_press(cls, device: lektricowifi.Charger) -> bool | None:
+    async def get_async_press(cls, device: lektricowifi.Device) -> bool | None:
         """Return None."""
         return None
 
@@ -33,7 +33,7 @@ class ChargeStartButtonEntityDescription(LektricoButtonEntityDescription):
     """A class that describes the Lektrico Charge Start button entity."""
 
     @classmethod
-    async def get_async_press(cls, device: lektricowifi.Charger) -> bool:
+    async def get_async_press(cls, device: lektricowifi.Device) -> bool:
         """Command to start charging."""
         return bool(await device.send_command("charge.start"))
 
@@ -43,7 +43,7 @@ class ChargeStopButtonEntityDescription(LektricoButtonEntityDescription):
     """A class that describes the Lektrico Charge Stop button entity."""
 
     @classmethod
-    async def get_async_press(cls, device: lektricowifi.Charger) -> bool:
+    async def get_async_press(cls, device: lektricowifi.Device) -> bool:
         """Command to stop charging."""
         return bool(await device.send_command("charge.stop"))
 
@@ -53,7 +53,7 @@ class ChargerRestartButtonEntityDescription(LektricoButtonEntityDescription):
     """A class that describes the Lektrico Charger Restart button entity."""
 
     @classmethod
-    async def get_async_press(cls, device: lektricowifi.Charger) -> bool:
+    async def get_async_press(cls, device: lektricowifi.Device) -> bool:
         """Command to restart the charger."""
         return bool(await device.send_command("device.reset"))
 
@@ -63,7 +63,7 @@ class ChargerPauseButtonEntityDescription(LektricoButtonEntityDescription):
     """A class that describes the Lektrico Charger Pause button entity."""
 
     @classmethod
-    async def get_async_press(cls, device: lektricowifi.Charger) -> bool:
+    async def get_async_press(cls, device: lektricowifi.Device) -> bool:
         """Command to pause the charger."""
         return bool(await device.send_command("charge.pause"))
 
@@ -73,12 +73,12 @@ class ChargerResumeButtonEntityDescription(LektricoButtonEntityDescription):
     """A class that describes the Lektrico Charger Resume button entity."""
 
     @classmethod
-    async def get_async_press(cls, device: lektricowifi.Charger) -> bool:
+    async def get_async_press(cls, device: lektricowifi.Device) -> bool:
         """Command to resume the charger."""
         return bool(await device.send_command("charge.resume"))
 
 
-SENSORS: tuple[LektricoButtonEntityDescription, ...] = (
+BUTTONS_FOR_CHARGERS: tuple[LektricoButtonEntityDescription, ...] = (
     ChargeStartButtonEntityDescription(
         key="charge_start",
         name="Charger start",
@@ -102,6 +102,14 @@ SENSORS: tuple[LektricoButtonEntityDescription, ...] = (
 )
 
 
+BUTTONS_FOR_LB_DEVICES: tuple[LektricoButtonEntityDescription, ...] = (
+    ChargerRestartButtonEntityDescription(
+        key="reboot",
+        name="Reboot",
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -110,13 +118,24 @@ async def async_setup_entry(
     """Set up Lektrico charger based on a config entry."""
     coordinator: LektricoDeviceDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
+    _sensors_to_be_used: tuple[LektricoButtonEntityDescription, ...]
+    if coordinator.device_type in (
+        lektricowifi.Device.TYPE_1P7K,
+        lektricowifi.Device.TYPE_3P22K,
+    ):
+        _sensors_to_be_used = BUTTONS_FOR_CHARGERS
+    elif coordinator.device_type == lektricowifi.Device.TYPE_M2W:
+        _sensors_to_be_used = BUTTONS_FOR_LB_DEVICES
+    else:
+        return
+
     async_add_entities(
         LektricoButton(
             description,
             coordinator,
             entry.data[CONF_FRIENDLY_NAME],
         )
-        for description in SENSORS
+        for description in _sensors_to_be_used
     )
 
 
@@ -138,8 +157,8 @@ class LektricoButton(CoordinatorEntity, ButtonEntity):
 
         self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.serial_number)},
-            model=f"1P7K {coordinator.serial_number} rev.{coordinator.board_revision}",
+            identifiers={(DOMAIN, str(coordinator.serial_number))},
+            model=f"{coordinator.device_type.upper()} {coordinator.serial_number} rev.{coordinator.board_revision}",
             name=friendly_name,
             manufacturer="Lektrico",
             sw_version=coordinator.data.fw_version,
