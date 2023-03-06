@@ -28,9 +28,9 @@ from homeassistant.components.bluetooth.manager import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.json import json_loads
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+from homeassistant.util.json import json_loads
 
 from . import (
     FakeScanner,
@@ -803,3 +803,138 @@ async def test_goes_unavailable_connectable_only_and_recovers(
     unsetup_connectable_scanner_2()
     cancel_not_connectable_scanner()
     unsetup_not_connectable_scanner()
+
+
+async def test_goes_unavailable_dismisses_discovery(
+    hass: HomeAssistant, mock_bluetooth_adapters: None
+) -> None:
+    """Test that unavailable will dismiss any active discoveries."""
+    assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert async_scanner_count(hass, connectable=False) == 0
+    switchbot_device_non_connectable = BLEDevice(
+        "44:44:33:11:23:45",
+        "wohand",
+        {},
+        rssi=-100,
+    )
+    switchbot_device_adv = generate_advertisement_data(
+        local_name="wohand",
+        service_uuids=["050a021a-0000-1000-8000-00805f9b34fb"],
+        service_data={"050a021a-0000-1000-8000-00805f9b34fb": b"\n\xff"},
+        manufacturer_data={1: b"\x01"},
+        rssi=-100,
+    )
+    callbacks = []
+
+    def _fake_subscriber(
+        service_info: BluetoothServiceInfo,
+        change: BluetoothChange,
+    ) -> None:
+        """Fake subscriber for the BleakScanner."""
+        callbacks.append((service_info, change))
+
+    cancel = bluetooth.async_register_callback(
+        hass,
+        _fake_subscriber,
+        {"address": "44:44:33:11:23:45", "connectable": False},
+        BluetoothScanningMode.ACTIVE,
+    )
+
+    class FakeScanner(BaseHaRemoteScanner):
+        def inject_advertisement(
+            self, device: BLEDevice, advertisement_data: AdvertisementData
+        ) -> None:
+            """Inject an advertisement."""
+            self._async_on_advertisement(
+                device.address,
+                advertisement_data.rssi,
+                device.name,
+                advertisement_data.service_uuids,
+                advertisement_data.service_data,
+                advertisement_data.manufacturer_data,
+                advertisement_data.tx_power,
+                {"scanner_specific_data": "test"},
+            )
+
+        def clear_all_devices(self) -> None:
+            """Clear all devices."""
+            self._discovered_device_advertisement_datas.clear()
+            self._discovered_device_timestamps.clear()
+
+    new_info_callback = async_get_advertisement_callback(hass)
+    connector = (
+        HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
+    )
+    non_connectable_scanner = FakeScanner(
+        hass,
+        "connectable",
+        "connectable",
+        new_info_callback,
+        connector,
+        False,
+    )
+    unsetup_connectable_scanner = non_connectable_scanner.async_setup()
+    cancel_connectable_scanner = _get_manager().async_register_scanner(
+        non_connectable_scanner, True
+    )
+    non_connectable_scanner.inject_advertisement(
+        switchbot_device_non_connectable, switchbot_device_adv
+    )
+    assert async_ble_device_from_address(hass, "44:44:33:11:23:45", False) is not None
+    assert async_scanner_count(hass, connectable=True) == 1
+    assert len(callbacks) == 1
+
+    assert (
+        "44:44:33:11:23:45"
+        in non_connectable_scanner.discovered_devices_and_advertisement_data
+    )
+
+    unavailable_callbacks: list[BluetoothServiceInfoBleak] = []
+
+    @callback
+    def _unavailable_callback(service_info: BluetoothServiceInfoBleak) -> None:
+        """Wrong device unavailable callback."""
+        nonlocal unavailable_callbacks
+        unavailable_callbacks.append(service_info.address)
+
+    cancel_unavailable = async_track_unavailable(
+        hass,
+        _unavailable_callback,
+        switchbot_device_non_connectable.address,
+        connectable=False,
+    )
+
+    assert async_scanner_count(hass, connectable=False) == 1
+
+    non_connectable_scanner.clear_all_devices()
+    assert (
+        "44:44:33:11:23:45"
+        not in non_connectable_scanner.discovered_devices_and_advertisement_data
+    )
+    monotonic_now = time.monotonic()
+    with patch.object(
+        hass.config_entries.flow,
+        "async_progress_by_init_data_type",
+        return_value=[{"flow_id": "mock_flow_id"}],
+    ) as mock_async_progress_by_init_data_type, patch.object(
+        hass.config_entries.flow, "async_abort"
+    ) as mock_async_abort, patch(
+        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        return_value=monotonic_now + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+    ):
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
+        )
+    await hass.async_block_till_done()
+    assert "44:44:33:11:23:45" in unavailable_callbacks
+
+    assert len(mock_async_progress_by_init_data_type.mock_calls) == 1
+    assert mock_async_abort.mock_calls[0][1][0] == "mock_flow_id"
+
+    cancel_unavailable()
+
+    cancel()
+    unsetup_connectable_scanner()
+    cancel_connectable_scanner()

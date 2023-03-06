@@ -6,5 +6,5 @@
   "iot_class": "local_polling",
   "loggers": ["watchdog"],
   "quality_scale": "internal",
-  "requirements": ["watchdog==2.2.1"]
+  "requirements": ["watchdog==2.3.1"]
 }

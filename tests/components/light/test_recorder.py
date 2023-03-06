@@ -6,7 +6,9 @@ from datetime import timedelta
 from homeassistant.components import light
 from homeassistant.components.light import (
     ATTR_EFFECT,
+    ATTR_MAX_COLOR_TEMP_KELVIN,
     ATTR_MAX_MIREDS,
+    ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_MIN_MIREDS,
     ATTR_SUPPORTED_COLOR_MODES,
 )
@@ -35,7 +37,11 @@ async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) 
     def _fetch_states() -> list[State]:
         with session_scope(hass=hass) as session:
             native_states = []
-            for db_state, db_state_attributes in session.query(States, StateAttributes):
+            for db_state, db_state_attributes in session.query(
+                States, StateAttributes
+            ).outerjoin(
+                StateAttributes, States.attributes_id == StateAttributes.attributes_id
+            ):
                 state = db_state.to_native()
                 state.attributes = db_state_attributes.to_native()
                 native_states.append(state)
@@ -49,3 +55,5 @@ async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) 
         assert ATTR_SUPPORTED_COLOR_MODES not in state.attributes
         assert ATTR_EFFECT not in state.attributes
         assert ATTR_FRIENDLY_NAME in state.attributes
+        assert ATTR_MAX_COLOR_TEMP_KELVIN not in state.attributes
+        assert ATTR_MIN_COLOR_TEMP_KELVIN not in state.attributes

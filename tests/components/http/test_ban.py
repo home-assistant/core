@@ -179,7 +179,7 @@ async def test_ip_ban_manager_never_started(
 
 
 @pytest.mark.parametrize(
-    "remote_addr, bans, status",
+    ("remote_addr", "bans", "status"),
     list(
         zip(
             BANNED_IPS_WITH_SUPERVISOR,

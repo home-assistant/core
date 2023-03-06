@@ -126,7 +126,6 @@ class HoneywellUSThermostat(ClimateEntity):
         if device.temperature_unit == "C":
             self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_preset_modes = [PRESET_NONE, PRESET_AWAY, PRESET_HOLD]
-        self._attr_is_aux_heat = device.system_mode == "emheat"
 
         # not all honeywell HVACs support all modes
 
@@ -261,6 +260,11 @@ class HoneywellUSThermostat(ClimateEntity):
             return PRESET_HOLD
 
         return None
+
+    @property
+    def is_aux_heat(self) -> bool | None:
+        """Return true if aux heater."""
+        return self._device.system_mode == "emheat"
 
     @property
     def fan_mode(self) -> str | None:
@@ -417,6 +421,7 @@ class HoneywellUSThermostat(ClimateEntity):
         """Get the latest state from the service."""
         try:
             await self._device.refresh()
+            self._attr_available = True
         except (
             aiosomecomfort.SomeComfortError,
             OSError,
@@ -424,8 +429,10 @@ class HoneywellUSThermostat(ClimateEntity):
             try:
                 await self._data.client.login()
 
-            except aiosomecomfort.SomeComfortError:
+            except aiosomecomfort.AuthError:
                 self._attr_available = False
                 await self.hass.async_create_task(
                     self.hass.config_entries.async_reload(self._data.entry_id)
                 )
+            except aiosomecomfort.SomeComfortError:
+                self._attr_available = False

@@ -94,5 +94,5 @@ class ElgatoButtonEntity(ElgatoEntity, ButtonEntity):
             await self.entity_description.press_fn(self.coordinator.client)
         except ElgatoError as error:
             raise HomeAssistantError(
-                "An error occurred while identifying the Elgato Light"
+                "An error occurred while communicating with the Elgato Light"
             ) from error

@@ -48,7 +48,7 @@ Device = namedtuple("Device", ["mac", "name"])
 
 
 class TadoDeviceScanner(DeviceScanner):
-    """This class gets geofenced devices from Tado."""
+    """Scanner for geofenced devices from Tado."""
 
     def __init__(self, hass, config):
         """Initialize the scanner."""

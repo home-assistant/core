@@ -247,8 +247,6 @@ class DenonDevice(MediaPlayerEntity):
             and MediaPlayerEntityFeature.SELECT_SOUND_MODE
         )
 
-        self._receiver.register_callback("ALL", self._telnet_callback)
-
         self._telnet_was_healthy: bool | None = None
 
     async def _telnet_callback(self, zone, event, parameter):
@@ -257,6 +255,10 @@ class DenonDevice(MediaPlayerEntity):
             return
 
         self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Register for telnet events."""
+        self._receiver.register_callback("ALL", self._telnet_callback)
 
     async def async_will_remove_from_hass(self) -> None:
         """Clean up the entity."""

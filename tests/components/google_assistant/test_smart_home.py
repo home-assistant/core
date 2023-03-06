@@ -1,5 +1,6 @@
 """Test Google Smart Home."""
 import asyncio
+from types import SimpleNamespace
 from unittest.mock import ANY, call, patch
 
 import pytest
@@ -23,30 +24,32 @@ from homeassistant.components.google_assistant import (
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfTemperature, __version__
 from homeassistant.core import EVENT_CALL_SERVICE, HomeAssistant, State
-from homeassistant.helpers import device_registry, entity_platform
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_platform,
+    entity_registry as er,
+)
 from homeassistant.setup import async_setup_component
 
 from . import BASIC_CONFIG, MockConfig
 
-from tests.common import (
-    async_capture_events,
-    mock_area_registry,
-    mock_device_registry,
-    mock_registry,
-)
+from tests.common import async_capture_events
 
 REQ_ID = "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
 
 
 @pytest.fixture
-def registries(hass):
+def registries(
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
+) -> SimpleNamespace:
     """Registry mock setup."""
-    from types import SimpleNamespace
-
     ret = SimpleNamespace()
-    ret.entity = mock_registry(hass)
-    ret.device = mock_device_registry(hass)
-    ret.area = mock_area_registry(hass)
+    ret.entity = entity_registry
+    ret.device = device_registry
+    ret.area = area_registry
     return ret
 
 
@@ -238,7 +241,7 @@ async def test_sync_in_area(area_on_device, hass: HomeAssistant, registries) -> 
         manufacturer="Someone",
         model="Some model",
         sw_version="Some Version",
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     registries.device.async_update_device(
         device.id, area_id=area.id if area_on_device else None
@@ -441,7 +444,8 @@ async def test_query_message(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "report_state,on,brightness,value", [(False, True, 20, 0.2), (True, ANY, ANY, ANY)]
+    ("report_state", "on", "brightness", "value"),
+    [(False, True, 20, 0.2), (True, ANY, ANY, ANY)],
 )
 async def test_execute(
     hass: HomeAssistant, report_state, on, brightness, value
@@ -621,7 +625,9 @@ async def test_execute(
     assert service_events[3].context == events[0].context
 
 
-@pytest.mark.parametrize("report_state,on,brightness,value", [(False, False, ANY, ANY)])
+@pytest.mark.parametrize(
+    ("report_state", "on", "brightness", "value"), [(False, False, ANY, ANY)]
+)
 async def test_execute_times_out(
     hass: HomeAssistant, report_state, on, brightness, value
 ) -> None:
@@ -998,7 +1004,7 @@ async def test_unavailable_state_does_sync(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "device_class,google_type",
+    ("device_class", "google_type"),
     [
         ("non_existing_class", "action.devices.types.SWITCH"),
         ("switch", "action.devices.types.SWITCH"),
@@ -1048,7 +1054,7 @@ async def test_device_class_switch(
 
 
 @pytest.mark.parametrize(
-    "device_class,google_type",
+    ("device_class", "google_type"),
     [
         ("door", "action.devices.types.DOOR"),
         ("garage_door", "action.devices.types.GARAGE"),
@@ -1098,7 +1104,7 @@ async def test_device_class_binary_sensor(
 
 
 @pytest.mark.parametrize(
-    "device_class,google_type",
+    ("device_class", "google_type"),
     [
         ("non_existing_class", "action.devices.types.BLINDS"),
         ("door", "action.devices.types.DOOR"),
@@ -1148,7 +1154,7 @@ async def test_device_class_cover(
 
 
 @pytest.mark.parametrize(
-    "device_class,google_type",
+    ("device_class", "google_type"),
     [
         ("non_existing_class", "action.devices.types.SETTOP"),
         ("tv", "action.devices.types.TV"),

@@ -140,7 +140,7 @@ async def test_full_batch(
 
 
 @pytest.mark.parametrize(
-    "filter_schema, tests",
+    ("filter_schema", "tests"),
     [
         (
             {
