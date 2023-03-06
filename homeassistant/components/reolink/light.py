@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
 from .const import DOMAIN
-from .entity import ReolinkCoordinatorEntity
+from .entity import ReolinkChannelCoordinatorEntity
 
 
 @dataclass
@@ -89,7 +89,7 @@ async def async_setup_entry(
     )
 
 
-class ReolinkLightEntity(ReolinkCoordinatorEntity, LightEntity):
+class ReolinkLightEntity(ReolinkChannelCoordinatorEntity, LightEntity):
     """Base light entity class for Reolink IP cameras."""
 
     entity_description: ReolinkLightEntityDescription
