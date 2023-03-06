@@ -122,15 +122,6 @@ def memory_used(data: SystemBridgeCoordinatorData) -> float | None:
     return None
 
 
-def get_attr_if_available(
-    data: SystemBridgeCoordinatorData, key: str
-) -> str | float | None:
-    """Return the attribute if available."""
-    if hasattr(data, key):
-        return getattr(data, key)
-    return None
-
-
 BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="boot_time",
@@ -274,8 +265,8 @@ async def async_setup_entry(
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=PERCENTAGE,
                     icon="mdi:harddisk",
-                    value=lambda data, p=partition: get_attr_if_available(
-                        data.disk, f"usage_{p}_percent"
+                    value=lambda data, p=partition: getattr(
+                        data.disk, f"usage_{p}_percent", None
                     ),
                 ),
                 entry.data[CONF_PORT],
@@ -331,8 +322,8 @@ async def async_setup_entry(
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=PIXELS,
                     icon="mdi:monitor",
-                    value=lambda data, k=display["key"]: get_attr_if_available(
-                        data.display, f"{k}_resolution_horizontal"
+                    value=lambda data, k=display["key"]: getattr(
+                        data.display, f"{k}_resolution_horizontal", None
                     ),
                 ),
                 entry.data[CONF_PORT],
@@ -345,8 +336,8 @@ async def async_setup_entry(
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=PIXELS,
                     icon="mdi:monitor",
-                    value=lambda data, k=display["key"]: get_attr_if_available(
-                        data.display, f"{k}_resolution_vertical"
+                    value=lambda data, k=display["key"]: getattr(
+                        data.display, f"{k}_resolution_vertical", None
                     ),
                 ),
                 entry.data[CONF_PORT],
@@ -360,8 +351,8 @@ async def async_setup_entry(
                     native_unit_of_measurement=UnitOfFrequency.HERTZ,
                     device_class=SensorDeviceClass.FREQUENCY,
                     icon="mdi:monitor",
-                    value=lambda data, k=display["key"]: get_attr_if_available(
-                        data.display, f"{k}_refresh_rate"
+                    value=lambda data, k=display["key"]: getattr(
+                        data.display, f"{k}_refresh_rate", None
                     ),
                 ),
                 entry.data[CONF_PORT],
@@ -374,7 +365,7 @@ async def async_setup_entry(
             gpus.append(
                 {
                     "key": gpu,
-                    "name": get_attr_if_available(coordinator.data.gpu, f"{gpu}_name"),
+                    "name": getattr(coordinator.data.gpu, f"{gpu}_name", None),
                 },
             )
 
@@ -459,8 +450,8 @@ async def async_setup_entry(
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
                     icon="mdi:fan",
-                    value=lambda data, k=gpu["key"]: get_attr_if_available(
-                        data.gpu, f"{k}_fan_speed"
+                    value=lambda data, k=gpu["key"]: getattr(
+                        data.gpu, f"{k}_fan_speed", None
                     ),
                 ),
                 entry.data[CONF_PORT],
@@ -474,8 +465,8 @@ async def async_setup_entry(
                     device_class=SensorDeviceClass.POWER,
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=UnitOfPower.WATT,
-                    value=lambda data, k=gpu["key"]: get_attr_if_available(
-                        data.gpu, f"{k}_power"
+                    value=lambda data, k=gpu["key"]: getattr(
+                        data.gpu, f"{k}_power", None
                     ),
                 ),
                 entry.data[CONF_PORT],
@@ -489,8 +480,8 @@ async def async_setup_entry(
                     device_class=SensorDeviceClass.TEMPERATURE,
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-                    value=lambda data, k=gpu["key"]: get_attr_if_available(
-                        data.gpu, f"{k}_temperature"
+                    value=lambda data, k=gpu["key"]: getattr(
+                        data.gpu, f"{k}_temperature", None
                     ),
                 ),
                 entry.data[CONF_PORT],
@@ -503,8 +494,8 @@ async def async_setup_entry(
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=PERCENTAGE,
                     icon="mdi:percent",
-                    value=lambda data, k=gpu["key"]: get_attr_if_available(
-                        data.gpu, f"{k}_core_load"
+                    value=lambda data, k=gpu["key"]: getattr(
+                        data.gpu, f"{k}_core_load", None
                     ),
                 ),
                 entry.data[CONF_PORT],
@@ -523,9 +514,7 @@ async def async_setup_entry(
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=PERCENTAGE,
                     icon="mdi:percent",
-                    value=lambda data, k=index: get_attr_if_available(
-                        data.cpu, f"usage_{k}"
-                    ),
+                    value=lambda data, k=index: getattr(data.cpu, f"usage_{k}", None),
                 ),
                 entry.data[CONF_PORT],
             ),
