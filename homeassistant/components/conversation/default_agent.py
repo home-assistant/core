@@ -57,6 +57,19 @@ class LanguageIntents:
     loaded_components: set[str]
 
 
+def _get_intents_language(language: str, country: str | None) -> str:
+    """Workaround for language mismatches between HA and Assist."""
+    if language == "zh-Hans":
+        language = "zh-cn"
+    elif language == "zh-Hant":
+        if country == "HK":
+            language = "zh-hk"
+        elif country == "TW":
+            language = "zh-tw"
+
+    return language
+
+
 def _get_language_variations(language: str) -> Iterable[str]:
     """Generate language codes with and without region."""
     yield language
@@ -112,7 +125,9 @@ class DefaultAgent(AbstractConversationAgent):
 
     async def async_process(self, user_input: ConversationInput) -> ConversationResult:
         """Process a sentence."""
-        language = user_input.language or self.hass.config.language
+        language = _get_intents_language(
+            user_input.language or self.hass.config.language, self.hass.config.country
+        )
         lang_intents = self._lang_intents.get(language)
         conversation_id = None  # Not supported
 
@@ -121,6 +136,7 @@ class DefaultAgent(AbstractConversationAgent):
             lang_intents.loaded_components - self.hass.config.components
         ):
             # Load intents in executor
+            _LOGGER.debug("Loading intents for language: %s", language)
             lang_intents = await self.async_get_or_load_intents(language)
 
         if lang_intents is None:
