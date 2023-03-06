@@ -28,7 +28,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         raise CannotConnect from request_error
 
     user_info = await api.user.get_info()
-    a_location_id = user_info["locations"][0]["id"]
+    a_location_id = user_info["locations"][1]["id"]
     location_info = await api.location.get_info(a_location_id)
     return {"title": location_info["nickname"]}
 
