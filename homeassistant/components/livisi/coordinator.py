@@ -19,6 +19,8 @@ from .const import (
     CONF_HOST,
     CONF_PASSWORD,
     DEVICE_POLLING_DELAY,
+    EVENT_BUTTON_PRESSED,
+    EVENT_STATE_CHANGED,
     LIVISI_REACHABILITY_CHANGE,
     LIVISI_STATE_CHANGE,
     LOGGER,
@@ -45,6 +47,7 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         self.aiolivisi = aiolivisi
         self.websocket = Websocket(aiolivisi)
         self.devices: set[str] = set()
+        self.capability_to_device: dict[str, str] = {}
         self.rooms: dict[str, Any] = {}
         self.serial_number: str = ""
         self.controller_type: str = ""
@@ -54,7 +57,13 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
     async def _async_update_data(self) -> list[dict[str, Any]]:
         """Get device configuration from LIVISI."""
         try:
-            return await self.async_get_devices()
+            devices = await self.async_get_devices()
+            capability_mapping = {}
+            for device in devices:
+                for capability_id in device.get("capabilities", []):
+                    capability_mapping[capability_id] = device["id"]
+            self.capability_to_device = capability_mapping
+            return devices
         except ClientConnectorError as exc:
             raise UpdateFailed("Failed to get LIVISI the devices") from exc
 
@@ -132,19 +141,31 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
 
     def on_data(self, event_data: LivisiEvent) -> None:
         """Define a handler to fire when the data is received."""
-        if event_data.onState is not None:
-            async_dispatcher_send(
-                self.hass,
-                f"{LIVISI_STATE_CHANGE}_{event_data.source}",
-                event_data.onState,
-            )
-        if event_data.vrccData is not None:
-            async_dispatcher_send(
-                self.hass,
-                f"{LIVISI_STATE_CHANGE}_{event_data.source}",
-                event_data.vrccData,
-            )
-        if event_data.isReachable is not None:
+
+        if event_data.type == EVENT_BUTTON_PRESSED:
+            device_id = self.capability_to_device.get(event_data.source)
+            if device_id is not None:
+                livisi_event_data = {
+                    "device_id": device_id,
+                    "type": "button_pressed",
+                    "button_index": event_data.properties.get("index", 0),
+                    "press_type": event_data.properties.get("type", "ShortPress"),
+                }
+                self.hass.bus.async_fire("livisi_event", livisi_event_data)
+        elif event_data.type == EVENT_STATE_CHANGED:
+            if event_data.onState is not None:
+                async_dispatcher_send(
+                    self.hass,
+                    f"{LIVISI_STATE_CHANGE}_{event_data.source}",
+                    event_data.onState,
+                )
+            if event_data.vrccData is not None:
+                async_dispatcher_send(
+                    self.hass,
+                    f"{LIVISI_STATE_CHANGE}_{event_data.source}",
+                    event_data.vrccData,
+                )
+        elif event_data.isReachable is not None:
             async_dispatcher_send(
                 self.hass,
                 f"{LIVISI_REACHABILITY_CHANGE}_{event_data.source}",
