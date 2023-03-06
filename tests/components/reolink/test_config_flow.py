@@ -1,6 +1,6 @@
 """Test the Reolink config flow."""
 import json
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkError
@@ -151,7 +151,7 @@ async def test_config_flow_errors(
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_HOST: "api_error"}
 
-    reolink_connect.get_host_data.return_value = None
+    reolink_connect.get_host_data.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
