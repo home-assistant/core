@@ -659,8 +659,8 @@ build.json @home-assistant/supervisor
 /tests/components/litejet/ @joncar
 /homeassistant/components/litterrobot/ @natekspencer @tkdrob
 /tests/components/litterrobot/ @natekspencer @tkdrob
-/homeassistant/components/livisi/ @StefanIacobLivisi
-/tests/components/livisi/ @StefanIacobLivisi
+/homeassistant/components/livisi/ @StefanIacobLivisi @planbnet
+/tests/components/livisi/ @StefanIacobLivisi @planbnet
 /homeassistant/components/local_calendar/ @allenporter
 /tests/components/local_calendar/ @allenporter
 /homeassistant/components/local_ip/ @issacg
@@ -825,7 +825,8 @@ build.json @home-assistant/supervisor
 /tests/components/nws/ @MatthewFlamm @kamiyo
 /homeassistant/components/nzbget/ @chriscla
 /tests/components/nzbget/ @chriscla
-/homeassistant/components/obihai/ @dshokouhi
+/homeassistant/components/obihai/ @dshokouhi @ejpenney
+/tests/components/obihai/ @dshokouhi @ejpenney
 /homeassistant/components/octoprint/ @rfleming71
 /tests/components/octoprint/ @rfleming71
 /homeassistant/components/ohmconnect/ @robbiet480
@@ -1100,6 +1101,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/smhi/ @gjohansson-ST
 /tests/components/smhi/ @gjohansson-ST
 /homeassistant/components/sms/ @ocalvo
+/homeassistant/components/snapcast/ @luar123
 /homeassistant/components/snooz/ @AustinBrunkhorst
 /tests/components/snooz/ @AustinBrunkhorst
 /homeassistant/components/solaredge/ @frenck
@@ -1212,8 +1214,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/thethingsnetwork/ @fabaff
 /homeassistant/components/thread/ @home-assistant/core
 /tests/components/thread/ @home-assistant/core
-/homeassistant/components/threshold/ @fabaff
-/tests/components/threshold/ @fabaff
 /homeassistant/components/tibber/ @danielhiversen
 /tests/components/tibber/ @danielhiversen
 /homeassistant/components/tile/ @bachya
