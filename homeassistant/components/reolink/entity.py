@@ -54,7 +54,15 @@ class ReolinkBaseCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[_T]])
         return self._host.api.session_active and super().available
 
 
-class ReolinkCoordinatorEntity(ReolinkBaseCoordinatorEntity[None]):
+class ReolinkDeviceCoordinatorEntity(ReolinkBaseCoordinatorEntity[None]):
+    """Parent class fo Reolink devices."""
+
+    def __init__(self, reolink_data: ReolinkData) -> None:
+        """Initialize ReolinkDeviceCoordinatorEntity."""
+        super().__init__(reolink_data, reolink_data.device_coordinator)
+
+
+class ReolinkCoordinatorEntity(ReolinkDeviceCoordinatorEntity):
     """Parent class for Reolink hardware camera entities connected to a channel of the NVR."""
 
     def __init__(
@@ -63,7 +71,7 @@ class ReolinkCoordinatorEntity(ReolinkBaseCoordinatorEntity[None]):
         channel: int,
     ) -> None:
         """Initialize ReolinkCoordinatorEntity for a hardware camera connected to a channel of the NVR."""
-        super().__init__(reolink_data, reolink_data.device_coordinator)
+        super().__init__(reolink_data)
 
         self._channel = channel
 

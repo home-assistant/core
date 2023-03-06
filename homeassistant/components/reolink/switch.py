@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
 from .const import DOMAIN
-from .entity import ReolinkBaseCoordinatorEntity, ReolinkCoordinatorEntity
+from .entity import ReolinkCoordinatorEntity, ReolinkDeviceCoordinatorEntity
 
 
 @dataclass
@@ -207,7 +207,7 @@ class ReolinkSwitchEntity(ReolinkCoordinatorEntity, SwitchEntity):
         self.async_write_ha_state()
 
 
-class ReolinkNVRSwitchEntity(ReolinkBaseCoordinatorEntity, SwitchEntity):
+class ReolinkNVRSwitchEntity(ReolinkDeviceCoordinatorEntity, SwitchEntity):
     """Switch entity class for Reolink NVR features."""
 
     entity_description: ReolinkNVRSwitchEntityDescription
