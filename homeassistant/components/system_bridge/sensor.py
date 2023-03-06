@@ -65,40 +65,28 @@ def cpu_speed(data: SystemBridgeCoordinatorData) -> float | None:
 
 def gpu_core_clock_speed(data: SystemBridgeCoordinatorData, key: str) -> float | None:
     """Return the GPU core clock speed."""
-    if (
-        hasattr(data.gpu, f"{key}_core_clock")
-        and getattr(data.gpu, f"{key}_core_clock") is not None
-    ):
+    if getattr(data.gpu, f"{key}_core_clock", None) is not None:
         return round(getattr(data.gpu, f"{key}_core_clock"))
     return None
 
 
 def gpu_memory_clock_speed(data: SystemBridgeCoordinatorData, key: str) -> float | None:
     """Return the GPU memory clock speed."""
-    if (
-        hasattr(data.gpu, f"{key}_memory_clock")
-        and getattr(data.gpu, f"{key}_memory_clock") is not None
-    ):
+    if getattr(data.gpu, f"{key}_memory_clock", None) is not None:
         return round(getattr(data.gpu, f"{key}_memory_clock"))
     return None
 
 
 def gpu_memory_free(data: SystemBridgeCoordinatorData, key: str) -> float | None:
     """Return the free GPU memory."""
-    if (
-        hasattr(data.gpu, f"{key}_memory_free")
-        and getattr(data.gpu, f"{key}_memory_free") is not None
-    ):
+    if getattr(data.gpu, f"{key}_memory_free", None) is not None:
         return round(getattr(data.gpu, f"{key}_memory_free") / 10**3, 2)
     return None
 
 
 def gpu_memory_used(data: SystemBridgeCoordinatorData, key: str) -> float | None:
     """Return the used GPU memory."""
-    if (
-        hasattr(data.gpu, f"{key}_memory_used")
-        and getattr(data.gpu, f"{key}_memory_used") is not None
-    ):
+    if getattr(data.gpu, f"{key}_memory_used", None) is not None:
         return round(getattr(data.gpu, f"{key}_memory_used") / 10**3, 2)
     return None
 
@@ -108,10 +96,8 @@ def gpu_memory_used_percentage(
 ) -> float | None:
     """Return the used GPU memory percentage."""
     if (
-        hasattr(data.gpu, f"{key}_memory_used")
-        and getattr(data.gpu, f"{key}_memory_used") is not None
-        and hasattr(data.gpu, f"{key}_memory_total") is not None
-        and getattr(data.gpu, f"{key}_memory_total") is not None
+        getattr(data.gpu, f"{key}_memory_used", None) is not None
+        and getattr(data.gpu, f"{key}_memory_total", None) is not None
     ):
         return round(
             getattr(data.gpu, f"{key}_memory_used")
