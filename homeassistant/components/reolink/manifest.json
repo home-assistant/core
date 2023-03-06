@@ -7,7 +7,12 @@
   "dhcp": [
     {
       "hostname": "reolink*",
+    },
+    {
       "macaddress": "EC71DB*"
+    },
+    {
+      "registered_devices": true,
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/reolink",
