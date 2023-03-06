@@ -33,6 +33,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.dt import utcnow
 
+from . import async_load_json_fixture
+
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
@@ -353,3 +355,24 @@ async def test_browse_media(
         response["error"]["message"]
         == "Media not found: collection / COLLECTION-UUID-404"
     )
+
+
+async def test_new_client_connected(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_jellyfin: MagicMock,
+    mock_api: MagicMock,
+) -> None:
+    """Test Jellyfin media player reacts to new clients connecting."""
+    mock_api.sessions.return_value = await async_load_json_fixture(
+        hass,
+        "sessions-new-client.json",
+    )
+
+    assert len(mock_api.sessions.mock_calls) == 1
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert len(mock_api.sessions.mock_calls) == 2
+
+    state = hass.states.get("media_player.jellyfin_device_five")
+    assert state

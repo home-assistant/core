@@ -7,7 +7,8 @@ from typing import Any, cast
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectorError
 from async_timeout import timeout
-from gios import ApiError, Gios, InvalidSensorsData, NoStationError
+from gios import Gios
+from gios.exceptions import GiosError
 
 from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
 from homeassistant.config_entries import ConfigEntry
@@ -89,10 +90,5 @@ class GiosDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             async with timeout(API_TIMEOUT):
                 return cast(dict[str, Any], await self.gios.async_update())
-        except (
-            ApiError,
-            NoStationError,
-            ClientConnectorError,
-            InvalidSensorsData,
-        ) as error:
+        except (GiosError, ClientConnectorError) as error:
             raise UpdateFailed(error) from error

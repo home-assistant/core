@@ -1,4 +1,4 @@
-"""This platform provides binary sensors for key RainMachine data."""
+"""Binary sensors for key RainMachine data."""
 from dataclasses import dataclass
 
 from homeassistant.components.binary_sensor import (
