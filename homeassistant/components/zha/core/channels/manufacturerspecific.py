@@ -155,13 +155,11 @@ class OppleRemote(ZigbeeChannel):
         elif self.cluster.endpoint.model == "lumi.sensor_smoke.acn03":
             self.ZCL_INIT_ATTRS = {
                 "buzzer_manual_mute": True,
-                "selftest": True,
                 "smoke_density": True,
                 "heartbeat_indicator": True,
                 "buzzer_manual_alarm": True,
                 "buzzer": True,
                 "linkage_alarm": True,
-                "linkage_alarm_state": True,
             }
 
     async def async_initialize_channel_specific(self, from_cache: bool) -> None:
