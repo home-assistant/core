@@ -1418,8 +1418,8 @@ build.json @home-assistant/supervisor
 /tests/components/valve/ @home-assistant/core
 /homeassistant/components/velbus/ @Cereal2nd @brefra
 /tests/components/velbus/ @Cereal2nd @brefra
-/homeassistant/components/velux/ @Julius2342
-/tests/components/velux/ @Julius2342
+/homeassistant/components/velux/ @Julius2342 @DeerMaximum
+/tests/components/velux/ @Julius2342 @DeerMaximum
 /homeassistant/components/venstar/ @garbled1
 /tests/components/venstar/ @garbled1
 /homeassistant/components/verisure/ @frenck
