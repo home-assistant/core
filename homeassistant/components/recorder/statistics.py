@@ -16,7 +16,7 @@ import re
 from statistics import mean
 from typing import TYPE_CHECKING, Any, Literal, cast
 
-from sqlalchemy import and_, bindparam, func, lambda_stmt, select, text
+from sqlalchemy import Select, and_, bindparam, func, lambda_stmt, select, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import OperationalError, SQLAlchemyError, StatementError
@@ -1258,7 +1258,8 @@ def _reduce_statistics_per_month(
     )
 
 
-def _statistics_during_period_stmt(
+def _generate_statistics_during_period_stmt(
+    columns: Select,
     start_time: datetime,
     end_time: datetime | None,
     metadata_ids: list[int] | None,
@@ -1270,21 +1271,6 @@ def _statistics_during_period_stmt(
     This prepares a lambda_stmt query, so we don't insert the parameters yet.
     """
     start_time_ts = start_time.timestamp()
-
-    columns = select(table.metadata_id, table.start_ts)
-    if "last_reset" in types:
-        columns = columns.add_columns(table.last_reset_ts)
-    if "max" in types:
-        columns = columns.add_columns(table.max)
-    if "mean" in types:
-        columns = columns.add_columns(table.mean)
-    if "min" in types:
-        columns = columns.add_columns(table.min)
-    if "state" in types:
-        columns = columns.add_columns(table.state)
-    if "sum" in types:
-        columns = columns.add_columns(table.sum)
-
     stmt = lambda_stmt(lambda: columns.filter(table.start_ts >= start_time_ts))
     if end_time is not None:
         end_time_ts = end_time.timestamp()
@@ -1295,6 +1281,23 @@ def _statistics_during_period_stmt(
             table.metadata_id.in_(metadata_ids)  # type:ignore[arg-type]
         )
     stmt += lambda q: q.order_by(table.metadata_id, table.start_ts)
+    return stmt
+
+
+def _generate_max_mean_min_statistic_in_sub_period_stmt(
+    columns: Select,
+    start_time: datetime | None,
+    end_time: datetime | None,
+    table: type[StatisticsBase],
+    metadata_id: int,
+) -> StatementLambdaElement:
+    stmt = lambda_stmt(lambda: columns.filter(table.metadata_id == metadata_id))
+    if start_time is not None:
+        start_time_ts = start_time.timestamp()
+        stmt += lambda q: q.filter(table.start_ts >= start_time_ts)
+    if end_time is not None:
+        end_time_ts = end_time.timestamp()
+        stmt += lambda q: q.filter(table.start_ts < end_time_ts)
     return stmt
 
 
@@ -1323,13 +1326,9 @@ def _get_max_mean_min_statistic_in_sub_period(
         # https://github.com/sqlalchemy/sqlalchemy/issues/9189
         # pylint: disable-next=not-callable
         columns = columns.add_columns(func.min(table.min))
-    stmt = lambda_stmt(lambda: columns.filter(table.metadata_id == metadata_id))
-    if start_time is not None:
-        start_time_ts = start_time.timestamp()
-        stmt += lambda q: q.filter(table.start_ts >= start_time_ts)
-    if end_time is not None:
-        end_time_ts = end_time.timestamp()
-        stmt += lambda q: q.filter(table.start_ts < end_time_ts)
+    stmt = _generate_max_mean_min_statistic_in_sub_period_stmt(
+        columns, start_time, end_time, table, metadata_id
+    )
     stats = cast(Sequence[Row[Any]], execute_stmt_lambda_element(session, stmt))
     if not stats:
         return
@@ -1744,8 +1743,21 @@ def _statistics_during_period_with_session(
     table: type[Statistics | StatisticsShortTerm] = (
         Statistics if period != "5minute" else StatisticsShortTerm
     )
-    stmt = _statistics_during_period_stmt(
-        start_time, end_time, metadata_ids, table, types
+    columns = select(table.metadata_id, table.start_ts)  # type: ignore[call-overload]
+    if "last_reset" in types:
+        columns = columns.add_columns(table.last_reset_ts)
+    if "max" in types:
+        columns = columns.add_columns(table.max)
+    if "mean" in types:
+        columns = columns.add_columns(table.mean)
+    if "min" in types:
+        columns = columns.add_columns(table.min)
+    if "state" in types:
+        columns = columns.add_columns(table.state)
+    if "sum" in types:
+        columns = columns.add_columns(table.sum)
+    stmt = _generate_statistics_during_period_stmt(
+        columns, start_time, end_time, metadata_ids, table, types
     )
     stats = cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
 
@@ -1975,30 +1987,14 @@ def get_latest_short_term_statistics(
         )
 
 
-def _statistics_at_time(
-    session: Session,
-    metadata_ids: set[int],
+def _generate_statistics_at_time_stmt(
+    columns: Select,
     table: type[StatisticsBase],
-    start_time: datetime,
-    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-) -> Sequence[Row] | None:
-    """Return last known statistics, earlier than start_time, for the metadata_ids."""
-    columns = select(table.metadata_id, table.start_ts)
-    if "last_reset" in types:
-        columns = columns.add_columns(table.last_reset_ts)
-    if "max" in types:
-        columns = columns.add_columns(table.max)
-    if "mean" in types:
-        columns = columns.add_columns(table.mean)
-    if "min" in types:
-        columns = columns.add_columns(table.min)
-    if "state" in types:
-        columns = columns.add_columns(table.state)
-    if "sum" in types:
-        columns = columns.add_columns(table.sum)
-
-    start_time_ts = start_time.timestamp()
-    stmt = lambda_stmt(
+    metadata_ids: set[int],
+    start_time_ts: float,
+) -> StatementLambdaElement:
+    """Create the statement for finding the statistics for a given time."""
+    return lambda_stmt(
         lambda: columns.join(
             (
                 most_recent_statistic_ids := (
@@ -2021,6 +2017,32 @@ def _statistics_at_time(
         )
     )
 
+
+def _statistics_at_time(
+    session: Session,
+    metadata_ids: set[int],
+    table: type[StatisticsBase],
+    start_time: datetime,
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+) -> Sequence[Row] | None:
+    """Return last known statistics, earlier than start_time, for the metadata_ids."""
+    columns = select(table.metadata_id, table.start_ts)
+    if "last_reset" in types:
+        columns = columns.add_columns(table.last_reset_ts)
+    if "max" in types:
+        columns = columns.add_columns(table.max)
+    if "mean" in types:
+        columns = columns.add_columns(table.mean)
+    if "min" in types:
+        columns = columns.add_columns(table.min)
+    if "state" in types:
+        columns = columns.add_columns(table.state)
+    if "sum" in types:
+        columns = columns.add_columns(table.sum)
+    start_time_ts = start_time.timestamp()
+    stmt = _generate_statistics_at_time_stmt(
+        columns, table, metadata_ids, start_time_ts
+    )
     return cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
 
 
