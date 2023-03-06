@@ -113,7 +113,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             afsapi = AFSAPI(self._webfsapi_url, DEFAULT_PIN)
 
             self._name = await afsapi.get_friendly_name()
-
+        except InvalidPinException:
+            pass  # Ask for a PIN
+        else:
             self.context["title_placeholders"] = {"name": self._name}
 
             self._unique_id = await afsapi.get_radio_id()
@@ -121,8 +123,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             return await self._create_entry()
-        except InvalidPinException:
-            pass  # Ask for a PIN
 
         return await self.async_step_device_config()
 
