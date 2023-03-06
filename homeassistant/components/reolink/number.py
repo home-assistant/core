@@ -124,8 +124,9 @@ NUMBER_ENTITIES = (
         native_step=1,
         get_min_value=lambda api, ch: 0,
         get_max_value=lambda api, ch: 100,
-        supported=lambda api, ch: api.supported(ch, "ai_sensitivity")
-        and api.ai_supported(ch, "face"),
+        supported=lambda api, ch: (
+            api.supported(ch, "ai_sensitivity") and api.ai_supported(ch, "face")
+        ),
         value=lambda api, ch: api.ai_sensitivity(ch, "face"),
         method=lambda api, ch, value: api.set_ai_sensitivity(ch, int(value), "face"),
     ),
@@ -137,8 +138,9 @@ NUMBER_ENTITIES = (
         native_step=1,
         get_min_value=lambda api, ch: 0,
         get_max_value=lambda api, ch: 100,
-        supported=lambda api, ch: api.supported(ch, "ai_sensitivity")
-        and api.ai_supported(ch, "people"),
+        supported=lambda api, ch: (
+            api.supported(ch, "ai_sensitivity") and api.ai_supported(ch, "people")
+        ),   
         value=lambda api, ch: api.ai_sensitivity(ch, "people"),
         method=lambda api, ch, value: api.set_ai_sensitivity(ch, int(value), "people"),
     ),
@@ -150,8 +152,9 @@ NUMBER_ENTITIES = (
         native_step=1,
         get_min_value=lambda api, ch: 0,
         get_max_value=lambda api, ch: 100,
-        supported=lambda api, ch: api.supported(ch, "ai_sensitivity")
-        and api.ai_supported(ch, "vehicle"),
+        supported=lambda api, ch: (
+           api.supported(ch, "ai_sensitivity") and api.ai_supported(ch, "vehicle")
+        ),
         value=lambda api, ch: api.ai_sensitivity(ch, "vehicle"),
         method=lambda api, ch, value: api.set_ai_sensitivity(ch, int(value), "vehicle"),
     ),
@@ -163,8 +166,9 @@ NUMBER_ENTITIES = (
         native_step=1,
         get_min_value=lambda api, ch: 0,
         get_max_value=lambda api, ch: 100,
-        supported=lambda api, ch: api.supported(ch, "ai_sensitivity")
-        and api.ai_supported(ch, "dog_cat"),
+        supported=lambda api, ch: (
+            api.supported(ch, "ai_sensitivity") and api.ai_supported(ch, "dog_cat")
+        ),
         value=lambda api, ch: api.ai_sensitivity(ch, "dog_cat"),
         method=lambda api, ch, value: api.set_ai_sensitivity(ch, int(value), "dog_cat"),
     ),
