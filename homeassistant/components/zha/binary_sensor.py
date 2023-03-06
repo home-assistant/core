@@ -201,3 +201,37 @@ class XiaomiPlugConsumerConnected(BinarySensor, id_suffix="consumer_connected"):
     SENSOR_ATTR = "consumer_connected"
     _attr_name: str = "Consumer connected"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PLUG
+
+
+@MULTI_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
+class AqaraThermostatWindowOpen(BinarySensor, id_suffix="window_open"):
+    """ZHA Aqara thermostat window open binary sensor."""
+
+    SENSOR_ATTR = "window_open"
+    _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.WINDOW
+    _attr_name: str = "Window open"
+
+
+@MULTI_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
+class AqaraThermostatValveAlarm(BinarySensor, id_suffix="valve_alarm"):
+    """ZHA Aqara thermostat valve alarm binary sensor."""
+
+    SENSOR_ATTR = "valve_alarm"
+    _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PROBLEM
+    _attr_name: str = "Valve alarm"
+
+
+@MULTI_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
+class AqaraThermostatCalibrated(BinarySensor, id_suffix="calibrated"):
+    """ZHA Aqara thermostat calibrated binary sensor."""
+
+    SENSOR_ATTR = "calibrated"
+    _attr_name: str = "Calibrated"
+
+
+@MULTI_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
+class AqaraThermostatExternalSensor(BinarySensor, id_suffix="sensor"):
+    """ZHA Aqara thermostat external sensor binary sensor."""
+
+    SENSOR_ATTR = "sensor"
+    _attr_name: str = "External sensor"
