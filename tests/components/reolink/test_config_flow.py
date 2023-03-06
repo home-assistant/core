@@ -1,6 +1,6 @@
 """Test the Reolink config flow."""
 import json
-from unittest.mock import patch, AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkError
@@ -64,7 +64,9 @@ async def test_config_flow_manual_success(hass: HomeAssistant) -> None:
     }
 
 
-async def test_config_flow_errors(hass: HomeAssistant, reolink_connect: MagicMock) -> None:
+async def test_config_flow_errors(
+    hass: HomeAssistant, reolink_connect: MagicMock
+) -> None:
     """Successful flow manually initialized by the user after some errors."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -105,7 +107,9 @@ async def test_config_flow_errors(hass: HomeAssistant, reolink_connect: MagicMoc
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_HOST: "cannot_connect"}
 
-    reolink_connect.get_host_data = AsyncMock(side_effect=json.JSONDecodeError("test_error", "test", 1))
+    reolink_connect.get_host_data = AsyncMock(
+        side_effect=json.JSONDecodeError("test_error", "test", 1)
+    )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -119,7 +123,9 @@ async def test_config_flow_errors(hass: HomeAssistant, reolink_connect: MagicMoc
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_HOST: "unknown"}
 
-    reolink_connect.get_host_data = AsyncMock(side_effect=CredentialsInvalidError("Test error"))
+    reolink_connect.get_host_data = AsyncMock(
+        side_effect=CredentialsInvalidError("Test error")
+    )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {

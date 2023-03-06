@@ -1,5 +1,5 @@
 """Test the Reolink init."""
-from unittest.mock import AsyncMock, Mock, patch, MagicMock
+from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
 from reolink_aio.exceptions import ReolinkError
@@ -50,7 +50,9 @@ def reolink_mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     return config_entry
 
 
-async def test_ConfigEntryAuthFailed(hass: HomeAssistant, reolink_connect: MagicMock) -> None:
+async def test_ConfigEntryAuthFailed(
+    hass: HomeAssistant, reolink_connect: MagicMock
+) -> None:
     """Test a ConfigEntryAuthFailed is raised when credentials are invalid."""
     config_entry = reolink_mock_config_entry(hass)
 
@@ -63,7 +65,9 @@ async def test_ConfigEntryAuthFailed(hass: HomeAssistant, reolink_connect: Magic
     assert not hass.data.get(const.DOMAIN)
 
 
-async def test_ConfigEntryNotReady(hass: HomeAssistant, reolink_connect: MagicMock) -> None:
+async def test_ConfigEntryNotReady(
+    hass: HomeAssistant, reolink_connect: MagicMock
+) -> None:
     """Test a ConfigEntryNotReady is raised when initial connection fails."""
     config_entry = reolink_mock_config_entry(hass)
 
@@ -75,7 +79,9 @@ async def test_ConfigEntryNotReady(hass: HomeAssistant, reolink_connect: MagicMo
     assert not hass.data.get(const.DOMAIN)
 
 
-async def test_ConfigEntryNotReady_initial_fetch(hass: HomeAssistant, reolink_connect: MagicMock) -> None:
+async def test_ConfigEntryNotReady_initial_fetch(
+    hass: HomeAssistant, reolink_connect: MagicMock
+) -> None:
     """Test a ConfigEntryNotReady is raised when initial fetch of data fails."""
     config_entry = reolink_mock_config_entry(hass)
 
@@ -87,7 +93,9 @@ async def test_ConfigEntryNotReady_initial_fetch(hass: HomeAssistant, reolink_co
     assert not hass.data.get(const.DOMAIN)
 
 
-async def test_firmware_update_not_supported(hass: HomeAssistant, reolink_connect: MagicMock) -> None:
+async def test_firmware_update_not_supported(
+    hass: HomeAssistant, reolink_connect: MagicMock
+) -> None:
     """Test successful setup if firmware update is not supported."""
     config_entry = reolink_mock_config_entry(hass)
 
@@ -98,18 +106,24 @@ async def test_firmware_update_not_supported(hass: HomeAssistant, reolink_connec
     assert config_entry.state == ConfigEntryState.LOADED
 
 
-async def test_firmware_update_error(hass: HomeAssistant, reolink_connect: MagicMock) -> None:
+async def test_firmware_update_error(
+    hass: HomeAssistant, reolink_connect: MagicMock
+) -> None:
     """Test error during firmware update does not block setup."""
     config_entry = reolink_mock_config_entry(hass)
 
-    reolink_connect.check_new_firmware = AsyncMock(side_effect=ReolinkError("Test error"))
+    reolink_connect.check_new_firmware = AsyncMock(
+        side_effect=ReolinkError("Test error")
+    )
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert config_entry.state == ConfigEntryState.LOADED
 
 
-async def test_unexpected_error(hass: HomeAssistant, reolink_connect: MagicMock) -> None:
+async def test_unexpected_error(
+    hass: HomeAssistant, reolink_connect: MagicMock
+) -> None:
     """Test a unexpected error during initial connection."""
     config_entry = reolink_mock_config_entry(hass)
 
