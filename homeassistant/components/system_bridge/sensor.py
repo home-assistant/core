@@ -51,8 +51,8 @@ class SystemBridgeSensorEntityDescription(SensorEntityDescription):
 
 def battery_time_remaining(data: SystemBridgeCoordinatorData) -> datetime | None:
     """Return the battery time remaining."""
-    if data.battery.sensors_secsleft is not None:
-        return utcnow() + timedelta(seconds=data.battery.sensors_secsleft)
+    if value := getattr(data.battery, "sensors_secsleft", None) is not None:
+        return utcnow() + timedelta(seconds=value)
     return None
 
 
