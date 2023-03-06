@@ -93,7 +93,7 @@ async def test_config_flow_errors(
 
     reolink_connect.is_admin = True
     reolink_connect.user_level = "admin"
-    reolink_connect.get_host_data = AsyncMock(side_effect=ReolinkError("Test error"))
+    reolink_connect.get_host_data.side_effect = ReolinkError("Test error")
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -107,8 +107,8 @@ async def test_config_flow_errors(
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_HOST: "cannot_connect"}
 
-    reolink_connect.get_host_data = AsyncMock(
-        side_effect=json.JSONDecodeError("test_error", "test", 1)
+    reolink_connect.get_host_data.side_effect = json.JSONDecodeError(
+        "test_error", "test", 1
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -123,9 +123,7 @@ async def test_config_flow_errors(
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_HOST: "unknown"}
 
-    reolink_connect.get_host_data = AsyncMock(
-        side_effect=CredentialsInvalidError("Test error")
-    )
+    reolink_connect.get_host_data.side_effect = CredentialsInvalidError("Test error")
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -139,7 +137,7 @@ async def test_config_flow_errors(
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_HOST: "invalid_auth"}
 
-    reolink_connect.get_host_data = AsyncMock(side_effect=ApiError("Test error"))
+    reolink_connect.get_host_data.side_effect = ApiError("Test error")
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -153,7 +151,7 @@ async def test_config_flow_errors(
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_HOST: "api_error"}
 
-    reolink_connect.get_host_data = AsyncMock(return_value=None)
+    reolink_connect.get_host_data.return_value = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
