@@ -361,10 +361,10 @@ async def async_setup_entry(
         gpus.extend(
             {
                 "key": gpu,
-                "name": getattr(coordinator.data.gpu.gpus, f"{gpu}_name"),
+                "name": getattr(coordinator.data.gpu, f"{gpu}_name"),
             }
             for gpu in coordinator.data.gpu.gpus
-            if hasattr(coordinator.data.gpu.gpus, f"{gpu}_name")
+            if hasattr(coordinator.data.gpu, f"{gpu}_name")
         )
 
     for index, gpu in enumerate(gpus):
