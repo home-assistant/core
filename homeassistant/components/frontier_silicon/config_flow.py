@@ -147,14 +147,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             self._name = await afsapi.get_friendly_name()
 
-            # _unique_id will already be set when discovered through SSDP with the SSDP UDN,
-            # however, when adding a device manually, it will still be empty at this point.
-            # Now we have successfully logged in, we can check the radio_id of this device
-            if self._unique_id is None:
-                self._unique_id = await afsapi.get_radio_id()
-                await self.async_set_unique_id(self._unique_id)
-                self._abort_if_unique_id_configured()
-
         except FSConnectionError:
             errors["base"] = "cannot_connect"
         except InvalidPinException:
@@ -163,6 +155,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception(exception)
             errors["base"] = "unknown"
         else:
+            self._unique_id = await afsapi.get_radio_id()
+            await self.async_set_unique_id(self._unique_id)
+            self._abort_if_unique_id_configured()
             return await self._create_entry(pin=user_input[CONF_PIN])
 
         data_schema = self.add_suggested_values_to_schema(

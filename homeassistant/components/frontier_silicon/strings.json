@@ -15,20 +15,15 @@
         "data": {
           "pin": "[%key:common::config_flow::data::pin%]"
         }
-      },
-      "confirm": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "discovery_error": "Failed to discover a matching DLNA device"
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
   "issues": {

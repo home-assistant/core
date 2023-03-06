@@ -14,7 +14,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def config_entry():
+def config_entry() -> MockConfigEntry:
     """Create a mock Frontier Silicon config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
@@ -24,7 +24,7 @@ def config_entry():
 
 
 @pytest.fixture(autouse=True)
-def mock_valid_device_url():
+def mock_valid_device_url() -> Generator[None, None, None]:
     """Return a valid webfsapi endpoint."""
     with patch(
         "afsapi.AFSAPI.get_webfsapi_endpoint",
@@ -34,7 +34,7 @@ def mock_valid_device_url():
 
 
 @pytest.fixture(autouse=True)
-def mock_valid_pin():
+def mock_valid_pin() -> Generator[None, None, None]:
     """Make get_friendly_name return a value, indicating a valid pin."""
     with patch(
         "afsapi.AFSAPI.get_friendly_name",
@@ -44,7 +44,7 @@ def mock_valid_pin():
 
 
 @pytest.fixture(autouse=True)
-def mock_radio_id():
+def mock_radio_id() -> Generator[None, None, None]:
     """Return a valid radio_id."""
     with patch("afsapi.AFSAPI.get_radio_id", return_value="mock_radio_id"):
         yield

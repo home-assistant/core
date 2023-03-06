@@ -38,7 +38,7 @@ async def test_import_success(hass: HomeAssistant) -> None:
     ],
 )
 async def test_import_webfsapi_endpoint_failures(
-    hass: HomeAssistant, webfsapi_endpoint_error, result_reason
+    hass: HomeAssistant, webfsapi_endpoint_error: Exception, result_reason: str
 ) -> None:
     """Test various failure of get_webfsapi_endpoint."""
     with patch(
@@ -69,7 +69,7 @@ async def test_import_webfsapi_endpoint_failures(
     ],
 )
 async def test_import_radio_id_failures(
-    hass: HomeAssistant, radio_id_error, result_reason
+    hass: HomeAssistant, radio_id_error: Exception, result_reason: str
 ) -> None:
     """Test various failure of get_radio_id."""
     with patch(
@@ -91,7 +91,7 @@ async def test_import_radio_id_failures(
         assert result["reason"] == result_reason
 
 
-async def test_import_already_exists(hass: HomeAssistant, config_entry) -> None:
+async def test_import_already_exists(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Test import of device which already exists."""
     config_entry.add_to_hass(hass)
 
@@ -110,7 +110,7 @@ async def test_import_already_exists(hass: HomeAssistant, config_entry) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_form_default_pin(hass: HomeAssistant, mock_setup_entry) -> None:
+async def test_form_default_pin(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test manual device add with default pin."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -133,7 +133,7 @@ async def test_form_default_pin(hass: HomeAssistant, mock_setup_entry) -> None:
     mock_setup_entry.assert_called_once()
 
 
-async def test_form_nondefault_pin(hass: HomeAssistant, mock_setup_entry) -> None:
+async def test_form_nondefault_pin(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -178,7 +178,7 @@ async def test_form_nondefault_pin(hass: HomeAssistant, mock_setup_entry) -> Non
     ],
 )
 async def test_form_nondefault_pin_invalid(
-    hass: HomeAssistant, friendly_name_error, result_error
+    hass: HomeAssistant, friendly_name_error: Exception, result_error: str
 ) -> None:
     """Test we get the proper errors when trying to validate an user-provided PIN."""
     result = await hass.config_entries.flow.async_init(
@@ -222,7 +222,7 @@ async def test_form_nondefault_pin_invalid(
     ],
 )
 async def test_invalid_device_url(
-    hass: HomeAssistant, webfsapi_endpoint_error, result_error
+    hass: HomeAssistant, webfsapi_endpoint_error: Exception, result_error: str
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(

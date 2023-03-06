@@ -51,7 +51,10 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Frontier Silicon platform from SSDP or perform a migration from YAML config to Config Flow entity.."""
+    """Set up the Frontier Silicon platform.
+    
+    YAML is deprecated, and imported automatically.
+    SSDP discovery is temporarily retained - to be refactor subsequently."""
     if discovery_info is not None:
         webfsapi_url = await AFSAPI.get_webfsapi_endpoint(
             discovery_info["ssdp_description"]
@@ -68,6 +71,7 @@ async def async_setup_platform(
         hass,
         DOMAIN,
         "remove_yaml",
+        breaks_in_ha_version="2023.6.0",
         is_fixable=False,
         severity=ir.IssueSeverity.WARNING,
         translation_key="removed_yaml",
@@ -94,7 +98,7 @@ async def async_setup_entry(
 
     afsapi = hass.data[DOMAIN][config_entry.entry_id]  # type: AFSAPI
 
-    async_add_entities([AFSAPIDevice(config_entry, afsapi)], True)
+    async_add_entities([AFSAPIDevice(config_entry.title, afsapi)], True)
 
 
 class AFSAPIDevice(MediaPlayerEntity):
@@ -120,15 +124,15 @@ class AFSAPIDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
 
-    def __init__(self, config_entry: ConfigEntry, afsapi: AFSAPI) -> None:
+    def __init__(self, name: str | None, afsapi: AFSAPI) -> None:
         """Initialize the Frontier Silicon API device."""
         self.fs_device = afsapi
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, afsapi.webfsapi_endpoint)},
-            name=config_entry.title,
+            name=name,
         )
-        self._attr_name = config_entry.title
+        self._attr_name = name
 
         self._max_volume: int | None = None
 
