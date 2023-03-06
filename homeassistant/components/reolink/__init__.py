@@ -29,6 +29,7 @@ PLATFORMS = [
     Platform.CAMERA,
     Platform.LIGHT,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SIREN,
     Platform.SWITCH,
     Platform.UPDATE,
