@@ -65,29 +65,29 @@ def cpu_speed(data: SystemBridgeCoordinatorData) -> float | None:
 
 def gpu_core_clock_speed(data: SystemBridgeCoordinatorData, key: str) -> float | None:
     """Return the GPU core clock speed."""
-    if getattr(data.gpu, f"{key}_core_clock", None) is not None:
-        return round(getattr(data.gpu, f"{key}_core_clock"))
+    if value := getattr(data.gpu, f"{key}_core_clock", None) is not None:
+        return round(value)
     return None
 
 
 def gpu_memory_clock_speed(data: SystemBridgeCoordinatorData, key: str) -> float | None:
     """Return the GPU memory clock speed."""
-    if getattr(data.gpu, f"{key}_memory_clock", None) is not None:
-        return round(getattr(data.gpu, f"{key}_memory_clock"))
+    if value := getattr(data.gpu, f"{key}_memory_clock", None) is not None:
+        return round(value)
     return None
 
 
 def gpu_memory_free(data: SystemBridgeCoordinatorData, key: str) -> float | None:
     """Return the free GPU memory."""
-    if getattr(data.gpu, f"{key}_memory_free", None) is not None:
-        return round(getattr(data.gpu, f"{key}_memory_free") / 10**3, 2)
+    if value := getattr(data.gpu, f"{key}_memory_free", None) is not None:
+        return round(value)
     return None
 
 
 def gpu_memory_used(data: SystemBridgeCoordinatorData, key: str) -> float | None:
     """Return the used GPU memory."""
-    if getattr(data.gpu, f"{key}_memory_used", None) is not None:
-        return round(getattr(data.gpu, f"{key}_memory_used") / 10**3, 2)
+    if value := getattr(data.gpu, f"{key}_memory_used", None) is not None:
+        return round(value)
     return None
 
 
@@ -95,14 +95,11 @@ def gpu_memory_used_percentage(
     data: SystemBridgeCoordinatorData, key: str
 ) -> float | None:
     """Return the used GPU memory percentage."""
-    if (
-        getattr(data.gpu, f"{key}_memory_used", None) is not None
-        and getattr(data.gpu, f"{key}_memory_total", None) is not None
+    if (used := getattr(data.gpu, f"{key}_memory_used", None) is not None) and (
+        total := getattr(data.gpu, f"{key}_memory_total", None) is not None
     ):
         return round(
-            getattr(data.gpu, f"{key}_memory_used")
-            / getattr(data.gpu, f"{key}_memory_total")
-            * 100,
+            used / total * 100,
             2,
         )
     return None
@@ -291,7 +288,7 @@ async def async_setup_entry(
                     {
                         "key": display,
                         "name": getattr(
-                            coordinator.data.display, f"{display}_name"
+                            coordinator.data.display, f"{display}_name", ""
                         ).replace("Display ", ""),
                     },
                 )
