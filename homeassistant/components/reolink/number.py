@@ -67,7 +67,7 @@ NUMBER_ENTITIES = (
         value=lambda api, ch: api.get_focus(ch),
         method=lambda api, ch, value: api.set_zoom(ch, int(value)),
     ),
-    # "Floodlight turn on brightness" controlles the brightness of the floodlight when
+    # "Floodlight turn on brightness" controls the brightness of the floodlight when
     # it is turned on internally by the camera (see "select.floodlight_mode" entity)
     # or when using the "light.floodlight" entity.
     ReolinkNumberEntityDescription(
