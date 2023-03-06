@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from typing import Any, Final
 
-from aioairzone.common import OperationMode
+from aioairzone.common import OperationAction, OperationMode
 from aioairzone.const import (
     API_MODE,
     API_ON,
     API_SET_POINT,
-    AZD_DEMAND,
+    AZD_ACTION,
     AZD_HUMIDITY,
     AZD_MASTER,
     AZD_MODE,
@@ -39,12 +39,13 @@ from .const import API_TEMPERATURE_STEP, DOMAIN, TEMP_UNIT_LIB_TO_HASS
 from .coordinator import AirzoneUpdateCoordinator
 from .entity import AirzoneZoneEntity
 
-HVAC_ACTION_LIB_TO_HASS: Final[dict[OperationMode, HVACAction]] = {
-    OperationMode.STOP: HVACAction.OFF,
-    OperationMode.COOLING: HVACAction.COOLING,
-    OperationMode.HEATING: HVACAction.HEATING,
-    OperationMode.FAN: HVACAction.FAN,
-    OperationMode.DRY: HVACAction.DRYING,
+HVAC_ACTION_LIB_TO_HASS: Final[dict[OperationAction, HVACAction]] = {
+    OperationAction.COOLING: HVACAction.COOLING,
+    OperationAction.DRYING: HVACAction.DRYING,
+    OperationAction.FAN: HVACAction.FAN,
+    OperationAction.HEATING: HVACAction.HEATING,
+    OperationAction.IDLE: HVACAction.IDLE,
+    OperationAction.OFF: HVACAction.OFF,
 }
 HVAC_MODE_LIB_TO_HASS: Final[dict[OperationMode, HVACMode]] = {
     OperationMode.STOP: HVACMode.OFF,
@@ -156,14 +157,13 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         """Update climate attributes."""
         self._attr_current_temperature = self.get_airzone_value(AZD_TEMP)
         self._attr_current_humidity = self.get_airzone_value(AZD_HUMIDITY)
+        self._attr_hvac_action = HVAC_ACTION_LIB_TO_HASS[
+            self.get_airzone_value(AZD_ACTION)
+        ]
         if self.get_airzone_value(AZD_ON):
-            mode = self.get_airzone_value(AZD_MODE)
-            self._attr_hvac_mode = HVAC_MODE_LIB_TO_HASS[mode]
-            if self.get_airzone_value(AZD_DEMAND):
-                self._attr_hvac_action = HVAC_ACTION_LIB_TO_HASS[mode]
-            else:
-                self._attr_hvac_action = HVACAction.IDLE
+            self._attr_hvac_mode = HVAC_MODE_LIB_TO_HASS[
+                self.get_airzone_value(AZD_MODE)
+            ]
         else:
-            self._attr_hvac_action = HVACAction.OFF
             self._attr_hvac_mode = HVACMode.OFF
         self._attr_target_temperature = self.get_airzone_value(AZD_TEMP_SET)
