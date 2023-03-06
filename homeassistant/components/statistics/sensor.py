@@ -85,6 +85,7 @@ STAT_SUM = "sum"
 STAT_SUM_DIFFERENCES = "sum_differences"
 STAT_SUM_DIFFERENCES_NONNEGATIVE = "sum_differences_nonnegative"
 STAT_TOTAL = "total"
+STAT_TOTAL_AREA = "total_area"
 STAT_VALUE_MAX = "value_max"
 STAT_VALUE_MIN = "value_min"
 STAT_VARIANCE = "variance"
@@ -114,6 +115,7 @@ STATS_NUMERIC_SUPPORT = {
     STAT_SUM_DIFFERENCES,
     STAT_SUM_DIFFERENCES_NONNEGATIVE,
     STAT_TOTAL,
+    STAT_TOTAL_AREA,
     STAT_VALUE_MAX,
     STAT_VALUE_MIN,
     STAT_VARIANCE,
@@ -163,6 +165,7 @@ STATS_NUMERIC_RETAIN_UNIT = {
     STAT_SUM_DIFFERENCES,
     STAT_SUM_DIFFERENCES_NONNEGATIVE,
     STAT_TOTAL,
+    STAT_TOTAL_AREA,
     STAT_VALUE_MAX,
     STAT_VALUE_MIN,
 }
@@ -719,6 +722,23 @@ class StatisticsSensor(SensorEntity):
 
     def _stat_total(self) -> StateType:
         return self._stat_sum()
+
+    def _stat_total_area(self) -> StateType:
+        """
+        Like total, but multiply each datapoint with its duration.
+        Gets the sum of the rectangles.
+        Given an X/second sensor,
+        you can get total X consumption in the last 24h
+        """
+        # Copied from _stat_average_linear
+        if len(self.states) >= 2:
+            area: float = 0
+            for i in range(1, len(self.states)):
+                width = self.states[i] + self.states[i - 1]
+                height = (self.ages[i] - self.ages[i - 1]).total_seconds()
+                area += width * height
+            return area
+        return None
 
     def _stat_value_max(self) -> StateType:
         if len(self.states) > 0:
