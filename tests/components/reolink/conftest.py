@@ -35,11 +35,11 @@ def reolink_connect_fixture(mock_get_source_ip):
         "homeassistant.components.reolink.host.Host", autospec=True
     ) as host_mock_class:
         host_mock = host_mock_class.return_value
-        host_mock.get_host_data = AsyncMock(return_value=None)
-        host_mock.get_states = AsyncMock(return_value=None)
-        host_mock.check_new_firmware = AsyncMock(return_value=False)
-        host_mock.unsubscribe = AsyncMock(return_value=True)
-        host_mock.logout = AsyncMock(return_value=True)
+        host_mock.get_host_data.return_value = None
+        host_mock.get_states.return_value = None
+        host_mock.check_new_firmware.return_value = False
+        host_mock.unsubscribe.return_value = True
+        host_mock.logout.return_value = True
         host_mock.mac_address = TEST_MAC
         host_mock.onvif_enabled = True
         host_mock.rtmp_enabled = True
