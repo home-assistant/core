@@ -1,4 +1,6 @@
 """Constants for the sma integration."""
+from pysma.const import DEFAULT_LANG
+
 from homeassistant.const import Platform
 
 DOMAIN = "sma"
@@ -16,3 +18,5 @@ CONF_GROUP = "group"
 DEFAULT_SCAN_INTERVAL = 5
 
 GROUPS = ["user", "installer"]
+
+DEFAULT_LANGUAGE = DEFAULT_LANG

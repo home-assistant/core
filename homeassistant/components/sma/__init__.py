@@ -10,6 +10,7 @@ import pysma
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
+    CONF_LANGUAGE,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_SSL,
@@ -45,9 +46,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     verify_ssl = entry.data[CONF_VERIFY_SSL]
     group = entry.data[CONF_GROUP]
     password = entry.data[CONF_PASSWORD]
+    lang = entry.options.get(CONF_LANGUAGE)
 
     session = async_get_clientsession(hass, verify_ssl=verify_ssl)
-    sma = pysma.SMA(session, url, password, group)
+    sma = pysma.SMA(session, url, password, group, lang=lang)
 
     try:
         # Get updated device info
@@ -62,6 +64,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if TYPE_CHECKING:
         assert entry.unique_id
+
+    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     # Create DeviceInfo object from sma_device_info
     device_info = DeviceInfo(
@@ -134,3 +138,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data[PYSMA_REMOVE_LISTENER]()
 
     return unload_ok
+
+
+async def update_listener(hass, entry):
+    """Handle options update."""
+    _LOGGER.info("Change SMA language to: %s", entry.options.get(CONF_LANGUAGE))
+    ok_result = await async_unload_entry(hass, entry)
+    if ok_result:
+        ok_result = await async_setup_entry(hass, entry)
+
+    return ok_result

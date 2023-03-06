@@ -8,12 +8,19 @@ import pysma
 import voluptuous as vol
 
 from homeassistant import config_entries, core
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_SSL, CONF_VERIFY_SSL
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_LANGUAGE,
+    CONF_PASSWORD,
+    CONF_SSL,
+    CONF_VERIFY_SSL,
+)
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_GROUP, DOMAIN, GROUPS
+from .const import CONF_GROUP, DEFAULT_LANGUAGE, DOMAIN, GROUPS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,6 +58,14 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_GROUP: GROUPS[0],
             CONF_PASSWORD: vol.UNDEFINED,
         }
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> SmaOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return SmaOptionsFlowHandler(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -99,4 +114,45 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+        )
+
+
+class SmaOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle a sma options flow."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize."""
+        self.config_entry = config_entry
+
+    def _get_option_schema_lang(self) -> vol.Schema:
+        """Get option schema for entering SMA language."""
+        return vol.Schema(
+            {
+                vol.Required(
+                    CONF_LANGUAGE,
+                    msg="SMA language",
+                    default=DEFAULT_LANGUAGE,
+                    description={
+                        "suggested_value": self.config_entry.options.get(CONF_LANGUAGE)
+                    },
+                ): str
+            }
+        )
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the options."""
+
+        option_schema_lang = self._get_option_schema_lang()
+
+        if user_input is None:
+            return self.async_show_form(
+                step_id="init",
+                data_schema=option_schema_lang,
+                errors={},
+            )
+
+        return self.async_create_entry(
+            title="", data={CONF_LANGUAGE: user_input.get(CONF_LANGUAGE)}
         )

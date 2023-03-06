@@ -23,5 +23,15 @@
         "title": "Set up SMA Solar"
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure SMA Solar",
+        "data": {
+          "language": "Sensor value language (must exist on device, e.g. en-US)"
+        }
+      }
+    }
   }
 }

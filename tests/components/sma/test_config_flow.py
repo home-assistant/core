@@ -9,6 +9,7 @@ from pysma.exceptions import (
 
 from homeassistant.components.sma.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_LANGUAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -137,3 +138,28 @@ async def test_form_already_configured(hass: HomeAssistant, mock_config_entry) -
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert len(mock_setup_entry.mock_calls) == 0
+
+
+async def test_options_flow_lang(hass: HomeAssistant, mock_config_entry) -> None:
+    """Test config flow options."""
+
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.sma.async_setup_entry",
+        return_value=True,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        result = await hass.config_entries.options.async_init(
+            mock_config_entry.entry_id
+        )
+
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_LANGUAGE: "en-US"}
+        )
+
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert mock_config_entry.options == {CONF_LANGUAGE: "en-US"}
