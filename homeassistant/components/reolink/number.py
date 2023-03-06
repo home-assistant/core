@@ -69,7 +69,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="floodlight_brightness",
-        name="Floodlight brightness",
+        name="Floodlight turn on brightness",
         icon="mdi:spotlight-beam",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
