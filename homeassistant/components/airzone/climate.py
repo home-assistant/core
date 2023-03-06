@@ -45,6 +45,7 @@ HVAC_ACTION_LIB_TO_HASS: Final[dict[OperationMode, HVACAction]] = {
     OperationMode.HEATING: HVACAction.HEATING,
     OperationMode.FAN: HVACAction.FAN,
     OperationMode.DRY: HVACAction.DRYING,
+    OperationMode.AUTO: HVACAction.IDLE,
 }
 HVAC_MODE_LIB_TO_HASS: Final[dict[OperationMode, HVACMode]] = {
     OperationMode.STOP: HVACMode.OFF,
