@@ -69,7 +69,7 @@ async def test_schema_update_calls(recorder_db_url: str, hass: HomeAssistant) ->
     session_maker = instance.get_session
     update.assert_has_calls(
         [
-            call(hass, engine, session_maker, version + 1, 0)
+            call(instance, hass, engine, session_maker, version + 1, 0)
             for version in range(0, db_schema.SCHEMA_VERSION)
         ]
     )
@@ -304,6 +304,8 @@ async def test_schema_migrate(
     migration_version = None
     real_migrate_schema = recorder.migration.migrate_schema
     real_apply_update = recorder.migration._apply_update
+    real_create_index = recorder.migration._create_index
+    create_calls = 0
 
     def _create_engine_test(*args, **kwargs):
         """Test version of create_engine that initializes with old schema.
@@ -355,6 +357,17 @@ async def test_schema_migrate(
         migration_stall.wait()
         real_apply_update(*args)
 
+    def _sometimes_failing_create_index(*args):
+        """Make the first index create raise a retryable error to ensure we retry."""
+        if recorder_db_url.startswith("mysql://"):
+            nonlocal create_calls
+            if create_calls < 1:
+                create_calls += 1
+                mysql_exception = OperationalError("statement", {}, [])
+                mysql_exception.orig = Exception(1205, "retryable")
+                raise mysql_exception
+        real_create_index(*args)
+
     with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
         "homeassistant.components.recorder.core.create_engine",
         new=_create_engine_test,
@@ -368,6 +381,11 @@ async def test_schema_migrate(
     ), patch(
         "homeassistant.components.recorder.migration._apply_update",
         wraps=_instrument_apply_update,
+    ) as apply_update_mock, patch(
+        "homeassistant.components.recorder.util.time.sleep"
+    ), patch(
+        "homeassistant.components.recorder.migration._create_index",
+        wraps=_sometimes_failing_create_index,
     ), patch(
         "homeassistant.components.recorder.Recorder._schedule_compile_missing_statistics",
     ), patch(
@@ -394,12 +412,13 @@ async def test_schema_migrate(
         assert migration_version == db_schema.SCHEMA_VERSION
         assert setup_run.called
         assert recorder.util.async_migration_in_progress(hass) is not True
+        assert apply_update_mock.called
 
 
 def test_invalid_update(hass: HomeAssistant) -> None:
     """Test that an invalid new version raises an exception."""
     with pytest.raises(ValueError):
-        migration._apply_update(hass, Mock(), Mock(), -1, 0)
+        migration._apply_update(Mock(), hass, Mock(), Mock(), -1, 0)
 
 
 @pytest.mark.parametrize(
