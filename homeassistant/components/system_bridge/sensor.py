@@ -280,7 +280,7 @@ async def async_setup_entry(
                 SystemBridgeSensor(coordinator, description, entry.data[CONF_PORT])
             )
 
-    displays: list = []
+    displays: list[dict] = []
     if coordinator.data.display.displays is not None:
         displays.extend(
             {
@@ -356,7 +356,7 @@ async def async_setup_entry(
             ),
         ]
 
-    gpus: list = []
+    gpus: list[dict] = []
     if coordinator.data.gpu.gpus is not None:
         gpus.extend(
             {
