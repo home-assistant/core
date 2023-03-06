@@ -94,7 +94,7 @@ SYSTEM_ENTITY_DESCRIPTIONS = (
     ),
     KNXSystemEntityDescription(
         key="telegrams_outgoing",
-        name="Telegrams Outgoing",
+        name="Telegrams outgoing",
         icon="mdi:download-network",
         entity_registry_enabled_default=False,
         force_update=True,
@@ -103,7 +103,7 @@ SYSTEM_ENTITY_DESCRIPTIONS = (
     ),
     KNXSystemEntityDescription(
         key="telegrams_outgoing_error",
-        name="Telegrams Outgoing Error",
+        name="Telegrams outgoing Error",
         icon="mdi:close-network",
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda knx: knx.xknx.connection_manager.cemi_count_outgoing_error,
