@@ -114,17 +114,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             self._name = await afsapi.get_friendly_name()
         except InvalidPinException:
-            pass  # Ask for a PIN
-        else:
-            self.context["title_placeholders"] = {"name": self._name}
+            # Ask for a PIN
+            return await self.async_step_device_config()
 
-            self._unique_id = await afsapi.get_radio_id()
-            await self.async_set_unique_id(self._unique_id)
-            self._abort_if_unique_id_configured()
+        self.context["title_placeholders"] = {"name": self._name}
 
-            return await self._create_entry()
+        self._unique_id = await afsapi.get_radio_id()
+        await self.async_set_unique_id(self._unique_id)
+        self._abort_if_unique_id_configured()
 
-        return await self.async_step_device_config()
+        return await self._create_entry()
 
     async def async_step_device_config(
         self, user_input: dict[str, Any] | None = None
