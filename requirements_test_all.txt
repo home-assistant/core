@@ -399,7 +399,7 @@ brother==2.3.0
 brunt==1.2.0
 
 # homeassistant.components.bthome
-bthome-ble==2.7.0
+bthome-ble==2.8.0
 
 # homeassistant.components.buienradar
 buienradar==1.0.5
@@ -1652,7 +1652,7 @@ sensorpro-ble==0.5.3
 sensorpush-ble==1.5.5
 
 # homeassistant.components.sentry
-sentry-sdk==1.13.0
+sentry-sdk==1.16.0
 
 # homeassistant.components.sfr_box
 sfrbox-api==0.0.6
@@ -1860,7 +1860,7 @@ wakeonlan==2.1.0
 wallbox==0.4.12
 
 # homeassistant.components.folder_watcher
-watchdog==2.2.1
+watchdog==2.3.1
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.2
