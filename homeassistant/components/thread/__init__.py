@@ -6,7 +6,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .dataset_store import DatasetEntry, async_add_dataset, async_get_preferred_dataset
+from .dataset_store import (
+    DatasetEntry,
+    async_add_dataset,
+    async_get_preferred_dataset,
+    async_set_preferred_dataset,
+)
 from .websocket_api import async_setup as async_setup_ws_api
 
 __all__ = [
@@ -14,6 +19,7 @@ __all__ = [
     "DatasetEntry",
     "async_add_dataset",
     "async_get_preferred_dataset",
+    "async_set_preferred_dataset",
 ]
 
 

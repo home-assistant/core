@@ -82,13 +82,16 @@ class DatasetStore:
         )
 
     @callback
-    def async_add(self, source: str, tlv: str) -> None:
+    def async_add(self, source: str, tlv: str) -> str:
         """Add dataset, does nothing if it already exists."""
         # Make sure the tlv is valid
         dataset = tlv_parser.parse_tlv(tlv)
         # Bail out if the dataset already exists
-        if any(entry for entry in self.datasets.values() if entry.dataset == dataset):
-            return
+        if entry := next(
+            (entry for entry in self.datasets.values() if entry.dataset == dataset),
+            None,
+        ):
+            return entry.id
 
         entry = DatasetEntry(source=source, tlv=tlv)
         self.datasets[entry.id] = entry
@@ -96,6 +99,7 @@ class DatasetStore:
         if self.preferred_dataset is None:
             self.preferred_dataset = entry.id
         self.async_schedule_save()
+        return entry.id
 
     @callback
     def async_delete(self, dataset_id: str) -> None:
@@ -109,6 +113,14 @@ class DatasetStore:
     def async_get(self, dataset_id: str) -> DatasetEntry | None:
         """Get dataset by id."""
         return self.datasets.get(dataset_id)
+
+    @callback
+    def async_set_preferred(self, dataset_id: str) -> None:
+        """Set preferred dataset."""
+        if dataset_id not in self.datasets:
+            raise DatasetPreferredError("attempt to set unknown preferred dataset")
+        self.preferred_dataset = dataset_id
+        self.async_schedule_save()
 
     async def async_load(self) -> None:
         """Load the datasets."""
@@ -153,10 +165,10 @@ async def async_get_store(hass: HomeAssistant) -> DatasetStore:
     return store
 
 
-async def async_add_dataset(hass: HomeAssistant, source: str, tlv: str) -> None:
+async def async_add_dataset(hass: HomeAssistant, source: str, tlv: str) -> str:
     """Add a dataset."""
     store = await async_get_store(hass)
-    store.async_add(source, tlv)
+    return store.async_add(source, tlv)
 
 
 async def async_get_preferred_dataset(hass: HomeAssistant) -> str | None:
@@ -167,3 +179,9 @@ async def async_get_preferred_dataset(hass: HomeAssistant) -> str | None:
     ) is None:
         return None
     return entry.tlv
+
+
+async def async_set_preferred_dataset(hass: HomeAssistant, dataset_id: str) -> None:
+    """Set the preferred dataset."""
+    store = await async_get_store(hass)
+    store.async_set_preferred(dataset_id)

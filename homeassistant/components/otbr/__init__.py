@@ -72,6 +72,11 @@ class OTBRData:
         return await self.api.get_active_dataset_tlvs()
 
     @_handle_otbr_error
+    async def set_active_dataset_tlvs(self, dataset: bytes) -> None:
+        """Set current active operational dataset in TLVS format."""
+        await self.api.set_active_dataset_tlvs(dataset)
+
+    @_handle_otbr_error
     async def create_active_dataset(
         self, dataset: python_otbr_api.OperationalDataSet
     ) -> None:

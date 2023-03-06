@@ -15,6 +15,37 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
+  "options": {
+    "step": {
+      "thread_network_menu": {
+        "title": "Reconfigure the OTBR's Thread network",
+        "menu_options": {
+          "create_network": "[%key:component::otbr::options::step::create_network::title%]",
+          "prefer_otbr_network": "[%key:component::otbr::options::step::prefer_otbr_network::title%]",
+          "use_preferred_network": "[%key:component::otbr::options::step::use_preferred_network::title%]"
+        }
+      },
+      "create_network": {
+        "title": "Reset Thread network",
+        "data": {
+          "set_as_preferred": "Make the new network the preferred network"
+        },
+        "description": "This will reset the Home Assistant Border Router to its factory defaults and form a new Thread network.\n\nThe old network may no longer be available, and any devices that were attached to this network may need to be recomissioned."
+      },
+      "prefer_otbr_network": {
+        "title": "Prefer Thread network ''{otbr_network}''",
+        "description": "Use this Thread network when commissioning Thread devices with Home Assistant.\n\nAlready commisioned devices will remain on their current networks."
+      },
+      "use_preferred_network": {
+        "title": "Join Thread network ''{preferred_network}''",
+        "description": "This will change the network your Home Assistant Border Router is attached to.\n\nThe old network may no longer be available, and any devices that were attached to this network may need to be recomissioned."
+      }
+    },
+    "abort": {
+      "config_entry_not_setup": "The OTBR config entry is not setup",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
   "issues": {
     "insecure_thread_network": {
       "title": "Insecure Thread network settings detected",
