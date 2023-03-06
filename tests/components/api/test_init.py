@@ -349,6 +349,52 @@ async def test_api_template(hass: HomeAssistant, mock_api_client: TestClient) ->
 
     assert body == "10"
 
+    hass.states.async_set("sensor.temperature", 20)
+    resp = await mock_api_client.post(
+        const.URL_API_TEMPLATE,
+        json={"template": "{{ states.sensor.temperature.state }}"},
+    )
+
+    body = await resp.text()
+
+    assert body == "20"
+
+    hass.states.async_remove("sensor.temperature")
+    resp = await mock_api_client.post(
+        const.URL_API_TEMPLATE,
+        json={"template": "{{ states.sensor.temperature.state }}"},
+    )
+
+    body = await resp.text()
+
+    assert body == ""
+
+
+async def test_api_template_cached(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
+    """Test the template API uses the cache."""
+    hass.states.async_set("sensor.temperature", 30)
+
+    resp = await mock_api_client.post(
+        const.URL_API_TEMPLATE,
+        json={"template": "{{ states.sensor.temperature.state }}"},
+    )
+
+    body = await resp.text()
+
+    assert body == "30"
+
+    hass.states.async_set("sensor.temperature", 40)
+    resp = await mock_api_client.post(
+        const.URL_API_TEMPLATE,
+        json={"template": "{{ states.sensor.temperature.state }}"},
+    )
+
+    body = await resp.text()
+
+    assert body == "40"
+
 
 async def test_api_template_error(
     hass: HomeAssistant, mock_api_client: TestClient

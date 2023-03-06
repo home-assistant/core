@@ -508,7 +508,9 @@ async def async_setup_multi_components(
 ) -> None:
     """Set up multiple domains. Log on failure."""
     futures = {
-        domain: hass.async_create_task(async_setup_component(hass, domain, config))
+        domain: hass.async_create_task(
+            async_setup_component(hass, domain, config), f"setup component {domain}"
+        )
         for domain in domains
     }
     await asyncio.wait(futures.values())
