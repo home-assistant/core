@@ -1,14 +1,16 @@
 """Test the Frontier Silicon config flow."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from afsapi import ConnectionError, InvalidPinException
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.frontier_silicon.const import DOMAIN
+from homeassistant.components.frontier_silicon.const import CONF_WEBFSAPI_URL, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -28,6 +30,11 @@ async def test_import_success(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test name"
+    assert result["data"] == {
+        CONF_WEBFSAPI_URL: "http://1.1.1.1:80/webfsapi",
+        CONF_PIN: "1234",
+    }
 
 
 @pytest.mark.parametrize(
@@ -91,7 +98,9 @@ async def test_import_radio_id_failures(
         assert result["reason"] == result_reason
 
 
-async def test_import_already_exists(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+async def test_import_already_exists(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test import of device which already exists."""
     config_entry.add_to_hass(hass)
 
@@ -110,12 +119,15 @@ async def test_import_already_exists(hass: HomeAssistant, config_entry: MockConf
     assert result["reason"] == "already_configured"
 
 
-async def test_form_default_pin(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_form_default_pin(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test manual device add with default pin."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -127,18 +139,21 @@ async def test_form_default_pin(hass: HomeAssistant, mock_setup_entry: AsyncMock
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Name of the device"
     assert result2["data"] == {
-        "webfsapi_url": "http://1.1.1.1:80/webfsapi",
-        "pin": "1234",
+        CONF_WEBFSAPI_URL: "http://1.1.1.1:80/webfsapi",
+        CONF_PIN: "1234",
     }
     mock_setup_entry.assert_called_once()
 
 
-async def test_form_nondefault_pin(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_form_nondefault_pin(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
     assert result["errors"] == {}
 
     with patch(
@@ -152,6 +167,7 @@ async def test_form_nondefault_pin(hass: HomeAssistant, mock_setup_entry: AsyncM
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "device_config"
     assert result2["errors"] is None
 
     result3 = await hass.config_entries.flow.async_configure(
@@ -185,6 +201,7 @@ async def test_form_nondefault_pin_invalid(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
     assert result["errors"] == {}
 
     with patch(
@@ -198,6 +215,7 @@ async def test_form_nondefault_pin_invalid(
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "device_config"
     assert result2["errors"] is None
 
     with patch(
@@ -211,6 +229,7 @@ async def test_form_nondefault_pin_invalid(
         await hass.async_block_till_done()
 
     assert result3["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "device_config"
     assert result3["errors"] == {"base": result_error}
 
 
@@ -229,6 +248,7 @@ async def test_invalid_device_url(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
     assert result["errors"] == {}
 
     with patch(
@@ -242,4 +262,5 @@ async def test_invalid_device_url(
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": result_error}
