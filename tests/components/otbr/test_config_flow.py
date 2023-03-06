@@ -8,10 +8,12 @@ import pytest
 import python_otbr_api
 
 from homeassistant.components import hassio, otbr
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import HomeAssistantError
 
-from . import DATASET_CH15, DATASET_CH16
+from . import BASE_URL, DATASET_CH15, DATASET_CH16
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -398,3 +400,407 @@ async def test_config_flow_single_entry(hass: HomeAssistant, source: str) -> Non
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
     mock_setup_entry.assert_not_called()
+
+
+async def test_options_flow_entry_not_setup(
+    hass: HomeAssistant, otbr_config_entry: ConfigEntry
+) -> None:
+    """Test starting the options flow when the entry is not loaded."""
+    await hass.config_entries.async_unload(otbr_config_entry.entry_id)
+    result = await hass.config_entries.options.async_init(otbr_config_entry.entry_id)
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "config_entry_not_setup"
+
+
+async def test_options_flow_no_network_no_preferred_dataset(
+    hass: HomeAssistant,
+    otbr_config_entry: ConfigEntry,
+) -> None:
+    """Test the options flow."""
+    with patch(
+        "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+        return_value=None,
+    ), patch("python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=None):
+        result = await hass.config_entries.options.async_init(
+            otbr_config_entry.entry_id
+        )
+
+    assert result["type"] == FlowResultType.MENU
+    assert result["menu_options"] == ["create_network"]
+    assert result["step_id"] == "thread_network_menu"
+
+
+async def test_options_flow_err_network_no_preferred_dataset(
+    hass: HomeAssistant,
+    otbr_config_entry: ConfigEntry,
+) -> None:
+    """Test the options flow."""
+    with patch(
+        "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+        return_value=None,
+    ), patch(
+        "python_otbr_api.OTBR.get_active_dataset_tlvs", side_effect=HomeAssistantError
+    ):
+        result = await hass.config_entries.options.async_init(
+            otbr_config_entry.entry_id
+        )
+
+    assert result["type"] == FlowResultType.MENU
+    assert result["menu_options"] == ["create_network"]
+    assert result["step_id"] == "thread_network_menu"
+
+
+async def test_options_flow_same_preferred_dataset(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    otbr_config_entry: ConfigEntry,
+) -> None:
+    """Test the options flow."""
+    aioclient_mock.get(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.NO_CONTENT)
+
+    with patch(
+        "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+        return_value=DATASET_CH16.hex(),
+    ), patch("python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16):
+        result = await hass.config_entries.options.async_init(
+            otbr_config_entry.entry_id
+        )
+
+    assert result["type"] == FlowResultType.MENU
+    assert result["menu_options"] == ["create_network"]
+    assert result["step_id"] == "thread_network_menu"
+
+
+@pytest.mark.parametrize(
+    ("otbr_network", "menu_options"),
+    [
+        (
+            None,
+            ["create_network", "use_preferred_network"],
+        ),
+        (
+            DATASET_CH15,
+            ["create_network", "prefer_otbr_network", "use_preferred_network"],
+        ),
+    ],
+)
+async def test_options_flow_other_network(
+    hass: HomeAssistant,
+    otbr_config_entry: ConfigEntry,
+    otbr_network: bytes | None,
+    menu_options: list[str],
+) -> None:
+    """Test the options flow."""
+    with patch(
+        "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+        return_value=DATASET_CH16.hex(),
+    ), patch("python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=otbr_network):
+        result = await hass.config_entries.options.async_init(
+            otbr_config_entry.entry_id
+        )
+
+    assert result["type"] == FlowResultType.MENU
+    assert result["menu_options"] == menu_options
+    assert result["step_id"] == "thread_network_menu"
+
+
+async def test_options_flow_create_new_network(
+    hass: HomeAssistant,
+    otbr_config_entry: ConfigEntry,
+) -> None:
+    """Test the options flow."""
+    with patch(
+        "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+        return_value=None,
+    ), patch("python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=None):
+        result = await hass.config_entries.options.async_init(
+            otbr_config_entry.entry_id
+        )
+
+    assert result["type"] == FlowResultType.MENU
+    assert result["menu_options"] == ["create_network"]
+    assert result["step_id"] == "thread_network_menu"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "create_network"},
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "create_network"
+
+    with patch(
+        "homeassistant.components.otbr.config_flow.async_set_preferred_dataset",
+    ) as set_preferred_mock, patch(
+        "python_otbr_api.OTBR.set_enabled"
+    ) as set_enabled_mock, patch(
+        "python_otbr_api.OTBR.create_active_dataset"
+    ) as create_active_dataset_mock, patch(
+        "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH15
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], {}
+        )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {}
+
+    assert len(set_enabled_mock.mock_calls) == 2
+    assert set_enabled_mock.mock_calls[0][1][0] is False
+    assert set_enabled_mock.mock_calls[1][1][0] is True
+
+    create_active_dataset_mock.assert_called_once_with(
+        python_otbr_api.models.OperationalDataSet(
+            channel=15, network_name="home-assistant"
+        )
+    )
+
+    set_preferred_mock.assert_called_once()
+
+
+async def test_options_flow_create_new_network_err(
+    hass: HomeAssistant,
+    otbr_config_entry: ConfigEntry,
+) -> None:
+    """Test the options flow."""
+    with patch(
+        "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+        return_value=None,
+    ), patch("python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=None):
+        result = await hass.config_entries.options.async_init(
+            otbr_config_entry.entry_id
+        )
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "create_network"},
+    )
+    with patch("python_otbr_api.OTBR.set_enabled", side_effect=HomeAssistantError):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], {}
+        )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "unknown"
+
+
+async def test_options_flow_create_new_network_empty(
+    hass: HomeAssistant,
+    otbr_config_entry: ConfigEntry,
+) -> None:
+    """Test the options flow."""
+    with patch(
+        "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+        return_value=None,
+    ), patch("python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=None):
+        result = await hass.config_entries.options.async_init(
+            otbr_config_entry.entry_id
+        )
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "create_network"},
+    )
+
+    with patch("python_otbr_api.OTBR.set_enabled"), patch(
+        "python_otbr_api.OTBR.create_active_dataset"
+    ), patch("python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=None):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], {}
+        )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "unknown"
+
+
+async def test_options_flow_prefer_otbr_network(
+    hass: HomeAssistant,
+    otbr_config_entry: ConfigEntry,
+) -> None:
+    """Test the options flow."""
+    with patch(
+        "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+        return_value=None,
+    ), patch("python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH15):
+        result = await hass.config_entries.options.async_init(
+            otbr_config_entry.entry_id
+        )
+
+    assert result["type"] == FlowResultType.MENU
+    assert result["menu_options"] == ["create_network", "prefer_otbr_network"]
+    assert result["step_id"] == "thread_network_menu"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "prefer_otbr_network"},
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "prefer_otbr_network"
+
+    with patch(
+        "homeassistant.components.otbr.config_flow.async_set_preferred_dataset",
+    ) as set_preferred_mock, patch(
+        "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH15
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], {}
+        )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {}
+
+    set_preferred_mock.assert_called_once()
+
+
+async def test_options_flow_prefer_otbr_network_err(
+    hass: HomeAssistant,
+    otbr_config_entry: ConfigEntry,
+) -> None:
+    """Test the options flow."""
+    with patch(
+        "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+        return_value=None,
+    ), patch("python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH15):
+        result = await hass.config_entries.options.async_init(
+            otbr_config_entry.entry_id
+        )
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "prefer_otbr_network"},
+    )
+
+    with patch(
+        "python_otbr_api.OTBR.get_active_dataset_tlvs", side_effect=HomeAssistantError
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], {}
+        )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "unknown"
+
+
+async def test_options_flow_prefer_otbr_network_empty(
+    hass: HomeAssistant,
+    otbr_config_entry: ConfigEntry,
+) -> None:
+    """Test the options flow."""
+    with patch(
+        "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+        return_value=None,
+    ), patch("python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH15):
+        result = await hass.config_entries.options.async_init(
+            otbr_config_entry.entry_id
+        )
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "prefer_otbr_network"},
+    )
+
+    with patch("python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=None):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], {}
+        )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "unknown"
+
+
+async def test_options_flow_use_preferred_network(
+    hass: HomeAssistant,
+    otbr_config_entry: ConfigEntry,
+) -> None:
+    """Test the options flow."""
+    with patch(
+        "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+        return_value=DATASET_CH15.hex(),
+    ), patch("python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=None):
+        result = await hass.config_entries.options.async_init(
+            otbr_config_entry.entry_id
+        )
+
+    assert result["type"] == FlowResultType.MENU
+    assert result["menu_options"] == ["create_network", "use_preferred_network"]
+    assert result["step_id"] == "thread_network_menu"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "use_preferred_network"},
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "use_preferred_network"
+
+    with patch(
+        "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+        return_value=DATASET_CH15.hex(),
+    ) as get_preferred_mock, patch(
+        "python_otbr_api.OTBR.set_enabled"
+    ) as set_enabled_mock, patch(
+        "python_otbr_api.OTBR.set_active_dataset_tlvs"
+    ) as set_active_dataset_mock:
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], {}
+        )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {}
+
+    get_preferred_mock.assert_called_once()
+
+    assert len(set_enabled_mock.mock_calls) == 2
+    assert set_enabled_mock.mock_calls[0][1][0] is False
+    assert set_enabled_mock.mock_calls[1][1][0] is True
+
+    set_active_dataset_mock.assert_called_once_with(DATASET_CH15)
+
+
+async def test_options_flow_use_preferred_network_no_preferred(
+    hass: HomeAssistant,
+    otbr_config_entry: ConfigEntry,
+) -> None:
+    """Test the options flow."""
+    with patch(
+        "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+        return_value=DATASET_CH15.hex(),
+    ), patch("python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=None):
+        result = await hass.config_entries.options.async_init(
+            otbr_config_entry.entry_id
+        )
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "use_preferred_network"},
+    )
+
+    with patch(
+        "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+        return_value=None,
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], {}
+        )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "unknown"
+
+
+async def test_options_flow_use_preferred_network_err(
+    hass: HomeAssistant,
+    otbr_config_entry: ConfigEntry,
+) -> None:
+    """Test the options flow."""
+    with patch(
+        "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+        return_value=DATASET_CH15.hex(),
+    ), patch("python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=None):
+        result = await hass.config_entries.options.async_init(
+            otbr_config_entry.entry_id
+        )
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "use_preferred_network"},
+    )
+
+    with patch(
+        "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+        return_value=DATASET_CH15.hex(),
+    ), patch("python_otbr_api.OTBR.set_enabled", side_effect=HomeAssistantError):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], {}
+        )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "unknown"

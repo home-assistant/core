@@ -22,10 +22,11 @@ async def otbr_config_entry_fixture(hass):
     config_entry.add_to_hass(hass)
     with patch(
         "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
-    ), patch(
+    ), patch(  # Patch compute_pskc to speed up tests
         "homeassistant.components.otbr.compute_pskc"
-    ):  # Patch to speed up tests
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
+        return config_entry
 
 
 @pytest.fixture(autouse=True)
