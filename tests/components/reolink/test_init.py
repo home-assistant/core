@@ -29,7 +29,8 @@ from tests.common import MockConfigEntry
 pytestmark = pytest.mark.usefixtures("reolink_connect", "reolink_init")
 
 
-def reolink_mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+@pytest.fixture(name="config_entry")
+def reolink_config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
     """Add the reolink mock config entry to hass."""
     config_entry = MockConfigEntry(
         domain=const.DOMAIN,
@@ -47,7 +48,6 @@ def reolink_mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         title=TEST_NVR_NAME,
     )
     config_entry.add_to_hass(hass)
-
     return config_entry
 
 
@@ -89,13 +89,12 @@ def reolink_mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 async def test_failures_parametrized(
     hass: HomeAssistant,
     reolink_connect: MagicMock,
+    config_entry: MockConfigEntry,
     attr: str,
     value: Any,
     expected: ConfigEntryState,
 ) -> None:
     """Test outcomes when changing errors."""
-    config_entry = reolink_mock_config_entry(hass)
-
     setattr(reolink_connect, attr, value)
     assert await hass.config_entries.async_setup(config_entry.entry_id) is (
         expected == ConfigEntryState.LOADED
@@ -107,10 +106,10 @@ async def test_failures_parametrized(
         assert not hass.data.get(const.DOMAIN)
 
 
-async def test_update_listener(hass: HomeAssistant) -> None:
+async def test_update_listener(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test the update listener."""
-    config_entry = reolink_mock_config_entry(hass)
-
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -122,10 +121,10 @@ async def test_update_listener(hass: HomeAssistant) -> None:
     assert config_entry.title == "New Name"
 
 
-async def test_http_no_repair_issue(hass: HomeAssistant) -> None:
+async def test_http_no_repair_issue(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test no repairs issue is raised when http local url is used."""
-    config_entry = reolink_mock_config_entry(hass)
-
     await async_process_ha_core_config(
         hass, {"country": "GB", "internal_url": "http://test_homeassistant_address"}
     )
@@ -137,10 +136,10 @@ async def test_http_no_repair_issue(hass: HomeAssistant) -> None:
     assert (const.DOMAIN, "https_webhook") not in issue_registry.issues
 
 
-async def test_https_repair_issue(hass: HomeAssistant) -> None:
+async def test_https_repair_issue(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test repairs issue is raised when https local url is used."""
-    config_entry = reolink_mock_config_entry(hass)
-
     await async_process_ha_core_config(
         hass, {"country": "GB", "internal_url": "https://test_homeassistant_address"}
     )
