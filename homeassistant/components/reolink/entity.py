@@ -17,11 +17,7 @@ _T = TypeVar("_T")
 
 
 class ReolinkBaseCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[_T]]):
-    """Parent class for entities that control the Reolink NVR itself, without a channel.
-
-    A camera connected directly to HomeAssistant without using a NVR is in the reolink API
-    basically a NVR with a single channel that has the camera connected to that channel.
-    """
+    """Parent class fo Reolink entities."""
 
     _attr_has_entity_name = True
 
@@ -54,15 +50,19 @@ class ReolinkBaseCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[_T]])
         return self._host.api.session_active and super().available
 
 
-class ReolinkDeviceCoordinatorEntity(ReolinkBaseCoordinatorEntity[None]):
-    """Parent class fo Reolink devices."""
+class ReolinkHostCoordinatorEntity(ReolinkBaseCoordinatorEntity[None]):
+    """Parent class for entities that control the Reolink NVR itself, without a channel.
+
+    A camera connected directly to HomeAssistant without using a NVR is in the reolink API
+    basically a NVR with a single channel that has the camera connected to that channel.
+    """
 
     def __init__(self, reolink_data: ReolinkData) -> None:
-        """Initialize ReolinkDeviceCoordinatorEntity."""
+        """Initialize ReolinkHostCoordinatorEntity."""
         super().__init__(reolink_data, reolink_data.device_coordinator)
 
 
-class ReolinkCoordinatorEntity(ReolinkDeviceCoordinatorEntity):
+class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
     """Parent class for Reolink hardware camera entities connected to a channel of the NVR."""
 
     def __init__(
@@ -70,7 +70,7 @@ class ReolinkCoordinatorEntity(ReolinkDeviceCoordinatorEntity):
         reolink_data: ReolinkData,
         channel: int,
     ) -> None:
-        """Initialize ReolinkCoordinatorEntity for a hardware camera connected to a channel of the NVR."""
+        """Initialize ReolinkChannelCoordinatorEntity for a hardware camera connected to a channel of the NVR."""
         super().__init__(reolink_data)
 
         self._channel = channel

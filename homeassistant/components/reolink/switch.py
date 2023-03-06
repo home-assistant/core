@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
 from .const import DOMAIN
-from .entity import ReolinkCoordinatorEntity, ReolinkDeviceCoordinatorEntity
+from .entity import ReolinkChannelCoordinatorEntity, ReolinkHostCoordinatorEntity
 
 
 @dataclass
@@ -172,7 +172,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ReolinkSwitchEntity(ReolinkCoordinatorEntity, SwitchEntity):
+class ReolinkSwitchEntity(ReolinkChannelCoordinatorEntity, SwitchEntity):
     """Base switch entity class for Reolink IP cameras."""
 
     entity_description: ReolinkSwitchEntityDescription
@@ -207,7 +207,7 @@ class ReolinkSwitchEntity(ReolinkCoordinatorEntity, SwitchEntity):
         self.async_write_ha_state()
 
 
-class ReolinkNVRSwitchEntity(ReolinkDeviceCoordinatorEntity, SwitchEntity):
+class ReolinkNVRSwitchEntity(ReolinkHostCoordinatorEntity, SwitchEntity):
     """Switch entity class for Reolink NVR features."""
 
     entity_description: ReolinkNVRSwitchEntityDescription
