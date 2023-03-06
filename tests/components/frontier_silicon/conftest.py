@@ -24,6 +24,26 @@ def config_entry():
 
 
 @pytest.fixture(autouse=True)
+def mock_valid_device_url():
+    """Return a valid webfsapi endpoint."""
+    with patch(
+        "afsapi.AFSAPI.get_webfsapi_endpoint",
+        return_value="http://1.1.1.1:80/webfsapi",
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def mock_valid_pin():
+    """Make get_friendly_name return a value, indicating a valid pin."""
+    with patch(
+        "afsapi.AFSAPI.get_friendly_name",
+        return_value="Name of the device",
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
 def mock_radio_id():
     """Return a valid radio_id."""
     with patch("afsapi.AFSAPI.get_radio_id", return_value="mock_radio_id"):
