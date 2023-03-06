@@ -1,6 +1,6 @@
 """Test the Reolink config flow."""
 import json
-from unittest.mock import patch
+from unittest.mock import patch, AsyncMock
 
 import pytest
 from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkError
@@ -65,7 +65,7 @@ async def test_config_flow_manual_success(hass: HomeAssistant) -> None:
     }
 
 
-async def test_config_flow_errors(hass: HomeAssistant) -> None:
+async def test_config_flow_errors(hass: HomeAssistant, reolink_connect) -> None:
     """Successful flow manually initialized by the user after some errors."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -75,16 +75,15 @@ async def test_config_flow_errors(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    host_mock = get_mock_info(error=ReolinkError("Test error"))
-    with patch("homeassistant.components.reolink.host.Host", return_value=host_mock):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_USERNAME: TEST_USERNAME,
-                CONF_PASSWORD: TEST_PASSWORD,
-                CONF_HOST: TEST_HOST,
-            },
-        )
+    #reolink_connect.get_host_data = AsyncMock(side_effect=ReolinkError("Test error"))
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_HOST: TEST_HOST,
+        },
+    )
 
     assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
