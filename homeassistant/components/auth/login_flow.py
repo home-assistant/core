@@ -283,6 +283,7 @@ class LoginFlowIndexView(LoginFlowBaseView):
                     "ip_address": ip_address(request.remote),  # type: ignore[arg-type]
                     "credential_only": data.get("type") == "link_user",
                     "redirect_uri": redirect_uri,
+                    "headers": request.headers,
                 },
             )
         except data_entry_flow.UnknownHandler:
