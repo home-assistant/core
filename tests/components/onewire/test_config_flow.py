@@ -1,5 +1,4 @@
 """Tests for 1-Wire config flow."""
-from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from pyownet import protocol
@@ -19,14 +18,7 @@ from homeassistant.helpers.config_validation import ensure_list
 
 from .const import MOCK_OWPROXY_DEVICES
 
-
-@pytest.fixture(autouse=True, name="mock_setup_entry")
-def override_async_setup_entry() -> Generator[AsyncMock, None, None]:
-    """Override async_setup_entry."""
-    with patch(
-        "homeassistant.components.onewire.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        yield mock_setup_entry
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 @pytest.fixture

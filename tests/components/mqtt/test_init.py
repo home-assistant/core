@@ -817,6 +817,50 @@ def test_entity_device_info_schema() -> None:
         )
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                "sensor": [
+                    {
+                        "name": "test-sensor",
+                        "unique_id": "test-sensor",
+                        "state_topic": "test/state",
+                    }
+                ]
+            }
+        }
+    ],
+)
+async def test_handle_logging_on_writing_the_entity_state(
+    hass: HomeAssistant,
+    mock_hass_config: None,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test on log handling when an error occurs writing the state."""
+    await mqtt_mock_entry_no_yaml_config()
+    await hass.async_block_till_done()
+    async_fire_mqtt_message(hass, "test/state", b"initial_state")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sensor")
+    assert state is not None
+    assert state.state == "initial_state"
+    with patch(
+        "homeassistant.helpers.entity.Entity.async_write_ha_state",
+        side_effect=ValueError("Invalid value for sensor"),
+    ):
+        async_fire_mqtt_message(hass, "test/state", b"payload causing errors")
+        await hass.async_block_till_done()
+        state = hass.states.get("sensor.test_sensor")
+        assert state is not None
+        assert state.state == "initial_state"
+        assert "Invalid value for sensor" in caplog.text
+        assert "Exception raised when updating state of" in caplog.text
+
+
 async def test_receiving_non_utf8_message_gets_logged(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,

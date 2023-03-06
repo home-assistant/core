@@ -75,6 +75,7 @@ from .models import (
     datetime_to_timestamp_or_none,
 )
 from .util import (
+    database_job_retry_wrapper,
     execute,
     execute_stmt_lambda_element,
     get_instance,
@@ -515,7 +516,10 @@ def _delete_duplicates_from_table(
     return (total_deleted_rows, all_non_identical_duplicates)
 
 
-def delete_statistics_duplicates(hass: HomeAssistant, session: Session) -> None:
+@database_job_retry_wrapper("delete statistics duplicates", 3)
+def delete_statistics_duplicates(
+    instance: Recorder, hass: HomeAssistant, session: Session
+) -> None:
     """Identify and delete duplicated statistics.
 
     A backup will be made of duplicated statistics before it is deleted.
