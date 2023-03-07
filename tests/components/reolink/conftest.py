@@ -25,8 +25,8 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
         yield mock_setup_entry
 
 
-@pytest.fixture(name="reolink_connect")
-def reolink_connect_fixture(mock_get_source_ip):
+@pytest.fixture
+def reolink_connect(mock_get_source_ip: None) -> Generator[MagicMock, None, None]:
     """Mock reolink connection."""
     with patch(
         "homeassistant.components.reolink.host.webhook.async_register",
