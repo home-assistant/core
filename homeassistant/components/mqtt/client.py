@@ -766,7 +766,8 @@ class MQTT:
     async def _async_resubscribe(self) -> None:
         """Resubscribe on reconnect."""
         # Group subscriptions to only re-subscribe once for each topic.
-        self._max_qos.clear()
+        async with self._pending_subscriptions_lock:
+            self._max_qos.clear()
         keyfunc = attrgetter("topic")
         await self._async_queue_subscriptions(
             [
