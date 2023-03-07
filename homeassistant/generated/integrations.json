@@ -2197,6 +2197,11 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "heatnglo": {
+      "name": "Heat&Glo",
+      "integration_type": "virtual",
+      "supported_by": "intellifire"
+    },
     "heiwa": {
       "name": "Heiwa",
       "integration_type": "virtual",
