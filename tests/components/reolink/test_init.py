@@ -6,23 +6,10 @@ import pytest
 from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.reolink import const
-from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.device_registry import format_mac
-
-from .conftest import (
-    TEST_HOST,
-    TEST_MAC,
-    TEST_NVR_NAME,
-    TEST_PASSWORD,
-    TEST_PORT,
-    TEST_USE_HTTPS,
-    TEST_USERNAME,
-)
 
 from tests.common import MockConfigEntry
 

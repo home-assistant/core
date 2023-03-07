@@ -1,8 +1,16 @@
 """Setup the Reolink tests."""
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
+from homeassistant.components.reolink import const
+from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import format_mac
+
+from tests.common import MockConfigEntry
 
 TEST_HOST = "1.2.3.4"
 TEST_HOST2 = "4.5.6.7"
@@ -62,6 +70,7 @@ def reolink_platforms(mock_get_source_ip: None) -> Generator[None, None, None]:
         yield
 
 
+@pytest.fixture
 def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Add the reolink mock config entry to hass."""
     config_entry = MockConfigEntry(
