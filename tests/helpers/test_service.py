@@ -1,7 +1,7 @@
 """Test service helpers."""
 from collections import OrderedDict
 from copy import deepcopy
-import unittest
+from functools import partial
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -33,10 +33,8 @@ from tests.common import (
     MockEntity,
     MockUser,
     async_mock_service,
-    get_test_home_assistant,
     mock_device_registry,
     mock_registry,
-    mock_service,
 )
 
 SUPPORT_A = 1
@@ -226,181 +224,192 @@ def area_mock(hass):
     )
 
 
-class TestServiceHelpers(unittest.TestCase):
-    """Test the Home Assistant service helpers."""
+async def test_service_call(hass: HomeAssistant):
+    """Test service call with templating."""
+    calls = async_mock_service(hass, "test_domain", "test_service")
+    config = {
+        "service": "{{ 'test_domain.test_service' }}",
+        "entity_id": "hello.world",
+        "data": {
+            "hello": "{{ 'goodbye' }}",
+            "effect": {"value": "{{ 'complex' }}", "simple": "simple"},
+        },
+        "data_template": {"list": ["{{ 'list' }}", "2"]},
+        "target": {"area_id": "test-area-id", "entity_id": "will.be_overridden"},
+    }
 
-    def setUp(self):  # pylint: disable=invalid-name
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.calls = mock_service(self.hass, "test_domain", "test_service")
+    await hass.async_add_executor_job(service.call_from_config, hass, config)
+    await hass.async_block_till_done()
 
-    def tearDown(self):  # pylint: disable=invalid-name
-        """Stop down everything that was started."""
-        self.hass.stop()
+    assert dict(calls[0].data) == {
+        "hello": "goodbye",
+        "effect": {
+            "value": "complex",
+            "simple": "simple",
+        },
+        "list": ["list", "2"],
+        "entity_id": ["hello.world"],
+        "area_id": ["test-area-id"],
+    }
 
-    def test_service_call(self):
-        """Test service call with templating."""
-        config = {
-            "service": "{{ 'test_domain.test_service' }}",
-            "entity_id": "hello.world",
-            "data": {
-                "hello": "{{ 'goodbye' }}",
-                "effect": {"value": "{{ 'complex' }}", "simple": "simple"},
+    config = {
+        "service": "{{ 'test_domain.test_service' }}",
+        "target": {
+            "area_id": ["area-42", "{{ 'area-51' }}"],
+            "device_id": ["abcdef", "{{ 'fedcba' }}"],
+            "entity_id": ["light.static", "{{ 'light.dynamic' }}"],
+        },
+    }
+
+    await hass.async_add_executor_job(service.call_from_config, hass, config)
+    await hass.async_block_till_done()
+
+    assert dict(calls[1].data) == {
+        "area_id": ["area-42", "area-51"],
+        "device_id": ["abcdef", "fedcba"],
+        "entity_id": ["light.static", "light.dynamic"],
+    }
+
+    config = {
+        "service": "{{ 'test_domain.test_service' }}",
+        "target": "{{ var_target }}",
+    }
+
+    service_call = partial(
+        service.call_from_config,
+        hass,
+        config,
+        variables={
+            "var_target": {
+                "entity_id": "light.static",
+                "area_id": ["area-42", "area-51"],
             },
-            "data_template": {"list": ["{{ 'list' }}", "2"]},
-            "target": {"area_id": "test-area-id", "entity_id": "will.be_overridden"},
+        },
+    )
+    await hass.async_add_executor_job(service_call)
+    await hass.async_block_till_done()
+
+    assert dict(calls[2].data) == {
+        "area_id": ["area-42", "area-51"],
+        "entity_id": ["light.static"],
+    }
+
+
+async def test_service_template_service_call(hass: HomeAssistant):
+    """Test legacy service_template call with templating."""
+    calls = async_mock_service(hass, "test_domain", "test_service")
+    config = {
+        "service_template": "{{ 'test_domain.test_service' }}",
+        "entity_id": "hello.world",
+        "data": {"hello": "goodbye"},
+    }
+
+    await hass.async_add_executor_job(service.call_from_config, hass, config)
+    await hass.async_block_till_done()
+
+    assert calls[0].data["hello"] == "goodbye"
+
+
+async def test_passing_variables_to_templates(hass: HomeAssistant):
+    """Test passing variables to templates."""
+    calls = async_mock_service(hass, "test_domain", "test_service")
+    config = {
+        "service_template": "{{ var_service }}",
+        "entity_id": "hello.world",
+        "data_template": {"hello": "{{ var_data }}"},
+    }
+
+    service_call = partial(
+        service.call_from_config,
+        hass,
+        config,
+        variables={
+            "var_service": "test_domain.test_service",
+            "var_data": "goodbye",
+        },
+    )
+    await hass.async_add_executor_job(service_call)
+    await hass.async_block_till_done()
+
+    assert calls[0].data["hello"] == "goodbye"
+
+
+async def test_bad_template(hass: HomeAssistant):
+    """Test passing bad template."""
+    calls = async_mock_service(hass, "test_domain", "test_service")
+    config = {
+        "service_template": "{{ var_service }}",
+        "entity_id": "hello.world",
+        "data_template": {"hello": "{{ states + unknown_var }}"},
+    }
+
+    service_call = partial(
+        service.call_from_config,
+        hass,
+        config,
+        variables={
+            "var_service": "test_domain.test_service",
+            "var_data": "goodbye",
+        },
+    )
+    await hass.async_add_executor_job(service_call)
+    await hass.async_block_till_done()
+
+    assert len(calls) == 0
+
+
+async def test_split_entity_string(hass: HomeAssistant):
+    """Test splitting of entity string."""
+    calls = async_mock_service(hass, "test_domain", "test_service")
+    service_call = partial(
+        service.call_from_config,
+        hass,
+        {
+            "service": "test_domain.test_service",
+            "entity_id": "hello.world, sensor.beer",
+        },
+    )
+    await hass.async_add_executor_job(service_call)
+    await hass.async_block_till_done()
+    assert ["hello.world", "sensor.beer"] == calls[-1].data.get("entity_id")
+
+
+async def test_not_mutate_input(hass: HomeAssistant):
+    """Test for immutable input."""
+    async_mock_service(hass, "test_domain", "test_service")
+    config = cv.SERVICE_SCHEMA(
+        {
+            "service": "test_domain.test_service",
+            "entity_id": "hello.world, sensor.beer",
+            "data": {"hello": 1},
+            "data_template": {"nested": {"value": "{{ 1 + 1 }}"}},
         }
+    )
+    orig = deepcopy(config)
 
-        service.call_from_config(self.hass, config)
-        self.hass.block_till_done()
+    # Only change after call is each template getting hass attached
+    template.attach(hass, orig)
 
-        assert dict(self.calls[0].data) == {
-            "hello": "goodbye",
-            "effect": {
-                "value": "complex",
-                "simple": "simple",
-            },
-            "list": ["list", "2"],
-            "entity_id": ["hello.world"],
-            "area_id": ["test-area-id"],
-        }
+    service_call = partial(
+        service.call_from_config, hass, config, validate_config=False
+    )
+    await hass.async_add_executor_job(service_call)
+    assert orig == config
 
-        config = {
-            "service": "{{ 'test_domain.test_service' }}",
-            "target": {
-                "area_id": ["area-42", "{{ 'area-51' }}"],
-                "device_id": ["abcdef", "{{ 'fedcba' }}"],
-                "entity_id": ["light.static", "{{ 'light.dynamic' }}"],
-            },
-        }
 
-        service.call_from_config(self.hass, config)
-        self.hass.block_till_done()
+@patch("homeassistant.helpers.service._LOGGER.error")
+async def test_fail_silently_if_no_service(mock_log, hass: HomeAssistant):
+    """Test failing if service is missing."""
+    await hass.async_add_executor_job(service.call_from_config, hass, None)
+    assert mock_log.call_count == 1
 
-        assert dict(self.calls[1].data) == {
-            "area_id": ["area-42", "area-51"],
-            "device_id": ["abcdef", "fedcba"],
-            "entity_id": ["light.static", "light.dynamic"],
-        }
+    await hass.async_add_executor_job(service.call_from_config, hass, {})
+    assert mock_log.call_count == 2
 
-        config = {
-            "service": "{{ 'test_domain.test_service' }}",
-            "target": "{{ var_target }}",
-        }
-
-        service.call_from_config(
-            self.hass,
-            config,
-            variables={
-                "var_target": {
-                    "entity_id": "light.static",
-                    "area_id": ["area-42", "area-51"],
-                },
-            },
-        )
-
-        service.call_from_config(self.hass, config)
-        self.hass.block_till_done()
-
-        assert dict(self.calls[2].data) == {
-            "area_id": ["area-42", "area-51"],
-            "entity_id": ["light.static"],
-        }
-
-    def test_service_template_service_call(self):
-        """Test legacy service_template call with templating."""
-        config = {
-            "service_template": "{{ 'test_domain.test_service' }}",
-            "entity_id": "hello.world",
-            "data": {"hello": "goodbye"},
-        }
-
-        service.call_from_config(self.hass, config)
-        self.hass.block_till_done()
-
-        assert self.calls[0].data["hello"] == "goodbye"
-
-    def test_passing_variables_to_templates(self):
-        """Test passing variables to templates."""
-        config = {
-            "service_template": "{{ var_service }}",
-            "entity_id": "hello.world",
-            "data_template": {"hello": "{{ var_data }}"},
-        }
-
-        service.call_from_config(
-            self.hass,
-            config,
-            variables={
-                "var_service": "test_domain.test_service",
-                "var_data": "goodbye",
-            },
-        )
-        self.hass.block_till_done()
-
-        assert self.calls[0].data["hello"] == "goodbye"
-
-    def test_bad_template(self):
-        """Test passing bad template."""
-        config = {
-            "service_template": "{{ var_service }}",
-            "entity_id": "hello.world",
-            "data_template": {"hello": "{{ states + unknown_var }}"},
-        }
-
-        service.call_from_config(
-            self.hass,
-            config,
-            variables={
-                "var_service": "test_domain.test_service",
-                "var_data": "goodbye",
-            },
-        )
-        self.hass.block_till_done()
-
-        assert len(self.calls) == 0
-
-    def test_split_entity_string(self):
-        """Test splitting of entity string."""
-        service.call_from_config(
-            self.hass,
-            {
-                "service": "test_domain.test_service",
-                "entity_id": "hello.world, sensor.beer",
-            },
-        )
-        self.hass.block_till_done()
-        assert ["hello.world", "sensor.beer"] == self.calls[-1].data.get("entity_id")
-
-    def test_not_mutate_input(self):
-        """Test for immutable input."""
-        config = cv.SERVICE_SCHEMA(
-            {
-                "service": "test_domain.test_service",
-                "entity_id": "hello.world, sensor.beer",
-                "data": {"hello": 1},
-                "data_template": {"nested": {"value": "{{ 1 + 1 }}"}},
-            }
-        )
-        orig = deepcopy(config)
-
-        # Only change after call is each template getting hass attached
-        template.attach(self.hass, orig)
-
-        service.call_from_config(self.hass, config, validate_config=False)
-        assert orig == config
-
-    @patch("homeassistant.helpers.service._LOGGER.error")
-    def test_fail_silently_if_no_service(self, mock_log):
-        """Test failing if service is missing."""
-        service.call_from_config(self.hass, None)
-        assert mock_log.call_count == 1
-
-        service.call_from_config(self.hass, {})
-        assert mock_log.call_count == 2
-
-        service.call_from_config(self.hass, {"service": "invalid"})
-        assert mock_log.call_count == 3
+    await hass.async_add_executor_job(
+        service.call_from_config, hass, {"service": "invalid"}
+    )
+    assert mock_log.call_count == 3
 
 
 async def test_service_call_entry_id(
