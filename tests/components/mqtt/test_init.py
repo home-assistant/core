@@ -1418,6 +1418,9 @@ async def test_unsubscribe_race(
     "mqtt_config_entry_data",
     [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_DISCOVERY: False}],
 )
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
 async def test_restore_subscriptions_on_reconnect(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
@@ -1478,6 +1481,7 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     assert mqtt_client_mock.unsubscribe.call_count == 0
 
     mqtt_client_mock.on_disconnect(None, None, 0)
+    await hass.async_block_till_done()
     mqtt_client_mock.on_connect(None, None, None, 0)
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
     await hass.async_block_till_done()
