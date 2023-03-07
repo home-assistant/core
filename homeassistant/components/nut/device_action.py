@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
@@ -69,7 +69,7 @@ def _get_command_name(device_action_name: str) -> str:
 
 
 def _get_entry_id_from_device_id(hass: HomeAssistant, device_id: str) -> str | None:
-    registry = device_registry.async_get(hass)
-    if (device := registry.async_get(device_id)) is None:
+    device_registry = dr.async_get(hass)
+    if (device := device_registry.async_get(device_id)) is None:
         return None
     return next(entry for entry in device.config_entries)
