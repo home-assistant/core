@@ -200,13 +200,13 @@ class NetatmoDataHandler:
             )
 
         except pyatmo.NoDevice as err:
-            _LOGGER.debug(err)
+            _LOGGER.info(err)
 
         except pyatmo.ApiError as err:
-            _LOGGER.debug(err)
+            _LOGGER.error(err)
 
         except asyncio.TimeoutError as err:
-            _LOGGER.debug(err)
+            _LOGGER.warning(err)
             return
 
         for update_callback in self.publisher[signal_name].subscriptions:
