@@ -495,10 +495,10 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 self._attr_color_mode = color_mode
             if self._topic[CONF_BRIGHTNESS_STATE_TOPIC] is None:
                 rgb = convert_color(*color)
-                percent_bright = float(color_util.color_RGB_to_hsv(*rgb)[2]) / 100.0
+                percent_bright = max(rgb) / 255.0
                 self._attr_brightness = min(round(percent_bright * 255), 255)
                 # Normalize the color to 100% brightness
-                color = tuple(int(channel / percent_bright) for channel in color)
+                color = tuple(round(channel / percent_bright) for channel in color)
             return color
 
         @callback
