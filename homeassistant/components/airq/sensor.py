@@ -80,6 +80,13 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         value=lambda data: data.get("br2"),
     ),
     AirQEntityDescription(
+        key="ch4s",
+        name="CH4S",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("ch4s"),
+    ),
+    AirQEntityDescription(
         key="cl2_M20",
         name="Chlorine",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -138,13 +145,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         value=lambda data: data.get("c2h4"),
     ),
     AirQEntityDescription(
-        key="ch4s",
-        name="CH4S",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        state_class=SensorStateClass.MEASUREMENT,
-        value=lambda data: data.get("ch4s"),
-    ),
-    AirQEntityDescription(
         key="ch2o_M10",
         name="Formaldehyde",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -157,13 +157,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("f2"),
-    ),
-    AirQEntityDescription(
-        key="h2o2",
-        name="Hydrogen Peroxide",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        state_class=SensorStateClass.MEASUREMENT,
-        value=lambda data: data.get("h2o2"),
     ),
     AirQEntityDescription(
         key="h2s",
@@ -195,7 +188,7 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     ),
     AirQEntityDescription(
         key="health",
-        name="Health Index",
+        name="Health index",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:heart-pulse",
@@ -223,6 +216,13 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("h2_M1000"),
+    ),
+    AirQEntityDescription(
+        key="h2o2",
+        name="Hydrogen peroxide",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("h2o2"),
     ),
     AirQEntityDescription(
         key="ch4_MIPEX",
@@ -280,7 +280,7 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     ),
     AirQEntityDescription(
         key="performance",
-        name="Performance Index",
+        name="Performance index",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:head-check",
@@ -375,7 +375,7 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     ),
     AirQEntityDescription(
         key="sound_max",
-        name="Noise (Maximum)",
+        name="Noise (maximum)",
         native_unit_of_measurement=UnitOfSoundPressure.WEIGHTED_DECIBEL_A,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("sound_max"),
@@ -406,14 +406,14 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     ),
     AirQEntityDescription(
         key="tvoc_ionsc",
-        name="VOC (Industrial)",
+        name="VOC (industrial)",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("tvoc_ionsc"),
     ),
     AirQEntityDescription(
         key="virus",
-        name="Virus Index",
+        name="Virus index",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:virus-off",
