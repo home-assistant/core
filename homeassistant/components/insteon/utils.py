@@ -5,7 +5,7 @@ import logging
 from pyinsteon import devices
 from pyinsteon.address import Address
 from pyinsteon.constants import ALDBStatus, DeviceAction
-from pyinsteon.events import OFF_EVENT, OFF_FAST_EVENT, ON_EVENT, ON_FAST_EVENT
+from pyinsteon.events import OFF_EVENT, OFF_FAST_EVENT, ON_EVENT, ON_FAST_EVENT, Event
 from pyinsteon.managers.link_manager import (
     async_enter_linking_mode,
     async_enter_unlinking_mode,
@@ -89,6 +89,17 @@ from .schemas import (
 _LOGGER = logging.getLogger(__name__)
 
 
+def _register_event(event: Event, listener) -> None:
+    """Register the events raised by a device."""
+    _LOGGER.debug(
+        "Registering on/off event for %s %d %s",
+        str(event.address),
+        event.group,
+        event.name,
+    )
+    event.subscribe(listener, force_strong_ref=True)
+
+
 def add_on_off_event_device(hass, device):
     """Register an Insteon device as an on/off event device."""
 
@@ -100,38 +111,28 @@ def add_on_off_event_device(hass, device):
         else:
             button_id = None
 
-        schema = {CONF_ADDRESS: address}
+        schema = {CONF_ADDRESS: address, "group": group}
         if button_id:
             schema[EVENT_CONF_BUTTON] = button_id
         if name == ON_EVENT:
             event = EVENT_GROUP_ON
-        if name == OFF_EVENT:
+        elif name == OFF_EVENT:
             event = EVENT_GROUP_OFF
-        if name == ON_FAST_EVENT:
+        elif name == ON_FAST_EVENT:
             event = EVENT_GROUP_ON_FAST
-        if name == OFF_FAST_EVENT:
+        elif name == OFF_FAST_EVENT:
             event = EVENT_GROUP_OFF_FAST
+        else:
+            event = f"insteon.{event.name}"
         _LOGGER.debug("Firing event %s with %s", event, schema)
         hass.bus.async_fire(event, schema)
 
-    for group in device.events:
-        if isinstance(group, int):
-            for event in device.events[group]:
-                if event in [
-                    OFF_EVENT,
-                    ON_EVENT,
-                    OFF_FAST_EVENT,
-                    ON_FAST_EVENT,
-                ]:
-                    _LOGGER.debug(
-                        "Registering on/off event for %s %d %s",
-                        str(device.address),
-                        group,
-                        event,
-                    )
-                    device.events[group][event].subscribe(
-                        async_fire_group_on_off_event, force_strong_ref=True
-                    )
+    for name_or_group, event in device.events.items():
+        if isinstance(name_or_group, int):
+            for _, event in device.events[name_or_group].items():
+                _register_event(event, async_fire_group_on_off_event)
+        else:
+            _register_event(event, async_fire_group_on_off_event)
 
 
 def register_new_device_callback(hass):
