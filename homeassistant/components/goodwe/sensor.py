@@ -119,12 +119,14 @@ _DESCRIPTIONS: dict[str, GoodweSensorEntityDescription] = {
         device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
+        entity_registry_enabled_default=False,
     ),
     "var": GoodweSensorEntityDescription(
         key="var",
         device_class=SensorDeviceClass.REACTIVE_POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
+        entity_registry_enabled_default=False,
     ),
     "C": GoodweSensorEntityDescription(
         key="C",
