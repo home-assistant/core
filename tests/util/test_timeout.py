@@ -97,8 +97,8 @@ async def test_mix_global_timeout_freeze_and_zone_freeze_different_order(
 
 
 async def test_mix_global_timeout_freeze_and_zone_freeze_other_zone_inside_executor_job(
-    hass,
-):
+    hass: HomeAssistant,
+) -> None:
     """Test a simple global timeout freeze other zone inside an executor job."""
     timeout = TimeoutManager()
 
@@ -114,8 +114,8 @@ async def test_mix_global_timeout_freeze_and_zone_freeze_other_zone_inside_execu
 
 
 async def test_mix_global_timeout_freeze_and_zone_freeze_inside_executor_job_second_job_outside_zone_context(
-    hass,
-):
+    hass: HomeAssistant,
+) -> None:
     """Test a simple global timeout freeze inside an executor job with second job outside of zone context."""
     timeout = TimeoutManager()
 
@@ -272,6 +272,9 @@ async def test_mix_zone_timeout_trigger_global_cool_down() -> None:
                 await asyncio.sleep(0.3)
 
         await asyncio.sleep(0.2)
+
+    # Cleanup lingering (cool_down) task after test is done
+    await asyncio.sleep(0.3)
 
 
 async def test_simple_zone_timeout_freeze_without_timeout_cleanup(

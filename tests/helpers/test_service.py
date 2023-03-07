@@ -21,8 +21,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import (
-    device_registry as dev_reg,
-    entity_registry as ent_reg,
+    device_registry as dr,
+    entity_registry as er,
     service,
     template,
 )
@@ -31,6 +31,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockEntity,
+    MockUser,
     async_mock_service,
     get_test_home_assistant,
     mock_device_registry,
@@ -95,10 +96,10 @@ def area_mock(hass):
     hass.states.async_set("light.Ceiling", STATE_OFF)
     hass.states.async_set("light.Kitchen", STATE_OFF)
 
-    device_in_area = dev_reg.DeviceEntry(area_id="test-area")
-    device_no_area = dev_reg.DeviceEntry(id="device-no-area-id")
-    device_diff_area = dev_reg.DeviceEntry(area_id="diff-area")
-    device_area_a = dev_reg.DeviceEntry(id="device-area-a-id", area_id="area-a")
+    device_in_area = dr.DeviceEntry(area_id="test-area")
+    device_no_area = dr.DeviceEntry(id="device-no-area-id")
+    device_diff_area = dr.DeviceEntry(area_id="diff-area")
+    device_area_a = dr.DeviceEntry(id="device-area-a-id", area_id="area-a")
 
     mock_device_registry(
         hass,
@@ -110,94 +111,94 @@ def area_mock(hass):
         },
     )
 
-    entity_in_own_area = ent_reg.RegistryEntry(
+    entity_in_own_area = er.RegistryEntry(
         entity_id="light.in_own_area",
         unique_id="in-own-area-id",
         platform="test",
         area_id="own-area",
     )
-    config_entity_in_own_area = ent_reg.RegistryEntry(
+    config_entity_in_own_area = er.RegistryEntry(
         entity_id="light.config_in_own_area",
         unique_id="config-in-own-area-id",
         platform="test",
         area_id="own-area",
         entity_category=EntityCategory.CONFIG,
     )
-    hidden_entity_in_own_area = ent_reg.RegistryEntry(
+    hidden_entity_in_own_area = er.RegistryEntry(
         entity_id="light.hidden_in_own_area",
         unique_id="hidden-in-own-area-id",
         platform="test",
         area_id="own-area",
-        hidden_by=ent_reg.RegistryEntryHider.USER,
+        hidden_by=er.RegistryEntryHider.USER,
     )
-    entity_in_area = ent_reg.RegistryEntry(
+    entity_in_area = er.RegistryEntry(
         entity_id="light.in_area",
         unique_id="in-area-id",
         platform="test",
         device_id=device_in_area.id,
     )
-    config_entity_in_area = ent_reg.RegistryEntry(
+    config_entity_in_area = er.RegistryEntry(
         entity_id="light.config_in_area",
         unique_id="config-in-area-id",
         platform="test",
         device_id=device_in_area.id,
         entity_category=EntityCategory.CONFIG,
     )
-    hidden_entity_in_area = ent_reg.RegistryEntry(
+    hidden_entity_in_area = er.RegistryEntry(
         entity_id="light.hidden_in_area",
         unique_id="hidden-in-area-id",
         platform="test",
         device_id=device_in_area.id,
-        hidden_by=ent_reg.RegistryEntryHider.USER,
+        hidden_by=er.RegistryEntryHider.USER,
     )
-    entity_in_other_area = ent_reg.RegistryEntry(
+    entity_in_other_area = er.RegistryEntry(
         entity_id="light.in_other_area",
         unique_id="in-area-a-id",
         platform="test",
         device_id=device_in_area.id,
         area_id="other-area",
     )
-    entity_assigned_to_area = ent_reg.RegistryEntry(
+    entity_assigned_to_area = er.RegistryEntry(
         entity_id="light.assigned_to_area",
         unique_id="assigned-area-id",
         platform="test",
         device_id=device_in_area.id,
         area_id="test-area",
     )
-    entity_no_area = ent_reg.RegistryEntry(
+    entity_no_area = er.RegistryEntry(
         entity_id="light.no_area",
         unique_id="no-area-id",
         platform="test",
         device_id=device_no_area.id,
     )
-    config_entity_no_area = ent_reg.RegistryEntry(
+    config_entity_no_area = er.RegistryEntry(
         entity_id="light.config_no_area",
         unique_id="config-no-area-id",
         platform="test",
         device_id=device_no_area.id,
         entity_category=EntityCategory.CONFIG,
     )
-    hidden_entity_no_area = ent_reg.RegistryEntry(
+    hidden_entity_no_area = er.RegistryEntry(
         entity_id="light.hidden_no_area",
         unique_id="hidden-no-area-id",
         platform="test",
         device_id=device_no_area.id,
-        hidden_by=ent_reg.RegistryEntryHider.USER,
+        hidden_by=er.RegistryEntryHider.USER,
     )
-    entity_diff_area = ent_reg.RegistryEntry(
+    entity_diff_area = er.RegistryEntry(
         entity_id="light.diff_area",
         unique_id="diff-area-id",
         platform="test",
         device_id=device_diff_area.id,
     )
-    entity_in_area_a = ent_reg.RegistryEntry(
+    entity_in_area_a = er.RegistryEntry(
         entity_id="light.in_area_a",
         unique_id="in-area-a-id",
         platform="test",
         device_id=device_area_a.id,
         area_id="area-a",
     )
-    entity_in_area_b = ent_reg.RegistryEntry(
+    entity_in_area_b = er.RegistryEntry(
         entity_id="light.in_area_b",
         unique_id="in-area-b-id",
         platform="test",
@@ -402,11 +403,12 @@ class TestServiceHelpers(unittest.TestCase):
         assert mock_log.call_count == 3
 
 
-async def test_service_call_entry_id(hass: HomeAssistant) -> None:
+async def test_service_call_entry_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test service call with entity specified by entity registry ID."""
-    registry = ent_reg.async_get(hass)
     calls = async_mock_service(hass, "test_domain", "test_service")
-    entry = registry.async_get_or_create(
+    entry = entity_registry.async_get_or_create(
         "hello", "hue", "1234", suggested_object_id="world"
     )
 
@@ -424,7 +426,7 @@ async def test_service_call_entry_id(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("target", ("all", "none"))
-async def test_service_call_all_none(hass, target):
+async def test_service_call_all_none(hass: HomeAssistant, target) -> None:
     """Test service call targeting all."""
     calls = async_mock_service(hass, "test_domain", "test_service")
 
@@ -474,7 +476,7 @@ async def test_extract_entity_ids(hass: HomeAssistant) -> None:
     )
 
 
-async def test_extract_entity_ids_from_area(hass, area_mock):
+async def test_extract_entity_ids_from_area(hass: HomeAssistant, area_mock) -> None:
     """Test extract_entity_ids method with areas."""
     call = ServiceCall("light", "turn_on", {"area_id": "own-area"})
 
@@ -505,7 +507,7 @@ async def test_extract_entity_ids_from_area(hass, area_mock):
     )
 
 
-async def test_extract_entity_ids_from_devices(hass, area_mock):
+async def test_extract_entity_ids_from_devices(hass: HomeAssistant, area_mock) -> None:
     """Test extract_entity_ids method with devices."""
     assert await service.async_extract_entity_ids(
         hass, ServiceCall("light", "turn_on", {"device_id": "device-no-area-id"})
@@ -551,7 +553,7 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
     assert "fields" in descriptions[logger.DOMAIN]["set_level"]
 
 
-async def test_call_with_required_features(hass, mock_entities):
+async def test_call_with_required_features(hass: HomeAssistant, mock_entities) -> None:
     """Test service calls invoked only if entity has required features."""
     test_service_mock = AsyncMock(return_value=None)
     await service.entity_service_call(
@@ -585,7 +587,9 @@ async def test_call_with_required_features(hass, mock_entities):
     assert test_service_mock.call_count == 0
 
 
-async def test_call_with_both_required_features(hass, mock_entities):
+async def test_call_with_both_required_features(
+    hass: HomeAssistant, mock_entities
+) -> None:
     """Test service calls invoked only if entity has both features."""
     test_service_mock = AsyncMock(return_value=None)
     await service.entity_service_call(
@@ -602,7 +606,9 @@ async def test_call_with_both_required_features(hass, mock_entities):
     ]
 
 
-async def test_call_with_one_of_required_features(hass, mock_entities):
+async def test_call_with_one_of_required_features(
+    hass: HomeAssistant, mock_entities
+) -> None:
     """Test service calls invoked with one entity having the required features."""
     test_service_mock = AsyncMock(return_value=None)
     await service.entity_service_call(
@@ -623,7 +629,7 @@ async def test_call_with_one_of_required_features(hass, mock_entities):
     assert all(entity in actual for entity in expected)
 
 
-async def test_call_with_sync_func(hass, mock_entities):
+async def test_call_with_sync_func(hass: HomeAssistant, mock_entities) -> None:
     """Test invoking sync service calls."""
     test_service_mock = Mock(return_value=None)
     await service.entity_service_call(
@@ -635,7 +641,7 @@ async def test_call_with_sync_func(hass, mock_entities):
     assert test_service_mock.call_count == 1
 
 
-async def test_call_with_sync_attr(hass, mock_entities):
+async def test_call_with_sync_attr(hass: HomeAssistant, mock_entities) -> None:
     """Test invoking sync service calls."""
     mock_method = mock_entities["light.kitchen"].sync_method = Mock(return_value=None)
     await service.entity_service_call(
@@ -670,7 +676,9 @@ async def test_call_context_user_not_exist(hass: HomeAssistant) -> None:
     assert err.value.context.user_id == "non-existing"
 
 
-async def test_call_context_target_all(hass, mock_handle_entity_call, mock_entities):
+async def test_call_context_target_all(
+    hass: HomeAssistant, mock_handle_entity_call, mock_entities
+) -> None:
     """Check we only target allowed entities if targeting all."""
     with patch(
         "homeassistant.auth.AuthManager.async_get_user",
@@ -697,8 +705,8 @@ async def test_call_context_target_all(hass, mock_handle_entity_call, mock_entit
 
 
 async def test_call_context_target_specific(
-    hass, mock_handle_entity_call, mock_entities
-):
+    hass: HomeAssistant, mock_handle_entity_call, mock_entities
+) -> None:
     """Check targeting specific entities."""
     with patch(
         "homeassistant.auth.AuthManager.async_get_user",
@@ -725,8 +733,8 @@ async def test_call_context_target_specific(
 
 
 async def test_call_context_target_specific_no_auth(
-    hass, mock_handle_entity_call, mock_entities
-):
+    hass: HomeAssistant, mock_handle_entity_call, mock_entities
+) -> None:
     """Check targeting specific entities without auth."""
     with pytest.raises(exceptions.Unauthorized) as err, patch(
         "homeassistant.auth.AuthManager.async_get_user",
@@ -748,7 +756,9 @@ async def test_call_context_target_specific_no_auth(
     assert err.value.entity_id == "light.kitchen"
 
 
-async def test_call_no_context_target_all(hass, mock_handle_entity_call, mock_entities):
+async def test_call_no_context_target_all(
+    hass: HomeAssistant, mock_handle_entity_call, mock_entities
+) -> None:
     """Check we target all if no user context given."""
     await service.entity_service_call(
         hass,
@@ -766,8 +776,8 @@ async def test_call_no_context_target_all(hass, mock_handle_entity_call, mock_en
 
 
 async def test_call_no_context_target_specific(
-    hass, mock_handle_entity_call, mock_entities
-):
+    hass: HomeAssistant, mock_handle_entity_call, mock_entities
+) -> None:
     """Check we can target specified entities."""
     await service.entity_service_call(
         hass,
@@ -785,8 +795,11 @@ async def test_call_no_context_target_specific(
 
 
 async def test_call_with_match_all(
-    hass, mock_handle_entity_call, mock_entities, caplog
-):
+    hass: HomeAssistant,
+    mock_handle_entity_call,
+    mock_entities,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Check we only target allowed entities if targeting all."""
     await service.entity_service_call(
         hass,
@@ -801,7 +814,9 @@ async def test_call_with_match_all(
     )
 
 
-async def test_call_with_omit_entity_id(hass, mock_handle_entity_call, mock_entities):
+async def test_call_with_omit_entity_id(
+    hass: HomeAssistant, mock_handle_entity_call, mock_entities
+) -> None:
     """Check service call if we do not pass an entity ID."""
     await service.entity_service_call(
         hass,
@@ -813,7 +828,9 @@ async def test_call_with_omit_entity_id(hass, mock_handle_entity_call, mock_enti
     assert len(mock_handle_entity_call.mock_calls) == 0
 
 
-async def test_register_admin_service(hass, hass_read_only_user, hass_admin_user):
+async def test_register_admin_service(
+    hass: HomeAssistant, hass_read_only_user: MockUser, hass_admin_user: MockUser
+) -> None:
     """Test the register admin service."""
     calls = []
 
@@ -880,7 +897,7 @@ async def test_register_admin_service(hass, hass_read_only_user, hass_admin_user
     assert calls[0].context.user_id == hass_admin_user.id
 
 
-async def test_domain_control_not_async(hass, mock_entities):
+async def test_domain_control_not_async(hass: HomeAssistant, mock_entities) -> None:
     """Test domain verification in a service call with an unknown user."""
     calls = []
 
@@ -892,7 +909,7 @@ async def test_domain_control_not_async(hass, mock_entities):
         service.verify_domain_control(hass, "test_domain")(mock_service_log)
 
 
-async def test_domain_control_unknown(hass, mock_entities):
+async def test_domain_control_unknown(hass: HomeAssistant, mock_entities) -> None:
     """Test domain verification in a service call with an unknown user."""
     calls = []
 
@@ -923,12 +940,14 @@ async def test_domain_control_unknown(hass, mock_entities):
         assert len(calls) == 0
 
 
-async def test_domain_control_unauthorized(hass, hass_read_only_user):
+async def test_domain_control_unauthorized(
+    hass: HomeAssistant, hass_read_only_user: MockUser
+) -> None:
     """Test domain verification in a service call with an unauthorized user."""
     mock_registry(
         hass,
         {
-            "light.kitchen": ent_reg.RegistryEntry(
+            "light.kitchen": er.RegistryEntry(
                 entity_id="light.kitchen",
                 unique_id="kitchen",
                 platform="test_domain",
@@ -962,12 +981,14 @@ async def test_domain_control_unauthorized(hass, hass_read_only_user):
     assert len(calls) == 0
 
 
-async def test_domain_control_admin(hass, hass_admin_user):
+async def test_domain_control_admin(
+    hass: HomeAssistant, hass_admin_user: MockUser
+) -> None:
     """Test domain verification in a service call with an admin user."""
     mock_registry(
         hass,
         {
-            "light.kitchen": ent_reg.RegistryEntry(
+            "light.kitchen": er.RegistryEntry(
                 entity_id="light.kitchen",
                 unique_id="kitchen",
                 platform="test_domain",
@@ -1005,7 +1026,7 @@ async def test_domain_control_no_user(hass: HomeAssistant) -> None:
     mock_registry(
         hass,
         {
-            "light.kitchen": ent_reg.RegistryEntry(
+            "light.kitchen": er.RegistryEntry(
                 entity_id="light.kitchen",
                 unique_id="kitchen",
                 platform="test_domain",
@@ -1114,7 +1135,7 @@ async def test_extract_from_service_filter_out_non_existing_entities(
     ]
 
 
-async def test_extract_from_service_area_id(hass, area_mock):
+async def test_extract_from_service_area_id(hass: HomeAssistant, area_mock) -> None:
     """Test the extraction using area ID as reference."""
     entities = [
         MockEntity(name="in_area", entity_id="light.in_area"),
@@ -1149,7 +1170,9 @@ async def test_extract_from_service_area_id(hass, area_mock):
     ]
 
 
-async def test_entity_service_call_warn_referenced(hass, caplog):
+async def test_entity_service_call_warn_referenced(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test we only warn for referenced entities in entity_service_call."""
     call = ServiceCall(
         "light",
@@ -1167,7 +1190,9 @@ async def test_entity_service_call_warn_referenced(hass, caplog):
     )
 
 
-async def test_async_extract_entities_warn_referenced(hass, caplog):
+async def test_async_extract_entities_warn_referenced(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test we only warn for referenced entities in async_extract_entities."""
     call = ServiceCall(
         "light",
@@ -1189,9 +1214,7 @@ async def test_async_extract_entities_warn_referenced(hass, caplog):
 async def test_async_extract_config_entry_ids(hass: HomeAssistant) -> None:
     """Test we can find devices that have no entities."""
 
-    device_no_entities = dev_reg.DeviceEntry(
-        id="device-no-entities", config_entries={"abc"}
-    )
+    device_no_entities = dr.DeviceEntry(id="device-no-entities", config_entries={"abc"})
 
     call = ServiceCall(
         "homeassistant",

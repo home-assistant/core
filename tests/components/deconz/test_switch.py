@@ -29,7 +29,9 @@ async def test_no_switches(
     assert len(hass.states.async_all()) == 0
 
 
-async def test_power_plugs(hass, aioclient_mock, mock_deconz_websocket):
+async def test_power_plugs(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test that all supported switch entities are created."""
     data = {
         "lights": {

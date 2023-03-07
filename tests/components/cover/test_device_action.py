@@ -5,7 +5,8 @@ import homeassistant.components.automation as automation
 from homeassistant.components.cover import DOMAIN, CoverEntityFeature
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import CONF_PLATFORM, EntityCategory
-from homeassistant.helpers import device_registry as dr
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
@@ -20,7 +21,7 @@ from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa:
 
 
 @pytest.mark.parametrize(
-    "set_state,features_reg,features_state,expected_action_types",
+    ("set_state", "features_reg", "features_state", "expected_action_types"),
     [
         (False, 0, 0, []),
         (False, CoverEntityFeature.CLOSE_TILT, 0, ["close_tilt"]),
@@ -41,14 +42,14 @@ from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa:
     ],
 )
 async def test_get_actions(
-    hass,
-    device_registry,
-    entity_registry,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     set_state,
     features_reg,
     features_state,
     expected_action_types,
-):
+) -> None:
     """Test we get the expected actions from a cover."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -87,7 +88,7 @@ async def test_get_actions(
 
 
 @pytest.mark.parametrize(
-    "hidden_by,entity_category",
+    ("hidden_by", "entity_category"),
     (
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
@@ -96,12 +97,12 @@ async def test_get_actions(
     ),
 )
 async def test_get_actions_hidden_auxiliary(
-    hass,
-    device_registry,
-    entity_registry,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     hidden_by,
     entity_category,
-):
+) -> None:
     """Test we get the expected actions from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -136,8 +137,11 @@ async def test_get_actions_hidden_auxiliary(
 
 
 async def test_get_action_capabilities(
-    hass, device_registry, entity_registry, enable_custom_integrations
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    enable_custom_integrations: None,
+) -> None:
     """Test we get the expected capabilities from a cover action."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init(empty=True)
@@ -183,8 +187,11 @@ async def test_get_action_capabilities(
 
 
 async def test_get_action_capabilities_set_pos(
-    hass, device_registry, entity_registry, enable_custom_integrations
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    enable_custom_integrations: None,
+) -> None:
     """Test we get the expected capabilities from a cover action."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -231,8 +238,11 @@ async def test_get_action_capabilities_set_pos(
 
 
 async def test_get_action_capabilities_set_tilt_pos(
-    hass, device_registry, entity_registry, enable_custom_integrations
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    enable_custom_integrations: None,
+) -> None:
     """Test we get the expected capabilities from a cover action."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -278,7 +288,7 @@ async def test_get_action_capabilities_set_tilt_pos(
             assert capabilities == {"extra_fields": []}
 
 
-async def test_action(hass, enable_custom_integrations):
+async def test_action(hass: HomeAssistant, enable_custom_integrations: None) -> None:
     """Test for cover actions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -344,7 +354,9 @@ async def test_action(hass, enable_custom_integrations):
     assert len(stop_calls) == 1
 
 
-async def test_action_tilt(hass, enable_custom_integrations):
+async def test_action_tilt(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test for cover tilt actions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -397,7 +409,9 @@ async def test_action_tilt(hass, enable_custom_integrations):
     assert len(close_calls) == 1
 
 
-async def test_action_set_position(hass, enable_custom_integrations):
+async def test_action_set_position(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test for cover set position actions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()

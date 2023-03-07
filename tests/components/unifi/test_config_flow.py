@@ -87,7 +87,9 @@ DPI_GROUPS = [
 ]
 
 
-async def test_flow_works(hass, aioclient_mock, mock_discovery):
+async def test_flow_works(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_discovery
+) -> None:
     """Test config flow."""
     mock_discovery.return_value = "1"
     result = await hass.config_entries.flow.async_init(
@@ -146,7 +148,9 @@ async def test_flow_works(hass, aioclient_mock, mock_discovery):
     }
 
 
-async def test_flow_works_negative_discovery(hass, aioclient_mock, mock_discovery):
+async def test_flow_works_negative_discovery(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_discovery
+) -> None:
     """Test config flow with a negative outcome of async_discovery_unifi."""
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}

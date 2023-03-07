@@ -145,7 +145,7 @@ async def test_distance_sensor(
 
 
 @pytest.mark.parametrize(
-    "unit_system, unit",
+    ("unit_system", "unit"),
     [
         (METRIC_SYSTEM, UnitOfTemperature.CELSIUS),
         (US_CUSTOMARY_SYSTEM, UnitOfTemperature.FAHRENHEIT),

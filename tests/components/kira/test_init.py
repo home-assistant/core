@@ -66,14 +66,14 @@ async def test_kira_setup(hass: HomeAssistant) -> None:
     ]
 
 
-async def test_kira_creates_codes(work_dir):
+async def test_kira_creates_codes(work_dir) -> None:
     """Kira module should create codes file if missing."""
     code_path = os.path.join(work_dir, "codes.yaml")
     kira.load_codes(code_path)
     assert os.path.exists(code_path), "Kira component didn't create codes file"
 
 
-async def test_load_codes(work_dir):
+async def test_load_codes(work_dir) -> None:
     """Kira should ignore invalid codes."""
     code_path = os.path.join(work_dir, "codes.yaml")
     with open(code_path, "w") as code_file:

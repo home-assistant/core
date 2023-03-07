@@ -112,7 +112,7 @@ async def test_setting_sensor_value_via_mqtt_message(
 
 
 @pytest.mark.parametrize(
-    "device_class,native_value,state_value,log",
+    ("device_class", "native_value", "state_value", "log"),
     [
         (sensor.SensorDeviceClass.DATE, "2021-11-18", "2021-11-18", False),
         (sensor.SensorDeviceClass.DATE, "invalid", STATE_UNKNOWN, True),
@@ -133,6 +133,12 @@ async def test_setting_sensor_value_via_mqtt_message(
             "2021-11-18 20:25:00+01:00",
             "2021-11-18T19:25:00+00:00",
             False,
+        ),
+        (
+            sensor.SensorDeviceClass.TIMESTAMP,
+            "2021-13-18T35:25:00+00:00",
+            STATE_UNKNOWN,
+            True,
         ),
         (sensor.SensorDeviceClass.TIMESTAMP, "invalid", STATE_UNKNOWN, True),
     ],
@@ -1363,7 +1369,7 @@ async def test_skip_restoring_state_with_over_due_expire_trigger(
 
 
 @pytest.mark.parametrize(
-    "topic,value,attribute,attribute_value",
+    ("topic", "value", "attribute", "attribute_value"),
     [
         ("state_topic", "2.21", None, "2.21"),
         ("state_topic", "beer", None, "beer"),

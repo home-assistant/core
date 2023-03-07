@@ -227,7 +227,9 @@ async def test_form_zeroconf_correct_oui(hass: HomeAssistant) -> None:
         None,
     ],
 )
-async def test_form_zeroconf_correct_oui_wrong_device(hass, doorbell_state_side_effect):
+async def test_form_zeroconf_correct_oui_wrong_device(
+    hass: HomeAssistant, doorbell_state_side_effect
+) -> None:
     """Test we can setup from zeroconf with the correct OUI source but not a doorstation."""
     doorbirdapi = _get_mock_doorbirdapi_return_values(
         ready=[True], info={"WIFI_MAC_ADDR": "macaddr"}

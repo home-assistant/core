@@ -54,7 +54,6 @@ class LIFXHevCycleBinarySensorEntity(LIFXSensorEntity, BinarySensorEntity):
         """Initialise the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = description.name
         self._attr_unique_id = f"{coordinator.parent.serial_number}_{description.key}"
         self._async_update_attrs()
 

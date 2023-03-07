@@ -48,7 +48,7 @@ SUM_VALUE = sum(VALUES)
 
 
 @pytest.mark.parametrize(
-    "sensor_type, result, attributes",
+    ("sensor_type", "result", "attributes"),
     [
         ("min", MIN_VALUE, {ATTR_MIN_ENTITY_ID: "sensor.test_3"}),
         ("max", MAX_VALUE, {ATTR_MAX_ENTITY_ID: "sensor.test_2"}),
@@ -368,3 +368,28 @@ async def test_sensor_calculated_properties(hass: HomeAssistant) -> None:
     assert state.attributes.get("device_class") is None
     assert state.attributes.get("state_class") is None
     assert state.attributes.get("unit_of_measurement") is None
+
+
+async def test_last_sensor(hass: HomeAssistant) -> None:
+    """Test the last sensor."""
+    config = {
+        SENSOR_DOMAIN: {
+            "platform": GROUP_DOMAIN,
+            "name": "test_last",
+            "type": "last",
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "unique_id": "very_unique_id_last_sensor",
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    entity_ids = config["sensor"]["entities"]
+
+    for entity_id, value in dict(zip(entity_ids, VALUES)).items():
+        hass.states.async_set(entity_id, value)
+        await hass.async_block_till_done()
+        state = hass.states.get("sensor.test_last")
+        assert str(float(value)) == state.state
+        assert entity_id == state.attributes.get("last_entity_id")

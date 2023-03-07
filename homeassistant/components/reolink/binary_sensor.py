@@ -1,4 +1,4 @@
-"""This component provides support for Reolink binary sensors."""
+"""Component providing support for Reolink binary sensors."""
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -116,7 +116,6 @@ async def async_setup_entry(
 class ReolinkBinarySensorEntity(ReolinkCoordinatorEntity, BinarySensorEntity):
     """Base binary-sensor class for Reolink IP camera motion sensors."""
 
-    _attr_has_entity_name = True
     entity_description: ReolinkBinarySensorEntityDescription
 
     def __init__(
