@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine, Iterable
-import copy
 from functools import lru_cache
 import inspect
 from itertools import chain, groupby
@@ -683,8 +682,8 @@ class MQTT:
                 _LOGGER.debug("Subscribing to %s, mid: %s, qos: %s", topic, mid, qos)
             return subscribe_result_list
 
-        subscriptions = copy.copy(self._pending_subscriptions)
-        self._pending_subscriptions.clear()
+        subscriptions = self._pending_subscriptions
+        self._pending_subscriptions = {}
 
         async with self._paho_lock:
             results = await self.hass.async_add_executor_job(
