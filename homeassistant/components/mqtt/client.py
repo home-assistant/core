@@ -588,13 +588,9 @@ class MQTT:
         async with self._pending_subscriptions_lock:
             for subscription in subscriptions:
                 topic, qos = subscription
-                old_qos: int = self._max_qos.setdefault(topic, qos) or 0
-                new_qos = max([old_qos, qos])
-                if new_qos > old_qos:
-                    self._max_qos[topic] = new_qos
-                if self._pending_subscriptions.setdefault(topic, new_qos) < new_qos:
-                    # update the qos if the existing value has a lower qos
-                    self._pending_subscriptions[topic] = new_qos
+                max_qos = max(qos, self._max_qos.setdefault(topic, qos))
+                self._max_qos[topic] = max_qos
+                self._pending_subscriptions[topic] = max_qos
         if queue_only:
             return
         self._subscribe_debouncer.async_schedule()
@@ -629,11 +625,11 @@ class MQTT:
             """Remove subscription."""
             self._async_untrack_subscription(subscription)
             self._matching_subscriptions.cache_clear()
+            subs = self._matching_subscriptions(topic)
             max_qos: int | None = self._max_qos.get(topic)
-            new_max: int | None = (
-                self._max_qos_from_subscriptions(topic) if max_qos is not None else None
+            self._max_qos[topic] = (
+                max(sub.qos for sub in subs) if subs and max_qos is not None else 0
             )
-            self._max_qos[topic] = new_max or 0
 
             # Only unsubscribe if currently connected
             if self.connected:
@@ -802,12 +798,6 @@ class MQTT:
             if subscription.matcher(topic):
                 subscriptions.append(subscription)
         return subscriptions
-
-    def _max_qos_from_subscriptions(self, topic: str) -> int | None:
-        """Get the highest current QoS according to the subscriptions."""
-        subs = self._matching_subscriptions(topic)
-        # pylint: disable-next=[consider-using-generator]
-        return max([sub.qos for sub in subs]) if subs else None
 
     @callback
     def _mqtt_handle_message(self, msg: mqtt.MQTTMessage) -> None:
