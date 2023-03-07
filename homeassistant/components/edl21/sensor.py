@@ -38,7 +38,13 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utcnow
 
-from .const import CONF_SERIAL_PORT, DOMAIN, LOGGER, SIGNAL_EDL21_TELEGRAM
+from .const import (
+    CONF_SERIAL_PORT,
+    DEFAULT_DEVICE_NAME,
+    DOMAIN,
+    LOGGER,
+    SIGNAL_EDL21_TELEGRAM,
+)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
@@ -438,7 +444,7 @@ class EDL21Entity(SensorEntity):
         self._attr_unique_id = f"{electricity_id}_{obis}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._electricity_id)},
-            name=self._electricity_id,
+            name=DEFAULT_DEVICE_NAME,
         )
 
     async def async_added_to_hass(self) -> None:
