@@ -3390,6 +3390,11 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "monessen": {
+      "name": "Monessen",
+      "integration_type": "virtual",
+      "supported_by": "intellifire"
+    },
     "monoprice": {
       "name": "Monoprice 6-Zone Amplifier",
       "integration_type": "hub",
