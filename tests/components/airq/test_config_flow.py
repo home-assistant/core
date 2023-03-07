@@ -39,8 +39,11 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch("aioairq.AirQ.validate"), patch(
-        "aioairq.AirQ.fetch_device_info", return_value=TEST_DEVICE_INFO
+    with patch(
+        "aioairq.AirQ.fetch_device_info", return_value=TEST_DEVICE_INFO.copy()
+    ), patch(
+        "homeassistant.components.airq.async_setup_entry",
+        return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -96,6 +99,27 @@ async def test_form_invalid_input(hass: HomeAssistant) -> None:
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_input"}
+
+
+async def test_duplicate_error(hass: HomeAssistant) -> None:
+    """Test that errors are shown when duplicates are added."""
+    MockConfigEntry(
+        data=TEST_USER_DATA,
+        domain=DOMAIN,
+        unique_id=TEST_DEVICE_INFO["id"],
+    ).add_to_hass(hass)
+
+    with patch(
+        "aioairq.AirQ.fetch_device_info", return_value=TEST_DEVICE_INFO.copy()
+    ), patch(
+        "homeassistant.components.airq.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=TEST_USER_DATA
+        )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_reauth(hass: HomeAssistant) -> None:
