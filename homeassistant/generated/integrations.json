@@ -3085,6 +3085,11 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "majestic": {
+      "name": "Majestic",
+      "integration_type": "virtual",
+      "supported_by": "intellifire"
+    },
     "manual": {
       "name": "Manual Alarm Control Panel",
       "integration_type": "hub",
