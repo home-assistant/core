@@ -6,6 +6,7 @@ import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import Literal
 
 from aiohttp import ClientConnectorError
 import async_timeout
@@ -27,7 +28,11 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CAMERA,
+    Platform.LIGHT,
     Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SIREN,
+    Platform.SWITCH,
     Platform.UPDATE,
 ]
 DEVICE_UPDATE_INTERVAL = timedelta(seconds=60)
@@ -39,8 +44,8 @@ class ReolinkData:
     """Data for the Reolink integration."""
 
     host: ReolinkHost
-    device_coordinator: DataUpdateCoordinator
-    firmware_coordinator: DataUpdateCoordinator
+    device_coordinator: DataUpdateCoordinator[None]
+    firmware_coordinator: DataUpdateCoordinator[str | Literal[False]]
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -70,7 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, host.stop)
     )
 
-    async def async_device_config_update():
+    async def async_device_config_update() -> None:
         """Update the host state cache and renew the ONVIF-subscription."""
         async with async_timeout.timeout(host.api.timeout):
             try:
@@ -83,7 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         async with async_timeout.timeout(host.api.timeout):
             await host.renew()
 
-    async def async_check_firmware_update():
+    async def async_check_firmware_update() -> str | Literal[False]:
         """Check for firmware updates."""
         if not host.api.supported(None, "update"):
             return False
