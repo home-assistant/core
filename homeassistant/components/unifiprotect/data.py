@@ -215,7 +215,7 @@ class ProtectData:
             return
 
         obj = message.new_obj
-        if isinstance(obj, (ProtectAdoptableDeviceModel, NVR)):
+        if isinstance(obj, ProtectAdoptableDeviceModel | NVR):
             if message.old_obj is None and isinstance(obj, ProtectAdoptableDeviceModel):
                 self._async_add_device(obj)
             elif getattr(obj, "is_adopted_by_us", True):

@@ -254,7 +254,7 @@ class OpeningDeviceBase(HomeAccessory):
         if not self._supports_tilt:
             return
         current_tilt = new_state.attributes.get(ATTR_CURRENT_TILT_POSITION)
-        if not isinstance(current_tilt, (float, int)):
+        if not isinstance(current_tilt, float | int):
             return
         # HomeKit sends values between -90 and 90.
         # We'll have to normalize to [0,100]
@@ -311,7 +311,7 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
     def async_update_state(self, new_state: State) -> None:
         """Update cover position and tilt after state changed."""
         current_position = new_state.attributes.get(ATTR_CURRENT_POSITION)
-        if isinstance(current_position, (float, int)):
+        if isinstance(current_position, float | int):
             current_position = int(current_position)
             self.char_current_position.set_value(current_position)
             # Writing target_position on a moving cover

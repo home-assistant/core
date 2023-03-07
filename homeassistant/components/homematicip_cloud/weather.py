@@ -59,7 +59,7 @@ async def async_setup_entry(
     for device in hap.home.devices:
         if isinstance(device, AsyncWeatherSensorPro):
             entities.append(HomematicipWeatherSensorPro(hap, device))
-        elif isinstance(device, (AsyncWeatherSensor, AsyncWeatherSensorPlus)):
+        elif isinstance(device, AsyncWeatherSensor | AsyncWeatherSensorPlus):
             entities.append(HomematicipWeatherSensor(hap, device))
 
     entities.append(HomematicipHomeWeather(hap))

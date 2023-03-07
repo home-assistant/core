@@ -45,12 +45,10 @@ async def async_setup_entry(
         for device in coordinator.data.values()
         if isinstance(
             device,
-            (
-                SwitchBeeTimedSwitch,
-                SwitchBeeGroupSwitch,
-                SwitchBeeSwitch,
-                SwitchBeeTimerSwitch,
-            ),
+            SwitchBeeTimedSwitch
+            | SwitchBeeGroupSwitch
+            | SwitchBeeSwitch
+            | SwitchBeeTimerSwitch,
         )
     )
 

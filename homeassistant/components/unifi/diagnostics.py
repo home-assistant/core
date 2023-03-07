@@ -40,7 +40,7 @@ def async_replace_dict_data(
     for key, value in data.items():
         if isinstance(value, dict):
             redacted[key] = async_replace_dict_data(value, to_replace)
-        elif isinstance(value, (list, set, tuple)):
+        elif isinstance(value, list | set | tuple):
             redacted[key] = async_replace_list_data(value, to_replace)
         elif isinstance(value, str):
             if value in to_replace:
@@ -58,7 +58,7 @@ def async_replace_list_data(
     redacted = []
     for item in data:
         new_value: Any | None = None
-        if isinstance(item, (list, set, tuple)):
+        if isinstance(item, list | set | tuple):
             new_value = async_replace_list_data(item, to_replace)
         elif isinstance(item, Mapping):
             new_value = async_replace_dict_data(item, to_replace)

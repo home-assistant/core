@@ -80,7 +80,7 @@ class WemoSwitch(WemoBinaryStateEntity, SwitchEntity):
             else:
                 attr[ATTR_SWITCH_MODE] = MAKER_SWITCH_TOGGLE
 
-        if isinstance(self.wemo, (Insight, CoffeeMaker)):
+        if isinstance(self.wemo, Insight | CoffeeMaker):
             attr[ATTR_CURRENT_STATE_DETAIL] = self.detail_state
 
         if isinstance(self.wemo, Insight):

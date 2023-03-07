@@ -390,7 +390,7 @@ def aiohttp_client(
         **kwargs: Any,
     ) -> TestClient:
         if isinstance(__param, Callable) and not isinstance(  # type: ignore[arg-type]
-            __param, (Application, BaseTestServer)
+            __param, Application | BaseTestServer
         ):
             __param = __param(loop, *args, **kwargs)
             kwargs = {}

@@ -177,7 +177,7 @@ class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
             self._attr_is_on = True
 
     def _apply_event_standard(self, event: rfxtrxmod.RFXtrxEvent) -> None:
-        assert isinstance(event, (rfxtrxmod.SensorEvent, rfxtrxmod.ControlEvent))
+        assert isinstance(event, rfxtrxmod.SensorEvent | rfxtrxmod.ControlEvent)
         if event.values.get("Command") in COMMAND_ON_LIST:
             self._attr_is_on = True
         elif event.values.get("Command") in COMMAND_OFF_LIST:

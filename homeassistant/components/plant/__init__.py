@@ -373,7 +373,7 @@ class DailyHistory:
     def add_measurement(self, value, timestamp=None):
         """Add a new measurement for a certain day."""
         day = (timestamp or datetime.now()).date()
-        if not isinstance(value, (int, float)):
+        if not isinstance(value, int | float):
             return
         if self._days is None:
             self._days = deque()
@@ -398,6 +398,6 @@ class DailyHistory:
             oldest = self._days.popleft()
             del self._max_dict[oldest]
         self._days.append(day)
-        if not isinstance(value, (int, float)):
+        if not isinstance(value, int | float):
             return
         self._max_dict[day] = value

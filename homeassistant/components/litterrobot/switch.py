@@ -85,6 +85,6 @@ async def async_setup_entry(
         RobotSwitchEntity(robot=robot, hub=hub, description=description)
         for description in ROBOT_SWITCHES
         for robot in hub.account.robots
-        if isinstance(robot, (LitterRobot, FeederRobot))
+        if isinstance(robot, LitterRobot | FeederRobot)
     ]
     async_add_entities(entities)

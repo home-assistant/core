@@ -115,7 +115,7 @@ class SwissHydrologicalDataSensor(SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        if isinstance(self._state, (int, float)):
+        if isinstance(self._state, int | float):
             return round(self._state, 2)
         return None
 

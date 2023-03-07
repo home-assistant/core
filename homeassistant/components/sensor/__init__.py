@@ -574,7 +574,7 @@ class SensorEntity(Entity):
 
         # From here on a numerical value is expected
         numerical_value: int | float | Decimal
-        if not isinstance(value, (int, float, Decimal)):
+        if not isinstance(value, int | float | Decimal):
             try:
                 if isinstance(value, str) and "." not in value and "e" not in value:
                     numerical_value = int(value)
@@ -816,7 +816,7 @@ class SensorExtraStoredData(ExtraStoredData):
         native_value: StateType | date | datetime | Decimal | dict[
             str, str
         ] = self.native_value
-        if isinstance(native_value, (date, datetime)):
+        if isinstance(native_value, date | datetime):
             native_value = {
                 "__type": str(type(native_value)),
                 "isoformat": native_value.isoformat(),

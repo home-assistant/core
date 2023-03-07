@@ -239,7 +239,7 @@ class Light(HomeAccessory):
         if (
             self.brightness_supported
             and (brightness := attributes.get(ATTR_BRIGHTNESS)) is not None
-            and isinstance(brightness, (int, float))
+            and isinstance(brightness, int | float)
         ):
             brightness = round(brightness / 255 * 100, 0)
             # The homeassistant component might report its brightness as 0 but is
@@ -267,7 +267,7 @@ class Light(HomeAccessory):
                 hue, saturation = 0, 0
             else:
                 hue, saturation = attributes.get(ATTR_HS_COLOR, (None, None))
-            if isinstance(hue, (int, float)) and isinstance(saturation, (int, float)):
+            if isinstance(hue, int | float) and isinstance(saturation, int | float):
                 self.char_hue.set_value(round(hue, 0))
                 self.char_saturation.set_value(round(saturation, 0))
                 if color_mode_changed:
@@ -284,7 +284,7 @@ class Light(HomeAccessory):
                     color_temp = color_temperature_kelvin_to_mired(color_temp_kelvin)
             elif color_mode == ColorMode.WHITE:
                 color_temp = self.min_mireds
-            if isinstance(color_temp, (int, float)):
+            if isinstance(color_temp, int | float):
                 self.char_color_temp.set_value(round(color_temp, 0))
                 if color_mode_changed:
                     self.char_color_temp.notify()

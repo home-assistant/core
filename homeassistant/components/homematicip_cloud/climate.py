@@ -325,11 +325,9 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         for device in self._device.devices:
             if isinstance(
                 device,
-                (
-                    AsyncHeatingThermostat,
-                    AsyncHeatingThermostatCompact,
-                    AsyncHeatingThermostatEvo,
-                ),
+                AsyncHeatingThermostat
+                | AsyncHeatingThermostatCompact
+                | AsyncHeatingThermostatEvo,
             ):
                 return device
 

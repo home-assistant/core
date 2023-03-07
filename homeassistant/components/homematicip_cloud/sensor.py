@@ -78,58 +78,50 @@ async def async_setup_entry(
             entities.append(HomematicipAccesspointDutyCycle(hap, device))
         if isinstance(
             device,
-            (
-                AsyncHeatingThermostat,
-                AsyncHeatingThermostatCompact,
-                AsyncHeatingThermostatEvo,
-            ),
+            AsyncHeatingThermostat
+            | AsyncHeatingThermostatCompact
+            | AsyncHeatingThermostatEvo,
         ):
             entities.append(HomematicipHeatingThermostat(hap, device))
             entities.append(HomematicipTemperatureSensor(hap, device))
         if isinstance(
             device,
-            (
-                AsyncTemperatureHumiditySensorDisplay,
-                AsyncTemperatureHumiditySensorWithoutDisplay,
-                AsyncTemperatureHumiditySensorOutdoor,
-                AsyncWeatherSensor,
-                AsyncWeatherSensorPlus,
-                AsyncWeatherSensorPro,
-            ),
+            AsyncTemperatureHumiditySensorDisplay
+            | AsyncTemperatureHumiditySensorWithoutDisplay
+            | AsyncTemperatureHumiditySensorOutdoor
+            | AsyncWeatherSensor
+            | AsyncWeatherSensorPlus
+            | AsyncWeatherSensorPro,
         ):
             entities.append(HomematicipTemperatureSensor(hap, device))
             entities.append(HomematicipHumiditySensor(hap, device))
-        elif isinstance(device, (AsyncRoomControlDeviceAnalog,)):
+        elif isinstance(device, AsyncRoomControlDeviceAnalog):
             entities.append(HomematicipTemperatureSensor(hap, device))
         if isinstance(
             device,
-            (
-                AsyncLightSensor,
-                AsyncMotionDetectorIndoor,
-                AsyncMotionDetectorOutdoor,
-                AsyncMotionDetectorPushButton,
-                AsyncPresenceDetectorIndoor,
-                AsyncWeatherSensor,
-                AsyncWeatherSensorPlus,
-                AsyncWeatherSensorPro,
-            ),
+            AsyncLightSensor
+            | AsyncMotionDetectorIndoor
+            | AsyncMotionDetectorOutdoor
+            | AsyncMotionDetectorPushButton
+            | AsyncPresenceDetectorIndoor
+            | AsyncWeatherSensor
+            | AsyncWeatherSensorPlus
+            | AsyncWeatherSensorPro,
         ):
             entities.append(HomematicipIlluminanceSensor(hap, device))
         if isinstance(
             device,
-            (
-                AsyncPlugableSwitchMeasuring,
-                AsyncBrandSwitchMeasuring,
-                AsyncFullFlushSwitchMeasuring,
-            ),
+            AsyncPlugableSwitchMeasuring
+            | AsyncBrandSwitchMeasuring
+            | AsyncFullFlushSwitchMeasuring,
         ):
             entities.append(HomematicipPowerSensor(hap, device))
             entities.append(HomematicipEnergySensor(hap, device))
         if isinstance(
-            device, (AsyncWeatherSensor, AsyncWeatherSensorPlus, AsyncWeatherSensorPro)
+            device, AsyncWeatherSensor | AsyncWeatherSensorPlus | AsyncWeatherSensorPro
         ):
             entities.append(HomematicipWindspeedSensor(hap, device))
-        if isinstance(device, (AsyncWeatherSensorPlus, AsyncWeatherSensorPro)):
+        if isinstance(device, AsyncWeatherSensorPlus | AsyncWeatherSensorPro):
             entities.append(HomematicipTodayRainSensor(hap, device))
         if isinstance(device, AsyncPassageDetector):
             entities.append(HomematicipPassageDetectorDeltaCounter(hap, device))

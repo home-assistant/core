@@ -203,6 +203,6 @@ class AsusWrtSensor(CoordinatorEntity, SensorEntity):
         """Return current state."""
         descr = self.entity_description
         state: float | int | str | None = self.coordinator.data.get(descr.key)
-        if state is not None and descr.factor and isinstance(state, (float, int)):
+        if state is not None and descr.factor and isinstance(state, float | int):
             return state / descr.factor
         return state

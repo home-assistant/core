@@ -167,7 +167,7 @@ def parse_mapping(mapping, parents=None):
     if parents is None:
         parents = []
     for addr, val in mapping.items():
-        if isinstance(addr, (str,)) and isinstance(val, (str,)):
+        if isinstance(addr, str) and isinstance(val, str):
             yield (addr, PhysicalAddress(val))
         else:
             cur = parents + [addr]
@@ -243,7 +243,7 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
                 _LOGGER.warning("Unknown command %s", cmd)
 
     def _process_volume(cmd, att):
-        if isinstance(att, (str,)):
+        if isinstance(att, str):
             att = att.strip()
         if att == CMD_PRESS:
             hdmi_network.send_command(KeyPressCommand(cmd, dst=ADDR_AUDIOSYSTEM))
@@ -269,7 +269,7 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
                 _LOGGER.error("Attribute 'cmd' is missing")
                 return
             if ATTR_ATT in data:
-                if isinstance(data[ATTR_ATT], (list,)):
+                if isinstance(data[ATTR_ATT], list):
                     att = data[ATTR_ATT]
                 else:
                     att = reduce(lambda x, y: f"{x}:{y:x}", data[ATTR_ATT])
@@ -302,7 +302,7 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
                         "Device %s has not physical address", call.data[ATTR_DEVICE]
                     )
                     return
-        if not isinstance(addr, (PhysicalAddress,)):
+        if not isinstance(addr, PhysicalAddress):
             addr = PhysicalAddress(addr)
         hdmi_network.active_source(addr)
         _LOGGER.info("Selected %s (%s)", call.data[ATTR_DEVICE], addr)

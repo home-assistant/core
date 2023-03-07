@@ -351,11 +351,9 @@ async def async_setup_entry(  # noqa: C901
         """Start reauth flow if appropriate connect error type."""
         if isinstance(
             err,
-            (
-                RequiresEncryptionAPIError,
-                InvalidEncryptionKeyAPIError,
-                InvalidAuthAPIError,
-            ),
+            RequiresEncryptionAPIError
+            | InvalidEncryptionKeyAPIError
+            | InvalidAuthAPIError,
         ):
             entry.async_start_reauth(hass)
 

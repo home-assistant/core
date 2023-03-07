@@ -140,7 +140,7 @@ class GraphiteFeeder(threading.Thread):
             "%s.%s.%s %f %i"
             % (self._prefix, entity_id, key.replace(" ", "_"), value, now)
             for key, value in things.items()
-            if isinstance(value, (float, int))
+            if isinstance(value, float | int)
         ]
         if not lines:
             return

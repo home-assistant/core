@@ -248,7 +248,7 @@ def _event_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, str]:
     """Convert CalendarEvent dataclass items to dictionary of attributes."""
     result: dict[str, str] = {}
     for name, value in obj:
-        if isinstance(value, (datetime.datetime, datetime.date)):
+        if isinstance(value, datetime.datetime | datetime.date):
             result[name] = value.isoformat()
         elif value is not None:
             result[name] = str(value)

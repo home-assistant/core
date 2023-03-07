@@ -24,7 +24,7 @@ def async_redact_data(data: _T, to_redact: Iterable[Any]) -> _T:
 @callback
 def async_redact_data(data: _T, to_redact: Iterable[Any]) -> _T:
     """Redact sensitive data in a dict."""
-    if not isinstance(data, (Mapping, list)):
+    if not isinstance(data, Mapping | list):
         return data
 
     if isinstance(data, list):

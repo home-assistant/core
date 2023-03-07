@@ -505,10 +505,10 @@ class KNXModule:
         data: int | tuple[int, ...] | None = None
         value = None
         if (
-            isinstance(telegram.payload, (GroupValueWrite, GroupValueResponse))
+            isinstance(telegram.payload, GroupValueWrite | GroupValueResponse)
             and telegram.payload.value is not None
             and isinstance(
-                telegram.destination_address, (GroupAddress, InternalGroupAddress)
+                telegram.destination_address, GroupAddress | InternalGroupAddress
             )
         ):
             data = telegram.payload.value.value

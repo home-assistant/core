@@ -54,7 +54,7 @@ async def async_setup_entry(
         elif isinstance(device, AsyncFullFlushShutter):
             entities.append(HomematicipCoverShutter(hap, device))
         elif isinstance(
-            device, (AsyncHoermannDrivesModule, AsyncGarageDoorModuleTormatic)
+            device, AsyncHoermannDrivesModule | AsyncGarageDoorModuleTormatic
         ):
             entities.append(HomematicipGarageDoorModule(hap, device))
 

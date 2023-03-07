@@ -123,7 +123,7 @@ def get_plug_devices(hass, entity_configs):
         if state.state == STATE_ON or state.domain == SENSOR_DOMAIN:
             if CONF_POWER in entity_config:
                 power_val = entity_config[CONF_POWER]
-                if isinstance(power_val, (float, int)):
+                if isinstance(power_val, float | int):
                     power = float(power_val)
                 elif isinstance(power_val, str):
                     power = float(hass.states.get(power_val).state)

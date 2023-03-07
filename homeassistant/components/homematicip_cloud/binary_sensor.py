@@ -94,24 +94,20 @@ async def async_setup_entry(
                 entities.append(
                     HomematicipMultiContactInterface(hap, device, channel=channel)
                 )
-        elif isinstance(
-            device, (AsyncContactInterface, AsyncFullFlushContactInterface)
-        ):
+        elif isinstance(device, AsyncContactInterface | AsyncFullFlushContactInterface):
             entities.append(HomematicipContactInterface(hap, device))
         if isinstance(
             device,
-            (AsyncShutterContact, AsyncShutterContactMagnetic),
+            AsyncShutterContact | AsyncShutterContactMagnetic,
         ):
             entities.append(HomematicipShutterContact(hap, device))
         if isinstance(device, AsyncRotaryHandleSensor):
             entities.append(HomematicipShutterContact(hap, device, True))
         if isinstance(
             device,
-            (
-                AsyncMotionDetectorIndoor,
-                AsyncMotionDetectorOutdoor,
-                AsyncMotionDetectorPushButton,
-            ),
+            AsyncMotionDetectorIndoor
+            | AsyncMotionDetectorOutdoor
+            | AsyncMotionDetectorPushButton,
         ):
             entities.append(HomematicipMotionDetector(hap, device))
         if isinstance(device, AsyncPluggableMainsFailureSurveillance):
@@ -125,11 +121,11 @@ async def async_setup_entry(
         if isinstance(device, AsyncWaterSensor):
             entities.append(HomematicipWaterDetector(hap, device))
         if isinstance(
-            device, (AsyncRainSensor, AsyncWeatherSensorPlus, AsyncWeatherSensorPro)
+            device, AsyncRainSensor | AsyncWeatherSensorPlus | AsyncWeatherSensorPro
         ):
             entities.append(HomematicipRainSensor(hap, device))
         if isinstance(
-            device, (AsyncWeatherSensor, AsyncWeatherSensorPlus, AsyncWeatherSensorPro)
+            device, AsyncWeatherSensor | AsyncWeatherSensorPlus | AsyncWeatherSensorPro
         ):
             entities.append(HomematicipStormSensor(hap, device))
             entities.append(HomematicipSunshineSensor(hap, device))

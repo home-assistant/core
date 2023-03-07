@@ -260,7 +260,7 @@ async def setup_platform(
     hostname=None,
 ):
     """Load the Hue integration with the provided bridge for given platform(s)."""
-    if not isinstance(platforms, (list, tuple)):
+    if not isinstance(platforms, list | tuple):
         platforms = [platforms]
     if hostname is None:
         hostname = "mock-host"

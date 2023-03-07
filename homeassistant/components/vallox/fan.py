@@ -57,7 +57,7 @@ EXTRA_STATE_ATTRIBUTES = (
 
 
 def _convert_to_int(value: StateType) -> int | None:
-    if isinstance(value, (int, float)):
+    if isinstance(value, int | float):
         return int(value)
 
     return None
