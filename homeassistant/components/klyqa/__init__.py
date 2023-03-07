@@ -175,9 +175,8 @@ class KlyqaAccount(Account):
                 and "productId" in group["devices"][0]
                 and group["devices"][0]["productId"].startswith("@klyqa.lighting")
             ):
-                await self.add_light_group_entity(  # pylint: disable=not-callable,line-too-long
-                    group
-                )
+                # pylint: disable-next=not-callable
+                await self.add_light_group_entity(group)
 
                 self.entity_ids.add(u_id)
 

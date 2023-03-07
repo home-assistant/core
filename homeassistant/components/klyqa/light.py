@@ -272,12 +272,9 @@ class KlyqaLightEntity(RestoreEntity, LightEntity, KlyqaEntity):
 
             self._attr_supported_features |= LightEntityFeature.EFFECT
 
-            if [  # look if device color support and set limits for color
-                # and scenes
-                x
-                for x in device_traits
-                if "msg_key" in x and x["msg_key"] == "color"
-            ]:
+            # look if device color is supported and set limits for color
+            # and scenes
+            if [x for x in device_traits if "msg_key" in x and x["msg_key"] == "color"]:
                 self._attr_supported_color_modes.add(ColorMode.RGB)
                 self._attr_effect_list = [x["label"] for x in BULB_SCENES]
             else:

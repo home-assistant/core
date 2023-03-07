@@ -154,8 +154,6 @@ class KlyqaVCEntity(StateVacuumEntity, KlyqaEntity):
         """Send command to device."""
 
         await super().send(command, time_to_live_secs)
-        # await asyncio.sleep(1)
-        # await self.request_device_state()
 
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner, do not return to base."""
