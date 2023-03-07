@@ -35,6 +35,10 @@ async def test_cover_basic(hass: HomeAssistant, knx: KNXTestKit) -> None:
     # read position state address and angle state address
     await knx.assert_read("1/0/2")
     await knx.assert_read("1/0/4")
+    # StateUpdater initialize state
+    await knx.receive_response("1/0/2", (0x0F,))
+    await knx.receive_response("1/0/4", (0x30,))
+    events.clear()
 
     # open cover
     await hass.services.async_call(

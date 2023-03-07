@@ -12,6 +12,10 @@ from .conftest import KNXTestKit
 
 from tests.common import async_capture_events
 
+RAW_FLOAT_20_0 = (0x07, 0xD0)
+RAW_FLOAT_21_0 = (0x0C, 0x1A)
+RAW_FLOAT_22_0 = (0x0C, 0x4C)
+
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
@@ -38,6 +42,10 @@ async def test_climate_basic_temperature_set(
     await knx.assert_read("1/2/3")
     # read target temperature
     await knx.assert_read("1/2/5")
+    # StateUpdater initialize state
+    await knx.receive_response("1/2/3", RAW_FLOAT_21_0)
+    await knx.receive_response("1/2/5", RAW_FLOAT_22_0)
+    events.clear()
 
     # set new temperature
     await hass.services.async_call(
@@ -46,9 +54,8 @@ async def test_climate_basic_temperature_set(
         {"entity_id": "climate.test", "temperature": 20},
         blocking=True,
     )
-    await knx.assert_write("1/2/4", (7, 208))
+    await knx.assert_write("1/2/4", RAW_FLOAT_20_0)
     assert len(events) == 1
-    events.pop()
 
 
 # This tests needs to be adjusted to remove lingering tasks
@@ -79,11 +86,12 @@ async def test_climate_hvac_mode(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await knx.assert_read("1/2/7")
     await knx.assert_read("1/2/3")
     # StateUpdater initialize state
-    await knx.receive_response("1/2/7", True)
-    await knx.receive_response("1/2/3", (0x21,))
+    await knx.receive_response("1/2/7", (0x01,))
+    await knx.receive_response("1/2/3", RAW_FLOAT_20_0)
     # StateUpdater semaphore allows 2 concurrent requests
     # read target temperature state
     await knx.assert_read("1/2/5")
+    await knx.receive_response("1/2/5", RAW_FLOAT_22_0)
 
     # turn hvac off
     await hass.services.async_call(
@@ -133,11 +141,13 @@ async def test_climate_preset_mode(
     await knx.assert_read("1/2/7")
     await knx.assert_read("1/2/3")
     # StateUpdater initialize state
-    await knx.receive_response("1/2/7", True)
-    await knx.receive_response("1/2/3", (0x01,))
+    await knx.receive_response("1/2/7", (0x01,))
+    await knx.receive_response("1/2/3", RAW_FLOAT_21_0)
     # StateUpdater semaphore allows 2 concurrent requests
     # read target temperature state
     await knx.assert_read("1/2/5")
+    await knx.receive_response("1/2/5", RAW_FLOAT_22_0)
+    events.clear()
 
     # set preset mode
     await hass.services.async_call(
@@ -200,10 +210,11 @@ async def test_update_entity(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await knx.assert_read("1/2/7")
     await knx.assert_read("1/2/3")
     # StateUpdater initialize state
-    await knx.receive_response("1/2/7", True)
-    await knx.receive_response("1/2/3", (0x01,))
+    await knx.receive_response("1/2/7", (0x01,))
+    await knx.receive_response("1/2/3", RAW_FLOAT_21_0)
     # StateUpdater semaphore allows 2 concurrent requests
     await knx.assert_read("1/2/5")
+    await knx.receive_response("1/2/5", RAW_FLOAT_22_0)
 
     # verify update entity retriggers group value reads to the bus
     await hass.services.async_call(
@@ -222,7 +233,6 @@ async def test_update_entity(hass: HomeAssistant, knx: KNXTestKit) -> None:
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_command_value_idle_mode(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX climate command_value."""
-    events = async_capture_events(hass, "state_changed")
     await knx.setup_integration(
         {
             ClimateSchema.PLATFORM: {
@@ -234,20 +244,17 @@ async def test_command_value_idle_mode(hass: HomeAssistant, knx: KNXTestKit) -> 
             }
         }
     )
-    assert len(hass.states.async_all()) == 1
-    assert len(events) == 1
-    events.pop()
 
     await hass.async_block_till_done()
     # read states state updater
     await knx.assert_read("1/2/3")
     await knx.assert_read("1/2/5")
     # StateUpdater initialize state
+    await knx.receive_response("1/2/5", RAW_FLOAT_22_0)
+    await knx.receive_response("1/2/3", RAW_FLOAT_21_0)
+    # StateUpdater semaphore allows 2 concurrent requests
+    await knx.assert_read("1/2/6")
     await knx.receive_response("1/2/6", (0x32,))
-    await knx.receive_response("1/2/3", (0x0C, 0x1A))
-
-    assert len(events) == 2
-    events.pop()
 
     knx.assert_state("climate.test", HVACMode.HEAT, command_value=20)
 
