@@ -318,7 +318,7 @@ async def test_adding_last_unconfigured_server(
         )
         assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
 
-    mock_setup_entry.assert_called_once()
+    assert mock_setup_entry.call_count == 2
 
 
 async def test_all_available_servers_configured(
