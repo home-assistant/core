@@ -101,10 +101,10 @@ class LifetimeTotalSensorEntity(RestoreEntity, SensorEntity):
 
             try:
                 new_value = Decimal(new_state.state)
-                if new_value > self._prev_value:
-                    delta = new_value - self._prev_value
-                else:
+                if new_value < self._prev_value:
                     delta = new_value
+                else:
+                    delta = new_value - self._prev_value
             except ValueError as err:
                 _LOGGER.warning("While calculating total: %s", err)
             except DecimalException as err:
