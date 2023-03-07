@@ -297,7 +297,7 @@ async def _async_setup_component(
             *(
                 asyncio.create_task(
                     entry.async_setup(hass, integration=integration),
-                    name=f"setup entry {entry.title} {entry.domain} {entry.entry_id}",
+                    name=f"config entry setup {entry.title} {entry.domain} {entry.entry_id}",
                 )
                 for entry in hass.config_entries.async_entries(domain)
             )
