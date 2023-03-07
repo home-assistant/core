@@ -43,9 +43,9 @@
     "0/40/0": 1,
     "0/40/1": "TEST_VENDOR",
     "0/40/2": 65521,
-    "0/40/3": "TEST_PRODUCT",
+    "0/40/3": "Mock Door Lock",
     "0/40/4": 32769,
-    "0/40/5": "",
+    "0/40/5": "Mock Door Lock",
     "0/40/6": "**REDACTED**",
     "0/40/7": 0,
     "0/40/8": "TEST_VERSION",
@@ -58,7 +58,7 @@
     "0/40/15": "TEST_SN",
     "0/40/16": false,
     "0/40/17": true,
-    "0/40/18": "3575CFB80EFA7D07",
+    "0/40/18": "mock-door-lock",
     "0/40/19": {
       "caseSessionsPerFabric": 3,
       "subscriptionsPerFabric": 65535
