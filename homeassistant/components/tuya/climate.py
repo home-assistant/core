@@ -230,6 +230,11 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
                 description.switch_only_hvac_mode,
             ]
 
+        # determine HVAC mode DPCode to use POWER_SWITCH and not SWITCH if available
+        self._hvac_mode_dp_name = DPCode.SWITCH
+        if DPCode.POWER_SWITCH in self.device.function:
+            self._hvac_mode_dp_name = DPCode.POWER_SWITCH
+
         # Determine dpcode to use for setting the humidity
         if int_type := self.find_dpcode(
             DPCode.HUMIDITY_SET, dptype=DPType.INTEGER, prefer_function=True
@@ -280,12 +285,9 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        if DPCode.SWITCH in self.device.function:
-            commands = [{"code": DPCode.SWITCH, "value": hvac_mode != HVACMode.OFF}]
-        elif DPCode.POWER_SWITCH in self.device.function:
-            commands = [
-                {"code": DPCode.POWER_SWITCH, "value": hvac_mode != HVACMode.OFF}
-            ]
+        commands = [
+            {"code": self._hvac_mode_dp_name, "value": hvac_mode != HVACMode.OFF}
+        ]
 
         if hvac_mode in self._hvac_to_tuya:
             commands.append(
@@ -293,7 +295,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             )
         self._send_command(commands)
 
-    def set_preset_mode(self, preset_mode):
+    def set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
         commands = [{"code": DPCode.MODE, "value": preset_mode}]
         self._send_command(commands)
@@ -422,15 +424,11 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         """Return hvac mode."""
         # If the switch off, hvac mode is off as well. Unless the switch
         # the switch is on or doesn't exists of course...
-        dp_name = DPCode.SWITCH
-        if DPCode.POWER_SWITCH in self.device.function:
-            dp_name = DPCode.POWER_SWITCH
-
-        if not self.device.status.get(dp_name, True):
+        if not self.device.status.get(self._hvac_mode_dp_name, True):
             return HVACMode.OFF
 
         if DPCode.MODE not in self.device.function:
-            if self.device.status.get(dp_name, False):
+            if self.device.status.get(self._hvac_mode_dp_name, False):
                 return self.entity_description.switch_only_hvac_mode
             return HVACMode.OFF
 
@@ -440,7 +438,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             return TUYA_HVAC_TO_HA[mode]
 
         # If the switch is on, and the mode does not match any hvac mode.
-        if self.device.status.get(dp_name, False):
+        if self.device.status.get(self._hvac_mode_dp_name, False):
             return self.entity_description.switch_only_hvac_mode
 
         return HVACMode.OFF
@@ -483,12 +481,11 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
     def turn_on(self) -> None:
         """Turn the device on, retaining current HVAC (if supported)."""
-        if DPCode.SWITCH in self.device.function:
-            self._send_command([{"code": DPCode.POWER, "value": True}])
-            return
-
-        if DPCode.POWER_SWITCH in self.device.function:
-            self._send_command([{"code": DPCode.POWER_SWITCH, "value": True}])
+        if (
+            DPCode.SWITCH in self.device.function
+            or DPCode.POWER_SWITCH in self.device.function
+        ):
+            self._send_command([{"code": self._hvac_mode_dp_name, "value": True}])
             return
 
         # Fake turn on
@@ -500,12 +497,11 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
     def turn_off(self) -> None:
         """Turn the device on, retaining current HVAC (if supported)."""
-        if DPCode.SWITCH in self.device.function:
-            self._send_command([{"code": DPCode.POWER, "value": False}])
-            return
-
-        if DPCode.POWER_SWITCH in self.device.function:
-            self._send_command([{"code": DPCode.POWER_SWITCH, "value": False}])
+        if (
+            DPCode.SWITCH in self.device.function
+            or DPCode.POWER_SWITCH in self.device.function
+        ):
+            self._send_command([{"code": self._hvac_mode_dp_name, "value": False}])
             return
 
         # Fake turn off
