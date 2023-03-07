@@ -320,7 +320,7 @@ class EnsureJobAfterCooldown:
         self._timeout = timeout
 
     async def _async_job(self) -> None:
-        """Subscribe after a cooldown period."""
+        """Execute after a cooldown period."""
         try:
             await self._callback()
         except HomeAssistantError as ha_error:
