@@ -45,8 +45,12 @@ class AirQCoordinator(DataUpdateCoordinator):
         self.device_info = DeviceInfo(
             manufacturer=MANUFACTURER,
             identifiers={(DOMAIN, self.device_id)},
+            name=entry.data["device_info"]["name"],
+            model=entry.data["device_info"]["model"],
+            suggested_area=entry.data["device_info"]["suggested_area"],
+            sw_version=entry.data["device_info"]["sw_version"],
+            hw_version=entry.data["device_info"]["hw_version"],
         )
-        self.device_info.update(entry.data["device_info"])
 
     async def _async_update_data(self) -> dict:
         """Fetch the data from the device."""
