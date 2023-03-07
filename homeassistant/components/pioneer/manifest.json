@@ -2,6 +2,7 @@
   "domain": "pioneer",
   "name": "Pioneer",
   "codeowners": [],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/pioneer",
   "iot_class": "local_polling"
 }
