@@ -580,7 +580,8 @@ class MQTT:
         except (KeyError, ValueError) as ex:
             raise HomeAssistantError("Can't remove subscription twice") from ex
 
-    async def _async_queue_subscriptions(
+    @callback
+    def _async_queue_subscriptions(
         self, subscriptions: Iterable[tuple[str, int]], queue_only: bool = False
     ) -> None:
         """Queue requested subscriptions."""
@@ -616,7 +617,7 @@ class MQTT:
         # Only subscribe if currently connected.
         if self.connected:
             self._last_subscribe = time.time()
-            await self._async_queue_subscriptions(((topic, qos),))
+            self._async_queue_subscriptions(((topic, qos),))
 
         @callback
         def async_remove() -> None:
@@ -764,7 +765,7 @@ class MQTT:
         # Group subscriptions to only re-subscribe once for each topic.
         self._max_qos.clear()
         keyfunc = attrgetter("topic")
-        await self._async_queue_subscriptions(
+        self._async_queue_subscriptions(
             [
                 # Re-subscribe with the highest requested qos
                 (topic, max(subscription.qos for subscription in subs))
