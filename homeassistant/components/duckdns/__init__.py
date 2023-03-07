@@ -108,7 +108,7 @@ def async_track_time_interval_backoff(
     intervals,
 ) -> CALLBACK_TYPE:
     """Add a listener that fires repetitively at every timedelta interval."""
-    if not isinstance(intervals, list | tuple):
+    if not isinstance(intervals, (list, tuple)):
         intervals = (intervals,)
     remove = None
     failed = 0

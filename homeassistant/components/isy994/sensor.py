@@ -208,7 +208,7 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
         if value is None:
             return None
 
-        assert isinstance(value, int | float)
+        assert isinstance(value, (int, float))
         return value
 
     @property

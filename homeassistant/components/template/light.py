@@ -583,7 +583,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             h_str, s_str = map(
                 float, render.replace("(", "").replace(")", "").split(",", 1)
             )
-        elif isinstance(render, list | tuple) and len(render) == 2:
+        elif isinstance(render, (list, tuple)) and len(render) == 2:
             h_str, s_str = render
 
         if (

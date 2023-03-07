@@ -487,7 +487,7 @@ class OnkyoDeviceZone(OnkyoDevice):
 
         # It's possible for some players to have zones set to HDMI with
         # no sound control. In this case, the string `N/A` is returned.
-        self._supports_volume = isinstance(volume_raw[1], float | int)
+        self._supports_volume = isinstance(volume_raw[1], (float, int))
 
         # eiscp can return string or tuple. Make everything tuples.
         if isinstance(current_source_raw[1], str):

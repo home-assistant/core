@@ -633,26 +633,26 @@ class Thermostat(HomeAccessory):
         # Update current humidity
         if CHAR_CURRENT_HUMIDITY in self.chars:
             current_humdity = attributes.get(ATTR_CURRENT_HUMIDITY)
-            if isinstance(current_humdity, int | float):
+            if isinstance(current_humdity, (int, float)):
                 self.char_current_humidity.set_value(current_humdity)
 
         # Update target humidity
         if CHAR_TARGET_HUMIDITY in self.chars:
             target_humdity = attributes.get(ATTR_HUMIDITY)
-            if isinstance(target_humdity, int | float):
+            if isinstance(target_humdity, (int, float)):
                 self.char_target_humidity.set_value(target_humdity)
 
         # Update cooling threshold temperature if characteristic exists
         if self.char_cooling_thresh_temp:
             cooling_thresh = attributes.get(ATTR_TARGET_TEMP_HIGH)
-            if isinstance(cooling_thresh, int | float):
+            if isinstance(cooling_thresh, (int, float)):
                 cooling_thresh = self._temperature_to_homekit(cooling_thresh)
                 self.char_cooling_thresh_temp.set_value(cooling_thresh)
 
         # Update heating threshold temperature if characteristic exists
         if self.char_heating_thresh_temp:
             heating_thresh = attributes.get(ATTR_TARGET_TEMP_LOW)
-            if isinstance(heating_thresh, int | float):
+            if isinstance(heating_thresh, (int, float)):
                 heating_thresh = self._temperature_to_homekit(heating_thresh)
                 self.char_heating_thresh_temp.set_value(heating_thresh)
 
@@ -667,11 +667,11 @@ class Thermostat(HomeAccessory):
             hc_hvac_mode = self.char_target_heat_cool.value
             if hc_hvac_mode == HC_HEAT_COOL_HEAT:
                 temp_low = attributes.get(ATTR_TARGET_TEMP_LOW)
-                if isinstance(temp_low, int | float):
+                if isinstance(temp_low, (int, float)):
                     target_temp = self._temperature_to_homekit(temp_low)
             elif hc_hvac_mode == HC_HEAT_COOL_COOL:
                 temp_high = attributes.get(ATTR_TARGET_TEMP_HIGH)
-                if isinstance(temp_high, int | float):
+                if isinstance(temp_high, (int, float)):
                     target_temp = self._temperature_to_homekit(temp_high)
         if target_temp:
             self.char_target_temp.set_value(target_temp)
@@ -836,7 +836,7 @@ def _get_temperature_range_from_state(state, unit, default_min, default_max):
 def _get_target_temperature(state, unit):
     """Calculate the target temperature from a state."""
     target_temp = state.attributes.get(ATTR_TEMPERATURE)
-    if isinstance(target_temp, int | float):
+    if isinstance(target_temp, (int, float)):
         return temperature_to_homekit(target_temp, unit)
     return None
 
@@ -844,6 +844,6 @@ def _get_target_temperature(state, unit):
 def _get_current_temperature(state, unit):
     """Calculate the current temperature from a state."""
     target_temp = state.attributes.get(ATTR_CURRENT_TEMPERATURE)
-    if isinstance(target_temp, int | float):
+    if isinstance(target_temp, (int, float)):
         return temperature_to_homekit(target_temp, unit)
     return None

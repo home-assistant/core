@@ -69,7 +69,7 @@ def dpt_subclass_validator(dpt_base_class: type[DPTBase]) -> Callable[[Any], str
     def dpt_value_validator(value: Any) -> str | int:
         """Validate that value is parsable as sensor type."""
         if (
-            isinstance(value, str | int)
+            isinstance(value, (str, int))
             and dpt_base_class.parse_transcoder(value) is not None
         ):
             return value
@@ -88,7 +88,7 @@ string_type_validator = dpt_subclass_validator(DPTString)
 
 def ga_validator(value: Any) -> str | int:
     """Validate that value is parsable as GroupAddress or InternalGroupAddress."""
-    if isinstance(value, str | int):
+    if isinstance(value, (str, int)):
         try:
             parse_device_group_address(value)
             return value

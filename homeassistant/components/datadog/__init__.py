@@ -82,7 +82,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         tags = [f"entity:{state.entity_id}"]
 
         for key, value in states.items():
-            if isinstance(value, float | int):
+            if isinstance(value, (float, int)):
                 attribute = f"{metric}.{key.replace(' ', '_')}"
                 value = int(value) if isinstance(value, bool) else value
                 statsd.gauge(attribute, value, sample_rate=sample_rate, tags=tags)

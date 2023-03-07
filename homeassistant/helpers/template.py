@@ -483,10 +483,10 @@ class Template:
             # Complex and scientific values are also unexpected. Filter them out.
             if (
                 # Filter out string and complex numbers
-                not isinstance(result, str | complex)
+                not isinstance(result, (str, complex))
                 and (
                     # Pass if not numeric and not a boolean
-                    not isinstance(result, int | float)
+                    not isinstance(result, (int, float))
                     # Or it's a boolean (inherit from int)
                     or isinstance(result, bool)
                     # Or if it's a digit
@@ -1592,7 +1592,7 @@ def arc_tangent2(*args, default=_SENTINEL):
     The default value may be passed either as a positional or in a keyword argument
     """
     try:
-        if 1 <= len(args) <= 2 and isinstance(args[0], list | tuple):
+        if 1 <= len(args) <= 2 and isinstance(args[0], (list, tuple)):
             if len(args) == 2 and default is _SENTINEL:
                 # Default value passed as a positional argument
                 default = args[1]
@@ -2255,8 +2255,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""
         if isinstance(
-            obj,
-            AllStates | DomainStates | TemplateState | LoopContext | AsyncLoopContext,
+            obj, (AllStates, DomainStates, TemplateState, LoopContext, AsyncLoopContext)
         ):
             return attr[0] != "_"
 

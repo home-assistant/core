@@ -394,7 +394,7 @@ class DataManager:
         except Exception as exception:
             # User is not authenticated.
             if isinstance(
-                exception, UnauthorizedException | AuthFailedException
+                exception, (UnauthorizedException, AuthFailedException)
             ) or NOT_AUTHENTICATED_ERROR.match(str(exception)):
                 self._api.config_entry.async_start_reauth(self._hass)
                 return None

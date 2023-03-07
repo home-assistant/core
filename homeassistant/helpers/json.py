@@ -45,7 +45,7 @@ def json_encoder_default(obj: Any) -> Any:
 
     Hand other objects to the original method.
     """
-    if isinstance(obj, set | tuple):
+    if isinstance(obj, (set, tuple)):
         return list(obj)
     if isinstance(obj, float):
         return float(obj)
@@ -68,7 +68,7 @@ class ExtendedJSONEncoder(JSONEncoder):
             return {"__type": str(type(o)), "total_seconds": o.total_seconds()}
         if isinstance(o, datetime.datetime):
             return o.isoformat()
-        if isinstance(o, datetime.date | datetime.time):
+        if isinstance(o, (datetime.date, datetime.time)):
             return {"__type": str(type(o)), "isoformat": o.isoformat()}
         try:
             return super().default(o)

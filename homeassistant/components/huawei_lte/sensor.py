@@ -361,7 +361,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 # We could try to parse this to separate component sensors sometime.
                 device_class_fn=lambda x: (
                     SensorDeviceClass.SIGNAL_STRENGTH
-                    if isinstance(x, float | int)
+                    if isinstance(x, (float, int))
                     else None
                 ),
                 entity_category=EntityCategory.DIAGNOSTIC,

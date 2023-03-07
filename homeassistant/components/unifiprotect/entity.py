@@ -56,7 +56,7 @@ def _async_device_entities(
         else data.get_by_types({model_type}, ignore_unadopted=False)
     )
     for device in devices:
-        assert isinstance(device, Camera | Light | Sensor | Viewer | Doorlock | Chime)
+        assert isinstance(device, (Camera, Light, Sensor, Viewer, Doorlock, Chime))
         if not device.is_adopted_by_us:
             for description in unadopted_descs:
                 entities.append(

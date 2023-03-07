@@ -99,7 +99,7 @@ class BasePlatform(Entity):
             if (val := entry.get(config_name)) is None:
                 return None
             assert isinstance(
-                val, float | int
+                val, (float, int)
             ), f"Expected float or int but {config_name} was {type(val)}"
             return val
 

@@ -114,7 +114,7 @@ async def async_generate_speaker_info(
     def get_contents(
         item: int | float | str | dict[str, Any]
     ) -> int | float | str | dict[str, Any]:
-        if isinstance(item, int | float | str):
+        if isinstance(item, (int, float, str)):
             return item
         if isinstance(item, dict):
             payload = {}

@@ -117,7 +117,7 @@ class ValloxState:
         if (value := self.metric_cache.get(metric_key)) is None:
             return None
 
-        if not isinstance(value, str | int | float):
+        if not isinstance(value, (str, int, float)):
             return None
 
         return value

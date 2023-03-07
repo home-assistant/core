@@ -281,7 +281,7 @@ class ZigbeeChannel(LogMixin):
         self, attrs: dict[int | str, tuple[int, int, float | int]], res: list | tuple
     ) -> None:
         """Parse configure reporting result."""
-        if isinstance(res, Exception | ConfigureReportingResponseRecord):
+        if isinstance(res, (Exception, ConfigureReportingResponseRecord)):
             # assume default response
             self.debug(
                 "attr reporting for '%s' on '%s': %s",
@@ -397,7 +397,7 @@ class ZigbeeChannel(LogMixin):
         if isinstance(arg, CommandSchema):
             args = [a for a in arg if a is not None]
             params = arg.as_dict()
-        elif isinstance(arg, list | dict):
+        elif isinstance(arg, (list, dict)):
             # Quirks can directly send lists and dicts to ZHA this way
             args = arg
             params = {}

@@ -263,5 +263,5 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
         """Return the state of the sensor."""
         value = round(self._state, self._round_digits)
         if TYPE_CHECKING:
-            assert isinstance(value, float | int | Decimal)
+            assert isinstance(value, (float, int, Decimal))
         return value

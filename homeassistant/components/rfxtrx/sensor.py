@@ -255,7 +255,7 @@ async def async_setup_entry(
     """Set up config entry."""
 
     def _supported(event: RFXtrxEvent) -> bool:
-        return isinstance(event, ControlEvent | SensorEvent)
+        return isinstance(event, (ControlEvent, SensorEvent))
 
     def _constructor(
         event: RFXtrxEvent,

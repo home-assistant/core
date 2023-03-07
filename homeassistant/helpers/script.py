@@ -483,12 +483,14 @@ class _ScriptRun:
         # be handled and thus cannot be stopped by `continue_on_error`.
         if isinstance(
             exception,
-            vol.Invalid
-            | exceptions.TemplateError
-            | exceptions.ServiceNotFound
-            | exceptions.InvalidEntityFormatError
-            | exceptions.NoEntitySpecifiedError
-            | exceptions.ConditionError,
+            (
+                vol.Invalid,
+                exceptions.TemplateError,
+                exceptions.ServiceNotFound,
+                exceptions.InvalidEntityFormatError,
+                exceptions.NoEntitySpecifiedError,
+                exceptions.ConditionError,
+            ),
         ):
             raise exception
 

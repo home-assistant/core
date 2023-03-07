@@ -211,7 +211,7 @@ class AugustData(AugustSubscriberMixin):
             return_exceptions=True,
         ):
             if isinstance(result, Exception) and not isinstance(
-                result, asyncio.TimeoutError | ClientResponseError | CannotConnect
+                result, (asyncio.TimeoutError, ClientResponseError, CannotConnect)
             ):
                 _LOGGER.warning(
                     "Unexpected exception during initial sync: %s",

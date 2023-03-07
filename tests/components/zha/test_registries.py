@@ -465,7 +465,7 @@ def test_quirk_classes():
             # Callables cannot be tested
             return
 
-        if isinstance(value, frozenset | set | list):
+        if isinstance(value, (frozenset, set, list)):
             for v in value:
                 # Unpack the value if needed
                 quirk_class_validator(v)

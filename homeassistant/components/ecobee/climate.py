@@ -659,9 +659,9 @@ class Thermostat(ClimateEntity):
         _LOGGER.debug(
             "Setting ecobee hold_temp to: heat=%s, is=%s, cool=%s, is=%s",
             heat_temp,
-            isinstance(heat_temp, int | float),
+            isinstance(heat_temp, (int, float)),
             cool_temp,
-            isinstance(cool_temp, int | float),
+            isinstance(cool_temp, (int, float)),
         )
 
         self.update_without_throttle = True

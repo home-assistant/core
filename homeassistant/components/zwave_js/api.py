@@ -1634,7 +1634,7 @@ async def websocket_set_config_parameter(
         code = ERR_UNKNOWN_ERROR
         if isinstance(err, NotFoundError):
             code = ERR_NOT_FOUND
-        elif isinstance(err, InvalidNewValue | NotImplementedError):
+        elif isinstance(err, (InvalidNewValue, NotImplementedError)):
             code = ERR_NOT_SUPPORTED
 
         connection.send_error(

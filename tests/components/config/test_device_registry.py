@@ -162,7 +162,7 @@ async def test_update_device(
     assert msg["result"][payload_key] == payload_value
     assert getattr(device, payload_key) == payload_value
 
-    assert isinstance(device.disabled_by, dr.DeviceEntryDisabler | type(None))
+    assert isinstance(device.disabled_by, (dr.DeviceEntryDisabler, type(None)))
 
 
 async def test_remove_config_entry_from_device(

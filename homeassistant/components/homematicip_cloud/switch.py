@@ -45,7 +45,7 @@ async def async_setup_entry(
             # not be added in the switch platform
             pass
         elif isinstance(
-            device, AsyncPlugableSwitchMeasuring | AsyncFullFlushSwitchMeasuring
+            device, (AsyncPlugableSwitchMeasuring, AsyncFullFlushSwitchMeasuring)
         ):
             entities.append(HomematicipSwitchMeasuring(hap, device))
         elif isinstance(device, AsyncWiredSwitch8):
@@ -58,9 +58,11 @@ async def async_setup_entry(
                 entities.append(HomematicipMultiSwitch(hap, device, channel=channel))
         elif isinstance(
             device,
-            AsyncPlugableSwitch
-            | AsyncPrintedCircuitBoardSwitchBattery
-            | AsyncFullFlushInputSwitch,
+            (
+                AsyncPlugableSwitch,
+                AsyncPrintedCircuitBoardSwitchBattery,
+                AsyncFullFlushInputSwitch,
+            ),
         ):
             entities.append(HomematicipSwitch(hap, device))
         elif isinstance(device, AsyncOpenCollector8Module):
@@ -77,7 +79,7 @@ async def async_setup_entry(
                 entities.append(HomematicipMultiSwitch(hap, device, channel=channel))
 
     for group in hap.home.groups:
-        if isinstance(group, AsyncExtendedLinkedSwitchingGroup | AsyncSwitchingGroup):
+        if isinstance(group, (AsyncExtendedLinkedSwitchingGroup, AsyncSwitchingGroup)):
             entities.append(HomematicipGroupSwitch(hap, group))
 
     async_add_entities(entities)

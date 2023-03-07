@@ -118,7 +118,7 @@ def set_or_callable(value) -> frozenset[str] | Callable:
         return frozenset()
     if callable(value):
         return value
-    if isinstance(value, frozenset | set | list):
+    if isinstance(value, (frozenset, set, list)):
         return frozenset(value)
     return frozenset([str(value)])
 

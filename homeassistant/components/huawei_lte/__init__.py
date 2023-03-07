@@ -214,7 +214,7 @@ class Router:
             # ResponseErrorException with a few select codes to mean the endpoint is
             # not supported.
             if not isinstance(
-                exc, ResponseErrorNotSupportedException | ExpatError
+                exc, (ResponseErrorNotSupportedException, ExpatError)
             ) and exc.code not in (-1, 100006):
                 raise
             _LOGGER.info(

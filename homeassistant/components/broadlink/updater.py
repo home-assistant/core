@@ -65,7 +65,7 @@ class BroadlinkUpdateManager(ABC):
         except (BroadlinkException, OSError) as err:
             if self.available and (
                 dt.utcnow() - self.last_update > self.SCAN_INTERVAL * 3
-                or isinstance(err, AuthorizationError | OSError)
+                or isinstance(err, (AuthorizationError, OSError))
             ):
                 self.available = False
                 _LOGGER.warning(

@@ -177,7 +177,7 @@ def parse_yaml(
     except yaml.YAMLError:
         # Loading failed, so we now load with the slow line loader
         # since the C one will not give us line numbers
-        if isinstance(content, StringIO | TextIO | TextIOWrapper):
+        if isinstance(content, (StringIO, TextIO, TextIOWrapper)):
             # Rewind the stream so we can try again
             content.seek(0, 0)
         return _parse_yaml_pure_python(content, secrets)
