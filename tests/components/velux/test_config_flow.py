@@ -36,6 +36,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
 
 async def test_user_step_schema(hass: HomeAssistant) -> None:
@@ -45,6 +46,9 @@ async def test_user_step_schema(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
     assert result["data_schema"] == vol.Schema(
         {
             vol.Required(CONF_HOST): cv.string,
@@ -66,6 +70,7 @@ async def test_user_connection_error(hass: HomeAssistant) -> None:
         connect_mock.assert_called_once()
 
         assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "user"
         assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -81,6 +86,7 @@ async def test_user_unknown_error(hass: HomeAssistant) -> None:
         connect_mock.assert_called_once()
 
         assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "unknown"
 
 
 async def test_user_success(hass: HomeAssistant) -> None:
@@ -97,6 +103,7 @@ async def test_user_success(hass: HomeAssistant) -> None:
 
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == DUMMY_DATA[CONF_HOST]
+        assert result["data"] == DUMMY_DATA
 
 
 async def test_import(hass: HomeAssistant) -> None:

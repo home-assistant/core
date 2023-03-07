@@ -45,7 +45,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, Any] = {}
 
-        if user_input is not None and not errors:
+        if user_input is not None:
             try:
                 await self.test_connection(
                     user_input[CONF_HOST], user_input[CONF_PASSWORD]

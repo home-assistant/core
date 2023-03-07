@@ -7,27 +7,24 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 
-from .const import _LOGGER, DATA_VELUX, DOMAIN, PLATFORMS
+from .const import _LOGGER, DOMAIN, PLATFORMS
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-    },
-    extra=vol.ALLOW_EXTRA,
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            vol.Required(CONF_HOST): cv.string,
+            vol.Required(CONF_PASSWORD): cv.string,
+        },
+        extra=vol.ALLOW_EXTRA,
+    )
 )
 
 
-def setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the velux component."""
     async_create_issue(
         hass,
@@ -46,23 +43,15 @@ def setup_platform(
         )
     )
 
+    return True
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the velux component."""
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_yaml",
-        breaks_in_ha_version="2023.9.0",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-    )
-
     try:
-        hass.data[DATA_VELUX] = VeluxModule(hass, entry.data)
-        hass.data[DATA_VELUX].setup()
-        await hass.data[DATA_VELUX].async_start()
+        hass.data[DOMAIN][entry.entry_id] = VeluxModule(hass, entry.data)
+        hass.data[DOMAIN][entry.entry_id].setup()
+        await hass.data[DOMAIN][entry.entry_id].async_start()
 
     except PyVLXException as ex:
         _LOGGER.exception("Can't connect to velux interface: %s", ex)
