@@ -1134,7 +1134,7 @@ class ConfigEntries:
             *(
                 asyncio.create_task(
                     entry.async_shutdown(),
-                    name=f"shutdown config entry {entry.title} {entry.domain} {entry.entry_id}",
+                    name=f"config entry shutdown {entry.title} {entry.domain} {entry.entry_id}",
                 )
                 for entry in self._entries.values()
             )
