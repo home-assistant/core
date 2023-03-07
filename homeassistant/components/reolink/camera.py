@@ -1,4 +1,4 @@
-"""This component provides support for Reolink IP cameras."""
+"""Component providing support for Reolink IP cameras."""
 from __future__ import annotations
 
 import logging
@@ -10,7 +10,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
 from .const import DOMAIN
-from .entity import ReolinkCoordinatorEntity
+from .entity import ReolinkChannelCoordinatorEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ async def async_setup_entry(
     async_add_entities(cameras)
 
 
-class ReolinkCamera(ReolinkCoordinatorEntity, Camera):
+class ReolinkCamera(ReolinkChannelCoordinatorEntity, Camera):
     """An implementation of a Reolink IP camera."""
 
     _attr_supported_features: CameraEntityFeature = CameraEntityFeature.STREAM
@@ -51,7 +51,7 @@ class ReolinkCamera(ReolinkCoordinatorEntity, Camera):
         stream: str,
     ) -> None:
         """Initialize Reolink camera stream."""
-        ReolinkCoordinatorEntity.__init__(self, reolink_data, channel)
+        ReolinkChannelCoordinatorEntity.__init__(self, reolink_data, channel)
         Camera.__init__(self)
 
         self._stream = stream

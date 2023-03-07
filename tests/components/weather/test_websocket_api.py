@@ -1,6 +1,4 @@
 """Test the weather websocket API."""
-from pytest_unordered import unordered
-
 from homeassistant.components.weather.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -22,10 +20,10 @@ async def test_device_class_units(hass: HomeAssistant, hass_ws_client) -> None:
     assert msg["success"]
     assert msg["result"] == {
         "units": {
-            "precipitation_unit": unordered(["mm", "in"]),
-            "pressure_unit": unordered(["mbar", "mmHg", "inHg", "hPa"]),
-            "temperature_unit": unordered(["°F", "°C"]),
-            "visibility_unit": unordered(["km", "mi"]),
-            "wind_speed_unit": unordered(["mph", "km/h", "kn", "m/s", "ft/s"]),
+            "precipitation_unit": ["in", "mm"],
+            "pressure_unit": ["hPa", "inHg", "mbar", "mmHg"],
+            "temperature_unit": ["°C", "°F"],
+            "visibility_unit": ["km", "mi"],
+            "wind_speed_unit": ["ft/s", "km/h", "kn", "m/s", "mph"],
         }
     }

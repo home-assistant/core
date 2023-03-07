@@ -65,7 +65,7 @@ def test_split_entity_id() -> None:
 
 
 def test_async_add_hass_job_schedule_callback() -> None:
-    """Test that we schedule coroutines and add jobs to the job pool."""
+    """Test that we schedule callbacks and add jobs to the job pool."""
     hass = MagicMock()
     job = MagicMock()
 
@@ -73,6 +73,19 @@ def test_async_add_hass_job_schedule_callback() -> None:
     assert len(hass.loop.call_soon.mock_calls) == 1
     assert len(hass.loop.create_task.mock_calls) == 0
     assert len(hass.add_job.mock_calls) == 0
+
+
+def test_async_add_hass_job_coro_named(hass) -> None:
+    """Test that we schedule coroutines and add jobs to the job pool with a name."""
+
+    async def mycoro():
+        pass
+
+    job = ha.HassJob(mycoro, "named coro")
+    assert "named coro" in str(job)
+    assert job.name == "named coro"
+    task = ha.HomeAssistant.async_add_hass_job(hass, job)
+    assert "named coro" in str(task)
 
 
 def test_async_add_hass_job_schedule_partial_callback() -> None:
@@ -139,6 +152,20 @@ def test_async_create_task_schedule_coroutine(event_loop) -> None:
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 1
     assert len(hass.add_job.mock_calls) == 0
+
+
+def test_async_create_task_schedule_coroutine_with_name(event_loop) -> None:
+    """Test that we schedule coroutines and add jobs to the job pool with a name."""
+    hass = MagicMock(loop=MagicMock(wraps=event_loop))
+
+    async def job():
+        pass
+
+    task = ha.HomeAssistant.async_create_task(hass, job(), "named task")
+    assert len(hass.loop.call_soon.mock_calls) == 0
+    assert len(hass.loop.create_task.mock_calls) == 1
+    assert len(hass.add_job.mock_calls) == 0
+    assert "named task" in str(task)
 
 
 def test_async_run_hass_job_calls_callback() -> None:
@@ -2034,7 +2061,8 @@ async def test_shutdown_does_not_block_on_shielded_tasks(
 ) -> None:
     """Ensure shutdown does not block on shielded tasks."""
     result = asyncio.Future()
-    shielded_task = asyncio.shield(asyncio.sleep(10))
+    sleep_task = asyncio.ensure_future(asyncio.sleep(10))
+    shielded_task = asyncio.shield(sleep_task)
 
     async def test_task():
         try:
@@ -2050,3 +2078,6 @@ async def test_shutdown_does_not_block_on_shielded_tasks(
     assert result.done()
     assert task.done()
     assert time.monotonic() - start < 0.5
+
+    # Cleanup lingering task after test is done
+    sleep_task.cancel()
