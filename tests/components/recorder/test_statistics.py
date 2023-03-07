@@ -1,4 +1,6 @@
 """The tests for sensor recorder platform."""
+from collections.abc import Callable
+
 # pylint: disable=invalid-name
 from datetime import datetime, timedelta
 import importlib
@@ -6,12 +8,12 @@ import sys
 from unittest.mock import ANY, DEFAULT, MagicMock, patch, sentinel
 
 import pytest
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, select
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import history, statistics
+from homeassistant.components.recorder import Recorder, history, statistics
 from homeassistant.components.recorder.const import SQLITE_URL_PREFIX
 from homeassistant.components.recorder.db_schema import StatisticsShortTerm
 from homeassistant.components.recorder.models import (
@@ -20,6 +22,10 @@ from homeassistant.components.recorder.models import (
 )
 from homeassistant.components.recorder.statistics import (
     STATISTIC_UNIT_TO_UNIT_CONVERTER,
+    _generate_get_metadata_stmt,
+    _generate_max_mean_min_statistic_in_sub_period_stmt,
+    _generate_statistics_at_time_stmt,
+    _generate_statistics_during_period_stmt,
     _statistics_during_period_with_session,
     _update_or_add_metadata,
     async_add_external_statistics,
@@ -35,7 +41,7 @@ from homeassistant.components.recorder.statistics import (
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.sensor import UNIT_CONVERTERS
 from homeassistant.const import UnitOfTemperature
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import setup_component
@@ -50,6 +56,7 @@ from .common import (
 )
 
 from tests.common import get_test_home_assistant, mock_registry
+from tests.typing import RecorderInstanceGenerator, WebSocketGenerator
 
 ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
 
@@ -63,7 +70,7 @@ def test_converters_align_with_sensor() -> None:
         assert converter in UNIT_CONVERTERS.values()
 
 
-def test_compile_hourly_statistics(hass_recorder):
+def test_compile_hourly_statistics(hass_recorder: Callable[..., HomeAssistant]) -> None:
     """Test compiling hourly statistics."""
     hass = hass_recorder()
     instance = recorder.get_instance(hass)
@@ -266,8 +273,8 @@ def mock_from_stats():
 
 
 def test_compile_periodic_statistics_exception(
-    hass_recorder, mock_sensor_statistics, mock_from_stats
-):
+    hass_recorder: Callable[..., HomeAssistant], mock_sensor_statistics, mock_from_stats
+) -> None:
     """Test exception handling when compiling periodic statistics."""
 
     hass = hass_recorder()
@@ -309,7 +316,7 @@ def test_compile_periodic_statistics_exception(
     }
 
 
-def test_rename_entity(hass_recorder):
+def test_rename_entity(hass_recorder: Callable[..., HomeAssistant]) -> None:
     """Test statistics is migrated when entity_id is changed."""
     hass = hass_recorder()
     setup_component(hass, "sensor", {})
@@ -375,7 +382,9 @@ def test_rename_entity(hass_recorder):
     assert stats == {"sensor.test99": expected_stats99, "sensor.test2": expected_stats2}
 
 
-def test_rename_entity_collision(hass_recorder, caplog):
+def test_rename_entity_collision(
+    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+) -> None:
     """Test statistics is migrated when entity_id is changed."""
     hass = hass_recorder()
     setup_component(hass, "sensor", {})
@@ -456,7 +465,9 @@ def test_rename_entity_collision(hass_recorder, caplog):
     assert "Blocked attempt to insert duplicated statistic rows" in caplog.text
 
 
-def test_statistics_duplicated(hass_recorder, caplog):
+def test_statistics_duplicated(
+    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+) -> None:
     """Test statistics with same start time is not compiled."""
     hass = hass_recorder()
     setup_component(hass, "sensor", {})
@@ -498,15 +509,15 @@ def test_statistics_duplicated(hass_recorder, caplog):
     ),
 )
 async def test_import_statistics(
-    recorder_mock,
-    hass,
-    hass_ws_client,
-    caplog,
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
     source,
     statistic_id,
     import_fn,
     last_reset_str,
-):
+) -> None:
     """Test importing statistics and inserting external statistics."""
     client = await hass_ws_client()
 
@@ -760,7 +771,9 @@ async def test_import_statistics(
     }
 
 
-def test_external_statistics_errors(hass_recorder, caplog):
+def test_external_statistics_errors(
+    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+) -> None:
     """Test validation of external statistics."""
     hass = hass_recorder()
     wait_recording_done(hass)
@@ -847,7 +860,9 @@ def test_external_statistics_errors(hass_recorder, caplog):
     assert get_metadata(hass, statistic_ids=("test:total_energy_import",)) == {}
 
 
-def test_import_statistics_errors(hass_recorder, caplog):
+def test_import_statistics_errors(
+    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+) -> None:
     """Test validation of imported statistics."""
     hass = hass_recorder()
     wait_recording_done(hass)
@@ -936,7 +951,11 @@ def test_import_statistics_errors(hass_recorder, caplog):
 
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
-def test_weekly_statistics(hass_recorder, caplog, timezone):
+def test_weekly_statistics(
+    hass_recorder: Callable[..., HomeAssistant],
+    caplog: pytest.LogCaptureFixture,
+    timezone,
+) -> None:
     """Test weekly statistics."""
     dt_util.set_default_time_zone(dt_util.get_time_zone(timezone))
 
@@ -1070,7 +1089,11 @@ def test_weekly_statistics(hass_recorder, caplog, timezone):
 
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
-def test_monthly_statistics(hass_recorder, caplog, timezone):
+def test_monthly_statistics(
+    hass_recorder: Callable[..., HomeAssistant],
+    caplog: pytest.LogCaptureFixture,
+    timezone,
+) -> None:
     """Test monthly statistics."""
     dt_util.set_default_time_zone(dt_util.get_time_zone(timezone))
 
@@ -1206,18 +1229,23 @@ def test_monthly_statistics(hass_recorder, caplog, timezone):
     dt_util.set_default_time_zone(dt_util.get_time_zone("UTC"))
 
 
-def test_delete_duplicates_no_duplicates(hass_recorder, caplog):
+def test_delete_duplicates_no_duplicates(
+    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+) -> None:
     """Test removal of duplicated statistics."""
     hass = hass_recorder()
     wait_recording_done(hass)
+    instance = recorder.get_instance(hass)
     with session_scope(hass=hass) as session:
-        delete_statistics_duplicates(hass, session)
+        delete_statistics_duplicates(instance, hass, session)
     assert "duplicated statistics rows" not in caplog.text
     assert "Found non identical" not in caplog.text
     assert "Found duplicated" not in caplog.text
 
 
-def test_duplicate_statistics_handle_integrity_error(hass_recorder, caplog):
+def test_duplicate_statistics_handle_integrity_error(
+    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+) -> None:
     """Test the recorder does not blow up if statistics is duplicated."""
     hass = hass_recorder()
     wait_recording_done(hass)
@@ -1297,7 +1325,7 @@ def _create_engine_28(*args, **kwargs):
     return engine
 
 
-def test_delete_metadata_duplicates(caplog, tmpdir):
+def test_delete_metadata_duplicates(caplog: pytest.LogCaptureFixture, tmpdir) -> None:
     """Test removal of duplicated statistics."""
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
@@ -1388,7 +1416,9 @@ def test_delete_metadata_duplicates(caplog, tmpdir):
     dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
 
-def test_delete_metadata_duplicates_many(caplog, tmpdir):
+def test_delete_metadata_duplicates_many(
+    caplog: pytest.LogCaptureFixture, tmpdir
+) -> None:
     """Test removal of duplicated statistics."""
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
@@ -1483,7 +1513,9 @@ def test_delete_metadata_duplicates_many(caplog, tmpdir):
     dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
 
-def test_delete_metadata_duplicates_no_duplicates(hass_recorder, caplog):
+def test_delete_metadata_duplicates_no_duplicates(
+    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+) -> None:
     """Test removal of duplicated statistics."""
     hass = hass_recorder()
     wait_recording_done(hass)
@@ -1495,8 +1527,11 @@ def test_delete_metadata_duplicates_no_duplicates(hass_recorder, caplog):
 @pytest.mark.parametrize("enable_statistics_table_validation", [True])
 @pytest.mark.parametrize("db_engine", ("mysql", "postgresql"))
 async def test_validate_db_schema(
-    async_setup_recorder_instance, hass, caplog, db_engine
-):
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    db_engine,
+) -> None:
     """Test validating DB schema with MySQL and PostgreSQL.
 
     Note: The test uses SQLite, the purpose is only to exercise the code.
@@ -1513,8 +1548,10 @@ async def test_validate_db_schema(
 
 @pytest.mark.parametrize("enable_statistics_table_validation", [True])
 async def test_validate_db_schema_fix_utf8_issue(
-    async_setup_recorder_instance, hass, caplog
-):
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test validating DB schema with MySQL.
 
     Note: The test uses SQLite, the purpose is only to exercise the code.
@@ -1553,15 +1590,15 @@ async def test_validate_db_schema_fix_utf8_issue(
     (("max", 1.0), ("mean", 1.0), ("min", 1.0), ("state", 1.0), ("sum", 1.0)),
 )
 async def test_validate_db_schema_fix_float_issue(
-    async_setup_recorder_instance,
-    hass,
-    caplog,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
     db_engine,
     table,
     replace_index,
     column,
     value,
-):
+) -> None:
     """Test validating DB schema with MySQL.
 
     Note: The test uses SQLite, the purpose is only to exercise the code.
@@ -1639,16 +1676,16 @@ async def test_validate_db_schema_fix_float_issue(
     ),
 )
 async def test_validate_db_schema_fix_statistics_datetime_issue(
-    async_setup_recorder_instance,
-    hass,
-    caplog,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
     db_engine,
     modification,
     table,
     replace_index,
     column,
     value,
-):
+) -> None:
     """Test validating DB schema with MySQL.
 
     Note: The test uses SQLite, the purpose is only to exercise the code.
@@ -1766,3 +1803,100 @@ def record_states(hass):
         states[sns4].append(set_state(sns4, "20", attributes=sns4_attr))
 
     return zero, four, states
+
+
+def test_cache_key_for_generate_statistics_during_period_stmt():
+    """Test cache key for _generate_statistics_during_period_stmt."""
+    columns = select(StatisticsShortTerm.metadata_id, StatisticsShortTerm.start_ts)
+    stmt = _generate_statistics_during_period_stmt(
+        columns, dt_util.utcnow(), dt_util.utcnow(), [0], StatisticsShortTerm, {}
+    )
+    cache_key_1 = stmt._generate_cache_key()
+    stmt2 = _generate_statistics_during_period_stmt(
+        columns, dt_util.utcnow(), dt_util.utcnow(), [0], StatisticsShortTerm, {}
+    )
+    cache_key_2 = stmt2._generate_cache_key()
+    assert cache_key_1 == cache_key_2
+    columns2 = select(
+        StatisticsShortTerm.metadata_id,
+        StatisticsShortTerm.start_ts,
+        StatisticsShortTerm.sum,
+        StatisticsShortTerm.mean,
+    )
+    stmt3 = _generate_statistics_during_period_stmt(
+        columns2,
+        dt_util.utcnow(),
+        dt_util.utcnow(),
+        [0],
+        StatisticsShortTerm,
+        {"max", "mean"},
+    )
+    cache_key_3 = stmt3._generate_cache_key()
+    assert cache_key_1 != cache_key_3
+
+
+def test_cache_key_for_generate_get_metadata_stmt():
+    """Test cache key for _generate_get_metadata_stmt."""
+    stmt_mean = _generate_get_metadata_stmt([0], "mean")
+    stmt_mean2 = _generate_get_metadata_stmt([1], "mean")
+    stmt_sum = _generate_get_metadata_stmt([0], "sum")
+    stmt_none = _generate_get_metadata_stmt()
+    assert stmt_mean._generate_cache_key() == stmt_mean2._generate_cache_key()
+    assert stmt_mean._generate_cache_key() != stmt_sum._generate_cache_key()
+    assert stmt_mean._generate_cache_key() != stmt_none._generate_cache_key()
+
+
+def test_cache_key_for_generate_max_mean_min_statistic_in_sub_period_stmt():
+    """Test cache key for _generate_max_mean_min_statistic_in_sub_period_stmt."""
+    columns = select(StatisticsShortTerm.metadata_id, StatisticsShortTerm.start_ts)
+    stmt = _generate_max_mean_min_statistic_in_sub_period_stmt(
+        columns,
+        dt_util.utcnow(),
+        dt_util.utcnow(),
+        StatisticsShortTerm,
+        [0],
+    )
+    cache_key_1 = stmt._generate_cache_key()
+    stmt2 = _generate_max_mean_min_statistic_in_sub_period_stmt(
+        columns,
+        dt_util.utcnow(),
+        dt_util.utcnow(),
+        StatisticsShortTerm,
+        [0],
+    )
+    cache_key_2 = stmt2._generate_cache_key()
+    assert cache_key_1 == cache_key_2
+    columns2 = select(
+        StatisticsShortTerm.metadata_id,
+        StatisticsShortTerm.start_ts,
+        StatisticsShortTerm.sum,
+        StatisticsShortTerm.mean,
+    )
+    stmt3 = _generate_max_mean_min_statistic_in_sub_period_stmt(
+        columns2,
+        dt_util.utcnow(),
+        dt_util.utcnow(),
+        StatisticsShortTerm,
+        [0],
+    )
+    cache_key_3 = stmt3._generate_cache_key()
+    assert cache_key_1 != cache_key_3
+
+
+def test_cache_key_for_generate_statistics_at_time_stmt():
+    """Test cache key for _generate_statistics_at_time_stmt."""
+    columns = select(StatisticsShortTerm.metadata_id, StatisticsShortTerm.start_ts)
+    stmt = _generate_statistics_at_time_stmt(columns, StatisticsShortTerm, {0}, 0.0)
+    cache_key_1 = stmt._generate_cache_key()
+    stmt2 = _generate_statistics_at_time_stmt(columns, StatisticsShortTerm, {0}, 0.0)
+    cache_key_2 = stmt2._generate_cache_key()
+    assert cache_key_1 == cache_key_2
+    columns2 = select(
+        StatisticsShortTerm.metadata_id,
+        StatisticsShortTerm.start_ts,
+        StatisticsShortTerm.sum,
+        StatisticsShortTerm.mean,
+    )
+    stmt3 = _generate_statistics_at_time_stmt(columns2, StatisticsShortTerm, {0}, 0.0)
+    cache_key_3 = stmt3._generate_cache_key()
+    assert cache_key_1 != cache_key_3

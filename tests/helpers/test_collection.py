@@ -16,6 +16,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import ConfigType
 
 from tests.common import flush_store
+from tests.typing import WebSocketGenerator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -425,7 +426,9 @@ async def test_entity_component_collection_entity_removed(hass: HomeAssistant) -
     assert len(async_remove_calls) == 1
 
 
-async def test_storage_collection_websocket(hass, hass_ws_client):
+async def test_storage_collection_websocket(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test exposing a storage collection via websockets."""
     store = storage.Store(hass, 1, "test-data")
     coll = MockStorageCollection(store, _LOGGER)

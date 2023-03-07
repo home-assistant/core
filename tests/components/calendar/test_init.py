@@ -28,9 +28,7 @@ async def test_events_http_api(
     start = dt_util.now()
     end = start + timedelta(days=1)
     response = await client.get(
-        "/api/calendars/calendar.calendar_1?start={}&end={}".format(
-            start.isoformat(), end.isoformat()
-        )
+        f"/api/calendars/calendar.calendar_1?start={start.isoformat()}&end={end.isoformat()}"
     )
     assert response.status == HTTPStatus.OK
     events = await response.json()
@@ -63,12 +61,25 @@ async def test_events_http_api_error(
         side_effect=HomeAssistantError("Failure"),
     ):
         response = await client.get(
-            "/api/calendars/calendar.calendar_1?start={}&end={}".format(
-                start.isoformat(), end.isoformat()
-            )
+            f"/api/calendars/calendar.calendar_1?start={start.isoformat()}&end={end.isoformat()}"
         )
         assert response.status == HTTPStatus.INTERNAL_SERVER_ERROR
         assert await response.json() == {"message": "Error reading events: Failure"}
+
+
+async def test_events_http_api_dates_wrong_order(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test the calendar demo view."""
+    await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
+    await hass.async_block_till_done()
+    client = await hass_client()
+    start = dt_util.now()
+    end = start + timedelta(days=-1)
+    response = await client.get(
+        f"/api/calendars/calendar.calendar_1?start={start.isoformat()}&end={end.isoformat()}"
+    )
+    assert response.status == HTTPStatus.BAD_REQUEST
 
 
 async def test_calendars_http_api(
@@ -299,6 +310,30 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
             vol.error.MultipleInvalid,
             "must contain at most one of start_date, start_date_time, in.",
         ),
+        (
+            {
+                "start_date_time": "2022-04-01T06:00:00+00:00",
+                "end_date_time": "2022-04-01T07:00:00+01:00",
+            },
+            vol.error.MultipleInvalid,
+            "Expected all values to have the same timezone",
+        ),
+        (
+            {
+                "start_date_time": "2022-04-01T07:00:00",
+                "end_date_time": "2022-04-01T06:00:00",
+            },
+            vol.error.MultipleInvalid,
+            "Values were not in order",
+        ),
+        (
+            {
+                "start_date": "2022-04-02",
+                "end_date": "2022-04-01",
+            },
+            vol.error.MultipleInvalid,
+            "Values were not in order",
+        ),
     ],
     ids=[
         "missing_all",
@@ -313,6 +348,9 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
         "multiple_in",
         "unexpected_in_with_date",
         "unexpected_in_with_datetime",
+        "inconsistent_timezone",
+        "incorrect_date_order",
+        "incorrect_datetime_order",
     ],
 )
 async def test_create_event_service_invalid_params(

@@ -125,6 +125,7 @@ class OppleRemote(ZigbeeChannel):
         elif self.cluster.endpoint.model in ("lumi.plug.mmeu01", "lumi.plug.maeu01"):
             self.ZCL_INIT_ATTRS = {
                 "power_outage_memory": True,
+                "consumer_connected": True,
             }
         elif self.cluster.endpoint.model == "aqara.feeder.acn001":
             self.ZCL_INIT_ATTRS = {

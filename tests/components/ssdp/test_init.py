@@ -784,3 +784,76 @@ async def test_ipv4_does_additional_search_for_sonos(
         ),
     )
     assert ssdp_listener.async_search.call_args[1] == {}
+
+
+@pytest.mark.usefixtures("mock_get_source_ip")
+@patch(
+    "homeassistant.components.ssdp.async_get_ssdp",
+    return_value={"mock-domain": [{"deviceType": "Paulus"}]},
+)
+async def test_flow_dismiss_on_byebye(
+    mock_get_ssdp,
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_flow_init,
+) -> None:
+    """Test config flow is only started for alive devices."""
+    aioclient_mock.get(
+        "http://1.1.1.1",
+        text="""
+<root>
+  <device>
+    <deviceType>Paulus</deviceType>
+  </device>
+</root>
+    """,
+    )
+    ssdp_listener = await init_ssdp_component(hass)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    # Search should start a flow
+    mock_ssdp_search_response = _ssdp_headers(
+        {
+            "st": "mock-st",
+            "location": "http://1.1.1.1",
+            "usn": "uuid:mock-udn::mock-st",
+        }
+    )
+    ssdp_listener._on_search(mock_ssdp_search_response)
+    await hass.async_block_till_done()
+
+    mock_flow_init.assert_awaited_once_with(
+        "mock-domain", context={"source": config_entries.SOURCE_SSDP}, data=ANY
+    )
+
+    # ssdp:alive advertisement should start a flow
+    mock_flow_init.reset_mock()
+    mock_ssdp_advertisement = _ssdp_headers(
+        {
+            "location": "http://1.1.1.1",
+            "usn": "uuid:mock-udn::mock-st",
+            "nt": "upnp:rootdevice",
+            "nts": "ssdp:alive",
+        }
+    )
+    ssdp_listener._on_alive(mock_ssdp_advertisement)
+    await hass.async_block_till_done()
+    mock_flow_init.assert_awaited_once_with(
+        "mock-domain", context={"source": config_entries.SOURCE_SSDP}, data=ANY
+    )
+
+    mock_ssdp_advertisement["nts"] = "ssdp:byebye"
+    # ssdp:byebye advertisement should dismiss existing flows
+    with patch.object(
+        hass.config_entries.flow,
+        "async_progress_by_init_data_type",
+        return_value=[{"flow_id": "mock_flow_id"}],
+    ) as mock_async_progress_by_init_data_type, patch.object(
+        hass.config_entries.flow, "async_abort"
+    ) as mock_async_abort:
+        ssdp_listener._on_byebye(mock_ssdp_advertisement)
+        await hass.async_block_till_done()
+
+    assert len(mock_async_progress_by_init_data_type.mock_calls) == 1
+    assert mock_async_abort.mock_calls[0][1][0] == "mock_flow_id"

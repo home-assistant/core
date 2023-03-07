@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
-from collections.abc import Awaitable, Callable, Generator, Mapping, Sequence
+from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 import functools as ft
@@ -50,13 +50,13 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers import (
-    area_registry,
-    device_registry,
+    area_registry as ar,
+    device_registry as dr,
     entity,
     entity_platform,
-    entity_registry,
+    entity_registry as er,
     intent,
-    issue_registry,
+    issue_registry as ir,
     recorder as recorder_helper,
     restore_state,
     storage,
@@ -210,14 +210,14 @@ async def async_test_home_assistant(event_loop, load_registries=True):
 
         return orig_async_add_executor_job(target, *args)
 
-    def async_create_task(coroutine):
+    def async_create_task(coroutine, name=None):
         """Create task."""
         if isinstance(coroutine, Mock) and not isinstance(coroutine, AsyncMock):
             fut = asyncio.Future()
             fut.set_result(None)
             return fut
 
-        return orig_async_create_task(coroutine)
+        return orig_async_create_task(coroutine, name)
 
     hass.async_add_job = async_add_job
     hass.async_add_executor_job = async_add_executor_job
@@ -247,13 +247,14 @@ async def async_test_home_assistant(event_loop, load_registries=True):
     )
 
     # Load the registries
+    entity.async_setup(hass)
     if load_registries:
         with patch("homeassistant.helpers.storage.Store.async_load", return_value=None):
             await asyncio.gather(
-                area_registry.async_load(hass),
-                device_registry.async_load(hass),
-                entity_registry.async_load(hass),
-                issue_registry.async_load(hass),
+                ar.async_load(hass),
+                dr.async_load(hass),
+                er.async_load(hass),
+                ir.async_load(hass),
             )
         hass.data[bootstrap.DATA_REGISTRIES_LOADED] = None
 
@@ -480,8 +481,8 @@ def mock_component(hass: HomeAssistant, component: str) -> None:
 
 def mock_registry(
     hass: HomeAssistant,
-    mock_entries: dict[str, entity_registry.RegistryEntry] | None = None,
-) -> entity_registry.EntityRegistry:
+    mock_entries: dict[str, er.RegistryEntry] | None = None,
+) -> er.EntityRegistry:
     """Mock the Entity Registry.
 
     This should only be used if you need to mock/re-stage a clean mocked
@@ -493,20 +494,20 @@ def mock_registry(
     If you just need to access the existing registry, use the `entity_registry`
     fixture instead.
     """
-    registry = entity_registry.EntityRegistry(hass)
+    registry = er.EntityRegistry(hass)
     if mock_entries is None:
         mock_entries = {}
-    registry.entities = entity_registry.EntityRegistryItems()
+    registry.entities = er.EntityRegistryItems()
     for key, entry in mock_entries.items():
         registry.entities[key] = entry
 
-    hass.data[entity_registry.DATA_REGISTRY] = registry
+    hass.data[er.DATA_REGISTRY] = registry
     return registry
 
 
 def mock_area_registry(
-    hass: HomeAssistant, mock_entries: dict[str, area_registry.AreaEntry] | None = None
-) -> area_registry.AreaRegistry:
+    hass: HomeAssistant, mock_entries: dict[str, ar.AreaEntry] | None = None
+) -> ar.AreaRegistry:
     """Mock the Area Registry.
 
     This should only be used if you need to mock/re-stage a clean mocked
@@ -518,17 +519,17 @@ def mock_area_registry(
     If you just need to access the existing registry, use the `area_registry`
     fixture instead.
     """
-    registry = area_registry.AreaRegistry(hass)
+    registry = ar.AreaRegistry(hass)
     registry.areas = mock_entries or OrderedDict()
 
-    hass.data[area_registry.DATA_REGISTRY] = registry
+    hass.data[ar.DATA_REGISTRY] = registry
     return registry
 
 
 def mock_device_registry(
     hass: HomeAssistant,
-    mock_entries: dict[str, device_registry.DeviceEntry] | None = None,
-) -> device_registry.DeviceRegistry:
+    mock_entries: dict[str, dr.DeviceEntry] | None = None,
+) -> dr.DeviceRegistry:
     """Mock the Device Registry.
 
     This should only be used if you need to mock/re-stage a clean mocked
@@ -540,15 +541,15 @@ def mock_device_registry(
     If you just need to access the existing registry, use the `device_registry`
     fixture instead.
     """
-    registry = device_registry.DeviceRegistry(hass)
-    registry.devices = device_registry.DeviceRegistryItems()
+    registry = dr.DeviceRegistry(hass)
+    registry.devices = dr.DeviceRegistryItems()
     if mock_entries is None:
         mock_entries = {}
     for key, entry in mock_entries.items():
         registry.devices[key] = entry
-    registry.deleted_devices = device_registry.DeviceRegistryItems()
+    registry.deleted_devices = dr.DeviceRegistryItems()
 
-    hass.data[device_registry.DATA_REGISTRY] = registry
+    hass.data[dr.DATA_REGISTRY] = registry
     return registry
 
 
@@ -977,9 +978,6 @@ def assert_setup_component(count, domain=None):
     ), f"setup_component failed, expected {count} got {res_len}: {res}"
 
 
-SetupRecorderInstanceT = Callable[..., Awaitable[Any]]
-
-
 def init_recorder_component(hass, add_config=None, db_url="sqlite://"):
     """Initialize the recorder."""
     # Local import to avoid processing recorder and SQLite modules when running a
@@ -1089,6 +1087,11 @@ class MockEntity(entity.Entity):
     def entity_category(self) -> entity.EntityCategory | None:
         """Return the entity category."""
         return self._handle("entity_category")
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return entity specific state attributes."""
+        return self._handle("extra_state_attributes")
 
     @property
     def has_entity_name(self) -> bool:

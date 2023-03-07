@@ -1,10 +1,12 @@
 """SQLAlchemy util functions."""
 from __future__ import annotations
 
-from collections.abc import Callable, Generator, Sequence
+from collections.abc import Callable, Generator, Iterable, Sequence
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta
 import functools
+from functools import partial
+from itertools import islice
 import logging
 import os
 import time
@@ -123,30 +125,13 @@ def session_scope(
             need_rollback = True
             session.commit()
     except Exception as err:  # pylint: disable=broad-except
-        _LOGGER.error("Error executing query: %s", err)
+        _LOGGER.error("Error executing query: %s", err, exc_info=True)
         if need_rollback:
             session.rollback()
         if not exception_filter or not exception_filter(err):
             raise
     finally:
         session.close()
-
-
-def commit(session: Session, work: Any) -> bool:
-    """Commit & retry work: Either a model or in a function."""
-    for _ in range(0, RETRIES):
-        try:
-            if callable(work):
-                work(session)
-            else:
-                session.add(work)
-            session.commit()
-            return True
-        except OperationalError as err:
-            _LOGGER.error("Error executing query: %s", err)
-            session.rollback()
-            time.sleep(QUERY_RETRY_WAIT)
-    return False
 
 
 def execute(
@@ -156,9 +141,12 @@ def execute(
 
     This method also retries a few times in the case of stale connections.
     """
+    debug = _LOGGER.isEnabledFor(logging.DEBUG)
     for tryno in range(0, RETRIES):
         try:
-            timer_start = time.perf_counter()
+            if debug:
+                timer_start = time.perf_counter()
+
             if to_native:
                 result = [
                     row
@@ -171,7 +159,7 @@ def execute(
             else:
                 result = qry.all()
 
-            if _LOGGER.isEnabledFor(logging.DEBUG):
+            if debug:
                 elapsed = time.perf_counter() - timer_start
                 if to_native:
                     _LOGGER.debug(
@@ -468,9 +456,8 @@ def setup_connection_for_dialect(
 ) -> DatabaseEngine | None:
     """Execute statements needed for dialect connection."""
     version: AwesomeVersion | None = None
-    slow_range_in_select = True
+    slow_range_in_select = False
     if dialect_name == SupportedDialect.SQLITE:
-        slow_range_in_select = False
         if first_connection:
             old_isolation = dbapi_connection.isolation_level
             dbapi_connection.isolation_level = None
@@ -547,11 +534,6 @@ def setup_connection_for_dialect(
         # Ensure all times are using UTC to avoid issues with daylight savings
         execute_on_connection(dbapi_connection, "SET time_zone = '+00:00'")
     elif dialect_name == SupportedDialect.POSTGRESQL:
-        # Historically we have marked PostgreSQL as having slow range in select
-        # but this may not be true for all versions. We should investigate
-        # this further when we have more data and remove this if possible
-        # in the future so we can use the simpler purge SQL query for
-        # _select_unused_attributes_ids and _select_unused_events_ids
         if first_connection:
             # server_version_num was added in 2006
             result = query_on_connection(dbapi_connection, "SHOW server_version")
@@ -586,6 +568,17 @@ def end_incomplete_runs(session: Session, start_time: datetime) -> None:
         session.add(run)
 
 
+def _is_retryable_error(instance: Recorder, err: OperationalError) -> bool:
+    """Return True if the error is retryable."""
+    assert instance.engine is not None
+    return bool(
+        instance.engine.dialect.name == SupportedDialect.MYSQL
+        and isinstance(err.orig, BaseException)
+        and err.orig.args
+        and err.orig.args[0] in RETRYABLE_MYSQL_ERRORS
+    )
+
+
 _FuncType = Callable[Concatenate[_RecorderT, _P], bool]
 
 
@@ -603,12 +596,8 @@ def retryable_database_job(
             try:
                 return job(instance, *args, **kwargs)
             except OperationalError as err:
-                assert instance.engine is not None
-                if (
-                    instance.engine.dialect.name == SupportedDialect.MYSQL
-                    and err.orig
-                    and err.orig.args[0] in RETRYABLE_MYSQL_ERRORS
-                ):
+                if _is_retryable_error(instance, err):
+                    assert isinstance(err.orig, BaseException)
                     _LOGGER.info(
                         "%s; %s not completed, retrying", err.orig.args[1], description
                     )
@@ -620,6 +609,46 @@ def retryable_database_job(
 
             # Failed with permanent error
             return True
+
+        return wrapper
+
+    return decorator
+
+
+_WrappedFuncType = Callable[Concatenate[_RecorderT, _P], None]
+
+
+def database_job_retry_wrapper(
+    description: str, attempts: int = 5
+) -> Callable[[_WrappedFuncType[_RecorderT, _P]], _WrappedFuncType[_RecorderT, _P]]:
+    """Try to execute a database job multiple times.
+
+    This wrapper handles InnoDB deadlocks and lock timeouts.
+
+    This is different from retryable_database_job in that it will retry the job
+    attempts number of times instead of returning False if the job fails.
+    """
+
+    def decorator(
+        job: _WrappedFuncType[_RecorderT, _P]
+    ) -> _WrappedFuncType[_RecorderT, _P]:
+        @functools.wraps(job)
+        def wrapper(instance: _RecorderT, *args: _P.args, **kwargs: _P.kwargs) -> None:
+            for attempt in range(attempts):
+                try:
+                    job(instance, *args, **kwargs)
+                    return
+                except OperationalError as err:
+                    if attempt == attempts - 1 or not _is_retryable_error(
+                        instance, err
+                    ):
+                        raise
+                    assert isinstance(err.orig, BaseException)
+                    _LOGGER.info(
+                        "%s; %s failed, retrying", err.orig.args[1], description
+                    )
+                    time.sleep(instance.db_retry_wait)
+                    # Failed with retryable error
 
         return wrapper
 
@@ -781,3 +810,19 @@ def resolve_period(
             end_time += offset
 
     return (start_time, end_time)
+
+
+def take(take_num: int, iterable: Iterable) -> list[Any]:
+    """Return first n items of the iterable as a list.
+
+    From itertools recipes
+    """
+    return list(islice(iterable, take_num))
+
+
+def chunked(iterable: Iterable, chunked_num: int) -> Iterable[Any]:
+    """Break *iterable* into lists of length *n*.
+
+    From more-itertools
+    """
+    return iter(partial(take, chunked_num, iter(iterable)), [])

@@ -817,6 +817,50 @@ def test_entity_device_info_schema() -> None:
         )
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                "sensor": [
+                    {
+                        "name": "test-sensor",
+                        "unique_id": "test-sensor",
+                        "state_topic": "test/state",
+                    }
+                ]
+            }
+        }
+    ],
+)
+async def test_handle_logging_on_writing_the_entity_state(
+    hass: HomeAssistant,
+    mock_hass_config: None,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test on log handling when an error occurs writing the state."""
+    await mqtt_mock_entry_no_yaml_config()
+    await hass.async_block_till_done()
+    async_fire_mqtt_message(hass, "test/state", b"initial_state")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sensor")
+    assert state is not None
+    assert state.state == "initial_state"
+    with patch(
+        "homeassistant.helpers.entity.Entity.async_write_ha_state",
+        side_effect=ValueError("Invalid value for sensor"),
+    ):
+        async_fire_mqtt_message(hass, "test/state", b"payload causing errors")
+        await hass.async_block_till_done()
+        state = hass.states.get("sensor.test_sensor")
+        assert state is not None
+        assert state.state == "initial_state"
+        assert "Invalid value for sensor" in caplog.text
+        assert "Exception raised when updating state of" in caplog.text
+
+
 async def test_receiving_non_utf8_message_gets_logged(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
@@ -920,109 +964,42 @@ async def test_subscribe_bad_topic(
         await mqtt.async_subscribe(hass, 55, record_calls)  # type: ignore[arg-type]
 
 
-# Support for a deprecated callback type will be removed from HA core 2023.2.0
-async def test_subscribe_deprecated(
+# Support for a deprecated callback type was removed with HA core 2023.3.0
+# Test can be removed from HA core 2023.5.0
+async def test_subscribe_with_deprecated_callback_fails(
     hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
-    """Test the subscription of a topic using deprecated callback signature."""
-    calls: list[tuple[str, ReceivePayloadType, int]]
-
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    """Test the subscription of a topic using deprecated callback signature fails."""
 
     async def record_calls(topic: str, payload: ReceivePayloadType, qos: int) -> None:
         """Record calls."""
-        calls.append((topic, payload, qos))
 
-    calls = []
-    unsub = await mqtt.async_subscribe(hass, "test-topic", record_calls)
-
-    async_fire_mqtt_message(hass, "test-topic", "test-payload")
-
-    await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0][0] == "test-topic"
-    assert calls[0][1] == "test-payload"
-
-    unsub()
-
-    async_fire_mqtt_message(hass, "test-topic", "test-payload")
-
-    await hass.async_block_till_done()
-    assert len(calls) == 1
-    mqtt_mock.async_publish.reset_mock()
-
+    with pytest.raises(HomeAssistantError):
+        await mqtt.async_subscribe(hass, "test-topic", record_calls)
     # Test with partial wrapper
-    calls = []
-    unsub = await mqtt.async_subscribe(
-        hass, "test-topic", RecordCallsPartial(record_calls)
-    )
-
-    async_fire_mqtt_message(hass, "test-topic", "test-payload")
-
-    await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0][0] == "test-topic"
-    assert calls[0][1] == "test-payload"
-
-    unsub()
-
-    async_fire_mqtt_message(hass, "test-topic", "test-payload")
-
-    await hass.async_block_till_done()
-    assert len(calls) == 1
+    with pytest.raises(HomeAssistantError):
+        await mqtt.async_subscribe(hass, "test-topic", RecordCallsPartial(record_calls))
 
 
-# Support for a deprecated callback type will be removed from HA core 2023.2.0
-async def test_subscribe_deprecated_async(
+# Support for a deprecated callback type was removed with HA core 2023.3.0
+# Test can be removed from HA core 2023.5.0
+async def test_subscribe_deprecated_async_fails(
     hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
-    """Test the subscription of a topic using deprecated coroutine signature."""
-    calls: list[tuple[str, ReceivePayloadType, int]]
-
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    """Test the subscription of a topic using deprecated coroutine signature fails."""
 
     @callback
     def async_record_calls(topic: str, payload: ReceivePayloadType, qos: int) -> None:
         """Record calls."""
-        calls.append((topic, payload, qos))
 
-    calls = []
-    unsub = await mqtt.async_subscribe(hass, "test-topic", async_record_calls)
-
-    async_fire_mqtt_message(hass, "test-topic", "test-payload")
-
-    await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0][0] == "test-topic"
-    assert calls[0][1] == "test-payload"
-
-    unsub()
-
-    async_fire_mqtt_message(hass, "test-topic", "test-payload")
-
-    await hass.async_block_till_done()
-    assert len(calls) == 1
-    mqtt_mock.async_publish.reset_mock()
+    with pytest.raises(HomeAssistantError):
+        await mqtt.async_subscribe(hass, "test-topic", async_record_calls)
 
     # Test with partial wrapper
-    calls = []
-    unsub = await mqtt.async_subscribe(
-        hass, "test-topic", RecordCallsPartial(async_record_calls)
-    )
-
-    async_fire_mqtt_message(hass, "test-topic", "test-payload")
-
-    await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0][0] == "test-topic"
-    assert calls[0][1] == "test-payload"
-
-    unsub()
-
-    async_fire_mqtt_message(hass, "test-topic", "test-payload")
-
-    await hass.async_block_till_done()
-    assert len(calls) == 1
+    with pytest.raises(HomeAssistantError):
+        await mqtt.async_subscribe(
+            hass, "test-topic", RecordCallsPartial(async_record_calls)
+        )
 
 
 async def test_subscribe_topic_not_match(
@@ -1300,25 +1277,32 @@ async def test_subscribe_same_topic(
     # Fake that the client is connected
     mqtt_mock().connected = True
 
-    calls_a = MagicMock()
-    await mqtt.async_subscribe(hass, "test/state", calls_a)
+    calls_a: list[ReceiveMessage] = []
+    calls_b: list[ReceiveMessage] = []
+
+    def _callback_a(msg: ReceiveMessage) -> None:
+        calls_a.append(msg)
+
+    def _callback_b(msg: ReceiveMessage) -> None:
+        calls_b.append(msg)
+
+    await mqtt.async_subscribe(hass, "test/state", _callback_a)
     async_fire_mqtt_message(
         hass, "test/state", "online"
     )  # Simulate a (retained) message
     await hass.async_block_till_done()
-    assert calls_a.called
+    assert len(calls_a) == 1
     mqtt_client_mock.subscribe.assert_called()
-    calls_a.reset_mock()
+    calls_a = []
     mqtt_client_mock.reset_mock()
 
-    calls_b = MagicMock()
-    await mqtt.async_subscribe(hass, "test/state", calls_b)
+    await mqtt.async_subscribe(hass, "test/state", _callback_b)
     async_fire_mqtt_message(
         hass, "test/state", "online"
     )  # Simulate a (retained) message
     await hass.async_block_till_done()
-    assert calls_a.called
-    assert calls_b.called
+    assert len(calls_a) == 1
+    assert len(calls_b) == 1
     mqtt_client_mock.subscribe.assert_called()
 
 
@@ -1353,19 +1337,25 @@ async def test_unsubscribe_race(
     # Fake that the client is connected
     mqtt_mock().connected = True
 
-    calls_a = MagicMock()
-    calls_b = MagicMock()
+    calls_a: list[ReceiveMessage] = []
+    calls_b: list[ReceiveMessage] = []
+
+    def _callback_a(msg: ReceiveMessage) -> None:
+        calls_a.append(msg)
+
+    def _callback_b(msg: ReceiveMessage) -> None:
+        calls_b.append(msg)
 
     mqtt_client_mock.reset_mock()
-    unsub = await mqtt.async_subscribe(hass, "test/state", calls_a)
+    unsub = await mqtt.async_subscribe(hass, "test/state", _callback_a)
     unsub()
-    await mqtt.async_subscribe(hass, "test/state", calls_b)
+    await mqtt.async_subscribe(hass, "test/state", _callback_b)
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "test/state", "online")
     await hass.async_block_till_done()
-    assert not calls_a.called
-    assert calls_b.called
+    assert not calls_a
+    assert calls_b
 
     # We allow either calls [subscribe, unsubscribe, subscribe] or [subscribe, subscribe]
     expected_calls_1 = [
@@ -1905,7 +1895,7 @@ async def test_custom_birth_message(
     await mqtt_mock_entry_no_yaml_config()
     birth = asyncio.Event()
 
-    async def wait_birth(topic, payload, qos) -> None:
+    async def wait_birth(msg: ReceiveMessage) -> None:
         """Handle birth message."""
         birth.set()
 
@@ -1940,7 +1930,7 @@ async def test_default_birth_message(
     await mqtt_mock_entry_no_yaml_config()
     birth = asyncio.Event()
 
-    async def wait_birth(topic, payload, qos) -> None:
+    async def wait_birth(msg: ReceiveMessage) -> None:
         """Handle birth message."""
         birth.set()
 
@@ -2015,7 +2005,7 @@ async def test_delayed_birth_message(
     mqtt_mock = hass.data["mqtt"].client
     mqtt_mock.reset_mock()
 
-    async def wait_birth(topic, payload, qos) -> None:
+    async def wait_birth(msg: ReceiveMessage) -> None:
         """Handle birth message."""
         birth.set()
 
