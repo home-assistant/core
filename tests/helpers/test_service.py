@@ -235,7 +235,7 @@ async def test_call_from_config(hass: HomeAssistant):
     await hass.async_add_executor_job(service.call_from_config, hass, config)
     await hass.async_block_till_done()
 
-    assert calls[0].data["hello"] == "goodbye"
+    assert calls[0].data == {"hello": "goodbye", "entity_id": ["hello.world"]}
 
 
 async def test_service_call(hass: HomeAssistant):
@@ -319,7 +319,7 @@ async def test_service_template_service_call(hass: HomeAssistant):
     await service.async_call_from_config(hass, config)
     await hass.async_block_till_done()
 
-    assert calls[0].data["hello"] == "goodbye"
+    assert calls[0].data == {"hello": "goodbye", "entity_id": ["hello.world"]}
 
 
 async def test_passing_variables_to_templates(hass: HomeAssistant):
@@ -341,7 +341,7 @@ async def test_passing_variables_to_templates(hass: HomeAssistant):
     )
     await hass.async_block_till_done()
 
-    assert calls[0].data["hello"] == "goodbye"
+    assert calls[0].data == {"hello": "goodbye", "entity_id": ["hello.world"]}
 
 
 async def test_bad_template(hass: HomeAssistant):
