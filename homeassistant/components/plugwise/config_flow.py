@@ -62,8 +62,7 @@ def _base_gw_schema(discovery_info: ZeroconfServiceInfo | None) -> vol.Schema:
 
 
 async def validate_gw_input(hass: HomeAssistant, data: dict[str, Any]) -> Smile:
-    """
-    Validate whether the user input allows us to connect to the gateway.
+    """Validate whether the user input allows us to connect to the gateway.
 
     Data has the keys from _base_gw_schema() with values provided by the user.
     """

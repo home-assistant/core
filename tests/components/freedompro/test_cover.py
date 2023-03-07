@@ -13,6 +13,7 @@ from homeassistant.const import (
     STATE_CLOSED,
     STATE_OPEN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util.dt import utcnow
@@ -23,7 +24,7 @@ from tests.common import async_fire_time_changed
 
 
 @pytest.mark.parametrize(
-    "entity_id, uid, name, model",
+    ("entity_id", "uid", "name", "model"),
     [
         (
             "cover.blind",
@@ -34,8 +35,13 @@ from tests.common import async_fire_time_changed
     ],
 )
 async def test_cover_get_state(
-    hass, init_integration, entity_id: str, uid: str, name: str, model: str
-):
+    hass: HomeAssistant,
+    init_integration,
+    entity_id: str,
+    uid: str,
+    name: str,
+    model: str,
+) -> None:
     """Test states of the cover."""
     init_integration
     registry = er.async_get(hass)
@@ -78,7 +84,7 @@ async def test_cover_get_state(
 
 
 @pytest.mark.parametrize(
-    "entity_id, uid, name, model",
+    ("entity_id", "uid", "name", "model"),
     [
         (
             "cover.blind",
@@ -89,8 +95,13 @@ async def test_cover_get_state(
     ],
 )
 async def test_cover_set_position(
-    hass, init_integration, entity_id: str, uid: str, name: str, model: str
-):
+    hass: HomeAssistant,
+    init_integration,
+    entity_id: str,
+    uid: str,
+    name: str,
+    model: str,
+) -> None:
     """Test set position of the cover."""
     init_integration
     registry = er.async_get(hass)
@@ -128,7 +139,7 @@ async def test_cover_set_position(
 
 
 @pytest.mark.parametrize(
-    "entity_id, uid, name, model",
+    ("entity_id", "uid", "name", "model"),
     [
         (
             "cover.blind",
@@ -139,8 +150,13 @@ async def test_cover_set_position(
     ],
 )
 async def test_cover_close(
-    hass, init_integration, entity_id: str, uid: str, name: str, model: str
-):
+    hass: HomeAssistant,
+    init_integration,
+    entity_id: str,
+    uid: str,
+    name: str,
+    model: str,
+) -> None:
     """Test close cover."""
     init_integration
     registry = er.async_get(hass)
@@ -186,7 +202,7 @@ async def test_cover_close(
 
 
 @pytest.mark.parametrize(
-    "entity_id, uid, name, model",
+    ("entity_id", "uid", "name", "model"),
     [
         (
             "cover.blind",
@@ -197,8 +213,13 @@ async def test_cover_close(
     ],
 )
 async def test_cover_open(
-    hass, init_integration, entity_id: str, uid: str, name: str, model: str
-):
+    hass: HomeAssistant,
+    init_integration,
+    entity_id: str,
+    uid: str,
+    name: str,
+    model: str,
+) -> None:
     """Test open cover."""
     init_integration
     registry = er.async_get(hass)

@@ -1,5 +1,4 @@
 """Test config flow."""
-
 from unittest.mock import patch
 
 from aiomusiccast import MusicCastConnectionException
@@ -10,6 +9,7 @@ from homeassistant.components import ssdp
 from homeassistant.components.yamaha_musiccast.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -125,8 +125,8 @@ def mock_empty_discovery_information():
 
 
 async def test_user_input_device_not_found(
-    hass, mock_get_device_info_mc_exception, mock_get_source_ip
-):
+    hass: HomeAssistant, mock_get_device_info_mc_exception, mock_get_source_ip
+) -> None:
     """Test when user specifies a non-existing device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -143,8 +143,8 @@ async def test_user_input_device_not_found(
 
 
 async def test_user_input_non_yamaha_device_found(
-    hass, mock_get_device_info_invalid, mock_get_source_ip
-):
+    hass: HomeAssistant, mock_get_device_info_invalid, mock_get_source_ip
+) -> None:
     """Test when user specifies an existing device, which does not provide the musiccast API."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -161,8 +161,8 @@ async def test_user_input_non_yamaha_device_found(
 
 
 async def test_user_input_device_already_existing(
-    hass, mock_get_device_info_valid, mock_get_source_ip
-):
+    hass: HomeAssistant, mock_get_device_info_valid, mock_get_source_ip
+) -> None:
     """Test when user specifies an existing device."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -185,8 +185,8 @@ async def test_user_input_device_already_existing(
 
 
 async def test_user_input_unknown_error(
-    hass, mock_get_device_info_exception, mock_get_source_ip
-):
+    hass: HomeAssistant, mock_get_device_info_exception, mock_get_source_ip
+) -> None:
     """Test when user specifies an existing device, which does not provide the musiccast API."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -203,11 +203,11 @@ async def test_user_input_unknown_error(
 
 
 async def test_user_input_device_found(
-    hass,
+    hass: HomeAssistant,
     mock_get_device_info_valid,
     mock_valid_discovery_information,
     mock_get_source_ip,
-):
+) -> None:
     """Test when user specifies an existing device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -229,11 +229,11 @@ async def test_user_input_device_found(
 
 
 async def test_user_input_device_found_no_ssdp(
-    hass,
+    hass: HomeAssistant,
     mock_get_device_info_valid,
     mock_empty_discovery_information,
     mock_get_source_ip,
-):
+) -> None:
     """Test when user specifies an existing device, which no discovery data are present for."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -257,7 +257,9 @@ async def test_user_input_device_found_no_ssdp(
 # SSDP Flows
 
 
-async def test_ssdp_discovery_failed(hass, mock_ssdp_no_yamaha, mock_get_source_ip):
+async def test_ssdp_discovery_failed(
+    hass: HomeAssistant, mock_ssdp_no_yamaha, mock_get_source_ip
+) -> None:
     """Test when an SSDP discovered device is not a musiccast device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -278,8 +280,8 @@ async def test_ssdp_discovery_failed(hass, mock_ssdp_no_yamaha, mock_get_source_
 
 
 async def test_ssdp_discovery_successful_add_device(
-    hass, mock_ssdp_yamaha, mock_get_source_ip
-):
+    hass: HomeAssistant, mock_ssdp_yamaha, mock_get_source_ip
+) -> None:
     """Test when the SSDP discovered device is a musiccast device and the user confirms it."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -314,8 +316,8 @@ async def test_ssdp_discovery_successful_add_device(
 
 
 async def test_ssdp_discovery_existing_device_update(
-    hass, mock_ssdp_yamaha, mock_get_source_ip
-):
+    hass: HomeAssistant, mock_ssdp_yamaha, mock_get_source_ip
+) -> None:
     """Test when the SSDP discovered device is a musiccast device, but it already exists with another IP."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,

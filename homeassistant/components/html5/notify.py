@@ -32,9 +32,10 @@ from homeassistant.const import ATTR_NAME, URL_ROOT
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import ensure_unique_string
-from homeassistant.util.json import load_json, save_json
+from homeassistant.util.json import JsonObjectType, load_json_object
 
 from .const import DOMAIN, SERVICE_DISMISS
 
@@ -174,9 +175,6 @@ def get_service(
 
     registrations = _load_config(json_path)
 
-    if registrations is None:
-        return None
-
     vapid_pub_key = config[ATTR_VAPID_PUB_KEY]
     vapid_prv_key = config[ATTR_VAPID_PRV_KEY]
     vapid_email = config[ATTR_VAPID_EMAIL]
@@ -196,10 +194,10 @@ def get_service(
     )
 
 
-def _load_config(filename):
+def _load_config(filename: str) -> JsonObjectType:
     """Load configuration."""
     with suppress(HomeAssistantError):
-        return load_json(filename)
+        return load_json_object(filename)
     return {}
 
 

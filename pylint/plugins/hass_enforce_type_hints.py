@@ -18,14 +18,16 @@ if TYPE_CHECKING:
     # pre-commit should still work on out of date environments
     from astroid.typing import InferenceResult
 
+_COMMON_ARGUMENTS: dict[str, list[str]] = {
+    "hass": ["HomeAssistant", "HomeAssistant | None"]
+}
+_PLATFORMS: set[str] = {platform.value for platform in Platform}
+
 
 class _Special(Enum):
     """Sentinel values."""
 
     UNDEFINED = 1
-
-
-_PLATFORMS: set[str] = {platform.value for platform in Platform}
 
 
 @dataclass
@@ -80,6 +82,71 @@ _TYPE_HINT_MATCHERS.update(
 
 
 _MODULE_REGEX: re.Pattern[str] = re.compile(r"^homeassistant\.components\.\w+(\.\w+)?$")
+
+_METHOD_MATCH: list[TypeHintMatch] = [
+    TypeHintMatch(
+        function_name="__init__",
+        return_type=None,
+    ),
+]
+
+_TEST_FIXTURES: dict[str, list[str] | str] = {
+    "aioclient_mock": "AiohttpClientMocker",
+    "aiohttp_client": "ClientSessionGenerator",
+    "area_registry": "AreaRegistry",
+    "async_setup_recorder_instance": "RecorderInstanceGenerator",
+    "caplog": "pytest.LogCaptureFixture",
+    "current_request_with_host": "None",
+    "device_registry": "DeviceRegistry",
+    "enable_bluetooth": "None",
+    "enable_custom_integrations": "None",
+    "enable_nightly_purge": "bool",
+    "enable_statistics": "bool",
+    "enable_statistics_table_validation": "bool",
+    "entity_registry": "EntityRegistry",
+    "hass_access_token": "str",
+    "hass_admin_credential": "Credentials",
+    "hass_admin_user": "MockUser",
+    "hass_client": "ClientSessionGenerator",
+    "hass_client_no_auth": "ClientSessionGenerator",
+    "hass_config": "ConfigType",
+    "hass_config_yaml": "str",
+    "hass_config_yaml_files": "dict[str, str]",
+    "hass_owner_user": "MockUser",
+    "hass_read_only_access_token": "str",
+    "hass_read_only_user": "MockUser",
+    "hass_recorder": "Callable[..., HomeAssistant]",
+    "hass_storage": "dict[str, Any]",
+    "hass_supervisor_access_token": "str",
+    "hass_supervisor_user": "MockUser",
+    "hass_ws_client": "WebSocketGenerator",
+    "issue_registry": "IssueRegistry",
+    "legacy_auth": "LegacyApiPasswordAuthProvider",
+    "local_auth": "HassAuthProvider",
+    "mock_async_zeroconf": "None",
+    "mock_bleak_scanner_start": "MagicMock",
+    "mock_bluetooth": "None",
+    "mock_bluetooth_adapters": "None",
+    "mock_device_tracker_conf": "list[Device]",
+    "mock_get_source_ip": "None",
+    "mock_hass_config": "None",
+    "mock_hass_config_yaml": "None",
+    "mock_zeroconf": "None",
+    "mqtt_client_mock": "MqttMockPahoClient",
+    "mqtt_mock": "MqttMockHAClient",
+    "mqtt_mock_entry_no_yaml_config": "MqttMockHAClientGenerator",
+    "mqtt_mock_entry_with_yaml_config": "MqttMockHAClientGenerator",
+    "recorder_db_url": "str",
+    "recorder_mock": "Recorder",
+    "requests_mock": "requests_mock.Mocker",
+    "snapshot": "SnapshotAssertion",
+    "tmp_path": "Path",
+}
+_TEST_FUNCTION_MATCH = TypeHintMatch(
+    function_name="test_*",
+    return_type=None,
+)
+
 
 _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
     "__init__": [
@@ -2757,7 +2824,9 @@ def _is_valid_type(
         return True
 
     # Attribute occurs when a namespace is used, eg. "core.HomeAssistant"
-    return isinstance(node, nodes.Attribute) and node.attrname == expected_type
+    return isinstance(node, nodes.Attribute) and (
+        node.attrname == expected_type or node.as_string() == expected_type
+    )
 
 
 def _is_valid_return_type(match: TypeHintMatch, node: nodes.NodeNG) -> bool:
@@ -2851,6 +2920,11 @@ def _get_module_platform(module_name: str) -> str | None:
     return platform.lstrip(".") if platform else "__init__"
 
 
+def _is_test_function(module_name: str, node: nodes.FunctionDef) -> bool:
+    """Return True if function is a pytest function."""
+    return module_name.startswith("tests.") and node.name.startswith("test_")
+
+
 class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
     """Checker for setup type hints."""
 
@@ -2881,16 +2955,15 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
         ),
     )
 
-    def __init__(self, linter: PyLinter | None = None) -> None:
-        """Initialize the HassTypeHintChecker."""
-        super().__init__(linter)
-        self._function_matchers: list[TypeHintMatch] = []
-        self._class_matchers: list[ClassTypeHintMatch] = []
+    _class_matchers: list[ClassTypeHintMatch]
+    _function_matchers: list[TypeHintMatch]
+    _module_name: str
 
     def visit_module(self, node: nodes.Module) -> None:
         """Populate matchers for a Module node."""
-        self._function_matchers = []
         self._class_matchers = []
+        self._function_matchers = []
+        self._module_name = node.name
 
         if (module_platform := _get_module_platform(node.name)) is None:
             return
@@ -2910,6 +2983,16 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
             self._class_matchers.extend(property_matches)
 
         self._class_matchers.reverse()
+
+    def _ignore_function(
+        self, node: nodes.FunctionDef, annotations: list[nodes.NodeNG | None]
+    ) -> bool:
+        """Check if we can skip the function validation."""
+        return (
+            self.linter.config.ignore_missing_annotations
+            and node.returns is None
+            and not _has_valid_annotations(annotations)
+        )
 
     def visit_classdef(self, node: nodes.ClassDef) -> None:
         """Apply relevant type hint checks on a ClassDef node."""
@@ -2932,34 +3015,65 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
         cached_methods: list[nodes.FunctionDef] = list(node.mymethods())
         for match in matches:
             for function_node in cached_methods:
-                if function_node.name in checked_class_methods:
+                if (
+                    function_node.name in checked_class_methods
+                    or not match.need_to_check_function(function_node)
+                ):
                     continue
-                if match.need_to_check_function(function_node):
-                    self._check_function(function_node, match)
-                    checked_class_methods.add(function_node.name)
+
+                annotations = _get_all_annotations(function_node)
+                if self._ignore_function(function_node, annotations):
+                    continue
+
+                self._check_function(function_node, match, annotations)
+                checked_class_methods.add(function_node.name)
 
     def visit_functiondef(self, node: nodes.FunctionDef) -> None:
         """Apply relevant type hint checks on a FunctionDef node."""
-        for match in self._function_matchers:
-            if not match.need_to_check_function(node) or node.is_method():
+        annotations = _get_all_annotations(node)
+        if self._ignore_function(node, annotations):
+            return
+
+        # Check that common arguments are correctly typed.
+        for arg_name, expected_type in _COMMON_ARGUMENTS.items():
+            arg_node, annotation = _get_named_annotation(node, arg_name)
+            if arg_node and not _is_valid_type(expected_type, annotation):
+                self.add_message(
+                    "hass-argument-type",
+                    node=arg_node,
+                    args=(arg_name, expected_type, node.name),
+                )
+
+        # Check method or function matchers.
+        if node.is_method():
+            matchers = _METHOD_MATCH
+        else:
+            matchers = self._function_matchers
+            if _is_test_function(self._module_name, node):
+                self._check_test_function(node, annotations)
+        for match in matchers:
+            if not match.need_to_check_function(node):
                 continue
-            self._check_function(node, match)
+            self._check_function(node, match, annotations)
 
     visit_asyncfunctiondef = visit_functiondef
 
-    def _check_function(self, node: nodes.FunctionDef, match: TypeHintMatch) -> None:
-        # Check that at least one argument is annotated.
-        annotations = _get_all_annotations(node)
-        if (
-            self.linter.config.ignore_missing_annotations
-            and node.returns is None
-            and not _has_valid_annotations(annotations)
-        ):
-            return
-
+    def _check_function(
+        self,
+        node: nodes.FunctionDef,
+        match: TypeHintMatch,
+        annotations: list[nodes.NodeNG | None],
+    ) -> None:
         # Check that all positional arguments are correctly annotated.
         if match.arg_types:
             for key, expected_type in match.arg_types.items():
+                if (
+                    node.args.args[key].name in _COMMON_ARGUMENTS
+                    or _is_test_function(self._module_name, node)
+                    and node.args.args[key].name in _TEST_FIXTURES
+                ):
+                    # It has already been checked, avoid double-message
+                    continue
                 if not _is_valid_type(expected_type, annotations[key]):
                     self.add_message(
                         "hass-argument-type",
@@ -2970,6 +3084,13 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
         # Check that all keyword arguments are correctly annotated.
         if match.named_arg_types is not None:
             for arg_name, expected_type in match.named_arg_types.items():
+                if (
+                    arg_name in _COMMON_ARGUMENTS
+                    or _is_test_function(self._module_name, node)
+                    and arg_name in _TEST_FIXTURES
+                ):
+                    # It has already been checked, avoid double-message
+                    continue
                 arg_node, annotation = _get_named_annotation(node, arg_name)
                 if arg_node and not _is_valid_type(expected_type, annotation):
                     self.add_message(
@@ -2995,6 +3116,26 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
                 node=node,
                 args=(match.return_type or "None", node.name),
             )
+
+    def _check_test_function(
+        self, node: nodes.FunctionDef, annotations: list[nodes.NodeNG | None]
+    ) -> None:
+        # Check the return type.
+        if not _is_valid_return_type(_TEST_FUNCTION_MATCH, node.returns):
+            self.add_message(
+                "hass-return-type",
+                node=node,
+                args=(_TEST_FUNCTION_MATCH.return_type or "None", node.name),
+            )
+        # Check that all positional arguments are correctly annotated.
+        for arg_name, expected_type in _TEST_FIXTURES.items():
+            arg_node, annotation = _get_named_annotation(node, arg_name)
+            if arg_node and not _is_valid_type(expected_type, annotation):
+                self.add_message(
+                    "hass-argument-type",
+                    node=arg_node,
+                    args=(arg_name, expected_type, node.name),
+                )
 
 
 def register(linter: PyLinter) -> None:

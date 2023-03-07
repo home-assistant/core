@@ -3,18 +3,18 @@ from __future__ import annotations
 
 import functools
 import logging
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any
 
+from typing_extensions import Self
 import zigpy.exceptions
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.foundation import Status
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, EntityCategory, Platform
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
@@ -32,10 +32,6 @@ from .entity import ZhaEntity, ZhaGroupEntity
 if TYPE_CHECKING:
     from .core.channels.base import ZigbeeChannel
     from .core.device import ZHADevice
-
-_ZHASwitchConfigurationEntitySelfT = TypeVar(
-    "_ZHASwitchConfigurationEntitySelfT", bound="ZHASwitchConfigurationEntity"
-)
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.SWITCH)
 GROUP_MATCH = functools.partial(ZHA_ENTITIES.group_match, Platform.SWITCH)
@@ -179,12 +175,12 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
 
     @classmethod
     def create_entity(
-        cls: type[_ZHASwitchConfigurationEntitySelfT],
+        cls,
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
         **kwargs: Any,
-    ) -> _ZHASwitchConfigurationEntitySelfT | None:
+    ) -> Self | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None

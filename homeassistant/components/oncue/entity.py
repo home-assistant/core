@@ -66,7 +66,8 @@ class OncueEntity(
                 return False
             # If the cloud is reporting that the generator is not connected
             # this also indicates the data is not available.
-            # The battery voltage sensor reports 0.0 rather than -- hence the purpose of this check.
+            # The battery voltage sensor reports 0.0 rather than
+            # -- hence the purpose of this check.
             device: OncueDevice = self.coordinator.data[self._device_id]
             conn_established: OncueSensor = device.sensors[CONNECTION_ESTABLISHED_KEY]
             if (

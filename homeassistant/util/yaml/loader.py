@@ -1,7 +1,6 @@
 """Custom loader."""
 from __future__ import annotations
 
-from collections import OrderedDict
 from collections.abc import Iterator
 import fnmatch
 from io import StringIO, TextIOWrapper
@@ -25,7 +24,7 @@ except ImportError:
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import SECRET_YAML
-from .objects import Input, NodeListClass, NodeStrClass
+from .objects import Input, NodeDictClass, NodeListClass, NodeStrClass
 
 # mypy: allow-untyped-calls, no-warn-return-any
 
@@ -205,7 +204,7 @@ def _parse_yaml(
     # We convert that to an empty dict
     return (
         yaml.load(content, Loader=lambda stream: loader(stream, secrets))
-        or OrderedDict()
+        or NodeDictClass()
     )
 
 
@@ -276,9 +275,9 @@ def _find_files(directory: str, pattern: str) -> Iterator[str]:
                 yield filename
 
 
-def _include_dir_named_yaml(loader: LoaderType, node: yaml.nodes.Node) -> OrderedDict:
+def _include_dir_named_yaml(loader: LoaderType, node: yaml.nodes.Node) -> NodeDictClass:
     """Load multiple files from directory as a dictionary."""
-    mapping: OrderedDict = OrderedDict()
+    mapping = NodeDictClass()
     loc = os.path.join(os.path.dirname(loader.get_name()), node.value)
     for fname in _find_files(loc, "*.yaml"):
         filename = os.path.splitext(os.path.basename(fname))[0]
@@ -290,9 +289,9 @@ def _include_dir_named_yaml(loader: LoaderType, node: yaml.nodes.Node) -> Ordere
 
 def _include_dir_merge_named_yaml(
     loader: LoaderType, node: yaml.nodes.Node
-) -> OrderedDict:
+) -> NodeDictClass:
     """Load multiple files from directory as a merged dictionary."""
-    mapping: OrderedDict = OrderedDict()
+    mapping = NodeDictClass()
     loc = os.path.join(os.path.dirname(loader.get_name()), node.value)
     for fname in _find_files(loc, "*.yaml"):
         if os.path.basename(fname) == SECRET_YAML:
@@ -330,7 +329,9 @@ def _include_dir_merge_list_yaml(
     return _add_reference(merged_list, loader, node)
 
 
-def _ordered_dict(loader: LoaderType, node: yaml.nodes.MappingNode) -> OrderedDict:
+def _handle_mapping_tag(
+    loader: LoaderType, node: yaml.nodes.MappingNode
+) -> NodeDictClass:
     """Load YAML mappings into an ordered dictionary to preserve key order."""
     loader.flatten_mapping(node)
     nodes = loader.construct_pairs(node)
@@ -361,7 +362,7 @@ def _ordered_dict(loader: LoaderType, node: yaml.nodes.MappingNode) -> OrderedDi
             )
         seen[key] = line
 
-    return _add_reference(OrderedDict(nodes), loader, node)
+    return _add_reference(NodeDictClass(nodes), loader, node)
 
 
 def _construct_seq(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
@@ -398,7 +399,7 @@ def add_constructor(tag: Any, constructor: Any) -> None:
 
 
 add_constructor("!include", _include_yaml)
-add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _ordered_dict)
+add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _handle_mapping_tag)
 add_constructor(yaml.resolver.BaseResolver.DEFAULT_SEQUENCE_TAG, _construct_seq)
 add_constructor("!env_var", _env_var_yaml)
 add_constructor("!secret", secret_yaml)

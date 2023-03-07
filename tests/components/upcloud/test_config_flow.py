@@ -1,14 +1,15 @@
 """Tests for the UpCloud config flow."""
-
 from unittest.mock import patch
 
 import requests.exceptions
+import requests_mock
 from requests_mock import ANY
 from upcloud_api import UpCloudAPIError
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.upcloud.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -22,7 +23,7 @@ FIXTURE_USER_INPUT_OPTIONS = {
 }
 
 
-async def test_show_set_form(hass):
+async def test_show_set_form(hass: HomeAssistant) -> None:
     """Test that the setup form is served."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
@@ -32,7 +33,9 @@ async def test_show_set_form(hass):
     assert result["step_id"] == "user"
 
 
-async def test_connection_error(hass, requests_mock):
+async def test_connection_error(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> None:
     """Test we show user form on connection error."""
     requests_mock.request(ANY, ANY, exc=requests.exceptions.ConnectionError())
     result = await hass.config_entries.flow.async_init(
@@ -44,7 +47,9 @@ async def test_connection_error(hass, requests_mock):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_login_error(hass, requests_mock):
+async def test_login_error(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> None:
     """Test we show user form with appropriate error on response failure."""
     requests_mock.request(
         ANY,
@@ -63,7 +68,9 @@ async def test_login_error(hass, requests_mock):
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_success(hass, requests_mock):
+async def test_success(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> None:
     """Test successful flow provides entry creation data."""
     requests_mock.request(ANY, ANY, text='{"account":{"username":"user"}}')
     result = await hass.config_entries.flow.async_init(
@@ -75,7 +82,7 @@ async def test_success(hass, requests_mock):
     assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
 
 
-async def test_options(hass):
+async def test_options(hass: HomeAssistant) -> None:
     """Test options produce expected data."""
 
     config_entry = MockConfigEntry(

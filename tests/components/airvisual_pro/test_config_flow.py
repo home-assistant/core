@@ -12,10 +12,11 @@ from homeassistant import data_entry_flow
 from homeassistant.components.airvisual_pro.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
+from homeassistant.core import HomeAssistant
 
 
 @pytest.mark.parametrize(
-    "connect_mock,connect_errors",
+    ("connect_mock", "connect_errors"),
     [
         (AsyncMock(side_effect=Exception), {"base": "unknown"}),
         (AsyncMock(side_effect=InvalidAuthenticationError), {"base": "invalid_auth"}),
@@ -24,8 +25,8 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
     ],
 )
 async def test_create_entry(
-    hass, config, connect_errors, connect_mock, pro, setup_airvisual_pro
-):
+    hass: HomeAssistant, config, connect_errors, connect_mock, pro, setup_airvisual_pro
+) -> None:
     """Test creating an entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -52,7 +53,9 @@ async def test_create_entry(
     }
 
 
-async def test_duplicate_error(hass, config, config_entry, setup_airvisual_pro):
+async def test_duplicate_error(
+    hass: HomeAssistant, config, config_entry, setup_airvisual_pro
+) -> None:
     """Test that errors are shown when duplicates are added."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -67,7 +70,7 @@ async def test_duplicate_error(hass, config, config_entry, setup_airvisual_pro):
     assert result["reason"] == "already_configured"
 
 
-async def test_step_import(hass, config, setup_airvisual_pro):
+async def test_step_import(hass: HomeAssistant, config, setup_airvisual_pro) -> None:
     """Test that the user step works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=config
@@ -81,7 +84,7 @@ async def test_step_import(hass, config, setup_airvisual_pro):
 
 
 @pytest.mark.parametrize(
-    "connect_mock,connect_errors",
+    ("connect_mock", "connect_errors"),
     [
         (AsyncMock(side_effect=Exception), {"base": "unknown"}),
         (AsyncMock(side_effect=InvalidAuthenticationError), {"base": "invalid_auth"}),
@@ -90,8 +93,14 @@ async def test_step_import(hass, config, setup_airvisual_pro):
     ],
 )
 async def test_reauth(
-    hass, config, config_entry, connect_errors, connect_mock, pro, setup_airvisual_pro
-):
+    hass: HomeAssistant,
+    config,
+    config_entry,
+    connect_errors,
+    connect_mock,
+    pro,
+    setup_airvisual_pro,
+) -> None:
     """Test re-auth (including errors)."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
