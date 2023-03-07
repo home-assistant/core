@@ -69,10 +69,10 @@ async def test_failures_parametrized(
     assert config_entry.state == expected
 
 
-async def test_update_listener(
+async def test_async_update_entry(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Test the update listener."""
+    """Test the update entry function."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
