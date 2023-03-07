@@ -8,7 +8,8 @@
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
           "timeout": "Telnet request timeout",
-          "sources": "Sources for your Pioneer AVR"
+          "sources": "Sources for your Pioneer AVR",
+          "zones": "Number of zones supported"
         }
       }
     }
