@@ -12,7 +12,7 @@ codecov==2.1.12
 coverage==7.2.1
 freezegun==1.2.2
 mock-open==1.4.0
-mypy==1.0.1
+mypy==1.1.1
 pre-commit==3.1.0
 pydantic==1.10.5
 pylint==2.17.0
