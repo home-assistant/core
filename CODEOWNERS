@@ -615,6 +615,7 @@ build.json @home-assistant/supervisor
 /tests/components/keymitt_ble/ @spycle
 /homeassistant/components/kitchen_sink/ @home-assistant/core
 /tests/components/kitchen_sink/ @home-assistant/core
+/homeassistant/components/klyqa/ @fraizy22 @klyqa
 /homeassistant/components/kmtronic/ @dgomes
 /tests/components/kmtronic/ @dgomes
 /homeassistant/components/knx/ @Julius2342 @farmio @marvin-w
