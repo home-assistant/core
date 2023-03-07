@@ -51,19 +51,8 @@ class KlyqaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return await self._show_setup_form()
 
-        username = str(user_input[CONF_USERNAME])
-        # username = (
-        #     os.environ["KLYQA_USERNAME"]
-        #     if "KLYQA_USERNAME" in os.environ
-        #     else str(user_input[CONF_USERNAME])
-        # )
-
-        password = str(user_input[CONF_PASSWORD])
-        # password = (
-        #     os.environ["KLYQA_PASSWORD"]
-        #     if "KLYQA_PASSWORD" in os.environ
-        #     else str(user_input[CONF_PASSWORD])
-        # )
+        username: str = str(user_input[CONF_USERNAME])
+        password: str = str(user_input[CONF_PASSWORD])
 
         return await self._async_klyqa_login(
             step_id="user", username=username, password=password
@@ -74,15 +63,11 @@ class KlyqaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle login with Klyqa."""
 
-        errors = {}
+        errors: dict = {}
         acc: Account | None = None
         try:
             client: Client = await Client.create_worker()
 
-            # login = self.hass.async_run_job(
-            #     acc.login,
-            # )
-            # if login:
             acc = await Account.create_default(
                 client,
                 cloud=client.cloud,
@@ -91,11 +76,6 @@ class KlyqaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
             await acc.login()
-            # acc = await client.add_account(username, password)
-            # await asyncio.wait_for(login, timeout=30)
-            # else:
-            #     raise Exception()
-
             if not acc or not acc.access_token:
                 raise ValueError()
 
