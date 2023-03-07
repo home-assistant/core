@@ -16,8 +16,8 @@ TEST_NVR_NAME = "test_reolink_name"
 TEST_USE_HTTPS = True
 
 
-@pytest.fixture(name="reolink_setup_entry")
-def reolink_setup_entry_fixture() -> Generator[AsyncMock, None, None]:
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.reolink.async_setup_entry", return_value=True
