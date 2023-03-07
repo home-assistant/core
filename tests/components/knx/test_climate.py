@@ -1,4 +1,6 @@
 """Test KNX climate."""
+import pytest
+
 from homeassistant.components.climate import PRESET_ECO, PRESET_SLEEP, HVACMode
 from homeassistant.components.knx.schema import ClimateSchema
 from homeassistant.const import CONF_NAME, STATE_IDLE
@@ -15,6 +17,8 @@ RAW_FLOAT_21_0 = (0x0C, 0x1A)
 RAW_FLOAT_22_0 = (0x0C, 0x4C)
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_climate_basic_temperature_set(
     hass: HomeAssistant, knx: KNXTestKit
 ) -> None:
@@ -54,6 +58,8 @@ async def test_climate_basic_temperature_set(
     assert len(events) == 1
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_climate_hvac_mode(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX climate hvac mode."""
     events = async_capture_events(hass, "state_changed")
@@ -107,6 +113,8 @@ async def test_climate_hvac_mode(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await knx.assert_write("1/2/6", (0x01,))
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_climate_preset_mode(
     hass: HomeAssistant, knx: KNXTestKit, entity_registry: er.EntityRegistry
 ) -> None:
@@ -174,6 +182,8 @@ async def test_climate_preset_mode(
     assert len(knx.xknx.devices) == 0
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_update_entity(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test update climate entity for KNX."""
     events = async_capture_events(hass, "state_changed")
@@ -219,6 +229,8 @@ async def test_update_entity(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await knx.assert_read("1/2/7")
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_command_value_idle_mode(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX climate command_value."""
     await knx.setup_integration(

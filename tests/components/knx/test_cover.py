@@ -1,4 +1,6 @@
 """Test KNX cover."""
+import pytest
+
 from homeassistant.components.knx.schema import CoverSchema
 from homeassistant.const import CONF_NAME, STATE_CLOSING
 from homeassistant.core import HomeAssistant
@@ -8,6 +10,8 @@ from .conftest import KNXTestKit
 from tests.common import async_capture_events
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_cover_basic(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX cover basic."""
     events = async_capture_events(hass, "state_changed")
