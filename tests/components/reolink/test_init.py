@@ -26,7 +26,7 @@ from .conftest import (
 
 from tests.common import MockConfigEntry
 
-pytestmark = pytest.mark.usefixtures("reolink_connect", "reolink_init")
+pytestmark = pytest.mark.usefixtures("reolink_connect", "reolink_platforms")
 
 
 @pytest.mark.parametrize(

@@ -62,8 +62,7 @@ def reolink_platforms(mock_get_source_ip: None) -> Generator[None, None, None]:
         yield
 
 
-@pytest.fixture(name="config_entry")
-def reolink_config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
+def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Add the reolink mock config entry to hass."""
     config_entry = MockConfigEntry(
         domain=const.DOMAIN,
