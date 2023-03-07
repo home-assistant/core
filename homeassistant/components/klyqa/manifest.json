@@ -7,5 +7,5 @@
   "documentation": "https://github.com/klyqa/home-assistant-integration",
   "iot_class": "local_push",
   "loggers": ["klyqa_ctl", "klyqa_ctl_dbg"],
-  "requirements": ["klyqa_ctl==1.0.18"]
+  "requirements": ["klyqa_ctl==1.0.19"]
 }
