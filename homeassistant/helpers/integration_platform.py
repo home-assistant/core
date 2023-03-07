@@ -28,7 +28,7 @@ class IntegrationPlatform:
 async def _async_process_single_integration_platform_component(
     hass: HomeAssistant,
     component_name: str,
-    integrations: dict[str, Integration | Exception],
+    integration: Integration | Exception,
     integration_platform: IntegrationPlatform,
 ) -> None:
     """Process a single integration platform."""
@@ -36,7 +36,6 @@ async def _async_process_single_integration_platform_component(
         return
     integration_platform.seen_components.add(component_name)
 
-    integration = integrations[component_name]
     if isinstance(integration, Exception):
         _LOGGER.exception(
             "Error importing integration %s for %s",
@@ -90,7 +89,7 @@ async def async_process_integration_platform_for_component(
     await asyncio.gather(
         *[
             _async_process_single_integration_platform_component(
-                hass, component_name, integrations, integration_platform
+                hass, component_name, integrations[component_name], integration_platform
             )
             for integration_platform in integration_platforms
         ]
@@ -128,7 +127,7 @@ async def async_process_integration_platforms(
         await asyncio.gather(
             *[
                 _async_process_single_integration_platform_component(
-                    hass, comp, integrations, integration_platform
+                    hass, comp, integrations[comp], integration_platform
                 )
                 for comp in top_level_components
             ]
