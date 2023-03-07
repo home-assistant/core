@@ -68,7 +68,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     AirQEntityDescription(
         key="co",
         name="CO",
-        device_class=SensorDeviceClass.CO,
         native_unit_of_measurement=CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("co"),
@@ -289,7 +288,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     AirQEntityDescription(
         key="tvoc",
         name="VOC",
-        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("tvoc"),
@@ -297,7 +295,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     AirQEntityDescription(
         key="tvoc_ionsc",
         name="VOC (Industrial)",
-        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("tvoc_ionsc"),
@@ -339,6 +336,7 @@ class AirQSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Sensor."""
 
     _attr_has_entity_name = True
+    entity_description: AirQEntityDescription
 
     def __init__(
         self,
@@ -347,7 +345,7 @@ class AirQSensor(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize a single sensor."""
         super().__init__(coordinator)
-        self.entity_description: AirQEntityDescription = description
+        self.entity_description = description
 
         self._attr_device_info = coordinator.device_info
         self._attr_unique_id = f"{coordinator.device_id}_{description.key}"
