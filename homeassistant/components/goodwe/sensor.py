@@ -145,6 +145,7 @@ _DESCRIPTIONS: dict[str, GoodweSensorEntityDescription] = {
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.HOURS,
+        entity_registry_enabled_default=False,
     ),
     "%": GoodweSensorEntityDescription(
         key="%",
