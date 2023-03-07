@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
+from homeassistant.components.zha.config_flow import ZhaConfigFlowHandler
 from homeassistant.components.zha.core.const import (
     CONF_BAUDRATE,
     CONF_RADIO_TYPE,
@@ -51,7 +52,7 @@ async def test_migration_from_v1_no_baudrate(
     assert config_entry_v1.data[CONF_DEVICE][CONF_DEVICE_PATH] == DATA_PORT_PATH
     assert CONF_BAUDRATE not in config_entry_v1.data[CONF_DEVICE]
     assert CONF_USB_PATH not in config_entry_v1.data
-    assert config_entry_v1.version == 3
+    assert config_entry_v1.version == ZhaConfigFlowHandler.VERSION
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
@@ -68,7 +69,7 @@ async def test_migration_from_v1_with_baudrate(
     assert CONF_USB_PATH not in config_entry_v1.data
     assert CONF_BAUDRATE in config_entry_v1.data[CONF_DEVICE]
     assert config_entry_v1.data[CONF_DEVICE][CONF_BAUDRATE] == 115200
-    assert config_entry_v1.version == 3
+    assert config_entry_v1.version == ZhaConfigFlowHandler.VERSION
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
@@ -84,12 +85,12 @@ async def test_migration_from_v1_wrong_baudrate(
     assert config_entry_v1.data[CONF_DEVICE][CONF_DEVICE_PATH] == DATA_PORT_PATH
     assert CONF_USB_PATH not in config_entry_v1.data
     assert CONF_BAUDRATE not in config_entry_v1.data[CONF_DEVICE]
-    assert config_entry_v1.version == 3
+    assert config_entry_v1.version == ZhaConfigFlowHandler.VERSION
 
 
 @pytest.mark.skipif(
     MAJOR_VERSION != 0 or (MAJOR_VERSION == 0 and MINOR_VERSION >= 112),
-    reason="Not applicaable for this version",
+    reason="Not applicable for this version",
 )
 @pytest.mark.parametrize(
     "zha_config",
@@ -108,3 +109,33 @@ async def test_config_depreciation(hass: HomeAssistant, zha_config) -> None:
     ) as setup_mock:
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: zha_config})
         assert setup_mock.call_count == 1
+
+
+@pytest.mark.parametrize(
+    ("path", "cleaned_path"),
+    [
+        ("/dev/path1", "/dev/path1"),
+        ("/dev/path1 ", "/dev/path1 "),
+        ("socket://dev/path1 ", "socket://dev/path1"),
+    ],
+)
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+async def test_migration_from_v3_spaces_in_uri(
+    hass: HomeAssistant, path: str, cleaned_path: str
+) -> None:
+    """Test migration of config entry from v3 with spaces after `socket://` URI."""
+    config_entry_v3 = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_RADIO_TYPE: DATA_RADIO_TYPE,
+            CONF_DEVICE: {CONF_DEVICE_PATH: path, CONF_BAUDRATE: 115200},
+        },
+        version=3,
+    )
+    config_entry_v3.add_to_hass(hass)
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_BAUDRATE: 115200}})
+
+    assert config_entry_v3.data[CONF_RADIO_TYPE] == DATA_RADIO_TYPE
+    assert config_entry_v3.data[CONF_DEVICE][CONF_DEVICE_PATH] == cleaned_path
+    assert config_entry_v3.version == ZhaConfigFlowHandler.VERSION
