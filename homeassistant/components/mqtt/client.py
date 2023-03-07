@@ -650,7 +650,7 @@ class MQTT:
             subs = self._matching_subscriptions(topic)
             if subs:
                 self._max_qos[topic] = max(sub.qos for sub in subs)
-            else:
+            elif topic in self._max_qos:
                 del self._max_qos[topic]
             if topic in self._pending_subscriptions:
                 # avoid any pending subscription to be executed
