@@ -654,6 +654,7 @@ async def test_brightness_from_rgb_controlling_scale(
 
     state = hass.states.get("light.test")
     assert state.attributes.get("brightness") == 128
+    assert state.attributes.get("rgb_color") == (255, 127, 63)
 
     mqtt_mock.async_publish.reset_mock()
     await common.async_turn_on(hass, "light.test", brightness=191)
@@ -671,6 +672,7 @@ async def test_brightness_from_rgb_controlling_scale(
 
     state = hass.states.get("light.test")
     assert state.attributes.get("brightness") == 191
+    assert state.attributes.get("rgb_color") == (254, 126, 62)
 
 
 async def test_controlling_state_via_topic_with_templates(
