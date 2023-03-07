@@ -686,7 +686,7 @@ class MQTT:
             return subscribe_result_list
 
         async with self._pending_subscriptions_lock:
-            subscriptions = copy.deepcopy(self._pending_subscriptions)
+            subscriptions = copy.copy(self._pending_subscriptions)
             self._pending_subscriptions.clear()
 
         async with self._paho_lock:
