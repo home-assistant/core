@@ -92,12 +92,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     # Strip whitespace around `socket://` URIs, this is no longer accepted by zigpy
     # This will be removed in 2023.7.0
-    data = config_entry.data
-    path = data[CONF_DEVICE][CONF_DEVICE_PATH]
+    path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
 
     if path.startswith("socket://") and path != path.strip():
-        data[CONF_DEVICE][CONF_DEVICE_PATH] = path.strip()
-        hass.config_entries.async_update_entry(config_entry, data=data)
+        config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH] = path.strip()
+        hass.config_entries.async_update_entry(config_entry, data=config_entry.data)
 
     zha_data = hass.data.setdefault(DATA_ZHA, {})
     config = zha_data.get(DATA_ZHA_CONFIG, {})
