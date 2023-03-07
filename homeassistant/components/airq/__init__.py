@@ -4,14 +4,15 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from aioairq import AirQ
+import aioairq
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, MANUFACTURER, TARGET_ROUTE, UPDATE_INTERVAL
 
@@ -36,7 +37,7 @@ class AirQCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
         session = async_get_clientsession(hass)
-        self.airq = AirQ(
+        self.airq = aioairq.AirQ(
             entry.data[CONF_IP_ADDRESS], entry.data[CONF_PASSWORD], session
         )
         self.device_id = entry.unique_id
@@ -49,7 +50,17 @@ class AirQCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> dict:
         """Fetch the data from the device."""
-        data = await self.airq.get(TARGET_ROUTE)
+        try:
+            data = await self.airq.get(TARGET_ROUTE)
+        except aioairq.InvalidAirQResponse as err:
+            raise UpdateFailed(
+                f"Failed to retrieve update from AirQ {self.device_id}: {err}"
+            ) from err
+        except aioairq.InvalidAuth as err:
+            raise ConfigEntryAuthFailed(
+                f"Invalid password for AirQ {self.device_id}. "
+                "If you changed the password, please reauthenicate"
+            ) from err
         return self.airq.drop_uncertainties_from_data(data)
 
 

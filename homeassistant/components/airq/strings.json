@@ -8,15 +8,21 @@
           "ip_address": "[%key:common::config_flow::data::ip%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "AirQ integration needs to manually re-authenticate device {ip_address}"
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_input": "[%key:common::config_flow::error::invalid_host%]"
+      "invalid_input": "[%key:common::config_flow::error::invalid_host%]",
+      "cannot_retrieve_device_info": "Successfully connected, but unable to retrieve the device information"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   }
 }

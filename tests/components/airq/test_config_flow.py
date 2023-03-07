@@ -1,7 +1,7 @@
 """Test the air-Q config flow."""
 from unittest.mock import patch
 
-from aioairq.core import DeviceInfo, InvalidAuth, InvalidInput
+from aioairq import DeviceInfo, InvalidAuth, InvalidInput
 from aiohttp.client_exceptions import ClientConnectionError
 
 from homeassistant import config_entries
@@ -10,8 +10,13 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
 TEST_USER_DATA = {
     CONF_IP_ADDRESS: "192.168.0.0",
+    CONF_PASSWORD: "password",
+}
+TEST_REAUTH_DATA = {
     CONF_PASSWORD: "password",
 }
 TEST_DEVICE_INFO = DeviceInfo(
@@ -32,7 +37,7 @@ async def test_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     with patch("aioairq.AirQ.validate"), patch(
         "aioairq.AirQ.fetch_device_info", return_value=TEST_DEVICE_INFO
@@ -54,7 +59,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("aioairq.AirQ.validate", side_effect=InvalidAuth):
+    with patch("aioairq.AirQ.fetch_device_info", side_effect=InvalidAuth):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_USER_DATA | {CONF_PASSWORD: "wrong_password"}
         )
@@ -69,7 +74,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("aioairq.AirQ.validate", side_effect=ClientConnectionError):
+    with patch("aioairq.AirQ.fetch_device_info", side_effect=ClientConnectionError):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_USER_DATA
         )
@@ -84,10 +89,65 @@ async def test_form_invalid_input(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("aioairq.AirQ.validate", side_effect=InvalidInput):
+    with patch("aioairq.AirQ.fetch_device_info", side_effect=InvalidInput):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_USER_DATA | {CONF_IP_ADDRESS: "invalid_ip"}
         )
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_input"}
+
+
+async def test_reauth(hass: HomeAssistant) -> None:
+    """Test reauthentication flow with possible errors handled correctly."""
+    MockConfigEntry(
+        data=TEST_USER_DATA,
+        domain=DOMAIN,
+        unique_id=TEST_DEVICE_INFO["id"],
+    ).add_to_hass(hass)
+
+    with patch(
+        "aioairq.AirQ.fetch_device_info", return_value=TEST_DEVICE_INFO.copy()
+    ), patch(
+        "homeassistant.components.airq.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "unique_id": TEST_DEVICE_INFO["id"],
+            },
+        )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch("aioairq.AirQ.fetch_device_info", side_effect=InvalidAuth):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_REAUTH_DATA | {CONF_PASSWORD: "wrong_password"}
+        )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_auth"}
+
+    with patch("aioairq.AirQ.fetch_device_info", side_effect=ClientConnectionError):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_REAUTH_DATA
+        )
+
+    assert result3["type"] == FlowResultType.FORM
+    assert result3["errors"] == {"base": "cannot_connect"}
+
+    with patch(
+        "aioairq.AirQ.fetch_device_info", return_value=TEST_DEVICE_INFO.copy()
+    ), patch(
+        "homeassistant.components.airq.async_setup_entry",
+        return_value=True,
+    ):
+        result4 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            TEST_REAUTH_DATA,
+        )
+
+    assert result4["type"] == "abort"
+    assert result4["reason"] == "reauth_successful"
