@@ -16,8 +16,12 @@ CONFIG_SCHEMA = vol.Schema(
     vol.All(
         cv.deprecated(DOMAIN),
         {
-            vol.Required(CONF_HOST): cv.string,
-            vol.Required(CONF_PASSWORD): cv.string,
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_HOST): cv.string,
+                    vol.Required(CONF_PASSWORD): cv.string,
+                }
+            )
         },
         extra=vol.ALLOW_EXTRA,
     )
