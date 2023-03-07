@@ -565,7 +565,12 @@ def test_template(hass: HomeAssistant) -> None:
     """Test template validator."""
     schema = vol.Schema(cv.template)
 
-    for value in (None, "{{ partial_print }", "{% if True %}Hello", ["test"]):
+    for value in (
+        None,
+        "{{ partial_print }",
+        "{% if True %}Hello",
+        ["test"],
+    ):
         with pytest.raises(vol.Invalid):
             schema(value)
 
@@ -581,6 +586,33 @@ def test_template(hass: HomeAssistant) -> None:
     )
     for value in options:
         schema(value)
+
+
+async def test_template_no_hass(hass: HomeAssistant) -> None:
+    """Test template validator."""
+    schema = vol.Schema(cv.template)
+
+    for value in (
+        None,
+        "{{ partial_print }",
+        "{% if True %}Hello",
+        ["test"],
+        # Filter added as an extension by Home Assistant
+        "{{ ['group.foo']|expand|map(attribute='entity_id')|list }}",
+    ):
+        with pytest.raises(vol.Invalid):
+            await hass.async_add_executor_job(schema, value)
+
+    options = (
+        1,
+        "Hello",
+        "{{ beer }}",
+        "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
+        # Function added as an extension by Home Assistant
+        "{{ expand('group.foo')|map(attribute='entity_id')|list }}",
+    )
+    for value in options:
+        await hass.async_add_executor_job(schema, value)
 
 
 def test_dynamic_template(hass: HomeAssistant) -> None:
@@ -608,6 +640,33 @@ def test_dynamic_template(hass: HomeAssistant) -> None:
     )
     for value in options:
         schema(value)
+
+
+async def test_dynamic_template_no_hass(hass: HomeAssistant) -> None:
+    """Test dynamic template validator."""
+    schema = vol.Schema(cv.dynamic_template)
+
+    for value in (
+        None,
+        1,
+        "{{ partial_print }",
+        "{% if True %}Hello",
+        ["test"],
+        "just a string",
+        # Filter added as an extension by Home Assistant
+        "{{ ['group.foo']|expand|map(attribute='entity_id')|list }}",
+    ):
+        with pytest.raises(vol.Invalid):
+            await hass.async_add_executor_job(schema, value)
+
+    options = (
+        "{{ beer }}",
+        "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
+        # Function added as an extension by Home Assistant
+        "{{ expand('group.foo')|map(attribute='entity_id')|list }}",
+    )
+    for value in options:
+        await hass.async_add_executor_job(schema, value)
 
 
 def test_template_complex() -> None:
