@@ -1,4 +1,5 @@
 """Support for number settings on VeSync devices."""
+import abc
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
@@ -12,7 +13,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import DEVICE_HELPER, VeSyncBaseEntity, VeSyncDevice
+from .common import VeSyncBaseEntity, VeSyncDevice
 from .const import DOMAIN, VS_DISCOVERY, VS_NUMBERS
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,8 +24,6 @@ class VeSyncNumberEntityDescriptionMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[VeSyncBaseDevice], float]
-    min_fn: Callable[[VeSyncBaseDevice], float]
-    max_fn: Callable[[VeSyncBaseDevice], float]
 
 
 @dataclass
@@ -33,22 +32,55 @@ class VeSyncNumberEntityDescription(
 ):
     """Describe VeSync number entity."""
 
-    exists_fn: Callable[[VeSyncBaseDevice], bool] = lambda device: True
+    # exists_fn: Callable[[VeSyncBaseDevice], bool] = lambda device: True
     update_fn: Callable[[VeSyncBaseDevice, float], None] = lambda device, value: None
 
 
-NUMBERS: tuple[VeSyncNumberEntityDescription, ...] = (
-    VeSyncNumberEntityDescription(
-        key="mist-level",
-        name="Mist Level",
-        entity_category=EntityCategory.CONFIG,
-        native_step=1,
-        min_fn=lambda device: float(device.config_dict["mist_levels"][0]),
-        max_fn=lambda device: float(device.config_dict["mist_levels"][-1]),
-        value_fn=lambda device: device.details["mist_virtual_level"],
-        update_fn=lambda device, value: device.set_mist_level(int(value)),
-        exists_fn=lambda device: DEVICE_HELPER.is_humidifier(device.device_type),
-    ),
+class VeSyncNumberEntityDescriptionFactory(metaclass=abc.ABCMeta):
+    """Describe a factory interface for creating VeSyncNumberEntityDescription objects."""
+
+    @classmethod
+    def __subclasshook__(cls, subclass):
+        """Impl of meta data."""
+        return (
+            hasattr(subclass, "create")
+            and callable(subclass.create)
+            and hasattr(subclass, "supports")
+            and callable(subclass.supports)
+        )
+
+    @abc.abstractmethod
+    def create(self, device: VeSyncBaseDevice) -> VeSyncNumberEntityDescription:
+        """Interface method for create."""
+
+    @abc.abstractmethod
+    def supports(self, device: VeSyncBaseDevice) -> bool:
+        """Interface method for supports."""
+
+
+class MistLevelEntityDescriptionFactory(VeSyncNumberEntityDescriptionFactory):
+    """Create an entity description for a device that supports mist levels."""
+
+    def create(self, device: VeSyncBaseDevice) -> VeSyncNumberEntityDescription:
+        """Create a VeSyncNumberEntityDescription."""
+        return VeSyncNumberEntityDescription(
+            key="mist-level",
+            name="Mist Level",
+            entity_category=EntityCategory.CONFIG,
+            native_step=1,
+            value_fn=lambda device: device.details["mist_virtual_level"],
+            update_fn=lambda device, value: device.set_mist_level(int(value)),
+            native_min_value=float(device.config_dict["mist_levels"][0]),
+            native_max_value=float(device.config_dict["mist_levels"][-1]),
+        )
+
+    def supports(self, device: VeSyncBaseDevice) -> bool:
+        """Determine if this device supports a mist_virtual_level property."""
+        return "mist_virtual_level" in device.details
+
+
+_FACTORIES: tuple[VeSyncNumberEntityDescriptionFactory] = (
+    MistLevelEntityDescriptionFactory(),
 )
 
 
@@ -59,27 +91,32 @@ async def async_setup_entry(
 ) -> None:
     """Set up numbers."""
 
-    async def discover(devices):
+    @callback
+    def discover(devices: list):
         """Add new devices to platform."""
-        _setup_entities(devices, async_add_entities)
+        entities = []
+        for dev in devices:
+            supported = False
+            for factory in _FACTORIES:
+                if factory.supports(dev):
+                    supported = True
+                    entities.append(VeSyncNumberEntity(dev, factory.create(dev)))
+
+            if not supported:
+                # if no factory supported a property of the device
+                _LOGGER.warning(
+                    "%s - Unsupported device type - %s",
+                    dev.device_name,
+                    dev.device_type,
+                )
+
+        async_add_entities(entities, update_before_add=True)
+
+    discover(hass.data[DOMAIN][VS_NUMBERS])
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_NUMBERS), discover)
     )
-
-    _setup_entities(hass.data[DOMAIN][VS_NUMBERS], async_add_entities)
-
-
-@callback
-def _setup_entities(devices, async_add_entities):
-    """Check if device is online and add entity."""
-    entities = []
-    for dev in devices:
-        for description in NUMBERS:
-            if description.exists_fn(dev):
-                entities.append(VeSyncNumberEntity(dev, description))
-
-    async_add_entities(entities, update_before_add=True)
 
 
 class VeSyncNumberEntity(VeSyncBaseEntity, NumberEntity):
@@ -95,16 +132,6 @@ class VeSyncNumberEntity(VeSyncBaseEntity, NumberEntity):
         self.entity_description = description
         self._attr_name = f"{super().name} {description.name}"
         self._attr_unique_id = f"{super().unique_id}-{description.key}"
-
-    @property
-    def native_min_value(self) -> float:
-        """Return the minimum value."""
-        return self.entity_description.min_fn(self.device)
-
-    @property
-    def native_max_value(self) -> float:
-        """Return the maximum value."""
-        return self.entity_description.max_fn(self.device)
 
     @property
     def native_value(self) -> float | None:

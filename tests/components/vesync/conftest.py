@@ -226,10 +226,12 @@ def humidifier_fixture() -> VeSyncHumid200300S:
 
     config_dict = {}
     config_dict["mist_modes"] = ["manual"]
+    config_dict["mist_levels"] = ["1", "2", "3"]
     mock_fixture.config_dict = config_dict
 
     details = {}
     details["mode"] = "manual"
+    details["mist_virtual_level"] = 1
     mock_fixture.details = details
 
     return mock_fixture
