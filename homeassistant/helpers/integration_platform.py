@@ -9,7 +9,7 @@ from typing import Any
 
 from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.loader import async_get_integration, bind_hass
+from homeassistant.loader import Integration, async_get_integrations, bind_hass
 from homeassistant.setup import ATTR_COMPONENT
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,14 +26,25 @@ class IntegrationPlatform:
 
 
 async def _async_process_single_integration_platform_component(
-    hass: HomeAssistant, component_name: str, integration_platform: IntegrationPlatform
+    hass: HomeAssistant,
+    component_name: str,
+    integrations: dict[str, Integration | Exception],
+    integration_platform: IntegrationPlatform,
 ) -> None:
     """Process a single integration platform."""
     if component_name in integration_platform.seen_components:
         return
     integration_platform.seen_components.add(component_name)
 
-    integration = await async_get_integration(hass, component_name)
+    integration = integrations[component_name]
+    if isinstance(integration, Exception):
+        _LOGGER.exception(
+            "Error importing integration %s for %s",
+            component_name,
+            integration_platform.platform_name,
+        )
+        return
+
     platform_name = integration_platform.platform_name
 
     try:
@@ -75,10 +86,11 @@ async def async_process_integration_platform_for_component(
     integration_platforms: list[IntegrationPlatform] = hass.data[
         DATA_INTEGRATION_PLATFORMS
     ]
+    integrations = await async_get_integrations(hass, (component_name,))
     await asyncio.gather(
         *[
             _async_process_single_integration_platform_component(
-                hass, component_name, integration_platform
+                hass, component_name, integrations, integration_platform
             )
             for integration_platform in integration_platforms
         ]
@@ -109,13 +121,14 @@ async def async_process_integration_platforms(
     ]
     integration_platform = IntegrationPlatform(platform_name, process_platform, set())
     integration_platforms.append(integration_platform)
-    if top_level_components := (
+    if top_level_components := [
         comp for comp in hass.config.components if "." not in comp
-    ):
+    ]:
+        integrations = await async_get_integrations(hass, top_level_components)
         await asyncio.gather(
             *[
                 _async_process_single_integration_platform_component(
-                    hass, comp, integration_platform
+                    hass, comp, integrations, integration_platform
                 )
                 for comp in top_level_components
             ]
