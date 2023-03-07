@@ -47,7 +47,9 @@ class VerisureSmartplug(CoordinatorEntity[VerisureDataUpdateCoordinator], Switch
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
-        area = self.coordinator.data["smart_plugs"][self.serial_number]["area"]
+        area = self.coordinator.data["smart_plugs"][self.serial_number]["device"][
+            "area"
+        ]
         return DeviceInfo(
             name=area,
             suggested_area=area,
@@ -79,14 +81,14 @@ class VerisureSmartplug(CoordinatorEntity[VerisureDataUpdateCoordinator], Switch
 
     def turn_on(self, **kwargs: Any) -> None:
         """Set smartplug status on."""
-        self.coordinator.verisure.set_smartplug_state(self.serial_number, True)
+        self.coordinator.verisure.set_smartplug(self.serial_number, True)
         self._state = True
         self._change_timestamp = monotonic()
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs: Any) -> None:
         """Set smartplug status off."""
-        self.coordinator.verisure.set_smartplug_state(self.serial_number, False)
+        self.coordinator.verisure.set_smartplug(self.serial_number, False)
         self._state = False
         self._change_timestamp = monotonic()
         self.schedule_update_ha_state()
