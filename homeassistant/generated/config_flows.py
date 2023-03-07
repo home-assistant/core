@@ -298,6 +298,7 @@ FLOWS = {
         "ondilo_ico",
         "onewire",
         "onvif",
+        "ooler",
         "open_meteo",
         "openai_conversation",
         "openexchangerates",

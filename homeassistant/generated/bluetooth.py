@@ -301,6 +301,10 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
     },
     {
+        "domain": "ooler",
+        "local_name": "OOLER-*",
+    },
+    {
         "domain": "oralb",
         "manufacturer_id": 220,
     },

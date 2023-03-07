@@ -1,0 +1,27 @@
+pause_service:
+  name: Pause Ooler Connection
+  description: Disconnect bluetooth connection to Ooler for x seconds allowing other controllers to access.
+  target:
+    entity:
+      integration: ooler
+      domain: climate
+  fields:
+    sec_delay:
+      name: Seconds delay
+      description: How long to delay in seconds before re-connecting
+      required: false
+      example: 60
+      default: 60
+      selector:
+        number:
+          min: 0
+          max: 1200
+          mode: box
+
+clean_service:
+  name: Clean Ooler
+  description: Turns on UV light to clean the Ooler.
+  target:
+    entity:
+      integration: ooler
+      domain: climate

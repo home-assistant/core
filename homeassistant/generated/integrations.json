@@ -3834,6 +3834,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "ooler": {
+      "name": "Ooler",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "open_meteo": {
       "name": "Open-Meteo",
       "integration_type": "service",
