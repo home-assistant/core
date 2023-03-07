@@ -625,12 +625,6 @@ class MQTT:
             """Remove subscription."""
             self._async_untrack_subscription(subscription)
             self._matching_subscriptions.cache_clear()
-            subs = self._matching_subscriptions(topic)
-            max_qos: int | None = self._max_qos.get(topic)
-            self._max_qos[topic] = (
-                max(sub.qos for sub in subs) if subs and max_qos is not None else 0
-            )
-
             # Only unsubscribe if currently connected
             if self.connected:
                 self.hass.async_create_task(self._async_unsubscribe(topic))
@@ -653,7 +647,10 @@ class MQTT:
             # Other subscriptions on topic remaining - don't unsubscribe.
             return
         async with self._pending_subscriptions_lock:
-            if topic in self._max_qos:
+            subs = self._matching_subscriptions(topic)
+            if subs:
+                self._max_qos[topic] = max(sub.qos for sub in subs)
+            else:
                 del self._max_qos[topic]
             if topic in self._pending_subscriptions:
                 # avoid any pending subscription to be executed
