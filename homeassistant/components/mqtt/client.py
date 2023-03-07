@@ -405,7 +405,6 @@ class MQTT:
         )
         self._max_qos: dict[str, int] = {}  # topic, max qos
         self._pending_subscriptions: dict[str, int] = {}  # topic, qos
-        self._pending_subscriptions_lock = asyncio.Lock()
 
         if self.hass.state == CoreState.running:
             self._ha_started.set()
@@ -585,12 +584,11 @@ class MQTT:
         self, subscriptions: Iterable[tuple[str, int]], queue_only: bool = False
     ) -> None:
         """Queue requested subscriptions."""
-        async with self._pending_subscriptions_lock:
-            for subscription in subscriptions:
-                topic, qos = subscription
-                max_qos = max(qos, self._max_qos.setdefault(topic, qos))
-                self._max_qos[topic] = max_qos
-                self._pending_subscriptions[topic] = max_qos
+        for subscription in subscriptions:
+            topic, qos = subscription
+            max_qos = max(qos, self._max_qos.setdefault(topic, qos))
+            self._max_qos[topic] = max_qos
+            self._pending_subscriptions[topic] = max_qos
         if queue_only:
             return
         self._subscribe_debouncer.async_schedule()
@@ -646,15 +644,14 @@ class MQTT:
         if self._is_active_subscription(topic):
             # Other subscriptions on topic remaining - don't unsubscribe.
             return
-        async with self._pending_subscriptions_lock:
-            subs = self._matching_subscriptions(topic)
-            if subs:
-                self._max_qos[topic] = max(sub.qos for sub in subs)
-            elif topic in self._max_qos:
-                del self._max_qos[topic]
-            if topic in self._pending_subscriptions:
-                # avoid any pending subscription to be executed
-                del self._pending_subscriptions[topic]
+        subs = self._matching_subscriptions(topic)
+        if subs:
+            self._max_qos[topic] = max(sub.qos for sub in subs)
+        elif topic in self._max_qos:
+            del self._max_qos[topic]
+        if topic in self._pending_subscriptions:
+            # avoid any pending subscription to be executed
+            del self._pending_subscriptions[topic]
         async with self._paho_lock:
             mid = await self.hass.async_add_executor_job(_client_unsubscribe, topic)
             await self._register_mid(mid)
@@ -685,9 +682,8 @@ class MQTT:
                 _LOGGER.debug("Subscribing to %s, mid: %s, qos: %s", topic, mid, qos)
             return subscribe_result_list
 
-        async with self._pending_subscriptions_lock:
-            subscriptions = copy.copy(self._pending_subscriptions)
-            self._pending_subscriptions.clear()
+        subscriptions = copy.copy(self._pending_subscriptions)
+        self._pending_subscriptions.clear()
 
         async with self._paho_lock:
             results = await self.hass.async_add_executor_job(
@@ -766,8 +762,7 @@ class MQTT:
     async def _async_resubscribe(self) -> None:
         """Resubscribe on reconnect."""
         # Group subscriptions to only re-subscribe once for each topic.
-        async with self._pending_subscriptions_lock:
-            self._max_qos.clear()
+        self._max_qos.clear()
         keyfunc = attrgetter("topic")
         await self._async_queue_subscriptions(
             [
