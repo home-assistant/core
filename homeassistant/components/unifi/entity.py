@@ -103,6 +103,8 @@ class UnifiEntity(Entity, Generic[HandlerT, DataT]):
         self.controller = controller
         self.entity_description = description
 
+        controller.known_objects.add((description.key, obj_id))
+
         self._removed = False
 
         self._attr_available = description.available_fn(controller, obj_id)
@@ -117,6 +119,13 @@ class UnifiEntity(Entity, Generic[HandlerT, DataT]):
         """Register callbacks."""
         description = self.entity_description
         handler = description.api_handler_fn(self.controller.api)
+
+        @callback
+        def unregister_object() -> None:
+            """Remove object ID from known_objects when unloaded."""
+            self.controller.known_objects.discard((description.key, self._obj_id))
+
+        self.async_on_remove(unregister_object)
 
         # New data from handler
         self.async_on_remove(

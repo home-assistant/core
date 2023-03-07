@@ -43,5 +43,23 @@
       "title": "Reolink webhook URL uses HTTPS (SSL)",
       "description": "Reolink products can not push motion events to an HTTPS address (SSL), please configure a (local) HTTP address under \"Home Assistant URL\" in the [network settings]({network_link}). The current (local) address is: `{base_url}`"
     }
+  },
+  "entity": {
+    "select": {
+      "floodlight_mode": {
+        "state": {
+          "off": "Off",
+          "auto": "Auto",
+          "schedule": "Schedule"
+        }
+      },
+      "day_night_mode": {
+        "state": {
+          "auto": "Auto",
+          "color": "Color",
+          "blackwhite": "Black&White"
+        }
+      }
+    }
   }
 }
