@@ -1672,6 +1672,9 @@ async def test_canceling_debouncer_throws(
         task.cancel = MagicMock(return_value=True)
         await debouncer.async_cleanup()
         assert "Error cleaning up task" in caplog.text
+        await hass.async_block_till_done()
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
+        await hass.async_block_till_done()
 
 
 async def test_initial_setup_logs_error(
