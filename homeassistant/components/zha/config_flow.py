@@ -453,7 +453,7 @@ class BaseZhaFlow(FlowHandler):
 class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    VERSION = 4
+    VERSION = 3
 
     async def _set_unique_id_or_update_path(
         self, unique_id: str, device_path: str

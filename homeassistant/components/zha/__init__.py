@@ -90,6 +90,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     Will automatically load components to support devices found on the network.
     """
 
+    # Strip whitespace around `socket://` URIs, this is no longer accepted by zigpy
+    # This will be removed in 2023.7.0
+    data = config_entry.data
+    path = data[CONF_DEVICE][CONF_DEVICE_PATH]
+
+    if path.startswith("socket://") and path != path.strip():
+        data[CONF_DEVICE][CONF_DEVICE_PATH] = path.strip()
+        hass.config_entries.async_update_entry(config_entry, data=data)
+
     zha_data = hass.data.setdefault(DATA_ZHA, {})
     config = zha_data.get(DATA_ZHA_CONFIG, {})
 
@@ -183,15 +192,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             data[CONF_RADIO_TYPE] = "znp"
 
         config_entry.version = 3
-        hass.config_entries.async_update_entry(config_entry, data=data)
-
-    if config_entry.version == 3:
-        data = {**config_entry.data}
-
-        if (path := data[CONF_DEVICE][CONF_DEVICE_PATH]).startswith("socket://"):
-            data[CONF_DEVICE][CONF_DEVICE_PATH] = path.strip()
-
-        config_entry.version = 4
         hass.config_entries.async_update_entry(config_entry, data=data)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
