@@ -1,10 +1,12 @@
 """Utilities used by insteon component."""
 import asyncio
+from collections.abc import Callable
 import logging
 
 from pyinsteon import devices
 from pyinsteon.address import Address
 from pyinsteon.constants import ALDBStatus, DeviceAction
+from pyinsteon.device_types.device_base import Device
 from pyinsteon.events import OFF_EVENT, OFF_FAST_EVENT, ON_EVENT, ON_FAST_EVENT, Event
 from pyinsteon.managers.link_manager import (
     async_enter_linking_mode,
@@ -27,7 +29,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     ENTITY_MATCH_ALL,
 )
-from homeassistant.core import ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -89,7 +91,7 @@ from .schemas import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def _register_event(event: Event, listener) -> None:
+def _register_event(event: Event, listener: Callable) -> None:
     """Register the events raised by a device."""
     _LOGGER.debug(
         "Registering on/off event for %s %d %s",
@@ -100,11 +102,13 @@ def _register_event(event: Event, listener) -> None:
     event.subscribe(listener, force_strong_ref=True)
 
 
-def add_on_off_event_device(hass, device):
+def add_on_off_event_device(hass: HomeAssistant, device: Device) -> None:
     """Register an Insteon device as an on/off event device."""
 
     @callback
-    def async_fire_group_on_off_event(name, address, group, button):
+    def async_fire_group_on_off_event(
+        name: str, address: Address, group: int, button: str
+    ):
         # Firing an event when a button is pressed.
         if button and button[-2] == "_":
             button_id = button[-1].lower()
@@ -123,7 +127,7 @@ def add_on_off_event_device(hass, device):
         elif name == OFF_FAST_EVENT:
             event = EVENT_GROUP_OFF_FAST
         else:
-            event = f"insteon.{event.name}"
+            event = f"insteon.{name}"
         _LOGGER.debug("Firing event %s with %s", event, schema)
         hass.bus.async_fire(event, schema)
 
