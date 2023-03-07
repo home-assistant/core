@@ -69,18 +69,20 @@ async def test_failures_parametrized(
     assert config_entry.state == expected
 
 
-async def test_async_update_entry(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+async def test_entry_reloading(
+    hass: HomeAssistant, config_entry: MockConfigEntry, reolink_connect: MagicMock
 ) -> None:
-    """Test the update entry function."""
+    """Test the entry is reloaded correctly when settings change."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
+    assert reolink_connect.logout.call_count == 0
     assert config_entry.title == "test_reolink_name"
 
     hass.config_entries.async_update_entry(config_entry, title="New Name")
     await hass.async_block_till_done()
 
+    assert reolink_connect.logout.call_count == 1
     assert config_entry.title == "New Name"
 
 
