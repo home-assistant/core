@@ -2,6 +2,7 @@
 from copy import deepcopy
 from http import HTTPStatus
 import json
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -28,8 +29,9 @@ from zwave_js_server.model.controller import (
     ProvisioningEntry,
     QRProvisioningInformation,
 )
-from zwave_js_server.model.firmware import FirmwareUpdateData
+from zwave_js_server.model.controller.firmware import ControllerFirmwareUpdateData
 from zwave_js_server.model.node import Node
+from zwave_js_server.model.node.firmware import NodeFirmwareUpdateData
 
 from homeassistant.components.websocket_api import ERR_INVALID_FORMAT, ERR_NOT_FOUND
 from homeassistant.components.zwave_js.api import (
@@ -84,7 +86,7 @@ from tests.common import MockUser
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
-def get_device(hass, node):
+def get_device(hass: HomeAssistant, node):
     """Get device ID for a node."""
     dev_reg = dr.async_get(hass)
     device_id = get_device_id(node.client.driver, node)
@@ -779,10 +781,36 @@ async def test_add_node(
     client.async_send_command.reset_mock()
     client.async_send_command.return_value = {"success": True}
 
-    # Test Smart Start QR provisioning information with S2 inclusion strategy fails
+    # Test S2 DSK string string
     await ws_client.send_json(
         {
             ID: 6,
+            TYPE: "zwave_js/add_node",
+            ENTRY_ID: entry.entry_id,
+            INCLUSION_STRATEGY: InclusionStrategy.SECURITY_S2.value,
+            DSK: "test_dsk",
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "controller.begin_inclusion",
+        "options": {
+            "strategy": InclusionStrategy.SECURITY_S2,
+            "dsk": "test_dsk",
+        },
+    }
+
+    client.async_send_command.reset_mock()
+    client.async_send_command.return_value = {"success": True}
+
+    # Test Smart Start QR provisioning information with S2 inclusion strategy fails
+    await ws_client.send_json(
+        {
+            ID: 7,
             TYPE: "zwave_js/add_node",
             ENTRY_ID: entry.entry_id,
             INCLUSION_STRATEGY: InclusionStrategy.SECURITY_S2.value,
@@ -812,7 +840,7 @@ async def test_add_node(
     # Test QR provisioning information with S0 inclusion strategy fails
     await ws_client.send_json(
         {
-            ID: 7,
+            ID: 8,
             TYPE: "zwave_js/add_node",
             ENTRY_ID: entry.entry_id,
             INCLUSION_STRATEGY: InclusionStrategy.SECURITY_S0,
@@ -842,7 +870,7 @@ async def test_add_node(
     # Test ValueError is caught as failure
     await ws_client.send_json(
         {
-            ID: 8,
+            ID: 9,
             TYPE: "zwave_js/add_node",
             ENTRY_ID: entry.entry_id,
             INCLUSION_STRATEGY: InclusionStrategy.DEFAULT.value,
@@ -862,7 +890,7 @@ async def test_add_node(
     ):
         await ws_client.send_json(
             {
-                ID: 9,
+                ID: 10,
                 TYPE: "zwave_js/add_node",
                 ENTRY_ID: entry.entry_id,
             }
@@ -878,7 +906,7 @@ async def test_add_node(
     await hass.async_block_till_done()
 
     await ws_client.send_json(
-        {ID: 10, TYPE: "zwave_js/add_node", ENTRY_ID: entry.entry_id}
+        {ID: 11, TYPE: "zwave_js/add_node", ENTRY_ID: entry.entry_id}
     )
     msg = await ws_client.receive_json()
 
@@ -1431,9 +1459,72 @@ async def test_parse_qr_code_string(
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
-async def test_supports_feature(
-    hass: HomeAssistant, integration, client, hass_ws_client: WebSocketGenerator
-) -> None:
+async def test_try_parse_dsk_from_qr_code_string(
+    hass, integration, client, hass_ws_client
+):
+    """Test try_parse_dsk_from_qr_code_string websocket command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    client.async_send_command.return_value = {"dsk": "a"}
+
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/try_parse_dsk_from_qr_code_string",
+            ENTRY_ID: entry.entry_id,
+            QR_CODE_STRING: "90testtesttesttesttesttesttesttesttesttesttesttesttest",
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == "a"
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "utils.try_parse_dsk_from_qr_code_string",
+        "qr": "90testtesttesttesttesttesttesttesttesttesttesttesttest",
+    }
+
+    # Test FailedZWaveCommand is caught
+    with patch(
+        "homeassistant.components.zwave_js.api.async_try_parse_dsk_from_qr_code_string",
+        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
+    ):
+        await ws_client.send_json(
+            {
+                ID: 6,
+                TYPE: "zwave_js/try_parse_dsk_from_qr_code_string",
+                ENTRY_ID: entry.entry_id,
+                QR_CODE_STRING: "90testtesttesttesttesttesttesttesttesttesttesttesttest",
+            }
+        )
+        msg = await ws_client.receive_json()
+
+        assert not msg["success"]
+        assert msg["error"]["code"] == "zwave_error"
+        assert msg["error"]["message"] == "Z-Wave error 1: error message"
+
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {
+            ID: 7,
+            TYPE: "zwave_js/try_parse_dsk_from_qr_code_string",
+            ENTRY_ID: entry.entry_id,
+            QR_CODE_STRING: "90testtesttesttesttesttesttesttesttesttesttesttesttest",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_LOADED
+
+
+async def test_supports_feature(hass, integration, client, hass_ws_client):
     """Test supports_feature websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -2893,31 +2984,76 @@ async def test_get_config_parameters(
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
+@pytest.mark.parametrize(
+    ("firmware_data", "expected_data"),
+    [({"target": "1"}, {"firmware_target": 1}), ({}, {})],
+)
 async def test_firmware_upload_view(
     hass: HomeAssistant,
     multisensor_6,
     integration,
     hass_client: ClientSessionGenerator,
     firmware_file,
+    firmware_data: dict[str, Any],
+    expected_data: dict[str, Any],
 ) -> None:
     """Test the HTTP firmware upload view."""
     client = await hass_client()
     device = get_device(hass, multisensor_6)
     with patch(
         "homeassistant.components.zwave_js.api.update_firmware",
-    ) as mock_cmd, patch.dict(
+    ) as mock_node_cmd, patch(
+        "homeassistant.components.zwave_js.api.controller_firmware_update_otw",
+    ) as mock_controller_cmd, patch.dict(
         "homeassistant.components.zwave_js.api.USER_AGENT",
         {"HomeAssistant": "0.0.0"},
     ):
+        data = {"file": firmware_file}
+        data.update(firmware_data)
+
         resp = await client.post(
+            f"/api/zwave_js/firmware/upload/{device.id}", data=data
+        )
+
+        update_data = NodeFirmwareUpdateData("file", bytes(10))
+        for attr, value in expected_data.items():
+            setattr(update_data, attr, value)
+
+        mock_controller_cmd.assert_not_called()
+        assert mock_node_cmd.call_args[0][1:3] == (multisensor_6, [update_data])
+        assert mock_node_cmd.call_args[1] == {
+            "additional_user_agent_components": {"HomeAssistant": "0.0.0"},
+        }
+        assert json.loads(await resp.text()) is None
+
+
+async def test_firmware_upload_view_controller(
+    hass: HomeAssistant,
+    client,
+    integration,
+    hass_client: ClientSessionGenerator,
+    firmware_file,
+) -> None:
+    """Test the HTTP firmware upload view for a controller."""
+    hass_client = await hass_client()
+    device = get_device(hass, client.driver.controller.nodes[1])
+    with patch(
+        "homeassistant.components.zwave_js.api.update_firmware",
+    ) as mock_node_cmd, patch(
+        "homeassistant.components.zwave_js.api.controller_firmware_update_otw",
+    ) as mock_controller_cmd, patch.dict(
+        "homeassistant.components.zwave_js.api.USER_AGENT",
+        {"HomeAssistant": "0.0.0"},
+    ):
+        resp = await hass_client.post(
             f"/api/zwave_js/firmware/upload/{device.id}",
             data={"file": firmware_file},
         )
-        assert mock_cmd.call_args[0][1:3] == (
-            multisensor_6,
-            [FirmwareUpdateData("file", bytes(10))],
+        mock_node_cmd.assert_not_called()
+        assert mock_controller_cmd.call_args[0][1:2] == (
+            ControllerFirmwareUpdateData("file", bytes(10)),
         )
-        assert mock_cmd.call_args[1] == {
+        assert mock_controller_cmd.call_args[1] == {
             "additional_user_agent_components": {"HomeAssistant": "0.0.0"},
         }
         assert json.loads(await resp.text()) is None
@@ -2955,6 +3091,24 @@ async def test_firmware_upload_view_invalid_payload(
         data={"wrong_key": bytes(10)},
     )
     assert resp.status == HTTPStatus.BAD_REQUEST
+
+
+async def test_firmware_upload_view_no_driver(
+    hass: HomeAssistant,
+    client,
+    multisensor_6,
+    integration,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test the HTTP firmware upload view when the driver doesn't exist."""
+    device = get_device(hass, multisensor_6)
+    client.driver = None
+    aiohttp_client = await hass_client()
+    resp = await aiohttp_client.post(
+        f"/api/zwave_js/firmware/upload/{device.id}",
+        data={"wrong_key": bytes(10)},
+    )
+    assert resp.status == HTTPStatus.NOT_FOUND
 
 
 @pytest.mark.parametrize(
@@ -3707,6 +3861,121 @@ async def test_subscribe_firmware_update_status_initial_value(
         },
     )
     multisensor_6.receive_event(event)
+
+    client.async_send_command_no_wait.return_value = {}
+
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/subscribe_firmware_update_status",
+            DEVICE_ID: device.id,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+
+    msg = await ws_client.receive_json()
+    assert msg["event"] == {
+        "event": "firmware update progress",
+        "current_file": 1,
+        "total_files": 1,
+        "sent_fragments": 1,
+        "total_fragments": 10,
+        "progress": 10.0,
+    }
+
+
+async def test_subscribe_controller_firmware_update_status(
+    hass, integration, client, hass_ws_client
+):
+    """Test the subscribe_firmware_update_status websocket command for a node."""
+    ws_client = await hass_ws_client(hass)
+    device = get_device(hass, client.driver.controller.nodes[1])
+
+    client.async_send_command_no_wait.return_value = {}
+
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/subscribe_firmware_update_status",
+            DEVICE_ID: device.id,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+
+    event = Event(
+        type="firmware update progress",
+        data={
+            "source": "controller",
+            "event": "firmware update progress",
+            "progress": {
+                "sentFragments": 1,
+                "totalFragments": 10,
+                "progress": 10.0,
+            },
+        },
+    )
+    client.driver.controller.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"] == {
+        "event": "firmware update progress",
+        "current_file": 1,
+        "total_files": 1,
+        "sent_fragments": 1,
+        "total_fragments": 10,
+        "progress": 10.0,
+    }
+
+    event = Event(
+        type="firmware update finished",
+        data={
+            "source": "controller",
+            "event": "firmware update finished",
+            "result": {
+                "status": 255,
+                "success": True,
+            },
+        },
+    )
+    client.driver.controller.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"] == {
+        "event": "firmware update finished",
+        "status": 255,
+        "success": True,
+    }
+
+
+async def test_subscribe_controller_firmware_update_status_initial_value(
+    hass, client, integration, hass_ws_client
+):
+    """Test subscribe_firmware_update_status cmd with in progress update for node."""
+    ws_client = await hass_ws_client(hass)
+    device = get_device(hass, client.driver.controller.nodes[1])
+
+    assert client.driver.controller.firmware_update_progress is None
+
+    # Send a firmware update progress event before the WS command
+    event = Event(
+        type="firmware update progress",
+        data={
+            "source": "controller",
+            "event": "firmware update progress",
+            "progress": {
+                "sentFragments": 1,
+                "totalFragments": 10,
+                "progress": 10.0,
+            },
+        },
+    )
+    client.driver.controller.receive_event(event)
 
     client.async_send_command_no_wait.return_value = {}
 

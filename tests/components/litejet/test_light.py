@@ -178,7 +178,7 @@ async def test_deactivated_event(hass: HomeAssistant, mock_litejet) -> None:
     assert hass.states.get(ENTITY_OTHER_LIGHT).state == "off"
 
 
-async def test_connected_event(hass, mock_litejet):
+async def test_connected_event(hass: HomeAssistant, mock_litejet) -> None:
     """Test handling an event from LiteJet."""
 
     await async_init_integration(hass)

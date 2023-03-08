@@ -16,20 +16,19 @@ import re
 from statistics import mean
 from typing import TYPE_CHECKING, Any, Literal, cast
 
-from sqlalchemy import bindparam, func, lambda_stmt, select, text
+from sqlalchemy import Select, and_, bindparam, func, lambda_stmt, select, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import OperationalError, SQLAlchemyError, StatementError
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import literal_column, true
 from sqlalchemy.sql.lambdas import StatementLambdaElement
-from sqlalchemy.sql.selectable import Subquery
 import voluptuous as vol
 
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import Event, HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.storage import STORAGE_DIR
@@ -56,7 +55,7 @@ from .const import (
     DOMAIN,
     EVENT_RECORDER_5MIN_STATISTICS_GENERATED,
     EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,
-    MAX_ROWS_TO_PURGE,
+    SQLITE_MAX_BIND_VARS,
     SupportedDialect,
 )
 from .db_schema import (
@@ -75,6 +74,7 @@ from .models import (
     datetime_to_timestamp_or_none,
 )
 from .util import (
+    database_job_retry_wrapper,
     execute,
     execute_stmt_lambda_element,
     get_instance,
@@ -338,7 +338,7 @@ def async_setup(hass: HomeAssistant) -> None:
     def setup_entity_registry_event_handler(hass: HomeAssistant) -> None:
         """Subscribe to event registry events."""
         hass.bus.async_listen(
-            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
             _async_entity_id_changed,
             event_filter=entity_registry_changed_filter,
         )
@@ -441,7 +441,7 @@ def _find_duplicates(
         )
         .filter(subquery.c.is_duplicate == 1)
         .order_by(table.metadata_id, table.start, table.id.desc())
-        .limit(1000 * MAX_ROWS_TO_PURGE)
+        .limit(1000 * SQLITE_MAX_BIND_VARS)
     )
     duplicates = execute(query)
     original_as_dict = {}
@@ -505,17 +505,20 @@ def _delete_duplicates_from_table(
         if not duplicate_ids:
             break
         all_non_identical_duplicates.extend(non_identical_duplicates)
-        for i in range(0, len(duplicate_ids), MAX_ROWS_TO_PURGE):
+        for i in range(0, len(duplicate_ids), SQLITE_MAX_BIND_VARS):
             deleted_rows = (
                 session.query(table)
-                .filter(table.id.in_(duplicate_ids[i : i + MAX_ROWS_TO_PURGE]))
+                .filter(table.id.in_(duplicate_ids[i : i + SQLITE_MAX_BIND_VARS]))
                 .delete(synchronize_session=False)
             )
             total_deleted_rows += deleted_rows
     return (total_deleted_rows, all_non_identical_duplicates)
 
 
-def delete_statistics_duplicates(hass: HomeAssistant, session: Session) -> None:
+@database_job_retry_wrapper("delete statistics duplicates", 3)
+def delete_statistics_duplicates(
+    instance: Recorder, hass: HomeAssistant, session: Session
+) -> None:
     """Identify and delete duplicated statistics.
 
     A backup will be made of duplicated statistics before it is deleted.
@@ -584,7 +587,7 @@ def _find_statistics_meta_duplicates(session: Session) -> list[int]:
         )
         .filter(subquery.c.is_duplicate == 1)
         .order_by(StatisticsMeta.statistic_id, StatisticsMeta.id.desc())
-        .limit(1000 * MAX_ROWS_TO_PURGE)
+        .limit(1000 * SQLITE_MAX_BIND_VARS)
     )
     duplicates = execute(query)
     statistic_id = None
@@ -609,10 +612,12 @@ def _delete_statistics_meta_duplicates(session: Session) -> int:
         duplicate_ids = _find_statistics_meta_duplicates(session)
         if not duplicate_ids:
             break
-        for i in range(0, len(duplicate_ids), MAX_ROWS_TO_PURGE):
+        for i in range(0, len(duplicate_ids), SQLITE_MAX_BIND_VARS):
             deleted_rows = (
                 session.query(StatisticsMeta)
-                .filter(StatisticsMeta.id.in_(duplicate_ids[i : i + MAX_ROWS_TO_PURGE]))
+                .filter(
+                    StatisticsMeta.id.in_(duplicate_ids[i : i + SQLITE_MAX_BIND_VARS])
+                )
                 .delete(synchronize_session=False)
             )
             total_deleted_rows += deleted_rows
@@ -644,27 +649,19 @@ def _compile_hourly_statistics_summary_mean_stmt(
     )
 
 
-def _compile_hourly_statistics_last_sum_stmt_subquery(
-    start_time_ts: float, end_time_ts: float
-) -> Subquery:
-    """Generate the summary mean statement for hourly statistics."""
-    return (
-        select(*QUERY_STATISTICS_SUMMARY_SUM)
-        .filter(StatisticsShortTerm.start_ts >= start_time_ts)
-        .filter(StatisticsShortTerm.start_ts < end_time_ts)
-        .subquery()
-    )
-
-
 def _compile_hourly_statistics_last_sum_stmt(
     start_time_ts: float, end_time_ts: float
 ) -> StatementLambdaElement:
     """Generate the summary mean statement for hourly statistics."""
-    subquery = _compile_hourly_statistics_last_sum_stmt_subquery(
-        start_time_ts, end_time_ts
-    )
     return lambda_stmt(
-        lambda: select(subquery)
+        lambda: select(
+            subquery := (
+                select(*QUERY_STATISTICS_SUMMARY_SUM)
+                .filter(StatisticsShortTerm.start_ts >= start_time_ts)
+                .filter(StatisticsShortTerm.start_ts < end_time_ts)
+                .subquery()
+            )
+        )
         .filter(subquery.c.rownum == 1)
         .order_by(subquery.c.metadata_id)
     )
@@ -737,36 +734,35 @@ def compile_statistics(instance: Recorder, start: datetime, fire_events: bool) -
     end = start + timedelta(minutes=5)
 
     # Return if we already have 5-minute statistics for the requested period
-    with session_scope(session=instance.get_session()) as session:
-        if session.query(StatisticsRuns).filter_by(start=start).first():
-            _LOGGER.debug("Statistics already compiled for %s-%s", start, end)
-            return True
-
-    _LOGGER.debug("Compiling statistics for %s-%s", start, end)
-    platform_stats: list[StatisticResult] = []
-    current_metadata: dict[str, tuple[int, StatisticMetaData]] = {}
-    # Collect statistics from all platforms implementing support
-    for domain, platform in instance.hass.data[DOMAIN].recorder_platforms.items():
-        if not hasattr(platform, "compile_statistics"):
-            continue
-        compiled: PlatformCompiledStatistics = platform.compile_statistics(
-            instance.hass, start, end
-        )
-        _LOGGER.debug(
-            "Statistics for %s during %s-%s: %s",
-            domain,
-            start,
-            end,
-            compiled.platform_stats,
-        )
-        platform_stats.extend(compiled.platform_stats)
-        current_metadata.update(compiled.current_metadata)
-
-    # Insert collected statistics in the database
     with session_scope(
         session=instance.get_session(),
         exception_filter=_filter_unique_constraint_integrity_error(instance),
     ) as session:
+        if session.query(StatisticsRuns).filter_by(start=start).first():
+            _LOGGER.debug("Statistics already compiled for %s-%s", start, end)
+            return True
+
+        _LOGGER.debug("Compiling statistics for %s-%s", start, end)
+        platform_stats: list[StatisticResult] = []
+        current_metadata: dict[str, tuple[int, StatisticMetaData]] = {}
+        # Collect statistics from all platforms implementing support
+        for domain, platform in instance.hass.data[DOMAIN].recorder_platforms.items():
+            if not hasattr(platform, "compile_statistics"):
+                continue
+            compiled: PlatformCompiledStatistics = platform.compile_statistics(
+                instance.hass, start, end
+            )
+            _LOGGER.debug(
+                "Statistics for %s during %s-%s: %s",
+                domain,
+                start,
+                end,
+                compiled.platform_stats,
+            )
+            platform_stats.extend(compiled.platform_stats)
+            current_metadata.update(compiled.current_metadata)
+
+        # Insert collected statistics in the database
         for stats in platform_stats:
             metadata_id = _update_or_add_metadata(
                 session, stats["meta"], current_metadata
@@ -986,6 +982,7 @@ def list_statistic_ids(
     period.
     """
     result = {}
+    statistic_ids_set = set(statistic_ids) if statistic_ids else None
 
     # Query the database
     with session_scope(hass=hass) as session:
@@ -1008,26 +1005,31 @@ def list_statistic_ids(
             for _, meta in metadata.values()
         }
 
-    # Query all integrations with a registered recorder platform
-    for platform in hass.data[DOMAIN].recorder_platforms.values():
-        if not hasattr(platform, "list_statistic_ids"):
-            continue
-        platform_statistic_ids = platform.list_statistic_ids(
-            hass, statistic_ids=statistic_ids, statistic_type=statistic_type
-        )
-
-        for key, meta in platform_statistic_ids.items():
-            if key in result:
+    if not statistic_ids_set or statistic_ids_set.difference(result):
+        # If we want all statistic_ids, or some are missing, we need to query
+        # the integrations for the missing ones.
+        #
+        # Query all integrations with a registered recorder platform
+        for platform in hass.data[DOMAIN].recorder_platforms.values():
+            if not hasattr(platform, "list_statistic_ids"):
                 continue
-            result[key] = {
-                "display_unit_of_measurement": meta["unit_of_measurement"],
-                "has_mean": meta["has_mean"],
-                "has_sum": meta["has_sum"],
-                "name": meta["name"],
-                "source": meta["source"],
-                "unit_class": _get_unit_class(meta["unit_of_measurement"]),
-                "unit_of_measurement": meta["unit_of_measurement"],
-            }
+            platform_statistic_ids = platform.list_statistic_ids(
+                hass, statistic_ids=statistic_ids, statistic_type=statistic_type
+            )
+
+            for key, meta in platform_statistic_ids.items():
+                if key in result:
+                    # The database has a higher priority than the integration
+                    continue
+                result[key] = {
+                    "display_unit_of_measurement": meta["unit_of_measurement"],
+                    "has_mean": meta["has_mean"],
+                    "has_sum": meta["has_sum"],
+                    "name": meta["name"],
+                    "source": meta["source"],
+                    "unit_class": _get_unit_class(meta["unit_of_measurement"]),
+                    "unit_of_measurement": meta["unit_of_measurement"],
+                }
 
     # Return a list of statistic_id + metadata
     return [
@@ -1256,7 +1258,8 @@ def _reduce_statistics_per_month(
     )
 
 
-def _statistics_during_period_stmt(
+def _generate_statistics_during_period_stmt(
+    columns: Select,
     start_time: datetime,
     end_time: datetime | None,
     metadata_ids: list[int] | None,
@@ -1268,21 +1271,6 @@ def _statistics_during_period_stmt(
     This prepares a lambda_stmt query, so we don't insert the parameters yet.
     """
     start_time_ts = start_time.timestamp()
-
-    columns = select(table.metadata_id, table.start_ts)
-    if "last_reset" in types:
-        columns = columns.add_columns(table.last_reset_ts)
-    if "max" in types:
-        columns = columns.add_columns(table.max)
-    if "mean" in types:
-        columns = columns.add_columns(table.mean)
-    if "min" in types:
-        columns = columns.add_columns(table.min)
-    if "state" in types:
-        columns = columns.add_columns(table.state)
-    if "sum" in types:
-        columns = columns.add_columns(table.sum)
-
     stmt = lambda_stmt(lambda: columns.filter(table.start_ts >= start_time_ts))
     if end_time is not None:
         end_time_ts = end_time.timestamp()
@@ -1293,6 +1281,23 @@ def _statistics_during_period_stmt(
             table.metadata_id.in_(metadata_ids)  # type:ignore[arg-type]
         )
     stmt += lambda q: q.order_by(table.metadata_id, table.start_ts)
+    return stmt
+
+
+def _generate_max_mean_min_statistic_in_sub_period_stmt(
+    columns: Select,
+    start_time: datetime | None,
+    end_time: datetime | None,
+    table: type[StatisticsBase],
+    metadata_id: int,
+) -> StatementLambdaElement:
+    stmt = lambda_stmt(lambda: columns.filter(table.metadata_id == metadata_id))
+    if start_time is not None:
+        start_time_ts = start_time.timestamp()
+        stmt += lambda q: q.filter(table.start_ts >= start_time_ts)
+    if end_time is not None:
+        end_time_ts = end_time.timestamp()
+        stmt += lambda q: q.filter(table.start_ts < end_time_ts)
     return stmt
 
 
@@ -1321,13 +1326,9 @@ def _get_max_mean_min_statistic_in_sub_period(
         # https://github.com/sqlalchemy/sqlalchemy/issues/9189
         # pylint: disable-next=not-callable
         columns = columns.add_columns(func.min(table.min))
-    stmt = lambda_stmt(lambda: columns.filter(table.metadata_id == metadata_id))
-    if start_time is not None:
-        start_time_ts = start_time.timestamp()
-        stmt += lambda q: q.filter(table.start_ts >= start_time_ts)
-    if end_time is not None:
-        end_time_ts = end_time.timestamp()
-        stmt += lambda q: q.filter(table.start_ts < end_time_ts)
+    stmt = _generate_max_mean_min_statistic_in_sub_period_stmt(
+        columns, start_time, end_time, table, metadata_id
+    )
     stats = cast(Sequence[Row[Any]], execute_stmt_lambda_element(session, stmt))
     if not stats:
         return
@@ -1742,8 +1743,21 @@ def _statistics_during_period_with_session(
     table: type[Statistics | StatisticsShortTerm] = (
         Statistics if period != "5minute" else StatisticsShortTerm
     )
-    stmt = _statistics_during_period_stmt(
-        start_time, end_time, metadata_ids, table, types
+    columns = select(table.metadata_id, table.start_ts)  # type: ignore[call-overload]
+    if "last_reset" in types:
+        columns = columns.add_columns(table.last_reset_ts)
+    if "max" in types:
+        columns = columns.add_columns(table.max)
+    if "mean" in types:
+        columns = columns.add_columns(table.mean)
+    if "min" in types:
+        columns = columns.add_columns(table.min)
+    if "state" in types:
+        columns = columns.add_columns(table.state)
+    if "sum" in types:
+        columns = columns.add_columns(table.sum)
+    stmt = _generate_statistics_during_period_stmt(
+        columns, start_time, end_time, metadata_ids, table, types
     )
     stats = cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
 
@@ -1908,32 +1922,25 @@ def get_last_short_term_statistics(
     )
 
 
-def _generate_most_recent_statistic_row(metadata_ids: list[int]) -> Subquery:
-    """Generate the subquery to find the most recent statistic row."""
-    return (
-        select(
-            StatisticsShortTerm.metadata_id,
-            # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-            # pylint: disable-next=not-callable
-            func.max(StatisticsShortTerm.start_ts).label("start_max"),
-        )
-        .where(StatisticsShortTerm.metadata_id.in_(metadata_ids))
-        .group_by(StatisticsShortTerm.metadata_id)
-    ).subquery()
-
-
 def _latest_short_term_statistics_stmt(
     metadata_ids: list[int],
 ) -> StatementLambdaElement:
     """Create the statement for finding the latest short term stat rows."""
     stmt = lambda_stmt(lambda: select(*QUERY_STATISTICS_SHORT_TERM))
-    most_recent_statistic_row = _generate_most_recent_statistic_row(metadata_ids)
     stmt += lambda s: s.join(
-        most_recent_statistic_row,
         (
-            StatisticsShortTerm.metadata_id  # pylint: disable=comparison-with-callable
-            == most_recent_statistic_row.c.metadata_id
-        )
+            most_recent_statistic_row := (
+                select(
+                    StatisticsShortTerm.metadata_id,
+                    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+                    # pylint: disable-next=not-callable
+                    func.max(StatisticsShortTerm.start_ts).label("start_max"),
+                )
+                .where(StatisticsShortTerm.metadata_id.in_(metadata_ids))
+                .group_by(StatisticsShortTerm.metadata_id)
+            ).subquery()
+        ),
+        (StatisticsShortTerm.metadata_id == most_recent_statistic_row.c.metadata_id)
         & (StatisticsShortTerm.start_ts == most_recent_statistic_row.c.start_max),
     )
     return stmt
@@ -1977,6 +1984,37 @@ def get_latest_short_term_statistics(
         )
 
 
+def _generate_statistics_at_time_stmt(
+    columns: Select,
+    table: type[StatisticsBase],
+    metadata_ids: set[int],
+    start_time_ts: float,
+) -> StatementLambdaElement:
+    """Create the statement for finding the statistics for a given time."""
+    return lambda_stmt(
+        lambda: columns.join(
+            (
+                most_recent_statistic_ids := (
+                    select(
+                        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+                        # pylint: disable-next=not-callable
+                        func.max(table.start_ts).label("max_start_ts"),
+                        table.metadata_id.label("max_metadata_id"),
+                    )
+                    .filter(table.start_ts < start_time_ts)
+                    .filter(table.metadata_id.in_(metadata_ids))
+                    .group_by(table.metadata_id)
+                    .subquery()
+                )
+            ),
+            and_(
+                table.start_ts == most_recent_statistic_ids.c.max_start_ts,
+                table.metadata_id == most_recent_statistic_ids.c.max_metadata_id,
+            ),
+        )
+    )
+
+
 def _statistics_at_time(
     session: Session,
     metadata_ids: set[int],
@@ -1998,23 +2036,9 @@ def _statistics_at_time(
         columns = columns.add_columns(table.state)
     if "sum" in types:
         columns = columns.add_columns(table.sum)
-
     start_time_ts = start_time.timestamp()
-    stmt = lambda_stmt(lambda: columns)
-
-    most_recent_statistic_ids = (
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-        # pylint: disable-next=not-callable
-        lambda_stmt(lambda: select(func.max(table.id).label("max_id")))
-        .filter(table.start_ts < start_time_ts)
-        .filter(table.metadata_id.in_(metadata_ids))
-        .group_by(table.metadata_id)
-        .subquery()
-    )
-
-    stmt += lambda q: q.join(
-        most_recent_statistic_ids,
-        table.id == most_recent_statistic_ids.c.max_id,
+    stmt = _generate_statistics_at_time_stmt(
+        columns, table, metadata_ids, start_time_ts
     )
     return cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
 

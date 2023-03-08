@@ -10,7 +10,7 @@
     "update_enabled": true
   },
   "data": {
-    "status": {
+    "vehicle_status": {
       "AVG_FUEL_CONSUMPTION": 2.3,
       "DISTANCE_TO_EMPTY_FUEL": 707,
       "DOOR_BOOT_LOCK_STATUS": "UNKNOWN",

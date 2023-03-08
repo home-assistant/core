@@ -460,7 +460,7 @@ def test_supported_pgsql(caplog: pytest.LogCaptureFixture, pgsql_version) -> Non
 
     assert "minimum supported version" not in caplog.text
     assert database_engine is not None
-    assert database_engine.optimizer.slow_range_in_select is True
+    assert database_engine.optimizer.slow_range_in_select is False
 
 
 @pytest.mark.parametrize(
