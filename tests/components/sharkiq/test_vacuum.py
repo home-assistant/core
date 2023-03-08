@@ -17,6 +17,8 @@ from homeassistant.components.sharkiq.vacuum import (
     ATTR_ERROR_MSG,
     ATTR_LOW_LIGHT,
     ATTR_RECHARGE_RESUME,
+    ATTR_ROOMS,
+    ATTR_RSSI,
     FAN_SPEEDS_MAP,
 )
 from homeassistant.components.vacuum import (
@@ -144,6 +146,8 @@ async def test_simple_properties(hass: HomeAssistant) -> None:
         (ATTR_ERROR_MSG, "Cliff sensor is blocked"),
         (ATTR_LOW_LIGHT, False),
         (ATTR_RECHARGE_RESUME, True),
+        (ATTR_RSSI, -46),
+        (ATTR_ROOMS, []),
     ],
 )
 async def test_initial_attributes(
