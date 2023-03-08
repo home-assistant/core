@@ -65,16 +65,16 @@ BINARY_SENSORS = [
         value_fn=lambda data: data.alert["alert_install_pending"],
     ),
     StarlinkBinarySensorEntityDescription(
-        key="currently_obstructed",
-        name="Obstructed",
-        device_class=BinarySensorDeviceClass.PROBLEM,
-        value_fn=lambda data: data.status["currently_obstructed"],
-    ),
-    StarlinkBinarySensorEntityDescription(
         key="roaming",
         name="Roaming mode",
         entity_registry_enabled_default=False,
         value_fn=lambda data: data.alert["alert_roaming"],
+    ),
+    StarlinkBinarySensorEntityDescription(
+        key="currently_obstructed",
+        name="Obstructed",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value_fn=lambda data: data.status["currently_obstructed"],
     ),
     StarlinkBinarySensorEntityDescription(
         key="heating",
