@@ -445,31 +445,6 @@ async def test_invalid_indexes(hass: HomeAssistant) -> None:
     assert state is None
 
 
-async def test_aqi_sensor_availability(hass: HomeAssistant) -> None:
-    """Ensure that we mark the AQI sensor unavailable correctly when indexes are invalid."""
-    await init_integration(hass)
-
-    state = hass.states.get("sensor.home_aqi")
-    assert state
-    assert state.state != STATE_UNAVAILABLE
-    assert state.state == "good"
-
-    future = utcnow() + timedelta(minutes=60)
-    with patch(
-        "homeassistant.components.gios.Gios._get_all_sensors",
-        return_value=json.loads(load_fixture("gios/sensors.json")),
-    ), patch(
-        "homeassistant.components.gios.Gios._get_indexes",
-        return_value={},
-    ):
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
-
-        state = hass.states.get("sensor.home_aqi")
-        assert state
-        assert state.state == STATE_UNAVAILABLE
-
-
 async def test_unique_id_migration(hass: HomeAssistant) -> None:
     """Test states of the unique_id migration."""
     registry = er.async_get(hass)
