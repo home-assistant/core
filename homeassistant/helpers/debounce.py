@@ -94,9 +94,6 @@ class Debouncer(Generic[_R_co]):
         """Handle a finished timer."""
         assert self._job is not None
 
-        if not self._execute_at_end_of_timer:
-            return
-
         self._execute_at_end_of_timer = False
 
         # Locked means a call is in progress. Any call is good, so abort.
