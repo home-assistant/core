@@ -117,8 +117,6 @@ class Debouncer(Generic[_R_co]):
             except Exception:  # pylint: disable=broad-except
                 self.logger.exception("Unexpected exception from %s", self.function)
 
-            self._schedule_timer()
-
     @callback
     def async_cancel(self) -> None:
         """Cancel any scheduled call."""
