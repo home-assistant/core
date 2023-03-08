@@ -60,7 +60,6 @@ class ServiceDetails(NamedTuple):
 SERVICE_HANDLERS = {
     SERVICE_ENIGMA2: ServiceDetails("media_player", "enigma2"),
     "yamaha": ServiceDetails("media_player", "yamaha"),
-    "frontier_silicon": ServiceDetails("media_player", "frontier_silicon"),
     "openhome": ServiceDetails("media_player", "openhome"),
     "bluesound": ServiceDetails("media_player", "bluesound"),
 }
