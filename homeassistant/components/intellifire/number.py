@@ -74,8 +74,7 @@ class IntellifireTimerControlEntity(IntellifireEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Slider change."""
-        minutes: int = int(value)
-        if minutes == 0:
+        if (minutes := int(value)) == 0:
             await self.coordinator.control_api.stop_sleep_timer()
         else:
             await self.coordinator.control_api.set_sleep_timer(minutes=minutes)
