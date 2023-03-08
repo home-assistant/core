@@ -94,8 +94,6 @@ class Debouncer(Generic[_R_co]):
         """Handle a finished timer."""
         assert self._job is not None
 
-        self._timer_task = None
-
         if not self._execute_at_end_of_timer:
             return
 
@@ -108,7 +106,7 @@ class Debouncer(Generic[_R_co]):
         async with self._execute_lock:
             # Abort if timer got set while we're waiting for the lock.
             if self._timer_task:
-                return  # type: ignore[unreachable]
+                return
 
             try:
                 task = self.hass.async_run_hass_job(self._job)
@@ -131,13 +129,12 @@ class Debouncer(Generic[_R_co]):
 
     def _on_debounce(self) -> None:
         """Create job task, but only if pending."""
+        self._timer_task = None
         if self._execute_at_end_of_timer:
             self.hass.async_create_task(
                 self._handle_timer_finish(),
                 f"debouncer {self._job} finish cooldown={self.cooldown}, immediate={self.immediate}",
             )
-        else:
-            self._timer_task = None
 
     @callback
     def _schedule_timer(self) -> None:
