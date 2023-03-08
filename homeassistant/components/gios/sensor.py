@@ -34,7 +34,6 @@ from .const import (
     ATTR_PM10,
     ATTR_PM25,
     ATTR_SO2,
-    ATTR_STATION,
     ATTRIBUTION,
     DOMAIN,
     MANUFACTURER,
@@ -171,9 +170,7 @@ class GiosSensor(CoordinatorEntity[GiosDataUpdateCoordinator], SensorEntity):
             configuration_url=URL.format(station_id=coordinator.gios.station_id),
         )
         self._attr_unique_id = f"{coordinator.gios.station_id}-{description.key}"
-        self._attrs: dict[str, Any] = {
-            ATTR_STATION: self.coordinator.gios.station_name,
-        }
+        self._attrs: dict[str, Any] = {}
         self.entity_description = description
 
     @property
