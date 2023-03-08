@@ -276,7 +276,7 @@ aioskybell==22.7.0
 aioslimproto==2.1.1
 
 # homeassistant.components.honeywell
-aiosomecomfort==0.0.11
+aiosomecomfort==0.0.14
 
 # homeassistant.components.steamist
 aiosteamist==0.3.2
