@@ -9,7 +9,7 @@ from homeassistant import config_entries
 from homeassistant.components.sharkiq.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from .const import CONFIG, TEST_PASSWORD, TEST_USERNAME, UNIQUE_ID
+from .const import CONFIG, TEST_PASSWORD, TEST_REGION, TEST_USERNAME, UNIQUE_ID
 
 from tests.common import MockConfigEntry
 
@@ -37,6 +37,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         "username": TEST_USERNAME,
         "password": TEST_PASSWORD,
+        "region": TEST_REGION,
     }
     await hass.async_block_till_done()
     mock_setup_entry.assert_called_once()
@@ -47,7 +48,7 @@ async def test_form(hass: HomeAssistant) -> None:
     [
         (SharkIqAuthError, "invalid_auth"),
         (aiohttp.ClientError, "cannot_connect"),
-        (TypeError, "unknown"),
+        (TypeError, "cannot_connect"),
     ],
 )
 async def test_form_error(hass: HomeAssistant, exc: Exception, base_error: str) -> None:
@@ -87,7 +88,7 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
     [
         (SharkIqAuthError, "form", "errors", "invalid_auth"),
         (aiohttp.ClientError, "abort", "reason", "cannot_connect"),
-        (TypeError, "abort", "reason", "unknown"),
+        (TypeError, "abort", "reason", "cannot_connect"),
     ],
 )
 async def test_reauth(

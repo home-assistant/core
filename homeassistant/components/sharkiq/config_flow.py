@@ -11,14 +11,20 @@ from sharkiq import SharkIqAuthError, get_ayla_api
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
 
 SHARKIQ_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+    {
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_REGION, default="Everywhere Else"): vol.In(
+            ["Europe", "Everywhere Else"]
+        ),
+    }
 )
 
 
@@ -30,16 +36,28 @@ async def _validate_input(
         username=data[CONF_USERNAME],
         password=data[CONF_PASSWORD],
         websession=async_get_clientsession(hass),
+        europe=(data[CONF_REGION] == "Europe"),
     )
 
     try:
         async with async_timeout.timeout(10):
             LOGGER.debug("Initialize connection to Ayla networks API")
             await ayla_api.async_sign_in()
-    except (asyncio.TimeoutError, aiohttp.ClientError) as errors:
-        raise CannotConnect from errors
+    except (asyncio.TimeoutError, aiohttp.ClientError) as error:
+        LOGGER.error(error)
+        raise CannotConnect(
+            "Unable to connect to SharkIQ services.  Check your region settings."
+        ) from error
     except SharkIqAuthError as error:
-        raise InvalidAuth from error
+        LOGGER.error(error)
+        raise InvalidAuth(
+            "Username or password incorrect.  Please check your credentials."
+        ) from error
+    except Exception as error:
+        LOGGER.error(error)
+        raise CannotConnect(
+            "An unknown error occurred. Check your region settings and open an issue on Github if the issue persists."
+        ) from error
 
     # Return info that you want to store in the config entry.
     return {"title": data[CONF_USERNAME]}
@@ -64,9 +82,10 @@ class SharkIqConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+        except Exception as error:  # pylint: disable=broad-except
             LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
+            raise UnknownAuth("An unknown error has occurred.") from error
         return info, errors
 
     async def async_step_user(
@@ -114,3 +133,7 @@ class CannotConnect(exceptions.HomeAssistantError):
 
 class InvalidAuth(exceptions.HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class UnknownAuth(exceptions.HomeAssistantError):
+    """Error to indicate there is an uncaught auth error."""
