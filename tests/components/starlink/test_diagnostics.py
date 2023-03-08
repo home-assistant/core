@@ -1,5 +1,5 @@
 """Tests for Starlink diagnostics."""
-import json
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.starlink.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS
@@ -7,13 +7,15 @@ from homeassistant.core import HomeAssistant
 
 from .patchers import COORDINATOR_SUCCESS_PATCHER
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test generating diagnostics for a config entry."""
     entry = MockConfigEntry(
@@ -29,4 +31,4 @@ async def test_diagnostics(
 
         diag = await get_diagnostics_for_config_entry(hass, hass_client, entry)
 
-        assert diag == json.loads(load_fixture("diagnostics_expected.json", "starlink"))
+        assert diag == snapshot
