@@ -27,7 +27,7 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -394,7 +394,30 @@ class EDL21:
                     self._OBIS_BLACKLIST.add(obis)
 
         if new_entities:
-            self._async_add_entities(new_entities, update_before_add=True)
+            self._hass.loop.create_task(self.add_entities(new_entities))
+
+    async def add_entities(self, new_entities: list[EDL21Entity]) -> None:
+        """Migrate old unique IDs, then add entities to hass."""
+        registry = er.async_get(self._hass)
+
+        for entity in new_entities:
+            old_entity_id = registry.async_get_entity_id(
+                "sensor", DOMAIN, entity.old_unique_id
+            )
+            if old_entity_id is not None and entity.unique_id is not None:
+                LOGGER.debug(
+                    "Migrating unique_id from [%s] to [%s]",
+                    entity.old_unique_id,
+                    entity.unique_id,
+                )
+                if registry.async_get_entity_id("sensor", DOMAIN, entity.unique_id):
+                    registry.async_remove(old_entity_id)
+                else:
+                    registry.async_update_entity(
+                        old_entity_id, new_unique_id=entity.unique_id
+                    )
+
+        self._async_add_entities(new_entities, update_before_add=True)
 
 
 class EDL21Entity(SensorEntity):
@@ -455,12 +478,17 @@ class EDL21Entity(SensorEntity):
             self._async_remove_dispatcher()
 
     @property
+    def old_unique_id(self) -> str:
+        """Return a less unique ID as used in the first version of edl21."""
+        return self._obis
+
+    @property
     def native_value(self) -> str:
         """Return the value of the last received telegram."""
         return self._telegram.get("value")
 
     @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+    def extra_state_attributes(self):
         """Enumerate supported attributes."""
         return {
             self._state_attrs[k]: v
@@ -469,7 +497,7 @@ class EDL21Entity(SensorEntity):
         }
 
     @property
-    def native_unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         if (unit := self._telegram.get("unit")) is None or unit == 0:
             return None
