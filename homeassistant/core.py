@@ -1042,7 +1042,7 @@ class EventBus:
         return self._async_listen_filterable_job(
             event_type,
             _FilterableJob(
-                HassJob(listener, "listen {event_type}"), event_filter, run_immediately
+                HassJob(listener, f"listen {event_type}"), event_filter, run_immediately
             ),
         )
 
