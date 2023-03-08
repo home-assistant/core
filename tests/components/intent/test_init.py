@@ -10,7 +10,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import area_registry, entity_registry, intent
+from homeassistant.helpers import area_registry as ar, entity_registry as er, intent
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockUser, async_mock_service
@@ -186,7 +186,11 @@ async def test_turn_on_multiple_intent(hass: HomeAssistant) -> None:
     assert call.data == {"entity_id": ["light.test_lights_2"]}
 
 
-async def test_get_state_intent(hass: HomeAssistant) -> None:
+async def test_get_state_intent(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test HassGetState intent.
 
     This tests name, area, domain, device class, and state constraints.
@@ -194,33 +198,31 @@ async def test_get_state_intent(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "intent", {})
 
-    areas = area_registry.async_get(hass)
-    bedroom = areas.async_get_or_create("bedroom")
-    kitchen = areas.async_get_or_create("kitchen")
-    office = areas.async_get_or_create("office")
+    bedroom = area_registry.async_get_or_create("bedroom")
+    kitchen = area_registry.async_get_or_create("kitchen")
+    office = area_registry.async_get_or_create("office")
 
     # 1 light in bedroom (off)
     # 1 light in kitchen (on)
     # 1 sensor in kitchen (50)
     # 2 binary sensors in the office (problem, moisture, on)
-    entities = entity_registry.async_get(hass)
-    bedroom_light = entities.async_get_or_create("light", "demo", "1")
-    entities.async_update_entity(bedroom_light.entity_id, area_id=bedroom.id)
+    bedroom_light = entity_registry.async_get_or_create("light", "demo", "1")
+    entity_registry.async_update_entity(bedroom_light.entity_id, area_id=bedroom.id)
 
-    kitchen_sensor = entities.async_get_or_create("sensor", "demo", "2")
-    entities.async_update_entity(kitchen_sensor.entity_id, area_id=kitchen.id)
+    kitchen_sensor = entity_registry.async_get_or_create("sensor", "demo", "2")
+    entity_registry.async_update_entity(kitchen_sensor.entity_id, area_id=kitchen.id)
 
-    kitchen_light = entities.async_get_or_create("light", "demo", "3")
-    entities.async_update_entity(kitchen_light.entity_id, area_id=kitchen.id)
+    kitchen_light = entity_registry.async_get_or_create("light", "demo", "3")
+    entity_registry.async_update_entity(kitchen_light.entity_id, area_id=kitchen.id)
 
-    kitchen_sensor = entities.async_get_or_create("sensor", "demo", "4")
-    entities.async_update_entity(kitchen_sensor.entity_id, area_id=kitchen.id)
+    kitchen_sensor = entity_registry.async_get_or_create("sensor", "demo", "4")
+    entity_registry.async_update_entity(kitchen_sensor.entity_id, area_id=kitchen.id)
 
-    problem_sensor = entities.async_get_or_create("binary_sensor", "demo", "5")
-    entities.async_update_entity(problem_sensor.entity_id, area_id=office.id)
+    problem_sensor = entity_registry.async_get_or_create("binary_sensor", "demo", "5")
+    entity_registry.async_update_entity(problem_sensor.entity_id, area_id=office.id)
 
-    moisture_sensor = entities.async_get_or_create("binary_sensor", "demo", "6")
-    entities.async_update_entity(moisture_sensor.entity_id, area_id=office.id)
+    moisture_sensor = entity_registry.async_get_or_create("binary_sensor", "demo", "6")
+    entity_registry.async_update_entity(moisture_sensor.entity_id, area_id=office.id)
 
     hass.states.async_set(
         bedroom_light.entity_id, "off", attributes={ATTR_FRIENDLY_NAME: "bedroom light"}
