@@ -12,17 +12,17 @@ CONF_ALARM_NAME = "alarm_name"
 CONF_ZONE_SET = "zone_set"
 CONF_PARTITION_SET = "partition_set"
 
-CONF_EVL_KEEPALIVE = "keepalive_interval"  # OPTION
+CONF_EVL_KEEPALIVE = "keepalive_interval"
 CONF_EVL_PORT = "port"
 CONF_EVL_DISCOVERY_PORT = "discovery_port"
 CONF_EVL_VERSION = "evl_version"
 CONF_PANEL_TYPE = "panel_type"
-CONF_PANIC = "panic_type"  # OPTION
+CONF_PANIC = "panic_type"
 CONF_PASS = "password"
 CONF_USERNAME = "user_name"
-CONF_ZONEDUMP_INTERVAL = "zonedump_interval"  # OPTION
-CONF_CREATE_ZONE_BYPASS_SWITCHES = "create_zone_bypass_switches"  # OPTION
-CONF_HONEYWELL_ARM_NIGHT_MODE = "honeywell_arm_night_mode"  # OPTION
+CONF_ZONEDUMP_INTERVAL = "zonedump_interval"
+CONF_CREATE_ZONE_BYPASS_SWITCHES = "create_zone_bypass_switches"
+CONF_HONEYWELL_ARM_NIGHT_MODE = "honeywell_arm_night_mode"
 
 
 # Config items used only in the YAML config
