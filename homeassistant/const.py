@@ -564,7 +564,13 @@ DEGREE: Final = "°"
 CURRENCY_EURO: Final = "€"
 CURRENCY_DOLLAR: Final = "$"
 CURRENCY_CENT: Final = "¢"
-
+CURRENCY_POUNDS: Final = "£"
+CURRENCY_YEN: Final = "¥"
+CURRENCY_LIRA: Final = "₺"
+CURRENCY_FRANC: Final = "₣"
+CURRENCY_ROUBLE: Final = "₽"
+CURRENCY_ETHER: Final = "Ξ"
+CURRENCY_BTC: Final = "₿"
 
 # Temperature units
 class UnitOfTemperature(StrEnum):
