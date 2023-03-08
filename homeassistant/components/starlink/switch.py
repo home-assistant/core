@@ -71,7 +71,6 @@ SWITCHES = [
         key="stowed",
         name="Stowed",
         device_class=SwitchDeviceClass.SWITCH,
-        entity_registry_enabled_default=False,
         value_fn=lambda data: data.status["state"] == "STOWED",
         turn_on_fn=lambda coordinator: coordinator.async_stow_starlink(True),
         turn_off_fn=lambda coordinator: coordinator.async_stow_starlink(False),
