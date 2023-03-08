@@ -2,6 +2,8 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import debounce
 from homeassistant.util.dt import utcnow
@@ -9,7 +11,9 @@ from homeassistant.util.dt import utcnow
 from ..common import async_fire_time_changed
 
 
-async def test_immediate_works(hass: HomeAssistant) -> None:
+async def test_immediate_works(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test immediate works."""
     calls = []
     debouncer = debounce.Debouncer(
@@ -54,6 +58,7 @@ async def test_immediate_works(hass: HomeAssistant) -> None:
     assert debouncer._job == before_job
 
     # Test calling doesn't execute/cooldown if currently executing.
+    freezer.tick(1)
     await debouncer._execute_lock.acquire()
     await debouncer.async_call()
     assert len(calls) == 2
@@ -97,7 +102,7 @@ async def test_not_immediate_works(hass: HomeAssistant) -> None:
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert debouncer._timer_task is not None
+    assert debouncer._timer_task is None
     assert debouncer._execute_at_end_of_timer is False
     assert debouncer._job.target == debouncer.function
 
@@ -114,7 +119,9 @@ async def test_not_immediate_works(hass: HomeAssistant) -> None:
     assert debouncer._job.target == debouncer.function
 
 
-async def test_immediate_works_with_function_swapped(hass: HomeAssistant) -> None:
+async def test_immediate_works_with_function_swapped(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test immediate works and we can change out the function."""
     calls = []
 
@@ -166,6 +173,7 @@ async def test_immediate_works_with_function_swapped(hass: HomeAssistant) -> Non
     assert debouncer._job != before_job
 
     # Test calling doesn't execute/cooldown if currently executing.
+    freezer.tick(1)
     await debouncer._execute_lock.acquire()
     await debouncer.async_call()
     assert len(calls) == 2
