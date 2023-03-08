@@ -86,21 +86,21 @@ async def async_process_integration_platform_for_component(
         DATA_INTEGRATION_PLATFORMS
     ]
     integrations = await async_get_integrations(hass, (component_name,))
-    await asyncio.gather(
-        *(
-            asyncio.create_task(
-                _async_process_single_integration_platform_component(
-                    hass,
-                    component_name,
-                    integrations[component_name],
-                    integration_platform,
-                ),
-                name=f"process integration platform {integration_platform.platform_name} for {component_name}",
-            )
-            for integration_platform in integration_platforms
-            if component_name not in integration_platform.seen_components
+    tasks = [
+        asyncio.create_task(
+            _async_process_single_integration_platform_component(
+                hass,
+                component_name,
+                integrations[component_name],
+                integration_platform,
+            ),
+            name=f"process integration platform {integration_platform.platform_name} for {component_name}",
         )
-    )
+        for integration_platform in integration_platforms
+        if component_name not in integration_platform.seen_components
+    ]
+    if tasks:
+        await asyncio.gather(*tasks)
 
 
 @bind_hass
@@ -140,15 +140,15 @@ async def async_process_integration_platforms(
         comp for comp in hass.config.components if "." not in comp
     ]:
         integrations = await async_get_integrations(hass, top_level_components)
-        await asyncio.gather(
-            *(
-                asyncio.create_task(
-                    _async_process_single_integration_platform_component(
-                        hass, comp, integrations[comp], integration_platform
-                    ),
-                    name=f"process integration platform {platform_name} for {comp}",
-                )
-                for comp in top_level_components
-                if comp not in integration_platform.seen_components
+        tasks = [
+            asyncio.create_task(
+                _async_process_single_integration_platform_component(
+                    hass, comp, integrations[comp], integration_platform
+                ),
+                name=f"process integration platform {platform_name} for {comp}",
             )
-        )
+            for comp in top_level_components
+            if comp not in integration_platform.seen_components
+        ]
+        if tasks:
+            await asyncio.gather(*tasks)
