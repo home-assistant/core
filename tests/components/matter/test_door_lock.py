@@ -5,7 +5,13 @@ from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
 import pytest
 
-from homeassistant.components.lock import STATE_LOCKED, STATE_UNLOCKED
+from homeassistant.components.lock import (
+    STATE_LOCKED,
+    STATE_LOCKING,
+    STATE_UNLOCKED,
+    STATE_UNLOCKING,
+)
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from .common import (
@@ -13,9 +19,6 @@ from .common import (
     setup_integration_with_node_fixture,
     trigger_subscription_callback,
 )
-
-# Seems to be missing from the lock component
-STATE_UNKNOWN = "unknown"
 
 
 @pytest.fixture(name="door_lock")
@@ -26,6 +29,8 @@ async def door_lock_fixture(
     return await setup_integration_with_node_fixture(hass, "door-lock", matter_client)
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_lock(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -72,6 +77,13 @@ async def test_lock(
     assert state
     assert state.state == STATE_LOCKED
 
+    set_node_attribute(door_lock, 1, 257, 0, 0)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("lock.mock_door_lock")
+    assert state
+    assert state.state == STATE_UNLOCKING
+
     set_node_attribute(door_lock, 1, 257, 0, 2)
     await trigger_subscription_callback(hass, matter_client)
 
@@ -80,6 +92,13 @@ async def test_lock(
     assert state.state == STATE_UNLOCKED
 
     set_node_attribute(door_lock, 1, 257, 0, 0)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("lock.mock_door_lock")
+    assert state
+    assert state.state == STATE_LOCKING
+
+    set_node_attribute(door_lock, 1, 257, 0, None)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("lock.mock_door_lock")
