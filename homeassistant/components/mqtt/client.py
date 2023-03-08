@@ -642,12 +642,11 @@ class MQTT:
             return mid
 
         if self._is_active_subscription(topic):
+            subs = self._matching_subscriptions(topic)
+            self._max_qos[topic] = max(sub.qos for sub in subs)
             # Other subscriptions on topic remaining - don't unsubscribe.
             return
-        subs = self._matching_subscriptions(topic)
-        if subs:
-            self._max_qos[topic] = max(sub.qos for sub in subs)
-        elif topic in self._max_qos:
+        if topic in self._max_qos:
             del self._max_qos[topic]
         if topic in self._pending_subscriptions:
             # avoid any pending subscription to be executed

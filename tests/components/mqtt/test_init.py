@@ -1316,6 +1316,9 @@ async def test_subscribe_same_topic(
     mqtt_client_mock.subscribe.assert_called()
 
 
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
 async def test_not_calling_unsubscribe_with_active_subscribers(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
@@ -1327,8 +1330,9 @@ async def test_not_calling_unsubscribe_with_active_subscribers(
     # Fake that the client is connected
     mqtt_mock().connected = True
 
-    unsub = await mqtt.async_subscribe(hass, "test/state", record_calls)
-    await mqtt.async_subscribe(hass, "test/state", record_calls)
+    unsub = await mqtt.async_subscribe(hass, "test/state", record_calls, 2)
+    await mqtt.async_subscribe(hass, "test/state", record_calls, 1)
+    await hass.async_block_till_done()
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
     await hass.async_block_till_done()
     assert mqtt_client_mock.subscribe.called
