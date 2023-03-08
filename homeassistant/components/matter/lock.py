@@ -86,20 +86,15 @@ class MatterLock(MatterEntity, LockEntity):
             self._attr_is_locking = False
             self._attr_is_unlocking = False
         elif lock_state is clusters.DoorLock.Enums.DlLockState.kNotFullyLocked:
-            if self._attr_is_locked is True:
+            if self.is_locked is True:
                 self._attr_is_unlocking = True
-            elif self._attr_is_locked is False:
+            elif self.is_locked is False:
                 self._attr_is_locking = True
         else:
+            # According to the matter docs a null state can happen during device startup.
             self._attr_is_locked = None
             self._attr_is_locking = None
             self._attr_is_unlocking = None
-            # According to the matter docs a null state can happen during device startup.
-            LOGGER.warning(
-                "Unknown lock state: %s for %s",
-                lock_state,
-                self.entity_id,
-            )
 
         if self.supports_door_position_sensor:
             door_state = self.get_matter_attribute_value(
