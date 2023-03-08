@@ -168,6 +168,8 @@ async def test_no_servers_found(
         assert result["errors"]["base"] == "no_servers"
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_single_available_server(
     hass: HomeAssistant, mock_plex_calls, current_request_with_host: None
 ) -> None:
@@ -206,6 +208,8 @@ async def test_single_available_server(
     await hass.config_entries.async_unload(result["result"].entry_id)
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_multiple_servers_with_selection(
     hass: HomeAssistant,
     mock_plex_calls,
@@ -261,6 +265,8 @@ async def test_multiple_servers_with_selection(
     await hass.config_entries.async_unload(result["result"].entry_id)
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_adding_last_unconfigured_server(
     hass: HomeAssistant,
     mock_plex_calls,

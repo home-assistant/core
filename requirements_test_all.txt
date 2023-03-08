@@ -738,7 +738,7 @@ influxdb==5.3.1
 inkbird-ble==0.5.6
 
 # homeassistant.components.insteon
-insteon-frontend-home-assistant==0.3.2
+insteon-frontend-home-assistant==0.3.3
 
 # homeassistant.components.intellifire
 intellifire4py==2.2.2
@@ -1107,7 +1107,7 @@ pyatv==0.10.3
 pyaussiebb==0.0.15
 
 # homeassistant.components.balboa
-pybalboa==1.0.0
+pybalboa==1.0.1
 
 # homeassistant.components.blackbird
 pyblackbird==0.5
@@ -1212,7 +1212,7 @@ pyialarm==2.2.0
 pyicloud==1.0.0
 
 # homeassistant.components.insteon
-pyinsteon==1.3.3
+pyinsteon==1.3.4
 
 # homeassistant.components.ipma
 pyipma==3.0.6
@@ -1743,7 +1743,7 @@ sunwatcher==0.2.1
 surepy==0.8.0
 
 # homeassistant.components.system_bridge
-systembridgeconnector==3.4.4
+systembridgeconnector==3.4.8
 
 # homeassistant.components.tailscale
 tailscale==0.2.0
