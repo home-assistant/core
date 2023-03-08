@@ -1771,7 +1771,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.mazda
-pymazda==0.3.7
+pymazda==0.3.8
 
 # homeassistant.components.mediaroom
 pymediaroom==0.6.5.4
