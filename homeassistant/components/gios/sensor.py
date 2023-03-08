@@ -14,11 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_NAME,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONF_NAME,
-)
+from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -183,9 +179,6 @@ class GiosSensor(CoordinatorEntity[GiosDataUpdateCoordinator], SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        self._attrs[ATTR_NAME] = getattr(
-            self.coordinator.data, self.entity_description.key
-        ).name
         self._attrs[ATTR_INDEX] = getattr(
             self.coordinator.data, self.entity_description.key
         ).index
