@@ -254,7 +254,7 @@ aioskybell==22.7.0
 aioslimproto==2.1.1
 
 # homeassistant.components.honeywell
-aiosomecomfort==0.0.11
+aiosomecomfort==0.0.14
 
 # homeassistant.components.steamist
 aiosteamist==0.3.2
@@ -1275,7 +1275,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.mazda
-pymazda==0.3.7
+pymazda==0.3.8
 
 # homeassistant.components.melcloud
 pymelcloud==2.5.8
@@ -1496,7 +1496,7 @@ python-nest==4.2.0
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
-python-otbr-api==1.0.5
+python-otbr-api==1.0.8
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0
