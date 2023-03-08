@@ -104,7 +104,6 @@ async def async_setup_entry(
         device_id: DeviceTuple,
         entity_info: dict[str, Any],
     ) -> list[Entity]:
-
         return [
             RfxtrxBinarySensor(
                 event.device,

@@ -1,7 +1,6 @@
 """Home Assistant representation of an UPnP/IGD."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 from functools import partial
 from ipaddress import ip_address
 from typing import Any
@@ -135,7 +134,7 @@ class Device:
         """Get string representation."""
         return f"IGD Device: {self.name}/{self.udn}::{self.device_type}"
 
-    async def async_get_data(self) -> Mapping[str, Any]:
+    async def async_get_data(self) -> dict[str, Any]:
         """Get all data from device."""
         _LOGGER.debug("Getting data for device: %s", self)
         igd_state = await self._igd_device.async_get_traffic_and_status_data()

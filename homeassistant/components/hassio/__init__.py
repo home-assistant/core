@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 from datetime import timedelta
 import logging
 import os
@@ -241,7 +242,7 @@ HARDWARE_INTEGRATIONS = {
 
 @callback
 @bind_hass
-def get_info(hass):
+def get_info(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return generic information from Supervisor.
 
     Async friendly.
@@ -251,7 +252,7 @@ def get_info(hass):
 
 @callback
 @bind_hass
-def get_host_info(hass):
+def get_host_info(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return generic host information.
 
     Async friendly.
@@ -261,7 +262,7 @@ def get_host_info(hass):
 
 @callback
 @bind_hass
-def get_store(hass):
+def get_store(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return store information.
 
     Async friendly.
@@ -271,7 +272,7 @@ def get_store(hass):
 
 @callback
 @bind_hass
-def get_supervisor_info(hass):
+def get_supervisor_info(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return Supervisor information.
 
     Async friendly.
@@ -311,7 +312,7 @@ def get_addons_changelogs(hass):
 
 @callback
 @bind_hass
-def get_os_info(hass):
+def get_os_info(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return OS information.
 
     Async friendly.
@@ -321,7 +322,7 @@ def get_os_info(hass):
 
 @callback
 @bind_hass
-def get_core_info(hass):
+def get_core_info(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return Home Assistant Core information from Supervisor.
 
     Async friendly.
@@ -449,15 +450,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             payload = data
 
         # Call API
-        try:
+        # The exceptions are logged properly in hassio.send_command
+        with suppress(HassioAPIError):
             await hassio.send_command(
                 api_endpoint.command.format(addon=addon, slug=slug),
                 payload=payload,
                 timeout=api_endpoint.timeout,
             )
-        except HassioAPIError:
-            # The exceptions are logged properly in hassio.send_command
-            pass
 
     for service, settings in MAP_SERVICE_API.items():
         hass.services.async_register(
@@ -719,11 +718,11 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(f"Error on Supervisor API: {err}") from err
 
         new_data: dict[str, Any] = {}
-        supervisor_info = get_supervisor_info(self.hass)
+        supervisor_info = get_supervisor_info(self.hass) or {}
         addons_info = get_addons_info(self.hass)
         addons_stats = get_addons_stats(self.hass)
         addons_changelogs = get_addons_changelogs(self.hass)
-        store_data = get_store(self.hass)
+        store_data = get_store(self.hass) or {}
 
         repositories = {
             repo[ATTR_SLUG]: repo[ATTR_NAME]

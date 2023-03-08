@@ -9,14 +9,14 @@ from typing import TypedDict
 class HERETravelTimeData(TypedDict):
     """Routing information."""
 
-    ATTR_ATTRIBUTION: str | None
-    ATTR_DURATION: float
-    ATTR_DURATION_IN_TRAFFIC: float
-    ATTR_DISTANCE: float
-    ATTR_ORIGIN: str
-    ATTR_DESTINATION: str
-    ATTR_ORIGIN_NAME: str
-    ATTR_DESTINATION_NAME: str
+    attribution: str | None
+    duration: float
+    duration_in_traffic: float
+    distance: float
+    origin: str
+    destination: str
+    origin_name: str | None
+    destination_name: str | None
 
 
 @dataclass

@@ -1,0 +1,7 @@
+{
+  "data": {
+    "type": "ChargingStart",
+    "id": "guid",
+    "attributes": { "action": "stop" }
+  }
+}

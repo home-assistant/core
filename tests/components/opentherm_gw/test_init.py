@@ -2,13 +2,15 @@
 from unittest.mock import patch
 
 from pyotgw.vars import OTGW, OTGW_ABOUT
+import pytest
 
 from homeassistant import setup
 from homeassistant.components.opentherm_gw.const import DOMAIN
 from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from tests.common import MockConfigEntry, mock_device_registry
+from tests.common import MockConfigEntry
 
 VERSION_OLD = "4.2.5"
 VERSION_NEW = "4.2.8.1"
@@ -27,7 +29,9 @@ MOCK_CONFIG_ENTRY = MockConfigEntry(
 )
 
 
-async def test_device_registry_insert(hass):
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_device_registry_insert(hass: HomeAssistant) -> None:
     """Test that the device registry is initialized correctly."""
     MOCK_CONFIG_ENTRY.add_to_hass(hass)
 
@@ -45,12 +49,15 @@ async def test_device_registry_insert(hass):
     assert gw_dev.sw_version == VERSION_OLD
 
 
-async def test_device_registry_update(hass):
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_device_registry_update(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test that the device registry is updated correctly."""
     MOCK_CONFIG_ENTRY.add_to_hass(hass)
 
-    dev_reg = mock_device_registry(hass)
-    dev_reg.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=MOCK_CONFIG_ENTRY.entry_id,
         identifiers={(DOMAIN, MOCK_GATEWAY_ID)},
         name="Mock Gateway",
@@ -66,5 +73,5 @@ async def test_device_registry_update(hass):
         await setup.async_setup_component(hass, DOMAIN, {})
 
     await hass.async_block_till_done()
-    gw_dev = dev_reg.async_get_device(identifiers={(DOMAIN, MOCK_GATEWAY_ID)})
+    gw_dev = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_GATEWAY_ID)})
     assert gw_dev.sw_version == VERSION_NEW

@@ -12,6 +12,7 @@ from homeassistant.components.gios.const import (
     DOMAIN,
 )
 from homeassistant.components.sensor import (
+    ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     DOMAIN as PLATFORM,
     SensorDeviceClass,
@@ -25,6 +26,7 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
@@ -33,7 +35,7 @@ from . import init_integration
 from tests.common import async_fire_time_changed, load_fixture
 
 
-async def test_sensor(hass):
+async def test_sensor(hass: HomeAssistant) -> None:
     """Test states of the sensor."""
     await init_integration(hass)
     registry = er.async_get(hass)
@@ -49,7 +51,7 @@ async def test_sensor(hass):
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
     assert state.attributes.get(ATTR_ICON) == "mdi:molecule"
-    assert state.attributes.get(ATTR_INDEX) == "bardzo dobry"
+    assert state.attributes.get(ATTR_INDEX) == "very_good"
 
     entry = registry.async_get("sensor.home_c6h6")
     assert entry
@@ -60,13 +62,13 @@ async def test_sensor(hass):
     assert state.state == "252"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.CO
+    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
-    assert state.attributes.get(ATTR_INDEX) == "dobry"
+    assert state.attributes.get(ATTR_INDEX) == "good"
 
     entry = registry.async_get("sensor.home_co")
     assert entry
@@ -83,7 +85,7 @@ async def test_sensor(hass):
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
-    assert state.attributes.get(ATTR_INDEX) == "dobry"
+    assert state.attributes.get(ATTR_INDEX) == "good"
 
     entry = registry.async_get("sensor.home_no2")
     assert entry
@@ -100,7 +102,7 @@ async def test_sensor(hass):
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
-    assert state.attributes.get(ATTR_INDEX) == "dobry"
+    assert state.attributes.get(ATTR_INDEX) == "good"
 
     entry = registry.async_get("sensor.home_o3")
     assert entry
@@ -117,7 +119,7 @@ async def test_sensor(hass):
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
-    assert state.attributes.get(ATTR_INDEX) == "dobry"
+    assert state.attributes.get(ATTR_INDEX) == "good"
 
     entry = registry.async_get("sensor.home_pm10")
     assert entry
@@ -134,7 +136,7 @@ async def test_sensor(hass):
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
-    assert state.attributes.get(ATTR_INDEX) == "dobry"
+    assert state.attributes.get(ATTR_INDEX) == "good"
 
     entry = registry.async_get("sensor.home_pm2_5")
     assert entry
@@ -151,7 +153,7 @@ async def test_sensor(hass):
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
-    assert state.attributes.get(ATTR_INDEX) == "bardzo dobry"
+    assert state.attributes.get(ATTR_INDEX) == "very_good"
 
     entry = registry.async_get("sensor.home_so2")
     assert entry
@@ -159,19 +161,26 @@ async def test_sensor(hass):
 
     state = hass.states.get("sensor.home_aqi")
     assert state
-    assert state.state == "dobry"
+    assert state.state == "good"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.AQI
     assert state.attributes.get(ATTR_STATE_CLASS) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+    assert state.attributes.get(ATTR_OPTIONS) == [
+        "very_bad",
+        "bad",
+        "sufficient",
+        "moderate",
+        "good",
+        "very_good",
+    ]
 
     entry = registry.async_get("sensor.home_aqi")
     assert entry
     assert entry.unique_id == "123-aqi"
 
 
-async def test_availability(hass):
+async def test_availability(hass: HomeAssistant) -> None:
     """Ensure that we mark the entities unavailable correctly when service causes an error."""
     await init_integration(hass)
 
@@ -213,7 +222,7 @@ async def test_availability(hass):
         assert state.state == STATE_UNAVAILABLE
 
 
-async def test_invalid_indexes(hass):
+async def test_invalid_indexes(hass: HomeAssistant) -> None:
     """Test states of the sensor when API returns invalid indexes."""
     await init_integration(hass, invalid_indexes=True)
     registry = er.async_get(hass)
@@ -335,14 +344,14 @@ async def test_invalid_indexes(hass):
     assert state is None
 
 
-async def test_aqi_sensor_availability(hass):
+async def test_aqi_sensor_availability(hass: HomeAssistant) -> None:
     """Ensure that we mark the AQI sensor unavailable correctly when indexes are invalid."""
     await init_integration(hass)
 
     state = hass.states.get("sensor.home_aqi")
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == "dobry"
+    assert state.state == "good"
 
     future = utcnow() + timedelta(minutes=60)
     with patch(
@@ -360,7 +369,7 @@ async def test_aqi_sensor_availability(hass):
         assert state.state == STATE_UNAVAILABLE
 
 
-async def test_unique_id_migration(hass):
+async def test_unique_id_migration(hass: HomeAssistant) -> None:
     """Test states of the unique_id migration."""
     registry = er.async_get(hass)
 

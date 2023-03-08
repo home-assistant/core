@@ -412,7 +412,9 @@ class OsramLightifyLight(Luminary):
         """Update static attributes of the luminary."""
         super().update_static_attributes()
         attrs = {
-            "device_type": f"{self._luminary.type_id()} ({self._luminary.devicename()})",
+            "device_type": (
+                f"{self._luminary.type_id()} ({self._luminary.devicename()})"
+            ),
             "firmware_version": self._luminary.version(),
         }
         if self._luminary.devicetype().name == "SENSOR":

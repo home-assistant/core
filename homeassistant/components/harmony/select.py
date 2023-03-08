@@ -33,7 +33,7 @@ async def async_setup_entry(
 class HarmonyActivitySelect(HarmonyEntity, SelectEntity):
     """Select representation of a Harmony activities."""
 
-    _attr_device_class = f"{DOMAIN}__activities"
+    _attr_translation_key = "activities"
 
     def __init__(self, name: str, data: HarmonyData) -> None:
         """Initialize HarmonyActivitySelect class."""
@@ -67,6 +67,7 @@ class HarmonyActivitySelect(HarmonyEntity, SelectEntity):
         """Change the current activity."""
         if option == TRANSLATABLE_POWER_OFF:
             await self._data.async_start_activity(ACTIVITY_POWER_OFF)
+            return
         await self._data.async_start_activity(option)
 
     async def async_added_to_hass(self) -> None:

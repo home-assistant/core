@@ -19,9 +19,9 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
-    PRESSURE_HPA,
-    SOUND_PRESSURE_WEIGHTED_DBA,
-    TEMP_CELSIUS,
+    UnitOfPressure,
+    UnitOfSoundPressure,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -68,7 +68,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     AirQEntityDescription(
         key="co",
         name="CO",
-        device_class=SensorDeviceClass.CO,
         native_unit_of_measurement=CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("co"),
@@ -84,10 +83,10 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     AirQEntityDescription(
         key="dewpt",
         name="Dew point",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("dewpt"),
-        icon="mdi:water-thermometer",
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     AirQEntityDescription(
         key="ethanol",
@@ -227,17 +226,17 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         key="pressure",
         name="Pressure",
         device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("pressure"),
     ),
     AirQEntityDescription(
         key="pressure_rel",
         name="Relative pressure",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("pressure_rel"),
-        icon="mdi:gauge",
+        device_class=SensorDeviceClass.PRESSURE,
     ),
     AirQEntityDescription(
         key="c3h8_MIPEX",
@@ -257,18 +256,18 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     AirQEntityDescription(
         key="sound",
         name="Noise",
-        native_unit_of_measurement=SOUND_PRESSURE_WEIGHTED_DBA,
+        native_unit_of_measurement=UnitOfSoundPressure.WEIGHTED_DECIBEL_A,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("sound"),
-        icon="mdi:ear-hearing",
+        device_class=SensorDeviceClass.SOUND_PRESSURE,
     ),
     AirQEntityDescription(
         key="sound_max",
         name="Noise (Maximum)",
-        native_unit_of_measurement=SOUND_PRESSURE_WEIGHTED_DBA,
+        native_unit_of_measurement=UnitOfSoundPressure.WEIGHTED_DECIBEL_A,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("sound_max"),
-        icon="mdi:ear-hearing",
+        device_class=SensorDeviceClass.SOUND_PRESSURE,
     ),
     AirQEntityDescription(
         key="radon",
@@ -282,14 +281,13 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         key="temperature",
         name="Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("temperature"),
     ),
     AirQEntityDescription(
         key="tvoc",
         name="VOC",
-        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("tvoc"),
@@ -297,7 +295,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     AirQEntityDescription(
         key="tvoc_ionsc",
         name="VOC (Industrial)",
-        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("tvoc_ionsc"),
@@ -350,7 +347,6 @@ class AirQSensor(CoordinatorEntity, SensorEntity):
         self.entity_description: AirQEntityDescription = description
 
         self._attr_device_info = coordinator.device_info
-        self._attr_name = description.name
         self._attr_unique_id = f"{coordinator.device_id}_{description.key}"
         self._attr_native_value = description.value(coordinator.data)
 

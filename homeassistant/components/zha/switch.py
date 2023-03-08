@@ -3,18 +3,18 @@ from __future__ import annotations
 
 import functools
 import logging
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any
 
+from typing_extensions import Self
 import zigpy.exceptions
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.foundation import Status
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, EntityCategory, Platform
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
@@ -32,10 +32,6 @@ from .entity import ZhaEntity, ZhaGroupEntity
 if TYPE_CHECKING:
     from .core.channels.base import ZigbeeChannel
     from .core.device import ZHADevice
-
-_ZHASwitchConfigurationEntitySelfT = TypeVar(
-    "_ZHASwitchConfigurationEntitySelfT", bound="ZHASwitchConfigurationEntity"
-)
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.SWITCH)
 GROUP_MATCH = functools.partial(ZHA_ENTITIES.group_match, Platform.SWITCH)
@@ -160,7 +156,7 @@ class SwitchGroup(ZhaGroupEntity, SwitchEntity):
         self.async_write_ha_state()
 
     async def async_update(self) -> None:
-        """Query all members and determine the light group state."""
+        """Query all members and determine the switch group state."""
         all_states = [self.hass.states.get(x) for x in self._entity_ids]
         states: list[State] = list(filter(None, all_states))
         on_states = [state for state in states if state.state == STATE_ON]
@@ -179,12 +175,12 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
 
     @classmethod
     def create_entity(
-        cls: type[_ZHASwitchConfigurationEntitySelfT],
+        cls,
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
         **kwargs: Any,
-    ) -> _ZHASwitchConfigurationEntitySelfT | None:
+    ) -> Self | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
@@ -372,12 +368,24 @@ class InovelliSmartBulbMode(ZHASwitchConfigurationEntity, id_suffix="smart_bulb_
     channel_names=CHANNEL_INOVELLI,
 )
 class InovelliDoubleTapForFullBrightness(
-    ZHASwitchConfigurationEntity, id_suffix="double_tap_up_for_full_brightness"
+    ZHASwitchConfigurationEntity, id_suffix="double_tap_up_for_max_brightness"
 ):
     """Inovelli double tap for full brightness control."""
 
-    _zcl_attribute: str = "double_tap_up_for_full_brightness"
+    _zcl_attribute: str = "double_tap_up_for_max_brightness"
     _attr_name: str = "Double tap full brightness"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_INOVELLI,
+)
+class InovelliDoubleTapForMinBrightness(
+    ZHASwitchConfigurationEntity, id_suffix="double_tap_down_for_min_brightness"
+):
+    """Inovelli double tap down for minimum brightness control."""
+
+    _zcl_attribute: str = "double_tap_down_for_min_brightness"
+    _attr_name: str = "Double tap minimum brightness"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -452,6 +460,18 @@ class AqaraPetFeederLEDIndicator(
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
 class AqaraPetFeederChildLock(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
+    """Representation of a child lock configuration entity."""
+
+    _zcl_attribute: str = "child_lock"
+    _attr_name = "Child lock"
+    _attr_icon: str = "mdi:account-lock"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_ON_OFF,
+    models={"TS011F"},
+)
+class TuyaChildLockSwitch(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
     """Representation of a child lock configuration entity."""
 
     _zcl_attribute: str = "child_lock"

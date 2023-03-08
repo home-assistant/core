@@ -1,8 +1,8 @@
 {
   "domain": "input_datetime",
-  "integration_type": "helper",
   "name": "Input Datetime",
-  "documentation": "https://www.home-assistant.io/integrations/input_datetime",
   "codeowners": ["@home-assistant/core"],
+  "documentation": "https://www.home-assistant.io/integrations/input_datetime",
+  "integration_type": "helper",
   "quality_scale": "internal"
 }

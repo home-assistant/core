@@ -1,16 +1,22 @@
 """Test KNX expose."""
+from datetime import timedelta
 import time
 from unittest.mock import patch
+
+import pytest
 
 from homeassistant.components.knx import CONF_KNX_EXPOSE, DOMAIN, KNX_ADDRESS
 from homeassistant.components.knx.schema import ExposeSchema
 from homeassistant.const import CONF_ATTRIBUTE, CONF_ENTITY_ID, CONF_TYPE
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt
 
 from .conftest import KNXTestKit
 
+from tests.common import async_fire_time_changed_exact
 
-async def test_binary_expose(hass: HomeAssistant, knx: KNXTestKit):
+
+async def test_binary_expose(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test a binary expose to only send telegrams on state change."""
     entity_id = "fake.entity"
     await knx.setup_integration(
@@ -37,7 +43,7 @@ async def test_binary_expose(hass: HomeAssistant, knx: KNXTestKit):
     await knx.assert_write("1/1/8", False)
 
 
-async def test_expose_attribute(hass: HomeAssistant, knx: KNXTestKit):
+async def test_expose_attribute(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test an expose to only send telegrams on attribute change."""
     entity_id = "fake.entity"
     attribute = "fake_attribute"
@@ -82,7 +88,9 @@ async def test_expose_attribute(hass: HomeAssistant, knx: KNXTestKit):
     await knx.assert_telegram_count(0)
 
 
-async def test_expose_attribute_with_default(hass: HomeAssistant, knx: KNXTestKit):
+async def test_expose_attribute_with_default(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
     """Test an expose to only send telegrams on attribute change."""
     entity_id = "fake.entity"
     attribute = "fake_attribute"
@@ -128,7 +136,7 @@ async def test_expose_attribute_with_default(hass: HomeAssistant, knx: KNXTestKi
     await knx.assert_write("1/1/8", (0,))
 
 
-async def test_expose_string(hass: HomeAssistant, knx: KNXTestKit):
+async def test_expose_string(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test an expose to send string values of up to 14 bytes only."""
 
     entity_id = "fake.entity"
@@ -163,7 +171,40 @@ async def test_expose_string(hass: HomeAssistant, knx: KNXTestKit):
     )
 
 
-async def test_expose_conversion_exception(hass: HomeAssistant, knx: KNXTestKit):
+async def test_expose_cooldown(hass: HomeAssistant, knx: KNXTestKit) -> None:
+    """Test an expose with cooldown."""
+    cooldown_time = 2
+    entity_id = "fake.entity"
+    await knx.setup_integration(
+        {
+            CONF_KNX_EXPOSE: {
+                CONF_TYPE: "percentU8",
+                KNX_ADDRESS: "1/1/8",
+                CONF_ENTITY_ID: entity_id,
+                ExposeSchema.CONF_KNX_EXPOSE_COOLDOWN: cooldown_time,
+            }
+        },
+    )
+    assert not hass.states.async_all()
+    # Change state to 1
+    hass.states.async_set(entity_id, "1", {})
+    await knx.assert_write("1/1/8", (1,))
+    # Change state to 2 - skip because of cooldown
+    hass.states.async_set(entity_id, "2", {})
+    await knx.assert_no_telegram()
+
+    # Change state to 3
+    hass.states.async_set(entity_id, "3", {})
+    await knx.assert_no_telegram()
+    # Wait for cooldown to pass
+    async_fire_time_changed_exact(hass, dt.utcnow() + timedelta(seconds=cooldown_time))
+    await hass.async_block_till_done()
+    await knx.assert_write("1/1/8", (3,))
+
+
+async def test_expose_conversion_exception(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, knx: KNXTestKit
+) -> None:
     """Test expose throws exception."""
 
     entity_id = "fake.entity"
@@ -191,12 +232,17 @@ async def test_expose_conversion_exception(hass: HomeAssistant, knx: KNXTestKit)
         "on",
         {attribute: 101},
     )
-
     await knx.assert_no_telegram()
+    assert (
+        'Could not expose fake.entity fake_attribute value "101.0" to KNX:'
+        in caplog.text
+    )
 
 
 @patch("time.localtime")
-async def test_expose_with_date(localtime, hass: HomeAssistant, knx: KNXTestKit):
+async def test_expose_with_date(
+    localtime, hass: HomeAssistant, knx: KNXTestKit
+) -> None:
     """Test an expose with a date."""
     localtime.return_value = time.struct_time([2022, 1, 7, 9, 13, 14, 6, 0, 0])
     await knx.setup_integration(
