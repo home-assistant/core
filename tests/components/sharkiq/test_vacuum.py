@@ -75,6 +75,9 @@ class MockAyla(AylaApi):
     async def async_sign_in(self):
         """Instead of signing in, just return."""
 
+    async def async_refresh_auth(self):
+        """Instead of refreshing auth, just return."""
+
     async def async_list_devices(self) -> list[dict]:
         """Return the device list."""
         return [SHARK_DEVICE_DICT]
