@@ -148,6 +148,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
             self._unsub_refresh()
             self._unsub_refresh = None
 
+        self._debounced_refresh.async_cancel()
+
     def async_contexts(self) -> Generator[Any, None, None]:
         """Return all registered contexts."""
         yield from (
