@@ -62,7 +62,7 @@ def can_use_pidfd() -> bool:
         return False
     try:
         pid = os.getpid()
-        os.close(os.pidfd_open(pid, 0))  # pylint: disable=no-member
+        os.close(os.pidfd_open(pid, 0))
     except OSError:
         # blocked by security policy like SECCOMP
         return False
