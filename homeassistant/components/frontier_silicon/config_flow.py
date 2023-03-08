@@ -44,7 +44,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         device_url = f"http://{import_info[CONF_HOST]}:{import_info[CONF_PORT]}/device"
         try:
-            self._webfsapi_url = await AFSAPI.get_webfsapi_endpoint(device_url)
+            webfsapi_url = await AFSAPI.get_webfsapi_endpoint(device_url)
         except FSConnectionError:
             return self.async_abort(reason="cannot_connect")
         except Exception as exception:  # pylint: disable=broad-except
@@ -52,7 +52,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="unknown")
 
         try:
-            afsapi = AFSAPI(self._webfsapi_url, import_info[CONF_PIN])
+            afsapi = AFSAPI(webfsapi_url, import_info[CONF_PIN])
 
             unique_id = await afsapi.get_radio_id()
         except FSConnectionError:
