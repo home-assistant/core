@@ -838,6 +838,10 @@ class TrackTemplateResultInfo:
         self._track_state_changes: _TrackStateChangeFiltered | None = None
         self._time_listeners: dict[Template, Callable[[], None]] = {}
 
+    def __repr__(self) -> str:
+        """Return the representation."""
+        return f"<TrackTemplateResultInfo {self._info}>"
+
     def async_setup(self, raise_on_template_error: bool, strict: bool = False) -> None:
         """Activation of template tracking."""
         block_render = False
@@ -1649,12 +1653,6 @@ def _render_infos_needs_all_listener(render_infos: Iterable[RenderInfo]) -> bool
     for render_info in render_infos:
         # Tracking all states
         if render_info.all_states or render_info.all_states_lifecycle:
-            return True
-
-        # Previous call had an exception
-        # so we do not know which states
-        # to track
-        if render_info.exception:
             return True
 
     return False
