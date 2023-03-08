@@ -8,7 +8,7 @@ import logging
 from typing import Any
 
 from homeassistant.const import EVENT_COMPONENT_LOADED
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.loader import Integration, async_get_integrations, bind_hass
 from homeassistant.setup import ATTR_COMPONENT
 
@@ -98,6 +98,7 @@ async def async_process_integration_platform_for_component(
                 name=f"process integration platform {integration_platform.platform_name} for {component_name}",
             )
             for integration_platform in integration_platforms
+            if component_name not in integration_platform.seen_components
         )
     )
 
@@ -115,11 +116,20 @@ async def async_process_integration_platforms(
 
         async def _async_component_loaded(event: Event) -> None:
             """Handle a new component loaded."""
-            comp = event.data[ATTR_COMPONENT]
-            if "." not in comp:
-                await async_process_integration_platform_for_component(hass, comp)
+            await async_process_integration_platform_for_component(
+                hass, event.data[ATTR_COMPONENT]
+            )
 
-        hass.bus.async_listen(EVENT_COMPONENT_LOADED, _async_component_loaded)
+        @callback
+        def _async_component_loaded_filter(event: Event) -> bool:
+            """Handle integration platforms loaded."""
+            return "." not in event.data[ATTR_COMPONENT]
+
+        hass.bus.async_listen(
+            EVENT_COMPONENT_LOADED,
+            _async_component_loaded,
+            event_filter=_async_component_loaded_filter,
+        )
 
     integration_platforms: list[IntegrationPlatform] = hass.data[
         DATA_INTEGRATION_PLATFORMS
@@ -139,5 +149,6 @@ async def async_process_integration_platforms(
                     name=f"process integration platform {platform_name} for {comp}",
                 )
                 for comp in top_level_components
+                if comp not in integration_platform.seen_components
             )
         )
