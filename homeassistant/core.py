@@ -149,7 +149,7 @@ MAX_EXPECTED_ENTITY_IDS = 16384
 
 _LOGGER = logging.getLogger(__name__)
 
-_cv_hass: ContextVar[HomeAssistant] = ContextVar("current_entry")
+_cv_hass: ContextVar[HomeAssistant] = ContextVar("hass")
 
 
 @functools.lru_cache(MAX_EXPECTED_ENTITY_IDS)

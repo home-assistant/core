@@ -526,6 +526,7 @@ class ESPHomeClient(BaseBleakClient):
                 The characteristic to read from, specified by either integer
                 handle, UUID or directly by the BleakGATTCharacteristic
                 object representing it.
+            **kwargs: Unused
 
         Returns:
             (bytearray) The read data.
@@ -542,6 +543,7 @@ class ESPHomeClient(BaseBleakClient):
 
         Args:
             handle (int): The handle of the descriptor to read from.
+            **kwargs: Unused
 
         Returns:
             (bytearray) The read data.
