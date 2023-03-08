@@ -65,7 +65,7 @@ NUMBER_ENTITIES = (
         get_max_value=lambda api, ch: api.zoom_range(ch)["focus"]["pos"]["max"],
         supported=lambda api, ch: api.supported(ch, "zoom"),
         value=lambda api, ch: api.get_focus(ch),
-        method=lambda api, ch, value: api.set_zoom(ch, int(value)),
+        method=lambda api, ch, value: api.set_focus(ch, int(value)),
     ),
     # "Floodlight turn on brightness" controls the brightness of the floodlight when
     # it is turned on internally by the camera (see "select.floodlight_mode" entity)
