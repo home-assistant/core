@@ -3,10 +3,15 @@ import logging
 from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
 
 import pytest
+from pytest_unordered import unordered
 from pyvesync import VeSync
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.vesync import _async_process_devices, async_setup_entry
+from homeassistant.components.vesync import (
+    _async_new_device_discovery,
+    _async_process_devices,
+    async_setup_entry,
+)
 from homeassistant.components.vesync.const import (
     DOMAIN,
     SERVICE_UPDATE_DEVS,
@@ -286,6 +291,263 @@ async def test_async_process_devices__devices(
         "sensors": [fan, humidifier1, humidifier2, outlet],
         "switches": [humidifier1, humidifier2, outlet, switch],
     }
+    assert caplog.messages[0] == "1 VeSync fans found"
+    assert caplog.messages[1] == "2 VeSync humidifiers found"
+    assert caplog.messages[2] == "1 VeSync lights found"
+    assert caplog.messages[3] == "1 VeSync outlets found"
+    assert caplog.messages[4] == "2 VeSync switches found"
+
+
+async def test_async_new_device_discovery__no_devices(
+    hass: HomeAssistant, config_entry, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test when manager with no devices is discovered."""
+    manager = MagicMock()
+
+    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][VS_MANAGER] = manager
+    hass.data[DOMAIN][VS_FANS]: list = []
+    hass.data[DOMAIN][VS_HUMIDIFIERS]: list = []
+    hass.data[DOMAIN][VS_LIGHTS]: list = []
+    hass.data[DOMAIN][VS_NUMBERS]: list = []
+    hass.data[DOMAIN][VS_SENSORS]: list = []
+    hass.data[DOMAIN][VS_SWITCHES]: list = []
+
+    mock_forward_setup = Mock()
+    mock_service = Mock()
+    with patch.object(
+        hass, "async_add_executor_job", new=AsyncMock()
+    ) as mock_add_executor_job:
+        await _async_new_device_discovery(
+            hass, config_entry, mock_forward_setup, mock_service
+        )
+        assert mock_add_executor_job.call_count == 1
+        assert mock_add_executor_job.call_args[0][0] == manager.update
+        mock_forward_setup.assert_not_called()
+        mock_service.assert_not_called()
+
+    assert caplog.messages[0] == "0 VeSync fans found"
+    assert caplog.messages[1] == "0 VeSync humidifiers found"
+    assert caplog.messages[2] == "0 VeSync lights found"
+    assert caplog.messages[3] == "0 VeSync outlets found"
+    assert caplog.messages[4] == "0 VeSync switches found"
+
+
+async def test_async_new_device_discovery__start_empty_discover_devices(
+    hass: HomeAssistant,
+    config_entry,
+    manager,
+    features,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test when manager with devices is processed."""
+    caplog.set_level(logging.INFO)
+
+    fan = MagicMock()
+    fan.device_type = FAN_MODEL
+    humidifier1 = MagicMock()
+    humidifier1.device_type = HUMIDIFIER_MODEL
+    humidifier1.night_light = True
+    humidifier2 = MagicMock()
+    humidifier2.device_type = HUMIDIFIER_MODEL
+    humidifier2.night_light = False
+    MagicMock()
+    manager.fans = [fan, humidifier1, humidifier2]
+
+    bulb = MagicMock()
+    manager.bulbs = [bulb]
+
+    outlet = MagicMock()
+    manager.outlets = [outlet]
+
+    switch = MagicMock()
+    switch.is_dimmable.return_value = False
+    light = MagicMock()
+    light.is_dimmable.return_value = True
+    manager.switches = [switch, light]
+
+    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][VS_MANAGER] = manager
+    hass.data[DOMAIN][VS_FANS]: list = []
+    hass.data[DOMAIN][VS_HUMIDIFIERS]: list = []
+    hass.data[DOMAIN][VS_LIGHTS]: list = []
+    hass.data[DOMAIN][VS_NUMBERS]: list = []
+    hass.data[DOMAIN][VS_SENSORS]: list = []
+    hass.data[DOMAIN][VS_SWITCHES]: list = []
+
+    mock_forward_setup = Mock()
+    mock_service = Mock()
+    with patch(
+        "homeassistant.components.vesync.common.humid_features"
+    ) as mock_features, patch.object(
+        hass, "async_add_executor_job", new=AsyncMock()
+    ) as mock_add_executor_job, patch(
+        "homeassistant.components.vesync.async_dispatcher_send"
+    ) as mock_dispatcher_send, patch.object(
+        hass, "async_create_task", new=AsyncMock()
+    ) as mock_create_task:
+        mock_features.values.side_effect = features.values
+        mock_features.keys.side_effect = features.keys
+
+        await _async_new_device_discovery(
+            hass, config_entry, mock_forward_setup, mock_service
+        )
+        assert mock_add_executor_job.call_count == 1
+        assert mock_add_executor_job.call_args[0][0] == manager.update
+        assert mock_dispatcher_send.call_count == 0
+        assert mock_create_task.call_count == 6
+        assert mock_forward_setup.call_count == 6
+        mock_forward_setup.assert_has_calls(
+            [
+                call(config_entry, Platform.SWITCH),
+                call(config_entry, Platform.FAN),
+                call(config_entry, Platform.LIGHT),
+                call(config_entry, Platform.HUMIDIFIER),
+                call(config_entry, Platform.NUMBER),
+                call(config_entry, Platform.SENSOR),
+            ]
+        )
+        mock_service.assert_not_called()
+
+    assert hass.data[DOMAIN][VS_FANS] == unordered([fan])
+    assert hass.data[DOMAIN][VS_HUMIDIFIERS] == unordered([humidifier1, humidifier2])
+    assert hass.data[DOMAIN][VS_LIGHTS] == unordered([humidifier1, bulb, light])
+    assert hass.data[DOMAIN][VS_NUMBERS] == unordered([humidifier1, humidifier2])
+    assert hass.data[DOMAIN][VS_SENSORS] == unordered(
+        [fan, humidifier1, humidifier2, outlet]
+    )
+    assert hass.data[DOMAIN][VS_SWITCHES] == unordered(
+        [humidifier1, humidifier2, outlet, switch]
+    )
+
+    assert caplog.messages[0] == "1 VeSync fans found"
+    assert caplog.messages[1] == "2 VeSync humidifiers found"
+    assert caplog.messages[2] == "1 VeSync lights found"
+    assert caplog.messages[3] == "1 VeSync outlets found"
+    assert caplog.messages[4] == "2 VeSync switches found"
+
+
+async def test_async_new_device_discovery__start_devices_discover_devices(
+    hass: HomeAssistant,
+    config_entry,
+    manager,
+    features,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test when manager with devices is processed."""
+    caplog.set_level(logging.INFO)
+
+    fan = MagicMock()
+    fan.device_type = FAN_MODEL
+    fan2 = MagicMock()
+    fan2.device_type = FAN_MODEL
+    humidifier1 = MagicMock()
+    humidifier1.device_type = HUMIDIFIER_MODEL
+    humidifier1.night_light = True
+    humidifier2 = MagicMock()
+    humidifier2.device_type = HUMIDIFIER_MODEL
+    humidifier2.night_light = False
+    humidifier3 = MagicMock()
+    humidifier3.device_type = HUMIDIFIER_MODEL
+    humidifier3.night_light = True
+    manager.fans = [fan, humidifier1, humidifier2]
+
+    bulb = MagicMock()
+    bulb2 = MagicMock()
+    manager.bulbs = [bulb]
+
+    outlet = MagicMock()
+    outlet2 = MagicMock()
+    manager.outlets = [outlet]
+
+    switch = MagicMock()
+    switch.is_dimmable.return_value = False
+    switch2 = MagicMock()
+    switch2.is_dimmable.return_value = False
+    light = MagicMock()
+    light.is_dimmable.return_value = True
+    light2 = MagicMock()
+    light2.is_dimmable.return_value = True
+    manager.switches = [switch, light]
+
+    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][VS_MANAGER] = manager
+    hass.data[DOMAIN][VS_FANS]: list = [fan2]
+    hass.data[DOMAIN][VS_HUMIDIFIERS]: list = [humidifier3]
+    hass.data[DOMAIN][VS_LIGHTS]: list = [bulb2, light2]
+    hass.data[DOMAIN][VS_NUMBERS]: list = [humidifier3]
+    hass.data[DOMAIN][VS_SENSORS]: list = [outlet2]
+    hass.data[DOMAIN][VS_SWITCHES]: list = [switch2]
+
+    mock_forward_setup = Mock()
+    mock_service = Mock()
+    with patch(
+        "homeassistant.components.vesync.common.humid_features"
+    ) as mock_features, patch.object(
+        hass, "async_add_executor_job", new=AsyncMock()
+    ) as mock_add_executor_job, patch(
+        "homeassistant.components.vesync.async_dispatcher_send"
+    ) as mock_dispatcher_send, patch.object(
+        hass, "async_create_task", new=AsyncMock()
+    ) as mock_create_task:
+        mock_features.values.side_effect = features.values
+        mock_features.keys.side_effect = features.keys
+
+        await _async_new_device_discovery(
+            hass, config_entry, mock_forward_setup, mock_service
+        )
+        assert mock_add_executor_job.call_count == 1
+        assert mock_add_executor_job.call_args[0][0] == manager.update
+        assert mock_dispatcher_send.call_count == 6
+        assert mock_dispatcher_send.mock_calls[0] == call(
+            hass,
+            "vesync_discovery_switches",
+            unordered([humidifier1, humidifier2, outlet, switch]),
+        )
+        assert mock_dispatcher_send.mock_calls[1] == call(
+            hass, "vesync_discovery_fans", unordered([fan])
+        )
+        assert mock_dispatcher_send.mock_calls[2] == call(
+            hass, "vesync_discovery_lights", unordered([humidifier1, bulb, light])
+        )
+        assert mock_dispatcher_send.mock_calls[3] == call(
+            hass, "vesync_discovery_humidifiers", unordered([humidifier1, humidifier2])
+        )
+        assert mock_dispatcher_send.mock_calls[4] == call(
+            hass, "vesync_discovery_numbers", unordered([humidifier1, humidifier2])
+        )
+        assert mock_dispatcher_send.mock_calls[5] == call(
+            hass,
+            "vesync_discovery_sensors",
+            unordered([fan, humidifier1, humidifier2, outlet]),
+        )
+        assert mock_create_task.call_count == 0
+        assert mock_forward_setup.call_count == 0
+        mock_service.assert_not_called()
+
+    assert hass.data[DOMAIN][VS_FANS] == unordered([fan, fan2])
+    assert hass.data[DOMAIN][VS_HUMIDIFIERS] == unordered(
+        [humidifier1, humidifier2, humidifier3]
+    )
+    assert hass.data[DOMAIN][VS_LIGHTS] == unordered(
+        [humidifier1, bulb, bulb2, light, light2]
+    )
+    assert hass.data[DOMAIN][VS_NUMBERS] == unordered(
+        [humidifier1, humidifier2, humidifier3]
+    )
+    assert hass.data[DOMAIN][VS_SENSORS] == unordered(
+        [fan, humidifier1, humidifier2, outlet, outlet2]
+    )
+    assert hass.data[DOMAIN][VS_SWITCHES] == unordered(
+        [
+            humidifier1,
+            humidifier2,
+            outlet,
+            switch,
+            switch2,
+        ]
+    )
+
     assert caplog.messages[0] == "1 VeSync fans found"
     assert caplog.messages[1] == "2 VeSync humidifiers found"
     assert caplog.messages[2] == "1 VeSync lights found"
