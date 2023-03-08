@@ -56,12 +56,10 @@ class MatterLock(MatterEntity, LockEntity):
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock with pin if needed."""
-
         await self.send_device_command(command=clusters.DoorLock.Commands.LockDoor())
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock with pin if needed."""
-
         await self.send_device_command(command=clusters.DoorLock.Commands.UnlockDoor())
 
     @callback
@@ -76,8 +74,6 @@ class MatterLock(MatterEntity, LockEntity):
         lock_state = self.get_matter_attribute_value(
             clusters.DoorLock.Attributes.LockState
         )
-
-        assert lock_state is not None
 
         LOGGER.debug("Lock state: %s for %s", lock_state, self.entity_id)
 
@@ -104,7 +100,10 @@ class MatterLock(MatterEntity, LockEntity):
 
 
 class DoorLockFeature(IntFlag):
-    """Temp enum that represents the features of a door lock, should be replaced by the library provided one once that is released."""
+    """Temp enum that represents the features of a door lock.
+
+    Should be replaced by the library provided one once that is released.
+    """
 
     kPinCredential = 0x1
     kRfidCredential = 0x2

@@ -67,8 +67,7 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSwitch,
         required_attributes=(clusters.OnOff.Attributes.OnOff,),
-        # restrict device type to prevent discovery by light
-        # platform which also uses OnOff cluster
+        # restrict device type to prevent discovery by the wrong platform
         not_device_type=(
             device_types.OnOffLight,
             device_types.DimmableLight,
