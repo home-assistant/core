@@ -97,12 +97,9 @@ async def test_not_immediate_works(hass: HomeAssistant) -> None:
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert debouncer._timer_task is not None
+    assert debouncer._timer_task is None
     assert debouncer._execute_at_end_of_timer is False
     assert debouncer._job.target == debouncer.function
-
-    # Reset debouncer
-    debouncer.async_cancel()
 
     # Test calling doesn't schedule if currently executing.
     await debouncer._execute_lock.acquire()
