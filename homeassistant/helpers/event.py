@@ -277,7 +277,12 @@ def _async_track_state_change_event(
         @callback
         def _async_state_change_dispatcher(event: Event) -> None:
             """Dispatch state changes by entity_id."""
-            for job in entity_callbacks[event.data["entity_id"]][:]:
+            entity_id = event.data.get("entity_id")
+
+            if entity_id not in entity_callbacks:
+                return
+
+            for job in entity_callbacks[entity_id][:]:
                 try:
                     hass.async_run_hass_job(job, event)
                 except Exception:  # pylint: disable=broad-except
@@ -369,6 +374,10 @@ def async_track_entity_registry_updated_event(
         def _async_entity_registry_updated_dispatcher(event: Event) -> None:
             """Dispatch entity registry updates by entity_id."""
             entity_id = event.data.get("old_entity_id", event.data["entity_id"])
+
+            if entity_id not in entity_callbacks:
+                return
+
             for job in entity_callbacks[entity_id][:]:
                 try:
                     hass.async_run_hass_job(job, event)
