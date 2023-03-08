@@ -129,13 +129,14 @@ class Debouncer(Generic[_R_co]):
 
         self._execute_at_end_of_timer = False
 
+    def _create_task(self) -> None:
+        if self._execute_at_end_of_timer:
+            self.hass.async_create_task(
+                self._handle_timer_finish(),
+                f"debouncer {self._job} finish cooldown={self.cooldown}, immediate={self.immediate}",
+            )
+
     @callback
     def _schedule_timer(self) -> None:
         """Schedule a timer."""
-        self._timer_task = self.hass.loop.call_later(
-            self.cooldown,
-            lambda: self.hass.async_create_task(
-                self._handle_timer_finish(),
-                f"debouncer {self._job} finish cooldown={self.cooldown}, immediate={self.immediate}",
-            ),
-        )
+        self._timer_task = self.hass.loop.call_later(self.cooldown, self._create_task)
