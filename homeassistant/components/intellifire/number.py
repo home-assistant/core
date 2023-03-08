@@ -62,13 +62,12 @@ class IntellifireTimerControlEntity(IntellifireEntity, NumberEntity):
         coordinator: IntellifireDataUpdateCoordinator,
         description: NumberEntityDescription,
     ) -> None:
-        """Initilaize fireplace timer."""
+        """Initialize fireplace timer."""
         super().__init__(coordinator, description)
 
     @property
     def native_value(self) -> float | None:
         """Return the current Timer value in minutes."""
-        # UI uses 1-5 for flame height, backing lib uses 0-4
         value = int(self.coordinator.read_api.data.timeremaining_s / 60)
         return value
 
