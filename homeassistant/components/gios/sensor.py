@@ -81,6 +81,7 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         name="CO",
         value=lambda sensors: sensors.co.value if sensors.co else None,
         suggested_display_precision=0,
+        icon="mdi:molecule",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
