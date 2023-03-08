@@ -80,14 +80,12 @@ BINARY_SENSORS = [
         key="heating",
         name="Heating",
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
         value_fn=lambda data: data.alert["alert_is_heating"],
     ),
     StarlinkBinarySensorEntityDescription(
         key="power_save_idle",
         name="Idle",
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
         value_fn=lambda data: data.alert["alert_is_power_save_idle"],
     ),
     StarlinkBinarySensorEntityDescription(
@@ -95,7 +93,6 @@ BINARY_SENSORS = [
         name="Mast near vertical",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
         value_fn=lambda data: data.alert["alert_mast_not_near_vertical"],
     ),
     StarlinkBinarySensorEntityDescription(
@@ -103,7 +100,6 @@ BINARY_SENSORS = [
         name="Motors stuck",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
         value_fn=lambda data: data.alert["alert_motors_stuck"],
     ),
     StarlinkBinarySensorEntityDescription(
@@ -111,7 +107,6 @@ BINARY_SENSORS = [
         name="Ethernet speeds",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
         value_fn=lambda data: data.alert["alert_slow_ethernet_speeds"],
     ),
     StarlinkBinarySensorEntityDescription(
@@ -119,7 +114,6 @@ BINARY_SENSORS = [
         name="Thermal throttle",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
         value_fn=lambda data: data.alert["alert_thermal_throttle"],
     ),
     StarlinkBinarySensorEntityDescription(
@@ -127,7 +121,6 @@ BINARY_SENSORS = [
         name="Unexpected location",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
         value_fn=lambda data: data.alert["alert_unexpected_location"],
     ),
 ]
