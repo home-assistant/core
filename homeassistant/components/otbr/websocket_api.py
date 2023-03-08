@@ -57,6 +57,7 @@ async def websocket_info(
         "type": "otbr/create_network",
     }
 )
+@websocket_api.require_admin
 @websocket_api.async_response
 async def websocket_create_network(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
