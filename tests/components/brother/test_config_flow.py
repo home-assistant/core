@@ -3,6 +3,7 @@ import json
 from unittest.mock import patch
 
 from brother import SnmpError, UnsupportedModelError
+import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components import zeroconf
@@ -14,6 +15,8 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry, load_fixture
 
 CONFIG = {CONF_HOST: "127.0.0.1", CONF_TYPE: "laser"}
+
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def test_show_form(hass: HomeAssistant) -> None:

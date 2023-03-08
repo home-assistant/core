@@ -1131,7 +1131,13 @@ class ConfigEntries:
     async def _async_shutdown(self, event: Event) -> None:
         """Call when Home Assistant is stopping."""
         await asyncio.gather(
-            *(entry.async_shutdown() for entry in self._entries.values())
+            *(
+                asyncio.create_task(
+                    entry.async_shutdown(),
+                    name=f"config entry shutdown {entry.title} {entry.domain} {entry.entry_id}",
+                )
+                for entry in self._entries.values()
+            )
         )
         await self.flow.async_shutdown()
 
@@ -1390,7 +1396,13 @@ class ConfigEntries:
     ) -> None:
         """Forward the setup of an entry to platforms."""
         await asyncio.gather(
-            *(self.async_forward_entry_setup(entry, platform) for platform in platforms)
+            *(
+                asyncio.create_task(
+                    self.async_forward_entry_setup(entry, platform),
+                    name=f"config entry forward setup {entry.title} {entry.domain} {entry.entry_id} {platform}",
+                )
+                for platform in platforms
+            )
         )
 
     async def async_forward_entry_setup(
@@ -1421,7 +1433,10 @@ class ConfigEntries:
         return all(
             await asyncio.gather(
                 *(
-                    self.async_forward_entry_unload(entry, platform)
+                    asyncio.create_task(
+                        self.async_forward_entry_unload(entry, platform),
+                        name=f"config entry forward unload {entry.title} {entry.domain} {entry.entry_id} {platform}",
+                    )
                     for platform in platforms
                 )
             )
@@ -1952,7 +1967,13 @@ class EntityRegistryDisabledHandler:
         )
 
         await asyncio.gather(
-            *(self.hass.config_entries.async_reload(entry_id) for entry_id in to_reload)
+            *(
+                asyncio.create_task(
+                    self.hass.config_entries.async_reload(entry_id),
+                    name="config entry reload {entry.title} {entry.domain} {entry.entry_id}",
+                )
+                for entry_id in to_reload
+            )
         )
 
 

@@ -276,7 +276,7 @@ aioskybell==22.7.0
 aioslimproto==2.1.1
 
 # homeassistant.components.honeywell
-aiosomecomfort==0.0.11
+aiosomecomfort==0.0.14
 
 # homeassistant.components.steamist
 aiosteamist==0.3.2
@@ -1645,7 +1645,7 @@ pyforked-daapd==0.1.14
 pyfreedompro==1.1.0
 
 # homeassistant.components.fritzbox
-pyfritzhome==0.6.7
+pyfritzhome==0.6.8
 
 # homeassistant.components.fronius
 pyfronius==0.7.1
@@ -1771,7 +1771,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.mazda
-pymazda==0.3.7
+pymazda==0.3.8
 
 # homeassistant.components.mediaroom
 pymediaroom==0.6.5.4
@@ -2097,7 +2097,7 @@ python-nest==4.2.0
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
-python-otbr-api==1.0.5
+python-otbr-api==1.0.8
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0
@@ -2334,7 +2334,7 @@ sentry-sdk==1.16.0
 sfrbox-api==0.0.6
 
 # homeassistant.components.sharkiq
-sharkiq==0.0.1
+sharkiq==1.0.2
 
 # homeassistant.components.aquostv
 sharp_aquos_rc==0.3.2
