@@ -269,11 +269,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not acc:
         return False
 
-    try:
+    with suppress(Exception):  # else we continue with cache if available
         await acc.login()
         await acc.get_account_state(print_onboarded_devices=False)
-    except:  # pylint: disable=bare-except # noqa: E722
-        pass  # offline we continue with cache if available
 
     async def on_hass_stop(*_: Any) -> None:
         """Logout from account."""
