@@ -375,13 +375,16 @@ class EDL21:
             else:
                 entity_description = SENSORS.get(obis)
                 if entity_description and entity_description.name:
-                    name = entity_description.name
-                    if self._name:
-                        name = f"{self._name}: {name}"
-
+                    device_name = (
+                        self._name or DEFAULT_DEVICE_NAME
+                    )  # self._name is only used for backwards compatibility of sensors from configuration.yaml and will be removed
                     new_entities.append(
                         EDL21Entity(
-                            electricity_id, obis, name, entity_description, telegram
+                            electricity_id,
+                            obis,
+                            device_name,
+                            entity_description,
+                            telegram,
                         )
                     )
                     self._registered_obis.add((electricity_id, obis))
@@ -424,8 +427,9 @@ class EDL21Entity(SensorEntity):
     """Entity reading values from EDL21 telegram."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
-    def __init__(self, electricity_id, obis, name, entity_description, telegram):
+    def __init__(self, electricity_id, obis, device_name, entity_description, telegram):
         """Initialize an EDL21Entity."""
         self._electricity_id = electricity_id
         self._obis = obis
@@ -440,11 +444,10 @@ class EDL21Entity(SensorEntity):
         }
         self._async_remove_dispatcher = None
         self.entity_description = entity_description
-        self._attr_name = name
         self._attr_unique_id = f"{electricity_id}_{obis}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._electricity_id)},
-            name=DEFAULT_DEVICE_NAME,
+            name=device_name,
         )
 
     async def async_added_to_hass(self) -> None:
