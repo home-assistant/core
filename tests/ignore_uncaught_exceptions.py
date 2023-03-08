@@ -24,4 +24,13 @@ IGNORE_UNCAUGHT_EXCEPTIONS = [
     ),
     ("tests.components.iaqualink.test_config_flow", "test_with_invalid_credentials"),
     ("tests.components.iaqualink.test_config_flow", "test_with_existing_config"),
+    # These tests explicitly throw an uncaught exception
+    ("tests.helpers.test_event", "test_async_track_state_change_filtered"),
+    ("tests.helpers.test_event", "test_async_track_state_change_event"),
+    ("tests.helpers.test_event", "test_async_track_state_added_domain"),
+    ("tests.helpers.test_event", "test_async_track_state_removed_domain"),
+    (
+        "tests.helpers.test_event",
+        "test_async_track_entity_registry_updated_event_with_a_callback_that_throws",
+    ),
 ]

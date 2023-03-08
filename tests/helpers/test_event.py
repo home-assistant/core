@@ -4171,7 +4171,7 @@ async def test_async_call_later_cancel(hass: HomeAssistant) -> None:
             assert await future, "callback not canceled"
 
 
-async def test_track_state_change_event_chain_multple_entity(
+async def test_track_state_change_event_chain_multiple_entity(
     hass: HomeAssistant,
 ) -> None:
     """Test that adding a new state tracker inside a tracker does not fire right away."""
@@ -4208,6 +4208,7 @@ async def test_track_state_change_event_chain_multple_entity(
     )
 
     hass.states.async_set("light.bowl", "on")
+    await hass.async_block_till_done()
     hass.states.async_set("light.top", "on")
     await hass.async_block_till_done()
 

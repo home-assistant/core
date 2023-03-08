@@ -200,7 +200,7 @@ def async_track_state_change(
     @callback
     def state_change_dispatcher(event: Event) -> None:
         """Handle specific state changes."""
-        hass.async_run_hass_job(
+        hass.async_add_hass_job(
             job,
             event.data["entity_id"],
             event.data.get("old_state"),
@@ -227,7 +227,10 @@ def async_track_state_change(
         return async_track_state_change_event(hass, entity_ids, state_change_listener)
 
     return hass.bus.async_listen(
-        EVENT_STATE_CHANGED, state_change_dispatcher, event_filter=state_change_filter
+        EVENT_STATE_CHANGED,
+        state_change_dispatcher,
+        event_filter=state_change_filter,
+        run_immediately=True,
     )
 
 
@@ -282,18 +285,14 @@ def _async_track_state_change_event(
             if entity_id not in entity_callbacks:
                 return
 
-            for job in entity_callbacks[entity_id][:]:
-                try:
-                    hass.async_run_hass_job(job, event)
-                except Exception:  # pylint: disable=broad-except
-                    _LOGGER.exception(
-                        "Error while processing state change for %s", entity_id
-                    )
+            for job in entity_callbacks[entity_id]:
+                hass.async_add_hass_job(job, event)
 
         hass.data[TRACK_STATE_CHANGE_LISTENER] = hass.bus.async_listen(
             EVENT_STATE_CHANGED,
             _async_state_change_dispatcher,
             event_filter=_async_state_change_filter,
+            run_immediately=True,
         )
 
     job = HassJob(action, f"track state change event {entity_ids}")
@@ -378,19 +377,14 @@ def async_track_entity_registry_updated_event(
             if entity_id not in entity_callbacks:
                 return
 
-            for job in entity_callbacks[entity_id][:]:
-                try:
-                    hass.async_run_hass_job(job, event)
-                except Exception:  # pylint: disable=broad-except
-                    _LOGGER.exception(
-                        "Error while processing entity registry update for %s",
-                        entity_id,
-                    )
+            for job in entity_callbacks[entity_id]:
+                hass.async_add_hass_job(job, event)
 
         hass.data[TRACK_ENTITY_REGISTRY_UPDATED_LISTENER] = hass.bus.async_listen(
             EVENT_ENTITY_REGISTRY_UPDATED,
             _async_entity_registry_updated_dispatcher,
             event_filter=_async_entity_registry_updated_filter,
+            run_immediately=True,
         )
 
     job = HassJob(action, f"track entity registry updated event {entity_ids}")
@@ -424,12 +418,7 @@ def _async_dispatch_domain_event(
     listeners = callbacks.get(domain, []) + callbacks.get(MATCH_ALL, [])
 
     for job in listeners:
-        try:
-            hass.async_run_hass_job(job, event)
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception(
-                "Error while processing event %s for domain %s", event, domain
-            )
+        hass.async_add_hass_job(job, event)
 
 
 @bind_hass
@@ -474,6 +463,7 @@ def _async_track_state_added_domain(
             EVENT_STATE_CHANGED,
             _async_state_change_dispatcher,
             event_filter=_async_state_change_filter,
+            run_immediately=True,
         )
 
     job = HassJob(action, f"track state added domain event {domains}")
@@ -528,6 +518,7 @@ def async_track_state_removed_domain(
             EVENT_STATE_CHANGED,
             _async_state_change_dispatcher,
             event_filter=_async_state_change_filter,
+            run_immediately=True,
         )
 
     job = HassJob(action, f"track state removed domain event {domains}")
