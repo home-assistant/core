@@ -135,6 +135,8 @@ class Debouncer(Generic[_R_co]):
                 self._handle_timer_finish(),
                 f"debouncer {self._job} finish cooldown={self.cooldown}, immediate={self.immediate}",
             )
+        else:
+            self._timer_task = None
 
     @callback
     def _schedule_timer(self) -> None:
