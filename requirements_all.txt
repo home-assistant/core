@@ -1516,7 +1516,7 @@ pyatv==0.10.3
 pyaussiebb==0.0.15
 
 # homeassistant.components.balboa
-pybalboa==1.0.0
+pybalboa==1.0.1
 
 # homeassistant.components.bbox
 pybbox==0.0.5-alpha
@@ -1645,7 +1645,7 @@ pyforked-daapd==0.1.14
 pyfreedompro==1.1.0
 
 # homeassistant.components.fritzbox
-pyfritzhome==0.6.7
+pyfritzhome==0.6.8
 
 # homeassistant.components.fronius
 pyfronius==0.7.1
@@ -1771,7 +1771,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.mazda
-pymazda==0.3.7
+pymazda==0.3.8
 
 # homeassistant.components.mediaroom
 pymediaroom==0.6.5.4
@@ -2097,7 +2097,7 @@ python-nest==4.2.0
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
-python-otbr-api==1.0.5
+python-otbr-api==1.0.8
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0

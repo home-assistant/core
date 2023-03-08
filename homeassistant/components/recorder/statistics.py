@@ -1940,10 +1940,7 @@ def _latest_short_term_statistics_stmt(
                 .group_by(StatisticsShortTerm.metadata_id)
             ).subquery()
         ),
-        (
-            StatisticsShortTerm.metadata_id  # pylint: disable=comparison-with-callable
-            == most_recent_statistic_row.c.metadata_id
-        )
+        (StatisticsShortTerm.metadata_id == most_recent_statistic_row.c.metadata_id)
         & (StatisticsShortTerm.start_ts == most_recent_statistic_row.c.start_max),
     )
     return stmt
