@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+from datetime import datetime, timedelta
 from logging import Logger
 from typing import Generic, TypeVar
 
@@ -44,6 +45,7 @@ class Debouncer(Generic[_R_co]):
                 function, f"debouncer cooldown={cooldown}, immediate={immediate}"
             )
         )
+        self._no_run_before: datetime | None = None
 
     @property
     def function(self) -> Callable[[], _R_co] | None:
@@ -64,7 +66,11 @@ class Debouncer(Generic[_R_co]):
         """Call the function."""
         assert self._job is not None
 
-        if self._timer_task:
+        if (
+            self._timer_task
+            or self._no_run_before
+            and self._no_run_before > datetime.now()
+        ):
             if not self._execute_at_end_of_timer:
                 self._execute_at_end_of_timer = True
 
@@ -88,6 +94,7 @@ class Debouncer(Generic[_R_co]):
             if task:
                 await task
 
+            self._no_run_before = datetime.now() + timedelta(seconds=self.cooldown)
             self._schedule_timer()
 
     async def _handle_timer_finish(self) -> None:
@@ -117,7 +124,7 @@ class Debouncer(Generic[_R_co]):
             except Exception:  # pylint: disable=broad-except
                 self.logger.exception("Unexpected exception from %s", self.function)
 
-            self._schedule_timer()
+            self._no_run_before = datetime.now() + timedelta(seconds=self.cooldown)
 
     @callback
     def async_cancel(self) -> None:
@@ -126,6 +133,7 @@ class Debouncer(Generic[_R_co]):
             self._timer_task.cancel()
             self._timer_task = None
 
+        self._no_run_before = None
         self._execute_at_end_of_timer = False
 
     @callback
