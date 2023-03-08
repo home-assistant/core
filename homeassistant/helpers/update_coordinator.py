@@ -143,7 +143,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
 
     @callback
     def _unschedule_refresh(self) -> None:
-        """Unschedule any pending refresh since there is no longer any listeners."""
+        """Unschedule any pending refresh, and cancel debounce."""
         if self._unsub_refresh:
             self._unsub_refresh()
             self._unsub_refresh = None
@@ -165,9 +165,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
         if self.config_entry and self.config_entry.pref_disable_polling:
             return
 
-        if self._unsub_refresh:
-            self._unsub_refresh()
-            self._unsub_refresh = None
+        self._unschedule_refresh()
 
         # We _floor_ utcnow to create a schedule on a rounded second,
         # minimizing the time between the point and the real activation.
@@ -231,11 +229,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
         raise_on_entry_error: bool = False,
     ) -> None:
         """Refresh data."""
-        if self._unsub_refresh:
-            self._unsub_refresh()
-            self._unsub_refresh = None
-
-        self._debounced_refresh.async_cancel()
+        self._unschedule_refresh()
 
         if scheduled and self.hass.is_stopping:
             return
@@ -350,11 +344,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
     @callback
     def async_set_updated_data(self, data: _T) -> None:
         """Manually update data, notify listeners and reset refresh interval."""
-        if self._unsub_refresh:
-            self._unsub_refresh()
-            self._unsub_refresh = None
-
-        self._debounced_refresh.async_cancel()
+        self._unschedule_refresh()
 
         self.data = data
         self.last_update_success = True
