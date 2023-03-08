@@ -18,6 +18,7 @@ def async_setup(hass: HomeAssistant) -> None:
     """Set up the OTBR Websocket API."""
     websocket_api.async_register_command(hass, websocket_info)
     websocket_api.async_register_command(hass, websocket_create_network)
+    websocket_api.async_register_command(hass, websocket_get_extended_address)
 
 
 @websocket_api.websocket_command(
@@ -96,3 +97,29 @@ async def websocket_create_network(
         return
 
     connection.send_result(msg["id"])
+
+
+@websocket_api.websocket_command(
+    {
+        "type": "otbr/get_extended_address",
+    }
+)
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_get_extended_address(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Get extended address (EUI-64)."""
+    if DOMAIN not in hass.data:
+        connection.send_error(msg["id"], "not_loaded", "No OTBR API loaded")
+        return
+
+    data: OTBRData = hass.data[DOMAIN]
+
+    try:
+        extended_address = await data.get_extended_address()
+    except HomeAssistantError as exc:
+        connection.send_error(msg["id"], "get_extended_address_failed", str(exc))
+        return
+
+    connection.send_result(msg["id"], {"extended_address": extended_address.hex()})
