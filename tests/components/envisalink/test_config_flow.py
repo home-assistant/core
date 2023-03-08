@@ -57,7 +57,7 @@ async def test_form(
 
 
 @pytest.mark.parametrize(
-    "alarm_error,exception_message",
+    ("alarm_error", "exception_message"),
     [
         (EnvisalinkAlarmPanel.ConnectionResult.INVALID_AUTHORIZATION, "invalid_auth"),
         (EnvisalinkAlarmPanel.ConnectionResult.CONNECTION_FAILED, "cannot_connect"),
