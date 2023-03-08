@@ -60,6 +60,9 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator[bool]):
     async def _async_update_data(self) -> bool:
         """Update data device by device."""
         try:
+            if self.ayla_api.token_expiring_soon:
+                await self.ayla_api.async_refresh_auth()
+
             all_vacuums = await self.ayla_api.async_list_devices()
             self._online_dsns = {
                 v["dsn"]
@@ -76,9 +79,11 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator[bool]):
             SharkIqAuthExpiringError,
         ) as err:
             LOGGER.debug("Bad auth state.  Attempting re-auth", exc_info=err)
+            await self.ayla_api.async_sign_in()
             raise ConfigEntryAuthFailed from err
         except Exception as err:
-            LOGGER.exception("Unexpected error updating SharkIQ")
+            LOGGER.exception("Unexpected error updating SharkIQ.  Attempting re-auth")
+            await self.ayla_api.async_sign_in()
             raise UpdateFailed(err) from err
 
         return True
