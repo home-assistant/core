@@ -110,7 +110,7 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
             thread_name_prefix="SyncWorker", max_workers=MAX_EXECUTOR_WORKERS
         )
         loop.set_default_executor(executor)
-        loop.set_default_executor = warn_use(  # type: ignore[assignment]
+        loop.set_default_executor = warn_use(  # type: ignore[method-assign]
             loop.set_default_executor, "sets default executor on the event loop"
         )
         return loop
