@@ -1519,7 +1519,7 @@ pyatv==0.10.3
 pyaussiebb==0.0.15
 
 # homeassistant.components.balboa
-pybalboa==1.0.0
+pybalboa==1.0.1
 
 # homeassistant.components.bbox
 pybbox==0.0.5-alpha
