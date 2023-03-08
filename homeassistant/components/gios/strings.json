@@ -34,6 +34,56 @@
           "good": "Good",
           "very_good": "Very good"
         }
+      },
+      "no2_index": {
+        "state": {
+          "very_bad": "Very bad",
+          "bad": "Bad",
+          "sufficient": "Sufficient",
+          "moderate": "Moderate",
+          "good": "Good",
+          "very_good": "Very good"
+        }
+      },
+      "o3_index": {
+        "state": {
+          "very_bad": "Very bad",
+          "bad": "Bad",
+          "sufficient": "Sufficient",
+          "moderate": "Moderate",
+          "good": "Good",
+          "very_good": "Very good"
+        }
+      },
+      "pm10_index": {
+        "state": {
+          "very_bad": "Very bad",
+          "bad": "Bad",
+          "sufficient": "Sufficient",
+          "moderate": "Moderate",
+          "good": "Good",
+          "very_good": "Very good"
+        }
+      },
+      "pm25_index": {
+        "state": {
+          "very_bad": "Very bad",
+          "bad": "Bad",
+          "sufficient": "Sufficient",
+          "moderate": "Moderate",
+          "good": "Good",
+          "very_good": "Very good"
+        }
+      },
+      "so2_index": {
+        "state": {
+          "very_bad": "Very bad",
+          "bad": "Bad",
+          "sufficient": "Sufficient",
+          "moderate": "Moderate",
+          "good": "Good",
+          "very_good": "Very good"
+        }
       }
     }
   }
