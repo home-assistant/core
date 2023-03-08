@@ -103,7 +103,7 @@ aio_georss_gdacs==0.8
 aioairq==0.2.4
 
 # homeassistant.components.airzone
-aioairzone==0.5.2
+aioairzone==0.5.3
 
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
