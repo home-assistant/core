@@ -1600,7 +1600,7 @@ ring_doorbell==0.7.2
 rokuecp==0.17.1
 
 # homeassistant.components.roomba
-roombapy==1.6.5
+roombapy==1.6.6
 
 # homeassistant.components.roon
 roonapi==0.1.3
