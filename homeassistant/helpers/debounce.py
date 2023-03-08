@@ -117,6 +117,9 @@ class Debouncer(Generic[_R_co]):
             except Exception:  # pylint: disable=broad-except
                 self.logger.exception("Unexpected exception from %s", self.function)
 
+            # Schedule a new timer to prevent new runs during cooldown
+            self._schedule_timer()
+
     @callback
     def async_cancel(self) -> None:
         """Cancel any scheduled call."""
