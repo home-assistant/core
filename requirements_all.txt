@@ -970,7 +970,7 @@ ihcsdk==2.7.6
 incomfort-client==0.5.0
 
 # homeassistant.components.inels
-inels-mqtt-new==0.0.98
+inels-mqtt-new==0.2.6
 
 # homeassistant.components.influxdb
 influxdb-client==1.24.0

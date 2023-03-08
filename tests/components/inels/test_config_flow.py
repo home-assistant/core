@@ -1,5 +1,6 @@
 """Test config flow."""
-from typing import Any, Callable, TypeVar
+from collections.abc import Callable
+from typing import Any, TypeVar
 from unittest.mock import patch
 
 from inelsmqtt import InelsMqtt

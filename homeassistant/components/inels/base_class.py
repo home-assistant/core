@@ -7,7 +7,7 @@ from inelsmqtt.devices import Device
 
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 
 
 class InelsBaseEntity(Entity):
@@ -16,6 +16,8 @@ class InelsBaseEntity(Entity):
     def __init__(
         self,
         device: Device,
+        key: str,
+        index: int,
     ) -> None:
         """Init base entity."""
         self._device: Device = device
@@ -25,17 +27,22 @@ class InelsBaseEntity(Entity):
         self._parent_id = self._device.parent_id
         self._attr_unique_id = f"{self._parent_id}-{self._device_id}"
 
+        self._key = key
+        self._index = index
+
+        self._device.add_ha_callback(self.key, self.index, self._callback)
+
     async def async_added_to_hass(self) -> None:
-        """Add subscription of the data listenere."""
-        self.async_on_remove(
-            self._device.mqtt.subscribe_listener(
-                self._device.state_topic, self._attr_unique_id, self._callback
-            )
+        """Add subscription of the data listener."""
+        self._device.mqtt.subscribe_listener(
+            self._device.state_topic, self._device.unique_id, self._device.callback
         )
+
+        self.async_on_remove(lambda: LOGGER.info("Entity %s to be removed", self.name))
 
     def _callback(self, new_value: Any) -> None:
         """Get data from broker into the HA."""
-        self._device.update_value(new_value)
+        # self._device.update_value(new_value)
         self.schedule_update_ha_state()
 
     @property
@@ -58,8 +65,16 @@ class InelsBaseEntity(Entity):
 
     @property
     def available(self) -> bool:
-        """Return if entity si available."""
-        if self._device.is_subscribed is False:
-            self._device.mqtt.subscribe(self._device.state_topic)
+        """Return if entity is available."""
 
         return self._device.is_available and super().available
+
+    @property
+    def key(self) -> str:
+        """Return the referenced variable to read from."""
+        return self._key
+
+    @property
+    def index(self) -> int:
+        """Return the index of the variable list to read from. '-1' for no index."""
+        return self._index

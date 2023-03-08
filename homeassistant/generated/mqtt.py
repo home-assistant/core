@@ -7,11 +7,11 @@ MQTT = {
     "dsmr_reader": [
         "dsmr/#",
     ],
-    "inels": [
-        "inels/status/#",
-    ],
     "fully_kiosk": [
         "fully/deviceInfo/+",
+    ],
+    "inels": [
+        "inels/status/#",
     ],
     "tasmota": [
         "tasmota/discovery/#",

@@ -28,6 +28,7 @@ async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up iNels from a config entry."""
+
     if CONF_HOST not in entry.data:
         LOGGER.error("MQTT broker is not configured")
         return False
@@ -62,10 +63,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     LOGGER.info("Finished discovery, setting up platforms")
 
     hass.data[DOMAIN][entry.entry_id] = inels_data
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     LOGGER.info("Platform setup complete")
-
     return True
 
 

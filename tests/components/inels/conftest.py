@@ -34,7 +34,7 @@ def mock_inelsmqtt_fixture():
         """Return mocked discovered devices."""
         return mqtt.mock_discovery_all
 
-    def subscribe(topic, qos, options, properties):
+    def subscribe(topic, qos=0, options=None, properties=None):
         """Mock subscribe fnc."""
         return mqtt.mock_messages[topic]
 
@@ -80,6 +80,6 @@ async def setup_inels_test_integration(hass: HomeAssistant):
     assert inels.DOMAIN in hass.config.components
 
 
-async def setup_inels(hass):
+async def setup_inels(hass: HomeAssistant):
     """Set up inels."""
     await setup_inels_test_integration(hass)

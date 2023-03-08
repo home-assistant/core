@@ -728,8 +728,8 @@ icmplib==3.0
 # homeassistant.components.network
 ifaddr==0.1.7
 
-#homeassistant.components.inels
-inels-mqtt-new==0.0.98
+# homeassistant.components.inels
+inels-mqtt-new==0.2.6
 
 # homeassistant.components.influxdb
 influxdb-client==1.24.0

@@ -1,12 +1,12 @@
 {
   "domain": "inels",
   "name": "iNELS",
-  "config_flow": true,
-  "issue_tracker": "https://github.com/zed4805/inels-hacs-new/issues",
-  "documentation": "https://github.com/zed4805/inels-hacs-new",
-  "requirements": ["inels-mqtt-new==0.0.98"],
-  "dependencies": ["mqtt"],
-  "mqtt": ["inels/status/#"],
   "codeowners": ["@Nejezchleb", "@jhoralek", "@zed4805"],
-  "iot_class": "local_push"
+  "config_flow": true,
+  "dependencies": ["mqtt"],
+  "documentation": "https://github.com/zed4805/inels-hacs-new",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/zed4805/inels-hacs-new/issues",
+  "mqtt": ["inels/status/#"],
+  "requirements": ["inels-mqtt-new==0.2.6"]
 }
