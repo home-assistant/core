@@ -67,7 +67,6 @@ BINARY_SENSORS = [
     StarlinkBinarySensorEntityDescription(
         key="roaming",
         name="Roaming mode",
-        entity_registry_enabled_default=False,
         value_fn=lambda data: data.alert["alert_roaming"],
     ),
     StarlinkBinarySensorEntityDescription(
