@@ -17,7 +17,7 @@ from homeassistant.const import SERVER_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import bind_hass
 
-from .const import ATTR_DISCOVERY, DOMAIN
+from .const import ATTR_DISCOVERY, DOMAIN, X_HASS_SOURCE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -445,6 +445,8 @@ class HassIO:
         payload=None,
         timeout=10,
         return_text=False,
+        *,
+        source="core.handler",
     ):
         """Send API command to Hass.io.
 
@@ -458,7 +460,8 @@ class HassIO:
                 headers={
                     aiohttp.hdrs.AUTHORIZATION: (
                         f"Bearer {os.environ.get('SUPERVISOR_TOKEN', '')}"
-                    )
+                    ),
+                    X_HASS_SOURCE: source,
                 },
                 timeout=aiohttp.ClientTimeout(total=timeout),
             )
