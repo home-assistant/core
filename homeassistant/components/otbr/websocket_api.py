@@ -104,6 +104,7 @@ async def websocket_create_network(
         "type": "otbr/get_extended_address",
     }
 )
+@websocket_api.require_admin
 @websocket_api.async_response
 async def websocket_get_extended_address(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
