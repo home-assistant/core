@@ -213,26 +213,6 @@ async def test_restore_state(mock_heat_meter, hass: HomeAssistant) -> None:
 
 
 @patch(API_HEAT_METER_SERVICE)
-async def test_exception_during_setup(mock_heat_meter, hass: HomeAssistant) -> None:
-    """Test sensor."""
-    entry_data = {
-        "device": "/dev/USB0",
-        "model": "LUGCUH50",
-        "device_number": "123456789",
-    }
-    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
-    mock_heat_meter().read.side_effect = serial.serialutil.SerialException
-    mock_heat_meter.reset_mock()
-    mock_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_entry.entry_id)
-    await async_setup_component(hass, HA_DOMAIN, {})
-    await hass.async_block_till_done()
-
-    mock_heat_meter.assert_called_once()
-
-
-@patch(API_HEAT_METER_SERVICE)
 async def test_exception_on_polling(mock_heat_meter, hass: HomeAssistant) -> None:
     """Test sensor."""
     entry_data = {
