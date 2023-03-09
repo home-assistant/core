@@ -34,7 +34,10 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] is None
 
-    with patch("pydiscovergy.Discovergy", return_value=get_discovergy_mock(),), patch(
+    with patch(
+        "pydiscovergy.Discovergy",
+        return_value=get_discovergy_mock(),
+    ), patch(
         "homeassistant.components.discovergy.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
