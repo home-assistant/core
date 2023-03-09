@@ -1,4 +1,5 @@
 """Test KNX cover."""
+
 from homeassistant.components.knx.schema import CoverSchema
 from homeassistant.const import CONF_NAME, STATE_CLOSING
 from homeassistant.core import HomeAssistant

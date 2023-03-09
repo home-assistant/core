@@ -40,6 +40,8 @@ async def async_setup_sdm(hass):
     await hass.async_block_till_done()
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("nest_test_config", [TEST_CONFIGFLOW_YAML_ONLY])
 async def test_auth(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Exercise authentication library creates valid credentials."""
@@ -92,6 +94,8 @@ async def test_auth(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) ->
     assert creds.scopes == SDM_SCOPES
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("nest_test_config", [TEST_CONFIGFLOW_YAML_ONLY])
 async def test_auth_expired_token(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker

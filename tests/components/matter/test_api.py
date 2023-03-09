@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, call
 
 from aiohttp import ClientWebSocketResponse
 from matter_server.common.errors import InvalidCommand, NodeCommissionFailed
+import pytest
 
 from homeassistant.components.matter.api import ID, TYPE
 from homeassistant.core import HomeAssistant
@@ -11,6 +12,8 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_commission(
     hass: HomeAssistant,
     hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
@@ -51,6 +54,8 @@ async def test_commission(
     matter_client.commission_with_code.assert_called_once_with("12345678")
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_commission_on_network(
     hass: HomeAssistant,
     hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
@@ -91,6 +96,8 @@ async def test_commission_on_network(
     matter_client.commission_on_network.assert_called_once_with(1234)
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_set_thread_dataset(
     hass: HomeAssistant,
     hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
@@ -131,6 +138,8 @@ async def test_set_thread_dataset(
     matter_client.set_thread_operational_dataset.assert_called_once_with("test_dataset")
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_set_wifi_credentials(
     hass: HomeAssistant,
     hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],

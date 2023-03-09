@@ -85,7 +85,12 @@ from homeassistant.const import (
     WEEKDAYS,
     UnitOfTemperature,
 )
-from homeassistant.core import split_entity_id, valid_entity_id
+from homeassistant.core import (
+    HomeAssistant,
+    async_get_hass,
+    split_entity_id,
+    valid_entity_id,
+)
 from homeassistant.exceptions import TemplateError
 from homeassistant.generated import currencies
 from homeassistant.generated.countries import COUNTRIES
@@ -597,7 +602,11 @@ def template(value: Any | None) -> template_helper.Template:
     if isinstance(value, (list, dict, template_helper.Template)):
         raise vol.Invalid("template value should be a string")
 
-    template_value = template_helper.Template(str(value))
+    hass: HomeAssistant | None = None
+    with contextlib.suppress(LookupError):
+        hass = async_get_hass()
+
+    template_value = template_helper.Template(str(value), hass)
 
     try:
         template_value.ensure_valid()
@@ -615,7 +624,12 @@ def dynamic_template(value: Any | None) -> template_helper.Template:
     if not template_helper.is_template_string(str(value)):
         raise vol.Invalid("template value does not contain a dynamic template")
 
-    template_value = template_helper.Template(str(value))
+    hass: HomeAssistant | None = None
+    with contextlib.suppress(LookupError):
+        hass = async_get_hass()
+
+    template_value = template_helper.Template(str(value), hass)
+
     try:
         template_value.ensure_valid()
         return template_value
