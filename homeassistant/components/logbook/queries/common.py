@@ -186,6 +186,7 @@ def legacy_select_events_context_id(
         .outerjoin(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
         )
+        .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
         .where((Events.time_fired_ts > start_day) & (Events.time_fired_ts < end_day))
         .where(Events.context_id_bin == context_id_bin)
     )
