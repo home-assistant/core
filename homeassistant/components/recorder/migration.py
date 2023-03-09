@@ -1195,7 +1195,7 @@ def _migrate_statistics_columns_to_timestamp(
                     result = session.connection().execute(
                         text(
                             f"UPDATE {table} set start_ts="
-                            f"IF(start is NULL or UNIX_TIMESTAMP(start) is NULL,0,"
+                            "IF(start is NULL or UNIX_TIMESTAMP(start) is NULL,0,"
                             "UNIX_TIMESTAMP(start) "
                             "), "
                             "created_ts="
