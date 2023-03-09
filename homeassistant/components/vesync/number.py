@@ -57,9 +57,9 @@ class MistLevelEntityDescriptionFactory(
         return "mist_virtual_level" in device.details
 
 
-_FACTORIES: tuple[VeSyncEntityDescriptionFactory] = (
+_FACTORIES: list[VeSyncEntityDescriptionFactory] = [
     MistLevelEntityDescriptionFactory(),
-)
+]
 
 
 async def async_setup_entry(
