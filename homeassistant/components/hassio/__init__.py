@@ -115,11 +115,13 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 DATA_CORE_INFO = "hassio_core_info"
+DATA_CORE_STATS = "hassio_core_stats"
 DATA_HOST_INFO = "hassio_host_info"
 DATA_STORE = "hassio_store"
 DATA_INFO = "hassio_info"
 DATA_OS_INFO = "hassio_os_info"
 DATA_SUPERVISOR_INFO = "hassio_supervisor_info"
+DATA_SUPERVISOR_STATS = "hassio_supervisor_stats"
 DATA_ADDONS_CHANGELOGS = "hassio_addons_changelogs"
 DATA_ADDONS_INFO = "hassio_addons_info"
 DATA_ADDONS_STATS = "hassio_addons_stats"
@@ -299,6 +301,26 @@ def get_addons_stats(hass):
     Async friendly.
     """
     return hass.data.get(DATA_ADDONS_STATS)
+
+
+@callback
+@bind_hass
+def get_core_stats(hass):
+    """Return Addons stats.
+
+    Async friendly.
+    """
+    return hass.data.get(DATA_CORE_STATS)
+
+
+@callback
+@bind_hass
+def get_supervisor_stats(hass):
+    """Return supervisor stats.
+
+    Async friendly.
+    """
+    return hass.data.get(DATA_SUPERVISOR_STATS)
 
 
 @callback
@@ -747,8 +769,14 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         if self.is_hass_os:
             new_data[DATA_KEY_OS] = get_os_info(self.hass)
 
-        new_data[DATA_KEY_CORE] = get_core_info(self.hass)
-        new_data[DATA_KEY_SUPERVISOR] = supervisor_info
+        new_data[DATA_KEY_CORE] = {
+            **(get_core_info(self.hass) or {}),
+            **get_core_stats(self.hass),
+        }
+        new_data[DATA_KEY_SUPERVISOR] = {
+            **supervisor_info,
+            **get_supervisor_stats(self.hass),
+        }
 
         # If this is the initial refresh, register all addons and return the dict
         if not self.data:
@@ -805,12 +833,16 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         (
             self.hass.data[DATA_INFO],
             self.hass.data[DATA_CORE_INFO],
+            self.hass.data[DATA_CORE_STATS],
             self.hass.data[DATA_SUPERVISOR_INFO],
+            self.hass.data[DATA_SUPERVISOR_STATS],
             self.hass.data[DATA_OS_INFO],
         ) = await asyncio.gather(
             self.hassio.get_info(),
             self.hassio.get_core_info(),
+            self.hassio.get_core_stats(),
             self.hassio.get_supervisor_info(),
+            self.hassio.get_supervisor_stats(),
             self.hassio.get_os_info(),
         )
 
