@@ -46,9 +46,9 @@ API_HEAT_METER_SERVICE = (
 class MockHeatMeterResponse:
     """Mock for HeatMeterResponse."""
 
-    heat_usage_gj: int
-    volume_usage_m3: int
-    heat_previous_year_gj: int
+    heat_usage_gj: float
+    volume_usage_m3: float
+    heat_previous_year_gj: float
     device_number: str
     meter_date_time: datetime.datetime
 
