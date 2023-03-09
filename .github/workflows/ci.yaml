@@ -1084,7 +1084,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache@v3.3.0
+        uses: actions/cache/restore@v3.3.0
         with:
           path: venv
           fail-on-cache-miss: true
