@@ -61,6 +61,7 @@ from .db_schema import (
     Base,
     EventData,
     Events,
+    EventTypes,
     StateAttributes,
     States,
     Statistics,
@@ -77,6 +78,7 @@ from .models import (
 )
 from .pool import POOL_SIZE, MutexPool, RecorderPool
 from .queries import (
+    find_event_type_id,
     find_shared_attributes_id,
     find_shared_data_id,
     get_shared_attributes,
@@ -135,6 +137,7 @@ EXPIRE_AFTER_COMMITS = 120
 STATE_ATTRIBUTES_ID_CACHE_SIZE = 2048
 EVENT_DATA_ID_CACHE_SIZE = 2048
 
+
 SHUTDOWN_TASK = object()
 
 COMMIT_TASK = CommitTask()
@@ -151,6 +154,45 @@ CONNECTIVITY_ERR = "Error in database connectivity during commit"
 
 # Pool size must accommodate Recorder thread + All db executors
 MAX_DB_EXECUTOR_WORKERS = POOL_SIZE - 1
+
+
+class EventTypeManager:
+    """Manage event types."""
+
+    def __init__(self) -> None:
+        """Initialize the event manager."""
+        self._id_map: dict[str, int] = LRU(EVENT_DATA_ID_CACHE_SIZE)
+        self._pending: dict[str, EventTypes] = {}
+        self.active = False
+
+    def get(self, event_type: str, event_session: Session) -> int | None:
+        """Resolve events to event data."""
+        if event_type_id := self._id_map.get(event_type):
+            return event_type_id
+        with event_session.no_autoflush:
+            if event_type_row := event_session.execute(
+                find_event_type_id(event_type)
+            ).first():
+                event_type_id = cast(int, event_type_row[0])
+                self._id_map[event_type] = event_type_id
+                return event_type_id
+        return None
+
+    def get_pending(self, event_type: str) -> EventTypes | None:
+        """Get pending event type."""
+        return self._pending.get(event_type)
+
+    def add_pending(self, db_event_type: EventTypes) -> None:
+        """Add a pending event."""
+        assert db_event_type.event_type is not None
+        event_type: str = db_event_type.event_type
+        self._pending[event_type] = db_event_type
+
+    def post_commit_pending(self) -> None:
+        """Flush pending events."""
+        for event_type, db_event_types in self._pending.items():
+            self._id_map[event_type] = db_event_types.event_type_id
+        self._pending.clear()
 
 
 class Recorder(threading.Thread):
@@ -209,6 +251,7 @@ class Recorder(threading.Thread):
         self._old_states: dict[str | None, States] = {}
         self._state_attributes_ids: LRU = LRU(STATE_ATTRIBUTES_ID_CACHE_SIZE)
         self._event_data_ids: LRU = LRU(EVENT_DATA_ID_CACHE_SIZE)
+        self._event_type_manager = EventTypeManager()
         self._pending_state_attributes: dict[str, StateAttributes] = {}
         self._pending_event_data: dict[str, EventData] = {}
         self._pending_expunge: list[States] = []
@@ -944,13 +987,30 @@ class Recorder(threading.Thread):
 
     def _process_non_state_changed_event_into_session(self, event: Event) -> None:
         """Process any event into the session except state changed."""
-        assert self.event_session is not None
+        event_session = self.event_session
+        assert event_session is not None
         dbevent = Events.from_event(event)
+
+        # Map the event_type to the EventTypes table
+        event_type_manager = self._event_type_manager
+        if pending_event_types := event_type_manager.get_pending(event.event_type):
+            dbevent.event_type_rel = pending_event_types
+        elif event_type_id := event_type_manager.get(event.event_type, event_session):
+            dbevent.event_type_id = event_type_id
+        else:
+            event_types = EventTypes(event_type=event.event_type)
+            event_type_manager.add_pending(event_types)
+            event_session.add(event_types)
+            dbevent.event_type_rel = event_types
+
         if not event.data:
-            self.event_session.add(dbevent)
+            event_session.add(dbevent)
             return
+
         if not (shared_data_bytes := self._serialize_event_data_from_event(event)):
             return
+
+        # Map the event data to the EventData table
         shared_data = shared_data_bytes.decode("utf-8")
         # Matching attributes found in the pending commit
         if pending_event_data := self._pending_event_data.get(shared_data):
@@ -969,9 +1029,9 @@ class Recorder(threading.Thread):
                 dbevent.event_data_rel = self._pending_event_data[
                     shared_data
                 ] = dbevent_data
-                self.event_session.add(dbevent_data)
+                event_session.add(dbevent_data)
 
-        self.event_session.add(dbevent)
+        event_session.add(dbevent)
 
     def _serialize_state_attributes_from_event(self, event: Event) -> bytes | None:
         """Serialize state changed event data."""
@@ -1096,6 +1156,7 @@ class Recorder(threading.Thread):
         for event_data in self._pending_event_data.values():
             self._event_data_ids[event_data.shared_data] = event_data.data_id
         self._pending_event_data = {}
+        self._event_type_manager.post_commit_pending()
 
         # Expire is an expensive operation (frequently more expensive
         # than the flush and commit itself) so we only

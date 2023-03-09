@@ -12,6 +12,7 @@ from .const import SQLITE_MAX_BIND_VARS
 from .db_schema import (
     EventData,
     Events,
+    EventTypes,
     RecorderRuns,
     StateAttributes,
     States,
@@ -34,6 +35,15 @@ def get_shared_event_datas(hashes: list[int]) -> StatementLambdaElement:
     return lambda_stmt(
         lambda: select(EventData.data_id, EventData.shared_data).where(
             EventData.hash.in_(hashes)
+        )
+    )
+
+
+def find_event_type_id(event_type: str) -> StatementLambdaElement:
+    """Find an event_type id by event_type."""
+    return lambda_stmt(
+        lambda: select(EventTypes.event_type_id).filter(
+            EventTypes.event_type == event_type
         )
     )
 
