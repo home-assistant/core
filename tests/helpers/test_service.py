@@ -383,15 +383,17 @@ async def test_split_entity_string(hass: HomeAssistant):
 async def test_not_mutate_input(hass: HomeAssistant):
     """Test for immutable input."""
     async_mock_service(hass, "test_domain", "test_service")
-    config = cv.SERVICE_SCHEMA(
-        {
-            "service": "test_domain.test_service",
-            "entity_id": "hello.world, sensor.beer",
-            "data": {"hello": 1},
-            "data_template": {"nested": {"value": "{{ 1 + 1 }}"}},
-        }
-    )
+    config = {
+        "service": "test_domain.test_service",
+        "entity_id": "hello.world, sensor.beer",
+        "data": {"hello": 1},
+        "data_template": {"nested": {"value": "{{ 1 + 1 }}"}},
+    }
     orig = deepcopy(config)
+
+    # Validate both the original and the copy
+    config = cv.SERVICE_SCHEMA(config)
+    orig = cv.SERVICE_SCHEMA(orig)
 
     # Only change after call is each template getting hass attached
     template.attach(hass, orig)
