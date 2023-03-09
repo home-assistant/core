@@ -158,12 +158,6 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
-    "almond": {
-      "name": "Almond",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
     "alpha_vantage": {
       "name": "Alpha Vantage",
       "integration_type": "hub",
@@ -1003,7 +997,7 @@
         "denonavr": {
           "integration_type": "hub",
           "config_flow": true,
-          "iot_class": "local_polling",
+          "iot_class": "local_push",
           "name": "Denon AVR Network Receivers"
         },
         "heos": {
@@ -1144,6 +1138,12 @@
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
     },
+    "dormakaba_dkey": {
+      "name": "Dormakaba dKey",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "dovado": {
       "name": "Dovado",
       "integration_type": "hub",
@@ -1209,6 +1209,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "easyenergy": {
+      "name": "easyEnergy",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "ebox": {
       "name": "EBox",
       "integration_type": "hub",
@@ -1266,7 +1272,7 @@
     "edl21": {
       "name": "EDL21",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "efergy": {
@@ -1733,7 +1739,7 @@
       "iot_class": "cloud_polling"
     },
     "forked_daapd": {
-      "name": "Owntone",
+      "name": "OwnTone",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
@@ -1875,7 +1881,7 @@
     },
     "geo_json_events": {
       "name": "GeoJSON",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -2013,7 +2019,7 @@
           "name": "Google Domains"
         },
         "google_mail": {
-          "integration_type": "device",
+          "integration_type": "service",
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "Google Mail"
@@ -2195,6 +2201,12 @@
       "name": "Heiwa",
       "integration_type": "virtual",
       "supported_by": "gree"
+    },
+    "heltun": {
+      "name": "HELTUN",
+      "iot_standards": [
+        "zwave"
+      ]
     },
     "here_travel_time": {
       "name": "HERE Travel Time",
@@ -3389,6 +3401,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "mopeka": {
+      "name": "Mopeka",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "motion_blinds": {
       "name": "Motion Blinds",
       "integration_type": "hub",
@@ -3765,7 +3783,7 @@
     "obihai": {
       "name": "Obihai",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "octoprint": {
@@ -3830,6 +3848,12 @@
     },
     "open_meteo": {
       "name": "Open-Meteo",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
+    "openai_conversation": {
+      "name": "OpenAI Conversation",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -4325,6 +4349,11 @@
       "config_flow": false,
       "iot_class": "calculated"
     },
+    "quadrafire": {
+      "name": "Quadra-Fire",
+      "integration_type": "virtual",
+      "supported_by": "intellifire"
+    },
     "quantum_gateway": {
       "name": "Quantum Gateway",
       "integration_type": "hub",
@@ -4470,7 +4499,7 @@
       "name": "Reolink IP NVR/camera",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "local_push"
     },
     "repetier": {
       "name": "Repetier-Server",
@@ -4637,6 +4666,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "rympro": {
+      "name": "Read Your Meter Pro",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "sabnzbd": {
       "name": "SABnzbd",
       "integration_type": "hub",
@@ -4699,7 +4734,7 @@
       "name": "Pentair ScreenLogic",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "local_push"
     },
     "scsgate": {
       "name": "SCSGate",
@@ -5571,6 +5606,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "thread": {
+      "name": "Thread",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "tibber": {
       "name": "Tibber",
       "integration_type": "hub",
@@ -5656,16 +5697,30 @@
       "iot_class": "local_polling"
     },
     "tplink": {
-      "name": "TP-Link Kasa Smart",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
-    "tplink_lte": {
-      "name": "TP-Link LTE",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
+      "name": "TP-Link",
+      "integrations": {
+        "tplink": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "TP-Link Kasa Smart"
+        },
+        "tplink_omada": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "TP-Link Omada"
+        },
+        "tplink_lte": {
+          "integration_type": "hub",
+          "config_flow": false,
+          "iot_class": "local_polling",
+          "name": "TP-Link LTE"
+        }
+      },
+      "iot_standards": [
+        "matter"
+      ]
     },
     "traccar": {
       "name": "Traccar",
@@ -5937,6 +5992,11 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "vermont_castings": {
+      "name": "Vermont Castings",
+      "integration_type": "virtual",
+      "supported_by": "intellifire"
     },
     "versasense": {
       "name": "VersaSense",

@@ -9,11 +9,10 @@ from functools import wraps
 from http import HTTPStatus
 import logging
 from ssl import SSLContext
-from typing import Any, TypeVar, cast
+from typing import Any, Concatenate, ParamSpec, TypeVar, cast
 
 from aiowebostv import WebOsClient, WebOsTvPairError
 import async_timeout
-from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant import util
 from homeassistant.components.media_player import (
@@ -297,7 +296,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         # not appear in the app or input lists in some cases
         elif not found_live_tv:
             app = {"id": LIVE_TV_APP_ID, "title": "Live TV"}
-            if LIVE_TV_APP_ID == self._client.current_app_id:
+            if self._client.current_app_id == LIVE_TV_APP_ID:
                 self._current_source = app["title"]
                 self._source_list["Live TV"] = app
             elif (

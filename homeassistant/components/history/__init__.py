@@ -34,13 +34,9 @@ from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 from . import websocket_api
-from .const import (
-    DOMAIN,
-    HISTORY_ENTITIES_FILTER,
-    HISTORY_FILTERS,
-    HISTORY_USE_INCLUDE_ORDER,
-)
+from .const import DOMAIN
 from .helpers import entities_may_have_state_changes_after
+from .models import HistoryConfig
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,8 +44,11 @@ CONF_ORDER = "use_include_order"
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
-            {vol.Optional(CONF_ORDER, default=False): cv.boolean}
+        DOMAIN: vol.All(
+            cv.deprecated(CONF_ORDER),
+            INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
+                {vol.Optional(CONF_ORDER, default=False): cv.boolean}
+            ),
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -67,18 +66,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     possible_merged_entities_filter = convert_include_exclude_filter(merged_filter)
 
+    sqlalchemy_filter = None
+    entity_filter = None
     if not possible_merged_entities_filter.empty_filter:
-        hass.data[
-            HISTORY_FILTERS
-        ] = filters = sqlalchemy_filter_from_include_exclude_conf(conf)
-        hass.data[HISTORY_ENTITIES_FILTER] = possible_merged_entities_filter
-    else:
-        hass.data[HISTORY_FILTERS] = filters = None
-        hass.data[HISTORY_ENTITIES_FILTER] = None
+        sqlalchemy_filter = sqlalchemy_filter_from_include_exclude_conf(conf)
+        entity_filter = possible_merged_entities_filter
 
-    hass.data[HISTORY_USE_INCLUDE_ORDER] = use_include_order = conf.get(CONF_ORDER)
-
-    hass.http.register_view(HistoryPeriodView(filters, use_include_order))
+    hass.data[DOMAIN] = HistoryConfig(sqlalchemy_filter, entity_filter)
+    hass.http.register_view(HistoryPeriodView(sqlalchemy_filter))
     frontend.async_register_built_in_panel(hass, "history", "history", "hass:chart-box")
     websocket_api.async_setup(hass)
     return True
@@ -91,10 +86,9 @@ class HistoryPeriodView(HomeAssistantView):
     name = "api:history:view-period"
     extra_urls = ["/api/history/period/{datetime}"]
 
-    def __init__(self, filters: Filters | None, use_include_order: bool) -> None:
+    def __init__(self, filters: Filters | None) -> None:
         """Initialize the history period view."""
         self.filters = filters
-        self.use_include_order = use_include_order
 
     async def get(
         self, request: web.Request, datetime: str | None = None
@@ -194,15 +188,4 @@ class HistoryPeriodView(HomeAssistantView):
                 "Extracted %d states in %fs", sum(map(len, states.values())), elapsed
             )
 
-        # Optionally reorder the result to respect the ordering given
-        # by any entities explicitly included in the configuration.
-        if not self.filters or not self.use_include_order:
-            return self.json(list(states.values()))
-
-        sorted_result = [
-            states.pop(order_entity)
-            for order_entity in self.filters.included_entities
-            if order_entity in states
-        ]
-        sorted_result.extend(list(states.values()))
-        return self.json(sorted_result)
+        return self.json(list(states.values()))

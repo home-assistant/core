@@ -8,7 +8,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
-from typing import Any, TypedDict, TypeVar, cast, overload
+from typing import Any, TypedDict, cast, overload
 
 import ciso8601
 from fnvhash import fnv1a_32
@@ -23,6 +23,7 @@ from sqlalchemy import (
     Identity,
     Index,
     Integer,
+    LargeBinary,
     SmallInteger,
     String,
     Text,
@@ -30,10 +31,11 @@ from sqlalchemy import (
     type_coerce,
 )
 from sqlalchemy.dialects import mysql, oracle, postgresql, sqlite
-from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import aliased, declarative_base, relationship
 from sqlalchemy.orm.session import Session
+from typing_extensions import Self
 
+from homeassistant.components.recorder.const import SupportedDialect
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_RESTORED,
@@ -45,13 +47,10 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_STATE,
 )
 from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
-from homeassistant.helpers.json import (
-    JSON_DECODE_EXCEPTIONS,
-    JSON_DUMP,
-    json_bytes,
-    json_loads,
-)
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.json import JSON_DUMP, json_bytes
 import homeassistant.util.dt as dt_util
+from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 ALL_DOMAIN_EXCLUDE_ATTRS = {ATTR_ATTRIBUTION, ATTR_RESTORED, ATTR_SUPPORTED_FEATURES}
 
@@ -60,8 +59,6 @@ ALL_DOMAIN_EXCLUDE_ATTRS = {ATTR_ATTRIBUTION, ATTR_RESTORED, ATTR_SUPPORTED_FEAT
 Base = declarative_base()
 
 SCHEMA_VERSION = 30
-
-_StatisticsBaseSelfT = TypeVar("_StatisticsBaseSelfT", bound="StatisticsBase")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -100,6 +97,9 @@ LAST_UPDATED_INDEX = "ix_states_last_updated"
 ENTITY_ID_LAST_UPDATED_INDEX = "ix_states_entity_id_last_updated"
 EVENTS_CONTEXT_ID_INDEX = "ix_events_context_id"
 STATES_CONTEXT_ID_INDEX = "ix_states_context_id"
+CONTEXT_ID_BIN_MAX_LENGTH = 16
+EVENTS_CONTEXT_ID_BIN_INDEX = "ix_events_context_id_bin"
+STATES_CONTEXT_ID_BIN_INDEX = "ix_states_context_id_bin"
 
 
 class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):  # type: ignore[misc]
@@ -197,6 +197,12 @@ class Events(Base):  # type: ignore[misc,valid-type]
         # Used for fetching events at a specific time
         # see logbook
         Index("ix_events_event_type_time_fired", "event_type", "time_fired"),
+        Index(
+            EVENTS_CONTEXT_ID_BIN_INDEX,
+            "context_id_bin",
+            mysql_length=CONTEXT_ID_BIN_MAX_LENGTH,
+            mariadb_length=CONTEXT_ID_BIN_MAX_LENGTH,
+        ),
         {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
     __tablename__ = TABLE_EVENTS
@@ -210,6 +216,15 @@ class Events(Base):  # type: ignore[misc,valid-type]
     context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
     context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
     data_id = Column(Integer, ForeignKey("event_data.data_id"), index=True)
+    context_id_bin = Column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
+    )  # *** Not originally in v30, only added for recorder to startup ok
+    context_user_id_bin = Column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
+    )  # *** Not originally in v23, only added for recorder to startup ok
+    context_parent_id_bin = Column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
+    )  # *** Not originally in v30, only added for recorder to startup ok
     event_data_rel = relationship("EventData")
 
     def __repr__(self) -> str:
@@ -287,7 +302,9 @@ class EventData(Base):  # type: ignore[misc,valid-type]
         )
 
     @staticmethod
-    def shared_data_bytes_from_event(event: Event) -> bytes:
+    def shared_data_bytes_from_event(
+        event: Event, dialect: SupportedDialect | None
+    ) -> bytes:
         """Create shared_data from an event."""
         return json_bytes(event.data)
 
@@ -312,6 +329,12 @@ class States(Base):  # type: ignore[misc,valid-type]
         # Used for fetching the state of entities at a specific time
         # (get_states in history.py)
         Index(ENTITY_ID_LAST_UPDATED_INDEX, "entity_id", "last_updated"),
+        Index(
+            STATES_CONTEXT_ID_BIN_INDEX,
+            "context_id_bin",
+            mysql_length=CONTEXT_ID_BIN_MAX_LENGTH,
+            mariadb_length=CONTEXT_ID_BIN_MAX_LENGTH,
+        ),
         {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
     __tablename__ = TABLE_STATES
@@ -334,6 +357,15 @@ class States(Base):  # type: ignore[misc,valid-type]
     context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
     context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
     origin_idx = Column(SmallInteger)  # 0 is local, 1 is remote
+    context_id_bin = Column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
+    )  # *** Not originally in v30, only added for recorder to startup ok
+    context_user_id_bin = Column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
+    )  # *** Not originally in v23, only added for recorder to startup ok
+    context_parent_id_bin = Column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
+    )  # *** Not originally in v30, only added for recorder to startup ok
     old_state = relationship("States", remote_side=[state_id])
     state_attributes = relationship("StateAttributes")
 
@@ -438,7 +470,10 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
 
     @staticmethod
     def shared_attrs_bytes_from_event(
-        event: Event, exclude_attrs_by_domain: dict[str, set[str]]
+        event: Event,
+        entity_registry: er.EntityRegistry,
+        exclude_attrs_by_domain: dict[str, set[str]],
+        dialect: SupportedDialect | None,
     ) -> bytes:
         """Create shared_attrs from a state_changed event."""
         state: State | None = event.data.get("new_state")
@@ -473,16 +508,11 @@ class StatisticsBase:
 
     id = Column(Integer, Identity(), primary_key=True)
     created = Column(DATETIME_TYPE, default=dt_util.utcnow)
-
-    @declared_attr  # type: ignore[misc]
-    def metadata_id(self) -> Column:
-        """Define the metadata_id column for sub classes."""
-        return Column(
-            Integer,
-            ForeignKey(f"{TABLE_STATISTICS_META}.id", ondelete="CASCADE"),
-            index=True,
-        )
-
+    metadata_id = Column(
+        Integer,
+        ForeignKey(f"{TABLE_STATISTICS_META}.id", ondelete="CASCADE"),
+        index=True,
+    )
     start = Column(DATETIME_TYPE, index=True)
     mean = Column(DOUBLE_TYPE)
     min = Column(DOUBLE_TYPE)
@@ -492,9 +522,7 @@ class StatisticsBase:
     sum = Column(DOUBLE_TYPE)
 
     @classmethod
-    def from_stats(
-        cls: type[_StatisticsBaseSelfT], metadata_id: int, stats: StatisticData
-    ) -> _StatisticsBaseSelfT:
+    def from_stats(cls, metadata_id: int, stats: StatisticData) -> Self:
         """Create object from a statistics."""
         return cls(  # type: ignore[call-arg,misc]
             metadata_id=metadata_id,

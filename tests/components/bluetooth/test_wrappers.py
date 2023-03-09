@@ -1,8 +1,7 @@
 """Tests for the Bluetooth integration."""
-
+from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Union
 from unittest.mock import patch
 
 import bleak
@@ -66,7 +65,7 @@ class FakeScanner(BaseHaRemoteScanner):
 class BaseFakeBleakClient:
     """Base class for fake bleak clients."""
 
-    def __init__(self, address_or_ble_device: Union[BLEDevice, str], **kwargs):
+    def __init__(self, address_or_ble_device: BLEDevice | str, **kwargs):
         """Initialize the fake bleak client."""
         self._device_path = "/dev/test"
         self._device = address_or_ble_device
@@ -181,10 +180,10 @@ def _generate_scanners_with_fake_devices(hass):
         hass, "00:00:00:00:00:02", "hci1", new_info_callback, None, True
     )
 
-    for (device, adv_data) in hci0_device_advs.values():
+    for device, adv_data in hci0_device_advs.values():
         scanner_hci0.inject_advertisement(device, adv_data)
 
-    for (device, adv_data) in hci1_device_advs.values():
+    for device, adv_data in hci1_device_advs.values():
         scanner_hci1.inject_advertisement(device, adv_data)
 
     cancel_hci0 = manager.async_register_scanner(scanner_hci0, True, 2)
@@ -194,8 +193,12 @@ def _generate_scanners_with_fake_devices(hass):
 
 
 async def test_test_switch_adapters_when_out_of_slots(
-    hass, two_adapters, enable_bluetooth, install_bleak_catcher, mock_platform_client
-):
+    hass: HomeAssistant,
+    two_adapters: None,
+    enable_bluetooth: None,
+    install_bleak_catcher,
+    mock_platform_client,
+) -> None:
     """Ensure we try another scanner when one runs out of slots."""
     manager = _get_manager()
     hci0_device_advs, cancel_hci0, cancel_hci1 = _generate_scanners_with_fake_devices(
@@ -247,12 +250,12 @@ async def test_test_switch_adapters_when_out_of_slots(
 
 
 async def test_release_slot_on_connect_failure(
-    hass,
-    two_adapters,
-    enable_bluetooth,
+    hass: HomeAssistant,
+    two_adapters: None,
+    enable_bluetooth: None,
     install_bleak_catcher,
     mock_platform_client_that_fails_to_connect,
-):
+) -> None:
     """Ensure the slot gets released on connection failure."""
     manager = _get_manager()
     hci0_device_advs, cancel_hci0, cancel_hci1 = _generate_scanners_with_fake_devices(
@@ -275,12 +278,12 @@ async def test_release_slot_on_connect_failure(
 
 
 async def test_release_slot_on_connect_exception(
-    hass,
-    two_adapters,
-    enable_bluetooth,
+    hass: HomeAssistant,
+    two_adapters: None,
+    enable_bluetooth: None,
     install_bleak_catcher,
     mock_platform_client_that_raises_on_connect,
-):
+) -> None:
     """Ensure the slot gets released on connection exception."""
     manager = _get_manager()
     hci0_device_advs, cancel_hci0, cancel_hci1 = _generate_scanners_with_fake_devices(
@@ -304,11 +307,11 @@ async def test_release_slot_on_connect_exception(
 
 
 async def test_we_switch_adapters_on_failure(
-    hass,
-    two_adapters,
-    enable_bluetooth,
+    hass: HomeAssistant,
+    two_adapters: None,
+    enable_bluetooth: None,
     install_bleak_catcher,
-):
+) -> None:
     """Ensure we try the next best adapter after a failure."""
     hci0_device_advs, cancel_hci0, cancel_hci1 = _generate_scanners_with_fake_devices(
         hass

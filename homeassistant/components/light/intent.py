@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import area_registry, config_validation as cv, intent
+from homeassistant.helpers import area_registry as ar, config_validation as cv, intent
 import homeassistant.util.color as color_util
 
 from . import (
@@ -47,7 +47,6 @@ class SetIntentHandler(intent.IntentHandler):
         """Handle the hass intent."""
         hass = intent_obj.hass
         service_data: dict[str, Any] = {}
-        speech_parts: list[str] = []
         slots = self.async_validate_slots(intent_obj.slots)
 
         name: str | None = slots.get("name", {}).get("value")
@@ -57,9 +56,9 @@ class SetIntentHandler(intent.IntentHandler):
 
         # Look up area first to fail early
         area_name = slots.get("area", {}).get("value")
-        area: area_registry.AreaEntry | None = None
+        area: ar.AreaEntry | None = None
         if area_name is not None:
-            areas = area_registry.async_get(hass)
+            areas = ar.async_get(hass)
             area = areas.async_get_area(area_name) or areas.async_get_area_by_name(
                 area_name
             )
@@ -92,13 +91,9 @@ class SetIntentHandler(intent.IntentHandler):
 
         if "color" in slots:
             service_data[ATTR_RGB_COLOR] = slots["color"]["value"]
-            # Use original passed in value of the color because we don't have
-            # human readable names for that internally.
-            speech_parts.append(f"the color {intent_obj.slots['color']['value']}")
 
         if "brightness" in slots:
             service_data[ATTR_BRIGHTNESS_PCT] = slots["brightness"]["value"]
-            speech_parts.append(f"{slots['brightness']['value']}% brightness")
 
         response = intent_obj.create_response()
         needs_brightness = ATTR_BRIGHTNESS_PCT in service_data
@@ -116,9 +111,6 @@ class SetIntentHandler(intent.IntentHandler):
                     id=area.id,
                 )
             )
-            speech_name = area.name
-        else:
-            speech_name = states[0].name
 
         for state in states:
             target = intent.IntentResponseTarget(
@@ -151,20 +143,5 @@ class SetIntentHandler(intent.IntentHandler):
         response.async_set_results(
             success_results=success_results, failed_results=failed_results
         )
-
-        if not speech_parts:  # No attributes changed
-            speech = f"Turned on {speech_name}"
-        else:
-            parts = [f"Changed {speech_name} to"]
-            for index, part in enumerate(speech_parts):
-                if index == 0:
-                    parts.append(f" {part}")
-                elif index != len(speech_parts) - 1:
-                    parts.append(f", {part}")
-                else:
-                    parts.append(f" and {part}")
-            speech = "".join(parts)
-
-        response.async_set_speech(speech)
 
         return response

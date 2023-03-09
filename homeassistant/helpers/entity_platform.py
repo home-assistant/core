@@ -210,9 +210,9 @@ class EntityPlatform:
             return
 
         @callback
-        def async_create_setup_task() -> Coroutine[
-            Any, Any, None
-        ] | asyncio.Future[None]:
+        def async_create_setup_task() -> (
+            Coroutine[Any, Any, None] | asyncio.Future[None]
+        ):
             """Get task to set up platform."""
             if getattr(platform, "async_setup_platform", None):
                 return platform.async_setup_platform(  # type: ignore[union-attr]
@@ -375,6 +375,7 @@ class EntityPlatform:
         """Schedule adding entities for a single platform async."""
         task = self.hass.async_create_task(
             self.async_add_entities(new_entities, update_before_add=update_before_add),
+            f"EntityPlatform async_add_entities {self.domain}.{self.platform_name}",
         )
 
         if not self._setup_complete:
@@ -389,6 +390,7 @@ class EntityPlatform:
         task = self.config_entry.async_create_task(
             self.hass,
             self.async_add_entities(new_entities, update_before_add=update_before_add),
+            f"EntityPlatform async_add_entities_for_entry {self.domain}.{self.platform_name}",
         )
 
         if not self._setup_complete:
@@ -418,7 +420,7 @@ class EntityPlatform:
         This method must be run in the event loop.
         """
         # handle empty list from component/platform
-        if not new_entities:
+        if not new_entities:  # type: ignore[truthy-iterable]
             return
 
         hass = self.hass

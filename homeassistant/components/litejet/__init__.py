@@ -2,12 +2,11 @@
 import logging
 
 import pylitejet
-from serial import SerialException
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -53,11 +52,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         system = await pylitejet.open(port)
-    except SerialException as ex:
-        _LOGGER.error("Error connecting to the LiteJet MCP at %s", port, exc_info=ex)
-        raise ConfigEntryNotReady from ex
+    except pylitejet.LiteJetError as exc:
+        raise ConfigEntryNotReady from exc
 
-    async def handle_stop(event) -> None:
+    def handle_connected_changed(connected: bool, reason: str) -> None:
+        if connected:
+            _LOGGER.info("Connected")
+        else:
+            _LOGGER.warning("Disconnected %s", reason)
+
+    system.on_connected_changed(handle_connected_changed)
+
+    async def handle_stop(event: Event) -> None:
         await system.close()
 
     entry.async_on_unload(

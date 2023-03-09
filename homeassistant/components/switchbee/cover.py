@@ -81,7 +81,7 @@ class SwitchBeeCoverEntity(SwitchBeeDeviceEntity[SwitchBeeShutter], CoverEntity)
         | CoverEntityFeature.SET_POSITION
         | CoverEntityFeature.STOP
     )
-    _attr_is_closed = None
+    _attr_is_closed: bool | None = None
 
     @callback
     def _handle_coordinator_update(self) -> None:

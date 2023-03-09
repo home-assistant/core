@@ -1,19 +1,20 @@
 """Queries for logbook."""
 from __future__ import annotations
 
+from typing import Final
+
 import sqlalchemy
 from sqlalchemy import select
-from sqlalchemy.orm import Query
-from sqlalchemy.sql.elements import ClauseList
+from sqlalchemy.sql.elements import BooleanClauseList, ColumnElement
 from sqlalchemy.sql.expression import literal
 from sqlalchemy.sql.selectable import Select
 
 from homeassistant.components.recorder.db_schema import (
-    EVENTS_CONTEXT_ID_INDEX,
+    EVENTS_CONTEXT_ID_BIN_INDEX,
     OLD_FORMAT_ATTRS_JSON,
     OLD_STATE,
     SHARED_ATTRS_JSON,
-    STATES_CONTEXT_ID_INDEX,
+    STATES_CONTEXT_ID_BIN_INDEX,
     EventData,
     Events,
     StateAttributes,
@@ -33,7 +34,7 @@ ALWAYS_CONTINUOUS_ENTITY_ID_LIKE = like_domain_matchers(ALWAYS_CONTINUOUS_DOMAIN
 UNIT_OF_MEASUREMENT_JSON = '"unit_of_measurement":'
 UNIT_OF_MEASUREMENT_JSON_LIKE = f"%{UNIT_OF_MEASUREMENT_JSON}%"
 
-PSUEDO_EVENT_STATE_CHANGED = None
+PSEUDO_EVENT_STATE_CHANGED: Final = None
 # Since we don't store event_types and None
 # and we don't store state_changed in events
 # we use a NULL for state_changed events
@@ -46,9 +47,9 @@ EVENT_COLUMNS = (
     Events.event_type.label("event_type"),
     Events.event_data.label("event_data"),
     Events.time_fired_ts.label("time_fired_ts"),
-    Events.context_id.label("context_id"),
-    Events.context_user_id.label("context_user_id"),
-    Events.context_parent_id.label("context_parent_id"),
+    Events.context_id_bin.label("context_id_bin"),
+    Events.context_user_id_bin.label("context_user_id_bin"),
+    Events.context_parent_id_bin.label("context_parent_id_bin"),
 )
 
 STATE_COLUMNS = (
@@ -67,22 +68,22 @@ STATE_CONTEXT_ONLY_COLUMNS = (
     literal(value=None, type_=sqlalchemy.String).label("old_format_icon"),
 )
 
-EVENT_COLUMNS_FOR_STATE_SELECT = [
+EVENT_COLUMNS_FOR_STATE_SELECT = (
     literal(value=None, type_=sqlalchemy.Text).label("event_id"),
-    # We use PSUEDO_EVENT_STATE_CHANGED aka None for
+    # We use PSEUDO_EVENT_STATE_CHANGED aka None for
     # state_changed events since it takes up less
     # space in the response and every row has to be
     # marked with the event_type
-    literal(value=PSUEDO_EVENT_STATE_CHANGED, type_=sqlalchemy.String).label(
+    literal(value=PSEUDO_EVENT_STATE_CHANGED, type_=sqlalchemy.String).label(
         "event_type"
     ),
     literal(value=None, type_=sqlalchemy.Text).label("event_data"),
     States.last_updated_ts.label("time_fired_ts"),
-    States.context_id.label("context_id"),
-    States.context_user_id.label("context_user_id"),
-    States.context_parent_id.label("context_parent_id"),
+    States.context_id_bin.label("context_id_bin"),
+    States.context_user_id_bin.label("context_user_id_bin"),
+    States.context_parent_id_bin.label("context_parent_id_bin"),
     literal(value=None, type_=sqlalchemy.Text).label("shared_data"),
-]
+)
 
 EMPTY_STATE_COLUMNS = (
     literal(value=0, type_=sqlalchemy.Integer).label("state_id"),
@@ -101,8 +102,8 @@ EVENT_ROWS_NO_STATES = (
 
 # Virtual column to tell logbook if it should avoid processing
 # the event as its only used to link contexts
-CONTEXT_ONLY = literal("1").label("context_only")
-NOT_CONTEXT_ONLY = literal(None).label("context_only")
+CONTEXT_ONLY = literal(value="1", type_=sqlalchemy.String).label("context_only")
+NOT_CONTEXT_ONLY = literal(value=None, type_=sqlalchemy.String).label("context_only")
 
 
 def select_events_context_id_subquery(
@@ -112,7 +113,7 @@ def select_events_context_id_subquery(
 ) -> Select:
     """Generate the select for a context_id subquery."""
     return (
-        select(Events.context_id)
+        select(Events.context_id_bin)
         .where((Events.time_fired_ts > start_day) & (Events.time_fired_ts < end_day))
         .where(Events.event_type.in_(event_types))
         .outerjoin(EventData, (Events.data_id == EventData.data_id))
@@ -161,7 +162,7 @@ def select_states() -> Select:
 
 
 def legacy_select_events_context_id(
-    start_day: float, end_day: float, context_id: str
+    start_day: float, end_day: float, context_id_bin: bytes
 ) -> Select:
     """Generate a legacy events context id select that also joins states."""
     # This can be removed once we no longer have event_ids in the states table
@@ -182,11 +183,11 @@ def legacy_select_events_context_id(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
         )
         .where((Events.time_fired_ts > start_day) & (Events.time_fired_ts < end_day))
-        .where(Events.context_id == context_id)
+        .where(Events.context_id_bin == context_id_bin)
     )
 
 
-def apply_states_filters(query: Query, start_day: float, end_day: float) -> Query:
+def apply_states_filters(sel: Select, start_day: float, end_day: float) -> Select:
     """Filter states by time range.
 
     Filters states that do not have an old state or new state (added / removed)
@@ -194,7 +195,7 @@ def apply_states_filters(query: Query, start_day: float, end_day: float) -> Quer
     Filters states that do not have matching last_updated_ts and last_changed_ts.
     """
     return (
-        query.filter(
+        sel.filter(
             (States.last_updated_ts > start_day) & (States.last_updated_ts < end_day)
         )
         .outerjoin(OLD_STATE, (States.old_state_id == OLD_STATE.state_id))
@@ -210,18 +211,18 @@ def apply_states_filters(query: Query, start_day: float, end_day: float) -> Quer
     )
 
 
-def _missing_state_matcher() -> sqlalchemy.and_:
+def _missing_state_matcher() -> ColumnElement[bool]:
     # The below removes state change events that do not have
     # and old_state or the old_state is missing (newly added entities)
     # or the new_state is missing (removed entities)
     return sqlalchemy.and_(
-        OLD_STATE.state_id.isnot(None),
+        OLD_STATE.state_id.is_not(None),
         (States.state != OLD_STATE.state),
-        States.state.isnot(None),
+        States.state.is_not(None),
     )
 
 
-def _not_continuous_entity_matcher() -> sqlalchemy.or_:
+def _not_continuous_entity_matcher() -> ColumnElement[bool]:
     """Match non continuous entities."""
     return sqlalchemy.or_(
         # First exclude domains that may be continuous
@@ -234,7 +235,7 @@ def _not_continuous_entity_matcher() -> sqlalchemy.or_:
     )
 
 
-def _not_possible_continuous_domain_matcher() -> sqlalchemy.and_:
+def _not_possible_continuous_domain_matcher() -> ColumnElement[bool]:
     """Match not continuous domains.
 
     This matches domain that are always considered continuous
@@ -252,7 +253,7 @@ def _not_possible_continuous_domain_matcher() -> sqlalchemy.and_:
     ).self_group()
 
 
-def _conditionally_continuous_domain_matcher() -> sqlalchemy.or_:
+def _conditionally_continuous_domain_matcher() -> ColumnElement[bool]:
     """Match conditionally continuous domains.
 
     This matches domain that are only considered
@@ -266,22 +267,26 @@ def _conditionally_continuous_domain_matcher() -> sqlalchemy.or_:
     ).self_group()
 
 
-def _not_uom_attributes_matcher() -> ClauseList:
+def _not_uom_attributes_matcher() -> BooleanClauseList:
     """Prefilter ATTR_UNIT_OF_MEASUREMENT as its much faster in sql."""
     return ~StateAttributes.shared_attrs.like(
         UNIT_OF_MEASUREMENT_JSON_LIKE
     ) | ~States.attributes.like(UNIT_OF_MEASUREMENT_JSON_LIKE)
 
 
-def apply_states_context_hints(query: Query) -> Query:
+def apply_states_context_hints(sel: Select) -> Select:
     """Force mysql to use the right index on large context_id selects."""
-    return query.with_hint(
-        States, f"FORCE INDEX ({STATES_CONTEXT_ID_INDEX})", dialect_name="mysql"
+    return sel.with_hint(
+        States, f"FORCE INDEX ({STATES_CONTEXT_ID_BIN_INDEX})", dialect_name="mysql"
+    ).with_hint(
+        States, f"FORCE INDEX ({STATES_CONTEXT_ID_BIN_INDEX})", dialect_name="mariadb"
     )
 
 
-def apply_events_context_hints(query: Query) -> Query:
+def apply_events_context_hints(sel: Select) -> Select:
     """Force mysql to use the right index on large context_id selects."""
-    return query.with_hint(
-        Events, f"FORCE INDEX ({EVENTS_CONTEXT_ID_INDEX})", dialect_name="mysql"
+    return sel.with_hint(
+        Events, f"FORCE INDEX ({EVENTS_CONTEXT_ID_BIN_INDEX})", dialect_name="mysql"
+    ).with_hint(
+        Events, f"FORCE INDEX ({EVENTS_CONTEXT_ID_BIN_INDEX})", dialect_name="mariadb"
     )

@@ -49,28 +49,8 @@ def async_remove_shelly_entity(
         entity_reg.async_remove(entity_id)
 
 
-def get_block_device_name(device: BlockDevice) -> str:
-    """Get Block device name."""
-    return cast(str, device.settings["name"] or device.settings["device"]["hostname"])
-
-
-def get_rpc_device_name(device: RpcDevice) -> str:
-    """Get RPC device name."""
-    return cast(str, device.config["sys"]["device"].get("name") or device.hostname)
-
-
-def get_device_name(device: BlockDevice | RpcDevice) -> str:
-    """Get device name."""
-    if isinstance(device, BlockDevice):
-        return get_block_device_name(device)
-
-    return get_rpc_device_name(device)
-
-
 def get_number_of_channels(device: BlockDevice, block: Block) -> int:
     """Get number of channels for block type."""
-    assert isinstance(device.shelly, dict)
-
     channels = None
 
     if block.type == "input":
@@ -98,14 +78,14 @@ def get_block_entity_name(
     channel_name = get_block_channel_name(device, block)
 
     if description:
-        return f"{channel_name} {description}"
+        return f"{channel_name} {description.lower()}"
 
     return channel_name
 
 
 def get_block_channel_name(device: BlockDevice, block: Block | None) -> str:
     """Get name based on device and channel name."""
-    entity_name = get_block_device_name(device)
+    entity_name = device.name
 
     if (
         not block
@@ -304,9 +284,10 @@ def get_model_name(info: dict[str, Any]) -> str:
 
 def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
     """Get name based on device and channel name."""
+    key = key.replace("emdata", "em")
     if device.config.get("switch:0"):
         key = key.replace("input", "switch")
-    device_name = get_rpc_device_name(device)
+    device_name = device.name
     entity_name: str | None = None
     if key in device.config:
         entity_name = device.config[key].get("name", device_name)
@@ -326,7 +307,7 @@ def get_rpc_entity_name(
     channel_name = get_rpc_channel_name(device, key)
 
     if description:
-        return f"{channel_name} {description}"
+        return f"{channel_name} {description.lower()}"
 
     return channel_name
 
@@ -344,12 +325,12 @@ def get_rpc_key_instances(keys_dict: dict[str, Any], key: str) -> list[str]:
     if key == "switch" and "cover:0" in keys_dict:
         key = "cover"
 
-    return [k for k in keys_dict if k.startswith(key)]
+    return [k for k in keys_dict if k.startswith(f"{key}:")]
 
 
 def get_rpc_key_ids(keys_dict: dict[str, Any], key: str) -> list[int]:
     """Return list of key ids for RPC device from a dict."""
-    return [int(k.split(":")[1]) for k in keys_dict if k.startswith(key)]
+    return [int(k.split(":")[1]) for k in keys_dict if k.startswith(f"{key}:")]
 
 
 def is_rpc_momentary_input(

@@ -1,15 +1,16 @@
 """The tests for the hassio binary sensors."""
-
 import os
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.hassio import DOMAIN
-from homeassistant.helpers import entity_registry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
@@ -119,6 +120,38 @@ def mock_all(aioclient_mock, request):
             },
         },
     )
+    aioclient_mock.get(
+        "http://127.0.0.1/core/stats",
+        json={
+            "result": "ok",
+            "data": {
+                "cpu_percent": 0.99,
+                "memory_usage": 182611968,
+                "memory_limit": 3977146368,
+                "memory_percent": 4.59,
+                "network_rx": 362570232,
+                "network_tx": 82374138,
+                "blk_read": 46010945536,
+                "blk_write": 15051526144,
+            },
+        },
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/supervisor/stats",
+        json={
+            "result": "ok",
+            "data": {
+                "cpu_percent": 0.99,
+                "memory_usage": 182611968,
+                "memory_limit": 3977146368,
+                "memory_percent": 4.59,
+                "network_rx": 362570232,
+                "network_tx": 82374138,
+                "blk_read": 46010945536,
+                "blk_write": 15051526144,
+            },
+        },
+    )
     aioclient_mock.get("http://127.0.0.1/addons/test/changelog", text="")
     aioclient_mock.get(
         "http://127.0.0.1/addons/test/info",
@@ -149,13 +182,19 @@ def mock_all(aioclient_mock, request):
 
 
 @pytest.mark.parametrize(
-    "entity_id,expected",
+    ("entity_id", "expected"),
     [
         ("binary_sensor.test_running", "on"),
         ("binary_sensor.test2_running", "off"),
     ],
 )
-async def test_binary_sensor(hass, entity_id, expected, aioclient_mock):
+async def test_binary_sensor(
+    hass: HomeAssistant,
+    entity_id,
+    expected,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test hassio OS and addons binary sensor."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -173,8 +212,7 @@ async def test_binary_sensor(hass, entity_id, expected, aioclient_mock):
     assert hass.states.get(entity_id) is None
 
     # Enable the entity.
-    ent_reg = entity_registry.async_get(hass)
-    ent_reg.async_update_entity(entity_id, disabled_by=None)
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 

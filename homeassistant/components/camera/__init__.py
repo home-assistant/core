@@ -12,7 +12,7 @@ from functools import partial
 import logging
 import os
 from random import SystemRandom
-from typing import Any, Final, Optional, cast, final
+from typing import Any, Final, cast, final
 
 from aiohttp import hdrs, web
 import async_timeout
@@ -41,6 +41,7 @@ from homeassistant.const import (
     CONF_FILENAME,
     CONTENT_TYPE_MULTIPART,
     EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
@@ -294,7 +295,7 @@ def _get_camera_from_entity_id(hass: HomeAssistant, entity_id: str) -> Camera:
 #     stream_id: A unique id for the stream, used to update an existing source
 # The output is the SDP answer, or None if the source or offer is not eligible.
 # The Callable may throw HomeAssistantError on failure.
-RtspToWebRtcProviderType = Callable[[str, str, str], Awaitable[Optional[str]]]
+RtspToWebRtcProviderType = Callable[[str, str, str], Awaitable[str | None]]
 
 
 def async_register_rtsp_to_web_rtc_provider(
@@ -378,7 +379,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             entity.async_update_token()
             entity.async_write_ha_state()
 
-    async_track_time_interval(hass, update_tokens, TOKEN_CHANGE_INTERVAL)
+    unsub = async_track_time_interval(hass, update_tokens, TOKEN_CHANGE_INTERVAL)
+
+    @callback
+    def unsub_track_time_interval(_event: Event) -> None:
+        """Unsubscribe track time interval timer."""
+        unsub()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unsub_track_time_interval)
 
     component.async_register_entity_service(
         SERVICE_ENABLE_MOTION, {}, "async_enable_motion_detection"

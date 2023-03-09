@@ -11,8 +11,10 @@ import functools
 import logging
 from random import randint
 from types import MappingProxyType, MethodType
-from typing import TYPE_CHECKING, Any, Optional, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 import weakref
+
+from typing_extensions import Self
 
 from . import data_entry_flow, loader
 from .backports.enum import StrEnum
@@ -86,7 +88,6 @@ PATH_CONFIG = ".config_entries.json"
 
 SAVE_DELAY = 1
 
-_ConfigEntryStateSelfT = TypeVar("_ConfigEntryStateSelfT", bound="ConfigEntryState")
 _R = TypeVar("_R")
 
 
@@ -110,9 +111,7 @@ class ConfigEntryState(Enum):
 
     _recoverable: bool
 
-    def __new__(
-        cls: type[_ConfigEntryStateSelfT], value: str, recoverable: bool
-    ) -> _ConfigEntryStateSelfT:
+    def __new__(cls, value: str, recoverable: bool) -> Self:
         """Create new ConfigEntryState."""
         obj = object.__new__(cls)
         obj._value_ = value
@@ -221,7 +220,8 @@ class ConfigEntry:
         "_async_cancel_retry_setup",
         "_on_unload",
         "reload_lock",
-        "_pending_tasks",
+        "_tasks",
+        "_background_tasks",
     )
 
     def __init__(
@@ -316,7 +316,8 @@ class ConfigEntry:
         # Reload lock to prevent conflicting reloads
         self.reload_lock = asyncio.Lock()
 
-        self._pending_tasks: list[asyncio.Future[Any]] = []
+        self._tasks: set[asyncio.Future[Any]] = set()
+        self._background_tasks: set[asyncio.Future[Any]] = set()
 
     async def async_setup(
         self,
@@ -444,6 +445,10 @@ class ConfigEntry:
 
             async def setup_again(*_: Any) -> None:
                 """Run setup again."""
+                # Check again when we fire in case shutdown
+                # has started so we do not block shutdown
+                if hass.is_stopping:
+                    return
                 self._async_cancel_retry_setup = None
                 await self.async_setup(hass, integration=integration, tries=tries)
 
@@ -458,7 +463,8 @@ class ConfigEntry:
 
             await self._async_process_on_unload()
             return
-        except Exception:  # pylint: disable=broad-except
+        # pylint: disable-next=broad-except
+        except (asyncio.CancelledError, SystemExit, Exception):
             _LOGGER.exception(
                 "Error setting up entry %s for %s", self.title, integration.domain
             )
@@ -682,11 +688,23 @@ class ConfigEntry:
             while self._on_unload:
                 self._on_unload.pop()()
 
-        while self._pending_tasks:
-            pending = [task for task in self._pending_tasks if not task.done()]
-            self._pending_tasks.clear()
-            if pending:
-                await asyncio.gather(*pending)
+        if not self._tasks and not self._background_tasks:
+            return
+
+        for task in self._background_tasks:
+            task.cancel()
+
+        _, pending = await asyncio.wait(
+            [*self._tasks, *self._background_tasks], timeout=10
+        )
+
+        for task in pending:
+            _LOGGER.warning(
+                "Unloading %s (%s) config entry. Task %s did not complete in time",
+                self.title,
+                self.domain,
+                task,
+            )
 
     @callback
     def async_start_reauth(
@@ -711,7 +729,8 @@ class ConfigEntry:
                 }
                 | (context or {}),
                 data=self.data | (data or {}),
-            )
+            ),
+            f"config entry reauth {self.title} {self.domain} {self.entry_id}",
         )
 
     @callback
@@ -728,7 +747,10 @@ class ConfigEntry:
 
     @callback
     def async_create_task(
-        self, hass: HomeAssistant, target: Coroutine[Any, Any, _R]
+        self,
+        hass: HomeAssistant,
+        target: Coroutine[Any, Any, _R],
+        name: str | None = None,
     ) -> asyncio.Task[_R]:
         """Create a task from within the eventloop.
 
@@ -736,10 +758,27 @@ class ConfigEntry:
 
         target: target to call.
         """
-        task = hass.async_create_task(target)
+        task = hass.async_create_task(
+            target, f"{name} {self.title} {self.domain} {self.entry_id}"
+        )
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.remove)
 
-        self._pending_tasks.append(task)
+        return task
 
+    @callback
+    def async_create_background_task(
+        self, hass: HomeAssistant, target: Coroutine[Any, Any, _R], name: str
+    ) -> asyncio.Task[_R]:
+        """Create a background task tied to the config entry lifecycle.
+
+        Background tasks are automatically canceled when config entry is unloaded.
+
+        target: target to call.
+        """
+        task = hass.async_create_background_task(target, name)
+        self._background_tasks.add(task)
+        task.add_done_callback(self._background_tasks.remove)
         return task
 
 
@@ -791,7 +830,10 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
             init_done: asyncio.Future[None] = asyncio.Future()
             self._pending_import_flows.setdefault(handler, {})[flow_id] = init_done
 
-        task = asyncio.create_task(self._async_init(flow_id, handler, context, data))
+        task = asyncio.create_task(
+            self._async_init(flow_id, handler, context, data),
+            name=f"config entry flow {handler} {flow_id}",
+        )
         self._initialize_tasks.setdefault(handler, []).append(task)
 
         try:
@@ -1079,7 +1121,8 @@ class ConfigEntries:
                     entry.domain,
                     context={"source": SOURCE_UNIGNORE},
                     data={"unique_id": entry.unique_id},
-                )
+                ),
+                f"config entry unignore {entry.title} {entry.domain} {entry.unique_id}",
             )
 
         self._async_dispatch(ConfigEntryChange.REMOVED, entry)
@@ -1088,7 +1131,13 @@ class ConfigEntries:
     async def _async_shutdown(self, event: Event) -> None:
         """Call when Home Assistant is stopping."""
         await asyncio.gather(
-            *(entry.async_shutdown() for entry in self._entries.values())
+            *(
+                asyncio.create_task(
+                    entry.async_shutdown(),
+                    name=f"config entry shutdown {entry.title} {entry.domain} {entry.entry_id}",
+                )
+                for entry in self._entries.values()
+            )
         )
         await self.flow.async_shutdown()
 
@@ -1304,7 +1353,10 @@ class ConfigEntries:
 
         for listener_ref in entry.update_listeners:
             if (listener := listener_ref()) is not None:
-                self.hass.async_create_task(listener(self.hass, entry))
+                self.hass.async_create_task(
+                    listener(self.hass, entry),
+                    f"config entry update listener {entry.title} {entry.domain} {entry.domain}",
+                )
 
         self._async_schedule_save()
         self._async_dispatch(ConfigEntryChange.UPDATED, entry)
@@ -1327,21 +1379,30 @@ class ConfigEntries:
         report(
             (
                 "called async_setup_platforms instead of awaiting"
-                " async_forward_entry_setups; this will fail in version 2022.12"
+                " async_forward_entry_setups; this will fail in version 2023.3"
             ),
             # Raise this to warning once all core integrations have been migrated
-            level=logging.DEBUG,
+            level=logging.WARNING,
             error_if_core=False,
         )
         for platform in platforms:
-            self.hass.async_create_task(self.async_forward_entry_setup(entry, platform))
+            self.hass.async_create_task(
+                self.async_forward_entry_setup(entry, platform),
+                f"config entry forward setup {entry.title} {entry.domain} {entry.entry_id} {platform}",
+            )
 
     async def async_forward_entry_setups(
         self, entry: ConfigEntry, platforms: Iterable[Platform | str]
     ) -> None:
         """Forward the setup of an entry to platforms."""
         await asyncio.gather(
-            *(self.async_forward_entry_setup(entry, platform) for platform in platforms)
+            *(
+                asyncio.create_task(
+                    self.async_forward_entry_setup(entry, platform),
+                    name=f"config entry forward setup {entry.title} {entry.domain} {entry.entry_id} {platform}",
+                )
+                for platform in platforms
+            )
         )
 
     async def async_forward_entry_setup(
@@ -1372,7 +1433,10 @@ class ConfigEntries:
         return all(
             await asyncio.gather(
                 *(
-                    self.async_forward_entry_unload(entry, platform)
+                    asyncio.create_task(
+                        self.async_forward_entry_unload(entry, platform),
+                        name=f"config entry forward unload {entry.title} {entry.domain} {entry.entry_id} {platform}",
+                    )
                     for platform in platforms
                 )
             )
@@ -1437,7 +1501,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         if not self.context:
             return None
 
-        return cast(Optional[str], self.context.get("unique_id"))
+        return cast(str | None, self.context.get("unique_id"))
 
     @staticmethod
     @callback
@@ -1455,7 +1519,10 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     def _async_abort_entries_match(
         self, match_dict: dict[str, Any] | None = None
     ) -> None:
-        """Abort if current entries match all data."""
+        """Abort if current entries match all data.
+
+        Requires `already_configured` in strings.json in user visible flows.
+        """
         if match_dict is None:
             match_dict = {}  # Match any entry
         for entry in self._async_current_entries(include_ignore=False):
@@ -1477,7 +1544,11 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         *,
         error: str = "already_configured",
     ) -> None:
-        """Abort if the unique ID is already configured."""
+        """Abort if the unique ID is already configured.
+
+        Requires strings.json entry corresponding to the `error` parameter
+        in user visible flows.
+        """
         if self.unique_id is None:
             return
 
@@ -1509,7 +1580,8 @@ class ConfigFlow(data_entry_flow.FlowHandler):
                 continue
             if should_reload:
                 self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(entry.entry_id)
+                    self.hass.config_entries.async_reload(entry.entry_id),
+                    f"config entry reload {entry.title} {entry.domain} {entry.entry_id}",
                 )
             raise data_entry_flow.AbortFlow(error)
 
@@ -1619,6 +1691,9 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         when the handler has no existing config entries.
 
         It ensures that the discovery can be ignored by the user.
+
+        Requires `already_configured` and `already_in_progress` in strings.json
+        in user visible flows.
         """
         if self.unique_id is not None:
             return
@@ -1892,7 +1967,13 @@ class EntityRegistryDisabledHandler:
         )
 
         await asyncio.gather(
-            *(self.hass.config_entries.async_reload(entry_id) for entry_id in to_reload)
+            *(
+                asyncio.create_task(
+                    self.hass.config_entries.async_reload(entry_id),
+                    name="config entry reload {entry.title} {entry.domain} {entry.entry_id}",
+                )
+                for entry_id in to_reload
+            )
         )
 
 

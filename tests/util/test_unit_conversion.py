@@ -6,8 +6,10 @@ import inspect
 import pytest
 
 from homeassistant.const import (
+    PERCENTAGE,
     UnitOfDataRate,
     UnitOfElectricCurrent,
+    UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfInformation,
     UnitOfLength,
@@ -63,130 +65,48 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
     )
 }
 
+# Dict containing all converters with a corresponding unit ratio.
+_GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, float]] = {
+    DataRateConverter: (
+        UnitOfDataRate.BITS_PER_SECOND,
+        UnitOfDataRate.BYTES_PER_SECOND,
+        8,
+    ),
+    DistanceConverter: (UnitOfLength.KILOMETERS, UnitOfLength.METERS, 0.001),
+    ElectricCurrentConverter: (
+        UnitOfElectricCurrent.AMPERE,
+        UnitOfElectricCurrent.MILLIAMPERE,
+        0.001,
+    ),
+    ElectricPotentialConverter: (
+        UnitOfElectricPotential.MILLIVOLT,
+        UnitOfElectricPotential.VOLT,
+        1000,
+    ),
+    EnergyConverter: (UnitOfEnergy.WATT_HOUR, UnitOfEnergy.KILO_WATT_HOUR, 1000),
+    InformationConverter: (UnitOfInformation.BITS, UnitOfInformation.BYTES, 8),
+    MassConverter: (UnitOfMass.STONES, UnitOfMass.KILOGRAMS, 0.157473),
+    PowerConverter: (UnitOfPower.WATT, UnitOfPower.KILO_WATT, 1000),
+    PressureConverter: (UnitOfPressure.HPA, UnitOfPressure.INHG, 33.86389),
+    SpeedConverter: (
+        UnitOfSpeed.KILOMETERS_PER_HOUR,
+        UnitOfSpeed.MILES_PER_HOUR,
+        1.609343,
+    ),
+    TemperatureConverter: (
+        UnitOfTemperature.CELSIUS,
+        UnitOfTemperature.FAHRENHEIT,
+        0.555556,
+    ),
+    UnitlessRatioConverter: (PERCENTAGE, None, 100),
+    VolumeConverter: (UnitOfVolume.GALLONS, UnitOfVolume.LITERS, 0.264172),
+}
 
-@pytest.mark.parametrize(
-    "converter",
-    [
-        # Generate list of all converters available in
-        # `homeassistant.util.unit_conversion` to ensure
-        # that we don't miss any in the tests.
-        obj
-        for _, obj in inspect.getmembers(unit_conversion)
-        if inspect.isclass(obj)
-        and issubclass(obj, BaseUnitConverter)
-        and obj != BaseUnitConverter
-    ],
-)
-def test_all_converters(converter: type[BaseUnitConverter]) -> None:
-    """Ensure all unit converters are tested."""
-    assert converter in _ALL_CONVERTERS, "converter is not present in _ALL_CONVERTERS"
-
-
-@pytest.mark.parametrize(
-    "converter,valid_unit",
-    [
-        # Ensure all units are tested
-        (converter, valid_unit)
-        for converter, valid_units in _ALL_CONVERTERS.items()
-        for valid_unit in valid_units
-    ],
-)
-def test_convert_same_unit(converter: type[BaseUnitConverter], valid_unit: str) -> None:
-    """Test conversion from any valid unit to same unit."""
-    assert converter.convert(2, valid_unit, valid_unit) == 2
-
-
-@pytest.mark.parametrize(
-    "converter,valid_unit",
-    [
-        # Ensure all units are tested
-        (converter, valid_unit)
-        for converter, valid_units in _ALL_CONVERTERS.items()
-        for valid_unit in valid_units
-    ],
-)
-def test_convert_invalid_unit(
-    converter: type[BaseUnitConverter], valid_unit: str
-) -> None:
-    """Test exception is thrown for invalid units."""
-    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
-        converter.convert(5, INVALID_SYMBOL, valid_unit)
-
-    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
-        converter.convert(5, valid_unit, INVALID_SYMBOL)
-
-
-@pytest.mark.parametrize(
-    "converter,from_unit,to_unit",
-    [
-        # Pick any two units
-        (converter, valid_units[0], valid_units[1])
-        for converter, valid_units in _ALL_CONVERTERS.items()
-    ],
-)
-def test_convert_nonnumeric_value(
-    converter: type[BaseUnitConverter], from_unit: str, to_unit: str
-) -> None:
-    """Test exception is thrown for nonnumeric type."""
-    with pytest.raises(TypeError):
-        converter.convert("a", from_unit, to_unit)
-
-
-@pytest.mark.parametrize(
-    "converter,from_unit,to_unit,expected",
-    [
-        (
-            DataRateConverter,
-            UnitOfDataRate.BITS_PER_SECOND,
-            UnitOfDataRate.BYTES_PER_SECOND,
-            8,
-        ),
-        (DistanceConverter, UnitOfLength.KILOMETERS, UnitOfLength.METERS, 1 / 1000),
-        (
-            ElectricCurrentConverter,
-            UnitOfElectricCurrent.AMPERE,
-            UnitOfElectricCurrent.MILLIAMPERE,
-            1 / 1000,
-        ),
-        (EnergyConverter, UnitOfEnergy.WATT_HOUR, UnitOfEnergy.KILO_WATT_HOUR, 1000),
-        (InformationConverter, UnitOfInformation.BITS, UnitOfInformation.BYTES, 8),
-        (PowerConverter, UnitOfPower.WATT, UnitOfPower.KILO_WATT, 1000),
-        (
-            PressureConverter,
-            UnitOfPressure.HPA,
-            UnitOfPressure.INHG,
-            pytest.approx(33.86389),
-        ),
-        (
-            SpeedConverter,
-            UnitOfSpeed.KILOMETERS_PER_HOUR,
-            UnitOfSpeed.MILES_PER_HOUR,
-            pytest.approx(1.609343),
-        ),
-        (
-            TemperatureConverter,
-            UnitOfTemperature.CELSIUS,
-            UnitOfTemperature.FAHRENHEIT,
-            1 / 1.8,
-        ),
-        (
-            VolumeConverter,
-            UnitOfVolume.GALLONS,
-            UnitOfVolume.LITERS,
-            pytest.approx(0.264172),
-        ),
-    ],
-)
-def test_get_unit_ratio(
-    converter: type[BaseUnitConverter], from_unit: str, to_unit: str, expected: float
-) -> None:
-    """Test unit ratio."""
-    assert converter.get_unit_ratio(from_unit, to_unit) == expected
-
-
-@pytest.mark.parametrize(
-    "value,from_unit,expected,to_unit",
-    [
+# Dict containing a conversion test for every know unit.
+_CONVERTED_VALUE: dict[
+    type[BaseUnitConverter], list[tuple[float, str | None, float, str | None]]
+] = {
+    DataRateConverter: [
         (8e3, UnitOfDataRate.BITS_PER_SECOND, 8, UnitOfDataRate.KILOBITS_PER_SECOND),
         (8e6, UnitOfDataRate.BITS_PER_SECOND, 8, UnitOfDataRate.MEGABITS_PER_SECOND),
         (8e9, UnitOfDataRate.BITS_PER_SECOND, 8, UnitOfDataRate.GIGABITS_PER_SECOND),
@@ -213,39 +133,7 @@ def test_get_unit_ratio(
             UnitOfDataRate.GIBIBYTES_PER_SECOND,
         ),
     ],
-)
-def test_data_rate_convert(
-    value: float,
-    from_unit: str,
-    expected: float,
-    to_unit: str,
-) -> None:
-    """Test conversion to other units."""
-    assert DataRateConverter.convert(value, from_unit, to_unit) == pytest.approx(
-        expected
-    )
-
-
-@pytest.mark.parametrize(
-    "value,from_unit,expected,to_unit",
-    [
-        (5, UnitOfElectricCurrent.AMPERE, 5000, UnitOfElectricCurrent.MILLIAMPERE),
-        (5, UnitOfElectricCurrent.MILLIAMPERE, 0.005, UnitOfElectricCurrent.AMPERE),
-    ],
-)
-def test_electric_current_convert(
-    value: float,
-    from_unit: str,
-    expected: float,
-    to_unit: str,
-) -> None:
-    """Test conversion to other units."""
-    assert ElectricCurrentConverter.convert(value, from_unit, to_unit) == expected
-
-
-@pytest.mark.parametrize(
-    "value,from_unit,expected,to_unit",
-    [
+    DistanceConverter: [
         (5, UnitOfLength.MILES, 8.04672, UnitOfLength.KILOMETERS),
         (5, UnitOfLength.MILES, 8046.72, UnitOfLength.METERS),
         (5, UnitOfLength.MILES, 804672.0, UnitOfLength.CENTIMETERS),
@@ -303,21 +191,15 @@ def test_electric_current_convert(
         (5000000, UnitOfLength.MILLIMETERS, 16404.2, UnitOfLength.FEET),
         (5000000, UnitOfLength.MILLIMETERS, 196850.5, UnitOfLength.INCHES),
     ],
-)
-def test_distance_convert(
-    value: float,
-    from_unit: str,
-    expected: float,
-    to_unit: str,
-) -> None:
-    """Test conversion to other units."""
-    expected = pytest.approx(expected)
-    assert DistanceConverter.convert(value, from_unit, to_unit) == expected
-
-
-@pytest.mark.parametrize(
-    "value,from_unit,expected,to_unit",
-    [
+    ElectricCurrentConverter: [
+        (5, UnitOfElectricCurrent.AMPERE, 5000, UnitOfElectricCurrent.MILLIAMPERE),
+        (5, UnitOfElectricCurrent.MILLIAMPERE, 0.005, UnitOfElectricCurrent.AMPERE),
+    ],
+    ElectricPotentialConverter: [
+        (5, UnitOfElectricPotential.VOLT, 5000, UnitOfElectricPotential.MILLIVOLT),
+        (5, UnitOfElectricPotential.MILLIVOLT, 0.005, UnitOfElectricPotential.VOLT),
+    ],
+    EnergyConverter: [
         (10, UnitOfEnergy.WATT_HOUR, 0.01, UnitOfEnergy.KILO_WATT_HOUR),
         (10, UnitOfEnergy.WATT_HOUR, 0.00001, UnitOfEnergy.MEGA_WATT_HOUR),
         (10, UnitOfEnergy.KILO_WATT_HOUR, 10000, UnitOfEnergy.WATT_HOUR),
@@ -326,21 +208,10 @@ def test_distance_convert(
         (10, UnitOfEnergy.MEGA_WATT_HOUR, 10000, UnitOfEnergy.KILO_WATT_HOUR),
         (10, UnitOfEnergy.GIGA_JOULE, 10000 / 3.6, UnitOfEnergy.KILO_WATT_HOUR),
         (10, UnitOfEnergy.GIGA_JOULE, 10 / 3.6, UnitOfEnergy.MEGA_WATT_HOUR),
+        (10, UnitOfEnergy.MEGA_JOULE, 10 / 3.6, UnitOfEnergy.KILO_WATT_HOUR),
+        (10, UnitOfEnergy.MEGA_JOULE, 0.010 / 3.6, UnitOfEnergy.MEGA_WATT_HOUR),
     ],
-)
-def test_energy_convert(
-    value: float,
-    from_unit: str,
-    expected: float,
-    to_unit: str,
-) -> None:
-    """Test conversion to other units."""
-    assert EnergyConverter.convert(value, from_unit, to_unit) == expected
-
-
-@pytest.mark.parametrize(
-    "value,from_unit,expected,to_unit",
-    [
+    InformationConverter: [
         (8e3, UnitOfInformation.BITS, 8, UnitOfInformation.KILOBITS),
         (8e6, UnitOfInformation.BITS, 8, UnitOfInformation.MEGABITS),
         (8e9, UnitOfInformation.BITS, 8, UnitOfInformation.GIGABITS),
@@ -362,21 +233,7 @@ def test_energy_convert(
         (8 * 2**70, UnitOfInformation.BITS, 1, UnitOfInformation.ZEBIBYTES),
         (8 * 2**80, UnitOfInformation.BITS, 1, UnitOfInformation.YOBIBYTES),
     ],
-)
-def test_information_convert(
-    value: float,
-    from_unit: str,
-    expected: float,
-    to_unit: str,
-) -> None:
-    """Test conversion to other units."""
-    expected = pytest.approx(expected)
-    assert InformationConverter.convert(value, from_unit, to_unit) == expected
-
-
-@pytest.mark.parametrize(
-    "value,from_unit,expected,to_unit",
-    [
+    MassConverter: [
         (10, UnitOfMass.KILOGRAMS, 10000, UnitOfMass.GRAMS),
         (10, UnitOfMass.KILOGRAMS, 10000000, UnitOfMass.MILLIGRAMS),
         (10, UnitOfMass.KILOGRAMS, 10000000000, UnitOfMass.MICROGRAMS),
@@ -413,37 +270,11 @@ def test_information_convert(
         (1, UnitOfMass.STONES, 14, UnitOfMass.POUNDS),
         (1, UnitOfMass.STONES, 224, UnitOfMass.OUNCES),
     ],
-)
-def test_mass_convert(
-    value: float,
-    from_unit: str,
-    expected: float,
-    to_unit: str,
-) -> None:
-    """Test conversion to other units."""
-    assert MassConverter.convert(value, from_unit, to_unit) == pytest.approx(expected)
-
-
-@pytest.mark.parametrize(
-    "value,from_unit,expected,to_unit",
-    [
+    PowerConverter: [
         (10, UnitOfPower.KILO_WATT, 10000, UnitOfPower.WATT),
         (10, UnitOfPower.WATT, 0.01, UnitOfPower.KILO_WATT),
     ],
-)
-def test_power_convert(
-    value: float,
-    from_unit: str,
-    expected: float,
-    to_unit: str,
-) -> None:
-    """Test conversion to other units."""
-    assert PowerConverter.convert(value, from_unit, to_unit) == expected
-
-
-@pytest.mark.parametrize(
-    "value,from_unit,expected,to_unit",
-    [
+    PressureConverter: [
         (1000, UnitOfPressure.HPA, 14.5037743897, UnitOfPressure.PSI),
         (1000, UnitOfPressure.HPA, 29.5299801647, UnitOfPressure.INHG),
         (1000, UnitOfPressure.HPA, 100000, UnitOfPressure.PA),
@@ -470,22 +301,9 @@ def test_power_convert(
         (30, UnitOfPressure.MMHG, 39.9967, UnitOfPressure.MBAR),
         (30, UnitOfPressure.MMHG, 3.99967, UnitOfPressure.CBAR),
         (30, UnitOfPressure.MMHG, 1.181102, UnitOfPressure.INHG),
+        (5, UnitOfPressure.BAR, 72.51887, UnitOfPressure.PSI),
     ],
-)
-def test_pressure_convert(
-    value: float,
-    from_unit: str,
-    expected: float,
-    to_unit: str,
-) -> None:
-    """Test conversion to other units."""
-    expected = pytest.approx(expected)
-    assert PressureConverter.convert(value, from_unit, to_unit) == expected
-
-
-@pytest.mark.parametrize(
-    "value,from_unit,expected,to_unit",
-    [
+    SpeedConverter: [
         # 5 km/h / 1.609 km/mi = 3.10686 mi/h
         (5, UnitOfSpeed.KILOMETERS_PER_HOUR, 3.106856, UnitOfSpeed.MILES_PER_HOUR),
         # 5 mi/h * 1.609 km/mi = 8.04672 km/h
@@ -537,20 +355,7 @@ def test_pressure_convert(
         # 5 ft/s * 0.3048 m/ft = 1.524 m/s
         (5, UnitOfSpeed.FEET_PER_SECOND, 1.524, UnitOfSpeed.METERS_PER_SECOND),
     ],
-)
-def test_speed_convert(
-    value: float,
-    from_unit: str,
-    expected: float,
-    to_unit: str,
-) -> None:
-    """Test conversion to other units."""
-    assert SpeedConverter.convert(value, from_unit, to_unit) == pytest.approx(expected)
-
-
-@pytest.mark.parametrize(
-    "value,from_unit,expected,to_unit",
-    [
+    TemperatureConverter: [
         (100, UnitOfTemperature.CELSIUS, 212, UnitOfTemperature.FAHRENHEIT),
         (100, UnitOfTemperature.CELSIUS, 373.15, UnitOfTemperature.KELVIN),
         (100, UnitOfTemperature.FAHRENHEIT, 37.7778, UnitOfTemperature.CELSIUS),
@@ -558,37 +363,11 @@ def test_speed_convert(
         (100, UnitOfTemperature.KELVIN, -173.15, UnitOfTemperature.CELSIUS),
         (100, UnitOfTemperature.KELVIN, -279.6699, UnitOfTemperature.FAHRENHEIT),
     ],
-)
-def test_temperature_convert(
-    value: float, from_unit: str, expected: float, to_unit: str
-) -> None:
-    """Test conversion to other units."""
-    expected = pytest.approx(expected)
-    assert TemperatureConverter.convert(value, from_unit, to_unit) == expected
-
-
-@pytest.mark.parametrize(
-    "value,from_unit,expected,to_unit",
-    [
-        (100, UnitOfTemperature.CELSIUS, 180, UnitOfTemperature.FAHRENHEIT),
-        (100, UnitOfTemperature.CELSIUS, 100, UnitOfTemperature.KELVIN),
-        (100, UnitOfTemperature.FAHRENHEIT, 55.5556, UnitOfTemperature.CELSIUS),
-        (100, UnitOfTemperature.FAHRENHEIT, 55.5556, UnitOfTemperature.KELVIN),
-        (100, UnitOfTemperature.KELVIN, 100, UnitOfTemperature.CELSIUS),
-        (100, UnitOfTemperature.KELVIN, 180, UnitOfTemperature.FAHRENHEIT),
+    UnitlessRatioConverter: [
+        (5, None, 500, PERCENTAGE),
+        (5, PERCENTAGE, 0.05, None),
     ],
-)
-def test_temperature_convert_with_interval(
-    value: float, from_unit: str, expected: float, to_unit: str
-) -> None:
-    """Test conversion to other units."""
-    expected = pytest.approx(expected)
-    assert TemperatureConverter.convert_interval(value, from_unit, to_unit) == expected
-
-
-@pytest.mark.parametrize(
-    "value,from_unit,expected,to_unit",
-    [
+    VolumeConverter: [
         (5, UnitOfVolume.LITERS, 1.32086, UnitOfVolume.GALLONS),
         (5, UnitOfVolume.GALLONS, 18.92706, UnitOfVolume.LITERS),
         (5, UnitOfVolume.CUBIC_METERS, 176.5733335, UnitOfVolume.CUBIC_FEET),
@@ -629,12 +408,142 @@ def test_temperature_convert_with_interval(
         (5, UnitOfVolume.CENTUM_CUBIC_FEET, 3740.26, UnitOfVolume.GALLONS),
         (5, UnitOfVolume.CENTUM_CUBIC_FEET, 14158.42, UnitOfVolume.LITERS),
     ],
+}
+
+
+@pytest.mark.parametrize(
+    "converter",
+    [
+        # Generate list of all converters available in
+        # `homeassistant.util.unit_conversion` to ensure
+        # that we don't miss any in the tests.
+        obj
+        for _, obj in inspect.getmembers(unit_conversion)
+        if inspect.isclass(obj)
+        and issubclass(obj, BaseUnitConverter)
+        and obj != BaseUnitConverter
+    ],
 )
-def test_volume_convert(
+def test_all_converters(converter: type[BaseUnitConverter]) -> None:
+    """Ensure all unit converters are tested."""
+    assert converter in _ALL_CONVERTERS, "converter is not present in _ALL_CONVERTERS"
+
+    assert converter in _GET_UNIT_RATIO, "converter is not present in _GET_UNIT_RATIO"
+    unit_ratio_item = _GET_UNIT_RATIO[converter]
+    assert unit_ratio_item[0] != unit_ratio_item[1], "ratio units should be different"
+
+    assert converter in _CONVERTED_VALUE, "converter is not present in _CONVERTED_VALUE"
+    converted_value_items = _CONVERTED_VALUE[converter]
+    for valid_unit in converter.VALID_UNITS:
+        assert any(
+            item
+            for item in converted_value_items
+            # item[1] is from_unit, item[3] is to_unit
+            if valid_unit in {item[1], item[3]}
+        ), f"Unit `{valid_unit}` is not tested in _CONVERTED_VALUE"
+
+
+@pytest.mark.parametrize(
+    ("converter", "valid_unit"),
+    [
+        # Ensure all units are tested
+        (converter, valid_unit)
+        for converter, valid_units in _ALL_CONVERTERS.items()
+        for valid_unit in valid_units
+    ],
+)
+def test_convert_same_unit(converter: type[BaseUnitConverter], valid_unit: str) -> None:
+    """Test conversion from any valid unit to same unit."""
+    assert converter.convert(2, valid_unit, valid_unit) == 2
+
+
+@pytest.mark.parametrize(
+    ("converter", "valid_unit"),
+    [
+        # Ensure all units are tested
+        (converter, valid_unit)
+        for converter, valid_units in _ALL_CONVERTERS.items()
+        for valid_unit in valid_units
+    ],
+)
+def test_convert_invalid_unit(
+    converter: type[BaseUnitConverter], valid_unit: str
+) -> None:
+    """Test exception is thrown for invalid units."""
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
+        converter.convert(5, INVALID_SYMBOL, valid_unit)
+
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
+        converter.convert(5, valid_unit, INVALID_SYMBOL)
+
+
+@pytest.mark.parametrize(
+    ("converter", "from_unit", "to_unit"),
+    [
+        # Pick any two units
+        (converter, valid_units[0], valid_units[1])
+        for converter, valid_units in _ALL_CONVERTERS.items()
+    ],
+)
+def test_convert_nonnumeric_value(
+    converter: type[BaseUnitConverter], from_unit: str, to_unit: str
+) -> None:
+    """Test exception is thrown for nonnumeric type."""
+    with pytest.raises(TypeError):
+        converter.convert("a", from_unit, to_unit)
+
+
+@pytest.mark.parametrize(
+    ("converter", "from_unit", "to_unit", "expected"),
+    [
+        # Process all items in _GET_UNIT_RATIO
+        (converter, item[0], item[1], item[2])
+        for converter, item in _GET_UNIT_RATIO.items()
+    ],
+)
+def test_get_unit_ratio(
+    converter: type[BaseUnitConverter], from_unit: str, to_unit: str, expected: float
+) -> None:
+    """Test unit ratio."""
+    ratio = converter.get_unit_ratio(from_unit, to_unit)
+    assert ratio == pytest.approx(expected)
+    assert converter.get_unit_ratio(to_unit, from_unit) == pytest.approx(1 / ratio)
+
+
+@pytest.mark.parametrize(
+    ("converter", "value", "from_unit", "expected", "to_unit"),
+    [
+        # Process all items in _CONVERTED_VALUE
+        (converter, list_item[0], list_item[1], list_item[2], list_item[3])
+        for converter, item in _CONVERTED_VALUE.items()
+        for list_item in item
+    ],
+)
+def test_unit_conversion(
+    converter: type[BaseUnitConverter],
     value: float,
     from_unit: str,
     expected: float,
     to_unit: str,
 ) -> None:
     """Test conversion to other units."""
-    assert VolumeConverter.convert(value, from_unit, to_unit) == pytest.approx(expected)
+    assert converter.convert(value, from_unit, to_unit) == pytest.approx(expected)
+
+
+@pytest.mark.parametrize(
+    ("value", "from_unit", "expected", "to_unit"),
+    [
+        (100, UnitOfTemperature.CELSIUS, 180, UnitOfTemperature.FAHRENHEIT),
+        (100, UnitOfTemperature.CELSIUS, 100, UnitOfTemperature.KELVIN),
+        (100, UnitOfTemperature.FAHRENHEIT, 55.5556, UnitOfTemperature.CELSIUS),
+        (100, UnitOfTemperature.FAHRENHEIT, 55.5556, UnitOfTemperature.KELVIN),
+        (100, UnitOfTemperature.KELVIN, 100, UnitOfTemperature.CELSIUS),
+        (100, UnitOfTemperature.KELVIN, 180, UnitOfTemperature.FAHRENHEIT),
+    ],
+)
+def test_temperature_convert_with_interval(
+    value: float, from_unit: str, expected: float, to_unit: str
+) -> None:
+    """Test conversion to other units."""
+    expected = pytest.approx(expected)
+    assert TemperatureConverter.convert_interval(value, from_unit, to_unit) == expected

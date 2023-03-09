@@ -6,13 +6,15 @@ import contextlib
 from dataclasses import dataclass, replace as dataclass_replace
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
+from uuid import UUID
 
 import sqlalchemy
-from sqlalchemy import ForeignKeyConstraint, MetaData, Table, func, text
-from sqlalchemy.engine import Engine
+from sqlalchemy import ForeignKeyConstraint, MetaData, Table, func, text, update
+from sqlalchemy.engine import CursorResult, Engine
 from sqlalchemy.exc import (
     DatabaseError,
+    IntegrityError,
     InternalError,
     OperationalError,
     ProgrammingError,
@@ -23,19 +25,28 @@ from sqlalchemy.schema import AddConstraint, DropConstraint
 from sqlalchemy.sql.expression import true
 
 from homeassistant.core import HomeAssistant
+from homeassistant.util.ulid import ulid_to_bytes
 
 from .const import SupportedDialect
 from .db_schema import (
+    CONTEXT_ID_BIN_MAX_LENGTH,
     SCHEMA_VERSION,
+    STATISTICS_TABLES,
     TABLE_STATES,
     Base,
+    Events,
     SchemaChanges,
+    States,
     Statistics,
     StatisticsMeta,
     StatisticsRuns,
     StatisticsShortTerm,
 )
 from .models import process_timestamp
+from .queries import (
+    find_events_context_ids_to_migrate,
+    find_states_context_ids_to_migrate,
+)
 from .statistics import (
     correct_db_schema as statistics_correct_db_schema,
     delete_statistics_duplicates,
@@ -43,13 +54,18 @@ from .statistics import (
     get_start_time,
     validate_db_schema as statistics_validate_db_schema,
 )
-from .tasks import PostSchemaMigrationTask
-from .util import session_scope
+from .tasks import (
+    CommitTask,
+    PostSchemaMigrationTask,
+    StatisticsTimestampMigrationCleanupTask,
+)
+from .util import database_job_retry_wrapper, session_scope
 
 if TYPE_CHECKING:
     from . import Recorder
 
 LIVE_MIGRATION_MIN_SCHEMA_VERSION = 0
+_EMPTY_CONTEXT_ID = b"\x00" * 16
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,7 +112,7 @@ def _schema_is_current(current_version: int) -> bool:
 
 
 def validate_db_schema(
-    hass: HomeAssistant, engine: Engine, session_maker: Callable[[], Session]
+    hass: HomeAssistant, instance: Recorder, session_maker: Callable[[], Session]
 ) -> SchemaValidationStatus | None:
     """Check if the schema is valid.
 
@@ -113,7 +129,7 @@ def validate_db_schema(
     if is_current := _schema_is_current(current_version):
         # We can only check for further errors if the schema is current, because
         # columns may otherwise not exist etc.
-        schema_errors |= statistics_validate_db_schema(hass, engine, session_maker)
+        schema_errors |= statistics_validate_db_schema(hass, instance, session_maker)
 
     valid = is_current and not schema_errors
 
@@ -151,7 +167,9 @@ def migrate_schema(
             hass.add_job(instance.async_set_db_ready)
         new_version = version + 1
         _LOGGER.info("Upgrading recorder db schema to version %s", new_version)
-        _apply_update(hass, engine, session_maker, new_version, current_version)
+        _apply_update(
+            instance, hass, engine, session_maker, new_version, current_version
+        )
         with session_scope(session=session_maker()) as session:
             session.add(SchemaChanges(schema_version=new_version))
 
@@ -166,6 +184,9 @@ def migrate_schema(
 
     if current_version != SCHEMA_VERSION:
         instance.queue_task(PostSchemaMigrationTask(current_version, SCHEMA_VERSION))
+        # Make sure the post schema migration task is committed in case
+        # the next task does not have commit_before = True
+        instance.queue_task(CommitTask())
 
 
 def _create_index(
@@ -207,7 +228,10 @@ def _create_index(
 
 
 def _drop_index(
-    session_maker: Callable[[], Session], table_name: str, index_name: str
+    session_maker: Callable[[], Session],
+    table_name: str,
+    index_name: str,
+    quiet: bool | None = None,
 ) -> None:
     """Drop an index from a specified table.
 
@@ -270,21 +294,37 @@ def _drop_index(
         _LOGGER.debug(
             "Finished dropping index %s from table %s", index_name, table_name
         )
-    else:
-        if index_name == "ix_states_context_parent_id":
-            # Was only there on nightly so we do not want
-            # to generate log noise or issues about it.
-            return
+        return
 
-        _LOGGER.warning(
-            (
-                "Failed to drop index %s from table %s. Schema "
-                "Migration will continue; this is not a "
-                "critical operation"
-            ),
-            index_name,
-            table_name,
-        )
+    if quiet:
+        return
+
+    if index_name in (
+        "ix_states_entity_id",
+        "ix_states_context_parent_id",
+        "ix_statistics_short_term_statistic_id_start",
+        "ix_statistics_statistic_id_start",
+    ):
+        # ix_states_context_parent_id was only there on nightly so we do not want
+        # to generate log noise or issues about it.
+        #
+        # ix_states_entity_id was only there for users who upgraded from schema
+        # version 8 or earlier. Newer installs will not have it so we do not
+        # want to generate log noise or issues about it.
+        #
+        # ix_statistics_short_term_statistic_id_start and ix_statistics_statistic_id_start
+        # were only there for users who upgraded from schema version 23 or earlier.
+        return
+
+    _LOGGER.warning(
+        (
+            "Failed to drop index %s from table %s. Schema "
+            "Migration will continue; this is not a "
+            "critical operation"
+        ),
+        index_name,
+        table_name,
+    )
 
 
 def _add_columns(
@@ -437,17 +477,17 @@ def _update_states_table_with_foreign_key_options(
 
     states_key_constraints = Base.metadata.tables[TABLE_STATES].foreign_key_constraints
     old_states_table = Table(  # noqa: F841 pylint: disable=unused-variable
-        TABLE_STATES, MetaData(), *(alter["old_fk"] for alter in alters)
+        TABLE_STATES, MetaData(), *(alter["old_fk"] for alter in alters)  # type: ignore[arg-type]
     )
 
     for alter in alters:
         with session_scope(session=session_maker()) as session:
             try:
                 connection = session.connection()
-                connection.execute(DropConstraint(alter["old_fk"]))
+                connection.execute(DropConstraint(alter["old_fk"]))  # type: ignore[no-untyped-call]
                 for fkc in states_key_constraints:
                     if fkc.column_keys == alter["columns"]:
-                        connection.execute(AddConstraint(fkc))
+                        connection.execute(AddConstraint(fkc))  # type: ignore[no-untyped-call]
             except (InternalError, OperationalError):
                 _LOGGER.exception(
                     "Could not update foreign options in %s table", TABLE_STATES
@@ -477,7 +517,7 @@ def _drop_foreign_key_constraints(
         with session_scope(session=session_maker()) as session:
             try:
                 connection = session.connection()
-                connection.execute(DropConstraint(drop))
+                connection.execute(DropConstraint(drop))  # type: ignore[no-untyped-call]
             except (InternalError, OperationalError):
                 _LOGGER.exception(
                     "Could not drop foreign constraints in %s table on %s",
@@ -486,7 +526,9 @@ def _drop_foreign_key_constraints(
                 )
 
 
+@database_job_retry_wrapper("Apply migration update", 10)
 def _apply_update(  # noqa: C901
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
@@ -496,18 +538,23 @@ def _apply_update(  # noqa: C901
     """Perform operations to bring schema up to date."""
     dialect = engine.dialect.name
     big_int = "INTEGER(20)" if dialect == SupportedDialect.MYSQL else "INTEGER"
-    if dialect in (SupportedDialect.MYSQL, SupportedDialect.POSTGRESQL):
+    if dialect == SupportedDialect.MYSQL:
         timestamp_type = "DOUBLE PRECISION"
+        context_bin_type = f"BLOB({CONTEXT_ID_BIN_MAX_LENGTH})"
+    if dialect == SupportedDialect.POSTGRESQL:
+        timestamp_type = "DOUBLE PRECISION"
+        context_bin_type = "BYTEA"
     else:
         timestamp_type = "FLOAT"
+        context_bin_type = "BLOB"
 
     if new_version == 1:
-        _create_index(session_maker, "events", "ix_events_time_fired")
+        # This used to create ix_events_time_fired, but it was removed in version 32
+        pass
     elif new_version == 2:
         # Create compound start/end index for recorder_runs
         _create_index(session_maker, "recorder_runs", "ix_recorder_runs_start_end")
-        # Create indexes for states
-        _create_index(session_maker, "states", "ix_states_last_updated")
+        # This used to create ix_states_last_updated bit it was removed in version 32
     elif new_version == 3:
         # There used to be a new index here, but it was removed in version 4.
         pass
@@ -526,8 +573,8 @@ def _apply_update(  # noqa: C901
         _drop_index(session_maker, "states", "states__state_changes")
         _drop_index(session_maker, "states", "states__significant_changes")
         _drop_index(session_maker, "states", "ix_states_entity_id_created")
-
-        _create_index(session_maker, "states", "ix_states_entity_id_last_updated")
+        # This used to create ix_states_entity_id_last_updated,
+        # but it was removed in version 32
     elif new_version == 5:
         # Create supporting index for States.event_id foreign key
         _create_index(session_maker, "states", "ix_states_event_id")
@@ -538,20 +585,25 @@ def _apply_update(  # noqa: C901
             ["context_id CHARACTER(36)", "context_user_id CHARACTER(36)"],
         )
         _create_index(session_maker, "events", "ix_events_context_id")
-        _create_index(session_maker, "events", "ix_events_context_user_id")
+        # This used to create ix_events_context_user_id,
+        # but it was removed in version 28
         _add_columns(
             session_maker,
             "states",
             ["context_id CHARACTER(36)", "context_user_id CHARACTER(36)"],
         )
         _create_index(session_maker, "states", "ix_states_context_id")
-        _create_index(session_maker, "states", "ix_states_context_user_id")
+        # This used to create ix_states_context_user_id,
+        # but it was removed in version 28
     elif new_version == 7:
-        _create_index(session_maker, "states", "ix_states_entity_id")
+        # There used to be a ix_states_entity_id index here,
+        # but it was removed in later schema
+        pass
     elif new_version == 8:
         _add_columns(session_maker, "events", ["context_parent_id CHARACTER(36)"])
         _add_columns(session_maker, "states", ["old_state_id INTEGER"])
-        _create_index(session_maker, "events", "ix_events_context_parent_id")
+        # This used to create ix_events_context_parent_id,
+        # but it was removed in version 28
     elif new_version == 9:
         # We now get the context from events with a join
         # since its always there on state_changed events
@@ -569,7 +621,8 @@ def _apply_update(  # noqa: C901
         # Redundant keys on composite index:
         # We already have ix_states_entity_id_last_updated
         _drop_index(session_maker, "states", "ix_states_entity_id")
-        _create_index(session_maker, "events", "ix_events_event_type_time_fired")
+        # This used to create ix_events_event_type_time_fired,
+        # but it was removed in version 32
         _drop_index(session_maker, "events", "ix_events_event_type")
     elif new_version == 10:
         # Now done in step 11
@@ -617,18 +670,21 @@ def _apply_update(  # noqa: C901
         # Order matters! Statistics and StatisticsShortTerm have a relation with
         # StatisticsMeta, so statistics need to be deleted before meta (or in pair
         # depending on the SQL backend); and meta needs to be created before statistics.
+
+        # We need to cast __table__ to Table, explanation in
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9130
         Base.metadata.drop_all(
             bind=engine,
             tables=[
-                StatisticsShortTerm.__table__,
-                Statistics.__table__,
-                StatisticsMeta.__table__,
+                cast(Table, StatisticsShortTerm.__table__),
+                cast(Table, Statistics.__table__),
+                cast(Table, StatisticsMeta.__table__),
             ],
         )
 
-        StatisticsMeta.__table__.create(engine)
-        StatisticsShortTerm.__table__.create(engine)
-        Statistics.__table__.create(engine)
+        cast(Table, StatisticsMeta.__table__).create(engine)
+        cast(Table, StatisticsShortTerm.__table__).create(engine)
+        cast(Table, Statistics.__table__).create(engine)
     elif new_version == 19:
         # This adds the statistic runs table, insert a fake run to prevent duplicating
         # statistics.
@@ -661,18 +717,19 @@ def _apply_update(  # noqa: C901
                     ),
                     table,
                 )
-                with contextlib.suppress(SQLAlchemyError):
-                    with session_scope(session=session_maker()) as session:
-                        connection = session.connection()
-                        connection.execute(
-                            # Using LOCK=EXCLUSIVE to prevent
-                            # the database from corrupting
-                            # https://github.com/home-assistant/core/issues/56104
-                            text(
-                                f"ALTER TABLE {table} CONVERT TO CHARACTER SET utf8mb4"
-                                " COLLATE utf8mb4_unicode_ci, LOCK=EXCLUSIVE"
-                            )
+                with contextlib.suppress(SQLAlchemyError), session_scope(
+                    session=session_maker()
+                ) as session:
+                    connection = session.connection()
+                    connection.execute(
+                        # Using LOCK=EXCLUSIVE to prevent
+                        # the database from corrupting
+                        # https://github.com/home-assistant/core/issues/56104
+                        text(
+                            f"ALTER TABLE {table} CONVERT TO CHARACTER SET utf8mb4"
+                            " COLLATE utf8mb4_unicode_ci, LOCK=EXCLUSIVE"
                         )
+                    )
     elif new_version == 22:
         # Recreate the all statistics tables for Oracle DB with Identity columns
         #
@@ -680,20 +737,22 @@ def _apply_update(  # noqa: C901
         # so statistics need to be deleted before meta (or in pair depending
         # on the SQL backend); and meta needs to be created before statistics.
         if engine.dialect.name == "oracle":
+            # We need to cast __table__ to Table, explanation in
+            # https://github.com/sqlalchemy/sqlalchemy/issues/9130
             Base.metadata.drop_all(
                 bind=engine,
                 tables=[
-                    StatisticsShortTerm.__table__,
-                    Statistics.__table__,
-                    StatisticsMeta.__table__,
-                    StatisticsRuns.__table__,
+                    cast(Table, StatisticsShortTerm.__table__),
+                    cast(Table, Statistics.__table__),
+                    cast(Table, StatisticsMeta.__table__),
+                    cast(Table, StatisticsRuns.__table__),
                 ],
             )
 
-            StatisticsRuns.__table__.create(engine)
-            StatisticsMeta.__table__.create(engine)
-            StatisticsShortTerm.__table__.create(engine)
-            Statistics.__table__.create(engine)
+            cast(Table, StatisticsRuns.__table__).create(engine)
+            cast(Table, StatisticsMeta.__table__).create(engine)
+            cast(Table, StatisticsShortTerm.__table__).create(engine)
+            cast(Table, Statistics.__table__).create(engine)
 
         # Block 5-minute statistics for one hour from the last run, or it will overlap
         # with existing hourly statistics. Don't block on a database with no existing
@@ -701,6 +760,8 @@ def _apply_update(  # noqa: C901
         with session_scope(session=session_maker()) as session:
             if session.query(Statistics.id).count() and (
                 last_run_string := session.query(
+                    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+                    # pylint: disable-next=not-callable
                     func.max(StatisticsRuns.start)
                 ).scalar()
             ):
@@ -743,35 +804,10 @@ def _apply_update(  # noqa: C901
         # Add name column to StatisticsMeta
         _add_columns(session_maker, "statistics_meta", ["name VARCHAR(255)"])
     elif new_version == 24:
-        # Recreate statistics indices to block duplicated statistics
-        _drop_index(session_maker, "statistics", "ix_statistics_statistic_id_start")
-        _drop_index(
-            session_maker,
-            "statistics_short_term",
-            "ix_statistics_short_term_statistic_id_start",
-        )
-        try:
-            _create_index(
-                session_maker, "statistics", "ix_statistics_statistic_id_start"
-            )
-            _create_index(
-                session_maker,
-                "statistics_short_term",
-                "ix_statistics_short_term_statistic_id_start",
-            )
-        except DatabaseError:
-            # There may be duplicated statistics entries, delete duplicated statistics
-            # and try again
-            with session_scope(session=session_maker()) as session:
-                delete_statistics_duplicates(hass, session)
-            _create_index(
-                session_maker, "statistics", "ix_statistics_statistic_id_start"
-            )
-            _create_index(
-                session_maker,
-                "statistics_short_term",
-                "ix_statistics_short_term_statistic_id_start",
-            )
+        # This used to create the unique indices for start and statistic_id
+        # but we changed the format in schema 34 which will now take care
+        # of removing any duplicate if they still exist.
+        pass
     elif new_version == 25:
         _add_columns(session_maker, "states", [f"attributes_id {big_int}"])
         _create_index(session_maker, "states", "ix_states_attributes_id")
@@ -804,14 +840,15 @@ def _apply_update(  # noqa: C901
         if engine.dialect.name == SupportedDialect.MYSQL:
             # Ensure the row format is dynamic or the index
             # unique will be too large
-            with contextlib.suppress(SQLAlchemyError):
-                with session_scope(session=session_maker()) as session:
-                    connection = session.connection()
-                    # This is safe to run multiple times and fast
-                    # since the table is small.
-                    connection.execute(
-                        text("ALTER TABLE statistics_meta ROW_FORMAT=DYNAMIC")
-                    )
+            with contextlib.suppress(SQLAlchemyError), session_scope(
+                session=session_maker()
+            ) as session:
+                connection = session.connection()
+                # This is safe to run multiple times and fast
+                # since the table is small.
+                connection.execute(
+                    text("ALTER TABLE statistics_meta ROW_FORMAT=DYNAMIC")
+                )
         try:
             _create_index(
                 session_maker, "statistics_meta", "ix_statistics_meta_statistic_id"
@@ -846,8 +883,7 @@ def _apply_update(  # noqa: C901
         _create_index(session_maker, "events", "ix_events_event_type_time_fired_ts")
         _create_index(session_maker, "states", "ix_states_entity_id_last_updated_ts")
         _create_index(session_maker, "states", "ix_states_last_updated_ts")
-        with session_scope(session=session_maker()) as session:
-            _migrate_columns_to_timestamp(hass, session, engine)
+        _migrate_columns_to_timestamp(session_maker, engine)
     elif new_version == 32:
         # Migration is done in two steps to ensure we can start using
         # the new columns before we wipe the old ones.
@@ -855,12 +891,99 @@ def _apply_update(  # noqa: C901
         _drop_index(session_maker, "events", "ix_events_event_type_time_fired")
         _drop_index(session_maker, "states", "ix_states_last_updated")
         _drop_index(session_maker, "events", "ix_events_time_fired")
+    elif new_version == 33:
+        # This index is no longer used and can cause MySQL to use the wrong index
+        # when querying the states table.
+        # https://github.com/home-assistant/core/issues/83787
+        _drop_index(session_maker, "states", "ix_states_entity_id")
+    elif new_version == 34:
+        # Once we require SQLite >= 3.35.5, we should drop the columns:
+        # ALTER TABLE statistics DROP COLUMN created
+        # ALTER TABLE statistics DROP COLUMN start
+        # ALTER TABLE statistics DROP COLUMN last_reset
+        # ALTER TABLE statistics_short_term DROP COLUMN created
+        # ALTER TABLE statistics_short_term DROP COLUMN start
+        # ALTER TABLE statistics_short_term DROP COLUMN last_reset
+        _add_columns(
+            session_maker,
+            "statistics",
+            [
+                f"created_ts {timestamp_type}",
+                f"start_ts {timestamp_type}",
+                f"last_reset_ts {timestamp_type}",
+            ],
+        )
+        _add_columns(
+            session_maker,
+            "statistics_short_term",
+            [
+                f"created_ts {timestamp_type}",
+                f"start_ts {timestamp_type}",
+                f"last_reset_ts {timestamp_type}",
+            ],
+        )
+        _create_index(session_maker, "statistics", "ix_statistics_start_ts")
+        _create_index(
+            session_maker, "statistics", "ix_statistics_statistic_id_start_ts"
+        )
+        _create_index(
+            session_maker, "statistics_short_term", "ix_statistics_short_term_start_ts"
+        )
+        _create_index(
+            session_maker,
+            "statistics_short_term",
+            "ix_statistics_short_term_statistic_id_start_ts",
+        )
+        try:
+            _migrate_statistics_columns_to_timestamp(session_maker, engine)
+        except IntegrityError as ex:
+            _LOGGER.error(
+                "Statistics table contains duplicate entries: %s; "
+                "Cleaning up duplicates and trying again; "
+                "This will take a while; "
+                "Please be patient!",
+                ex,
+            )
+            # There may be duplicated statistics entries, delete duplicates
+            # and try again
+            with session_scope(session=session_maker()) as session:
+                delete_statistics_duplicates(instance, hass, session)
+            _migrate_statistics_columns_to_timestamp(session_maker, engine)
+            # Log at error level to ensure the user sees this message in the log
+            # since we logged the error above.
+            _LOGGER.error(
+                "Statistics migration successfully recovered after statistics table duplicate cleanup"
+            )
+    elif new_version == 35:
+        # Migration is done in two steps to ensure we can start using
+        # the new columns before we wipe the old ones.
+        _drop_index(session_maker, "statistics", "ix_statistics_statistic_id_start")
+        _drop_index(
+            session_maker,
+            "statistics_short_term",
+            "ix_statistics_short_term_statistic_id_start",
+        )
+        # ix_statistics_start and ix_statistics_statistic_id_start are still used
+        # for the post migration cleanup and can be removed in a future version.
+    elif new_version == 36:
+        for table in ("states", "events"):
+            _add_columns(
+                session_maker,
+                table,
+                [
+                    f"context_id_bin {context_bin_type}",
+                    f"context_user_id_bin {context_bin_type}",
+                    f"context_parent_id_bin {context_bin_type}",
+                ],
+            )
+        _create_index(session_maker, "events", "ix_events_context_id_bin")
+        _create_index(session_maker, "states", "ix_states_context_id_bin")
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
 
 def post_schema_migration(
-    session: Session,
+    instance: Recorder,
     old_version: int,
     new_version: int,
 ) -> None:
@@ -878,62 +1001,291 @@ def post_schema_migration(
         # In version 31 we migrated all the time_fired, last_updated, and last_changed
         # columns to be timestamps. In version 32 we need to wipe the old columns
         # since they are no longer used and take up a significant amount of space.
-        _wipe_old_string_time_columns(session)
+        assert instance.event_session is not None
+        assert instance.engine is not None
+        _wipe_old_string_time_columns(instance, instance.engine, instance.event_session)
+    if old_version < 35 <= new_version:
+        # In version 34 we migrated all the created, start, and last_reset
+        # columns to be timestamps. In version 34 we need to wipe the old columns
+        # since they are no longer used and take up a significant amount of space.
+        _wipe_old_string_statistics_columns(instance)
 
 
-def _wipe_old_string_time_columns(session: Session) -> None:
+def _wipe_old_string_statistics_columns(instance: Recorder) -> None:
+    """Wipe old string statistics columns to save space."""
+    instance.queue_task(StatisticsTimestampMigrationCleanupTask())
+
+
+@database_job_retry_wrapper("Wipe old string time columns", 3)
+def _wipe_old_string_time_columns(
+    instance: Recorder, engine: Engine, session: Session
+) -> None:
     """Wipe old string time columns to save space."""
     # Wipe Events.time_fired since its been replaced by Events.time_fired_ts
     # Wipe States.last_updated since its been replaced by States.last_updated_ts
     # Wipe States.last_changed since its been replaced by States.last_changed_ts
-    session.execute(text("UPDATE events set time_fired=NULL;"))
-    session.execute(text("UPDATE states set last_updated=NULL, last_changed=NULL;"))
-    session.commit()
+    #
+    if engine.dialect.name == SupportedDialect.SQLITE:
+        session.execute(text("UPDATE events set time_fired=NULL;"))
+        session.commit()
+        session.execute(text("UPDATE states set last_updated=NULL, last_changed=NULL;"))
+        session.commit()
+    elif engine.dialect.name == SupportedDialect.MYSQL:
+        #
+        # Since this is only to save space we limit the number of rows we update
+        # to 10,000,000 per table since we do not want to block the database for too long
+        # or run out of innodb_buffer_pool_size on MySQL. The old data will eventually
+        # be cleaned up by the recorder purge if we do not do it now.
+        #
+        session.execute(text("UPDATE events set time_fired=NULL LIMIT 10000000;"))
+        session.commit()
+        session.execute(
+            text(
+                "UPDATE states set last_updated=NULL, last_changed=NULL "
+                " LIMIT 10000000;"
+            )
+        )
+        session.commit()
+    elif engine.dialect.name == SupportedDialect.POSTGRESQL:
+        #
+        # Since this is only to save space we limit the number of rows we update
+        # to 250,000 per table since we do not want to block the database for too long
+        # or run out ram with postgresql. The old data will eventually
+        # be cleaned up by the recorder purge if we do not do it now.
+        #
+        session.execute(
+            text(
+                "UPDATE events set time_fired=NULL "
+                "where event_id in "
+                "(select event_id from events where time_fired_ts is NOT NULL LIMIT 250000);"
+            )
+        )
+        session.commit()
+        session.execute(
+            text(
+                "UPDATE states set last_updated=NULL, last_changed=NULL "
+                "where state_id in "
+                "(select state_id from states where last_updated_ts is NOT NULL LIMIT 250000);"
+            )
+        )
+        session.commit()
 
 
 def _migrate_columns_to_timestamp(
-    hass: HomeAssistant, session: Session, engine: Engine
+    session_maker: Callable[[], Session], engine: Engine
 ) -> None:
     """Migrate columns to use timestamp."""
     # Migrate all data in Events.time_fired to Events.time_fired_ts
     # Migrate all data in States.last_updated to States.last_updated_ts
     # Migrate all data in States.last_changed to States.last_changed_ts
-    connection = session.connection()
+    result: CursorResult | None = None
     if engine.dialect.name == SupportedDialect.SQLITE:
-        connection.execute(
-            text(
-                'UPDATE events set time_fired_ts=strftime("%s",time_fired) + '
-                "cast(substr(time_fired,-7) AS FLOAT);"
+        # With SQLite we do this in one go since it is faster
+        with session_scope(session=session_maker()) as session:
+            connection = session.connection()
+            connection.execute(
+                text(
+                    'UPDATE events set time_fired_ts=strftime("%s",time_fired) + '
+                    "cast(substr(time_fired,-7) AS FLOAT);"
+                )
             )
-        )
-        connection.execute(
-            text(
-                'UPDATE states set last_updated_ts=strftime("%s",last_updated) + '
-                "cast(substr(last_updated,-7) AS FLOAT), "
-                'last_changed_ts=strftime("%s",last_changed) + '
-                "cast(substr(last_changed,-7) AS FLOAT);"
+            connection.execute(
+                text(
+                    'UPDATE states set last_updated_ts=strftime("%s",last_updated) + '
+                    "cast(substr(last_updated,-7) AS FLOAT), "
+                    'last_changed_ts=strftime("%s",last_changed) + '
+                    "cast(substr(last_changed,-7) AS FLOAT);"
+                )
             )
-        )
     elif engine.dialect.name == SupportedDialect.MYSQL:
-        connection.execute(
-            text("UPDATE events set time_fired_ts=UNIX_TIMESTAMP(time_fired);")
-        )
-        connection.execute(
-            text(
-                "UPDATE states set last_updated_ts=UNIX_TIMESTAMP(last_updated), "
-                "last_changed_ts=UNIX_TIMESTAMP(last_changed);"
-            )
-        )
+        # With MySQL we do this in chunks to avoid hitting the `innodb_buffer_pool_size` limit
+        # We also need to do this in a loop since we can't be sure that we have
+        # updated all rows in the table until the rowcount is 0
+        while result is None or result.rowcount > 0:
+            with session_scope(session=session_maker()) as session:
+                result = session.connection().execute(
+                    text(
+                        "UPDATE events set time_fired_ts="
+                        "IF(time_fired is NULL,0,"
+                        "UNIX_TIMESTAMP(time_fired)"
+                        ") "
+                        "where time_fired_ts is NULL "
+                        "LIMIT 250000;"
+                    )
+                )
+        result = None
+        while result is None or result.rowcount > 0:  # type: ignore[unreachable]
+            with session_scope(session=session_maker()) as session:
+                result = session.connection().execute(
+                    text(
+                        "UPDATE states set last_updated_ts="
+                        "IF(last_updated is NULL,0,"
+                        "UNIX_TIMESTAMP(last_updated) "
+                        "), "
+                        "last_changed_ts="
+                        "UNIX_TIMESTAMP(last_changed) "
+                        "where last_updated_ts is NULL "
+                        "LIMIT 250000;"
+                    )
+                )
     elif engine.dialect.name == SupportedDialect.POSTGRESQL:
-        connection.execute(
-            text("UPDATE events set time_fired_ts=EXTRACT(EPOCH FROM time_fired);")
-        )
-        connection.execute(
-            text(
-                "UPDATE states set last_updated_ts=EXTRACT(EPOCH FROM last_updated), "
-                "last_changed_ts=EXTRACT(EPOCH FROM last_changed);"
+        # With Postgresql we do this in chunks to avoid using too much memory
+        # We also need to do this in a loop since we can't be sure that we have
+        # updated all rows in the table until the rowcount is 0
+        while result is None or result.rowcount > 0:
+            with session_scope(session=session_maker()) as session:
+                result = session.connection().execute(
+                    text(
+                        "UPDATE events SET "
+                        "time_fired_ts= "
+                        "(case when time_fired is NULL then 0 else EXTRACT(EPOCH FROM time_fired) end) "
+                        "WHERE event_id IN ( "
+                        "SELECT event_id FROM events where time_fired_ts is NULL LIMIT 250000 "
+                        " );"
+                    )
+                )
+        result = None
+        while result is None or result.rowcount > 0:  # type: ignore[unreachable]
+            with session_scope(session=session_maker()) as session:
+                result = session.connection().execute(
+                    text(
+                        "UPDATE states set last_updated_ts="
+                        "(case when last_updated is NULL then 0 else EXTRACT(EPOCH FROM last_updated) end), "
+                        "last_changed_ts=EXTRACT(EPOCH FROM last_changed) "
+                        "where state_id IN ( "
+                        "SELECT state_id FROM states where last_updated_ts is NULL LIMIT 250000 "
+                        " );"
+                    )
+                )
+
+
+def _migrate_statistics_columns_to_timestamp(
+    session_maker: Callable[[], Session], engine: Engine
+) -> None:
+    """Migrate statistics columns to use timestamp."""
+    # Migrate all data in statistics.start to statistics.start_ts
+    # Migrate all data in statistics.created to statistics.created_ts
+    # Migrate all data in statistics.last_reset to statistics.last_reset_ts
+    # Migrate all data in statistics_short_term.start to statistics_short_term.start_ts
+    # Migrate all data in statistics_short_term.created to statistics_short_term.created_ts
+    # Migrate all data in statistics_short_term.last_reset to statistics_short_term.last_reset_ts
+    result: CursorResult | None = None
+    if engine.dialect.name == SupportedDialect.SQLITE:
+        # With SQLite we do this in one go since it is faster
+        for table in STATISTICS_TABLES:
+            with session_scope(session=session_maker()) as session:
+                session.connection().execute(
+                    text(
+                        f"UPDATE {table} set start_ts=strftime('%s',start) + "
+                        "cast(substr(start,-7) AS FLOAT), "
+                        f"created_ts=strftime('%s',created) + "
+                        "cast(substr(created,-7) AS FLOAT), "
+                        f"last_reset_ts=strftime('%s',last_reset) + "
+                        "cast(substr(last_reset,-7) AS FLOAT);"
+                    )
+                )
+    elif engine.dialect.name == SupportedDialect.MYSQL:
+        # With MySQL we do this in chunks to avoid hitting the `innodb_buffer_pool_size` limit
+        # We also need to do this in a loop since we can't be sure that we have
+        # updated all rows in the table until the rowcount is 0
+        for table in STATISTICS_TABLES:
+            result = None
+            while result is None or result.rowcount > 0:  # type: ignore[unreachable]
+                with session_scope(session=session_maker()) as session:
+                    result = session.connection().execute(
+                        text(
+                            f"UPDATE {table} set start_ts="
+                            "IF(start is NULL,0,"
+                            "UNIX_TIMESTAMP(start) "
+                            "), "
+                            "created_ts="
+                            "UNIX_TIMESTAMP(created), "
+                            "last_reset_ts="
+                            "UNIX_TIMESTAMP(last_reset) "
+                            "where start_ts is NULL "
+                            "LIMIT 100000;"
+                        )
+                    )
+    elif engine.dialect.name == SupportedDialect.POSTGRESQL:
+        # With Postgresql we do this in chunks to avoid using too much memory
+        # We also need to do this in a loop since we can't be sure that we have
+        # updated all rows in the table until the rowcount is 0
+        for table in STATISTICS_TABLES:
+            result = None
+            while result is None or result.rowcount > 0:  # type: ignore[unreachable]
+                with session_scope(session=session_maker()) as session:
+                    result = session.connection().execute(
+                        text(
+                            f"UPDATE {table} set start_ts="  # nosec
+                            "(case when start is NULL then 0 else EXTRACT(EPOCH FROM start) end), "
+                            "created_ts=EXTRACT(EPOCH FROM created), "
+                            "last_reset_ts=EXTRACT(EPOCH FROM last_reset) "
+                            "where id IN ( "
+                            f"SELECT id FROM {table} where start_ts is NULL LIMIT 100000 "
+                            " );"
+                        )
+                    )
+
+
+def _context_id_to_bytes(context_id: str | None) -> bytes | None:
+    """Convert a context_id to bytes."""
+    if context_id is None:
+        return None
+    if len(context_id) == 32:
+        return UUID(context_id).bytes
+    if len(context_id) == 26:
+        return ulid_to_bytes(context_id)
+    return None
+
+
+def migrate_context_ids(instance: Recorder) -> bool:
+    """Migrate context_ids to use binary format."""
+    _to_bytes = _context_id_to_bytes
+    session_maker = instance.get_session
+    _LOGGER.debug("Migrating context_ids to binary format")
+    with session_scope(session=session_maker()) as session:
+        if events := session.execute(find_events_context_ids_to_migrate()).all():
+            session.execute(
+                update(Events),
+                [
+                    {
+                        "event_id": event_id,
+                        "context_id": None,
+                        "context_id_bin": _to_bytes(context_id) or _EMPTY_CONTEXT_ID,
+                        "context_user_id": None,
+                        "context_user_id_bin": _to_bytes(context_user_id),
+                        "context_parent_id": None,
+                        "context_parent_id_bin": _to_bytes(context_parent_id),
+                    }
+                    for event_id, context_id, context_user_id, context_parent_id in events
+                ],
             )
-        )
+        if states := session.execute(find_states_context_ids_to_migrate()).all():
+            session.execute(
+                update(States),
+                [
+                    {
+                        "state_id": state_id,
+                        "context_id": None,
+                        "context_id_bin": _to_bytes(context_id) or _EMPTY_CONTEXT_ID,
+                        "context_user_id": None,
+                        "context_user_id_bin": _to_bytes(context_user_id),
+                        "context_parent_id": None,
+                        "context_parent_id_bin": _to_bytes(context_parent_id),
+                    }
+                    for state_id, context_id, context_user_id, context_parent_id in states
+                ],
+            )
+        # If there is more work to do return False
+        # so that we can be called again
+        is_done = not (events or states)
+
+    if is_done:
+        _drop_index(session_maker, "events", "ix_events_context_id", quiet=True)
+        _drop_index(session_maker, "states", "ix_states_context_id", quiet=True)
+
+    _LOGGER.debug("Migrating context_ids to binary format: done=%s", is_done)
+    return is_done
 
 
 def _initialize_database(session: Session) -> bool:

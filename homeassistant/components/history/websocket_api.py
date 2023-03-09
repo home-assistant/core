@@ -38,14 +38,9 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.json import JSON_DUMP
 import homeassistant.util.dt as dt_util
 
-from .const import (
-    EVENT_COALESCE_TIME,
-    HISTORY_ENTITIES_FILTER,
-    HISTORY_FILTERS,
-    HISTORY_USE_INCLUDE_ORDER,
-    MAX_PENDING_HISTORY_STATES,
-)
+from .const import DOMAIN, EVENT_COALESCE_TIME, MAX_PENDING_HISTORY_STATES
 from .helpers import entities_may_have_state_changes_after
+from .models import HistoryConfig
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,38 +70,27 @@ def _ws_get_significant_states(
     end_time: dt | None,
     entity_ids: list[str] | None,
     filters: Filters | None,
-    use_include_order: bool | None,
     include_start_time_state: bool,
     significant_changes_only: bool,
     minimal_response: bool,
     no_attributes: bool,
 ) -> str:
     """Fetch history significant_states and convert them to json in the executor."""
-    states = history.get_significant_states(
-        hass,
-        start_time,
-        end_time,
-        entity_ids,
-        filters,
-        include_start_time_state,
-        significant_changes_only,
-        minimal_response,
-        no_attributes,
-        True,
-    )
-
-    if not use_include_order or not filters:
-        return JSON_DUMP(messages.result_message(msg_id, states))
-
     return JSON_DUMP(
         messages.result_message(
             msg_id,
-            {
-                order_entity: states.pop(order_entity)
-                for order_entity in filters.included_entities
-                if order_entity in states
-            }
-            | states,
+            history.get_significant_states(
+                hass,
+                start_time,
+                end_time,
+                entity_ids,
+                filters,
+                include_start_time_state,
+                significant_changes_only,
+                minimal_response,
+                no_attributes,
+                True,
+            ),
         )
     )
 
@@ -166,6 +150,7 @@ async def ws_get_history_during_period(
 
     significant_changes_only = msg["significant_changes_only"]
     minimal_response = msg["minimal_response"]
+    history_config: HistoryConfig = hass.data[DOMAIN]
 
     connection.send_message(
         await get_instance(hass).async_add_executor_job(
@@ -175,8 +160,7 @@ async def ws_get_history_during_period(
             start_time,
             end_time,
             entity_ids,
-            hass.data[HISTORY_FILTERS],
-            hass.data[HISTORY_USE_INCLUDE_ORDER],
+            history_config.sqlalchemy_filter,
             include_start_time_state,
             significant_changes_only,
             minimal_response,
@@ -413,9 +397,11 @@ async def ws_stream(
     utc_now = dt_util.utcnow()
     filters: Filters | None = None
     entities_filter: EntityFilter | None = None
+
     if not entity_ids:
-        filters = hass.data[HISTORY_FILTERS]
-        entities_filter = hass.data[HISTORY_ENTITIES_FILTER]
+        history_config: HistoryConfig = hass.data[DOMAIN]
+        filters = history_config.sqlalchemy_filter
+        entities_filter = history_config.entity_filter
 
     if start_time := dt_util.parse_datetime(start_time_str):
         start_time = dt_util.as_utc(start_time)

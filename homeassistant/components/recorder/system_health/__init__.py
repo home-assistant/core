@@ -49,8 +49,8 @@ def _async_get_db_engine_info(instance: Recorder) -> dict[str, Any]:
     db_engine_info: dict[str, Any] = {}
     if dialect_name := instance.dialect_name:
         db_engine_info["database_engine"] = dialect_name.value
-    if engine_version := instance.engine_version:
-        db_engine_info["database_version"] = str(engine_version)
+    if database_engine := instance.database_engine:
+        db_engine_info["database_version"] = str(database_engine.version)
     return db_engine_info
 
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import (
@@ -123,7 +123,7 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
 
 
 class SlaveSensor(
-    CoordinatorEntity[DataUpdateCoordinator[Optional[list[int]]]],
+    CoordinatorEntity[DataUpdateCoordinator[list[int] | None]],
     RestoreEntity,
     BinarySensorEntity,
 ):

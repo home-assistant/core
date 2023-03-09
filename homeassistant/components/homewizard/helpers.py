@@ -2,10 +2,9 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
-from typing import Any, TypeVar
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from homewizard_energy.errors import DisabledError, RequestError
-from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.exceptions import HomeAssistantError
 

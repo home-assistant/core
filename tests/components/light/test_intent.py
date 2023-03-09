@@ -2,12 +2,13 @@
 from homeassistant.components import light
 from homeassistant.components.light import ATTR_SUPPORTED_COLOR_MODES, ColorMode, intent
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.intent import async_handle
 
 from tests.common import async_mock_service
 
 
-async def test_intent_set_color(hass):
+async def test_intent_set_color(hass: HomeAssistant) -> None:
     """Test the set color intent."""
     hass.states.async_set(
         "light.hello_2", "off", {ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS]}
@@ -16,15 +17,13 @@ async def test_intent_set_color(hass):
     calls = async_mock_service(hass, light.DOMAIN, light.SERVICE_TURN_ON)
     await intent.async_setup_intents(hass)
 
-    result = await async_handle(
+    await async_handle(
         hass,
         "test",
         intent.INTENT_SET,
         {"name": {"value": "Hello 2"}, "color": {"value": "blue"}},
     )
     await hass.async_block_till_done()
-
-    assert result.speech["plain"]["speech"] == "Changed hello 2 to the color blue"
 
     assert len(calls) == 1
     call = calls[0]
@@ -34,7 +33,7 @@ async def test_intent_set_color(hass):
     assert call.data.get(light.ATTR_RGB_COLOR) == (0, 0, 255)
 
 
-async def test_intent_set_color_tests_feature(hass):
+async def test_intent_set_color_tests_feature(hass: HomeAssistant) -> None:
     """Test the set color intent."""
     hass.states.async_set("light.hello", "off")
     calls = async_mock_service(hass, light.DOMAIN, light.SERVICE_TURN_ON)
@@ -53,7 +52,7 @@ async def test_intent_set_color_tests_feature(hass):
     assert len(calls) == 0
 
 
-async def test_intent_set_color_and_brightness(hass):
+async def test_intent_set_color_and_brightness(hass: HomeAssistant) -> None:
     """Test the set color intent."""
     hass.states.async_set(
         "light.hello_2", "off", {ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS]}
@@ -62,7 +61,7 @@ async def test_intent_set_color_and_brightness(hass):
     calls = async_mock_service(hass, light.DOMAIN, light.SERVICE_TURN_ON)
     await intent.async_setup_intents(hass)
 
-    result = await async_handle(
+    await async_handle(
         hass,
         "test",
         intent.INTENT_SET,
@@ -73,11 +72,6 @@ async def test_intent_set_color_and_brightness(hass):
         },
     )
     await hass.async_block_till_done()
-
-    assert (
-        result.speech["plain"]["speech"]
-        == "Changed hello 2 to the color blue and 20% brightness"
-    )
 
     assert len(calls) == 1
     call = calls[0]

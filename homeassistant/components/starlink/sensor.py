@@ -12,9 +12,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEGREE, UnitOfDataRate, UnitOfTime
+from homeassistant.const import DEGREE, EntityCategory, UnitOfDataRate, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import now
@@ -76,6 +75,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DEGREE,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: round(data.status["direction_azimuth"]),
     ),
     StarlinkSensorEntityDescription(
@@ -85,6 +85,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DEGREE,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: round(data.status["direction_elevation"]),
     ),
     StarlinkSensorEntityDescription(
@@ -92,6 +93,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         name="Uplink throughput",
         icon="mdi:upload",
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.BITS_PER_SECOND,
         value_fn=lambda data: round(data.status["uplink_throughput_bps"]),
     ),
@@ -100,6 +102,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         name="Downlink throughput",
         icon="mdi:download",
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.BITS_PER_SECOND,
         value_fn=lambda data: round(data.status["downlink_throughput_bps"]),
     ),

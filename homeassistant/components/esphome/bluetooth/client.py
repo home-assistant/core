@@ -43,6 +43,7 @@ CCCD_NOTIFY_BYTES = b"\x01\x00"
 CCCD_INDICATE_BYTES = b"\x02\x00"
 
 MIN_BLUETOOTH_PROXY_VERSION_HAS_CACHE = 3
+MIN_BLUETOOTH_PROXY_HAS_PAIRING = 4
 
 DEFAULT_MAX_WRITE_WITHOUT_RESPONSE = DEFAULT_MTU - GATT_HEADER_SIZE
 _LOGGER = logging.getLogger(__name__)
@@ -61,22 +62,23 @@ def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
     """Define a wrapper throw BleakError if not connected."""
 
     async def _async_wrap_bluetooth_connected_operation(
-        self: "ESPHomeClient", *args: Any, **kwargs: Any
+        self: ESPHomeClient, *args: Any, **kwargs: Any
     ) -> Any:
         disconnected_event = (
             self._disconnected_event  # pylint: disable=protected-access
         )
         if not disconnected_event:
             raise BleakError("Not connected")
-        task = asyncio.create_task(func(self, *args, **kwargs))
-        done, _ = await asyncio.wait(
-            (task, disconnected_event.wait()),
+        action_task = asyncio.create_task(func(self, *args, **kwargs))
+        disconnect_task = asyncio.create_task(disconnected_event.wait())
+        await asyncio.wait(
+            (action_task, disconnect_task),
             return_when=asyncio.FIRST_COMPLETED,
         )
-        if disconnected_event.is_set():
-            task.cancel()
+        if disconnect_task.done():
+            action_task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
-                await task
+                await action_task
 
             raise BleakError(
                 f"{self._source_name}: "  # pylint: disable=protected-access
@@ -84,7 +86,7 @@ def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
                 f" {self._ble_device.address}: "  # pylint: disable=protected-access
                 "Disconnected during operation"
             )
-        return next(iter(done)).result()
+        return action_task.result()
 
     return cast(_WrapFuncType, _async_wrap_bluetooth_connected_operation)
 
@@ -93,7 +95,7 @@ def api_error_as_bleak_error(func: _WrapFuncType) -> _WrapFuncType:
     """Define a wrapper throw esphome api errors as BleakErrors."""
 
     async def _async_wrap_bluetooth_operation(
-        self: "ESPHomeClient", *args: Any, **kwargs: Any
+        self: ESPHomeClient, *args: Any, **kwargs: Any
     ) -> Any:
         try:
             return await func(self, *args, **kwargs)
@@ -233,6 +235,7 @@ class ESPHomeClient(BaseBleakClient):
         Keyword Args:
             timeout (float): Timeout for required
                 ``BleakScanner.find_device_by_address`` call. Defaults to 10.0.
+
         Returns:
             Boolean representing connection status.
         """
@@ -384,13 +387,33 @@ class ESPHomeClient(BaseBleakClient):
     @api_error_as_bleak_error
     async def pair(self, *args: Any, **kwargs: Any) -> bool:
         """Attempt to pair."""
-        raise NotImplementedError("Pairing is not available in ESPHome.")
+        if self._connection_version < MIN_BLUETOOTH_PROXY_HAS_PAIRING:
+            raise NotImplementedError(
+                "Pairing is not available in ESPHome with version {self._connection_version}."
+            )
+        response = await self._client.bluetooth_device_pair(self._address_as_int)
+        if response.paired:
+            return True
+        _LOGGER.error(
+            "Pairing with %s failed due to error: %s", self.address, response.error
+        )
+        return False
 
     @verify_connected
     @api_error_as_bleak_error
     async def unpair(self) -> bool:
         """Attempt to unpair."""
-        raise NotImplementedError("Pairing is not available in ESPHome.")
+        if self._connection_version < MIN_BLUETOOTH_PROXY_HAS_PAIRING:
+            raise NotImplementedError(
+                "Unpairing is not available in ESPHome with version {self._connection_version}."
+            )
+        response = await self._client.bluetooth_device_unpair(self._address_as_int)
+        if response.success:
+            return True
+        _LOGGER.error(
+            "Unpairing with %s failed due to error: %s", self.address, response.error
+        )
+        return False
 
     @api_error_as_bleak_error
     async def get_services(
@@ -503,6 +526,8 @@ class ESPHomeClient(BaseBleakClient):
                 The characteristic to read from, specified by either integer
                 handle, UUID or directly by the BleakGATTCharacteristic
                 object representing it.
+            **kwargs: Unused
+
         Returns:
             (bytearray) The read data.
         """
@@ -518,6 +543,8 @@ class ESPHomeClient(BaseBleakClient):
 
         Args:
             handle (int): The handle of the descriptor to read from.
+            **kwargs: Unused
+
         Returns:
             (bytearray) The read data.
         """
@@ -582,6 +609,7 @@ class ESPHomeClient(BaseBleakClient):
             def callback(sender: int, data: bytearray):
                 print(f"{sender}: {data}")
             client.start_notify(char_uuid, callback)
+
         Args:
             characteristic (BleakGATTCharacteristic):
                 The characteristic to activate notifications/indications on a

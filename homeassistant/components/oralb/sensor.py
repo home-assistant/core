@@ -1,8 +1,6 @@
 """Support for OralB sensors."""
 from __future__ import annotations
 
-from typing import Optional, Union
-
 from oralb_ble import OralBSensor, SensorUpdate
 
 from homeassistant import config_entries
@@ -21,10 +19,10 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
@@ -117,9 +115,7 @@ async def async_setup_entry(
 
 
 class OralBBluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[
-        PassiveBluetoothDataProcessor[Optional[Union[str, int]]]
-    ],
+    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[str | int | None]],
     SensorEntity,
 ):
     """Representation of a OralB sensor."""

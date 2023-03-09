@@ -3,14 +3,14 @@ from functools import partial
 
 import pytest
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 
 
-async def test_simple_function(hass):
+async def test_simple_function(hass: HomeAssistant) -> None:
     """Test simple function (executor)."""
     calls = []
 
@@ -30,7 +30,7 @@ async def test_simple_function(hass):
     assert calls == [3, "bla"]
 
 
-async def test_simple_function_unsub(hass):
+async def test_simple_function_unsub(hass: HomeAssistant) -> None:
     """Test simple function (executor) and unsub."""
     calls1 = []
     calls2 = []
@@ -72,7 +72,7 @@ async def test_simple_function_unsub(hass):
     assert calls2 == [4]
 
 
-async def test_simple_callback(hass):
+async def test_simple_callback(hass: HomeAssistant) -> None:
     """Test simple callback (async)."""
     calls = []
 
@@ -93,7 +93,7 @@ async def test_simple_callback(hass):
     assert calls == [3, "bla"]
 
 
-async def test_simple_coro(hass):
+async def test_simple_coro(hass: HomeAssistant) -> None:
     """Test simple coro (async)."""
     calls = []
 
@@ -113,7 +113,7 @@ async def test_simple_coro(hass):
     assert calls == [3, "bla"]
 
 
-async def test_simple_function_multiargs(hass):
+async def test_simple_function_multiargs(hass: HomeAssistant) -> None:
     """Test simple function (executor)."""
     calls = []
 
@@ -131,7 +131,9 @@ async def test_simple_function_multiargs(hass):
 
 
 @pytest.mark.no_fail_on_log_exception
-async def test_callback_exception_gets_logged(hass, caplog):
+async def test_callback_exception_gets_logged(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test exception raised by signal handler."""
 
     @callback
