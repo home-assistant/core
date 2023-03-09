@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -19,12 +20,14 @@ from .const import (
     ATTR_VERSION_LATEST,
     DATA_KEY_ADDONS,
     DATA_KEY_CORE,
+    DATA_KEY_HOST,
     DATA_KEY_OS,
     DATA_KEY_SUPERVISOR,
 )
 from .entity import (
     HassioAddonEntity,
     HassioCoreEntity,
+    HassioHostEntity,
     HassioOSEntity,
     HassioSupervisorEntity,
 )
@@ -66,6 +69,45 @@ CORE_ENTITY_DESCRIPTIONS = STATS_ENTITY_DESCRIPTIONS
 OS_ENTITY_DESCRIPTIONS = COMMON_ENTITY_DESCRIPTIONS
 SUPERVISOR_ENTITY_DESCRIPTIONS = STATS_ENTITY_DESCRIPTIONS
 
+HOST_ENTITY_DESCRIPTIONS = (
+    SensorEntityDescription(
+        entity_registry_enabled_default=False,
+        key="agent_version",
+        name="Agent Version",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        entity_registry_enabled_default=False,
+        key="apparmor_version",
+        name="Apparmor Version",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        entity_registry_enabled_default=False,
+        key="disk_total",
+        name="Disk Total",
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        entity_registry_enabled_default=False,
+        key="disk_used",
+        name="Disk Used",
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        entity_registry_enabled_default=False,
+        key="disk_free",
+        name="Disk Free",
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -76,7 +118,7 @@ async def async_setup_entry(
     coordinator = hass.data[ADDONS_COORDINATOR]
 
     entities: list[
-        HassioOSSensor | HassioAddonSensor | CoreSensor | SupervisorSensor
+        HassioOSSensor | HassioAddonSensor | CoreSensor | SupervisorSensor | HostSensor
     ] = []
 
     for addon in coordinator.data[DATA_KEY_ADDONS].values():
@@ -100,6 +142,14 @@ async def async_setup_entry(
     for entity_description in SUPERVISOR_ENTITY_DESCRIPTIONS:
         entities.append(
             SupervisorSensor(
+                coordinator=coordinator,
+                entity_description=entity_description,
+            )
+        )
+
+    for entity_description in HOST_ENTITY_DESCRIPTIONS:
+        entities.append(
+            HostSensor(
                 coordinator=coordinator,
                 entity_description=entity_description,
             )
@@ -153,3 +203,12 @@ class SupervisorSensor(HassioSupervisorEntity, SensorEntity):
     def native_value(self) -> str:
         """Return native value of entity."""
         return self.coordinator.data[DATA_KEY_SUPERVISOR][self.entity_description.key]
+
+
+class HostSensor(HassioHostEntity, SensorEntity):
+    """Sensor to track a host attribute."""
+
+    @property
+    def native_value(self) -> str:
+        """Return native value of entity."""
+        return self.coordinator.data[DATA_KEY_HOST][self.entity_description.key]

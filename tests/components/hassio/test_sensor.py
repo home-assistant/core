@@ -44,12 +44,10 @@ def mock_all(aioclient_mock, request):
         json={
             "result": "ok",
             "data": {
-                "result": "ok",
-                "data": {
-                    "chassis": "vm",
-                    "operating_system": "Debian GNU/Linux 10 (buster)",
-                    "kernel": "4.19.0-6-amd64",
-                },
+                "agent_version": "1.0.0",
+                "chassis": "vm",
+                "operating_system": "Debian GNU/Linux 10 (buster)",
+                "kernel": "4.19.0-6-amd64",
             },
         },
     )
@@ -179,6 +177,7 @@ def mock_all(aioclient_mock, request):
     [
         ("sensor.home_assistant_operating_system_version", "1.0.0"),
         ("sensor.home_assistant_operating_system_newest_version", "1.0.0"),
+        ("sensor.home_assistant_host_agent_version", "1.0.0"),
         ("sensor.test_version", "2.0.0"),
         ("sensor.test_newest_version", "2.0.1"),
         ("sensor.test2_version", "3.1.0"),
