@@ -73,19 +73,19 @@ HOST_ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
         entity_registry_enabled_default=False,
         key="agent_version",
-        name="Agent Version",
+        name="Agent version",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         entity_registry_enabled_default=False,
         key="apparmor_version",
-        name="Apparmor Version",
+        name="Apparmor version",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         entity_registry_enabled_default=False,
         key="disk_total",
-        name="Disk Total",
+        name="Disk total",
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -93,7 +93,7 @@ HOST_ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
         entity_registry_enabled_default=False,
         key="disk_used",
-        name="Disk Used",
+        name="Disk used",
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -101,7 +101,7 @@ HOST_ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
         entity_registry_enabled_default=False,
         key="disk_free",
-        name="Disk Free",
+        name="Disk free",
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
