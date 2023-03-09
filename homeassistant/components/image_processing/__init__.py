@@ -1,11 +1,16 @@
 """Provides functionality to interact with image processing services."""
+from __future__ import annotations
+
 import asyncio
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import final
+from typing import Any, Final, TypedDict, final
 
 import voluptuous as vol
 
+from homeassistant.backports.enum import StrEnum
+from homeassistant.components.camera import Image
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
@@ -17,34 +22,40 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.async_ import run_callback_threadsafe
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "image_processing"
 SCAN_INTERVAL = timedelta(seconds=10)
 
-DEVICE_CLASSES = [
-    "alpr",  # Automatic license plate recognition
-    "face",  # Face
-    "ocr",  # OCR
-]
+
+class ImageProcessingDeviceClass(StrEnum):
+    """Device class for image processing entities."""
+
+    # Automatic license plate recognition
+    ALPR = "alpr"
+
+    # Face
+    FACE = "face"
+
+    # OCR
+    OCR = "ocr"
+
 
 SERVICE_SCAN = "scan"
 
 EVENT_DETECT_FACE = "image_processing.detect_face"
 
 ATTR_AGE = "age"
-ATTR_CONFIDENCE = "confidence"
+ATTR_CONFIDENCE: Final = "confidence"
 ATTR_FACES = "faces"
 ATTR_GENDER = "gender"
 ATTR_GLASSES = "glasses"
-ATTR_MOTION = "motion"
+ATTR_MOTION: Final = "motion"
 ATTR_TOTAL_FACES = "total_faces"
 
 CONF_CONFIDENCE = "confidence"
@@ -70,9 +81,23 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE.extend(PLATFORM_SCHEMA.schema)
 
 
+class FaceInformation(TypedDict, total=False):
+    """Face information."""
+
+    confidence: float
+    name: str
+    age: float
+    gender: str
+    motion: str
+    glasses: str
+    entity_id: str
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the image processing."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
+    component = EntityComponent[ImageProcessingEntity](
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL
+    )
 
     await component.async_setup(config)
 
@@ -95,39 +120,68 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+@dataclass
+class ImageProcessingEntityDescription(EntityDescription):
+    """A class that describes sensor entities."""
+
+    device_class: ImageProcessingDeviceClass | None = None
+    camera_entity: str | None = None
+    confidence: float | None = None
+
+
 class ImageProcessingEntity(Entity):
     """Base entity class for image processing."""
 
+    entity_description: ImageProcessingEntityDescription
+    _attr_device_class: ImageProcessingDeviceClass | None
+    _attr_camera_entity: str | None
+    _attr_confidence: float | None
     timeout = DEFAULT_TIMEOUT
 
     @property
-    def camera_entity(self):
+    def camera_entity(self) -> str | None:
         """Return camera entity id from process pictures."""
+        if hasattr(self, "_attr_camera_entity"):
+            return self._attr_camera_entity
+        if hasattr(self, "entity_description"):
+            return self.entity_description.camera_entity
         return None
 
     @property
-    def confidence(self):
-        """Return minimum confidence for do some things."""
+    def confidence(self) -> float | None:
+        """Return minimum confidence to do some things."""
+        if hasattr(self, "_attr_confidence"):
+            return self._attr_confidence
+        if hasattr(self, "entity_description"):
+            return self.entity_description.confidence
         return None
 
-    def process_image(self, image):
+    @property
+    def device_class(self) -> ImageProcessingDeviceClass | None:
+        """Return the class of this entity."""
+        if hasattr(self, "_attr_device_class"):
+            return self._attr_device_class
+        if hasattr(self, "entity_description"):
+            return self.entity_description.device_class
+        return None
+
+    def process_image(self, image: bytes) -> None:
         """Process image."""
         raise NotImplementedError()
 
-    async def async_process_image(self, image):
+    async def async_process_image(self, image: bytes) -> None:
         """Process image."""
         return await self.hass.async_add_executor_job(self.process_image, image)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update image and process it.
 
         This method is a coroutine.
         """
         camera = self.hass.components.camera
-        image = None
 
         try:
-            image = await camera.async_get_image(
+            image: Image = await camera.async_get_image(
                 self.camera_entity, timeout=self.timeout
             )
 
@@ -142,15 +196,17 @@ class ImageProcessingEntity(Entity):
 class ImageProcessingFaceEntity(ImageProcessingEntity):
     """Base entity class for face image processing."""
 
-    def __init__(self):
+    _attr_device_class = ImageProcessingDeviceClass.FACE
+
+    def __init__(self) -> None:
         """Initialize base face identify/verify entity."""
-        self.faces = []
+        self.faces: list[FaceInformation] = []
         self.total_faces = 0
 
     @property
-    def state(self):
+    def state(self) -> str | int | None:
         """Return the state of the entity."""
-        confidence = 0
+        confidence: float = 0
         state = None
 
         # No confidence support
@@ -166,30 +222,25 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
                 confidence = f_co
                 for attr in (ATTR_NAME, ATTR_MOTION):
                     if attr in face:
-                        state = face[attr]
+                        state = face[attr]  # type: ignore[literal-required]
                         break
 
         return state
 
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return "face"
-
     @final
     @property
-    def state_attributes(self):
+    def state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         return {ATTR_FACES: self.faces, ATTR_TOTAL_FACES: self.total_faces}
 
-    def process_faces(self, faces, total):
+    def process_faces(self, faces: list[FaceInformation], total: int) -> None:
         """Send event with detected faces and store data."""
         run_callback_threadsafe(
             self.hass.loop, self.async_process_faces, faces, total
         ).result()
 
     @callback
-    def async_process_faces(self, faces, total):
+    def async_process_faces(self, faces: list[FaceInformation], total: int) -> None:
         """Send event with detected faces and store data.
 
         known are a dict in follow format:

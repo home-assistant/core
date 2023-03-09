@@ -6,7 +6,7 @@ from PyTado.interface import Tado
 from requests import RequestException
 import requests.exceptions
 
-from homeassistant.components.climate.const import PRESET_AWAY, PRESET_HOME
+from homeassistant.components.climate import PRESET_AWAY, PRESET_HOME
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
@@ -268,6 +268,7 @@ class TadoConnector:
             self.tado.setAway()
         elif presence == PRESET_HOME:
             self.tado.setHome()
+        self.update_zones()
 
     def set_zone_overlay(
         self,
@@ -282,7 +283,10 @@ class TadoConnector:
     ):
         """Set a zone overlay."""
         _LOGGER.debug(
-            "Set overlay for zone %s: overlay_mode=%s, temp=%s, duration=%s, type=%s, mode=%s fan_speed=%s swing=%s",
+            (
+                "Set overlay for zone %s: overlay_mode=%s, temp=%s, duration=%s,"
+                " type=%s, mode=%s fan_speed=%s swing=%s"
+            ),
             zone_id,
             overlay_mode,
             temperature,

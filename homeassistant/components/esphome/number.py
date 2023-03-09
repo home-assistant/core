@@ -5,10 +5,11 @@ import math
 
 from aioesphomeapi import NumberInfo, NumberMode as EsphomeNumberMode, NumberState
 
-from homeassistant.components.number import NumberEntity, NumberMode
+from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.enum import try_parse_enum
 
 from . import (
     EsphomeEntity,
@@ -44,12 +45,13 @@ NUMBER_MODES: EsphomeEnumMapper[EsphomeNumberMode, NumberMode] = EsphomeEnumMapp
 )
 
 
-# https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
-# pylint: disable=invalid-overridden-method
-
-
 class EsphomeNumber(EsphomeEntity[NumberInfo, NumberState], NumberEntity):
     """A number implementation for esphome."""
+
+    @property
+    def device_class(self) -> NumberDeviceClass | None:
+        """Return the class of this entity."""
+        return try_parse_enum(NumberDeviceClass, self._static_info.device_class)
 
     @property
     def native_min_value(self) -> float:
@@ -78,6 +80,7 @@ class EsphomeNumber(EsphomeEntity[NumberInfo, NumberState], NumberEntity):
             return NUMBER_MODES.from_esphome(self._static_info.mode)
         return NumberMode.AUTO
 
+    @property
     @esphome_state_property
     def native_value(self) -> float | None:
         """Return the state of the entity."""

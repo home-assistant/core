@@ -4,6 +4,8 @@
   "cname_flattening": true,
   "anonymized_ecs": true,
   "logs": true,
+  "logs_location": "ch",
+  "logs_retention": 720,
   "web3": true,
   "allow_affiliate": true,
   "block_disguised_trackers": true,

@@ -16,7 +16,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, CONF_OFFSET, STATE_UNKNOWN
+from homeassistant.const import CONF_NAME, CONF_OFFSET, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -427,16 +427,14 @@ def get_next_departure(
     if item["dest_arrival_time"] < item["origin_depart_time"]:
         dest_arrival += datetime.timedelta(days=1)
     dest_arrival_time = (
-        f"{dest_arrival.strftime(dt_util.DATE_STR_FORMAT)} "
-        f"{item['dest_arrival_time']}"
+        f"{dest_arrival.strftime(dt_util.DATE_STR_FORMAT)} {item['dest_arrival_time']}"
     )
 
     dest_depart = dest_arrival
     if item["dest_depart_time"] < item["dest_arrival_time"]:
         dest_depart += datetime.timedelta(days=1)
     dest_depart_time = (
-        f"{dest_depart.strftime(dt_util.DATE_STR_FORMAT)} "
-        f"{item['dest_depart_time']}"
+        f"{dest_depart.strftime(dt_util.DATE_STR_FORMAT)} {item['dest_depart_time']}"
     )
 
     depart_time = dt_util.parse_datetime(origin_depart_time)
@@ -638,15 +636,22 @@ class GTFSDepartureSensor(SensorEntity):
                     self._agency = self._pygtfs.agencies_by_id(self._route.agency_id)[0]
                 except IndexError:
                     _LOGGER.warning(
-                        "Agency ID '%s' was not found in agency table, "
-                        "you may want to update the routes database table "
-                        "to fix this missing reference",
+                        (
+                            "Agency ID '%s' was not found in agency table, "
+                            "you may want to update the routes database table "
+                            "to fix this missing reference"
+                        ),
                         self._route.agency_id,
                     )
                     self._agency = False
 
             # Assign attributes, icon and name
             self.update_attributes()
+
+            if self._agency:
+                self._attr_attribution = self._agency.agency_name
+            else:
+                self._attr_attribution = None
 
             if self._route:
                 self._icon = ICONS.get(self._route.route_type, ICON)
@@ -701,11 +706,6 @@ class GTFSDepartureSensor(SensorEntity):
             )
         elif ATTR_INFO in self._attributes:
             del self._attributes[ATTR_INFO]
-
-        if self._agency:
-            self._attributes[ATTR_ATTRIBUTION] = self._agency.agency_name
-        elif ATTR_ATTRIBUTION in self._attributes:
-            del self._attributes[ATTR_ATTRIBUTION]
 
         # Add extra metadata
         key = "agency_id"
@@ -800,9 +800,7 @@ class GTFSDepartureSensor(SensorEntity):
     @staticmethod
     def dict_for_table(resource: Any) -> dict:
         """Return a dictionary for the SQLAlchemy resource given."""
-        return {
-            col: getattr(resource, col) for col in resource.__table__.columns.keys()
-        }
+        return {col: getattr(resource, col) for col in resource.__table__.columns}
 
     def append_keys(self, resource: dict, prefix: str | None = None) -> None:
         """Properly format key val pairs to append to attributes."""

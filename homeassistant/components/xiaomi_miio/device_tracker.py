@@ -26,7 +26,9 @@ PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
+def get_scanner(
+    hass: HomeAssistant, config: ConfigType
+) -> XiaomiMiioDeviceScanner | None:
     """Return a Xiaomi MiIO device scanner."""
     scanner = None
     host = config[DOMAIN][CONF_HOST]
@@ -51,7 +53,7 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None
 
 
 class XiaomiMiioDeviceScanner(DeviceScanner):
-    """This class queries a Xiaomi Mi WiFi Repeater."""
+    """Class which queries a Xiaomi Mi WiFi Repeater."""
 
     def __init__(self, device):
         """Initialize the scanner."""

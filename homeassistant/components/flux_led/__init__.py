@@ -58,7 +58,12 @@ PLATFORMS_BY_TYPE: Final = {
         Platform.SENSOR,
         Platform.SWITCH,
     ],
-    DeviceType.Switch: [Platform.BUTTON, Platform.SELECT, Platform.SWITCH],
+    DeviceType.Switch: [
+        Platform.BUTTON,
+        Platform.SELECT,
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
 }
 DISCOVERY_INTERVAL: Final = timedelta(minutes=15)
 REQUEST_REFRESH_DELAY: Final = 1.5
@@ -82,14 +87,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, STARTUP_SCAN_TIMEOUT
     )
 
+    @callback
+    def _async_start_background_discovery(*_: Any) -> None:
+        """Run discovery in the background."""
+        hass.async_create_background_task(_async_discovery(), "flux_led-discovery")
+
     async def _async_discovery(*_: Any) -> None:
         async_trigger_discovery(
             hass, await async_discover_devices(hass, DISCOVER_SCAN_TIMEOUT)
         )
 
     async_trigger_discovery(hass, domain_data[FLUX_LED_DISCOVERY])
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_discovery)
-    async_track_time_interval(hass, _async_discovery, DISCOVERY_INTERVAL)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STARTED, _async_start_background_discovery
+    )
+    async_track_time_interval(
+        hass, _async_start_background_discovery, DISCOVERY_INTERVAL
+    )
     return True
 
 
@@ -106,7 +120,7 @@ async def _async_migrate_unique_ids(hass: HomeAssistant, entry: ConfigEntry) -> 
         new_unique_id = None
         if entity_unique_id.startswith(entry_id):
             # Old format {entry_id}....., New format {unique_id}....
-            new_unique_id = f"{unique_id}{entity_unique_id[len(entry_id):]}"
+            new_unique_id = f"{unique_id}{entity_unique_id.removeprefix(entry_id)}"
         elif (
             ":" in entity_mac
             and entity_mac != unique_id
@@ -172,7 +186,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if not mac_matches_by_one(mac, entry.unique_id):
             # The device is offline and another flux_led device is now using the ip address
             raise ConfigEntryNotReady(
-                f"Unexpected device found at {host}; Expected {entry.unique_id}, found {mac}"
+                f"Unexpected device found at {host}; Expected {entry.unique_id}, found"
+                f" {mac}"
             )
 
     if not discovery_cached:

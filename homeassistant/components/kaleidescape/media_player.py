@@ -9,8 +9,8 @@ from kaleidescape import const as kaleidescape_const
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
-from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN as KALEIDESCAPE_DOMAIN
@@ -86,15 +86,15 @@ class KaleidescapeMediaPlayer(KaleidescapeEntity, MediaPlayerEntity):
         await self._device.previous()
 
     @property
-    def state(self) -> str:
+    def state(self) -> MediaPlayerState:
         """State of device."""
         if self._device.power.state == kaleidescape_const.DEVICE_POWER_STATE_STANDBY:
-            return STATE_OFF
+            return MediaPlayerState.OFF
         if self._device.movie.play_status in KALEIDESCAPE_PLAYING_STATES:
-            return STATE_PLAYING
+            return MediaPlayerState.PLAYING
         if self._device.movie.play_status in KALEIDESCAPE_PAUSED_STATES:
-            return STATE_PAUSED
-        return STATE_IDLE
+            return MediaPlayerState.PAUSED
+        return MediaPlayerState.IDLE
 
     @property
     def available(self) -> bool:

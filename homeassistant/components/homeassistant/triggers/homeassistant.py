@@ -7,8 +7,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-# mypy: allow-untyped-defs
-
 EVENT_START = "start"
 EVENT_SHUTDOWN = "shutdown"
 
@@ -29,7 +27,7 @@ async def async_attach_trigger(
     """Listen for events based on configuration."""
     trigger_data = trigger_info["trigger_data"]
     event = config.get(CONF_EVENT)
-    job = HassJob(action)
+    job = HassJob(action, f"homeassistant trigger {trigger_info}")
 
     if event == EVENT_SHUTDOWN:
 

@@ -1,8 +1,7 @@
 {
   "domain": "frontend",
   "name": "Home Assistant Frontend",
-  "documentation": "https://www.home-assistant.io/integrations/frontend",
-  "requirements": ["home-assistant-frontend==20220816.0"],
+  "codeowners": ["@home-assistant/frontend"],
   "dependencies": [
     "api",
     "auth",
@@ -18,6 +17,8 @@
     "system_log",
     "websocket_api"
   ],
-  "codeowners": ["@home-assistant/frontend"],
-  "quality_scale": "internal"
+  "documentation": "https://www.home-assistant.io/integrations/frontend",
+  "integration_type": "system",
+  "quality_scale": "internal",
+  "requirements": ["home-assistant-frontend==20230309.0"]
 }

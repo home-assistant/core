@@ -20,7 +20,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
-    entity_registry,
+    entity_registry as er,
 )
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
@@ -31,10 +31,6 @@ from .const import (
     DOMAIN,
     EVENT_TYPE_THERM_MODE,
     INDOOR_CAMERA_TRIGGERS,
-    MODEL_NACAMERA,
-    MODEL_NATHERM1,
-    MODEL_NOC,
-    MODEL_NRV,
     NETATMO_EVENT,
     OUTDOOR_CAMERA_TRIGGERS,
 )
@@ -42,10 +38,10 @@ from .const import (
 CONF_SUBTYPE = "subtype"
 
 DEVICES = {
-    MODEL_NACAMERA: INDOOR_CAMERA_TRIGGERS,
-    MODEL_NOC: OUTDOOR_CAMERA_TRIGGERS,
-    MODEL_NATHERM1: CLIMATE_TRIGGERS,
-    MODEL_NRV: CLIMATE_TRIGGERS,
+    "Smart Indoor Camera": INDOOR_CAMERA_TRIGGERS,
+    "Smart Outdoor Camera": OUTDOOR_CAMERA_TRIGGERS,
+    "Smart Thermostat": CLIMATE_TRIGGERS,
+    "Smart Valve": CLIMATE_TRIGGERS,
 }
 
 SUBTYPES = {
@@ -76,7 +72,7 @@ async def async_validate_trigger_config(
     device_registry = dr.async_get(hass)
     device = device_registry.async_get(config[CONF_DEVICE_ID])
 
-    if not device:
+    if not device or device.model is None:
         raise InvalidDeviceAutomationConfig(
             f"Trigger invalid, device with ID {config[CONF_DEVICE_ID]} not found"
         )
@@ -97,11 +93,11 @@ async def async_get_triggers(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device triggers for Netatmo devices."""
-    registry = entity_registry.async_get(hass)
+    registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
     triggers = []
 
-    for entry in entity_registry.async_entries_for_device(registry, device_id):
+    for entry in er.async_entries_for_device(registry, device_id):
         if (
             device := device_registry.async_get(device_id)
         ) is None or device.model is None:

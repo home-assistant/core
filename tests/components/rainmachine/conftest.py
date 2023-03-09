@@ -51,10 +51,8 @@ def controller_fixture(
     """Define a regenmaschine controller."""
     controller = AsyncMock()
     controller.api_version = "4.5.0"
-    controller.hardware_version = 3
-    # The api returns a controller with all numbers as numeric
-    # instead of a string
-    controller.name = 12345
+    controller.hardware_version = "3"
+    controller.name = "12345"
     controller.mac = controller_mac
     controller.software_version = "4.0.925"
 
@@ -78,19 +76,19 @@ def controller_mac_fixture():
     return "aa:bb:cc:dd:ee:ff"
 
 
-@pytest.fixture(name="data_api_versions", scope="session")
+@pytest.fixture(name="data_api_versions", scope="package")
 def data_api_versions_fixture():
     """Define API version data."""
     return json.loads(load_fixture("api_versions_data.json", "rainmachine"))
 
 
-@pytest.fixture(name="data_diagnostics_current", scope="session")
+@pytest.fixture(name="data_diagnostics_current", scope="package")
 def data_diagnostics_current_fixture():
     """Define current diagnostics data."""
     return json.loads(load_fixture("diagnostics_current_data.json", "rainmachine"))
 
 
-@pytest.fixture(name="data_machine_firmare_update_status", scope="session")
+@pytest.fixture(name="data_machine_firmare_update_status", scope="package")
 def data_machine_firmare_update_status_fixture():
     """Define machine firmware update status data."""
     return json.loads(
@@ -98,31 +96,31 @@ def data_machine_firmare_update_status_fixture():
     )
 
 
-@pytest.fixture(name="data_programs", scope="session")
+@pytest.fixture(name="data_programs", scope="package")
 def data_programs_fixture():
     """Define program data."""
     return json.loads(load_fixture("programs_data.json", "rainmachine"))
 
 
-@pytest.fixture(name="data_provision_settings", scope="session")
+@pytest.fixture(name="data_provision_settings", scope="package")
 def data_provision_settings_fixture():
     """Define provisioning settings data."""
     return json.loads(load_fixture("provision_settings_data.json", "rainmachine"))
 
 
-@pytest.fixture(name="data_restrictions_current", scope="session")
+@pytest.fixture(name="data_restrictions_current", scope="package")
 def data_restrictions_current_fixture():
     """Define current restrictions settings data."""
     return json.loads(load_fixture("restrictions_current_data.json", "rainmachine"))
 
 
-@pytest.fixture(name="data_restrictions_universal", scope="session")
+@pytest.fixture(name="data_restrictions_universal", scope="package")
 def data_restrictions_universal_fixture():
     """Define universal restrictions settings data."""
     return json.loads(load_fixture("restrictions_universal_data.json", "rainmachine"))
 
 
-@pytest.fixture(name="data_zones", scope="session")
+@pytest.fixture(name="data_zones", scope="package")
 def data_zones_fixture():
     """Define zone data."""
     return json.loads(load_fixture("zones_data.json", "rainmachine"))

@@ -3,10 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from homeassistant.components.logbook.const import (
-    LOGBOOK_ENTRY_MESSAGE,
-    LOGBOOK_ENTRY_NAME,
-)
+from homeassistant.components.logbook import LOGBOOK_ENTRY_MESSAGE, LOGBOOK_ENTRY_NAME
 from homeassistant.const import CONF_DEVICE_ID, CONF_EVENT, CONF_ID, CONF_TYPE
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -38,6 +35,7 @@ TRIGGER_TYPE = {
     "remote_double_button_long_press": "both {subtype} released after long press",
     "remote_double_button_short_press": "both {subtype} released",
     "initial_press": "{subtype} pressed initially",
+    "long_press": "{subtype} long press",
     "repeat": "{subtype} held down",
     "short_release": "{subtype} released after short press",
     "long_release": "{subtype} released after long press",

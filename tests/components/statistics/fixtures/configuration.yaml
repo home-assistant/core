@@ -3,3 +3,4 @@ sensor:
     entity_id: sensor.cpu
     name: cputest
     state_characteristic: mean
+    sampling_size: 20

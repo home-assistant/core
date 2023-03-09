@@ -4,7 +4,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import Final, TypedDict
 
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     PRESET_AWAY,
     PRESET_COMFORT,
     PRESET_ECO,
@@ -30,18 +30,24 @@ CONF_KNX_INDIVIDUAL_ADDRESS: Final = "individual_address"
 CONF_KNX_CONNECTION_TYPE: Final = "connection_type"
 CONF_KNX_AUTOMATIC: Final = "automatic"
 CONF_KNX_ROUTING: Final = "routing"
+CONF_KNX_ROUTING_BACKBONE_KEY: Final = "backbone_key"
+CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE: Final = "sync_latency_tolerance"
+CONF_KNX_ROUTING_SECURE: Final = "routing_secure"
 CONF_KNX_TUNNELING: Final = "tunneling"
 CONF_KNX_TUNNELING_TCP: Final = "tunneling_tcp"
 CONF_KNX_TUNNELING_TCP_SECURE: Final = "tunneling_tcp_secure"
 CONF_KNX_LOCAL_IP: Final = "local_ip"
 CONF_KNX_MCAST_GRP: Final = "multicast_group"
 CONF_KNX_MCAST_PORT: Final = "multicast_port"
+CONF_KNX_TUNNEL_ENDPOINT_IA: Final = "tunnel_endpoint_ia"
 
 CONF_KNX_RATE_LIMIT: Final = "rate_limit"
 CONF_KNX_ROUTE_BACK: Final = "route_back"
 CONF_KNX_STATE_UPDATER: Final = "state_updater"
 CONF_KNX_DEFAULT_STATE_UPDATER: Final = True
-CONF_KNX_DEFAULT_RATE_LIMIT: Final = 20
+CONF_KNX_DEFAULT_RATE_LIMIT: Final = 0
+
+DEFAULT_ROUTING_IA: Final = "0.0.240"
 
 ##
 # Secure constants
@@ -84,12 +90,15 @@ class KNXConfigEntryData(TypedDict, total=False):
     rate_limit: int
     host: str
     port: int
+    tunnel_endpoint_ia: str | None
 
-    user_id: int
-    user_password: str
-    device_authentication: str
+    user_id: int | None
+    user_password: str | None
+    device_authentication: str | None
     knxkeys_filename: str
     knxkeys_password: str
+    backbone_key: str | None
+    sync_latency_tolerance: int | None
 
 
 class ColorTempModes(Enum):
@@ -112,6 +121,7 @@ SUPPORTED_PLATFORMS: Final = [
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.TEXT,
     Platform.WEATHER,
 ]
 

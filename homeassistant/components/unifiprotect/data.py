@@ -4,12 +4,13 @@ from __future__ import annotations
 from collections.abc import Callable, Generator, Iterable
 from datetime import timedelta
 import logging
-from typing import Any, Union
+from typing import Any, cast
 
 from pyunifiprotect import ProtectApiClient
 from pyunifiprotect.data import (
     NVR,
     Bootstrap,
+    Camera,
     Event,
     EventType,
     Liveview,
@@ -21,6 +22,7 @@ from pyunifiprotect.exceptions import ClientError, NotAuthorized
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -29,18 +31,15 @@ from .const import (
     CONF_MAX_MEDIA,
     DEFAULT_MAX_MEDIA,
     DEVICES_THAT_ADOPT,
+    DISPATCH_ADD,
     DISPATCH_ADOPT,
     DISPATCH_CHANNELS,
     DOMAIN,
 )
-from .utils import (
-    async_dispatch_id as _ufpd,
-    async_get_devices,
-    async_get_devices_by_type,
-)
+from .utils import async_dispatch_id as _ufpd, async_get_devices_by_type
 
 _LOGGER = logging.getLogger(__name__)
-ProtectDeviceType = Union[ProtectAdoptableDeviceModel, NVR]
+ProtectDeviceType = ProtectAdoptableDeviceModel | NVR
 
 
 @callback
@@ -90,13 +89,17 @@ class ProtectData:
         return self._entry.options.get(CONF_MAX_MEDIA, DEFAULT_MAX_MEDIA)
 
     def get_by_types(
-        self, device_types: Iterable[ModelType]
+        self, device_types: Iterable[ModelType], ignore_unadopted: bool = True
     ) -> Generator[ProtectAdoptableDeviceModel, None, None]:
         """Get all devices matching types."""
         for device_type in device_types:
-            yield from async_get_devices_by_type(
+            devices = async_get_devices_by_type(
                 self.api.bootstrap, device_type
             ).values()
+            for device in devices:
+                if ignore_unadopted and not device.is_adopted_by_us:
+                    continue
+                yield device
 
     async def async_setup(self) -> None:
         """Subscribe and do the refresh."""
@@ -146,8 +149,7 @@ class ProtectData:
 
     @callback
     def async_add_pending_camera_id(self, camera_id: str) -> None:
-        """
-        Add pending camera.
+        """Add pending camera.
 
         A "pending camera" is one that has been adopted by not had its camera channels
         initialized yet. Will cause Websocket code to check for channels to be
@@ -157,35 +159,68 @@ class ProtectData:
         self._pending_camera_ids.add(camera_id)
 
     @callback
-    def _async_process_ws_message(self, message: WSSubscriptionMessage) -> None:
-        # removed packets are not processed yet
-        if message.new_obj is None or not getattr(
-            message.new_obj, "is_adopted_by_us", True
+    def _async_add_device(self, device: ProtectAdoptableDeviceModel) -> None:
+        if device.is_adopted_by_us:
+            _LOGGER.debug("Device adopted: %s", device.id)
+            async_dispatcher_send(
+                self._hass, _ufpd(self._entry, DISPATCH_ADOPT), device
+            )
+        else:
+            _LOGGER.debug("New device detected: %s", device.id)
+            async_dispatcher_send(self._hass, _ufpd(self._entry, DISPATCH_ADD), device)
+
+    @callback
+    def _async_remove_device(self, device: ProtectAdoptableDeviceModel) -> None:
+        registry = dr.async_get(self._hass)
+        device_entry = registry.async_get_device(
+            identifiers=set(), connections={(dr.CONNECTION_NETWORK_MAC, device.mac)}
+        )
+        if device_entry:
+            _LOGGER.debug("Device removed: %s", device.id)
+            registry.async_update_device(
+                device_entry.id, remove_config_entry_id=self._entry.entry_id
+            )
+
+    @callback
+    def _async_update_device(
+        self, device: ProtectAdoptableDeviceModel | NVR, changed_data: dict[str, Any]
+    ) -> None:
+        self._async_signal_device_update(device)
+        if (
+            device.model == ModelType.CAMERA
+            and device.id in self._pending_camera_ids
+            and "channels" in changed_data
         ):
+            self._pending_camera_ids.remove(device.id)
+            async_dispatcher_send(
+                self._hass, _ufpd(self._entry, DISPATCH_CHANNELS), device
+            )
+
+        # trigger update for all Cameras with LCD screens when NVR Doorbell settings updates
+        if "doorbell_settings" in changed_data:
+            _LOGGER.debug(
+                "Doorbell messages updated. Updating devices with LCD screens"
+            )
+            self.api.bootstrap.nvr.update_all_messages()
+            for camera in self.get_by_types({ModelType.CAMERA}):
+                camera = cast(Camera, camera)
+                if camera.feature_flags.has_lcd_screen:
+                    self._async_signal_device_update(camera)
+
+    @callback
+    def _async_process_ws_message(self, message: WSSubscriptionMessage) -> None:
+        if message.new_obj is None:
+            if isinstance(message.old_obj, ProtectAdoptableDeviceModel):
+                self._async_remove_device(message.old_obj)
             return
 
         obj = message.new_obj
         if isinstance(obj, (ProtectAdoptableDeviceModel, NVR)):
-            self._async_signal_device_update(obj)
-            if (
-                obj.model == ModelType.CAMERA
-                and obj.id in self._pending_camera_ids
-                and "channels" in message.changed_data
-            ):
-                self._pending_camera_ids.remove(obj.id)
-                async_dispatcher_send(
-                    self._hass, _ufpd(self._entry, DISPATCH_CHANNELS), obj
-                )
+            if message.old_obj is None and isinstance(obj, ProtectAdoptableDeviceModel):
+                self._async_add_device(obj)
+            elif getattr(obj, "is_adopted_by_us", True):
+                self._async_update_device(obj, message.changed_data)
 
-            # trigger update for all Cameras with LCD screens when NVR Doorbell settings updates
-            if "doorbell_settings" in message.changed_data:
-                _LOGGER.debug(
-                    "Doorbell messages updated. Updating devices with LCD screens"
-                )
-                self.api.bootstrap.nvr.update_all_messages()
-                for camera in self.api.bootstrap.cameras.values():
-                    if camera.feature_flags.has_lcd_screen:
-                        self._async_signal_device_update(camera)
         # trigger updates for camera that the event references
         elif isinstance(obj, Event):
             if obj.type == EventType.DEVICE_ADOPTED:
@@ -194,10 +229,7 @@ class ProtectData:
                         obj.metadata.device_id
                     )
                     if device is not None:
-                        _LOGGER.debug("New device detected: %s", device.id)
-                        async_dispatcher_send(
-                            self._hass, _ufpd(self._entry, DISPATCH_ADOPT), device
-                        )
+                        self._async_add_device(device)
             elif obj.camera is not None:
                 self._async_signal_device_update(obj.camera)
             elif obj.light is not None:
@@ -207,7 +239,8 @@ class ProtectData:
         # alert user viewport needs restart so voice clients can get new options
         elif len(self.api.bootstrap.viewers) > 0 and isinstance(obj, Liveview):
             _LOGGER.warning(
-                "Liveviews updated. Restart Home Assistant to update Viewport select options"
+                "Liveviews updated. Restart Home Assistant to update Viewport select"
+                " options"
             )
 
     @callback
@@ -219,7 +252,7 @@ class ProtectData:
             return
 
         self._async_signal_device_update(self.api.bootstrap.nvr)
-        for device in async_get_devices(self.api.bootstrap, DEVICES_THAT_ADOPT):
+        for device in self.get_by_types(DEVICES_THAT_ADOPT):
             self._async_signal_device_update(device)
 
     @callback

@@ -38,6 +38,8 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     }
 )
 
+# mypy: disallow-any-generics
+
 
 class CalendarEventListener:
     """Helper class to listen to calendar events."""
@@ -82,9 +84,10 @@ class CalendarEventListener:
 
     async def _fetch_events(self, last_endtime: datetime.datetime) -> None:
         """Update the set of eligible events."""
-        # Use a sliding window for selecting in scope events in the next interval. The event
-        # search range is offset, then the fire time of the returned events are offset again below.
-        # Event time ranges are exclusive so the end time is expanded by 1sec
+        # Use a sliding window for selecting in scope events in the next interval.
+        # The event search range is offset, then the fire time of the returned events
+        # are offset again below. Event time ranges are exclusive so the end time
+        # is expanded by 1sec.
         start_time = last_endtime - self._offset
         end_time = start_time + UPDATE_INTERVAL + datetime.timedelta(seconds=1)
         _LOGGER.debug(
@@ -172,7 +175,7 @@ async def async_attach_trigger(
     event_type = config[CONF_EVENT]
     offset = config[CONF_OFFSET]
 
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[CalendarEntity] = hass.data[DOMAIN]
     if not (entity := component.get_entity(entity_id)) or not isinstance(
         entity, CalendarEntity
     ):

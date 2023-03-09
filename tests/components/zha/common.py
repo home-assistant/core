@@ -2,13 +2,15 @@
 import asyncio
 from datetime import timedelta
 import math
-from unittest.mock import AsyncMock, Mock
+from typing import Any
+from unittest.mock import AsyncMock, Mock, patch
 
 import zigpy.zcl
 import zigpy.zcl.foundation as zcl_f
 
 import homeassistant.components.zha.core.const as zha_const
-from homeassistant.helpers import entity_registry
+from homeassistant.components.zha.core.helpers import async_get_zha_config_value
+from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
@@ -33,7 +35,7 @@ def patch_cluster(cluster):
                     zcl_f.ReadAttributeRecord(
                         attr_id,
                         zcl_f.Status.SUCCESS,
-                        zcl_f.TypeValue(python_type=None, value=value),
+                        zcl_f.TypeValue(type=None, value=value),
                     )
                 )
             else:
@@ -75,7 +77,7 @@ def update_attribute_cache(cluster):
             attrid = zigpy.types.uint16_t(attrid)
         attrs.append(make_attribute(attrid, value))
 
-    hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
+    hdr = make_zcl_header(zcl_f.GeneralCommand.Report_Attributes)
     hdr.frame_control.disable_default_response = True
     msg = zcl_f.GENERAL_COMMANDS[zcl_f.GeneralCommand.Report_Attributes].schema(
         attribute_reports=attrs
@@ -155,12 +157,10 @@ def find_entity_ids(domain, zha_device, hass):
     machine so that we can test state changes.
     """
 
-    registry = entity_registry.async_get(hass)
+    registry = er.async_get(hass)
     return [
         entity.entity_id
-        for entity in entity_registry.async_entries_for_device(
-            registry, zha_device.device_id
-        )
+        for entity in er.async_entries_for_device(registry, zha_device.device_id)
         if entity.domain == domain
     ]
 
@@ -177,7 +177,7 @@ def async_find_group_entity_id(hass, domain, group):
 
 
 async def async_enable_traffic(hass, zha_devices, enabled=True):
-    """Allow traffic to flow through the gateway and the zha device."""
+    """Allow traffic to flow through the gateway and the ZHA device."""
     for zha_device in zha_devices:
         zha_device.update_available(enabled)
     await hass.async_block_till_done()
@@ -243,3 +243,20 @@ async def async_shift_time(hass):
     next_update = dt_util.utcnow() + timedelta(seconds=11)
     async_fire_time_changed(hass, next_update)
     await hass.async_block_till_done()
+
+
+def patch_zha_config(component: str, overrides: dict[tuple[str, str], Any]):
+    """Patch the ZHA custom configuration defaults."""
+
+    def new_get_config(config_entry, section, config_key, default):
+        if (section, config_key) in overrides:
+            return overrides[section, config_key]
+        else:
+            return async_get_zha_config_value(
+                config_entry, section, config_key, default
+            )
+
+    return patch(
+        f"homeassistant.components.zha.{component}.async_get_zha_config_value",
+        side_effect=new_get_config,
+    )

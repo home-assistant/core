@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 from contextlib import suppress
-from typing import Any
+
+from pyfibaro.fibaro_device import DeviceModel
 
 from homeassistant.components.sensor import (
     ENTITY_ID_FORMAT,
@@ -14,13 +15,12 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
-    ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
     PERCENTAGE,
-    POWER_WATT,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
     Platform,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -67,7 +67,7 @@ MAIN_SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "com.fibaro.energyMeter": SensorEntityDescription(
         key="com.fibaro.energyMeter",
         name="Energy",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -79,14 +79,14 @@ ADDITIONAL_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="energy",
         name="Energy",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="power",
         name="Power",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -94,8 +94,8 @@ ADDITIONAL_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 FIBARO_TO_HASS_UNIT: dict[str, str] = {
     "lux": LIGHT_LUX,
-    "C": TEMP_CELSIUS,
-    "F": TEMP_FAHRENHEIT,
+    "C": UnitOfTemperature.CELSIUS,
+    "F": UnitOfTemperature.FAHRENHEIT,
 }
 
 
@@ -126,7 +126,9 @@ class FibaroSensor(FibaroDevice, SensorEntity):
     """Representation of a Fibaro Sensor."""
 
     def __init__(
-        self, fibaro_device: Any, entity_description: SensorEntityDescription | None
+        self,
+        fibaro_device: DeviceModel,
+        entity_description: SensorEntityDescription | None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(fibaro_device)
@@ -139,20 +141,20 @@ class FibaroSensor(FibaroDevice, SensorEntity):
         with suppress(KeyError, ValueError):
             if not self.native_unit_of_measurement:
                 self._attr_native_unit_of_measurement = FIBARO_TO_HASS_UNIT.get(
-                    fibaro_device.properties.unit, fibaro_device.properties.unit
+                    fibaro_device.unit, fibaro_device.unit
                 )
 
-    def update(self):
+    def update(self) -> None:
         """Update the state."""
-        with suppress(KeyError, ValueError):
-            self._attr_native_value = float(self.fibaro_device.properties.value)
+        with suppress(TypeError):
+            self._attr_native_value = self.fibaro_device.value.float_value()
 
 
 class FibaroAdditionalSensor(FibaroDevice, SensorEntity):
     """Representation of a Fibaro Additional Sensor."""
 
     def __init__(
-        self, fibaro_device: Any, entity_description: SensorEntityDescription
+        self, fibaro_device: DeviceModel, entity_description: SensorEntityDescription
     ) -> None:
         """Initialize the sensor."""
         super().__init__(fibaro_device)

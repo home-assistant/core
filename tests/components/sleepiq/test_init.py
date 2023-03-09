@@ -19,8 +19,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from tests.common import MockConfigEntry, async_fire_time_changed, mock_registry
-from tests.components.sleepiq.conftest import (
+from .conftest import (
     BED_ID,
     SLEEPER_L_ID,
     SLEEPER_L_NAME,
@@ -28,6 +27,8 @@ from tests.components.sleepiq.conftest import (
     SLEEPIQ_CONFIG,
     setup_platform,
 )
+
+from tests.common import MockConfigEntry, async_fire_time_changed, mock_registry
 
 ENTITY_IS_IN_BED = f"sensor.sleepnumber_{BED_ID}_{SLEEPER_L_NAME_LOWER}_{IS_IN_BED}"
 ENTITY_PRESSURE = f"sensor.sleepnumber_{BED_ID}_{SLEEPER_L_NAME_LOWER}_{PRESSURE}"

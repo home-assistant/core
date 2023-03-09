@@ -237,32 +237,3 @@ async def test_reauth(
     assert result["type"] == "abort"
     assert result["reason"] == "reauth_successful"
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_import_create_entry(
-    hass: HomeAssistant,
-    mock_latest_rates_config_flow: AsyncMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
-    """Test we can import data from configuration.yaml."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            "api_key": "test-api-key",
-            "base": "USD",
-            "quote": "EUR",
-            "name": "test",
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "USD"
-    assert result["data"] == {
-        "api_key": "test-api-key",
-        "base": "USD",
-        "quote": "EUR",
-        "name": "test",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1

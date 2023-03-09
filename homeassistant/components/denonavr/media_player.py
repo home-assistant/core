@@ -5,10 +5,10 @@ from collections.abc import Awaitable, Callable, Coroutine
 from datetime import timedelta
 from functools import wraps
 import logging
-from typing import Any, TypeVar
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from denonavr import DenonAVR
-from denonavr.const import POWER_ON
+from denonavr.const import POWER_ON, STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING
 from denonavr.exceptions import (
     AvrCommandError,
     AvrForbiddenError,
@@ -16,25 +16,16 @@ from denonavr.exceptions import (
     AvrTimoutError,
     DenonAvrError,
 )
-from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
-)
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_CHANNEL,
-    MEDIA_TYPE_MUSIC,
+    MediaPlayerState,
+    MediaType,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_COMMAND,
-    CONF_HOST,
-    CONF_MODEL,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+from homeassistant.const import ATTR_COMMAND, CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import DeviceInfo
@@ -84,6 +75,14 @@ SERVICE_UPDATE_AUDYSSEY = "update_audyssey"
 _DenonDeviceT = TypeVar("_DenonDeviceT", bound="DenonDevice")
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
+
+
+DENON_STATE_MAPPING = {
+    STATE_ON: MediaPlayerState.ON,
+    STATE_OFF: MediaPlayerState.OFF,
+    STATE_PLAYING: MediaPlayerState.PLAYING,
+    STATE_PAUSED: MediaPlayerState.PAUSED,
+}
 
 
 async def async_setup_entry(
@@ -140,8 +139,7 @@ async def async_setup_entry(
 def async_log_errors(
     func: Callable[Concatenate[_DenonDeviceT, _P], Awaitable[_R]],
 ) -> Callable[Concatenate[_DenonDeviceT, _P], Coroutine[Any, Any, _R | None]]:
-    """
-    Log errors occurred when calling a Denon AVR receiver.
+    """Log errors occurred when calling a Denon AVR receiver.
 
     Decorates methods of DenonDevice class.
     Declaration of staticmethod for this method is at the end of this class.
@@ -157,32 +155,38 @@ def async_log_errors(
             return await func(self, *args, **kwargs)
         except AvrTimoutError:
             available = False
-            if self._available is True:
+            if self.available:
                 _LOGGER.warning(
-                    "Timeout connecting to Denon AVR receiver at host %s. "
-                    "Device is unavailable",
+                    (
+                        "Timeout connecting to Denon AVR receiver at host %s. "
+                        "Device is unavailable"
+                    ),
                     self._receiver.host,
                 )
-                self._available = False
+                self._attr_available = False
         except AvrNetworkError:
             available = False
-            if self._available is True:
+            if self.available:
                 _LOGGER.warning(
-                    "Network error connecting to Denon AVR receiver at host %s. "
-                    "Device is unavailable",
+                    (
+                        "Network error connecting to Denon AVR receiver at host %s. "
+                        "Device is unavailable"
+                    ),
                     self._receiver.host,
                 )
-                self._available = False
+                self._attr_available = False
         except AvrForbiddenError:
             available = False
-            if self._available is True:
+            if self.available:
                 _LOGGER.warning(
-                    "Denon AVR receiver at host %s responded with HTTP 403 error. "
-                    "Device is unavailable. Please consider power cycling your "
-                    "receiver",
+                    (
+                        "Denon AVR receiver at host %s responded with HTTP 403 error. "
+                        "Device is unavailable. Please consider power cycling your "
+                        "receiver"
+                    ),
                     self._receiver.host,
                 )
-                self._available = False
+                self._attr_available = False
         except AvrCommandError as err:
             available = False
             _LOGGER.error(
@@ -199,12 +203,12 @@ def async_log_errors(
                 exc_info=True,
             )
         finally:
-            if available is True and self._available is False:
+            if available and not self.available:
                 _LOGGER.info(
                     "Denon AVR receiver at host %s is available again",
                     self._receiver.host,
                 )
-                self._available = True
+                self._attr_available = True
         return None
 
     return wrapper
@@ -242,24 +246,55 @@ class DenonDevice(MediaPlayerEntity):
             self._receiver.support_sound_mode
             and MediaPlayerEntityFeature.SELECT_SOUND_MODE
         )
-        self._available = True
+
+        self._telnet_was_healthy: bool | None = None
+
+    async def _telnet_callback(self, zone, event, parameter):
+        """Process a telnet command callback."""
+        if zone != self._receiver.zone:
+            return
+
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Register for telnet events."""
+        self._receiver.register_callback("ALL", self._telnet_callback)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Clean up the entity."""
+        self._receiver.unregister_callback("ALL", self._telnet_callback)
 
     @async_log_errors
     async def async_update(self) -> None:
         """Get the latest status information from device."""
-        await self._receiver.async_update()
+        receiver = self._receiver
+
+        # We can only skip the update if telnet was healthy after
+        # the last update and is still healthy now to ensure that
+        # we don't miss any state changes while telnet is down
+        # or reconnecting.
+        if (
+            telnet_is_healthy := receiver.telnet_connected and receiver.telnet_healthy
+        ) and self._telnet_was_healthy:
+            await receiver.input.async_update_media_state()
+            return
+
+        # if async_update raises an exception, we don't want to skip the next update
+        # so we set _telnet_was_healthy to None here and only set it to the value
+        # before the update if the update was successful
+        self._telnet_was_healthy = None
+
+        await receiver.async_update()
+
+        self._telnet_was_healthy = telnet_is_healthy
+
         if self._update_audyssey:
-            await self._receiver.async_update_audyssey()
+            await receiver.async_update_audyssey()
 
     @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._available
-
-    @property
-    def state(self):
+    def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
-        return self._receiver.state
+        return DENON_STATE_MAPPING.get(self._receiver.state)
 
     @property
     def source_list(self):
@@ -291,7 +326,7 @@ class DenonDevice(MediaPlayerEntity):
         return self._receiver.sound_mode
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         if self._receiver.input_func in self._receiver.netaudio_func_list:
             return self._supported_features_base | SUPPORT_MEDIA_MODES
@@ -303,11 +338,11 @@ class DenonDevice(MediaPlayerEntity):
         return None
 
     @property
-    def media_content_type(self):
+    def media_content_type(self) -> MediaType:
         """Content type of current playing media."""
-        if self._receiver.state in (STATE_PLAYING, STATE_PAUSED):
-            return MEDIA_TYPE_MUSIC
-        return MEDIA_TYPE_CHANNEL
+        if self._receiver.state in {MediaPlayerState.PLAYING, MediaPlayerState.PAUSED}:
+            return MediaType.MUSIC
+        return MediaType.CHANNEL
 
     @property
     def media_duration(self):

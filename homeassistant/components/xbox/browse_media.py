@@ -16,14 +16,7 @@ from xbox.webapi.api.provider.smartglass.models import (
     InstalledPackagesList,
 )
 
-from homeassistant.components.media_player import BrowseMedia
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_APP,
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_CLASS_GAME,
-    MEDIA_TYPE_APP,
-    MEDIA_TYPE_GAME,
-)
+from homeassistant.components.media_player import BrowseMedia, MediaClass, MediaType
 
 
 class MediaTypeDetails(NamedTuple):
@@ -35,12 +28,12 @@ class MediaTypeDetails(NamedTuple):
 
 TYPE_MAP = {
     "App": MediaTypeDetails(
-        type=MEDIA_TYPE_APP,
-        cls=MEDIA_CLASS_APP,
+        type=MediaType.APP,
+        cls=MediaClass.APP,
     ),
     "Game": MediaTypeDetails(
-        type=MEDIA_TYPE_GAME,
-        cls=MEDIA_CLASS_GAME,
+        type=MediaType.GAME,
+        cls=MediaClass.GAME,
     ),
 }
 
@@ -58,7 +51,7 @@ async def build_item_response(
     if media_content_type in (None, "library"):
         children: list[BrowseMedia] = []
         library_info = BrowseMedia(
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class=MediaClass.DIRECTORY,
             media_content_id="library",
             media_content_type="library",
             title="Installed Applications",
@@ -79,9 +72,9 @@ async def build_item_response(
         )
         children.append(
             BrowseMedia(
-                media_class=MEDIA_CLASS_APP,
+                media_class=MediaClass.APP,
                 media_content_id="Home",
-                media_content_type=MEDIA_TYPE_APP,
+                media_content_type=MediaType.APP,
                 title="Home",
                 can_play=True,
                 can_expand=False,
@@ -102,9 +95,9 @@ async def build_item_response(
             )
             children.append(
                 BrowseMedia(
-                    media_class=MEDIA_CLASS_APP,
+                    media_class=MediaClass.APP,
                     media_content_id="TV",
-                    media_content_type=MEDIA_TYPE_APP,
+                    media_content_type=MediaType.APP,
                     title="Live TV",
                     can_play=True,
                     can_expand=False,
@@ -118,7 +111,7 @@ async def build_item_response(
         for c_type in content_types:
             children.append(
                 BrowseMedia(
-                    media_class=MEDIA_CLASS_DIRECTORY,
+                    media_class=MediaClass.DIRECTORY,
                     media_content_id=c_type,
                     media_content_type=TYPE_MAP[c_type].type,
                     title=f"{c_type}s",
@@ -145,7 +138,7 @@ async def build_item_response(
     }
 
     return BrowseMedia(
-        media_class=MEDIA_CLASS_DIRECTORY,
+        media_class=MediaClass.DIRECTORY,
         media_content_id=media_content_id,
         media_content_type=media_content_type,
         title=f"{media_content_id}s",

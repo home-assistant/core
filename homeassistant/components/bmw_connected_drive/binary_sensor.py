@@ -30,6 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ALLOWED_CONDITION_BASED_SERVICE_KEYS = {
     "BRAKE_FLUID",
+    "EMISSION_CHECK",
     "ENGINE_OIL",
     "OIL",
     "TIRE_WEAR_FRONT",
@@ -37,10 +38,10 @@ ALLOWED_CONDITION_BASED_SERVICE_KEYS = {
     "VEHICLE_CHECK",
     "VEHICLE_TUV",
 }
-LOGGED_CONDITION_BASED_SERVICE_WARNINGS = set()
+LOGGED_CONDITION_BASED_SERVICE_WARNINGS: set[str] = set()
 
 ALLOWED_CHECK_CONTROL_MESSAGE_KEYS = {"ENGINE_OIL", "TIRE_PRESSURE"}
-LOGGED_CHECK_CONTROL_MESSAGE_WARNINGS = set()
+LOGGED_CHECK_CONTROL_MESSAGE_WARNINGS: set[str] = set()
 
 
 def _condition_based_services(
@@ -121,7 +122,7 @@ class BMWBinarySensorEntityDescription(
 SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
     BMWBinarySensorEntityDescription(
         key="lids",
-        name="Doors",
+        name="Lids",
         device_class=BinarySensorDeviceClass.OPENING,
         icon="mdi:car-door-lock",
         # device class opening: On means open, Off means closed
@@ -165,7 +166,7 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
     ),
     BMWBinarySensorEntityDescription(
         key="check_control_messages",
-        name="Control messages",
+        name="Check control messages",
         device_class=BinarySensorDeviceClass.PROBLEM,
         icon="mdi:car-tire-alert",
         # device class problem: On means problem detected, Off means no problem
@@ -224,8 +225,6 @@ class BMWBinarySensor(BMWBaseEntity, BinarySensorEntity):
         super().__init__(coordinator, vehicle)
         self.entity_description = description
         self._unit_system = unit_system
-
-        self._attr_name = f"{vehicle.name} {description.key}"
         self._attr_unique_id = f"{vehicle.vin}-{description.key}"
 
     @callback

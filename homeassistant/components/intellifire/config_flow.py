@@ -38,7 +38,7 @@ async def validate_host_input(host: str, dhcp_mode: bool = False) -> str:
     """
     LOGGER.debug("Instantiating IntellifireAPI with host: [%s]", host)
     api = IntellifireAPILocal(fireplace_ip=host)
-    await api.poll(supress_warnings=dhcp_mode)
+    await api.poll(suppress_warnings=dhcp_mode)
     serial = api.data.serial
 
     LOGGER.debug("Found a fireplace: %s", serial)
@@ -51,7 +51,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the Config Flow Handler."""
         self._host: str = ""
         self._serial: str = ""
@@ -62,7 +62,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _find_fireplaces(self):
         """Perform UDP discovery."""
         fireplace_finder = AsyncUDPFireplaceFinder()
-        discovered_hosts = await fireplace_finder.search_fireplace(timeout=1)
+        discovered_hosts = await fireplace_finder.search_fireplace(timeout=12)
         configured_hosts = {
             entry.data[CONF_HOST]
             for entry in self._async_current_entries(include_ignore=False)
@@ -119,7 +119,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         if user_input is not None:
-
             control_schema = vol.Schema(
                 {
                     vol.Required(

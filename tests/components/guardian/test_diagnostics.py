@@ -1,11 +1,18 @@
 """Test Guardian diagnostics."""
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.guardian import DOMAIN, GuardianData
+from homeassistant.core import HomeAssistant
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
-async def test_entry_diagnostics(hass, config_entry, hass_client, setup_guardian):
+async def test_entry_diagnostics(
+    hass: HomeAssistant,
+    config_entry,
+    hass_client: ClientSessionGenerator,
+    setup_guardian,
+) -> None:
     """Test config entry diagnostics."""
     data: GuardianData = hass.data[DOMAIN][config_entry.entry_id]
 
@@ -14,12 +21,21 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_guardian
 
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "entry": {
-            "title": "Mock Title",
+            "entry_id": config_entry.entry_id,
+            "version": 1,
+            "domain": "guardian",
+            "title": REDACTED,
             "data": {
+                "uid": REDACTED,
                 "ip_address": "192.168.1.100",
                 "port": 7777,
-                "uid": REDACTED,
             },
+            "options": {},
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "source": "user",
+            "unique_id": REDACTED,
+            "disabled_by": None,
         },
         "data": {
             "valve_controller": {

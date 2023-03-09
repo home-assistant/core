@@ -5,29 +5,27 @@ from typing import Any, cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     PRESET_AWAY,
     PRESET_HOME,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 
+from ..const import DOMAIN
 from ..coordinator import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
 
 PRESET_FREEZE = "freeze"
 PRESET_NIGHT = "night"
 
-STATE_DEROGATION_ACTIVE = "active"
-STATE_DEROGATION_INACTIVE = "inactive"
-
 
 OVERKIZ_TO_HVAC_MODES: dict[str, HVACMode] = {
-    STATE_DEROGATION_ACTIVE: HVACMode.HEAT,
-    STATE_DEROGATION_INACTIVE: HVACMode.AUTO,
+    OverkizCommandParam.ACTIVE: HVACMode.HEAT,
+    OverkizCommandParam.INACTIVE: HVACMode.AUTO,
 }
 HVAC_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_HVAC_MODES.items()}
 
@@ -54,12 +52,14 @@ TEMPERATURE_SENSOR_DEVICE_INDEX = 2
 class SomfyThermostat(OverkizEntity, ClimateEntity):
     """Representation of Somfy Smart Thermostat."""
 
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
     _attr_hvac_modes = [*HVAC_MODES_TO_OVERKIZ]
     _attr_preset_modes = [*PRESET_MODES_TO_OVERKIZ]
+    _attr_translation_key = DOMAIN
+
     # Both min and max temp values have been retrieved from the Somfy Application.
     _attr_min_temp = 15.0
     _attr_max_temp = 26.0

@@ -10,7 +10,7 @@ from PyTado.const import (
     CONST_HVAC_OFF,
 )
 
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -18,6 +18,8 @@ from homeassistant.components.climate.const import (
     FAN_OFF,
     PRESET_AWAY,
     PRESET_HOME,
+    SWING_OFF,
+    SWING_ON,
     HVACAction,
     HVACMode,
 )
@@ -156,6 +158,15 @@ SUPPORT_PRESET = [PRESET_AWAY, PRESET_HOME]
 
 TADO_SWING_OFF = "OFF"
 TADO_SWING_ON = "ON"
+
+HA_TO_TADO_SWING_MODE_MAP = {
+    SWING_OFF: TADO_SWING_OFF,
+    SWING_ON: TADO_SWING_ON,
+}
+
+TADO_TO_HA_SWING_MODE_MAP = {
+    value: key for key, value in HA_TO_TADO_SWING_MODE_MAP.items()
+}
 
 DOMAIN = "tado"
 

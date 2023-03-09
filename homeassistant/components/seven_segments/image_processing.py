@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.image_processing import (
     PLATFORM_SCHEMA,
+    ImageProcessingDeviceClass,
     ImageProcessingEntity,
 )
 from homeassistant.const import CONF_ENTITY_ID, CONF_NAME, CONF_SOURCE
@@ -69,6 +70,8 @@ async def async_setup_platform(
 class ImageProcessingSsocr(ImageProcessingEntity):
     """Representation of the seven segments OCR image processing entity."""
 
+    _attr_device_class = ImageProcessingDeviceClass.OCR
+
     def __init__(self, hass, camera_entity, config, name):
         """Initialize seven segments processing."""
         self.hass = hass
@@ -106,11 +109,6 @@ class ImageProcessingSsocr(ImageProcessingEntity):
         self._command.append(self.filepath)
 
     @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return "ocr"
-
-    @property
     def camera_entity(self):
         """Return camera entity id from process pictures."""
         return self._camera_entity
@@ -132,7 +130,10 @@ class ImageProcessingSsocr(ImageProcessingEntity):
         img.save(self.filepath, "png")
 
         with subprocess.Popen(
-            self._command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            self._command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            close_fds=False,  # Required for posix_spawn
         ) as ocr:
             out = ocr.communicate()
             if out[0] != b"":

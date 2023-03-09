@@ -27,9 +27,6 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
-# mypy: no-check-untyped-defs
-
 
 def validate_above_below(value):
     """Validate that above and below can co-exist."""
@@ -44,7 +41,10 @@ def validate_above_below(value):
 
     if above > below:
         raise vol.Invalid(
-            f"A value can never be above {above} and below {below} at the same time. You probably want two different triggers.",
+            (
+                f"A value can never be above {above} and below {below} at the same"
+                " time. You probably want two different triggers."
+            ),
         )
 
     return value
@@ -100,7 +100,7 @@ async def async_attach_trigger(
     armed_entities = set()
     period: dict = {}
     attribute = config.get(CONF_ATTRIBUTE)
-    job = HassJob(action)
+    job = HassJob(action, f"numeric state trigger {trigger_info}")
 
     trigger_data = trigger_info["trigger_data"]
     _variables = trigger_info["variables"] or {}

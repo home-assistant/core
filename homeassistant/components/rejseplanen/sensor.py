@@ -1,5 +1,4 @@
-"""
-Support for Rejseplanen information from rejseplanen.dk.
+"""Support for Rejseplanen information from rejseplanen.dk.
 
 For more info on the API see:
 https://help.rejseplanen.dk/hc/en-us/articles/214174465-Rejseplanen-s-API
@@ -15,7 +14,7 @@ import rjpl
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, TIME_MINUTES
+from homeassistant.const import CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -36,8 +35,6 @@ ATTR_SCHEDULED_AT = "scheduled_at"
 ATTR_REAL_TIME_AT = "real_time_at"
 ATTR_TRACK = "track"
 ATTR_NEXT_UP = "next_departures"
-
-ATTRIBUTION = "Data provided by rejseplanen.dk"
 
 CONF_STOP_ID = "stop_id"
 CONF_ROUTE = "route"
@@ -100,6 +97,8 @@ def setup_platform(
 class RejseplanenTransportSensor(SensorEntity):
     """Implementation of Rejseplanen transport sensor."""
 
+    _attr_attribution = "Data provided by rejseplanen.dk"
+
     def __init__(self, data, stop_id, route, direction, name):
         """Initialize the sensor."""
         self.data = data
@@ -123,14 +122,13 @@ class RejseplanenTransportSensor(SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         if not self._times:
-            return {ATTR_STOP_ID: self._stop_id, ATTR_ATTRIBUTION: ATTRIBUTION}
+            return {ATTR_STOP_ID: self._stop_id}
 
         next_up = []
         if len(self._times) > 1:
             next_up = self._times[1:]
 
         attributes = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_NEXT_UP: next_up,
             ATTR_STOP_ID: self._stop_id,
         }
@@ -143,14 +141,14 @@ class RejseplanenTransportSensor(SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return TIME_MINUTES
+        return UnitOfTime.MINUTES
 
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
         return ICON
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from rejseplanen.dk and update the states."""
         self.data.update()
         self._times = self.data.info

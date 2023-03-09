@@ -26,7 +26,9 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
+def get_scanner(
+    hass: HomeAssistant, config: ConfigType
+) -> SwisscomDeviceScanner | None:
     """Return the Swisscom device scanner."""
     scanner = SwisscomDeviceScanner(config[DOMAIN])
 
@@ -34,7 +36,7 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None
 
 
 class SwisscomDeviceScanner(DeviceScanner):
-    """This class queries a router running Swisscom Internet-Box firmware."""
+    """Class which queries a router running Swisscom Internet-Box firmware."""
 
     def __init__(self, config):
         """Initialize the scanner."""

@@ -8,17 +8,19 @@ from homeassistant.components.lock import (
     SERVICE_UNLOCK,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNLOCKED
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util.dt import utcnow
 
+from .conftest import get_states_response_for_uid
+
 from tests.common import async_fire_time_changed
-from tests.components.freedompro.conftest import get_states_response_for_uid
 
 uid = "2WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU-LQ*2VAS3HTWINNZ5N6HVEIPDJ6NX85P2-AM-GSYWUCNPU0"
 
 
-async def test_lock_get_state(hass, init_integration):
+async def test_lock_get_state(hass: HomeAssistant, init_integration) -> None:
     """Test states of the lock."""
     init_integration
     registry = er.async_get(hass)
@@ -61,7 +63,7 @@ async def test_lock_get_state(hass, init_integration):
         assert state.state == STATE_LOCKED
 
 
-async def test_lock_set_unlock(hass, init_integration):
+async def test_lock_set_unlock(hass: HomeAssistant, init_integration) -> None:
     """Test set on of the lock."""
     init_integration
     registry = er.async_get(hass)
@@ -109,7 +111,7 @@ async def test_lock_set_unlock(hass, init_integration):
     assert state.state == STATE_UNLOCKED
 
 
-async def test_lock_set_lock(hass, init_integration):
+async def test_lock_set_lock(hass: HomeAssistant, init_integration) -> None:
     """Test set on of the lock."""
     init_integration
     registry = er.async_get(hass)

@@ -89,6 +89,11 @@ TIME_SENSORS = (
         icon="mdi:calendar-clock",
     ),
     SensorEntityDescription(
+        key="midday",
+        name="Chatzot Hayom",
+        icon="mdi:calendar-clock",
+    ),
+    SensorEntityDescription(
         key="big_mincha",
         name="Mincha Gedola",
         icon="mdi:calendar-clock",
@@ -262,7 +267,7 @@ class JewishCalendarSensor(SensorEntity):
 
 
 class JewishCalendarTimeSensor(JewishCalendarSensor):
-    """Implement attrbutes for sensors returning times."""
+    """Implement attributes for sensors returning times."""
 
     _attr_device_class = SensorDeviceClass.TIMESTAMP
 

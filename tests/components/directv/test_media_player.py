@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
-from pytest import fixture
+import pytest
 
 from homeassistant.components.directv.media_player import (
     ATTR_MEDIA_CURRENTLY_RECORDING,
@@ -12,8 +12,7 @@ from homeassistant.components.directv.media_player import (
     ATTR_MEDIA_RECORDED,
     ATTR_MEDIA_START_TIME,
 )
-from homeassistant.components.media_player import MediaPlayerDeviceClass
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_ALBUM_NAME,
     ATTR_MEDIA_ARTIST,
@@ -27,18 +26,10 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_SERIES_TITLE,
     ATTR_MEDIA_TITLE,
     DOMAIN as MP_DOMAIN,
-    MEDIA_TYPE_MOVIE,
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_TVSHOW,
     SERVICE_PLAY_MEDIA,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
+    MediaPlayerDeviceClass,
+    MediaPlayerEntityFeature,
+    MediaType,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -58,7 +49,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from tests.components.directv import setup_integration
+from . import setup_integration
+
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 ATTR_UNIQUE_ID = "unique_id"
@@ -69,10 +61,8 @@ RESTRICTED_ENTITY_ID = f"{MP_DOMAIN}.restricted_client"
 STANDBY_ENTITY_ID = f"{MP_DOMAIN}.standby_client"
 UNAVAILABLE_ENTITY_ID = f"{MP_DOMAIN}.unavailable_client"
 
-# pylint: disable=redefined-outer-name
 
-
-@fixture
+@pytest.fixture
 def mock_now() -> datetime:
     """Fixture for dtutil.now."""
     return dt_util.utcnow()
@@ -181,26 +171,26 @@ async def test_supported_features(
     # Features supported for main DVR
     state = hass.states.get(MAIN_ENTITY_ID)
     assert (
-        SUPPORT_PAUSE
-        | SUPPORT_TURN_ON
-        | SUPPORT_TURN_OFF
-        | SUPPORT_PLAY_MEDIA
-        | SUPPORT_STOP
-        | SUPPORT_NEXT_TRACK
-        | SUPPORT_PREVIOUS_TRACK
-        | SUPPORT_PLAY
+        MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.PLAY
         == state.attributes.get("supported_features")
     )
 
     # Feature supported for clients.
     state = hass.states.get(CLIENT_ENTITY_ID)
     assert (
-        SUPPORT_PAUSE
-        | SUPPORT_PLAY_MEDIA
-        | SUPPORT_STOP
-        | SUPPORT_NEXT_TRACK
-        | SUPPORT_PREVIOUS_TRACK
-        | SUPPORT_PLAY
+        MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.PLAY
         == state.attributes.get("supported_features")
     )
 
@@ -217,7 +207,7 @@ async def test_check_attributes(
     assert state.state == STATE_PLAYING
 
     assert state.attributes.get(ATTR_MEDIA_CONTENT_ID) == "17016356"
-    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_MOVIE
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MediaType.MOVIE
     assert state.attributes.get(ATTR_MEDIA_DURATION) == 7200
     assert state.attributes.get(ATTR_MEDIA_POSITION) == 4437
     assert state.attributes.get(ATTR_MEDIA_POSITION_UPDATED_AT)
@@ -236,7 +226,7 @@ async def test_check_attributes(
     assert state.state == STATE_PLAYING
 
     assert state.attributes.get(ATTR_MEDIA_CONTENT_ID) == "4405732"
-    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_TVSHOW
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MediaType.TVSHOW
     assert state.attributes.get(ATTR_MEDIA_DURATION) == 1791
     assert state.attributes.get(ATTR_MEDIA_POSITION) == 263
     assert state.attributes.get(ATTR_MEDIA_POSITION_UPDATED_AT)
@@ -255,7 +245,7 @@ async def test_check_attributes(
     assert state.state == STATE_PLAYING
 
     assert state.attributes.get(ATTR_MEDIA_CONTENT_ID) == "76917562"
-    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_MUSIC
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MediaType.MUSIC
     assert state.attributes.get(ATTR_MEDIA_DURATION) == 86400
     assert state.attributes.get(ATTR_MEDIA_POSITION) == 15050
     assert state.attributes.get(ATTR_MEDIA_POSITION_UPDATED_AT)
@@ -316,7 +306,7 @@ async def test_attributes_paused(
     hass: HomeAssistant,
     mock_now: dt_util.dt.datetime,
     aioclient_mock: AiohttpClientMocker,
-):
+) -> None:
     """Test attributes while paused."""
     await setup_integration(hass, aioclient_mock)
 

@@ -13,8 +13,7 @@ from aioesphomeapi import (
     ClimateSwingMode,
 )
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -39,6 +38,7 @@ from homeassistant.components.climate.const import (
     SWING_HORIZONTAL,
     SWING_OFF,
     SWING_VERTICAL,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -49,7 +49,7 @@ from homeassistant.const import (
     PRECISION_HALVES,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -60,6 +60,8 @@ from . import (
     esphome_state_property,
     platform_async_setup_entry,
 )
+
+FAN_QUIET = "quiet"
 
 
 async def async_setup_entry(
@@ -109,6 +111,7 @@ _FAN_MODES: EsphomeEnumMapper[ClimateFanMode, str] = EsphomeEnumMapper(
         ClimateFanMode.MIDDLE: FAN_MIDDLE,
         ClimateFanMode.FOCUS: FAN_FOCUS,
         ClimateFanMode.DIFFUSE: FAN_DIFFUSE,
+        ClimateFanMode.QUIET: FAN_QUIET,
     }
 )
 _SWING_MODES: EsphomeEnumMapper[ClimateSwingMode, str] = EsphomeEnumMapper(
@@ -133,27 +136,24 @@ _PRESETS: EsphomeEnumMapper[ClimatePreset, str] = EsphomeEnumMapper(
 )
 
 
-# https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
-# pylint: disable=invalid-overridden-method
-
-
 class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEntity):
     """A climate implementation for ESPHome."""
+
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     @property
     def precision(self) -> float:
         """Return the precision of the climate device."""
         precicions = [PRECISION_WHOLE, PRECISION_HALVES, PRECISION_TENTHS]
+        if self._static_info.visual_current_temperature_step != 0:
+            step = self._static_info.visual_current_temperature_step
+        else:
+            step = self._static_info.visual_target_temperature_step
         for prec in precicions:
-            if self._static_info.visual_temperature_step >= prec:
+            if step >= prec:
                 return prec
         # Fall back to highest precision, tenths
         return PRECISION_TENTHS
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement used by the platform."""
-        return TEMP_CELSIUS
 
     @property
     def hvac_modes(self) -> list[str]:
@@ -191,7 +191,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
     def target_temperature_step(self) -> float:
         """Return the supported step of target temperature."""
         # Round to one digit because of floating point math
-        return round(self._static_info.visual_temperature_step, 1)
+        return round(self._static_info.visual_target_temperature_step, 1)
 
     @property
     def min_temp(self) -> float:
@@ -204,9 +204,9 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         return self._static_info.visual_max_temperature
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
-        features = 0
+        features = ClimateEntityFeature(0)
         if self._static_info.supports_two_point_target_temperature:
             features |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         else:
@@ -219,11 +219,13 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             features |= ClimateEntityFeature.SWING_MODE
         return features
 
+    @property
     @esphome_state_property
     def hvac_mode(self) -> str | None:
         """Return current operation ie. heat, cool, idle."""
         return _CLIMATE_MODES.from_esphome(self._state.mode)
 
+    @property
     @esphome_state_property
     def hvac_action(self) -> str | None:
         """Return current action."""
@@ -232,6 +234,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             return None
         return _CLIMATE_ACTIONS.from_esphome(self._state.action)
 
+    @property
     @esphome_state_property
     def fan_mode(self) -> str | None:
         """Return current fan setting."""
@@ -239,6 +242,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             self._state.fan_mode
         )
 
+    @property
     @esphome_state_property
     def preset_mode(self) -> str | None:
         """Return current preset mode."""
@@ -246,26 +250,31 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             self._state.preset_compat(self._api_version)
         )
 
+    @property
     @esphome_state_property
     def swing_mode(self) -> str | None:
         """Return current swing mode."""
         return _SWING_MODES.from_esphome(self._state.swing_mode)
 
+    @property
     @esphome_state_property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._state.current_temperature
 
+    @property
     @esphome_state_property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._state.target_temperature
 
+    @property
     @esphome_state_property
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         return self._state.target_temperature_low
 
+    @property
     @esphome_state_property
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""

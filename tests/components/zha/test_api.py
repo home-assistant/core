@@ -1,5 +1,6 @@
 """Test ZHA API."""
 from binascii import unhexlify
+from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -8,6 +9,7 @@ import zigpy.backups
 import zigpy.profiles.zha
 import zigpy.types
 import zigpy.zcl.clusters.general as general
+import zigpy.zcl.clusters.security as security
 
 from homeassistant.components.websocket_api import const
 from homeassistant.components.zha import DOMAIN
@@ -34,12 +36,13 @@ from homeassistant.components.zha.core.const import (
     CLUSTER_TYPE_IN,
     DATA_ZHA,
     DATA_ZHA_GATEWAY,
+    EZSP_OVERWRITE_EUI64,
     GROUP_ID,
     GROUP_IDS,
     GROUP_NAME,
 )
 from homeassistant.const import ATTR_NAME, Platform
-from homeassistant.core import Context
+from homeassistant.core import Context, HomeAssistant
 
 from .conftest import (
     FIXTURE_GRP_ID,
@@ -49,6 +52,9 @@ from .conftest import (
     SIG_EP_PROFILE,
     SIG_EP_TYPE,
 )
+from .data import BASE_CUSTOM_CONFIGURATION, CONFIG_WITH_ALARM_OPTIONS
+
+from tests.common import MockUser
 
 IEEE_SWITCH_DEVICE = "01:2d:6f:00:0a:90:69:e7"
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
@@ -56,10 +62,11 @@ IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
 
 @pytest.fixture(autouse=True)
 def required_platform_only():
-    """Only setup the required and required base platforms to speed up tests."""
+    """Only set up the required and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (
+            Platform.ALARM_CONTROL_PANEL,
             Platform.SELECT,
             Platform.SENSOR,
             Platform.SWITCH,
@@ -70,7 +77,7 @@ def required_platform_only():
 
 @pytest.fixture
 async def device_switch(hass, zigpy_device_mock, zha_device_joined):
-    """Test zha switch platform."""
+    """Test ZHA switch platform."""
 
     zigpy_device = zigpy_device_mock(
         {
@@ -89,8 +96,27 @@ async def device_switch(hass, zigpy_device_mock, zha_device_joined):
 
 
 @pytest.fixture
+async def device_ias_ace(hass, zigpy_device_mock, zha_device_joined):
+    """Test alarm control panel device."""
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [security.IasAce.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.IAS_ANCILLARY_CONTROL,
+                SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+            }
+        },
+    )
+    zha_device = await zha_device_joined(zigpy_device)
+    zha_device.available = True
+    return zha_device
+
+
+@pytest.fixture
 async def device_groupable(hass, zigpy_device_mock, zha_device_joined):
-    """Test zha light platform."""
+    """Test ZHA light platform."""
 
     zigpy_device = zigpy_device_mock(
         {
@@ -114,14 +140,14 @@ async def device_groupable(hass, zigpy_device_mock, zha_device_joined):
 
 @pytest.fixture
 async def zha_client(hass, hass_ws_client, device_switch, device_groupable):
-    """Test zha switch platform."""
+    """Get ZHA WebSocket client."""
 
     # load the ZHA API
     async_load_api(hass)
     return await hass_ws_client(hass)
 
 
-async def test_device_clusters(hass, zha_client):
+async def test_device_clusters(hass: HomeAssistant, zha_client) -> None:
     """Test getting device cluster info."""
     await zha_client.send_json(
         {ID: 5, TYPE: "zha/devices/clusters", ATTR_IEEE: IEEE_SWITCH_DEVICE}
@@ -144,7 +170,7 @@ async def test_device_clusters(hass, zha_client):
     assert cluster_info[ATTR_NAME] == "OnOff"
 
 
-async def test_device_cluster_attributes(zha_client):
+async def test_device_cluster_attributes(zha_client) -> None:
     """Test getting device cluster attributes."""
     await zha_client.send_json(
         {
@@ -167,7 +193,7 @@ async def test_device_cluster_attributes(zha_client):
         assert attribute[ATTR_NAME] is not None
 
 
-async def test_device_cluster_commands(zha_client):
+async def test_device_cluster_commands(zha_client) -> None:
     """Test getting device cluster commands."""
     await zha_client.send_json(
         {
@@ -191,8 +217,8 @@ async def test_device_cluster_commands(zha_client):
         assert command[TYPE] is not None
 
 
-async def test_list_devices(zha_client):
-    """Test getting zha devices."""
+async def test_list_devices(zha_client) -> None:
+    """Test getting ZHA devices."""
     await zha_client.send_json({ID: 5, TYPE: "zha/devices"})
 
     msg = await zha_client.receive_json()
@@ -224,7 +250,61 @@ async def test_list_devices(zha_client):
         assert device == device2
 
 
-async def test_device_not_found(zha_client):
+async def test_get_zha_config(zha_client) -> None:
+    """Test getting ZHA custom configuration."""
+    await zha_client.send_json({ID: 5, TYPE: "zha/configuration"})
+
+    msg = await zha_client.receive_json()
+
+    configuration = msg["result"]
+    assert configuration == BASE_CUSTOM_CONFIGURATION
+
+
+async def test_get_zha_config_with_alarm(
+    hass: HomeAssistant, zha_client, device_ias_ace
+) -> None:
+    """Test getting ZHA custom configuration."""
+    await zha_client.send_json({ID: 5, TYPE: "zha/configuration"})
+
+    msg = await zha_client.receive_json()
+
+    configuration = msg["result"]
+    assert configuration == CONFIG_WITH_ALARM_OPTIONS
+
+    # test that the alarm options are not in the config when we remove the device
+    device_ias_ace.gateway.device_removed(device_ias_ace.device)
+    await hass.async_block_till_done()
+    await zha_client.send_json({ID: 6, TYPE: "zha/configuration"})
+
+    msg = await zha_client.receive_json()
+
+    configuration = msg["result"]
+    assert configuration == BASE_CUSTOM_CONFIGURATION
+
+
+async def test_update_zha_config(zha_client, zigpy_app_controller) -> None:
+    """Test updating ZHA custom configuration."""
+
+    configuration = deepcopy(CONFIG_WITH_ALARM_OPTIONS)
+    configuration["data"]["zha_options"]["default_light_transition"] = 10
+
+    with patch(
+        "bellows.zigbee.application.ControllerApplication.new",
+        return_value=zigpy_app_controller,
+    ):
+        await zha_client.send_json(
+            {ID: 5, TYPE: "zha/configuration/update", "data": configuration["data"]}
+        )
+        msg = await zha_client.receive_json()
+        assert msg["success"]
+
+        await zha_client.send_json({ID: 6, TYPE: "zha/configuration"})
+        msg = await zha_client.receive_json()
+        configuration = msg["result"]
+        assert configuration == configuration
+
+
+async def test_device_not_found(zha_client) -> None:
     """Test not found response from get device API."""
     await zha_client.send_json(
         {ID: 6, TYPE: "zha/device", ATTR_IEEE: "28:6d:97:00:01:04:11:8c"}
@@ -236,8 +316,8 @@ async def test_device_not_found(zha_client):
     assert msg["error"]["code"] == const.ERR_NOT_FOUND
 
 
-async def test_list_groups(zha_client):
-    """Test getting zha zigbee groups."""
+async def test_list_groups(zha_client) -> None:
+    """Test getting ZHA zigbee groups."""
     await zha_client.send_json({ID: 7, TYPE: "zha/groups"})
 
     msg = await zha_client.receive_json()
@@ -253,8 +333,8 @@ async def test_list_groups(zha_client):
         assert group["members"] == []
 
 
-async def test_get_group(zha_client):
-    """Test getting a specific zha zigbee group."""
+async def test_get_group(zha_client) -> None:
+    """Test getting a specific ZHA zigbee group."""
     await zha_client.send_json({ID: 8, TYPE: "zha/group", GROUP_ID: FIXTURE_GRP_ID})
 
     msg = await zha_client.receive_json()
@@ -268,7 +348,7 @@ async def test_get_group(zha_client):
     assert group["members"] == []
 
 
-async def test_get_group_not_found(zha_client):
+async def test_get_group_not_found(zha_client) -> None:
     """Test not found response from get group API."""
     await zha_client.send_json({ID: 9, TYPE: "zha/group", GROUP_ID: 1_234_567})
 
@@ -280,8 +360,8 @@ async def test_get_group_not_found(zha_client):
     assert msg["error"]["code"] == const.ERR_NOT_FOUND
 
 
-async def test_list_groupable_devices(zha_client, device_groupable):
-    """Test getting zha devices that have a group cluster."""
+async def test_list_groupable_devices(zha_client, device_groupable) -> None:
+    """Test getting ZHA devices that have a group cluster."""
 
     await zha_client.send_json({ID: 10, TYPE: "zha/devices/groupable"})
 
@@ -323,8 +403,8 @@ async def test_list_groupable_devices(zha_client, device_groupable):
     assert len(device_endpoints) == 0
 
 
-async def test_add_group(zha_client):
-    """Test adding and getting a new zha zigbee group."""
+async def test_add_group(zha_client) -> None:
+    """Test adding and getting a new ZHA zigbee group."""
     await zha_client.send_json({ID: 12, TYPE: "zha/group/add", GROUP_NAME: "new_group"})
 
     msg = await zha_client.receive_json()
@@ -349,8 +429,8 @@ async def test_add_group(zha_client):
         assert group["name"] == FIXTURE_GRP_NAME or group["name"] == "new_group"
 
 
-async def test_remove_group(zha_client):
-    """Test removing a new zha zigbee group."""
+async def test_remove_group(zha_client) -> None:
+    """Test removing a new ZHA zigbee group."""
 
     await zha_client.send_json({ID: 14, TYPE: "zha/groups"})
 
@@ -394,7 +474,7 @@ async def app_controller(hass, setup_zha):
 
 
 @pytest.mark.parametrize(
-    "params, duration, node",
+    ("params", "duration", "node"),
     (
         ({}, 60, None),
         ({ATTR_DURATION: 30}, 30, None),
@@ -411,8 +491,13 @@ async def app_controller(hass, setup_zha):
     ),
 )
 async def test_permit_ha12(
-    hass, app_controller, hass_admin_user, params, duration, node
-):
+    hass: HomeAssistant,
+    app_controller,
+    hass_admin_user: MockUser,
+    params,
+    duration,
+    node,
+) -> None:
     """Test permit service."""
 
     await hass.services.async_call(
@@ -444,10 +529,15 @@ IC_TEST_PARAMS = (
 )
 
 
-@pytest.mark.parametrize("params, src_ieee, code", IC_TEST_PARAMS)
+@pytest.mark.parametrize(("params", "src_ieee", "code"), IC_TEST_PARAMS)
 async def test_permit_with_install_code(
-    hass, app_controller, hass_admin_user, params, src_ieee, code
-):
+    hass: HomeAssistant,
+    app_controller,
+    hass_admin_user: MockUser,
+    params,
+    src_ieee,
+    code,
+) -> None:
     """Test permit service with install code."""
 
     await hass.services.async_call(
@@ -497,8 +587,8 @@ IC_FAIL_PARAMS = (
 
 @pytest.mark.parametrize("params", IC_FAIL_PARAMS)
 async def test_permit_with_install_code_fail(
-    hass, app_controller, hass_admin_user, params
-):
+    hass: HomeAssistant, app_controller, hass_admin_user: MockUser, params
+) -> None:
     """Test permit service with install code."""
 
     with pytest.raises(vol.Invalid):
@@ -533,10 +623,15 @@ IC_QR_CODE_TEST_PARAMS = (
 )
 
 
-@pytest.mark.parametrize("params, src_ieee, code", IC_QR_CODE_TEST_PARAMS)
+@pytest.mark.parametrize(("params", "src_ieee", "code"), IC_QR_CODE_TEST_PARAMS)
 async def test_permit_with_qr_code(
-    hass, app_controller, hass_admin_user, params, src_ieee, code
-):
+    hass: HomeAssistant,
+    app_controller,
+    hass_admin_user: MockUser,
+    params,
+    src_ieee,
+    code,
+) -> None:
     """Test permit service with install code from qr code."""
 
     await hass.services.async_call(
@@ -549,10 +644,10 @@ async def test_permit_with_qr_code(
     assert app_controller.permit_with_key.await_args[1]["code"] == code
 
 
-@pytest.mark.parametrize("params, src_ieee, code", IC_QR_CODE_TEST_PARAMS)
+@pytest.mark.parametrize(("params", "src_ieee", "code"), IC_QR_CODE_TEST_PARAMS)
 async def test_ws_permit_with_qr_code(
     app_controller, zha_client, params, src_ieee, code
-):
+) -> None:
     """Test permit service with install code from qr code."""
 
     await zha_client.send_json(
@@ -572,7 +667,9 @@ async def test_ws_permit_with_qr_code(
 
 
 @pytest.mark.parametrize("params", IC_FAIL_PARAMS)
-async def test_ws_permit_with_install_code_fail(app_controller, zha_client, params):
+async def test_ws_permit_with_install_code_fail(
+    app_controller, zha_client, params
+) -> None:
     """Test permit ws service with install code."""
 
     await zha_client.send_json(
@@ -589,7 +686,7 @@ async def test_ws_permit_with_install_code_fail(app_controller, zha_client, para
 
 
 @pytest.mark.parametrize(
-    "params, duration, node",
+    ("params", "duration", "node"),
     (
         ({}, 60, None),
         ({ATTR_DURATION: 30}, 30, None),
@@ -605,7 +702,9 @@ async def test_ws_permit_with_install_code_fail(app_controller, zha_client, para
         ),
     ),
 )
-async def test_ws_permit_ha12(app_controller, zha_client, params, duration, node):
+async def test_ws_permit_ha12(
+    app_controller, zha_client, params, duration, node
+) -> None:
     """Test permit ws service."""
 
     await zha_client.send_json(
@@ -623,7 +722,7 @@ async def test_ws_permit_ha12(app_controller, zha_client, params, duration, node
     assert app_controller.permit_with_key.call_count == 0
 
 
-async def test_get_network_settings(app_controller, zha_client):
+async def test_get_network_settings(app_controller, zha_client) -> None:
     """Test current network settings are returned."""
 
     await app_controller.backups.create_backup()
@@ -638,7 +737,7 @@ async def test_get_network_settings(app_controller, zha_client):
     assert "network_info" in msg["result"]["settings"]
 
 
-async def test_list_network_backups(app_controller, zha_client):
+async def test_list_network_backups(app_controller, zha_client) -> None:
     """Test backups are serialized."""
 
     await app_controller.backups.create_backup()
@@ -652,7 +751,7 @@ async def test_list_network_backups(app_controller, zha_client):
     assert "network_info" in msg["result"][0]
 
 
-async def test_create_network_backup(app_controller, zha_client):
+async def test_create_network_backup(app_controller, zha_client) -> None:
     """Test creating backup."""
 
     assert not app_controller.backups.backups
@@ -666,7 +765,7 @@ async def test_create_network_backup(app_controller, zha_client):
     assert "backup" in msg["result"] and "is_complete" in msg["result"]
 
 
-async def test_restore_network_backup_success(app_controller, zha_client):
+async def test_restore_network_backup_success(app_controller, zha_client) -> None:
     """Test successfully restoring a backup."""
 
     backup = zigpy.backups.NetworkBackup()
@@ -689,7 +788,9 @@ async def test_restore_network_backup_success(app_controller, zha_client):
     assert msg["success"]
 
 
-async def test_restore_network_backup_force_write_eui64(app_controller, zha_client):
+async def test_restore_network_backup_force_write_eui64(
+    app_controller, zha_client
+) -> None:
     """Test successfully restoring a backup."""
 
     backup = zigpy.backups.NetworkBackup()
@@ -709,11 +810,7 @@ async def test_restore_network_backup_force_write_eui64(app_controller, zha_clie
     p.assert_called_once_with(
         backup.replace(
             network_info=backup.network_info.replace(
-                stack_specific={
-                    "ezsp": {
-                        "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it": True
-                    }
-                }
+                stack_specific={"ezsp": {EZSP_OVERWRITE_EUI64: True}}
             )
         )
     )
@@ -724,7 +821,7 @@ async def test_restore_network_backup_force_write_eui64(app_controller, zha_clie
 
 
 @patch("zigpy.backups.NetworkBackup.from_dict", new=lambda v: v)
-async def test_restore_network_backup_failure(app_controller, zha_client):
+async def test_restore_network_backup_failure(app_controller, zha_client) -> None:
     """Test successfully restoring a backup."""
 
     with patch.object(

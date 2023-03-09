@@ -14,6 +14,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 import json
 import logging
+import time
 from typing import TypedDict, overload
 
 from sqlalchemy import (
@@ -26,6 +27,7 @@ from sqlalchemy import (
     Identity,
     Index,
     Integer,
+    LargeBinary,
     SmallInteger,
     String,
     Text,
@@ -89,6 +91,12 @@ DOUBLE_TYPE = (
     .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )
 
+TIMESTAMP_TYPE = DOUBLE_TYPE
+
+CONTEXT_ID_BIN_MAX_LENGTH = 16
+EVENTS_CONTEXT_ID_BIN_INDEX = "ix_events_context_id_bin"
+STATES_CONTEXT_ID_BIN_INDEX = "ix_states_context_id_bin"
+
 
 class Events(Base):  # type: ignore
     """Event history data."""
@@ -97,6 +105,12 @@ class Events(Base):  # type: ignore
         # Used for fetching events at a specific time
         # see logbook
         Index("ix_events_event_type_time_fired", "event_type", "time_fired"),
+        Index(
+            EVENTS_CONTEXT_ID_BIN_INDEX,
+            "context_id_bin",
+            mysql_length=CONTEXT_ID_BIN_MAX_LENGTH,
+            mariadb_length=CONTEXT_ID_BIN_MAX_LENGTH,
+        ),
         {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
     __tablename__ = TABLE_EVENTS
@@ -108,12 +122,24 @@ class Events(Base):  # type: ignore
         SmallInteger
     )  # *** Not originally in v23, only added for recorder to startup ok
     time_fired = Column(DATETIME_TYPE, index=True)
+    time_fired_ts = Column(
+        TIMESTAMP_TYPE, index=True
+    )  # *** Not originally in v23, only added for recorder to startup ok
     created = Column(DATETIME_TYPE, default=dt_util.utcnow)
     context_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
     context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
     context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
     data_id = Column(
         Integer, ForeignKey("event_data.data_id"), index=True
+    )  # *** Not originally in v23, only added for recorder to startup ok
+    context_id_bin = Column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
+    )  # *** Not originally in v23, only added for recorder to startup ok
+    context_user_id_bin = Column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
+    )  # *** Not originally in v23, only added for recorder to startup ok
+    context_parent_id_bin = Column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
     )  # *** Not originally in v23, only added for recorder to startup ok
     event_data_rel = relationship(
         "EventData"
@@ -185,6 +211,12 @@ class States(Base):  # type: ignore
         # Used for fetching the state of entities at a specific time
         # (get_states in history.py)
         Index("ix_states_entity_id_last_updated", "entity_id", "last_updated"),
+        Index(
+            STATES_CONTEXT_ID_BIN_INDEX,
+            "context_id_bin",
+            mysql_length=CONTEXT_ID_BIN_MAX_LENGTH,
+            mariadb_length=CONTEXT_ID_BIN_MAX_LENGTH,
+        ),
         {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
     __tablename__ = TABLE_STATES
@@ -197,9 +229,24 @@ class States(Base):  # type: ignore
         Integer, ForeignKey("events.event_id", ondelete="CASCADE"), index=True
     )
     last_changed = Column(DATETIME_TYPE, default=dt_util.utcnow)
+    last_updated_ts = Column(
+        TIMESTAMP_TYPE, default=time.time
+    )  # *** Not originally in v23, only added for recorder to startup ok
     last_updated = Column(DATETIME_TYPE, default=dt_util.utcnow, index=True)
+    last_updated_ts = Column(
+        TIMESTAMP_TYPE, default=time.time, index=True
+    )  # *** Not originally in v23, only added for recorder to startup ok
     created = Column(DATETIME_TYPE, default=dt_util.utcnow)
     old_state_id = Column(Integer, ForeignKey("states.state_id"), index=True)
+    context_id_bin = Column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
+    )  # *** Not originally in v23, only added for recorder to startup ok
+    context_user_id_bin = Column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
+    )  # *** Not originally in v23, only added for recorder to startup ok
+    context_parent_id_bin = Column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
+    )  # *** Not originally in v23, only added for recorder to startup ok
     event = relationship("Events", uselist=False)
     old_state = relationship("States", remote_side=[state_id])
 

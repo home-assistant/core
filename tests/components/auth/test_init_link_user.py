@@ -2,9 +2,12 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
+from homeassistant.core import HomeAssistant
+
 from . import async_setup_auth
 
 from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI
+from tests.typing import ClientSessionGenerator
 
 
 async def async_get_code(hass, aiohttp_client):
@@ -48,7 +51,6 @@ async def async_get_code(hass, aiohttp_client):
         f"/auth/login_flow/{step['flow_id']}",
         json={
             "client_id": CLIENT_ID,
-            "redirect_uri": CLIENT_REDIRECT_URI,
             "username": "2nd-user",
             "password": "2nd-pass",
         },
@@ -65,7 +67,9 @@ async def async_get_code(hass, aiohttp_client):
     }
 
 
-async def test_link_user(hass, aiohttp_client):
+async def test_link_user(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Test linking a user to new credentials."""
     info = await async_get_code(hass, aiohttp_client)
     client = info["client"]
@@ -82,7 +86,9 @@ async def test_link_user(hass, aiohttp_client):
     assert len(info["user"].credentials) == 1
 
 
-async def test_link_user_invalid_client_id(hass, aiohttp_client):
+async def test_link_user_invalid_client_id(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Test linking a user to new credentials."""
     info = await async_get_code(hass, aiohttp_client)
     client = info["client"]
@@ -99,7 +105,9 @@ async def test_link_user_invalid_client_id(hass, aiohttp_client):
     assert len(info["user"].credentials) == 0
 
 
-async def test_link_user_invalid_code(hass, aiohttp_client):
+async def test_link_user_invalid_code(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Test linking a user to new credentials."""
     info = await async_get_code(hass, aiohttp_client)
     client = info["client"]
@@ -115,7 +123,9 @@ async def test_link_user_invalid_code(hass, aiohttp_client):
     assert len(info["user"].credentials) == 0
 
 
-async def test_link_user_invalid_auth(hass, aiohttp_client):
+async def test_link_user_invalid_auth(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Test linking a user to new credentials."""
     info = await async_get_code(hass, aiohttp_client)
     client = info["client"]
@@ -132,7 +142,9 @@ async def test_link_user_invalid_auth(hass, aiohttp_client):
     assert len(info["user"].credentials) == 0
 
 
-async def test_link_user_already_linked_same_user(hass, aiohttp_client):
+async def test_link_user_already_linked_same_user(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Test linking a user to a credential it's already linked to."""
     info = await async_get_code(hass, aiohttp_client)
     client = info["client"]
@@ -153,7 +165,9 @@ async def test_link_user_already_linked_same_user(hass, aiohttp_client):
     assert len(info["user"].credentials) == 0
 
 
-async def test_link_user_already_linked_other_user(hass, aiohttp_client):
+async def test_link_user_already_linked_other_user(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Test linking a user to a credential already linked to other user."""
     info = await async_get_code(hass, aiohttp_client)
     client = info["client"]

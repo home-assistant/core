@@ -8,8 +8,6 @@ from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
 CONF_HOURS = "hours"
 CONF_MINUTES = "minutes"
 CONF_SECONDS = "seconds"
@@ -68,7 +66,7 @@ async def async_attach_trigger(
     hours = config.get(CONF_HOURS)
     minutes = config.get(CONF_MINUTES)
     seconds = config.get(CONF_SECONDS)
-    job = HassJob(action)
+    job = HassJob(action, f"time pattern trigger {trigger_info}")
 
     # If larger units are specified, default the smaller units to zero
     if minutes is None and hours is not None:

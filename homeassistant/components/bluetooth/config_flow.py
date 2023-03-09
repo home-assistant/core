@@ -3,17 +3,38 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, cast
 
+from bluetooth_adapters import (
+    ADAPTER_ADDRESS,
+    AdapterDetails,
+    adapter_human_name,
+    adapter_unique_name,
+    get_adapters,
+)
 import voluptuous as vol
 
 from homeassistant.components import onboarding
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.core import callback
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaFlowFormStep,
+    SchemaOptionsFlowHandler,
+)
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import ADAPTER_ADDRESS, CONF_ADAPTER, CONF_DETAILS, DOMAIN, AdapterDetails
-from .util import adapter_human_name, adapter_unique_name, async_get_bluetooth_adapters
+from . import models
+from .const import CONF_ADAPTER, CONF_DETAILS, CONF_PASSIVE, DOMAIN
 
 if TYPE_CHECKING:
     from homeassistant.data_entry_flow import FlowResult
+
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PASSIVE, default=False): bool,
+    }
+)
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
+}
 
 
 class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -78,14 +99,22 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         configured_addresses = self._async_current_ids()
-        self._adapters = await async_get_bluetooth_adapters()
+        bluetooth_adapters = get_adapters()
+        await bluetooth_adapters.refresh()
+        self._adapters = bluetooth_adapters.adapters
         unconfigured_adapters = [
             adapter
             for adapter, details in self._adapters.items()
             if details[ADAPTER_ADDRESS] not in configured_addresses
         ]
         if not unconfigured_adapters:
-            return self.async_abort(reason="no_adapters")
+            ignored_adapters = len(
+                self._async_current_entries(include_ignore=True)
+            ) - len(self._async_current_entries(include_ignore=False))
+            return self.async_abort(
+                reason="no_adapters",
+                description_placeholders={"ignored_adapters": str(ignored_adapters)},
+            )
         if len(unconfigured_adapters) == 1:
             self._adapter = list(self._adapters)[0]
             self._details = self._adapters[self._adapter]
@@ -112,3 +141,17 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
         return await self.async_step_multiple_adapters()
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> SchemaOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
+
+    @classmethod
+    @callback
+    def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
+        """Return options flow support for this handler."""
+        return bool(models.MANAGER and models.MANAGER.supports_passive_scan)

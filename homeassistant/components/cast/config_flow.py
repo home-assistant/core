@@ -7,11 +7,12 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import onboarding, zeroconf
+from homeassistant.const import CONF_UUID
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_IGNORE_CEC, CONF_KNOWN_HOSTS, CONF_UUID, DOMAIN
+from .const import CONF_IGNORE_CEC, CONF_KNOWN_HOSTS, DOMAIN
 
 IGNORE_CEC_SCHEMA = vol.Schema(vol.All(cv.ensure_list, [cv.string]))
 KNOWN_HOSTS_SCHEMA = vol.Schema(vol.All(cv.ensure_list, [cv.string]))

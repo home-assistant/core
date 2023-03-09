@@ -12,7 +12,7 @@ import simplehound.core as hound
 import homeassistant.components.image_processing as ip
 import homeassistant.components.sighthound.image_processing as sh
 from homeassistant.const import ATTR_ENTITY_ID, CONF_API_KEY
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
 TEST_DIR = os.path.dirname(__file__)
@@ -82,7 +82,9 @@ def mock_now():
         yield now_dt
 
 
-async def test_bad_api_key(hass, caplog):
+async def test_bad_api_key(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Catch bad api key."""
     with mock.patch(
         "simplehound.core.cloud.detect", side_effect=hound.SimplehoundException
@@ -93,14 +95,14 @@ async def test_bad_api_key(hass, caplog):
         assert not hass.states.get(VALID_ENTITY_ID)
 
 
-async def test_setup_platform(hass, mock_detections):
+async def test_setup_platform(hass: HomeAssistant, mock_detections) -> None:
     """Set up platform with one entity."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
     await hass.async_block_till_done()
     assert hass.states.get(VALID_ENTITY_ID)
 
 
-async def test_process_image(hass, mock_image, mock_detections):
+async def test_process_image(hass: HomeAssistant, mock_image, mock_detections) -> None:
     """Process an image."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
     await hass.async_block_till_done()
@@ -125,8 +127,12 @@ async def test_process_image(hass, mock_image, mock_detections):
 
 
 async def test_catch_bad_image(
-    hass, caplog, mock_image, mock_detections, mock_bad_image_data
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_image,
+    mock_detections,
+    mock_bad_image_data,
+) -> None:
     """Process an image."""
     valid_config_save_file = deepcopy(VALID_CONFIG)
     valid_config_save_file[ip.DOMAIN].update({sh.CONF_SAVE_FILE_FOLDER: TEST_DIR})
@@ -140,7 +146,7 @@ async def test_catch_bad_image(
     assert "Sighthound unable to process image" in caplog.text
 
 
-async def test_save_image(hass, mock_image, mock_detections):
+async def test_save_image(hass: HomeAssistant, mock_image, mock_detections) -> None:
     """Save a processed image."""
     valid_config_save_file = deepcopy(VALID_CONFIG)
     valid_config_save_file[ip.DOMAIN].update({sh.CONF_SAVE_FILE_FOLDER: TEST_DIR})
@@ -165,7 +171,9 @@ async def test_save_image(hass, mock_image, mock_detections):
         assert pil_img.save.call_args_list[0] == mock.call(latest_save_path)
 
 
-async def test_save_timestamped_image(hass, mock_image, mock_detections, mock_now):
+async def test_save_timestamped_image(
+    hass: HomeAssistant, mock_image, mock_detections, mock_now
+) -> None:
     """Save a processed image."""
     valid_config_save_ts_file = deepcopy(VALID_CONFIG)
     valid_config_save_ts_file[ip.DOMAIN].update({sh.CONF_SAVE_FILE_FOLDER: TEST_DIR})

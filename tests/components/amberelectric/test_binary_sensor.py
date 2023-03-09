@@ -19,12 +19,9 @@ from homeassistant.components.amberelectric.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from .helpers import GENERAL_CHANNEL, GENERAL_ONLY_SITE_ID, generate_current_interval
+
 from tests.common import MockConfigEntry
-from tests.components.amberelectric.helpers import (
-    GENERAL_CHANNEL,
-    GENERAL_ONLY_SITE_ID,
-    generate_current_interval,
-)
 
 MOCK_API_TOKEN = "psk_0000000000000000"
 

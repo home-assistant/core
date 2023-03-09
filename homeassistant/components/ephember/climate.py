@@ -18,8 +18,9 @@ from pyephember.pyephember import (
 )
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
+    PLATFORM_SCHEMA,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -28,7 +29,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_PASSWORD,
     CONF_USERNAME,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -80,6 +81,9 @@ def setup_platform(
 class EphEmberThermostat(ClimateEntity):
     """Representation of a EphEmber thermostat."""
 
+    _attr_hvac_modes = OPERATION_LIST
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+
     def __init__(self, ember, zone):
         """Initialize the thermostat."""
         self._ember = ember
@@ -87,23 +91,15 @@ class EphEmberThermostat(ClimateEntity):
         self._zone = zone
         self._hot_water = zone_is_hot_water(zone)
 
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
+        self._attr_name = self._zone_name
+
+        self._attr_supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.AUX_HEAT
+        )
+        self._attr_target_temperature_step = 0.5
         if self._hot_water:
-            return ClimateEntityFeature.AUX_HEAT
-
-        return ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.AUX_HEAT
-
-    @property
-    def name(self):
-        """Return the name of the thermostat, if any."""
-        return self._zone_name
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement which this thermostat uses."""
-        return TEMP_CELSIUS
+            self._attr_supported_features = ClimateEntityFeature.AUX_HEAT
+            self._attr_target_temperature_step = None
 
     @property
     def current_temperature(self):
@@ -116,15 +112,7 @@ class EphEmberThermostat(ClimateEntity):
         return zone_target_temperature(self._zone)
 
     @property
-    def target_temperature_step(self):
-        """Return the supported step of target temperature."""
-        if self._hot_water:
-            return None
-
-        return 0.5
-
-    @property
-    def hvac_action(self):
+    def hvac_action(self) -> HVACAction:
         """Return current HVAC action."""
         if zone_is_active(self._zone):
             return HVACAction.HEATING
@@ -132,15 +120,10 @@ class EphEmberThermostat(ClimateEntity):
         return HVACAction.IDLE
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return current operation ie. heat, cool, idle."""
         mode = zone_mode(self._zone)
         return self.map_mode_eph_hass(mode)
-
-    @property
-    def hvac_modes(self):
-        """Return the supported operations."""
-        return OPERATION_LIST
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the operation mode."""

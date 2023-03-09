@@ -1,5 +1,4 @@
-"""
-Support for Homekit number ranges.
+"""Support for Homekit number ranges.
 
 These are mostly used where a HomeKit accessory exposes additional non-standard
 characteristics that don't map to a Home Assistant feature.
@@ -8,15 +7,16 @@ from __future__ import annotations
 
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.components.number.const import (
+from homeassistant.components.number import (
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
+    NumberEntity,
+    NumberEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
@@ -58,12 +58,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Homekit numbers."""
-    hkid = config_entry.data["AccessoryPairingID"]
-    conn = hass.data[KNOWN_DEVICES][hkid]
+    hkid: str = config_entry.data["AccessoryPairingID"]
+    conn: HKDevice = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
     def async_add_characteristic(char: Characteristic) -> bool:
-        entities = []
+        entities: list[HomeKitNumber] = []
         info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
 
         if description := NUMBER_ENTITIES.get(char.type):
@@ -71,7 +71,12 @@ async def async_setup_entry(
         else:
             return False
 
-        async_add_entities(entities, True)
+        for entity in entities:
+            conn.async_migrate_unique_id(
+                entity.old_unique_id, entity.unique_id, Platform.NUMBER
+            )
+
+        async_add_entities(entities)
         return True
 
     conn.add_char_factory(async_add_characteristic)

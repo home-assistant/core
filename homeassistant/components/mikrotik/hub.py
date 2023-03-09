@@ -13,6 +13,7 @@ from librouteros.login import plain as login_plain, token as login_token
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -132,8 +133,10 @@ class MikrotikData:
             # get new hub firmware version if updated
             self.firmware = self.get_info(ATTR_FIRMWARE)
 
-        except (CannotConnect, LoginError) as err:
+        except CannotConnect as err:
             raise UpdateFailed from err
+        except LoginError as err:
+            raise ConfigEntryAuthFailed from err
 
         if not device_list:
             return

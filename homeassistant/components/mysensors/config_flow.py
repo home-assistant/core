@@ -82,7 +82,10 @@ def _validate_version(version: str) -> dict[str, str]:
     try:
         AwesomeVersion(
             version,
-            [AwesomeVersionStrategy.SIMPLEVER, AwesomeVersionStrategy.SEMVER],
+            ensure_strategy=[
+                AwesomeVersionStrategy.SIMPLEVER,
+                AwesomeVersionStrategy.SEMVER,
+            ],
         )
     except AwesomeVersionStrategyException:
         version_okay = False

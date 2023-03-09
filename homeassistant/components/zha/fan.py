@@ -105,7 +105,7 @@ class BaseFan(FanEntity):
         await self.async_set_percentage(0)
 
     async def async_set_percentage(self, percentage: int) -> None:
-        """Set the speed percenage of the fan."""
+        """Set the speed percentage of the fan."""
         fan_mode = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
         await self._async_set_fan_mode(fan_mode)
 
@@ -113,7 +113,8 @@ class BaseFan(FanEntity):
         """Set the preset mode for the fan."""
         if preset_mode not in self.preset_modes:
             raise NotValidPresetModeError(
-                f"The preset_mode {preset_mode} is not a valid preset_mode: {self.preset_modes}"
+                f"The preset_mode {preset_mode} is not a valid preset_mode:"
+                f" {self.preset_modes}"
             )
         await self._async_set_fan_mode(NAME_TO_PRESET_MODE[preset_mode])
 
@@ -248,7 +249,10 @@ IKEA_NAME_TO_PRESET_MODE = {v: k for k, v in IKEA_PRESET_MODES_TO_NAME.items()}
 IKEA_PRESET_MODES = list(IKEA_NAME_TO_PRESET_MODE)
 
 
-@MULTI_MATCH(channel_names="ikea_airpurifier", models={"STARKVIND Air purifier"})
+@MULTI_MATCH(
+    channel_names="ikea_airpurifier",
+    models={"STARKVIND Air purifier", "STARKVIND Air purifier table"},
+)
 class IkeaFan(BaseFan, ZhaEntity):
     """Representation of a ZHA fan."""
 
@@ -257,7 +261,7 @@ class IkeaFan(BaseFan, ZhaEntity):
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._fan_channel = self.cluster_channels.get("ikea_airpurifier")
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         self.async_accept_signal(
@@ -285,7 +289,8 @@ class IkeaFan(BaseFan, ZhaEntity):
         """Set the preset mode for the fan."""
         if preset_mode not in self.preset_modes:
             raise NotValidPresetModeError(
-                f"The preset_mode {preset_mode} is not a valid preset_mode: {self.preset_modes}"
+                f"The preset_mode {preset_mode} is not a valid preset_mode:"
+                f" {self.preset_modes}"
             )
         await self._async_set_fan_mode(IKEA_NAME_TO_PRESET_MODE[preset_mode])
 
@@ -314,7 +319,7 @@ class IkeaFan(BaseFan, ZhaEntity):
             ]
         await self.async_set_percentage(percentage)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.async_set_percentage(0)
 

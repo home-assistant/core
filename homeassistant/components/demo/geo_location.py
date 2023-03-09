@@ -7,7 +7,7 @@ from math import cos, pi, radians, sin
 import random
 
 from homeassistant.components.geo_location import GeolocationEvent
-from homeassistant.const import LENGTH_KILOMETERS
+from homeassistant.const import UnitOfLength
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import track_time_interval
@@ -80,7 +80,7 @@ class DemoManager:
 
         event_name = random.choice(EVENT_NAMES)
         return DemoGeolocationEvent(
-            event_name, radius_in_km, latitude, longitude, LENGTH_KILOMETERS
+            event_name, radius_in_km, latitude, longitude, UnitOfLength.KILOMETERS
         )
 
     def _init_regular_updates(self) -> None:
@@ -110,7 +110,9 @@ class DemoManager:
 
 
 class DemoGeolocationEvent(GeolocationEvent):
-    """This represents a demo geolocation event."""
+    """Represents a demo geolocation event."""
+
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -121,7 +123,7 @@ class DemoGeolocationEvent(GeolocationEvent):
         unit_of_measurement: str,
     ) -> None:
         """Initialize entity with data provided."""
-        self._name = name
+        self._attr_name = name
         self._distance = distance
         self._latitude = latitude
         self._longitude = longitude
@@ -131,16 +133,6 @@ class DemoGeolocationEvent(GeolocationEvent):
     def source(self) -> str:
         """Return source value of this external event."""
         return SOURCE
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the event."""
-        return self._name
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed for a demo geolocation event."""
-        return False
 
     @property
     def distance(self) -> float | None:

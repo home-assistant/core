@@ -3,18 +3,21 @@ from __future__ import annotations
 
 from datetime import datetime
 import struct
-from typing import Any
+from typing import Any, cast
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
+from homeassistant.components.climate import (
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
+)
 from homeassistant.const import (
     ATTR_TEMPERATURE,
+    CONF_ADDRESS,
     CONF_NAME,
     CONF_TEMPERATURE_UNIT,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -28,6 +31,16 @@ from .const import (
     CALL_TYPE_WRITE_REGISTER,
     CALL_TYPE_WRITE_REGISTERS,
     CONF_CLIMATES,
+    CONF_HVAC_MODE_AUTO,
+    CONF_HVAC_MODE_COOL,
+    CONF_HVAC_MODE_DRY,
+    CONF_HVAC_MODE_FAN_ONLY,
+    CONF_HVAC_MODE_HEAT,
+    CONF_HVAC_MODE_HEAT_COOL,
+    CONF_HVAC_MODE_OFF,
+    CONF_HVAC_MODE_REGISTER,
+    CONF_HVAC_MODE_VALUES,
+    CONF_HVAC_ONOFF_REGISTER,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
     CONF_STEP,
@@ -60,8 +73,6 @@ async def async_setup_platform(
 class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
     """Representation of a Modbus Thermostat."""
 
-    _attr_hvac_mode = HVACMode.AUTO
-    _attr_hvac_modes = [HVACMode.AUTO]
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
 
     def __init__(
@@ -77,7 +88,9 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         self._attr_current_temperature = None
         self._attr_target_temperature = None
         self._attr_temperature_unit = (
-            TEMP_FAHRENHEIT if self._unit == "F" else TEMP_CELSIUS
+            UnitOfTemperature.FAHRENHEIT
+            if self._unit == "F"
+            else UnitOfTemperature.CELSIUS
         )
         self._attr_precision = (
             PRECISION_TENTHS if self._precision >= 1 else PRECISION_WHOLE
@@ -86,6 +99,42 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         self._attr_max_temp = config[CONF_MAX_TEMP]
         self._attr_target_temperature_step = config[CONF_TARGET_TEMP]
         self._attr_target_temperature_step = config[CONF_STEP]
+
+        if CONF_HVAC_MODE_REGISTER in config:
+            mode_config = config[CONF_HVAC_MODE_REGISTER]
+            self._hvac_mode_register = mode_config[CONF_ADDRESS]
+            self._attr_hvac_modes = cast(list[HVACMode], [])
+            self._attr_hvac_mode = None
+            self._hvac_mode_mapping: list[tuple[int, HVACMode]] = []
+            mode_value_config = mode_config[CONF_HVAC_MODE_VALUES]
+
+            for hvac_mode_kw, hvac_mode in (
+                (CONF_HVAC_MODE_OFF, HVACMode.OFF),
+                (CONF_HVAC_MODE_HEAT, HVACMode.HEAT),
+                (CONF_HVAC_MODE_COOL, HVACMode.COOL),
+                (CONF_HVAC_MODE_HEAT_COOL, HVACMode.HEAT_COOL),
+                (CONF_HVAC_MODE_AUTO, HVACMode.AUTO),
+                (CONF_HVAC_MODE_DRY, HVACMode.DRY),
+                (CONF_HVAC_MODE_FAN_ONLY, HVACMode.FAN_ONLY),
+            ):
+                if hvac_mode_kw in mode_value_config:
+                    self._hvac_mode_mapping.append(
+                        (mode_value_config[hvac_mode_kw], hvac_mode)
+                    )
+                    self._attr_hvac_modes.append(hvac_mode)
+
+        else:
+            # No HVAC modes defined
+            self._hvac_mode_register = None
+            self._attr_hvac_mode = HVACMode.AUTO
+            self._attr_hvac_modes = [HVACMode.AUTO]
+
+        if CONF_HVAC_ONOFF_REGISTER in config:
+            self._hvac_onoff_register = config[CONF_HVAC_ONOFF_REGISTER]
+            if HVACMode.OFF not in self._attr_hvac_modes:
+                self._attr_hvac_modes.append(HVACMode.OFF)
+        else:
+            self._hvac_onoff_register = None
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -96,8 +145,28 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        # Home Assistant expects this method.
-        # We'll keep it here to avoid getting exceptions.
+        if self._hvac_onoff_register is not None:
+            # Turn HVAC Off by writing 0 to the On/Off register, or 1 otherwise.
+            await self._hub.async_pymodbus_call(
+                self._slave,
+                self._hvac_onoff_register,
+                0 if hvac_mode == HVACMode.OFF else 1,
+                CALL_TYPE_WRITE_REGISTER,
+            )
+
+        if self._hvac_mode_register is not None:
+            # Write a value to the mode register for the desired mode.
+            for value, mode in self._hvac_mode_mapping:
+                if mode == hvac_mode:
+                    await self._hub.async_pymodbus_call(
+                        self._slave,
+                        self._hvac_mode_register,
+                        value,
+                        CALL_TYPE_WRITE_REGISTER,
+                    )
+                    break
+
+        await self.async_update()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -155,11 +224,36 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         self._attr_current_temperature = await self._async_read_register(
             self._input_type, self._address
         )
+
+        # Read the mode register if defined
+        if self._hvac_mode_register is not None:
+            hvac_mode = await self._async_read_register(
+                CALL_TYPE_REGISTER_HOLDING, self._hvac_mode_register, raw=True
+            )
+
+            # Translate the value received
+            if hvac_mode is not None:
+                self._attr_hvac_mode = None
+                for value, mode in self._hvac_mode_mapping:
+                    if hvac_mode == value:
+                        self._attr_hvac_mode = mode
+                        break
+
+        # Read th on/off register if defined. If the value in this
+        # register is "OFF", it will take precedence over the value
+        # in the mode register.
+        if self._hvac_onoff_register is not None:
+            onoff = await self._async_read_register(
+                CALL_TYPE_REGISTER_HOLDING, self._hvac_onoff_register, raw=True
+            )
+            if onoff == 0:
+                self._attr_hvac_mode = HVACMode.OFF
+
         self._call_active = False
         self.async_write_ha_state()
 
     async def _async_read_register(
-        self, register_type: str, register: int
+        self, register_type: str, register: int, raw: bool | None = False
     ) -> float | None:
         """Read register using the Modbus hub slave."""
         result = await self._hub.async_pymodbus_call(
@@ -174,6 +268,14 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             return -1
 
         self._lazy_errors = self._lazy_error_count
+
+        if raw:
+            # Return the raw value read from the register, do not change
+            # the object's state
+            self._attr_available = True
+            return int(result.registers[0])
+
+        # The regular handling of the value
         self._value = self.unpack_structure_result(result.registers)
         if not self._value:
             self._attr_available = False

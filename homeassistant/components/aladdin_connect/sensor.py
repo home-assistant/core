@@ -83,7 +83,7 @@ async def async_setup_entry(
             [AladdinConnectSensor(acc, door, description) for description in SENSORS]
         )
 
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class AladdinConnectSensor(SensorEntity):
@@ -114,7 +114,7 @@ class AladdinConnectSensor(SensorEntity):
     def device_info(self) -> DeviceInfo | None:
         """Device information for Aladdin Connect sensors."""
         return DeviceInfo(
-            identifiers={(DOMAIN, self._device_id)},
+            identifiers={(DOMAIN, f"{self._device_id}-{self._number}")},
             name=self._name,
             manufacturer="Overhead Door",
             model=self._model,

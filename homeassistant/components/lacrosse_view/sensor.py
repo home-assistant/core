@@ -14,11 +14,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    DEGREE,
     PERCENTAGE,
-    PRECIPITATION_INCHES,
-    SPEED_KILOMETERS_PER_HOUR,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -34,7 +35,7 @@ from .const import DOMAIN, LOGGER
 class LaCrosseSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[Sensor, str], float]
+    value_fn: Callable[[Sensor, str], float | int | str | None]
 
 
 @dataclass
@@ -44,9 +45,17 @@ class LaCrosseSensorEntityDescription(
     """Description for LaCrosse View sensor."""
 
 
-def get_value(sensor: Sensor, field: str) -> float:
+def get_value(sensor: Sensor, field: str) -> float | int | str | None:
     """Get the value of a sensor field."""
-    return float(sensor.data[field]["values"][-1]["s"])
+    field_data = sensor.data.get(field)
+    if field_data is None:
+        return None
+    value = field_data["values"][-1]["s"]
+    try:
+        value = float(value)
+    except ValueError:
+        return str(value)  # handle non-numericals
+    return int(value) if value.is_integer() else value
 
 
 PARALLEL_UPDATES = 0
@@ -57,7 +66,7 @@ SENSOR_DESCRIPTIONS = {
         name="Temperature",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     "Humidity": LaCrosseSensorEntityDescription(
         key="Humidity",
@@ -70,24 +79,66 @@ SENSOR_DESCRIPTIONS = {
     "HeatIndex": LaCrosseSensorEntityDescription(
         key="HeatIndex",
         device_class=SensorDeviceClass.TEMPERATURE,
-        name="Heat Index",
+        name="Heat index",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
     ),
     "WindSpeed": LaCrosseSensorEntityDescription(
         key="WindSpeed",
-        name="Wind Speed",
+        name="Wind speed",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
-        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
     ),
     "Rain": LaCrosseSensorEntityDescription(
         key="Rain",
         name="Rain",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
-        native_unit_of_measurement=PRECIPITATION_INCHES,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
+        device_class=SensorDeviceClass.PRECIPITATION,
+    ),
+    "WindHeading": LaCrosseSensorEntityDescription(
+        key="WindHeading",
+        name="Wind heading",
+        value_fn=get_value,
+        native_unit_of_measurement=DEGREE,
+    ),
+    "WetDry": LaCrosseSensorEntityDescription(
+        key="WetDry",
+        name="Wet/Dry",
+        value_fn=get_value,
+    ),
+    "Flex": LaCrosseSensorEntityDescription(
+        key="Flex",
+        name="Flex",
+        value_fn=get_value,
+    ),
+    "BarometricPressure": LaCrosseSensorEntityDescription(
+        key="BarometricPressure",
+        name="Barometric pressure",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=get_value,
+        device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+        native_unit_of_measurement=UnitOfPressure.HPA,
+    ),
+    "FeelsLike": LaCrosseSensorEntityDescription(
+        key="FeelsLike",
+        name="Feels like",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=get_value,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    "WindChill": LaCrosseSensorEntityDescription(
+        key="WindChill",
+        name="Wind chill",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=get_value,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
 }
 
@@ -104,13 +155,14 @@ async def async_setup_entry(
     sensors: list[Sensor] = coordinator.data
 
     sensor_list = []
-    for sensor in sensors:
+    for i, sensor in enumerate(sensors):
         for field in sensor.sensor_field_names:
             description = SENSOR_DESCRIPTIONS.get(field)
             if description is None:
                 message = (
                     f"Unsupported sensor field: {field}\nPlease create an issue on "
-                    "GitHub. https://github.com/home-assistant/core/issues/new?assignees=&la"
+                    "GitHub."
+                    " https://github.com/home-assistant/core/issues/new?assignees=&la"
                     "bels=&template=bug_report.yml&integration_name=LaCrosse%20View&integrat"
                     "ion_link=https://www.home-assistant.io/integrations/lacrosse_view/&addi"
                     f"tional_information=Field:%20{field}%0ASensor%20Model:%20{sensor.model}&"
@@ -124,6 +176,7 @@ async def async_setup_entry(
                     coordinator=coordinator,
                     description=description,
                     sensor=sensor,
+                    index=i,
                 )
             )
 
@@ -136,31 +189,40 @@ class LaCrosseViewSensor(
     """LaCrosse View sensor."""
 
     entity_description: LaCrosseSensorEntityDescription
+    _attr_has_entity_name: bool = True
 
     def __init__(
         self,
         description: LaCrosseSensorEntityDescription,
         coordinator: DataUpdateCoordinator[list[Sensor]],
         sensor: Sensor,
+        index: int,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
 
         self.entity_description = description
         self._attr_unique_id = f"{sensor.sensor_id}-{description.key}"
-        self._attr_name = f"{sensor.location.name} {description.name}"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, sensor.sensor_id)},
-            "name": sensor.name.split(" ")[0],
+            "name": sensor.name,
             "manufacturer": "LaCrosse Technology",
             "model": sensor.model,
             "via_device": (DOMAIN, sensor.location.id),
         }
-        self._sensor = sensor
+        self.index = index
 
     @property
-    def native_value(self) -> float | str:
+    def native_value(self) -> int | float | str | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(
-            self._sensor, self.entity_description.key
+            self.coordinator.data[self.index], self.entity_description.key
+        )
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return (
+            super().available
+            and self.entity_description.key in self.coordinator.data[self.index].data
         )

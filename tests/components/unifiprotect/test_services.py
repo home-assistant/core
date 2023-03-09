@@ -1,5 +1,5 @@
 """Test the UniFi Protect global services."""
-# pylint: disable=protected-access
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, Mock
@@ -45,11 +45,13 @@ async def subdevice_fixture(hass: HomeAssistant, ufp: MockUFPFixture, light: Lig
     return [d for d in device_registry.devices.values() if d.name != "UnifiProtect"][0]
 
 
-async def test_global_service_bad_device(hass: HomeAssistant, ufp: MockUFPFixture):
+async def test_global_service_bad_device(
+    hass: HomeAssistant, ufp: MockUFPFixture
+) -> None:
     """Test global service, invalid device ID."""
 
     nvr = ufp.api.bootstrap.nvr
-    nvr.__fields__["add_custom_doorbell_message"] = Mock()
+    nvr.__fields__["add_custom_doorbell_message"] = Mock(final=False)
     nvr.add_custom_doorbell_message = AsyncMock()
 
     with pytest.raises(HomeAssistantError):
@@ -64,11 +66,11 @@ async def test_global_service_bad_device(hass: HomeAssistant, ufp: MockUFPFixtur
 
 async def test_global_service_exception(
     hass: HomeAssistant, device: dr.DeviceEntry, ufp: MockUFPFixture
-):
+) -> None:
     """Test global service, unexpected error."""
 
     nvr = ufp.api.bootstrap.nvr
-    nvr.__fields__["add_custom_doorbell_message"] = Mock()
+    nvr.__fields__["add_custom_doorbell_message"] = Mock(final=False)
     nvr.add_custom_doorbell_message = AsyncMock(side_effect=BadRequest)
 
     with pytest.raises(HomeAssistantError):
@@ -83,11 +85,11 @@ async def test_global_service_exception(
 
 async def test_add_doorbell_text(
     hass: HomeAssistant, device: dr.DeviceEntry, ufp: MockUFPFixture
-):
+) -> None:
     """Test add_doorbell_text service."""
 
     nvr = ufp.api.bootstrap.nvr
-    nvr.__fields__["add_custom_doorbell_message"] = Mock()
+    nvr.__fields__["add_custom_doorbell_message"] = Mock(final=False)
     nvr.add_custom_doorbell_message = AsyncMock()
 
     await hass.services.async_call(
@@ -101,11 +103,11 @@ async def test_add_doorbell_text(
 
 async def test_remove_doorbell_text(
     hass: HomeAssistant, subdevice: dr.DeviceEntry, ufp: MockUFPFixture
-):
+) -> None:
     """Test remove_doorbell_text service."""
 
     nvr = ufp.api.bootstrap.nvr
-    nvr.__fields__["remove_custom_doorbell_message"] = Mock()
+    nvr.__fields__["remove_custom_doorbell_message"] = Mock(final=False)
     nvr.remove_custom_doorbell_message = AsyncMock()
 
     await hass.services.async_call(
@@ -119,11 +121,11 @@ async def test_remove_doorbell_text(
 
 async def test_set_default_doorbell_text(
     hass: HomeAssistant, device: dr.DeviceEntry, ufp: MockUFPFixture
-):
+) -> None:
     """Test set_default_doorbell_text service."""
 
     nvr = ufp.api.bootstrap.nvr
-    nvr.__fields__["set_default_doorbell_message"] = Mock()
+    nvr.__fields__["set_default_doorbell_message"] = Mock(final=False)
     nvr.set_default_doorbell_message = AsyncMock()
 
     await hass.services.async_call(
@@ -140,7 +142,7 @@ async def test_set_chime_paired_doorbells(
     ufp: MockUFPFixture,
     chime: Chime,
     doorbell: Camera,
-):
+) -> None:
     """Test set_chime_paired_doorbells."""
 
     ufp.api.update_device = AsyncMock()

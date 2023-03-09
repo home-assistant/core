@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Setup Transmission Client",
+        "title": "Set up Transmission Client",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "host": "[%key:common::config_flow::data::host%]",
@@ -37,6 +37,18 @@
           "scan_interval": "Update frequency",
           "limit": "Limit",
           "order": "Order"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "transmission_status": {
+        "state": {
+          "idle": "Idle",
+          "up_down": "Up/Down",
+          "seeding": "Seeding",
+          "downloading": "Downloading"
         }
       }
     }

@@ -1,8 +1,12 @@
 """Test switch of NextDNS integration."""
+import asyncio
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
+from aiohttp import ClientError
+from aiohttp.client_exceptions import ClientConnectorError
 from nextdns import ApiError
+import pytest
 
 from homeassistant.components.nextdns.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -15,6 +19,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
@@ -977,3 +982,27 @@ async def test_availability(hass: HomeAssistant) -> None:
     assert state
     assert state.state != STATE_UNAVAILABLE
     assert state.state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    "exc",
+    [
+        ApiError(Mock()),
+        asyncio.TimeoutError,
+        ClientConnectorError(Mock(), Mock()),
+        ClientError,
+    ],
+)
+async def test_switch_failure(hass: HomeAssistant, exc: Exception) -> None:
+    """Tests that the turn on/off service throws HomeAssistantError."""
+    await init_integration(hass)
+
+    with patch(
+        "homeassistant.components.nextdns.NextDns.set_setting", side_effect=exc
+    ), pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.fake_profile_block_page"},
+            blocking=True,
+        )

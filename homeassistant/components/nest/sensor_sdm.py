@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -62,6 +62,11 @@ class SensorBase(SensorEntity):
         self._attr_unique_id = f"{device.name}-{self.device_class}"
         self._attr_device_info = self._device_info.device_info
 
+    @property
+    def available(self) -> bool:
+        """Return the device availability."""
+        return self._device_info.available
+
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to register update signal handler."""
         self.async_on_remove(
@@ -73,7 +78,7 @@ class TemperatureSensor(SensorBase):
     """Representation of a Temperature Sensor."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_native_unit_of_measurement = TEMP_CELSIUS
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_name = "Temperature"
 
     @property

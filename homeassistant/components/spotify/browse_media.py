@@ -9,22 +9,11 @@ from spotipy import Spotify
 import yarl
 
 from homeassistant.backports.enum import StrEnum
-from homeassistant.components.media_player import BrowseError, BrowseMedia
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_ALBUM,
-    MEDIA_CLASS_APP,
-    MEDIA_CLASS_ARTIST,
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_CLASS_EPISODE,
-    MEDIA_CLASS_GENRE,
-    MEDIA_CLASS_PLAYLIST,
-    MEDIA_CLASS_PODCAST,
-    MEDIA_CLASS_TRACK,
-    MEDIA_TYPE_ALBUM,
-    MEDIA_TYPE_ARTIST,
-    MEDIA_TYPE_EPISODE,
-    MEDIA_TYPE_PLAYLIST,
-    MEDIA_TYPE_TRACK,
+from homeassistant.components.media_player import (
+    BrowseError,
+    BrowseMedia,
+    MediaClass,
+    MediaType,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
@@ -70,62 +59,62 @@ LIBRARY_MAP = {
 
 CONTENT_TYPE_MEDIA_CLASS: dict[str, Any] = {
     BrowsableMedia.CURRENT_USER_PLAYLISTS.value: {
-        "parent": MEDIA_CLASS_DIRECTORY,
-        "children": MEDIA_CLASS_PLAYLIST,
+        "parent": MediaClass.DIRECTORY,
+        "children": MediaClass.PLAYLIST,
     },
     BrowsableMedia.CURRENT_USER_FOLLOWED_ARTISTS.value: {
-        "parent": MEDIA_CLASS_DIRECTORY,
-        "children": MEDIA_CLASS_ARTIST,
+        "parent": MediaClass.DIRECTORY,
+        "children": MediaClass.ARTIST,
     },
     BrowsableMedia.CURRENT_USER_SAVED_ALBUMS.value: {
-        "parent": MEDIA_CLASS_DIRECTORY,
-        "children": MEDIA_CLASS_ALBUM,
+        "parent": MediaClass.DIRECTORY,
+        "children": MediaClass.ALBUM,
     },
     BrowsableMedia.CURRENT_USER_SAVED_TRACKS.value: {
-        "parent": MEDIA_CLASS_DIRECTORY,
-        "children": MEDIA_CLASS_TRACK,
+        "parent": MediaClass.DIRECTORY,
+        "children": MediaClass.TRACK,
     },
     BrowsableMedia.CURRENT_USER_SAVED_SHOWS.value: {
-        "parent": MEDIA_CLASS_DIRECTORY,
-        "children": MEDIA_CLASS_PODCAST,
+        "parent": MediaClass.DIRECTORY,
+        "children": MediaClass.PODCAST,
     },
     BrowsableMedia.CURRENT_USER_RECENTLY_PLAYED.value: {
-        "parent": MEDIA_CLASS_DIRECTORY,
-        "children": MEDIA_CLASS_TRACK,
+        "parent": MediaClass.DIRECTORY,
+        "children": MediaClass.TRACK,
     },
     BrowsableMedia.CURRENT_USER_TOP_ARTISTS.value: {
-        "parent": MEDIA_CLASS_DIRECTORY,
-        "children": MEDIA_CLASS_ARTIST,
+        "parent": MediaClass.DIRECTORY,
+        "children": MediaClass.ARTIST,
     },
     BrowsableMedia.CURRENT_USER_TOP_TRACKS.value: {
-        "parent": MEDIA_CLASS_DIRECTORY,
-        "children": MEDIA_CLASS_TRACK,
+        "parent": MediaClass.DIRECTORY,
+        "children": MediaClass.TRACK,
     },
     BrowsableMedia.FEATURED_PLAYLISTS.value: {
-        "parent": MEDIA_CLASS_DIRECTORY,
-        "children": MEDIA_CLASS_PLAYLIST,
+        "parent": MediaClass.DIRECTORY,
+        "children": MediaClass.PLAYLIST,
     },
     BrowsableMedia.CATEGORIES.value: {
-        "parent": MEDIA_CLASS_DIRECTORY,
-        "children": MEDIA_CLASS_GENRE,
+        "parent": MediaClass.DIRECTORY,
+        "children": MediaClass.GENRE,
     },
     "category_playlists": {
-        "parent": MEDIA_CLASS_DIRECTORY,
-        "children": MEDIA_CLASS_PLAYLIST,
+        "parent": MediaClass.DIRECTORY,
+        "children": MediaClass.PLAYLIST,
     },
     BrowsableMedia.NEW_RELEASES.value: {
-        "parent": MEDIA_CLASS_DIRECTORY,
-        "children": MEDIA_CLASS_ALBUM,
+        "parent": MediaClass.DIRECTORY,
+        "children": MediaClass.ALBUM,
     },
-    MEDIA_TYPE_PLAYLIST: {
-        "parent": MEDIA_CLASS_PLAYLIST,
-        "children": MEDIA_CLASS_TRACK,
+    MediaType.PLAYLIST: {
+        "parent": MediaClass.PLAYLIST,
+        "children": MediaClass.TRACK,
     },
-    MEDIA_TYPE_ALBUM: {"parent": MEDIA_CLASS_ALBUM, "children": MEDIA_CLASS_TRACK},
-    MEDIA_TYPE_ARTIST: {"parent": MEDIA_CLASS_ARTIST, "children": MEDIA_CLASS_ALBUM},
-    MEDIA_TYPE_EPISODE: {"parent": MEDIA_CLASS_EPISODE, "children": None},
-    MEDIA_TYPE_SHOW: {"parent": MEDIA_CLASS_PODCAST, "children": MEDIA_CLASS_EPISODE},
-    MEDIA_TYPE_TRACK: {"parent": MEDIA_CLASS_TRACK, "children": None},
+    MediaType.ALBUM: {"parent": MediaClass.ALBUM, "children": MediaClass.TRACK},
+    MediaType.ARTIST: {"parent": MediaClass.ARTIST, "children": MediaClass.ALBUM},
+    MediaType.EPISODE: {"parent": MediaClass.EPISODE, "children": None},
+    MEDIA_TYPE_SHOW: {"parent": MediaClass.PODCAST, "children": MediaClass.EPISODE},
+    MediaType.TRACK: {"parent": MediaClass.TRACK, "children": None},
 }
 
 
@@ -151,13 +140,13 @@ async def async_browse_media(
     # Check if caller is requesting the root nodes
     if media_content_type is None and media_content_id is None:
         children = []
-        for config_entry_id, info in hass.data[DOMAIN].items():
+        for config_entry_id in hass.data[DOMAIN]:
             config_entry = hass.config_entries.async_get_entry(config_entry_id)
             assert config_entry is not None
             children.append(
                 BrowseMedia(
                     title=config_entry.title,
-                    media_class=MEDIA_CLASS_APP,
+                    media_class=MediaClass.APP,
                     media_content_id=f"{MEDIA_PLAYER_PREFIX}{config_entry_id}",
                     media_content_type=f"{MEDIA_PLAYER_PREFIX}library",
                     thumbnail="https://brands.home-assistant.io/_/spotify/logo.png",
@@ -167,7 +156,7 @@ async def async_browse_media(
             )
         return BrowseMedia(
             title="Spotify",
-            media_class=MEDIA_CLASS_APP,
+            media_class=MediaClass.APP,
             media_content_id=MEDIA_PLAYER_PREFIX,
             media_content_type="spotify",
             thumbnail="https://brands.home-assistant.io/_/spotify/logo.png",
@@ -227,7 +216,7 @@ async def async_browse_media_internal(
 
     # Strip prefix
     if media_content_type:
-        media_content_type = media_content_type[len(MEDIA_PLAYER_PREFIX) :]
+        media_content_type = media_content_type.removeprefix(MEDIA_PLAYER_PREFIX)
 
     payload = {
         "media_content_type": media_content_type,
@@ -312,13 +301,13 @@ def build_item_response(  # noqa: C901
     elif media_content_type == BrowsableMedia.NEW_RELEASES:
         if media := spotify.new_releases(country=user["country"], limit=BROWSE_LIMIT):
             items = media.get("albums", {}).get("items", [])
-    elif media_content_type == MEDIA_TYPE_PLAYLIST:
+    elif media_content_type == MediaType.PLAYLIST:
         if media := spotify.playlist(media_content_id):
             items = [item["track"] for item in media.get("tracks", {}).get("items", [])]
-    elif media_content_type == MEDIA_TYPE_ALBUM:
+    elif media_content_type == MediaType.ALBUM:
         if media := spotify.album(media_content_id):
             items = media.get("tracks", {}).get("items", [])
-    elif media_content_type == MEDIA_TYPE_ARTIST:
+    elif media_content_type == MediaType.ARTIST:
         if (media := spotify.artist_albums(media_content_id, limit=BROWSE_LIMIT)) and (
             artist := spotify.artist(media_content_id)
         ):
@@ -364,8 +353,8 @@ def build_item_response(  # noqa: C901
                 BrowseMedia(
                     can_expand=True,
                     can_play=False,
-                    children_media_class=MEDIA_CLASS_TRACK,
-                    media_class=MEDIA_CLASS_PLAYLIST,
+                    children_media_class=MediaClass.TRACK,
+                    media_class=MediaClass.PLAYLIST,
                     media_content_id=item_id,
                     media_content_type=f"{MEDIA_PLAYER_PREFIX}category_playlists",
                     thumbnail=fetch_image_url(item, key="icons"),
@@ -380,7 +369,7 @@ def build_item_response(  # noqa: C901
             title = media["name"]
 
     can_play = media_content_type in PLAYABLE_MEDIA_TYPES and (
-        media_content_type != MEDIA_TYPE_ARTIST or can_play_artist
+        media_content_type != MediaType.ARTIST or can_play_artist
     )
 
     browse_media = BrowseMedia(
@@ -410,8 +399,7 @@ def build_item_response(  # noqa: C901
 
 
 def item_payload(item: dict[str, Any], *, can_play_artist: bool) -> BrowseMedia:
-    """
-    Create response payload for a single media item.
+    """Create response payload for a single media item.
 
     Used by async_browse_media.
     """
@@ -429,12 +417,12 @@ def item_payload(item: dict[str, Any], *, can_play_artist: bool) -> BrowseMedia:
         raise UnknownMediaType from err
 
     can_expand = media_type not in [
-        MEDIA_TYPE_TRACK,
-        MEDIA_TYPE_EPISODE,
+        MediaType.TRACK,
+        MediaType.EPISODE,
     ]
 
     can_play = media_type in PLAYABLE_MEDIA_TYPES and (
-        media_type != MEDIA_TYPE_ARTIST or can_play_artist
+        media_type != MediaType.ARTIST or can_play_artist
     )
 
     browse_media = BrowseMedia(
@@ -449,23 +437,22 @@ def item_payload(item: dict[str, Any], *, can_play_artist: bool) -> BrowseMedia:
 
     if "images" in item:
         browse_media.thumbnail = fetch_image_url(item)
-    elif MEDIA_TYPE_ALBUM in item:
-        browse_media.thumbnail = fetch_image_url(item[MEDIA_TYPE_ALBUM])
+    elif MediaType.ALBUM in item:
+        browse_media.thumbnail = fetch_image_url(item[MediaType.ALBUM])
 
     return browse_media
 
 
 def library_payload(*, can_play_artist: bool) -> BrowseMedia:
-    """
-    Create response payload to describe contents of a specific library.
+    """Create response payload to describe contents of a specific library.
 
     Used by async_browse_media.
     """
     browse_media = BrowseMedia(
         can_expand=True,
         can_play=False,
-        children_media_class=MEDIA_CLASS_DIRECTORY,
-        media_class=MEDIA_CLASS_DIRECTORY,
+        children_media_class=MediaClass.DIRECTORY,
+        media_class=MediaClass.DIRECTORY,
         media_content_id="library",
         media_content_type=f"{MEDIA_PLAYER_PREFIX}library",
         title="Media Library",

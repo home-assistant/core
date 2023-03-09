@@ -45,7 +45,7 @@ class YALEXSBLEEntity(Entity):
         self, new_state: LockState, lock_info: LockInfo, connection_info: ConnectionInfo
     ) -> None:
         """Update the state."""
-        self._attr_available = True
+        self._attr_available = bool(not new_state.auth or new_state.auth.successful)
 
     @callback
     def _async_state_changed(
@@ -56,7 +56,9 @@ class YALEXSBLEEntity(Entity):
         self.async_write_ha_state()
 
     @callback
-    def _async_device_unavailable(self, _address: str) -> None:
+    def _async_device_unavailable(
+        self, _service_info: bluetooth.BluetoothServiceInfoBleak
+    ) -> None:
         """Handle device not longer being seen by the bluetooth stack."""
         self._attr_available = False
         self.async_write_ha_state()

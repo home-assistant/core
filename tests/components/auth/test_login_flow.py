@@ -2,12 +2,17 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
+from homeassistant.core import HomeAssistant
+
 from . import async_setup_auth
 
 from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI
+from tests.typing import ClientSessionGenerator
 
 
-async def test_fetch_auth_providers(hass, aiohttp_client):
+async def test_fetch_auth_providers(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Test fetching auth providers."""
     client = await async_setup_auth(hass, aiohttp_client)
     resp = await client.get("/auth/providers")
@@ -17,7 +22,9 @@ async def test_fetch_auth_providers(hass, aiohttp_client):
     ]
 
 
-async def test_fetch_auth_providers_onboarding(hass, aiohttp_client):
+async def test_fetch_auth_providers_onboarding(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Test fetching auth providers."""
     client = await async_setup_auth(hass, aiohttp_client)
     with patch(
@@ -32,14 +39,18 @@ async def test_fetch_auth_providers_onboarding(hass, aiohttp_client):
     }
 
 
-async def test_cannot_get_flows_in_progress(hass, aiohttp_client):
+async def test_cannot_get_flows_in_progress(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Test we cannot get flows in progress."""
     client = await async_setup_auth(hass, aiohttp_client, [])
     resp = await client.get("/auth/login_flow")
     assert resp.status == HTTPStatus.METHOD_NOT_ALLOWED
 
 
-async def test_invalid_username_password(hass, aiohttp_client):
+async def test_invalid_username_password(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Test we cannot get flows in progress."""
     client = await async_setup_auth(hass, aiohttp_client)
     resp = await client.post(
@@ -61,7 +72,6 @@ async def test_invalid_username_password(hass, aiohttp_client):
             f"/auth/login_flow/{step['flow_id']}",
             json={
                 "client_id": CLIENT_ID,
-                "redirect_uri": CLIENT_REDIRECT_URI,
                 "username": "wrong-user",
                 "password": "test-pass",
             },
@@ -82,7 +92,6 @@ async def test_invalid_username_password(hass, aiohttp_client):
             f"/auth/login_flow/{step['flow_id']}",
             json={
                 "client_id": CLIENT_ID,
-                "redirect_uri": CLIENT_REDIRECT_URI,
                 "username": "test-user",
                 "password": "wrong-pass",
             },
@@ -103,7 +112,6 @@ async def test_invalid_username_password(hass, aiohttp_client):
             f"/auth/login_flow/{step['flow_id']}",
             json={
                 "client_id": CLIENT_ID,
-                "redirect_uri": "http://some-other-domain.com",
                 "username": "wrong-user",
                 "password": "test-pass",
             },
@@ -116,7 +124,23 @@ async def test_invalid_username_password(hass, aiohttp_client):
     assert step["step_id"] == "init"
     assert step["errors"]["base"] == "invalid_auth"
 
-    # Incorrect redirect URI
+
+async def test_invalid_redirect_uri(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test invalid redirect URI."""
+    client = await async_setup_auth(hass, aiohttp_client)
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["insecure_example", None],
+            "redirect_uri": "https://some-other-domain.com",
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    step = await resp.json()
+
     with patch(
         "homeassistant.components.auth.indieauth.fetch_redirect_uris", return_value=[]
     ), patch(
@@ -126,7 +150,6 @@ async def test_invalid_username_password(hass, aiohttp_client):
             f"/auth/login_flow/{step['flow_id']}",
             json={
                 "client_id": CLIENT_ID,
-                "redirect_uri": "http://some-other-domain.com",
                 "username": "test-user",
                 "password": "test-pass",
             },
@@ -139,7 +162,9 @@ async def test_invalid_username_password(hass, aiohttp_client):
     assert data["message"] == "Invalid redirect URI"
 
 
-async def test_login_exist_user(hass, aiohttp_client):
+async def test_login_exist_user(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Test logging in with exist user."""
     client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
     cred = await hass.auth.auth_providers[0].async_get_or_create_credentials(
@@ -165,7 +190,6 @@ async def test_login_exist_user(hass, aiohttp_client):
             f"/auth/login_flow/{step['flow_id']}",
             json={
                 "client_id": CLIENT_ID,
-                "redirect_uri": CLIENT_REDIRECT_URI,
                 "username": "test-user",
                 "password": "test-pass",
             },
@@ -178,7 +202,9 @@ async def test_login_exist_user(hass, aiohttp_client):
     assert len(mock_process_success_login.mock_calls) == 1
 
 
-async def test_login_local_only_user(hass, aiohttp_client):
+async def test_login_local_only_user(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Test logging in with local only user."""
     client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
     cred = await hass.auth.auth_providers[0].async_get_or_create_credentials(
@@ -206,18 +232,19 @@ async def test_login_local_only_user(hass, aiohttp_client):
             f"/auth/login_flow/{step['flow_id']}",
             json={
                 "client_id": CLIENT_ID,
-                "redirect_uri": CLIENT_REDIRECT_URI,
                 "username": "test-user",
                 "password": "test-pass",
             },
         )
 
-    assert len(mock_not_allowed_do_auth.mock_calls) == 1
     assert resp.status == HTTPStatus.FORBIDDEN
+    assert len(mock_not_allowed_do_auth.mock_calls) == 1
     assert await resp.json() == {"message": "Login blocked: User is local only"}
 
 
-async def test_login_exist_user_ip_changes(hass, aiohttp_client):
+async def test_login_exist_user_ip_changes(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Test logging in and the ip address changes results in an rejection."""
     client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
     cred = await hass.auth.auth_providers[0].async_get_or_create_credentials(
@@ -262,7 +289,9 @@ async def test_login_exist_user_ip_changes(hass, aiohttp_client):
     assert response == {"message": "IP address changed"}
 
 
-async def test_well_known_auth_info(hass, aiohttp_client):
+async def test_well_known_auth_info(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Test logging in and the ip address changes results in an rejection."""
     client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
     resp = await client.get(

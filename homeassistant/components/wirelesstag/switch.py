@@ -1,6 +1,8 @@
 """Switch implementation for Wireless Sensor Tags (wirelesstag.net)."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components.switch import (
@@ -75,17 +77,17 @@ def setup_platform(
 class WirelessTagSwitch(WirelessTagBaseSensor, SwitchEntity):
     """A switch implementation for Wireless Sensor Tags."""
 
-    def __init__(self, api, tag, description: SwitchEntityDescription):
+    def __init__(self, api, tag, description: SwitchEntityDescription) -> None:
         """Initialize a switch for Wireless Sensor Tag."""
         super().__init__(api, tag)
         self.entity_description = description
         self._name = f"{self._tag.name} {description.name}"
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         self._api.arm(self)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         self._api.disarm(self)
 

@@ -90,8 +90,7 @@ async def async_setup_entry(
             ]
         )
 
-    if entities:
-        async_add_entities(entities, True)
+    async_add_entities(entities, True)
 
 
 class TadoDeviceBinarySensor(TadoDeviceEntity, BinarySensorEntity):
@@ -108,7 +107,7 @@ class TadoDeviceBinarySensor(TadoDeviceEntity, BinarySensorEntity):
 
         self._state = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register for sensor updates."""
 
         self.async_on_remove(
@@ -184,7 +183,7 @@ class TadoZoneBinarySensor(TadoZoneEntity, BinarySensorEntity):
         self._state_attributes = None
         self._tado_zone_data = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register for sensor updates."""
 
         self.async_on_remove(

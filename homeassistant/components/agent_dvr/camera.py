@@ -70,6 +70,7 @@ class AgentCamera(MjpegCamera):
     """Representation of an Agent Device Stream."""
 
     _attr_attribution = ATTRIBUTION
+    _attr_should_poll = True  # Cameras default to False
     _attr_supported_features = CameraEntityFeature.ON_OFF
 
     def __init__(self, device):
@@ -116,11 +117,6 @@ class AgentCamera(MjpegCamera):
             "has_ptz": self.device.has_ptz,
             "alerts_enabled": self.device.alerts_active,
         }
-
-    @property
-    def should_poll(self) -> bool:
-        """Update the state periodically."""
-        return True
 
     @property
     def is_recording(self) -> bool:

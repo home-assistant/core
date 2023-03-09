@@ -21,6 +21,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_CYCLES, CONF_ICON_TYPE, CONF_PRIORITY, CONF_SOUND, DOMAIN
+from .coordinator import LaMetricDataUpdateCoordinator
 
 
 async def async_get_service(
@@ -31,8 +32,10 @@ async def async_get_service(
     """Get the LaMetric notification service."""
     if discovery_info is None:
         return None
-    lametric: LaMetricDevice = hass.data[DOMAIN][discovery_info["entry_id"]]
-    return LaMetricNotificationService(lametric)
+    coordinator: LaMetricDataUpdateCoordinator = hass.data[DOMAIN][
+        discovery_info["entry_id"]
+    ]
+    return LaMetricNotificationService(coordinator.lametric)
 
 
 class LaMetricNotificationService(BaseNotificationService):
@@ -49,7 +52,7 @@ class LaMetricNotificationService(BaseNotificationService):
 
         sound = None
         if CONF_SOUND in data:
-            sound = Sound(id=data[CONF_SOUND], category=None)
+            sound = Sound(sound=data[CONF_SOUND], category=None)
 
         notification = Notification(
             icon_type=NotificationIconType(data.get(CONF_ICON_TYPE, "none")),

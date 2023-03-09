@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, MusicCastCapabilityEntity, MusicCastDataUpdateCoordinator
-from .const import DEVICE_CLASS_MAPPING
+from .const import TRANSLATION_KEY_MAPPING
 
 
 async def async_setup_entry(
@@ -47,9 +47,9 @@ class SelectableCapapility(MusicCastCapabilityEntity, SelectEntity):
         await self.capability.set(value)
 
     @property
-    def device_class(self) -> str | None:
-        """Return the device class, to identify the entity for translations."""
-        return DEVICE_CLASS_MAPPING.get(self.capability.id)
+    def translation_key(self) -> str | None:
+        """Return the translation key to translate the entity's states."""
+        return TRANSLATION_KEY_MAPPING.get(self.capability.id)
 
     @property
     def options(self) -> list[str]:

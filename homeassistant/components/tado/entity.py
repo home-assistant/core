@@ -7,6 +7,8 @@ from .const import DEFAULT_NAME, DOMAIN, TADO_HOME, TADO_ZONE
 class TadoDeviceEntity(Entity):
     """Base implementation for Tado device."""
 
+    _attr_should_poll = False
+
     def __init__(self, device_info):
         """Initialize a Tado device."""
         super().__init__()
@@ -26,11 +28,6 @@ class TadoDeviceEntity(Entity):
             model=self._device_info["deviceType"],
             via_device=(DOMAIN, self._device_info["serialNo"]),
         )
-
-    @property
-    def should_poll(self):
-        """Do not poll."""
-        return False
 
 
 class TadoHomeEntity(Entity):
@@ -57,6 +54,8 @@ class TadoHomeEntity(Entity):
 class TadoZoneEntity(Entity):
     """Base implementation for Tado zone."""
 
+    _attr_should_poll = False
+
     def __init__(self, zone_name, home_id, zone_id):
         """Initialize a Tado zone."""
         super().__init__()
@@ -68,15 +67,12 @@ class TadoZoneEntity(Entity):
     def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
         return DeviceInfo(
-            configuration_url=f"https://app.tado.com/en/main/home/zoneV2/{self.zone_id}",
+            configuration_url=(
+                f"https://app.tado.com/en/main/home/zoneV2/{self.zone_id}"
+            ),
             identifiers={(DOMAIN, self._device_zone_id)},
             name=self.zone_name,
             manufacturer=DEFAULT_NAME,
             model=TADO_ZONE,
             suggested_area=self.zone_name,
         )
-
-    @property
-    def should_poll(self):
-        """Do not poll."""
-        return False

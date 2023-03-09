@@ -1,10 +1,10 @@
 {
   "domain": "folder_watcher",
   "name": "Folder Watcher",
-  "documentation": "https://www.home-assistant.io/integrations/folder_watcher",
-  "requirements": ["watchdog==2.1.9"],
   "codeowners": [],
-  "quality_scale": "internal",
+  "documentation": "https://www.home-assistant.io/integrations/folder_watcher",
   "iot_class": "local_polling",
-  "loggers": ["watchdog"]
+  "loggers": ["watchdog"],
+  "quality_scale": "internal",
+  "requirements": ["watchdog==2.3.1"]
 }

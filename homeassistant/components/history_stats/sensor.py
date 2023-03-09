@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_STATE,
     CONF_TYPE,
     PERCENTAGE,
-    TIME_HOURS,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
@@ -46,7 +46,7 @@ CONF_TYPE_KEYS = [CONF_TYPE_TIME, CONF_TYPE_RATIO, CONF_TYPE_COUNT]
 
 DEFAULT_NAME = "unnamed statistics"
 UNITS: dict[str, str] = {
-    CONF_TYPE_TIME: TIME_HOURS,
+    CONF_TYPE_TIME: UnitOfTime.HOURS,
     CONF_TYPE_RATIO: PERCENTAGE,
     CONF_TYPE_COUNT: "",
 }
@@ -143,7 +143,6 @@ class HistoryStatsSensorBase(
 class HistoryStatsSensor(HistoryStatsSensorBase):
     """A HistoryStats sensor."""
 
-    _attr_device_class = SensorDeviceClass.DURATION
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
@@ -157,6 +156,8 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
         self._attr_native_unit_of_measurement = UNITS[sensor_type]
         self._type = sensor_type
         self._process_update()
+        if self._type == CONF_TYPE_TIME:
+            self._attr_device_class = SensorDeviceClass.DURATION
 
     @callback
     def _process_update(self) -> None:

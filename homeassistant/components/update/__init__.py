@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.backports.enum import StrEnum
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -20,7 +20,7 @@ from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.helpers.entity import EntityCategory, EntityDescription
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
@@ -60,6 +60,8 @@ DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(UpdateDeviceClass))
 
 __all__ = [
     "ATTR_BACKUP",
+    "ATTR_INSTALLED_VERSION",
+    "ATTR_LATEST_VERSION",
     "ATTR_VERSION",
     "DEVICE_CLASSES_SCHEMA",
     "DOMAIN",
@@ -73,10 +75,12 @@ __all__ = [
     "UpdateEntityFeature",
 ]
 
+# mypy: disallow-any-generics
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Select entities."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[UpdateEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -109,13 +113,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[UpdateEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[UpdateEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
@@ -126,7 +130,7 @@ async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None
         entity.installed_version == entity.latest_version
         or entity.latest_version is None
     ):
-        raise HomeAssistantError(f"No update available for {entity.name}")
+        raise HomeAssistantError(f"No update available for {entity.entity_id}")
 
     # If version is specified, but not supported by the entity.
     if (
@@ -134,19 +138,19 @@ async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None
         and not entity.supported_features & UpdateEntityFeature.SPECIFIC_VERSION
     ):
         raise HomeAssistantError(
-            f"Installing a specific version is not supported for {entity.name}"
+            f"Installing a specific version is not supported for {entity.entity_id}"
         )
 
     # If backup is requested, but not supported by the entity.
     if (
         backup := service_call.data[ATTR_BACKUP]
     ) and not entity.supported_features & UpdateEntityFeature.BACKUP:
-        raise HomeAssistantError(f"Backup is not supported for {entity.name}")
+        raise HomeAssistantError(f"Backup is not supported for {entity.entity_id}")
 
     # Update is already in progress.
     if entity.in_progress is not False:
         raise HomeAssistantError(
-            f"Update installation already in progress for {entity.name}"
+            f"Update installation already in progress for {entity.entity_id}"
         )
 
     await entity.async_install_with_progress(version, backup)
@@ -155,7 +159,9 @@ async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None
 async def async_skip(entity: UpdateEntity, service_call: ServiceCall) -> None:
     """Service call wrapper to validate the call."""
     if entity.auto_update:
-        raise HomeAssistantError(f"Skipping update is not supported for {entity.name}")
+        raise HomeAssistantError(
+            f"Skipping update is not supported for {entity.entity_id}"
+        )
     await entity.async_skip()
 
 
@@ -163,7 +169,7 @@ async def async_clear_skipped(entity: UpdateEntity, service_call: ServiceCall) -
     """Service call wrapper to validate the call."""
     if entity.auto_update:
         raise HomeAssistantError(
-            f"Clearing skipped update is not supported for {entity.name}"
+            f"Clearing skipped update is not supported for {entity.entity_id}"
         )
     await entity.async_clear_skipped()
 
@@ -172,7 +178,7 @@ async def async_clear_skipped(entity: UpdateEntity, service_call: ServiceCall) -
 class UpdateEntityDescription(EntityDescription):
     """A class that describes update entities."""
 
-    device_class: UpdateDeviceClass | str | None = None
+    device_class: UpdateDeviceClass | None = None
     entity_category: EntityCategory | None = EntityCategory.CONFIG
 
 
@@ -182,13 +188,13 @@ class UpdateEntity(RestoreEntity):
     entity_description: UpdateEntityDescription
     _attr_auto_update: bool = False
     _attr_installed_version: str | None = None
-    _attr_device_class: UpdateDeviceClass | str | None
+    _attr_device_class: UpdateDeviceClass | None
     _attr_in_progress: bool | int = False
     _attr_latest_version: str | None = None
     _attr_release_summary: str | None = None
     _attr_release_url: str | None = None
     _attr_state: None = None
-    _attr_supported_features: int = 0
+    _attr_supported_features: UpdateEntityFeature = UpdateEntityFeature(0)
     _attr_title: str | None = None
     __skipped_version: str | None = None
     __in_progress: bool = False
@@ -204,7 +210,7 @@ class UpdateEntity(RestoreEntity):
         return self._attr_installed_version
 
     @property
-    def device_class(self) -> UpdateDeviceClass | str | None:
+    def device_class(self) -> UpdateDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
             return self._attr_device_class
@@ -268,7 +274,7 @@ class UpdateEntity(RestoreEntity):
         return self._attr_release_url
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> UpdateEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features
 
@@ -324,16 +330,16 @@ class UpdateEntity(RestoreEntity):
     async def async_release_notes(self) -> str | None:
         """Return full release notes.
 
-        This is suitable for a long changelog that does not fit in the release_summary property.
-        The returned string can contain markdown.
+        This is suitable for a long changelog that does not fit in the release_summary
+        property. The returned string can contain markdown.
         """
         return await self.hass.async_add_executor_job(self.release_notes)
 
     def release_notes(self) -> str | None:
         """Return full release notes.
 
-        This is suitable for a long changelog that does not fit in the release_summary property.
-        The returned string can contain markdown.
+        This is suitable for a long changelog that does not fit in the release_summary
+        property. The returned string can contain markdown.
         """
         raise NotImplementedError()
 
@@ -437,11 +443,11 @@ class UpdateEntity(RestoreEntity):
 async def websocket_release_notes(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Get the full release notes for a entity."""
-    component = hass.data[DOMAIN]
-    entity: UpdateEntity | None = component.get_entity(msg["entity_id"])
+    component: EntityComponent[UpdateEntity] = hass.data[DOMAIN]
+    entity = component.get_entity(msg["entity_id"])
 
     if entity is None:
         connection.send_error(

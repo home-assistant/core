@@ -12,7 +12,7 @@ from homeassistant.const import CONF_DEVICE_ID, EVENT_HOMEASSISTANT_STOP, Platfo
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
-    device_registry,
+    device_registry as dr,
     update_coordinator,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -29,7 +29,13 @@ from .const import (
 )
 from .utils import async_start_bridge, async_stop_bridge
 
-PLATFORMS = [Platform.SWITCH, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -116,7 +122,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-class SwitcherDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
+class SwitcherDataUpdateCoordinator(
+    update_coordinator.DataUpdateCoordinator[SwitcherBase]
+):
     """Switcher device data update coordinator."""
 
     def __init__(
@@ -132,10 +140,11 @@ class SwitcherDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
         self.entry = entry
         self.data = device
 
-    async def _async_update_data(self) -> None:
+    async def _async_update_data(self) -> SwitcherBase:
         """Mark device offline if no data."""
         raise update_coordinator.UpdateFailed(
-            f"Device {self.name} did not send update for {MAX_UPDATE_INTERVAL_SEC} seconds"
+            f"Device {self.name} did not send update for"
+            f" {MAX_UPDATE_INTERVAL_SEC} seconds"
         )
 
     @property
@@ -156,10 +165,10 @@ class SwitcherDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
     @callback
     def async_setup(self) -> None:
         """Set up the coordinator."""
-        dev_reg = device_registry.async_get(self.hass)
+        dev_reg = dr.async_get(self.hass)
         dev_reg.async_get_or_create(
             config_entry_id=self.entry.entry_id,
-            connections={(device_registry.CONNECTION_NETWORK_MAC, self.mac_address)},
+            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
             identifiers={(DOMAIN, self.device_id)},
             manufacturer="Switcher",
             name=self.name,

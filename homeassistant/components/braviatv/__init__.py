@@ -4,31 +4,37 @@ from __future__ import annotations
 from typing import Final
 
 from aiohttp import CookieJar
-from pybravia import BraviaTV
+from pybravia import BraviaClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN, Platform
+from homeassistant.const import CONF_HOST, CONF_MAC, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import CONF_IGNORED_SOURCES, DOMAIN
+from .const import DOMAIN
 from .coordinator import BraviaTVCoordinator
 
-PLATFORMS: Final[list[Platform]] = [Platform.MEDIA_PLAYER, Platform.REMOTE]
+PLATFORMS: Final[list[Platform]] = [
+    Platform.BUTTON,
+    Platform.MEDIA_PLAYER,
+    Platform.REMOTE,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up a config entry."""
     host = config_entry.data[CONF_HOST]
     mac = config_entry.data[CONF_MAC]
-    pin = config_entry.data[CONF_PIN]
-    ignored_sources = config_entry.options.get(CONF_IGNORED_SOURCES, [])
 
     session = async_create_clientsession(
         hass, cookie_jar=CookieJar(unsafe=True, quote_cookie=False)
     )
-    client = BraviaTV(host, mac, session=session)
-    coordinator = BraviaTVCoordinator(hass, client, pin, ignored_sources)
+    client = BraviaClient(host, mac, session=session)
+    coordinator = BraviaTVCoordinator(
+        hass=hass,
+        client=client,
+        config=config_entry.data,
+    )
     config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
 
     await coordinator.async_config_entry_first_refresh()

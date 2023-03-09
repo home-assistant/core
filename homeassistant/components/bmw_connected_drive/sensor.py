@@ -19,7 +19,6 @@ from homeassistant.const import LENGTH, PERCENTAGE, VOLUME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.util.unit_system import UnitSystem
 
 from . import BMWBaseEntity
 from .const import DOMAIN, UNIT_MAP
@@ -56,23 +55,27 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
     # --- Generic ---
     "charging_start_time": BMWSensorEntityDescription(
         key="charging_start_time",
+        name="Charging start time",
         key_class="fuel_and_battery",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
     ),
     "charging_end_time": BMWSensorEntityDescription(
         key="charging_end_time",
+        name="Charging end time",
         key_class="fuel_and_battery",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     "charging_status": BMWSensorEntityDescription(
         key="charging_status",
+        name="Charging status",
         key_class="fuel_and_battery",
         icon="mdi:ev-station",
         value=lambda x, y: x.value,
     ),
     "remaining_battery_percent": BMWSensorEntityDescription(
         key="remaining_battery_percent",
+        name="Remaining battery percent",
         key_class="fuel_and_battery",
         unit_type=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
@@ -80,12 +83,14 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
     # --- Specific ---
     "mileage": BMWSensorEntityDescription(
         key="mileage",
+        name="Mileage",
         icon="mdi:speedometer",
         unit_type=LENGTH,
         value=lambda x, hass: convert_and_round(x, hass.config.units.length, 2),
     ),
     "remaining_range_total": BMWSensorEntityDescription(
         key="remaining_range_total",
+        name="Remaining range total",
         key_class="fuel_and_battery",
         icon="mdi:map-marker-distance",
         unit_type=LENGTH,
@@ -93,6 +98,7 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
     ),
     "remaining_range_electric": BMWSensorEntityDescription(
         key="remaining_range_electric",
+        name="Remaining range electric",
         key_class="fuel_and_battery",
         icon="mdi:map-marker-distance",
         unit_type=LENGTH,
@@ -100,6 +106,7 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
     ),
     "remaining_range_fuel": BMWSensorEntityDescription(
         key="remaining_range_fuel",
+        name="Remaining range fuel",
         key_class="fuel_and_battery",
         icon="mdi:map-marker-distance",
         unit_type=LENGTH,
@@ -107,6 +114,7 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
     ),
     "remaining_fuel": BMWSensorEntityDescription(
         key="remaining_fuel",
+        name="Remaining fuel",
         key_class="fuel_and_battery",
         icon="mdi:gas-station",
         unit_type=VOLUME,
@@ -114,6 +122,7 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
     ),
     "remaining_fuel_percent": BMWSensorEntityDescription(
         key="remaining_fuel_percent",
+        name="Remaining fuel percent",
         key_class="fuel_and_battery",
         icon="mdi:gas-station",
         unit_type=PERCENTAGE,
@@ -127,7 +136,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the MyBMW sensors from config entry."""
-    unit_system = hass.config.units
     coordinator: BMWDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     entities: list[BMWSensor] = []
@@ -135,7 +143,7 @@ async def async_setup_entry(
     for vehicle in coordinator.account.vehicles:
         entities.extend(
             [
-                BMWSensor(coordinator, vehicle, description, unit_system)
+                BMWSensor(coordinator, vehicle, description)
                 for attribute_name in vehicle.available_attributes
                 if (description := SENSOR_TYPES.get(attribute_name))
             ]
@@ -154,13 +162,10 @@ class BMWSensor(BMWBaseEntity, SensorEntity):
         coordinator: BMWDataUpdateCoordinator,
         vehicle: MyBMWVehicle,
         description: BMWSensorEntityDescription,
-        unit_system: UnitSystem,
     ) -> None:
         """Initialize BMW vehicle sensor."""
         super().__init__(coordinator, vehicle)
         self.entity_description = description
-
-        self._attr_name = f"{vehicle.name} {description.key}"
         self._attr_unique_id = f"{vehicle.vin}-{description.key}"
 
         # Set the correct unit of measurement based on the unit_type

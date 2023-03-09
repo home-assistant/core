@@ -1,7 +1,10 @@
 """Clicksend platform for notify component."""
+from __future__ import annotations
+
 from http import HTTPStatus
 import json
 import logging
+from typing import Any
 
 import requests
 import voluptuous as vol
@@ -14,7 +17,9 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONTENT_TYPE_JSON,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +46,11 @@ PLATFORM_SCHEMA = vol.Schema(
 )
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> ClicksendNotificationService | None:
     """Get the ClickSend notification service."""
     if not _authenticate(config):
         _LOGGER.error("You are not authorized to access ClickSend")
@@ -52,16 +61,16 @@ def get_service(hass, config, discovery_info=None):
 class ClicksendNotificationService(BaseNotificationService):
     """Implementation of a notification service for the ClickSend service."""
 
-    def __init__(self, config):
+    def __init__(self, config: ConfigType) -> None:
         """Initialize the service."""
-        self.username = config[CONF_USERNAME]
-        self.api_key = config[CONF_API_KEY]
-        self.recipients = config[CONF_RECIPIENT]
-        self.sender = config[CONF_SENDER]
+        self.username: str = config[CONF_USERNAME]
+        self.api_key: str = config[CONF_API_KEY]
+        self.recipients: list[str] = config[CONF_RECIPIENT]
+        self.sender: str = config[CONF_SENDER]
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
-        data = {"messages": []}
+        data: dict[str, Any] = {"messages": []}
         for recipient in self.recipients:
             data["messages"].append(
                 {
@@ -91,7 +100,7 @@ class ClicksendNotificationService(BaseNotificationService):
         )
 
 
-def _authenticate(config):
+def _authenticate(config: ConfigType) -> bool:
     """Authenticate with ClickSend."""
     api_url = f"{BASE_API_URL}/account"
     resp = requests.get(

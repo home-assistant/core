@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import datetime
+import logging
 import threading
 from typing import TYPE_CHECKING, Any
 
@@ -14,8 +15,12 @@ from homeassistant.helpers.typing import UndefinedType
 
 from . import purge, statistics
 from .const import DOMAIN, EXCLUDE_ATTRIBUTES
+from .db_schema import Statistics, StatisticsShortTerm
 from .models import StatisticData, StatisticMetaData
 from .util import periodic_db_cleanups
+
+_LOGGER = logging.getLogger(__name__)
+
 
 if TYPE_CHECKING:
     from .core import Recorder
@@ -29,6 +34,24 @@ class RecorderTask(abc.ABC):
     @abc.abstractmethod
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
+
+
+@dataclass
+class ChangeStatisticsUnitTask(RecorderTask):
+    """Object to store statistics_id and unit to convert unit of statistics."""
+
+    statistic_id: str
+    new_unit_of_measurement: str
+    old_unit_of_measurement: str
+
+    def run(self, instance: Recorder) -> None:
+        """Handle the task."""
+        statistics.change_statistics_unit(
+            instance,
+            self.statistic_id,
+            self.new_unit_of_measurement,
+            self.old_unit_of_measurement,
+        )
 
 
 @dataclass
@@ -102,7 +125,10 @@ class PurgeEntitiesTask(RecorderTask):
 
 @dataclass
 class PerodicCleanupTask(RecorderTask):
-    """An object to insert into the recorder to trigger cleanup tasks when auto purge is disabled."""
+    """An object to insert into the recorder to trigger cleanup tasks.
+
+    Trigger cleanup tasks when auto purge is disabled.
+    """
 
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
@@ -114,13 +140,14 @@ class StatisticsTask(RecorderTask):
     """An object to insert into the recorder queue to run a statistics task."""
 
     start: datetime
+    fire_events: bool
 
     def run(self, instance: Recorder) -> None:
         """Run statistics task."""
-        if statistics.compile_statistics(instance, self.start):
+        if statistics.compile_statistics(instance, self.start, self.fire_events):
             return
         # Schedule a new statistics task if this one didn't finish
-        instance.queue_task(StatisticsTask(self.start))
+        instance.queue_task(StatisticsTask(self.start, self.fire_events))
 
 
 @dataclass
@@ -129,13 +156,18 @@ class ImportStatisticsTask(RecorderTask):
 
     metadata: StatisticMetaData
     statistics: Iterable[StatisticData]
+    table: type[Statistics | StatisticsShortTerm]
 
     def run(self, instance: Recorder) -> None:
         """Run statistics task."""
-        if statistics.import_statistics(instance, self.metadata, self.statistics):
+        if statistics.import_statistics(
+            instance, self.metadata, self.statistics, self.table
+        ):
             return
         # Schedule a new statistics task if this one didn't finish
-        instance.queue_task(ImportStatisticsTask(self.metadata, self.statistics))
+        instance.queue_task(
+            ImportStatisticsTask(self.metadata, self.statistics, self.table)
+        )
 
 
 @dataclass
@@ -145,6 +177,7 @@ class AdjustStatisticsTask(RecorderTask):
     statistic_id: str
     start_time: datetime
     sum_adjustment: float
+    adjustment_unit: str
 
     def run(self, instance: Recorder) -> None:
         """Run statistics task."""
@@ -153,19 +186,26 @@ class AdjustStatisticsTask(RecorderTask):
             self.statistic_id,
             self.start_time,
             self.sum_adjustment,
+            self.adjustment_unit,
         ):
             return
         # Schedule a new adjust statistics task if this one didn't finish
         instance.queue_task(
             AdjustStatisticsTask(
-                self.statistic_id, self.start_time, self.sum_adjustment
+                self.statistic_id,
+                self.start_time,
+                self.sum_adjustment,
+                self.adjustment_unit,
             )
         )
 
 
 @dataclass
 class WaitTask(RecorderTask):
-    """An object to insert into the recorder queue to tell it set the _queue_watch event."""
+    """An object to insert into the recorder queue.
+
+    Tell it set the _queue_watch event.
+    """
 
     commit_before = False
 
@@ -267,3 +307,52 @@ class SynchronizeTask(RecorderTask):
         # Does not use a tracked task to avoid
         # blocking shutdown if the recorder is broken
         instance.hass.loop.call_soon_threadsafe(self.event.set)
+
+
+@dataclass
+class PostSchemaMigrationTask(RecorderTask):
+    """Post migration task to update schema."""
+
+    old_version: int
+    new_version: int
+
+    def run(self, instance: Recorder) -> None:
+        """Handle the task."""
+        instance._post_schema_migration(  # pylint: disable=[protected-access]
+            self.old_version, self.new_version
+        )
+
+
+@dataclass
+class StatisticsTimestampMigrationCleanupTask(RecorderTask):
+    """An object to insert into the recorder queue to run a statistics migration cleanup task."""
+
+    def run(self, instance: Recorder) -> None:
+        """Run statistics timestamp cleanup task."""
+        if not statistics.cleanup_statistics_timestamp_migration(instance):
+            # Schedule a new statistics migration task if this one didn't finish
+            instance.queue_task(StatisticsTimestampMigrationCleanupTask())
+
+
+@dataclass
+class AdjustLRUSizeTask(RecorderTask):
+    """An object to insert into the recorder queue to adjust the LRU size."""
+
+    commit_before = False
+
+    def run(self, instance: Recorder) -> None:
+        """Handle the task to adjust the size."""
+        instance._adjust_lru_size()  # pylint: disable=[protected-access]
+
+
+@dataclass
+class ContextIDMigrationTask(RecorderTask):
+    """An object to insert into the recorder queue to migrate context ids."""
+
+    commit_before = False
+
+    def run(self, instance: Recorder) -> None:
+        """Run context id migration task."""
+        if not instance._migrate_context_ids():  # pylint: disable=[protected-access]
+            # Schedule a new migration task if this one didn't finish
+            instance.queue_task(ContextIDMigrationTask())

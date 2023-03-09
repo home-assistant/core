@@ -121,7 +121,7 @@ class SimulatedSensor(SensorEntity):
         noise = self._random.gauss(mu=0, sigma=fwhm)
         return round(mean + periodic + noise, 3)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the sensor."""
         self._state = self.signal_calc()
 

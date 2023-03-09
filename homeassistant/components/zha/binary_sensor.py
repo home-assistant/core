@@ -69,7 +69,7 @@ class BinarySensor(ZhaEntity, BinarySensorEntity):
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._channel = channels[0]
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         self.async_accept_signal(
@@ -92,12 +92,12 @@ class BinarySensor(ZhaEntity, BinarySensorEntity):
     @callback
     def async_set_state(self, attr_id, attr_name, value):
         """Set the state."""
-        if self.SENSOR_ATTR is None or self.SENSOR_ATTR != attr_name:
+        if self.SENSOR_ATTR is None or attr_name != self.SENSOR_ATTR:
             return
         self._state = bool(value)
         self.async_write_ha_state()
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Attempt to retrieve on off state from the binary sensor."""
         await super().async_update()
         attribute = getattr(self._channel, "value_attribute", "on_off")
@@ -167,7 +167,7 @@ class IASZone(BinarySensor):
         """Return device class from component DEVICE_CLASSES."""
         return CLASS_MAPPING.get(self._channel.cluster.get("zone_type"))
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Attempt to retrieve on off state from the binary sensor."""
         await super().async_update()
         value = await self._channel.get_attribute_value("zone_status")
@@ -194,3 +194,22 @@ class ReplaceFilter(BinarySensor, id_suffix="replace_filter"):
 
     SENSOR_ATTR = "replace_filter"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PROBLEM
+
+
+@MULTI_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederErrorDetected(BinarySensor, id_suffix="error_detected"):
+    """ZHA aqara pet feeder error detected binary sensor."""
+
+    SENSOR_ATTR = "error_detected"
+    _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PROBLEM
+    _attr_name: str = "Error detected"
+
+
+@MULTI_MATCH(
+    channel_names="opple_cluster", models={"lumi.plug.mmeu01", "lumi.plug.maeu01"}
+)
+class XiaomiPlugConsumerConnected(BinarySensor, id_suffix="consumer_connected"):
+    """ZHA Xiaomi plug consumer connected binary sensor."""
+
+    SENSOR_ATTR = "consumer_connected"
+    _attr_name: str = "Consumer connected"

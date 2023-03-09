@@ -22,6 +22,7 @@ from homeassistant.components.bluetooth import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -32,6 +33,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DISPATCH_DETECTION, DOMAIN
+
+
+class UnableToConnect(HomeAssistantError):
+    """Exception to indicate that we cannot connect to device."""
+
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -64,39 +70,52 @@ class Coordinator(DataUpdateCoordinator[State]):
         log_failures: bool = True,
         raise_on_auth_failed: bool = False,
         scheduled: bool = False,
+        raise_on_entry_error: bool = False,
     ) -> None:
         self._refresh_was_scheduled = scheduled
         await super()._async_refresh(
             log_failures=log_failures,
             raise_on_auth_failed=raise_on_auth_failed,
             scheduled=scheduled,
+            raise_on_entry_error=raise_on_entry_error,
         )
 
     async def _async_update_data(self) -> State:
         """Handle an explicit update request."""
         if self._refresh_was_scheduled:
-            if async_address_present(self.hass, self.device.address):
+            if async_address_present(self.hass, self.device.address, False):
                 return self.device.state
             raise UpdateFailed(
                 "No data received within schedule, and device is no longer present"
             )
 
-        await self.device.update()
+        if (
+            ble_device := async_ble_device_from_address(
+                self.hass, self.device.address, True
+            )
+        ) is None:
+            raise UpdateFailed("No connectable path to device")
+        async with self.device.connect(ble_device) as device:
+            await device.update()
         return self.device.state
 
     def detection_callback(self, service_info: BluetoothServiceInfoBleak) -> None:
         """Handle a new announcement of data."""
-        self.device.device = service_info.device
         self.device.detection_callback(service_info.device, service_info.advertisement)
         self.async_set_updated_data(self.device.state)
 
     @asynccontextmanager
     async def async_connect_and_update(self) -> AsyncIterator[Device]:
         """Provide an up to date device for use during connections."""
-        if ble_device := async_ble_device_from_address(self.hass, self.device.address):
-            self.device.device = ble_device
-        async with self.device:
-            yield self.device
+        if (
+            ble_device := async_ble_device_from_address(
+                self.hass, self.device.address, True
+            )
+        ) is None:
+            raise UnableToConnect("No connectable path to device")
+
+        async with self.device.connect(ble_device) as device:
+            yield device
 
         self.async_set_updated_data(self.device.state)
 
@@ -126,7 +145,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         else:
             _LOGGER.debug("Detected: %s", service_info)
 
-            device = Device(service_info.device)
+            device = Device(service_info.device.address)
             device_info = DeviceInfo(
                 connections={(dr.CONNECTION_BLUETOOTH, service_info.address)},
                 identifiers={(DOMAIN, service_info.address)},
@@ -149,12 +168,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             BluetoothCallbackMatcher(
                 manufacturer_id=20296,
                 manufacturer_data_start=[79, 68, 70, 74, 65, 82],
+                connectable=False,
             ),
             BluetoothScanningMode.ACTIVE,
         )
     )
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 

@@ -1,10 +1,10 @@
-"""
-Regression tests for Ecobee occupancy.
+"""Regression tests for Ecobee occupancy.
 
 https://github.com/home-assistant/core/issues/31827
 """
+from homeassistant.core import HomeAssistant
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
@@ -14,7 +14,7 @@ from tests.components.homekit_controller.common import (
 )
 
 
-async def test_ecobee_occupancy_setup(hass):
+async def test_ecobee_occupancy_setup(hass: HomeAssistant) -> None:
     """Test that an Ecbobee occupancy sensor be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "ecobee_occupancy.json")
     await setup_test_accessories(hass, accessories)
@@ -34,7 +34,7 @@ async def test_ecobee_occupancy_setup(hass):
                 EntityTestInfo(
                     entity_id="binary_sensor.master_fan",
                     friendly_name="Master Fan",
-                    unique_id="homekit-111111111111-56",
+                    unique_id="00:00:00:00:00:00_1_56",
                     state="off",
                 ),
             ],

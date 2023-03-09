@@ -29,9 +29,6 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
-# mypy: no-check-untyped-defs
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ENTITY_ID = "entity_id"
@@ -126,7 +123,7 @@ async def async_attach_trigger(
     unsub_track_same = {}
     period: dict[str, timedelta] = {}
     attribute = config.get(CONF_ATTRIBUTE)
-    job = HassJob(action)
+    job = HassJob(action, f"state trigger {trigger_info}")
 
     trigger_data = trigger_info["trigger_data"]
     _variables = trigger_info["variables"] or {}

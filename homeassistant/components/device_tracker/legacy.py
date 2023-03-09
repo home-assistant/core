@@ -71,12 +71,7 @@ from .const import (
 
 SERVICE_SEE: Final = "see"
 
-SOURCE_TYPES: Final[tuple[str, ...]] = (
-    SourceType.GPS,
-    SourceType.ROUTER,
-    SourceType.BLUETOOTH,
-    SourceType.BLUETOOTH_LE,
-)
+SOURCE_TYPES = [cls.value for cls in SourceType]
 
 NEW_DEVICE_DEFAULTS_SCHEMA = vol.Any(
     None,
@@ -108,7 +103,7 @@ SERVICE_SEE_PAYLOAD_SCHEMA: Final[vol.Schema] = vol.Schema(
             ATTR_GPS_ACCURACY: cv.positive_int,
             ATTR_BATTERY: cv.positive_int,
             ATTR_ATTRIBUTES: dict,
-            ATTR_SOURCE_TYPE: vol.In(SOURCE_TYPES),
+            ATTR_SOURCE_TYPE: vol.Coerce(SourceType),
             ATTR_CONSIDER_HOME: cv.time_period,
             # Temp workaround for iOS app introduced in 0.65
             vol.Optional("battery_status"): str,
@@ -384,8 +379,10 @@ def async_setup_scanner_platform(
         """Handle interval matches."""
         if update_lock.locked():
             LOGGER.warning(
-                "Updating device list from %s took longer than the scheduled "
-                "scan interval %s",
+                (
+                    "Updating device list from %s took longer than the scheduled "
+                    "scan interval %s"
+                ),
                 platform,
                 interval,
             )
@@ -959,6 +956,6 @@ def get_gravatar_for_email(email: str) -> str:
     """
 
     return (
-        f"https://www.gravatar.com/avatar/"
+        "https://www.gravatar.com/avatar/"
         f"{hashlib.md5(email.encode('utf-8').lower()).hexdigest()}.jpg?s=80&d=wavatar"
     )

@@ -19,14 +19,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import NextDnsUpdateCoordinator, TCoordinatorData
+from . import CoordinatorDataT, NextDnsUpdateCoordinator
 from .const import (
     ATTR_DNSSEC,
     ATTR_ENCRYPTION,
@@ -40,17 +39,17 @@ PARALLEL_UPDATES = 1
 
 
 @dataclass
-class NextDnsSensorRequiredKeysMixin(Generic[TCoordinatorData]):
+class NextDnsSensorRequiredKeysMixin(Generic[CoordinatorDataT]):
     """Class for NextDNS entity required keys."""
 
     coordinator_type: str
-    value: Callable[[TCoordinatorData], StateType]
+    value: Callable[[CoordinatorDataT], StateType]
 
 
 @dataclass
 class NextDnsSensorEntityDescription(
     SensorEntityDescription,
-    NextDnsSensorRequiredKeysMixin[TCoordinatorData],
+    NextDnsSensorRequiredKeysMixin[CoordinatorDataT],
 ):
     """NextDNS sensor entity description."""
 
@@ -348,7 +347,7 @@ async def async_setup_entry(
 
 
 class NextDnsSensor(
-    CoordinatorEntity[NextDnsUpdateCoordinator[TCoordinatorData]], SensorEntity
+    CoordinatorEntity[NextDnsUpdateCoordinator[CoordinatorDataT]], SensorEntity
 ):
     """Define an NextDNS sensor."""
 
@@ -356,7 +355,7 @@ class NextDnsSensor(
 
     def __init__(
         self,
-        coordinator: NextDnsUpdateCoordinator[TCoordinatorData],
+        coordinator: NextDnsUpdateCoordinator[CoordinatorDataT],
         description: NextDnsSensorEntityDescription,
     ) -> None:
         """Initialize."""

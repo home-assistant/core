@@ -125,6 +125,7 @@ class HyperionBaseLight(LightEntity):
     """A Hyperion light base class."""
 
     _attr_color_mode = ColorMode.HS
+    _attr_should_poll = False
     _attr_supported_color_modes = {ColorMode.HS}
     _attr_supported_features = LightEntityFeature.EFFECT
 
@@ -177,11 +178,6 @@ class HyperionBaseLight(LightEntity):
     def entity_registry_enabled_default(self) -> bool:
         """Whether or not the entity is enabled by default."""
         return True
-
-    @property
-    def should_poll(self) -> bool:
-        """Return whether or not this entity should be polled."""
-        return False
 
     @property
     def name(self) -> str:
@@ -296,8 +292,10 @@ class HyperionBaseLight(LightEntity):
                 component = const.KEY_COMPONENTID_FROM_NAME[effect]
             else:
                 _LOGGER.warning(
-                    "Use of Hyperion effect '%s' is deprecated and will be removed "
-                    "in a future release. Please use '%s' instead",
+                    (
+                        "Use of Hyperion effect '%s' is deprecated and will be removed "
+                        "in a future release. Please use '%s' instead"
+                    ),
                     effect,
                     const.KEY_COMPONENTID_TO_NAME[effect],
                 )
@@ -437,8 +435,10 @@ class HyperionBaseLight(LightEntity):
         self._update_effect_list()
 
         _LOGGER.debug(
-            "Hyperion full state update: On=%s,Brightness=%i,Effect=%s "
-            "(%i effects total),Color=%s",
+            (
+                "Hyperion full state update: On=%s,Brightness=%i,Effect=%s "
+                "(%i effects total),Color=%s"
+            ),
             self.is_on,
             self._brightness,
             self._effect,

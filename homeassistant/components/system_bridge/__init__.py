@@ -66,7 +66,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         if not await version.check_supported():
             raise ConfigEntryNotReady(
-                f"You are not running a supported version of System Bridge. Please update to {SUPPORTED_VERSION} or higher."
+                "You are not running a supported version of System Bridge. Please"
+                f" update to {SUPPORTED_VERSION} or higher."
             )
     except AuthenticationException as exception:
         _LOGGER.error("Authentication failed for %s: %s", entry.title, exception)
@@ -286,6 +287,7 @@ class SystemBridgeEntity(CoordinatorEntity[SystemBridgeDataUpdateCoordinator]):
             f"http://{self._hostname}:{api_port}/app/settings.html"
         )
         self._mac_address = coordinator.data.system.mac_address
+        self._uuid = coordinator.data.system.uuid
         self._version = coordinator.data.system.version
 
     @property
@@ -298,16 +300,13 @@ class SystemBridgeEntity(CoordinatorEntity[SystemBridgeDataUpdateCoordinator]):
         """Return the name of the entity."""
         return self._name
 
-
-class SystemBridgeDeviceEntity(SystemBridgeEntity):
-    """Defines a System Bridge device entity."""
-
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this System Bridge instance."""
         return DeviceInfo(
             configuration_url=self._configuration_url,
             connections={(dr.CONNECTION_NETWORK_MAC, self._mac_address)},
+            identifiers={(DOMAIN, self._uuid)},
             name=self._hostname,
             sw_version=self._version,
         )

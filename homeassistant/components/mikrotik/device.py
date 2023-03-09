@@ -25,7 +25,7 @@ class Device:
     @property
     def name(self) -> str:
         """Return device name."""
-        return self._params.get("host-name", self.mac)
+        return str(self._params.get("host-name", self.mac))
 
     @property
     def ip_address(self) -> str | None:

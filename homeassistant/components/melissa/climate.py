@@ -2,17 +2,18 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -58,6 +59,7 @@ class MelissaClimate(ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.FAN_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, api, serial_number, init_data):
         """Initialize the climate device."""
@@ -125,11 +127,6 @@ class MelissaClimate(ClimateEntity):
         return self._cur_settings[self._api.TEMP]
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement which this thermostat uses."""
-        return TEMP_CELSIUS
-
-    @property
     def min_temp(self):
         """Return the minimum supported temperature for the thermostat."""
         return 16
@@ -139,12 +136,12 @@ class MelissaClimate(ClimateEntity):
         """Return the maximum supported temperature for the thermostat."""
         return 30
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
         await self.async_send({self._api.TEMP: temp})
 
-    async def async_set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
         melissa_fan_mode = self.hass_fan_to_melissa(fan_mode)
         await self.async_send({self._api.FAN: melissa_fan_mode})
@@ -172,7 +169,7 @@ class MelissaClimate(ClimateEntity):
         ):
             self._cur_settings = old_value
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get latest data from Melissa."""
         try:
             self._data = (await self._api.async_status(cached=True))[

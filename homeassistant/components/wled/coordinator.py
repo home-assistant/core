@@ -1,14 +1,11 @@
 """DataUpdateCoordinator for WLED."""
 from __future__ import annotations
 
-import asyncio
-from collections.abc import Callable
-
 from wled import WLED, Device as WLEDDevice, WLEDConnectionClosed, WLEDError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -38,7 +35,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
             CONF_KEEP_MASTER_LIGHT, DEFAULT_KEEP_MASTER_LIGHT
         )
         self.wled = WLED(entry.data[CONF_HOST], session=async_get_clientsession(hass))
-        self.unsub: Callable | None = None
+        self.unsub: CALLBACK_TYPE | None = None
 
         super().__init__(
             hass,
@@ -85,7 +82,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
                 self.unsub()
                 self.unsub = None
 
-        async def close_websocket(_) -> None:
+        async def close_websocket(_: Event) -> None:
             """Close WebSocket connection."""
             self.unsub = None
             await self.wled.disconnect()
@@ -96,7 +93,9 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         )
 
         # Start listening
-        asyncio.create_task(listen())
+        self.config_entry.async_create_background_task(
+            self.hass, listen(), "wled-listen"
+        )
 
     async def _async_update_data(self) -> WLEDDevice:
         """Fetch data from WLED."""

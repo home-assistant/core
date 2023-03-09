@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import person
 from homeassistant.components.auth import indieauth
-from homeassistant.components.http.const import KEY_HASS_REFRESH_TOKEN_ID
+from homeassistant.components.http import KEY_HASS_REFRESH_TOKEN_ID
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import callback
@@ -166,7 +166,7 @@ class UserOnboardingView(_BaseOnboardingView):
 
             # Return authorization code for fetching tokens and connect
             # during onboarding.
-            # pylint: disable=import-outside-toplevel
+            # pylint: disable-next=import-outside-toplevel
             from homeassistant.components.auth import create_auth_code
 
             auth_code = create_auth_code(hass, data["client_id"], credentials)
@@ -195,7 +195,7 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
             # Integrations to set up when finishing onboarding
             onboard_integrations = ["met", "radio_browser"]
 
-            # pylint: disable=import-outside-toplevel
+            # pylint: disable-next=import-outside-toplevel
             from homeassistant.components import hassio
 
             if (
@@ -255,7 +255,7 @@ class IntegrationOnboardingView(_BaseOnboardingView):
                 )
 
             # Return authorization code so we can redirect user and log them in
-            # pylint: disable=import-outside-toplevel
+            # pylint: disable-next=import-outside-toplevel
             from homeassistant.components.auth import create_auth_code
 
             auth_code = create_auth_code(

@@ -6,25 +6,26 @@ from typing import Any
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
-from homeassistant.components.climate import ClimateEntity, ClimateEntityDescription
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
     SWING_ON,
     SWING_VERTICAL,
+    ClimateEntity,
+    ClimateEntityDescription,
     ClimateEntityFeature,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
 from .base import IntegerTypeData, TuyaEntity
-from .const import DOMAIN, LOGGER, TUYA_DISCOVERY_NEW, DPCode, DPType
+from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
 
 TUYA_HVAC_TO_HA = {
     "auto": HVACMode.HEAT_COOL,
@@ -133,7 +134,6 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     ) -> None:
         """Determine which values to use."""
         self._attr_target_temperature_step = 1.0
-        self._attr_supported_features = 0
         self.entity_description = description
 
         super().__init__(device, device_manager)
@@ -147,46 +147,52 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         ) or all(
             dpcode in device.status for dpcode in (DPCode.TEMP_SET, DPCode.TEMP_SET_F)
         ):
-            prefered_temperature_unit = TEMP_CELSIUS
+            prefered_temperature_unit = UnitOfTemperature.CELSIUS
             if any(
                 "f" in device.status[dpcode].lower()
                 for dpcode in (DPCode.C_F, DPCode.TEMP_UNIT_CONVERT)
                 if isinstance(device.status.get(dpcode), str)
             ):
-                prefered_temperature_unit = TEMP_FAHRENHEIT
+                prefered_temperature_unit = UnitOfTemperature.FAHRENHEIT
 
         # Default to Celsius
-        self._attr_temperature_unit = TEMP_CELSIUS
+        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
 
         # Figure out current temperature, use preferred unit or what is available
         celsius_type = self.find_dpcode(
             (DPCode.TEMP_CURRENT, DPCode.UPPER_TEMP), dptype=DPType.INTEGER
         )
-        farhenheit_type = self.find_dpcode(
+        fahrenheit_type = self.find_dpcode(
             (DPCode.TEMP_CURRENT_F, DPCode.UPPER_TEMP_F), dptype=DPType.INTEGER
         )
-        if farhenheit_type and (
-            prefered_temperature_unit == TEMP_FAHRENHEIT
-            or (prefered_temperature_unit == TEMP_CELSIUS and not celsius_type)
+        if fahrenheit_type and (
+            prefered_temperature_unit == UnitOfTemperature.FAHRENHEIT
+            or (
+                prefered_temperature_unit == UnitOfTemperature.CELSIUS
+                and not celsius_type
+            )
         ):
-            self._attr_temperature_unit = TEMP_FAHRENHEIT
-            self._current_temperature = farhenheit_type
+            self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+            self._current_temperature = fahrenheit_type
         elif celsius_type:
-            self._attr_temperature_unit = TEMP_CELSIUS
+            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
             self._current_temperature = celsius_type
 
         # Figure out setting temperature, use preferred unit or what is available
         celsius_type = self.find_dpcode(
             DPCode.TEMP_SET, dptype=DPType.INTEGER, prefer_function=True
         )
-        farhenheit_type = self.find_dpcode(
+        fahrenheit_type = self.find_dpcode(
             DPCode.TEMP_SET_F, dptype=DPType.INTEGER, prefer_function=True
         )
-        if farhenheit_type and (
-            prefered_temperature_unit == TEMP_FAHRENHEIT
-            or (prefered_temperature_unit == TEMP_CELSIUS and not celsius_type)
+        if fahrenheit_type and (
+            prefered_temperature_unit == UnitOfTemperature.FAHRENHEIT
+            or (
+                prefered_temperature_unit == UnitOfTemperature.CELSIUS
+                and not celsius_type
+            )
         ):
-            self._set_temperature = farhenheit_type
+            self._set_temperature = fahrenheit_type
         elif celsius_type:
             self._set_temperature = celsius_type
 
@@ -205,10 +211,19 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
         ):
             self._attr_hvac_modes = [HVACMode.OFF]
-            for tuya_mode, ha_mode in TUYA_HVAC_TO_HA.items():
-                if tuya_mode in enum_type.range:
+            unknown_hvac_modes: list[str] = []
+            for tuya_mode in enum_type.range:
+                if tuya_mode in TUYA_HVAC_TO_HA:
+                    ha_mode = TUYA_HVAC_TO_HA[tuya_mode]
                     self._hvac_to_tuya[ha_mode] = tuya_mode
                     self._attr_hvac_modes.append(ha_mode)
+                else:
+                    unknown_hvac_modes.append(tuya_mode)
+
+            if unknown_hvac_modes:  # Tuya modes are presets instead of hvac_modes
+                self._attr_hvac_modes.append(description.switch_only_hvac_mode)
+                self._attr_preset_modes = unknown_hvac_modes
+                self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
         elif self.find_dpcode(DPCode.SWITCH, prefer_function=True):
             self._attr_hvac_modes = [
                 HVACMode.OFF,
@@ -263,18 +278,6 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         """Call when entity is added to hass."""
         await super().async_added_to_hass()
 
-        # Log unknown modes
-        if enum_type := self.find_dpcode(
-            DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
-        ):
-            for tuya_mode in enum_type.range:
-                if tuya_mode not in TUYA_HVAC_TO_HA:
-                    LOGGER.warning(
-                        "Unknown HVAC mode '%s' for device %s; assuming it as off",
-                        tuya_mode,
-                        self.device.name,
-                    )
-
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         commands = [{"code": DPCode.SWITCH, "value": hvac_mode != HVACMode.OFF}]
@@ -284,11 +287,16 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             )
         self._send_command(commands)
 
+    def set_preset_mode(self, preset_mode):
+        """Set new target preset mode."""
+        commands = [{"code": DPCode.MODE, "value": preset_mode}]
+        self._send_command(commands)
+
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         self._send_command([{"code": DPCode.FAN_SPEED_ENUM, "value": fan_mode}])
 
-    def set_humidity(self, humidity: float) -> None:
+    def set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         if self._set_humidity is None:
             raise RuntimeError(
@@ -333,7 +341,8 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         """Set new target temperature."""
         if self._set_temperature is None:
             raise RuntimeError(
-                "Cannot set target temperature, device doesn't provide methods to set it"
+                "Cannot set target temperature, device doesn't provide methods to"
+                " set it"
             )
 
         self._send_command(
@@ -420,7 +429,23 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         ) is not None and mode in TUYA_HVAC_TO_HA:
             return TUYA_HVAC_TO_HA[mode]
 
+        # If the switch is on, and the mode does not match any hvac mode.
+        if self.device.status.get(DPCode.SWITCH, False):
+            return self.entity_description.switch_only_hvac_mode
+
         return HVACMode.OFF
+
+    @property
+    def preset_mode(self) -> str | None:
+        """Return preset mode."""
+        if DPCode.MODE not in self.device.function:
+            return None
+
+        mode = self.device.status.get(DPCode.MODE)
+        if mode in TUYA_HVAC_TO_HA:
+            return None
+
+        return mode
 
     @property
     def fan_mode(self) -> str | None:

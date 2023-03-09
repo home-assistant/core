@@ -10,22 +10,10 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
 )
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_CHANNEL,
-    MEDIA_TYPE_EPISODE,
-    MEDIA_TYPE_MOVIE,
-    MEDIA_TYPE_TVSHOW,
-)
-from homeassistant.const import (
-    ATTR_SECONDS,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    STATE_IDLE,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+from homeassistant.const import ATTR_SECONDS, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -78,6 +66,7 @@ async def async_setup_platform(
 class ChannelsPlayer(MediaPlayerEntity):
     """Representation of a Channels instance."""
 
+    _attr_media_content_type = MediaType.CHANNEL
     _attr_supported_features = (
         MediaPlayerEntityFeature.PLAY
         | MediaPlayerEntityFeature.PAUSE
@@ -156,16 +145,16 @@ class ChannelsPlayer(MediaPlayerEntity):
         return self._name
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState | None:
         """Return the state of the player."""
         if self.status == "stopped":
-            return STATE_IDLE
+            return MediaPlayerState.IDLE
 
         if self.status == "paused":
-            return STATE_PAUSED
+            return MediaPlayerState.PAUSED
 
         if self.status == "playing":
-            return STATE_PLAYING
+            return MediaPlayerState.PLAYING
 
         return None
 
@@ -189,11 +178,6 @@ class ChannelsPlayer(MediaPlayerEntity):
     def media_content_id(self):
         """Content ID of current playing channel."""
         return self.channel_number
-
-    @property
-    def media_content_type(self):
-        """Content type of current playing media."""
-        return MEDIA_TYPE_CHANNEL
 
     @property
     def media_image_url(self):
@@ -253,12 +237,14 @@ class ChannelsPlayer(MediaPlayerEntity):
                 self.update_state(response)
                 break
 
-    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
+    def play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Send the play_media command to the player."""
-        if media_type == MEDIA_TYPE_CHANNEL:
+        if media_type == MediaType.CHANNEL:
             response = self.client.play_channel(media_id)
             self.update_state(response)
-        elif media_type in (MEDIA_TYPE_MOVIE, MEDIA_TYPE_EPISODE, MEDIA_TYPE_TVSHOW):
+        elif media_type in {MediaType.MOVIE, MediaType.EPISODE, MediaType.TVSHOW}:
             response = self.client.play_recording(media_id)
             self.update_state(response)
 

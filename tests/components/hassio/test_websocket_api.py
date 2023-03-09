@@ -16,7 +16,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_mock_signal
+from tests.common import MockUser, async_mock_signal
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -61,9 +63,24 @@ def mock_all(aioclient_mock):
     aioclient_mock.get(
         "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
     )
+    aioclient_mock.get(
+        "http://127.0.0.1/resolution/info",
+        json={
+            "result": "ok",
+            "data": {
+                "unsupported": [],
+                "unhealthy": [],
+                "suggestions": [],
+                "issues": [],
+                "checks": [],
+            },
+        },
+    )
 
 
-async def test_ws_subscription(hassio_env, hass: HomeAssistant, hass_ws_client):
+async def test_ws_subscription(
+    hassio_env, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test websocket subscription."""
     assert await async_setup_component(hass, "hassio", {})
     client = await hass_ws_client(hass)
@@ -99,8 +116,11 @@ async def test_ws_subscription(hassio_env, hass: HomeAssistant, hass_ws_client):
 
 
 async def test_websocket_supervisor_api(
-    hassio_env, hass: HomeAssistant, hass_ws_client, aioclient_mock
-):
+    hassio_env,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
     """Test Supervisor websocket api."""
     assert await async_setup_component(hass, "hassio", {})
     websocket_client = await hass_ws_client(hass)
@@ -133,10 +153,18 @@ async def test_websocket_supervisor_api(
     msg = await websocket_client.receive_json()
     assert msg["result"]["version_latest"] == "1.0.0"
 
+    assert aioclient_mock.mock_calls[-1][3] == {
+        "X-Hass-Source": "core.websocket_api",
+        "Authorization": "Bearer 123456",
+    }
+
 
 async def test_websocket_supervisor_api_error(
-    hassio_env, hass: HomeAssistant, hass_ws_client, aioclient_mock
-):
+    hassio_env,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
     """Test Supervisor websocket api error."""
     assert await async_setup_component(hass, "hassio", {})
     websocket_client = await hass_ws_client(hass)
@@ -159,8 +187,12 @@ async def test_websocket_supervisor_api_error(
 
 
 async def test_websocket_non_admin_user(
-    hassio_env, hass: HomeAssistant, hass_ws_client, aioclient_mock, hass_admin_user
-):
+    hassio_env,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    hass_admin_user: MockUser,
+) -> None:
     """Test Supervisor websocket api error."""
     hass_admin_user.groups = []
     assert await async_setup_component(hass, "hassio", {})

@@ -7,8 +7,6 @@
           "port": "[%key:common::config_flow::data::port%]",
           "name": "[%key:common::config_flow::data::name%]",
           "location": "[%key:common::config_flow::data::location%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]",
-          "statistics_only": "Statistics Only",
           "ssl": "[%key:common::config_flow::data::ssl%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }
@@ -17,13 +15,22 @@
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         }
+      },
+      "reauth_confirm": {
+        "title": "PI-Hole [%key:common::config_flow::title::reauth%]",
+        "description": "Please enter a new api key for PI-Hole at {host}/{location}",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   }
 }

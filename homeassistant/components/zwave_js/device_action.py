@@ -9,7 +9,7 @@ import voluptuous as vol
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.lock import ATTR_CODE_SLOT, ATTR_USERCODE
 from zwave_js_server.const.command_class.meter import CC_SPECIFIC_METER_TYPE
-from zwave_js_server.model.value import get_value_id
+from zwave_js_server.model.value import get_value_id_str
 from zwave_js_server.util.command_class.meter import get_meter_type
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
@@ -25,8 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from .config_validation import VALUE_SCHEMA
@@ -145,10 +144,13 @@ async def async_get_actions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, Any]]:
     """List device actions for Z-Wave JS devices."""
-    registry = entity_registry.async_get(hass)
+    registry = er.async_get(hass)
     actions: list[dict] = []
 
     node = async_get_node_from_device_id(hass, device_id)
+
+    if node.client.driver and node.client.driver.controller.own_node == node:
+        return actions
 
     base_action = {
         CONF_DEVICE_ID: device_id,
@@ -176,7 +178,7 @@ async def async_get_actions(
 
     meter_endpoints: dict[int, dict[str, Any]] = defaultdict(dict)
 
-    for entry in entity_registry.async_entries_for_device(
+    for entry in er.async_entries_for_device(
         registry, device_id, include_disabled_entities=False
     ):
         # If an entry is unavailable, it is possible that the underlying value
@@ -341,7 +343,7 @@ async def async_get_action_capabilities(
         }
 
     if action_type == SERVICE_SET_CONFIG_PARAMETER:
-        value_id = get_value_id(
+        value_id = get_value_id_str(
             node,
             CommandClass.CONFIGURATION,
             config[ATTR_CONFIG_PARAMETER],

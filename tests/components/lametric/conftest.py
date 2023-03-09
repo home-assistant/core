@@ -54,11 +54,27 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_lametric_config_flow() -> Generator[MagicMock, None, None]:
+def mock_lametric_cloud() -> Generator[MagicMock, None, None]:
+    """Return a mocked LaMetric Cloud client."""
+    with patch(
+        "homeassistant.components.lametric.config_flow.LaMetricCloud", autospec=True
+    ) as lametric_mock:
+        lametric = lametric_mock.return_value
+        lametric.devices.return_value = parse_raw_as(
+            list[CloudDevice], load_fixture("cloud_devices.json", DOMAIN)
+        )
+        yield lametric
+
+
+@pytest.fixture
+def mock_lametric() -> Generator[MagicMock, None, None]:
     """Return a mocked LaMetric client."""
     with patch(
-        "homeassistant.components.lametric.config_flow.LaMetricDevice", autospec=True
-    ) as lametric_mock:
+        "homeassistant.components.lametric.coordinator.LaMetricDevice", autospec=True
+    ) as lametric_mock, patch(
+        "homeassistant.components.lametric.config_flow.LaMetricDevice",
+        new=lametric_mock,
+    ):
         lametric = lametric_mock.return_value
         lametric.api_key = "mock-api-key"
         lametric.host = "127.0.0.1"
@@ -69,13 +85,13 @@ def mock_lametric_config_flow() -> Generator[MagicMock, None, None]:
 
 
 @pytest.fixture
-def mock_lametric_cloud_config_flow() -> Generator[MagicMock, None, None]:
-    """Return a mocked LaMetric Cloud client."""
-    with patch(
-        "homeassistant.components.lametric.config_flow.LaMetricCloud", autospec=True
-    ) as lametric_mock:
-        lametric = lametric_mock.return_value
-        lametric.devices.return_value = parse_raw_as(
-            list[CloudDevice], load_fixture("cloud_devices.json", DOMAIN)
-        )
-        yield lametric
+async def init_integration(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_lametric: MagicMock
+) -> MockConfigEntry:
+    """Set up the LaMetric integration for testing."""
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    return mock_config_entry

@@ -34,14 +34,14 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
     DEGREE,
-    IRRADIATION_WATTS_PER_SQUARE_METER,
-    LENGTH_KILOMETERS,
-    LENGTH_MILLIMETERS,
     PERCENTAGE,
-    PRECIPITATION_MILLIMETERS_PER_HOUR,
-    PRESSURE_HPA,
-    SPEED_KILOMETERS_PER_HOUR,
-    TEMP_CELSIUS,
+    UnitOfIrradiance,
+    UnitOfLength,
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -110,7 +110,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="feeltemperature",
         name="Feel temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
@@ -123,22 +123,22 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="temperature",
         name="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="groundtemperature",
         name="Ground temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="windspeed",
         name="Wind speed",
-        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
-        icon="mdi:weather-windy",
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -161,213 +161,214 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="pressure",
         name="Pressure",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         icon="mdi:gauge",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="visibility",
         name="Visibility",
-        native_unit_of_measurement=LENGTH_KILOMETERS,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
+        device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="windgust",
         name="Wind gust",
-        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
-        icon="mdi:weather-windy",
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
     ),
     SensorEntityDescription(
         key="precipitation",
         name="Precipitation",
-        native_unit_of_measurement=PRECIPITATION_MILLIMETERS_PER_HOUR,
-        icon="mdi:weather-pouring",
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
     ),
     SensorEntityDescription(
         key="irradiance",
         name="Irradiance",
-        native_unit_of_measurement=IRRADIATION_WATTS_PER_SQUARE_METER,
-        icon="mdi:sunglasses",
+        device_class=SensorDeviceClass.IRRADIANCE,
+        native_unit_of_measurement=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="precipitation_forecast_average",
         name="Precipitation forecast average",
-        native_unit_of_measurement=PRECIPITATION_MILLIMETERS_PER_HOUR,
-        icon="mdi:weather-pouring",
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
     ),
     SensorEntityDescription(
         key="precipitation_forecast_total",
         name="Precipitation forecast total",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
     ),
     # new in json api (>1.0.0):
     SensorEntityDescription(
         key="rainlast24hour",
         name="Rain last 24h",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
     ),
     # new in json api (>1.0.0):
     SensorEntityDescription(
         key="rainlasthour",
         name="Rain last hour",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
     ),
     SensorEntityDescription(
         key="temperature_1d",
         name="Temperature 1d",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key="temperature_2d",
         name="Temperature 2d",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key="temperature_3d",
         name="Temperature 3d",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key="temperature_4d",
         name="Temperature 4d",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key="temperature_5d",
         name="Temperature 5d",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key="mintemp_1d",
         name="Minimum temperature 1d",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key="mintemp_2d",
         name="Minimum temperature 2d",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key="mintemp_3d",
         name="Minimum temperature 3d",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key="mintemp_4d",
         name="Minimum temperature 4d",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key="mintemp_5d",
         name="Minimum temperature 5d",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key="rain_1d",
         name="Rain 1d",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
     ),
     SensorEntityDescription(
         key="rain_2d",
         name="Rain 2d",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
     ),
     SensorEntityDescription(
         key="rain_3d",
         name="Rain 3d",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
     ),
     SensorEntityDescription(
         key="rain_4d",
         name="Rain 4d",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
     ),
     SensorEntityDescription(
         key="rain_5d",
         name="Rain 5d",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
     ),
     # new in json api (>1.0.0):
     SensorEntityDescription(
         key="minrain_1d",
         name="Minimum rain 1d",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
     ),
     SensorEntityDescription(
         key="minrain_2d",
         name="Minimum rain 2d",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
     ),
     SensorEntityDescription(
         key="minrain_3d",
         name="Minimum rain 3d",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
     ),
     SensorEntityDescription(
         key="minrain_4d",
         name="Minimum rain 4d",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
     ),
     SensorEntityDescription(
         key="minrain_5d",
         name="Minimum rain 5d",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
     ),
     # new in json api (>1.0.0):
     SensorEntityDescription(
         key="maxrain_1d",
         name="Maximum rain 1d",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
     ),
     SensorEntityDescription(
         key="maxrain_2d",
         name="Maximum rain 2d",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
     ),
     SensorEntityDescription(
         key="maxrain_3d",
         name="Maximum rain 3d",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
     ),
     SensorEntityDescription(
         key="maxrain_4d",
         name="Maximum rain 4d",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
     ),
     SensorEntityDescription(
         key="maxrain_5d",
         name="Maximum rain 5d",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
     ),
     SensorEntityDescription(
         key="rainchance_1d",
@@ -462,32 +463,32 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="windspeed_1d",
         name="Wind speed 1d",
-        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
-        icon="mdi:weather-windy",
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
     ),
     SensorEntityDescription(
         key="windspeed_2d",
         name="Wind speed 2d",
-        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
-        icon="mdi:weather-windy",
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
     ),
     SensorEntityDescription(
         key="windspeed_3d",
         name="Wind speed 3d",
-        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
-        icon="mdi:weather-windy",
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
     ),
     SensorEntityDescription(
         key="windspeed_4d",
         name="Wind speed 4d",
-        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
-        icon="mdi:weather-windy",
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
     ),
     SensorEntityDescription(
         key="windspeed_5d",
         name="Wind speed 5d",
-        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
-        icon="mdi:weather-windy",
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
     ),
     SensorEntityDescription(
         key="winddirection_1d",
@@ -691,7 +692,9 @@ class BrSensor(SensorEntity):
     _attr_entity_registry_enabled_default = False
     _attr_should_poll = False
 
-    def __init__(self, client_name, coordinates, description: SensorEntityDescription):
+    def __init__(
+        self, client_name, coordinates, description: SensorEntityDescription
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self._attr_name = f"{client_name} {description.name}"
@@ -734,7 +737,6 @@ class BrSensor(SensorEntity):
             or sensor_type.endswith("_4d")
             or sensor_type.endswith("_5d")
         ):
-
             # update forecasting sensors:
             fcday = 0
             if sensor_type.endswith("_2d"):

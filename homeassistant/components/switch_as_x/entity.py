@@ -3,18 +3,21 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.switch.const import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
     STATE_UNAVAILABLE,
+    EntityCategory,
 )
 from homeassistant.core import Event, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import Entity, ToggleEntity
 from homeassistant.helpers.event import async_track_state_change_event
+
+from .const import DOMAIN as SWITCH_AS_X_DOMAIN
 
 
 class BaseEntity(Entity):
@@ -27,10 +30,12 @@ class BaseEntity(Entity):
         name: str,
         switch_entity_id: str,
         unique_id: str | None,
-        device_id: str | None = None,
+        device_id: str | None,
+        entity_category: EntityCategory | None,
     ) -> None:
         """Initialize Light Switch."""
         self._device_id = device_id
+        self._attr_entity_category = entity_category
         self._attr_name = name
         self._attr_unique_id = unique_id
         self._switch_entity_id = switch_entity_id
@@ -68,6 +73,11 @@ class BaseEntity(Entity):
         registry = er.async_get(self.hass)
         if registry.async_get(self.entity_id) is not None:
             registry.async_update_entity(self.entity_id, device_id=self._device_id)
+            registry.async_update_entity_options(
+                self.entity_id,
+                SWITCH_AS_X_DOMAIN,
+                {"entity_id": self._switch_entity_id},
+            )
 
 
 class BaseToggleEntity(BaseEntity, ToggleEntity):

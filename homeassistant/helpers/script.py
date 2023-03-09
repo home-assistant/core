@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from contextlib import asynccontextmanager, suppress
 from contextvars import ContextVar
 from copy import copy
@@ -11,7 +11,7 @@ from functools import partial
 import itertools
 import logging
 from types import MappingProxyType
-from typing import Any, TypedDict, Union, cast
+from typing import Any, TypedDict, cast
 
 import async_timeout
 import voluptuous as vol
@@ -49,6 +49,8 @@ from homeassistant.const import (
     CONF_SCENE,
     CONF_SEQUENCE,
     CONF_SERVICE,
+    CONF_SERVICE_DATA,
+    CONF_SERVICE_DATA_TEMPLATE,
     CONF_STOP,
     CONF_TARGET,
     CONF_THEN,
@@ -218,7 +220,9 @@ async def trace_action(hass, script_run, stop, variables):
         trace_stack_pop(trace_stack_cv)
 
 
-def make_script_schema(schema, default_script_mode, extra=vol.PREVENT_EXTRA):
+def make_script_schema(
+    schema: Mapping[Any, Any], default_script_mode: str, extra: int = vol.PREVENT_EXTRA
+) -> vol.Schema:
     """Make a schema for a component that uses the script helper."""
     return vol.Schema(
         {
@@ -371,7 +375,7 @@ class _ScriptRun:
             self._script._changed()  # pylint: disable=protected-access
 
     async def _async_get_condition(self, config):
-        # pylint: disable=protected-access
+        # pylint: disable-next=protected-access
         return await self._script._async_get_condition(config)
 
     def _log(
@@ -753,7 +757,7 @@ class _ScriptRun:
                 with trace_path(condition_path):
                     for idx, cond in enumerate(conditions):
                         with trace_path(str(idx)):
-                            if not cond(hass, variables):
+                            if cond(hass, variables) is False:
                                 return False
             except exceptions.ConditionError as ex:
                 _LOGGER.warning("Error in '%s[%s]' evaluation: %s", name, idx, ex)
@@ -782,7 +786,7 @@ class _ScriptRun:
                 repeat_vars["item"] = item
             self._variables["repeat"] = repeat_vars
 
-        # pylint: disable=protected-access
+        # pylint: disable-next=protected-access
         script = self._script._get_repeat_script(self._step)
 
         async def async_run_sequence(iteration, extra_msg=""):
@@ -1106,12 +1110,13 @@ async def _async_stop_scripts_at_shutdown(hass, event):
         )
 
 
-_VarsType = Union[dict[str, Any], MappingProxyType]
+_VarsType = dict[str, Any] | MappingProxyType
 
 
-def _referenced_extract_ids(data: dict[str, Any], key: str, found: set[str]) -> None:
+def _referenced_extract_ids(data: Any, key: str, found: set[str]) -> None:
     """Extract referenced IDs."""
-    if not data:
+    # Data may not exist, or be a template
+    if not isinstance(data, dict):
         return
 
     item_ids = data.get(key)
@@ -1275,25 +1280,27 @@ class Script:
         return self.script_mode in (SCRIPT_MODE_PARALLEL, SCRIPT_MODE_QUEUED)
 
     @property
-    def referenced_areas(self):
+    def referenced_areas(self) -> set[str]:
         """Return a set of referenced areas."""
         if self._referenced_areas is not None:
             return self._referenced_areas
 
-        self._referenced_areas: set[str] = set()
+        self._referenced_areas = set()
         Script._find_referenced_areas(self._referenced_areas, self.sequence)
         return self._referenced_areas
 
     @staticmethod
-    def _find_referenced_areas(referenced, sequence):
+    def _find_referenced_areas(
+        referenced: set[str], sequence: Sequence[dict[str, Any]]
+    ) -> None:
         for step in sequence:
             action = cv.determine_script_action(step)
 
             if action == cv.SCRIPT_ACTION_CALL_SERVICE:
                 for data in (
                     step.get(CONF_TARGET),
-                    step.get(service.CONF_SERVICE_DATA),
-                    step.get(service.CONF_SERVICE_DATA_TEMPLATE),
+                    step.get(CONF_SERVICE_DATA),
+                    step.get(CONF_SERVICE_DATA_TEMPLATE),
                 ):
                     _referenced_extract_ids(data, ATTR_AREA_ID, referenced)
 
@@ -1313,25 +1320,27 @@ class Script:
                     Script._find_referenced_areas(referenced, script[CONF_SEQUENCE])
 
     @property
-    def referenced_devices(self):
+    def referenced_devices(self) -> set[str]:
         """Return a set of referenced devices."""
         if self._referenced_devices is not None:
             return self._referenced_devices
 
-        self._referenced_devices: set[str] = set()
+        self._referenced_devices = set()
         Script._find_referenced_devices(self._referenced_devices, self.sequence)
         return self._referenced_devices
 
     @staticmethod
-    def _find_referenced_devices(referenced, sequence):
+    def _find_referenced_devices(
+        referenced: set[str], sequence: Sequence[dict[str, Any]]
+    ) -> None:
         for step in sequence:
             action = cv.determine_script_action(step)
 
             if action == cv.SCRIPT_ACTION_CALL_SERVICE:
                 for data in (
                     step.get(CONF_TARGET),
-                    step.get(service.CONF_SERVICE_DATA),
-                    step.get(service.CONF_SERVICE_DATA_TEMPLATE),
+                    step.get(CONF_SERVICE_DATA),
+                    step.get(CONF_SERVICE_DATA_TEMPLATE),
                 ):
                     _referenced_extract_ids(data, ATTR_DEVICE_ID, referenced)
 
@@ -1361,17 +1370,19 @@ class Script:
                     Script._find_referenced_devices(referenced, script[CONF_SEQUENCE])
 
     @property
-    def referenced_entities(self):
+    def referenced_entities(self) -> set[str]:
         """Return a set of referenced entities."""
         if self._referenced_entities is not None:
             return self._referenced_entities
 
-        self._referenced_entities: set[str] = set()
+        self._referenced_entities = set()
         Script._find_referenced_entities(self._referenced_entities, self.sequence)
         return self._referenced_entities
 
     @staticmethod
-    def _find_referenced_entities(referenced, sequence):
+    def _find_referenced_entities(
+        referenced: set[str], sequence: Sequence[dict[str, Any]]
+    ) -> None:
         for step in sequence:
             action = cv.determine_script_action(step)
 
@@ -1379,8 +1390,8 @@ class Script:
                 for data in (
                     step,
                     step.get(CONF_TARGET),
-                    step.get(service.CONF_SERVICE_DATA),
-                    step.get(service.CONF_SERVICE_DATA_TEMPLATE),
+                    step.get(CONF_SERVICE_DATA),
+                    step.get(CONF_SERVICE_DATA_TEMPLATE),
                 ):
                     _referenced_extract_ids(data, ATTR_ENTITY_ID, referenced)
 
@@ -1527,7 +1538,7 @@ class Script:
         self, update_state: bool = True, spare: _ScriptRun | None = None
     ) -> None:
         """Stop running script."""
-        # Collect a a list of script runs to stop. This must be done before calling
+        # Collect a list of script runs to stop. This must be done before calling
         # asyncio.shield as asyncio.shield yields to the event loop, which would cause
         # us to wait for script runs added after the call to async_stop.
         aws = [

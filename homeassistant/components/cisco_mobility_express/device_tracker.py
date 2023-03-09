@@ -38,7 +38,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> CiscoMEDeviceScanner | None:
     """Validate the configuration and return a Cisco ME scanner."""
 
     config = config[DOMAIN]
@@ -56,7 +56,7 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None
 
 
 class CiscoMEDeviceScanner(DeviceScanner):
-    """This class scans for devices associated to a Cisco ME controller."""
+    """Scanner for devices associated to a Cisco ME controller."""
 
     def __init__(self, controller):
         """Initialize the scanner."""
@@ -78,8 +78,7 @@ class CiscoMEDeviceScanner(DeviceScanner):
         return name
 
     def get_extra_attributes(self, device):
-        """
-        Get extra attributes of a device.
+        """Get extra attributes of a device.
 
         Some known extra attributes that may be returned in the device tuple
         include SSID, PT (eg 802.11ac), devtype (eg iPhone 7) among others.
