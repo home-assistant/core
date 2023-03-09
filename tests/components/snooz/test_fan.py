@@ -27,7 +27,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 
 from . import SnoozFixture, create_mock_snooz, create_mock_snooz_config_entry
 
@@ -148,6 +148,8 @@ async def test_transition_off(hass: HomeAssistant, snooz_fan_entity_id: str) -> 
     assert ATTR_ASSUMED_STATE not in state.attributes
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_push_events(
     hass: HomeAssistant, mock_connected_snooz: SnoozFixture, snooz_fan_entity_id: str
 ) -> None:
@@ -172,12 +174,16 @@ async def test_push_events(
     assert state.attributes[ATTR_ASSUMED_STATE] is True
 
 
-async def test_restore_state(hass: HomeAssistant) -> None:
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_restore_state(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Tests restoring entity state."""
     device = await create_mock_snooz(connected=False, initial_state=UnknownSnoozState)
 
     entry = await create_mock_snooz_config_entry(hass, device)
-    entity_id = get_fan_entity_id(hass, device)
+    entity_id = get_fan_entity_id(hass, device, entity_registry)
 
     # call service to store state
     await hass.services.async_call(
@@ -203,12 +209,14 @@ async def test_restore_state(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_ASSUMED_STATE] is True
 
 
-async def test_restore_unknown_state(hass: HomeAssistant) -> None:
+async def test_restore_unknown_state(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Tests restoring entity state that was unknown."""
     device = await create_mock_snooz(connected=False, initial_state=UnknownSnoozState)
 
     entry = await create_mock_snooz_config_entry(hass, device)
-    entity_id = get_fan_entity_id(hass, device)
+    entity_id = get_fan_entity_id(hass, device, entity_registry)
 
     # unload entry
     await hass.config_entries.async_unload(entry.entry_id)
@@ -282,16 +290,18 @@ async def test_command_results(
 
 @pytest.fixture(name="snooz_fan_entity_id")
 async def fixture_snooz_fan_entity_id(
-    hass: HomeAssistant, mock_connected_snooz: SnoozFixture
+    hass: HomeAssistant,
+    mock_connected_snooz: SnoozFixture,
+    entity_registry: er.EntityRegistry,
 ) -> str:
     """Mock a Snooz fan entity and config entry."""
 
-    return get_fan_entity_id(hass, mock_connected_snooz.device)
+    return get_fan_entity_id(hass, mock_connected_snooz.device, entity_registry)
 
 
-def get_fan_entity_id(hass: HomeAssistant, device: MockSnoozDevice) -> str:
+def get_fan_entity_id(
+    hass: HomeAssistant, device: MockSnoozDevice, entity_registry: er.EntityRegistry
+) -> str:
     """Get the entity ID for a mock device."""
 
-    return entity_registry.async_get(hass).async_get_entity_id(
-        Platform.FAN, DOMAIN, device.address
-    )
+    return entity_registry.async_get_entity_id(Platform.FAN, DOMAIN, device.address)

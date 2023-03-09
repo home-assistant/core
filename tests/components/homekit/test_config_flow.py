@@ -13,7 +13,7 @@ from homeassistant.components.homekit.const import (
 from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_IMPORT
 from homeassistant.const import CONF_NAME, CONF_PORT, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_registry import RegistryEntry, RegistryEntryHider
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entityfilter import CONF_INCLUDE_DOMAINS
 from homeassistant.setup import async_setup_component
 
@@ -398,8 +398,8 @@ async def test_options_flow_devices(
     port_mock,
     hass: HomeAssistant,
     demo_cleanup,
-    device_reg,
-    entity_reg,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     mock_get_source_ip,
     mock_async_zeroconf: None,
 ) -> None:
@@ -451,7 +451,7 @@ async def test_options_flow_devices(
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "exclude"
 
-    entry = entity_reg.async_get("light.ceiling_lights")
+    entry = entity_registry.async_get("light.ceiling_lights")
     assert entry is not None
     device_id = entry.device_id
 
@@ -1379,7 +1379,7 @@ async def test_options_flow_exclude_mode_skips_category_entities(
     mock_get_source_ip,
     hk_driver,
     mock_async_zeroconf: None,
-    entity_reg,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Ensure exclude mode does not offer category entities."""
     config_entry = _mock_config_entry_with_options_populated()
@@ -1389,7 +1389,7 @@ async def test_options_flow_exclude_mode_skips_category_entities(
     hass.states.async_set("media_player.sonos", "off")
     hass.states.async_set("switch.other", "off")
 
-    sonos_config_switch: RegistryEntry = entity_reg.async_get_or_create(
+    sonos_config_switch = entity_registry.async_get_or_create(
         "switch",
         "sonos",
         "config",
@@ -1398,7 +1398,7 @@ async def test_options_flow_exclude_mode_skips_category_entities(
     )
     hass.states.async_set(sonos_config_switch.entity_id, "off")
 
-    sonos_notconfig_switch: RegistryEntry = entity_reg.async_get_or_create(
+    sonos_notconfig_switch = entity_registry.async_get_or_create(
         "switch",
         "sonos",
         "notconfig",
@@ -1484,7 +1484,7 @@ async def test_options_flow_exclude_mode_skips_hidden_entities(
     mock_get_source_ip,
     hk_driver,
     mock_async_zeroconf: None,
-    entity_reg,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Ensure exclude mode does not offer hidden entities."""
     config_entry = _mock_config_entry_with_options_populated()
@@ -1494,12 +1494,12 @@ async def test_options_flow_exclude_mode_skips_hidden_entities(
     hass.states.async_set("media_player.sonos", "off")
     hass.states.async_set("switch.other", "off")
 
-    sonos_hidden_switch: RegistryEntry = entity_reg.async_get_or_create(
+    sonos_hidden_switch = entity_registry.async_get_or_create(
         "switch",
         "sonos",
         "config",
         device_id="1234",
-        hidden_by=RegistryEntryHider.INTEGRATION,
+        hidden_by=er.RegistryEntryHider.INTEGRATION,
     )
     hass.states.async_set(sonos_hidden_switch.entity_id, "off")
     await hass.async_block_till_done()
@@ -1569,7 +1569,7 @@ async def test_options_flow_include_mode_allows_hidden_entities(
     mock_get_source_ip,
     hk_driver,
     mock_async_zeroconf: None,
-    entity_reg,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Ensure include mode does not offer hidden entities."""
     config_entry = _mock_config_entry_with_options_populated()
@@ -1579,12 +1579,12 @@ async def test_options_flow_include_mode_allows_hidden_entities(
     hass.states.async_set("media_player.sonos", "off")
     hass.states.async_set("switch.other", "off")
 
-    sonos_hidden_switch: RegistryEntry = entity_reg.async_get_or_create(
+    sonos_hidden_switch = entity_registry.async_get_or_create(
         "switch",
         "sonos",
         "config",
         device_id="1234",
-        hidden_by=RegistryEntryHider.INTEGRATION,
+        hidden_by=er.RegistryEntryHider.INTEGRATION,
     )
     hass.states.async_set(sonos_hidden_switch.entity_id, "off")
     await hass.async_block_till_done()

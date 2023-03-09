@@ -18,6 +18,7 @@ KNOWN_BRANDS: dict[str | None, str] = {
     "Apple Inc.": "apple",
     "Google Inc.": "google",
     "HomeAssistant": "homeassistant",
+    "Home Assistant": "homeassistant",
 }
 THREAD_TYPE = "_meshcop._udp.local."
 CLASS_IN = 1

@@ -1,25 +1,14 @@
 """Tests for Islamic Prayer Times config flow."""
 from unittest.mock import patch
 
-import pytest
-
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import islamic_prayer_times
-from homeassistant.components.islamic_prayer_times import config_flow  # noqa: F401
 from homeassistant.components.islamic_prayer_times.const import CONF_CALC_METHOD, DOMAIN
 from homeassistant.core import HomeAssistant
 
+from . import PRAYER_TIMES
+
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture(name="mock_setup", autouse=True)
-def mock_setup():
-    """Mock entry setup."""
-    with patch(
-        "homeassistant.components.islamic_prayer_times.async_setup_entry",
-        return_value=True,
-    ):
-        yield
 
 
 async def test_flow_works(hass: HomeAssistant) -> None:
@@ -30,9 +19,13 @@ async def test_flow_works(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
+    with patch(
+        "homeassistant.components.islamic_prayer_times.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "Islamic Prayer Times"
 
@@ -46,6 +39,13 @@ async def test_options(hass: HomeAssistant) -> None:
         options={CONF_CALC_METHOD: "isna"},
     )
     entry.add_to_hass(hass)
+
+    with patch(
+        "prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times",
+        return_value=PRAYER_TIMES,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
