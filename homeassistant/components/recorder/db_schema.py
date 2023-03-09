@@ -71,7 +71,7 @@ class Base(DeclarativeBase):
     """Base class for tables."""
 
 
-SCHEMA_VERSION = 36
+SCHEMA_VERSION = 37
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -192,7 +192,9 @@ class Events(Base):
     )
     __tablename__ = TABLE_EVENTS
     event_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
-    event_type: Mapped[str | None] = mapped_column(String(MAX_LENGTH_EVENT_EVENT_TYPE))
+    event_type: Mapped[str | None] = mapped_column(
+        String(MAX_LENGTH_EVENT_EVENT_TYPE)
+    )  # no longer used
     event_data: Mapped[str | None] = mapped_column(
         Text().with_variant(mysql.LONGTEXT, "mysql", "mariadb")
     )
@@ -256,7 +258,7 @@ class Events(Base):
     def from_event(event: Event) -> Events:
         """Create an event database object from a native event."""
         return Events(
-            event_type=event.event_type,
+            event_type=None,
             event_data=None,
             origin_idx=EVENT_ORIGIN_TO_IDX.get(event.origin),
             time_fired=None,

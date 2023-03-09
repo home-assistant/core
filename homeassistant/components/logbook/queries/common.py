@@ -17,6 +17,7 @@ from homeassistant.components.recorder.db_schema import (
     STATES_CONTEXT_ID_BIN_INDEX,
     EventData,
     Events,
+    EventTypes,
     StateAttributes,
     States,
 )
@@ -106,6 +107,13 @@ CONTEXT_ONLY = literal(value="1", type_=sqlalchemy.String).label("context_only")
 NOT_CONTEXT_ONLY = literal(value=None, type_=sqlalchemy.String).label("context_only")
 
 
+def select_event_type_ids(event_types: tuple[str, ...]) -> Select:
+    """Generate a select for event type ids."""
+    return select(EventTypes.event_type_id).where(
+        EventTypes.event_type.in_(event_types)
+    )
+
+
 def select_events_context_id_subquery(
     start_day: float,
     end_day: float,
@@ -115,7 +123,7 @@ def select_events_context_id_subquery(
     return (
         select(Events.context_id_bin)
         .where((Events.time_fired_ts > start_day) & (Events.time_fired_ts < end_day))
-        .where(Events.event_type.in_(event_types))
+        .where(Events.event_type.in_(select_event_type_ids(event_types)))
         .outerjoin(EventData, (Events.data_id == EventData.data_id))
     )
 
@@ -147,7 +155,7 @@ def select_events_without_states(
     return (
         select(*EVENT_ROWS_NO_STATES, NOT_CONTEXT_ONLY)
         .where((Events.time_fired_ts > start_day) & (Events.time_fired_ts < end_day))
-        .where(Events.event_type.in_(event_types))
+        .where(Events.event_type.in_(select_event_type_ids(event_types)))
         .outerjoin(EventData, (Events.data_id == EventData.data_id))
     )
 
