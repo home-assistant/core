@@ -231,7 +231,7 @@ class Events(Base):
         Integer, ForeignKey("event_types.event_type_id"), index=True
     )
     event_data_rel: Mapped[EventData | None] = relationship("EventData")
-    event_type_rel: Mapped[EventTypes | None] = relationship("EventType")
+    event_type_rel: Mapped[EventTypes | None] = relationship("EventTypes")
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""

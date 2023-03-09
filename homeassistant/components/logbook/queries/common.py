@@ -22,6 +22,7 @@ from homeassistant.components.recorder.db_schema import (
     States,
 )
 from homeassistant.components.recorder.filters import like_domain_matchers
+from homeassistant.components.recorder.queries import select_event_type_ids
 
 from ..const import ALWAYS_CONTINUOUS_DOMAINS, CONDITIONALLY_CONTINUOUS_DOMAINS
 
@@ -45,7 +46,7 @@ PSEUDO_EVENT_STATE_CHANGED: Final = None
 
 EVENT_COLUMNS = (
     Events.event_id.label("event_id"),
-    Events.event_type.label("event_type"),
+    EventTypes.event_type.label("event_type"),
     Events.event_data.label("event_data"),
     Events.time_fired_ts.label("time_fired_ts"),
     Events.context_id_bin.label("context_id_bin"),
@@ -107,13 +108,6 @@ CONTEXT_ONLY = literal(value="1", type_=sqlalchemy.String).label("context_only")
 NOT_CONTEXT_ONLY = literal(value=None, type_=sqlalchemy.String).label("context_only")
 
 
-def select_event_type_ids(event_types: tuple[str, ...]) -> Select:
-    """Generate a select for event type ids."""
-    return select(EventTypes.event_type_id).where(
-        EventTypes.event_type.in_(event_types)
-    )
-
-
 def select_events_context_id_subquery(
     start_day: float,
     end_day: float,
@@ -123,7 +117,8 @@ def select_events_context_id_subquery(
     return (
         select(Events.context_id_bin)
         .where((Events.time_fired_ts > start_day) & (Events.time_fired_ts < end_day))
-        .where(Events.event_type.in_(select_event_type_ids(event_types)))
+        .where(Events.event_type_id.in_(select_event_type_ids(event_types)))
+        .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
         .outerjoin(EventData, (Events.data_id == EventData.data_id))
     )
 
@@ -155,7 +150,8 @@ def select_events_without_states(
     return (
         select(*EVENT_ROWS_NO_STATES, NOT_CONTEXT_ONLY)
         .where((Events.time_fired_ts > start_day) & (Events.time_fired_ts < end_day))
-        .where(Events.event_type.in_(select_event_type_ids(event_types)))
+        .where(Events.event_type_id.in_(select_event_type_ids(event_types)))
+        .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
         .outerjoin(EventData, (Events.data_id == EventData.data_id))
     )
 

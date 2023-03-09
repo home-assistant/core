@@ -8,7 +8,12 @@ from sqlalchemy.sql.elements import ColumnElement
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import CTE, CompoundSelect, Select
 
-from homeassistant.components.recorder.db_schema import EventData, Events, States
+from homeassistant.components.recorder.db_schema import (
+    EventData,
+    Events,
+    EventTypes,
+    States,
+)
 
 from .common import (
     apply_events_context_hints,
@@ -80,7 +85,9 @@ def _apply_entities_devices_context_union(
             .outerjoin(
                 Events, devices_entities_cte.c.context_id_bin == Events.context_id_bin
             )
-        ).outerjoin(EventData, (Events.data_id == EventData.data_id)),
+        )
+        .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
+        .outerjoin(EventData, (Events.data_id == EventData.data_id)),
         apply_states_context_hints(
             select_states_context_only()
             .select_from(devices_entities_cte)

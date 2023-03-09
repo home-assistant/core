@@ -39,12 +39,14 @@ from homeassistant.components.recorder.db_schema import (
     SCHEMA_VERSION,
     EventData,
     Events,
+    EventTypes,
     RecorderRuns,
     StateAttributes,
     States,
     StatisticsRuns,
 )
 from homeassistant.components.recorder.models import process_timestamp
+from homeassistant.components.recorder.queries import select_event_type_ids
 from homeassistant.components.recorder.services import (
     SERVICE_DISABLE,
     SERVICE_ENABLE,
@@ -483,16 +485,19 @@ def test_saving_event(hass_recorder: Callable[..., HomeAssistant]) -> None:
     events: list[Event] = []
 
     with session_scope(hass=hass) as session:
-        for select_event, event_data in (
-            session.query(Events, EventData)
-            .filter_by(event_type=event_type)
+        for select_event, event_data, event_types in (
+            session.query(Events, EventData, EventTypes)
+            .filter(Events.event_type_id.in_(select_event_type_ids((event_type,))))
+            .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
             .outerjoin(EventData, Events.data_id == EventData.data_id)
         ):
             select_event = cast(Events, select_event)
             event_data = cast(EventData, event_data)
+            event_types = cast(EventTypes, event_types)
 
             native_event = select_event.to_native()
             native_event.data = event_data.to_native()
+            native_event.event_type = event_types.event_type
             events.append(native_event)
 
     db_event = events[0]
@@ -555,8 +560,10 @@ def _add_events(hass, events):
 
     with session_scope(hass=hass) as session:
         events = []
-        for event, event_data in session.query(Events, EventData).outerjoin(
-            EventData, Events.data_id == EventData.data_id
+        for event, event_data in (
+            session.query(Events, EventData)
+            .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
+            .outerjoin(EventData, Events.data_id == EventData.data_id)
         ):
             event = cast(Events, event)
             event_data = cast(EventData, event_data)
@@ -1349,7 +1356,11 @@ def test_service_disable_events_not_recording(
     event = events[0]
 
     with session_scope(hass=hass) as session:
-        db_events = list(session.query(Events).filter_by(event_type=event_type))
+        db_events = list(
+            session.query(Events)
+            .filter(Events.event_type_id.in_(select_event_type_ids((event_type,))))
+            .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
+        )
         assert len(db_events) == 0
 
     assert hass.services.call(
@@ -1372,6 +1383,7 @@ def test_service_disable_events_not_recording(
         for select_event, event_data in (
             session.query(Events, EventData)
             .filter_by(event_type=event_type)
+            .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
             .outerjoin(EventData, Events.data_id == EventData.data_id)
         ):
             select_event = cast(Events, select_event)
@@ -1793,9 +1805,11 @@ def test_deduplication_event_data_inside_commit_interval(
     wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
+        event_types = ("this_event",)
         events = list(
             session.query(Events)
-            .filter(Events.event_type == "this_event")
+            .filter(Events.event_type_id.in_(select_event_type_ids(event_types)))
+            .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
             .outerjoin(EventData, (Events.data_id == EventData.data_id))
         )
         assert len(events) == 20

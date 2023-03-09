@@ -21,6 +21,17 @@ from .db_schema import (
 )
 
 
+def select_event_type_ids(event_types: tuple[str, ...]) -> Select:
+    """Generate a select for event type ids.
+
+    This query is intentional not a lambda statement as it is used inside
+    other lambda statements.
+    """
+    return select(EventTypes.event_type_id).where(
+        EventTypes.event_type.in_(event_types)
+    )
+
+
 def get_shared_attributes(hashes: list[int]) -> StatementLambdaElement:
     """Load shared attributes from the database."""
     return lambda_stmt(
