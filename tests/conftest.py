@@ -1139,6 +1139,16 @@ def enable_nightly_purge() -> bool:
 
 
 @pytest.fixture
+def enable_migrate_context_ids() -> bool:
+    """Fixture to control enabling of recorder's context id migration.
+
+    To enable context id migration, tests can be marked with:
+    @pytest.mark.parametrize("enable_migrate_context_ids", [True])
+    """
+    return False
+
+
+@pytest.fixture
 def recorder_config() -> dict[str, Any] | None:
     """Fixture to override recorder config.
 
@@ -1280,6 +1290,7 @@ async def async_setup_recorder_instance(
     enable_nightly_purge: bool,
     enable_statistics: bool,
     enable_statistics_table_validation: bool,
+    enable_migrate_context_ids: bool,
 ) -> AsyncGenerator[RecorderInstanceGenerator, None]:
     """Yield callable to setup recorder instance."""
     # pylint: disable-next=import-outside-toplevel
@@ -1295,6 +1306,9 @@ async def async_setup_recorder_instance(
         if enable_statistics_table_validation
         else itertools.repeat(set())
     )
+    migrate_context_ids = (
+        recorder.Recorder._migrate_context_ids if enable_migrate_context_ids else None
+    )
     with patch(
         "homeassistant.components.recorder.Recorder.async_nightly_tasks",
         side_effect=nightly,
@@ -1306,6 +1320,10 @@ async def async_setup_recorder_instance(
     ), patch(
         "homeassistant.components.recorder.migration.statistics_validate_db_schema",
         side_effect=stats_validate,
+        autospec=True,
+    ), patch(
+        "homeassistant.components.recorder.Recorder._migrate_context_ids",
+        side_effect=migrate_context_ids,
         autospec=True,
     ):
 
