@@ -20,6 +20,15 @@ from tests.common import MockConfigEntry
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
+MOCK_DISCOVERY = ssdp.SsdpServiceInfo(
+    ssdp_usn="mock_usn",
+    ssdp_udn="mock_udn",
+    ssdp_st="mock_st",
+    ssdp_location="http://1.1.1.1/device",
+    upnp={"SPEAKER-NAME": "Speaker Name"},
+)
+
+
 async def test_import_success(hass: HomeAssistant) -> None:
     """Test successful import."""
 
@@ -311,13 +320,7 @@ async def test_ssdp(hass: HomeAssistant, mock_setup_entry: MockConfigEntry) -> N
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
-            ssdp_usn="mock_usn",
-            ssdp_udn="mock_udn",
-            ssdp_st="mock_st",
-            ssdp_location="http://1.1.1.1/device",
-            upnp={"SPEAKER-NAME": "Speaker Name"},
-        ),
+        data=MOCK_DISCOVERY,
     )
 
     assert result["type"] == FlowResultType.FORM
@@ -352,13 +355,7 @@ async def test_ssdp_fail(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_SSDP},
-            data=ssdp.SsdpServiceInfo(
-                ssdp_usn="mock_usn",
-                ssdp_udn="mock_udn",
-                ssdp_st="mock_st",
-                ssdp_location="http://1.1.1.1/device",
-                upnp={"SPEAKER-NAME": "Speaker Name"},
-            ),
+            data=MOCK_DISCOVERY,
         )
 
     assert result["type"] == FlowResultType.ABORT
@@ -377,13 +374,7 @@ async def test_ssdp_nondefault_pin(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_SSDP},
-            data=ssdp.SsdpServiceInfo(
-                ssdp_usn="mock_usn",
-                ssdp_udn="mock_udn",
-                ssdp_st="mock_st",
-                ssdp_location="http://1.1.1.1/device",
-                upnp={"SPEAKER-NAME": "Speaker Name"},
-            ),
+            data=MOCK_DISCOVERY,
         )
 
     assert result["type"] == FlowResultType.FORM
@@ -422,13 +413,7 @@ async def test_ssdp_nondefault_pin_fail(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_SSDP},
-            data=ssdp.SsdpServiceInfo(
-                ssdp_usn="mock_usn",
-                ssdp_udn="mock_udn",
-                ssdp_st="mock_st",
-                ssdp_location="http://1.1.1.1/device",
-                upnp={"SPEAKER-NAME": "Speaker Name"},
-            ),
+            data=MOCK_DISCOVERY,
         )
 
     assert result["type"] == FlowResultType.FORM
