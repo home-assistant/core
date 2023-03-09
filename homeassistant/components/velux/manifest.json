@@ -1,7 +1,7 @@
 {
   "domain": "velux",
   "name": "Velux",
-  "codeowners": ["@Julius2342", "@DeerMaximum"],
+  "codeowners": ["@Julius2342"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/velux",
   "iot_class": "local_polling",
