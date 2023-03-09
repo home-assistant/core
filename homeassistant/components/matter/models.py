@@ -1,8 +1,9 @@
 """Models used for the Matter integration."""
+from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Objects import ClusterAttributeDescriptor
@@ -12,11 +13,14 @@ from matter_server.client.models.node import MatterEndpoint
 from homeassistant.const import Platform
 from homeassistant.helpers.entity import EntityDescription
 
+if TYPE_CHECKING:
+    from _typeshed import DataclassInstance
+
 
 class DataclassMustHaveAtLeastOne:
     """A dataclass that must have at least one input parameter that is not None."""
 
-    def __post_init__(self) -> None:
+    def __post_init__(self: DataclassInstance) -> None:
         """Post dataclass initialization."""
         if all(val is None for val in asdict(self).values()):
             raise ValueError("At least one input parameter must not be None")

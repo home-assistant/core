@@ -3,9 +3,9 @@ from __future__ import annotations
 
 import time
 
-from ulid_transform import ulid_at_time, ulid_hex
+from ulid_transform import bytes_to_ulid, ulid_at_time, ulid_hex, ulid_to_bytes
 
-__all__ = ["ulid", "ulid_hex", "ulid_at_time"]
+__all__ = ["ulid", "ulid_hex", "ulid_at_time", "ulid_to_bytes", "bytes_to_ulid"]
 
 
 def ulid(timestamp: float | None = None) -> str:

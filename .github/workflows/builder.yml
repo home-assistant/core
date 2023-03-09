@@ -232,6 +232,7 @@ jobs:
           - khadas-vim3
           - odroid-c2
           - odroid-c4
+          - odroid-m1
           - odroid-n2
           - odroid-xu
           - qemuarm
