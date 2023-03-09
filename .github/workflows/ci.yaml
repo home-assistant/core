@@ -230,6 +230,7 @@ jobs:
         uses: actions/cache@v3.3.0
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
+          lookup-only: true
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
               needs.info.outputs.pre-commit_cache_key }}
@@ -565,6 +566,7 @@ jobs:
         uses: actions/cache@v3.3.0
         with:
           path: venv
+          lookup-only: true
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
