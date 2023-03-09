@@ -35,18 +35,4 @@ ROCKROBO_1S = "roborock.vacuum.m1s"
 ROCKROBO_C1 = "roborock.vacuum.c1"
 ROCKROBO_WILD = "roborock.vacuum.*"  # wildcard
 
-MODELS_VACUUM_WITH_MOP = [
-    ROCKROBO_E2,
-    ROCKROBO_S5,
-    ROCKROBO_S5_MAX,
-    ROCKROBO_S6,
-    ROCKROBO_S6_MAXV,
-    ROCKROBO_S6_PURE,
-    ROCKROBO_S7,
-    ROCKROBO_S7_MAXV,
-]
-MODELS_VACUUM_WITH_SEPARATE_MOP = [
-    ROCKROBO_S7,
-    ROCKROBO_S7_MAXV,
-]
 CONF_INCLUDE_SHARED = "include_shared"

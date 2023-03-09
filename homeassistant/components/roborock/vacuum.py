@@ -1,9 +1,8 @@
 """Support for Roborock vacuum class."""
 from abc import ABC
-import logging
 from typing import Any
 
-from roborock.code_mappings import FAN_SPEED_CODES, MOP_INTENSITY_CODES, MOP_MODE_CODES
+from roborock.code_mappings import FAN_SPEED_CODES
 from roborock.typing import RoborockCommand, RoborockDeviceInfo
 
 from homeassistant.components.vacuum import (
@@ -28,8 +27,6 @@ from homeassistant.util import slugify
 from . import RoborockDataUpdateCoordinator
 from .const import DOMAIN
 from .device import RoborockCoordinatedEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 STATE_CODE_TO_STATE = {
     1: STATE_IDLE,  # "Starting"
@@ -59,10 +56,6 @@ STATE_CODE_TO_STATE = {
 
 
 ATTR_STATUS = "status"
-ATTR_MOP_MODE = "mop_mode"
-ATTR_MOP_INTENSITY = "mop_intensity"
-ATTR_MOP_MODE_LIST = f"{ATTR_MOP_MODE}_list"
-ATTR_MOP_INTENSITY_LIST = f"{ATTR_MOP_INTENSITY}_list"
 ATTR_ERROR = "error"
 
 
@@ -154,8 +147,6 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity, ABC):
 
         data[ATTR_STATE] = self.state
         data[ATTR_STATUS] = self.status
-        data[ATTR_MOP_MODE] = self.mop_mode
-        data[ATTR_MOP_INTENSITY] = self.mop_intensity
         data[ATTR_ERROR] = self.error
         data.update(self.capability_attributes)
 
@@ -181,30 +172,6 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity, ABC):
         return list(FAN_SPEED_CODES.values())
 
     @property
-    def mop_mode(self) -> str | None:
-        """Return the mop mode of the vacuum cleaner."""
-        if not self._device_status:
-            return None
-        return self._device_status.mop_mode
-
-    @property
-    def mop_mode_list(self) -> list[str]:
-        """Get the list of available mop mode steps of the vacuum cleaner."""
-        return list(MOP_MODE_CODES.values())
-
-    @property
-    def mop_intensity(self) -> str | None:
-        """Return the mop intensity of the vacuum cleaner."""
-        if not self._device_status:
-            return None
-        return self._device_status.mop_intensity
-
-    @property
-    def mop_intensity_list(self) -> list[str]:
-        """Get the list of available mop intensity steps of the vacuum cleaner."""
-        return list(MOP_INTENSITY_CODES.values())
-
-    @property
     def error(self) -> str | None:
         """Get the error str if an error code exists."""
         if not self._device_status:
@@ -217,13 +184,7 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity, ABC):
         capability_attributes = {}
         if self.supported_features & VacuumEntityFeature.FAN_SPEED:
             capability_attributes[ATTR_FAN_SPEED_LIST] = self.fan_speed_list
-        capability_attributes[ATTR_MOP_MODE_LIST] = self.mop_mode_list
-        capability_attributes[ATTR_MOP_INTENSITY_LIST] = self.mop_intensity_list
         return capability_attributes
-
-    async def async_map(self) -> None:
-        """Return map token."""
-        return await self.coordinator.api.get_map_v1(self._device_id)
 
     async def async_start(self) -> None:
         """Start the vacuum."""
@@ -257,36 +218,6 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity, ABC):
         )
         await self.coordinator.async_request_refresh()
 
-    async def async_set_mop_mode(self, mop_mode: str, _=None) -> None:
-        """Change vacuum mop mode."""
-        await self.send(
-            RoborockCommand.SET_MOP_MODE,
-            [k for k, v in MOP_MODE_CODES.items() if v == mop_mode],
-        )
-        await self.coordinator.async_request_refresh()
-
-    async def async_set_mop_intensity(self, mop_intensity: str, _=None):
-        """Set vacuum mop intensity."""
-        await self.send(
-            RoborockCommand.SET_WATER_BOX_CUSTOM_MODE,
-            [k for k, v in MOP_INTENSITY_CODES.items() if v == mop_intensity],
-        )
-        await self.coordinator.async_request_refresh()
-
-    async def async_clean_segment(self, segments):
-        """Clean the specified segments(s)."""
-        if isinstance(segments, int):
-            segments = [segments]
-
-        await self.send(RoborockCommand.APP_SEGMENT_CLEAN, segments)
-
-    async def async_clean_zone(self, zone: list, repeats: int = 1):
-        """Clean selected area for the number of repeats indicated."""
-        for _zone in zone:
-            _zone.append(repeats)
-        _LOGGER.debug("Zone with repeats: %s", zone)
-        await self.send(RoborockCommand.APP_ZONED_CLEAN, zone)
-
     async def async_start_pause(self):
         """Pause cleaning if running."""
         if self.state == STATE_CLEANING:
@@ -294,11 +225,6 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity, ABC):
         else:
             # Start/resume cleaning.
             await self.async_start()
-
-    async def async_reset_consumable(self):
-        """Reset the consumable data(ex. brush work time)."""
-        await self.send(RoborockCommand.RESET_CONSUMABLE)
-        await self.coordinator.async_request_refresh()
 
     async def async_send_command(
         self,
