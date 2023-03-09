@@ -15,6 +15,7 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_MAX_COLOR_TEMP_KELVIN,
     ATTR_MIN_COLOR_TEMP_KELVIN,
+    ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN,
 )
 from homeassistant.const import (
@@ -57,6 +58,46 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
     assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 2700
     assert state.attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 2700
     assert state.attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 6500
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs"]
+
+
+async def test_setup_non_color(hass: HomeAssistant, fritz: Mock) -> None:
+    """Test setup of platform of non color bulb."""
+    device = FritzDeviceLightMock()
+    device.has_color = False
+    device.get_color_temps.return_value = []
+    device.get_colors.return_value = {}
+
+    assert await setup_config_entry(
+        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "fake_name"
+    assert state.attributes[ATTR_BRIGHTNESS] == 100
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == ["brightness"]
+
+
+async def test_setup_non_color_non_level(hass: HomeAssistant, fritz: Mock) -> None:
+    """Test setup of platform of non color and non level bulb."""
+    device = FritzDeviceLightMock()
+    device.has_color = False
+    device.has_level = False
+    device.get_color_temps.return_value = []
+    device.get_colors.return_value = {}
+
+    assert await setup_config_entry(
+        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "fake_name"
+    assert state.attributes[ATTR_BRIGHTNESS] == 100
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == ["onoff"]
 
 
 async def test_setup_color(hass: HomeAssistant, fritz: Mock) -> None:
@@ -80,6 +121,7 @@ async def test_setup_color(hass: HomeAssistant, fritz: Mock) -> None:
     assert state.attributes[ATTR_FRIENDLY_NAME] == "fake_name"
     assert state.attributes[ATTR_BRIGHTNESS] == 100
     assert state.attributes[ATTR_HS_COLOR] == (100, 70)
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs"]
 
 
 async def test_turn_on(hass: HomeAssistant, fritz: Mock) -> None:

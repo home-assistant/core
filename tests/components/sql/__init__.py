@@ -4,9 +4,15 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.recorder import CONF_DB_URL
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.components.sql.const import CONF_COLUMN_NAME, CONF_QUERY, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
+    CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
@@ -56,6 +62,8 @@ YAML_CONFIG = {
         CONF_UNIT_OF_MEASUREMENT: "MiB",
         CONF_UNIQUE_ID: "unique_id_12345",
         CONF_VALUE_TEMPLATE: "{{ value }}",
+        CONF_DEVICE_CLASS: SensorDeviceClass.DATA_RATE,
+        CONF_STATE_CLASS: SensorStateClass.MEASUREMENT,
     }
 }
 
