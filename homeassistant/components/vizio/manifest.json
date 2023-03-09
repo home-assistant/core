@@ -8,6 +8,6 @@
   "iot_class": "local_polling",
   "loggers": ["pyvizio"],
   "quality_scale": "platinum",
-  "requirements": ["pyvizio==0.1.57"],
+  "requirements": ["pyvizio==0.1.60"],
   "zeroconf": ["_viziocast._tcp.local."]
 }
