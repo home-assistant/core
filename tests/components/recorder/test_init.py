@@ -560,17 +560,19 @@ def _add_events(hass, events):
 
     with session_scope(hass=hass) as session:
         events = []
-        for event, event_data in (
-            session.query(Events, EventData)
+        for event, event_data, event_types in (
+            session.query(Events, EventData, EventTypes)
             .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
             .outerjoin(EventData, Events.data_id == EventData.data_id)
         ):
             event = cast(Events, event)
             event_data = cast(EventData, event_data)
+            event_types = cast(EventTypes, event_types)
 
             native_event = event.to_native()
             if event_data:
                 native_event.data = event_data.to_native()
+            native_event.event_type = event_types.event_type
             events.append(native_event)
         return events
 
@@ -1380,17 +1382,19 @@ def test_service_disable_events_not_recording(
 
     db_events = []
     with session_scope(hass=hass) as session:
-        for select_event, event_data in (
-            session.query(Events, EventData)
-            .filter_by(event_type=event_type)
+        for select_event, event_data, event_types in (
+            session.query(Events, EventData, EventTypes)
+            .filter(Events.event_type_id.in_(select_event_type_ids((event_type,))))
             .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
             .outerjoin(EventData, Events.data_id == EventData.data_id)
         ):
             select_event = cast(Events, select_event)
             event_data = cast(EventData, event_data)
+            event_types = cast(EventTypes, event_types)
 
             native_event = select_event.to_native()
             native_event.data = event_data.to_native()
+            native_event.event_type = event_types.event_type
             db_events.append(native_event)
 
     assert len(db_events) == 1
@@ -1570,6 +1574,7 @@ def test_entity_id_filter(hass_recorder: Callable[..., HomeAssistant]) -> None:
     hass = hass_recorder(
         {"include": {"domains": "hello"}, "exclude": {"domains": "hidden_domain"}}
     )
+    event_types = ("hello",)
 
     for idx, data in enumerate(
         (
@@ -1584,7 +1589,11 @@ def test_entity_id_filter(hass_recorder: Callable[..., HomeAssistant]) -> None:
         wait_recording_done(hass)
 
         with session_scope(hass=hass) as session:
-            db_events = list(session.query(Events).filter_by(event_type="hello"))
+            db_events = list(
+                session.query(Events).filter(
+                    Events.event_type_id.in_(select_event_type_ids(event_types))
+                )
+            )
             assert len(db_events) == idx + 1, data
 
     for data in (
@@ -1595,7 +1604,11 @@ def test_entity_id_filter(hass_recorder: Callable[..., HomeAssistant]) -> None:
         wait_recording_done(hass)
 
         with session_scope(hass=hass) as session:
-            db_events = list(session.query(Events).filter_by(event_type="hello"))
+            db_events = list(
+                session.query(Events).filter(
+                    Events.event_type_id.in_(select_event_type_ids(event_types))
+                )
+            )
             # Keep referring idx + 1, as no new events are being added
             assert len(db_events) == idx + 1, data
 
@@ -1620,10 +1633,16 @@ async def test_database_lock_and_unlock(
     }
     await async_setup_recorder_instance(hass, config)
     await hass.async_block_till_done()
+    event_type = "EVENT_TEST"
+    event_types = (event_type,)
 
     def _get_db_events():
         with session_scope(hass=hass) as session:
-            return list(session.query(Events).filter_by(event_type=event_type))
+            return list(
+                session.query(Events).filter(
+                    Events.event_type_id.in_(select_event_type_ids(event_types))
+                )
+            )
 
     instance = get_instance(hass)
 
@@ -1631,7 +1650,6 @@ async def test_database_lock_and_unlock(
 
     assert not await instance.lock_database()
 
-    event_type = "EVENT_TEST"
     event_data = {"test_attr": 5, "test_attr_10": "nice"}
     hass.bus.async_fire(event_type, event_data)
     task = asyncio.create_task(async_wait_recording_done(hass))
@@ -1670,10 +1688,16 @@ async def test_database_lock_and_overflow(
     }
     await async_setup_recorder_instance(hass, config)
     await hass.async_block_till_done()
+    event_type = "EVENT_TEST"
+    event_types = (event_type,)
 
     def _get_db_events():
         with session_scope(hass=hass) as session:
-            return list(session.query(Events).filter_by(event_type=event_type))
+            return list(
+                session.query(Events).filter(
+                    Events.event_type_id.in_(select_event_type_ids(event_types))
+                )
+            )
 
     instance = get_instance(hass)
 
@@ -1682,7 +1706,6 @@ async def test_database_lock_and_overflow(
     ):
         await instance.lock_database()
 
-        event_type = "EVENT_TEST"
         event_data = {"test_attr": 5, "test_attr_10": "nice"}
         hass.bus.fire(event_type, event_data)
 
