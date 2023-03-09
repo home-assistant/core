@@ -643,6 +643,8 @@ class MQTT:
 
         if self._is_active_subscription(topic):
             subs = self._matching_subscriptions(topic)
+            if self._max_qos[topic] == 0:
+                return
             self._max_qos[topic] = max(sub.qos for sub in subs)
             # Other subscriptions on topic remaining - don't unsubscribe.
             return
