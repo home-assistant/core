@@ -53,7 +53,7 @@ class RensonFan(RensonEntity, FanEntity):
     current_speed = None
 
     def __init__(self, api: RensonVentilation, coordinator: RensonCoordinator) -> None:
-        """Initialize the ComfoConnect fan."""
+        """Initialize the Renson fan."""
         super().__init__("fan", api, coordinator)
 
         self._attr_name = "Fan"
@@ -110,15 +110,13 @@ class RensonFan(RensonEntity, FanEntity):
 
         await self.hass.async_add_executor_job(self.api.set_manual_level, cmd)
 
-        await self.coordinator.async_request_refresh()
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the ComfoConnect fan platform."""
+    """Set up the Renson fan platform."""
     api: RensonVentilation = hass.data[DOMAIN][config_entry.entry_id]["api"]
     coordinator: RensonCoordinator = hass.data[DOMAIN][config_entry.entry_id][
         "coordinator"
@@ -127,3 +125,5 @@ async def async_setup_entry(
     await coordinator.async_config_entry_first_refresh()
 
     async_add_entities([RensonFan(api, coordinator)])
+
+    await coordinator.async_config_entry_first_refresh()

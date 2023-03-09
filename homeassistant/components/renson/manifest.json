@@ -1,11 +1,11 @@
 {
   "domain": "renson",
   "name": "Renson",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/renson",
-  "issue_tracker": "https://github.com/jimmyd-be/Home-Assistant-Sensor-Renson-Ventilation/issues",
-  "requirements": ["renson-endura-delta==1.4.1"],
-  "dependencies": [],
   "codeowners": ["@jimmyd-be"],
-  "iot_class": "local_polling"
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/renson",
+  "iot_class": "local_polling",
+  "requirements": ["renson-endura-delta==1.4.3"],
+  "version": "1.2.0"
 }

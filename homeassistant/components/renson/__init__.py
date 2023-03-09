@@ -21,6 +21,7 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.BINARY_SENSOR,
     Platform.FAN,
+    Platform.UPDATE,
 ]
 
 
@@ -29,6 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     api = RensonVentilation(entry.data[CONF_HOST])
     coordinator = RensonCoordinator(hass, api)
+    fw_coordinator = RensonFirmwareCoordinator(hass, api)
 
     if not await hass.async_add_executor_job(api.connect):
         raise ConfigEntryNotReady("Cannot connect to Renson device")
@@ -36,9 +38,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "api": api,
         "coordinator": coordinator,
+        "fw_coordinator": fw_coordinator,
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await hass.async_add_executor_job(setup_hass_services, hass, api)
 
     return True
@@ -129,9 +132,9 @@ def setup_hass_services(hass: HomeAssistant, renson_api: RensonVentilation) -> N
 
 
 class RensonCoordinator(DataUpdateCoordinator):
-    """My custom coordinator."""
+    """Data update coordinator for Renson."""
 
-    def __init__(self, hass, api):
+    def __init__(self, hass, api, update_interval=timedelta(seconds=30)):
         """Initialize my coordinator."""
         super().__init__(
             hass,
@@ -139,7 +142,7 @@ class RensonCoordinator(DataUpdateCoordinator):
             # Name of the data. For logging purposes.
             name="Renson",
             # Polling interval. Will only be polled if there are subscribers.
-            update_interval=timedelta(seconds=30),
+            update_interval=update_interval,
         )
         self.api = api
 
@@ -148,5 +151,31 @@ class RensonCoordinator(DataUpdateCoordinator):
         try:
             async with async_timeout.timeout(30):
                 return await self.hass.async_add_executor_job(self.api.get_all_data)
+        except Exception as err:
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
+
+
+class RensonFirmwareCoordinator(RensonCoordinator):
+    """My custom coordinator."""
+
+    def __init__(self, hass, api):
+        """Initialize my coordinator."""
+        super().__init__(
+            hass,
+            api,
+            update_interval=timedelta(seconds=60 * 60 * 24),
+        )
+
+    async def _async_update_data(self):
+        """Fetch data from API endpoint."""
+        data = await super()._async_update_data()
+
+        try:
+            async with async_timeout.timeout(30):
+                latest_version = await self.hass.async_add_executor_job(
+                    self.api.get_latest_firmware_version
+                )
+                data["latest_firmware_version"] = latest_version
+                return data
         except Exception as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err

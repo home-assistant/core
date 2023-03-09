@@ -29,28 +29,21 @@ from renson_endura_delta.field_enum import (
     FieldEnum,
 )
 from renson_endura_delta.renson import RensonVentilation
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, TEMP_CELSIUS
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RensonCoordinator
 from .const import CONCENTRATION_PARTS_PER_CUBIC_METER, DOMAIN
 from .entity import RensonEntity
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_HOST, default=[]): cv.string}
-)
 
 
 @dataclass
@@ -74,14 +67,14 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         name="CO2 quality",
         field=CO2_QUALITY_FIELD,
         raw_format=False,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
     ),
     RensonSensorEntityDescription(
         key="AIR_QUALITY_FIELD",
         name="Air quality",
         field=AIR_QUALITY_FIELD,
         raw_format=False,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
     ),
     RensonSensorEntityDescription(
         key="CO2_FIELD",
@@ -104,13 +97,13 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         key="CURRENT_LEVEL_FIELD_RAW",
         name="Ventilation level raw",
         field=CURRENT_LEVEL_FIELD,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         raw_format=True,
     ),
     RensonSensorEntityDescription(
         key="CURRENT_LEVEL_FIELD",
         name="Ventilation level",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         field=CURRENT_LEVEL_FIELD,
         raw_format=False,
     ),
@@ -170,7 +163,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         name="Manual level",
         field=MANUAL_LEVEL_FIELD,
         raw_format=False,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
     ),
     RensonSensorEntityDescription(
         key="BREEZE_TEMPERATURE_FIELD",
