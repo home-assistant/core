@@ -46,28 +46,28 @@ class SFRBoxSensorEntityDescription(SensorEntityDescription, SFRBoxSensorMixin[_
 DSL_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[DslInfo], ...] = (
     SFRBoxSensorEntityDescription[DslInfo](
         key="linemode",
-        name="Line mode",
+        name="DSL line mode",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda x: x.linemode,
     ),
     SFRBoxSensorEntityDescription[DslInfo](
         key="counter",
-        name="Counter",
+        name="DSL counter",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda x: x.counter,
     ),
     SFRBoxSensorEntityDescription[DslInfo](
         key="crc",
-        name="CRC",
+        name="DSL CRC",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda x: x.crc,
     ),
     SFRBoxSensorEntityDescription[DslInfo](
         key="noise_down",
-        name="Noise down",
+        name="DSL noise down",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -77,7 +77,7 @@ DSL_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[DslInfo], ...] = (
     ),
     SFRBoxSensorEntityDescription[DslInfo](
         key="noise_up",
-        name="Noise up",
+        name="DSL noise up",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -87,7 +87,7 @@ DSL_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[DslInfo], ...] = (
     ),
     SFRBoxSensorEntityDescription[DslInfo](
         key="attenuation_down",
-        name="Attenuation down",
+        name="DSL attenuation down",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -97,7 +97,7 @@ DSL_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[DslInfo], ...] = (
     ),
     SFRBoxSensorEntityDescription[DslInfo](
         key="attenuation_up",
-        name="Attenuation up",
+        name="DSL attenuation up",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -107,7 +107,7 @@ DSL_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[DslInfo], ...] = (
     ),
     SFRBoxSensorEntityDescription[DslInfo](
         key="rate_down",
-        name="Rate down",
+        name="DSL rate down",
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
@@ -115,7 +115,7 @@ DSL_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[DslInfo], ...] = (
     ),
     SFRBoxSensorEntityDescription[DslInfo](
         key="rate_up",
-        name="Rate up",
+        name="DSL rate up",
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
@@ -123,7 +123,7 @@ DSL_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[DslInfo], ...] = (
     ),
     SFRBoxSensorEntityDescription[DslInfo](
         key="line_status",
-        name="Line status",
+        name="DSL line status",
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -140,7 +140,7 @@ DSL_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[DslInfo], ...] = (
     ),
     SFRBoxSensorEntityDescription[DslInfo](
         key="training",
-        name="Training",
+        name="DSL training",
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
