@@ -375,9 +375,9 @@ class EDL21:
             else:
                 entity_description = SENSORS.get(obis)
                 if entity_description and entity_description.name:
-                    device_name = (
-                        self._name or DEFAULT_DEVICE_NAME
-                    )  # self._name is only used for backwards compatibility of sensors from configuration.yaml and will be removed
+                    # self._name is only used for backwards YAML compatibility
+                    # This needs to be cleaned up when YAML support is removed
+                    device_name = self._name or DEFAULT_DEVICE_NAME
                     new_entities.append(
                         EDL21Entity(
                             electricity_id,
