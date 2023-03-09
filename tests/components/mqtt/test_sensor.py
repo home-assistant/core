@@ -135,6 +135,8 @@ async def test_setting_sensor_value_via_mqtt_message(
             False,
         ),
         (sensor.SensorDeviceClass.TIMESTAMP, "invalid", STATE_UNKNOWN, True),
+        (sensor.SensorDeviceClass.ENUM, "some_value", "some_value", False),
+        (None, "some_value", "some_value", False),
     ],
 )
 async def test_setting_sensor_native_value_handling_via_mqtt_message(
