@@ -283,7 +283,7 @@ class PyNUTData:
             self._device_info = self._get_device_info()
 
     async def async_run_command(
-        self, hass: HomeAssistant, data: PyNUTData, command_name: str | None
+        self, hass: HomeAssistant, command_name: str | None
     ) -> None:
         """Invoke instant command in UPS."""
         try:
