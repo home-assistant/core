@@ -29,7 +29,7 @@ from .dataset_store import async_get_store
 from .discovery import async_read_zeroconf_cache
 
 if TYPE_CHECKING:
-    from pyroute2 import NDB  # pylint: disable=no-name-in-module
+    from pyroute2 import NDB
 
 
 class Neighbour(TypedDict):
@@ -121,7 +121,7 @@ def _get_routes_and_neighbors():
         NDB,
     )
 
-    with NDB() as ndb:  # pylint: disable=not-callable
+    with NDB() as ndb:
         routes, reverse_routes = _get_possible_thread_routes(ndb)
         neighbours = _get_neighbours(ndb)
 
