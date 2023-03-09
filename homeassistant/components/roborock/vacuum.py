@@ -4,7 +4,7 @@ import logging
 from typing import Any
 
 from roborock.code_mappings import FAN_SPEED_CODES, MOP_INTENSITY_CODES, MOP_MODE_CODES
-from roborock.typing import RoborockCommand, RoborockDeviceInfo, Status
+from roborock.typing import RoborockCommand, RoborockDeviceInfo
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
@@ -68,7 +68,7 @@ STATE_CODE_TO_STATE = {
 }
 
 
-ATTR_STATUS = "vacuum_status"
+ATTR_STATUS = "status"
 ATTR_MOP_MODE = "mop_mode"
 ATTR_MOP_INTENSITY = "mop_intensity"
 ATTR_MOP_MODE_LIST = f"{ATTR_MOP_MODE}_list"
@@ -208,18 +208,18 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity, ABC):
         return STATE_CODE_TO_STATE.get(self._device_status.state)
 
     @property
-    def status(self) -> Status | None:
+    def status(self) -> str | None:
         """Return the status of the vacuum cleaner."""
         if not self._device_status:
             return None
         return self._device_status.status
 
     @property
-    def state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the vacuum cleaner."""
         if not self._device_status:
             return {}
-        data = dict(self._device_status)
+        data: dict[str, Any] = dict(self._device_status)
 
         if self.supported_features & VacuumEntityFeature.BATTERY:
             data[ATTR_BATTERY_LEVEL] = self.battery_level

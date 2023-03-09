@@ -28,19 +28,8 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._username = None
         self._errors: dict[str, str] = {}
-        self._client: RoborockClient = None
+        self._client: RoborockClient | None = None
         self._auth_method: str | None = None
-
-    # async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
-    #     """Handle a reauth flow."""
-    #     return await self.async_step_reauth_confirm(entry_data)
-
-    # async def async_step_reauth_confirm(
-    #     self, user_input: dict[str, Any] | None = None
-    # ) -> FlowResult:
-    #     """Handle reauthorization flow."""
-    #     # TO-DO Show correct form based on code error or email error
-    #     return self._show_code_form(user_input)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -115,6 +104,7 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _create_entry(self, username: str, user_data: UserData) -> FlowResult:
         """Finished config flow and create entry."""
+        assert self._client is not None
         return self.async_create_entry(
             title=username,
             data={
@@ -124,7 +114,7 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def _request_code(self, username: str) -> RoborockClient:
+    async def _request_code(self, username: str) -> RoborockClient | None:
         """Return true if credentials are valid."""
         try:
             _LOGGER.debug("Requesting code for Roborock account")
@@ -144,6 +134,7 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Return UserData if login code is valid."""
         try:
             _LOGGER.debug("Logging into Roborock account using email provided code")
+            assert self._client is not None
             login_data = await self._client.code_login(code)
             return login_data
         except RoborockException as ex:

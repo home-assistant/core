@@ -3,10 +3,9 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
 
 from roborock.api import RoborockClient, RoborockMqttClient
-from roborock.containers import UserData
+from roborock.containers import HomeDataProduct, UserData
 from roborock.exceptions import RoborockException, RoborockTimeout
 from roborock.typing import RoborockDeviceInfo, RoborockDeviceProp
 
@@ -54,9 +53,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         else home_data.devices
     )
     for device in devices:
-        product: dict[str, Any] = next(
+        product: HomeDataProduct = next(
             (
-                product
+                HomeDataProduct(product)
                 for product in home_data.products
                 if product.id == device.product_id
             ),
@@ -139,7 +138,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle removal of an entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        # await hass.data[DOMAIN][entry.entry_id].release() # RELEASE IS NOT FUNCTINOAL TODO
+        await hass.data[DOMAIN][entry.entry_id].release()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     if not hass.data[DOMAIN]:
