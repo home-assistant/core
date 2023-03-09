@@ -142,13 +142,14 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
             update_callback()
 
     @callback
-    def _unschedule_refresh(self) -> None:
+    def _unschedule_refresh(self, *, cancel_debounce: bool = True) -> None:
         """Unschedule any pending refresh, and cancel debounce."""
         if self._unsub_refresh:
             self._unsub_refresh()
             self._unsub_refresh = None
 
-        self._debounced_refresh.async_cancel()
+        if cancel_debounce:
+            self._debounced_refresh.async_cancel()
 
     def async_contexts(self) -> Generator[Any, None, None]:
         """Return all registered contexts."""
@@ -165,7 +166,9 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
         if self.config_entry and self.config_entry.pref_disable_polling:
             return
 
-        self._unschedule_refresh()
+        # If the refresh interval is shorter than the debouncer cooldown
+        # cancelling the debounce would cause the debounce to never be called
+        self._unschedule_refresh(cancel_debounce=False)
 
         # We _floor_ utcnow to create a schedule on a rounded second,
         # minimizing the time between the point and the real activation.
