@@ -243,6 +243,26 @@ def test_iterating_domain_states(hass: HomeAssistant) -> None:
     )
 
 
+def test_loop_controls(hass: HomeAssistant) -> None:
+    """Test that loop controls are enabled."""
+    assert (
+        template.Template(
+            """
+            {%- for v in range(10) %}
+                {%- if v == 1 -%}
+                    {%- continue -%}
+                {%- elif v == 3 -%}
+                    {%- break -%}
+                {%- endif -%}
+                {{ v }}
+            {%- endfor -%}
+            """,
+            hass,
+        ).async_render()
+        == "02"
+    )
+
+
 def test_float_function(hass: HomeAssistant) -> None:
     """Test float function."""
     hass.states.async_set("sensor.temperature", "12")
@@ -4323,3 +4343,14 @@ def test_contains(hass: HomeAssistant, seq, value, expected) -> None:
         )
         == expected
     )
+
+
+async def test_render_to_info_with_exception(hass: HomeAssistant) -> None:
+    """Test info is still available if the template has an exception."""
+    hass.states.async_set("test_domain.object", "dog")
+    info = render_to_info(hass, '{{ states("test_domain.object") | float }}')
+    with pytest.raises(TemplateError, match="no default was specified"):
+        info.result()
+
+    assert info.all_states is False
+    assert info.entities == {"test_domain.object"}

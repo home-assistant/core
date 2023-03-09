@@ -72,7 +72,7 @@ def create_async_httpx_client(
 
     original_aclose = client.aclose
 
-    client.aclose = warn_use(  # type: ignore[assignment]
+    client.aclose = warn_use(  # type: ignore[method-assign]
         client.aclose, "closes the Home Assistant httpx client"
     )
 

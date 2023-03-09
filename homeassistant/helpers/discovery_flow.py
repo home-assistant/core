@@ -29,7 +29,7 @@ def async_create_flow(
 
     if not dispatcher or dispatcher.started:
         if init_coro := _async_init_flow(hass, domain, context, data):
-            hass.async_create_task(init_coro)
+            hass.async_create_task(init_coro, f"discovery flow {domain} {context}")
         return
 
     return dispatcher.async_create(domain, context, data)
@@ -44,7 +44,9 @@ def _async_init_flow(
     # as ones in progress as it may cause additional device probing
     # which can overload devices since zeroconf/ssdp updates can happen
     # multiple times in the same minute
-    if hass.config_entries.flow.async_has_matching_flow(domain, context, data):
+    if hass.is_stopping or hass.config_entries.flow.async_has_matching_flow(
+        domain, context, data
+    ):
         return None
 
     return hass.config_entries.flow.async_init(domain, context=context, data=data)

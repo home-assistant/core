@@ -287,3 +287,39 @@ async def test_gateway_initialize_failure_transient(
 
     # Initialization immediately stops and is retried after TransientConnectionError
     assert mock_new.call_count == 2
+
+
+@patch(
+    "homeassistant.components.zha.core.gateway.ZHAGateway.async_load_devices",
+    MagicMock(),
+)
+@patch(
+    "homeassistant.components.zha.core.gateway.ZHAGateway.async_load_groups",
+    MagicMock(),
+)
+@pytest.mark.parametrize(
+    ("device_path", "thread_state", "config_override"),
+    [
+        ("/dev/ttyUSB0", True, {}),
+        ("socket://192.168.1.123:9999", False, {}),
+        ("socket://192.168.1.123:9999", True, {"use_thread": True}),
+    ],
+)
+async def test_gateway_initialize_bellows_thread(
+    device_path, thread_state, config_override, hass, coordinator
+):
+    """Test ZHA disabling the UART thread when connecting to a TCP coordinator."""
+    zha_gateway = get_zha_gateway(hass)
+    assert zha_gateway is not None
+
+    zha_gateway.config_entry.data = dict(zha_gateway.config_entry.data)
+    zha_gateway.config_entry.data["device"]["path"] = device_path
+    zha_gateway._config.setdefault("zigpy_config", {}).update(config_override)
+
+    with patch(
+        "bellows.zigbee.application.ControllerApplication.new",
+        new=AsyncMock(),
+    ) as mock_new:
+        await zha_gateway.async_initialize()
+
+    assert mock_new.mock_calls[0].args[0]["use_thread"] is thread_state

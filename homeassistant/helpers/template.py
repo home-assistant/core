@@ -274,6 +274,8 @@ class RenderInfo:
             f" entities={self.entities}"
             f" rate_limit={self.rate_limit}"
             f" has_time={self.has_time}"
+            f" exception={self.exception}"
+            f" is_static={self.is_static}"
             ">"
         )
 
@@ -2069,6 +2071,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.template_cache: weakref.WeakValueDictionary[
             str | jinja2.nodes.Template, CodeType | str | None
         ] = weakref.WeakValueDictionary()
+        self.add_extension("jinja2.ext.loopcontrols")
         self.filters["round"] = forgiving_round
         self.filters["multiply"] = multiply
         self.filters["log"] = logarithm
