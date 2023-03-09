@@ -21,7 +21,6 @@ from .const import (
     CONF_USER_DATA,
     DOMAIN,
     PLATFORMS,
-    SERVICES,
     VACUUM,
 )
 
@@ -140,10 +139,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         await hass.data[DOMAIN][entry.entry_id].release()
         hass.data[DOMAIN].pop(entry.entry_id)
-
-    if not hass.data[DOMAIN]:
-        for service in SERVICES:
-            hass.services.async_remove(DOMAIN, service)
 
     return unload_ok
 

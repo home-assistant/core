@@ -147,9 +147,3 @@ async def test_unknown_user(hass: HomeAssistant, bypass_api_fixture) -> None:
     # Check the user form is presented with the error
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {"base": "unknown"}
-
-
-async def test_reauth(hass: HomeAssistant, bypass_api_fixture) -> None:
-    """Test reauth flow handles correctly."""
-    pass
-    # TODO

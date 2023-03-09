@@ -5,7 +5,6 @@ from typing import Any
 
 from roborock.code_mappings import FAN_SPEED_CODES, MOP_INTENSITY_CODES, MOP_MODE_CODES
 from roborock.typing import RoborockCommand, RoborockDeviceInfo
-import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_ICON,
@@ -23,20 +22,11 @@ from homeassistant.components.vacuum import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_STATE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
 from . import RoborockDataUpdateCoordinator
-from .const import (
-    DOMAIN,
-    SERVICE_VACUUM_CLEAN_SEGMENT,
-    SERVICE_VACUUM_CLEAN_ZONE,
-    SERVICE_VACUUM_RESET_CONSUMABLES,
-    SERVICE_VACUUM_SET_FAN_SPEED,
-    SERVICE_VACUUM_SET_MOP_INTENSITY,
-    SERVICE_VACUUM_SET_MOP_MODE,
-)
+from .const import DOMAIN
 from .device import RoborockCoordinatedEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,78 +66,12 @@ ATTR_MOP_INTENSITY_LIST = f"{ATTR_MOP_INTENSITY}_list"
 ATTR_ERROR = "error"
 
 
-def add_services() -> None:
-    """Add the vacuum services to hass."""
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_VACUUM_CLEAN_ZONE,
-        cv.make_entity_service_schema(
-            {
-                vol.Required("zone"): vol.All(
-                    list,
-                    [
-                        vol.ExactSequence(
-                            [
-                                vol.Coerce(int),
-                                vol.Coerce(int),
-                                vol.Coerce(int),
-                                vol.Coerce(int),
-                            ]
-                        )
-                    ],
-                ),
-                vol.Optional("repeats"): vol.All(
-                    vol.Coerce(int), vol.Clamp(min=1, max=3)
-                ),
-            }
-        ),
-        RoborockVacuum.async_clean_zone.__name__,
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_VACUUM_CLEAN_SEGMENT,
-        cv.make_entity_service_schema(
-            {vol.Required("segments"): vol.Any(vol.Coerce(int), [vol.Coerce(int)])}
-        ),
-        RoborockVacuum.async_clean_segment.__name__,
-    )
-    platform.async_register_entity_service(
-        SERVICE_VACUUM_SET_MOP_MODE,
-        cv.make_entity_service_schema(
-            {vol.Required("mop_mode"): vol.In(list(MOP_MODE_CODES.values()))}
-        ),
-        RoborockVacuum.async_set_mop_mode.__name__,
-    )
-    platform.async_register_entity_service(
-        SERVICE_VACUUM_SET_MOP_INTENSITY,
-        cv.make_entity_service_schema(
-            {vol.Required("mop_intensity"): vol.In(list(MOP_INTENSITY_CODES.values()))}
-        ),
-        RoborockVacuum.async_set_mop_intensity.__name__,
-    )
-    platform.async_register_entity_service(
-        SERVICE_VACUUM_SET_FAN_SPEED,
-        cv.make_entity_service_schema(
-            {vol.Required("fan_speed"): vol.In(list(FAN_SPEED_CODES.values()))}
-        ),
-        RoborockVacuum.async_set_fan_speed.__name__,
-    )
-    platform.async_register_entity_service(
-        SERVICE_VACUUM_RESET_CONSUMABLES,
-        cv.make_entity_service_schema({}),
-        RoborockVacuum.async_reset_consumable.__name__,
-    )
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Roborock sensor."""
-    add_services()
-
     coordinator: RoborockDataUpdateCoordinator = hass.data[DOMAIN][
         config_entry.entry_id
     ]
