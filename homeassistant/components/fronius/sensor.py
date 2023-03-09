@@ -703,17 +703,14 @@ class _FroniusSensorEntity(CoordinatorEntity["FroniusCoordinatorBase"], SensorEn
 
     def _get_entity_value(self) -> Any:
         """Extract entity value from coordinator. Raises KeyError if not included in latest update."""
-        try:
-            new_value = self.coordinator.data[self.solar_net_id][
-                self.entity_description.key
-            ]["value"]
-        except KeyError:
-            if self.entity_description.default_value is None:
-                raise
-            return self.entity_description.default_value
+        new_value = self.coordinator.data[self.solar_net_id][
+            self.entity_description.key
+        ]["value"]
         if new_value is None:
             return self.entity_description.default_value
-        return round(new_value, 4) if isinstance(new_value, float) else new_value
+        if isinstance(new_value, float):
+            return round(new_value, 4)
+        return new_value
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -721,7 +718,9 @@ class _FroniusSensorEntity(CoordinatorEntity["FroniusCoordinatorBase"], SensorEn
         try:
             self._attr_native_value = self._get_entity_value()
         except KeyError:
-            return
+            if self.entity_description.default_value is None:
+                return
+            self._attr_native_value = self.entity_description.default_value
         self.async_write_ha_state()
 
 
