@@ -311,7 +311,9 @@ async def test_coordinator_entity(crd: update_coordinator.DataUpdateCoordinator[
     assert list(crd.async_contexts()) == [context]
 
     # Call remove callback to cleanup debouncer and avoid lingering timer
+    assert len(crd._listeners) == 1
     _on_remove_callback()
+    assert len(crd._listeners) == 0
 
 
 async def test_async_set_updated_data(crd) -> None:
