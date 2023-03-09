@@ -4349,6 +4349,11 @@
       "config_flow": false,
       "iot_class": "calculated"
     },
+    "quadrafire": {
+      "name": "Quadra-Fire",
+      "integration_type": "virtual",
+      "supported_by": "intellifire"
+    },
     "quantum_gateway": {
       "name": "Quantum Gateway",
       "integration_type": "hub",

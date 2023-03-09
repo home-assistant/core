@@ -1,10 +1,10 @@
 {
   "domain": "sharkiq",
   "name": "Shark IQ",
-  "codeowners": ["@JeffResc", "@funkybunch", "@AritroSaha10"],
+  "codeowners": ["@JeffResc", "@funkybunch"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sharkiq",
   "iot_class": "cloud_polling",
   "loggers": ["sharkiq"],
-  "requirements": ["sharkiq==0.0.1"]
+  "requirements": ["sharkiq==1.0.2"]
 }

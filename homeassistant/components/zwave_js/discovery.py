@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from dataclasses import asdict, dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from awesomeversion import AwesomeVersion
 from zwave_js_server.const import (
@@ -60,6 +60,9 @@ from .discovery_data_template import (
 )
 from .helpers import ZwaveValueID
 
+if TYPE_CHECKING:
+    from _typeshed import DataclassInstance
+
 
 class ValueType(StrEnum):
     """Enum with all value types."""
@@ -73,7 +76,7 @@ class ValueType(StrEnum):
 class DataclassMustHaveAtLeastOne:
     """A dataclass that must have at least one input parameter that is not None."""
 
-    def __post_init__(self) -> None:
+    def __post_init__(self: DataclassInstance) -> None:
         """Post dataclass initialization."""
         if all(val is None for val in asdict(self).values()):
             raise ValueError("At least one input parameter must not be None")
