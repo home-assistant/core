@@ -1,7 +1,6 @@
 """SFR Box sensor platform."""
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 from dataclasses import dataclass
-from itertools import chain
 from typing import Generic, TypeVar
 
 from sfrbox_api.models import DslInfo, SystemInfo
@@ -204,16 +203,15 @@ async def async_setup_entry(
     """Set up the sensors."""
     data: DomainData = hass.data[DOMAIN][entry.entry_id]
 
-    entities: Iterable[SFRBoxSensor] = chain(
-        (
+    entities: list[SFRBoxSensor] = [
+        SFRBoxSensor(data.system, description, data.system.data)
+        for description in SYSTEM_SENSOR_TYPES
+    ]
+    if data.system.data.net_infra == "adsl":
+        entities.extend(
             SFRBoxSensor(data.dsl, description, data.system.data)
             for description in DSL_SENSOR_TYPES
-        ),
-        (
-            SFRBoxSensor(data.system, description, data.system.data)
-            for description in SYSTEM_SENSOR_TYPES
-        ),
-    )
+        )
 
     async_add_entities(entities)
 

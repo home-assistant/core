@@ -38,16 +38,15 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="mock_config_entry")
-async def mock_config_entry_fixture(hass, config_entry):
+async def mock_config_entry_fixture(hass, config_entry, mock_setup_entry):
     """Mock config entry and setup entry."""
-    with patch("homeassistant.components.axis.async_setup_entry", return_value=True):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        yield config_entry
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    return config_entry
 
 
 async def test_flow_manual_configuration(
-    hass: HomeAssistant, setup_default_vapix_requests
+    hass: HomeAssistant, setup_default_vapix_requests, mock_setup_entry
 ) -> None:
     """Test that config flow works."""
     MockConfigEntry(domain=AXIS_DOMAIN, source=SOURCE_IGNORE).add_to_hass(hass)
@@ -164,7 +163,7 @@ async def test_flow_fails_cannot_connect(hass: HomeAssistant) -> None:
 
 
 async def test_flow_create_entry_multiple_existing_entries_of_same_model(
-    hass: HomeAssistant, setup_default_vapix_requests
+    hass: HomeAssistant, setup_default_vapix_requests, mock_setup_entry
 ) -> None:
     """Test that create entry can generate a name with other entries."""
     entry = MockConfigEntry(
@@ -310,7 +309,11 @@ async def test_reauth_flow_update_configuration(
     ],
 )
 async def test_discovery_flow(
-    hass: HomeAssistant, setup_default_vapix_requests, source: str, discovery_info: dict
+    hass: HomeAssistant,
+    setup_default_vapix_requests,
+    source: str,
+    discovery_info: dict,
+    mock_setup_entry,
 ) -> None:
     """Test the different discovery flows for new devices work."""
     result = await hass.config_entries.flow.async_init(
