@@ -14,6 +14,7 @@ from .common import DEVICE_HELPER
 from .const import (
     DOMAIN,
     SERVICE_UPDATE_DEVS,
+    VS_BINARY_SENSORS,
     VS_DISCOVERY,
     VS_FANS,
     VS_HUMIDIFIERS,
@@ -31,6 +32,7 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.HUMIDIFIER,
     Platform.NUMBER,
+    Platform.BINARY_SENSOR,
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,6 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     sensors = hass.data[DOMAIN][VS_SENSORS] = []
     humidifiers = hass.data[DOMAIN][VS_HUMIDIFIERS] = []
     numbers = hass.data[DOMAIN][VS_NUMBERS] = []
+    binary_sensors = hass.data[DOMAIN][VS_BINARY_SENSORS] = []
     platforms = []
 
     if device_dict[VS_SWITCHES]:
@@ -92,6 +95,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         numbers.extend(device_dict[VS_NUMBERS])
         platforms.append(Platform.NUMBER)
 
+    if device_dict[VS_BINARY_SENSORS]:
+        binary_sensors.extend(device_dict[VS_BINARY_SENSORS])
+        platforms.append(Platform.BINARY_SENSOR)
+
     await hass.config_entries.async_forward_entry_setups(config_entry, platforms)
 
     async def async_new_device_discovery(service: ServiceCall) -> None:
@@ -116,6 +123,7 @@ async def _async_process_devices(
     devices[VS_SENSORS] = []
     devices[VS_HUMIDIFIERS] = []
     devices[VS_NUMBERS] = []
+    devices[VS_BINARY_SENSORS] = []
 
     await hass.async_add_executor_job(manager.update)
 
@@ -124,13 +132,13 @@ async def _async_process_devices(
             # VeSync classifies humidifiers as fans
             if DEVICE_HELPER.is_humidifier(fan.device_type):
                 devices[VS_HUMIDIFIERS].append(fan)
-                devices[VS_NUMBERS].append(fan)  # for night light and mist level
-                devices[VS_SWITCHES].append(fan)  # for automatic stop and display
-                if fan.night_light:
-                    devices[VS_LIGHTS].append(fan)  # for night light
             else:
                 devices[VS_FANS].append(fan)
+            devices[VS_NUMBERS].append(fan)  # for night light and mist level
+            devices[VS_SWITCHES].append(fan)  # for automatic stop and display
+            devices[VS_LIGHTS].append(fan)  # for night light
             devices[VS_SENSORS].append(fan)
+            devices[VS_BINARY_SENSORS].append(fan)
         _LOGGER.info("%d VeSync fans found", len(devices[VS_FANS]))
         _LOGGER.info("%d VeSync humidifiers found", len(devices[VS_HUMIDIFIERS]))
 
@@ -169,6 +177,7 @@ async def _async_new_device_discovery(
     sensors = hass.data[DOMAIN][VS_SENSORS]
     humidifiers = hass.data[DOMAIN][VS_HUMIDIFIERS]
     numbers = hass.data[DOMAIN][VS_NUMBERS]
+    binary_sensors = hass.data[DOMAIN][VS_BINARY_SENSORS]
 
     dev_dict = await _async_process_devices(hass, manager)
     switch_devs = dev_dict.get(VS_SWITCHES, [])
@@ -177,6 +186,7 @@ async def _async_new_device_discovery(
     sensor_devs = dev_dict.get(VS_SENSORS, [])
     humidifier_devs = dev_dict.get(VS_HUMIDIFIERS, [])
     number_devs = dev_dict.get(VS_NUMBERS, [])
+    binary_sensor_devs = dev_dict.get(VS_BINARY_SENSORS, [])
 
     switch_set = set(switch_devs)
     new_switches = list(switch_set.difference(switches))
@@ -233,6 +243,17 @@ async def _async_new_device_discovery(
     elif new_sensors and not sensors:
         sensors.extend(new_sensors)
         hass.async_create_task(forward_setup(config_entry, Platform.SENSOR))
+
+    binary_sensor_set = set(binary_sensor_devs)
+    new_binary_sensors = list(binary_sensor_set.difference(binary_sensors))
+    if new_binary_sensors and binary_sensors:
+        binary_sensors.extend(new_binary_sensors)
+        async_dispatcher_send(
+            hass, VS_DISCOVERY.format(VS_BINARY_SENSORS), new_binary_sensors
+        )
+    elif new_binary_sensors and not binary_sensors:
+        binary_sensors.extend(new_binary_sensors)
+        hass.async_create_task(forward_setup(config_entry, Platform.BINARY_SENSOR))
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

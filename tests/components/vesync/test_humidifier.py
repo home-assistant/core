@@ -28,7 +28,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 async def test_async_setup_entry(
     hass: HomeAssistant,
     config_entry,
-    features,
+    humid_features,
     humidifier: VeSyncHumid200300S,
     humidifier_nightlight: VeSyncHumid200300S,
     caplog: pytest.LogCaptureFixture,
@@ -43,8 +43,8 @@ async def test_async_setup_entry(
     with patch.object(config_entry, "async_on_unload") as mock_on_unload, patch(
         "homeassistant.components.vesync.common.humid_features"
     ) as mock_features:
-        mock_features.values.side_effect = features.values
-        mock_features.keys.side_effect = features.keys
+        mock_features.values.side_effect = humid_features.values
+        mock_features.keys.side_effect = humid_features.keys
 
         await async_setup_entry(hass, config_entry, callback)
         await hass.async_block_till_done()
@@ -59,7 +59,7 @@ async def test_async_setup_entry(
 
 
 async def test_async_setup_entry__empty(
-    hass: HomeAssistant, config_entry, features, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, config_entry, humid_features, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test the discovery mechanism can handle no devices."""
     caplog.set_level(logging.INFO)
@@ -71,8 +71,8 @@ async def test_async_setup_entry__empty(
     with patch.object(config_entry, "async_on_unload") as mock_on_unload, patch(
         "homeassistant.components.vesync.common.humid_features"
     ) as mock_features:
-        mock_features.values.side_effect = features.values
-        mock_features.keys.side_effect = features.keys
+        mock_features.values.side_effect = humid_features.values
+        mock_features.keys.side_effect = humid_features.keys
 
         await async_setup_entry(hass, config_entry, callback)
         await hass.async_block_till_done()
@@ -85,7 +85,7 @@ async def test_async_setup_entry__empty(
 
 
 async def test_async_setup_entry__invalid(
-    hass: HomeAssistant, config_entry, features, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, config_entry, humid_features, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test the discovery mechanism can handle unsupported devices."""
     caplog.set_level(logging.INFO)
@@ -101,8 +101,8 @@ async def test_async_setup_entry__invalid(
     with patch.object(config_entry, "async_on_unload") as mock_on_unload, patch(
         "homeassistant.components.vesync.common.humid_features"
     ) as mock_features:
-        mock_features.values.side_effect = features.values
-        mock_features.keys.side_effect = features.keys
+        mock_features.values.side_effect = humid_features.values
+        mock_features.keys.side_effect = humid_features.keys
 
         await async_setup_entry(hass, config_entry, callback)
         await hass.async_block_till_done()

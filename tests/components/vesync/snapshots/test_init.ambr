@@ -57,6 +57,17 @@
       }),
       dict({
         'attributes': ReadOnlyDict({
+          'friendly_name': 'Air Purifier 400s night light',
+          'supported_color_modes': list([
+            <ColorMode.BRIGHTNESS: 'brightness'>,
+          ]),
+          'supported_features': 0,
+        }),
+        'entity_id': 'light.air_purifier_400s_night_light',
+        'state': 'off',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
           'friendly_name': 'Air Purifier 400s Air Quality',
         }),
         'entity_id': 'sensor.air_purifier_400s_air_quality',
@@ -101,6 +112,17 @@
         }),
         'entity_id': 'fan.air_purifier_600s',
         'state': 'on',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Air Purifier 600s night light',
+          'supported_color_modes': list([
+            <ColorMode.BRIGHTNESS: 'brightness'>,
+          ]),
+          'supported_features': 0,
+        }),
+        'entity_id': 'light.air_purifier_600s_night_light',
+        'state': 'off',
       }),
       dict({
         'attributes': ReadOnlyDict({
@@ -180,6 +202,17 @@
       }),
       dict({
         'attributes': ReadOnlyDict({
+          'friendly_name': 'Air Purifier 200s night light',
+          'supported_color_modes': list([
+            <ColorMode.BRIGHTNESS: 'brightness'>,
+          ]),
+          'supported_features': 0,
+        }),
+        'entity_id': 'light.air_purifier_200s_night_light',
+        'state': 'off',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
           'friendly_name': 'Air Purifier 200s Filter Life',
           'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
           'unit_of_measurement': '%',
@@ -193,6 +226,30 @@
 # name: test_asynch_setup_entry__loaded_state[humidifiers]
   dict({
     '200s-humidifier': list([
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Humidifier 200s Empty Water Tank',
+          'icon': 'mdi:water-alert',
+        }),
+        'entity_id': 'binary_sensor.humidifier_200s_empty_water_tank',
+        'state': 'on',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Humidifier 200s Humidity High',
+          'icon': 'mdi:water-percent-alert',
+        }),
+        'entity_id': 'binary_sensor.humidifier_200s_humidity_high',
+        'state': 'off',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Humidifier 200s Water Tank Lifted',
+          'icon': 'mdi:water-alert',
+        }),
+        'entity_id': 'binary_sensor.humidifier_200s_water_tank_lifted',
+        'state': 'on',
+      }),
       dict({
         'attributes': ReadOnlyDict({
           'available_modes': list([
@@ -225,14 +282,6 @@
       }),
       dict({
         'attributes': ReadOnlyDict({
-          'friendly_name': 'Humidifier 200s Empty Water Tank',
-          'icon': 'mdi:water-alert',
-        }),
-        'entity_id': 'sensor.humidifier_200s_empty_water_tank',
-        'state': 'True',
-      }),
-      dict({
-        'attributes': ReadOnlyDict({
           'device_class': 'humidity',
           'friendly_name': 'Humidifier 200s Humidity',
           'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -240,22 +289,6 @@
         }),
         'entity_id': 'sensor.humidifier_200s_humidity',
         'state': '35',
-      }),
-      dict({
-        'attributes': ReadOnlyDict({
-          'friendly_name': 'Humidifier 200s Humidity High',
-          'icon': 'mdi:water-percent-alert',
-        }),
-        'entity_id': 'sensor.humidifier_200s_humidity_high',
-        'state': 'False',
-      }),
-      dict({
-        'attributes': ReadOnlyDict({
-          'friendly_name': 'Humidifier 200s Water Tank Lifted',
-          'icon': 'mdi:water-alert',
-        }),
-        'entity_id': 'sensor.humidifier_200s_water_tank_lifted',
-        'state': 'True',
       }),
       dict({
         'attributes': ReadOnlyDict({
@@ -273,6 +306,30 @@
       }),
     ]),
     '600s-humidifier': list([
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Humidifier 600S Empty Water Tank',
+          'icon': 'mdi:water-alert',
+        }),
+        'entity_id': 'binary_sensor.humidifier_600s_empty_water_tank',
+        'state': 'on',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Humidifier 600S Humidity High',
+          'icon': 'mdi:water-percent-alert',
+        }),
+        'entity_id': 'binary_sensor.humidifier_600s_humidity_high',
+        'state': 'off',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Humidifier 600S Water Tank Lifted',
+          'icon': 'mdi:water-alert',
+        }),
+        'entity_id': 'binary_sensor.humidifier_600s_water_tank_lifted',
+        'state': 'on',
+      }),
       dict({
         'attributes': ReadOnlyDict({
           'available_modes': list([
@@ -320,14 +377,6 @@
       }),
       dict({
         'attributes': ReadOnlyDict({
-          'friendly_name': 'Humidifier 600S Empty Water Tank',
-          'icon': 'mdi:water-alert',
-        }),
-        'entity_id': 'sensor.humidifier_600s_empty_water_tank',
-        'state': 'True',
-      }),
-      dict({
-        'attributes': ReadOnlyDict({
           'device_class': 'humidity',
           'friendly_name': 'Humidifier 600S Humidity',
           'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -335,22 +384,6 @@
         }),
         'entity_id': 'sensor.humidifier_600s_humidity',
         'state': '35',
-      }),
-      dict({
-        'attributes': ReadOnlyDict({
-          'friendly_name': 'Humidifier 600S Humidity High',
-          'icon': 'mdi:water-percent-alert',
-        }),
-        'entity_id': 'sensor.humidifier_600s_humidity_high',
-        'state': 'False',
-      }),
-      dict({
-        'attributes': ReadOnlyDict({
-          'friendly_name': 'Humidifier 600S Water Tank Lifted',
-          'icon': 'mdi:water-alert',
-        }),
-        'entity_id': 'sensor.humidifier_600s_water_tank_lifted',
-        'state': 'True',
       }),
       dict({
         'attributes': ReadOnlyDict({

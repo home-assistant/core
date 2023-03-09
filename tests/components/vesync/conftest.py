@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
-from .common import HUMIDIFIER_MODEL
+from .common import FAN_MODEL, HUMIDIFIER_MODEL
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -115,7 +115,7 @@ def manager_with_devices_fixture(
         yield mock_vesync
 
 
-@pytest.fixture(name="features")
+@pytest.fixture(name="humid_features")
 def humid_features_fixture() -> dict:
     """Create a replacement dict for humid_features fixture."""
     DEVICE_HELPER.reset_cache()
@@ -126,6 +126,21 @@ def humid_features_fixture() -> dict:
         },
         "Model2": {
             "models": ["XXX-YYY-ZZZ"],
+        },
+    }
+
+
+@pytest.fixture(name="air_features")
+def air_features_fixture() -> dict:
+    """Create a replacement dict for humid_features fixture."""
+    DEVICE_HELPER.reset_cache()
+
+    return {
+        FAN_MODEL: {
+            "models": [FAN_MODEL, "BBB-CCC-DDD"],
+        },
+        "Model2": {
+            "models": ["WWW-XXX-YYY"],
         },
     }
 
@@ -230,8 +245,11 @@ def humidifier_fixture() -> VeSyncHumid200300S:
     mock_fixture.config_dict = config_dict
 
     details = {}
+    details["humidity_high"] = True
     details["mode"] = "manual"
     details["mist_virtual_level"] = 1
+    details["water_lacks"] = True
+    details["water_tank_lifted"] = True
     mock_fixture.details = details
 
     return mock_fixture

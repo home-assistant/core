@@ -1,10 +1,11 @@
 """Common utilities for VeSync Component."""
+import abc
 from itertools import chain
 import logging
-from typing import Any
+from typing import Any, Generic, TypeVar
 
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
-from pyvesync.vesyncfan import humid_features
+from pyvesync.vesyncfan import air_features, humid_features
 
 from homeassistant.helpers.entity import DeviceInfo, Entity, ToggleEntity
 
@@ -17,6 +18,19 @@ class VeSyncDeviceHelper:
     """Collection of VeSync device helpers."""
 
     humidifier_models: set | None = None
+    air_models: set | None = None
+
+    def get_feature(
+        self, device: VeSyncBaseDevice, dictionary: str, attribute: str
+    ) -> Any:
+        """Return the value of the feature."""
+        return getattr(device, dictionary, {}).get(attribute, None)
+
+    def has_feature(
+        self, device: VeSyncBaseDevice, dictionary: str, attribute: str
+    ) -> bool:
+        """Return true if the feature is available."""
+        return self.get_feature(device, dictionary, attribute) is not None
 
     def is_humidifier(self, device_type: str) -> bool:
         """Return true if the device type is a humidifier."""
@@ -32,8 +46,23 @@ class VeSyncDeviceHelper:
 
         return device_type in self.humidifier_models
 
+    def is_air_purifier(self, device_type: str) -> bool:
+        """Return true if the device type is an air_purifier."""
+        if self.air_models is None:
+            # cache the model list after the first use
+            self.air_models = set(
+                chain(*[features["models"] for features in air_features.values()]),
+            ).union(set(air_features.keys()))
+            _LOGGER.debug(
+                "Initialized air_models cache with %d models",
+                len(self.air_models),
+            )
+
+        return device_type in self.air_models
+
     def reset_cache(self) -> None:
         """Reset the helper caches."""
+        self.air_models = None
         self.humidifier_models = None
 
 
@@ -104,3 +133,28 @@ class VeSyncDevice(VeSyncBaseEntity, ToggleEntity):
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self.device.turn_off()
+
+
+T = TypeVar("T")
+
+
+class VeSyncEntityDescriptionFactory(Generic[T], metaclass=abc.ABCMeta):
+    """Describe a factory interface for creating EntityDescription objects."""
+
+    @classmethod
+    def __subclasshook__(cls, subclass):
+        """Impl of meta data."""
+        return (
+            hasattr(subclass, "create")
+            and callable(subclass.create)
+            and hasattr(subclass, "supports")
+            and callable(subclass.supports)
+        )
+
+    @abc.abstractmethod
+    def create(self, device: VeSyncBaseDevice) -> T:
+        """Interface method for create."""
+
+    @abc.abstractmethod
+    def supports(self, device: VeSyncBaseDevice) -> bool:
+        """Interface method for supports."""

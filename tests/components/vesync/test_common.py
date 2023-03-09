@@ -1,5 +1,5 @@
 """Tests for VeSync common utilities."""
-from unittest.mock import patch
+from unittest.mock import MagicMock, call, patch
 
 from homeassistant.components.vesync.common import (
     DOMAIN,
@@ -12,13 +12,63 @@ from homeassistant.helpers.entity import DeviceInfo
 from .common import FAN_MODEL, HUMIDIFIER_MODEL
 
 
-async def test_vesyncdevicehelper__is_humidifier(features) -> None:
+async def test_vesyncdevicehelper__get_feature() -> None:
+    """Test helper get_feature."""
+    mock_device = MagicMock()
+    mock_device.dictionary = MagicMock(wraps={"attribute": "value"})
+
+    helper = VeSyncDeviceHelper()
+    assert helper.get_feature(mock_device, "dictionary", "attribute") == "value"
+    assert mock_device.mock_calls[0] == call.dictionary.get("attribute", None)
+
+
+async def test_vesyncdevicehelper__get_feature_missing_attribute() -> None:
+    """Test helper get_feature."""
+    mock_device = MagicMock()
+    mock_device.dictionary = MagicMock(wraps={})
+
+    helper = VeSyncDeviceHelper()
+    assert helper.get_feature(mock_device, "dictionary", "attribute") is None
+    assert mock_device.mock_calls[0] == call.dictionary.get("attribute", None)
+
+
+async def test_vesyncdevicehelper__has_feature() -> None:
+    """Test helper get_feature."""
+    mock_device = MagicMock()
+    mock_device.dictionary = MagicMock(wraps={"attribute": "value"})
+
+    helper = VeSyncDeviceHelper()
+    assert helper.has_feature(mock_device, "dictionary", "attribute") is True
+    assert mock_device.mock_calls[0] == call.dictionary.get("attribute", None)
+
+
+async def test_vesyncdevicehelper__has_feature_none_value() -> None:
+    """Test helper get_feature."""
+    mock_device = MagicMock()
+    mock_device.dictionary = MagicMock(wraps={"attribute": None})
+
+    helper = VeSyncDeviceHelper()
+    assert helper.has_feature(mock_device, "dictionary", "attribute") is False
+    assert mock_device.mock_calls[0] == call.dictionary.get("attribute", None)
+
+
+async def test_vesyncdevicehelper__has_feature_missing_attribute() -> None:
+    """Test helper get_feature."""
+    mock_device = MagicMock()
+    mock_device.dictionary = MagicMock(wraps={})
+
+    helper = VeSyncDeviceHelper()
+    assert helper.has_feature(mock_device, "dictionary", "attribute") is False
+    assert mock_device.mock_calls[0] == call.dictionary.get("attribute", None)
+
+
+async def test_vesyncdevicehelper__is_humidifier(humid_features) -> None:
     """Test helper for detecting a humidifer."""
     with patch(
         "homeassistant.components.vesync.common.humid_features"
     ) as mock_features:
-        mock_features.values.side_effect = features.values
-        mock_features.keys.side_effect = features.keys
+        mock_features.values.side_effect = humid_features.values
+        mock_features.keys.side_effect = humid_features.keys
 
         helper = VeSyncDeviceHelper()
         assert not helper.humidifier_models
@@ -34,15 +84,42 @@ async def test_vesyncdevicehelper__is_humidifier(features) -> None:
         assert mock_features.keys.call_count == 1
 
 
-async def test_vesyncdevicehelper__reset_cache(features) -> None:
-    """Test helper cache reset."""
-    with patch("homeassistant.components.vesync.common.humid_features"):
+async def test_vesyncdevicehelper__is_air_purifier(air_features) -> None:
+    """Test helper for detecting a humidifer."""
+    with patch(
+        "homeassistant.components.vesync.common.humid_features"
+    ) as mock_features:
+        mock_features.values.side_effect = air_features.values
+        mock_features.keys.side_effect = air_features.keys
+
         helper = VeSyncDeviceHelper()
-        assert helper.humidifier_models is None
-        helper.is_humidifier("ANYTHING")
-        assert helper.humidifier_models is not None
-        helper.reset_cache()
-        assert helper.humidifier_models is None
+        assert not helper.humidifier_models
+        assert helper.is_humidifier(HUMIDIFIER_MODEL) is False
+        assert helper.is_humidifier(FAN_MODEL) is True
+        assert helper.humidifier_models == {
+            FAN_MODEL,
+            "BBB-CCC-DDD",
+            "Model2",
+            "WWW-XXX-YYY",
+        }
+        assert mock_features.values.call_count == 1
+        assert mock_features.keys.call_count == 1
+
+
+async def test_vesyncdevicehelper__reset_cache() -> None:
+    """Test helper cache reset."""
+    helper = VeSyncDeviceHelper()
+    assert helper.humidifier_models is None
+    assert helper.air_models is None
+    helper.is_humidifier("ANYTHING")
+    assert helper.humidifier_models is not None
+    assert helper.air_models is None
+    helper.is_air_purifier("ANYTHING")
+    assert helper.humidifier_models is not None
+    assert helper.air_models is not None
+    helper.reset_cache()
+    assert helper.humidifier_models is None
+    assert helper.air_models is None
 
 
 async def test_base_entity__init(base_device) -> None:

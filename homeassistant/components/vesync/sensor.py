@@ -166,36 +166,6 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         value_fn=lambda device: device.details["humidity"],
         exists_fn=lambda device: "humidity" in device.details,
     ),
-    # Humidifier - VeSyncHumid200300S
-    VeSyncSensorEntityDescription(
-        key="water_lacks",
-        name="Empty Water Tank",
-        icon="mdi:water-alert",
-        value_fn=lambda device: device.details["water_lacks"],
-        exists_fn=lambda device: "water_lacks" in device.details,
-    ),
-    # Humidifier - VeSyncHumid200300S
-    VeSyncSensorEntityDescription(
-        key="humidity_high",
-        name="Humidity High",
-        icon="mdi:water-percent-alert",
-        value_fn=lambda device: device.details["humidity_high"],
-        exists_fn=lambda device: "humidity_high" in device.details,
-    ),
-    # Humidifier - VeSyncHumid200300S
-    VeSyncSensorEntityDescription(
-        key="water_tank_lifted",
-        name="Water Tank Lifted",
-        icon="mdi:water-alert",
-        value_fn=lambda device: device.details["water_tank_lifted"],
-        exists_fn=lambda device: "water_tank_lifted" in device.details,
-    ),
-    VeSyncSensorEntityDescription(
-        key="firmware_update",
-        name="Firmware Update Available",
-        value_fn=lambda device: device.firmware_update,
-        exists_fn=lambda device: device.current_firm_version,
-    ),
 )
 
 

@@ -1,5 +1,4 @@
 """Support for number settings on VeSync devices."""
-import abc
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
@@ -13,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import VeSyncBaseEntity, VeSyncDevice
+from .common import VeSyncBaseEntity, VeSyncDevice, VeSyncEntityDescriptionFactory
 from .const import DOMAIN, VS_DISCOVERY, VS_NUMBERS
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,33 +31,12 @@ class VeSyncNumberEntityDescription(
 ):
     """Describe VeSync number entity."""
 
-    # exists_fn: Callable[[VeSyncBaseDevice], bool] = lambda device: True
     update_fn: Callable[[VeSyncBaseDevice, float], None] = lambda device, value: None
 
 
-class VeSyncNumberEntityDescriptionFactory(metaclass=abc.ABCMeta):
-    """Describe a factory interface for creating VeSyncNumberEntityDescription objects."""
-
-    @classmethod
-    def __subclasshook__(cls, subclass):
-        """Impl of meta data."""
-        return (
-            hasattr(subclass, "create")
-            and callable(subclass.create)
-            and hasattr(subclass, "supports")
-            and callable(subclass.supports)
-        )
-
-    @abc.abstractmethod
-    def create(self, device: VeSyncBaseDevice) -> VeSyncNumberEntityDescription:
-        """Interface method for create."""
-
-    @abc.abstractmethod
-    def supports(self, device: VeSyncBaseDevice) -> bool:
-        """Interface method for supports."""
-
-
-class MistLevelEntityDescriptionFactory(VeSyncNumberEntityDescriptionFactory):
+class MistLevelEntityDescriptionFactory(
+    VeSyncEntityDescriptionFactory[VeSyncNumberEntityDescription]
+):
     """Create an entity description for a device that supports mist levels."""
 
     def create(self, device: VeSyncBaseDevice) -> VeSyncNumberEntityDescription:
@@ -79,7 +57,7 @@ class MistLevelEntityDescriptionFactory(VeSyncNumberEntityDescriptionFactory):
         return "mist_virtual_level" in device.details
 
 
-_FACTORIES: tuple[VeSyncNumberEntityDescriptionFactory] = (
+_FACTORIES: tuple[VeSyncEntityDescriptionFactory] = (
     MistLevelEntityDescriptionFactory(),
 )
 
