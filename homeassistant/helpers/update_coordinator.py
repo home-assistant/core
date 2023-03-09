@@ -143,7 +143,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
 
     @callback
     def _unschedule_refresh(self) -> None:
-        """Unschedule any pending refresh, and cancel debounce."""
+        """Unschedule any pending refresh since there is no longer any listeners."""
         if self._unsub_refresh:
             self._unsub_refresh()
             self._unsub_refresh = None
@@ -233,7 +233,11 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
         raise_on_entry_error: bool = False,
     ) -> None:
         """Refresh data."""
-        self._unschedule_refresh()
+        if self._unsub_refresh:
+            self._unsub_refresh()
+            self._unsub_refresh = None
+
+        self._debounced_refresh.async_cancel()
 
         if scheduled and self.hass.is_stopping:
             return
@@ -348,7 +352,11 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
     @callback
     def async_set_updated_data(self, data: _T) -> None:
         """Manually update data, notify listeners and reset refresh interval."""
-        self._unschedule_refresh()
+        if self._unsub_refresh:
+            self._unsub_refresh()
+            self._unsub_refresh = None
+
+        self._debounced_refresh.async_cancel()
 
         self.data = data
         self.last_update_success = True
