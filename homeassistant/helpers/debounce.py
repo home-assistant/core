@@ -124,6 +124,7 @@ class Debouncer(Generic[_R_co]):
 
         self._execute_at_end_of_timer = False
 
+    @callback
     def _on_debounce(self) -> None:
         """Create job task, but only if pending."""
         self._timer_task = None
