@@ -99,7 +99,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Frontier Silicon entity."""
 
-    afsapi = hass.data[DOMAIN][config_entry.entry_id]  # type: AFSAPI
+    afsapi: AFSAPI = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities([AFSAPIDevice(config_entry.title, afsapi)], True)
 
