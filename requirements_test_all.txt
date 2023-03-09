@@ -690,7 +690,7 @@ hole==0.8.0
 holidays==0.18.0
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230306.0
+home-assistant-frontend==20230309.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.2.28
@@ -1275,7 +1275,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.mazda
-pymazda==0.3.7
+pymazda==0.3.8
 
 # homeassistant.components.melcloud
 pymelcloud==2.5.8
@@ -1600,7 +1600,7 @@ ring_doorbell==0.7.2
 rokuecp==0.17.1
 
 # homeassistant.components.roomba
-roombapy==1.6.5
+roombapy==1.6.6
 
 # homeassistant.components.roon
 roonapi==0.1.3
