@@ -4329,3 +4329,14 @@ def test_contains(hass: HomeAssistant, seq, value, expected) -> None:
         )
         == expected
     )
+
+
+async def test_render_to_info_with_exception(hass: HomeAssistant) -> None:
+    """Test info is still available if the template has an exception."""
+    hass.states.async_set("test_domain.object", "dog")
+    info = render_to_info(hass, '{{ states("test_domain.object") | float }}')
+    with pytest.raises(TemplateError, match="no default was specified"):
+        info.result()
+
+    assert info.all_states is False
+    assert info.entities == {"test_domain.object"}

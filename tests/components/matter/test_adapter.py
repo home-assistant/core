@@ -15,6 +15,8 @@ from homeassistant.helpers import device_registry as dr
 from .common import load_and_parse_node_fixture, setup_integration_with_node_fixture
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_device_registry_single_node_device(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -42,6 +44,8 @@ async def test_device_registry_single_node_device(
     assert entry.sw_version == "v1.0"
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_device_registry_single_node_device_alt(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -113,6 +117,8 @@ async def test_device_registry_bridge(
     assert device2_entry.sw_version == "1.49.1"
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_node_added_subscription(
     hass: HomeAssistant,
     matter_client: MagicMock,

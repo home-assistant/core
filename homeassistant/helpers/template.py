@@ -274,6 +274,8 @@ class RenderInfo:
             f" entities={self.entities}"
             f" rate_limit={self.rate_limit}"
             f" has_time={self.has_time}"
+            f" exception={self.exception}"
+            f" is_static={self.is_static}"
             ">"
         )
 

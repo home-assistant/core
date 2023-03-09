@@ -117,7 +117,7 @@ def mock_from_connection_string_fixture():
         yield from_conn_string
 
 
-@pytest.fixture(name="mock_setup_entry")
+@pytest.fixture
 def mock_setup_entry():
     """Mock the setup entry call, used for config flow tests."""
     with patch(
