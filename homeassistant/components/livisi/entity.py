@@ -16,7 +16,7 @@ from .const import DOMAIN, LIVISI_REACHABILITY_CHANGE
 from .coordinator import LivisiDataUpdateCoordinator
 
 
-class LivisiEntity(CoordinatorEntity[LivisiDataUpdateCoordinator], Entity):
+class LivisiEntity(CoordinatorEntity[LivisiDataUpdateCoordinator]):
     """Represents a base livisi entity."""
 
     _attr_has_entity_name = True
