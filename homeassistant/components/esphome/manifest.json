@@ -14,6 +14,6 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["aioesphomeapi", "noiseprotocol"],
-  "requirements": ["aioesphomeapi==13.4.0", "esphome-dashboard-api==1.2.3"],
+  "requirements": ["aioesphomeapi==13.5.0", "esphome-dashboard-api==1.2.3"],
   "zeroconf": ["_esphomelib._tcp.local."]
 }

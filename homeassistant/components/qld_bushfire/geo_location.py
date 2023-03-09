@@ -149,7 +149,7 @@ class QldBushfireFeedEntityManager:
 
 
 class QldBushfireLocationEvent(GeolocationEvent):
-    """This represents an external event with Qld Bushfire feed data."""
+    """Represents an external event with Qld Bushfire feed data."""
 
     _attr_icon = "mdi:fire"
     _attr_should_poll = False

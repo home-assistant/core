@@ -9,7 +9,7 @@ from aiohue.v2.models.relative_rotary import RelativeRotary
 
 from homeassistant.const import CONF_DEVICE_ID, CONF_ID, CONF_TYPE, CONF_UNIQUE_ID
 from homeassistant.core import callback
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.util import slugify
 
 from ..const import ATTR_HUE_EVENT, CONF_SUBTYPE, DOMAIN
@@ -29,7 +29,7 @@ async def async_setup_hue_events(bridge: "HueBridge"):
     hass = bridge.hass
     api: HueBridgeV2 = bridge.api  # to satisfy typing
     conf_entry = bridge.config_entry
-    dev_reg = device_registry.async_get(hass)
+    dev_reg = dr.async_get(hass)
 
     btn_controller = api.sensors.button
     rotary_controller = api.sensors.relative_rotary
