@@ -802,7 +802,11 @@ class MQTT:
 
         for subscription in subscriptions:
             if (init_status := self._retained_init.get(subscription)) is None:
-                self._retained_init[subscription] = msg.retain
+                if subscription in self._wildcard_subscriptions:
+                    self._retained_init[subscription] = False
+                else:
+                    self._retained_init[subscription] = msg.retain
+
             if msg.retain and init_status is True:
                 # do not replay already initialized subscriptions
                 continue
