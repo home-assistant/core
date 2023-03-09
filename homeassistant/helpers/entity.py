@@ -322,7 +322,7 @@ class Entity(ABC):
         if hasattr(self, "entity_description"):
             if (name := self.entity_description.name) is not UNDEFINED:
                 return name
-        if self.translation_key is not None:
+        if self.translation_key is not None and self.has_entity_name:
             assert self.platform
             name_translation_key = (
                 f"component.{self.platform.platform_name}.entity.{self.platform.domain}"
