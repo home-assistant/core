@@ -2209,7 +2209,7 @@ async def test_track_template_result_errors(
     hass.states.async_set("switch.not_exist", "on")
     await hass.async_block_till_done()
 
-    assert len(syntax_error_runs) == 1
+    assert len(syntax_error_runs) == 0
     assert len(not_exist_runs) == 2
     assert not_exist_runs[1][0].data.get("entity_id") == "switch.not_exist"
     assert not_exist_runs[1][1] == template_not_exist
@@ -2227,6 +2227,56 @@ async def test_track_template_result_errors(
         assert not_exist_runs[2][1] == template_not_exist
         assert not_exist_runs[2][2] == "on"
         assert isinstance(not_exist_runs[2][3], TemplateError)
+
+
+async def test_track_template_result_transient_errors(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test tracking template with transient errors in the template."""
+    hass.states.async_set("sensor.error", "unknown")
+    template_that_raises_sometimes = Template(
+        "{{ states('sensor.error') | float }}", hass
+    )
+
+    sometimes_error_runs = []
+
+    @ha.callback
+    def sometimes_error_listener(event, updates):
+        track_result = updates.pop()
+        sometimes_error_runs.append(
+            (
+                event,
+                track_result.template,
+                track_result.last_result,
+                track_result.result,
+            )
+        )
+
+    info = async_track_template_result(
+        hass,
+        [TrackTemplate(template_that_raises_sometimes, None)],
+        sometimes_error_listener,
+    )
+    await hass.async_block_till_done()
+
+    assert sometimes_error_runs == []
+    assert "ValueError" in caplog.text
+    assert "ValueError" in repr(info)
+    caplog.clear()
+
+    hass.states.async_set("sensor.error", "unavailable")
+    await hass.async_block_till_done()
+    assert len(sometimes_error_runs) == 1
+    assert isinstance(sometimes_error_runs[0][3], TemplateError)
+    sometimes_error_runs.clear()
+    assert "ValueError" in repr(info)
+
+    hass.states.async_set("sensor.error", "4")
+    await hass.async_block_till_done()
+    assert len(sometimes_error_runs) == 1
+    assert sometimes_error_runs[0][3] == 4.0
+    sometimes_error_runs.clear()
+    assert "ValueError" not in repr(info)
 
 
 async def test_static_string(hass: HomeAssistant) -> None:

@@ -149,7 +149,7 @@ MAX_EXPECTED_ENTITY_IDS = 16384
 
 _LOGGER = logging.getLogger(__name__)
 
-_cv_hass: ContextVar[HomeAssistant] = ContextVar("current_entry")
+_cv_hass: ContextVar[HomeAssistant] = ContextVar("hass")
 
 
 @functools.lru_cache(MAX_EXPECTED_ENTITY_IDS)
@@ -1042,7 +1042,7 @@ class EventBus:
         return self._async_listen_filterable_job(
             event_type,
             _FilterableJob(
-                HassJob(listener, "listen {event_type}"), event_filter, run_immediately
+                HassJob(listener, f"listen {event_type}"), event_filter, run_immediately
             ),
         )
 
@@ -1118,7 +1118,7 @@ class EventBus:
         )
 
         filterable_job = _FilterableJob(
-            HassJob(_onetime_listener, "onetime listen {event_type} {listener}"),
+            HassJob(_onetime_listener, f"onetime listen {event_type} {listener}"),
             None,
             False,
         )

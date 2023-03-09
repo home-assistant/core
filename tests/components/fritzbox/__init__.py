@@ -151,6 +151,8 @@ class FritzDeviceLightMock(FritzEntityBaseMock):
     has_alarm = False
     has_powermeter = False
     has_lightbulb = True
+    has_color = True
+    has_level = True
     has_switch = False
     has_temperature_sensor = False
     has_thermostat = False
