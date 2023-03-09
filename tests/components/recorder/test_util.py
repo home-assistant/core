@@ -1,6 +1,8 @@
 """Test util methods."""
+from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
 import os
+from pathlib import Path
 import sqlite3
 from unittest.mock import MagicMock, Mock, patch
 
@@ -14,9 +16,12 @@ from sqlalchemy.sql.lambdas import StatementLambdaElement
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import history, util
-from homeassistant.components.recorder.const import SQLITE_URL_PREFIX
+from homeassistant.components.recorder.const import DOMAIN, SQLITE_URL_PREFIX
 from homeassistant.components.recorder.db_schema import RecorderRuns
-from homeassistant.components.recorder.models import UnsupportedDialect
+from homeassistant.components.recorder.models import (
+    UnsupportedDialect,
+    process_timestamp,
+)
 from homeassistant.components.recorder.util import (
     end_incomplete_runs,
     is_second_sunday,
@@ -25,46 +30,25 @@ from homeassistant.components.recorder.util import (
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.issue_registry import async_get as async_get_issue_registry
 from homeassistant.util import dt as dt_util
 
 from .common import corrupt_db_file, run_information_with_session, wait_recording_done
 
-from tests.common import SetupRecorderInstanceT, async_test_home_assistant
+from tests.common import async_test_home_assistant
+from tests.typing import RecorderInstanceGenerator
 
 
-def test_session_scope_not_setup(hass_recorder):
+def test_session_scope_not_setup(hass_recorder: Callable[..., HomeAssistant]) -> None:
     """Try to create a session scope when not setup."""
     hass = hass_recorder()
     with patch.object(
         util.get_instance(hass), "get_session", return_value=None
-    ), pytest.raises(RuntimeError):
-        with util.session_scope(hass=hass):
-            pass
+    ), pytest.raises(RuntimeError), util.session_scope(hass=hass):
+        pass
 
 
-def test_recorder_bad_commit(hass_recorder, recorder_db_url):
-    """Bad _commit should retry 3 times."""
-    if recorder_db_url.startswith("mysql://"):
-        # This test is specific for SQLite: mysql does not raise an OperationalError
-        # which triggers retries for the bad query below, it raises ProgrammingError
-        # on which we give up
-        return
-
-    hass = hass_recorder()
-
-    def work(session):
-        """Bad work."""
-        session.execute(text("select * from notthere"))
-
-    with patch(
-        "homeassistant.components.recorder.core.time.sleep"
-    ) as e_mock, util.session_scope(hass=hass) as session:
-        res = util.commit(session, work)
-    assert res is False
-    assert e_mock.call_count == 3
-
-
-def test_recorder_bad_execute(hass_recorder):
+def test_recorder_bad_execute(hass_recorder: Callable[..., HomeAssistant]) -> None:
     """Bad execute, retry 3 times."""
     from sqlalchemy.exc import SQLAlchemyError
 
@@ -85,7 +69,9 @@ def test_recorder_bad_execute(hass_recorder):
     assert e_mock.call_count == 2
 
 
-def test_validate_or_move_away_sqlite_database(hass, tmpdir, caplog):
+def test_validate_or_move_away_sqlite_database(
+    hass: HomeAssistant, tmpdir, caplog: pytest.LogCaptureFixture
+) -> None:
     """Ensure a malformed sqlite database is moved away."""
 
     test_dir = tmpdir.mkdir("test_validate_or_move_away_sqlite_database")
@@ -110,8 +96,8 @@ def test_validate_or_move_away_sqlite_database(hass, tmpdir, caplog):
 
 
 async def test_last_run_was_recently_clean(
-    event_loop, async_setup_recorder_instance: SetupRecorderInstanceT, tmp_path
-):
+    event_loop, async_setup_recorder_instance: RecorderInstanceGenerator, tmp_path: Path
+) -> None:
     """Test we can check if the last recorder run was recently clean."""
     config = {
         recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db"),
@@ -177,7 +163,7 @@ async def test_last_run_was_recently_clean(
     "mysql_version",
     ["10.3.0-MariaDB", "8.0.0"],
 )
-def test_setup_connection_for_dialect_mysql(mysql_version):
+def test_setup_connection_for_dialect_mysql(mysql_version) -> None:
     """Test setting up the connection for a mysql dialect."""
     instance_mock = MagicMock()
     execute_args = []
@@ -200,16 +186,17 @@ def test_setup_connection_for_dialect_mysql(mysql_version):
 
     util.setup_connection_for_dialect(instance_mock, "mysql", dbapi_connection, True)
 
-    assert len(execute_args) == 2
+    assert len(execute_args) == 3
     assert execute_args[0] == "SET session wait_timeout=28800"
     assert execute_args[1] == "SELECT VERSION()"
+    assert execute_args[2] == "SET time_zone = '+00:00'"
 
 
 @pytest.mark.parametrize(
     "sqlite_version",
     ["3.31.0"],
 )
-def test_setup_connection_for_dialect_sqlite(sqlite_version):
+def test_setup_connection_for_dialect_sqlite(sqlite_version) -> None:
     """Test setting up the connection for a sqlite dialect."""
     instance_mock = MagicMock()
     execute_args = []
@@ -230,7 +217,12 @@ def test_setup_connection_for_dialect_sqlite(sqlite_version):
 
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
-    util.setup_connection_for_dialect(instance_mock, "sqlite", dbapi_connection, True)
+    assert (
+        util.setup_connection_for_dialect(
+            instance_mock, "sqlite", dbapi_connection, True
+        )
+        is not None
+    )
 
     assert len(execute_args) == 5
     assert execute_args[0] == "PRAGMA journal_mode=WAL"
@@ -240,7 +232,12 @@ def test_setup_connection_for_dialect_sqlite(sqlite_version):
     assert execute_args[4] == "PRAGMA foreign_keys=ON"
 
     execute_args = []
-    util.setup_connection_for_dialect(instance_mock, "sqlite", dbapi_connection, False)
+    assert (
+        util.setup_connection_for_dialect(
+            instance_mock, "sqlite", dbapi_connection, False
+        )
+        is None
+    )
 
     assert len(execute_args) == 3
     assert execute_args[0] == "PRAGMA cache_size = -16384"
@@ -254,7 +251,7 @@ def test_setup_connection_for_dialect_sqlite(sqlite_version):
 )
 def test_setup_connection_for_dialect_sqlite_zero_commit_interval(
     sqlite_version,
-):
+) -> None:
     """Test setting up the connection for a sqlite dialect with a zero commit interval."""
     instance_mock = MagicMock(commit_interval=0)
     execute_args = []
@@ -275,7 +272,12 @@ def test_setup_connection_for_dialect_sqlite_zero_commit_interval(
 
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
-    util.setup_connection_for_dialect(instance_mock, "sqlite", dbapi_connection, True)
+    assert (
+        util.setup_connection_for_dialect(
+            instance_mock, "sqlite", dbapi_connection, True
+        )
+        is not None
+    )
 
     assert len(execute_args) == 5
     assert execute_args[0] == "PRAGMA journal_mode=WAL"
@@ -285,7 +287,12 @@ def test_setup_connection_for_dialect_sqlite_zero_commit_interval(
     assert execute_args[4] == "PRAGMA foreign_keys=ON"
 
     execute_args = []
-    util.setup_connection_for_dialect(instance_mock, "sqlite", dbapi_connection, False)
+    assert (
+        util.setup_connection_for_dialect(
+            instance_mock, "sqlite", dbapi_connection, False
+        )
+        is None
+    )
 
     assert len(execute_args) == 3
     assert execute_args[0] == "PRAGMA cache_size = -16384"
@@ -294,7 +301,7 @@ def test_setup_connection_for_dialect_sqlite_zero_commit_interval(
 
 
 @pytest.mark.parametrize(
-    "mysql_version,message",
+    ("mysql_version", "message"),
     [
         (
             "10.2.0-MariaDB",
@@ -310,7 +317,9 @@ def test_setup_connection_for_dialect_sqlite_zero_commit_interval(
         ),
     ],
 )
-def test_fail_outdated_mysql(caplog, mysql_version, message):
+def test_fail_outdated_mysql(
+    caplog: pytest.LogCaptureFixture, mysql_version, message
+) -> None:
     """Test setting up the connection for an outdated mysql version."""
     instance_mock = MagicMock()
     execute_args = []
@@ -346,7 +355,7 @@ def test_fail_outdated_mysql(caplog, mysql_version, message):
         ("8.0.0"),
     ],
 )
-def test_supported_mysql(caplog, mysql_version):
+def test_supported_mysql(caplog: pytest.LogCaptureFixture, mysql_version) -> None:
     """Test setting up the connection for a supported mysql version."""
     instance_mock = MagicMock()
     execute_args = []
@@ -373,7 +382,7 @@ def test_supported_mysql(caplog, mysql_version):
 
 
 @pytest.mark.parametrize(
-    "pgsql_version,message",
+    ("pgsql_version", "message"),
     [
         (
             "11.12 (Debian 11.12-1.pgdg100+1)",
@@ -389,7 +398,9 @@ def test_supported_mysql(caplog, mysql_version):
         ),
     ],
 )
-def test_fail_outdated_pgsql(caplog, pgsql_version, message):
+def test_fail_outdated_pgsql(
+    caplog: pytest.LogCaptureFixture, pgsql_version, message
+) -> None:
     """Test setting up the connection for an outdated PostgreSQL version."""
     instance_mock = MagicMock()
     execute_args = []
@@ -422,7 +433,7 @@ def test_fail_outdated_pgsql(caplog, pgsql_version, message):
     "pgsql_version",
     ["14.0 (Debian 14.0-1.pgdg110+1)"],
 )
-def test_supported_pgsql(caplog, pgsql_version):
+def test_supported_pgsql(caplog: pytest.LogCaptureFixture, pgsql_version) -> None:
     """Test setting up the connection for a supported PostgreSQL version."""
     instance_mock = MagicMock()
     execute_args = []
@@ -443,15 +454,17 @@ def test_supported_pgsql(caplog, pgsql_version):
 
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
-    util.setup_connection_for_dialect(
+    database_engine = util.setup_connection_for_dialect(
         instance_mock, "postgresql", dbapi_connection, True
     )
 
     assert "minimum supported version" not in caplog.text
+    assert database_engine is not None
+    assert database_engine.optimizer.slow_range_in_select is False
 
 
 @pytest.mark.parametrize(
-    "sqlite_version,message",
+    ("sqlite_version", "message"),
     [
         (
             "3.30.0",
@@ -467,7 +480,9 @@ def test_supported_pgsql(caplog, pgsql_version):
         ),
     ],
 )
-def test_fail_outdated_sqlite(caplog, sqlite_version, message):
+def test_fail_outdated_sqlite(
+    caplog: pytest.LogCaptureFixture, sqlite_version, message
+) -> None:
     """Test setting up the connection for an outdated sqlite version."""
     instance_mock = MagicMock()
     execute_args = []
@@ -503,7 +518,7 @@ def test_fail_outdated_sqlite(caplog, sqlite_version, message):
         ("3.33.0"),
     ],
 )
-def test_supported_sqlite(caplog, sqlite_version):
+def test_supported_sqlite(caplog: pytest.LogCaptureFixture, sqlite_version) -> None:
     """Test setting up the connection for a supported sqlite version."""
     instance_mock = MagicMock()
     execute_args = []
@@ -524,20 +539,26 @@ def test_supported_sqlite(caplog, sqlite_version):
 
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
-    util.setup_connection_for_dialect(instance_mock, "sqlite", dbapi_connection, True)
+    database_engine = util.setup_connection_for_dialect(
+        instance_mock, "sqlite", dbapi_connection, True
+    )
 
     assert "minimum supported version" not in caplog.text
+    assert database_engine is not None
+    assert database_engine.optimizer.slow_range_in_select is False
 
 
 @pytest.mark.parametrize(
-    "dialect,message",
+    ("dialect", "message"),
     [
         ("mssql", "Database mssql is not supported"),
         ("oracle", "Database oracle is not supported"),
         ("some_db", "Database some_db is not supported"),
     ],
 )
-def test_warn_unsupported_dialect(caplog, dialect, message):
+def test_warn_unsupported_dialect(
+    caplog: pytest.LogCaptureFixture, dialect, message
+) -> None:
     """Test setting up the connection for an outdated sqlite version."""
     instance_mock = MagicMock()
     dbapi_connection = MagicMock()
@@ -550,9 +571,131 @@ def test_warn_unsupported_dialect(caplog, dialect, message):
     assert message in caplog.text
 
 
-def test_basic_sanity_check(hass_recorder, recorder_db_url):
+@pytest.mark.parametrize(
+    ("mysql_version", "min_version"),
+    [
+        (
+            "10.5.16-MariaDB",
+            "10.5.17",
+        ),
+        (
+            "10.6.8-MariaDB",
+            "10.6.9",
+        ),
+        (
+            "10.7.1-MariaDB",
+            "10.7.5",
+        ),
+        (
+            "10.8.0-MariaDB",
+            "10.8.4",
+        ),
+    ],
+)
+async def test_issue_for_mariadb_with_MDEV_25020(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mysql_version, min_version
+) -> None:
+    """Test we create an issue for MariaDB versions affected.
+
+    See https://jira.mariadb.org/browse/MDEV-25020.
+    """
+    instance_mock = MagicMock()
+    instance_mock.hass = hass
+    execute_args = []
+    close_mock = MagicMock()
+
+    def execute_mock(statement):
+        nonlocal execute_args
+        execute_args.append(statement)
+
+    def fetchall_mock():
+        nonlocal execute_args
+        if execute_args[-1] == "SELECT VERSION()":
+            return [[mysql_version]]
+        return None
+
+    def _make_cursor_mock(*_):
+        return MagicMock(execute=execute_mock, close=close_mock, fetchall=fetchall_mock)
+
+    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
+
+    database_engine = await hass.async_add_executor_job(
+        util.setup_connection_for_dialect,
+        instance_mock,
+        "mysql",
+        dbapi_connection,
+        True,
+    )
+    await hass.async_block_till_done()
+
+    registry = async_get_issue_registry(hass)
+    issue = registry.async_get_issue(DOMAIN, "maria_db_range_index_regression")
+    assert issue is not None
+    assert issue.translation_placeholders == {"min_version": min_version}
+
+    assert database_engine is not None
+    assert database_engine.optimizer.slow_range_in_select is True
+
+
+@pytest.mark.parametrize(
+    "mysql_version",
+    [
+        "10.5.17-MariaDB",
+        "10.6.9-MariaDB",
+        "10.7.5-MariaDB",
+        "10.8.4-MariaDB",
+        "10.9.1-MariaDB",
+    ],
+)
+async def test_no_issue_for_mariadb_with_MDEV_25020(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mysql_version
+) -> None:
+    """Test we do not create an issue for MariaDB versions not affected.
+
+    See https://jira.mariadb.org/browse/MDEV-25020.
+    """
+    instance_mock = MagicMock()
+    instance_mock.hass = hass
+    execute_args = []
+    close_mock = MagicMock()
+
+    def execute_mock(statement):
+        nonlocal execute_args
+        execute_args.append(statement)
+
+    def fetchall_mock():
+        nonlocal execute_args
+        if execute_args[-1] == "SELECT VERSION()":
+            return [[mysql_version]]
+        return None
+
+    def _make_cursor_mock(*_):
+        return MagicMock(execute=execute_mock, close=close_mock, fetchall=fetchall_mock)
+
+    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
+
+    database_engine = await hass.async_add_executor_job(
+        util.setup_connection_for_dialect,
+        instance_mock,
+        "mysql",
+        dbapi_connection,
+        True,
+    )
+    await hass.async_block_till_done()
+
+    registry = async_get_issue_registry(hass)
+    issue = registry.async_get_issue(DOMAIN, "maria_db_range_index_regression")
+    assert issue is None
+
+    assert database_engine is not None
+    assert database_engine.optimizer.slow_range_in_select is False
+
+
+def test_basic_sanity_check(
+    hass_recorder: Callable[..., HomeAssistant], recorder_db_url
+) -> None:
     """Test the basic sanity checks with a missing table."""
-    if recorder_db_url.startswith("mysql://"):
+    if recorder_db_url.startswith(("mysql://", "postgresql://")):
         # This test is specific for SQLite
         return
 
@@ -568,9 +711,13 @@ def test_basic_sanity_check(hass_recorder, recorder_db_url):
         util.basic_sanity_check(cursor)
 
 
-def test_combined_checks(hass_recorder, caplog, recorder_db_url):
+def test_combined_checks(
+    hass_recorder: Callable[..., HomeAssistant],
+    caplog: pytest.LogCaptureFixture,
+    recorder_db_url,
+) -> None:
     """Run Checks on the open database."""
-    if recorder_db_url.startswith("mysql://"):
+    if recorder_db_url.startswith(("mysql://", "postgresql://")):
         # This test is specific for SQLite
         return
 
@@ -626,7 +773,9 @@ def test_combined_checks(hass_recorder, caplog, recorder_db_url):
         util.run_checks_on_open_db("fake_db_path", cursor)
 
 
-def test_end_incomplete_runs(hass_recorder, caplog):
+def test_end_incomplete_runs(
+    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+) -> None:
     """Ensure we can end incomplete runs."""
     hass = hass_recorder()
 
@@ -636,24 +785,25 @@ def test_end_incomplete_runs(hass_recorder, caplog):
         assert run_info.closed_incorrect is False
 
         now = dt_util.utcnow()
-        now_without_tz = now.replace(tzinfo=None)
         end_incomplete_runs(session, now)
         run_info = run_information_with_session(session)
         assert run_info.closed_incorrect is True
-        assert run_info.end == now_without_tz
+        assert process_timestamp(run_info.end) == now
         session.flush()
 
         later = dt_util.utcnow()
         end_incomplete_runs(session, later)
         run_info = run_information_with_session(session)
-        assert run_info.end == now_without_tz
+        assert process_timestamp(run_info.end) == now
 
     assert "Ended unfinished session" in caplog.text
 
 
-def test_periodic_db_cleanups(hass_recorder, recorder_db_url):
+def test_periodic_db_cleanups(
+    hass_recorder: Callable[..., HomeAssistant], recorder_db_url
+) -> None:
     """Test periodic db cleanups."""
-    if recorder_db_url.startswith("mysql://"):
+    if recorder_db_url.startswith(("mysql://", "postgresql://")):
         # This test is specific for SQLite
         return
 
@@ -671,10 +821,10 @@ def test_periodic_db_cleanups(hass_recorder, recorder_db_url):
 @patch("homeassistant.components.recorder.pool.check_loop")
 async def test_write_lock_db(
     skip_check_loop,
-    async_setup_recorder_instance: SetupRecorderInstanceT,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
-    tmp_path,
-):
+    tmp_path: Path,
+) -> None:
     """Test database write lock."""
     from sqlalchemy.exc import OperationalError
 
@@ -689,19 +839,18 @@ async def test_write_lock_db(
         with instance.engine.connect() as connection:
             connection.execute(text("DROP TABLE events;"))
 
-    with util.write_lock_db_sqlite(instance):
+    with util.write_lock_db_sqlite(instance), pytest.raises(OperationalError):
         # Database should be locked now, try writing SQL command
-        with pytest.raises(OperationalError):
-            # This needs to be called in another thread since
-            # the lock method is BEGIN IMMEDIATE and since we have
-            # a connection per thread with sqlite now, we cannot do it
-            # in the same thread as the one holding the lock since it
-            # would be allowed to proceed as the goal is to prevent
-            # all the other threads from accessing the database
-            await hass.async_add_executor_job(_drop_table)
+        # This needs to be called in another thread since
+        # the lock method is BEGIN IMMEDIATE and since we have
+        # a connection per thread with sqlite now, we cannot do it
+        # in the same thread as the one holding the lock since it
+        # would be allowed to proceed as the goal is to prevent
+        # all the other threads from accessing the database
+        await hass.async_add_executor_job(_drop_table)
 
 
-def test_is_second_sunday():
+def test_is_second_sunday() -> None:
     """Test we can find the second sunday of the month."""
     assert is_second_sunday(datetime(2022, 1, 9, 0, 0, 0, tzinfo=dt_util.UTC)) is True
     assert is_second_sunday(datetime(2022, 2, 13, 0, 0, 0, tzinfo=dt_util.UTC)) is True
@@ -712,7 +861,7 @@ def test_is_second_sunday():
     assert is_second_sunday(datetime(2022, 1, 10, 0, 0, 0, tzinfo=dt_util.UTC)) is False
 
 
-def test_build_mysqldb_conv():
+def test_build_mysqldb_conv() -> None:
     """Test building the MySQLdb connect conv param."""
     mock_converters = Mock(conversions={"original": "preserved"})
     mock_constants = Mock(FIELD_TYPE=Mock(DATETIME="DATETIME"))
@@ -730,7 +879,9 @@ def test_build_mysqldb_conv():
 
 
 @patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
-def test_execute_stmt_lambda_element(hass_recorder):
+def test_execute_stmt_lambda_element(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
     """Test executing with execute_stmt_lambda_element."""
     hass = hass_recorder()
     instance = recorder.get_instance(hass)
@@ -781,7 +932,7 @@ def test_execute_stmt_lambda_element(hass_recorder):
 
 
 @freeze_time(datetime(2022, 10, 21, 7, 25, tzinfo=timezone.utc))
-async def test_resolve_period(hass):
+async def test_resolve_period(hass: HomeAssistant) -> None:
     """Test statistic_during_period."""
 
     now = dt_util.utcnow()

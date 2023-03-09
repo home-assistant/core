@@ -4,9 +4,20 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.recorder import CONF_DB_URL
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.components.sql.const import CONF_COLUMN_NAME, CONF_QUERY, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_NAME,
+    CONF_UNIQUE_ID,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_VALUE_TEMPLATE,
+)
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -40,6 +51,38 @@ ENTRY_CONFIG_NO_RESULTS = {
     CONF_QUERY: "SELECT kalle as value from no_table;",
     CONF_COLUMN_NAME: "value",
     CONF_UNIT_OF_MEASUREMENT: "MiB",
+}
+
+YAML_CONFIG = {
+    "sql": {
+        CONF_DB_URL: "sqlite://",
+        CONF_NAME: "Get Value",
+        CONF_QUERY: "SELECT 5 as value",
+        CONF_COLUMN_NAME: "value",
+        CONF_UNIT_OF_MEASUREMENT: "MiB",
+        CONF_UNIQUE_ID: "unique_id_12345",
+        CONF_VALUE_TEMPLATE: "{{ value }}",
+        CONF_DEVICE_CLASS: SensorDeviceClass.DATA_RATE,
+        CONF_STATE_CLASS: SensorStateClass.MEASUREMENT,
+    }
+}
+
+YAML_CONFIG_INVALID = {
+    "sql": {
+        CONF_DB_URL: "sqlite://",
+        CONF_QUERY: "SELECT 5 as value",
+        CONF_COLUMN_NAME: "value",
+        CONF_UNIT_OF_MEASUREMENT: "MiB",
+        CONF_UNIQUE_ID: "unique_id_12345",
+    }
+}
+
+YAML_CONFIG_NO_DB = {
+    "sql": {
+        CONF_NAME: "Get Value",
+        CONF_QUERY: "SELECT 5 as value",
+        CONF_COLUMN_NAME: "value",
+    }
 }
 
 

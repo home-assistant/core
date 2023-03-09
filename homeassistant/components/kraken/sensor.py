@@ -2,12 +2,11 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -56,11 +55,11 @@ async def async_setup_entry(
     @callback
     def async_update_sensors(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Add or remove sensors for configured tracked asset pairs."""
-        dev_reg = device_registry.async_get(hass)
+        dev_reg = dr.async_get(hass)
 
         existing_devices = {
             device.name: device.id
-            for device in device_registry.async_entries_for_config_entry(
+            for device in dr.async_entries_for_config_entry(
                 dev_reg, config_entry.entry_id
             )
         }
@@ -90,7 +89,7 @@ async def async_setup_entry(
 
 
 class KrakenSensor(
-    CoordinatorEntity[DataUpdateCoordinator[Optional[KrakenResponse]]], SensorEntity
+    CoordinatorEntity[DataUpdateCoordinator[KrakenResponse | None]], SensorEntity
 ):
     """Define a Kraken sensor."""
 
@@ -126,7 +125,7 @@ class KrakenSensor(
 
         self._attr_device_info = DeviceInfo(
             configuration_url="https://www.kraken.com/",
-            entry_type=device_registry.DeviceEntryType.SERVICE,
+            entry_type=dr.DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, "_".join(self._device_name.split(" ")))},
             manufacturer="Kraken.com",
             name=self._device_name,

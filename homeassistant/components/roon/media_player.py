@@ -12,6 +12,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
+    RepeatMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_DEFAULT_NAME
@@ -34,6 +35,16 @@ _LOGGER = logging.getLogger(__name__)
 SERVICE_TRANSFER = "transfer"
 
 ATTR_TRANSFER = "transfer_id"
+
+REPEAT_MODE_MAPPING_TO_HA = {
+    "loop": RepeatMode.ALL,
+    "disabled": RepeatMode.OFF,
+    "loop_one": RepeatMode.ONE,
+}
+
+REPEAT_MODE_MAPPING_TO_ROON = {
+    value: key for key, value in REPEAT_MODE_MAPPING_TO_HA.items()
+}
 
 
 async def async_setup_entry(
@@ -84,6 +95,7 @@ class RoonDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.PREVIOUS_TRACK
         | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.REPEAT_SET
         | MediaPlayerEntityFeature.SHUFFLE_SET
         | MediaPlayerEntityFeature.SEEK
         | MediaPlayerEntityFeature.TURN_ON
@@ -180,13 +192,16 @@ class RoonDevice(MediaPlayerEntity):
             volume_data = player_data["volume"]
             volume_muted = volume_data["is_muted"]
             volume_step = convert(volume_data["step"], int, 0)
+            volume_max = volume_data["max"]
+            volume_min = volume_data["min"]
+            raw_level = convert(volume_data["value"], float, 0)
 
-            if volume_data["type"] == "db":
-                level = convert(volume_data["value"], float, 0.0) / 80 * 100 + 100
-            else:
-                level = convert(volume_data["value"], float, 0.0)
+            volume_range = volume_max - volume_min
+            volume_percentage_factor = volume_range / 100
 
+            level = (raw_level - volume_min) / volume_percentage_factor
             volume_level = convert(level, int, 0) / 100
+
         except KeyError:
             # catch KeyError
             pass
@@ -259,6 +274,9 @@ class RoonDevice(MediaPlayerEntity):
         self._attr_unique_id = self.player_data["dev_id"]
         self._zone_id = self.player_data["zone_id"]
         self._output_id = self.player_data["output_id"]
+        self._attr_repeat = REPEAT_MODE_MAPPING_TO_HA.get(
+            self.player_data["settings"]["loop"]
+        )
         self._attr_shuffle = self.player_data["settings"]["shuffle"]
         self._attr_name = self.player_data["display_name"]
 
@@ -328,8 +346,8 @@ class RoonDevice(MediaPlayerEntity):
 
     def set_volume_level(self, volume: float) -> None:
         """Send new volume_level to device."""
-        volume = int(volume * 100)
-        self._server.roonapi.change_volume(self.output_id, volume)
+        volume = volume * 100
+        self._server.roonapi.set_volume_percent(self.output_id, volume)
 
     def mute_volume(self, mute=True):
         """Send mute/unmute to device."""
@@ -337,11 +355,11 @@ class RoonDevice(MediaPlayerEntity):
 
     def volume_up(self) -> None:
         """Send new volume_level to device."""
-        self._server.roonapi.change_volume(self.output_id, 3, "relative")
+        self._server.roonapi.change_volume_percent(self.output_id, 3)
 
     def volume_down(self) -> None:
         """Send new volume_level to device."""
-        self._server.roonapi.change_volume(self.output_id, -3, "relative")
+        self._server.roonapi.change_volume_percent(self.output_id, -3)
 
     def turn_on(self) -> None:
         """Turn on device (if supported)."""
@@ -369,6 +387,12 @@ class RoonDevice(MediaPlayerEntity):
     def set_shuffle(self, shuffle: bool) -> None:
         """Set shuffle state."""
         self._server.roonapi.shuffle(self.output_id, shuffle)
+
+    def set_repeat(self, repeat: RepeatMode) -> None:
+        """Set repeat mode."""
+        if repeat not in REPEAT_MODE_MAPPING_TO_ROON:
+            raise ValueError(f"Unsupported repeat mode: {repeat}")
+        self._server.roonapi.repeat(self.output_id, REPEAT_MODE_MAPPING_TO_ROON[repeat])
 
     def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
         """Send the play_media command to the media player."""

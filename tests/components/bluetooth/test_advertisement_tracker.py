@@ -1,10 +1,10 @@
 """Tests for the Bluetooth integration advertisement tracking."""
-
 from datetime import timedelta
 import time
 from unittest.mock import patch
 
 from bleak.backends.scanner import BLEDevice
+import pytest
 
 from homeassistant.components.bluetooth import (
     async_register_scanner,
@@ -14,10 +14,11 @@ from homeassistant.components.bluetooth.advertisement_tracker import (
     ADVERTISING_TIMES_NEEDED,
 )
 from homeassistant.components.bluetooth.const import (
+    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     SOURCE_LOCAL,
     UNAVAILABLE_TRACK_SECONDS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
 
 from . import (
@@ -33,8 +34,11 @@ ONE_HOUR_SECONDS = 3600
 
 
 async def test_advertisment_interval_shorter_than_adapter_stack_timeout(
-    hass, caplog, enable_bluetooth, macos_adapter
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_bluetooth: None,
+    macos_adapter: None,
+) -> None:
     """Test we can determine the advertisement interval."""
     start_monotonic_time = time.monotonic()
     switchbot_device = BLEDevice("44:44:33:11:23:12", "wohand")
@@ -77,8 +81,11 @@ async def test_advertisment_interval_shorter_than_adapter_stack_timeout(
 
 
 async def test_advertisment_interval_longer_than_adapter_stack_timeout_connectable(
-    hass, caplog, enable_bluetooth, macos_adapter
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_bluetooth: None,
+    macos_adapter: None,
+) -> None:
     """Test device with a long advertisement interval."""
     start_monotonic_time = time.monotonic()
     switchbot_device = BLEDevice("44:44:33:11:23:18", "wohand")
@@ -123,8 +130,11 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_connectab
 
 
 async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_change_connectable(
-    hass, caplog, enable_bluetooth, macos_adapter
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_bluetooth: None,
+    macos_adapter: None,
+) -> None:
     """Test device with a long advertisement interval with an adapter change."""
     start_monotonic_time = time.monotonic()
     switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
@@ -178,8 +188,11 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
 
 
 async def test_advertisment_interval_longer_than_adapter_stack_timeout_not_connectable(
-    hass, caplog, enable_bluetooth, macos_adapter
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_bluetooth: None,
+    macos_adapter: None,
+) -> None:
     """Test device with a long advertisement interval that is not connectable not reaching the advertising interval."""
     start_monotonic_time = time.monotonic()
     switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
@@ -227,8 +240,11 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_not_conne
 
 
 async def test_advertisment_interval_shorter_than_adapter_stack_timeout_adapter_change_not_connectable(
-    hass, caplog, enable_bluetooth, macos_adapter
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_bluetooth: None,
+    macos_adapter: None,
+) -> None:
     """Test device with a short advertisement interval with an adapter change that is not connectable."""
     start_monotonic_time = time.monotonic()
     switchbot_device = BLEDevice("44:44:33:11:23:5C", "wohand")
@@ -292,8 +308,11 @@ async def test_advertisment_interval_shorter_than_adapter_stack_timeout_adapter_
 
 
 async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_change_not_connectable(
-    hass, caplog, enable_bluetooth, macos_adapter
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_bluetooth: None,
+    macos_adapter: None,
+) -> None:
     """Test device with a long advertisement interval with an adapter change that is not connectable."""
     start_monotonic_time = time.monotonic()
     switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
@@ -370,14 +389,31 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
         )
         await hass.async_block_till_done()
 
-    assert switchbot_device_went_unavailable is True
+    assert switchbot_device_went_unavailable is False
+
+    # Now that the scanner is gone we should go back to the stack default timeout
+    with patch(
+        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
+    ):
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow()
+            + timedelta(seconds=FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS),
+        )
+        await hass.async_block_till_done()
+
+    assert switchbot_device_went_unavailable is False
 
     switchbot_device_unavailable_cancel()
 
 
 async def test_advertisment_interval_longer_increasing_than_adapter_stack_timeout_adapter_change_not_connectable(
-    hass, caplog, enable_bluetooth, macos_adapter
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_bluetooth: None,
+    macos_adapter: None,
+) -> None:
     """Test device with a increasing advertisement interval with an adapter change that is not connectable."""
     start_monotonic_time = time.monotonic()
     switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")

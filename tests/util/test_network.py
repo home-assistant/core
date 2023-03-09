@@ -5,7 +5,7 @@ from ipaddress import ip_address
 import homeassistant.util.network as network_util
 
 
-def test_is_loopback():
+def test_is_loopback() -> None:
     """Test loopback addresses."""
     assert network_util.is_loopback(ip_address("127.0.0.2"))
     assert network_util.is_loopback(ip_address("127.0.0.1"))
@@ -17,7 +17,7 @@ def test_is_loopback():
     assert not network_util.is_loopback(ip_address("2600:1404:400:1a4::356e"))
 
 
-def test_is_private():
+def test_is_private() -> None:
     """Test private addresses."""
     assert network_util.is_private(ip_address("192.168.0.1"))
     assert network_util.is_private(ip_address("172.16.12.0"))
@@ -27,7 +27,7 @@ def test_is_private():
     assert not network_util.is_private(ip_address("::1"))
 
 
-def test_is_link_local():
+def test_is_link_local() -> None:
     """Test link local addresses."""
     assert network_util.is_link_local(ip_address("169.254.12.3"))
     assert network_util.is_link_local(ip_address("fe80::1234:5678:abcd"))
@@ -35,13 +35,13 @@ def test_is_link_local():
     assert not network_util.is_link_local(ip_address("::1"))
 
 
-def test_is_invalid():
+def test_is_invalid() -> None:
     """Test invalid address."""
     assert network_util.is_invalid(ip_address("0.0.0.0"))
     assert not network_util.is_invalid(ip_address("127.0.0.1"))
 
 
-def test_is_local():
+def test_is_local() -> None:
     """Test local addresses."""
     assert network_util.is_local(ip_address("192.168.0.1"))
     assert network_util.is_local(ip_address("127.0.0.1"))
@@ -54,7 +54,7 @@ def test_is_local():
     assert not network_util.is_local(ip_address("::ffff:208.5.4.2"))
 
 
-def test_is_ip_address():
+def test_is_ip_address() -> None:
     """Test if strings are IP addresses."""
     assert network_util.is_ip_address("192.168.0.1")
     assert network_util.is_ip_address("8.8.8.8")
@@ -64,7 +64,7 @@ def test_is_ip_address():
     assert not network_util.is_ip_address("example.com")
 
 
-def test_is_ipv4_address():
+def test_is_ipv4_address() -> None:
     """Test if strings are IPv4 addresses."""
     assert network_util.is_ipv4_address("192.168.0.1") is True
     assert network_util.is_ipv4_address("8.8.8.8") is True
@@ -73,14 +73,14 @@ def test_is_ipv4_address():
     assert network_util.is_ipv4_address("example.com") is False
 
 
-def test_is_ipv6_address():
+def test_is_ipv6_address() -> None:
     """Test if strings are IPv6 addresses."""
     assert network_util.is_ipv6_address("::1") is True
     assert network_util.is_ipv6_address("8.8.8.8") is False
     assert network_util.is_ipv6_address("8.8.8.8") is False
 
 
-def test_is_valid_host():
+def test_is_valid_host() -> None:
     """Test if strings are IPv6 addresses."""
     assert network_util.is_host_valid("::1")
     assert network_util.is_host_valid("::ffff:127.0.0.0")
@@ -104,7 +104,7 @@ def test_is_valid_host():
     assert not network_util.is_host_valid("verydeepdomain." * 18)
 
 
-def test_normalize_url():
+def test_normalize_url() -> None:
     """Test the normalizing of URLs."""
     assert network_util.normalize_url("http://example.com") == "http://example.com"
     assert network_util.normalize_url("https://example.com") == "https://example.com"

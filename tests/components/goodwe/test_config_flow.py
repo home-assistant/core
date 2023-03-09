@@ -26,7 +26,7 @@ def mock_inverter():
     return goodwe_inverter
 
 
-async def test_manual_setup(hass: HomeAssistant):
+async def test_manual_setup(hass: HomeAssistant) -> None:
     """Test manually setting up."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -55,7 +55,7 @@ async def test_manual_setup(hass: HomeAssistant):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_manual_setup_already_exists(hass: HomeAssistant):
+async def test_manual_setup_already_exists(hass: HomeAssistant) -> None:
     """Test manually setting up and the device already exists."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: TEST_HOST}, unique_id=TEST_SERIAL
@@ -81,7 +81,7 @@ async def test_manual_setup_already_exists(hass: HomeAssistant):
     assert result["reason"] == "already_configured"
 
 
-async def test_manual_setup_device_offline(hass: HomeAssistant):
+async def test_manual_setup_device_offline(hass: HomeAssistant) -> None:
     """Test manually setting up, device offline."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

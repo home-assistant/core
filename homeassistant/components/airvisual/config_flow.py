@@ -132,15 +132,14 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     LOGGER.error(err)
                     errors["base"] = "unknown"
 
+                if errors:
+                    return self.async_show_form(
+                        step_id=error_step, data_schema=error_schema, errors=errors
+                    )
+
                 valid_keys.add(user_input[CONF_API_KEY])
 
-        if errors:
-            return self.async_show_form(
-                step_id=error_step, data_schema=error_schema, errors=errors
-            )
-
-        existing_entry = await self.async_set_unique_id(self._geo_id)
-        if existing_entry:
+        if existing_entry := await self.async_set_unique_id(self._geo_id):
             self.hass.config_entries.async_update_entry(existing_entry, data=user_input)
             self.hass.async_create_task(
                 self.hass.config_entries.async_reload(existing_entry.entry_id)
@@ -171,6 +170,13 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(config_entry: ConfigEntry) -> SchemaOptionsFlowHandler:
         """Define the config flow to handle options."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
+
+    async def async_step_import(self, import_data: dict[str, str]) -> FlowResult:
+        """Handle import of config entry version 1 data."""
+        import_source = import_data.pop("import_source")
+        if import_source == "geography_by_coords":
+            return await self.async_step_geography_by_coords(import_data)
+        return await self.async_step_geography_by_name(import_data)
 
     async def async_step_geography_by_coords(
         self, user_input: dict[str, str] | None = None

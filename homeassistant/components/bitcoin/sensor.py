@@ -20,11 +20,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = "Data provided by blockchain.com"
-
 DEFAULT_CURRENCY = "USD"
-
-ICON = "mdi:currency-btc"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -167,10 +163,12 @@ def setup_platform(
 class BitcoinSensor(SensorEntity):
     """Representation of a Bitcoin sensor."""
 
-    _attr_attribution = ATTRIBUTION
-    _attr_icon = ICON
+    _attr_attribution = "Data provided by blockchain.com"
+    _attr_icon = "mdi:currency-btc"
 
-    def __init__(self, data, currency, description: SensorEntityDescription):
+    def __init__(
+        self, data: BitcoinData, currency: str, description: SensorEntityDescription
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.data = data
@@ -231,12 +229,10 @@ class BitcoinSensor(SensorEntity):
 class BitcoinData:
     """Get the latest data and update the states."""
 
-    def __init__(self):
-        """Initialize the data object."""
-        self.stats = None
-        self.ticker = None
+    stats: statistics.Stats
+    ticker: dict[str, exchangerates.Currency]
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from blockchain.com."""
 
         self.stats = statistics.get()

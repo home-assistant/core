@@ -9,6 +9,7 @@ import requests_mock
 
 from homeassistant.components import notify
 import homeassistant.components.clicksend_tts.notify as cs_tts
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component
@@ -52,7 +53,9 @@ async def setup_notify(hass):
         await hass.async_block_till_done()
 
 
-async def test_no_notify_service(hass, mock_clicksend_tts_notify, caplog):
+async def test_no_notify_service(
+    hass: HomeAssistant, mock_clicksend_tts_notify, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test missing platform notify service instance."""
     caplog.set_level(logging.ERROR)
     mock_clicksend_tts_notify.return_value = None
@@ -62,7 +65,7 @@ async def test_no_notify_service(hass, mock_clicksend_tts_notify, caplog):
     assert "Failed to initialize notification service clicksend_tts" in caplog.text
 
 
-async def test_send_simple_message(hass):
+async def test_send_simple_message(hass: HomeAssistant) -> None:
     """Test sending a simple message with success."""
 
     with requests_mock.Mocker() as mock:
@@ -108,7 +111,7 @@ async def test_send_simple_message(hass):
 
         expected_content_type = "application/json"
         assert (
-            "Content-Type" in mock.last_request.headers.keys()
+            "Content-Type" in mock.last_request.headers
             and mock.last_request.headers["Content-Type"] == expected_content_type
         )
 

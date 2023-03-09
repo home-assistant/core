@@ -79,6 +79,13 @@
           "right": "Right"
         }
       },
+      "airpurifier_mode": {
+        "state": {
+          "silent": "Silent",
+          "auto": "Auto",
+          "favorite": "Favorite"
+        }
+      },
       "ptc_level": {
         "state": {
           "low": "Low",

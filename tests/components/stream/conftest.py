@@ -59,7 +59,7 @@ class WorkerSync:
         self._original(stream_state)
 
 
-@pytest.fixture()
+@pytest.fixture
 def stream_worker_sync(hass):
     """Patch StreamOutput to allow test to synchronize worker stream end."""
     sync = WorkerSync()
@@ -138,7 +138,7 @@ class HLSSync:
         return await self._original_part_recv(output)
 
 
-@pytest.fixture()
+@pytest.fixture
 def hls_sync():
     """Patch HLSOutput to allow test to synchronize playlist requests and responses."""
     sync = HLSSync()

@@ -1,4 +1,6 @@
 """Support for mobile_app push notifications."""
+from __future__ import annotations
+
 import asyncio
 from functools import partial
 from http import HTTPStatus
@@ -15,8 +17,10 @@ from homeassistant.components.notify import (
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -81,7 +85,11 @@ def log_rate_limits(hass, device_name, resp, level=logging.INFO):
     )
 
 
-async def async_get_service(hass, config, discovery_info=None):
+async def async_get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> MobileAppNotificationService:
     """Get the mobile_app notification service."""
     service = hass.data[DOMAIN][DATA_NOTIFY] = MobileAppNotificationService(hass)
     return service

@@ -5,9 +5,7 @@ from collections.abc import Callable
 import functools
 import inspect
 import logging
-from typing import Any, TypeVar
-
-from typing_extensions import ParamSpec
+from typing import Any, ParamSpec, TypeVar
 
 from ..helpers.frame import MissingIntegrationFrame, get_integration_frame
 
@@ -115,7 +113,7 @@ def deprecated_class(
 def deprecated_function(
     replacement: str,
 ) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:
-    """Mark function as deprecated and provide a replacement function to be used instead."""
+    """Mark function as deprecated and provide a replacement to be used instead."""
 
     def deprecated_decorator(func: Callable[_P, _R]) -> Callable[_P, _R]:
         """Decorate function as deprecated."""

@@ -9,7 +9,7 @@ from .conftest import KNXTestKit
 from tests.common import async_capture_events
 
 
-async def test_sensor(hass: HomeAssistant, knx: KNXTestKit):
+async def test_sensor(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test simple KNX sensor."""
 
     await knx.setup_integration(
@@ -41,7 +41,7 @@ async def test_sensor(hass: HomeAssistant, knx: KNXTestKit):
     await knx.assert_no_telegram()
 
 
-async def test_always_callback(hass: HomeAssistant, knx: KNXTestKit):
+async def test_always_callback(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX sensor with always_callback."""
 
     events = async_capture_events(hass, "state_changed")
