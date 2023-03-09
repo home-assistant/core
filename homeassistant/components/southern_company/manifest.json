@@ -6,5 +6,5 @@
   "dependencies": ["recorder"],
   "documentation": "https://www.home-assistant.io/integrations/southern_company",
   "iot_class": "cloud_polling",
-  "requirements": ["southern-company-api==0.6.0"]
+  "requirements": ["southern-company-api==0.6.2"]
 }
