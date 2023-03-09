@@ -6,6 +6,7 @@
   "documentation": "https://www.home-assistant.io/integrations/gdacs",
   "integration_type": "service",
   "iot_class": "cloud_polling",
+  "loggers": ["aio_georss_gdacs", "aio_georss_client"],
   "quality_scale": "platinum",
   "requirements": ["aio_georss_gdacs==0.8"]
 }

@@ -38,7 +38,7 @@ def _select_device_id_context_ids_sub_query(
         .where(apply_event_device_id_matchers(json_quotable_device_ids))
         .subquery()
     )
-    return select(inner.c.context_id).group_by(inner.c.context_id)
+    return select(inner.c.context_id_bin).group_by(inner.c.context_id_bin)
 
 
 def _apply_devices_context_union(
@@ -59,12 +59,12 @@ def _apply_devices_context_union(
         apply_events_context_hints(
             select_events_context_only()
             .select_from(devices_cte)
-            .outerjoin(Events, devices_cte.c.context_id == Events.context_id)
+            .outerjoin(Events, devices_cte.c.context_id_bin == Events.context_id_bin)
         ).outerjoin(EventData, (Events.data_id == EventData.data_id)),
         apply_states_context_hints(
             select_states_context_only()
             .select_from(devices_cte)
-            .outerjoin(States, devices_cte.c.context_id == States.context_id)
+            .outerjoin(States, devices_cte.c.context_id_bin == States.context_id_bin)
         ),
     )
 

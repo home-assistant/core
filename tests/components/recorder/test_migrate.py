@@ -6,9 +6,10 @@ import sqlite3
 import sys
 import threading
 from unittest.mock import Mock, PropertyMock, call, patch
+import uuid
 
 import pytest
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.exc import (
     DatabaseError,
     InternalError,
@@ -23,17 +24,25 @@ from homeassistant.components import persistent_notification as pn, recorder
 from homeassistant.components.recorder import db_schema, migration
 from homeassistant.components.recorder.db_schema import (
     SCHEMA_VERSION,
+    Events,
     RecorderRuns,
     States,
 )
+from homeassistant.components.recorder.tasks import ContextIDMigrationTask
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import recorder as recorder_helper
 import homeassistant.util.dt as dt_util
+from homeassistant.util.ulid import bytes_to_ulid
 
-from .common import async_wait_recording_done, create_engine_test
+from .common import (
+    async_recorder_block_till_done,
+    async_wait_recording_done,
+    create_engine_test,
+)
 
 from tests.common import async_fire_time_changed
+from tests.typing import RecorderInstanceGenerator
 
 ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
 
@@ -535,3 +544,147 @@ def test_raise_if_exception_missing_empty_cause_str() -> None:
 
     with pytest.raises(ProgrammingError):
         migration.raise_if_exception_missing_str(programming_exc, ["not present"])
+
+
+@pytest.mark.parametrize("enable_migrate_context_ids", [True])
+async def test_migrate_context_ids(
+    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
+) -> None:
+    """Test we can migrate old uuid context ids and ulid context ids to binary format."""
+    instance = await async_setup_recorder_instance(hass)
+    await async_wait_recording_done(hass)
+
+    test_uuid = uuid.uuid4()
+    uuid_hex = test_uuid.hex
+    uuid_bin = test_uuid.bytes
+
+    def _insert_events():
+        with session_scope(hass=hass) as session:
+            session.add_all(
+                (
+                    Events(
+                        event_type="old_uuid_context_id_event",
+                        event_data=None,
+                        origin_idx=0,
+                        time_fired=None,
+                        time_fired_ts=1677721632.452529,
+                        context_id=uuid_hex,
+                        context_id_bin=None,
+                        context_user_id=None,
+                        context_user_id_bin=None,
+                        context_parent_id=None,
+                        context_parent_id_bin=None,
+                    ),
+                    Events(
+                        event_type="empty_context_id_event",
+                        event_data=None,
+                        origin_idx=0,
+                        time_fired=None,
+                        time_fired_ts=1677721632.552529,
+                        context_id=None,
+                        context_id_bin=None,
+                        context_user_id=None,
+                        context_user_id_bin=None,
+                        context_parent_id=None,
+                        context_parent_id_bin=None,
+                    ),
+                    Events(
+                        event_type="ulid_context_id_event",
+                        event_data=None,
+                        origin_idx=0,
+                        time_fired=None,
+                        time_fired_ts=1677721632.552529,
+                        context_id="01ARZ3NDEKTSV4RRFFQ69G5FAV",
+                        context_id_bin=None,
+                        context_user_id="9400facee45711eaa9308bfd3d19e474",
+                        context_user_id_bin=None,
+                        context_parent_id="01ARZ3NDEKTSV4RRFFQ69G5FA2",
+                        context_parent_id_bin=None,
+                    ),
+                    Events(
+                        event_type="invalid_context_id_event",
+                        event_data=None,
+                        origin_idx=0,
+                        time_fired=None,
+                        time_fired_ts=1677721632.552529,
+                        context_id="invalid",
+                        context_id_bin=None,
+                        context_user_id=None,
+                        context_user_id_bin=None,
+                        context_parent_id=None,
+                        context_parent_id_bin=None,
+                    ),
+                )
+            )
+
+    await instance.async_add_executor_job(_insert_events)
+
+    await async_wait_recording_done(hass)
+    # This is a threadsafe way to add a task to the recorder
+    instance.queue_task(ContextIDMigrationTask())
+    await async_recorder_block_till_done(hass)
+
+    def _object_as_dict(obj):
+        return {c.key: getattr(obj, c.key) for c in inspect(obj).mapper.column_attrs}
+
+    def _fetch_migrated_events():
+        with session_scope(hass=hass) as session:
+            events = (
+                session.query(Events)
+                .filter(
+                    Events.event_type.in_(
+                        [
+                            "old_uuid_context_id_event",
+                            "empty_context_id_event",
+                            "ulid_context_id_event",
+                            "invalid_context_id_event",
+                        ]
+                    )
+                )
+                .all()
+            )
+            assert len(events) == 4
+            return {event.event_type: _object_as_dict(event) for event in events}
+
+    events_by_type = await instance.async_add_executor_job(_fetch_migrated_events)
+
+    old_uuid_context_id_event = events_by_type["old_uuid_context_id_event"]
+    assert old_uuid_context_id_event["context_id"] is None
+    assert old_uuid_context_id_event["context_user_id"] is None
+    assert old_uuid_context_id_event["context_parent_id"] is None
+    assert old_uuid_context_id_event["context_id_bin"] == uuid_bin
+    assert old_uuid_context_id_event["context_user_id_bin"] is None
+    assert old_uuid_context_id_event["context_parent_id_bin"] is None
+
+    empty_context_id_event = events_by_type["empty_context_id_event"]
+    assert empty_context_id_event["context_id"] is None
+    assert empty_context_id_event["context_user_id"] is None
+    assert empty_context_id_event["context_parent_id"] is None
+    assert empty_context_id_event["context_id_bin"] == b"\x00" * 16
+    assert empty_context_id_event["context_user_id_bin"] is None
+    assert empty_context_id_event["context_parent_id_bin"] is None
+
+    ulid_context_id_event = events_by_type["ulid_context_id_event"]
+    assert ulid_context_id_event["context_id"] is None
+    assert ulid_context_id_event["context_user_id"] is None
+    assert ulid_context_id_event["context_parent_id"] is None
+    assert (
+        bytes_to_ulid(ulid_context_id_event["context_id_bin"])
+        == "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+    )
+    assert (
+        ulid_context_id_event["context_user_id_bin"]
+        == b"\x94\x00\xfa\xce\xe4W\x11\xea\xa90\x8b\xfd=\x19\xe4t"
+    )
+    assert (
+        bytes_to_ulid(ulid_context_id_event["context_parent_id_bin"])
+        == "01ARZ3NDEKTSV4RRFFQ69G5FA2"
+    )
+
+    invalid_context_id_event = events_by_type["invalid_context_id_event"]
+    assert invalid_context_id_event["context_id"] is None
+    assert invalid_context_id_event["context_user_id"] is None
+    assert invalid_context_id_event["context_parent_id"] is None
+    assert invalid_context_id_event["context_id_bin"] == b"\x00" * 16
+    assert invalid_context_id_event["context_user_id_bin"] is None
+    assert invalid_context_id_event["context_parent_id_bin"] is None
