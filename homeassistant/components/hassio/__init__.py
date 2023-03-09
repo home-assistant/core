@@ -306,7 +306,7 @@ def get_addons_stats(hass):
 @callback
 @bind_hass
 def get_core_stats(hass):
-    """Return Addons stats.
+    """Return core stats.
 
     Async friendly.
     """
