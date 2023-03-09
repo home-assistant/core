@@ -1,0 +1,13 @@
+{
+  "domain": "connector",
+  "name": "Connector",
+  "codeowners": ["@ConnectorGit"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/connector",
+  "homekit": {},
+  "iot_class": "local_polling",
+  "requirements": ["pycryptodomex==3.17"],
+  "ssdp": [],
+  "zeroconf": []
+}

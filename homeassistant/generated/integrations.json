@@ -863,6 +863,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "connector": {
+      "name": "Connector",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "control4": {
       "name": "Control4",
       "integration_type": "hub",

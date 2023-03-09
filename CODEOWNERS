@@ -209,6 +209,8 @@ build.json @home-assistant/supervisor
 /tests/components/config/ @home-assistant/core
 /homeassistant/components/configurator/ @home-assistant/core
 /tests/components/configurator/ @home-assistant/core
+/homeassistant/components/connector/ @ConnectorGit
+/tests/components/connector/ @ConnectorGit
 /homeassistant/components/control4/ @lawtancool
 /tests/components/control4/ @lawtancool
 /homeassistant/components/conversation/ @home-assistant/core @synesthesiam
