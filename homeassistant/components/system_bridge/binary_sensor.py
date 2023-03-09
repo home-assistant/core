@@ -23,7 +23,6 @@ from .coordinator import SystemBridgeDataUpdateCoordinator
 class SystemBridgeBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Class describing System Bridge binary sensor entities."""
 
-    name: str | None = None
     value: Callable = round
 
 

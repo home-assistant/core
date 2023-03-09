@@ -283,7 +283,6 @@ class BlockEntityDescription(EntityDescription):
     # Callable (settings, block), return true if entity should be removed
     removal_condition: Callable[[dict, Block], bool] | None = None
     extra_state_attributes: Callable[[Block], dict | None] | None = None
-    name: str | None = None
 
 
 @dataclass
@@ -303,7 +302,6 @@ class RpcEntityDescription(EntityDescription, RpcEntityRequiredKeysMixin):
     extra_state_attributes: Callable[[dict, dict], dict | None] | None = None
     use_polling_coordinator: bool = False
     supported: Callable = lambda _: False
-    name: str | None = None
 
 
 @dataclass
@@ -312,7 +310,6 @@ class RestEntityDescription(EntityDescription):
 
     value: Callable[[dict, Any], Any] | None = None
     extra_state_attributes: Callable[[dict], dict | None] | None = None
-    name: str | None = None
 
 
 class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):

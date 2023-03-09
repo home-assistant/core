@@ -1,8 +1,6 @@
 """Support for Aranet sensors."""
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from aranet4.client import Aranet4Advertisement
 from bleak.backends.device import BLEDevice
 
@@ -35,51 +33,43 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 
-
-@dataclass
-class AranetSensorEntityDescription(SensorEntityDescription):
-    """Describes aranet sensor entity."""
-
-    name: str | None = None
-
-
 SENSOR_DESCRIPTIONS = {
-    "temperature": AranetSensorEntityDescription(
+    "temperature": SensorEntityDescription(
         key="temperature",
         name="Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "humidity": AranetSensorEntityDescription(
+    "humidity": SensorEntityDescription(
         key="humidity",
         name="Humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "pressure": AranetSensorEntityDescription(
+    "pressure": SensorEntityDescription(
         key="pressure",
         name="Pressure",
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "co2": AranetSensorEntityDescription(
+    "co2": SensorEntityDescription(
         key="co2",
         name="Carbon Dioxide",
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "battery": AranetSensorEntityDescription(
+    "battery": SensorEntityDescription(
         key="battery",
         name="Battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "interval": AranetSensorEntityDescription(
+    "interval": SensorEntityDescription(
         key="update_interval",
         name="Update Interval",
         device_class=SensorDeviceClass.DURATION,

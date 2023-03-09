@@ -46,7 +46,6 @@ PIXELS: Final = "px"
 class SystemBridgeSensorEntityDescription(SensorEntityDescription):
     """Class describing System Bridge sensor entities."""
 
-    name: str | None = None
     value: Callable = round
 
 

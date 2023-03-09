@@ -29,7 +29,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.typing import UNDEFINED, StateType
 
 from . import HuaweiLteBaseEntityWithDevice
 from .const import (
@@ -122,7 +122,6 @@ class HuaweiSensorEntityDescription(SensorEntityDescription):
     device_class_fn: Callable[[StateType], SensorDeviceClass | None] | None = None
     last_reset_item: str | None = None
     last_reset_format_fn: Callable[[str | None], datetime | None] | None = None
-    name: str | None = None
 
 
 SENSOR_META: dict[str, HuaweiSensorGroup] = {
@@ -716,7 +715,8 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
 
     def __post_init__(self) -> None:
         """Initialize remaining attributes."""
-        self._attr_name = self.entity_description.name or self.item
+        if self.entity_description.name is UNDEFINED:
+            self._attr_name = self.item
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to needed data on add."""
