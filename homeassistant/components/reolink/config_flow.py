@@ -99,6 +99,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {
             "short_mac": short_mac,
             "ip_address": discovery_info.ip,
+            "hostname": discovery_info.hostname,
         }
 
         self._host = discovery_info.ip
