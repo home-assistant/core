@@ -234,16 +234,21 @@ async def test_clean_room(hass: HomeAssistant, room_list: list) -> None:
 
 @pytest.mark.parametrize(
     ("room_list"),
-    [(["KITCHEN"]), (["Office"]), ([]), (None)],
+    [(["KITCHEN"]), (["Office"]), ([]), (None), ("Office")],
 )
 async def test_form_error(hass: HomeAssistant, room_list: list) -> None:
     """Test clean_room errors."""
     with pytest.raises(Exception):
         if room_list:
             data = {ATTR_ENTITY_ID: VAC_ENTITY_ID, ATTR_ROOMS: room_list}
-        else:
+            await hass.services.async_call(
+                DOMAIN, SERVICE_CLEAN_ROOM, data, blocking=True
+            )
+        elif not room_list:
             data = {ATTR_ENTITY_ID: VAC_ENTITY_ID}
-        await hass.services.async_call(DOMAIN, SERVICE_CLEAN_ROOM, data, blocking=True)
+            await hass.services.async_call(
+                DOMAIN, SERVICE_CLEAN_ROOM, {}, blocking=True
+            )
 
 
 @pytest.mark.parametrize(
