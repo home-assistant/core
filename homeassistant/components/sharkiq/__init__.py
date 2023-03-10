@@ -17,7 +17,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import API_TIMEOUT, DOMAIN, LOGGER, PLATFORMS
+from .const import API_TIMEOUT, DOMAIN, LOGGER, PLATFORMS, SHARKIQ_REGION_EUROPE
 from .update_coordinator import SharkIqUpdateCoordinator
 
 
@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         username=config_entry.data[CONF_USERNAME],
         password=config_entry.data[CONF_PASSWORD],
         websession=async_get_clientsession(hass),
-        europe=(config_entry.data[CONF_REGION] == "Europe"),
+        europe=(config_entry.data[CONF_REGION] == SHARKIQ_REGION_EUROPE),
     )
 
     try:

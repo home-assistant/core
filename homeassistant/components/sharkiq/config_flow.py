@@ -13,20 +13,27 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, LOGGER
-
-SHARKIQ_REGION_EUROPE = "Europe"
-SHARKIQ_REGION_ELSEWHERE = "Everywhere Else"
-SHARKIQ_REGION_DEFAULT = SHARKIQ_REGION_ELSEWHERE
+from .const import (
+    DOMAIN,
+    LOGGER,
+    SHARKIQ_REGION_DEFAULT,
+    SHARKIQ_REGION_EUROPE,
+    SHARKIQ_REGION_OPTIONS,
+)
 
 SHARKIQ_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_REGION, default=SHARKIQ_REGION_ELSEWHERE): vol.In(
-            [SHARKIQ_REGION_EUROPE, SHARKIQ_REGION_ELSEWHERE]
+        vol.Required(
+            CONF_REGION, default=SHARKIQ_REGION_DEFAULT
+        ): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=SHARKIQ_REGION_OPTIONS, translation_key="region"
+            ),
         ),
     }
 )
