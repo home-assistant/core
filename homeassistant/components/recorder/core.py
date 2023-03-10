@@ -211,6 +211,11 @@ class EventTypeManager:
             self._id_map[event_type] = db_event_types.event_type_id
         self._pending.clear()
 
+    def reset(self) -> None:
+        """Reset the event manager."""
+        self._id_map.clear()
+        self._pending.clear()
+
 
 class Recorder(threading.Thread):
     """A threaded recorder class."""
@@ -1201,6 +1206,7 @@ class Recorder(threading.Thread):
         self._event_data_ids.clear()
         self._pending_state_attributes.clear()
         self._pending_event_data.clear()
+        self.event_type_manager.reset()
 
         if not self.event_session:
             return
