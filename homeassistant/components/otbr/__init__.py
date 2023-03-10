@@ -78,6 +78,11 @@ class OTBRData:
         """Create an active operational dataset."""
         return await self.api.create_active_dataset(dataset)
 
+    @_handle_otbr_error
+    async def get_extended_address(self) -> bytes:
+        """Get extended address (EUI-64)."""
+        return await self.api.get_extended_address()
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Open Thread Border Router component."""

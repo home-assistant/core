@@ -223,7 +223,7 @@ def area_mock(hass):
     )
 
 
-async def test_call_from_config(hass: HomeAssistant):
+async def test_call_from_config(hass: HomeAssistant) -> None:
     """Test the sync wrapper of service.async_call_from_config."""
     calls = async_mock_service(hass, "test_domain", "test_service")
     config = {
@@ -238,7 +238,7 @@ async def test_call_from_config(hass: HomeAssistant):
     assert calls[0].data == {"hello": "goodbye", "entity_id": ["hello.world"]}
 
 
-async def test_service_call(hass: HomeAssistant):
+async def test_service_call(hass: HomeAssistant) -> None:
     """Test service call with templating."""
     calls = async_mock_service(hass, "test_domain", "test_service")
     config = {
@@ -307,7 +307,7 @@ async def test_service_call(hass: HomeAssistant):
     }
 
 
-async def test_service_template_service_call(hass: HomeAssistant):
+async def test_service_template_service_call(hass: HomeAssistant) -> None:
     """Test legacy service_template call with templating."""
     calls = async_mock_service(hass, "test_domain", "test_service")
     config = {
@@ -322,7 +322,7 @@ async def test_service_template_service_call(hass: HomeAssistant):
     assert calls[0].data == {"hello": "goodbye", "entity_id": ["hello.world"]}
 
 
-async def test_passing_variables_to_templates(hass: HomeAssistant):
+async def test_passing_variables_to_templates(hass: HomeAssistant) -> None:
     """Test passing variables to templates."""
     calls = async_mock_service(hass, "test_domain", "test_service")
     config = {
@@ -344,7 +344,7 @@ async def test_passing_variables_to_templates(hass: HomeAssistant):
     assert calls[0].data == {"hello": "goodbye", "entity_id": ["hello.world"]}
 
 
-async def test_bad_template(hass: HomeAssistant):
+async def test_bad_template(hass: HomeAssistant) -> None:
     """Test passing bad template."""
     calls = async_mock_service(hass, "test_domain", "test_service")
     config = {
@@ -366,7 +366,7 @@ async def test_bad_template(hass: HomeAssistant):
     assert len(calls) == 0
 
 
-async def test_split_entity_string(hass: HomeAssistant):
+async def test_split_entity_string(hass: HomeAssistant) -> None:
     """Test splitting of entity string."""
     calls = async_mock_service(hass, "test_domain", "test_service")
     await service.async_call_from_config(
@@ -380,18 +380,20 @@ async def test_split_entity_string(hass: HomeAssistant):
     assert ["hello.world", "sensor.beer"] == calls[-1].data.get("entity_id")
 
 
-async def test_not_mutate_input(hass: HomeAssistant):
+async def test_not_mutate_input(hass: HomeAssistant) -> None:
     """Test for immutable input."""
     async_mock_service(hass, "test_domain", "test_service")
-    config = cv.SERVICE_SCHEMA(
-        {
-            "service": "test_domain.test_service",
-            "entity_id": "hello.world, sensor.beer",
-            "data": {"hello": 1},
-            "data_template": {"nested": {"value": "{{ 1 + 1 }}"}},
-        }
-    )
+    config = {
+        "service": "test_domain.test_service",
+        "entity_id": "hello.world, sensor.beer",
+        "data": {"hello": 1},
+        "data_template": {"nested": {"value": "{{ 1 + 1 }}"}},
+    }
     orig = deepcopy(config)
+
+    # Validate both the original and the copy
+    config = cv.SERVICE_SCHEMA(config)
+    orig = cv.SERVICE_SCHEMA(orig)
 
     # Only change after call is each template getting hass attached
     template.attach(hass, orig)
@@ -401,7 +403,7 @@ async def test_not_mutate_input(hass: HomeAssistant):
 
 
 @patch("homeassistant.helpers.service._LOGGER.error")
-async def test_fail_silently_if_no_service(mock_log, hass: HomeAssistant):
+async def test_fail_silently_if_no_service(mock_log, hass: HomeAssistant) -> None:
     """Test failing if service is missing."""
     await service.async_call_from_config(hass, None)
     assert mock_log.call_count == 1
