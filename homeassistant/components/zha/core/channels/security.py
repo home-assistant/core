@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any
 from zigpy.exceptions import ZigbeeException
 import zigpy.zcl
 from zigpy.zcl.clusters import security
-from zigpy.zcl.clusters.security import IasAce as AceCluster
+from zigpy.zcl.clusters.security import IasAce as AceCluster, IasZone
 
 from homeassistant.core import callback
 
@@ -343,7 +343,10 @@ class IASZoneChannel(ZigbeeChannel):
         """Handle commands received to this cluster."""
         if command_id == 0:
             state = args[0] & 3
-            self.cluster.update_attribute(2, state)  # update cache (sends signal)
+            # update attribute cache (sends signal)
+            self.cluster.update_attribute(
+                IasZone.attributes_by_name["zone_status"].id, state
+            )
             self.debug("Updated alarm state: %s", state)
         elif command_id == 1:
             self.debug("Enroll requested")
@@ -387,7 +390,7 @@ class IASZoneChannel(ZigbeeChannel):
     @callback
     def attribute_updated(self, attrid, value):
         """Handle attribute updates on this cluster."""
-        if attrid == 2:
+        if attrid == IasZone.attributes_by_name["zone_status"].id:
             value = value & 3
             self.async_send_signal(
                 f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
