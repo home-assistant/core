@@ -34,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     if coordinator.device_type in (Device.TYPE_1P7K, Device.TYPE_3P22K):
         await hass.config_entries.async_forward_entry_setups(entry, CHARGERS_PLATFORMS)
-    elif coordinator.device_type == Device.TYPE_M2W:
+    elif coordinator.device_type in (Device.TYPE_EM, Device.TYPE_3EM):
         await hass.config_entries.async_forward_entry_setups(
             entry, LB_DEVICES_PLATFORMS
         )

@@ -862,7 +862,7 @@ ld2410-ble==0.1.1
 led-ble==1.0.0
 
 # homeassistant.components.lektrico
-lektricowifi==0.0.22
+lektricowifi==0.0.23
 
 # homeassistant.components.foscam
 libpyfoscam==1.0

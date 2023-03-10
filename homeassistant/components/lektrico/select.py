@@ -37,11 +37,7 @@ class DeviceLBModeSelectEntityDescription(LektricoSelectEntityDescription):
     @classmethod
     async def async_select_option(cls, device: lektricowifi.Device, value: int) -> bool:
         """Command the LB_DEVICE to change the LB_MODE."""
-        return bool(
-            await device.send_command(
-                f'app_config.set?config_key="load_balancing_mode"&config_value="{value}"'
-            )
-        )
+        return bool(await device.set_load_balancing_mode(value))
 
 
 _MODE_TO_OPTION: dict[lektricowifi.LBMode, str] = {

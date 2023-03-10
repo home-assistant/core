@@ -50,20 +50,12 @@ class RequireAuthSwitchEntityDescription(LektricoSwitchEntityDescription):
     @classmethod
     async def turn_on(cls, device: lektricowifi.Device, data: Any) -> bool:
         """Turn on the RequireAuth switch."""
-        return bool(
-            await device.send_command(
-                'app_config.set?config_key="headless"&config_value="false"'
-            )
-        )
+        return bool(await device.set_auth(False))
 
     @classmethod
     async def turn_off(cls, device: lektricowifi.Device, data: Any) -> bool:
         """Turn off the RequireAuth switch."""
-        return bool(
-            await device.send_command(
-                'app_config.set?config_key="headless"&config_value="true"'
-            )
-        )
+        return bool(await device.set_auth(True))
 
 
 @dataclass
@@ -78,26 +70,18 @@ class LockSwitchEntityDescription(LektricoSwitchEntityDescription):
     @classmethod
     async def turn_on(cls, device: lektricowifi.Device, data: Any) -> bool:
         """Lock the charger."""
-        return bool(
-            await device.send_command(
-                'app_config.set?config_key="charger_locked"&config_value="true"'
-            )
-        )
+        return bool(await device.set_charger_locked(True))
 
     @classmethod
     async def turn_off(cls, device: lektricowifi.Device, data: Any) -> bool:
         """Unlock the charger."""
-        return bool(
-            await device.send_command(
-                'app_config.set?config_key="charger_locked"&config_value="false"'
-            )
-        )
+        return bool(await device.set_charger_locked(False))
 
 
 SENSORS: tuple[LektricoSwitchEntityDescription, ...] = (
     RequireAuthSwitchEntityDescription(
-        key="require_auth",
-        name="Require auth",
+        key="authentication",
+        name="Authentication",
     ),
     LockSwitchEntityDescription(
         key="locked",

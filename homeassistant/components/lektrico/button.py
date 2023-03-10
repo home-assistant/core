@@ -35,7 +35,7 @@ class ChargeStartButtonEntityDescription(LektricoButtonEntityDescription):
     @classmethod
     async def get_async_press(cls, device: lektricowifi.Device) -> bool:
         """Command to start charging."""
-        return bool(await device.send_command("charge.start"))
+        return bool(await device.send_charge_start())
 
 
 @dataclass
@@ -45,7 +45,7 @@ class ChargeStopButtonEntityDescription(LektricoButtonEntityDescription):
     @classmethod
     async def get_async_press(cls, device: lektricowifi.Device) -> bool:
         """Command to stop charging."""
-        return bool(await device.send_command("charge.stop"))
+        return bool(await device.send_charge_stop())
 
 
 @dataclass
@@ -55,49 +55,21 @@ class ChargerRestartButtonEntityDescription(LektricoButtonEntityDescription):
     @classmethod
     async def get_async_press(cls, device: lektricowifi.Device) -> bool:
         """Command to restart the charger."""
-        return bool(await device.send_command("device.reset"))
-
-
-@dataclass
-class ChargerPauseButtonEntityDescription(LektricoButtonEntityDescription):
-    """A class that describes the Lektrico Charger Pause button entity."""
-
-    @classmethod
-    async def get_async_press(cls, device: lektricowifi.Device) -> bool:
-        """Command to pause the charger."""
-        return bool(await device.send_command("charge.pause"))
-
-
-@dataclass
-class ChargerResumeButtonEntityDescription(LektricoButtonEntityDescription):
-    """A class that describes the Lektrico Charger Resume button entity."""
-
-    @classmethod
-    async def get_async_press(cls, device: lektricowifi.Device) -> bool:
-        """Command to resume the charger."""
-        return bool(await device.send_command("charge.resume"))
+        return bool(await device.send_reset())
 
 
 BUTTONS_FOR_CHARGERS: tuple[LektricoButtonEntityDescription, ...] = (
     ChargeStartButtonEntityDescription(
         key="charge_start",
-        name="Charger start",
+        name="Charge start",
     ),
     ChargeStopButtonEntityDescription(
         key="charge_stop",
         name="Charge stop",
     ),
     ChargerRestartButtonEntityDescription(
-        key="charger_restart",
-        name="Charger restart",
-    ),
-    ChargerPauseButtonEntityDescription(
-        key="charge_pause",
-        name="Charge pause",
-    ),
-    ChargerResumeButtonEntityDescription(
-        key="charge_resume",
-        name="Charge resume",
+        key="reboot",
+        name="Reboot",
     ),
 )
 
@@ -124,7 +96,10 @@ async def async_setup_entry(
         lektricowifi.Device.TYPE_3P22K,
     ):
         _sensors_to_be_used = BUTTONS_FOR_CHARGERS
-    elif coordinator.device_type == lektricowifi.Device.TYPE_M2W:
+    elif coordinator.device_type in (
+        lektricowifi.Device.TYPE_EM,
+        lektricowifi.Device.TYPE_3EM,
+    ):
         _sensors_to_be_used = BUTTONS_FOR_LB_DEVICES
     else:
         return

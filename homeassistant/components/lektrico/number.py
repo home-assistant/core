@@ -41,14 +41,10 @@ class LedBrightnessNumberEntityDescription(LektricoNumberEntityDescription):
     async def set_native_value(
         cls, device: lektricowifi.Device, value: float, data: Any
     ) -> bool:
-        """Set the value for the led brightness in %, from 20 to 100."""
+        """Set the value for the led brightness in %, from 10 to 100."""
         # Quick change the value displayed on the entity.
         data.led_max_brightness = int(value)
-        return bool(
-            await device.send_command(
-                f'app_config.set?config_key="led_max_brightness"&config_value={int(value)}'
-            )
-        )
+        return bool(await device.set_led_max_brightness(int(value)))
 
 
 @dataclass
@@ -62,11 +58,7 @@ class DynamicCurrentNumberEntityDescription(LektricoNumberEntityDescription):
         """Set the value of the dynamic current, as int between 0 and 32 A."""
         # Quick change the value displayed on the entity.
         data.dynamic_current = int(value)
-        return bool(
-            await device.send_command(
-                f'dynamic_current.set?dynamic_current="{int(value)}"'
-            )
-        )
+        return bool(await device.set_dynamic_current(int(value)))
 
 
 @dataclass
@@ -80,26 +72,22 @@ class UserCurrentNumberEntityDescription(LektricoNumberEntityDescription):
         """Set the value of the user current, as int between 6 and 32 A."""
         # Quick change the value displayed on the entity.
         data.user_current = int(value)
-        return bool(
-            await device.send_command(
-                f'app_config.set?config_key="user_current"&config_value="{int(value)}"'
-            )
-        )
+        return bool(await device.set_user_current(int(value)))
 
 
 NUMBERS: tuple[LektricoNumberEntityDescription, ...] = (
     LedBrightnessNumberEntityDescription(
         key="led_max_brightness",
         name="Led brightness",
-        native_min_value=20,
+        native_min_value=10,
         native_max_value=100,
         native_step=5,
         native_unit_of_measurement=PERCENTAGE,
         value=lambda data: int(data.led_max_brightness),
     ),
     DynamicCurrentNumberEntityDescription(
-        key="dynamic_current",
-        name="Dynamic current",
+        key="dynamic_limit",
+        name="Dynamic limit",
         native_min_value=0,
         native_max_value=32,
         native_step=1,
@@ -107,8 +95,8 @@ NUMBERS: tuple[LektricoNumberEntityDescription, ...] = (
         value=lambda data: int(data.dynamic_current),
     ),
     UserCurrentNumberEntityDescription(
-        key="user_current",
-        name="User current",
+        key="user_limit",
+        name="User limit",
         native_min_value=6,
         native_max_value=32,
         native_step=1,
@@ -161,7 +149,7 @@ class LektricoNumber(CoordinatorEntity, NumberEntity):
             sw_version=coordinator.data.fw_version,
         )
 
-        self._attr_native_value = 20
+        self._attr_native_value = 10
         if description.native_step is not None:
             self._attr_native_step = description.native_step
         if description.native_max_value is not None:

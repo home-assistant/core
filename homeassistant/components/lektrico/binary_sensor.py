@@ -54,7 +54,7 @@ class HasActiveErrorsBinarySensorEntityDescription(
 
 SENSORS: tuple[LektricoBinarySensorEntityDescription, ...] = (
     HasActiveErrorsBinarySensorEntityDescription(
-        key="has_active_errors",
+        key="errors",
         name="Errors",
         device_class=BinarySensorDeviceClass.PROBLEM,
         get_is_on=lambda data: bool(data.has_active_errors),
