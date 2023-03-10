@@ -33,8 +33,10 @@ def _select_device_id_context_ids_sub_query(
     json_quotable_device_ids: list[str],
 ) -> Select:
     """Generate a subquery to find context ids for multiple devices."""
-    inner = select_events_context_id_subquery(start_day, end_day, event_types).where(
-        apply_event_device_id_matchers(json_quotable_device_ids)
+    inner = (
+        select_events_context_id_subquery(start_day, end_day, event_types)
+        .where(apply_event_device_id_matchers(json_quotable_device_ids))
+        .subquery()
     )
     return select(inner.c.context_id_bin).group_by(inner.c.context_id_bin)
 
