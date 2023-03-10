@@ -75,7 +75,7 @@ def test_async_add_hass_job_schedule_callback() -> None:
     assert len(hass.add_job.mock_calls) == 0
 
 
-def test_async_add_hass_job_coro_named(hass) -> None:
+def test_async_add_hass_job_coro_named(hass: HomeAssistant) -> None:
     """Test that we schedule coroutines and add jobs to the job pool with a name."""
 
     async def mycoro():
