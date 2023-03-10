@@ -1,7 +1,6 @@
 """Support for ISY switches."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any
 
 from pyisy.constants import (
@@ -23,19 +22,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .entity import ISYAuxControlEntity, ISYNodeEntity, ISYProgramEntity
 from .models import IsyData
-
-
-@dataclass
-class ISYSwitchEntityDescription(SwitchEntityDescription):
-    """Class describing ISY switch entities."""
-
-    name: str | None = None
 
 
 async def async_setup_entry(
@@ -61,7 +53,7 @@ async def async_setup_entry(
     for node, control in isy_data.aux_properties[Platform.SWITCH]:
         # Currently only used for enable switches, will need to be updated for
         # NS support by making sure control == TAG_ENABLED
-        description = ISYSwitchEntityDescription(
+        description = SwitchEntityDescription(
             key=control,
             device_class=SwitchDeviceClass.SWITCH,
             name=control.title(),
@@ -143,7 +135,7 @@ class ISYEnableSwitchEntity(ISYAuxControlEntity, SwitchEntity):
         node: Node,
         control: str,
         unique_id: str,
-        description: ISYSwitchEntityDescription,
+        description: EntityDescription,
         device_info: DeviceInfo | None,
     ) -> None:
         """Initialize the ISY Aux Control Number entity."""

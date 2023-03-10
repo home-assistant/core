@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Any, Generic, TypeVar
 from homeassistant.const import ATTR_IDENTIFIERS, ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from .const import DOMAIN
 from .update_coordinator import BasePassiveBluetoothCoordinator
@@ -45,9 +44,9 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
     entity_descriptions: Mapping[
         PassiveBluetoothEntityKey, EntityDescription
     ] = dataclasses.field(default_factory=dict)
-    entity_names: Mapping[
-        PassiveBluetoothEntityKey, str | None | UndefinedType
-    ] = dataclasses.field(default_factory=dict)
+    entity_names: Mapping[PassiveBluetoothEntityKey, str | None] = dataclasses.field(
+        default_factory=dict
+    )
     entity_data: Mapping[PassiveBluetoothEntityKey, _T] = dataclasses.field(
         default_factory=dict
     )
@@ -181,9 +180,7 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
             list[Callable[[PassiveBluetoothDataUpdate[_T] | None], None]],
         ] = {}
         self.update_method = update_method
-        self.entity_names: dict[
-            PassiveBluetoothEntityKey, str | None | UndefinedType
-        ] = {}
+        self.entity_names: dict[PassiveBluetoothEntityKey, str | None] = {}
         self.entity_data: dict[PassiveBluetoothEntityKey, _T] = {}
         self.entity_descriptions: dict[
             PassiveBluetoothEntityKey, EntityDescription
@@ -344,11 +341,7 @@ class PassiveBluetoothProcessorEntity(Entity, Generic[_PassiveBluetoothDataProce
             self._attr_unique_id = f"{address}-{key}"
         if ATTR_NAME not in self._attr_device_info:
             self._attr_device_info[ATTR_NAME] = self.processor.coordinator.name
-        if (
-            entity_key in processor.entity_names
-            and (name := processor.entity_names[entity_key]) is not UNDEFINED
-        ):
-            self._attr_name = name
+        self._attr_name = processor.entity_names.get(entity_key)
 
     @property
     def available(self) -> bool:

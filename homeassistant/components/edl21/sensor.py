@@ -34,7 +34,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utcnow
 
 from .const import CONF_SERIAL_PORT, DOMAIN, LOGGER, SIGNAL_EDL21_TELEGRAM
@@ -367,11 +367,7 @@ class EDL21:
                 )
             else:
                 entity_description = SENSORS.get(obis)
-                if (
-                    entity_description
-                    and entity_description.name is not None
-                    and entity_description.name is not UNDEFINED
-                ):
+                if entity_description and entity_description.name:
                     name = entity_description.name
                     if self._name:
                         name = f"{self._name}: {name}"

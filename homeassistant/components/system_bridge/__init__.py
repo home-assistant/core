@@ -31,7 +31,6 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.typing import UndefinedType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MODULES
@@ -276,7 +275,7 @@ class SystemBridgeEntity(CoordinatorEntity[SystemBridgeDataUpdateCoordinator]):
         coordinator: SystemBridgeDataUpdateCoordinator,
         api_port: int,
         key: str,
-        name: str | None | UndefinedType,
+        name: str | None,
     ) -> None:
         """Initialize the System Bridge entity."""
         super().__init__(coordinator)

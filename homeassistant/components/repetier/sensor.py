@@ -9,7 +9,7 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import REPETIER_API, SENSOR_TYPES, UPDATE_SIGNAL, RepetierSensorEntityDescription
 
@@ -45,12 +45,10 @@ def setup_platform(
         sensor_type = info["sensor_type"]
         temp_id = info["temp_id"]
         description = SENSOR_TYPES[sensor_type]
-        name = info["name"]
-        if description.name is not None and description.name is not UNDEFINED:
-            name += description.name
+        name = f"{info['name']}{description.name or ''}"
         if temp_id is not None:
             _LOGGER.debug("%s Temp_id: %s", sensor_type, temp_id)
-            name += temp_id
+            name = f"{name}{temp_id}"
         sensor_class = sensor_map[sensor_type]
         entity = sensor_class(api, temp_id, name, printer_id, description)
         entities.append(entity)

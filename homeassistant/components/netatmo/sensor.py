@@ -36,7 +36,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED
 
 from .const import (
     CONF_URL_ENERGY,
@@ -420,7 +419,7 @@ class NetatmoWeatherSensor(NetatmoBase, SensorEntity):
         description: NetatmoSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(netatmo_device.data_handler, initial_name=UNDEFINED)
+        super().__init__(netatmo_device.data_handler)
         self.entity_description = description
 
         self._module = netatmo_device.device
@@ -439,6 +438,7 @@ class NetatmoWeatherSensor(NetatmoBase, SensorEntity):
             ]
         )
 
+        self._attr_name = f"{description.name}"
         self._model = self._module.device_type
         self._config_url = CONF_URL_WEATHER
         self._attr_unique_id = f"{self._id}-{description.key}"
@@ -676,7 +676,7 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
         description: NetatmoSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(data_handler, initial_name=UNDEFINED)
+        super().__init__(data_handler)
         self.entity_description = description
 
         self._signal_name = f"{PUBLIC}-{area.uuid}"
@@ -699,6 +699,7 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
         self._area_name = area.area_name
         self._id = self._area_name
         self._device_name = f"{self._area_name}"
+        self._attr_name = f"{description.name}"
         self._show_on_map = area.show_on_map
         self._config_url = CONF_URL_PUBLIC_WEATHER
         self._attr_unique_id = (

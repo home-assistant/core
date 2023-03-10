@@ -11,7 +11,6 @@ from pyatmo.modules.device_types import (
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, Entity
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from .const import DATA_DEVICE_IDS, DEFAULT_ATTRIBUTION, DOMAIN, SIGNAL_NAME
 from .data_handler import PUBLIC, NetatmoDataHandler
@@ -22,11 +21,7 @@ class NetatmoBase(Entity):
 
     _attr_attribution = DEFAULT_ATTRIBUTION
 
-    def __init__(
-        self,
-        data_handler: NetatmoDataHandler,
-        initial_name: None | UndefinedType = None,
-    ) -> None:
+    def __init__(self, data_handler: NetatmoDataHandler) -> None:
         """Set up Netatmo entity base."""
         self.data_handler = data_handler
         self._publishers: list[dict[str, Any]] = []
@@ -35,8 +30,7 @@ class NetatmoBase(Entity):
         self._id: str = ""
         self._model: str = ""
         self._config_url: str | None = None
-        if initial_name is not UNDEFINED:
-            self._attr_name = initial_name
+        self._attr_name = None
         self._attr_unique_id = None
         self._attr_extra_state_attributes = {}
 

@@ -72,7 +72,6 @@ from .const import (
 class TomorrowioSensorEntityDescription(SensorEntityDescription):
     """Describes a Tomorrow.io sensor entity."""
 
-    name: str | None = None
     unit_imperial: str | None = None
     unit_metric: str | None = None
     multiplication_factor: Callable[[float], float] | float | None = None

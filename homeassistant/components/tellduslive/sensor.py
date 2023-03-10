@@ -23,7 +23,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED
 
 from .. import tellduslive
 from .entry import TelldusLiveEntity
@@ -185,15 +184,10 @@ class TelldusLiveSensor(TelldusLiveEntity, SensorEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        if (
-            hasattr(self, "entity_description")
-            and self.entity_description.name is not None
-            and self.entity_description.name is not UNDEFINED
-        ):
-            quantity_name = self.entity_description.name
-        else:
-            quantity_name = ""
-        return f"{super().name} {quantity_name}".strip()
+        quantity_name = (
+            self.entity_description.name if hasattr(self, "entity_description") else ""
+        )
+        return "{} {}".format(super().name, quantity_name or "").strip()
 
     @property
     def native_value(self):

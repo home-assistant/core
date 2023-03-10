@@ -17,8 +17,7 @@ from .entity import SwitchbotEntity
 
 PARALLEL_UPDATES = 0
 
-
-BINARY_SENSOR_TYPES = {
+BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
     "calibration": BinarySensorEntityDescription(
         key="calibration",
         name="Calibration",
@@ -95,6 +94,7 @@ class SwitchBotBinarySensor(SwitchbotEntity, BinarySensorEntity):
         self._sensor = binary_sensor
         self._attr_unique_id = f"{coordinator.base_unique_id}-{binary_sensor}"
         self.entity_description = BINARY_SENSOR_TYPES[binary_sensor]
+        self._attr_name = self.entity_description.name
 
     @property
     def is_on(self) -> bool:
