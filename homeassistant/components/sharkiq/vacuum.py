@@ -220,30 +220,25 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
 
     async def async_clean_room(self, **kwargs):
         """Clean a specific room."""
-        if ATTR_ROOMS in kwargs:
-            rooms_cleaned = []
-            all_rooms_reachable = True
-            for room in kwargs.get(ATTR_ROOMS):
-                if room in self.available_rooms:
-                    rooms_cleaned.append(room)
-                elif room.capitalize() in self.available_rooms:
-                    rooms_cleaned.append(room.capitalize())
-                else:
-                    all_rooms_reachable = False
-                    LOGGER.error("Room not reachable: %s", room)
-
-            if all_rooms_reachable:
-                LOGGER.info("Cleaning room(s): %s", rooms_cleaned)
-                await self.sharkiq.async_clean_rooms(rooms_cleaned)
+        rooms_cleaned = []
+        all_rooms_reachable = True
+        for room in kwargs.get(ATTR_ROOMS):
+            if room in self.available_rooms:
+                rooms_cleaned.append(room)
+            elif room.capitalize() in self.available_rooms:
+                rooms_cleaned.append(room.capitalize())
             else:
-                LOGGER.error("Invalid room selection - service not run")
-                raise self.InvalidRoomSelection(
-                    "One or more of the rooms listed is not available to your vacuum.  Make sure all rooms match the Shark App including capitalization."
-                )
+                all_rooms_reachable = False
+                LOGGER.error("Room not reachable: %s", room)
 
+        if all_rooms_reachable:
+            LOGGER.info("Cleaning room(s): %s", rooms_cleaned)
+            await self.sharkiq.async_clean_rooms(rooms_cleaned)
         else:
-            LOGGER.error("No target specified")
-            raise self.InvalidRoomSelection
+            LOGGER.error("Invalid room selection - service not run")
+            raise self.InvalidRoomSelection(
+                "One or more of the rooms listed is not available to your vacuum.  Make sure all rooms match the Shark App including capitalization."
+            )
 
         await self.coordinator.async_refresh()
 
