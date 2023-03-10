@@ -212,6 +212,7 @@ FLOWS = {
         "icloud",
         "ifttt",
         "imap",
+        "inels",
         "inkbird",
         "insteon",
         "intellifire",
