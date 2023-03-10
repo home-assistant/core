@@ -24,12 +24,14 @@ from .queries import (
     data_ids_exist_in_events_with_fast_in_distinct,
     delete_event_data_rows,
     delete_event_rows,
+    delete_event_types_rows,
     delete_recorder_runs_rows,
     delete_states_attributes_rows,
     delete_states_rows,
     delete_statistics_runs_rows,
     delete_statistics_short_term_rows,
     disconnect_states_rows,
+    find_event_types_to_purge,
     find_events_to_purge,
     find_latest_statistics_runs_run_id,
     find_legacy_event_state_and_attributes_and_data_ids_to_purge,
@@ -110,6 +112,7 @@ def purge_old_data(
             return False
 
         _purge_old_recorder_runs(instance, session, purge_before)
+        _purge_old_event_types(instance, session)
     if repack:
         repack_database(instance)
     return True
@@ -562,6 +565,22 @@ def _purge_old_recorder_runs(
         delete_recorder_runs_rows(purge_before, instance.run_history.current.run_id)
     )
     _LOGGER.debug("Deleted %s recorder_runs", deleted_rows)
+
+
+def _purge_old_event_types(instance: Recorder, session: Session) -> None:
+    """Purge all old event types."""
+    # Event types is small, no need to batch run it
+    purged_event_types = set()
+    event_type_ids = set()
+    for event_type_id, event_type in session.execute(find_event_types_to_purge()):
+        purged_event_types.add(event_type)
+        event_type_ids.add(event_type_id)
+
+    deleted_rows = session.execute(delete_event_types_rows(event_type_ids))
+    _LOGGER.debug("Deleted %s event types", deleted_rows)
+
+    # Evict any entries in the event_type cache referring to a purged state
+    instance.event_type_manager.evict_purged(purged_event_types)
 
 
 def _purge_filtered_data(instance: Recorder, session: Session) -> bool:

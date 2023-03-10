@@ -737,3 +737,26 @@ def find_states_context_ids_to_migrate() -> StatementLambdaElement:
         .filter(States.context_id_bin.is_(None))
         .limit(SQLITE_MAX_BIND_VARS)
     )
+
+
+def find_event_types_to_purge() -> StatementLambdaElement:
+    """Find event_type_ids to purge."""
+    return lambda_stmt(
+        lambda: select(EventTypes.event_type_id, EventTypes.event_type).where(
+            EventTypes.event_type_id
+            == (
+                select(
+                    distinct(Events.event_type_id).label("unused_event_type_id")
+                ).filter(Events.event_type_id.not_in(select(EventTypes.event_type_id)))
+            ).c.unused_event_type_id
+        )
+    )
+
+
+def delete_event_types_rows(event_type_ids: Iterable[int]) -> StatementLambdaElement:
+    """Delete EventTypes rows."""
+    return lambda_stmt(
+        lambda: delete(EventTypes)
+        .where(EventTypes.event_type_id.in_(event_type_ids))
+        .execution_options(synchronize_session=False)
+    )

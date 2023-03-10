@@ -164,6 +164,7 @@ class EventTypeManager:
         """Initialize the event manager."""
         self._id_map: dict[str, int] = LRU(EVENT_DATA_ID_CACHE_SIZE)
         self._pending: dict[str, EventTypes] = {}
+        self.active = False
 
     def load(self, events: list[Event], session: Session) -> None:
         """Load the event types into memory."""
@@ -221,6 +222,11 @@ class EventTypeManager:
         """Reset the event manager."""
         self._id_map.clear()
         self._pending.clear()
+
+    def evict_purged(self, event_types: Iterable[str]) -> None:
+        """Evict purged event types."""
+        for event_type in event_types:
+            self._id_map.pop(event_type, None)
 
 
 class Recorder(threading.Thread):
