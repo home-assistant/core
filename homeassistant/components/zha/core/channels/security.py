@@ -341,10 +341,6 @@ class IASZoneChannel(ZigbeeChannel):
     @callback
     def cluster_command(self, tsn, command_id, args):
         """Handle commands received to this cluster."""
-        # Note: zha-quirks has a bug with the "MotionOnEvent" quirk where the ZONE_STATE attribute is set (instead of the correct ZONE_STATUS attribute).
-        #   This command is sent properly though, so we use it to update the ZONE_STATUS attribute here for now.
-        #   See: https://github.com/zigpy/zha-device-handlers/pull/2231 for a fix in quirks.
-        # Note: This also allows to remove the explicit "attribute report signal" here
         if command_id == 0:
             state = args[0] & 3
             self.cluster.update_attribute(2, state)  # update cache (sends signal)
