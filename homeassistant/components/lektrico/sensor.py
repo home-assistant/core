@@ -100,7 +100,7 @@ SENSORS_FOR_CHARGERS: tuple[LektricoSensorEntityDescription, ...] = (
 SENSORS_FOR_LB_DEVICES: tuple[LektricoSensorEntityDescription, ...] = (
     LektricoSensorEntityDescription(
         key="breaker_current",
-        name="Breaker Current",
+        name="Breaker current",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,

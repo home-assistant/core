@@ -55,7 +55,7 @@ _OPTION_TO_MODE: dict[str, lektricowifi.LBMode] = {
 SELECTS_FOR_LB_DEVICES: tuple[LektricoSelectEntityDescription, ...] = (
     DeviceLBModeSelectEntityDescription(
         key="lb_mode",
-        name="LB Mode",
+        name="LB mode",
         entity_category=EntityCategory.CONFIG,
     ),
 )
