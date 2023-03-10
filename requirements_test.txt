@@ -24,7 +24,7 @@ pytest-cov==3.0.0
 pytest-freezer==0.4.6
 pytest-socket==0.5.1
 pytest-test-groups==1.0.3
-pytest-sugar==0.9.5
+pytest-sugar==0.9.6
 pytest-timeout==2.1.0
 pytest-unordered==0.5.2
 pytest-picked==0.4.6
