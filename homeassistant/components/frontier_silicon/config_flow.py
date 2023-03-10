@@ -38,7 +38,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     _webfsapi_url: str | None = None
-    _unique_id: str | None = None
 
     async def async_step_import(self, import_info: dict[str, Any]) -> FlowResult:
         """Handle the import of legacy configuration.yaml entries."""
@@ -119,8 +118,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self.context["title_placeholders"] = {"name": name}
 
-        self._unique_id = await afsapi.get_radio_id()
-        await self.async_set_unique_id(self._unique_id)
+        unique_id = await afsapi.get_radio_id()
+        await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
@@ -157,8 +156,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception(exception)
             errors["base"] = "unknown"
         else:
-            self._unique_id = await afsapi.get_radio_id()
-            await self.async_set_unique_id(self._unique_id)
+            unique_id = await afsapi.get_radio_id()
+            await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title=name,
