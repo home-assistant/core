@@ -14,6 +14,21 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from tests.common import MockConfigEntry
 
+HEATUPPERSETPOINTLIMIT = 35
+HEATLOWERSETPOINTLIMIT = 20
+COOLUPPERSETPOINTLIMIT = 20
+COOLLOWERSETPOINTLIMIT = 10
+NEXTCOOLPERIOD = 10
+NEXTHEATPERIOD = 10
+OUTDOORTEMP = 5
+OUTDOORHUMIDITY = 25
+CURRENTTEMPERATURE = 20
+CURRENTHUMIDITY = 50
+HEATAWAY = 10
+COOLAWAY = 20
+SETPOINTCOOL = 26
+SETPOINTHEAT = 18
+
 
 @pytest.fixture
 def config_data():
@@ -51,18 +66,18 @@ def device():
     }
     mock_device.system_mode = "off"
     mock_device.name = "device1"
-    mock_device.current_temperature = 20
+    mock_device.current_temperature = CURRENTTEMPERATURE
     mock_device.mac_address = "macaddress1"
     mock_device.outdoor_temperature = None
     mock_device.outdoor_humidity = None
     mock_device.is_alive = True
     mock_device.fan_running = False
     mock_device.fan_mode = "auto"
-    mock_device.setpoint_cool = 26
-    mock_device.setpoint_heat = 18
+    mock_device.setpoint_cool = SETPOINTCOOL
+    mock_device.setpoint_heat = SETPOINTHEAT
     mock_device.hold_heat = False
     mock_device.hold_cool = False
-    mock_device.current_humidity = 50
+    mock_device.current_humidity = CURRENTHUMIDITY
     mock_device.equipment_status = "off"
     mock_device.equipment_output_status = "off"
     mock_device.raw_ui_data = {
@@ -71,12 +86,12 @@ def device():
         "SwitchCoolAllowed": True,
         "SwitchHeatAllowed": True,
         "SwitchEmergencyHeatAllowed": True,
-        "HeatUpperSetptLimit": 35,
-        "HeatLowerSetptLimit": 20,
-        "CoolUpperSetptLimit": 20,
-        "CoolLowerSetptLimit": 10,
-        "HeatNextPeriod": 10,
-        "CoolNextPeriod": 10,
+        "HeatUpperSetptLimit": HEATUPPERSETPOINTLIMIT,
+        "HeatLowerSetptLimit": HEATLOWERSETPOINTLIMIT,
+        "CoolUpperSetptLimit": COOLUPPERSETPOINTLIMIT,
+        "CoolLowerSetptLimit": COOLLOWERSETPOINTLIMIT,
+        "HeatNextPeriod": NEXTHEATPERIOD,
+        "CoolNextPeriod": NEXTCOOLPERIOD,
     }
     mock_device.raw_fan_data = {
         "fanModeOnAllowed": True,
@@ -90,8 +105,8 @@ def device():
     mock_device.set_hold_heat = AsyncMock()
     mock_device.set_hold_cool = AsyncMock()
     mock_device.refresh = AsyncMock()
-    mock_device.heat_away_temp = 10
-    mock_device.cool_away_temp = 20
+    mock_device.heat_away_temp = HEATAWAY
+    mock_device.cool_away_temp = COOLAWAY
 
     return mock_device
 
@@ -107,11 +122,11 @@ def device_with_outdoor_sensor():
     }
     mock_device.system_mode = "off"
     mock_device.name = "device1"
-    mock_device.current_temperature = 20
+    mock_device.current_temperature = CURRENTTEMPERATURE
     mock_device.mac_address = "macaddress1"
     mock_device.temperature_unit = "C"
-    mock_device.outdoor_temperature = 5
-    mock_device.outdoor_humidity = 25
+    mock_device.outdoor_temperature = OUTDOORTEMP
+    mock_device.outdoor_humidity = OUTDOORHUMIDITY
     return mock_device
 
 
@@ -126,7 +141,7 @@ def another_device():
     }
     mock_device.system_mode = "off"
     mock_device.name = "device2"
-    mock_device.current_temperature = 20
+    mock_device.current_temperature = CURRENTTEMPERATURE
     mock_device.mac_address = "macaddress1"
     mock_device.outdoor_temperature = None
     mock_device.outdoor_humidity = None

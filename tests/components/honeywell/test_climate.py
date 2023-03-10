@@ -1,4 +1,5 @@
 """Test the Whirlpool Sixth Sense climate domain."""
+import datetime
 from unittest.mock import MagicMock
 
 import aiosomecomfort
@@ -466,8 +467,7 @@ async def test_service_calls_cool_mode(
         {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 15},
         blocking=True,
     )
-    device.set_hold_cool.assert_called_once()
-    device.set_setpoint_cool.assert_called_once_with(59)
+    device.set_hold_cool.assert_called_once_with(datetime.time(2, 30), 59)
     device.set_hold_cool.reset_mock()
 
     await hass.services.async_call(
@@ -506,8 +506,7 @@ async def test_service_calls_cool_mode(
         blocking=True,
     )
 
-    device.set_hold_cool.assert_called_once_with(True)
-    device.set_setpoint_cool.assert_called_once_with(12)
+    device.set_hold_cool.assert_called_once_with(True, 12)
     device.set_hold_heat.assert_not_called()
     device.set_setpoint_heat.assert_not_called()
 
@@ -521,8 +520,7 @@ async def test_service_calls_cool_mode(
         blocking=True,
     )
 
-    device.set_hold_cool.assert_called_once_with(True)
-    device.set_setpoint_cool.assert_called_once_with(12)
+    device.set_hold_cool.assert_called_once_with(True, 12)
     device.set_hold_heat.assert_not_called()
     device.set_setpoint_heat.assert_not_called()
 
@@ -632,8 +630,8 @@ async def test_service_calls_heat_mode(
         {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 15},
         blocking=True,
     )
-    device.set_setpoint_heat.assert_called_once_with(59)
-    device.set_setpoint_heat.reset_mock()
+    device.set_hold_heat.assert_called_once_with(datetime.time(2, 30), 59)
+    device.set_hold_heat.reset_mock()
 
     device.set_setpoint_heat.side_effect = aiosomecomfort.SomeComfortError
 
@@ -643,8 +641,8 @@ async def test_service_calls_heat_mode(
         {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 15},
         blocking=True,
     )
-    device.set_setpoint_heat.assert_called_once_with(59)
-    device.set_setpoint_heat.reset_mock()
+    device.set_hold_heat.assert_called_once_with(datetime.time(2, 30), 59)
+    device.set_hold_heat.reset_mock()
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -711,8 +709,7 @@ async def test_service_calls_heat_mode(
         blocking=True,
     )
 
-    device.set_hold_heat.assert_called_once_with(True)
-    device.set_setpoint_heat.assert_called_once_with(22)
+    device.set_hold_heat.assert_called_once_with(True, 22)
     device.set_hold_cool.assert_not_called()
     device.set_setpoint_cool.assert_not_called()
 
@@ -726,8 +723,7 @@ async def test_service_calls_heat_mode(
         blocking=True,
     )
 
-    device.set_hold_heat.assert_called_once_with(True)
-    device.set_setpoint_heat.assert_called_once_with(22)
+    device.set_hold_heat.assert_called_once_with(True, 22)
     device.set_hold_cool.assert_not_called()
     device.set_setpoint_cool.assert_not_called()
 
@@ -895,10 +891,8 @@ async def test_service_calls_auto_mode(
         blocking=True,
     )
 
-    device.set_hold_cool.assert_called_once_with(True)
-    device.set_setpoint_cool.assert_called_once_with(12)
-    device.set_hold_heat.assert_called_once_with(True)
-    device.set_setpoint_heat.assert_called_once_with(22)
+    device.set_hold_cool.assert_called_once_with(True, 12)
+    device.set_hold_heat.assert_called_once_with(True, 22)
 
     reset_mock(device)
 
@@ -965,8 +959,8 @@ async def test_async_update_errors(
 
     await init_integration(hass, config_entry)
 
-    device.refresh.side_effect = aiosomecomfort.device.SomeComfortError
-    client.login.side_effect = aiosomecomfort.device.SomeComfortError
+    device.refresh.side_effect = aiosomecomfort.SomeComfortError
+    client.login.side_effect = aiosomecomfort.SomeComfortError
     async_fire_time_changed(
         hass,
         utcnow() + SCAN_INTERVAL,
