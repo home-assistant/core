@@ -17,12 +17,16 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
 
+SHARKIQ_REGION_EUROPE = "Europe"
+SHARKIQ_REGION_ELSEWHERE = "Everywhere Else"
+SHARKIQ_REGION_DEFAULT = SHARKIQ_REGION_ELSEWHERE
+
 SHARKIQ_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_REGION, default="Everywhere Else"): vol.In(
-            ["Europe", "Everywhere Else"]
+        vol.Required(CONF_REGION, default=SHARKIQ_REGION_ELSEWHERE): vol.In(
+            [SHARKIQ_REGION_EUROPE, SHARKIQ_REGION_ELSEWHERE]
         ),
     }
 )
@@ -43,7 +47,7 @@ async def _validate_input(
         async with async_timeout.timeout(10):
             LOGGER.debug("Initialize connection to Ayla networks API")
             await ayla_api.async_sign_in()
-    except (asyncio.TimeoutError, aiohttp.ClientError) as error:
+    except (asyncio.TimeoutError, aiohttp.ClientError, TypeError) as error:
         LOGGER.error(error)
         raise CannotConnect(
             "Unable to connect to SharkIQ services.  Check your region settings."
@@ -54,8 +58,9 @@ async def _validate_input(
             "Username or password incorrect.  Please check your credentials."
         ) from error
     except Exception as error:
+        LOGGER.exception("Unexpected exception")
         LOGGER.error(error)
-        raise CannotConnect(
+        raise UnknownAuth(
             "An unknown error occurred. Check your region settings and open an issue on Github if the issue persists."
         ) from error
 
@@ -82,10 +87,8 @@ class SharkIqConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-        except Exception as error:  # pylint: disable=broad-except
-            LOGGER.exception("Unexpected exception")
+        except UnknownAuth:  # pylint: disable=broad-except
             errors["base"] = "unknown"
-            raise UnknownAuth("An unknown error has occurred.") from error
         return info, errors
 
     async def async_step_user(

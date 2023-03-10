@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import aiohttp
 import pytest
-from sharkiq import AylaApi, SharkIqAuthError
+from sharkiq import AylaApi, SharkIqAuthError, SharkIqError
 
 from homeassistant import config_entries
 from homeassistant.components.sharkiq.const import DOMAIN
@@ -49,6 +49,7 @@ async def test_form(hass: HomeAssistant) -> None:
         (SharkIqAuthError, "invalid_auth"),
         (aiohttp.ClientError, "cannot_connect"),
         (TypeError, "cannot_connect"),
+        (SharkIqError, "unknown"),
     ],
 )
 async def test_form_error(hass: HomeAssistant, exc: Exception, base_error: str) -> None:
@@ -89,6 +90,7 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
         (SharkIqAuthError, "form", "errors", "invalid_auth"),
         (aiohttp.ClientError, "abort", "reason", "cannot_connect"),
         (TypeError, "abort", "reason", "cannot_connect"),
+        (SharkIqError, "abort", "reason", "unknown"),
     ],
 )
 async def test_reauth(
