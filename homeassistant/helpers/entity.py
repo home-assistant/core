@@ -325,7 +325,9 @@ class Entity(ABC):
                 f"component.{self.platform.platform_name}.entity.{self.platform.domain}"
                 f".{self.translation_key}.name"
             )
-            return self.platform.entity_translations.get(name_translation_key)
+            if name_translation_key in self.platform.entity_translations:
+                name: str = self.platform.entity_translations[name_translation_key]
+                return name
         if hasattr(self, "entity_description"):
             return self.entity_description.name
         return None
