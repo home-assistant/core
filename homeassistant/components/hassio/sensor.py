@@ -18,9 +18,16 @@ from .const import (
     ATTR_VERSION,
     ATTR_VERSION_LATEST,
     DATA_KEY_ADDONS,
+    DATA_KEY_CORE,
     DATA_KEY_OS,
+    DATA_KEY_SUPERVISOR,
 )
-from .entity import HassioAddonEntity, HassioOSEntity
+from .entity import (
+    HassioAddonEntity,
+    HassioCoreEntity,
+    HassioOSEntity,
+    HassioSupervisorEntity,
+)
 
 COMMON_ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
@@ -35,7 +42,7 @@ COMMON_ENTITY_DESCRIPTIONS = (
     ),
 )
 
-ADDON_ENTITY_DESCRIPTIONS = COMMON_ENTITY_DESCRIPTIONS + (
+STATS_ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
         entity_registry_enabled_default=False,
         key=ATTR_CPU_PERCENT,
@@ -54,7 +61,10 @@ ADDON_ENTITY_DESCRIPTIONS = COMMON_ENTITY_DESCRIPTIONS + (
     ),
 )
 
+ADDON_ENTITY_DESCRIPTIONS = COMMON_ENTITY_DESCRIPTIONS + STATS_ENTITY_DESCRIPTIONS
+CORE_ENTITY_DESCRIPTIONS = STATS_ENTITY_DESCRIPTIONS
 OS_ENTITY_DESCRIPTIONS = COMMON_ENTITY_DESCRIPTIONS
+SUPERVISOR_ENTITY_DESCRIPTIONS = STATS_ENTITY_DESCRIPTIONS
 
 
 async def async_setup_entry(
@@ -65,7 +75,9 @@ async def async_setup_entry(
     """Sensor set up for Hass.io config entry."""
     coordinator = hass.data[ADDONS_COORDINATOR]
 
-    entities: list[HassioOSSensor | HassioAddonSensor] = []
+    entities: list[
+        HassioOSSensor | HassioAddonSensor | CoreSensor | SupervisorSensor
+    ] = []
 
     for addon in coordinator.data[DATA_KEY_ADDONS].values():
         for entity_description in ADDON_ENTITY_DESCRIPTIONS:
@@ -76,6 +88,22 @@ async def async_setup_entry(
                     entity_description=entity_description,
                 )
             )
+
+    for entity_description in CORE_ENTITY_DESCRIPTIONS:
+        entities.append(
+            CoreSensor(
+                coordinator=coordinator,
+                entity_description=entity_description,
+            )
+        )
+
+    for entity_description in SUPERVISOR_ENTITY_DESCRIPTIONS:
+        entities.append(
+            SupervisorSensor(
+                coordinator=coordinator,
+                entity_description=entity_description,
+            )
+        )
 
     if coordinator.is_hass_os:
         for entity_description in OS_ENTITY_DESCRIPTIONS:
@@ -107,3 +135,21 @@ class HassioOSSensor(HassioOSEntity, SensorEntity):
     def native_value(self) -> str:
         """Return native value of entity."""
         return self.coordinator.data[DATA_KEY_OS][self.entity_description.key]
+
+
+class CoreSensor(HassioCoreEntity, SensorEntity):
+    """Sensor to track a core attribute."""
+
+    @property
+    def native_value(self) -> str:
+        """Return native value of entity."""
+        return self.coordinator.data[DATA_KEY_CORE][self.entity_description.key]
+
+
+class SupervisorSensor(HassioSupervisorEntity, SensorEntity):
+    """Sensor to track a supervisor attribute."""
+
+    @property
+    def native_value(self) -> str:
+        """Return native value of entity."""
+        return self.coordinator.data[DATA_KEY_SUPERVISOR][self.entity_description.key]

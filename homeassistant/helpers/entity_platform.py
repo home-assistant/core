@@ -375,6 +375,7 @@ class EntityPlatform:
         """Schedule adding entities for a single platform async."""
         task = self.hass.async_create_task(
             self.async_add_entities(new_entities, update_before_add=update_before_add),
+            f"EntityPlatform async_add_entities {self.domain}.{self.platform_name}",
         )
 
         if not self._setup_complete:
@@ -389,6 +390,7 @@ class EntityPlatform:
         task = self.config_entry.async_create_task(
             self.hass,
             self.async_add_entities(new_entities, update_before_add=update_before_add),
+            f"EntityPlatform async_add_entities_for_entry {self.domain}.{self.platform_name}",
         )
 
         if not self._setup_complete:
