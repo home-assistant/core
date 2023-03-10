@@ -64,6 +64,7 @@ _LOGGER = logging.getLogger(__name__)
 
 TABLE_EVENTS = "events"
 TABLE_EVENT_DATA = "event_data"
+TABLE_EVENT_TYPES = "event_types"
 TABLE_STATES = "states"
 TABLE_STATE_ATTRIBUTES = "state_attributes"
 TABLE_RECORDER_RUNS = "recorder_runs"
@@ -78,6 +79,7 @@ ALL_TABLES = [
     TABLE_STATE_ATTRIBUTES,
     TABLE_EVENTS,
     TABLE_EVENT_DATA,
+    TABLE_EVENT_TYPES,
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
     TABLE_STATISTICS,
@@ -225,7 +227,11 @@ class Events(Base):  # type: ignore[misc,valid-type]
     context_parent_id_bin = Column(
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
     )  # *** Not originally in v30, only added for recorder to startup ok
+    event_type_id = Column(
+        Integer, ForeignKey("event_types.event_type_id"), index=True
+    )  # *** Not originally in v30, only added for recorder to startup ok
     event_data_rel = relationship("EventData")
+    event_type_rel = relationship("EventTypes")
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
@@ -320,6 +326,19 @@ class EventData(Base):  # type: ignore[misc,valid-type]
         except JSON_DECODE_EXCEPTIONS:
             _LOGGER.exception("Error converting row to event data: %s", self)
             return {}
+
+
+# *** Not originally in v30, only added for recorder to startup ok
+# This is not being tested by the v30 statistics migration tests
+class EventTypes(Base):  # type: ignore[misc,valid-type]
+    """Event type history."""
+
+    __table_args__ = (
+        {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
+    )
+    __tablename__ = TABLE_EVENT_TYPES
+    event_type_id = Column(Integer, Identity(), primary_key=True)
+    event_type = Column(String(MAX_LENGTH_EVENT_EVENT_TYPE))
 
 
 class States(Base):  # type: ignore[misc,valid-type]
