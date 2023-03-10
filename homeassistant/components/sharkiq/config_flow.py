@@ -40,7 +40,7 @@ async def _validate_input(
         username=data[CONF_USERNAME],
         password=data[CONF_PASSWORD],
         websession=async_get_clientsession(hass),
-        europe=(data[CONF_REGION] == "Europe"),
+        europe=(data[CONF_REGION] == SHARKIQ_REGION_EUROPE),
     )
 
     try:
