@@ -37,7 +37,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _webfsapi_url: str | None = None
+    _webfsapi_url: str
 
     async def async_step_import(self, import_info: dict[str, Any]) -> FlowResult:
         """Handle the import of legacy configuration.yaml entries."""
