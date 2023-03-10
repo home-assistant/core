@@ -134,7 +134,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         We ask for the PIN in this step.
         """
-        assert self._webfsapi_url is not None
 
         if user_input is None:
             return self.async_show_form(
