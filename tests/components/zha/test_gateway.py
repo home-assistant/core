@@ -306,8 +306,8 @@ async def test_gateway_initialize_failure_transient(
     ],
 )
 async def test_gateway_initialize_bellows_thread(
-    device_path, thread_state, config_override, hass, coordinator
-):
+    device_path, thread_state, config_override, hass: HomeAssistant, coordinator
+) -> None:
     """Test ZHA disabling the UART thread when connecting to a TCP coordinator."""
     zha_gateway = get_zha_gateway(hass)
     assert zha_gateway is not None
