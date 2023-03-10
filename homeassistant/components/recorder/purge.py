@@ -111,9 +111,12 @@ def purge_old_data(
             _LOGGER.debug("Cleanup filtered data hasn't fully completed yet")
             return False
 
-        _purge_old_recorder_runs(instance, session, purge_before)
+        # This purge cycle is finished, clean up old event types and
+        # recorder runs
         if instance.event_type_manager.active:
             _purge_old_event_types(instance, session)
+
+        _purge_old_recorder_runs(instance, session, purge_before)
     if repack:
         repack_database(instance)
     return True
