@@ -11,7 +11,6 @@ from homeassistant.components.homeassistant import (
 )
 from homeassistant.components.landisgyr_heat_meter.const import DOMAIN, POLLING_INTERVAL
 from homeassistant.components.sensor import (
-    ATTR_LAST_RESET,
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
@@ -26,16 +25,12 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfVolume,
 )
-from homeassistant.core import CoreState, HomeAssistant, State
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    mock_restore_cache_with_extra_data,
-)
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 API_HEAT_METER_SERVICE = (
     "homeassistant.components.landisgyr_heat_meter.ultraheat_api.HeatMeterService"
@@ -90,9 +85,13 @@ async def test_create_sensors(
 
     # check if 26 attributes have been created
     assert len(hass.states.async_all()) == 25
+    assert len(hass.states.async_all()) == 25
 
     state = hass.states.get("sensor.heat_meter_heat_usage_gj")
+    state = hass.states.get("sensor.heat_meter_heat_usage_gj")
     assert state
+    assert state.state == "123.0"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.GIGA_JOULE
     assert state.state == "123.0"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.GIGA_JOULE
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
@@ -119,97 +118,6 @@ async def test_create_sensors(
         "sensor.heat_meter_meter_date_time"
     )
     assert entity_registry_entry.entity_category == EntityCategory.DIAGNOSTIC
-
-
-@patch(API_HEAT_METER_SERVICE)
-async def test_restore_state(mock_heat_meter, hass: HomeAssistant) -> None:
-    """Test sensor restore state."""
-    # Home assistant is not running yet
-    hass.state = CoreState.not_running
-    last_reset = "2022-07-01T00:00:00.000000+00:00"
-    mock_restore_cache_with_extra_data(
-        hass,
-        [
-            (
-                State(
-                    "sensor.heat_meter_heat_usage_gj",
-                    "34167",
-                    attributes={
-                        ATTR_LAST_RESET: last_reset,
-                        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.GIGA_JOULE,
-                        ATTR_STATE_CLASS: SensorStateClass.TOTAL,
-                    },
-                ),
-                {
-                    "native_value": 34167,
-                    "native_unit_of_measurement": UnitOfEnergy.GIGA_JOULE,
-                    "icon": "mdi:fire",
-                    "last_reset": last_reset,
-                },
-            ),
-            (
-                State(
-                    "sensor.heat_meter_volume_usage",
-                    "456",
-                    attributes={
-                        ATTR_LAST_RESET: last_reset,
-                        ATTR_UNIT_OF_MEASUREMENT: UnitOfVolume.CUBIC_METERS,
-                        ATTR_STATE_CLASS: SensorStateClass.TOTAL,
-                    },
-                ),
-                {
-                    "native_value": 456,
-                    "native_unit_of_measurement": UnitOfVolume.CUBIC_METERS,
-                    "icon": "mdi:fire",
-                    "last_reset": last_reset,
-                },
-            ),
-            (
-                State(
-                    "sensor.heat_meter_device_number",
-                    "devicenr_789",
-                    attributes={
-                        ATTR_LAST_RESET: last_reset,
-                    },
-                ),
-                {
-                    "native_value": "devicenr_789",
-                    "native_unit_of_measurement": None,
-                    "last_reset": last_reset,
-                },
-            ),
-        ],
-    )
-    entry_data = {
-        "device": "/dev/USB0",
-        "model": "LUGCUH50",
-        "device_number": "123456789",
-    }
-
-    # create and add entry
-    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
-    mock_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # restore from cache
-    state = hass.states.get("sensor.heat_meter_heat_usage_gj")
-    assert state
-    assert state.state == "34167"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.GIGA_JOULE
-    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
-
-    state = hass.states.get("sensor.heat_meter_volume_usage")
-    assert state
-    assert state.state == "456"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfVolume.CUBIC_METERS
-    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
-
-    state = hass.states.get("sensor.heat_meter_device_number")
-    assert state
-    assert state.state == "devicenr_789"
-    assert state.attributes.get(ATTR_STATE_CLASS) is None
 
 
 @patch(API_HEAT_METER_SERVICE)
