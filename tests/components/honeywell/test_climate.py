@@ -374,6 +374,7 @@ async def test_service_calls_off_mode(
     device.set_hold_heat.assert_not_called()
 
     reset_mock(device)
+
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
@@ -538,6 +539,18 @@ async def test_service_calls_cool_mode(
     device.set_hold_cool.assert_called_once_with(True)
     device.set_hold_heat.assert_not_called()
 
+    device.hold_heat = True
+    device.hold_cool = True
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: "20"},
+        blocking=True,
+    )
+
+    device.set_setpoint_cool.assert_called_once()
+
     reset_mock(device)
     device.set_setpoint_cool.side_effect = aiosomecomfort.SomeComfortError
 
@@ -686,6 +699,18 @@ async def test_service_calls_heat_mode(
     device.set_hold_heat.assert_called_once_with(True)
     device.set_hold_cool.assert_not_called()
 
+    device.hold_heat = True
+    device.hold_cool = True
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: "20"},
+        blocking=True,
+    )
+
+    device.set_setpoint_heat.assert_called_once()
+
     reset_mock(device)
     device.set_setpoint_heat.side_effect = aiosomecomfort.SomeComfortError
 
@@ -780,6 +805,8 @@ async def test_service_calls_heat_mode(
 
     device.set_hold_heat.assert_called_once_with(True)
     device.set_hold_cool.assert_not_called()
+
+    reset_mock(device)
 
 
 async def test_service_calls_auto_mode(
