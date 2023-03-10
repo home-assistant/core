@@ -86,7 +86,7 @@ async def test_name(thermostat) -> None:
     assert thermostat.name == "Ecobee"
 
 
-async def test_aux_heat_not_supported_by_default(hass):
+async def test_aux_heat_not_supported_by_default(hass: HomeAssistant) -> None:
     """Default setup should not support Aux heat."""
     await setup_platform(hass, const.Platform.CLIMATE)
     state = hass.states.get(ENTITY_ID)
@@ -100,7 +100,7 @@ async def test_aux_heat_not_supported_by_default(hass):
     )
 
 
-async def test_aux_heat_supported_with_heat_pump(hass):
+async def test_aux_heat_supported_with_heat_pump(hass: HomeAssistant) -> None:
     """Aux Heat should be supported if thermostat has heatpump."""
     mock_get_thermostat = mock.Mock()
     mock_get_thermostat.return_value = GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP
@@ -242,7 +242,7 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat) -> None:
     } == thermostat.extra_state_attributes
 
 
-async def test_is_aux_heat_on(hass):
+async def test_is_aux_heat_on(hass: HomeAssistant) -> None:
     """Test aux heat property is only enabled for auxHeatOnly."""
     mock_get_thermostat = mock.Mock()
     mock_get_thermostat.return_value = copy.deepcopy(
@@ -255,7 +255,7 @@ async def test_is_aux_heat_on(hass):
     assert state.attributes[climate.ATTR_AUX_HEAT] == "on"
 
 
-async def test_is_aux_heat_off(hass):
+async def test_is_aux_heat_off(hass: HomeAssistant) -> None:
     """Test aux heat property is only enabled for auxHeatOnly."""
     mock_get_thermostat = mock.Mock()
     mock_get_thermostat.return_value = GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP
