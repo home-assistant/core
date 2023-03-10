@@ -274,6 +274,8 @@ class RenderInfo:
             f" entities={self.entities}"
             f" rate_limit={self.rate_limit}"
             f" has_time={self.has_time}"
+            f" exception={self.exception}"
+            f" is_static={self.is_static}"
             ">"
         )
 
@@ -1181,6 +1183,12 @@ def is_device_attr(
 ) -> bool:
     """Test if a device's attribute is a specific value."""
     return bool(device_attr(hass, device_or_entity_id, attr_name) == attr_value)
+
+
+def areas(hass: HomeAssistant) -> Iterable[str | None]:
+    """Return all areas."""
+    area_reg = area_registry.async_get(hass)
+    return [area.id for area in area_reg.async_list_areas()]
 
 
 def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
@@ -2187,6 +2195,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         self.globals["device_id"] = hassfunction(device_id)
         self.filters["device_id"] = pass_context(self.globals["device_id"])
+
+        self.globals["areas"] = hassfunction(areas)
+        self.filters["areas"] = pass_context(self.globals["areas"])
 
         self.globals["area_id"] = hassfunction(area_id)
         self.filters["area_id"] = pass_context(self.globals["area_id"])
