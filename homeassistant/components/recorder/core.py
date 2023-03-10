@@ -164,7 +164,13 @@ class EventTypeManager:
         """Initialize the event manager."""
         self._id_map: dict[str, int] = LRU(EVENT_DATA_ID_CACHE_SIZE)
         self._pending: dict[str, EventTypes] = {}
-        self.active = False
+
+    def load(self, events: list[Event], session: Session) -> None:
+        """Load the event types into memory."""
+        self.get_many(
+            (event.event_type for event in events if event.event_type is not None),
+            session,
+        )
 
     def get(self, event_type: str, session: Session) -> int | None:
         """Resolve events to event data."""
@@ -790,8 +796,10 @@ class Recorder(threading.Thread):
                 else:
                     non_state_change_events.append(event_)
 
+        assert self.event_session is not None
         self._pre_process_state_change_events(state_change_events)
         self._pre_process_non_state_change_events(non_state_change_events)
+        self.event_type_manager.load(non_state_change_events, self.event_session)
 
     def _pre_process_state_change_events(self, events: list[Event]) -> None:
         """Load startup state attributes from the database.
