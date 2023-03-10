@@ -1319,15 +1319,16 @@ def migrate_event_type_ids(instance: Recorder) -> bool:
                         db_event_type.event_type
                     ] = db_event_type.event_type_id
 
-            for event_id, event_type in events:
-                session.execute(
-                    update(Events),
+            session.execute(
+                update(Events),
+                [
                     {
                         "event_id": event_id,
                         "event_type_id": event_type_to_id[event_type],
-                    },
-                )
-            session.commit()
+                    }
+                    for event_id, event_type in events
+                ],
+            )
 
         # If there is more work to do return False
         # so that we can be called again
