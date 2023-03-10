@@ -11,7 +11,9 @@ from homeassistant.core import HomeAssistant
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
-pytestmark = pytest.mark.usefixtures("system_get_info", "dsl_get_info")
+pytestmark = pytest.mark.usefixtures(
+    "dsl_get_info", "ftth_get_info", "system_get_info", "wan_get_info"
+)
 
 
 @pytest.fixture(autouse=True)
@@ -49,6 +51,7 @@ async def test_entry_diagnostics(
                 "training": "Showtime",
                 "uptime": 450796,
             },
+            "ftth": {"status": "down", "wanfibre": "out"},
             "system": {
                 "alimvoltage": 12251,
                 "current_datetime": "202212282233",
@@ -65,6 +68,17 @@ async def test_entry_diagnostics(
                 "version_dsldriver": "NB6VAC-XDSL-A2pv6F039p",
                 "version_mainfirmware": "NB6VAC-MAIN-R4.0.44k",
                 "version_rescuefirmware": "NB6VAC-MAIN-R4.0.44k",
+            },
+            "wan": {
+                "status": "up",
+                "uptime": 297464,
+                "ip_addr": "1.2.3.4",
+                "infra": "adsl",
+                "mode": "adsl/routed",
+                "infra6": "",
+                "status6": "down",
+                "uptime6": None,
+                "ipv6_addr": "",
             },
         },
     }
