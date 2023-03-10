@@ -58,10 +58,10 @@ class DevialetDevice(MediaPlayerEntity):
     def __init__(self, client: DevialetApi, entry: ConfigEntry) -> None:
         """Initialize the Devialet device."""
         self._client = client
-        self._name = entry.data[CONF_NAME]
-        self._muted = False
+        self._attr_name = entry.data[CONF_NAME]
+
         if entry.unique_id:
-            self._serial = entry.unique_id
+            self._attr_unique_id = entry.unique_id
 
     async def async_update(self) -> None:
         """Get the latest details from the device."""
@@ -71,22 +71,12 @@ class DevialetDevice(MediaPlayerEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return DeviceInfo(
-            identifiers={(DOMAIN, self._serial)},
-            name=self._name,
+            identifiers={(DOMAIN, self.unique_id)},
+            name=self.name,
             manufacturer=MANUFACTURER,
             model=self._client.model,
             sw_version=self._client.version,
         )
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique id of the device."""
-        return self._serial
 
     @property
     def state(self) -> MediaPlayerState | None:
