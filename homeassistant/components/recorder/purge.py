@@ -577,6 +577,9 @@ def _purge_old_event_types(instance: Recorder, session: Session) -> None:
         purged_event_types.add(event_type)
         event_type_ids.add(event_type_id)
 
+    if not event_type_ids:
+        return
+
     deleted_rows = session.execute(delete_event_types_rows(event_type_ids))
     _LOGGER.debug("Deleted %s event types", deleted_rows)
 

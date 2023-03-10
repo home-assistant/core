@@ -82,6 +82,7 @@ from .queries import (
     find_shared_data_id,
     get_shared_attributes,
     get_shared_event_datas,
+    has_event_type_to_migrate,
 )
 from .run_history import RunHistory
 from .table_managers.event_types import EventTypeManager
@@ -693,10 +694,25 @@ class Recorder(threading.Thread):
         _LOGGER.debug("Recorder processing the queue")
         self._adjust_lru_size()
         self.hass.add_job(self._async_set_recorder_ready_migration_done)
-        self.queue_task(ContextIDMigrationTask())
-        self.queue_task(EventTypeIDMigrationTask())
+        self._activate_table_managers_or_migrate()
         self._run_event_loop()
         self._shutdown()
+
+    def _activate_table_managers_or_migrate(self) -> None:
+        """Activate the table managers or schedule migrations."""
+        # Currently we always check if context ids need to be migrated
+        # since there are multiple tables. This could be optimized
+        # to check both the states and events table to see if there
+        # are any missing and avoid inserting the task but it currently
+        # is not needed since there is no dependent code branching
+        # on the result of the migration.
+        self.queue_task(ContextIDMigrationTask())
+        with session_scope(session=self.get_session()) as session:
+            if session.execute(has_event_type_to_migrate()).scalar():
+                self.queue_task(EventTypeIDMigrationTask())
+            else:
+                _LOGGER.debug("Activating event type manager as all data is migrated")
+                self.event_type_manager.active = True
 
     def _run_event_loop(self) -> None:
         """Run the event loop for the recorder."""

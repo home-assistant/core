@@ -716,6 +716,13 @@ def find_event_type_to_migrate() -> StatementLambdaElement:
     )
 
 
+def has_event_type_to_migrate() -> StatementLambdaElement:
+    """Check if there are event_types to migrate."""
+    return lambda_stmt(
+        lambda: select(Events.event_id).filter(Events.event_type_id.is_(None)).limit(1)
+    )
+
+
 def find_states_context_ids_to_migrate() -> StatementLambdaElement:
     """Find events context_ids to migrate."""
     return lambda_stmt(
