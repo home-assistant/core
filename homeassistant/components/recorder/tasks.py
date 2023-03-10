@@ -363,6 +363,9 @@ class EventTypeIDMigrationTask(RecorderTask):
     """An object to insert into the recorder queue to migrate event type ids."""
 
     commit_before = True
+    # We have to commit before to make sure there are
+    # no new pending event_types about to be added to
+    # the db since this happens live
 
     def run(self, instance: Recorder) -> None:
         """Run event type id migration task."""
