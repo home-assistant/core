@@ -73,7 +73,7 @@ HOST_ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
         entity_registry_enabled_default=False,
         key="agent_version",
-        name="Agent version",
+        name="OS Agent version",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(

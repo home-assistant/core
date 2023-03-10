@@ -177,7 +177,9 @@ def mock_all(aioclient_mock, request):
     [
         ("sensor.home_assistant_operating_system_version", "1.0.0"),
         ("sensor.home_assistant_operating_system_newest_version", "1.0.0"),
-        ("sensor.home_assistant_host_agent_version", "1.0.0"),
+        ("sensor.home_assistant_host_os_agent_version", "1.0.0"),
+        ("sensor.home_assistant_core_cpu_percent", "0.99"),
+        ("sensor.home_assistant_supervisor_cpu_percent", "0.99"),
         ("sensor.test_version", "2.0.0"),
         ("sensor.test_newest_version", "2.0.1"),
         ("sensor.test2_version", "3.1.0"),
