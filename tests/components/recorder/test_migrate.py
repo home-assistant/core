@@ -25,10 +25,15 @@ from homeassistant.components.recorder import db_schema, migration
 from homeassistant.components.recorder.db_schema import (
     SCHEMA_VERSION,
     Events,
+    EventTypes,
     RecorderRuns,
     States,
 )
-from homeassistant.components.recorder.tasks import ContextIDMigrationTask
+from homeassistant.components.recorder.queries import select_event_type_ids
+from homeassistant.components.recorder.tasks import (
+    ContextIDMigrationTask,
+    EventTypeIDMigrationTask,
+)
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import recorder as recorder_helper
@@ -688,3 +693,104 @@ async def test_migrate_context_ids(
     assert invalid_context_id_event["context_id_bin"] == b"\x00" * 16
     assert invalid_context_id_event["context_user_id_bin"] is None
     assert invalid_context_id_event["context_parent_id_bin"] is None
+
+
+@pytest.mark.parametrize("enable_migrate_event_type_ids", [True])
+async def test_migrate_event_type_ids(
+    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
+) -> None:
+    """Test we can migrate event_types to the EventTypes table."""
+    instance = await async_setup_recorder_instance(hass)
+    await async_wait_recording_done(hass)
+
+    test_uuid = uuid.uuid4()
+    uuid_hex = test_uuid.hex
+
+    def _insert_events():
+        with session_scope(hass=hass) as session:
+            session.add_all(
+                (
+                    Events(
+                        event_type="event_type_one",
+                        event_data=None,
+                        origin_idx=0,
+                        time_fired=None,
+                        time_fired_ts=1677721632.452529,
+                        context_id=uuid_hex,
+                        context_id_bin=None,
+                        context_user_id=None,
+                        context_user_id_bin=None,
+                        context_parent_id=None,
+                        context_parent_id_bin=None,
+                    ),
+                    Events(
+                        event_type="event_type_one",
+                        event_data=None,
+                        origin_idx=0,
+                        time_fired=None,
+                        time_fired_ts=1677721632.552529,
+                        context_id=None,
+                        context_id_bin=None,
+                        context_user_id=None,
+                        context_user_id_bin=None,
+                        context_parent_id=None,
+                        context_parent_id_bin=None,
+                    ),
+                    Events(
+                        event_type="event_type_two",
+                        event_data=None,
+                        origin_idx=0,
+                        time_fired=None,
+                        time_fired_ts=1677721632.552529,
+                        context_id=None,
+                        context_id_bin=None,
+                        context_user_id=None,
+                        context_user_id_bin=None,
+                        context_parent_id=None,
+                        context_parent_id_bin=None,
+                    ),
+                )
+            )
+
+    await instance.async_add_executor_job(_insert_events)
+
+    await async_wait_recording_done(hass)
+    # This is a threadsafe way to add a task to the recorder
+    instance.queue_task(EventTypeIDMigrationTask())
+    await async_recorder_block_till_done(hass)
+
+    def _object_as_dict(obj):
+        return {c.key: getattr(obj, c.key) for c in inspect(obj).mapper.column_attrs}
+
+    def _fetch_migrated_events():
+        with session_scope(hass=hass) as session:
+            events = (
+                session.query(Events.event_id, Events.time_fired, EventTypes.event_type)
+                .filter(
+                    Events.event_type_id.in_(
+                        select_event_type_ids(
+                            (
+                                "event_type_one",
+                                "event_type_two",
+                            )
+                        )
+                    )
+                )
+                .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
+                .all()
+            )
+            assert len(events) == 3
+            result = {}
+            for event in events:
+                result.setdefault(event.event_type, []).append(
+                    {
+                        "event_id": event.event_id,
+                        "time_fired": event.time_fired,
+                        "event_type": event.event_type,
+                    }
+                )
+            return result
+
+    events_by_type = await instance.async_add_executor_job(_fetch_migrated_events)
+    assert len(events_by_type["event_type_one"]) == 2
+    assert len(events_by_type["event_type_two"]) == 1
