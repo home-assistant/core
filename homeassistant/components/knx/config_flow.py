@@ -4,6 +4,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import AsyncGenerator
 from pathlib import Path
+import shutil
 from typing import Any, Final
 
 import voluptuous as vol
@@ -549,9 +550,12 @@ class KNXCommonFlow(ABC, FlowHandler):
                     ),
                     None,
                 )
+            _tunnel_identifier = selected_tunnel_ia or self.new_entry_data.get(
+                CONF_HOST
+            )
+            _tunnel_suffix = f" @ {_tunnel_identifier}" if _tunnel_identifier else ""
             self.new_title = (
-                f"{'Secure ' if _if_user_id else ''}"
-                f"Tunneling @ {selected_tunnel_ia or self.new_entry_data[CONF_HOST]}"
+                f"{'Secure ' if _if_user_id else ''}Tunneling{_tunnel_suffix}"
             )
             return self.finish_flow()
 
@@ -708,7 +712,8 @@ class KNXCommonFlow(ABC, FlowHandler):
                 else:
                     dest_path = Path(self.hass.config.path(STORAGE_DIR, DOMAIN))
                     dest_path.mkdir(exist_ok=True)
-                    file_path.rename(dest_path / DEFAULT_KNX_KEYRING_FILENAME)
+                    dest_file = dest_path / DEFAULT_KNX_KEYRING_FILENAME
+                    shutil.move(file_path, dest_file)
             return keyring, errors
 
         keyring, errors = await self.hass.async_add_executor_job(_process_upload)

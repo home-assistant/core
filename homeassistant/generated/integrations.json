@@ -1272,7 +1272,7 @@
     "edl21": {
       "name": "EDL21",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "efergy": {
@@ -4349,6 +4349,11 @@
       "config_flow": false,
       "iot_class": "calculated"
     },
+    "quadrafire": {
+      "name": "Quadra-Fire",
+      "integration_type": "virtual",
+      "supported_by": "intellifire"
+    },
     "quantum_gateway": {
       "name": "Quantum Gateway",
       "integration_type": "hub",
@@ -5987,6 +5992,11 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "vermont_castings": {
+      "name": "Vermont Castings",
+      "integration_type": "virtual",
+      "supported_by": "intellifire"
     },
     "versasense": {
       "name": "VersaSense",

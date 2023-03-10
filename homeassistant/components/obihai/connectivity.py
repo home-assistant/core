@@ -45,7 +45,7 @@ class ObihaiConnection:
         self.host = host
         self.username = username
         self.password = password
-        self.serial: list = []
+        self.serial: str
         self.services: list = []
         self.line_services: list = []
         self.call_direction: list = []

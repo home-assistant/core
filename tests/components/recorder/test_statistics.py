@@ -8,7 +8,7 @@ import sys
 from unittest.mock import ANY, DEFAULT, MagicMock, patch, sentinel
 
 import pytest
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, select
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
@@ -22,6 +22,10 @@ from homeassistant.components.recorder.models import (
 )
 from homeassistant.components.recorder.statistics import (
     STATISTIC_UNIT_TO_UNIT_CONVERTER,
+    _generate_get_metadata_stmt,
+    _generate_max_mean_min_statistic_in_sub_period_stmt,
+    _generate_statistics_at_time_stmt,
+    _generate_statistics_during_period_stmt,
     _statistics_during_period_with_session,
     _update_or_add_metadata,
     async_add_external_statistics,
@@ -1231,8 +1235,9 @@ def test_delete_duplicates_no_duplicates(
     """Test removal of duplicated statistics."""
     hass = hass_recorder()
     wait_recording_done(hass)
+    instance = recorder.get_instance(hass)
     with session_scope(hass=hass) as session:
-        delete_statistics_duplicates(hass, session)
+        delete_statistics_duplicates(instance, hass, session)
     assert "duplicated statistics rows" not in caplog.text
     assert "Found non identical" not in caplog.text
     assert "Found duplicated" not in caplog.text
@@ -1798,3 +1803,100 @@ def record_states(hass):
         states[sns4].append(set_state(sns4, "20", attributes=sns4_attr))
 
     return zero, four, states
+
+
+def test_cache_key_for_generate_statistics_during_period_stmt():
+    """Test cache key for _generate_statistics_during_period_stmt."""
+    columns = select(StatisticsShortTerm.metadata_id, StatisticsShortTerm.start_ts)
+    stmt = _generate_statistics_during_period_stmt(
+        columns, dt_util.utcnow(), dt_util.utcnow(), [0], StatisticsShortTerm, {}
+    )
+    cache_key_1 = stmt._generate_cache_key()
+    stmt2 = _generate_statistics_during_period_stmt(
+        columns, dt_util.utcnow(), dt_util.utcnow(), [0], StatisticsShortTerm, {}
+    )
+    cache_key_2 = stmt2._generate_cache_key()
+    assert cache_key_1 == cache_key_2
+    columns2 = select(
+        StatisticsShortTerm.metadata_id,
+        StatisticsShortTerm.start_ts,
+        StatisticsShortTerm.sum,
+        StatisticsShortTerm.mean,
+    )
+    stmt3 = _generate_statistics_during_period_stmt(
+        columns2,
+        dt_util.utcnow(),
+        dt_util.utcnow(),
+        [0],
+        StatisticsShortTerm,
+        {"max", "mean"},
+    )
+    cache_key_3 = stmt3._generate_cache_key()
+    assert cache_key_1 != cache_key_3
+
+
+def test_cache_key_for_generate_get_metadata_stmt():
+    """Test cache key for _generate_get_metadata_stmt."""
+    stmt_mean = _generate_get_metadata_stmt([0], "mean")
+    stmt_mean2 = _generate_get_metadata_stmt([1], "mean")
+    stmt_sum = _generate_get_metadata_stmt([0], "sum")
+    stmt_none = _generate_get_metadata_stmt()
+    assert stmt_mean._generate_cache_key() == stmt_mean2._generate_cache_key()
+    assert stmt_mean._generate_cache_key() != stmt_sum._generate_cache_key()
+    assert stmt_mean._generate_cache_key() != stmt_none._generate_cache_key()
+
+
+def test_cache_key_for_generate_max_mean_min_statistic_in_sub_period_stmt():
+    """Test cache key for _generate_max_mean_min_statistic_in_sub_period_stmt."""
+    columns = select(StatisticsShortTerm.metadata_id, StatisticsShortTerm.start_ts)
+    stmt = _generate_max_mean_min_statistic_in_sub_period_stmt(
+        columns,
+        dt_util.utcnow(),
+        dt_util.utcnow(),
+        StatisticsShortTerm,
+        [0],
+    )
+    cache_key_1 = stmt._generate_cache_key()
+    stmt2 = _generate_max_mean_min_statistic_in_sub_period_stmt(
+        columns,
+        dt_util.utcnow(),
+        dt_util.utcnow(),
+        StatisticsShortTerm,
+        [0],
+    )
+    cache_key_2 = stmt2._generate_cache_key()
+    assert cache_key_1 == cache_key_2
+    columns2 = select(
+        StatisticsShortTerm.metadata_id,
+        StatisticsShortTerm.start_ts,
+        StatisticsShortTerm.sum,
+        StatisticsShortTerm.mean,
+    )
+    stmt3 = _generate_max_mean_min_statistic_in_sub_period_stmt(
+        columns2,
+        dt_util.utcnow(),
+        dt_util.utcnow(),
+        StatisticsShortTerm,
+        [0],
+    )
+    cache_key_3 = stmt3._generate_cache_key()
+    assert cache_key_1 != cache_key_3
+
+
+def test_cache_key_for_generate_statistics_at_time_stmt():
+    """Test cache key for _generate_statistics_at_time_stmt."""
+    columns = select(StatisticsShortTerm.metadata_id, StatisticsShortTerm.start_ts)
+    stmt = _generate_statistics_at_time_stmt(columns, StatisticsShortTerm, {0}, 0.0)
+    cache_key_1 = stmt._generate_cache_key()
+    stmt2 = _generate_statistics_at_time_stmt(columns, StatisticsShortTerm, {0}, 0.0)
+    cache_key_2 = stmt2._generate_cache_key()
+    assert cache_key_1 == cache_key_2
+    columns2 = select(
+        StatisticsShortTerm.metadata_id,
+        StatisticsShortTerm.start_ts,
+        StatisticsShortTerm.sum,
+        StatisticsShortTerm.mean,
+    )
+    stmt3 = _generate_statistics_at_time_stmt(columns2, StatisticsShortTerm, {0}, 0.0)
+    cache_key_3 = stmt3._generate_cache_key()
+    assert cache_key_1 != cache_key_3

@@ -22,14 +22,14 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 MOCK_USER_DATA = {
-    "host": "1.1.1.1",
+    "host": "https://fake.omada.host",
     "verify_ssl": True,
     "username": "test-username",
     "password": "test-password",
 }
 
 MOCK_ENTRY_DATA = {
-    "host": "1.1.1.1",
+    "host": "https://fake.omada.host",
     "verify_ssl": True,
     "site": "SiteId",
     "username": "test-username",
@@ -111,7 +111,7 @@ async def test_form_multiple_sites(hass: HomeAssistant) -> None:
     assert result3["type"] == FlowResultType.CREATE_ENTRY
     assert result3["title"] == "OC200 (Site 2)"
     assert result3["data"] == {
-        "host": "1.1.1.1",
+        "host": "https://fake.omada.host",
         "verify_ssl": True,
         "site": "second",
         "username": "test-username",
@@ -272,7 +272,7 @@ async def test_async_step_reauth_success(hass: HomeAssistant) -> None:
     mocked_validate.assert_called_once_with(
         hass,
         {
-            "host": "1.1.1.1",
+            "host": "https://fake.omada.host",
             "verify_ssl": True,
             "site": "SiteId",
             "username": "new_uname",
@@ -353,6 +353,64 @@ async def test_create_omada_client_parses_args(hass: HomeAssistant) -> None:
 
     assert result is not None
     mock_client.assert_called_once_with(
-        "1.1.1.1", "test-username", "test-password", "ws"
+        "https://fake.omada.host", "test-username", "test-password", "ws"
     )
     mock_clientsession.assert_called_once_with(hass, verify_ssl=True)
+
+
+async def test_create_omada_client_adds_missing_scheme(hass: HomeAssistant) -> None:
+    """Test config arguments are passed to Omada client."""
+
+    with patch(
+        "homeassistant.components.tplink_omada.config_flow.OmadaClient", autospec=True
+    ) as mock_client, patch(
+        "homeassistant.components.tplink_omada.config_flow.async_get_clientsession",
+        return_value="ws",
+    ) as mock_clientsession:
+        result = await create_omada_client(
+            hass,
+            {
+                "host": "fake.omada.host",
+                "verify_ssl": True,
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+
+    assert result is not None
+    mock_client.assert_called_once_with(
+        "https://fake.omada.host", "test-username", "test-password", "ws"
+    )
+    mock_clientsession.assert_called_once_with(hass, verify_ssl=True)
+
+
+async def test_create_omada_client_with_ip_creates_clientsession(
+    hass: HomeAssistant,
+) -> None:
+    """Test config arguments are passed to Omada client."""
+
+    with patch(
+        "homeassistant.components.tplink_omada.config_flow.OmadaClient", autospec=True
+    ) as mock_client, patch(
+        "homeassistant.components.tplink_omada.config_flow.CookieJar", autospec=True
+    ) as mock_jar, patch(
+        "homeassistant.components.tplink_omada.config_flow.async_create_clientsession",
+        return_value="ws",
+    ) as mock_create_clientsession:
+        result = await create_omada_client(
+            hass,
+            {
+                "host": "10.10.10.10",
+                "verify_ssl": True,  # Verify is meaningless for IP
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+
+    assert result is not None
+    mock_client.assert_called_once_with(
+        "https://10.10.10.10", "test-username", "test-password", "ws"
+    )
+    mock_create_clientsession.assert_called_once_with(
+        hass, cookie_jar=mock_jar.return_value
+    )
