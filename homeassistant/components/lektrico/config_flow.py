@@ -13,7 +13,7 @@ from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_FRIENDLY_NAME, CONF_HOST
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import device_registry, entity_registry
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -109,8 +109,13 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
         if _index == -1:
             # "id" does not contain "_"
             return self.async_abort(reason="missing_underline_in_id")
-        self._friendly_name = _id[:_index]  # it's the type
         self._serial_number = _id[_index + 1 :]
+        if _id.startswith("m2w_81"):
+            self._friendly_name = lektricowifi.Device.TYPE_EM
+        elif _id.startswith("m2w_83"):
+            self._friendly_name = lektricowifi.Device.TYPE_3EM
+        else:
+            self._friendly_name = _id[:_index]  # it's the type
 
         # Set unique id
         await self.async_set_unique_id(self._serial_number, raise_on_progress=True)
@@ -201,8 +206,8 @@ class LektricoOptionsFlowHandler(config_entries.OptionsFlow):
 
             await self.hass.config_entries.async_reload(self.config_entry.entry_id)
 
-            ent_reg = entity_registry.async_get(self.hass)
-            device_registry.async_get(self.hass)
+            ent_reg = er.async_get(self.hass)
+            dr.async_get(self.hass)
             for entity_entry in list(ent_reg.entities.values()):
                 if entity_entry.config_entry_id == self.config_entry.entry_id:
                     # it's the entity of my device => rename it
