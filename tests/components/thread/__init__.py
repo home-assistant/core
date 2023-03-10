@@ -185,3 +185,109 @@ ROUTER_DISCOVERY_HASS_MISSING_MANDATORY_DATA = {
     },
     "interface_index": None,
 }
+
+
+ROUTER_DISCOVERY_HASS_NO_ACTIVE_TIMESTAMP = {
+    "type_": "_meshcop._udp.local.",
+    "name": "HomeAssistant OpenThreadBorderRouter #0BBF._meshcop._udp.local.",
+    "addresses": [b"\xc0\xa8\x00s"],
+    "port": 49153,
+    "weight": 0,
+    "priority": 0,
+    "server": "core-silabs-multiprotocol.local.",
+    "properties": {
+        b"rv": b"1",
+        b"vn": b"HomeAssistant",
+        b"mn": b"OpenThreadBorderRouter",
+        b"nn": b"OpenThread HC",
+        b"xp": b"\xe6\x0f\xc7\xc1\x86!,\xe5",
+        b"tv": b"1.3.0",
+        b"xa": b"\xae\xeb/YKW\x0b\xbf",
+        b"sb": b"\x00\x00\x01\xb1",
+        b"pt": b"\x8f\x06Q~",
+        b"sq": b"3",
+        b"bb": b"\xf0\xbf",
+        b"dn": b"DefaultDomain",
+    },
+    "interface_index": None,
+}
+
+
+ROUTER_DISCOVERY_HASS_NO_STATE_BITMAP = {
+    "type_": "_meshcop._udp.local.",
+    "name": "HomeAssistant OpenThreadBorderRouter #0BBF._meshcop._udp.local.",
+    "addresses": [b"\xc0\xa8\x00s"],
+    "port": 49153,
+    "weight": 0,
+    "priority": 0,
+    "server": "core-silabs-multiprotocol.local.",
+    "properties": {
+        b"rv": b"1",
+        b"vn": b"HomeAssistant",
+        b"mn": b"OpenThreadBorderRouter",
+        b"nn": b"OpenThread HC",
+        b"xp": b"\xe6\x0f\xc7\xc1\x86!,\xe5",
+        b"tv": b"1.3.0",
+        b"xa": b"\xae\xeb/YKW\x0b\xbf",
+        b"at": b"\x00\x00\x00\x00\x00\x01\x00\x00",
+        b"pt": b"\x8f\x06Q~",
+        b"sq": b"3",
+        b"bb": b"\xf0\xbf",
+        b"dn": b"DefaultDomain",
+    },
+    "interface_index": None,
+}
+
+
+ROUTER_DISCOVERY_HASS_BAD_STATE_BITMAP = {
+    "type_": "_meshcop._udp.local.",
+    "name": "HomeAssistant OpenThreadBorderRouter #0BBF._meshcop._udp.local.",
+    "addresses": [b"\xc0\xa8\x00s"],
+    "port": 49153,
+    "weight": 0,
+    "priority": 0,
+    "server": "core-silabs-multiprotocol.local.",
+    "properties": {
+        b"rv": b"1",
+        b"vn": b"HomeAssistant",
+        b"mn": b"OpenThreadBorderRouter",
+        b"nn": b"OpenThread HC",
+        b"xp": b"\xe6\x0f\xc7\xc1\x86!,\xe5",
+        b"tv": b"1.3.0",
+        b"xa": b"\xae\xeb/YKW\x0b\xbf",
+        b"sb": b"\xff\x00\x01\xb1",
+        b"at": b"\x00\x00\x00\x00\x00\x01\x00\x00",
+        b"pt": b"\x8f\x06Q~",
+        b"sq": b"3",
+        b"bb": b"\xf0\xbf",
+        b"dn": b"DefaultDomain",
+    },
+    "interface_index": None,
+}
+
+
+ROUTER_DISCOVERY_HASS_STATE_BITMAP_NOT_ACTIVE = {
+    "type_": "_meshcop._udp.local.",
+    "name": "HomeAssistant OpenThreadBorderRouter #0BBF._meshcop._udp.local.",
+    "addresses": [b"\xc0\xa8\x00s"],
+    "port": 49153,
+    "weight": 0,
+    "priority": 0,
+    "server": "core-silabs-multiprotocol.local.",
+    "properties": {
+        b"rv": b"1",
+        b"vn": b"HomeAssistant",
+        b"mn": b"OpenThreadBorderRouter",
+        b"nn": b"OpenThread HC",
+        b"xp": b"\xe6\x0f\xc7\xc1\x86!,\xe5",
+        b"tv": b"1.3.0",
+        b"xa": b"\xae\xeb/YKW\x0b\xbf",
+        b"sb": b"\x00\x00\x01\x31",
+        b"at": b"\x00\x00\x00\x00\x00\x01\x00\x00",
+        b"pt": b"\x8f\x06Q~",
+        b"sq": b"3",
+        b"bb": b"\xf0\xbf",
+        b"dn": b"DefaultDomain",
+    },
+    "interface_index": None,
+}

@@ -283,7 +283,7 @@ async def test_alerts(
 )
 async def test_alerts_refreshed_on_component_load(
     hass: HomeAssistant,
-    hass_ws_client,
+    hass_ws_client: WebSocketGenerator,
     aioclient_mock: AiohttpClientMocker,
     ha_version,
     supervisor_info,
