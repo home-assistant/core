@@ -703,51 +703,24 @@ async def test_migrate_event_type_ids(
     instance = await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
 
-    test_uuid = uuid.uuid4()
-    uuid_hex = test_uuid.hex
-
     def _insert_events():
         with session_scope(hass=hass) as session:
             session.add_all(
                 (
                     Events(
                         event_type="event_type_one",
-                        event_data=None,
                         origin_idx=0,
-                        time_fired=None,
                         time_fired_ts=1677721632.452529,
-                        context_id=uuid_hex,
-                        context_id_bin=None,
-                        context_user_id=None,
-                        context_user_id_bin=None,
-                        context_parent_id=None,
-                        context_parent_id_bin=None,
                     ),
                     Events(
                         event_type="event_type_one",
-                        event_data=None,
                         origin_idx=0,
-                        time_fired=None,
                         time_fired_ts=1677721632.552529,
-                        context_id=None,
-                        context_id_bin=None,
-                        context_user_id=None,
-                        context_user_id_bin=None,
-                        context_parent_id=None,
-                        context_parent_id_bin=None,
                     ),
                     Events(
                         event_type="event_type_two",
-                        event_data=None,
                         origin_idx=0,
-                        time_fired=None,
                         time_fired_ts=1677721632.552529,
-                        context_id=None,
-                        context_id_bin=None,
-                        context_user_id=None,
-                        context_user_id_bin=None,
-                        context_parent_id=None,
-                        context_parent_id_bin=None,
                     ),
                 )
             )
@@ -758,9 +731,6 @@ async def test_migrate_event_type_ids(
     # This is a threadsafe way to add a task to the recorder
     instance.queue_task(EventTypeIDMigrationTask())
     await async_recorder_block_till_done(hass)
-
-    def _object_as_dict(obj):
-        return {c.key: getattr(obj, c.key) for c in inspect(obj).mapper.column_attrs}
 
     def _fetch_migrated_events():
         with session_scope(hass=hass) as session:

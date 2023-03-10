@@ -1324,6 +1324,7 @@ def migrate_event_type_ids(instance: Recorder) -> bool:
                 [
                     {
                         "event_id": event_id,
+                        "event_type": None,
                         "event_type_id": event_type_to_id[event_type],
                     }
                     for event_id, event_type in events
