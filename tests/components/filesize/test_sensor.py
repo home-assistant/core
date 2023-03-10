@@ -71,3 +71,5 @@ async def test_state_unavailable(
 
     state = hass.states.get("sensor.file_txt_size")
     assert state.state == STATE_UNAVAILABLE
+
+    await mock_config_entry.async_unload(hass)
