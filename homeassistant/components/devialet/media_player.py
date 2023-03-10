@@ -59,9 +59,8 @@ class DevialetDevice(MediaPlayerEntity):
         """Initialize the Devialet device."""
         self._client = client
         self._attr_name = entry.data[CONF_NAME]
-
         if entry.unique_id:
-            self._attr_unique_id = entry.unique_id
+            self._serial = self._attr_unique_id = entry.unique_id
 
     async def async_update(self) -> None:
         """Get the latest details from the device."""
@@ -71,7 +70,7 @@ class DevialetDevice(MediaPlayerEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
+            identifiers={(DOMAIN, self._serial)},
             name=self.name,
             manufacturer=MANUFACTURER,
             model=self._client.model,
