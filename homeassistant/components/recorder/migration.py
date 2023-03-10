@@ -1339,7 +1339,6 @@ def migrate_event_type_ids(instance: Recorder) -> bool:
         is_done = not events
 
     if is_done:
-        _drop_index(session_maker, "events", "ix_events_event_type")
         _drop_index(session_maker, "events", "ix_events_event_type_time_fired_ts")
         instance.event_type_manager.active = True
 
