@@ -341,8 +341,12 @@ class IASZoneChannel(ZigbeeChannel):
     @callback
     def cluster_command(self, tsn, command_id, args):
         """Handle commands received to this cluster."""
+        # TODO: zha-quirks has a bug with the "fake motion with reset" stuff where the ZONE_STATE attribute is set (instead of the correct ZONE_STATUS attribute).
+        #   This command is sent properly though, so we use it to update the ZONE_STATUS attribute here for now.
+        #   (This is a workaround -- see: https://github.com/zigpy/zha-device-handlers/pull/2231 for a fix in quirks)
         if command_id == 0:
             state = args[0] & 3
+            self.cluster.update_attribute(2, state)  # update attribute cache on command
             self.async_send_signal(
                 f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", 2, "zone_status", state
             )
@@ -394,6 +398,6 @@ class IASZoneChannel(ZigbeeChannel):
             self.async_send_signal(
                 f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
                 attrid,
-                self.cluster.attributes.get(attrid, [attrid])[0],
+                "zone_status",
                 value,
             )
