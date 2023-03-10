@@ -78,7 +78,6 @@ from .models import (
 )
 from .pool import POOL_SIZE, MutexPool, RecorderPool
 from .queries import (
-    find_event_type_id,
     find_event_type_ids,
     find_shared_attributes_id,
     find_shared_data_id,
@@ -168,16 +167,7 @@ class EventTypeManager:
 
     def get(self, event_type: str, session: Session) -> int | None:
         """Resolve events to event data."""
-        if event_type_id := self._id_map.get(event_type):
-            return event_type_id
-        with session.no_autoflush:
-            if event_type_row := session.execute(
-                find_event_type_id(event_type)
-            ).first():
-                event_type_id = cast(int, event_type_row[0])
-                self._id_map[event_type] = event_type_id
-                return event_type_id
-        return None
+        return self.get_many((event_type,), session)[event_type]
 
     def get_many(
         self, event_types: Iterable[str], session: Session
@@ -277,7 +267,7 @@ class Recorder(threading.Thread):
         self._old_states: dict[str | None, States] = {}
         self._state_attributes_ids: LRU = LRU(STATE_ATTRIBUTES_ID_CACHE_SIZE)
         self._event_data_ids: LRU = LRU(EVENT_DATA_ID_CACHE_SIZE)
-        self._event_type_manager = EventTypeManager()
+        self.event_type_manager = EventTypeManager()
         self._pending_state_attributes: dict[str, StateAttributes] = {}
         self._pending_event_data: dict[str, EventData] = {}
         self._pending_expunge: list[States] = []
@@ -1018,7 +1008,7 @@ class Recorder(threading.Thread):
         dbevent = Events.from_event(event)
 
         # Map the event_type to the EventTypes table
-        event_type_manager = self._event_type_manager
+        event_type_manager = self.event_type_manager
         if pending_event_types := event_type_manager.get_pending(event.event_type):
             dbevent.event_type_rel = pending_event_types
         elif event_type_id := event_type_manager.get(event.event_type, event_session):
@@ -1182,7 +1172,7 @@ class Recorder(threading.Thread):
         for event_data in self._pending_event_data.values():
             self._event_data_ids[event_data.shared_data] = event_data.data_id
         self._pending_event_data = {}
-        self._event_type_manager.post_commit_pending()
+        self.event_type_manager.post_commit_pending()
 
         # Expire is an expensive operation (frequently more expensive
         # than the flush and commit itself) so we only
@@ -1238,6 +1228,10 @@ class Recorder(threading.Thread):
     def _migrate_context_ids(self) -> bool:
         """Migrate context ids if needed."""
         return migration.migrate_context_ids(self)
+
+    def _migrate_event_type_ids(self) -> bool:
+        """Migrate event type ids if needed."""
+        return migration.migrate_event_type_ids(self)
 
     def _send_keep_alive(self) -> None:
         """Send a keep alive to keep the db connection open."""

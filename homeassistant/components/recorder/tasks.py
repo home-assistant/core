@@ -356,3 +356,16 @@ class ContextIDMigrationTask(RecorderTask):
         if not instance._migrate_context_ids():  # pylint: disable=[protected-access]
             # Schedule a new migration task if this one didn't finish
             instance.queue_task(ContextIDMigrationTask())
+
+
+@dataclass
+class EventTypeIDMigrationTask(RecorderTask):
+    """An object to insert into the recorder queue to migrate event type ids."""
+
+    commit_before = True
+
+    def run(self, instance: Recorder) -> None:
+        """Run event type id migration task."""
+        if not instance._migrate_event_type_ids():  # pylint: disable=[protected-access]
+            # Schedule a new migration task if this one didn't finish
+            instance.queue_task(EventTypeIDMigrationTask())
