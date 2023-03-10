@@ -457,6 +457,10 @@ class StatisticsSensor(SensorEntity):
 
         while self.ages and (now - self.ages[0]) > max_age:
             if self._samples_preserve_last_val and len(self.ages) == 1:
+                # Under normal circumstance this will not be executed, as a purge will not
+                # be scheduled for the last value if _samples_preserve_last_val is enabled.
+                # If this happens to be called outside normal scheduling logic or a
+                # source sensor update, this ensures the last value is preserved.
                 _LOGGER.debug(
                     "%s: preserving expired record with datetime %s(%s)",
                     self.entity_id,
@@ -478,11 +482,16 @@ class StatisticsSensor(SensorEntity):
         """Find the timestamp when the next purge would occur."""
         if self.ages and self._samples_max_age:
             if self._samples_preserve_last_val and len(self.ages) == 1:
-                most_recent_age = dt_util.utcnow() - self.ages[0]
-                if most_recent_age > self._samples_max_age:
-                    # if most recent entry was expired but preserved, do not schedule another update
-                    # when a new source value is inserted it will restart purge cycle
-                    return None
+                # Preserve the most recent entry if it is the only value.
+                # Do not schedule another purge. When a new source
+                # value is inserted it will restart purge cycle.
+                _LOGGER.debug(
+                    "%s: skipping purge cycle for last record with datetime %s(%s)",
+                    self.entity_id,
+                    dt_util.as_local(self.ages[0]),
+                    (dt_util.utcnow() - self.ages[0]),
+                )
+                return None
             # Take the oldest entry from the ages list and add the configured max_age.
             # If executed after purging old states, the result is the next timestamp
             # in the future when the oldest state will expire.
