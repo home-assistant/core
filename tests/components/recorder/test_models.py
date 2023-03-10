@@ -35,6 +35,7 @@ def test_from_event_to_db_event() -> None:
     db_event = Events.from_event(event)
     dialect = SupportedDialect.MYSQL
     db_event.event_data = EventData.shared_data_bytes_from_event(event, dialect)
+    db_event.event_type = event.event_type
     assert event.as_dict() == db_event.to_native().as_dict()
 
 
@@ -308,11 +309,13 @@ async def test_event_to_db_model() -> None:
     db_event = Events.from_event(event)
     dialect = SupportedDialect.MYSQL
     db_event.event_data = EventData.shared_data_bytes_from_event(event, dialect)
+    db_event.event_type = event.event_type
     native = db_event.to_native()
     assert native.as_dict() == event.as_dict()
 
     native = Events.from_event(event).to_native()
     event.data = {}
+    native.event_type = event.event_type
     assert native.as_dict() == event.as_dict()
 
 
