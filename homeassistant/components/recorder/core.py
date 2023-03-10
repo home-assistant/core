@@ -94,6 +94,7 @@ from .tasks import (
     ContextIDMigrationTask,
     DatabaseLockTask,
     EventTask,
+    EventTypeIDMigrationTask,
     ImportStatisticsTask,
     KeepAliveTask,
     PerodicCleanupTask,
@@ -748,6 +749,7 @@ class Recorder(threading.Thread):
         self._adjust_lru_size()
         self.hass.add_job(self._async_set_recorder_ready_migration_done)
         self.queue_task(ContextIDMigrationTask())
+        self.queue_task(EventTypeIDMigrationTask())
         self._run_event_loop()
         self._shutdown()
 
