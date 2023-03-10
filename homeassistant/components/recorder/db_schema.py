@@ -239,7 +239,7 @@ class Events(Base):
         """Return string representation of instance for debugging."""
         return (
             "<recorder.Events("
-            f"id={self.event_id}, type='{self.event_type}', "
+            f"id={self.event_id}, event_type_id='{self.event_type_id}', "
             f"origin_idx='{self.origin_idx}', time_fired='{self._time_fired_isotime}'"
             f", data_id={self.data_id})>"
         )

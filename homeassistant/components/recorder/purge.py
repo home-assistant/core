@@ -571,10 +571,10 @@ def _purge_old_recorder_runs(
 def _purge_old_event_types(instance: Recorder, session: Session) -> None:
     """Purge all old event types."""
     # Event types is small, no need to batch run it
-    purged_event_types = set()
+    purge_event_types = set()
     event_type_ids = set()
     for event_type_id, event_type in session.execute(find_event_types_to_purge()):
-        purged_event_types.add(event_type)
+        purge_event_types.add(event_type)
         event_type_ids.add(event_type_id)
 
     if not event_type_ids:
@@ -584,7 +584,7 @@ def _purge_old_event_types(instance: Recorder, session: Session) -> None:
     _LOGGER.debug("Deleted %s event types", deleted_rows)
 
     # Evict any entries in the event_type cache referring to a purged state
-    instance.event_type_manager.evict_purged(purged_event_types)
+    instance.event_type_manager.evict_purged(purge_event_types)
 
 
 def _purge_filtered_data(instance: Recorder, session: Session) -> bool:

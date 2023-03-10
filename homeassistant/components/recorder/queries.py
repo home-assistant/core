@@ -743,9 +743,9 @@ def find_event_types_to_purge() -> StatementLambdaElement:
         lambda: select(EventTypes.event_type_id, EventTypes.event_type).where(
             EventTypes.event_type_id
             == (
-                select(
-                    distinct(Events.event_type_id).label("unused_event_type_id")
-                ).filter(Events.event_type_id.not_in(select(EventTypes.event_type_id)))
+                select(distinct(EventTypes.event_type_id).label("unused_event_type_id"))
+                .filter(EventTypes.event_type_id.not_in(select(Events.event_type_id)))
+                .subquery()
             ).c.unused_event_type_id
         )
     )
