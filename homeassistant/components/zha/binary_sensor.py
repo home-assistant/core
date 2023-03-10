@@ -159,7 +159,7 @@ class IASZone(BinarySensor):
     @staticmethod
     def parse(value: bool | int) -> bool:
         """Parse the raw attribute into a bool state."""
-        return bool(value & 3)  # only use bit 0 and 1 for determining alarm state
+        return BinarySensor.parse(value & 3)  # use only bit 0 and 1 for alarm state
 
 
 @MULTI_MATCH(
