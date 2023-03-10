@@ -1,5 +1,4 @@
 """Test the runner."""
-
 import asyncio
 import threading
 from unittest.mock import patch
@@ -7,6 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import core, runner
+from homeassistant.core import HomeAssistant
 from homeassistant.util import executor, thread
 
 # https://github.com/home-assistant/supervisor/blob/main/supervisor/docker/homeassistant.py
@@ -28,7 +28,7 @@ async def test_cumulative_shutdown_timeout_less_than_supervisor() -> None:
     )
 
 
-async def test_setup_and_run_hass(hass, tmpdir):
+async def test_setup_and_run_hass(hass: HomeAssistant, tmpdir) -> None:
     """Test we can setup and run."""
     test_dir = tmpdir.mkdir("config")
     default_config = runner.RuntimeConfig(test_dir)
@@ -42,7 +42,7 @@ async def test_setup_and_run_hass(hass, tmpdir):
     assert mock_run.called
 
 
-def test_run(hass, tmpdir):
+def test_run(hass: HomeAssistant, tmpdir) -> None:
     """Test we can run."""
     test_dir = tmpdir.mkdir("config")
     default_config = runner.RuntimeConfig(test_dir)
@@ -57,7 +57,7 @@ def test_run(hass, tmpdir):
     assert mock_run.called
 
 
-def test_run_executor_shutdown_throws(hass, tmpdir):
+def test_run_executor_shutdown_throws(hass: HomeAssistant, tmpdir) -> None:
     """Test we can run and we still shutdown if the executor shutdown throws."""
     test_dir = tmpdir.mkdir("config")
     default_config = runner.RuntimeConfig(test_dir)
@@ -78,15 +78,15 @@ def test_run_executor_shutdown_throws(hass, tmpdir):
     assert mock_run.called
 
 
-def test_run_does_not_block_forever_with_shielded_task(hass, tmpdir, caplog):
+def test_run_does_not_block_forever_with_shielded_task(
+    hass: HomeAssistant, tmpdir, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test we can shutdown and not block forever."""
     test_dir = tmpdir.mkdir("config")
     default_config = runner.RuntimeConfig(test_dir)
-    created_tasks = False
+    tasks = []
 
     async def _async_create_tasks(*_):
-        nonlocal created_tasks
-
         async def async_raise(*_):
             try:
                 await asyncio.sleep(2)
@@ -99,11 +99,10 @@ def test_run_does_not_block_forever_with_shielded_task(hass, tmpdir, caplog):
             except asyncio.CancelledError:
                 await asyncio.sleep(2)
 
-        asyncio.ensure_future(asyncio.shield(async_shielded()))
-        asyncio.ensure_future(asyncio.sleep(2))
-        asyncio.ensure_future(async_raise())
+        tasks.append(asyncio.ensure_future(asyncio.shield(async_shielded())))
+        tasks.append(asyncio.ensure_future(asyncio.sleep(2)))
+        tasks.append(asyncio.ensure_future(async_raise()))
         await asyncio.sleep(0.1)
-        created_tasks = True
         return 0
 
     with patch.object(runner, "TASK_CANCELATION_TIMEOUT", 1), patch(
@@ -113,13 +112,15 @@ def test_run_does_not_block_forever_with_shielded_task(hass, tmpdir, caplog):
     ):
         runner.run(default_config)
 
-    assert created_tasks is True
+    assert len(tasks) == 3
     assert (
         "Task could not be canceled and was still running after shutdown" in caplog.text
     )
 
 
-async def test_unhandled_exception_traceback(hass, caplog):
+async def test_unhandled_exception_traceback(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test an unhandled exception gets a traceback in debug mode."""
 
     raised = asyncio.Event()
@@ -142,7 +143,7 @@ async def test_unhandled_exception_traceback(hass, caplog):
     assert "_unhandled_exception" in caplog.text
 
 
-def test__enable_posix_spawn():
+def test__enable_posix_spawn() -> None:
     """Test that we can enable posix_spawn on Alpine."""
 
     def _mock_alpine_exists(path):

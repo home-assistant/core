@@ -1,10 +1,13 @@
 """Models for Recorder."""
 from __future__ import annotations
 
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from functools import lru_cache
 import logging
 from typing import Any, Literal, TypedDict, overload
+from uuid import UUID
 
 from awesomeversion import AwesomeVersion
 from sqlalchemy.engine.row import Row
@@ -18,6 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import Context, State
 import homeassistant.util.dt as dt_util
 from homeassistant.util.json import json_loads_object
+from homeassistant.util.ulid import bytes_to_ulid, ulid_to_bytes
 
 from .const import SupportedDialect
 
@@ -153,6 +157,40 @@ def timestamp_to_datetime_or_none(ts: float | None) -> datetime | None:
     if not ts:
         return None
     return dt_util.utc_from_timestamp(ts)
+
+
+def ulid_to_bytes_or_none(ulid: str | None) -> bytes | None:
+    """Convert an ulid to bytes."""
+    if ulid is None:
+        return None
+    return ulid_to_bytes(ulid)
+
+
+def bytes_to_ulid_or_none(_bytes: bytes | None) -> str | None:
+    """Convert bytes to a ulid."""
+    if _bytes is None:
+        return None
+    return bytes_to_ulid(_bytes)
+
+
+@lru_cache(maxsize=16)
+def uuid_hex_to_bytes_or_none(uuid_hex: str | None) -> bytes | None:
+    """Convert a uuid hex to bytes."""
+    if uuid_hex is None:
+        return None
+    with suppress(ValueError):
+        return UUID(hex=uuid_hex).bytes
+    return None
+
+
+@lru_cache(maxsize=16)
+def bytes_to_uuid_hex_or_none(_bytes: bytes | None) -> str | None:
+    """Convert bytes to a uuid hex."""
+    if _bytes is None:
+        return None
+    with suppress(ValueError):
+        return UUID(bytes=_bytes).hex
+    return None
 
 
 class LazyStatePreSchema31(State):

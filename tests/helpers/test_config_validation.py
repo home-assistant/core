@@ -561,11 +561,16 @@ def test_x10_address() -> None:
     schema("C11")
 
 
-def test_template() -> None:
+def test_template(hass: HomeAssistant) -> None:
     """Test template validator."""
     schema = vol.Schema(cv.template)
 
-    for value in (None, "{{ partial_print }", "{% if True %}Hello", ["test"]):
+    for value in (
+        None,
+        "{{ partial_print }",
+        "{% if True %}Hello",
+        ["test"],
+    ):
         with pytest.raises(vol.Invalid):
             schema(value)
 
@@ -574,12 +579,43 @@ def test_template() -> None:
         "Hello",
         "{{ beer }}",
         "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
+        # Function added as an extension by Home Assistant
+        "{{ expand('group.foo')|map(attribute='entity_id')|list }}",
+        # Filter added as an extension by Home Assistant
+        "{{ ['group.foo']|expand|map(attribute='entity_id')|list }}",
     )
     for value in options:
         schema(value)
 
 
-def test_dynamic_template() -> None:
+async def test_template_no_hass(hass: HomeAssistant) -> None:
+    """Test template validator."""
+    schema = vol.Schema(cv.template)
+
+    for value in (
+        None,
+        "{{ partial_print }",
+        "{% if True %}Hello",
+        ["test"],
+        # Filter added as an extension by Home Assistant
+        "{{ ['group.foo']|expand|map(attribute='entity_id')|list }}",
+    ):
+        with pytest.raises(vol.Invalid):
+            await hass.async_add_executor_job(schema, value)
+
+    options = (
+        1,
+        "Hello",
+        "{{ beer }}",
+        "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
+        # Function added as an extension by Home Assistant
+        "{{ expand('group.foo')|map(attribute='entity_id')|list }}",
+    )
+    for value in options:
+        await hass.async_add_executor_job(schema, value)
+
+
+def test_dynamic_template(hass: HomeAssistant) -> None:
     """Test dynamic template validator."""
     schema = vol.Schema(cv.dynamic_template)
 
@@ -597,9 +633,40 @@ def test_dynamic_template() -> None:
     options = (
         "{{ beer }}",
         "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
+        # Function added as an extension by Home Assistant
+        "{{ expand('group.foo')|map(attribute='entity_id')|list }}",
+        # Filter added as an extension by Home Assistant
+        "{{ ['group.foo']|expand|map(attribute='entity_id')|list }}",
     )
     for value in options:
         schema(value)
+
+
+async def test_dynamic_template_no_hass(hass: HomeAssistant) -> None:
+    """Test dynamic template validator."""
+    schema = vol.Schema(cv.dynamic_template)
+
+    for value in (
+        None,
+        1,
+        "{{ partial_print }",
+        "{% if True %}Hello",
+        ["test"],
+        "just a string",
+        # Filter added as an extension by Home Assistant
+        "{{ ['group.foo']|expand|map(attribute='entity_id')|list }}",
+    ):
+        with pytest.raises(vol.Invalid):
+            await hass.async_add_executor_job(schema, value)
+
+    options = (
+        "{{ beer }}",
+        "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
+        # Function added as an extension by Home Assistant
+        "{{ expand('group.foo')|map(attribute='entity_id')|list }}",
+    )
+    for value in options:
+        await hass.async_add_executor_job(schema, value)
 
 
 def test_template_complex() -> None:
@@ -1376,3 +1443,28 @@ def test_language() -> None:
 
     for value in ("en", "sv"):
         assert schema(value)
+
+
+def test_positive_time_period_template() -> None:
+    """Test positive time period template validation."""
+    schema = vol.Schema(cv.positive_time_period_template)
+
+    with pytest.raises(vol.MultipleInvalid):
+        schema({})
+    with pytest.raises(vol.MultipleInvalid):
+        schema({5: 5})
+    with pytest.raises(vol.MultipleInvalid):
+        schema({"invalid": 5})
+    with pytest.raises(vol.MultipleInvalid):
+        schema("invalid")
+
+    # Time periods pass
+    schema("00:01")
+    schema("00:00:01")
+    schema("00:00:00.500")
+    schema({"minutes": 5})
+
+    # Templates are not evaluated and will pass
+    schema("{{ 'invalid' }}")
+    schema({"{{ 'invalid' }}": 5})
+    schema({"minutes": "{{ 'invalid' }}"})

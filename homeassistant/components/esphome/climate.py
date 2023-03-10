@@ -61,6 +61,8 @@ from . import (
     platform_async_setup_entry,
 )
 
+FAN_QUIET = "quiet"
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -109,6 +111,7 @@ _FAN_MODES: EsphomeEnumMapper[ClimateFanMode, str] = EsphomeEnumMapper(
         ClimateFanMode.MIDDLE: FAN_MIDDLE,
         ClimateFanMode.FOCUS: FAN_FOCUS,
         ClimateFanMode.DIFFUSE: FAN_DIFFUSE,
+        ClimateFanMode.QUIET: FAN_QUIET,
     }
 )
 _SWING_MODES: EsphomeEnumMapper[ClimateSwingMode, str] = EsphomeEnumMapper(

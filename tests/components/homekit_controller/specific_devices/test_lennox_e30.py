@@ -2,11 +2,11 @@
 
 https://github.com/home-assistant/core/issues/20885
 """
-
 from homeassistant.components.climate import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
+from homeassistant.core import HomeAssistant
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,
@@ -18,7 +18,7 @@ from ..common import (
 )
 
 
-async def test_lennox_e30_setup(hass):
+async def test_lennox_e30_setup(hass: HomeAssistant) -> None:
     """Test that a Lennox E30 can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "lennox_e30.json")
     await setup_test_accessories(hass, accessories)

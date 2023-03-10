@@ -18,12 +18,13 @@ lru-dict==1.1.8
 PyJWT==2.5.0
 cryptography==39.0.1
 pyOpenSSL==23.0.0
-orjson==3.8.6
+orjson==3.8.7
 pip>=21.0,<23.1
 python-slugify==4.0.1
 pyyaml==6.0
-requests==2.28.1
+requests==2.28.2
 typing-extensions>=4.5.0,<5.0
+ulid-transform==0.4.0
 voluptuous==0.13.1
 voluptuous-serialize==2.6.0
 yarl==1.8.1

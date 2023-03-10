@@ -89,6 +89,7 @@ from .tasks import (
     ChangeStatisticsUnitTask,
     ClearStatisticsTask,
     CommitTask,
+    ContextIDMigrationTask,
     DatabaseLockTask,
     EventTask,
     ImportStatisticsTask,
@@ -687,6 +688,7 @@ class Recorder(threading.Thread):
         _LOGGER.debug("Recorder processing the queue")
         self._adjust_lru_size()
         self.hass.add_job(self._async_set_recorder_ready_migration_done)
+        self.queue_task(ContextIDMigrationTask())
         self._run_event_loop()
         self._shutdown()
 
@@ -1145,6 +1147,10 @@ class Recorder(threading.Thread):
     def _post_schema_migration(self, old_version: int, new_version: int) -> None:
         """Run post schema migration tasks."""
         migration.post_schema_migration(self, old_version, new_version)
+
+    def _migrate_context_ids(self) -> bool:
+        """Migrate context ids if needed."""
+        return migration.migrate_context_ids(self)
 
     def _send_keep_alive(self) -> None:
         """Send a keep alive to keep the db connection open."""
