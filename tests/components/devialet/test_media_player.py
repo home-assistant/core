@@ -248,7 +248,6 @@ async def test_media_player_services(
     target = {ATTR_ENTITY_ID: hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}").entity_id}
 
     for i, (service, urls) in enumerate(SERVICE_TO_URL.items()):
-
         for url in urls:
             aioclient_mock.post(f"http://{HOST}{url}")
 
@@ -268,7 +267,6 @@ async def test_media_player_services(
             call_available = False
             for item in aioclient_mock.mock_calls:
                 if item[0] == "POST" and item[1] == URL(f"http://{HOST}{url}"):
-
                     call_available = True
                     break
 
