@@ -37,12 +37,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize flow."""
-
-        self._webfsapi_url: str | None = None
-        self._name: str | None = None
-        self._unique_id: str | None = None
+    _webfsapi_url: str | None = None
+    _unique_id: str | None = None
 
     async def async_step_import(self, import_info: dict[str, Any]) -> FlowResult:
         """Handle the import of legacy configuration.yaml entries."""
@@ -59,7 +55,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             afsapi = AFSAPI(self._webfsapi_url, import_info[CONF_PIN])
 
-            self._unique_id = await afsapi.get_radio_id()
+            unique_id = await afsapi.get_radio_id()
         except FSConnectionError:
             return self.async_abort(reason="cannot_connect")
         except InvalidPinException:
@@ -68,12 +64,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception(exception)
             return self.async_abort(reason="unknown")
 
-        await self.async_set_unique_id(self._unique_id, raise_on_progress=False)
+        await self.async_set_unique_id(unique_id, raise_on_progress=False)
         self._abort_if_unique_id_configured()
 
-        self._name = import_info[CONF_NAME] or "Radio"
-
-        return await self._create_entry(pin=import_info[CONF_PIN])
+        return self.async_create_entry(
+            title=import_info[CONF_NAME] or "Radio",
+            data={
+                CONF_WEBFSAPI_URL: self._webfsapi_url,
+                CONF_PIN: import_info[CONF_PIN],
+            },
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -112,18 +112,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # try to login with default pin
             afsapi = AFSAPI(self._webfsapi_url, DEFAULT_PIN)
 
-            self._name = await afsapi.get_friendly_name()
+            name = await afsapi.get_friendly_name()
         except InvalidPinException:
             # Ask for a PIN
             return await self.async_step_device_config()
 
-        self.context["title_placeholders"] = {"name": self._name}
+        self.context["title_placeholders"] = {"name": name}
 
         self._unique_id = await afsapi.get_radio_id()
         await self.async_set_unique_id(self._unique_id)
         self._abort_if_unique_id_configured()
 
-        return await self._create_entry()
+        return self.async_create_entry(
+            title=name,
+            data={CONF_WEBFSAPI_URL: self._webfsapi_url, CONF_PIN: DEFAULT_PIN},
+        )
 
     async def async_step_device_config(
         self, user_input: dict[str, Any] | None = None
@@ -144,7 +147,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             afsapi = AFSAPI(self._webfsapi_url, user_input[CONF_PIN])
 
-            self._name = await afsapi.get_friendly_name()
+            name = await afsapi.get_friendly_name()
 
         except FSConnectionError:
             errors["base"] = "cannot_connect"
@@ -157,7 +160,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._unique_id = await afsapi.get_radio_id()
             await self.async_set_unique_id(self._unique_id)
             self._abort_if_unique_id_configured()
-            return await self._create_entry(pin=user_input[CONF_PIN])
+            return self.async_create_entry(
+                title=name,
+                data={
+                    CONF_WEBFSAPI_URL: self._webfsapi_url,
+                    CONF_PIN: user_input[CONF_PIN],
+                },
+            )
 
         data_schema = self.add_suggested_values_to_schema(
             STEP_DEVICE_CONFIG_DATA_SCHEMA, user_input
@@ -167,12 +176,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=data_schema,
             errors=errors,
         )
-
-    async def _create_entry(self, pin: str | None = None) -> FlowResult:
-        """Create the entry."""
-        assert self._name is not None
-        assert self._webfsapi_url is not None
-
-        data = {CONF_WEBFSAPI_URL: self._webfsapi_url, CONF_PIN: pin or DEFAULT_PIN}
-
-        return self.async_create_entry(title=self._name, data=data)
