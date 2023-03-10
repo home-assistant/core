@@ -499,12 +499,14 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                     ),
                 },
             ]
-        
+
         if self._color_data_type and (
             ATTR_HS_COLOR in kwargs
-            or (ATTR_BRIGHTNESS in kwargs 
-            and self.color_mode == ColorMode.HS 
-            and ATTR_COLOR_TEMP not in kwargs)
+            or (
+                ATTR_BRIGHTNESS in kwargs
+                and self.color_mode == ColorMode.HS
+                and ATTR_COLOR_TEMP not in kwargs
+            )
         ):
             if self._color_mode_dpcode:
                 commands += [
@@ -545,10 +547,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                 },
             ]
 
-        elif (
-            ATTR_BRIGHTNESS in kwargs
-            and self._brightness
-        ):
+        elif ATTR_BRIGHTNESS in kwargs and self._brightness:
             brightness = kwargs[ATTR_BRIGHTNESS]
 
             # If there is a min/max value, the brightness is actually limited.
