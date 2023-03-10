@@ -50,15 +50,6 @@ def get_shared_event_datas(hashes: list[int]) -> StatementLambdaElement:
     )
 
 
-def find_event_type_id(event_type: str) -> StatementLambdaElement:
-    """Find an event_type id by event_type."""
-    return lambda_stmt(
-        lambda: select(EventTypes.event_type_id).filter(
-            EventTypes.event_type == event_type
-        )
-    )
-
-
 def find_event_type_ids(event_types: Iterable[str]) -> StatementLambdaElement:
     """Find an event_type id by event_type."""
     return lambda_stmt(
