@@ -1315,6 +1315,8 @@ def migrate_event_type_ids(instance: Recorder) -> bool:
                 session.add_all(missing_db_event_types)
                 session.flush()  # Assign ids
                 for db_event_type in missing_db_event_types:
+                    # We cannot add the assigned ids to the event_type_manager
+                    # because the commit could get rolled back
                     assert db_event_type.event_type is not None
                     event_type_to_id[
                         db_event_type.event_type

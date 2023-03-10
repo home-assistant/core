@@ -112,7 +112,8 @@ def purge_old_data(
             return False
 
         _purge_old_recorder_runs(instance, session, purge_before)
-        _purge_old_event_types(instance, session)
+        if instance.event_type_manager.active:
+            _purge_old_event_types(instance, session)
     if repack:
         repack_database(instance)
     return True

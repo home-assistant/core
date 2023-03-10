@@ -42,21 +42,21 @@ class EventTypeManager:
         results: dict[str, int | None] = {}
         missing: list[str] = []
         for event_type in event_types:
-            if event_type_id := self._id_map.get(event_type):
-                results[event_type] = event_type_id
-            else:
+            if (event_type_id := self._id_map.get(event_type)) is None:
                 missing.append(event_type)
 
-        for event_type in missing:
-            with session.no_autoflush:
-                if event_type_row := session.execute(
-                    find_event_type_ids(missing)
-                ).first():
-                    event_type_id = cast(int, event_type_row[0])
-                    results[event_type] = self._id_map[event_type] = event_type_id
-                    continue
+            results[event_type] = event_type_id
 
-            results[event_type] = None
+        if not missing:
+            return results
+
+        with session.no_autoflush:
+            for event_type_id, event_type in session.execute(
+                find_event_type_ids(missing)
+            ):
+                results[event_type] = self._id_map[event_type] = cast(
+                    int, event_type_id
+                )
 
         return results
 
