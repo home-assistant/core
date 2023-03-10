@@ -69,7 +69,7 @@ SHARK_PROPERTIES_DICT = {
 
 TEST_USERNAME = "test-username"
 TEST_PASSWORD = "test-password"
-TEST_REGION = "Europe"
+TEST_REGION = "elsewhere"
 UNIQUE_ID = "foo@bar.com"
 CONFIG = {
     CONF_USERNAME: TEST_USERNAME,
