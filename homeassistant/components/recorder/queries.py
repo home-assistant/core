@@ -59,6 +59,15 @@ def find_event_type_id(event_type: str) -> StatementLambdaElement:
     )
 
 
+def find_event_type_ids(event_types: Iterable[str]) -> StatementLambdaElement:
+    """Find an event_type id by event_type."""
+    return lambda_stmt(
+        lambda: select(EventTypes.event_type_id, EventTypes.event_type).filter(
+            EventTypes.event_type.in_(event_types)
+        )
+    )
+
+
 def find_shared_attributes_id(
     data_hash: int, shared_attrs: str
 ) -> StatementLambdaElement:

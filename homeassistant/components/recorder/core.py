@@ -79,6 +79,7 @@ from .models import (
 from .pool import POOL_SIZE, MutexPool, RecorderPool
 from .queries import (
     find_event_type_id,
+    find_event_type_ids,
     find_shared_attributes_id,
     find_shared_data_id,
     get_shared_attributes,
@@ -165,18 +166,43 @@ class EventTypeManager:
         self._pending: dict[str, EventTypes] = {}
         self.active = False
 
-    def get(self, event_type: str, event_session: Session) -> int | None:
+    def get(self, event_type: str, session: Session) -> int | None:
         """Resolve events to event data."""
         if event_type_id := self._id_map.get(event_type):
             return event_type_id
-        with event_session.no_autoflush:
-            if event_type_row := event_session.execute(
+        with session.no_autoflush:
+            if event_type_row := session.execute(
                 find_event_type_id(event_type)
             ).first():
                 event_type_id = cast(int, event_type_row[0])
                 self._id_map[event_type] = event_type_id
                 return event_type_id
         return None
+
+    def get_many(
+        self, event_types: Iterable[str], session: Session
+    ) -> dict[str, int | None]:
+        """Resolve events to event data."""
+        results: dict[str, int | None] = {}
+        missing: list[str] = []
+        for event_type in event_types:
+            if event_type_id := self._id_map.get(event_type):
+                results[event_type] = event_type_id
+            else:
+                missing.append(event_type)
+
+        for event_type in missing:
+            with session.no_autoflush:
+                if event_type_row := session.execute(
+                    find_event_type_ids(missing)
+                ).first():
+                    event_type_id = cast(int, event_type_row[0])
+                    results[event_type] = self._id_map[event_type] = event_type_id
+                    continue
+
+            results[event_type] = None
+
+        return results
 
     def get_pending(self, event_type: str) -> EventTypes | None:
         """Get pending event type."""
