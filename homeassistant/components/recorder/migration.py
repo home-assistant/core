@@ -1112,7 +1112,7 @@ def _migrate_columns_to_timestamp(
                 result = session.connection().execute(
                     text(
                         "UPDATE events set time_fired_ts="
-                        "IF(time_fired is NULL,0,"
+                        "IF(time_fired is NULL or UNIX_TIMESTAMP(time_fired) is NULL,0,"
                         "UNIX_TIMESTAMP(time_fired)"
                         ") "
                         "where time_fired_ts is NULL "
@@ -1125,7 +1125,7 @@ def _migrate_columns_to_timestamp(
                 result = session.connection().execute(
                     text(
                         "UPDATE states set last_updated_ts="
-                        "IF(last_updated is NULL,0,"
+                        "IF(last_updated is NULL or UNIX_TIMESTAMP(last_updated) is NULL,0,"
                         "UNIX_TIMESTAMP(last_updated) "
                         "), "
                         "last_changed_ts="
@@ -1201,7 +1201,7 @@ def _migrate_statistics_columns_to_timestamp(
                     result = session.connection().execute(
                         text(
                             f"UPDATE {table} set start_ts="
-                            "IF(start is NULL,0,"
+                            "IF(start is NULL or UNIX_TIMESTAMP(start) is NULL,0,"
                             "UNIX_TIMESTAMP(start) "
                             "), "
                             "created_ts="
