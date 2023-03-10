@@ -2899,6 +2899,26 @@ async def test_device_attr(
     assert info.rate_limit is None
 
 
+async def test_areas(hass: HomeAssistant, area_registry: ar.AreaRegistry) -> None:
+    """Test areas function."""
+    # Test no areas
+    info = render_to_info(hass, "{{ areas() }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    # Test one area
+    area1 = area_registry.async_get_or_create("area1")
+    info = render_to_info(hass, "{{ areas() }}")
+    assert_result_info(info, [area1.id])
+    assert info.rate_limit is None
+
+    # Test multiple areas
+    area2 = area_registry.async_get_or_create("area2")
+    info = render_to_info(hass, "{{ areas() }}")
+    assert_result_info(info, [area1.id, area2.id])
+    assert info.rate_limit is None
+
+
 async def test_area_id(
     hass: HomeAssistant,
     area_registry: ar.AreaRegistry,
@@ -4371,3 +4391,14 @@ def test_contains(hass: HomeAssistant, seq, value, expected) -> None:
         )
         == expected
     )
+
+
+async def test_render_to_info_with_exception(hass: HomeAssistant) -> None:
+    """Test info is still available if the template has an exception."""
+    hass.states.async_set("test_domain.object", "dog")
+    info = render_to_info(hass, '{{ states("test_domain.object") | float }}')
+    with pytest.raises(TemplateError, match="no default was specified"):
+        info.result()
+
+    assert info.all_states is False
+    assert info.entities == {"test_domain.object"}

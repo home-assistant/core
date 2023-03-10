@@ -169,7 +169,7 @@ class PluggableAction:
             if not entry.actions and not entry.plugs:
                 del reg[key]
 
-        job = HassJob(action)
+        job = HassJob(action, f"trigger {trigger} {variables}")
         entry.actions[_remove] = (job, variables)
         _update()
 

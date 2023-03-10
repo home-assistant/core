@@ -9,10 +9,11 @@ from homeassistant.components import camera
 from homeassistant.components.camera import Image
 from homeassistant.components.prosegur.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 
-async def test_camera(hass, init_integration):
+async def test_camera(hass: HomeAssistant, init_integration) -> None:
     """Test prosegur get_image."""
 
     image = await camera.async_get_image(hass, "camera.test_cam")
@@ -20,25 +21,31 @@ async def test_camera(hass, init_integration):
     assert image == Image(content_type="image/jpeg", content=b"ABC")
 
 
-async def test_camera_fail(hass, init_integration, mock_install, caplog):
+async def test_camera_fail(
+    hass: HomeAssistant,
+    init_integration,
+    mock_install,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test prosegur get_image fails."""
 
     mock_install.get_image = AsyncMock(
         return_value=b"ABC", side_effect=ProsegurException()
     )
 
-    with caplog.at_level(logging.ERROR, logger="homeassistant.components.prosegur"):
-        try:
-            await camera.async_get_image(hass, "camera.test_cam")
-        except HomeAssistantError as exc:
-            assert str(exc) == "Unable to get image"
-        else:
-            assert pytest.fail()
+    with caplog.at_level(
+        logging.ERROR, logger="homeassistant.components.prosegur"
+    ), pytest.raises(HomeAssistantError) as exc:
+        await camera.async_get_image(hass, "camera.test_cam")
+
+        assert "Unable to get image" in str(exc.value)
 
         assert "Image test_cam doesn't exist" in caplog.text
 
 
-async def test_request_image(hass, init_integration, mock_install):
+async def test_request_image(
+    hass: HomeAssistant, init_integration, mock_install
+) -> None:
     """Test the camera request image service."""
 
     await hass.services.async_call(
@@ -51,7 +58,12 @@ async def test_request_image(hass, init_integration, mock_install):
     assert mock_install.request_image.called
 
 
-async def test_request_image_fail(hass, init_integration, mock_install, caplog):
+async def test_request_image_fail(
+    hass: HomeAssistant,
+    init_integration,
+    mock_install,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test the camera request image service fails."""
 
     mock_install.request_image = AsyncMock(side_effect=ProsegurException())

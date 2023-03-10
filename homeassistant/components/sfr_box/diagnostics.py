@@ -27,8 +27,14 @@ async def async_get_config_entry_diagnostics(
         },
         "data": {
             "dsl": async_redact_data(dataclasses.asdict(data.dsl.data), TO_REDACT),
+            "ftth": async_redact_data(
+                dataclasses.asdict(await data.system.box.ftth_get_info()), TO_REDACT
+            ),
             "system": async_redact_data(
                 dataclasses.asdict(data.system.data), TO_REDACT
+            ),
+            "wan": async_redact_data(
+                dataclasses.asdict(await data.system.box.wan_get_info()), TO_REDACT
             ),
         },
     }

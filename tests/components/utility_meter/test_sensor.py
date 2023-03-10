@@ -38,7 +38,7 @@ from homeassistant.const import (
     UnitOfEnergy,
 )
 from homeassistant.core import CoreState, HomeAssistant, State
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -324,7 +324,9 @@ async def test_init(hass: HomeAssistant, yaml_config, config_entry_config) -> No
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
 
 
-async def test_unique_id(hass: HomeAssistant) -> None:
+async def test_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test unique_id configuration option."""
     yaml_config = {
         "utility_meter": {
@@ -342,10 +344,9 @@ async def test_unique_id(hass: HomeAssistant) -> None:
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
-    ent_reg = entity_registry.async_get(hass)
-    assert len(ent_reg.entities) == 4
-    assert ent_reg.entities["select.energy_bill"].unique_id == "1"
-    assert ent_reg.entities["sensor.energy_bill_onpeak"].unique_id == "1_onpeak"
+    assert len(entity_registry.entities) == 4
+    assert entity_registry.entities["select.energy_bill"].unique_id == "1"
+    assert entity_registry.entities["sensor.energy_bill_onpeak"].unique_id == "1_onpeak"
 
 
 @pytest.mark.parametrize(

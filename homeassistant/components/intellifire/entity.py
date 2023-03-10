@@ -21,7 +21,8 @@ class IntellifireEntity(CoordinatorEntity[IntellifireDataUpdateCoordinator]):
         super().__init__(coordinator=coordinator)
         self.entity_description = description
         # Set the Display name the User will see
-        self._attr_name = f"Fireplace {description.name}"
+        self._attr_name = description.name
         self._attr_unique_id = f"{description.key}_{coordinator.read_api.data.serial}"
+        self._attr_has_entity_name = True
         # Configure the Device Info
         self._attr_device_info = self.coordinator.device_info
