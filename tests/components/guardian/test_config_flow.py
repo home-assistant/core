@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 from aioguardian.errors import GuardianError
+import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components import dhcp, zeroconf
@@ -15,6 +16,8 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def test_duplicate_error(

@@ -1,5 +1,5 @@
 """Test the Philips TV config flow."""
-from unittest.mock import ANY, patch
+from unittest.mock import ANY
 
 from haphilipsjs import PairingFailure
 import pytest
@@ -19,16 +19,7 @@ from . import (
 
 from tests.common import MockConfigEntry
 
-
-@pytest.fixture(autouse=True, name="mock_setup_entry")
-def mock_setup_entry_fixture():
-    """Disable component setup."""
-    with patch(
-        "homeassistant.components.philips_js.async_setup_entry", return_value=True
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.philips_js.async_unload_entry", return_value=True
-    ):
-        yield mock_setup_entry
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 @pytest.fixture
