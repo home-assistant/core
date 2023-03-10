@@ -7,7 +7,7 @@ from .mock_data import PROP
 
 
 @pytest.fixture(name="bypass_api_fixture")
-def bypass_api_fixture():
+def bypass_api_fixture() -> None:
     """Skip calls to the API."""
     with patch("homeassistant.components.roborock.RoborockMqttClient.connect"), patch(
         "homeassistant.components.roborock.RoborockMqttClient.send_command"
