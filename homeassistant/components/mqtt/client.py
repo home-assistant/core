@@ -400,7 +400,7 @@ class MQTT:
         self._pending_operations: dict[int, asyncio.Event] = {}
         self._pending_operations_condition = asyncio.Condition()
         self._subscribe_debouncer = EnsureJobAfterCooldown(
-            SUBSCRIBE_COOLDOWN, self._async_perform_subscriptions
+            INITIAL_SUBSCRIBE_COOLDOWN, self._async_perform_subscriptions
         )
         self._max_qos: dict[str, int] = {}  # topic, max qos
         self._pending_subscriptions: dict[str, int] = {}  # topic, qos
