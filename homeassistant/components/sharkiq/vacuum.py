@@ -24,10 +24,8 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, LOGGER, SHARK
+from .const import DOMAIN, LOGGER, SERVICE_CLEAN_ROOM, SHARK
 from .update_coordinator import SharkIqUpdateCoordinator
-
-SERVICE_CLEAN_ROOM = "clean_room"
 
 OPERATING_STATE_MAP = {
     OperatingModes.PAUSE: STATE_PAUSED,
@@ -50,7 +48,6 @@ ATTR_ERROR_MSG = "last_error_message"
 ATTR_LOW_LIGHT = "low_light"
 ATTR_RECHARGE_RESUME = "recharge_and_resume"
 ATTR_RSSI = "rssi"
-ATTR_AVAILABLE_ROOMS = "available_rooms"
 ATTR_ROOMS = "rooms"
 
 
@@ -74,7 +71,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_CLEAN_ROOM,
         {
-            vol.Required("rooms"): list,
+            vol.Required(ATTR_ROOMS): list,
         },
         "async_clean_room",
     )

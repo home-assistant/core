@@ -68,7 +68,7 @@ SHARK_PROPERTIES_DICT = {
     "Robot_Room_List": {
         "base_type": "string",
         "read_only": True,
-        "value": "Kitchen, Entry",
+        "value": "Kitchen",
     },
 }
 
