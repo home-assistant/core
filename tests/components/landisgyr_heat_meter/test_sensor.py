@@ -245,9 +245,31 @@ async def test_exception_on_polling(mock_heat_meter, hass: HomeAssistant) -> Non
     )
     await hass.async_block_till_done()
 
+    # check if initial setup succeeded
+    state = hass.states.get("sensor.heat_meter_heat_usage")
+    assert state
+    assert state.state == "34.16669"
+
     # Now 'disable' the connection and wait for polling and see if it fails
     mock_heat_meter().read.side_effect = serial.serialutil.SerialException
     async_fire_time_changed(hass, dt_util.utcnow() + POLLING_INTERVAL)
     await hass.async_block_till_done()
     state = hass.states.get("sensor.heat_meter_heat_usage")
     assert state.state == STATE_UNAVAILABLE
+
+    # Now 'enable' and see if next poll succeeds
+    mock_heat_meter_response = MockHeatMeterResponse(
+        heat_usage_gj=124.0,
+        volume_usage_m3=457.0,
+        heat_previous_year_gj=112.0,
+        device_number="devicenr_789",
+        meter_date_time=dt_util.as_utc(datetime.datetime(2022, 5, 19, 20, 41, 17)),
+    )
+
+    mock_heat_meter().read.return_value = mock_heat_meter_response
+    mock_heat_meter().read.side_effect = None
+    async_fire_time_changed(hass, dt_util.utcnow() + POLLING_INTERVAL)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.heat_meter_heat_usage")
+    assert state
+    assert state.state == "34.44447"
