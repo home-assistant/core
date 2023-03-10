@@ -335,7 +335,7 @@ async def test_ingress_missing_peername(
 
 
 async def test_forwarding_paths_as_requested(
-    hassio_noauth_client, aioclient_mock
+    hassio_noauth_client, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test incomnig URLs with double encoding go out as dobule encoded."""
     # This double encoded string should be forwarded double-encoded too.
