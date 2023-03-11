@@ -19,7 +19,7 @@ from .entity import RidwellEntity
 def async_get_calendar_event_from_pickup_event(
     pickup_event: RidwellPickupEvent,
 ) -> CalendarEvent:
-    """Get a HASS CalendarEvent from an aiorecollect PickupEvent."""
+    """Get a HASS CalendarEvent from an aioridwell PickupEvent."""
     pickup_type_string = ", ".join(
         [
             f"{pickup.name} (quantity: {pickup.quantity})"
