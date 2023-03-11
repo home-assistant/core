@@ -323,7 +323,7 @@ def test_weighted_match(
     model,
     quirk_class,
     match_name,
-):
+) -> None:
     """Test weightedd match."""
 
     s = mock.sentinel
@@ -435,7 +435,7 @@ def test_multi_sensor_match(channel, entity_registry: er.EntityRegistry) -> None
     }
 
 
-def test_quirk_classes():
+def test_quirk_classes() -> None:
     """Make sure that quirk_classes in components matches are valid."""
 
     def find_quirk_class(base_obj, quirk_mod, quirk_cls):
