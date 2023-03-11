@@ -374,7 +374,9 @@ class States(Base):
     )
     __tablename__ = TABLE_STATES
     state_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
-    entity_id: Mapped[str | None] = mapped_column(String(MAX_LENGTH_STATE_ENTITY_ID))
+    entity_id: Mapped[str | None] = mapped_column(
+        String(MAX_LENGTH_STATE_ENTITY_ID)
+    )  # no longer used for new rows
     state: Mapped[str | None] = mapped_column(String(MAX_LENGTH_STATE_STATE))
     attributes: Mapped[str | None] = mapped_column(
         Text().with_variant(mysql.LONGTEXT, "mysql", "mariadb")
@@ -421,6 +423,10 @@ class States(Base):
     context_parent_id_bin: Mapped[bytes | None] = mapped_column(
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
     )
+    metadata_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("states_meta.metadata_id"), index=True
+    )
+    states_meta_rel: Mapped[StatesMeta | None] = relationship("StatesMeta")
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
@@ -581,6 +587,23 @@ class StateAttributes(Base):
             # When json_loads fails
             _LOGGER.exception("Error converting row to state attributes: %s", self)
             return {}
+
+
+class StatesMeta(Base):
+    """Metadata for states."""
+
+    __table_args__ = (_DEFAULT_TABLE_ARGS,)
+    __tablename__ = TABLE_EVENT_TYPES
+    metadata_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
+    entity_id: Mapped[str | None] = mapped_column(String(MAX_LENGTH_STATE_ENTITY_ID))
+
+    def __repr__(self) -> str:
+        """Return string representation of instance for debugging."""
+        return (
+            "<recorder.StatesMeta("
+            f"id={self.metadata_id}, entity_id='{self.entity_id}'"
+            ")>"
+        )
 
 
 class StatisticsBase:

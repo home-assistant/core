@@ -16,6 +16,7 @@ from .db_schema import (
     RecorderRuns,
     StateAttributes,
     States,
+    StatesMeta,
     StatisticsRuns,
     StatisticsShortTerm,
 )
@@ -55,6 +56,15 @@ def find_event_type_ids(event_types: Iterable[str]) -> StatementLambdaElement:
     return lambda_stmt(
         lambda: select(EventTypes.event_type_id, EventTypes.event_type).filter(
             EventTypes.event_type.in_(event_types)
+        )
+    )
+
+
+def find_states_metadata_ids(entity_ids: Iterable[str]) -> StatementLambdaElement:
+    """Find an metadata_id by entity_id."""
+    return lambda_stmt(
+        lambda: select(StatesMeta.metadata_id, StatesMeta.entity_id).filter(
+            StatesMeta.entity_id.in_(entity_ids)
         )
     )
 
