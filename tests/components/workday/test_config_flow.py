@@ -20,11 +20,7 @@ from homeassistant.components.workday.const import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import init_integration
 
@@ -37,7 +33,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
 
     with patch(
         "homeassistant.components.workday.async_setup_entry",
@@ -64,7 +60,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Workday Sensor"
     assert result3["options"] == {
         "name": "Workday Sensor",
@@ -101,7 +97,7 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Workday Sensor"
     assert result["options"] == {
         "name": "Workday Sensor",
@@ -146,7 +142,7 @@ async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -180,7 +176,7 @@ async def test_options_form(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
         "name": "Workday Sensor",
         "country": "DE",
@@ -202,7 +198,7 @@ async def test_form_incorrect_dates(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
 
     with patch(
         "homeassistant.components.workday.async_setup_entry",
@@ -258,7 +254,7 @@ async def test_form_incorrect_dates(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Workday Sensor"
     assert result3["options"] == {
         "name": "Workday Sensor",
@@ -330,7 +326,7 @@ async def test_options_form_incorrect_dates(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
         "name": "Workday Sensor",
         "country": "DE",
