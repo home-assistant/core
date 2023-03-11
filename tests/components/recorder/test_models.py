@@ -4,15 +4,11 @@ from unittest.mock import PropertyMock
 
 from freezegun import freeze_time
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker
 
 from homeassistant.components.recorder.const import SupportedDialect
 from homeassistant.components.recorder.db_schema import (
-    Base,
     EventData,
     Events,
-    RecorderRuns,
     StateAttributes,
     States,
 )
@@ -150,78 +146,6 @@ def test_from_event_to_delete_state() -> None:
     assert db_state.state == ""
     assert db_state.last_changed_ts is None
     assert db_state.last_updated_ts == event.time_fired.timestamp()
-
-
-def test_entity_ids(recorder_db_url: str) -> None:
-    """Test if entity ids helper method works."""
-    if recorder_db_url.startswith("mysql://"):
-        # Dropping the database after this test will fail on MySQL
-        # because it will create an InnoDB deadlock.
-        return
-    engine = create_engine(recorder_db_url)
-    Base.metadata.create_all(engine)
-    session_factory = sessionmaker(bind=engine)
-
-    session = scoped_session(session_factory)
-    session.query(Events).delete()
-    session.query(States).delete()
-    session.query(RecorderRuns).delete()
-
-    run = RecorderRuns(
-        start=datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC),
-        end=datetime(2016, 7, 9, 23, 0, 0, tzinfo=dt.UTC),
-        closed_incorrect=False,
-        created=datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC),
-    )
-
-    session.add(run)
-    session.commit()
-
-    before_run = datetime(2016, 7, 9, 8, 0, 0, tzinfo=dt.UTC)
-    in_run = datetime(2016, 7, 9, 13, 0, 0, tzinfo=dt.UTC)
-    in_run2 = datetime(2016, 7, 9, 15, 0, 0, tzinfo=dt.UTC)
-    in_run3 = datetime(2016, 7, 9, 18, 0, 0, tzinfo=dt.UTC)
-    after_run = datetime(2016, 7, 9, 23, 30, 0, tzinfo=dt.UTC)
-
-    assert run.to_native() == run
-    assert run.entity_ids() == []
-
-    session.add(
-        States(
-            entity_id="sensor.temperature",
-            state="20",
-            last_changed=before_run,
-            last_updated=before_run,
-        )
-    )
-    session.add(
-        States(
-            entity_id="sensor.sound",
-            state="10",
-            last_changed=after_run,
-            last_updated=after_run,
-        )
-    )
-
-    session.add(
-        States(
-            entity_id="sensor.humidity",
-            state="76",
-            last_changed=in_run,
-            last_updated=in_run,
-        )
-    )
-    session.add(
-        States(
-            entity_id="sensor.lux",
-            state="5",
-            last_changed=in_run3,
-            last_updated=in_run3,
-        )
-    )
-
-    assert sorted(run.entity_ids()) == ["sensor.humidity", "sensor.lux"]
-    assert run.entity_ids(in_run2) == ["sensor.humidity"]
 
 
 def test_states_from_native_invalid_entity_id() -> None:
