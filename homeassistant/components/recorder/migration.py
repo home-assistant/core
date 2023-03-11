@@ -38,6 +38,7 @@ from .db_schema import (
     EventTypes,
     SchemaChanges,
     States,
+    StatesMeta,
     Statistics,
     StatisticsMeta,
     StatisticsRuns,
@@ -45,6 +46,7 @@ from .db_schema import (
 )
 from .models import process_timestamp
 from .queries import (
+    find_entity_ids_to_migrate,
     find_event_type_to_migrate,
     find_events_context_ids_to_migrate,
     find_states_context_ids_to_migrate,
@@ -1343,6 +1345,60 @@ def migrate_event_type_ids(instance: Recorder) -> bool:
         instance.event_type_manager.active = True
 
     _LOGGER.debug("Migrating event_types done=%s", is_done)
+    return is_done
+
+
+def migrate_entity_ids(instance: Recorder) -> bool:
+    """Migrate entity_ids to states_meta."""
+    session_maker = instance.get_session
+    _LOGGER.debug("Migrating entity_ids")
+    states_meta_manager = instance.states_meta_manager
+    with session_scope(session=session_maker()) as session:
+        if states := session.execute(find_entity_ids_to_migrate()).all():
+            entity_ids = {entity_id for _, entity_id in states}
+            entity_id_to_metadata_id = states_meta_manager.get_many(entity_ids, session)
+            if missing_entity_ids := {
+                entity_id
+                for entity_id, metadata_id in entity_id_to_metadata_id.items()
+                if metadata_id is None
+            }:
+                missing_states_metadata = [
+                    StatesMeta(entity_id=entity_id) for entity_id in missing_entity_ids
+                ]
+                session.add_all(missing_states_metadata)
+                session.flush()  # Assign ids
+                for db_states_metadata in missing_states_metadata:
+                    # We cannot add the assigned ids to the event_type_manager
+                    # because the commit could get rolled back
+                    assert db_states_metadata.entity_id is not None
+                    entity_id_to_metadata_id[
+                        db_states_metadata.entity_id
+                    ] = db_states_metadata.metadata_id
+
+            session.execute(
+                update(Events),
+                [
+                    {
+                        "state_id": state_id,
+                        # We cannot set "entity_id": None yet since
+                        # the history queries still need to work while the
+                        # migration is in progress.
+                        "metadata_id": entity_id_to_metadata_id[state_id],
+                    }
+                    for state_id, entity_id in states
+                ],
+            )
+
+        # If there is more work to do return False
+        # so that we can be called again
+        is_done = not states
+
+    if is_done:
+        # TODO: make this call later 5 minutes to make
+        # sure there are no history queries still running
+        instance.states_meta_manager.active = True
+
+    _LOGGER.debug("Migrating entity_ids done=%s", is_done)
     return is_done
 
 

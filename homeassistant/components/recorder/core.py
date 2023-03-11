@@ -83,6 +83,7 @@ from .queries import (
     find_shared_data_id,
     get_shared_attributes,
     get_shared_event_datas,
+    has_entity_ids_to_migrate,
     has_event_type_to_migrate,
 )
 from .run_history import RunHistory
@@ -96,6 +97,7 @@ from .tasks import (
     CommitTask,
     ContextIDMigrationTask,
     DatabaseLockTask,
+    EntityIDMigration,
     EventTask,
     EventTypeIDMigrationTask,
     ImportStatisticsTask,
@@ -716,6 +718,11 @@ class Recorder(threading.Thread):
             else:
                 _LOGGER.debug("Activating event type manager as all data is migrated")
                 self.event_type_manager.active = True
+            if session.execute(has_entity_ids_to_migrate()).scalar():
+                self.queue_task(EntityIDMigration())
+            else:
+                _LOGGER.debug("Activating states meta manager as all data is migrated")
+                self.states_meta_manager.active = True
 
     def _run_event_loop(self) -> None:
         """Run the event loop for the recorder."""
@@ -1221,6 +1228,10 @@ class Recorder(threading.Thread):
     def _migrate_event_type_ids(self) -> bool:
         """Migrate event type ids if needed."""
         return migration.migrate_event_type_ids(self)
+
+    def _migrate_entity_ids(self) -> bool:
+        """Migrate entity_ids if needed."""
+        return migration.migrate_entity_ids(self)
 
     def _send_keep_alive(self) -> None:
         """Send a keep alive to keep the db connection open."""

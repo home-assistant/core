@@ -731,10 +731,29 @@ def find_event_type_to_migrate() -> StatementLambdaElement:
     )
 
 
+def find_entity_ids_to_migrate() -> StatementLambdaElement:
+    """Find events entity_id to migrate."""
+    return lambda_stmt(
+        lambda: select(
+            States.state_id,
+            States.entity_id,
+        )
+        .filter(States.metadata_id.is_(None))
+        .limit(SQLITE_MAX_BIND_VARS)
+    )
+
+
 def has_event_type_to_migrate() -> StatementLambdaElement:
     """Check if there are event_types to migrate."""
     return lambda_stmt(
         lambda: select(Events.event_id).filter(Events.event_type_id.is_(None)).limit(1)
+    )
+
+
+def has_entity_ids_to_migrate() -> StatementLambdaElement:
+    """Check if there are entity_id to migrate."""
+    return lambda_stmt(
+        lambda: select(States.metadata_id).filter(States.metadata_id.is_(None)).limit(1)
     )
 
 
