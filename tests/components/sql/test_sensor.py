@@ -12,7 +12,7 @@ from homeassistant.components.recorder import Recorder
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.sql.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
@@ -317,3 +317,17 @@ async def test_attributes_from_yaml_setup(
     assert state.attributes["device_class"] == SensorDeviceClass.DATA_RATE
     assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
     assert state.attributes["unit_of_measurement"] == "MiB"
+
+
+async def test_query_unknown(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+    """Test the SQL sensor for unknown return values."""
+    config = {
+        "db_url": "sqlite://",
+        "query": "SELECT 'unknown' as value",
+        "column": "value",
+        "name": "Select value SQL query",
+    }
+    await init_integration(hass, config)
+
+    state = hass.states.get("sensor.select_value_sql_query")
+    assert state.state == STATE_UNAVAILABLE

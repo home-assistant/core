@@ -24,6 +24,8 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
@@ -222,6 +224,11 @@ class SQLSensor(SensorEntity):
                 manufacturer="SQL",
                 name=name,
             )
+
+    @property
+    def available(self) -> bool:
+        """Return available only if query returns proper values."""
+        return self.state not in [STATE_UNAVAILABLE, STATE_UNKNOWN]
 
     def update(self) -> None:
         """Retrieve sensor data from the query."""
