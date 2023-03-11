@@ -18,6 +18,7 @@ from homeassistant.components.recorder import (
 from homeassistant.components.recorder.db_schema import (
     StateAttributes,
     States,
+    StatesMeta,
     StatisticsMeta,
 )
 from homeassistant.components.recorder.models import (
@@ -4735,11 +4736,15 @@ async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) 
     def _fetch_states() -> list[State]:
         with session_scope(hass=hass) as session:
             native_states = []
-            for db_state, db_state_attributes in session.query(
-                States, StateAttributes
-            ).outerjoin(
-                StateAttributes, States.attributes_id == StateAttributes.attributes_id
+            for db_state, db_state_attributes, db_states_meta in (
+                session.query(States, StateAttributes, StatesMeta)
+                .outerjoin(
+                    StateAttributes,
+                    States.attributes_id == StateAttributes.attributes_id,
+                )
+                .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
             ):
+                db_state.entity_id = db_states_meta.entity_id
                 state = db_state.to_native()
                 state.attributes = db_state_attributes.to_native()
                 native_states.append(state)
