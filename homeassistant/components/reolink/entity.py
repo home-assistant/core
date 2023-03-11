@@ -3,14 +3,14 @@ from __future__ import annotations
 
 from typing import TypeVar
 
+from reolink_aio.api import DUAL_LENS_MODELS
+
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
-
-from reolink_aio.api import DUAL_LENS_MODELS
 
 from . import ReolinkData
 from .const import DOMAIN

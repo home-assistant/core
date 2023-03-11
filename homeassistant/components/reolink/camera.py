@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import logging
 
+from reolink_aio.api import DUAL_LENS_MODELS
+
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -11,8 +13,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import ReolinkData
 from .const import DOMAIN
 from .entity import ReolinkChannelCoordinatorEntity
-
-from reolink_aio.api import DUAL_LENS_MODELS
 
 _LOGGER = logging.getLogger(__name__)
 
