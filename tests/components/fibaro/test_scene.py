@@ -12,12 +12,12 @@ from .conftest import setup_platform
 from .const import TEST_SERIALNUMBER
 
 
-async def test_entity_attributes(hass: HomeAssistant, scene: SceneModel) -> None:
+async def test_entity_attributes(hass: HomeAssistant, fibaro_scene: SceneModel) -> None:
     """Test the attributes of the entity are correct."""
     # Arrange
     entity_registry = er.async_get(hass)
     # Act
-    await setup_platform(hass, Platform.SCENE, "Room 1", [scene])
+    await setup_platform(hass, Platform.SCENE, "Room 1", [fibaro_scene])
     # Assert
     entry = entity_registry.async_get("scene.room_1_test_scene")
 
@@ -27,13 +27,13 @@ async def test_entity_attributes(hass: HomeAssistant, scene: SceneModel) -> None
 
 
 async def test_entity_attributes_without_room(
-    hass: HomeAssistant, scene: SceneModel
+    hass: HomeAssistant, fibaro_scene: SceneModel
 ) -> None:
     """Test the attributes of the entity are correct."""
     # Arrange
     entity_registry = er.async_get(hass)
     # Act
-    await setup_platform(hass, Platform.SCENE, None, [scene])
+    await setup_platform(hass, Platform.SCENE, None, [fibaro_scene])
     # Assert
     entry = entity_registry.async_get("scene.unknown_test_scene")
 
@@ -41,10 +41,10 @@ async def test_entity_attributes_without_room(
     assert entry.unique_id == f"{slugify(TEST_SERIALNUMBER)}.scene.1"
 
 
-async def test_activate_scene(hass: HomeAssistant, scene: SceneModel) -> None:
+async def test_activate_scene(hass: HomeAssistant, fibaro_scene: SceneModel) -> None:
     """Test activate scene is called."""
     # Arrange
-    await setup_platform(hass, Platform.SCENE, "Room 1", [scene])
+    await setup_platform(hass, Platform.SCENE, "Room 1", [fibaro_scene])
     # Act
     await hass.services.async_call(
         SCENE_DOMAIN,
@@ -53,4 +53,4 @@ async def test_activate_scene(hass: HomeAssistant, scene: SceneModel) -> None:
         blocking=True,
     )
     # Assert
-    assert scene.start.call_count == 1
+    assert fibaro_scene.start.call_count == 1

@@ -300,10 +300,10 @@ class FibaroController:
         for device in devices:
             try:
                 device.fibaro_controller = self
-                room_name = self.get_room_name(device.room_id)
-                if not room_name:
+                if device.room_id == 0:
                     room_name = "Unknown"
-                device.room_name = room_name
+                else:
+                    room_name = self._room_map[device.room_id].name
                 device.friendly_name = f"{room_name} {device.name}"
                 device.ha_id = (
                     f"{slugify(room_name)}_{slugify(device.name)}_{device.fibaro_id}"
@@ -427,7 +427,8 @@ class FibaroDevice(Entity):
         self._attr_unique_id = fibaro_device.unique_id_str
         self._attr_device_info = self.controller.get_device_info(fibaro_device)
         # propagate hidden attribute set in fibaro home center to HA
-        self._attr_entity_registry_visible_default = fibaro_device.visible
+        if not fibaro_device.visible:
+            self._attr_entity_registry_visible_default = False
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""

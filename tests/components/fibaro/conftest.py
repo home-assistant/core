@@ -22,7 +22,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
         yield mock_setup_entry
 
 
-@pytest.fixture(name="scene")
+@pytest.fixture(name="fibaro_scene")
 def mock_scene() -> SceneModel:
     """Fixture for an individual scene."""
     scene = Mock(SceneModel)
