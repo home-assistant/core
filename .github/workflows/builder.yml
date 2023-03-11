@@ -198,7 +198,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2022.11.0
+        uses: home-assistant/builder@2023.03.0
         with:
           args: |
             $BUILD_ARGS \
@@ -232,6 +232,7 @@ jobs:
           - khadas-vim3
           - odroid-c2
           - odroid-c4
+          - odroid-m1
           - odroid-n2
           - odroid-xu
           - qemuarm
@@ -275,7 +276,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2022.11.0
+        uses: home-assistant/builder@2023.03.0
         with:
           args: |
             $BUILD_ARGS \
