@@ -1,21 +1,14 @@
-"""Fixtures for Ambee integration tests."""
+"""Fixtures for Discovergy integration tests."""
+from unittest.mock import AsyncMock, Mock, patch
+
 import pytest
 
-from homeassistant.components.discovergy.const import DOMAIN
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-
-from tests.common import MockConfigEntry
+from tests.components.discovergy import GET_METERS
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
-    """Return the default mocked config entry."""
-    return MockConfigEntry(
-        title="test@example.com",
-        domain=DOMAIN,
-        data={
-            CONF_EMAIL: "test@example.com",
-            CONF_PASSWORD: "test-password",
-        },
-        unique_id="unique_thingy",
-    )
+def mock_meters() -> Mock:
+    """Patch libraries."""
+    with patch("pydiscovergy.Discovergy.get_meters") as discovergy:
+        discovergy.side_effect = AsyncMock(return_value=GET_METERS)
+        yield discovergy
