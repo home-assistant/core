@@ -22,42 +22,29 @@ from homeassistant.const import COMPRESSED_STATE_LAST_UPDATED, COMPRESSED_STATE_
 from homeassistant.core import HomeAssistant, State, split_entity_id
 import homeassistant.util.dt as dt_util
 
-from .. import recorder
-from .db_schema import RecorderRuns, StateAttributes, States
-from .filters import Filters
-from .models import (
+from ... import recorder
+from ..db_schema import RecorderRuns, StateAttributes, States
+from ..filters import Filters
+from ..models import (
     LazyState,
-    LazyStatePreSchema31,
     process_datetime_to_timestamp,
     process_timestamp,
     process_timestamp_to_utc_isoformat,
     row_to_compressed_state,
-    row_to_compressed_state_pre_schema_31,
 )
-from .util import execute_stmt_lambda_element, session_scope
+from ..models.legacy import LazyStatePreSchema31, row_to_compressed_state_pre_schema_31
+from ..util import execute_stmt_lambda_element, session_scope
+from .common import _schema_version
+from .const import (
+    IGNORE_DOMAINS_ENTITY_ID_LIKE,
+    LAST_CHANGED_KEY,
+    NEED_ATTRIBUTE_DOMAINS,
+    SIGNIFICANT_DOMAINS,
+    SIGNIFICANT_DOMAINS_ENTITY_ID_LIKE,
+    STATE_KEY,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-STATE_KEY = "state"
-LAST_CHANGED_KEY = "last_changed"
-
-SIGNIFICANT_DOMAINS = {
-    "climate",
-    "device_tracker",
-    "humidifier",
-    "thermostat",
-    "water_heater",
-}
-SIGNIFICANT_DOMAINS_ENTITY_ID_LIKE = [f"{domain}.%" for domain in SIGNIFICANT_DOMAINS]
-IGNORE_DOMAINS = {"zone", "scene"}
-IGNORE_DOMAINS_ENTITY_ID_LIKE = [f"{domain}.%" for domain in IGNORE_DOMAINS]
-NEED_ATTRIBUTE_DOMAINS = {
-    "climate",
-    "humidifier",
-    "input_datetime",
-    "thermostat",
-    "water_heater",
-}
 
 
 _BASE_STATES = (
@@ -151,11 +138,7 @@ _FIELD_MAP_PRE_SCHEMA_31 = {
 }
 
 
-def _schema_version(hass: HomeAssistant) -> int:
-    return recorder.get_instance(hass).schema_version
-
-
-def lambda_stmt_and_join_attributes(
+def _lambda_stmt_and_join_attributes(
     schema_version: int, no_attributes: bool, include_last_changed: bool = True
 ) -> tuple[StatementLambdaElement, bool]:
     """Return the lambda_stmt and if StateAttributes should be joined.
@@ -268,7 +251,7 @@ def _significant_states_stmt(
     no_attributes: bool,
 ) -> StatementLambdaElement:
     """Query the database for significant state changes."""
-    stmt, join_attributes = lambda_stmt_and_join_attributes(
+    stmt, join_attributes = _lambda_stmt_and_join_attributes(
         schema_version, no_attributes, include_last_changed=not significant_changes_only
     )
     if (
@@ -440,7 +423,7 @@ def _state_changed_during_period_stmt(
     descending: bool,
     limit: int | None,
 ) -> StatementLambdaElement:
-    stmt, join_attributes = lambda_stmt_and_join_attributes(
+    stmt, join_attributes = _lambda_stmt_and_join_attributes(
         schema_version, no_attributes, include_last_changed=False
     )
     if schema_version >= 31:
@@ -532,7 +515,7 @@ def state_changes_during_period(
 def _get_last_state_changes_stmt(
     schema_version: int, number_of_states: int, entity_id: str
 ) -> StatementLambdaElement:
-    stmt, join_attributes = lambda_stmt_and_join_attributes(
+    stmt, join_attributes = _lambda_stmt_and_join_attributes(
         schema_version, False, include_last_changed=False
     )
     if schema_version >= 31:
@@ -599,7 +582,7 @@ def _get_states_for_entities_stmt(
     no_attributes: bool,
 ) -> StatementLambdaElement:
     """Baked query to get states for specific entities."""
-    stmt, join_attributes = lambda_stmt_and_join_attributes(
+    stmt, join_attributes = _lambda_stmt_and_join_attributes(
         schema_version, no_attributes, include_last_changed=True
     )
     # We got an include-list of entities, accelerate the query by filtering already
@@ -671,7 +654,7 @@ def _get_states_for_all_stmt(
     no_attributes: bool,
 ) -> StatementLambdaElement:
     """Baked query to get states for all entities."""
-    stmt, join_attributes = lambda_stmt_and_join_attributes(
+    stmt, join_attributes = _lambda_stmt_and_join_attributes(
         schema_version, no_attributes, include_last_changed=True
     )
     # We did not get an include-list of entities, query all states in the inner
@@ -785,7 +768,7 @@ def _get_single_entity_states_stmt(
 ) -> StatementLambdaElement:
     # Use an entirely different (and extremely fast) query if we only
     # have a single entity id
-    stmt, join_attributes = lambda_stmt_and_join_attributes(
+    stmt, join_attributes = _lambda_stmt_and_join_attributes(
         schema_version, no_attributes, include_last_changed=True
     )
     if schema_version >= 31:
