@@ -246,6 +246,7 @@ def get_significant_states_with_session(
     thermostat so that we get current temperature in our graphs).
     """
     metadata_ids: list[int] | None = None
+    entity_id_to_metadata_id: dict[str, int | None] | None = None
     if entity_ids:
         instance = recorder.get_instance(hass)
         entity_id_to_metadata_id = instance.states_meta_manager.get_many(
