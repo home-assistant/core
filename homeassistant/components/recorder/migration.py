@@ -983,6 +983,7 @@ def _apply_update(  # noqa: C901
     elif new_version == 37:
         _add_columns(session_maker, "events", [f"event_type_id {big_int}"])
         _create_index(session_maker, "events", "ix_events_event_type_id")
+        _drop_index(session_maker, "events", "ix_events_event_type_time_fired_ts")
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
@@ -1338,7 +1339,6 @@ def migrate_event_type_ids(instance: Recorder) -> bool:
         is_done = not events
 
     if is_done:
-        _drop_index(session_maker, "events", "ix_events_event_type_time_fired_ts")
         instance.event_type_manager.active = True
 
     _LOGGER.debug("Migrating event_types done=%s", is_done)
