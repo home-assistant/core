@@ -69,7 +69,9 @@ def db_schema_30():
 
     with patch.object(recorder, "db_schema", old_db_schema), patch.object(
         recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-    ), patch.object(core, "EventData", old_db_schema.EventData), patch.object(
+    ), patch.object(core, "EventTypes", old_db_schema.EventTypes), patch.object(
+        core, "EventData", old_db_schema.EventData
+    ), patch.object(
         core, "States", old_db_schema.States
     ), patch.object(
         core, "Events", old_db_schema.Events

@@ -69,10 +69,12 @@ TABLE_STATISTICS_META = "statistics_meta"
 TABLE_STATISTICS_RUNS = "statistics_runs"
 TABLE_STATISTICS_SHORT_TERM = "statistics_short_term"
 TABLE_EVENT_DATA = "event_data"
+TABLE_EVENT_TYPES = "event_types"
 
 ALL_TABLES = [
     TABLE_STATES,
     TABLE_EVENTS,
+    TABLE_EVENT_TYPES,
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
     TABLE_STATISTICS,
@@ -141,9 +143,13 @@ class Events(Base):  # type: ignore
     context_parent_id_bin = Column(
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
     )  # *** Not originally in v23, only added for recorder to startup ok
+    event_type_id = Column(
+        Integer, ForeignKey("event_types.event_type_id"), index=True
+    )  # *** Not originally in v23, only added for recorder to startup ok
     event_data_rel = relationship(
         "EventData"
     )  # *** Not originally in v23, only added for recorder to startup ok
+    event_type_rel = relationship("EventTypes")
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
@@ -202,6 +208,19 @@ class EventData(Base):  # type: ignore[misc,valid-type]
     hash = Column(BigInteger, index=True)
     # Note that this is not named attributes to avoid confusion with the states table
     shared_data = Column(Text().with_variant(mysql.LONGTEXT, "mysql"))
+
+
+# *** Not originally in v23, only added for recorder to startup ok
+# This is not being tested by the v23 statistics migration tests
+class EventTypes(Base):  # type: ignore[misc,valid-type]
+    """Event type history."""
+
+    __table_args__ = (
+        {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
+    )
+    __tablename__ = TABLE_EVENT_TYPES
+    event_type_id = Column(Integer, Identity(), primary_key=True)
+    event_type = Column(String(MAX_LENGTH_EVENT_EVENT_TYPE))
 
 
 class States(Base):  # type: ignore
