@@ -209,6 +209,27 @@ def test_significant_states_with_session_entity_minimal_response_no_matches(
         )
 
 
+def test_significant_states_with_session_single_entity(
+    hass_recorder: Callable[..., HomeAssistant],
+) -> None:
+    """Test get_significant_states_with_session with a single entity."""
+    hass = hass_recorder()
+    hass.states.set("demo.id", "any", {"attr": True})
+    hass.states.set("demo.id", "any2", {"attr": True})
+    wait_recording_done(hass)
+    now = dt_util.utcnow()
+    with session_scope(hass=hass) as session:
+        states = history.get_significant_states_with_session(
+            hass,
+            session,
+            now - timedelta(days=1),
+            now,
+            entity_ids=["demo.id"],
+            minimal_response=False,
+        )
+        assert len(states["demo.id"]) == 2
+
+
 @pytest.mark.parametrize(
     ("attributes", "no_attributes", "limit"),
     [
