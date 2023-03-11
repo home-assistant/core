@@ -1,12 +1,12 @@
 """Entity class for Renson ventilation unit."""
 from __future__ import annotations
 
-from renson_endura_delta.renson import RensonVentilation
 from renson_endura_delta.field_enum import (
     DEVICE_NAME_FIELD,
     FIRMWARE_VERSION_FIELD,
     HARDWARE_VERSION_FIELD,
 )
+from renson_endura_delta.renson import RensonVentilation
 
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -39,4 +39,4 @@ class RensonEntity(CoordinatorEntity):
 
         self.api = api
 
-        self._attr_unique_id = f"renson-{name}"
+        self._attr_unique_id = f"{name}"

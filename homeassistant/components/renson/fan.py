@@ -42,21 +42,20 @@ SPEED_MAPPING = {
 }
 
 
-SPEED_RANGE = (1, 4)
+SPEED_RANGE: tuple[float, float] = (1, 4)
 
 
 class RensonFan(RensonEntity, FanEntity):
     """Representation of the Renson fan platform."""
 
     _attr_icon = "mdi:air-conditioner"
+    _attr_name = "Fan"
     _attr_supported_features = FanEntityFeature.SET_SPEED
-    current_speed = None
+    current_speed: int | None = None
 
     def __init__(self, api: RensonVentilation, coordinator: RensonCoordinator) -> None:
         """Initialize the Renson fan."""
         super().__init__("fan", api, coordinator)
-
-        self._attr_name = "Fan"
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -122,8 +121,4 @@ async def async_setup_entry(
         "coordinator"
     ]
 
-    await coordinator.async_config_entry_first_refresh()
-
     async_add_entities([RensonFan(api, coordinator)])
-
-    await coordinator.async_config_entry_first_refresh()

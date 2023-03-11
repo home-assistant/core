@@ -6,10 +6,11 @@ import logging
 
 import async_timeout
 from renson_endura_delta.renson import Level, RensonVentilation
+from requests import RequestException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -29,11 +30,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Renson from a config entry."""
 
     api = RensonVentilation(entry.data[CONF_HOST])
-    coordinator = RensonCoordinator(hass, api)
-    fw_coordinator = RensonFirmwareCoordinator(hass, api)
+    coordinator = RensonCoordinator("Renson", hass, api)
+    fw_coordinator = RensonFirmwareCoordinator("Update", hass, api)
 
     if not await hass.async_add_executor_job(api.connect):
         raise ConfigEntryNotReady("Cannot connect to Renson device")
+
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "api": api,
@@ -42,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    await hass.async_add_executor_job(setup_hass_services, hass, api)
+    setup_hass_services(hass, api)
 
     return True
 
@@ -55,6 +58,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
+@callback
 def setup_hass_services(hass: HomeAssistant, renson_api: RensonVentilation) -> None:
     """Set up the Renson platforms."""
 
@@ -134,13 +138,19 @@ def setup_hass_services(hass: HomeAssistant, renson_api: RensonVentilation) -> N
 class RensonCoordinator(DataUpdateCoordinator):
     """Data update coordinator for Renson."""
 
-    def __init__(self, hass, api, update_interval=timedelta(seconds=30)):
+    def __init__(
+        self,
+        name: str,
+        hass: HomeAssistant,
+        api: RensonVentilation,
+        update_interval=timedelta(seconds=30),
+    ) -> None:
         """Initialize my coordinator."""
         super().__init__(
             hass,
             _LOGGER,
             # Name of the data. For logging purposes.
-            name="Renson",
+            name=name,
             # Polling interval. Will only be polled if there are subscribers.
             update_interval=update_interval,
         )
@@ -151,16 +161,17 @@ class RensonCoordinator(DataUpdateCoordinator):
         try:
             async with async_timeout.timeout(30):
                 return await self.hass.async_add_executor_job(self.api.get_all_data)
-        except Exception as err:
+        except RequestException as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
 
 class RensonFirmwareCoordinator(RensonCoordinator):
     """My custom coordinator."""
 
-    def __init__(self, hass, api):
+    def __init__(self, name: str, hass: HomeAssistant, api: RensonVentilation) -> None:
         """Initialize my coordinator."""
         super().__init__(
+            name,
             hass,
             api,
             update_interval=timedelta(seconds=60 * 60 * 24),
@@ -177,5 +188,5 @@ class RensonFirmwareCoordinator(RensonCoordinator):
                 )
                 data["latest_firmware_version"] = latest_version
                 return data
-        except Exception as err:
+        except RequestException as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err

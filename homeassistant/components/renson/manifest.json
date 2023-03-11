@@ -6,6 +6,5 @@
   "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/renson",
   "iot_class": "local_polling",
-  "requirements": ["renson-endura-delta==1.4.3"],
-  "version": "1.2.0"
+  "requirements": ["renson-endura-delta==1.4.3"]
 }

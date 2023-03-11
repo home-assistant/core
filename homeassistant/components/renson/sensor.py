@@ -37,7 +37,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -64,21 +64,21 @@ class RensonSensorEntityDescription(
 SENSORS: tuple[RensonSensorEntityDescription, ...] = (
     RensonSensorEntityDescription(
         key="CO2_QUALITY_FIELD",
-        name="CO2 quality",
+        name="CO2 quality category",
         field=CO2_QUALITY_FIELD,
         raw_format=False,
         state_class=None,
     ),
     RensonSensorEntityDescription(
         key="AIR_QUALITY_FIELD",
-        name="Air quality",
+        name="Air quality category",
         field=AIR_QUALITY_FIELD,
         raw_format=False,
         state_class=None,
     ),
     RensonSensorEntityDescription(
         key="CO2_FIELD",
-        name="CO2 quality value",
+        name="CO2 quality",
         field=CO2_FIELD,
         raw_format=True,
         state_class=SensorStateClass.MEASUREMENT,
@@ -87,25 +87,18 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
     ),
     RensonSensorEntityDescription(
         key="AIR_FIELD",
-        name="Air quality value",
+        name="Air quality",
         field=AIR_QUALITY_FIELD,
         state_class=SensorStateClass.MEASUREMENT,
         raw_format=True,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
     ),
     RensonSensorEntityDescription(
-        key="CURRENT_LEVEL_FIELD_RAW",
-        name="Ventilation level raw",
-        field=CURRENT_LEVEL_FIELD,
-        state_class=None,
-        raw_format=True,
-    ),
-    RensonSensorEntityDescription(
         key="CURRENT_LEVEL_FIELD",
         name="Ventilation level",
         state_class=None,
         field=CURRENT_LEVEL_FIELD,
-        raw_format=False,
+        raw_format=True,
     ),
     RensonSensorEntityDescription(
         key="CURRENT_AIRFLOW_EXTRACT_FIELD",
@@ -130,7 +123,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         raw_format=False,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     RensonSensorEntityDescription(
         key="INDOOR_TEMP_FIELD",
@@ -139,7 +132,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         raw_format=False,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     RensonSensorEntityDescription(
         key="FILTER_REMAIN_FIELD",
@@ -171,7 +164,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         field=BREEZE_TEMPERATURE_FIELD,
         raw_format=False,
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_registry_enabled_default=False,
     ),
     RensonSensorEntityDescription(
@@ -232,14 +225,14 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         raw_format=False,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     RensonSensorEntityDescription(
         key="BYPASS_LEVEL_FIELD",
         name="Bypass level",
         field=BYPASS_LEVEL_FIELD,
         raw_format=False,
-        device_class="power_factor",
+        device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="%",
     ),
