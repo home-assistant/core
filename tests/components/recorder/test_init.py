@@ -43,6 +43,7 @@ from homeassistant.components.recorder.db_schema import (
     RecorderRuns,
     StateAttributes,
     States,
+    StatesMeta,
     StatisticsRuns,
 )
 from homeassistant.components.recorder.models import process_timestamp
@@ -235,11 +236,14 @@ async def test_saving_state(recorder_mock: Recorder, hass: HomeAssistant) -> Non
 
     with session_scope(hass=hass) as session:
         db_states = []
-        for db_state, db_state_attributes in session.query(
-            States, StateAttributes
-        ).outerjoin(
-            StateAttributes, States.attributes_id == StateAttributes.attributes_id
+        for db_state, db_state_attributes, states_meta in (
+            session.query(States, StateAttributes, StatesMeta)
+            .outerjoin(
+                StateAttributes, States.attributes_id == StateAttributes.attributes_id
+            )
+            .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
         ):
+            db_state.entity_id = states_meta.entity_id
             db_states.append(db_state)
             state = db_state.to_native()
             state.attributes = db_state_attributes.to_native()
@@ -273,11 +277,14 @@ async def test_saving_state_with_nul(
 
     with session_scope(hass=hass) as session:
         db_states = []
-        for db_state, db_state_attributes in session.query(
-            States, StateAttributes
-        ).outerjoin(
-            StateAttributes, States.attributes_id == StateAttributes.attributes_id
+        for db_state, db_state_attributes, states_meta in (
+            session.query(States, StateAttributes, StatesMeta)
+            .outerjoin(
+                StateAttributes, States.attributes_id == StateAttributes.attributes_id
+            )
+            .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
         ):
+            db_state.entity_id = states_meta.entity_id
             db_states.append(db_state)
             state = db_state.to_native()
             state.attributes = db_state_attributes.to_native()
@@ -542,11 +549,16 @@ def _add_entities(hass, entity_ids):
 
     with session_scope(hass=hass) as session:
         states = []
-        for state, state_attributes in session.query(States, StateAttributes).outerjoin(
-            StateAttributes, States.attributes_id == StateAttributes.attributes_id
+        for db_state, db_state_attributes, states_meta in (
+            session.query(States, StateAttributes, StatesMeta)
+            .outerjoin(
+                StateAttributes, States.attributes_id == StateAttributes.attributes_id
+            )
+            .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
         ):
-            native_state = state.to_native()
-            native_state.attributes = state_attributes.to_native()
+            db_state.entity_id = states_meta.entity_id
+            native_state = db_state.to_native()
+            native_state.attributes = db_state_attributes.to_native()
             states.append(native_state)
         return states
 
@@ -761,7 +773,11 @@ def test_saving_state_and_removing_entity(
     wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
-        states = list(session.query(States))
+        states = list(
+            session.query(StatesMeta.entity_id, States.state).outerjoin(
+                StatesMeta, States.metadata_id == StatesMeta.metadata_id
+            )
+        )
         assert len(states) == 3
         assert states[0].entity_id == entity_id
         assert states[0].state == STATE_LOCKED
@@ -784,11 +800,16 @@ def test_saving_state_with_oversized_attributes(
     states = []
 
     with session_scope(hass=hass) as session:
-        for state, state_attributes in session.query(States, StateAttributes).outerjoin(
-            StateAttributes, States.attributes_id == StateAttributes.attributes_id
+        for db_state, db_state_attributes, states_meta in (
+            session.query(States, StateAttributes, StatesMeta)
+            .outerjoin(
+                StateAttributes, States.attributes_id == StateAttributes.attributes_id
+            )
+            .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
         ):
-            native_state = state.to_native()
-            native_state.attributes = state_attributes.to_native()
+            db_state.entity_id = states_meta.entity_id
+            native_state = db_state.to_native()
+            native_state.attributes = db_state_attributes.to_native()
             states.append(native_state)
 
     assert "switch.too_big" in caplog.text
@@ -1275,7 +1296,11 @@ def test_saving_sets_old_state(hass_recorder: Callable[..., HomeAssistant]) -> N
     wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
-        states = list(session.query(States))
+        states = list(
+            session.query(
+                StatesMeta.entity_id, States.state_id, States.old_state_id, States.state
+            ).outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
+        )
         assert len(states) == 4
 
         assert states[0].entity_id == "test.one"
@@ -1304,7 +1329,11 @@ def test_saving_state_with_serializable_data(
     wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
-        states = list(session.query(States))
+        states = list(
+            session.query(
+                StatesMeta.entity_id, States.state_id, States.old_state_id, States.state
+            ).outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
+        )
         assert len(states) == 2
 
         assert states[0].entity_id == "test.two"
@@ -1442,6 +1471,7 @@ def test_service_disable_states_not_recording(
         db_states = list(session.query(States))
         assert len(db_states) == 1
         assert db_states[0].event_id is None
+        db_states[0].entity_id = "test.two"
         assert (
             db_states[0].to_native().as_dict()
             == _state_with_context(hass, "test.two").as_dict()
@@ -1554,6 +1584,7 @@ async def test_database_corruption_while_running(
         with session_scope(hass=hass) as session:
             db_states = list(session.query(States))
             assert len(db_states) == 1
+            db_states[0].entity_id = "test.two"
             assert db_states[0].event_id is None
             return db_states[0].to_native()
 
@@ -1868,9 +1899,7 @@ def test_deduplication_state_attributes_inside_commit_interval(
 
     with session_scope(hass=hass) as session:
         states = list(
-            session.query(States)
-            .filter(States.entity_id == entity_id)
-            .outerjoin(
+            session.query(States).outerjoin(
                 StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
             )
         )
@@ -1895,7 +1924,7 @@ async def test_async_block_till_done(
 
     def _fetch_states():
         with session_scope(hass=hass) as session:
-            return list(session.query(States).filter(States.entity_id == entity_id))
+            return list(session.query(States))
 
     await async_block_recorder(hass, 0.1)
     await instance.async_block_till_done()
@@ -2098,11 +2127,14 @@ async def test_excluding_attributes_by_integration(
 
     with session_scope(hass=hass) as session:
         db_states = []
-        for db_state, db_state_attributes in session.query(
-            States, StateAttributes
-        ).outerjoin(
-            StateAttributes, States.attributes_id == StateAttributes.attributes_id
+        for db_state, db_state_attributes, states_meta in (
+            session.query(States, StateAttributes, StatesMeta)
+            .outerjoin(
+                StateAttributes, States.attributes_id == StateAttributes.attributes_id
+            )
+            .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
         ):
+            db_state.entity_id = states_meta.entity_id
             db_states.append(db_state)
             state = db_state.to_native()
             state.attributes = db_state_attributes.to_native()
