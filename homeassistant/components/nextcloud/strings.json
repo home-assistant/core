@@ -12,7 +12,8 @@
       }
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "connection_error_during_import": "Connection error occured during yaml configuration import"
     },
     "error": {
       "connection_error": "[%key:common::config_flow::error::cannot_connect%]"

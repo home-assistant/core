@@ -12,7 +12,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_form_create_entry(
+async def test_user_create_entry(
     hass: HomeAssistant, mock_nextcloud_monitor: Mock
 ) -> None:
     """Test that the user step works."""
@@ -40,7 +40,7 @@ async def test_form_create_entry(
     assert result["data"][CONF_PASSWORD] == "nc_pass"
 
 
-async def test_form_already_configured(
+async def test_user_already_configured(
     hass: HomeAssistant, mock_nextcloud_monitor: Mock
 ) -> None:
     """Test that errors are shown when duplicates are added."""
@@ -73,7 +73,7 @@ async def test_form_already_configured(
     assert result["reason"] == "already_configured"
 
 
-async def test_form_connection_error(
+async def test_user_connection_error(
     hass: HomeAssistant, mock_nextcloud_monitor: Mock
 ) -> None:
     """Test that errors are shown when connection fails."""
@@ -86,9 +86,8 @@ async def test_form_connection_error(
 
     with patch(
         "homeassistant.components.nextcloud.config_flow.NextcloudMonitor",
-        return_value=mock_nextcloud_monitor,
-    ) as ncm_mock:
-        ncm_mock.side_effect = NextcloudMonitorError
+        side_effect=NextcloudMonitorError,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_URL: "nc_url", CONF_USERNAME: "nc_user", CONF_PASSWORD: "nc_pass"},
@@ -119,3 +118,54 @@ async def test_import(hass: HomeAssistant, mock_nextcloud_monitor: Mock) -> None
     assert result["data"][CONF_URL] == "nc_url"
     assert result["data"][CONF_USERNAME] == "nc_user"
     assert result["data"][CONF_PASSWORD] == "nc_pass"
+
+
+async def test_import_already_configured(
+    hass: HomeAssistant, mock_nextcloud_monitor: Mock
+) -> None:
+    """Test that import step is aborted when duplicates are added."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="nc_url",
+        unique_id="nc_url",
+        data={CONF_URL: "nc_url", CONF_USERNAME: "nc_user", CONF_PASSWORD: "nc_pass"},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.nextcloud.config_flow.NextcloudMonitor",
+        return_value=mock_nextcloud_monitor,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_URL: "nc_url",
+                CONF_USERNAME: "nc_user",
+                CONF_PASSWORD: "nc_pass",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_import_connection_error(hass: HomeAssistant) -> None:
+    """Test that import step is aborted on connection error."""
+    with patch(
+        "homeassistant.components.nextcloud.config_flow.NextcloudMonitor",
+        side_effect=NextcloudMonitorError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_URL: "nc_url",
+                CONF_USERNAME: "nc_user",
+                CONF_PASSWORD: "nc_pass",
+            },
+        )
+        await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "connection_error_during_import"
