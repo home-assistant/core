@@ -304,6 +304,7 @@ class FibaroController:
                     room_name = "Unknown"
                 else:
                     room_name = self._room_map[device.room_id].name
+                device.room_name = room_name
                 device.friendly_name = f"{room_name} {device.name}"
                 device.ha_id = (
                     f"{slugify(room_name)}_{slugify(device.name)}_{device.fibaro_id}"
