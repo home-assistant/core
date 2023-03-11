@@ -74,6 +74,7 @@ class NextcloudConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
 
+        data_schema = self.add_suggested_values_to_schema(DATA_SCHEMA_USER, user_input)
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA_USER, errors=errors
+            step_id="user", data_schema=data_schema, errors=errors
         )
