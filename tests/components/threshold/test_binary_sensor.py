@@ -1,5 +1,4 @@
 """The test for the threshold sensor platform."""
-import pytest
 
 import pytest
 

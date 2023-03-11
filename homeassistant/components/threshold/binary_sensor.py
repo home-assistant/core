@@ -183,7 +183,7 @@ class ThresholdSensor(BinarySensorEntity):
         return self._state
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the sensor class of the sensor."""
         return self._device_class
 
