@@ -46,7 +46,7 @@ async def test_valid_country_yaml() -> None:
 
 
 @pytest.mark.parametrize(
-    "config, expected_state",
+    ("config", "expected_state"),
     [
         (TEST_CONFIG_WITH_PROVINCE, "off"),
         (TEST_CONFIG_NO_PROVINCE, "off"),

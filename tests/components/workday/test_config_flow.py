@@ -228,7 +228,6 @@ async def test_form_incorrect_dates(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-        print(result3)
         assert result3["errors"] == {"add_holidays": "add_holiday_error"}
 
         result3 = await hass.config_entries.flow.async_configure(

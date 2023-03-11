@@ -172,7 +172,6 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle remaining flow."""
         errors = {}
         if user_input is not None:
-
             try:
                 await self.hass.async_add_executor_job(
                     validate_custom_dates, {**self.data, **user_input}
@@ -216,7 +215,6 @@ class WorkdayOptionsFlowHandler(OptionsFlow):
         errors = {}
 
         if user_input is not None:
-
             try:
                 await self.hass.async_add_executor_job(
                     validate_custom_dates, {**self.entry.options, **user_input}
