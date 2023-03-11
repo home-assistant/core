@@ -123,7 +123,7 @@ async def async_attach_trigger(
     unsub_track_same = {}
     period: dict[str, timedelta] = {}
     attribute = config.get(CONF_ATTRIBUTE)
-    job = HassJob(action)
+    job = HassJob(action, f"state trigger {trigger_info}")
 
     trigger_data = trigger_info["trigger_data"]
     _variables = trigger_info["variables"] or {}
