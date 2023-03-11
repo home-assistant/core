@@ -77,6 +77,7 @@ TABLE_EVENT_DATA = "event_data"
 TABLE_EVENT_TYPES = "event_types"
 TABLE_STATES = "states"
 TABLE_STATE_ATTRIBUTES = "state_attributes"
+TABLE_STATES_META = "states_meta"
 TABLE_RECORDER_RUNS = "recorder_runs"
 TABLE_SCHEMA_CHANGES = "schema_changes"
 TABLE_STATISTICS = "statistics"
@@ -97,6 +98,7 @@ ALL_TABLES = [
     TABLE_EVENT_TYPES,
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
+    TABLE_STATES_META,
     TABLE_STATISTICS,
     TABLE_STATISTICS_META,
     TABLE_STATISTICS_RUNS,
@@ -593,7 +595,7 @@ class StatesMeta(Base):
     """Metadata for states."""
 
     __table_args__ = (_DEFAULT_TABLE_ARGS,)
-    __tablename__ = TABLE_EVENT_TYPES
+    __tablename__ = TABLE_STATES_META
     metadata_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
     entity_id: Mapped[str | None] = mapped_column(String(MAX_LENGTH_STATE_ENTITY_ID))
 
