@@ -12,6 +12,8 @@ from . import ReolinkData
 from .const import DOMAIN
 from .entity import ReolinkChannelCoordinatorEntity
 
+from reolink_aio.api import DUAL_LENS_MODELS
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -25,7 +27,7 @@ async def async_setup_entry(
     host = reolink_data.host
 
     cameras = []
-    for channel in host.api.channels:
+    for channel in host.api.stream_channels:
         streams = ["sub", "main", "snapshots"]
         if host.api.protocol in ["rtmp", "flv"]:
             streams.append("ext")
@@ -56,7 +58,10 @@ class ReolinkCamera(ReolinkChannelCoordinatorEntity, Camera):
 
         self._stream = stream
 
-        self._attr_name = self._stream
+        if self._host.api.model in DUAL_LENS_MODELS:
+            self._attr_name = f"{self._stream} lens {self._channel}"
+        else:
+            self._attr_name = self._stream
         self._attr_unique_id = f"{self._host.unique_id}_{self._channel}_{self._stream}"
         self._attr_entity_registry_enabled_default = stream == "sub"
 

@@ -1594,7 +1594,7 @@ regenmaschine==2022.11.0
 renault-api==0.1.12
 
 # homeassistant.components.reolink
-reolink-aio==0.5.3
+reolink-aio==0.5.4
 
 # homeassistant.components.python_script
 restrictedpython==6.0
