@@ -89,7 +89,7 @@ async def test_create_sensors(
     await hass.async_block_till_done()
 
     # check if 26 attributes have been created
-    assert len(hass.states.async_all()) == 25
+    assert len(hass.states.async_all()) == 27
 
     state = hass.states.get("sensor.heat_meter_heat_usage_gj")
     assert state
