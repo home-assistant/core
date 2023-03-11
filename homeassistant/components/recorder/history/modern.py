@@ -156,6 +156,7 @@ def _significant_states_stmt(
     start_time: datetime,
     end_time: datetime | None,
     entity_ids: list[str] | None,
+    metadata_ids: list[int] | None,
     filters: Filters | None,
     significant_changes_only: bool,
     no_attributes: bool,
@@ -164,6 +165,7 @@ def _significant_states_stmt(
     stmt, join_attributes = _lambda_stmt_and_join_attributes(
         no_attributes, include_last_changed=not significant_changes_only
     )
+    join_states_meta = False
     if (
         entity_ids
         and len(entity_ids) == 1
@@ -187,11 +189,12 @@ def _significant_states_stmt(
                 ),
             )
         )
+        join_states_meta = True
 
-    if entity_ids:
+    if metadata_ids:
         stmt += lambda q: q.filter(
             # https://github.com/python/mypy/issues/2608
-            StatesMeta.entity_id.in_(entity_ids)  # type:ignore[arg-type]
+            States.metadata_id.in_(metadata_ids)  # type:ignore[arg-type]
         )
     else:
         stmt += _ignore_domains_filter
@@ -200,13 +203,17 @@ def _significant_states_stmt(
             stmt = stmt.add_criteria(
                 lambda q: q.filter(entity_filter), track_on=[filters]
             )
+        join_states_meta = True
 
     start_time_ts = start_time.timestamp()
     stmt += lambda q: q.filter(States.last_updated_ts > start_time_ts)
     if end_time:
         end_time_ts = end_time.timestamp()
         stmt += lambda q: q.filter(States.last_updated_ts < end_time_ts)
-
+    if join_states_meta:
+        stmt += lambda q: q.outerjoin(
+            StatesMeta, States.metadata_id == StatesMeta.metadata_id
+        )
     if join_attributes:
         stmt += lambda q: q.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
@@ -239,10 +246,22 @@ def get_significant_states_with_session(
     as well as all states from certain domains (for instance
     thermostat so that we get current temperature in our graphs).
     """
+    metadata_ids: list[int] | None = None
+    if entity_ids:
+        instance = recorder.get_instance(hass)
+        entity_id_to_metadata_id = instance.states_meta_manager.get_many(
+            entity_ids, session
+        )
+        metadata_ids = [
+            metadata_id
+            for metadata_id in entity_id_to_metadata_id.values()
+            if metadata_id is not None
+        ]
     stmt = _significant_states_stmt(
         start_time,
         end_time,
         entity_ids,
+        metadata_ids,
         filters,
         significant_changes_only,
         no_attributes,
@@ -349,6 +368,7 @@ def state_changes_during_period(
     entity_ids = [entity_id] if entity_id is not None else None
 
     with session_scope(hass=hass) as session:
+        metadata_id: int | None = None
         if entity_id:
             instance = recorder.get_instance(hass)
             metadata_id = instance.states_meta_manager.get(entity_id, session)
@@ -520,6 +540,9 @@ def _get_states_for_all_stmt(
         stmt += lambda q: q.outerjoin(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
         )
+    stmt += lambda q: q.outerjoin(
+        StatesMeta, States.metadata_id == StatesMeta.metadata_id
+    )
     return stmt
 
 
@@ -695,14 +718,15 @@ def _sorted_states_to_dict(
         ent_results = result[entity_id]
         if row := initial_states.pop(metadata_id, None):
             prev_state = row.state
-            ent_results.append(state_class(row, attr_cache, start_time))
+            ent_results.append(state_class(row, attr_cache, start_time, entity_id=entity_id))  # type: ignore[call-arg]
 
         if (
             not minimal_response
             or split_entity_id(entity_id)[0] in NEED_ATTRIBUTE_DOMAINS
         ):
             ent_results.extend(
-                state_class(db_state, attr_cache, None) for db_state in group
+                state_class(db_state, attr_cache, None, entity_id=entity_id)  # type: ignore[call-arg]
+                for db_state in group
             )
             continue
 
@@ -714,7 +738,9 @@ def _sorted_states_to_dict(
             if (first_state := next(group, None)) is None:
                 continue
             prev_state = first_state.state
-            ent_results.append(state_class(first_state, attr_cache, None))
+            ent_results.append(
+                state_class(first_state, attr_cache, None, entity_id=entity_id)  # type: ignore[call-arg]
+            )
 
         state_idx = field_map["state"]
 
@@ -753,7 +779,9 @@ def _sorted_states_to_dict(
     # the state a was never popped from initial_states
     for metadata_id, row in initial_states.items():
         if entity_id := metadata_id_to_entity_id.get(metadata_id):
-            result[entity_id].append(state_class(row, {}, start_time))
+            result[entity_id].append(
+                state_class(row, {}, start_time, entity_id=entity_id)  # type: ignore[call-arg]
+            )
 
     # Filter out the empty lists if some states had 0 results.
     return {key: val for key, val in result.items() if val}

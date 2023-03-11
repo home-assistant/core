@@ -42,7 +42,7 @@ class StatesMetaManager:
     def get_metadata_id_to_entity_id(self, session: Session) -> dict[int, str]:
         """Resolve all entity_ids to metadata_ids."""
         with session.no_autoflush:
-            return dict(session.execute(find_all_states_metadata_ids()))  # type: ignore[arg-type]
+            return dict(tuple(session.execute(find_all_states_metadata_ids())))  # type: ignore[arg-type]
 
     def get_many(
         self, entity_ids: Iterable[str], session: Session
