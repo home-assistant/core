@@ -1,11 +1,13 @@
 """Event parser and human readable log generator."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, cast
 
 from sqlalchemy.engine.row import Row
 
+from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.models import (
     bytes_to_ulid_or_none,
     bytes_to_uuid_hex_or_none,
@@ -14,9 +16,21 @@ from homeassistant.components.recorder.models import (
 )
 from homeassistant.const import ATTR_ICON, EVENT_STATE_CHANGED
 from homeassistant.core import Context, Event, State, callback
+from homeassistant.helpers.entityfilter import EntityFilter
 import homeassistant.util.dt as dt_util
 from homeassistant.util.json import json_loads
 from homeassistant.util.ulid import ulid_to_bytes
+
+
+@dataclass
+class LogbookConfig:
+    """Configuration for the logbook integration."""
+
+    external_events: dict[
+        str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
+    ]
+    sqlalchemy_filter: Filters | None = None
+    entity_filter: EntityFilter | None = None
 
 
 class LazyEventPartialState:
