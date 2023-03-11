@@ -15,9 +15,12 @@ from sqlalchemy.sql.elements import TextClause
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import history, util
+from homeassistant.components.recorder import util
 from homeassistant.components.recorder.const import DOMAIN, SQLITE_URL_PREFIX
 from homeassistant.components.recorder.db_schema import RecorderRuns
+from homeassistant.components.recorder.history.legacy import (
+    _get_single_entity_states_stmt,
+)
 from homeassistant.components.recorder.models import (
     UnsupportedDialect,
     process_timestamp,
@@ -905,7 +908,7 @@ def test_execute_stmt_lambda_element(
 
     with session_scope(hass=hass) as session:
         # No time window, we always get a list
-        stmt = history._get_single_entity_states_stmt(
+        stmt = _get_single_entity_states_stmt(
             instance.schema_version, dt_util.utcnow(), "sensor.on", False
         )
         rows = util.execute_stmt_lambda_element(session, stmt)
