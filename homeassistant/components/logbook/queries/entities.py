@@ -17,6 +17,7 @@ from homeassistant.components.recorder.db_schema import (
     Events,
     EventTypes,
     States,
+    StatesMeta,
 )
 
 from .common import (
@@ -86,6 +87,7 @@ def _apply_entities_context_union(
             select_states_context_only()
             .select_from(entities_cte)
             .outerjoin(States, entities_cte.c.context_id_bin == States.context_id_bin)
+            .outerjoin(StatesMeta, (States.metadata_id == StatesMeta.metadata_id))
         ),
     )
 
