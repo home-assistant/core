@@ -1098,9 +1098,9 @@ class Recorder(threading.Thread):
         else:
             dbstate.state = None
 
-        # TODO: if we have finished the migration do not recorder `dbstate.entity_id`
-        # by setting it to None. This will allow us to remove the entity_id column
-        # from the states table.
+        if states_meta_manager.active:
+            dbstate.entity_id = None
+
         self.event_session.add(dbstate)
 
     def _handle_database_error(self, err: Exception) -> bool:
