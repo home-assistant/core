@@ -199,7 +199,7 @@ def _significant_states_stmt(
     else:
         stmt += _ignore_domains_filter
         if filters and filters.has_config:
-            entity_filter = filters.states_entity_filter()
+            entity_filter = filters.states_metadata_entity_filter()
             stmt = stmt.add_criteria(
                 lambda q: q.filter(entity_filter), track_on=[filters]
             )
@@ -305,7 +305,7 @@ def _state_changed_during_period_stmt(
     schema_version: int,
     start_time: datetime,
     end_time: datetime | None,
-    entity_id: str | None,
+    metadata_id: int | None,
     no_attributes: bool,
     descending: bool,
     limit: int | None,
@@ -324,9 +324,8 @@ def _state_changed_during_period_stmt(
     if end_time:
         end_time_ts = end_time.timestamp()
         stmt += lambda q: q.filter(States.last_updated_ts < end_time_ts)
-    if entity_id:
-        # TODO: resolve entity_id to id
-        stmt += lambda q: q.filter(States.metadata_id == entity_id)
+    if metadata_id:
+        stmt += lambda q: q.filter(States.metadata_id == metadata_id)
     if join_attributes:
         stmt += lambda q: q.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
@@ -355,11 +354,14 @@ def state_changes_during_period(
     entity_ids = [entity_id] if entity_id is not None else None
 
     with session_scope(hass=hass) as session:
+        if entity_id:
+            instance = recorder.get_instance(hass)
+            metadata_id = instance.states_meta_manager.get(entity_id, session)
         stmt = _state_changed_during_period_stmt(
             _schema_version(hass),
             start_time,
             end_time,
-            entity_id,
+            metadata_id,
             no_attributes,
             descending,
             limit,
@@ -381,17 +383,16 @@ def state_changes_during_period(
 
 
 def _get_last_state_changes_stmt(
-    schema_version: int, number_of_states: int, entity_id: str
+    schema_version: int, number_of_states: int, metadata_id: int
 ) -> StatementLambdaElement:
     stmt, join_attributes = _lambda_stmt_and_join_attributes(
         schema_version, False, include_last_changed=False
     )
-    # TODO: resolve entity_id to id
     stmt += lambda q: q.where(
         States.state_id
         == (
             select(States.state_id)
-            .filter(States.metadata_id == entity_id)
+            .filter(States.metadata_id == metadata_id)
             .order_by(States.last_updated_ts.desc())
             .limit(number_of_states)
             .subquery()
@@ -414,8 +415,12 @@ def get_last_state_changes(
     entity_ids = [entity_id_lower]
 
     with session_scope(hass=hass) as session:
+        instance = recorder.get_instance(hass)
+        metadata_id = instance.states_meta_manager.get(entity_id, session)
+        if metadata_id is None:
+            return {}
         stmt = _get_last_state_changes_stmt(
-            _schema_version(hass), number_of_states, entity_id_lower
+            _schema_version(hass), number_of_states, metadata_id
         )
         states = list(execute_stmt_lambda_element(session, stmt))
         return cast(
@@ -435,7 +440,7 @@ def _get_states_for_entities_stmt(
     schema_version: int,
     run_start: datetime,
     utc_point_in_time: datetime,
-    entity_ids: list[str],
+    metadata_ids: list[int],
     no_attributes: bool,
 ) -> StatementLambdaElement:
     """Baked query to get states for specific entities."""
@@ -446,7 +451,6 @@ def _get_states_for_entities_stmt(
     # in the inner query.
     run_start_ts = process_timestamp(run_start).timestamp()
     utc_point_in_time_ts = dt_util.utc_to_timestamp(utc_point_in_time)
-    # TODO: resolve entity_id to id
     stmt += lambda q: q.join(
         (
             most_recent_states_for_entities_by_date := (
@@ -460,7 +464,7 @@ def _get_states_for_entities_stmt(
                     (States.last_updated_ts >= run_start_ts)
                     & (States.last_updated_ts < utc_point_in_time_ts)
                 )
-                .filter(States.metadata_id.in_(entity_ids))
+                .filter(States.metadata_id.in_(metadata_ids))
                 .group_by(States.metadata_id)
                 .subquery()
             )
@@ -496,7 +500,6 @@ def _get_states_for_all_stmt(
     # not indexed and we can't control what's in the custom filter.
     run_start_ts = process_timestamp(run_start).timestamp()
     utc_point_in_time_ts = dt_util.utc_to_timestamp(utc_point_in_time)
-    # TODO: resolve entity_id to id
     stmt += lambda q: q.join(
         (
             most_recent_states_by_date := (
@@ -521,7 +524,7 @@ def _get_states_for_all_stmt(
     )
     stmt += _ignore_domains_filter
     if filters and filters.has_config:
-        entity_filter = filters.states_entity_filter()
+        entity_filter = filters.states_metadata_entity_filter()
         stmt = stmt.add_criteria(lambda q: q.filter(entity_filter), track_on=[filters])
     if join_attributes:
         stmt += lambda q: q.outerjoin(
@@ -542,10 +545,14 @@ def _get_rows_with_session(
     """Return the states at a specific point in time."""
     schema_version = _schema_version(hass)
     if entity_ids and len(entity_ids) == 1:
+        instance = recorder.get_instance(hass)
+        metadata_id = instance.states_meta_manager.get(entity_ids[0], session)
+        if metadata_id is None:
+            return []
         return execute_stmt_lambda_element(
             session,
             _get_single_entity_states_stmt(
-                schema_version, utc_point_in_time, entity_ids[0], no_attributes
+                schema_version, utc_point_in_time, metadata_id, no_attributes
             ),
         )
 
@@ -559,8 +566,17 @@ def _get_rows_with_session(
     # We have more than one entity to look at so we need to do a query on states
     # since the last recorder run started.
     if entity_ids:
+        instance = recorder.get_instance(hass)
+        entity_id_to_metadata_id = instance.states_meta_manager.get_many(
+            entity_ids, session
+        )
+        metadata_ids = [
+            metadata_id
+            for metadata_id in entity_id_to_metadata_id.values()
+            if metadata_id is not None
+        ]
         stmt = _get_states_for_entities_stmt(
-            schema_version, run.start, utc_point_in_time, entity_ids, no_attributes
+            schema_version, run.start, utc_point_in_time, metadata_ids, no_attributes
         )
     else:
         stmt = _get_states_for_all_stmt(
@@ -573,7 +589,7 @@ def _get_rows_with_session(
 def _get_single_entity_states_stmt(
     schema_version: int,
     utc_point_in_time: datetime,
-    entity_id: str,
+    metadata_id: int,
     no_attributes: bool = False,
 ) -> StatementLambdaElement:
     # Use an entirely different (and extremely fast) query if we only
@@ -582,11 +598,10 @@ def _get_single_entity_states_stmt(
         schema_version, no_attributes, include_last_changed=True
     )
     utc_point_in_time_ts = dt_util.utc_to_timestamp(utc_point_in_time)
-    # TODO: resolve entity_id to id
     stmt += (
         lambda q: q.filter(
             States.last_updated_ts < utc_point_in_time_ts,
-            States.metadata_id == entity_id,
+            States.metadata_id == metadata_id,
         )
         .order_by(States.last_updated_ts.desc())
         .limit(1)

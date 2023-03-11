@@ -86,6 +86,7 @@ from .queries import (
 )
 from .run_history import RunHistory
 from .table_managers.event_types import EventTypeManager
+from .table_managers.states_meta import StatesMetaManager
 from .tasks import (
     AdjustLRUSizeTask,
     AdjustStatisticsTask,
@@ -215,6 +216,7 @@ class Recorder(threading.Thread):
         self._state_attributes_ids: LRU = LRU(STATE_ATTRIBUTES_ID_CACHE_SIZE)
         self._event_data_ids: LRU = LRU(EVENT_DATA_ID_CACHE_SIZE)
         self.event_type_manager = EventTypeManager()
+        self.states_meta_manager = StatesMetaManager()
         self._pending_state_attributes: dict[str, StateAttributes] = {}
         self._pending_event_data: dict[str, EventData] = {}
         self._pending_expunge: list[States] = []
@@ -750,6 +752,7 @@ class Recorder(threading.Thread):
         self._pre_process_state_change_events(state_change_events)
         self._pre_process_non_state_change_events(non_state_change_events)
         self.event_type_manager.load(non_state_change_events, self.event_session)
+        self.states_meta_manager.load(state_change_events, self.event_session)
 
     def _pre_process_state_change_events(self, events: list[Event]) -> None:
         """Load startup state attributes from the database.
@@ -1138,6 +1141,7 @@ class Recorder(threading.Thread):
             self._event_data_ids[event_data.shared_data] = event_data.data_id
         self._pending_event_data = {}
         self.event_type_manager.post_commit_pending()
+        self.states_meta_manager.post_commit_pending()
 
         # Expire is an expensive operation (frequently more expensive
         # than the flush and commit itself) so we only
@@ -1165,6 +1169,7 @@ class Recorder(threading.Thread):
         self._pending_state_attributes.clear()
         self._pending_event_data.clear()
         self.event_type_manager.reset()
+        self.states_meta_manager.reset()
 
         if not self.event_session:
             return

@@ -1,6 +1,7 @@
 """Queries for logbook."""
 from __future__ import annotations
 
+from collections.abc import Collection
 from datetime import datetime as dt
 
 from sqlalchemy.sql.lambdas import StatementLambdaElement
@@ -21,6 +22,7 @@ def statement_for_request(
     end_day_dt: dt,
     event_types: tuple[str, ...],
     entity_ids: list[str] | None = None,
+    states_metadata_ids: Collection[int] | None = None,
     device_ids: list[str] | None = None,
     filters: Filters | None = None,
     context_id: str | None = None,
@@ -32,7 +34,9 @@ def statement_for_request(
     # No entities: logbook sends everything for the timeframe
     # limited by the context_id and the yaml configured filter
     if not entity_ids and not device_ids:
-        states_entity_filter = filters.states_entity_filter() if filters else None
+        states_entity_filter = (
+            filters.states_metadata_entity_filter() if filters else None
+        )
         events_entity_filter = filters.events_entity_filter() if filters else None
         return all_stmt(
             start_day,
@@ -49,26 +53,26 @@ def statement_for_request(
     # sqlalchemy from quoting them incorrectly
 
     # entities and devices: logbook sends everything for the timeframe for the entities and devices
-    if entity_ids and device_ids:
+    if states_metadata_ids and entity_ids and device_ids:
         json_quoted_entity_ids = [json_dumps(entity_id) for entity_id in entity_ids]
         json_quoted_device_ids = [json_dumps(device_id) for device_id in device_ids]
         return entities_devices_stmt(
             start_day,
             end_day,
             event_types,
-            entity_ids,
+            states_metadata_ids,
             json_quoted_entity_ids,
             json_quoted_device_ids,
         )
 
     # entities: logbook sends everything for the timeframe for the entities
-    if entity_ids:
+    if states_metadata_ids and entity_ids:
         json_quoted_entity_ids = [json_dumps(entity_id) for entity_id in entity_ids]
         return entities_stmt(
             start_day,
             end_day,
             event_types,
-            entity_ids,
+            states_metadata_ids,
             json_quoted_entity_ids,
         )
 

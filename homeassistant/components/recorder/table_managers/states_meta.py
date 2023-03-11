@@ -15,11 +15,11 @@ from ..queries import find_states_metadata_ids
 CACHE_SIZE = 8192
 
 
-class EventTypeManager:
-    """Manage the EventTypes table."""
+class StatesMetaManager:
+    """Manage the StatesMeta table."""
 
     def __init__(self) -> None:
-        """Initialize the event type manager."""
+        """Initialize the states meta manager."""
         self._id_map: dict[str, int] = LRU(CACHE_SIZE)
         self._pending: dict[str, StatesMeta] = {}
         self.active = False
