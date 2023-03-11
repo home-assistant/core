@@ -52,10 +52,9 @@ from .const import (
     LOGBOOK_ENTRY_SOURCE,
     LOGBOOK_ENTRY_STATE,
     LOGBOOK_ENTRY_WHEN,
-    LOGBOOK_FILTERS,
 )
 from .helpers import is_sensor_continuous
-from .models import EventAsRow, LazyEventPartialState, async_event_to_row
+from .models import EventAsRow, LazyEventPartialState, LogbookConfig, async_event_to_row
 from .queries import statement_for_request
 from .queries.common import PSEUDO_EVENT_STATE_CHANGED
 
@@ -97,16 +96,14 @@ class EventProcessor:
         self.entity_ids = entity_ids
         self.device_ids = device_ids
         self.context_id = context_id
-        self.filters: Filters | None = hass.data[LOGBOOK_FILTERS]
+        logbook_config: LogbookConfig = hass.data[DOMAIN]
+        self.filters: Filters | None = logbook_config.sqlalchemy_filter
         format_time = (
             _row_time_fired_timestamp if timestamp else _row_time_fired_isoformat
         )
-        external_events: dict[
-            str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
-        ] = hass.data.get(DOMAIN, {})
         self.logbook_run = LogbookRun(
             context_lookup=ContextLookup(hass),
-            external_events=external_events,
+            external_events=logbook_config.external_events,
             event_cache=EventCache({}),
             entity_name_cache=EntityNameCache(self.hass),
             include_entity_name=include_entity_name,
