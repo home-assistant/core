@@ -12,11 +12,11 @@ from .legacy import (
 
 # These are the APIs of this package
 __all__ = [
-    "get_significant_states",
-    "get_significant_states_with_session",
-    "get_full_significant_states_with_session",
-    "state_changes_during_period",
-    "get_last_state_changes",
     "NEED_ATTRIBUTE_DOMAINS",
     "SIGNIFICANT_DOMAINS",
+    "get_full_significant_states_with_session",
+    "get_last_state_changes",
+    "get_significant_states",
+    "get_significant_states_with_session",
+    "state_changes_during_period",
 ]
