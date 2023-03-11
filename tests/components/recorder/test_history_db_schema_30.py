@@ -88,9 +88,9 @@ def test_get_full_significant_states_with_session_entity_no_matches(
     hass = hass_recorder()
     now = dt_util.utcnow()
     time_before_recorder_ran = now - timedelta(days=1000)
-    isinstance = recorder.get_instance(hass)
+    instance = recorder.get_instance(hass)
     with session_scope(hass=hass) as session, patch.object(
-        isinstance.states_meta_manager, "active", False
+        instance.states_meta_manager, "active", False
     ):
         assert (
             history.get_full_significant_states_with_session(
@@ -117,9 +117,9 @@ def test_significant_states_with_session_entity_minimal_response_no_matches(
     hass = hass_recorder()
     now = dt_util.utcnow()
     time_before_recorder_ran = now - timedelta(days=1000)
-    isinstance = recorder.get_instance(hass)
+    instance = recorder.get_instance(hass)
     with session_scope(hass=hass) as session, patch.object(
-        isinstance.states_meta_manager, "active", False
+        instance.states_meta_manager, "active", False
     ):
         assert (
             history.get_significant_states_with_session(
@@ -160,8 +160,8 @@ def test_state_changes_during_period(
     """Test state change during period."""
     hass = hass_recorder()
     entity_id = "media_player.test"
-    isinstance = recorder.get_instance(hass)
-    with patch.object(isinstance.states_meta_manager, "active", False):
+    instance = recorder.get_instance(hass)
+    with patch.object(instance.states_meta_manager, "active", False):
 
         def set_state(state):
             """Set the state."""
@@ -208,8 +208,8 @@ def test_state_changes_during_period_descending(
     """Test state change during period descending."""
     hass = hass_recorder()
     entity_id = "media_player.test"
-    isinstance = recorder.get_instance(hass)
-    with patch.object(isinstance.states_meta_manager, "active", False):
+    instance = recorder.get_instance(hass)
+    with patch.object(instance.states_meta_manager, "active", False):
 
         def set_state(state):
             """Set the state."""
@@ -270,8 +270,8 @@ def test_get_last_state_changes(hass_recorder: Callable[..., HomeAssistant]) -> 
     """Test number of state changes."""
     hass = hass_recorder()
     entity_id = "sensor.test"
-    isinstance = recorder.get_instance(hass)
-    with patch.object(isinstance.states_meta_manager, "active", False):
+    instance = recorder.get_instance(hass)
+    with patch.object(instance.states_meta_manager, "active", False):
 
         def set_state(state):
             """Set the state."""
@@ -314,8 +314,8 @@ def test_ensure_state_can_be_copied(
     """
     hass = hass_recorder()
     entity_id = "sensor.test"
-    isinstance = recorder.get_instance(hass)
-    with patch.object(isinstance.states_meta_manager, "active", False):
+    instance = recorder.get_instance(hass)
+    with patch.object(instance.states_meta_manager, "active", False):
 
         def set_state(state):
             """Set the state."""
@@ -354,8 +354,8 @@ def test_get_significant_states(hass_recorder: Callable[..., HomeAssistant]) -> 
     media player (attribute changes are not significant and not returned).
     """
     hass = hass_recorder()
-    isinstance = recorder.get_instance(hass)
-    with patch.object(isinstance.states_meta_manager, "active", False):
+    instance = recorder.get_instance(hass)
+    with patch.object(instance.states_meta_manager, "active", False):
         zero, four, states = record_states(hass)
         hist = history.get_significant_states(hass, zero, four)
         assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
@@ -373,8 +373,8 @@ def test_get_significant_states_minimal_response(
     media player (attribute changes are not significant and not returned).
     """
     hass = hass_recorder()
-    isinstance = recorder.get_instance(hass)
-    with patch.object(isinstance.states_meta_manager, "active", False):
+    instance = recorder.get_instance(hass)
+    with patch.object(instance.states_meta_manager, "active", False):
         zero, four, states = record_states(hass)
         hist = history.get_significant_states(hass, zero, four, minimal_response=True)
         entites_with_reducable_states = [
@@ -438,8 +438,8 @@ def test_get_significant_states_with_initial(
     media player (attribute changes are not significant and not returned).
     """
     hass = hass_recorder()
-    isinstance = recorder.get_instance(hass)
-    with patch.object(isinstance.states_meta_manager, "active", False):
+    instance = recorder.get_instance(hass)
+    with patch.object(instance.states_meta_manager, "active", False):
         zero, four, states = record_states(hass)
         one = zero + timedelta(seconds=1)
         one_with_microsecond = zero + timedelta(seconds=1, microseconds=1)
@@ -474,8 +474,8 @@ def test_get_significant_states_without_initial(
     media player (attribute changes are not significant and not returned).
     """
     hass = hass_recorder()
-    isinstance = recorder.get_instance(hass)
-    with patch.object(isinstance.states_meta_manager, "active", False):
+    instance = recorder.get_instance(hass)
+    with patch.object(instance.states_meta_manager, "active", False):
         zero, four, states = record_states(hass)
         one = zero + timedelta(seconds=1)
         one_with_microsecond = zero + timedelta(seconds=1, microseconds=1)
@@ -504,8 +504,8 @@ def test_get_significant_states_entity_id(
 ) -> None:
     """Test that only significant states are returned for one entity."""
     hass = hass_recorder()
-    isinstance = recorder.get_instance(hass)
-    with patch.object(isinstance.states_meta_manager, "active", False):
+    instance = recorder.get_instance(hass)
+    with patch.object(instance.states_meta_manager, "active", False):
         zero, four, states = record_states(hass)
         del states["media_player.test2"]
         del states["media_player.test3"]
@@ -522,8 +522,8 @@ def test_get_significant_states_multiple_entity_ids(
 ) -> None:
     """Test that only significant states are returned for one entity."""
     hass = hass_recorder()
-    isinstance = recorder.get_instance(hass)
-    with patch.object(isinstance.states_meta_manager, "active", False):
+    instance = recorder.get_instance(hass)
+    with patch.object(instance.states_meta_manager, "active", False):
         zero, four, states = record_states(hass)
         del states["media_player.test2"]
         del states["media_player.test3"]
@@ -554,8 +554,8 @@ def test_get_significant_states_are_ordered(
     """
     hass = hass_recorder()
 
-    isinstance = recorder.get_instance(hass)
-    with patch.object(isinstance.states_meta_manager, "active", False):
+    instance = recorder.get_instance(hass)
+    with patch.object(instance.states_meta_manager, "active", False):
         zero, four, _states = record_states(hass)
         entity_ids = ["media_player.test", "media_player.test2"]
         hist = history.get_significant_states(hass, zero, four, entity_ids)
@@ -571,8 +571,8 @@ def test_get_significant_states_only(
     """Test significant states when significant_states_only is set."""
     hass = hass_recorder()
     entity_id = "sensor.test"
-    isinstance = recorder.get_instance(hass)
-    with patch.object(isinstance.states_meta_manager, "active", False):
+    instance = recorder.get_instance(hass)
+    with patch.object(instance.states_meta_manager, "active", False):
 
         def set_state(state, **kwargs):
             """Set the state."""
@@ -731,8 +731,8 @@ def test_state_changes_during_period_multiple_entities_single_test(
     generate incorrect results.
     """
     hass = hass_recorder()
-    isinstance = recorder.get_instance(hass)
-    with patch.object(isinstance.states_meta_manager, "active", False):
+    instance = recorder.get_instance(hass)
+    with patch.object(instance.states_meta_manager, "active", False):
         start = dt_util.utcnow()
         test_entites = {f"sensor.{i}": str(i) for i in range(30)}
         for entity_id, value in test_entites.items():
