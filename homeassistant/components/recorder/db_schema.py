@@ -113,7 +113,7 @@ TABLES_TO_CHECK = [
 ]
 
 LAST_UPDATED_INDEX_TS = "ix_states_last_updated_ts"
-ENTITY_ID_LAST_UPDATED_INDEX_TS = "ix_states_entity_id_last_updated_ts"
+METADATA_ID_LAST_UPDATED_INDEX_TS = "ix_states_metadata_id_last_updated_ts"
 EVENTS_CONTEXT_ID_BIN_INDEX = "ix_events_context_id_bin"
 STATES_CONTEXT_ID_BIN_INDEX = "ix_states_context_id_bin"
 CONTEXT_ID_BIN_MAX_LENGTH = 16
@@ -365,7 +365,7 @@ class States(Base):
     __table_args__ = (
         # Used for fetching the state of entities at a specific time
         # (get_states in history.py)
-        Index(ENTITY_ID_LAST_UPDATED_INDEX_TS, "entity_id", "last_updated_ts"),
+        Index(METADATA_ID_LAST_UPDATED_INDEX_TS, "metadata_id", "last_updated_ts"),
         Index(
             STATES_CONTEXT_ID_BIN_INDEX,
             "context_id_bin",

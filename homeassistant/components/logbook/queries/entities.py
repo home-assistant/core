@@ -11,7 +11,7 @@ from sqlalchemy.sql.selectable import CTE, CompoundSelect, Select
 
 from homeassistant.components.recorder.db_schema import (
     ENTITY_ID_IN_EVENT,
-    ENTITY_ID_LAST_UPDATED_INDEX_TS,
+    METADATA_ID_LAST_UPDATED_INDEX_TS,
     OLD_ENTITY_ID_IN_EVENT,
     EventData,
     Events,
@@ -140,9 +140,11 @@ def apply_event_entity_id_matchers(
 def apply_entities_hints(sel: Select) -> Select:
     """Force mysql to use the right index on large selects."""
     return sel.with_hint(
-        States, f"FORCE INDEX ({ENTITY_ID_LAST_UPDATED_INDEX_TS})", dialect_name="mysql"
+        States,
+        f"FORCE INDEX ({METADATA_ID_LAST_UPDATED_INDEX_TS})",
+        dialect_name="mysql",
     ).with_hint(
         States,
-        f"FORCE INDEX ({ENTITY_ID_LAST_UPDATED_INDEX_TS})",
+        f"FORCE INDEX ({METADATA_ID_LAST_UPDATED_INDEX_TS})",
         dialect_name="mariadb",
     )

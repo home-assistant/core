@@ -987,6 +987,10 @@ def _apply_update(  # noqa: C901
         _create_index(session_maker, "events", "ix_events_event_type_id")
         _drop_index(session_maker, "events", "ix_events_event_type_time_fired_ts")
         _create_index(session_maker, "events", "ix_events_event_type_id_time_fired_ts")
+    elif new_version == 38:
+        _add_columns(session_maker, "states", [f"metadata_id {big_int}"])
+        _create_index(session_maker, "states", "ix_states_metadata_id")
+        _create_index(session_maker, "states", "ix_states_metadata_id_last_updated_ts")
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
@@ -1394,6 +1398,7 @@ def migrate_entity_ids(instance: Recorder) -> bool:
         is_done = not states
 
     if is_done:
+        _drop_index(session_maker, "states", "ix_states_entity_id_last_updated_ts")
         # TODO: make this call later 5 minutes to make
         # sure there are no history queries still running
         instance.states_meta_manager.active = True
