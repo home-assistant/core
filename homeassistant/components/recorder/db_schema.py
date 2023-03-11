@@ -179,6 +179,11 @@ class Events(Base):
     """Event history data."""
 
     __table_args__ = (
+        # Used for fetching events at a specific time
+        # see logbook
+        Index(
+            "ix_events_event_type_id_time_fired_ts", "event_type_id", "time_fired_ts"
+        ),
         Index(
             EVENTS_CONTEXT_ID_BIN_INDEX,
             "context_id_bin",
