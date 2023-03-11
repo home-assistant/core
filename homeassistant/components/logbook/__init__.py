@@ -43,7 +43,7 @@ from .const import (  # noqa: F401
     LOGBOOK_ENTRY_NAME,
     LOGBOOK_ENTRY_SOURCE,
 )
-from .models import LazyEventPartialState, LogbookConfig  # noqa: F401
+from .models import LazyEventPartialState, LogbookConfig
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA}, extra=vol.ALLOW_EXTRA
