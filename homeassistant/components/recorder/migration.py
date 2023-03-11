@@ -1380,14 +1380,14 @@ def migrate_entity_ids(instance: Recorder) -> bool:
                     ] = db_states_metadata.metadata_id
 
             session.execute(
-                update(Events),
+                update(States),
                 [
                     {
                         "state_id": state_id,
                         # We cannot set "entity_id": None yet since
                         # the history queries still need to work while the
                         # migration is in progress.
-                        "metadata_id": entity_id_to_metadata_id[state_id],
+                        "metadata_id": entity_id_to_metadata_id[entity_id],
                     }
                     for state_id, entity_id in states
                 ],
