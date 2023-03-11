@@ -2,6 +2,7 @@
 from unittest.mock import Mock, patch
 
 from nextcloudmonitor import NextcloudMonitorError
+import pytest
 
 from homeassistant.components.nextcloud import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
@@ -10,6 +11,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
+
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def test_user_create_entry(
