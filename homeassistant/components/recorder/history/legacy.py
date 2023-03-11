@@ -265,9 +265,11 @@ def _significant_states_stmt(
                 (States.last_changed_ts == States.last_updated_ts)
                 | States.last_changed_ts.is_(None)
             )
-        stmt += lambda q: q.filter(
-            (States.last_changed == States.last_updated) | States.last_changed.is_(None)
-        )
+        else:
+            stmt += lambda q: q.filter(
+                (States.last_changed == States.last_updated)
+                | States.last_changed.is_(None)
+            )
     elif significant_changes_only:
         if schema_version >= 31:
             stmt += lambda q: q.filter(
