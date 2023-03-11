@@ -731,6 +731,9 @@ icmplib==3.0
 # homeassistant.components.network
 ifaddr==0.1.7
 
+# homeassistant.components.incharge
+incharge==1.0.3
+
 # homeassistant.components.influxdb
 influxdb-client==1.24.0
 

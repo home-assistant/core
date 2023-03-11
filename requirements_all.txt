@@ -966,6 +966,9 @@ iglo==1.2.7
 # homeassistant.components.ihc
 ihcsdk==2.7.6
 
+# homeassistant.components.incharge
+incharge==1.0.3
+
 # homeassistant.components.incomfort
 incomfort-client==0.5.0
 
