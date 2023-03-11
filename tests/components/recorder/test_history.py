@@ -20,11 +20,9 @@ from homeassistant.components.recorder.db_schema import (
     StateAttributes,
     States,
 )
-from homeassistant.components.recorder.models import (
-    LazyState,
-    LazyStatePreSchema31,
-    process_timestamp,
-)
+from homeassistant.components.recorder.history import legacy
+from homeassistant.components.recorder.models import LazyState, process_timestamp
+from homeassistant.components.recorder.models.legacy import LazyStatePreSchema31
 from homeassistant.components.recorder.util import session_scope
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant, State
@@ -63,7 +61,7 @@ async def _async_get_states(
             attr_cache = {}
             return [
                 klass(row, attr_cache, None)
-                for row in history._get_rows_with_session(
+                for row in legacy._get_rows_with_session(
                     hass,
                     session,
                     utc_point_in_time,
@@ -207,6 +205,27 @@ def test_significant_states_with_session_entity_minimal_response_no_matches(
             )
             == {}
         )
+
+
+def test_significant_states_with_session_single_entity(
+    hass_recorder: Callable[..., HomeAssistant],
+) -> None:
+    """Test get_significant_states_with_session with a single entity."""
+    hass = hass_recorder()
+    hass.states.set("demo.id", "any", {"attr": True})
+    hass.states.set("demo.id", "any2", {"attr": True})
+    wait_recording_done(hass)
+    now = dt_util.utcnow()
+    with session_scope(hass=hass) as session:
+        states = history.get_significant_states_with_session(
+            hass,
+            session,
+            now - timedelta(days=1),
+            now,
+            entity_ids=["demo.id"],
+            minimal_response=False,
+        )
+        assert len(states["demo.id"]) == 2
 
 
 @pytest.mark.parametrize(
