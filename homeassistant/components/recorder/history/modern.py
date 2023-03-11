@@ -7,7 +7,6 @@ from datetime import datetime
 from itertools import groupby
 import logging
 from operator import itemgetter
-import time
 from typing import Any, cast
 
 from sqlalchemy import Column, Text, and_, func, lambda_stmt, or_, select
@@ -275,6 +274,7 @@ def get_significant_states_with_session(
         states,
         start_time,
         entity_ids,
+        entity_id_to_metadata_id,
         filters,
         include_start_time_state,
         minimal_response,
@@ -369,9 +369,11 @@ def state_changes_during_period(
 
     with session_scope(hass=hass) as session:
         metadata_id: int | None = None
+        entity_id_to_metadata_id = None
         if entity_id:
             instance = recorder.get_instance(hass)
             metadata_id = instance.states_meta_manager.get(entity_id, session)
+            entity_id_to_metadata_id = {entity_id: metadata_id}
         stmt = _state_changed_during_period_stmt(
             start_time,
             end_time,
@@ -391,6 +393,7 @@ def state_changes_during_period(
                 states,
                 start_time,
                 entity_ids,
+                entity_id_to_metadata_id,
                 include_start_time_state=include_start_time_state,
             ),
         )
@@ -430,9 +433,9 @@ def get_last_state_changes(
 
     with session_scope(hass=hass) as session:
         instance = recorder.get_instance(hass)
-        metadata_id = instance.states_meta_manager.get(entity_id, session)
-        if metadata_id is None:
+        if not (metadata_id := instance.states_meta_manager.get(entity_id, session)):
             return {}
+        entity_id_to_metadata_id: dict[str, int | None] = {entity_id_lower: metadata_id}
         stmt = _get_last_state_changes_stmt(number_of_states, metadata_id)
         states = list(execute_stmt_lambda_element(session, stmt))
         return cast(
@@ -443,6 +446,7 @@ def get_last_state_changes(
                 reversed(states),
                 dt_util.utcnow(),
                 entity_ids,
+                entity_id_to_metadata_id,
                 include_start_time_state=False,
             ),
         )
@@ -551,15 +555,16 @@ def _get_rows_with_session(
     session: Session,
     utc_point_in_time: datetime,
     entity_ids: list[str] | None = None,
+    entity_id_to_metadata_id: dict[str, int | None] | None = None,
     run: RecorderRuns | None = None,
     filters: Filters | None = None,
     no_attributes: bool = False,
 ) -> Iterable[Row]:
     """Return the states at a specific point in time."""
     if entity_ids and len(entity_ids) == 1:
-        instance = recorder.get_instance(hass)
-        metadata_id = instance.states_meta_manager.get(entity_ids[0], session)
-        if metadata_id is None:
+        if not entity_id_to_metadata_id or not (
+            metadata_id := entity_id_to_metadata_id.get(entity_ids[0])
+        ):
             return []
         return execute_stmt_lambda_element(
             session,
@@ -578,15 +583,15 @@ def _get_rows_with_session(
     # We have more than one entity to look at so we need to do a query on states
     # since the last recorder run started.
     if entity_ids:
-        instance = recorder.get_instance(hass)
-        entity_id_to_metadata_id = instance.states_meta_manager.get_many(
-            entity_ids, session
-        )
+        if not entity_id_to_metadata_id:
+            return []
         metadata_ids = [
             metadata_id
             for metadata_id in entity_id_to_metadata_id.values()
             if metadata_id is not None
         ]
+        if not metadata_ids:
+            return []
         stmt = _get_states_for_entities_stmt(
             run.start, utc_point_in_time, metadata_ids, no_attributes
         )
@@ -630,6 +635,7 @@ def _sorted_states_to_dict(
     states: Iterable[Row],
     start_time: datetime,
     entity_ids: list[str] | None,
+    entity_id_to_metadata_id: dict[str, int | None] | None,
     filters: Filters | None = None,
     include_start_time_state: bool = True,
     minimal_response: bool = False,
@@ -662,51 +668,48 @@ def _sorted_states_to_dict(
 
     result: dict[str, list[State | dict[str, Any]]] = defaultdict(list)
     metadata_id_to_entity_id: dict[int, str] = {}
-    states_meta_manager = recorder.get_instance(hass).states_meta_manager
+    metadata_id_idx = field_map["metadata_id"]
 
     # Set all entity IDs to empty lists in result set to maintain the order
     if entity_ids is not None:
         for ent_id in entity_ids:
             result[ent_id] = []
 
-        entity_id_to_metadata_id = states_meta_manager.get_many(entity_ids, session)
-        metadata_id_to_entity_id = {
-            v: k for k, v in entity_id_to_metadata_id.items() if v is not None
-        }
+        if entity_id_to_metadata_id:
+            metadata_id_to_entity_id = {
+                v: k for k, v in entity_id_to_metadata_id.items() if v is not None
+            }
     else:
-        metadata_id_to_entity_id = states_meta_manager.get_metadata_id_to_entity_id(
-            session
-        )
+        metadata_id_to_entity_id = recorder.get_instance(
+            hass
+        ).states_meta_manager.get_metadata_id_to_entity_id(session)
 
     # Get the states at the start time
-    timer_start = time.perf_counter()
     initial_states: dict[int, Row] = {}
     if include_start_time_state:
         initial_states = {
-            row[0]: row
+            row[metadata_id_idx]: row
             for row in _get_rows_with_session(
                 hass,
                 session,
                 start_time,
                 entity_ids,
+                entity_id_to_metadata_id,
                 filters=filters,
                 no_attributes=no_attributes,
             )
         }
 
-    if _LOGGER.isEnabledFor(logging.DEBUG):
-        elapsed = time.perf_counter() - timer_start
-        _LOGGER.debug("getting %d first datapoints took %fs", len(result), elapsed)
-
     if entity_ids and len(entity_ids) == 1:
-        metadata_id = entity_id_to_metadata_id[entity_ids[0]]
-        if metadata_id is None:
-            return result
+        if not entity_id_to_metadata_id or not (
+            metadata_id := entity_id_to_metadata_id.get(entity_ids[0])
+        ):
+            return {}
         states_iter: Iterable[tuple[int, Iterator[Row]]] = (
             (metadata_id, iter(states)),
         )
     else:
-        key_func = itemgetter(0)
+        key_func = itemgetter(metadata_id_idx)
         states_iter = groupby(states, key_func)
 
     # Append all changes to it
