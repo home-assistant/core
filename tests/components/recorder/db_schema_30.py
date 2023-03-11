@@ -67,6 +67,7 @@ TABLE_EVENT_DATA = "event_data"
 TABLE_EVENT_TYPES = "event_types"
 TABLE_STATES = "states"
 TABLE_STATE_ATTRIBUTES = "state_attributes"
+TABLE_STATES_META = "states_meta"
 TABLE_RECORDER_RUNS = "recorder_runs"
 TABLE_SCHEMA_CHANGES = "schema_changes"
 TABLE_STATISTICS = "statistics"
@@ -77,6 +78,7 @@ TABLE_STATISTICS_SHORT_TERM = "statistics_short_term"
 ALL_TABLES = [
     TABLE_STATES,
     TABLE_STATE_ATTRIBUTES,
+    TABLE_STATES_META,
     TABLE_EVENTS,
     TABLE_EVENT_DATA,
     TABLE_EVENT_TYPES,
@@ -388,6 +390,10 @@ class States(Base):  # type: ignore[misc,valid-type]
     context_parent_id_bin = Column(
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
     )  # *** Not originally in v30, only added for recorder to startup ok
+    metadata_id = Column(
+        Integer, ForeignKey("states_meta.metadata_id"), index=True
+    )  # *** Not originally in v30, only added for recorder to startup ok
+    states_meta_rel = relationship("StatesMeta")
     old_state = relationship("States", remote_side=[state_id])
     state_attributes = relationship("StateAttributes")
 
@@ -523,6 +529,27 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
             # When json_loads fails
             _LOGGER.exception("Error converting row to state attributes: %s", self)
             return {}
+
+
+# *** Not originally in v30, only added for recorder to startup ok
+# This is not being tested by the v30 statistics migration tests
+class StatesMeta(Base):  # type: ignore[misc,valid-type]
+    """Metadata for states."""
+
+    __table_args__ = (
+        {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
+    )
+    __tablename__ = TABLE_STATES_META
+    metadata_id = Column(Integer, Identity(), primary_key=True)
+    entity_id = Column(String(MAX_LENGTH_STATE_ENTITY_ID))
+
+    def __repr__(self) -> str:
+        """Return string representation of instance for debugging."""
+        return (
+            "<recorder.StatesMeta("
+            f"id={self.metadata_id}, entity_id='{self.entity_id}'"
+            ")>"
+        )
 
 
 class StatisticsBase:
