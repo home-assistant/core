@@ -9,7 +9,7 @@ import logging
 from operator import itemgetter
 from typing import Any, cast
 
-from sqlalchemy import Column, Text, and_, func, lambda_stmt, or_, select
+from sqlalchemy import Column, and_, func, lambda_stmt, or_, select
 from sqlalchemy.engine.row import Row
 from sqlalchemy.orm.properties import MappedColumn
 from sqlalchemy.orm.query import Query
@@ -55,16 +55,8 @@ _BASE_STATES_NO_LAST_CHANGED = (  # type: ignore[var-annotated]
     literal(value=None).label("last_changed_ts"),
     States.last_updated_ts,
 )
-_QUERY_STATE_NO_ATTR = (
-    *_BASE_STATES,
-    literal(value=None, type_=Text).label("attributes"),
-    literal(value=None, type_=Text).label("shared_attrs"),
-)
-_QUERY_STATE_NO_ATTR_NO_LAST_CHANGED = (
-    *_BASE_STATES_NO_LAST_CHANGED,
-    literal(value=None, type_=Text).label("attributes"),
-    literal(value=None, type_=Text).label("shared_attrs"),
-)
+_QUERY_STATE_NO_ATTR = (*_BASE_STATES,)
+_QUERY_STATE_NO_ATTR_NO_LAST_CHANGED = (*_BASE_STATES_NO_LAST_CHANGED,)
 _QUERY_STATES = (
     *_BASE_STATES,
     # Remove States.attributes once all attributes are in StateAttributes.shared_attrs
