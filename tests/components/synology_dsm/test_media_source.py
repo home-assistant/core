@@ -58,7 +58,7 @@ async def test_get_media_source(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("setup_media_source")
 @pytest.mark.parametrize(
-    ("identifier,exception_msg"),
+    ("identifier", "exception_msg"),
     [
         ("unique_id", "No album id"),
         ("unique_id/1", "No file name"),
@@ -78,7 +78,7 @@ async def test_resolve_media_bad_identifier(
 
 @pytest.mark.usefixtures("setup_media_source")
 @pytest.mark.parametrize(
-    ("identifier,url,mime_type"),
+    ("identifier", "url", "mime_type"),
     [
         (
             "ABC012345/10/27643_876876/filename.jpg",
