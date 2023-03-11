@@ -64,6 +64,7 @@ from .db_schema import (
     EventTypes,
     StateAttributes,
     States,
+    StatesMeta,
     Statistics,
     StatisticsRuns,
     StatisticsShortTerm,
@@ -1036,12 +1037,25 @@ class Recorder(threading.Thread):
 
     def _process_state_changed_event_into_session(self, event: Event) -> None:
         """Process a state_changed event into the session."""
-        assert self.event_session is not None
         dbstate = States.from_event(event)
-        if not (
+        if (entity_id := dbstate.entity_id) is None or not (
             shared_attrs_bytes := self._serialize_state_attributes_from_event(event)
         ):
             return
+
+        assert self.event_session is not None
+        event_session = self.event_session
+        # Map the entity_id to the StatesMeta table
+        states_meta_manager = self.states_meta_manager
+        if pending_states_meta := states_meta_manager.get_pending(entity_id):
+            dbstate.states_meta_rel = pending_states_meta
+        elif metadata_id := states_meta_manager.get(event.event_type, event_session):
+            dbstate.metadata_id = metadata_id
+        else:
+            states_meta = StatesMeta(entity_id=entity_id)
+            states_meta_manager.add_pending(states_meta)
+            event_session.add(states_meta)
+            dbstate.states_meta_rel = states_meta
 
         shared_attrs = shared_attrs_bytes.decode("utf-8")
         dbstate.attributes = None
@@ -1066,16 +1080,20 @@ class Recorder(threading.Thread):
                 self._pending_state_attributes[shared_attrs] = dbstate_attributes
                 self.event_session.add(dbstate_attributes)
 
-        if old_state := self._old_states.pop(dbstate.entity_id, None):
+        if old_state := self._old_states.pop(entity_id, None):
             if old_state.state_id:
                 dbstate.old_state_id = old_state.state_id
             else:
                 dbstate.old_state = old_state
         if event.data.get("new_state"):
-            self._old_states[dbstate.entity_id] = dbstate
+            self._old_states[entity_id] = dbstate
             self._pending_expunge.append(dbstate)
         else:
             dbstate.state = None
+
+        # TODO: if we have finished the migration do not recorder `dbstate.entity_id`
+        # by setting it to None. This will allow us to remove the entity_id column
+        # from the states table.
         self.event_session.add(dbstate)
 
     def _handle_database_error(self, err: Exception) -> bool:
