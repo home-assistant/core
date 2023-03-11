@@ -1,7 +1,7 @@
 """Test for SQL component Init."""
 from __future__ import annotations
 
-from unittest.mock import patch, AsyncMock
+from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
@@ -60,9 +60,9 @@ async def test_invalid_query(hass: HomeAssistant) -> None:
 
 
 async def test_remove_configured_db_url_if_not_needed_when_not_needed(
-    recorder_mock: AsyncMock,
+    recorder_mock: Recorder,
     hass: HomeAssistant,
-):
+) -> None:
     """Test configured db_url is replaced with None if matching the recorder db."""
     recorder_db_url = get_instance(hass).db_url
 
@@ -79,9 +79,9 @@ async def test_remove_configured_db_url_if_not_needed_when_not_needed(
 
 
 async def test_remove_configured_db_url_if_not_needed_when_needed(
-    recorder_mock: AsyncMock,
+    recorder_mock: Recorder,
     hass: HomeAssistant,
-):
+) -> None:
     """Test configured db_url is not replaced if it differs from the recorder db."""
     db_url = "mssql://"
 

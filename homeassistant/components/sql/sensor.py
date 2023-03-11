@@ -10,7 +10,7 @@ from sqlalchemy.engine import Result
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
 
-from homeassistant.components.recorder import CONF_DB_URL, DEFAULT_DB_FILE, DEFAULT_URL
+from homeassistant.components.recorder import CONF_DB_URL
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     SensorDeviceClass,
@@ -60,7 +60,7 @@ async def async_setup_platform(
     value_template: Template | None = conf.get(CONF_VALUE_TEMPLATE)
     column_name: str = conf[CONF_COLUMN_NAME]
     unique_id: str | None = conf.get(CONF_UNIQUE_ID)
-    db_url: str | None = resolve_db_url(hass, conf.get(CONF_DB_URL))
+    db_url: str = resolve_db_url(hass, conf.get(CONF_DB_URL))
     device_class: SensorDeviceClass | None = conf.get(CONF_DEVICE_CLASS)
     state_class: SensorStateClass | None = conf.get(CONF_STATE_CLASS)
 

@@ -6,7 +6,7 @@ from unittest.mock import patch
 from sqlalchemy.exc import SQLAlchemyError
 
 from homeassistant import config_entries
-from homeassistant.components.recorder import DEFAULT_DB_FILE, DEFAULT_URL, Recorder
+from homeassistant.components.recorder import Recorder
 from homeassistant.components.sql.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
