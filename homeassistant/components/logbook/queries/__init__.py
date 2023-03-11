@@ -53,26 +53,26 @@ def statement_for_request(
     # sqlalchemy from quoting them incorrectly
 
     # entities and devices: logbook sends everything for the timeframe for the entities and devices
-    if states_metadata_ids and entity_ids and device_ids:
+    if entity_ids and device_ids:
         json_quoted_entity_ids = [json_dumps(entity_id) for entity_id in entity_ids]
         json_quoted_device_ids = [json_dumps(device_id) for device_id in device_ids]
         return entities_devices_stmt(
             start_day,
             end_day,
             event_types,
-            states_metadata_ids,
+            states_metadata_ids or [],
             json_quoted_entity_ids,
             json_quoted_device_ids,
         )
 
     # entities: logbook sends everything for the timeframe for the entities
-    if states_metadata_ids and entity_ids:
+    if entity_ids:
         json_quoted_entity_ids = [json_dumps(entity_id) for entity_id in entity_ids]
         return entities_stmt(
             start_day,
             end_day,
             event_types,
-            states_metadata_ids,
+            states_metadata_ids or [],
             json_quoted_entity_ids,
         )
 
