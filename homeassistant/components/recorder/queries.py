@@ -60,6 +60,11 @@ def find_event_type_ids(event_types: Iterable[str]) -> StatementLambdaElement:
     )
 
 
+def find_all_states_metadata_ids() -> StatementLambdaElement:
+    """Find an metadata_id by entity_id."""
+    return lambda_stmt(lambda: select(StatesMeta.metadata_id, StatesMeta.entity_id))
+
+
 def find_states_metadata_ids(entity_ids: Iterable[str]) -> StatementLambdaElement:
     """Find an metadata_id by entity_id."""
     return lambda_stmt(

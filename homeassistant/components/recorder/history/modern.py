@@ -6,7 +6,7 @@ from collections.abc import Callable, Iterable, Iterator, MutableMapping
 from datetime import datetime
 from itertools import groupby
 import logging
-from operator import attrgetter
+from operator import itemgetter
 import time
 from typing import Any, cast
 
@@ -27,13 +27,11 @@ from ..db_schema import RecorderRuns, StateAttributes, States, StatesMeta
 from ..filters import Filters
 from ..models import (
     LazyState,
-    process_datetime_to_timestamp,
     process_timestamp,
     process_timestamp_to_utc_isoformat,
     row_to_compressed_state,
 )
 from ..util import execute_stmt_lambda_element, session_scope
-from .common import _schema_version
 from .const import (
     IGNORE_DOMAINS_ENTITY_ID_LIKE,
     LAST_CHANGED_KEY,
@@ -87,7 +85,7 @@ _FIELD_MAP = {
 
 
 def _lambda_stmt_and_join_attributes(
-    schema_version: int, no_attributes: bool, include_last_changed: bool = True
+    no_attributes: bool, include_last_changed: bool = True
 ) -> tuple[StatementLambdaElement, bool]:
     """Return the lambda_stmt and if StateAttributes should be joined.
 
@@ -155,7 +153,6 @@ def _ignore_domains_filter(query: Query) -> Query:
 
 
 def _significant_states_stmt(
-    schema_version: int,
     start_time: datetime,
     end_time: datetime | None,
     entity_ids: list[str] | None,
@@ -165,7 +162,7 @@ def _significant_states_stmt(
 ) -> StatementLambdaElement:
     """Query the database for significant state changes."""
     stmt, join_attributes = _lambda_stmt_and_join_attributes(
-        schema_version, no_attributes, include_last_changed=not significant_changes_only
+        no_attributes, include_last_changed=not significant_changes_only
     )
     if (
         entity_ids
@@ -243,7 +240,6 @@ def get_significant_states_with_session(
     thermostat so that we get current temperature in our graphs).
     """
     stmt = _significant_states_stmt(
-        _schema_version(hass),
         start_time,
         end_time,
         entity_ids,
@@ -302,7 +298,6 @@ def get_full_significant_states_with_session(
 
 
 def _state_changed_during_period_stmt(
-    schema_version: int,
     start_time: datetime,
     end_time: datetime | None,
     metadata_id: int | None,
@@ -311,7 +306,7 @@ def _state_changed_during_period_stmt(
     limit: int | None,
 ) -> StatementLambdaElement:
     stmt, join_attributes = _lambda_stmt_and_join_attributes(
-        schema_version, no_attributes, include_last_changed=False
+        no_attributes, include_last_changed=False
     )
     start_time_ts = start_time.timestamp()
     stmt += lambda q: q.filter(
@@ -358,7 +353,6 @@ def state_changes_during_period(
             instance = recorder.get_instance(hass)
             metadata_id = instance.states_meta_manager.get(entity_id, session)
         stmt = _state_changed_during_period_stmt(
-            _schema_version(hass),
             start_time,
             end_time,
             metadata_id,
@@ -383,10 +377,10 @@ def state_changes_during_period(
 
 
 def _get_last_state_changes_stmt(
-    schema_version: int, number_of_states: int, metadata_id: int
+    number_of_states: int, metadata_id: int
 ) -> StatementLambdaElement:
     stmt, join_attributes = _lambda_stmt_and_join_attributes(
-        schema_version, False, include_last_changed=False
+        False, include_last_changed=False
     )
     stmt += lambda q: q.where(
         States.state_id
@@ -419,9 +413,7 @@ def get_last_state_changes(
         metadata_id = instance.states_meta_manager.get(entity_id, session)
         if metadata_id is None:
             return {}
-        stmt = _get_last_state_changes_stmt(
-            _schema_version(hass), number_of_states, metadata_id
-        )
+        stmt = _get_last_state_changes_stmt(number_of_states, metadata_id)
         states = list(execute_stmt_lambda_element(session, stmt))
         return cast(
             MutableMapping[str, list[State]],
@@ -437,7 +429,6 @@ def get_last_state_changes(
 
 
 def _get_states_for_entities_stmt(
-    schema_version: int,
     run_start: datetime,
     utc_point_in_time: datetime,
     metadata_ids: list[int],
@@ -445,7 +436,7 @@ def _get_states_for_entities_stmt(
 ) -> StatementLambdaElement:
     """Baked query to get states for specific entities."""
     stmt, join_attributes = _lambda_stmt_and_join_attributes(
-        schema_version, no_attributes, include_last_changed=True
+        no_attributes, include_last_changed=True
     )
     # We got an include-list of entities, accelerate the query by filtering already
     # in the inner query.
@@ -484,7 +475,6 @@ def _get_states_for_entities_stmt(
 
 
 def _get_states_for_all_stmt(
-    schema_version: int,
     run_start: datetime,
     utc_point_in_time: datetime,
     filters: Filters | None,
@@ -492,7 +482,7 @@ def _get_states_for_all_stmt(
 ) -> StatementLambdaElement:
     """Baked query to get states for all entities."""
     stmt, join_attributes = _lambda_stmt_and_join_attributes(
-        schema_version, no_attributes, include_last_changed=True
+        no_attributes, include_last_changed=True
     )
     # We did not get an include-list of entities, query all states in the inner
     # query, then filter out unwanted domains as well as applying the custom filter.
@@ -543,7 +533,6 @@ def _get_rows_with_session(
     no_attributes: bool = False,
 ) -> Iterable[Row]:
     """Return the states at a specific point in time."""
-    schema_version = _schema_version(hass)
     if entity_ids and len(entity_ids) == 1:
         instance = recorder.get_instance(hass)
         metadata_id = instance.states_meta_manager.get(entity_ids[0], session)
@@ -552,7 +541,7 @@ def _get_rows_with_session(
         return execute_stmt_lambda_element(
             session,
             _get_single_entity_states_stmt(
-                schema_version, utc_point_in_time, metadata_id, no_attributes
+                utc_point_in_time, metadata_id, no_attributes
             ),
         )
 
@@ -576,18 +565,17 @@ def _get_rows_with_session(
             if metadata_id is not None
         ]
         stmt = _get_states_for_entities_stmt(
-            schema_version, run.start, utc_point_in_time, metadata_ids, no_attributes
+            run.start, utc_point_in_time, metadata_ids, no_attributes
         )
     else:
         stmt = _get_states_for_all_stmt(
-            schema_version, run.start, utc_point_in_time, filters, no_attributes
+            run.start, utc_point_in_time, filters, no_attributes
         )
 
     return execute_stmt_lambda_element(session, stmt)
 
 
 def _get_single_entity_states_stmt(
-    schema_version: int,
     utc_point_in_time: datetime,
     metadata_id: int,
     no_attributes: bool = False,
@@ -595,7 +583,7 @@ def _get_single_entity_states_stmt(
     # Use an entirely different (and extremely fast) query if we only
     # have a single entity id
     stmt, join_attributes = _lambda_stmt_and_join_attributes(
-        schema_version, no_attributes, include_last_changed=True
+        no_attributes, include_last_changed=True
     )
     utc_point_in_time_ts = dt_util.utc_to_timestamp(utc_point_in_time)
     stmt += (
@@ -636,35 +624,43 @@ def _sorted_states_to_dict(
     each list of states, otherwise our graphs won't start on the Y
     axis correctly.
     """
-    _schema_version(hass)
-    _process_timestamp: Callable[[datetime], float | str]
     field_map = _FIELD_MAP
     state_class: Callable[
         [Row, dict[str, dict[str, Any]], datetime | None], State | dict[str, Any]
     ]
     if compressed_state_format:
         state_class = row_to_compressed_state
-        _process_timestamp = process_datetime_to_timestamp
         attr_time = COMPRESSED_STATE_LAST_UPDATED
         attr_state = COMPRESSED_STATE_STATE
     else:
         state_class = LazyState
-        _process_timestamp = process_timestamp_to_utc_isoformat
         attr_time = LAST_CHANGED_KEY
         attr_state = STATE_KEY
 
     result: dict[str, list[State | dict[str, Any]]] = defaultdict(list)
+    metadata_id_to_entity_id: dict[int, str] = {}
+    states_meta_manager = recorder.get_instance(hass).states_meta_manager
+
     # Set all entity IDs to empty lists in result set to maintain the order
     if entity_ids is not None:
         for ent_id in entity_ids:
             result[ent_id] = []
 
+        entity_id_to_metadata_id = states_meta_manager.get_many(entity_ids, session)
+        metadata_id_to_entity_id = {
+            v: k for k, v in entity_id_to_metadata_id.items() if v is not None
+        }
+    else:
+        metadata_id_to_entity_id = states_meta_manager.get_metadata_id_to_entity_id(
+            session
+        )
+
     # Get the states at the start time
     timer_start = time.perf_counter()
-    initial_states: dict[str, Row] = {}
+    initial_states: dict[int, Row] = {}
     if include_start_time_state:
         initial_states = {
-            row.entity_id: row
+            row[0]: row
             for row in _get_rows_with_session(
                 hass,
                 session,
@@ -680,23 +676,31 @@ def _sorted_states_to_dict(
         _LOGGER.debug("getting %d first datapoints took %fs", len(result), elapsed)
 
     if entity_ids and len(entity_ids) == 1:
-        states_iter: Iterable[tuple[str, Iterator[Row]]] = (
-            (entity_ids[0], iter(states)),
+        metadata_id = entity_id_to_metadata_id[entity_ids[0]]
+        if metadata_id is None:
+            return result
+        states_iter: Iterable[tuple[int, Iterator[Row]]] = (
+            (metadata_id, iter(states)),
         )
     else:
-        key_func = attrgetter("entity_id")
+        key_func = itemgetter(0)
         states_iter = groupby(states, key_func)
 
     # Append all changes to it
-    for ent_id, group in states_iter:
+    for metadata_id, group in states_iter:
         attr_cache: dict[str, dict[str, Any]] = {}
         prev_state: Column | str
-        ent_results = result[ent_id]
-        if row := initial_states.pop(ent_id, None):
+        if not (entity_id := metadata_id_to_entity_id.get(metadata_id)):
+            continue
+        ent_results = result[entity_id]
+        if row := initial_states.pop(metadata_id, None):
             prev_state = row.state
             ent_results.append(state_class(row, attr_cache, start_time))
 
-        if not minimal_response or split_entity_id(ent_id)[0] in NEED_ATTRIBUTE_DOMAINS:
+        if (
+            not minimal_response
+            or split_entity_id(entity_id)[0] in NEED_ATTRIBUTE_DOMAINS
+        ):
             ent_results.extend(
                 state_class(db_state, attr_cache, None) for db_state in group
             )
@@ -747,8 +751,9 @@ def _sorted_states_to_dict(
 
     # If there are no states beyond the initial state,
     # the state a was never popped from initial_states
-    for ent_id, row in initial_states.items():
-        result[ent_id].append(state_class(row, {}, start_time))
+    for metadata_id, row in initial_states.items():
+        if entity_id := metadata_id_to_entity_id.get(metadata_id):
+            result[entity_id].append(state_class(row, {}, start_time))
 
     # Filter out the empty lists if some states had 0 results.
     return {key: val for key, val in result.items() if val}

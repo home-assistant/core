@@ -10,7 +10,7 @@ from sqlalchemy.orm.session import Session
 from homeassistant.core import Event
 
 from ..db_schema import StatesMeta
-from ..queries import find_states_metadata_ids
+from ..queries import find_all_states_metadata_ids, find_states_metadata_ids
 
 CACHE_SIZE = 8192
 
@@ -38,6 +38,11 @@ class StatesMetaManager:
     def get(self, entity_id: str, session: Session) -> int | None:
         """Resolve entity_id to the metadata_id."""
         return self.get_many((entity_id,), session)[entity_id]
+
+    def get_metadata_id_to_entity_id(self, session: Session) -> dict[int, str]:
+        """Resolve all entity_ids to metadata_ids."""
+        with session.no_autoflush:
+            return dict(session.execute(find_all_states_metadata_ids()))  # type: ignore[arg-type]
 
     def get_many(
         self, entity_ids: Iterable[str], session: Session
