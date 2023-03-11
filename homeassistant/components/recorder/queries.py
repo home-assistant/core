@@ -753,7 +753,7 @@ def has_event_type_to_migrate() -> StatementLambdaElement:
 def has_entity_ids_to_migrate() -> StatementLambdaElement:
     """Check if there are entity_id to migrate."""
     return lambda_stmt(
-        lambda: select(States.metadata_id).filter(States.metadata_id.is_(None)).limit(1)
+        lambda: select(States.state_id).filter(States.metadata_id.is_(None)).limit(1)
     )
 
 
