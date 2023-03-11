@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -99,7 +100,7 @@ async def async_setup_platform(
     lower: float | None = config.get(CONF_LOWER)
     upper: float | None = config.get(CONF_UPPER)
     hysteresis: float = config[CONF_HYSTERESIS]
-    device_class: str | None = config.get(CONF_DEVICE_CLASS)
+    device_class: BinarySensorDeviceClass | None = config.get(CONF_DEVICE_CLASS)
 
     if lower is None and upper is None:
         raise ValueError("Lower or Upper thresholds not provided")
@@ -126,7 +127,7 @@ class ThresholdSensor(BinarySensorEntity):
         lower: float | None,
         upper: float | None,
         hysteresis: float,
-        device_class: str | None,
+        device_class: BinarySensorDeviceClass | None,
         unique_id: str | None,
     ) -> None:
         """Initialize the Threshold sensor."""
@@ -137,7 +138,6 @@ class ThresholdSensor(BinarySensorEntity):
         self._threshold_upper = upper
         self._hysteresis: float = hysteresis
         self._device_class = device_class
-
         self._state_position = POSITION_UNKNOWN
         self._state: bool | None = None
         self.sensor_value: float | None = None
@@ -247,7 +247,6 @@ class ThresholdSensor(BinarySensorEntity):
             and self._threshold_lower is not None
             and self._threshold_upper is not None
         ):
-
             if below(self.sensor_value, self._threshold_lower):
                 self._state_position = POSITION_BELOW
                 self._state = False

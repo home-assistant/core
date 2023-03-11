@@ -1,7 +1,7 @@
 """The test for the threshold sensor platform."""
 import pytest
 
-from pytest import LogCaptureFixture
+import pytest
 
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -572,7 +572,7 @@ async def test_sensor_upper_zero_threshold(hass: HomeAssistant) -> None:
 
 
 async def test_sensor_no_lower_upper(
-    hass: HomeAssistant, caplog: LogCaptureFixture
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test if no lower or upper has been provided."""
     config = {
