@@ -25,14 +25,11 @@ from sqlalchemy import (
     SmallInteger,
     String,
     Text,
-    distinct,
     type_coerce,
 )
 from sqlalchemy.dialects import mysql, oracle, postgresql, sqlite
 from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.orm import DeclarativeBase, Mapped, aliased, mapped_column, relationship
-from sqlalchemy.orm.query import RowReturningQuery
-from sqlalchemy.orm.session import Session
 from typing_extensions import Self
 
 from homeassistant.const import (
@@ -698,27 +695,6 @@ class RecorderRuns(Base):
             f" closed_incorrect={self.closed_incorrect},"
             f" created='{self.created.isoformat(sep=' ', timespec='seconds')}')>"
         )
-
-    def entity_ids(self, point_in_time: datetime | None = None) -> list[str]:
-        """Return the entity ids that existed in this run.
-
-        Specify point_in_time if you want to know which existed at that point
-        in time inside the run.
-        """
-        session = Session.object_session(self)
-
-        assert session is not None, "RecorderRuns need to be persisted"
-
-        query: RowReturningQuery[tuple[str]] = session.query(distinct(States.entity_id))
-
-        query = query.filter(States.last_updated >= self.start)
-
-        if point_in_time is not None:
-            query = query.filter(States.last_updated < point_in_time)
-        elif self.end is not None:
-            query = query.filter(States.last_updated < self.end)
-
-        return [row[0] for row in query]
 
     def to_native(self, validate_entity_id: bool = True) -> Self:
         """Return self, native format is this model."""
