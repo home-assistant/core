@@ -1,0 +1,1 @@
+"""Managers for each table."""
