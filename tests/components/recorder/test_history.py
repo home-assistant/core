@@ -20,11 +20,9 @@ from homeassistant.components.recorder.db_schema import (
     StateAttributes,
     States,
 )
-from homeassistant.components.recorder.models import (
-    LazyState,
-    LazyStatePreSchema31,
-    process_timestamp,
-)
+from homeassistant.components.recorder.history import legacy
+from homeassistant.components.recorder.models import LazyState, process_timestamp
+from homeassistant.components.recorder.models.legacy import LazyStatePreSchema31
 from homeassistant.components.recorder.util import session_scope
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant, State
@@ -63,7 +61,7 @@ async def _async_get_states(
             attr_cache = {}
             return [
                 klass(row, attr_cache, None)
-                for row in history._get_rows_with_session(
+                for row in legacy._get_rows_with_session(
                     hass,
                     session,
                     utc_point_in_time,
