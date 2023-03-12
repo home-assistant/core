@@ -101,7 +101,8 @@ class OmadaDeviceUpdate(
         self._omada_client = coordinator.omada_client
 
         self._attr_unique_id = f"{device.mac}_firmware"
-        self._attr_name = f"{device.name} Firmware Update"
+        self._attr_has_entity_name = True
+        self._attr_name = "Firmware Update"
         self._refresh_state()
 
     def _refresh_state(self) -> None:
