@@ -244,14 +244,14 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             name="Vertical swing flap angle",
             entity_category=EntityCategory.CONFIG,
             icon="mdi:format-vertical-align-center",
-            translation_key="fan_angle",
+            translation_key="fan_angle_vertical",
         ),
         SelectEntityDescription(
             key=DPCode.FAN_HORIZONTAL,
             name="Horizontal swing flap angle",
             entity_category=EntityCategory.CONFIG,
             icon="mdi:format-horizontal-align-center",
-            translation_key="fan_angle",
+            translation_key="fan_angle_horizontal",
         ),
         SelectEntityDescription(
             key=DPCode.COUNTDOWN,

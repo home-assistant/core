@@ -20,6 +20,7 @@
   "entity": {
     "select": {
       "basic_anti_flicker": {
+        "name": "Anti-flicker",
         "state": {
           "0": "Disabled",
           "1": "50 Hz",
@@ -27,6 +28,7 @@
         }
       },
       "basic_nightvision": {
+        "name": "Night vision",
         "state": {
           "0": "Automatic",
           "1": "[%key:common::state::off%]",
@@ -34,18 +36,21 @@
         }
       },
       "decibel_sensitivity": {
+        "name": "Sound detection densitivit",
         "state": {
           "0": "Low sensitivity",
           "1": "High sensitivity"
         }
       },
       "ipc_work_mode": {
+        "name": "IPC mode",
         "state": {
           "0": "Low power mode",
           "1": "Continuous working mode"
         }
       },
       "led_type": {
+        "name": "Light source type",
         "state": {
           "halogen": "Halogen",
           "incandescent": "Incandescent",
@@ -53,6 +58,7 @@
         }
       },
       "light_mode": {
+        "name": "Indicator light mode",
         "state": {
           "none": "[%key:common::state::off%]",
           "pos": "Indicate switch location",
@@ -60,6 +66,7 @@
         }
       },
       "motion_sensitivity": {
+        "name": "Motion detection sensitivity",
         "state": {
           "0": "Low sensitivity",
           "1": "Medium sensitivity",
@@ -67,12 +74,14 @@
         }
       },
       "record_mode": {
+        "name": "Record mode",
         "state": {
           "1": "Record events only",
           "2": "Continuous recording"
         }
       },
       "relay_status": {
+        "name": "Power on behavior",
         "state": {
           "last": "Remember last state",
           "memory": "Remember last state",
@@ -83,12 +92,14 @@
         }
       },
       "fingerbot_mode": {
+        "name": "Mode",
         "state": {
           "click": "Push",
           "switch": "Switch"
         }
       },
       "vacuum_cistern": {
+        "name": "Water tank adjustment",
         "state": {
           "low": "Low",
           "middle": "Middle",
@@ -97,6 +108,7 @@
         }
       },
       "vacuum_collection": {
+        "name": "Dust collection mode",
         "state": {
           "small": "Small",
           "middle": "Middle",
@@ -104,6 +116,7 @@
         }
       },
       "vacuum_mode": {
+        "name": "Mode",
         "state": {
           "standby": "Standby",
           "random": "Random",
@@ -126,7 +139,16 @@
           "pick_zone": "Pick Zone"
         }
       },
-      "fan_angle": {
+      "fan_angle_vertical": {
+        "name": "Vertical swing flap angle",
+        "state": {
+          "30": "30°",
+          "60": "60°",
+          "90": "90°"
+        }
+      },
+      "fan_angle_horizontal": {
+        "name": "Horizontal swing flap angle",
         "state": {
           "30": "30°",
           "60": "60°",
@@ -134,18 +156,21 @@
         }
       },
       "curtain_mode": {
+        "name": "Mode",
         "state": {
           "morning": "Morning",
           "night": "Night"
         }
       },
       "curtain_motor_mode": {
+        "name": "Motor mode",
         "state": {
           "forward": "Forward",
           "back": "Back"
         }
       },
       "countdown": {
+        "name": "Countdown",
         "state": {
           "cancel": "Cancel",
           "1h": "1 hour",
@@ -157,6 +182,7 @@
         }
       },
       "humidifier_spray_mode": {
+        "name": "Spray mode",
         "state": {
           "auto": "Auto",
           "health": "Health",
@@ -166,6 +192,7 @@
         }
       },
       "humidifier_level": {
+        "name": "Spraying level",
         "state": {
           "level_1": "Level 1",
           "level_2": "Level 2",
@@ -180,6 +207,7 @@
         }
       },
       "humidifier_moodlighting": {
+        "name": "Moodlighting",
         "state": {
           "1": "Mood 1",
           "2": "Mood 2",
@@ -191,6 +219,7 @@
     },
     "sensor": {
       "status": {
+        "name": "Status",
         "state": {
           "boiling_temp": "Boiling temperature",
           "cooling": "Cooling",
@@ -204,6 +233,7 @@
         }
       },
       "air_quality": {
+        "name": "Air quality",
         "state": {
           "great": "Great",
           "mild": "Mild",
