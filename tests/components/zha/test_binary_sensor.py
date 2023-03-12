@@ -75,6 +75,11 @@ async def async_test_iaszone_on_off(hass, cluster, entity_id):
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_OFF
 
+    # check that binary sensor remains off when non-alarm bits change
+    cluster.listener_event("cluster_command", 1, 0, [0b1111111100])
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_OFF
+
 
 @pytest.mark.parametrize(
     ("device", "on_off_test", "cluster_name", "reporting"),
