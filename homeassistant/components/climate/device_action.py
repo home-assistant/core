@@ -12,7 +12,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import get_capability, get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
@@ -44,11 +44,11 @@ async def async_get_actions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device actions for Climate devices."""
-    registry = entity_registry.async_get(hass)
+    registry = er.async_get(hass)
     actions = []
 
     # Get all the integrations entities for this device
-    for entry in entity_registry.async_entries_for_device(registry, device_id):
+    for entry in er.async_entries_for_device(registry, device_id):
         if entry.domain != DOMAIN:
             continue
 

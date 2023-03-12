@@ -7,7 +7,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
 import functools
 import logging
-from typing import TYPE_CHECKING, Any, Protocol, TypedDict, cast
+from typing import Any, Protocol, TypedDict, cast
 
 import voluptuous as vol
 
@@ -31,11 +31,6 @@ from homeassistant.loader import IntegrationNotFound, async_get_integration
 
 from .typing import ConfigType, TemplateVarsType
 
-if TYPE_CHECKING:
-    from homeassistant.components.device_automation.trigger import (
-        DeviceAutomationTriggerProtocol,
-    )
-
 _PLATFORM_ALIASES = {
     "device": "device_automation",
     "event": "homeassistant",
@@ -46,6 +41,29 @@ _PLATFORM_ALIASES = {
 }
 
 DATA_PLUGGABLE_ACTIONS = "pluggable_actions"
+
+
+class TriggerProtocol(Protocol):
+    """Define the format of trigger modules.
+
+    Each module must define either TRIGGER_SCHEMA or async_validate_trigger_config.
+    """
+
+    TRIGGER_SCHEMA: vol.Schema
+
+    async def async_validate_trigger_config(
+        self, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+
+    async def async_attach_trigger(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        action: TriggerActionType,
+        trigger_info: TriggerInfo,
+    ) -> CALLBACK_TYPE:
+        """Attach a trigger."""
 
 
 class TriggerActionType(Protocol):
@@ -151,7 +169,7 @@ class PluggableAction:
             if not entry.actions and not entry.plugs:
                 del reg[key]
 
-        job = HassJob(action)
+        job = HassJob(action, f"trigger {trigger} {variables}")
         entry.actions[_remove] = (job, variables)
         _update()
 
@@ -195,7 +213,7 @@ class PluggableAction:
 
 async def _async_get_trigger_platform(
     hass: HomeAssistant, config: ConfigType
-) -> DeviceAutomationTriggerProtocol:
+) -> TriggerProtocol:
     platform_and_sub_type = config[CONF_PLATFORM].split(".")
     platform = platform_and_sub_type[0]
     platform = _PLATFORM_ALIASES.get(platform, platform)

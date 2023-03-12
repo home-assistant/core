@@ -10,7 +10,7 @@ from typing import Any
 from aiohttp import CookieJar
 import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
-from aiounifi.interfaces.messages import DATA_CLIENT_REMOVED, DATA_EVENT
+from aiounifi.interfaces.messages import DATA_EVENT
 from aiounifi.models.event import EventKey
 from aiounifi.websocket import WebsocketSignal, WebsocketState
 import async_timeout
@@ -31,7 +31,10 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.helpers.event import async_track_time_interval
@@ -70,17 +73,6 @@ from .errors import AuthenticationRequired, CannotConnect
 RETRY_TIMER = 15
 CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
 
-CLIENT_CONNECTED = (
-    EventKey.WIRED_CLIENT_CONNECTED,
-    EventKey.WIRELESS_CLIENT_CONNECTED,
-    EventKey.WIRELESS_GUEST_CONNECTED,
-)
-DEVICE_CONNECTED = (
-    EventKey.ACCESS_POINT_CONNECTED,
-    EventKey.GATEWAY_CONNECTED,
-    EventKey.SWITCH_CONNECTED,
-)
-
 
 class UniFiController:
     """Manages a single UniFi Network instance."""
@@ -108,6 +100,7 @@ class UniFiController:
         self.load_config_entry_options()
 
         self.entities = {}
+        self.known_objects: set[tuple[str, str]] = set()
 
     def load_config_entry_options(self):
         """Store attributes to avoid property call overhead since they are called frequently."""
@@ -198,28 +191,40 @@ class UniFiController:
         @callback
         def async_load_entities(description: UnifiEntityDescription) -> None:
             """Load and subscribe to UniFi endpoints."""
-            entities: list[UnifiEntity] = []
             api_handler = description.api_handler_fn(self.api)
 
             @callback
+            def async_add_unifi_entity(obj_ids: list[str]) -> None:
+                """Add UniFi entity."""
+                async_add_entities(
+                    [
+                        unifi_platform_entity(obj_id, self, description)
+                        for obj_id in obj_ids
+                        if (description.key, obj_id) not in self.known_objects
+                        if description.allowed_fn(self, obj_id)
+                        if description.supported_fn(self, obj_id)
+                    ]
+                )
+
+            async_add_unifi_entity(list(api_handler))
+
+            @callback
             def async_create_entity(event: ItemEvent, obj_id: str) -> None:
-                """Create UniFi entity."""
-                if not description.allowed_fn(
-                    self, obj_id
-                ) or not description.supported_fn(self, obj_id):
-                    return
-
-                entity = unifi_platform_entity(obj_id, self, description)
-                if event == ItemEvent.ADDED:
-                    async_add_entities([entity])
-                    return
-                entities.append(entity)
-
-            for obj_id in api_handler:
-                async_create_entity(ItemEvent.CHANGED, obj_id)
-            async_add_entities(entities)
+                """Create new UniFi entity on event."""
+                async_add_unifi_entity([obj_id])
 
             api_handler.subscribe(async_create_entity, ItemEvent.ADDED)
+
+            @callback
+            def async_options_updated() -> None:
+                """Load new entities based on changed options."""
+                async_add_unifi_entity(list(api_handler))
+
+            self.config_entry.async_on_unload(
+                async_dispatcher_connect(
+                    self.hass, self.signal_options_update, async_options_updated
+                )
+            )
 
         for description in descriptions:
             async_load_entities(description)
@@ -242,54 +247,19 @@ class UniFiController:
                 else:
                     LOGGER.info("Connected to UniFi Network")
 
-        elif signal == WebsocketSignal.DATA and data:
-            if DATA_EVENT in data:
-                clients_connected = set()
-                devices_connected = set()
-                wireless_clients_connected = False
-
-                for event in data[DATA_EVENT]:
-                    if event.key in CLIENT_CONNECTED:
-                        clients_connected.add(event.mac)
-
-                        if not wireless_clients_connected and event.key in (
-                            EventKey.WIRELESS_CLIENT_CONNECTED,
-                            EventKey.WIRELESS_GUEST_CONNECTED,
-                        ):
-                            wireless_clients_connected = True
-
-                    elif event.key in DEVICE_CONNECTED:
-                        devices_connected.add(event.mac)
-
-                if wireless_clients_connected:
+        elif signal == WebsocketSignal.DATA and DATA_EVENT in data:
+            for event in data[DATA_EVENT]:
+                if event.key in (
+                    EventKey.WIRELESS_CLIENT_CONNECTED,
+                    EventKey.WIRELESS_GUEST_CONNECTED,
+                ):
                     self.update_wireless_clients()
-                if clients_connected or devices_connected:
-                    async_dispatcher_send(
-                        self.hass,
-                        self.signal_update,
-                        clients_connected,
-                        devices_connected,
-                    )
-
-            elif DATA_CLIENT_REMOVED in data:
-                async_dispatcher_send(
-                    self.hass, self.signal_remove, data[DATA_CLIENT_REMOVED]
-                )
+                    break
 
     @property
     def signal_reachable(self) -> str:
         """Integration specific event to signal a change in connection status."""
         return f"unifi-reachable-{self.config_entry.entry_id}"
-
-    @property
-    def signal_update(self) -> str:
-        """Event specific per UniFi entry to signal new data."""
-        return f"unifi-update-{self.config_entry.entry_id}"
-
-    @property
-    def signal_remove(self) -> str:
-        """Event specific per UniFi entry to signal removal of entities."""
-        return f"unifi-remove-{self.config_entry.entry_id}"
 
     @property
     def signal_options_update(self) -> str:

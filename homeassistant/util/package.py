@@ -39,7 +39,7 @@ def is_installed(package: str) -> bool:
     try:
         pkg_resources.get_distribution(package)
         return True
-    except (pkg_resources.ResolutionError, pkg_resources.ExtractionError):
+    except (IndexError, pkg_resources.ResolutionError, pkg_resources.ExtractionError):
         req = pkg_resources.Requirement.parse(package)
     except ValueError:
         # This is a zip file. We no longer use this in Home Assistant,

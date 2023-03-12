@@ -234,11 +234,14 @@ async def test_discover_routers(
     assert msg == {
         "event": {
             "data": {
+                "addresses": ["192.168.0.115"],
                 "brand": "homeassistant",
                 "extended_pan_id": "e60fc7c186212ce5",
                 "model_name": "OpenThreadBorderRouter",
                 "network_name": "OpenThread HC",
                 "server": "core-silabs-multiprotocol.local.",
+                "thread_version": "1.3.0",
+                "unconfigured": None,
                 "vendor_name": "HomeAssistant",
             },
             "key": "aeeb2f594b570bbf",
@@ -259,11 +262,14 @@ async def test_discover_routers(
     assert msg == {
         "event": {
             "data": {
+                "addresses": ["192.168.0.124"],
                 "brand": "google",
                 "extended_pan_id": "9e75e256f61409a3",
                 "model_name": "Google Nest Hub",
                 "network_name": "NEST-PAN-E1AF",
                 "server": "2d99f293-cd8e-2770-8dd2-6675de9fa000.local.",
+                "thread_version": "1.3.0",
+                "unconfigured": None,
                 "vendor_name": "Google Inc.",
             },
             "key": "f6a99b425a67abed",

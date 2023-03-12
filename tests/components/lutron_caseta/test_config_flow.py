@@ -67,13 +67,13 @@ async def test_bridge_import_flow(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_IMPORT},
             data=entry_mock_data,
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
     assert result["title"] == CasetaConfigFlow.ENTRY_DEFAULT_TITLE
     assert result["data"] == entry_mock_data
     assert result["result"].unique_id == "000004d2"
 
-    await hass.async_block_till_done()
     assert len(mock_setup_entry.mock_calls) == 1
 
 
