@@ -42,7 +42,7 @@
     "https_webhook": {
       "title": "Reolink webhook URL uses HTTPS (SSL)",
       "description": "Reolink products can not push motion events to an HTTPS address (SSL), please configure a (local) HTTP address under \"Home Assistant URL\" in the [network settings]({network_link}). The current (local) address is: `{base_url}`"
-    }
+    },
     "enable_port": {
       "title": "Reolink port not enabled",
       "description": "Failed to automatically enable {ports}port(s) on {name}. Set it to ON [manually using the Reolink client]({info_link})"

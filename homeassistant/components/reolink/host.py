@@ -128,7 +128,7 @@ class ReolinkHost:
                     translation_placeholders={
                         "name": self._api.nvr_name,
                         "ports": ports,
-                        "info_link": "https://support.reolink.com/hc/en-us/articles/900004435763-How-to-Set-up-Reolink-Ports-Settings-via-Reolink-Client-New-Client-"
+                        "info_link": "https://support.reolink.com/hc/en-us/articles/900004435763-How-to-Set-up-Reolink-Ports-Settings-via-Reolink-Client-New-Client-",
                     },
                 )
         else:
