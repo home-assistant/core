@@ -56,6 +56,7 @@ class ReolinkHost:
         )
 
         self.webhook_id: str | None = None
+        self._base_url: str = ""
         self._webhook_url: str | None = None
         self._webhook_reachable: asyncio.Event = asyncio.Event()
         self._lost_subscription: bool = False
@@ -148,7 +149,7 @@ class ReolinkHost:
                 severity=ir.IssueSeverity.WARNING,
                 translation_key="webhook_url",
                 translation_placeholders={
-                    "base_url": base_url,
+                    "base_url": self._base_url,
                     "network_link": "https://my.home-assistant.io/redirect/network/",
                 },
             )
@@ -284,10 +285,10 @@ class ReolinkHost:
         )
 
         try:
-            base_url = get_url(self._hass, prefer_external=False)
+            self._base_url = get_url(self._hass, prefer_external=False)
         except NoURLAvailableError:
             try:
-                base_url = get_url(self._hass, prefer_external=True)
+                self._base_url = get_url(self._hass, prefer_external=True)
             except NoURLAvailableError as err:
                 self.unregister_webhook()
                 raise ReolinkWebhookException(
@@ -296,9 +297,9 @@ class ReolinkHost:
                 ) from err
 
         webhook_path = webhook.async_generate_path(event_id)
-        self._webhook_url = f"{base_url}{webhook_path}"
+        self._webhook_url = f"{self._base_url}{webhook_path}"
 
-        if base_url.startswith("https"):
+        if self._base_url.startswith("https"):
             ir.async_create_issue(
                 self._hass,
                 DOMAIN,
@@ -307,7 +308,7 @@ class ReolinkHost:
                 severity=ir.IssueSeverity.WARNING,
                 translation_key="https_webhook",
                 translation_placeholders={
-                    "base_url": base_url,
+                    "base_url": self._base_url,
                     "network_link": "https://my.home-assistant.io/redirect/network/",
                 },
             )
