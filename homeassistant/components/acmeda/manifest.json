@@ -1,7 +1,6 @@
 {
   "domain": "acmeda",
   "name": "Rollease Acmeda Automate",
-  "version": "0.4.4",
   "codeowners": ["@atmurray"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/acmeda",
