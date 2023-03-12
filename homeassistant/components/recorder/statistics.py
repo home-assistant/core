@@ -925,7 +925,7 @@ def get_metadata(
     statistic_source: str | None = None,
 ) -> dict[str, tuple[int, StatisticMetaData]]:
     """Return metadata for statistic_ids."""
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         return get_metadata_with_session(
             session,
             statistic_ids=statistic_ids,
@@ -985,7 +985,7 @@ def list_statistic_ids(
     statistic_ids_set = set(statistic_ids) if statistic_ids else None
 
     # Query the database
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         metadata = get_metadata_with_session(
             session, statistic_type=statistic_type, statistic_ids=statistic_ids
         )
