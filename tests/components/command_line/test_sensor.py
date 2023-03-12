@@ -7,26 +7,19 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import setup
-from homeassistant.components.sensor import DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 
 
 async def setup_test_entities(hass: HomeAssistant, config_dict: dict[str, Any]) -> None:
     """Set up a test command line sensor entity."""
+    hass.states.async_set("sensor.input_sensor", "sensor_value")
     assert await setup.async_setup_component(
         hass,
-        DOMAIN,
+        SENSOR_DOMAIN,
         {
-            DOMAIN: [
-                {
-                    "platform": "template",
-                    "sensors": {
-                        "template_sensor": {
-                            "value_template": "template_value",
-                        }
-                    },
-                },
+            SENSOR_DOMAIN: [
                 {"platform": "command_line", "name": "Test", **config_dict},
             ]
         },
@@ -71,12 +64,12 @@ async def test_template_render(hass: HomeAssistant) -> None:
     await setup_test_entities(
         hass,
         {
-            "command": "echo {{ states.sensor.template_sensor.state }}",
+            "command": "echo {{ states.sensor.input_sensor.state }}",
         },
     )
     entity_state = hass.states.get("sensor.test")
     assert entity_state
-    assert entity_state.state == "template_value"
+    assert entity_state.state == "sensor_value"
 
 
 async def test_template_render_with_quote(hass: HomeAssistant) -> None:
@@ -89,14 +82,15 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
         await setup_test_entities(
             hass,
             {
-                "command": 'echo "{{ states.sensor.template_sensor.state }}" "3 4"',
+                "command": 'echo "{{ states.sensor.input_sensor.state }}" "3 4"',
             },
         )
 
         check_output.assert_called_once_with(
-            'echo "template_value" "3 4"',
+            'echo "sensor_value" "3 4"',
             shell=True,  # nosec # shell by design
             timeout=15,
+            close_fds=False,
         )
 
 
@@ -259,13 +253,15 @@ async def test_update_with_unnecessary_json_attrs(
     assert "key_three" not in entity_state.attributes
 
 
-async def test_unique_id(hass: HomeAssistant) -> None:
+async def test_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test unique_id option and if it only creates one sensor per id."""
     assert await setup.async_setup_component(
         hass,
-        DOMAIN,
+        SENSOR_DOMAIN,
         {
-            DOMAIN: [
+            SENSOR_DOMAIN: [
                 {
                     "platform": "command_line",
                     "unique_id": "unique",
@@ -288,11 +284,8 @@ async def test_unique_id(hass: HomeAssistant) -> None:
 
     assert len(hass.states.async_all()) == 2
 
-    ent_reg = entity_registry.async_get(hass)
-
-    assert len(ent_reg.entities) == 2
-    assert ent_reg.async_get_entity_id("sensor", "command_line", "unique") is not None
-    assert (
-        ent_reg.async_get_entity_id("sensor", "command_line", "not-so-unique-anymore")
-        is not None
+    assert len(entity_registry.entities) == 2
+    assert entity_registry.async_get_entity_id("sensor", "command_line", "unique")
+    assert entity_registry.async_get_entity_id(
+        "sensor", "command_line", "not-so-unique-anymore"
     )

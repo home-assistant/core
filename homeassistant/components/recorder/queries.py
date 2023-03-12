@@ -8,16 +8,55 @@ from sqlalchemy import delete, distinct, func, lambda_stmt, select, union_all, u
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import Select
 
-from .const import MAX_ROWS_TO_PURGE
+from .const import SQLITE_MAX_BIND_VARS
 from .db_schema import (
     EventData,
     Events,
+    EventTypes,
     RecorderRuns,
     StateAttributes,
     States,
     StatisticsRuns,
     StatisticsShortTerm,
 )
+
+
+def select_event_type_ids(event_types: tuple[str, ...]) -> Select:
+    """Generate a select for event type ids.
+
+    This query is intentionally not a lambda statement as it is used inside
+    other lambda statements.
+    """
+    return select(EventTypes.event_type_id).where(
+        EventTypes.event_type.in_(event_types)
+    )
+
+
+def get_shared_attributes(hashes: list[int]) -> StatementLambdaElement:
+    """Load shared attributes from the database."""
+    return lambda_stmt(
+        lambda: select(
+            StateAttributes.attributes_id, StateAttributes.shared_attrs
+        ).where(StateAttributes.hash.in_(hashes))
+    )
+
+
+def get_shared_event_datas(hashes: list[int]) -> StatementLambdaElement:
+    """Load shared event data from the database."""
+    return lambda_stmt(
+        lambda: select(EventData.data_id, EventData.shared_data).where(
+            EventData.hash.in_(hashes)
+        )
+    )
+
+
+def find_event_type_ids(event_types: Iterable[str]) -> StatementLambdaElement:
+    """Find an event_type id by event_type."""
+    return lambda_stmt(
+        lambda: select(EventTypes.event_type_id, EventTypes.event_type).filter(
+            EventTypes.event_type.in_(event_types)
+        )
+    )
 
 
 def find_shared_attributes_id(
@@ -42,10 +81,12 @@ def find_shared_data_id(attr_hash: int, shared_data: str) -> StatementLambdaElem
 
 def _state_attrs_exist(attr: int | None) -> Select:
     """Check if a state attributes id exists in the states table."""
+    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+    # pylint: disable-next=not-callable
     return select(func.min(States.attributes_id)).where(States.attributes_id == attr)
 
 
-def attributes_ids_exist_in_states_sqlite(
+def attributes_ids_exist_in_states_with_fast_in_distinct(
     attributes_ids: Iterable[int],
 ) -> StatementLambdaElement:
     """Find attributes ids that exist in the states table."""
@@ -268,7 +309,7 @@ def attributes_ids_exist_in_states(
     )
 
 
-def data_ids_exist_in_events_sqlite(
+def data_ids_exist_in_events_with_fast_in_distinct(
     data_ids: Iterable[int],
 ) -> StatementLambdaElement:
     """Find data ids that exist in the events table."""
@@ -279,6 +320,8 @@ def data_ids_exist_in_events_sqlite(
 
 def _event_data_id_exist(data_id: int | None) -> Select:
     """Check if a event data id exists in the events table."""
+    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+    # pylint: disable-next=not-callable
     return select(func.min(Events.data_id)).where(Events.data_id == data_id)
 
 
@@ -583,7 +626,7 @@ def find_events_to_purge(purge_before: float) -> StatementLambdaElement:
     return lambda_stmt(
         lambda: select(Events.event_id, Events.data_id)
         .filter(Events.time_fired_ts < purge_before)
-        .limit(MAX_ROWS_TO_PURGE)
+        .limit(SQLITE_MAX_BIND_VARS)
     )
 
 
@@ -592,7 +635,7 @@ def find_states_to_purge(purge_before: float) -> StatementLambdaElement:
     return lambda_stmt(
         lambda: select(States.state_id, States.attributes_id)
         .filter(States.last_updated_ts < purge_before)
-        .limit(MAX_ROWS_TO_PURGE)
+        .limit(SQLITE_MAX_BIND_VARS)
     )
 
 
@@ -600,10 +643,11 @@ def find_short_term_statistics_to_purge(
     purge_before: datetime,
 ) -> StatementLambdaElement:
     """Find short term statistics to purge."""
+    purge_before_ts = purge_before.timestamp()
     return lambda_stmt(
         lambda: select(StatisticsShortTerm.id)
-        .filter(StatisticsShortTerm.start < purge_before)
-        .limit(MAX_ROWS_TO_PURGE)
+        .filter(StatisticsShortTerm.start_ts < purge_before_ts)
+        .limit(SQLITE_MAX_BIND_VARS)
     )
 
 
@@ -614,12 +658,14 @@ def find_statistics_runs_to_purge(
     return lambda_stmt(
         lambda: select(StatisticsRuns.run_id)
         .filter(StatisticsRuns.start < purge_before)
-        .limit(MAX_ROWS_TO_PURGE)
+        .limit(SQLITE_MAX_BIND_VARS)
     )
 
 
 def find_latest_statistics_runs_run_id() -> StatementLambdaElement:
     """Find the latest statistics_runs run_id."""
+    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+    # pylint: disable-next=not-callable
     return lambda_stmt(lambda: select(func.max(StatisticsRuns.run_id)))
 
 
@@ -633,10 +679,85 @@ def find_legacy_event_state_and_attributes_and_data_ids_to_purge(
         )
         .outerjoin(States, Events.event_id == States.event_id)
         .filter(Events.time_fired_ts < purge_before)
-        .limit(MAX_ROWS_TO_PURGE)
+        .limit(SQLITE_MAX_BIND_VARS)
     )
 
 
 def find_legacy_row() -> StatementLambdaElement:
     """Check if there are still states in the table with an event_id."""
+    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+    # pylint: disable-next=not-callable
     return lambda_stmt(lambda: select(func.max(States.event_id)))
+
+
+def find_events_context_ids_to_migrate() -> StatementLambdaElement:
+    """Find events context_ids to migrate."""
+    return lambda_stmt(
+        lambda: select(
+            Events.event_id,
+            Events.context_id,
+            Events.context_user_id,
+            Events.context_parent_id,
+        )
+        .filter(Events.context_id_bin.is_(None))
+        .limit(SQLITE_MAX_BIND_VARS)
+    )
+
+
+def find_event_type_to_migrate() -> StatementLambdaElement:
+    """Find events event_type to migrate."""
+    return lambda_stmt(
+        lambda: select(
+            Events.event_id,
+            Events.event_type,
+        )
+        .filter(Events.event_type_id.is_(None))
+        .limit(SQLITE_MAX_BIND_VARS)
+    )
+
+
+def has_event_type_to_migrate() -> StatementLambdaElement:
+    """Check if there are event_types to migrate."""
+    return lambda_stmt(
+        lambda: select(Events.event_id).filter(Events.event_type_id.is_(None)).limit(1)
+    )
+
+
+def find_states_context_ids_to_migrate() -> StatementLambdaElement:
+    """Find events context_ids to migrate."""
+    return lambda_stmt(
+        lambda: select(
+            States.state_id,
+            States.context_id,
+            States.context_user_id,
+            States.context_parent_id,
+        )
+        .filter(States.context_id_bin.is_(None))
+        .limit(SQLITE_MAX_BIND_VARS)
+    )
+
+
+def find_event_types_to_purge() -> StatementLambdaElement:
+    """Find event_type_ids to purge."""
+    return lambda_stmt(
+        lambda: select(EventTypes.event_type_id, EventTypes.event_type).where(
+            EventTypes.event_type_id.not_in(
+                select(EventTypes.event_type_id).join(
+                    used_event_type_ids := select(
+                        distinct(Events.event_type_id).label("used_event_type_id")
+                    ).subquery(),
+                    EventTypes.event_type_id
+                    == used_event_type_ids.c.used_event_type_id,
+                )
+            )
+        )
+    )
+
+
+def delete_event_types_rows(event_type_ids: Iterable[int]) -> StatementLambdaElement:
+    """Delete EventTypes rows."""
+    return lambda_stmt(
+        lambda: delete(EventTypes)
+        .where(EventTypes.event_type_id.in_(event_type_ids))
+        .execution_options(synchronize_session=False)
+    )

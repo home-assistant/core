@@ -5,11 +5,13 @@ import importlib
 import sys
 from unittest.mock import patch
 
+import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import SQLITE_URL_PREFIX, core, statistics
+from homeassistant.components.recorder.queries import select_event_type_ids
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import EVENT_STATE_CHANGED, Event, EventOrigin, State
 from homeassistant.helpers import recorder as recorder_helper
@@ -48,7 +50,7 @@ def _create_engine_test(*args, **kwargs):
     return engine
 
 
-def test_migrate_times(caplog, tmpdir):
+def test_migrate_times(caplog: pytest.LogCaptureFixture, tmpdir) -> None:
     """Test we can migrate times."""
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
@@ -86,7 +88,9 @@ def test_migrate_times(caplog, tmpdir):
 
     with patch.object(recorder, "db_schema", old_db_schema), patch.object(
         recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-    ), patch.object(core, "EventData", old_db_schema.EventData), patch.object(
+    ), patch.object(core, "EventTypes", old_db_schema.EventTypes), patch.object(
+        core, "EventData", old_db_schema.EventData
+    ), patch.object(
         core, "States", old_db_schema.States
     ), patch.object(
         core, "Events", old_db_schema.Events
@@ -116,8 +120,10 @@ def test_migrate_times(caplog, tmpdir):
     wait_recording_done(hass)
     with session_scope(hass=hass) as session:
         result = list(
-            session.query(recorder.db_schema.Events).where(
-                recorder.db_schema.Events.event_type == "custom_event"
+            session.query(recorder.db_schema.Events).filter(
+                recorder.db_schema.Events.event_type_id.in_(
+                    select_event_type_ids(("custom_event",))
+                )
             )
         )
         assert len(result) == 1

@@ -1,20 +1,23 @@
 """Tests for the Gree Integration."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
+
+import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.gree.const import DOMAIN as GREE_DOMAIN
+from homeassistant.core import HomeAssistant
 
 from .common import FakeDiscovery
 
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+
 
 @patch("homeassistant.components.gree.config_flow.DISCOVERY_TIMEOUT", 0)
-async def test_creating_entry_sets_up_climate(hass):
+async def test_creating_entry_sets_up_climate(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test setting up Gree creates the climate components."""
     with patch(
-        "homeassistant.components.gree.climate.async_setup_entry", return_value=True
-    ) as setup, patch(
-        "homeassistant.components.gree.bridge.Discovery", return_value=FakeDiscovery()
-    ), patch(
         "homeassistant.components.gree.config_flow.Discovery",
         return_value=FakeDiscovery(),
     ):
@@ -30,22 +33,19 @@ async def test_creating_entry_sets_up_climate(hass):
 
         await hass.async_block_till_done()
 
-        assert len(setup.mock_calls) == 1
+        assert len(mock_setup_entry.mock_calls) == 1
 
 
 @patch("homeassistant.components.gree.config_flow.DISCOVERY_TIMEOUT", 0)
-async def test_creating_entry_has_no_devices(hass):
+async def test_creating_entry_has_no_devices(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test setting up Gree creates the climate components."""
     with patch(
-        "homeassistant.components.gree.climate.async_setup_entry", return_value=True
-    ) as setup, patch(
-        "homeassistant.components.gree.bridge.Discovery", return_value=FakeDiscovery()
-    ) as discovery, patch(
         "homeassistant.components.gree.config_flow.Discovery",
         return_value=FakeDiscovery(),
-    ) as discovery2:
+    ) as discovery:
         discovery.return_value.mock_devices = []
-        discovery2.return_value.mock_devices = []
 
         result = await hass.config_entries.flow.async_init(
             GREE_DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -59,4 +59,4 @@ async def test_creating_entry_has_no_devices(hass):
 
         await hass.async_block_till_done()
 
-        assert len(setup.mock_calls) == 0
+        assert len(mock_setup_entry.mock_calls) == 0

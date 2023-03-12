@@ -200,7 +200,6 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
             """Handle a new received MQTT state message."""
             # auto-expire enabled?
             if self._expire_after:
-
                 # When expire_after is set, and we receive a message, assume device is
                 # not expired since it has to be to receive the message
                 self._expired = False

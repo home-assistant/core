@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Iterable
 from datetime import datetime, timedelta
 import logging
@@ -129,8 +128,8 @@ async def async_setup_entry(
                 hass, calendar_item.dict(exclude_unset=True)
             )
             new_calendars.append(calendar_info)
-        # Yaml calendar config may map one calendar to multiple entities with extra options like
-        # offsets or search criteria.
+        # Yaml calendar config may map one calendar to multiple entities
+        # with extra options like offsets or search criteria.
         num_entities = len(calendar_info[CONF_ENTITIES])
         for data in calendar_info[CONF_ENTITIES]:
             entity_enabled = data.get(CONF_TRACK, True)
@@ -141,15 +140,17 @@ async def async_setup_entry(
                     " removed from google_calendars.yaml"
                 )
             entity_name = data[CONF_DEVICE_ID]
-            # The unique id is based on the config entry and calendar id since multiple accounts
-            # can have a common calendar id (e.g. `en.usa#holiday@group.v.calendar.google.com`).
-            # When using google_calendars.yaml with multiple entities for a single calendar, we
-            # have no way to set a unique id.
+            # The unique id is based on the config entry and calendar id since
+            # multiple accounts can have a common calendar id
+            # (e.g. `en.usa#holiday@group.v.calendar.google.com`).
+            # When using google_calendars.yaml with multiple entities for a
+            # single calendar, we have no way to set a unique id.
             if num_entities > 1:
                 unique_id = None
             else:
                 unique_id = f"{config_entry.unique_id}-{calendar_id}"
-            # Migrate to new unique_id format which supports multiple config entries as of 2022.7
+            # Migrate to new unique_id format which supports
+            # multiple config entries as of 2022.7
             for old_unique_id in (calendar_id, f"{calendar_id}-{entity_name}"):
                 if not (entity_entry := entity_entry_map.get(old_unique_id)):
                     continue
@@ -173,9 +174,9 @@ async def async_setup_entry(
                         entity_entry.entity_id,
                     )
             coordinator: CalendarSyncUpdateCoordinator | CalendarQueryUpdateCoordinator
-            # Prefer calendar sync down of resources when possible. However, sync does not work
-            # for search. Also free-busy calendars denormalize recurring events as individual
-            # events which is not efficient for sync
+            # Prefer calendar sync down of resources when possible. However,
+            # sync does not work for search. Also free-busy calendars denormalize
+            # recurring events as individual events which is not efficient for sync
             support_write = (
                 calendar_item.access_role.is_writer
                 and get_feature_access(hass, config_entry) is FeatureAccess.read_write
@@ -244,6 +245,8 @@ async def async_setup_entry(
 class CalendarSyncUpdateCoordinator(DataUpdateCoordinator[Timeline]):
     """Coordinator for calendar RPC calls that use an efficient sync."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -297,6 +300,8 @@ class CalendarQueryUpdateCoordinator(DataUpdateCoordinator[list[Event]]):
     This sends a polling RPC, not using sync, as a workaround
     for limitations in the calendar API for supporting search.
     """
+
+    config_entry: ConfigEntry
 
     def __init__(
         self,
@@ -433,7 +438,9 @@ class GoogleCalendarEntity(
             await self.coordinator.async_request_refresh()
             self._apply_coordinator_update()
 
-        asyncio.create_task(refresh())
+        self.coordinator.config_entry.async_create_background_task(
+            self.hass, refresh(), "google.calendar-refresh"
+        )
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
