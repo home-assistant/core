@@ -254,47 +254,62 @@ def _drop_index(
     success = False
 
     # Engines like DB2/Oracle
-    with session_scope(session=session_maker()) as session:
-        try:
-            connection = session.connection()
-            connection.execute(text(f"DROP INDEX {index_name}"))
-        except SQLAlchemyError:
-            pass
-        else:
-            success = True
+    with session_scope(session=session_maker()) as session, contextlib.suppress(
+        SQLAlchemyError
+    ):
+        connection = session.connection()
+        connection.execute(text(f"DROP INDEX {index_name}"))
+        success = True
 
     # Engines like SQLite, SQL Server
     if not success:
-        with session_scope(session=session_maker()) as session:
-            try:
-                connection = session.connection()
-                connection.execute(
-                    text(
-                        "DROP INDEX {table}.{index}".format(
-                            index=index_name, table=table_name
-                        )
+        with session_scope(session=session_maker()) as session, contextlib.suppress(
+            SQLAlchemyError
+        ):
+            connection = session.connection()
+            connection.execute(
+                text(
+                    "DROP INDEX {table}.{index}".format(
+                        index=index_name, table=table_name
                     )
                 )
-            except SQLAlchemyError:
-                pass
-            else:
-                success = True
+            )
+            success = True
 
     if not success:
         # Engines like MySQL, MS Access
-        with session_scope(session=session_maker()) as session:
-            try:
-                connection = session.connection()
-                connection.execute(
-                    text(
-                        "DROP INDEX {index} ON {table}".format(
-                            index=index_name, table=table_name
-                        )
+        with session_scope(session=session_maker()) as session, contextlib.suppress(
+            SQLAlchemyError
+        ):
+            connection = session.connection()
+            connection.execute(
+                text(
+                    "DROP INDEX {index} ON {table}".format(
+                        index=index_name, table=table_name
                     )
                 )
-            except SQLAlchemyError:
-                pass
-            else:
+            )
+            success = True
+
+    if not success:
+        # Engines like postgresql may have a prefix
+        # ex idx_16532_ix_events_event_type_time_fired
+        with session_scope(session=session_maker()) as session, contextlib.suppress(
+            SQLAlchemyError
+        ):
+            connection = session.connection()
+            inspector = sqlalchemy.inspect(connection)
+            indexes = inspector.get_indexes(table_name)
+            if index_to_drop := next(
+                (
+                    possible_index["name"]
+                    for possible_index in indexes
+                    if possible_index["name"]
+                    and possible_index["name"].endswith(f"_{index_name}")
+                ),
+                None,
+            ):
+                connection.execute(text(f"DROP INDEX {index_to_drop} ON {table_name}"))
                 success = True
 
     if success:
@@ -304,23 +319,6 @@ def _drop_index(
         return
 
     if quiet:
-        return
-
-    if index_name in (
-        "ix_states_entity_id",
-        "ix_states_context_parent_id",
-        "ix_statistics_short_term_statistic_id_start",
-        "ix_statistics_statistic_id_start",
-    ):
-        # ix_states_context_parent_id was only there on nightly so we do not want
-        # to generate log noise or issues about it.
-        #
-        # ix_states_entity_id was only there for users who upgraded from schema
-        # version 8 or earlier. Newer installs will not have it so we do not
-        # want to generate log noise or issues about it.
-        #
-        # ix_statistics_short_term_statistic_id_start and ix_statistics_statistic_id_start
-        # were only there for users who upgraded from schema version 23 or earlier.
         return
 
     _LOGGER.warning(
@@ -902,7 +900,8 @@ def _apply_update(  # noqa: C901
         # This index is no longer used and can cause MySQL to use the wrong index
         # when querying the states table.
         # https://github.com/home-assistant/core/issues/83787
-        _drop_index(session_maker, "states", "ix_states_entity_id")
+        # There was an index cleanup here but its now done in schema 39
+        pass
     elif new_version == 34:
         # Once we require SQLite >= 3.35.5, we should drop the columns:
         # ALTER TABLE statistics DROP COLUMN created
@@ -964,11 +963,14 @@ def _apply_update(  # noqa: C901
     elif new_version == 35:
         # Migration is done in two steps to ensure we can start using
         # the new columns before we wipe the old ones.
-        _drop_index(session_maker, "statistics", "ix_statistics_statistic_id_start")
+        _drop_index(
+            session_maker, "statistics", "ix_statistics_statistic_id_start", quiet=True
+        )
         _drop_index(
             session_maker,
             "statistics_short_term",
             "ix_statistics_short_term_statistic_id_start",
+            quiet=True,
         )
         # ix_statistics_start and ix_statistics_statistic_id_start are still used
         # for the post migration cleanup and can be removed in a future version.
@@ -994,6 +996,40 @@ def _apply_update(  # noqa: C901
         _add_columns(session_maker, "states", [f"metadata_id {big_int}"])
         _create_index(session_maker, "states", "ix_states_metadata_id")
         _create_index(session_maker, "states", "ix_states_metadata_id_last_updated_ts")
+    elif new_version == 39:
+        # Dropping indexes with PostgreSQL never worked correctly if there was a prefix
+        # so we need to cleanup leftover indexes.
+        _drop_index(
+            session_maker, "events", "ix_events_event_type_time_fired_ts", quiet=True
+        )
+        _drop_index(session_maker, "events", "ix_events_event_type", quiet=True)
+        _drop_index(
+            session_maker, "events", "ix_events_event_type_time_fired", quiet=True
+        )
+        _drop_index(session_maker, "events", "ix_events_time_fired", quiet=True)
+        _drop_index(session_maker, "events", "ix_events_context_user_id", quiet=True)
+        _drop_index(session_maker, "events", "ix_events_context_parent_id", quiet=True)
+        _drop_index(
+            session_maker, "states", "ix_states_entity_id_last_updated", quiet=True
+        )
+        _drop_index(session_maker, "states", "ix_states_last_updated", quiet=True)
+        _drop_index(session_maker, "states", "ix_states_entity_id", quiet=True)
+        _drop_index(session_maker, "states", "ix_states_context_user_id", quiet=True)
+        _drop_index(session_maker, "states", "ix_states_context_parent_id", quiet=True)
+        _drop_index(session_maker, "states", "ix_states_created_domain", quiet=True)
+        _drop_index(session_maker, "states", "ix_states_entity_id_created", quiet=True)
+        _drop_index(session_maker, "states", "states__state_changes", quiet=True)
+        _drop_index(session_maker, "states", "states__significant_changes", quiet=True)
+        _drop_index(session_maker, "states", "ix_states_entity_id_created", quiet=True)
+        _drop_index(
+            session_maker, "statistics", "ix_statistics_statistic_id_start", quiet=True
+        )
+        _drop_index(
+            session_maker,
+            "statistics_short_term",
+            "ix_statistics_short_term_statistic_id_start",
+            quiet=True,
+        )
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
@@ -1297,8 +1333,8 @@ def migrate_context_ids(instance: Recorder) -> bool:
         is_done = not (events or states)
 
     if is_done:
-        _drop_index(session_maker, "events", "ix_events_context_id", quiet=True)
-        _drop_index(session_maker, "states", "ix_states_context_id", quiet=True)
+        _drop_index(session_maker, "events", "ix_events_context_id")
+        _drop_index(session_maker, "states", "ix_states_context_id")
 
     _LOGGER.debug("Migrating context_ids to binary format: done=%s", is_done)
     return is_done
