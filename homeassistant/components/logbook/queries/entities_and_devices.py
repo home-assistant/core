@@ -13,7 +13,7 @@ from homeassistant.components.recorder.db_schema import (
     Events,
     EventTypes,
     States,
-    StatesMeta
+    StatesMeta,
 )
 
 from .common import (
