@@ -865,6 +865,23 @@ async def test_v1_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
+                b"\x40\x4f\x87\x56\x2a\x01",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_water",
+                    "friendly_name": "Test Device 18B2 Water",
+                    "unit_of_measurement": "L",
+                    "state_class": "total_increasing",
+                    "expected_state": "19551.879",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
                 b"\x40\x02\xca\x09\x02\xcf\x09",
             ),
             None,
