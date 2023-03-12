@@ -8,6 +8,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 import json
 import logging
+import time
 from typing import Any, TypedDict, cast, overload
 
 from fnvhash import fnv1a_32
@@ -276,7 +277,13 @@ class States(Base):  # type: ignore[misc,valid-type]
         Integer, ForeignKey("events.event_id", ondelete="CASCADE"), index=True
     )
     last_changed = Column(DATETIME_TYPE, default=dt_util.utcnow)
+    last_changed_ts = Column(
+        DATETIME_TYPE
+    )  # *** Not originally in v30, only added for recorder to startup ok
     last_updated = Column(DATETIME_TYPE, default=dt_util.utcnow, index=True)
+    last_updated_ts = Column(
+        DATETIME_TYPE, default=time.time, index=True
+    )  # *** Not originally in v30, only added for recorder to startup ok
     old_state_id = Column(Integer, ForeignKey("states.state_id"), index=True)
     attributes_id = Column(
         Integer, ForeignKey("state_attributes.attributes_id"), index=True
