@@ -4753,5 +4753,7 @@ async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) 
     states: list[State] = await hass.async_add_executor_job(_fetch_states)
     assert len(states) > 1
     for state in states:
+        if state.domain != DOMAIN:
+            continue
         assert ATTR_OPTIONS not in state.attributes
         assert ATTR_FRIENDLY_NAME in state.attributes
