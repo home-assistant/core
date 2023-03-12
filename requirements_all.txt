@@ -1576,7 +1576,7 @@ pydaikin==2.9.0
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==108
+pydeconz==110
 
 # homeassistant.components.delijn
 pydelijn==1.0.0
