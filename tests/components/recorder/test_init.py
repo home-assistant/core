@@ -774,9 +774,9 @@ def test_saving_state_and_removing_entity(
 
     with session_scope(hass=hass) as session:
         states = list(
-            session.query(StatesMeta.entity_id, States.state).outerjoin(
-                StatesMeta, States.metadata_id == StatesMeta.metadata_id
-            )
+            session.query(StatesMeta.entity_id, States.state)
+            .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
+            .order_by(States.last_updated_ts)
         )
         assert len(states) == 3
         assert states[0].entity_id == entity_id
