@@ -2246,7 +2246,7 @@ restrictedpython==6.0
 rfk101py==0.0.1
 
 # homeassistant.components.rflink
-rflink==0.0.63
+rflink==0.0.65
 
 # homeassistant.components.ring
 ring_doorbell==0.7.2
