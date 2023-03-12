@@ -15,10 +15,9 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import RidwellData
 from .const import DOMAIN, SENSOR_TYPE_NEXT_PICKUP
+from .coordinator import RidwellDataUpdateCoordinator
 from .entity import RidwellEntity
 
 ATTR_CATEGORY = "category"
@@ -37,11 +36,11 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Ridwell sensors based on a config entry."""
-    data: RidwellData = hass.data[DOMAIN][entry.entry_id]
+    coordinator: RidwellDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        RidwellSensor(data.coordinator, account, SENSOR_DESCRIPTION)
-        for account in data.accounts.values()
+        RidwellSensor(coordinator, account, SENSOR_DESCRIPTION)
+        for account in coordinator.accounts.values()
     )
 
 
@@ -50,7 +49,7 @@ class RidwellSensor(RidwellEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: RidwellDataUpdateCoordinator,
         account: RidwellAccount,
         description: SensorEntityDescription,
     ) -> None:

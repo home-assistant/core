@@ -1,7 +1,7 @@
 """Test state helpers."""
 import asyncio
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -18,14 +18,16 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_UNLOCKED,
 )
-import homeassistant.core as ha
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import state
 from homeassistant.util import dt as dt_util
 
 from tests.common import async_mock_service
 
 
-async def test_async_track_states(hass, mock_integration_frame):
+async def test_async_track_states(
+    hass: HomeAssistant, mock_integration_frame: Mock
+) -> None:
     """Test AsyncTrackStates context manager."""
     point1 = dt_util.utcnow()
     point2 = point1 + timedelta(seconds=5)
@@ -49,7 +51,7 @@ async def test_async_track_states(hass, mock_integration_frame):
     assert [state2, state3] == sorted(states, key=lambda state: state.entity_id)
 
 
-async def test_call_to_component(hass):
+async def test_call_to_component(hass: HomeAssistant) -> None:
     """Test calls to components state reproduction functions."""
     with patch(
         "homeassistant.components.media_player.reproduce_state.async_reproduce_states"
@@ -63,8 +65,8 @@ async def test_call_to_component(hass):
             climate_fun.return_value = asyncio.Future()
             climate_fun.return_value.set_result(None)
 
-            state_media_player = ha.State("media_player.test", "bad")
-            state_climate = ha.State("climate.test", "bad")
+            state_media_player = State("media_player.test", "bad")
+            state_climate = State("climate.test", "bad")
             context = "dummy_context"
 
             await state.async_reproduce_state(
@@ -82,7 +84,9 @@ async def test_call_to_component(hass):
             )
 
 
-async def test_get_changed_since(hass, mock_integration_frame):
+async def test_get_changed_since(
+    hass: HomeAssistant, mock_integration_frame: Mock
+) -> None:
     """Test get_changed_since."""
     point1 = dt_util.utcnow()
     point2 = point1 + timedelta(seconds=5)
@@ -103,11 +107,11 @@ async def test_get_changed_since(hass, mock_integration_frame):
     assert [state2, state3] == state.get_changed_since([state1, state2, state3], point2)
 
 
-async def test_reproduce_with_no_entity(hass):
+async def test_reproduce_with_no_entity(hass: HomeAssistant) -> None:
     """Test reproduce_state with no entity."""
     calls = async_mock_service(hass, "light", SERVICE_TURN_ON)
 
-    await state.async_reproduce_state(hass, ha.State("light.test", "on"))
+    await state.async_reproduce_state(hass, State("light.test", "on"))
 
     await hass.async_block_till_done()
 
@@ -115,13 +119,13 @@ async def test_reproduce_with_no_entity(hass):
     assert hass.states.get("light.test") is None
 
 
-async def test_reproduce_turn_on(hass):
+async def test_reproduce_turn_on(hass: HomeAssistant) -> None:
     """Test reproduce_state with SERVICE_TURN_ON."""
     calls = async_mock_service(hass, "light", SERVICE_TURN_ON)
 
     hass.states.async_set("light.test", "off")
 
-    await state.async_reproduce_state(hass, ha.State("light.test", "on"))
+    await state.async_reproduce_state(hass, State("light.test", "on"))
 
     await hass.async_block_till_done()
 
@@ -132,13 +136,13 @@ async def test_reproduce_turn_on(hass):
     assert last_call.data.get("entity_id") == "light.test"
 
 
-async def test_reproduce_turn_off(hass):
+async def test_reproduce_turn_off(hass: HomeAssistant) -> None:
     """Test reproduce_state with SERVICE_TURN_OFF."""
     calls = async_mock_service(hass, "light", SERVICE_TURN_OFF)
 
     hass.states.async_set("light.test", "on")
 
-    await state.async_reproduce_state(hass, ha.State("light.test", "off"))
+    await state.async_reproduce_state(hass, State("light.test", "off"))
 
     await hass.async_block_till_done()
 
@@ -149,7 +153,7 @@ async def test_reproduce_turn_off(hass):
     assert last_call.data.get("entity_id") == "light.test"
 
 
-async def test_reproduce_complex_data(hass):
+async def test_reproduce_complex_data(hass: HomeAssistant) -> None:
     """Test reproduce_state with complex service data."""
     calls = async_mock_service(hass, "light", SERVICE_TURN_ON)
 
@@ -158,7 +162,7 @@ async def test_reproduce_complex_data(hass):
     complex_data = [255, 100, 100]
 
     await state.async_reproduce_state(
-        hass, ha.State("light.test", "on", {"rgb_color": complex_data})
+        hass, State("light.test", "on", {"rgb_color": complex_data})
     )
 
     await hass.async_block_till_done()
@@ -170,13 +174,13 @@ async def test_reproduce_complex_data(hass):
     assert last_call.data.get("rgb_color") == complex_data
 
 
-async def test_reproduce_bad_state(hass):
+async def test_reproduce_bad_state(hass: HomeAssistant) -> None:
     """Test reproduce_state with bad state."""
     calls = async_mock_service(hass, "light", SERVICE_TURN_ON)
 
     hass.states.async_set("light.test", "off")
 
-    await state.async_reproduce_state(hass, ha.State("light.test", "bad"))
+    await state.async_reproduce_state(hass, State("light.test", "bad"))
 
     await hass.async_block_till_done()
 
@@ -184,7 +188,7 @@ async def test_reproduce_bad_state(hass):
     assert hass.states.get("light.test").state == "off"
 
 
-async def test_as_number_states(hass):
+async def test_as_number_states(hass: HomeAssistant) -> None:
     """Test state_as_number with states."""
     zero_states = (
         STATE_OFF,
@@ -195,21 +199,21 @@ async def test_as_number_states(hass):
     )
     one_states = (STATE_ON, STATE_OPEN, STATE_LOCKED, STATE_ABOVE_HORIZON, STATE_HOME)
     for _state in zero_states:
-        assert state.state_as_number(ha.State("domain.test", _state, {})) == 0
+        assert state.state_as_number(State("domain.test", _state, {})) == 0
     for _state in one_states:
-        assert state.state_as_number(ha.State("domain.test", _state, {})) == 1
+        assert state.state_as_number(State("domain.test", _state, {})) == 1
 
 
-async def test_as_number_coercion(hass):
+async def test_as_number_coercion(hass: HomeAssistant) -> None:
     """Test state_as_number with number."""
     for _state in ("0", "0.0", 0, 0.0):
-        assert state.state_as_number(ha.State("domain.test", _state, {})) == 0.0
+        assert state.state_as_number(State("domain.test", _state, {})) == 0.0
     for _state in ("1", "1.0", 1, 1.0):
-        assert state.state_as_number(ha.State("domain.test", _state, {})) == 1.0
+        assert state.state_as_number(State("domain.test", _state, {})) == 1.0
 
 
-async def test_as_number_invalid_cases(hass):
+async def test_as_number_invalid_cases(hass: HomeAssistant) -> None:
     """Test state_as_number with invalid cases."""
     for _state in ("", "foo", "foo.bar", None, False, True, object, object()):
         with pytest.raises(ValueError):
-            state.state_as_number(ha.State("domain.test", _state, {}))
+            state.state_as_number(State("domain.test", _state, {}))

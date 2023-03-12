@@ -20,6 +20,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
 )
 from homeassistant.const import STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 
 from . import MockLocation
 
@@ -52,7 +53,7 @@ class MockBadLocation(MockLocation):
         return []
 
 
-async def test_setup_config_flow(hass):
+async def test_setup_config_flow(hass: HomeAssistant) -> None:
     """Test for successfully setting up the IPMA platform."""
     with patch(
         "pyipma.location.Location.get",
@@ -75,7 +76,7 @@ async def test_setup_config_flow(hass):
     assert state.attributes.get("friendly_name") == "HomeTown"
 
 
-async def test_daily_forecast(hass):
+async def test_daily_forecast(hass: HomeAssistant) -> None:
     """Test for successfully getting daily forecast."""
     with patch(
         "pyipma.location.Location.get",
@@ -100,7 +101,7 @@ async def test_daily_forecast(hass):
 
 
 @freeze_time("2020-01-14 23:00:00")
-async def test_hourly_forecast(hass):
+async def test_hourly_forecast(hass: HomeAssistant) -> None:
     """Test for successfully getting daily forecast."""
     with patch(
         "pyipma.location.Location.get",
@@ -122,7 +123,7 @@ async def test_hourly_forecast(hass):
     assert forecast.get(ATTR_FORECAST_WIND_BEARING) == "S"
 
 
-async def test_failed_get_observation_forecast(hass):
+async def test_failed_get_observation_forecast(hass: HomeAssistant) -> None:
     """Test for successfully setting up the IPMA platform."""
     with patch(
         "pyipma.location.Location.get",

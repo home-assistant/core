@@ -4,18 +4,18 @@ from __future__ import annotations
 from enum import Enum
 import functools
 import logging
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any
 
+from typing_extensions import Self
 from zigpy import types
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.clusters.security import IasWd
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNKNOWN, EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
@@ -26,6 +26,7 @@ from .core.const import (
     CHANNEL_ON_OFF,
     DATA_ZHA,
     SIGNAL_ADD_ENTITIES,
+    SIGNAL_ATTR_UPDATED,
     Strobe,
 )
 from .core.registries import ZHA_ENTITIES
@@ -35,10 +36,6 @@ if TYPE_CHECKING:
     from .core.channels.base import ZigbeeChannel
     from .core.device import ZHADevice
 
-
-_ZCLEnumSelectEntitySelfT = TypeVar(
-    "_ZCLEnumSelectEntitySelfT", bound="ZCLEnumSelectEntity"
-)
 
 CONFIG_DIAGNOSTIC_MATCH = functools.partial(
     ZHA_ENTITIES.config_diagnostic_match, Platform.SELECT
@@ -164,12 +161,12 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
 
     @classmethod
     def create_entity(
-        cls: type[_ZCLEnumSelectEntitySelfT],
+        cls,
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
         **kwargs: Any,
-    ) -> _ZCLEnumSelectEntitySelfT | None:
+    ) -> Self | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
@@ -214,6 +211,18 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
         await self._channel.cluster.write_attributes(
             {self._select_attr: self._enum[option.replace(" ", "_")]}
         )
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Run when about to be added to hass."""
+        await super().async_added_to_hass()
+        self.async_accept_signal(
+            self._channel, SIGNAL_ATTR_UPDATED, self.async_set_state
+        )
+
+    @callback
+    def async_set_state(self, attr_id: int, attr_name: str, value: Any):
+        """Handle state update from channel."""
         self.async_write_ha_state()
 
 

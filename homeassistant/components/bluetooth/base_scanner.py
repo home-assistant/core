@@ -30,7 +30,6 @@ from homeassistant.util.dt import monotonic_time_coarse
 from . import models
 from .const import (
     CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
-    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     SCANNER_WATCHDOG_INTERVAL,
     SCANNER_WATCHDOG_TIMEOUT,
 )
@@ -207,13 +206,11 @@ class BaseHaRemoteScanner(BaseHaScanner):
         self._discovered_device_timestamps: dict[str, float] = {}
         self.connectable = connectable
         self._details: dict[str, str | HaBluetoothConnector] = {"source": scanner_id}
-        self._expire_seconds = FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
+        # Scanners only care about connectable devices. The manager
+        # will handle taking care of availability for non-connectable devices
+        self._expire_seconds = CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
         assert models.MANAGER is not None
         self._storage = models.MANAGER.storage
-        if connectable:
-            self._expire_seconds = (
-                CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
-            )
 
     @hass_callback
     def async_setup(self) -> CALLBACK_TYPE:
@@ -230,20 +227,21 @@ class BaseHaRemoteScanner(BaseHaScanner):
             self.hass, self._async_expire_devices, timedelta(seconds=30)
         )
         cancel_stop = self.hass.bus.async_listen(
-            EVENT_HOMEASSISTANT_STOP, self._save_history
+            EVENT_HOMEASSISTANT_STOP, self._async_save_history
         )
         self._async_setup_scanner_watchdog()
 
         @hass_callback
         def _cancel() -> None:
-            self._save_history()
+            self._async_save_history()
             self._async_stop_scanner_watchdog()
             cancel_track()
             cancel_stop()
 
         return _cancel
 
-    def _save_history(self, event: Event | None = None) -> None:
+    @hass_callback
+    def _async_save_history(self, event: Event | None = None) -> None:
         """Save the history."""
         self._storage.async_set_advertisement_history(
             self.source,
@@ -255,6 +253,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
             ),
         )
 
+    @hass_callback
     def _async_expire_devices(self, _datetime: datetime.datetime) -> None:
         """Expire old devices."""
         now = MONOTONIC_TIME()

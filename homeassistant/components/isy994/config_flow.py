@@ -234,10 +234,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert isinstance(url, str)
         parsed_url = urlparse(url)
         mac = discovery_info.upnp[ssdp.ATTR_UPNP_UDN]
-        if mac.startswith(UDN_UUID_PREFIX):
-            mac = mac[len(UDN_UUID_PREFIX) :]
-        if url.endswith(ISY_URL_POSTFIX):
-            url = url[: -len(ISY_URL_POSTFIX)]
+        mac = mac.removeprefix(UDN_UUID_PREFIX)
+        url = url.removesuffix(ISY_URL_POSTFIX)
 
         port = HTTP_PORT
         if parsed_url.port:

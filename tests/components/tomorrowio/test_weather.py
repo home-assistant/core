@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Any
-from unittest.mock import patch
+
+from freezegun import freeze_time
 
 from homeassistant.components.tomorrowio.config_flow import (
     _get_config_schema,
@@ -41,7 +42,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED_UNIT,
     DOMAIN as WEATHER_DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY, SOURCE_USER
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_FRIENDLY_NAME, CONF_NAME
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.entity_registry import async_get
@@ -49,7 +50,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import API_V4_ENTRY_DATA
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @callback
@@ -66,10 +67,9 @@ def _enable_entity(hass: HomeAssistant, entity_name: str) -> None:
 
 async def _setup(hass: HomeAssistant, config: dict[str, Any]) -> State:
     """Set up entry and return entity state."""
-    with patch(
-        "homeassistant.util.dt.utcnow",
-        return_value=datetime(2021, 3, 6, 23, 59, 59, tzinfo=dt_util.UTC),
-    ):
+    with freeze_time(
+        datetime(2021, 3, 6, 23, 59, 59, tzinfo=dt_util.UTC)
+    ) as frozen_time:
         data = _get_config_schema(hass, SOURCE_USER)(config)
         data[CONF_NAME] = DEFAULT_NAME
         config_entry = MockConfigEntry(
@@ -84,6 +84,10 @@ async def _setup(hass: HomeAssistant, config: dict[str, Any]) -> State:
         await hass.async_block_till_done()
         for entity_name in ("hourly", "nowcast"):
             _enable_entity(hass, f"weather.tomorrow_io_{entity_name}")
+        await hass.async_block_till_done()
+        # the enabled entity state will be fired in RELOAD_AFTER_UPDATE_DELAY
+        frozen_time.tick(delta=RELOAD_AFTER_UPDATE_DELAY)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert len(hass.states.async_entity_ids(WEATHER_DOMAIN)) == 3
 

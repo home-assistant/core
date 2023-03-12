@@ -5,7 +5,9 @@ import asyncio
 from collections.abc import Callable
 import functools
 import logging
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any
+
+from typing_extensions import Self
 
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, Event, callback
@@ -35,13 +37,10 @@ if TYPE_CHECKING:
     from .core.channels.base import ZigbeeChannel
     from .core.device import ZHADevice
 
-_ZhaEntitySelfT = TypeVar("_ZhaEntitySelfT", bound="ZhaEntity")
-_ZhaGroupEntitySelfT = TypeVar("_ZhaGroupEntitySelfT", bound="ZhaGroupEntity")
-
 _LOGGER = logging.getLogger(__name__)
 
 ENTITY_SUFFIX = "entity_suffix"
-UPDATE_GROUP_FROM_CHILD_DELAY = 0.5
+DEFAULT_UPDATE_GROUP_FROM_CHILD_DELAY = 0.5
 
 
 class BaseZhaEntity(LogMixin, entity.Entity):
@@ -181,12 +180,12 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
 
     @classmethod
     def create_entity(
-        cls: type[_ZhaEntitySelfT],
+        cls,
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
         **kwargs: Any,
-    ) -> _ZhaEntitySelfT | None:
+    ) -> Self | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
@@ -270,6 +269,7 @@ class ZhaGroupEntity(BaseZhaEntity):
         self._async_unsub_state_changed: CALLBACK_TYPE | None = None
         self._handled_group_membership = False
         self._change_listener_debouncer: Debouncer | None = None
+        self._update_group_from_child_delay = DEFAULT_UPDATE_GROUP_FROM_CHILD_DELAY
 
     @property
     def available(self) -> bool:
@@ -278,13 +278,13 @@ class ZhaGroupEntity(BaseZhaEntity):
 
     @classmethod
     def create_entity(
-        cls: type[_ZhaGroupEntitySelfT],
+        cls,
         entity_ids: list[str],
         unique_id: str,
         group_id: int,
         zha_device: ZHADevice,
         **kwargs: Any,
-    ) -> _ZhaGroupEntitySelfT | None:
+    ) -> Self | None:
         """Group Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
@@ -316,7 +316,7 @@ class ZhaGroupEntity(BaseZhaEntity):
             self._change_listener_debouncer = Debouncer(
                 self.hass,
                 _LOGGER,
-                cooldown=UPDATE_GROUP_FROM_CHILD_DELAY,
+                cooldown=self._update_group_from_child_delay,
                 immediate=False,
                 function=functools.partial(self.async_update_ha_state, True),
             )
