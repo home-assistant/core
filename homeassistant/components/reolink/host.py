@@ -18,12 +18,14 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_PROTOCOL, CONF_USE_HTTPS, DOMAIN
 from .exceptions import ReolinkSetupException, ReolinkWebhookException, UserNotAdmin
 
 DEFAULT_TIMEOUT = 60
 SUBSCRIPTION_RENEW_THRESHOLD = 300
+CHECK_WEBHOOK_TEXT = "check reolink webhook"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -290,6 +292,9 @@ class ReolinkHost:
         else:
             ir.async_delete_issue(self._hass, DOMAIN, "https_webhook")
 
+        session = async_get_clientsession(self._hass, verify_ssl=False)
+        session.post(self._webhook_url, data=CHECK_WEBHOOK_TEXT)
+
         _LOGGER.debug("Registered webhook: %s", event_id)
 
     def unregister_webhook(self):
@@ -314,6 +319,10 @@ class ReolinkHost:
             _LOGGER.debug(
                 "Webhook '%s' triggered with unknown payload: %s", webhook_id, data
             )
+            return
+
+        if data == CHECK_WEBHOOK_TEXT:
+            _LOGGER.error("Webhook '%s' check received", webhook_id)
             return
 
         channels = await self._api.ONVIF_event_callback(data)
