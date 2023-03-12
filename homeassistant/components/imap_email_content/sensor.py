@@ -101,12 +101,12 @@ class EmailReader:
 
     @property
     def last_id(self) -> int | None:
-        """The last email uid that was processed."""
+        """Return last email uid that was processed."""
         return self._last_id
 
     @property
     def last_unread_id(self) -> int | None:
-        """The last email uid received."""
+        """Return last email uid received."""
         if self._unread_ids:
             return max(int(uid) for uid in self._unread_ids)
         return self._last_id
