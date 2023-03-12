@@ -720,7 +720,7 @@ class Recorder(threading.Thread):
             ):
                 self.queue_task(EventTypeIDMigrationTask())
             else:
-                _LOGGER.debug("Activating event type manager as all data is migrated")
+                _LOGGER.debug("Activating event_types manager as all data is migrated")
                 self.event_type_manager.active = True
 
             if (
@@ -729,12 +729,14 @@ class Recorder(threading.Thread):
             ):
                 self.queue_task(EntityIDMigrationTask())
             else:
-                _LOGGER.debug("Activating states meta manager as all data is migrated")
+                _LOGGER.debug("Activating states_meta manager as all data is migrated")
                 self.states_meta_manager.active = True
 
-        # We must only set the db ready after we have scheduled all
-        # migration tasks. Otherwise history and statistics will
-        # use the old queries when the migration is already completed
+        # We must only set the db ready after we have set the table managers
+        # to active if there is no data to migrate.
+        #
+        # This ensures that the history queries will use the new tables
+        # and not the old ones as soon as the API is available.
         self.hass.add_job(self.async_set_db_ready)
 
     def _run_event_loop(self) -> None:
