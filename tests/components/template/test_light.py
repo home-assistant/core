@@ -86,6 +86,27 @@ OPTIMISTIC_HS_COLOR_LIGHT_CONFIG = {
 }
 
 
+CONTROL_OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG = {
+    "level_template": "{{ states.light.optimistic_brightness_light.attributes.brightness | int }}",
+    "value_template": "{{ states.light.optimistic_brightness_light.state }}",
+    "turn_on": {
+        "service": "light.turn_on",
+        "entity_id": "light.optimistic_brightness_light",
+    },
+    "turn_off": {
+        "service": "light.turn_off",
+        "entity_id": "light.optimistic_brightness_light",
+    },
+    "set_level": {
+        "service": "light.turn_on",
+        "entity_id": "light.optimistic_brightness_light",
+        "data_template": {
+            "brightness": "{{brightness}}",
+        },
+    },
+}
+
+
 async def async_setup_light(hass, count, light_config):
     """Do setup of light integration."""
     config = {"light": {"platform": "template", "lights": light_config}}
@@ -1361,3 +1382,206 @@ async def test_invalid_availability_template_keeps_component_available(
 async def test_unique_id(hass: HomeAssistant, setup_light) -> None:
     """Test unique_id option only creates one light per id."""
     assert len(hass.states.async_all("light")) == 1
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    "light_config",
+    [
+        {
+            "optimistic_brightness_light": {
+                **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
+                "set_temperature": {
+                    "service": "test.automation",
+                    "data_template": {
+                        "action": "set_temperature",
+                        "caller": "{{ this.entity_id }}",
+                        "color_temp": "{{color_temp}}",
+                    },
+                },
+            },
+            "test_template_light": {
+                **CONTROL_OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
+                "temperature_template": "{{ states.light.optimistic_brightness_light.attributes.color_temp | int }}",
+                "set_temperature": {
+                    "service": "light.turn_on",
+                    "entity_id": "light.optimistic_brightness_light",
+                    "data_template": {
+                        "color_temp": "{{color_temp}}",
+                    },
+                },
+            },
+        },
+    ],
+)
+async def test_brightness_and_temperature(
+    hass: HomeAssistant,
+    setup_light,
+    calls,
+) -> None:
+    """Test setting both brightness and temperature at the same time. Check both optimistic and otherwise."""
+    state = hass.states.get("light.optimistic_brightness_light")
+    assert state.attributes.get("brightness") is None
+    assert state.attributes.get("color_temp") is None
+
+    state = hass.states.get("light.test_template_light")
+    assert state.attributes.get("brightness") is None
+    assert state.attributes.get("color_temp") is None
+
+    await hass.services.async_call(
+        light.DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.test_template_light",
+            ATTR_BRIGHTNESS: 200,
+            ATTR_COLOR_TEMP: 300,
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get("light.optimistic_brightness_light")
+    assert state.state == STATE_ON
+    assert state.attributes.get("brightness") == 200
+    assert state.attributes.get("color_temp") == 300
+
+    state = hass.states.get("light.test_template_light")
+    assert state.state == STATE_ON
+    assert state.attributes.get("brightness") == 200
+    assert state.attributes.get("color_temp") == 300
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    "light_config",
+    [
+        {
+            "optimistic_brightness_light": {
+                **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
+                "set_color": {
+                    "service": "test.automation",
+                    "data_template": {
+                        "action": "set_temperature",
+                        "caller": "{{ this.entity_id }}",
+                        "s": "{{s}}",
+                        "h": "{{h}}",
+                    },
+                },
+            },
+            "test_template_light": {
+                **CONTROL_OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
+                "temperature_template": "{{ states.light.optimistic_brightness_light.attributes.color_temp | int }}",
+                "set_color": {
+                    "service": "light.turn_on",
+                    "entity_id": "light.optimistic_brightness_light",
+                    "data_template": {
+                        "hs_color": "{{ [h, s] }}",
+                    },
+                },
+            },
+        },
+    ],
+)
+async def test_brightness_and_color(
+    hass: HomeAssistant,
+    setup_light,
+    calls,
+) -> None:
+    """Test setting both brightness and temperature at the same time. Check both optimistic and otherwise."""
+    state = hass.states.get("light.optimistic_brightness_light")
+    assert state.attributes.get("brightness") is None
+    assert state.attributes.get("hs_color") is None
+
+    state = hass.states.get("light.test_template_light")
+    assert state.attributes.get("brightness") is None
+    assert state.attributes.get("hs_color") is None
+
+    await hass.services.async_call(
+        light.DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.test_template_light",
+            ATTR_BRIGHTNESS: 200,
+            ATTR_HS_COLOR: (40, 50),
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get("light.optimistic_brightness_light")
+    assert state.state == STATE_ON
+    assert state.attributes.get("brightness") == 200
+    assert state.attributes.get("hs_color") == (40, 50)
+
+    state = hass.states.get("light.test_template_light")
+    assert state.state == STATE_ON
+    assert state.attributes.get("brightness") == 200
+    assert state.attributes.get("hs_color") == (40, 50)
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    "light_config",
+    [
+        {
+            "optimistic_brightness_light": {
+                **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
+                "effect_list_template": "{{ ['Disco'] }}",
+                "effect_template": "{{ 'Disco' }}",
+                "set_effect": {
+                    "service": "test.automation",
+                    "data_template": {
+                        "action": "set_effect",
+                        "caller": "{{ this.entity_id }}",
+                        "entity_id": "test.test_state",
+                        "effect": "{{effect}}",
+                    },
+                },
+            },
+            "test_template_light": {
+                **CONTROL_OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
+                "effect_list_template": "{{ states.light.optimistic_brightness_light.attributes.effect_list }}",
+                "effect_template": "{{ states.light.optimistic_brightness_light.attributes.effect }}",
+                "set_effect": {
+                    "service": "light.turn_on",
+                    "entity_id": "light.optimistic_brightness_light",
+                    "data_template": {
+                        "effect": "{{effect}}",
+                    },
+                },
+            },
+        },
+    ],
+)
+async def test_brightness_and_effect(
+    hass: HomeAssistant,
+    setup_light,
+    calls,
+) -> None:
+    """Test setting both brightness and temperature at the same time. Check both optimistic and otherwise."""
+    state = hass.states.get("light.optimistic_brightness_light")
+    assert state.attributes.get("brightness") is None
+    assert state.attributes.get("effect") is None
+
+    state = hass.states.get("light.test_template_light")
+    assert state.attributes.get("brightness") is None
+    assert state.attributes.get("effect") is None
+
+    await hass.services.async_call(
+        light.DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.test_template_light",
+            ATTR_BRIGHTNESS: 200,
+            ATTR_EFFECT: "Disco",
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get("light.optimistic_brightness_light")
+    assert state.state == STATE_ON
+    assert state.attributes.get("brightness") == 200
+    assert state.attributes.get("effect") == "Disco"
+
+    state = hass.states.get("light.test_template_light")
+    assert state.state == STATE_ON
+    assert state.attributes.get("brightness") == 200
+    assert state.attributes.get("effect") == "Disco"

@@ -376,6 +376,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             optimistic_set = True
 
         common_params = {}
+        script_called = False
 
         if ATTR_BRIGHTNESS in kwargs:
             common_params["brightness"] = kwargs[ATTR_BRIGHTNESS]
@@ -385,6 +386,7 @@ class LightTemplate(TemplateEntity, LightEntity):
 
         if ATTR_COLOR_TEMP in kwargs and self._temperature_script:
             common_params["color_temp"] = kwargs[ATTR_COLOR_TEMP]
+            script_called = True
 
             await self.async_run_script(
                 self._temperature_script,
@@ -403,6 +405,7 @@ class LightTemplate(TemplateEntity, LightEntity):
                 )
 
             common_params["effect"] = effect
+            script_called = True
 
             await self.async_run_script(
                 self._effect_script, run_variables=common_params, context=self._context
@@ -412,15 +415,19 @@ class LightTemplate(TemplateEntity, LightEntity):
             common_params["hs"] = hs_value
             common_params["h"] = int(hs_value[0])
             common_params["s"] = int(hs_value[1])
+            script_called = True
 
             await self.async_run_script(
                 self._color_script, run_variables=common_params, context=self._context
             )
-        elif ATTR_BRIGHTNESS in kwargs and self._level_script:
+
+        if ATTR_BRIGHTNESS in kwargs and self._level_script:
+            script_called = True
             await self.async_run_script(
                 self._level_script, run_variables=common_params, context=self._context
             )
-        else:
+
+        if not script_called:
             await self.async_run_script(
                 self._on_script, run_variables=common_params, context=self._context
             )
