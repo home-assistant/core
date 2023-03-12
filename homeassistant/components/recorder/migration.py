@@ -332,7 +332,7 @@ def _drop_index(
 
     _LOGGER.warning(
         (
-            "Failed to drop index %s from table %s. Schema "
+            "Failed to drop index `%s` from table `%s`. Schema "
             "Migration will continue; this is not a "
             "critical operation"
         ),
