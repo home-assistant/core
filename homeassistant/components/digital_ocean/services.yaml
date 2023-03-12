@@ -1,0 +1,42 @@
+update_domain_record:
+  name: Update DNS Record
+  description: |
+    Updates the value of a DigitalOcean DNS domain record.
+  fields:
+    domain:
+      name: Domain
+      description: The domain of the record
+      required: true
+      example: "example.com"
+      selector:
+        text:
+    record:
+      name: Record
+      description: |
+        The name of the record.
+        Use '@' if you want to update the 'root' of the domain.
+      required: true
+      example: |
+        Using "home" on "example.com" will update home.example.com
+        Using "@" on "example.com" will update example.com
+      selector:
+        text:
+    value:
+      name: Value
+      description: |
+        The value to assign to the record, typically an IP address or another DNS name.
+      required: true
+      example: "123.456.789.10"
+      selector:
+        text:
+    type:
+      name: Type
+      description: The type of the DNS record.
+      required: true
+      example: "A"
+      selector:
+        select:
+          options:
+            - "A"
+            - "AAAA"
+            - "CNAME"
