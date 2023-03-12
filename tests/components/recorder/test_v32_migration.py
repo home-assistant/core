@@ -99,6 +99,12 @@ async def test_migrate_times(caplog: pytest.LogCaptureFixture, tmpdir) -> None:
         core, "Events", old_db_schema.Events
     ), patch(
         CREATE_ENGINE_TARGET, new=_create_engine_test
+    ), patch(
+        "homeassistant.components.recorder.Recorder._migrate_context_ids",
+    ), patch(
+        "homeassistant.components.recorder.Recorder._migrate_event_type_ids",
+    ), patch(
+        "homeassistant.components.recorder.Recorder._migrate_entity_ids",
     ):
         hass = await async_test_home_assistant(asyncio.get_running_loop())
         recorder_helper.async_initialize_recorder(hass)

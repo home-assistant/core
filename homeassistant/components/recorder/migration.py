@@ -71,6 +71,8 @@ if TYPE_CHECKING:
 
 LIVE_MIGRATION_MIN_SCHEMA_VERSION = 0
 _EMPTY_CONTEXT_ID = b"\x00" * 16
+_EMPTY_ENTITY_ID = "missing.entity_id"
+_EMPTY_EVENT_TYPE = "missing_event_type"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -1312,7 +1314,10 @@ def migrate_event_type_ids(instance: Recorder) -> bool:
             event_types = {event_type for _, event_type in events}
             event_type_to_id = event_type_manager.get_many(event_types, session)
             if missing_event_types := {
-                event_type
+                # We should never see see None for the event_Type in the events table
+                # but we need to be defensive so we don't fail the migration
+                # because of a bad event
+                _EMPTY_EVENT_TYPE if event_type is None else event_type
                 for event_type, event_id in event_type_to_id.items()
                 if event_id is None
             }:
@@ -1325,7 +1330,9 @@ def migrate_event_type_ids(instance: Recorder) -> bool:
                 for db_event_type in missing_db_event_types:
                     # We cannot add the assigned ids to the event_type_manager
                     # because the commit could get rolled back
-                    assert db_event_type.event_type is not None
+                    assert (
+                        db_event_type.event_type is not None
+                    ), "event_type should never be None"
                     event_type_to_id[
                         db_event_type.event_type
                     ] = db_event_type.event_type_id
@@ -1369,7 +1376,10 @@ def migrate_entity_ids(instance: Recorder) -> bool:
             entity_ids = {entity_id for _, entity_id in states}
             entity_id_to_metadata_id = states_meta_manager.get_many(entity_ids, session)
             if missing_entity_ids := {
-                entity_id
+                # We should never see _EMPTY_ENTITY_ID in the states table
+                # but we need to be defensive so we don't fail the migration
+                # because of a bad state
+                _EMPTY_ENTITY_ID if entity_id is None else entity_id
                 for entity_id, metadata_id in entity_id_to_metadata_id.items()
                 if metadata_id is None
             }:
@@ -1381,7 +1391,9 @@ def migrate_entity_ids(instance: Recorder) -> bool:
                 for db_states_metadata in missing_states_metadata:
                     # We cannot add the assigned ids to the event_type_manager
                     # because the commit could get rolled back
-                    assert db_states_metadata.entity_id is not None
+                    assert (
+                        db_states_metadata.entity_id is not None
+                    ), "entity_id should never be None"
                     entity_id_to_metadata_id[
                         db_states_metadata.entity_id
                     ] = db_states_metadata.metadata_id
