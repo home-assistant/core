@@ -19,6 +19,7 @@ from homeassistant.components.recorder.db_schema import (
     RecorderRuns,
     StateAttributes,
     States,
+    StatesMeta,
 )
 from homeassistant.components.recorder.history import legacy
 from homeassistant.components.recorder.models import LazyState, process_timestamp
@@ -802,34 +803,15 @@ async def test_state_changes_during_period_query_during_migration_to_schema_25(
 
     instance = await async_setup_recorder_instance(hass, {})
 
-    start = dt_util.utcnow()
-    point = start + timedelta(seconds=1)
-    end = point + timedelta(seconds=1)
-    entity_id = "light.test"
-    await recorder.get_instance(hass).async_add_executor_job(
-        _add_db_entries, hass, point, [entity_id]
-    )
+    with patch.object(instance.states_meta_manager, "active", False):
+        start = dt_util.utcnow()
+        point = start + timedelta(seconds=1)
+        end = point + timedelta(seconds=1)
+        entity_id = "light.test"
+        await recorder.get_instance(hass).async_add_executor_job(
+            _add_db_entries, hass, point, [entity_id]
+        )
 
-    no_attributes = True
-    hist = history.state_changes_during_period(
-        hass, start, end, entity_id, no_attributes, include_start_time_state=False
-    )
-    state = hist[entity_id][0]
-    assert state.attributes == {}
-
-    no_attributes = False
-    hist = history.state_changes_during_period(
-        hass, start, end, entity_id, no_attributes, include_start_time_state=False
-    )
-    state = hist[entity_id][0]
-    assert state.attributes == {"name": "the shared light"}
-
-    with instance.engine.connect() as conn:
-        conn.execute(text("update states set attributes_id=NULL;"))
-        conn.execute(text("drop table state_attributes;"))
-        conn.commit()
-
-    with patch.object(instance, "schema_version", 24):
         no_attributes = True
         hist = history.state_changes_during_period(
             hass, start, end, entity_id, no_attributes, include_start_time_state=False
@@ -842,7 +824,37 @@ async def test_state_changes_during_period_query_during_migration_to_schema_25(
             hass, start, end, entity_id, no_attributes, include_start_time_state=False
         )
         state = hist[entity_id][0]
-        assert state.attributes == {"name": "the light"}
+        assert state.attributes == {"name": "the shared light"}
+
+        with instance.engine.connect() as conn:
+            conn.execute(text("update states set attributes_id=NULL;"))
+            conn.execute(text("drop table state_attributes;"))
+            conn.commit()
+
+        with patch.object(instance, "schema_version", 24):
+            no_attributes = True
+            hist = history.state_changes_during_period(
+                hass,
+                start,
+                end,
+                entity_id,
+                no_attributes,
+                include_start_time_state=False,
+            )
+            state = hist[entity_id][0]
+            assert state.attributes == {}
+
+            no_attributes = False
+            hist = history.state_changes_during_period(
+                hass,
+                start,
+                end,
+                entity_id,
+                no_attributes,
+                include_start_time_state=False,
+            )
+            state = hist[entity_id][0]
+            assert state.attributes == {"name": "the light"}
 
 
 async def test_get_states_query_during_migration_to_schema_25(
@@ -993,7 +1005,14 @@ async def test_get_full_significant_states_handles_empty_last_changed(
                 state_attributes.attributes_id: state_attributes
                 for state_attributes in session.query(StateAttributes)
             }
+            metadata_id_to_entity_id = {
+                states_meta.metadata_id: states_meta
+                for states_meta in session.query(StatesMeta)
+            }
             for db_state in session.query(States):
+                db_state.entity_id = metadata_id_to_entity_id[
+                    db_state.metadata_id
+                ].entity_id
                 state = db_state.to_native()
                 state.attributes = db_state_attributes[
                     db_state.attributes_id
