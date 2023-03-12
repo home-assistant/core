@@ -86,7 +86,7 @@ class InChargeSensor(SensorEntity):
     def __init__(
         self, probe, name, unique_id, description: SensorEntityDescription
     ) -> None:
-        """Initialize a PVOutput sensor."""
+        """Initialize a InCharge sensor."""
         self.probe = probe
         self.entity_description = description
         self._attr_name = f"{name} {description.name}"
