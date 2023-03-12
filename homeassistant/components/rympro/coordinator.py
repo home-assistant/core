@@ -66,7 +66,7 @@ class RymProDataUpdateCoordinator(DataUpdateCoordinator[dict[int, dict]]):
         try:
             meters = await self.rympro.last_read()
             raw = await asyncio.gather(
-                *(self._results_for_meter(meter_id) for meter_id in meters.keys())
+                *(self._results_for_meter(meter_id) for meter_id in meters)
             )
             self._first_run = False
             return {
