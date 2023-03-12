@@ -100,7 +100,9 @@ async def test_migrate_times(caplog: pytest.LogCaptureFixture, tmpdir) -> None:
     ), patch(
         CREATE_ENGINE_TARGET, new=_create_engine_test
     ), patch(
-        "homeassistant.components.recorder.Recorder._migrate_context_ids",
+        "homeassistant.components.recorder.Recorder._migrate_events_context_ids",
+    ), patch(
+        "homeassistant.components.recorder.Recorder._migrate_states_context_ids",
     ), patch(
         "homeassistant.components.recorder.Recorder._migrate_event_type_ids",
     ), patch(

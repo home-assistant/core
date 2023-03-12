@@ -346,16 +346,33 @@ class AdjustLRUSizeTask(RecorderTask):
 
 
 @dataclass
-class ContextIDMigrationTask(RecorderTask):
-    """An object to insert into the recorder queue to migrate context ids."""
+class StatesContextIDMigrationTask(RecorderTask):
+    """An object to insert into the recorder queue to migrate states context ids."""
 
     commit_before = False
 
     def run(self, instance: Recorder) -> None:
         """Run context id migration task."""
-        if not instance._migrate_context_ids():  # pylint: disable=[protected-access]
+        if (
+            not instance._migrate_states_context_ids()  # pylint: disable=[protected-access]
+        ):
             # Schedule a new migration task if this one didn't finish
-            instance.queue_task(ContextIDMigrationTask())
+            instance.queue_task(StatesContextIDMigrationTask())
+
+
+@dataclass
+class EventsContextIDMigrationTask(RecorderTask):
+    """An object to insert into the recorder queue to migrate events context ids."""
+
+    commit_before = False
+
+    def run(self, instance: Recorder) -> None:
+        """Run context id migration task."""
+        if (
+            not instance._migrate_events_context_ids()  # pylint: disable=[protected-access]
+        ):
+            # Schedule a new migration task if this one didn't finish
+            instance.queue_task(EventsContextIDMigrationTask())
 
 
 @dataclass

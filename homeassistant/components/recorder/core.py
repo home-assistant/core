@@ -97,9 +97,9 @@ from .tasks import (
     ChangeStatisticsUnitTask,
     ClearStatisticsTask,
     CommitTask,
-    ContextIDMigrationTask,
     DatabaseLockTask,
     EntityIDMigrationTask,
+    EventsContextIDMigrationTask,
     EventTask,
     EventTypeIDMigrationTask,
     ImportStatisticsTask,
@@ -107,6 +107,7 @@ from .tasks import (
     PerodicCleanupTask,
     PurgeTask,
     RecorderTask,
+    StatesContextIDMigrationTask,
     StatisticsTask,
     StopTask,
     SynchronizeTask,
@@ -710,9 +711,14 @@ class Recorder(threading.Thread):
             if (
                 self.schema_version < 36
                 or session.execute(has_events_context_ids_to_migrate()).scalar()
+            ):
+                self.queue_task(StatesContextIDMigrationTask())
+
+            if (
+                self.schema_version < 36
                 or session.execute(has_states_context_ids_to_migrate()).scalar()
             ):
-                self.queue_task(ContextIDMigrationTask())
+                self.queue_task(EventsContextIDMigrationTask())
 
             if (
                 self.schema_version < 37
@@ -1236,9 +1242,13 @@ class Recorder(threading.Thread):
         """Run post schema migration tasks."""
         migration.post_schema_migration(self, old_version, new_version)
 
-    def _migrate_context_ids(self) -> bool:
-        """Migrate context ids if needed."""
-        return migration.migrate_context_ids(self)
+    def _migrate_states_context_ids(self) -> bool:
+        """Migrate states context ids if needed."""
+        return migration.migrate_states_context_ids(self)
+
+    def _migrate_events_context_ids(self) -> bool:
+        """Migrate events context ids if needed."""
+        return migration.migrate_events_context_ids(self)
 
     def _migrate_event_type_ids(self) -> bool:
         """Migrate event type ids if needed."""
