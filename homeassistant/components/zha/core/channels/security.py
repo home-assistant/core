@@ -342,12 +342,12 @@ class IASZoneChannel(ZigbeeChannel):
     def cluster_command(self, tsn, command_id, args):
         """Handle commands received to this cluster."""
         if command_id == 0:
-            state = args[0] & 3
-            # update attribute cache (sends signal)
+            zone_status = args[0]
+            # update attribute cache with new zone status
             self.cluster.update_attribute(
-                IasZone.attributes_by_name["zone_status"].id, state
+                IasZone.attributes_by_name["zone_status"].id, zone_status
             )
-            self.debug("Updated alarm state: %s", state)
+            self.debug("Updated alarm state: %s", zone_status)
         elif command_id == 1:
             self.debug("Enroll requested")
             res = self._cluster.enroll_response(0, 0)
@@ -391,7 +391,6 @@ class IASZoneChannel(ZigbeeChannel):
     def attribute_updated(self, attrid, value):
         """Handle attribute updates on this cluster."""
         if attrid == IasZone.attributes_by_name["zone_status"].id:
-            value = value & 3
             self.async_send_signal(
                 f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
                 attrid,
