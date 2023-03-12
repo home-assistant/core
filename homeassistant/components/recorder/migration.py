@@ -1354,7 +1354,14 @@ def migrate_event_type_ids(instance: Recorder) -> bool:
 
 
 def migrate_entity_ids(instance: Recorder) -> bool:
-    """Migrate entity_ids to states_meta."""
+    """Migrate entity_ids to states_meta.
+
+    We do this in two steps because we need the history queries to work
+    while we are migrating.
+
+    1. Link the states to the states_meta table
+    2. Remove the entity_id column from the states table (in post_migrate_entity_ids)
+    """
     _LOGGER.debug("Migrating entity_ids")
     states_meta_manager = instance.states_meta_manager
     with session_scope(session=instance.get_session()) as session:
