@@ -236,7 +236,7 @@ async def test_time_sync_startup_and_next_day(hass: HomeAssistant) -> None:
         assert config_entry.state == ConfigEntryState.LOADED
 
     assert len(bulb.async_set_time.mock_calls) == 1
-    async_fire_time_changed(hass, utcnow() + timedelta(hours=48))
+    async_fire_time_changed(hass, utcnow() + timedelta(hours=24))
     await hass.async_block_till_done()
     assert len(bulb.async_set_time.mock_calls) == 2
 
