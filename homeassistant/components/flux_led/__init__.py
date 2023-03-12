@@ -209,7 +209,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await device.async_set_time()
 
     await _async_sync_time()  # set at startup
-    entry.async_on_unload(async_track_time_change(hass, _async_sync_time, 2, 40, 30))
+    entry.async_on_unload(async_track_time_change(hass, _async_sync_time, 3, 40, 30))
 
     # There must not be any awaits between here and the return
     # to avoid a race condition where the add_update_listener is not
