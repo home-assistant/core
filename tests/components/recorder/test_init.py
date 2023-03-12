@@ -1288,11 +1288,11 @@ def test_saving_sets_old_state(hass_recorder: Callable[..., HomeAssistant]) -> N
     """Test saving sets old state."""
     hass = hass_recorder()
 
-    hass.states.set("test.one", "on", {})
-    hass.states.set("test.two", "on", {})
+    hass.states.set("test.one", "s1", {})
+    hass.states.set("test.two", "s2", {})
     wait_recording_done(hass)
-    hass.states.set("test.one", "off", {})
-    hass.states.set("test.two", "off", {})
+    hass.states.set("test.one", "s3", {})
+    hass.states.set("test.two", "s4", {})
     wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
@@ -1302,16 +1302,17 @@ def test_saving_sets_old_state(hass_recorder: Callable[..., HomeAssistant]) -> N
             ).outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
         )
         assert len(states) == 4
+        states_by_state = {state.state: state for state in states}
 
-        assert states[0].entity_id == "test.one"
-        assert states[1].entity_id == "test.two"
-        assert states[2].entity_id == "test.one"
-        assert states[3].entity_id == "test.two"
+        assert states_by_state["s1"].entity_id == "test.one"
+        assert states_by_state["s2"].entity_id == "test.two"
+        assert states_by_state["s3"].entity_id == "test.one"
+        assert states_by_state["s4"].entity_id == "test.two"
 
-        assert states[0].old_state_id is None
-        assert states[1].old_state_id is None
-        assert states[2].old_state_id == states[0].state_id
-        assert states[3].old_state_id == states[1].state_id
+        assert states_by_state["s1"].old_state_id is None
+        assert states_by_state["s2"].old_state_id is None
+        assert states_by_state["s3"].old_state_id == states_by_state["s1"].state_id
+        assert states_by_state["s4"].old_state_id == states_by_state["s2"].state_id
 
 
 def test_saving_state_with_serializable_data(
@@ -1321,11 +1322,11 @@ def test_saving_state_with_serializable_data(
     hass = hass_recorder()
 
     hass.bus.fire("bad_event", {"fail": CannotSerializeMe()})
-    hass.states.set("test.one", "on", {"fail": CannotSerializeMe()})
+    hass.states.set("test.one", "s1", {"fail": CannotSerializeMe()})
     wait_recording_done(hass)
-    hass.states.set("test.two", "on", {})
+    hass.states.set("test.two", "s2", {})
     wait_recording_done(hass)
-    hass.states.set("test.two", "off", {})
+    hass.states.set("test.two", "s3", {})
     wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
@@ -1335,11 +1336,11 @@ def test_saving_state_with_serializable_data(
             ).outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
         )
         assert len(states) == 2
-
-        assert states[0].entity_id == "test.two"
-        assert states[1].entity_id == "test.two"
-        assert states[0].old_state_id is None
-        assert states[1].old_state_id == states[0].state_id
+        states_by_state = {state.state: state for state in states}
+        assert states_by_state["s2"].entity_id == "test.two"
+        assert states_by_state["s3"].entity_id == "test.two"
+        assert states_by_state["s2"].old_state_id is None
+        assert states_by_state["s3"].old_state_id == states_by_state["s2"].state_id
 
     assert "State is not JSON serializable" in caplog.text
 
