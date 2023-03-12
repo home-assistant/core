@@ -1418,7 +1418,7 @@ def post_migrate_entity_ids(instance: Recorder) -> bool:
     session_maker = instance.get_session
     _LOGGER.debug("Cleanup legacy entity_ids")
     with session_scope(session=session_maker()) as session:
-        is_done = session.execute(batch_cleanup_entity_ids()).scalar() is None
+        is_done = not bool(session.execute(batch_cleanup_entity_ids()).scalar())
         # If there is more work to do return False
         # so that we can be called again
 
