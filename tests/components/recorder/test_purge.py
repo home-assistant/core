@@ -20,6 +20,7 @@ from homeassistant.components.recorder.db_schema import (
     RecorderRuns,
     StateAttributes,
     States,
+    StatesMeta,
     StatisticsRuns,
     StatisticsShortTerm,
 )
@@ -670,6 +671,19 @@ async def test_purge_cutoff_date(
         assert state_attributes.count() == 0
 
 
+def _convert_pending_states_to_meta(session: Session) -> None:
+    """Convert pending states to use states_metadata."""
+    for object in session:
+        states_meta_objects: dict[str, StatesMeta] = {}
+        if isinstance(object, States):
+            if object.entity_id not in states_meta_objects:
+                states_meta_objects[object.entity_id] = StatesMeta(
+                    entity_id=object.entity_id,
+                )
+            object.states_meta_rel = states_meta_objects[object.entity_id]
+            object.entity_id = None
+
+
 @pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
 async def test_purge_filtered_states(
     async_setup_recorder_instance: RecorderInstanceGenerator,
@@ -762,6 +776,7 @@ async def test_purge_filtered_states(
                     time_fired_ts=dt_util.utc_to_timestamp(timestamp),
                 )
             )
+            _convert_pending_states_to_meta(session)
 
     service_data = {"keep_days": 10}
     _add_db_entries(hass)
@@ -815,8 +830,10 @@ async def test_purge_filtered_states(
         events_keep = session.query(Events).filter(Events.event_type == "EVENT_KEEP")
         assert events_keep.count() == 1
 
-        states_sensor_excluded = session.query(States).filter(
-            States.entity_id == "sensor.excluded"
+        states_sensor_excluded = (
+            session.query(States)
+            .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
+            .filter(StatesMeta.entity_id == "sensor.excluded")
         )
         assert states_sensor_excluded.count() == 0
 
@@ -880,6 +897,7 @@ async def test_purge_filtered_states_to_empty(
                         timestamp,
                         event_id * days,
                     )
+            _convert_pending_states_to_meta(session)
 
     service_data = {"keep_days": 10}
     _add_db_entries(hass)

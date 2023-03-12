@@ -33,8 +33,8 @@ from homeassistant.components.recorder.db_schema import (
 from homeassistant.components.recorder.queries import select_event_type_ids
 from homeassistant.components.recorder.tasks import (
     ContextIDMigrationTask,
-    EntityIDMigration,
-    EntityIDPostMigration,
+    EntityIDMigrationTask,
+    EntityIDPostMigrationTask,
     EventTypeIDMigrationTask,
 )
 from homeassistant.components.recorder.util import session_scope
@@ -806,7 +806,7 @@ async def test_migrate_entity_ids(
 
     await async_wait_recording_done(hass)
     # This is a threadsafe way to add a task to the recorder
-    instance.queue_task(EntityIDMigration())
+    instance.queue_task(EntityIDMigrationTask())
     await async_recorder_block_till_done(hass)
 
     def _fetch_migrated_states():
@@ -872,7 +872,7 @@ async def test_post_migrate_entity_ids(
 
     await async_wait_recording_done(hass)
     # This is a threadsafe way to add a task to the recorder
-    instance.queue_task(EntityIDPostMigration())
+    instance.queue_task(EntityIDPostMigrationTask())
     await async_recorder_block_till_done(hass)
 
     def _fetch_migrated_states():

@@ -97,7 +97,7 @@ from .tasks import (
     CommitTask,
     ContextIDMigrationTask,
     DatabaseLockTask,
-    EntityIDMigration,
+    EntityIDMigrationTask,
     EventTask,
     EventTypeIDMigrationTask,
     ImportStatisticsTask,
@@ -719,7 +719,7 @@ class Recorder(threading.Thread):
                 _LOGGER.debug("Activating event type manager as all data is migrated")
                 self.event_type_manager.active = True
             if session.execute(has_entity_ids_to_migrate()).scalar():
-                self.queue_task(EntityIDMigration())
+                self.queue_task(EntityIDMigrationTask())
             else:
                 _LOGGER.debug("Activating states meta manager as all data is migrated")
                 self.states_meta_manager.active = True

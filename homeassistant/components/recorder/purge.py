@@ -15,7 +15,7 @@ from homeassistant.const import EVENT_STATE_CHANGED
 import homeassistant.util.dt as dt_util
 
 from .const import SQLITE_MAX_BIND_VARS
-from .db_schema import Events, StateAttributes, States
+from .db_schema import Events, StateAttributes, States, StatesMeta
 from .models import DatabaseEngine
 from .queries import (
     attributes_ids_exist_in_states,
@@ -597,13 +597,18 @@ def _purge_filtered_data(instance: Recorder, session: Session) -> bool:
     assert database_engine is not None
 
     # Check if excluded entity_ids are in database
-    excluded_entity_ids: list[str] = [
-        entity_id
-        for (entity_id,) in session.query(distinct(States.entity_id)).all()
-        if not instance.entity_filter(entity_id)
+    entity_filter = instance.entity_filter
+    excluded_metadata_ids: list[str] = [
+        metadata_id
+        for (metadata_id, entity_id) in session.query(
+            StatesMeta.metadata_id, StatesMeta.entity_id
+        ).all()
+        if not entity_filter(entity_id)
     ]
-    if len(excluded_entity_ids) > 0:
-        _purge_filtered_states(instance, session, excluded_entity_ids, database_engine)
+    if len(excluded_metadata_ids) > 0:
+        _purge_filtered_states(
+            instance, session, excluded_metadata_ids, database_engine
+        )
         return False
 
     # Check if excluded event_types are in database
@@ -622,7 +627,7 @@ def _purge_filtered_data(instance: Recorder, session: Session) -> bool:
 def _purge_filtered_states(
     instance: Recorder,
     session: Session,
-    excluded_entity_ids: list[str],
+    excluded_metadata_ids: list[str],
     database_engine: DatabaseEngine,
 ) -> None:
     """Remove filtered states and linked events."""
@@ -632,7 +637,7 @@ def _purge_filtered_states(
     state_ids, attributes_ids, event_ids = zip(
         *(
             session.query(States.state_id, States.attributes_id, States.event_id)
-            .filter(States.entity_id.in_(excluded_entity_ids))
+            .filter(States.metadata_id.in_(excluded_metadata_ids))
             .limit(SQLITE_MAX_BIND_VARS)
             .all()
         )
@@ -687,17 +692,19 @@ def purge_entity_data(instance: Recorder, entity_filter: Callable[[str], bool]) 
     database_engine = instance.database_engine
     assert database_engine is not None
     with session_scope(session=instance.get_session()) as session:
-        selected_entity_ids: list[str] = [
-            entity_id
-            for (entity_id,) in session.query(distinct(States.entity_id)).all()
+        selected_metadata_ids: list[str] = [
+            metadata_id
+            for (metadata_id, entity_id) in session.query(
+                StatesMeta.metadata_id, StatesMeta.entity_id
+            ).all()
             if entity_filter(entity_id)
         ]
-        _LOGGER.debug("Purging entity data for %s", selected_entity_ids)
-        if len(selected_entity_ids) > 0:
+        _LOGGER.debug("Purging entity data for %s", selected_metadata_ids)
+        if len(selected_metadata_ids) > 0:
             # Purge a max of SQLITE_MAX_BIND_VARS, based on the oldest states
             # or events record.
             _purge_filtered_states(
-                instance, session, selected_entity_ids, database_engine
+                instance, session, selected_metadata_ids, database_engine
             )
             _LOGGER.debug("Purging entity data hasn't fully completed yet")
             return False
