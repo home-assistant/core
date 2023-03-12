@@ -1,4 +1,4 @@
-"""This component provides select entities for UniFi Protect."""
+"""Component providing select entities for UniFi Protect."""
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -32,12 +32,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import (
-    config_validation as cv,
-    entity_platform,
-    issue_registry as ir,
-)
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 from homeassistant.util.dt import utcnow
 
 from .const import ATTR_DURATION, ATTR_MESSAGE, DISPATCH_ADOPT, DOMAIN, TYPE_EMPTY_VALUE
@@ -319,9 +319,7 @@ VIEWER_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: entity_platform.AddEntitiesCallback,
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up number entities for UniFi Protect integration."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
@@ -354,7 +352,7 @@ async def async_setup_entry(
     )
 
     async_add_entities(entities)
-    platform = entity_platform.async_get_current_platform()
+    platform = async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_SET_DOORBELL_MESSAGE,
         SET_DOORBELL_LCD_MESSAGE_SCHEMA,

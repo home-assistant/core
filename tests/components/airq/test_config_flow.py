@@ -3,12 +3,15 @@ from unittest.mock import patch
 
 from aioairq.core import DeviceInfo, InvalidAuth, InvalidInput
 from aiohttp.client_exceptions import ClientConnectionError
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.airq.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 TEST_USER_DATA = {
     CONF_IP_ADDRESS: "192.168.0.0",

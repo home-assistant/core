@@ -61,6 +61,7 @@ from .db_schema import (
     Base,
     EventData,
     Events,
+    EventTypes,
     StateAttributes,
     States,
     Statistics,
@@ -81,16 +82,20 @@ from .queries import (
     find_shared_data_id,
     get_shared_attributes,
     get_shared_event_datas,
+    has_event_type_to_migrate,
 )
 from .run_history import RunHistory
+from .table_managers.event_types import EventTypeManager
 from .tasks import (
     AdjustLRUSizeTask,
     AdjustStatisticsTask,
     ChangeStatisticsUnitTask,
     ClearStatisticsTask,
     CommitTask,
+    ContextIDMigrationTask,
     DatabaseLockTask,
     EventTask,
+    EventTypeIDMigrationTask,
     ImportStatisticsTask,
     KeepAliveTask,
     PerodicCleanupTask,
@@ -133,6 +138,7 @@ EXPIRE_AFTER_COMMITS = 120
 # - How much memory our low end hardware has
 STATE_ATTRIBUTES_ID_CACHE_SIZE = 2048
 EVENT_DATA_ID_CACHE_SIZE = 2048
+
 
 SHUTDOWN_TASK = object()
 
@@ -208,6 +214,7 @@ class Recorder(threading.Thread):
         self._old_states: dict[str | None, States] = {}
         self._state_attributes_ids: LRU = LRU(STATE_ATTRIBUTES_ID_CACHE_SIZE)
         self._event_data_ids: LRU = LRU(EVENT_DATA_ID_CACHE_SIZE)
+        self.event_type_manager = EventTypeManager()
         self._pending_state_attributes: dict[str, StateAttributes] = {}
         self._pending_event_data: dict[str, EventData] = {}
         self._pending_expunge: list[States] = []
@@ -687,8 +694,25 @@ class Recorder(threading.Thread):
         _LOGGER.debug("Recorder processing the queue")
         self._adjust_lru_size()
         self.hass.add_job(self._async_set_recorder_ready_migration_done)
+        self._activate_table_managers_or_migrate()
         self._run_event_loop()
         self._shutdown()
+
+    def _activate_table_managers_or_migrate(self) -> None:
+        """Activate the table managers or schedule migrations."""
+        # Currently we always check if context ids need to be migrated
+        # since there are multiple tables. This could be optimized
+        # to check both the states and events table to see if there
+        # are any missing and avoid inserting the task but it currently
+        # is not needed since there is no dependent code branching
+        # on the result of the migration.
+        self.queue_task(ContextIDMigrationTask())
+        with session_scope(session=self.get_session()) as session:
+            if session.execute(has_event_type_to_migrate()).scalar():
+                self.queue_task(EventTypeIDMigrationTask())
+            else:
+                _LOGGER.debug("Activating event type manager as all data is migrated")
+                self.event_type_manager.active = True
 
     def _run_event_loop(self) -> None:
         """Run the event loop for the recorder."""
@@ -722,8 +746,10 @@ class Recorder(threading.Thread):
                 else:
                     non_state_change_events.append(event_)
 
+        assert self.event_session is not None
         self._pre_process_state_change_events(state_change_events)
         self._pre_process_non_state_change_events(non_state_change_events)
+        self.event_type_manager.load(non_state_change_events, self.event_session)
 
     def _pre_process_state_change_events(self, events: list[Event]) -> None:
         """Load startup state attributes from the database.
@@ -942,13 +968,30 @@ class Recorder(threading.Thread):
 
     def _process_non_state_changed_event_into_session(self, event: Event) -> None:
         """Process any event into the session except state changed."""
-        assert self.event_session is not None
+        event_session = self.event_session
+        assert event_session is not None
         dbevent = Events.from_event(event)
+
+        # Map the event_type to the EventTypes table
+        event_type_manager = self.event_type_manager
+        if pending_event_types := event_type_manager.get_pending(event.event_type):
+            dbevent.event_type_rel = pending_event_types
+        elif event_type_id := event_type_manager.get(event.event_type, event_session):
+            dbevent.event_type_id = event_type_id
+        else:
+            event_types = EventTypes(event_type=event.event_type)
+            event_type_manager.add_pending(event_types)
+            event_session.add(event_types)
+            dbevent.event_type_rel = event_types
+
         if not event.data:
-            self.event_session.add(dbevent)
+            event_session.add(dbevent)
             return
+
         if not (shared_data_bytes := self._serialize_event_data_from_event(event)):
             return
+
+        # Map the event data to the EventData table
         shared_data = shared_data_bytes.decode("utf-8")
         # Matching attributes found in the pending commit
         if pending_event_data := self._pending_event_data.get(shared_data):
@@ -967,9 +1010,9 @@ class Recorder(threading.Thread):
                 dbevent.event_data_rel = self._pending_event_data[
                     shared_data
                 ] = dbevent_data
-                self.event_session.add(dbevent_data)
+                event_session.add(dbevent_data)
 
-        self.event_session.add(dbevent)
+        event_session.add(dbevent)
 
     def _serialize_state_attributes_from_event(self, event: Event) -> bytes | None:
         """Serialize state changed event data."""
@@ -1094,6 +1137,7 @@ class Recorder(threading.Thread):
         for event_data in self._pending_event_data.values():
             self._event_data_ids[event_data.shared_data] = event_data.data_id
         self._pending_event_data = {}
+        self.event_type_manager.post_commit_pending()
 
         # Expire is an expensive operation (frequently more expensive
         # than the flush and commit itself) so we only
@@ -1120,6 +1164,7 @@ class Recorder(threading.Thread):
         self._event_data_ids.clear()
         self._pending_state_attributes.clear()
         self._pending_event_data.clear()
+        self.event_type_manager.reset()
 
         if not self.event_session:
             return
@@ -1145,6 +1190,14 @@ class Recorder(threading.Thread):
     def _post_schema_migration(self, old_version: int, new_version: int) -> None:
         """Run post schema migration tasks."""
         migration.post_schema_migration(self, old_version, new_version)
+
+    def _migrate_context_ids(self) -> bool:
+        """Migrate context ids if needed."""
+        return migration.migrate_context_ids(self)
+
+    def _migrate_event_type_ids(self) -> bool:
+        """Migrate event type ids if needed."""
+        return migration.migrate_event_type_ids(self)
 
     def _send_keep_alive(self) -> None:
         """Send a keep alive to keep the db connection open."""
