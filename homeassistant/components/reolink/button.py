@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
 from .const import DOMAIN
-from .entity import ReolinkCoordinatorEntity
+from .entity import ReolinkChannelCoordinatorEntity
 
 
 @dataclass
@@ -112,7 +112,7 @@ async def async_setup_entry(
     )
 
 
-class ReolinkButtonEntity(ReolinkCoordinatorEntity, ButtonEntity):
+class ReolinkButtonEntity(ReolinkChannelCoordinatorEntity, ButtonEntity):
     """Base button entity class for Reolink IP cameras."""
 
     entity_description: ReolinkButtonEntityDescription

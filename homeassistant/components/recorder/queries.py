@@ -12,12 +12,24 @@ from .const import SQLITE_MAX_BIND_VARS
 from .db_schema import (
     EventData,
     Events,
+    EventTypes,
     RecorderRuns,
     StateAttributes,
     States,
     StatisticsRuns,
     StatisticsShortTerm,
 )
+
+
+def select_event_type_ids(event_types: tuple[str, ...]) -> Select:
+    """Generate a select for event type ids.
+
+    This query is intentionally not a lambda statement as it is used inside
+    other lambda statements.
+    """
+    return select(EventTypes.event_type_id).where(
+        EventTypes.event_type.in_(event_types)
+    )
 
 
 def get_shared_attributes(hashes: list[int]) -> StatementLambdaElement:
@@ -34,6 +46,15 @@ def get_shared_event_datas(hashes: list[int]) -> StatementLambdaElement:
     return lambda_stmt(
         lambda: select(EventData.data_id, EventData.shared_data).where(
             EventData.hash.in_(hashes)
+        )
+    )
+
+
+def find_event_type_ids(event_types: Iterable[str]) -> StatementLambdaElement:
+    """Find an event_type id by event_type."""
+    return lambda_stmt(
+        lambda: select(EventTypes.event_type_id, EventTypes.event_type).filter(
+            EventTypes.event_type.in_(event_types)
         )
     )
 
@@ -667,3 +688,76 @@ def find_legacy_row() -> StatementLambdaElement:
     # https://github.com/sqlalchemy/sqlalchemy/issues/9189
     # pylint: disable-next=not-callable
     return lambda_stmt(lambda: select(func.max(States.event_id)))
+
+
+def find_events_context_ids_to_migrate() -> StatementLambdaElement:
+    """Find events context_ids to migrate."""
+    return lambda_stmt(
+        lambda: select(
+            Events.event_id,
+            Events.context_id,
+            Events.context_user_id,
+            Events.context_parent_id,
+        )
+        .filter(Events.context_id_bin.is_(None))
+        .limit(SQLITE_MAX_BIND_VARS)
+    )
+
+
+def find_event_type_to_migrate() -> StatementLambdaElement:
+    """Find events event_type to migrate."""
+    return lambda_stmt(
+        lambda: select(
+            Events.event_id,
+            Events.event_type,
+        )
+        .filter(Events.event_type_id.is_(None))
+        .limit(SQLITE_MAX_BIND_VARS)
+    )
+
+
+def has_event_type_to_migrate() -> StatementLambdaElement:
+    """Check if there are event_types to migrate."""
+    return lambda_stmt(
+        lambda: select(Events.event_id).filter(Events.event_type_id.is_(None)).limit(1)
+    )
+
+
+def find_states_context_ids_to_migrate() -> StatementLambdaElement:
+    """Find events context_ids to migrate."""
+    return lambda_stmt(
+        lambda: select(
+            States.state_id,
+            States.context_id,
+            States.context_user_id,
+            States.context_parent_id,
+        )
+        .filter(States.context_id_bin.is_(None))
+        .limit(SQLITE_MAX_BIND_VARS)
+    )
+
+
+def find_event_types_to_purge() -> StatementLambdaElement:
+    """Find event_type_ids to purge."""
+    return lambda_stmt(
+        lambda: select(EventTypes.event_type_id, EventTypes.event_type).where(
+            EventTypes.event_type_id.not_in(
+                select(EventTypes.event_type_id).join(
+                    used_event_type_ids := select(
+                        distinct(Events.event_type_id).label("used_event_type_id")
+                    ).subquery(),
+                    EventTypes.event_type_id
+                    == used_event_type_ids.c.used_event_type_id,
+                )
+            )
+        )
+    )
+
+
+def delete_event_types_rows(event_type_ids: Iterable[int]) -> StatementLambdaElement:
+    """Delete EventTypes rows."""
+    return lambda_stmt(
+        lambda: delete(EventTypes)
+        .where(EventTypes.event_type_id.in_(event_type_ids))
+        .execution_options(synchronize_session=False)
+    )
