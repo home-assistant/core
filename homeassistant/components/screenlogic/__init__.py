@@ -90,23 +90,23 @@ async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_get_connect_info(hass: HomeAssistant, entry: ConfigEntry):
+async def async_get_connect_info(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> dict[str, str | int]:
     """Construct connect_info from configuration entry and returns it to caller."""
     mac = entry.unique_id
     # Attempt to rediscover gateway to follow IP changes
     discovered_gateways = await async_discover_gateways_by_unique_id(hass)
     if mac in discovered_gateways:
-        connect_info = discovered_gateways[mac]
-    else:
-        _LOGGER.warning("Gateway rediscovery failed")
-        # Static connection defined or fallback from discovery
-        connect_info = {
-            SL_GATEWAY_NAME: name_for_mac(mac),
-            SL_GATEWAY_IP: entry.data[CONF_IP_ADDRESS],
-            SL_GATEWAY_PORT: entry.data[CONF_PORT],
-        }
+        return discovered_gateways[mac]
 
-    return connect_info
+    _LOGGER.warning("Gateway rediscovery failed")
+    # Static connection defined or fallback from discovery
+    return {
+        SL_GATEWAY_NAME: name_for_mac(mac),
+        SL_GATEWAY_IP: entry.data[CONF_IP_ADDRESS],
+        SL_GATEWAY_PORT: entry.data[CONF_PORT],
+    }
 
 
 class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
@@ -143,7 +143,7 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
         """Return the gateway data."""
         return self.gateway.get_data()
 
-    async def _async_update_configured_data(self):
+    async def _async_update_configured_data(self) -> None:
         """Update data sets based on equipment config."""
         equipment_flags = self.gateway.get_data()[SL_DATA.KEY_CONFIG]["equipment_flags"]
         if not self.gateway.is_client:
@@ -155,7 +155,7 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
         if equipment_flags & EQUIPMENT.FLAG_CHLORINATOR:
             await self.gateway.async_get_scg()
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> None:
         """Fetch data from the Screenlogic gateway."""
         try:
             await self._async_update_configured_data()
@@ -165,8 +165,9 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
 
         return None
 
-    async def _async_reconnect_update_data(self):
+    async def _async_reconnect_update_data(self) -> None:
         """Attempt to reconnect to the gateway and fetch data."""
+        assert self.config_entry is not None
         try:
             # Clean up the previous connection as we're about to create a new one
             await self.gateway.async_disconnect()
