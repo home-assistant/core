@@ -732,7 +732,7 @@ def find_event_type_to_migrate() -> StatementLambdaElement:
 
 
 def find_entity_ids_to_migrate() -> StatementLambdaElement:
-    """Find events entity_id to migrate."""
+    """Find entity_id to migrate."""
     return lambda_stmt(
         lambda: select(
             States.state_id,
