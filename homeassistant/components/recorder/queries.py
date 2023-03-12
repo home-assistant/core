@@ -743,12 +743,24 @@ def find_entity_ids_to_migrate() -> StatementLambdaElement:
     )
 
 
-def find_entity_ids_to_cleanup() -> StatementLambdaElement:
+def batch_cleanup_entity_ids() -> StatementLambdaElement:
     """Find events entity_id to cleanup."""
     return lambda_stmt(
-        lambda: select(States.state_id)
-        .filter(States.entity_id.is_not(None))
-        .limit(SQLITE_MAX_BIND_VARS)
+        lambda: update(States)
+        .where(
+            States.state_id.in_(
+                select(States.state_id).join(
+                    states_with_entity_ids := select(
+                        States.state_id.label("state_id_with_entity_id")
+                    )
+                    .filter(States.entity_id.is_not(None))
+                    .limit(100000)
+                    .subquery(),
+                    States.state_id == states_with_entity_ids.c.state_id_with_entity_id,
+                )
+            )
+        )
+        .values(entity_id=None)
     )
 
 

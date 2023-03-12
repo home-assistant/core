@@ -46,7 +46,7 @@ from .db_schema import (
 )
 from .models import process_timestamp
 from .queries import (
-    find_entity_ids_to_cleanup,
+    batch_cleanup_entity_ids,
     find_entity_ids_to_migrate,
     find_event_type_to_migrate,
     find_events_context_ids_to_migrate,
@@ -1418,21 +1418,9 @@ def post_migrate_entity_ids(instance: Recorder) -> bool:
     session_maker = instance.get_session
     _LOGGER.debug("Cleanup legacy entity_ids")
     with session_scope(session=session_maker()) as session:
-        if states := session.execute(find_entity_ids_to_cleanup()).all():
-            session.execute(
-                update(States),
-                [
-                    {
-                        "state_id": state_id,
-                        "entity_id": None,
-                    }
-                    for state_id in states
-                ],
-            )
-
+        is_done = session.execute(batch_cleanup_entity_ids()).scalar() is None
         # If there is more work to do return False
         # so that we can be called again
-        is_done = not states
 
     if is_done:
         # Drop the old indexes since they are no longer needed

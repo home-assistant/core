@@ -34,6 +34,7 @@ from homeassistant.components.recorder.queries import select_event_type_ids
 from homeassistant.components.recorder.tasks import (
     ContextIDMigrationTask,
     EntityIDMigration,
+    EntityIDPostMigration,
     EventTypeIDMigrationTask,
 )
 from homeassistant.components.recorder.util import session_scope
@@ -835,3 +836,55 @@ async def test_migrate_entity_ids(
     states_by_entity_id = await instance.async_add_executor_job(_fetch_migrated_states)
     assert len(states_by_entity_id["sensor.two"]) == 2
     assert len(states_by_entity_id["sensor.one"]) == 1
+
+
+@pytest.mark.parametrize("enable_migrate_entity_ids", [True])
+async def test_post_migrate_entity_ids(
+    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
+) -> None:
+    """Test we can migrate entity_ids to the StatesMeta table."""
+    instance = await async_setup_recorder_instance(hass)
+    await async_wait_recording_done(hass)
+
+    def _insert_events():
+        with session_scope(hass=hass) as session:
+            session.add_all(
+                (
+                    States(
+                        entity_id="sensor.one",
+                        state="one_1",
+                        last_updated_ts=1.452529,
+                    ),
+                    States(
+                        entity_id="sensor.two",
+                        state="two_2",
+                        last_updated_ts=2.252529,
+                    ),
+                    States(
+                        entity_id="sensor.two",
+                        state="two_1",
+                        last_updated_ts=3.152529,
+                    ),
+                )
+            )
+
+    await instance.async_add_executor_job(_insert_events)
+
+    await async_wait_recording_done(hass)
+    # This is a threadsafe way to add a task to the recorder
+    instance.queue_task(EntityIDPostMigration())
+    await async_recorder_block_till_done(hass)
+
+    def _fetch_migrated_states():
+        with session_scope(hass=hass) as session:
+            states = session.query(
+                States.state,
+                States.entity_id,
+            ).all()
+            assert len(states) == 3
+            return {state.state: state.entity_id for state in states}
+
+    states_by_state = await instance.async_add_executor_job(_fetch_migrated_states)
+    assert states_by_state["one_1"] is None
+    assert states_by_state["two_2"] is None
+    assert states_by_state["two_1"] is None
