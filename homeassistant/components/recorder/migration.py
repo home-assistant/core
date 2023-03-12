@@ -35,6 +35,7 @@ from .db_schema import (
     TABLE_STATES,
     Base,
     Events,
+    EventTypes,
     SchemaChanges,
     States,
     Statistics,
@@ -44,6 +45,7 @@ from .db_schema import (
 )
 from .models import process_timestamp
 from .queries import (
+    find_event_type_to_migrate,
     find_events_context_ids_to_migrate,
     find_states_context_ids_to_migrate,
 )
@@ -978,6 +980,11 @@ def _apply_update(  # noqa: C901
             )
         _create_index(session_maker, "events", "ix_events_context_id_bin")
         _create_index(session_maker, "states", "ix_states_context_id_bin")
+    elif new_version == 37:
+        _add_columns(session_maker, "events", [f"event_type_id {big_int}"])
+        _create_index(session_maker, "events", "ix_events_event_type_id")
+        _drop_index(session_maker, "events", "ix_events_event_type_time_fired_ts")
+        _create_index(session_maker, "events", "ix_events_event_type_id_time_fired_ts")
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
@@ -1285,6 +1292,57 @@ def migrate_context_ids(instance: Recorder) -> bool:
         _drop_index(session_maker, "states", "ix_states_context_id", quiet=True)
 
     _LOGGER.debug("Migrating context_ids to binary format: done=%s", is_done)
+    return is_done
+
+
+def migrate_event_type_ids(instance: Recorder) -> bool:
+    """Migrate event_type to event_type_ids."""
+    session_maker = instance.get_session
+    _LOGGER.debug("Migrating event_types")
+    event_type_manager = instance.event_type_manager
+    with session_scope(session=session_maker()) as session:
+        if events := session.execute(find_event_type_to_migrate()).all():
+            event_types = {event_type for _, event_type in events}
+            event_type_to_id = event_type_manager.get_many(event_types, session)
+            if missing_event_types := {
+                event_type
+                for event_type, event_id in event_type_to_id.items()
+                if event_id is None
+            }:
+                missing_db_event_types = [
+                    EventTypes(event_type=event_type)
+                    for event_type in missing_event_types
+                ]
+                session.add_all(missing_db_event_types)
+                session.flush()  # Assign ids
+                for db_event_type in missing_db_event_types:
+                    # We cannot add the assigned ids to the event_type_manager
+                    # because the commit could get rolled back
+                    assert db_event_type.event_type is not None
+                    event_type_to_id[
+                        db_event_type.event_type
+                    ] = db_event_type.event_type_id
+
+            session.execute(
+                update(Events),
+                [
+                    {
+                        "event_id": event_id,
+                        "event_type": None,
+                        "event_type_id": event_type_to_id[event_type],
+                    }
+                    for event_id, event_type in events
+                ],
+            )
+
+        # If there is more work to do return False
+        # so that we can be called again
+        is_done = not events
+
+    if is_done:
+        instance.event_type_manager.active = True
+
+    _LOGGER.debug("Migrating event_types done=%s", is_done)
     return is_done
 
 

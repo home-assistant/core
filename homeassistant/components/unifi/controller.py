@@ -10,7 +10,7 @@ from typing import Any
 from aiohttp import CookieJar
 import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
-from aiounifi.interfaces.messages import DATA_CLIENT_REMOVED, DATA_EVENT
+from aiounifi.interfaces.messages import DATA_EVENT
 from aiounifi.models.event import EventKey
 from aiounifi.websocket import WebsocketSignal, WebsocketState
 import async_timeout
@@ -72,17 +72,6 @@ from .errors import AuthenticationRequired, CannotConnect
 
 RETRY_TIMER = 15
 CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
-
-CLIENT_CONNECTED = (
-    EventKey.WIRED_CLIENT_CONNECTED,
-    EventKey.WIRELESS_CLIENT_CONNECTED,
-    EventKey.WIRELESS_GUEST_CONNECTED,
-)
-DEVICE_CONNECTED = (
-    EventKey.ACCESS_POINT_CONNECTED,
-    EventKey.GATEWAY_CONNECTED,
-    EventKey.SWITCH_CONNECTED,
-)
 
 
 class UniFiController:
@@ -258,54 +247,19 @@ class UniFiController:
                 else:
                     LOGGER.info("Connected to UniFi Network")
 
-        elif signal == WebsocketSignal.DATA and data:
-            if DATA_EVENT in data:
-                clients_connected = set()
-                devices_connected = set()
-                wireless_clients_connected = False
-
-                for event in data[DATA_EVENT]:
-                    if event.key in CLIENT_CONNECTED:
-                        clients_connected.add(event.mac)
-
-                        if not wireless_clients_connected and event.key in (
-                            EventKey.WIRELESS_CLIENT_CONNECTED,
-                            EventKey.WIRELESS_GUEST_CONNECTED,
-                        ):
-                            wireless_clients_connected = True
-
-                    elif event.key in DEVICE_CONNECTED:
-                        devices_connected.add(event.mac)
-
-                if wireless_clients_connected:
+        elif signal == WebsocketSignal.DATA and DATA_EVENT in data:
+            for event in data[DATA_EVENT]:
+                if event.key in (
+                    EventKey.WIRELESS_CLIENT_CONNECTED,
+                    EventKey.WIRELESS_GUEST_CONNECTED,
+                ):
                     self.update_wireless_clients()
-                if clients_connected or devices_connected:
-                    async_dispatcher_send(
-                        self.hass,
-                        self.signal_update,
-                        clients_connected,
-                        devices_connected,
-                    )
-
-            elif DATA_CLIENT_REMOVED in data:
-                async_dispatcher_send(
-                    self.hass, self.signal_remove, data[DATA_CLIENT_REMOVED]
-                )
+                    break
 
     @property
     def signal_reachable(self) -> str:
         """Integration specific event to signal a change in connection status."""
         return f"unifi-reachable-{self.config_entry.entry_id}"
-
-    @property
-    def signal_update(self) -> str:
-        """Event specific per UniFi entry to signal new data."""
-        return f"unifi-update-{self.config_entry.entry_id}"
-
-    @property
-    def signal_remove(self) -> str:
-        """Event specific per UniFi entry to signal removal of entities."""
-        return f"unifi-remove-{self.config_entry.entry_id}"
 
     @property
     def signal_options_update(self) -> str:

@@ -15,6 +15,7 @@ from homeassistant.components.recorder.db_schema import (
     OLD_ENTITY_ID_IN_EVENT,
     EventData,
     Events,
+    EventTypes,
     States,
 )
 
@@ -78,7 +79,9 @@ def _apply_entities_context_union(
             select_events_context_only()
             .select_from(entities_cte)
             .outerjoin(Events, entities_cte.c.context_id_bin == Events.context_id_bin)
-        ).outerjoin(EventData, (Events.data_id == EventData.data_id)),
+            .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
+            .outerjoin(EventData, (Events.data_id == EventData.data_id))
+        ),
         apply_states_context_hints(
             select_states_context_only()
             .select_from(entities_cte)
