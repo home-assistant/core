@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from contextlib import suppress
 import logging
 from typing import Any
 
@@ -389,49 +390,45 @@ class ControllerDevice(ClimateEntity):
         """Return the maximum temperature."""
         return self._controller.temp_max
 
-    async def wrap_and_catch(self, coro):
-        """Catch any connection errors and set unavailable."""
-        try:
-            await coro
-        except ConnectionError as ex:
-            self.set_available(False, ex)
-        else:
-            self.set_available(True)
-
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if not self.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
             self.async_schedule_update_ha_state(True)
             return
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
-            await self.wrap_and_catch(self._controller.set_temp_setpoint(temp))
+            with suppress(ConnectionError):
+                await self._controller.set_temp_setpoint(temp)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         fan = self._fan_to_pizone[fan_mode]
-        await self.wrap_and_catch(self._controller.set_fan(fan))
+        with suppress(ConnectionError):
+            await self._controller.set_fan(fan)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         if hvac_mode == HVACMode.OFF:
-            await self.wrap_and_catch(self._controller.set_on(False))
+            with suppress(ConnectionError):
+                await self._controller.set_on(False)
             return
         if not self._controller.is_on:
-            await self.wrap_and_catch(self._controller.set_on(True))
+            with suppress(ConnectionError):
+                await self._controller.set_on(True)
         if self._controller.free_air:
             return
         mode = self._state_to_pizone[hvac_mode]
-        await self.wrap_and_catch(self._controller.set_mode(mode))
+        with suppress(ConnectionError):
+            await self._controller.set_mode(mode)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode."""
-        await self.wrap_and_catch(
-            self._controller.set_free_air(preset_mode == PRESET_ECO)
-        )
+        with suppress(ConnectionError):
+            await self._controller.set_free_air(preset_mode == PRESET_ECO)
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
-        await self.wrap_and_catch(self._controller.set_on(True))
+        with suppress(ConnectionError):
+            await self._controller.set_on(True)
 
 
 class ZoneDevice(ClimateEntity):
@@ -578,16 +575,14 @@ class ZoneDevice(ClimateEntity):
 
     async def async_set_airflow_min(self, **kwargs):
         """Set new airflow minimum."""
-        await self._controller.wrap_and_catch(
-            self._zone.set_airflow_min(int(kwargs[ATTR_AIRFLOW]))
-        )
+        with suppress(ConnectionError):
+            await self._zone.set_airflow_min(int(kwargs[ATTR_AIRFLOW]))
         self.async_write_ha_state()
 
     async def async_set_airflow_max(self, **kwargs):
         """Set new airflow maximum."""
-        await self._controller.wrap_and_catch(
-            self._zone.set_airflow_max(int(kwargs[ATTR_AIRFLOW]))
-        )
+        with suppress(ConnectionError):
+            await self._zone.set_airflow_max(int(kwargs[ATTR_AIRFLOW]))
         self.async_write_ha_state()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -595,12 +590,14 @@ class ZoneDevice(ClimateEntity):
         if self._zone.mode != Zone.Mode.AUTO:
             return
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
-            await self._controller.wrap_and_catch(self._zone.set_temp_setpoint(temp))
+            with suppress(ConnectionError):
+                await self._zone.set_temp_setpoint(temp)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         mode = self._state_to_pizone[hvac_mode]
-        await self._controller.wrap_and_catch(self._zone.set_mode(mode))
+        with suppress(ConnectionError):
+            await self._zone.set_mode(mode)
         self.async_write_ha_state()
 
     @property
@@ -610,15 +607,17 @@ class ZoneDevice(ClimateEntity):
 
     async def async_turn_on(self) -> None:
         """Turn device on (open zone)."""
-        if self._zone.type == Zone.Type.AUTO:
-            await self._controller.wrap_and_catch(self._zone.set_mode(Zone.Mode.AUTO))
-        else:
-            await self._controller.wrap_and_catch(self._zone.set_mode(Zone.Mode.OPEN))
+        with suppress(ConnectionError):
+            if self._zone.type == Zone.Type.AUTO:
+                await self._zone.set_mode(Zone.Mode.AUTO)
+            else:
+                await self._zone.set_mode(Zone.Mode.OPEN)
         self.async_write_ha_state()
 
     async def async_turn_off(self) -> None:
         """Turn device off (close zone)."""
-        await self._controller.wrap_and_catch(self._zone.set_mode(Zone.Mode.CLOSE))
+        with suppress(ConnectionError):
+            await self._zone.set_mode(Zone.Mode.CLOSE)
         self.async_write_ha_state()
 
     @property
