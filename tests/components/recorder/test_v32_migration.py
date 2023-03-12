@@ -102,7 +102,10 @@ async def test_migrate_times(caplog: pytest.LogCaptureFixture, tmpdir) -> None:
     ):
         hass = await async_test_home_assistant(asyncio.get_running_loop())
         recorder_helper.async_initialize_recorder(hass)
-        await async_setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+        assert await async_setup_component(
+            hass, "recorder", {"recorder": {"db_url": dburl}}
+        )
+        await hass.async_block_till_done()
         await async_wait_recording_done(hass)
         await async_wait_recording_done(hass)
 
@@ -112,6 +115,7 @@ async def test_migrate_times(caplog: pytest.LogCaptureFixture, tmpdir) -> None:
                 session.add(old_db_schema.States.from_event(state_changed_event))
 
         await recorder.get_instance(hass).async_add_executor_job(_add_data)
+        await hass.async_block_till_done()
 
         await hass.async_stop()
 
@@ -120,8 +124,10 @@ async def test_migrate_times(caplog: pytest.LogCaptureFixture, tmpdir) -> None:
     # Test that the duplicates are removed during migration from schema 23
     hass = await async_test_home_assistant(asyncio.get_running_loop())
     recorder_helper.async_initialize_recorder(hass)
-    await async_setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
-    await hass.async_start()
+    assert await async_setup_component(
+        hass, "recorder", {"recorder": {"db_url": dburl}}
+    )
+    await hass.async_block_till_done()
 
     # We need to wait for all the migration tasks to complete
     # before we can check the database.
