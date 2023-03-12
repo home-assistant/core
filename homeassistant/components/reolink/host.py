@@ -15,10 +15,10 @@ from homeassistant.components import webhook
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.network import NoURLAvailableError, get_url
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_PROTOCOL, CONF_USE_HTTPS, DOMAIN
 from .exceptions import ReolinkSetupException, ReolinkWebhookException, UserNotAdmin
@@ -57,6 +57,7 @@ class ReolinkHost:
 
         self.webhook_id: str | None = None
         self._webhook_url: str | None = None
+        self._webhook_reachable: asyncio.Event = asyncio.Event()
         self._lost_subscription: bool = False
 
     @property
@@ -132,6 +133,27 @@ class ReolinkHost:
         self._unique_id = format_mac(self._api.mac_address)
 
         await self.subscribe()
+
+        _LOGGER.debug("Checking webhook '%s' is reachable", self.webhook_id)
+        session = async_get_clientsession(self._hass, verify_ssl=False)
+        try:
+            await session.post(self._webhook_url, data=CHECK_WEBHOOK_TEXT)
+            await asyncio.wait_for(self._webhook_reachable.wait(), timeout=5)
+        except (asyncio.TimeoutError, aiohttp.ClientError):
+            ir.async_create_issue(
+                self._hass,
+                DOMAIN,
+                "webhook_url",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="webhook_url",
+                translation_placeholders={
+                    "base_url": base_url,
+                    "network_link": "https://my.home-assistant.io/redirect/network/",
+                },
+            )
+        else:
+            ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
 
     async def update_states(self) -> None:
         """Call the API of the camera device to update the internal states."""
@@ -292,9 +314,6 @@ class ReolinkHost:
         else:
             ir.async_delete_issue(self._hass, DOMAIN, "https_webhook")
 
-        session = async_get_clientsession(self._hass, verify_ssl=False)
-        session.post(self._webhook_url, data=CHECK_WEBHOOK_TEXT)
-
         _LOGGER.debug("Registered webhook: %s", event_id)
 
     def unregister_webhook(self):
@@ -322,7 +341,8 @@ class ReolinkHost:
             return
 
         if data == CHECK_WEBHOOK_TEXT:
-            _LOGGER.error("Webhook '%s' check received", webhook_id)
+            _LOGGER.debug("Webhook '%s' check received", webhook_id)
+            self._webhook_reachable.set()
             return
 
         channels = await self._api.ONVIF_event_callback(data)
