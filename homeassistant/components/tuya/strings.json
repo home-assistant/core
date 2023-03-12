@@ -218,6 +218,132 @@
       }
     },
     "sensor": {
+      "air_quality": {
+        "name": "Air quality",
+        "state": {
+          "great": "Great",
+          "mild": "Mild",
+          "good": "Good",
+          "severe": "Severe"
+        }
+      },
+      "battery": {
+        "name": "Battery"
+      },
+      "battery_state": {
+        "name": "Battery state"
+      },
+      "carbon_dioxide": {
+        "name": "Carbon dioxide"
+      },
+      "carbon_dioxide_concentration": {
+        "name": "Concentration of carbon dioxide"
+      },
+      "carbon_monoxide": {
+        "name": "Carbon monoxide"
+      },
+      "cleaning_area": {
+        "name": "Cleaning area"
+      },
+      "cleaning_area_total": {
+        "name": "Total Cleaning Area"
+      },
+      "cleaning_time": {
+        "name": "Cleaning time"
+      },
+      "cleaning_time_total": {
+        "name": "Total cleaning time"
+      },
+      "cleaning_times_total": {
+        "name": "Total cleaning times"
+      },
+      "current": {
+        "name": "Current"
+      },
+      "current_phase_a": {
+        "name": "Phase A current"
+      },
+      "current_phase_b": {
+        "name": "Phase B current"
+      },
+      "current_phase_c": {
+        "name": "Phase C current"
+      },
+      "current_temperature": {
+        "name": "Current temperature"
+      },
+      "duster_cloth_life": {
+        "name": "Duster cloth life"
+      },
+      "filter_life": {
+        "name": "Filter life"
+      },
+      "filter_utilization": {
+        "name": "Filter utilization"
+      },
+      "formaldehyde": {
+        "name": "Formaldehyde"
+      },
+      "gas": {
+        "name": "Gas"
+      },
+      "humidity": {
+        "name": "Humidity"
+      },
+      "kettle_status": {
+        "name": "Status"
+      },
+      "last_amount": {
+        "name": "Last amount"
+      },
+      "last_operartion_duration": {
+        "name": "Last operation duration"
+      },
+      "luminosity": {
+        "name": "Luminosity"
+      },
+      "methane": {
+        "name": "Methane"
+      },
+      "particulate_matter_1_0_um": {
+        "name": "Particulate matter 1.0 µm"
+      },
+      "particulate_matter_10_0_um": {
+        "name": "Particulate matter 10.0 µm"
+      },
+      "particulate_matter_2_5_um": {
+        "name": "Particulate matter 2.5 µm"
+      },
+      "power": {
+        "name": "Power"
+      },
+      "power_phase_a": {
+        "name": "Phase A power"
+      },
+      "power_phase_b": {
+        "name": "Phase B power"
+      },
+      "power_phase_c": {
+        "name": "Phase C power"
+      },
+      "remaining_time": {
+        "name": "Remaining time"
+      },
+      "rolling_brush_life": {
+        "name": "Rolling brush life"
+      },
+      "side_brush_life": {
+        "name": "Side brush life"
+      },
+      "smoke_amount": {
+        "name": "Smoke amount"
+      },
+      "somke_amount": {
+        "name": "Smoke amount"
+      },
+      "sous_vide_status": {
+        "name": "Status"
+      },
       "status": {
         "name": "Status",
         "state": {
@@ -232,14 +358,38 @@
           "warm": "Heat preservation"
         }
       },
-      "air_quality": {
-        "name": "Air quality",
-        "state": {
-          "great": "Great",
-          "mild": "Mild",
-          "good": "Good",
-          "severe": "Severe"
-        }
+      "temperature": {
+        "name": "Temperature"
+      },
+      "total_absortion_particules": {
+        "name": "Total absorption of particles"
+      },
+      "total_energy": {
+        "name": "Total energy"
+      },
+      "total_operation_time": {
+        "name": "Total operating time"
+      },
+      "volatile_organic_compound": {
+        "name": "Volatile organic compound"
+      },
+      "volatile_organic_compound_total": {
+        "name": "Total volatile organic compound"
+      },
+      "voltage": {
+        "name": "Voltage"
+      },
+      "voltage_phase_a": {
+        "name": "Phase A voltage"
+      },
+      "voltage_phase_b": {
+        "name": "Phase B voltage"
+      },
+      "voltage_phase_c": {
+        "name": "Phase C voltage"
+      },
+      "water_level": {
+        "name": "Water level"
       }
     }
   }

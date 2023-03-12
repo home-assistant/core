@@ -25,6 +25,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             key=DPCode.ALARM_VOLUME,
             name="Volume",
             entity_category=EntityCategory.CONFIG,
+            translation_key="",
         ),
     ),
     # Coffee maker
@@ -34,22 +35,26 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             key=DPCode.CUP_NUMBER,
             name="Cups",
             icon="mdi:numeric",
+            translation_key="coffe_maker_cups",
         ),
         SelectEntityDescription(
             key=DPCode.CONCENTRATION_SET,
             name="Concentration",
             icon="mdi:altimeter",
             entity_category=EntityCategory.CONFIG,
+            translation_key="coffe_maker_concentration",
         ),
         SelectEntityDescription(
             key=DPCode.MATERIAL,
             name="Material",
             entity_category=EntityCategory.CONFIG,
+            translation_key="coffe_maker_material",
         ),
         SelectEntityDescription(
             key=DPCode.MODE,
             name="Mode",
             icon="mdi:coffee",
+            translation_key="coffe_maker_mode",
         ),
     ),
     # Switch
@@ -75,6 +80,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             key=DPCode.LEVEL,
             name="Temperature level",
             icon="mdi:thermometer-lines",
+            translation_key="heater_temperature_level",
         ),
     ),
     # Siren Alarm
@@ -84,11 +90,13 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             key=DPCode.ALARM_VOLUME,
             name="Volume",
             entity_category=EntityCategory.CONFIG,
+            translation_key="siren_alarm",
         ),
         SelectEntityDescription(
             key=DPCode.BRIGHT_STATE,
             name="Brightness",
             entity_category=EntityCategory.CONFIG,
+            translation_key="siren_brightness",
         ),
     ),
     # Smart Camera
@@ -357,6 +365,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             name="Target humidity",
             entity_category=EntityCategory.CONFIG,
             icon="mdi:water-percent",
+            translation_key="dehumidifier_target_humidity",
         ),
     ),
 }

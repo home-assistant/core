@@ -49,6 +49,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             current_position=(DPCode.PERCENT_CONTROL, DPCode.PERCENT_STATE),
             set_position=DPCode.PERCENT_CONTROL,
             device_class=CoverDeviceClass.CURTAIN,
+            translation_key="curtain",
         ),
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL_2,
@@ -56,6 +57,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             current_position=DPCode.PERCENT_STATE_2,
             set_position=DPCode.PERCENT_CONTROL_2,
             device_class=CoverDeviceClass.CURTAIN,
+            translation_key="curtain_2",
         ),
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL_3,
@@ -63,6 +65,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             current_position=DPCode.PERCENT_STATE_3,
             set_position=DPCode.PERCENT_CONTROL_3,
             device_class=CoverDeviceClass.CURTAIN,
+            translation_key="curtain_3",
         ),
         TuyaCoverEntityDescription(
             key=DPCode.MACH_OPERATE,
@@ -73,6 +76,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             open_instruction_value="FZ",
             close_instruction_value="ZZ",
             stop_instruction_value="STOP",
+            translation_key="curtain",
         ),
         # switch_1 is an undocumented code that behaves identically to control
         # It is used by the Kogan Smart Blinds Driver
@@ -82,6 +86,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             current_position=DPCode.PERCENT_CONTROL,
             set_position=DPCode.PERCENT_CONTROL,
             device_class=CoverDeviceClass.BLIND,
+            translation_key="blind",
         ),
     ),
     # Garage Door Opener
@@ -93,6 +98,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             current_state=DPCode.DOORCONTACT_STATE,
             current_state_inverse=True,
             device_class=CoverDeviceClass.GARAGE,
+            translation_key="door",
         ),
         TuyaCoverEntityDescription(
             key=DPCode.SWITCH_2,
@@ -100,6 +106,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             current_state=DPCode.DOORCONTACT_STATE_2,
             current_state_inverse=True,
             device_class=CoverDeviceClass.GARAGE,
+            translation_key="door_2",
         ),
         TuyaCoverEntityDescription(
             key=DPCode.SWITCH_3,
@@ -107,6 +114,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             current_state=DPCode.DOORCONTACT_STATE_3,
             current_state_inverse=True,
             device_class=CoverDeviceClass.GARAGE,
+            translation_key="door_3",
         ),
     ),
     # Curtain Switch
@@ -118,6 +126,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             current_position=DPCode.PERCENT_CONTROL,
             set_position=DPCode.PERCENT_CONTROL,
             device_class=CoverDeviceClass.CURTAIN,
+            translation_key="curtain",
         ),
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL_2,
@@ -125,6 +134,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             current_position=DPCode.PERCENT_CONTROL_2,
             set_position=DPCode.PERCENT_CONTROL_2,
             device_class=CoverDeviceClass.CURTAIN,
+            translation_key="curtain_2",
         ),
     ),
     # Curtain Robot

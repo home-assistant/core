@@ -38,6 +38,7 @@ TAMPER_BINARY_SENSOR = TuyaBinarySensorEntityDescription(
     name="Tamper",
     device_class=BinarySensorDeviceClass.TAMPER,
     entity_category=EntityCategory.DIAGNOSTIC,
+    translation_key="tamper_alarm",
 )
 
 
@@ -218,6 +219,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             name="Tamper",
             device_class=BinarySensorDeviceClass.TAMPER,
             entity_category=EntityCategory.DIAGNOSTIC,
+            translation_key="tamper_alarm",
         ),
         TAMPER_BINARY_SENSOR,
     ),
@@ -293,6 +295,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             name="Window",
             device_class=BinarySensorDeviceClass.WINDOW,
             on_value="opened",
+            translation_key="window",
         ),
     ),
     # Temperature and Humidity Sensor
@@ -331,6 +334,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             name="Vibration",
             device_class=BinarySensorDeviceClass.VIBRATION,
             on_value="vibration",
+            translation_key="vibration",
         ),
         TuyaBinarySensorEntityDescription(
             key=f"{DPCode.SHOCK_STATE}_drop",
@@ -338,6 +342,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             name="Drop",
             icon="mdi:icon=package-down",
             on_value="drop",
+            translation_key="drop",
         ),
         TuyaBinarySensorEntityDescription(
             key=f"{DPCode.SHOCK_STATE}_tilt",
@@ -345,6 +350,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             name="Tilt",
             icon="mdi:spirit-level",
             on_value="tilt",
+            translation_key="tilt",
         ),
     ),
 }

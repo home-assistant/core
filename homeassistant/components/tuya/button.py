@@ -25,30 +25,35 @@ BUTTONS: dict[str, tuple[ButtonEntityDescription, ...]] = {
             name="Reset duster cloth",
             icon="mdi:restart",
             entity_category=EntityCategory.CONFIG,
+            translation_key="vaccum_reset_duster_cloth",
         ),
         ButtonEntityDescription(
             key=DPCode.RESET_EDGE_BRUSH,
             name="Reset edge brush",
             icon="mdi:restart",
             entity_category=EntityCategory.CONFIG,
+            translation_key="vaccum_reset_edge_brush",
         ),
         ButtonEntityDescription(
             key=DPCode.RESET_FILTER,
             name="Reset filter",
             icon="mdi:air-filter",
             entity_category=EntityCategory.CONFIG,
+            translation_key="vaccum_reset_filter",
         ),
         ButtonEntityDescription(
             key=DPCode.RESET_MAP,
             name="Reset map",
             icon="mdi:map-marker-remove",
             entity_category=EntityCategory.CONFIG,
+            translation_key="vaccum_reset_map",
         ),
         ButtonEntityDescription(
             key=DPCode.RESET_ROLL_BRUSH,
             name="Reset roll brush",
             icon="mdi:restart",
             entity_category=EntityCategory.CONFIG,
+            translation_key="vaccum_reset_rool_brush",
         ),
     ),
     # Wake Up Light II
@@ -58,6 +63,7 @@ BUTTONS: dict[str, tuple[ButtonEntityDescription, ...]] = {
             key=DPCode.SWITCH_USB6,
             name="Snooze",
             icon="mdi:sleep",
+            translation_key="snooze",
         ),
     ),
 }

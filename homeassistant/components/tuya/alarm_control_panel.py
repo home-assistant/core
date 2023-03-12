@@ -51,6 +51,7 @@ ALARM: dict[str, tuple[AlarmControlPanelEntityDescription, ...]] = {
         AlarmControlPanelEntityDescription(
             key=DPCode.MASTER_MODE,
             name="Alarm",
+            translation_key="alarm",
         ),
     )
 }

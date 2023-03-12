@@ -28,6 +28,7 @@ SIRENS: dict[str, tuple[SirenEntityDescription, ...]] = {
         SirenEntityDescription(
             key=DPCode.ALARM_SWITCH,
             name="Siren",
+            translation_key="siren",
         ),
     ),
     # Siren Alarm
@@ -36,6 +37,7 @@ SIRENS: dict[str, tuple[SirenEntityDescription, ...]] = {
         SirenEntityDescription(
             key=DPCode.ALARM_SWITCH,
             name="Siren",
+            translation_key="siren",
         ),
     ),
     # Smart Camera
@@ -44,6 +46,7 @@ SIRENS: dict[str, tuple[SirenEntityDescription, ...]] = {
         SirenEntityDescription(
             key=DPCode.SIREN_SWITCH,
             name="Siren",
+            translation_key="siren",
         ),
     ),
 }

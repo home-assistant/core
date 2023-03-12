@@ -72,6 +72,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             key=DPCode.SWITCH_BACKLIGHT,
             name="Backlight",
             entity_category=EntityCategory.CONFIG,
+            translation_key="backlight",
         ),
     ),
     # String Lights
@@ -113,6 +114,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             key=DPCode.SWITCH_1,
             name="Light",
             brightness=DPCode.BRIGHT_VALUE_1,
+            translation_key="light",
         ),
     ),
     # Ceiling Fan Light
@@ -169,6 +171,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             key=DPCode.SWITCH_BACKLIGHT,
             name="Backlight",
             entity_category=EntityCategory.CONFIG,
+            translation_key="backlight",
         ),
     ),
     # Air conditioner
@@ -178,6 +181,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             key=DPCode.LIGHT,
             name="Backlight",
             entity_category=EntityCategory.CONFIG,
+            translation_key="backlight",
         ),
     ),
     # Unknown light product
@@ -209,6 +213,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             key=DPCode.LIGHT,
             name="Backlight",
             entity_category=EntityCategory.CONFIG,
+            translation_key="backlight",
         ),
     ),
     # Smart Camera
@@ -218,11 +223,13 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             key=DPCode.FLOODLIGHT_SWITCH,
             brightness=DPCode.FLOODLIGHT_LIGHTNESS,
             name="Floodlight",
+            translation_key="floodlight",
         ),
         TuyaLightEntityDescription(
             key=DPCode.BASIC_INDICATOR,
             name="Indicator Light",
             entity_category=EntityCategory.CONFIG,
+            translation_key="indicator_light",
         ),
     ),
     # Dimmer Switch
@@ -234,6 +241,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             brightness=DPCode.BRIGHT_VALUE_1,
             brightness_max=DPCode.BRIGHTNESS_MAX_1,
             brightness_min=DPCode.BRIGHTNESS_MIN_1,
+            translation_key="light_1",
         ),
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED_2,
@@ -241,6 +249,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             brightness=DPCode.BRIGHT_VALUE_2,
             brightness_max=DPCode.BRIGHTNESS_MAX_2,
             brightness_min=DPCode.BRIGHTNESS_MIN_2,
+            translation_key="light_2",
         ),
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED_3,
@@ -248,6 +257,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             brightness=DPCode.BRIGHT_VALUE_3,
             brightness_max=DPCode.BRIGHTNESS_MAX_3,
             brightness_min=DPCode.BRIGHTNESS_MIN_3,
+            translation_key="light_3",
         ),
     ),
     # Dimmer
@@ -259,16 +269,19 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             brightness=(DPCode.BRIGHT_VALUE_V2, DPCode.BRIGHT_VALUE),
             brightness_max=DPCode.BRIGHTNESS_MAX_1,
             brightness_min=DPCode.BRIGHTNESS_MIN_1,
+            translation_key="light",
         ),
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED_1,
             name="Light",
             brightness=DPCode.BRIGHT_VALUE_1,
+            translation_key="light",
         ),
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED_2,
             name="Light 2",
             brightness=DPCode.BRIGHT_VALUE_2,
+            translation_key="light_2",
         ),
     ),
     # Wake Up Light II
@@ -280,6 +293,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             brightness=(DPCode.BRIGHT_VALUE_V2, DPCode.BRIGHT_VALUE),
             brightness_max=DPCode.BRIGHTNESS_MAX_1,
             brightness_min=DPCode.BRIGHTNESS_MIN_1,
+            translation_key="light",
         ),
     ),
     # Solar Light
@@ -306,6 +320,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_NIGHT_LIGHT,
             name="Night light",
+            translation_key="night_light",
         ),
     ),
     # Remote Control
