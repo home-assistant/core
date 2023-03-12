@@ -1,7 +1,6 @@
 """Get status for all stations for InCharge."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 import datetime
 import logging
 from typing import Any
@@ -30,19 +29,11 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = datetime.timedelta(minutes=5)
 
-
-@dataclass
-class InChargeSensorEntityDescription(SensorEntityDescription):
-    """Describes InCharge sensor entity."""
-
-    precision: int | None = None
-
-
-SENSOR_TYPES: dict[str, InChargeSensorEntityDescription] = {
-    "total_energy_consumption": InChargeSensorEntityDescription(
+SENSOR_TYPES: dict[str, SensorEntityDescription] = {
+    "total_energy_consumption": SensorEntityDescription(
         key="total_energy_consumption",
         name="Total Energy Consumption",
-        precision=2,
+        suggested_display_precision=2,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -90,10 +81,10 @@ async def async_setup_entry(
 class InChargeSensor(SensorEntity):
     """Representation of a InCharge Sensor."""
 
-    entity_description: InChargeSensorEntityDescription
+    entity_description: SensorEntityDescription
 
     def __init__(
-        self, probe, name, unique_id, description: InChargeSensorEntityDescription
+        self, probe, name, unique_id, description: SensorEntityDescription
     ) -> None:
         """Initialize a PVOutput sensor."""
         self.probe = probe
@@ -109,11 +100,11 @@ class InChargeSensor(SensorEntity):
         )
 
     @property
-    def native_value(self):
+    def native_value(self) -> float:
         """Return the state of the sensor."""
         result = self.probe.get_data(self.entity_description)
-        if self.entity_description.precision is not None:
-            result = round(result, self.entity_description.precision)
+        if self.entity_description.suggested_display_precision is not None:
+            result = round(result, self.entity_description.suggested_display_precision)
         return result
 
     def update(self) -> None:
@@ -124,29 +115,28 @@ class InChargeSensor(SensorEntity):
 class InChargeData:
     """The class for handling data retrieval."""
 
-    def __init__(self, api, station_id):
+    def __init__(self, api: InCharge, station_id: str) -> None:
         """Initialize the probe."""
         self.api = api
         self.station_id = station_id
-        self.data = {}
-        self.previous_values = {}
+        self.data: dict[str, Any] = {}
+        self.previous_values: dict[str, Any] = {}
 
     @Throttle(SCAN_INTERVAL)
-    def update(self):
+    def update(self) -> None:
         """Update probe data."""
         _LOGGER.debug("Updating data for %s", self.station_id)
         try:
             response = self.api.get_station_consumption(self.station_id)
             response.raise_for_status()
-            self.data["total_energy_consumption"]: dict[str, Any] = response.json()[0][
-                "total"
-            ]
+            result = response.json()[0]["total"]
+            self.data["total_energy_consumption"] = result
         except (
             ConnectionError,
             requests.exceptions.HTTPError,
         ) as incharge_connection_error:
             raise UpdateFailed from incharge_connection_error
 
-    def get_data(self, entity_description):
+    def get_data(self, entity_description: SensorEntityDescription) -> float | None:
         """Get data."""
         return self.data.get(entity_description.key)

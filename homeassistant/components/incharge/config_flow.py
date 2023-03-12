@@ -6,7 +6,7 @@ from incharge.api import InCharge
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
@@ -21,10 +21,10 @@ class InChargeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialise growatt server flow."""
         self.data: dict[str, Any] = {}
-        self.api: InCharge = None
+        self.api: InCharge | None = None
 
     @callback
-    def _async_show_user_form(self, errors=None):
+    def _async_show_user_form(self, errors: dict[str, str] | None = None):
         """Show the form to the user."""
         data_schema = vol.Schema(
             {
@@ -37,7 +37,9 @@ class InChargeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=data_schema, errors=errors
         )
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
         """Handle the start of the config flow."""
         if not user_input:
             return self._async_show_user_form()
@@ -51,6 +53,5 @@ class InChargeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if login_response.status_code != HTTPStatus.OK:
             return self._async_show_user_form({"base": "invalid_auth"})
         self.data = user_input
-        self.data[CONF_NAME] = NAME
 
-        return self.async_create_entry(title=self.data[CONF_NAME], data=self.data)
+        return self.async_create_entry(title=NAME, data=self.data)

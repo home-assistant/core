@@ -3,11 +3,7 @@
   "name": "Vattenfall InCharge",
   "codeowners": ["@tgriek"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/incharge",
-  "homekit": {},
   "iot_class": "cloud_polling",
-  "requirements": ["incharge==1.0.3"],
-  "ssdp": [],
-  "zeroconf": []
+  "requirements": ["incharge==1.0.3"]
 }
