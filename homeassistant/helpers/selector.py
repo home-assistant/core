@@ -358,6 +358,38 @@ class ConfigEntrySelector(Selector[ConfigEntrySelectorConfig]):
         return config
 
 
+class ConstantSelectorConfig(TypedDict, total=False):
+    """Class to represent a constant selector config."""
+
+    value: str | int | bool
+    label: str
+
+
+@SELECTORS.register("constant")
+class ConstantSelector(Selector[ConstantSelectorConfig]):
+    """Constant selector."""
+
+    selector_type = "constant"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("value"): vol.Any(str, int, bool),
+            vol.Optional("label"): str,
+        }
+    )
+
+    def __init__(self, config: ConstantSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        if "value" not in self.config:
+            return vol.Schema(None)(data)
+        vol.Schema(self.config["value"])(data)
+        return self.config["value"]
+
+
 class DateSelectorConfig(TypedDict):
     """Class to represent a date selector config."""
 

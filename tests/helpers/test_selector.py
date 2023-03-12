@@ -836,3 +836,61 @@ def test_file_selector_schema(schema, valid_selections, invalid_selections) -> N
     """Test file selector."""
 
     _test_selector("file", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    (
+        (
+            {"label": "Blah"},
+            (None,),
+            (False, True, 0, 1, "abc", "def"),
+        ),
+        (
+            {"value": True, "label": "Blah"},
+            (True, 1),
+            (None, False, 0, "abc", "def"),
+        ),
+        (
+            {"value": False},
+            (False, 0),
+            (None, True, 1, "abc", "def"),
+        ),
+        (
+            {"value": 0},
+            (0, False),
+            (None, True, 1, "abc", "def"),
+        ),
+        (
+            {"value": 1},
+            (1, True),
+            (None, False, 0, "abc", "def"),
+        ),
+        (
+            {"value": 4},
+            (4,),
+            (None, False, True, 0, 1, "abc", "def"),
+        ),
+        (
+            {"value": "dog"},
+            ("dog",),
+            (None, False, True, 0, 1, "abc", "def"),
+        ),
+    ),
+)
+def test_constant_selector_schema(schema, valid_selections, invalid_selections) -> None:
+    """Test constant selector."""
+    _test_selector("constant", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema",
+    (
+        {"value": []},  # Value must be str, int or bool
+        {"label": 123},  # Label must be str
+    ),
+)
+def test_constant_selector_schema_error(schema) -> None:
+    """Test constant selector."""
+    with pytest.raises(vol.Invalid):
+        selector.validate_selector({"constant": schema})
