@@ -25,7 +25,7 @@ class RensonEntity(CoordinatorEntity):
         super().__init__(coordinator)
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, "fan")},
+            identifiers={(DOMAIN, "sensor")},
             manufacturer="Renson",
             model=api.get_field_value(coordinator.data, DEVICE_NAME_FIELD.name),
             name="Ventilation",
