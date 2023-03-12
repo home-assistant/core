@@ -745,6 +745,7 @@ def find_entity_ids_to_migrate() -> StatementLambdaElement:
 
 def batch_cleanup_entity_ids() -> StatementLambdaElement:
     """Find events entity_id to cleanup."""
+    # Self join because This version of MariaDB doesn't yet support 'LIMIT & IN/ALL/ANY/SOME subquery'
     return lambda_stmt(
         lambda: update(States)
         .where(
@@ -754,7 +755,7 @@ def batch_cleanup_entity_ids() -> StatementLambdaElement:
                         States.state_id.label("state_id_with_entity_id")
                     )
                     .filter(States.entity_id.is_not(None))
-                    .limit(100000)
+                    .limit(5000)
                     .subquery(),
                     States.state_id == states_with_entity_ids.c.state_id_with_entity_id,
                 )
