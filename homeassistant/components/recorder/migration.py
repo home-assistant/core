@@ -7,9 +7,10 @@ from dataclasses import dataclass, replace as dataclass_replace
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, cast
+from uuid import UUID
 
 import sqlalchemy
-from sqlalchemy import ForeignKeyConstraint, MetaData, Table, func, text
+from sqlalchemy import ForeignKeyConstraint, MetaData, Table, func, text, update
 from sqlalchemy.engine import CursorResult, Engine
 from sqlalchemy.exc import (
     DatabaseError,
@@ -24,20 +25,30 @@ from sqlalchemy.schema import AddConstraint, DropConstraint
 from sqlalchemy.sql.expression import true
 
 from homeassistant.core import HomeAssistant
+from homeassistant.util.ulid import ulid_to_bytes
 
 from .const import SupportedDialect
 from .db_schema import (
+    CONTEXT_ID_BIN_MAX_LENGTH,
     SCHEMA_VERSION,
     STATISTICS_TABLES,
     TABLE_STATES,
     Base,
+    Events,
+    EventTypes,
     SchemaChanges,
+    States,
     Statistics,
     StatisticsMeta,
     StatisticsRuns,
     StatisticsShortTerm,
 )
 from .models import process_timestamp
+from .queries import (
+    find_event_type_to_migrate,
+    find_events_context_ids_to_migrate,
+    find_states_context_ids_to_migrate,
+)
 from .statistics import (
     correct_db_schema as statistics_correct_db_schema,
     delete_statistics_duplicates,
@@ -56,7 +67,7 @@ if TYPE_CHECKING:
     from . import Recorder
 
 LIVE_MIGRATION_MIN_SCHEMA_VERSION = 0
-
+_EMPTY_CONTEXT_ID = b"\x00" * 16
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -219,7 +230,10 @@ def _create_index(
 
 
 def _drop_index(
-    session_maker: Callable[[], Session], table_name: str, index_name: str
+    session_maker: Callable[[], Session],
+    table_name: str,
+    index_name: str,
+    quiet: bool | None = None,
 ) -> None:
     """Drop an index from a specified table.
 
@@ -282,33 +296,37 @@ def _drop_index(
         _LOGGER.debug(
             "Finished dropping index %s from table %s", index_name, table_name
         )
-    else:
-        if index_name in (
-            "ix_states_entity_id",
-            "ix_states_context_parent_id",
-            "ix_statistics_short_term_statistic_id_start",
-            "ix_statistics_statistic_id_start",
-        ):
-            # ix_states_context_parent_id was only there on nightly so we do not want
-            # to generate log noise or issues about it.
-            #
-            # ix_states_entity_id was only there for users who upgraded from schema
-            # version 8 or earlier. Newer installs will not have it so we do not
-            # want to generate log noise or issues about it.
-            #
-            # ix_statistics_short_term_statistic_id_start and ix_statistics_statistic_id_start
-            # were only there for users who upgraded from schema version 23 or earlier.
-            return
+        return
 
-        _LOGGER.warning(
-            (
-                "Failed to drop index %s from table %s. Schema "
-                "Migration will continue; this is not a "
-                "critical operation"
-            ),
-            index_name,
-            table_name,
-        )
+    if quiet:
+        return
+
+    if index_name in (
+        "ix_states_entity_id",
+        "ix_states_context_parent_id",
+        "ix_statistics_short_term_statistic_id_start",
+        "ix_statistics_statistic_id_start",
+    ):
+        # ix_states_context_parent_id was only there on nightly so we do not want
+        # to generate log noise or issues about it.
+        #
+        # ix_states_entity_id was only there for users who upgraded from schema
+        # version 8 or earlier. Newer installs will not have it so we do not
+        # want to generate log noise or issues about it.
+        #
+        # ix_statistics_short_term_statistic_id_start and ix_statistics_statistic_id_start
+        # were only there for users who upgraded from schema version 23 or earlier.
+        return
+
+    _LOGGER.warning(
+        (
+            "Failed to drop index %s from table %s. Schema "
+            "Migration will continue; this is not a "
+            "critical operation"
+        ),
+        index_name,
+        table_name,
+    )
 
 
 def _add_columns(
@@ -522,10 +540,15 @@ def _apply_update(  # noqa: C901
     """Perform operations to bring schema up to date."""
     dialect = engine.dialect.name
     big_int = "INTEGER(20)" if dialect == SupportedDialect.MYSQL else "INTEGER"
-    if dialect in (SupportedDialect.MYSQL, SupportedDialect.POSTGRESQL):
+    if dialect == SupportedDialect.MYSQL:
         timestamp_type = "DOUBLE PRECISION"
+        context_bin_type = f"BLOB({CONTEXT_ID_BIN_MAX_LENGTH})"
+    if dialect == SupportedDialect.POSTGRESQL:
+        timestamp_type = "DOUBLE PRECISION"
+        context_bin_type = "BYTEA"
     else:
         timestamp_type = "FLOAT"
+        context_bin_type = "BLOB"
 
     if new_version == 1:
         # This used to create ix_events_time_fired, but it was removed in version 32
@@ -944,6 +967,24 @@ def _apply_update(  # noqa: C901
         )
         # ix_statistics_start and ix_statistics_statistic_id_start are still used
         # for the post migration cleanup and can be removed in a future version.
+    elif new_version == 36:
+        for table in ("states", "events"):
+            _add_columns(
+                session_maker,
+                table,
+                [
+                    f"context_id_bin {context_bin_type}",
+                    f"context_user_id_bin {context_bin_type}",
+                    f"context_parent_id_bin {context_bin_type}",
+                ],
+            )
+        _create_index(session_maker, "events", "ix_events_context_id_bin")
+        _create_index(session_maker, "states", "ix_states_context_id_bin")
+    elif new_version == 37:
+        _add_columns(session_maker, "events", [f"event_type_id {big_int}"])
+        _create_index(session_maker, "events", "ix_events_event_type_id")
+        _drop_index(session_maker, "events", "ix_events_event_type_time_fired_ts")
+        _create_index(session_maker, "events", "ix_events_event_type_id_time_fired_ts")
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
@@ -1072,7 +1113,7 @@ def _migrate_columns_to_timestamp(
                 result = session.connection().execute(
                     text(
                         "UPDATE events set time_fired_ts="
-                        "IF(time_fired is NULL,0,"
+                        "IF(time_fired is NULL or UNIX_TIMESTAMP(time_fired) is NULL,0,"
                         "UNIX_TIMESTAMP(time_fired)"
                         ") "
                         "where time_fired_ts is NULL "
@@ -1085,7 +1126,7 @@ def _migrate_columns_to_timestamp(
                 result = session.connection().execute(
                     text(
                         "UPDATE states set last_updated_ts="
-                        "IF(last_updated is NULL,0,"
+                        "IF(last_updated is NULL or UNIX_TIMESTAMP(last_updated) is NULL,0,"
                         "UNIX_TIMESTAMP(last_updated) "
                         "), "
                         "last_changed_ts="
@@ -1161,7 +1202,7 @@ def _migrate_statistics_columns_to_timestamp(
                     result = session.connection().execute(
                         text(
                             f"UPDATE {table} set start_ts="
-                            "IF(start is NULL,0,"
+                            "IF(start is NULL or UNIX_TIMESTAMP(start) is NULL,0,"
                             "UNIX_TIMESTAMP(start) "
                             "), "
                             "created_ts="
@@ -1191,6 +1232,118 @@ def _migrate_statistics_columns_to_timestamp(
                             " );"
                         )
                     )
+
+
+def _context_id_to_bytes(context_id: str | None) -> bytes | None:
+    """Convert a context_id to bytes."""
+    if context_id is None:
+        return None
+    if len(context_id) == 32:
+        return UUID(context_id).bytes
+    if len(context_id) == 26:
+        return ulid_to_bytes(context_id)
+    return None
+
+
+def migrate_context_ids(instance: Recorder) -> bool:
+    """Migrate context_ids to use binary format."""
+    _to_bytes = _context_id_to_bytes
+    session_maker = instance.get_session
+    _LOGGER.debug("Migrating context_ids to binary format")
+    with session_scope(session=session_maker()) as session:
+        if events := session.execute(find_events_context_ids_to_migrate()).all():
+            session.execute(
+                update(Events),
+                [
+                    {
+                        "event_id": event_id,
+                        "context_id": None,
+                        "context_id_bin": _to_bytes(context_id) or _EMPTY_CONTEXT_ID,
+                        "context_user_id": None,
+                        "context_user_id_bin": _to_bytes(context_user_id),
+                        "context_parent_id": None,
+                        "context_parent_id_bin": _to_bytes(context_parent_id),
+                    }
+                    for event_id, context_id, context_user_id, context_parent_id in events
+                ],
+            )
+        if states := session.execute(find_states_context_ids_to_migrate()).all():
+            session.execute(
+                update(States),
+                [
+                    {
+                        "state_id": state_id,
+                        "context_id": None,
+                        "context_id_bin": _to_bytes(context_id) or _EMPTY_CONTEXT_ID,
+                        "context_user_id": None,
+                        "context_user_id_bin": _to_bytes(context_user_id),
+                        "context_parent_id": None,
+                        "context_parent_id_bin": _to_bytes(context_parent_id),
+                    }
+                    for state_id, context_id, context_user_id, context_parent_id in states
+                ],
+            )
+        # If there is more work to do return False
+        # so that we can be called again
+        is_done = not (events or states)
+
+    if is_done:
+        _drop_index(session_maker, "events", "ix_events_context_id", quiet=True)
+        _drop_index(session_maker, "states", "ix_states_context_id", quiet=True)
+
+    _LOGGER.debug("Migrating context_ids to binary format: done=%s", is_done)
+    return is_done
+
+
+def migrate_event_type_ids(instance: Recorder) -> bool:
+    """Migrate event_type to event_type_ids."""
+    session_maker = instance.get_session
+    _LOGGER.debug("Migrating event_types")
+    event_type_manager = instance.event_type_manager
+    with session_scope(session=session_maker()) as session:
+        if events := session.execute(find_event_type_to_migrate()).all():
+            event_types = {event_type for _, event_type in events}
+            event_type_to_id = event_type_manager.get_many(event_types, session)
+            if missing_event_types := {
+                event_type
+                for event_type, event_id in event_type_to_id.items()
+                if event_id is None
+            }:
+                missing_db_event_types = [
+                    EventTypes(event_type=event_type)
+                    for event_type in missing_event_types
+                ]
+                session.add_all(missing_db_event_types)
+                session.flush()  # Assign ids
+                for db_event_type in missing_db_event_types:
+                    # We cannot add the assigned ids to the event_type_manager
+                    # because the commit could get rolled back
+                    assert db_event_type.event_type is not None
+                    event_type_to_id[
+                        db_event_type.event_type
+                    ] = db_event_type.event_type_id
+
+            session.execute(
+                update(Events),
+                [
+                    {
+                        "event_id": event_id,
+                        "event_type": None,
+                        "event_type_id": event_type_to_id[event_type],
+                    }
+                    for event_id, event_type in events
+                ],
+            )
+
+        # If there is more work to do return False
+        # so that we can be called again
+        is_done = not events
+
+    if is_done:
+        instance.event_type_manager.active = True
+
+    _LOGGER.debug("Migrating event_types done=%s", is_done)
+    return is_done
 
 
 def _initialize_database(session: Session) -> bool:

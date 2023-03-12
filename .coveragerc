@@ -395,7 +395,8 @@ omit =
     homeassistant/components/fritzbox_callmonitor/__init__.py
     homeassistant/components/fritzbox_callmonitor/base.py
     homeassistant/components/fritzbox_callmonitor/sensor.py
-    homeassistant/components/frontier_silicon/const.py
+    homeassistant/components/frontier_silicon/__init__.py
+    homeassistant/components/frontier_silicon/browse_media.py
     homeassistant/components/frontier_silicon/media_player.py
     homeassistant/components/futurenow/light.py
     homeassistant/components/garadget/cover.py
@@ -975,7 +976,6 @@ omit =
     homeassistant/components/rejseplanen/sensor.py
     homeassistant/components/remember_the_milk/__init__.py
     homeassistant/components/remote_rpi_gpio/*
-    homeassistant/components/reolink/__init__.py
     homeassistant/components/reolink/binary_sensor.py
     homeassistant/components/reolink/button.py
     homeassistant/components/reolink/camera.py

@@ -21,6 +21,7 @@ from sqlalchemy import (
     Identity,
     Index,
     Integer,
+    LargeBinary,
     SmallInteger,
     String,
     Text,
@@ -54,6 +55,7 @@ DB_TIMEZONE = "+00:00"
 
 TABLE_EVENTS = "events"
 TABLE_EVENT_DATA = "event_data"
+TABLE_EVENT_TYPES = "event_types"
 TABLE_STATES = "states"
 TABLE_STATE_ATTRIBUTES = "state_attributes"
 TABLE_RECORDER_RUNS = "recorder_runs"
@@ -68,6 +70,7 @@ ALL_TABLES = [
     TABLE_STATE_ATTRIBUTES,
     TABLE_EVENTS,
     TABLE_EVENT_DATA,
+    TABLE_EVENT_TYPES,
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
     TABLE_STATISTICS,
@@ -98,6 +101,11 @@ DOUBLE_TYPE = (
 )
 EVENT_ORIGIN_ORDER = [EventOrigin.local, EventOrigin.remote]
 EVENT_ORIGIN_TO_IDX = {origin: idx for idx, origin in enumerate(EVENT_ORIGIN_ORDER)}
+CONTEXT_ID_BIN_MAX_LENGTH = 16
+EVENTS_CONTEXT_ID_BIN_INDEX = "ix_events_context_id_bin"
+STATES_CONTEXT_ID_BIN_INDEX = "ix_states_context_id_bin"
+
+TIMESTAMP_TYPE = DOUBLE_TYPE
 
 
 class Events(Base):  # type: ignore[misc,valid-type]
@@ -107,6 +115,12 @@ class Events(Base):  # type: ignore[misc,valid-type]
         # Used for fetching events at a specific time
         # see logbook
         Index("ix_events_event_type_time_fired", "event_type", "time_fired"),
+        Index(
+            EVENTS_CONTEXT_ID_BIN_INDEX,
+            "context_id_bin",
+            mysql_length=CONTEXT_ID_BIN_MAX_LENGTH,
+            mariadb_length=CONTEXT_ID_BIN_MAX_LENGTH,
+        ),
         {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
     __tablename__ = TABLE_EVENTS
@@ -116,11 +130,27 @@ class Events(Base):  # type: ignore[misc,valid-type]
     origin = Column(String(MAX_LENGTH_EVENT_ORIGIN))  # no longer used
     origin_idx = Column(SmallInteger)
     time_fired = Column(DATETIME_TYPE, index=True)
+    time_fired_ts = Column(
+        TIMESTAMP_TYPE, index=True
+    )  # *** Not originally in v30, only added for recorder to startup ok
     context_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
     context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
     context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
     data_id = Column(Integer, ForeignKey("event_data.data_id"), index=True)
+    context_id_bin = Column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
+    )  # *** Not originally in v28, only added for recorder to startup ok
+    context_user_id_bin = Column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
+    )  # *** Not originally in v28, only added for recorder to startup ok
+    context_parent_id_bin = Column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
+    )  # *** Not originally in v28, only added for recorder to startup ok
+    event_type_id = Column(
+        Integer, ForeignKey("event_types.event_type_id"), index=True
+    )  # *** Not originally in v28, only added for recorder to startup ok
     event_data_rel = relationship("EventData")
+    event_type_rel = relationship("EventTypes")
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
@@ -212,6 +242,19 @@ class EventData(Base):  # type: ignore[misc,valid-type]
         except ValueError:
             _LOGGER.exception("Error converting row to event data: %s", self)
             return {}
+
+
+# *** Not originally in v28, only added for recorder to startup ok
+# This is not being tested by the v28 statistics migration tests
+class EventTypes(Base):  # type: ignore[misc,valid-type]
+    """Event type history."""
+
+    __table_args__ = (
+        {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
+    )
+    __tablename__ = TABLE_EVENT_TYPES
+    event_type_id = Column(Integer, Identity(), primary_key=True)
+    event_type = Column(String(MAX_LENGTH_EVENT_EVENT_TYPE))
 
 
 class States(Base):  # type: ignore[misc,valid-type]
