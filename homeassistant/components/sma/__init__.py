@@ -142,9 +142,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def update_listener(hass, entry):
     """Handle options update."""
-    _LOGGER.info("Change SMA language to: %s", entry.options.get(CONF_LANGUAGE))
-    ok_result = await async_unload_entry(hass, entry)
-    if ok_result:
+    _LOGGER.debug("Change SMA language to: %s", entry.options.get(CONF_LANGUAGE))
+    ok_result = False
+    unloaded = await async_unload_entry(hass, entry)
+    if unloaded:
         ok_result = await async_setup_entry(hass, entry)
 
     return ok_result
