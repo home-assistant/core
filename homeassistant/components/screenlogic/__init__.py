@@ -109,7 +109,7 @@ async def async_get_connect_info(
     }
 
 
-class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
+class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to manage the data update for the Screenlogic component."""
 
     def __init__(
@@ -157,25 +157,19 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> None:
         """Fetch data from the Screenlogic gateway."""
-        try:
-            await self._async_update_configured_data()
-        except (ScreenLogicError, ScreenLogicWarning) as ex:
-            _LOGGER.warning("Update error - attempting reconnect: %s", ex)
-            await self._async_reconnect_update_data()
-
-        return None
-
-    async def _async_reconnect_update_data(self) -> None:
-        """Attempt to reconnect to the gateway and fetch data."""
         assert self.config_entry is not None
         try:
-            # Clean up the previous connection as we're about to create a new one
-            await self.gateway.async_disconnect()
-
-            connect_info = await async_get_connect_info(self.hass, self.config_entry)
-            await self.gateway.async_connect(**connect_info)
+            if not self.gateway.is_connected:
+                connect_info = await async_get_connect_info(
+                    self.hass, self.config_entry
+                )
+                await self.gateway.async_connect(**connect_info)
 
             await self._async_update_configured_data()
-
-        except (ScreenLogicError, ScreenLogicWarning) as ex:
+        except ScreenLogicWarning as warn:
+            _LOGGER.warning(warn.args[0])
+        except ScreenLogicError as ex:
+            if self.gateway.is_connected:
+                await self.gateway.async_disconnect()
             raise UpdateFailed(ex) from ex
+        return None
