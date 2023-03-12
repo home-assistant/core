@@ -198,6 +198,7 @@ async def test_reauth(
 
     # check reauth trigger with bad-auth responses
     freezer.move_to(_MOCK_TIME_BAD_AUTH_RESPONSES)
+    async_fire_time_changed(hass, _MOCK_TIME_BAD_AUTH_RESPONSES)
     await hass.async_block_till_done()
     assert pvpc_aioclient_mock.call_count == 4
 
@@ -219,6 +220,7 @@ async def test_reauth(
     assert result["step_id"] == "reauth_confirm"
 
     freezer.move_to(_MOCK_TIME_VALID_RESPONSES)
+    async_fire_time_changed(hass, _MOCK_TIME_VALID_RESPONSES)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_API_TOKEN: "good-token"}
     )
