@@ -215,11 +215,12 @@ def _create_index(
     _LOGGER.debug("Creating %s index", index_name)
     _LOGGER.warning(
         (
-            "Adding index `%s` to database. Note: this can take several "
+            "Adding index `%s` to table `%s`. Note: this can take several "
             "minutes on large databases and slow computers. Please "
             "be patient!"
         ),
         index_name,
+        table_name,
     )
     with session_scope(session=session_maker()) as session:
         try:
@@ -250,7 +251,15 @@ def _drop_index(
     string here is generated from the method parameters without sanitizing.
     DO NOT USE THIS FUNCTION IN ANY OPERATION THAT TAKES USER INPUT.
     """
-    _LOGGER.debug("Dropping index %s from table %s", index_name, table_name)
+    _LOGGER.warning(
+        (
+            "Dropping index `%s` from table `%s`. Note: this can take several "
+            "minutes on large databases and slow computers. Please "
+            "be patient!"
+        ),
+        index_name,
+        table_name,
+    )
     success = False
 
     # Engines like DB2/Oracle
@@ -309,7 +318,7 @@ def _drop_index(
                 ),
                 None,
             ):
-                connection.execute(text(f"DROP INDEX {index_to_drop} ON {table_name}"))
+                connection.execute(text(f"DROP INDEX {index_to_drop}"))
                 success = True
 
     if success:
