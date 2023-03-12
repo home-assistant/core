@@ -1435,7 +1435,7 @@ pysmartapp==0.3.3
 pysmartthings==0.7.6
 
 # homeassistant.components.edl21
-pysml==0.0.8
+pysml==0.0.9
 
 # homeassistant.components.snmp
 pysnmplib==5.0.21
