@@ -57,11 +57,11 @@ def remove_configured_db_url_if_not_needed(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> None:
     """Remove db url from config if it matches recorder database."""
-    new_options = {**entry.options}
-    new_options.pop(CONF_DB_URL)
     hass.config_entries.async_update_entry(
         entry,
-        options=new_options,
+        options={
+            key: value for key, value in entry.options.items() if key != CONF_DB_URL
+        },
     )
 
 
