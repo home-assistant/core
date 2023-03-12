@@ -1233,6 +1233,10 @@ class Recorder(threading.Thread):
         """Migrate entity_ids if needed."""
         return migration.migrate_entity_ids(self)
 
+    def _post_migrate_entity_ids(self) -> bool:
+        """Post migrate entity_ids if needed."""
+        return migration.post_migrate_entity_ids(self)
+
     def _send_keep_alive(self) -> None:
         """Send a keep alive to keep the db connection open."""
         assert self.event_session is not None

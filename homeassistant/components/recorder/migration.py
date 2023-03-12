@@ -46,6 +46,7 @@ from .db_schema import (
 )
 from .models import process_timestamp
 from .queries import (
+    find_entity_ids_to_cleanup,
     find_entity_ids_to_migrate,
     find_event_type_to_migrate,
     find_events_context_ids_to_migrate,
@@ -1354,10 +1355,9 @@ def migrate_event_type_ids(instance: Recorder) -> bool:
 
 def migrate_entity_ids(instance: Recorder) -> bool:
     """Migrate entity_ids to states_meta."""
-    session_maker = instance.get_session
     _LOGGER.debug("Migrating entity_ids")
     states_meta_manager = instance.states_meta_manager
-    with session_scope(session=session_maker()) as session:
+    with session_scope(session=instance.get_session()) as session:
         if states := session.execute(find_entity_ids_to_migrate()).all():
             entity_ids = {entity_id for _, entity_id in states}
             entity_id_to_metadata_id = states_meta_manager.get_many(entity_ids, session)
@@ -1386,7 +1386,8 @@ def migrate_entity_ids(instance: Recorder) -> bool:
                         "state_id": state_id,
                         # We cannot set "entity_id": None yet since
                         # the history queries still need to work while the
-                        # migration is in progress.
+                        # migration is in progress and we will do this in
+                        # post_migrate_entity_ids
                         "metadata_id": entity_id_to_metadata_id[entity_id],
                     }
                     for state_id, entity_id in states
@@ -1397,13 +1398,40 @@ def migrate_entity_ids(instance: Recorder) -> bool:
         # so that we can be called again
         is_done = not states
 
-    if is_done:
-        _drop_index(session_maker, "states", "ix_states_entity_id_last_updated_ts")
-        # TODO: make this call later 5 minutes to make
-        # sure there are no history queries still running
-        instance.states_meta_manager.active = True
-
     _LOGGER.debug("Migrating entity_ids done=%s", is_done)
+    return is_done
+
+
+def post_migrate_entity_ids(instance: Recorder) -> bool:
+    """Remove old entity_id strings from states.
+
+    We cannot do this in migrate_entity_ids since the history queries
+    still need to work while the migration is in progress.
+    """
+    session_maker = instance.get_session
+    _LOGGER.debug("Cleanup legacy entity_ids")
+    with session_scope(session=session_maker()) as session:
+        if states := session.execute(find_entity_ids_to_cleanup()).all():
+            session.execute(
+                update(States),
+                [
+                    {
+                        "state_id": state_id,
+                        "entity_id": None,
+                    }
+                    for state_id in states
+                ],
+            )
+
+        # If there is more work to do return False
+        # so that we can be called again
+        is_done = not states
+
+    if is_done:
+        # Drop the old indexes since they are no longer needed
+        _drop_index(session_maker, "states", "ix_states_entity_id_last_updated_ts")
+
+    _LOGGER.debug("Cleanup legacy entity_ids done=%s", is_done)
     return is_done
 
 

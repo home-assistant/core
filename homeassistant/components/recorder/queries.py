@@ -743,6 +743,15 @@ def find_entity_ids_to_migrate() -> StatementLambdaElement:
     )
 
 
+def find_entity_ids_to_cleanup() -> StatementLambdaElement:
+    """Find events entity_id to cleanup."""
+    return lambda_stmt(
+        lambda: select(States.state_id)
+        .filter(States.entity_id.is_not(None))
+        .limit(SQLITE_MAX_BIND_VARS)
+    )
+
+
 def has_event_type_to_migrate() -> StatementLambdaElement:
     """Check if there are event_types to migrate."""
     return lambda_stmt(
