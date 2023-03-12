@@ -118,8 +118,12 @@ def test_migrate_times(caplog: pytest.LogCaptureFixture, tmpdir) -> None:
     recorder_helper.async_initialize_recorder(hass)
     setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
     hass.start()
-    wait_recording_done(hass)
-    wait_recording_done(hass)
+
+    # We need to wait for all the migration tasks to complete
+    # before we can check the database.
+    for _ in range(5):
+        wait_recording_done(hass)
+
     with session_scope(hass=hass) as session:
         result = list(
             session.query(recorder.db_schema.Events).filter(
@@ -132,7 +136,7 @@ def test_migrate_times(caplog: pytest.LogCaptureFixture, tmpdir) -> None:
         assert result[0].time_fired_ts == now_timestamp
         result = list(
             session.query(recorder.db_schema.States)
-            .outerjoin(
+            .join(
                 recorder.db_schema.StatesMeta,
                 recorder.db_schema.StatesMeta.metadata_id
                 == recorder.db_schema.States.metadata_id,
