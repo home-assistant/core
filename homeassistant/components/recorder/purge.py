@@ -27,10 +27,12 @@ from .queries import (
     delete_event_types_rows,
     delete_recorder_runs_rows,
     delete_states_attributes_rows,
+    delete_states_meta_rows,
     delete_states_rows,
     delete_statistics_runs_rows,
     delete_statistics_short_term_rows,
     disconnect_states_rows,
+    find_entity_ids_to_purge,
     find_event_types_to_purge,
     find_events_to_purge,
     find_latest_statistics_runs_run_id,
@@ -115,6 +117,9 @@ def purge_old_data(
         # recorder runs
         if instance.event_type_manager.active:
             _purge_old_event_types(instance, session)
+
+        if instance.states_meta_manager.active:
+            _purge_old_entity_ids(instance, session)
 
         _purge_old_recorder_runs(instance, session, purge_before)
     if repack:
@@ -588,6 +593,25 @@ def _purge_old_event_types(instance: Recorder, session: Session) -> None:
 
     # Evict any entries in the event_type cache referring to a purged state
     instance.event_type_manager.evict_purged(purge_event_types)
+
+
+def _purge_old_entity_ids(instance: Recorder, session: Session) -> None:
+    """Purge all old entity_ids."""
+    # entity_ids are small, no need to batch run it
+    purge_entity_ids = set()
+    states_metadata_ids = set()
+    for metadata_id, entity_id in session.execute(find_entity_ids_to_purge()):
+        purge_entity_ids.add(entity_id)
+        states_metadata_ids.add(metadata_id)
+
+    if not states_metadata_ids:
+        return
+
+    deleted_rows = session.execute(delete_states_meta_rows(states_metadata_ids))
+    _LOGGER.debug("Deleted %s states meta", deleted_rows)
+
+    # Evict any entries in the event_type cache referring to a purged state
+    instance.states_meta_manager.evict_purged(purge_entity_ids)
 
 
 def _purge_filtered_data(instance: Recorder, session: Session) -> bool:

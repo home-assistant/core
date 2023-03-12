@@ -809,10 +809,36 @@ def find_event_types_to_purge() -> StatementLambdaElement:
     )
 
 
+def find_entity_ids_to_purge() -> StatementLambdaElement:
+    """Find entity_ids to purge."""
+    return lambda_stmt(
+        lambda: select(StatesMeta.metadata_id, StatesMeta.entity_id).where(
+            StatesMeta.metadata_id.not_in(
+                select(StatesMeta.metadata_id).join(
+                    used_states_metadata_id := select(
+                        distinct(States.metadata_id).label("used_states_metadata_id")
+                    ).subquery(),
+                    StatesMeta.metadata_id
+                    == used_states_metadata_id.c.used_states_metadata_id,
+                )
+            )
+        )
+    )
+
+
 def delete_event_types_rows(event_type_ids: Iterable[int]) -> StatementLambdaElement:
     """Delete EventTypes rows."""
     return lambda_stmt(
         lambda: delete(EventTypes)
         .where(EventTypes.event_type_id.in_(event_type_ids))
+        .execution_options(synchronize_session=False)
+    )
+
+
+def delete_states_meta_rows(metadata_ids: Iterable[int]) -> StatementLambdaElement:
+    """Delete StatesMeta rows."""
+    return lambda_stmt(
+        lambda: delete(StatesMeta)
+        .where(StatesMeta.metadata_id.in_(metadata_ids))
         .execution_options(synchronize_session=False)
     )

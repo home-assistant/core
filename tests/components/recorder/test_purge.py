@@ -1814,3 +1814,103 @@ async def test_purge_old_events_purges_the_event_type_ids(
         assert finished
         assert events.count() == 0
         assert event_types.count() == 0
+
+
+async def test_purge_old_states_purges_the_state_metadata_ids(
+    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
+) -> None:
+    """Test deleting old states purges state metadata_ids."""
+    instance = await async_setup_recorder_instance(hass)
+    assert instance.states_meta_manager.active is True
+
+    utcnow = dt_util.utcnow()
+    five_days_ago = utcnow - timedelta(days=5)
+    eleven_days_ago = utcnow - timedelta(days=11)
+    far_past = utcnow - timedelta(days=1000)
+
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    def _insert_states():
+        with session_scope(hass=hass) as session:
+            states_meta_sensor_one = StatesMeta(entity_id="sensor.one")
+            states_meta_sensor_two = StatesMeta(entity_id="sensor.two")
+            states_meta_sensor_three = StatesMeta(entity_id="sensor.three")
+            states_meta_sensor_unused = StatesMeta(entity_id="sensor.unused")
+            session.add_all(
+                (
+                    states_meta_sensor_one,
+                    states_meta_sensor_two,
+                    states_meta_sensor_three,
+                    states_meta_sensor_unused,
+                )
+            )
+            session.flush()
+            for _ in range(5):
+                for event_id in range(6):
+                    if event_id < 2:
+                        timestamp = eleven_days_ago
+                        metadata_id = states_meta_sensor_one.metadata_id
+                    elif event_id < 4:
+                        timestamp = five_days_ago
+                        metadata_id = states_meta_sensor_two.metadata_id
+                    else:
+                        timestamp = utcnow
+                        metadata_id = states_meta_sensor_three.metadata_id
+
+                    session.add(
+                        States(
+                            metadata_id=metadata_id,
+                            state="any",
+                            last_updated_ts=dt_util.utc_to_timestamp(timestamp),
+                        )
+                    )
+            return instance.states_meta_manager.get_many(
+                ["sensor.one", "sensor.two", "sensor.three", "sensor.unused"],
+                session,
+            )
+
+    entity_id_to_metadata_id = await instance.async_add_executor_job(_insert_states)
+    test_metadata_ids = entity_id_to_metadata_id.values()
+    with session_scope(hass=hass) as session:
+        states = session.query(States).where(States.metadata_id.in_(test_metadata_ids))
+        states_meta = session.query(StatesMeta).where(
+            StatesMeta.metadata_id.in_(test_metadata_ids)
+        )
+
+        assert states.count() == 30
+        assert states_meta.count() == 4
+
+        # run purge_old_data()
+        finished = purge_old_data(
+            instance,
+            far_past,
+            repack=False,
+        )
+        assert finished
+        assert states.count() == 30
+        # We should remove the unused entity_id
+        assert states_meta.count() == 3
+
+        assert "sensor.unused" not in instance.event_type_manager._id_map
+
+        # we should only have 10 states left since
+        # only one event type was recorded now
+        finished = purge_old_data(
+            instance,
+            utcnow,
+            repack=False,
+        )
+        assert finished
+        assert states.count() == 10
+        assert states_meta.count() == 1
+
+        # Purge everything
+        finished = purge_old_data(
+            instance,
+            utcnow + timedelta(seconds=1),
+            repack=False,
+        )
+        assert finished
+        assert states.count() == 0
+        assert states_meta.count() == 0
