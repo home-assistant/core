@@ -37,6 +37,7 @@ class FullyKioskEntity(CoordinatorEntity[FullyKioskDataUpdateCoordinator], Entit
             host=coordinator.data["ip4"],
             port=2323,
         )
+
         device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.data["deviceID"])},
             name=coordinator.data["deviceName"],
@@ -44,7 +45,6 @@ class FullyKioskEntity(CoordinatorEntity[FullyKioskDataUpdateCoordinator], Entit
             model=coordinator.data["deviceModel"],
             sw_version=coordinator.data["appVersionName"],
             configuration_url=str(url),
-            connections={(CONNECTION_NETWORK_MAC, coordinator.data["Mac"])},
         )
         if "Mac" in coordinator.data and valid_global_mac_address(
             coordinator.data["Mac"]

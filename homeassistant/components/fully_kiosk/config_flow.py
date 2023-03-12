@@ -44,6 +44,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             host,
             DEFAULT_PORT,
             user_input[CONF_PASSWORD],
+            use_ssl=user_input[CONF_SSL],
+            verify_ssl=user_input[CONF_VERIFY_SSL],
         )
 
         try:
@@ -70,6 +72,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_HOST: host,
                 CONF_PASSWORD: user_input[CONF_PASSWORD],
                 CONF_MAC: format_mac(device_info["Mac"]),
+                CONF_SSL: user_input[CONF_SSL],
+                CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
             },
         )
 
@@ -79,35 +83,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            fully = FullyKiosk(
-                async_get_clientsession(self.hass),
-                user_input[CONF_HOST],
-                DEFAULT_PORT,
-                user_input[CONF_PASSWORD],
-                use_ssl=user_input[CONF_SSL],
-                verify_ssl=user_input[CONF_VERIFY_SSL],
-            )
-
-            try:
-                async with timeout(15):
-                    device_info = await fully.getDeviceInfo()
-            except (
-                ClientConnectorError,
-                FullyKioskError,
-                asyncio.TimeoutError,
-            ) as error:
-                LOGGER.debug(error.args, exc_info=True)
-                errors["base"] = "cannot_connect"
-            except Exception as error:  # pylint: disable=broad-except
-                LOGGER.exception("Unexpected exception: %s", error)
-                errors["base"] = "unknown"
-            else:
-                await self.async_set_unique_id(device_info["deviceID"])
-                self._abort_if_unique_id_configured(updates=user_input)
-                return self.async_create_entry(
-                    title=device_info["deviceName"],
-                    data=user_input | {CONF_MAC: format_mac(device_info["Mac"])},
+            if user_input is not None:
+                result = await self._create_entry(
+                    user_input[CONF_HOST], user_input, errors
                 )
+                if result:
+                    return result
 
         return self.async_show_form(
             step_id="user",
@@ -161,6 +142,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_PASSWORD): str,
+                    vol.Optional(CONF_SSL, default=False): bool,
+                    vol.Optional(CONF_VERIFY_SSL, default=False): bool,
                 }
             ),
             description_placeholders=placeholders,

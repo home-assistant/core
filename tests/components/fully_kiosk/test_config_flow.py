@@ -242,6 +242,8 @@ async def test_mqtt_discovery_flow(
         result["flow_id"],
         {
             CONF_PASSWORD: "test-password",
+            CONF_SSL: False,
+            CONF_VERIFY_SSL: False,
         },
     )
 
@@ -252,6 +254,8 @@ async def test_mqtt_discovery_flow(
         CONF_HOST: "192.168.1.234",
         CONF_PASSWORD: "test-password",
         CONF_MAC: "aa:bb:cc:dd:ee:ff",
+        CONF_SSL: False,
+        CONF_VERIFY_SSL: False,
     }
     assert "result" in confirmResult
     assert confirmResult["result"].unique_id == "12345"
