@@ -85,6 +85,8 @@ from .queries import (
     get_shared_event_datas,
     has_entity_ids_to_migrate,
     has_event_type_to_migrate,
+    has_events_context_ids_to_migrate,
+    has_states_context_ids_to_migrate,
 )
 from .run_history import RunHistory
 from .table_managers.event_types import EventTypeManager
@@ -657,7 +659,7 @@ class Recorder(threading.Thread):
             # If the migrate is live or the schema is valid, we need to
             # wait for startup to complete. If its not live, we need to continue
             # on.
-            self.hass.add_job(self.async_set_db_ready)
+            self._activate_and_set_db_ready()
 
             # We wait to start a live migration until startup has finished
             # since it can be cpu intensive and we do not want it to compete
@@ -668,7 +670,7 @@ class Recorder(threading.Thread):
                 # Make sure we cleanly close the run if
                 # we restart before startup finishes
                 self._shutdown()
-                self.hass.add_job(self.async_set_db_ready)
+                self._activate_and_set_db_ready()
                 return
 
         if not schema_status.valid:
@@ -686,11 +688,11 @@ class Recorder(threading.Thread):
                     "Database Migration Failed",
                     "recorder_database_migration",
                 )
-                self.hass.add_job(self.async_set_db_ready)
+                self._activate_and_set_db_ready()
                 self._shutdown()
                 return
 
-        self.hass.add_job(self.async_set_db_ready)
+        self._activate_and_set_db_ready()
 
         # Catch up with missed statistics
         with session_scope(session=self.get_session()) as session:
@@ -699,30 +701,41 @@ class Recorder(threading.Thread):
         _LOGGER.debug("Recorder processing the queue")
         self._adjust_lru_size()
         self.hass.add_job(self._async_set_recorder_ready_migration_done)
-        self._activate_table_managers_or_migrate()
         self._run_event_loop()
         self._shutdown()
 
-    def _activate_table_managers_or_migrate(self) -> None:
-        """Activate the table managers or schedule migrations."""
-        # Currently we always check if context ids need to be migrated
-        # since there are multiple tables. This could be optimized
-        # to check both the states and events table to see if there
-        # are any missing and avoid inserting the task but it currently
-        # is not needed since there is no dependent code branching
-        # on the result of the migration.
-        self.queue_task(ContextIDMigrationTask())
+    def _activate_and_set_db_ready(self) -> None:
+        """Activate the table managers or schedule migrations and mark the db as ready."""
         with session_scope(session=self.get_session()) as session:
-            if session.execute(has_event_type_to_migrate()).scalar():
+            if (
+                self.schema_version < 36
+                or session.execute(has_events_context_ids_to_migrate()).scalar()
+                or session.execute(has_states_context_ids_to_migrate()).scalar()
+            ):
+                self.queue_task(ContextIDMigrationTask())
+
+            if (
+                self.schema_version < 37
+                or session.execute(has_event_type_to_migrate()).scalar()
+            ):
                 self.queue_task(EventTypeIDMigrationTask())
             else:
                 _LOGGER.debug("Activating event type manager as all data is migrated")
                 self.event_type_manager.active = True
-            if session.execute(has_entity_ids_to_migrate()).scalar():
+
+            if (
+                self.schema_version < 38
+                or session.execute(has_entity_ids_to_migrate()).scalar()
+            ):
                 self.queue_task(EntityIDMigrationTask())
             else:
                 _LOGGER.debug("Activating states meta manager as all data is migrated")
                 self.states_meta_manager.active = True
+
+        # We must only set the db ready after we have scheduled all
+        # migration tasks. Otherwise history and statistics will
+        # use the old queries when the migration is already completed
+        self.hass.add_job(self.async_set_db_ready)
 
     def _run_event_loop(self) -> None:
         """Run the event loop for the recorder."""

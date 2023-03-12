@@ -765,6 +765,20 @@ def batch_cleanup_entity_ids() -> StatementLambdaElement:
     )
 
 
+def has_events_context_ids_to_migrate() -> StatementLambdaElement:
+    """Check if there are events context ids to migrate."""
+    return lambda_stmt(
+        lambda: select(Events.event_id).filter(Events.context_id_bin.is_(None)).limit(1)
+    )
+
+
+def has_states_context_ids_to_migrate() -> StatementLambdaElement:
+    """Check if there are states context ids to migrate."""
+    return lambda_stmt(
+        lambda: select(States.state_id).filter(States.context_id_bin.is_(None)).limit(1)
+    )
+
+
 def has_event_type_to_migrate() -> StatementLambdaElement:
     """Check if there are event_types to migrate."""
     return lambda_stmt(

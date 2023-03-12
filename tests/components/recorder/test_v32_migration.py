@@ -129,9 +129,13 @@ def test_migrate_times(caplog: pytest.LogCaptureFixture, tmpdir) -> None:
         assert len(result) == 1
         assert result[0].time_fired_ts == now_timestamp
         result = list(
-            session.query(recorder.db_schema.States).where(
-                recorder.db_schema.States.entity_id == "sensor.test"
+            session.query(recorder.db_schema.States)
+            .outerjoin(
+                recorder.db_schema.StatesMeta,
+                recorder.db_schema.StatesMeta.metadata_id
+                == recorder.db_schema.States.metadata_id,
             )
+            .where(recorder.db_schema.StatesMeta.entity_id == "sensor.test")
         )
         assert len(result) == 1
         assert result[0].last_changed_ts == one_second_past_timestamp
