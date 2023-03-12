@@ -180,7 +180,9 @@ def migrate_schema(
         with session_scope(session=session_maker()) as session:
             session.add(SchemaChanges(schema_version=new_version))
 
-        _LOGGER.info("Upgrade to version %s done", new_version)
+        # Log at the same level as the long schema changes
+        # so its clear that the upgrade is done
+        _LOGGER.warning("Upgrade to version %s done", new_version)
 
     if schema_errors := schema_status.statistics_schema_errors:
         _LOGGER.warning(
