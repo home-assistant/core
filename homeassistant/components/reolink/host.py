@@ -57,7 +57,7 @@ class ReolinkHost:
 
         self.webhook_id: str | None = None
         self._base_url: str = ""
-        self._webhook_url: str | None = None
+        self._webhook_url: str = ""
         self._webhook_reachable: asyncio.Event = asyncio.Event()
         self._lost_subscription: bool = False
 
