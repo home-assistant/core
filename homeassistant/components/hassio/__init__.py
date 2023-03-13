@@ -69,6 +69,7 @@ from .const import (
     ATTR_VERSION,
     DATA_KEY_ADDONS,
     DATA_KEY_CORE,
+    DATA_KEY_HOST,
     DATA_KEY_OS,
     DATA_KEY_SUPERVISOR,
     DOMAIN,
@@ -669,6 +670,22 @@ def async_register_os_in_dev_reg(
 
 
 @callback
+def async_register_host_in_dev_reg(
+    entry_id: str,
+    dev_reg: dr.DeviceRegistry,
+) -> None:
+    """Register host in the device registry."""
+    params = DeviceInfo(
+        identifiers={(DOMAIN, "host")},
+        manufacturer="Home Assistant",
+        model=SupervisorEntityModel.HOST,
+        name="Home Assistant Host",
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
+    dev_reg.async_get_or_create(config_entry_id=entry_id, **params)
+
+
+@callback
 def async_register_core_in_dev_reg(
     entry_id: str,
     dev_reg: dr.DeviceRegistry,
@@ -777,6 +794,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             **supervisor_info,
             **get_supervisor_stats(self.hass),
         }
+        new_data[DATA_KEY_HOST] = get_host_info(self.hass) or {}
 
         # If this is the initial refresh, register all addons and return the dict
         if not self.data:
@@ -789,6 +807,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             async_register_supervisor_in_dev_reg(
                 self.entry_id, self.dev_reg, new_data[DATA_KEY_SUPERVISOR]
             )
+            async_register_host_in_dev_reg(self.entry_id, self.dev_reg)
             if self.is_hass_os:
                 async_register_os_in_dev_reg(
                     self.entry_id, self.dev_reg, new_data[DATA_KEY_OS]
