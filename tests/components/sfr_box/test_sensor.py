@@ -33,12 +33,12 @@ async def test_sensors(
     await hass.async_block_till_done()
 
     device_entry = device_registry.async_get_device({(DOMAIN, "e4:5d:51:00:11:22")})
-    assert device_entry == snapshot(name="devices")
+    assert device_entry == snapshot
 
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, config_entry.entry_id
     )
-    assert entity_entries == snapshot(name="entities")
+    assert entity_entries == snapshot
 
     for entity in entity_entries:
         entity_registry.async_update_entity(entity.entity_id, **{"disabled_by": None})
