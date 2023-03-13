@@ -1147,7 +1147,6 @@ jobs:
       - lint-other
       - lint-ruff
       - mypy
-      - pytest-partial
     strategy:
       fail-fast: false
       matrix:
@@ -1243,7 +1242,7 @@ jobs:
       - pytest-mariadb
     if: |
       !failure('pytest')
-      || !failure('0ytest-partial')
+      || !failure('pytest-partial')
       || !failure('pytest-mariadb')
       || !failure('pytest-postgres')
     steps:
