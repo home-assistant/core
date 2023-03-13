@@ -97,9 +97,9 @@ from .tasks import (
     ChangeStatisticsUnitTask,
     ClearStatisticsTask,
     CommitTask,
-    ContextIDMigrationTask,
     DatabaseLockTask,
     EntityIDMigrationTask,
+    EventsContextIDMigrationTask,
     EventTask,
     EventTypeIDMigrationTask,
     ImportStatisticsTask,
@@ -107,6 +107,7 @@ from .tasks import (
     PerodicCleanupTask,
     PurgeTask,
     RecorderTask,
+    StatesContextIDMigrationTask,
     StatisticsTask,
     StopTask,
     SynchronizeTask,
@@ -654,8 +655,9 @@ class Recorder(threading.Thread):
             self.migration_is_live = migration.live_migration(schema_status)
 
         self.hass.add_job(self.async_connection_success)
+        database_was_ready = self.migration_is_live or schema_status.valid
 
-        if self.migration_is_live or schema_status.valid:
+        if database_was_ready:
             # If the migrate is live or the schema is valid, we need to
             # wait for startup to complete. If its not live, we need to continue
             # on.
@@ -670,7 +672,6 @@ class Recorder(threading.Thread):
                 # Make sure we cleanly close the run if
                 # we restart before startup finishes
                 self._shutdown()
-                self._activate_and_set_db_ready()
                 return
 
         if not schema_status.valid:
@@ -692,7 +693,8 @@ class Recorder(threading.Thread):
                 self._shutdown()
                 return
 
-        self._activate_and_set_db_ready()
+        if not database_was_ready:
+            self._activate_and_set_db_ready()
 
         # Catch up with missed statistics
         with session_scope(session=self.get_session()) as session:
@@ -710,9 +712,14 @@ class Recorder(threading.Thread):
             if (
                 self.schema_version < 36
                 or session.execute(has_events_context_ids_to_migrate()).scalar()
+            ):
+                self.queue_task(StatesContextIDMigrationTask())
+
+            if (
+                self.schema_version < 36
                 or session.execute(has_states_context_ids_to_migrate()).scalar()
             ):
-                self.queue_task(ContextIDMigrationTask())
+                self.queue_task(EventsContextIDMigrationTask())
 
             if (
                 self.schema_version < 37
@@ -1236,9 +1243,13 @@ class Recorder(threading.Thread):
         """Run post schema migration tasks."""
         migration.post_schema_migration(self, old_version, new_version)
 
-    def _migrate_context_ids(self) -> bool:
-        """Migrate context ids if needed."""
-        return migration.migrate_context_ids(self)
+    def _migrate_states_context_ids(self) -> bool:
+        """Migrate states context ids if needed."""
+        return migration.migrate_states_context_ids(self)
+
+    def _migrate_events_context_ids(self) -> bool:
+        """Migrate events context ids if needed."""
+        return migration.migrate_events_context_ids(self)
 
     def _migrate_event_type_ids(self) -> bool:
         """Migrate event type ids if needed."""

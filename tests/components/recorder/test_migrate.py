@@ -32,10 +32,11 @@ from homeassistant.components.recorder.db_schema import (
 )
 from homeassistant.components.recorder.queries import select_event_type_ids
 from homeassistant.components.recorder.tasks import (
-    ContextIDMigrationTask,
     EntityIDMigrationTask,
     EntityIDPostMigrationTask,
+    EventsContextIDMigrationTask,
     EventTypeIDMigrationTask,
+    StatesContextIDMigrationTask,
 )
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant
@@ -558,7 +559,7 @@ def test_raise_if_exception_missing_empty_cause_str() -> None:
 
 
 @pytest.mark.parametrize("enable_migrate_context_ids", [True])
-async def test_migrate_context_ids(
+async def test_migrate_events_context_ids(
     async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
 ) -> None:
     """Test we can migrate old uuid context ids and ulid context ids to binary format."""
@@ -632,7 +633,7 @@ async def test_migrate_context_ids(
 
     await async_wait_recording_done(hass)
     # This is a threadsafe way to add a task to the recorder
-    instance.queue_task(ContextIDMigrationTask())
+    instance.queue_task(EventsContextIDMigrationTask())
     await async_recorder_block_till_done(hass)
 
     def _object_as_dict(obj):
@@ -699,6 +700,137 @@ async def test_migrate_context_ids(
     assert invalid_context_id_event["context_id_bin"] == b"\x00" * 16
     assert invalid_context_id_event["context_user_id_bin"] is None
     assert invalid_context_id_event["context_parent_id_bin"] is None
+
+
+@pytest.mark.parametrize("enable_migrate_context_ids", [True])
+async def test_migrate_states_context_ids(
+    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
+) -> None:
+    """Test we can migrate old uuid context ids and ulid context ids to binary format."""
+    instance = await async_setup_recorder_instance(hass)
+    await async_wait_recording_done(hass)
+
+    test_uuid = uuid.uuid4()
+    uuid_hex = test_uuid.hex
+    uuid_bin = test_uuid.bytes
+
+    def _insert_events():
+        with session_scope(hass=hass) as session:
+            session.add_all(
+                (
+                    States(
+                        entity_id="state.old_uuid_context_id",
+                        last_updated_ts=1677721632.452529,
+                        context_id=uuid_hex,
+                        context_id_bin=None,
+                        context_user_id=None,
+                        context_user_id_bin=None,
+                        context_parent_id=None,
+                        context_parent_id_bin=None,
+                    ),
+                    States(
+                        entity_id="state.empty_context_id",
+                        last_updated_ts=1677721632.552529,
+                        context_id=None,
+                        context_id_bin=None,
+                        context_user_id=None,
+                        context_user_id_bin=None,
+                        context_parent_id=None,
+                        context_parent_id_bin=None,
+                    ),
+                    States(
+                        entity_id="state.ulid_context_id",
+                        last_updated_ts=1677721632.552529,
+                        context_id="01ARZ3NDEKTSV4RRFFQ69G5FAV",
+                        context_id_bin=None,
+                        context_user_id="9400facee45711eaa9308bfd3d19e474",
+                        context_user_id_bin=None,
+                        context_parent_id="01ARZ3NDEKTSV4RRFFQ69G5FA2",
+                        context_parent_id_bin=None,
+                    ),
+                    States(
+                        entity_id="state.invalid_context_id",
+                        last_updated_ts=1677721632.552529,
+                        context_id="invalid",
+                        context_id_bin=None,
+                        context_user_id=None,
+                        context_user_id_bin=None,
+                        context_parent_id=None,
+                        context_parent_id_bin=None,
+                    ),
+                )
+            )
+
+    await instance.async_add_executor_job(_insert_events)
+
+    await async_wait_recording_done(hass)
+    # This is a threadsafe way to add a task to the recorder
+    instance.queue_task(StatesContextIDMigrationTask())
+    await async_recorder_block_till_done(hass)
+
+    def _object_as_dict(obj):
+        return {c.key: getattr(obj, c.key) for c in inspect(obj).mapper.column_attrs}
+
+    def _fetch_migrated_states():
+        with session_scope(hass=hass) as session:
+            events = (
+                session.query(States)
+                .filter(
+                    States.entity_id.in_(
+                        [
+                            "state.old_uuid_context_id",
+                            "state.empty_context_id",
+                            "state.ulid_context_id",
+                            "state.invalid_context_id",
+                        ]
+                    )
+                )
+                .all()
+            )
+            assert len(events) == 4
+            return {state.entity_id: _object_as_dict(state) for state in events}
+
+    states_by_entity_id = await instance.async_add_executor_job(_fetch_migrated_states)
+
+    old_uuid_context_id = states_by_entity_id["state.old_uuid_context_id"]
+    assert old_uuid_context_id["context_id"] is None
+    assert old_uuid_context_id["context_user_id"] is None
+    assert old_uuid_context_id["context_parent_id"] is None
+    assert old_uuid_context_id["context_id_bin"] == uuid_bin
+    assert old_uuid_context_id["context_user_id_bin"] is None
+    assert old_uuid_context_id["context_parent_id_bin"] is None
+
+    empty_context_id = states_by_entity_id["state.empty_context_id"]
+    assert empty_context_id["context_id"] is None
+    assert empty_context_id["context_user_id"] is None
+    assert empty_context_id["context_parent_id"] is None
+    assert empty_context_id["context_id_bin"] == b"\x00" * 16
+    assert empty_context_id["context_user_id_bin"] is None
+    assert empty_context_id["context_parent_id_bin"] is None
+
+    ulid_context_id = states_by_entity_id["state.ulid_context_id"]
+    assert ulid_context_id["context_id"] is None
+    assert ulid_context_id["context_user_id"] is None
+    assert ulid_context_id["context_parent_id"] is None
+    assert (
+        bytes_to_ulid(ulid_context_id["context_id_bin"]) == "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+    )
+    assert (
+        ulid_context_id["context_user_id_bin"]
+        == b"\x94\x00\xfa\xce\xe4W\x11\xea\xa90\x8b\xfd=\x19\xe4t"
+    )
+    assert (
+        bytes_to_ulid(ulid_context_id["context_parent_id_bin"])
+        == "01ARZ3NDEKTSV4RRFFQ69G5FA2"
+    )
+
+    invalid_context_id = states_by_entity_id["state.invalid_context_id"]
+    assert invalid_context_id["context_id"] is None
+    assert invalid_context_id["context_user_id"] is None
+    assert invalid_context_id["context_parent_id"] is None
+    assert invalid_context_id["context_id_bin"] == b"\x00" * 16
+    assert invalid_context_id["context_user_id_bin"] is None
+    assert invalid_context_id["context_parent_id_bin"] is None
 
 
 @pytest.mark.parametrize("enable_migrate_event_type_ids", [True])

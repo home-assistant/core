@@ -64,7 +64,7 @@ from .tasks import (
     PostSchemaMigrationTask,
     StatisticsTimestampMigrationCleanupTask,
 )
-from .util import database_job_retry_wrapper, session_scope
+from .util import database_job_retry_wrapper, retryable_database_job, session_scope
 
 if TYPE_CHECKING:
     from . import Recorder
@@ -1301,8 +1301,43 @@ def _context_id_to_bytes(context_id: str | None) -> bytes | None:
     return None
 
 
-def migrate_context_ids(instance: Recorder) -> bool:
-    """Migrate context_ids to use binary format."""
+@retryable_database_job("migrate states context_ids to binary format")
+def migrate_states_context_ids(instance: Recorder) -> bool:
+    """Migrate states context_ids to use binary format."""
+    _to_bytes = _context_id_to_bytes
+    session_maker = instance.get_session
+    _LOGGER.debug("Migrating states context_ids to binary format")
+    with session_scope(session=session_maker()) as session:
+        if states := session.execute(find_states_context_ids_to_migrate()).all():
+            session.execute(
+                update(States),
+                [
+                    {
+                        "state_id": state_id,
+                        "context_id": None,
+                        "context_id_bin": _to_bytes(context_id) or _EMPTY_CONTEXT_ID,
+                        "context_user_id": None,
+                        "context_user_id_bin": _to_bytes(context_user_id),
+                        "context_parent_id": None,
+                        "context_parent_id_bin": _to_bytes(context_parent_id),
+                    }
+                    for state_id, context_id, context_user_id, context_parent_id in states
+                ],
+            )
+        # If there is more work to do return False
+        # so that we can be called again
+        is_done = not states
+
+    if is_done:
+        _drop_index(session_maker, "states", "ix_states_context_id")
+
+    _LOGGER.debug("Migrating states context_ids to binary format: done=%s", is_done)
+    return is_done
+
+
+@retryable_database_job("migrate events context_ids to binary format")
+def migrate_events_context_ids(instance: Recorder) -> bool:
+    """Migrate events context_ids to use binary format."""
     _to_bytes = _context_id_to_bytes
     session_maker = instance.get_session
     _LOGGER.debug("Migrating context_ids to binary format")
@@ -1323,34 +1358,18 @@ def migrate_context_ids(instance: Recorder) -> bool:
                     for event_id, context_id, context_user_id, context_parent_id in events
                 ],
             )
-        if states := session.execute(find_states_context_ids_to_migrate()).all():
-            session.execute(
-                update(States),
-                [
-                    {
-                        "state_id": state_id,
-                        "context_id": None,
-                        "context_id_bin": _to_bytes(context_id) or _EMPTY_CONTEXT_ID,
-                        "context_user_id": None,
-                        "context_user_id_bin": _to_bytes(context_user_id),
-                        "context_parent_id": None,
-                        "context_parent_id_bin": _to_bytes(context_parent_id),
-                    }
-                    for state_id, context_id, context_user_id, context_parent_id in states
-                ],
-            )
         # If there is more work to do return False
         # so that we can be called again
-        is_done = not (events or states)
+        is_done = not events
 
     if is_done:
         _drop_index(session_maker, "events", "ix_events_context_id")
-        _drop_index(session_maker, "states", "ix_states_context_id")
 
-    _LOGGER.debug("Migrating context_ids to binary format: done=%s", is_done)
+    _LOGGER.debug("Migrating events context_ids to binary format: done=%s", is_done)
     return is_done
 
 
+@retryable_database_job("migrate events event_types to event_type_ids")
 def migrate_event_type_ids(instance: Recorder) -> bool:
     """Migrate event_type to event_type_ids."""
     session_maker = instance.get_session
@@ -1407,6 +1426,7 @@ def migrate_event_type_ids(instance: Recorder) -> bool:
     return is_done
 
 
+@retryable_database_job("migrate states entity_ids to states_meta")
 def migrate_entity_ids(instance: Recorder) -> bool:
     """Migrate entity_ids to states_meta.
 
@@ -1468,6 +1488,7 @@ def migrate_entity_ids(instance: Recorder) -> bool:
     return is_done
 
 
+@retryable_database_job("post migrate states entity_ids to states_meta")
 def post_migrate_entity_ids(instance: Recorder) -> bool:
     """Remove old entity_id strings from states.
 
