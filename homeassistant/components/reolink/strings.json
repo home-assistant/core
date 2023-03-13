@@ -46,6 +46,10 @@
     "webhook_url": {
       "title": "Reolink webhook URL unreachable",
       "description": "The current (local) \"Home Assistant URL\" `{base_url}` is not reachable, please configure a (local) HTTP address under \"Home Assistant URL\" in the [network settings]({network_link}) that points to Home Assistant. For example `http://192.168.1.10:8123` where `192.168.1.10` is the IP of the Home Assistant device"
+    },
+    "enable_port": {
+      "title": "Reolink port not enabled",
+      "description": "Failed to automatically enable {ports}port(s) on {name}. Use the [Reolink client]({info_link}) to manually set it to ON"
     }
   },
   "entity": {

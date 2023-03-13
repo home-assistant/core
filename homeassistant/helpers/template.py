@@ -14,6 +14,7 @@ import json
 import logging
 import math
 from operator import attrgetter, contains
+import pathlib
 import random
 import re
 import statistics
@@ -73,6 +74,7 @@ from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.thread import ThreadWithException
 
 from . import area_registry, device_registry, entity_registry, location as loc_helper
+from .singleton import singleton
 from .typing import TemplateVarsType
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -85,6 +87,7 @@ _RENDER_INFO = "template.render_info"
 _ENVIRONMENT = "template.environment"
 _ENVIRONMENT_LIMITED = "template.environment_limited"
 _ENVIRONMENT_STRICT = "template.environment_strict"
+_HASS_LOADER = "template.hass_loader"
 
 _RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{|\{#")
 # Match "simple" ints and floats. -1.0, 1, +5, 5.0
@@ -119,6 +122,8 @@ template_cv: ContextVar[tuple[str, str] | None] = ContextVar(
 
 CACHED_TEMPLATE_STATES = 512
 EVAL_CACHE_SIZE = 512
+
+MAX_CUSTOM_JINJA_SIZE = 5 * 1024 * 1024
 
 
 @bind_hass
@@ -2056,6 +2061,60 @@ class LoggingUndefined(jinja2.Undefined):
         return super().__bool__()
 
 
+async def async_load_custom_jinja(hass: HomeAssistant) -> None:
+    """Load all custom jinja files under 5MiB into memory."""
+    return await hass.async_add_executor_job(_load_custom_jinja, hass)
+
+
+def _load_custom_jinja(hass: HomeAssistant) -> None:
+    result = {}
+    jinja_path = hass.config.path("custom_jinja")
+    all_files = [
+        item
+        for item in pathlib.Path(jinja_path).rglob("*.jinja")
+        if item.is_file() and item.stat().st_size <= MAX_CUSTOM_JINJA_SIZE
+    ]
+    for file in all_files:
+        content = file.read_text()
+        path = str(file.relative_to(jinja_path))
+        result[path] = content
+
+    _get_hass_loader(hass).sources = result
+
+
+@singleton(_HASS_LOADER)
+def _get_hass_loader(hass: HomeAssistant) -> HassLoader:
+    return HassLoader({})
+
+
+class HassLoader(jinja2.BaseLoader):
+    """An in-memory jinja loader that keeps track of templates that need to be reloaded."""
+
+    def __init__(self, sources: dict[str, str]) -> None:
+        """Initialize an empty HassLoader."""
+        self._sources = sources
+        self._reload = 0
+
+    @property
+    def sources(self) -> dict[str, str]:
+        """Map filename to jinja source."""
+        return self._sources
+
+    @sources.setter
+    def sources(self, value: dict[str, str]) -> None:
+        self._sources = value
+        self._reload += 1
+
+    def get_source(
+        self, environment: jinja2.Environment, template: str
+    ) -> tuple[str, str | None, Callable[[], bool] | None]:
+        """Get in-memory sources."""
+        if template not in self._sources:
+            raise jinja2.TemplateNotFound(template)
+        cur_reload = self._reload
+        return self._sources[template], template, lambda: cur_reload == self._reload
+
+
 class TemplateEnvironment(ImmutableSandboxedEnvironment):
     """The Home Assistant template environment."""
 
@@ -2158,6 +2217,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         if hass is None:
             return
+
+        # This environment has access to hass, attach its loader to enable imports.
+        self.loader = _get_hass_loader(hass)
 
         # We mark these as a context functions to ensure they get
         # evaluated fresh with every execution, rather than executed

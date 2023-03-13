@@ -222,7 +222,7 @@ aiopurpleair==2022.12.1
 aiopvapi==2.0.4
 
 # homeassistant.components.pvpc_hourly_pricing
-aiopvpc==4.0.1
+aiopvpc==4.1.0
 
 # homeassistant.components.lidarr
 # homeassistant.components.radarr
@@ -550,7 +550,7 @@ fivem-api==0.1.2
 fjaraskupan==2.2.0
 
 # homeassistant.components.flipr
-flipr-api==1.4.4
+flipr-api==1.5.0
 
 # homeassistant.components.flux_led
 flux_led==0.28.35
@@ -1435,7 +1435,7 @@ pysmartapp==0.3.3
 pysmartthings==0.7.6
 
 # homeassistant.components.edl21
-pysml==0.0.8
+pysml==0.0.9
 
 # homeassistant.components.snmp
 pysnmplib==5.0.21
@@ -1594,13 +1594,13 @@ regenmaschine==2022.11.0
 renault-api==0.1.12
 
 # homeassistant.components.reolink
-reolink-aio==0.5.3
+reolink-aio==0.5.4
 
 # homeassistant.components.python_script
 restrictedpython==6.0
 
 # homeassistant.components.rflink
-rflink==0.0.63
+rflink==0.0.65
 
 # homeassistant.components.ring
 ring_doorbell==0.7.2
@@ -1785,7 +1785,7 @@ toonapi==0.2.1
 total_connect_client==2023.2
 
 # homeassistant.components.tplink_omada
-tplink-omada-client==1.1.0
+tplink-omada-client==1.1.3
 
 # homeassistant.components.transmission
 transmission-rpc==3.4.0
