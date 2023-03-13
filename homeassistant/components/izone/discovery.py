@@ -26,7 +26,7 @@ class DiscoveryService(pizone.Listener):
         """Initialise discovery service."""
         super().__init__()
         self.hass = hass
-        self.pi_disco = None  # type: pizone.DiscoveryService | None
+        self.pi_disco: pizone.DiscoveryService | None = None
 
     # Listener interface
     def controller_discovered(self, ctrl: pizone.Controller) -> None:
