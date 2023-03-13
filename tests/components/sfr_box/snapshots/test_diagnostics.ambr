@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entry_diagnostics
+# name: test_entry_diagnostics[adsl]
   dict({
     'data': dict({
       'dsl': dict({

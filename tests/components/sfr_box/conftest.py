@@ -79,10 +79,17 @@ def ftth_get_info() -> Generator[FtthInfo, None, None]:
         yield info
 
 
+@pytest.fixture(params=["adsl"])
+def net_infra(request: pytest.FixtureRequest) -> str:
+    """Fixture to parametrize net_infra in SFRBox.system_get_info."""
+    return request.param
+
+
 @pytest.fixture
-def system_get_info() -> Generator[SystemInfo, None, None]:
+def system_get_info(net_infra: str) -> Generator[SystemInfo, None, None]:
     """Fixture for SFRBox.system_get_info."""
     info = SystemInfo(**json.loads(load_fixture("system_getInfo.json", DOMAIN)))
+    info.net_infra = net_infra
     with patch(
         "homeassistant.components.sfr_box.coordinator.SFRBox.system_get_info",
         return_value=info,

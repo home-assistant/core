@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_buttons
+# name: test_buttons[adsl]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
@@ -28,7 +28,7 @@
     }),
   ])
 # ---
-# name: test_buttons.1
+# name: test_buttons[adsl].1
   list([
     EntityRegistryEntrySnapshot({
       'aliases': set({
@@ -60,7 +60,7 @@
     }),
   ])
 # ---
-# name: test_buttons[button.sfr_box_reboot]
+# name: test_buttons[adsl][button.sfr_box_reboot]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'restart',

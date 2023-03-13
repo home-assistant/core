@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_binary_sensors
+# name: test_binary_sensors[adsl]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
@@ -28,7 +28,7 @@
     }),
   ])
 # ---
-# name: test_binary_sensors.1
+# name: test_binary_sensors[adsl].1
   list([
     EntityRegistryEntrySnapshot({
       'aliases': set({
@@ -60,7 +60,7 @@
     }),
   ])
 # ---
-# name: test_binary_sensors[binary_sensor.sfr_box_dsl_status]
+# name: test_binary_sensors[adsl][binary_sensor.sfr_box_dsl_status]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',

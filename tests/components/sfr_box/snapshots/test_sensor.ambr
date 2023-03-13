@@ -1,32 +1,34 @@
 # serializer version: 1
-# name: test_sensors
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': 'http://192.168.0.1',
-    'connections': set({
+# name: test_sensors[adsl]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': 'http://192.168.0.1',
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'sfr_box',
+          'e4:5d:51:00:11:22',
+        ),
+      }),
+      'is_new': False,
+      'manufacturer': None,
+      'model': 'NB6VAC-FXC-r0',
+      'name': 'SFR Box',
+      'name_by_user': None,
+      'suggested_area': None,
+      'sw_version': 'NB6VAC-MAIN-R4.0.44k',
+      'via_device_id': None,
     }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'sfr_box',
-        'e4:5d:51:00:11:22',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': None,
-    'model': 'NB6VAC-FXC-r0',
-    'name': 'SFR Box',
-    'name_by_user': None,
-    'suggested_area': None,
-    'sw_version': 'NB6VAC-MAIN-R4.0.44k',
-    'via_device_id': None,
-  })
+  ])
 # ---
-# name: test_sensors.1
+# name: test_sensors[adsl].1
   list([
     EntityRegistryEntrySnapshot({
       'aliases': set({
@@ -463,7 +465,7 @@
     }),
   ])
 # ---
-# name: test_sensors[sensor.sfr_box_dsl_attenuation_down]
+# name: test_sensors[adsl][sensor.sfr_box_dsl_attenuation_down]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
@@ -478,7 +480,7 @@
     'state': '28.5',
   })
 # ---
-# name: test_sensors[sensor.sfr_box_dsl_attenuation_up]
+# name: test_sensors[adsl][sensor.sfr_box_dsl_attenuation_up]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
@@ -493,7 +495,7 @@
     'state': '20.8',
   })
 # ---
-# name: test_sensors[sensor.sfr_box_dsl_counter]
+# name: test_sensors[adsl][sensor.sfr_box_dsl_counter]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'SFR Box DSL counter',
@@ -505,7 +507,7 @@
     'state': '16',
   })
 # ---
-# name: test_sensors[sensor.sfr_box_dsl_crc]
+# name: test_sensors[adsl][sensor.sfr_box_dsl_crc]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'SFR Box DSL CRC',
@@ -517,7 +519,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[sensor.sfr_box_dsl_line_mode]
+# name: test_sensors[adsl][sensor.sfr_box_dsl_line_mode]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'SFR Box DSL line mode',
@@ -529,7 +531,7 @@
     'state': 'ADSL2+',
   })
 # ---
-# name: test_sensors[sensor.sfr_box_dsl_line_status]
+# name: test_sensors[adsl][sensor.sfr_box_dsl_line_status]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -550,7 +552,7 @@
     'state': 'no_defect',
   })
 # ---
-# name: test_sensors[sensor.sfr_box_dsl_noise_down]
+# name: test_sensors[adsl][sensor.sfr_box_dsl_noise_down]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
@@ -565,7 +567,7 @@
     'state': '5.8',
   })
 # ---
-# name: test_sensors[sensor.sfr_box_dsl_noise_up]
+# name: test_sensors[adsl][sensor.sfr_box_dsl_noise_up]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
@@ -580,7 +582,7 @@
     'state': '6.0',
   })
 # ---
-# name: test_sensors[sensor.sfr_box_dsl_rate_down]
+# name: test_sensors[adsl][sensor.sfr_box_dsl_rate_down]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_rate',
@@ -595,7 +597,7 @@
     'state': '5549',
   })
 # ---
-# name: test_sensors[sensor.sfr_box_dsl_rate_up]
+# name: test_sensors[adsl][sensor.sfr_box_dsl_rate_up]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_rate',
@@ -610,7 +612,7 @@
     'state': '187',
   })
 # ---
-# name: test_sensors[sensor.sfr_box_dsl_training]
+# name: test_sensors[adsl][sensor.sfr_box_dsl_training]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -635,7 +637,7 @@
     'state': 'showtime',
   })
 # ---
-# name: test_sensors[sensor.sfr_box_network_infrastructure]
+# name: test_sensors[adsl][sensor.sfr_box_network_infrastructure]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -654,7 +656,7 @@
     'state': 'adsl',
   })
 # ---
-# name: test_sensors[sensor.sfr_box_temperature]
+# name: test_sensors[adsl][sensor.sfr_box_temperature]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -668,7 +670,7 @@
     'state': '27.56',
   })
 # ---
-# name: test_sensors[sensor.sfr_box_voltage]
+# name: test_sensors[adsl][sensor.sfr_box_voltage]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
