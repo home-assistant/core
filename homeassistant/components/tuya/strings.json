@@ -127,7 +127,7 @@
         "name": "Floodlight,"
       },
       "indicator_light,": {
-        "name": "Indicator Light,"
+        "name": "Indicator light,"
       },
       "light,": {
         "name": "Light,"
@@ -474,7 +474,7 @@
         "name": "Cleaning area"
       },
       "cleaning_area_total": {
-        "name": "Total Cleaning Area"
+        "name": "Total cleaning area"
       },
       "cleaning_time": {
         "name": "Cleaning time"
@@ -642,22 +642,22 @@
         "name": "Anion"
       },
       "battery_lock": {
-        "name": "Battery Lock"
+        "name": "Battery lock"
       },
       "child_lock": {
-        "name": "Child Lock"
+        "name": "Child lock"
       },
       "cry_detection": {
-        "name": "Cry Detection"
+        "name": "Cry detection"
       },
       "disinfection": {
         "name": "Disinfection"
       },
       "do_not_disturb": {
-        "name": "Do Not Disturb"
+        "name": "Do not disturb"
       },
       "energy_saving": {
-        "name": "Energy Saving"
+        "name": "Energy saving"
       },
       "filter_reset": {
         "name": "Filter reset"
@@ -666,7 +666,7 @@
         "name": "Flip"
       },
       "heat_preservation": {
-        "name": "Heat Preservation"
+        "name": "Heat preservation"
       },
       "humidification": {
         "name": "Humidification"
@@ -675,28 +675,28 @@
         "name": "Ionizer"
       },
       "motion_alarm": {
-        "name": "Motion Alarm"
+        "name": "Motion alarm"
       },
       "motion_recording": {
-        "name": "Motion Recording"
+        "name": "Motion recording"
       },
       "motion_tracking": {
-        "name": "Motion Tracking"
+        "name": "Motion tracking"
       },
       "mute_voice": {
-        "name": "Mute Voice"
+        "name": "Mute voice"
       },
       "mute": {
         "name": "Mute"
       },
       "natural_wind": {
-        "name": "Natural Wind"
+        "name": "Natural wind"
       },
       "open_window_detection": {
-        "name": "Open Window Detection"
+        "name": "Open window detection"
       },
       "oxygen_bar": {
-        "name": "Oxygen Bar"
+        "name": "Oxygen bar"
       },
       "plug": {
         "name": "Plug"
@@ -705,7 +705,7 @@
         "name": "Power"
       },
       "privacy_mode": {
-        "name": "Privacy Mode"
+        "name": "Privacy mode"
       },
       "radio": {
         "name": "Radio"
@@ -717,13 +717,13 @@
         "name": "Reverse"
       },
       "sleep_aid": {
-        "name": "Sleep Aid"
+        "name": "Sleep aid"
       },
       "sleep": {
         "name": "Sleep"
       },
       "slow_feed": {
-        "name": "Slow Feed"
+        "name": "Slow feed"
       },
       "socket_1": {
         "name": "Socket 1"
@@ -747,7 +747,7 @@
         "name": "Socket"
       },
       "soud_detection": {
-        "name": "Sound Detection"
+        "name": "Sound detection"
       },
       "sound": {
         "name": "Sound"
@@ -789,7 +789,7 @@
         "name": "Switch 8"
       },
       "time_watermark": {
-        "name": "Time Watermark"
+        "name": "Time watermark"
       },
       "usb_1": {
         "name": "USB 1"
@@ -810,10 +810,10 @@
         "name": "USB 6"
       },
       "uv_sterilization": {
-        "name": "UV Sterilization"
+        "name": "UV sterilization"
       },
       "video_recording": {
-        "name": "Video Recording"
+        "name": "Video recording"
       },
       "voice": {
         "name": "Voice"
@@ -828,7 +828,7 @@
         "name": "Water"
       },
       "wide_dynamic_range": {
-        "name": "Wide Dynamic Range"
+        "name": "Wide dynamic range"
       }
     }
   }

@@ -227,7 +227,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
         ),
         TuyaLightEntityDescription(
             key=DPCode.BASIC_INDICATOR,
-            name="Indicator Light",
+            name="Indicator light",
             entity_category=EntityCategory.CONFIG,
             translation_key="indicator_light",
         ),
