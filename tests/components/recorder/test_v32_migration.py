@@ -7,7 +7,7 @@ import sys
 from unittest.mock import patch
 
 import pytest
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import Session
 
 from homeassistant.components import recorder
@@ -178,6 +178,18 @@ async def test_migrate_times(caplog: pytest.LogCaptureFixture, tmpdir) -> None:
     assert len(states_result) == 1
     assert states_result[0].last_changed_ts == one_second_past_timestamp
     assert states_result[0].last_updated_ts == now_timestamp
+
+    def _get_events_index_names():
+        with session_scope(hass=hass) as session:
+            return inspect(session.connection()).get_indexes("events")
+
+    indexes = await recorder.get_instance(hass).async_add_executor_job(
+        _get_events_index_names
+    )
+    index_names = {index["name"] for index in indexes}
+
+    assert "ix_events_context_id_bin" in index_names
+    assert "ix_events_context_id" not in index_names
 
     await hass.async_stop()
     dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
