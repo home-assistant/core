@@ -18,6 +18,207 @@
     }
   },
   "entity": {
+    "alarm_control_panel": {
+      "alarm": {
+        "name": "Alarm"
+      }
+    },
+    "binary_sensor": {
+      "carbon_dioxide": {
+        "name": "Carbon dioxide"
+      },
+      "carbon_monoxide": {
+        "name": "Carbon monoxide"
+      },
+      "door": {
+        "name": "Door"
+      },
+      "drop": {
+        "name": "Drop"
+      },
+      "Formaldehyde": {
+        "name": "Feeding"
+      },
+      "formaldehyde": {
+        "name": "Formaldehyde"
+      },
+      "gas": {
+        "name": "Gas"
+      },
+      "methane": {
+        "name": "Methane"
+      },
+      "particulate_matter_2_5_um": {
+        "name": "Particulate matter 2.5 µm"
+      },
+      "pressure": {
+        "name": "Pressure"
+      },
+      "smoke": {
+        "name": "Smoke"
+      },
+      "tamper": {
+        "name": "Tamper"
+      },
+      "tilt": {
+        "name": "Tilt"
+      },
+      "vibration": {
+        "name": "Vibration"
+      },
+      "volatile_organic_compound": {
+        "name": "Volatile organic compound"
+      },
+      "water_leak": {
+        "name": "Water leak"
+      },
+      "window": {
+        "name": "Window"
+      }
+    },
+    "button": {
+      "snooze": {
+        "name": "Snooze"
+      },
+      "vaccum_reset_duster_cloth": {
+        "name": "Reset duster cloth"
+      },
+      "vaccum_reset_edge_brush": {
+        "name": "Reset edge brush"
+      },
+      "vaccum_reset_filter": {
+        "name": "Reset filter"
+      },
+      "vaccum_reset_map": {
+        "name": "Reset map"
+      },
+      "vaccum_reset_rool_brush": {
+        "name": "Reset roll brush"
+      }
+    },
+    "cover": {
+      "blind": {
+        "name": "Blind"
+      },
+      "curtain": {
+        "name": "Curtain"
+      },
+      "curtain_2": {
+        "name": "Curtain 2"
+      },
+      "curtain_3": {
+        "name": "Curtain 3"
+      },
+      "door": {
+        "name": "Door"
+      },
+      "door_1": {
+        "name": "Door 1"
+      },
+      "door_2": {
+        "name": "Door 2"
+      }
+    },
+    "light": {
+      "backlight,": {
+        "name": "Backlight,"
+      },
+      "floodlight,": {
+        "name": "Floodlight,"
+      },
+      "indicator_light,": {
+        "name": "Indicator Light,"
+      },
+      "light,": {
+        "name": "Light,"
+      },
+      "light_1,": {
+        "name": "Light,"
+      },
+      "light_2,": {
+        "name": "Light 2,"
+      },
+      "light_3,": {
+        "name": "Light 3,"
+      },
+      "night_light,": {
+        "name": "Night light,"
+      }
+    },
+    "number": {
+      "cloud_recipe,": {
+        "name": "Cloud recipe"
+      },
+      "cook_temperature,": {
+        "name": "Cook temperature"
+      },
+      "cook_time,": {
+        "name": "Cook time"
+      },
+      "far_detection,": {
+        "name": "Far detection"
+      },
+      "feed,": {
+        "name": "Feed"
+      },
+      "heat_preservation_time,": {
+        "name": "Heat preservation time"
+      },
+      "maximum_brightness,": {
+        "name": "Maximum brightness"
+      },
+      "maximum_brightness_2,": {
+        "name": "Maximum brightness 2"
+      },
+      "maximum_brightness_3,": {
+        "name": "Maximum brightness 3"
+      },
+      "minimum_brightness,": {
+        "name": "Minimum brightness"
+      },
+      "minimum_brightness_2,": {
+        "name": "Minimum brightness 2"
+      },
+      "minimum_brightness_3,": {
+        "name": "Minimum brightness 3"
+      },
+      "move_delay,": {
+        "name": "Down delay"
+      },
+      "move_down_perc,": {
+        "name": "Move down %"
+      },
+      "move_up_perc,": {
+        "name": "Move up %"
+      },
+      "near_detection,": {
+        "name": "Near detection"
+      },
+      "powder,": {
+        "name": "Powder"
+      },
+      "sensitivity,": {
+        "name": "Sensitivity"
+      },
+      "temperature,": {
+        "name": "Temperature"
+      },
+      "temperature_after_boiling,": {
+        "name": "Temperature after boiling"
+      },
+      "time,": {
+        "name": "Time"
+      },
+      "voice_times,": {
+        "name": "Voice times"
+      },
+      "volume,": {
+        "name": "Volume"
+      },
+      "water_level,": {
+        "name": "Water level"
+      }
+    },
     "select": {
       "basic_anti_flicker": {
         "name": "Anti-flicker",
@@ -35,11 +236,113 @@
           "2": "[%key:common::state::on%]"
         }
       },
+      "coffe_maker_concentration": {
+        "name": "Concentration"
+      },
+      "coffe_maker_cups": {
+        "name": "Cups"
+      },
+      "coffe_maker_material": {
+        "name": "Material"
+      },
+      "coffe_maker_mode": {
+        "name": "Mode"
+      },
+      "countdown": {
+        "name": "Countdown",
+        "state": {
+          "cancel": "Cancel",
+          "1h": "1 hour",
+          "2h": "2 hours",
+          "3h": "3 hours",
+          "4h": "4 hours",
+          "5h": "5 hours",
+          "6h": "6 hours"
+        }
+      },
+      "curtain_mode": {
+        "name": "Mode",
+        "state": {
+          "morning": "Morning",
+          "night": "Night"
+        }
+      },
+      "curtain_motor_mode": {
+        "name": "Motor mode",
+        "state": {
+          "forward": "Forward",
+          "back": "Back"
+        }
+      },
       "decibel_sensitivity": {
         "name": "Sound detection densitivit",
         "state": {
           "0": "Low sensitivity",
           "1": "High sensitivity"
+        }
+      },
+      "dehumidifier_target_humidity": {
+        "name": "Target humidity"
+      },
+      "fan_angle_horizontal": {
+        "name": "Horizontal swing flap angle",
+        "state": {
+          "30": "30°",
+          "60": "60°",
+          "90": "90°"
+        }
+      },
+      "fan_angle_vertical": {
+        "name": "Vertical swing flap angle",
+        "state": {
+          "30": "30°",
+          "60": "60°",
+          "90": "90°"
+        }
+      },
+      "fingerbot_mode": {
+        "name": "Mode",
+        "state": {
+          "click": "Push",
+          "switch": "Switch"
+        }
+      },
+      "heater_temperature_level": {
+        "name": "Temperature level"
+      },
+      "humidifier_spray_mode": {
+        "name": "Spray mode",
+        "state": {
+          "auto": "Auto",
+          "health": "Health",
+          "sleep": "Sleep",
+          "humidity": "Humidity",
+          "work": "Work"
+        }
+      },
+      "humidifier_level": {
+        "name": "Spraying level",
+        "state": {
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6",
+          "level_7": "Level 7",
+          "level_8": "Level 8",
+          "level_9": "Level 9",
+          "level_10": "Level 10"
+        }
+      },
+      "humidifier_moodlighting": {
+        "name": "Moodlighting",
+        "state": {
+          "1": "Mood 1",
+          "2": "Mood 2",
+          "3": "Mood 3",
+          "4": "Mood 4",
+          "5": "Mood 5"
         }
       },
       "ipc_work_mode": {
@@ -91,12 +394,11 @@
           "power_on": "[%key:common::state::on%]"
         }
       },
-      "fingerbot_mode": {
-        "name": "Mode",
-        "state": {
-          "click": "Push",
-          "switch": "Switch"
-        }
+      "siren_alarm": {
+        "name": "Volume"
+      },
+      "siren_brightness": {
+        "name": "Brightness"
       },
       "vacuum_cistern": {
         "name": "Water tank adjustment",
@@ -139,82 +441,8 @@
           "pick_zone": "Pick Zone"
         }
       },
-      "fan_angle_vertical": {
-        "name": "Vertical swing flap angle",
-        "state": {
-          "30": "30°",
-          "60": "60°",
-          "90": "90°"
-        }
-      },
-      "fan_angle_horizontal": {
-        "name": "Horizontal swing flap angle",
-        "state": {
-          "30": "30°",
-          "60": "60°",
-          "90": "90°"
-        }
-      },
-      "curtain_mode": {
-        "name": "Mode",
-        "state": {
-          "morning": "Morning",
-          "night": "Night"
-        }
-      },
-      "curtain_motor_mode": {
-        "name": "Motor mode",
-        "state": {
-          "forward": "Forward",
-          "back": "Back"
-        }
-      },
-      "countdown": {
-        "name": "Countdown",
-        "state": {
-          "cancel": "Cancel",
-          "1h": "1 hour",
-          "2h": "2 hours",
-          "3h": "3 hours",
-          "4h": "4 hours",
-          "5h": "5 hours",
-          "6h": "6 hours"
-        }
-      },
-      "humidifier_spray_mode": {
-        "name": "Spray mode",
-        "state": {
-          "auto": "Auto",
-          "health": "Health",
-          "sleep": "Sleep",
-          "humidity": "Humidity",
-          "work": "Work"
-        }
-      },
-      "humidifier_level": {
-        "name": "Spraying level",
-        "state": {
-          "level_1": "Level 1",
-          "level_2": "Level 2",
-          "level_3": "Level 3",
-          "level_4": "Level 4",
-          "level_5": "Level 5",
-          "level_6": "Level 6",
-          "level_7": "Level 7",
-          "level_8": "Level 8",
-          "level_9": "Level 9",
-          "level_10": "Level 10"
-        }
-      },
-      "humidifier_moodlighting": {
-        "name": "Moodlighting",
-        "state": {
-          "1": "Mood 1",
-          "2": "Mood 2",
-          "3": "Mood 3",
-          "4": "Mood 4",
-          "5": "Mood 5"
-        }
+      "volume": {
+        "name": "Volume"
       }
     },
     "sensor": {
@@ -390,6 +618,217 @@
       },
       "water_level": {
         "name": "Water level"
+      }
+    },
+    "siren": {
+      "siren": {
+        "name": "Siren"
+      }
+    },
+    "switch": {
+      "alarm_1": {
+        "name": "Alarm 1"
+      },
+      "alarm_2": {
+        "name": "Alarm 2"
+      },
+      "alarm_3": {
+        "name": "Alarm 3"
+      },
+      "alarm_4": {
+        "name": "Alarm 4"
+      },
+      "anion": {
+        "name": "Anion"
+      },
+      "battery_lock": {
+        "name": "Battery Lock"
+      },
+      "child_lock": {
+        "name": "Child Lock"
+      },
+      "cry_detection": {
+        "name": "Cry Detection"
+      },
+      "disinfection": {
+        "name": "Disinfection"
+      },
+      "do_not_disturb": {
+        "name": "Do Not Disturb"
+      },
+      "energy_saving": {
+        "name": "Energy Saving"
+      },
+      "filter_reset": {
+        "name": "Filter reset"
+      },
+      "flip": {
+        "name": "Flip"
+      },
+      "heat_preservation": {
+        "name": "Heat Preservation"
+      },
+      "humidification": {
+        "name": "Humidification"
+      },
+      "ionizer": {
+        "name": "Ionizer"
+      },
+      "motion_alarm": {
+        "name": "Motion Alarm"
+      },
+      "motion_recording": {
+        "name": "Motion Recording"
+      },
+      "motion_tracking": {
+        "name": "Motion Tracking"
+      },
+      "mute_voice": {
+        "name": "Mute Voice"
+      },
+      "mute": {
+        "name": "Mute"
+      },
+      "natural_wind": {
+        "name": "Natural Wind"
+      },
+      "open_window_detection": {
+        "name": "Open Window Detection"
+      },
+      "oxygen_bar": {
+        "name": "Oxygen Bar"
+      },
+      "plug": {
+        "name": "Plug"
+      },
+      "power": {
+        "name": "Power"
+      },
+      "privacy_mode": {
+        "name": "Privacy Mode"
+      },
+      "radio": {
+        "name": "Radio"
+      },
+      "reset_filter_cartridge": {
+        "name": "Filter cartridge reset"
+      },
+      "reverse": {
+        "name": "Reverse"
+      },
+      "sleep_aid": {
+        "name": "Sleep Aid"
+      },
+      "sleep": {
+        "name": "Sleep"
+      },
+      "slow_feed": {
+        "name": "Slow Feed"
+      },
+      "socket_1": {
+        "name": "Socket 1"
+      },
+      "socket_2": {
+        "name": "Socket 2"
+      },
+      "socket_3": {
+        "name": "Socket 3"
+      },
+      "socket_4": {
+        "name": "Socket 4"
+      },
+      "socket_5": {
+        "name": "Socket 5"
+      },
+      "socket_6": {
+        "name": "Socket 6"
+      },
+      "socket": {
+        "name": "Socket"
+      },
+      "soud_detection": {
+        "name": "Sound Detection"
+      },
+      "sound": {
+        "name": "Sound"
+      },
+      "spray": {
+        "name": "Spray"
+      },
+      "start": {
+        "name": "Start"
+      },
+      "sterilization": {
+        "name": "Sterilization"
+      },
+      "switch": {
+        "name": "Switch"
+      },
+      "swtich_1": {
+        "name": "Switch 1"
+      },
+      "swtich_2": {
+        "name": "Switch 2"
+      },
+      "swtich_3": {
+        "name": "Switch 3"
+      },
+      "swtich_4": {
+        "name": "Switch 4"
+      },
+      "swtich_5": {
+        "name": "Switch 5"
+      },
+      "swtich_6": {
+        "name": "Switch 6"
+      },
+      "swtich_7": {
+        "name": "Switch 7"
+      },
+      "swtich_8": {
+        "name": "Switch 8"
+      },
+      "time_watermark": {
+        "name": "Time Watermark"
+      },
+      "usb_1": {
+        "name": "USB 1"
+      },
+      "usb_2": {
+        "name": "USB 2"
+      },
+      "usb_3": {
+        "name": "USB 3"
+      },
+      "usb_4": {
+        "name": "USB 4"
+      },
+      "usb_5": {
+        "name": "USB 5"
+      },
+      "usb_6": {
+        "name": "USB 6"
+      },
+      "uv_sterilization": {
+        "name": "UV Sterilization"
+      },
+      "video_recording": {
+        "name": "Video Recording"
+      },
+      "voice": {
+        "name": "Voice"
+      },
+      "water_pump_reset": {
+        "name": "Water pump reset"
+      },
+      "water_reset_days_usage": {
+        "name": "Reset of water usage days"
+      },
+      "water": {
+        "name": "Water"
+      },
+      "wide_dynamic_range": {
+        "name": "Wide Dynamic Range"
       }
     }
   }

@@ -25,7 +25,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             key=DPCode.ALARM_VOLUME,
             name="Volume",
             entity_category=EntityCategory.CONFIG,
-            translation_key="",
+            translation_key="volume",
         ),
     ),
     # Coffee maker
