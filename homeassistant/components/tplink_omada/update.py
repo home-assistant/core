@@ -1,7 +1,6 @@
-"""Support for TPLink Omada device toggle options."""
+"""Support for TPLink Omada device firmware updates."""
 from __future__ import annotations
 
-import logging
 from typing import Any, NamedTuple
 
 from tplink_omada_client.devices import OmadaFirmwareUpdate, OmadaListDevice
@@ -17,8 +16,6 @@ from .const import DOMAIN
 from .controller import OmadaSiteController
 from .coordinator import OmadaCoordinator
 from .entity import OmadaDeviceEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class FirmwareUpdateStatus(NamedTuple):
@@ -67,11 +64,7 @@ async def async_setup_entry(
         poll_delay=6 * 60 * 60,
     )
 
-    entities: list = []
-    for device in devices:
-        entities.append(OmadaDeviceUpdate(coordinator, device))
-
-    async_add_entities(entities)
+    async_add_entities(OmadaDeviceUpdate(coordinator, device) for device in devices)
     await coordinator.async_request_refresh()
 
 
@@ -86,7 +79,8 @@ class OmadaDeviceUpdate(
         | UpdateEntityFeature.PROGRESS
         | UpdateEntityFeature.RELEASE_NOTES
     )
-    _firmware_update: OmadaFirmwareUpdate = None
+    _attr_has_entity_name = True
+    _attr_name = "Firmware update"
 
     def __init__(
         self,
@@ -97,53 +91,44 @@ class OmadaDeviceUpdate(
         super().__init__(coordinator, device)
 
         self._mac = device.mac
-        self._device = device
         self._omada_client = coordinator.omada_client
 
         self._attr_unique_id = f"{device.mac}_firmware"
-        self._attr_has_entity_name = True
-        self._attr_name = "Firmware Update"
-        self._refresh_state()
-
-    def _refresh_state(self) -> None:
-        if self._firmware_update and self._device.need_upgrade:
-            self._attr_installed_version = self._firmware_update.current_version
-            self._attr_latest_version = self._firmware_update.latest_version
-        else:
-            self._attr_installed_version = self._device.firmware_version
-            self._attr_latest_version = self._device.firmware_version
-        self._attr_in_progress = self._device.fw_download
-
-        if self._attr_in_progress:
-            # While firmware update is in progress, poll more frequently
-            async_call_later(self.hass, 60, self._request_refresh)
-
-    async def _request_refresh(self, _now: Any) -> None:
-        await self.coordinator.async_request_refresh()
 
     def release_notes(self) -> str | None:
         """Get the release notes for the latest update."""
-        if self._firmware_update:
-            return str(self._firmware_update.release_notes)
-        return ""
+        status = self.coordinator.data[self._mac]
+        if status.firmware:
+            return status.firmware.release_notes
+        return None
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install a firmware update."""
-        if self._firmware_update and (
-            version is None or self._firmware_update.latest_version == version
-        ):
-            await self._omada_client.start_firmware_upgrade(self._device)
-            await self.coordinator.async_request_refresh()
-        else:
-            _LOGGER.error("Firmware upgrade is not available for %s", self._device.name)
+        await self._omada_client.start_firmware_upgrade(
+            self.coordinator.data[self._mac].device
+        )
+        await self.coordinator.async_request_refresh()
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         status = self.coordinator.data[self._mac]
-        self._device = status.device
-        self._firmware_update = status.firmware
-        self._refresh_state()
+
+        if status.firmware and status.device.need_upgrade:
+            self._attr_installed_version = status.firmware.current_version
+            self._attr_latest_version = status.firmware.latest_version
+        else:
+            self._attr_installed_version = status.device.firmware_version
+            self._attr_latest_version = status.device.firmware_version
+        self._attr_in_progress = status.device.fw_download
+
+        if self._attr_in_progress:
+            # While firmware update is in progress, poll more frequently
+            async def do_refresh(*_: Any) -> None:
+                await self.coordinator.async_request_refresh()
+
+            async_call_later(self.hass, 60, do_refresh)
+
         self.async_write_ha_state()
