@@ -15,15 +15,16 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 
-from .const import CONF_PROTOCOL, CONF_USE_HTTPS, DOMAIN
+from .const import CONF_PROTOCOL, CONF_USE_HTTPS, DOMAIN, CONF_HA_URL, CONF_CUSTOM_HA_URL
 from .exceptions import ReolinkException, UserNotAdmin
 from .host import ReolinkHost
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_PROTOCOL = "rtsp"
-DEFAULT_OPTIONS = {CONF_PROTOCOL: DEFAULT_PROTOCOL}
+DEFAULT_OPTIONS = {CONF_PROTOCOL: DEFAULT_PROTOCOL, CONF_CUSTOM_HA_URL: False}
 
 
 class ReolinkOptionsFlowHandler(config_entries.OptionsFlow):
@@ -33,12 +34,34 @@ class ReolinkOptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize ReolinkOptionsFlowHandler."""
         self.config_entry = config_entry
 
+    def get_ha_url(self) -> str:
+        """Get the Home Assistant URL from the network configuration"""
+        try:
+            ha_url = get_url(self.hass, prefer_external=False)
+        except NoURLAvailableError:
+            try:
+                ha_url = get_url(self.hass, prefer_external=True)
+            except NoURLAvailableError as err:
+                ha_url = ""
+        return ha_url
+
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the Reolink options."""
         if user_input is not None:
+            ha_url = user_input.get(CONF_HA_URL, "")
+            if ha_url != "" and ha_url != self.get_ha_url():
+                user_input[CONF_CUSTOM_HA_URL] = True
+            else:
+                user_input[CONF_CUSTOM_HA_URL] = False
+
             return self.async_create_entry(data=user_input)
+
+        if self.config_entry.options.get(CONF_CUSTOM_HA_URL, False):
+            ha_url = self.config_entry.options[CONF_HA_URL]
+        else:
+            ha_url = self.get_ha_url()
 
         return self.async_show_form(
             step_id="init",
@@ -48,6 +71,10 @@ class ReolinkOptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_PROTOCOL,
                         default=self.config_entry.options[CONF_PROTOCOL],
                     ): vol.In(["rtsp", "rtmp", "flv"]),
+                    vol.Optional(
+                        CONF_HA_URL,
+                        default=ha_url,
+                    ): str,
                 }
             ),
         )

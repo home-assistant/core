@@ -12,7 +12,7 @@ from reolink_aio.api import Host
 from reolink_aio.exceptions import ReolinkError, SubscriptionError
 
 from homeassistant.components import webhook
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_CUSTOM_HA_URL, CONF_HA_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import format_mac
@@ -39,6 +39,7 @@ class ReolinkHost:
     ) -> None:
         """Initialize Reolink Host. Could be either NVR, or Camera."""
         self._hass: HomeAssistant = hass
+        self._options = options
 
         self._clientsession: aiohttp.ClientSession | None = None
         self._unique_id: str = ""
@@ -259,17 +260,20 @@ class ReolinkHost:
             self._hass, DOMAIN, event_id, event_id, self.handle_webhook
         )
 
-        try:
-            base_url = get_url(self._hass, prefer_external=False)
-        except NoURLAvailableError:
+        if self._options.get(CONF_CUSTOM_HA_URL, False):
+            base_url = self._options[CONF_HA_URL]
+        else:
             try:
-                base_url = get_url(self._hass, prefer_external=True)
-            except NoURLAvailableError as err:
-                self.unregister_webhook()
-                raise ReolinkWebhookException(
-                    f"Error registering URL for webhook {event_id}: "
-                    "HomeAssistant URL is not available"
-                ) from err
+                base_url = get_url(self._hass, prefer_external=False)
+            except NoURLAvailableError:
+                try:
+                    base_url = get_url(self._hass, prefer_external=True)
+                except NoURLAvailableError as err:
+                    self.unregister_webhook()
+                    raise ReolinkWebhookException(
+                        f"Error registering URL for webhook {event_id}: "
+                        "HomeAssistant URL is not available"
+                    ) from err
 
         webhook_path = webhook.async_generate_path(event_id)
         self._webhook_url = f"{base_url}{webhook_path}"
