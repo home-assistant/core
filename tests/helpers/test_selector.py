@@ -842,11 +842,6 @@ def test_file_selector_schema(schema, valid_selections, invalid_selections) -> N
     ("schema", "valid_selections", "invalid_selections"),
     (
         (
-            {"label": "Blah"},
-            (None,),
-            (False, True, 0, 1, "abc", "def"),
-        ),
-        (
             {"value": True, "label": "Blah"},
             (True, 1),
             (None, False, 0, "abc", "def"),
@@ -886,8 +881,9 @@ def test_constant_selector_schema(schema, valid_selections, invalid_selections) 
 @pytest.mark.parametrize(
     "schema",
     (
+        {},  # Value is mandatory
         {"value": []},  # Value must be str, int or bool
-        {"label": 123},  # Label must be str
+        {"value": 123, "label": 123},  # Label must be str
     ),
 )
 def test_constant_selector_schema_error(schema) -> None:

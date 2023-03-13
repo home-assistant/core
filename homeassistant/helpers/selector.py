@@ -361,8 +361,9 @@ class ConfigEntrySelector(Selector[ConfigEntrySelectorConfig]):
 class ConstantSelectorConfig(TypedDict, total=False):
     """Class to represent a constant selector config."""
 
-    value: str | int | bool
     label: str
+    translation_key: str
+    value: str | int | bool
 
 
 @SELECTORS.register("constant")
@@ -373,8 +374,9 @@ class ConstantSelector(Selector[ConstantSelectorConfig]):
 
     CONFIG_SCHEMA = vol.Schema(
         {
-            vol.Optional("value"): vol.Any(str, int, bool),
             vol.Optional("label"): str,
+            vol.Optional("translation_key"): cv.string,
+            vol.Required("value"): vol.Any(str, int, bool),
         }
     )
 
@@ -384,8 +386,6 @@ class ConstantSelector(Selector[ConstantSelectorConfig]):
 
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
-        if "value" not in self.config:
-            return vol.Schema(None)(data)
         vol.Schema(self.config["value"])(data)
         return self.config["value"]
 
