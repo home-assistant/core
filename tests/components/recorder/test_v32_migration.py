@@ -86,6 +86,7 @@ async def test_migrate_times(caplog: pytest.LogCaptureFixture, tmpdir) -> None:
         EventOrigin.local,
         time_fired=now,
     )
+    number_of_migrations = 5
 
     with patch.object(recorder, "db_schema", old_db_schema), patch.object(
         recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
@@ -107,6 +108,8 @@ async def test_migrate_times(caplog: pytest.LogCaptureFixture, tmpdir) -> None:
         "homeassistant.components.recorder.Recorder._migrate_event_type_ids",
     ), patch(
         "homeassistant.components.recorder.Recorder._migrate_entity_ids",
+    ), patch(
+        "homeassistant.components.recorder.Recorder._post_migrate_entity_ids"
     ):
         hass = await async_test_home_assistant(asyncio.get_running_loop())
         recorder_helper.async_initialize_recorder(hass)
@@ -124,8 +127,10 @@ async def test_migrate_times(caplog: pytest.LogCaptureFixture, tmpdir) -> None:
 
         await recorder.get_instance(hass).async_add_executor_job(_add_data)
         await hass.async_block_till_done()
+        await recorder.get_instance(hass).async_block_till_done()
 
         await hass.async_stop()
+        await hass.async_block_till_done()
 
         dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
@@ -139,7 +144,8 @@ async def test_migrate_times(caplog: pytest.LogCaptureFixture, tmpdir) -> None:
 
     # We need to wait for all the migration tasks to complete
     # before we can check the database.
-    for _ in range(5):
+    for _ in range(number_of_migrations):
+        await recorder.get_instance(hass).async_block_till_done()
         await async_wait_recording_done(hass)
 
     def _get_test_data_from_db():

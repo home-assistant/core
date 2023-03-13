@@ -671,7 +671,6 @@ class Recorder(threading.Thread):
                 # Make sure we cleanly close the run if
                 # we restart before startup finishes
                 self._shutdown()
-                self._activate_and_set_db_ready()
                 return
 
         if not schema_status.valid:
