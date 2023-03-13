@@ -176,8 +176,8 @@ NUMBER_ENTITIES = (
         method=lambda api, ch, value: api.set_ai_sensitivity(ch, int(value), "dog_cat"),
     ),
     ReolinkNumberEntityDescription(
-        key="quick_reply_time",
-        name="Quick reply time",
+        key="auto_quick_reply_time",
+        name="Auto quick reply time",
         icon="mdi:message-reply-text-outline",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
