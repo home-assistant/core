@@ -45,7 +45,7 @@
     },
     "enable_port": {
       "title": "Reolink port not enabled",
-      "description": "Failed to automatically enable {ports}port(s) on {name}. Set it to ON [manually using the Reolink client]({info_link})"
+      "description": "Failed to automatically enable {ports}port(s) on {name}. Use the [Reolink client]({info_link}) to manually set it to ON"
     }
   },
   "entity": {
