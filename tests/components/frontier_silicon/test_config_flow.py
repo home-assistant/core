@@ -194,7 +194,10 @@ async def test_form_nondefault_pin(
     ],
 )
 async def test_form_nondefault_pin_invalid(
-    hass: HomeAssistant, friendly_name_error: Exception, result_error: str
+    hass: HomeAssistant,
+    friendly_name_error: Exception,
+    result_error: str,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test we get the proper errors when trying to validate an user-provided PIN."""
     result = await hass.config_entries.flow.async_init(
@@ -232,6 +235,20 @@ async def test_form_nondefault_pin_invalid(
     assert result2["step_id"] == "device_config"
     assert result3["errors"] == {"base": result_error}
 
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"],
+        {CONF_PIN: "4321"},
+    )
+    await hass.async_block_till_done()
+
+    assert result4["type"] == FlowResultType.CREATE_ENTRY
+    assert result4["title"] == "Name of the device"
+    assert result4["data"] == {
+        "webfsapi_url": "http://1.1.1.1:80/webfsapi",
+        "pin": "4321",
+    }
+    mock_setup_entry.assert_called_once()
+
 
 @pytest.mark.parametrize(
     ("webfsapi_endpoint_error", "result_error"),
@@ -241,9 +258,12 @@ async def test_form_nondefault_pin_invalid(
     ],
 )
 async def test_invalid_device_url(
-    hass: HomeAssistant, webfsapi_endpoint_error: Exception, result_error: str
+    hass: HomeAssistant,
+    webfsapi_endpoint_error: Exception,
+    result_error: str,
+    mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test we get the form."""
+    """Test flow when the user provides an invalid device IP/hostname."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -264,3 +284,17 @@ async def test_invalid_device_url(
     assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": result_error}
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {CONF_HOST: "1.1.1.1", CONF_PORT: 80},
+    )
+    await hass.async_block_till_done()
+
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "Name of the device"
+    assert result3["data"] == {
+        "webfsapi_url": "http://1.1.1.1:80/webfsapi",
+        "pin": "1234",
+    }
+    mock_setup_entry.assert_called_once()
