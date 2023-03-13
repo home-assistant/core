@@ -1443,6 +1443,26 @@ def test_if_state_exists(hass: HomeAssistant) -> None:
     assert tpl.async_render() == "exists"
 
 
+def test_is_hidden_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test is_hidden_entity method."""
+    hidden_entity = entity_registry.async_get_or_create(
+        "sensor", "mock", "hidden", hidden_by=er.RegistryEntryHider.USER
+    )
+    visible_entity = entity_registry.async_get_or_create("sensor", "mock", "visible")
+    assert template.Template(
+        f"{{{{ is_hidden_entity('{hidden_entity.entity_id}') }}}}",
+        hass,
+    ).async_render()
+
+    assert not template.Template(
+        f"{{{{ is_hidden_entity('{visible_entity.entity_id}') }}}}",
+        hass,
+    ).async_render()
+
+
 def test_is_state(hass: HomeAssistant) -> None:
     """Test is_state method."""
     hass.states.async_set("test.object", "available")
