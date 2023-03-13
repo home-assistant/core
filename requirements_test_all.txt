@@ -493,7 +493,7 @@ dynalite_devices==0.1.47
 eagle100==0.1.1
 
 # homeassistant.components.easyenergy
-easyenergy==0.1.2
+easyenergy==0.2.1
 
 # homeassistant.components.elgato
 elgato==4.0.1
