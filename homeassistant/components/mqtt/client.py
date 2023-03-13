@@ -314,11 +314,6 @@ class EnsureJobAfterCooldown:
         self._task: asyncio.Future | None = None
         self._timer: asyncio.TimerHandle | None = None
 
-    @property
-    def timeout(self) -> float:
-        """Return the current timeout."""
-        return self._timeout
-
     def set_timeout(self, timeout: float) -> None:
         """Set a new timeout period."""
         self._timeout = timeout
