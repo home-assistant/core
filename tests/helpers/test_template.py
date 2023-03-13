@@ -1060,6 +1060,10 @@ def test_mutables(hass: HomeAssistant) -> None:
             hass,
         ).async_render()
 
+    # Ensure that as_mutable raises an error when non-dicts/lists are passed
+    with pytest.raises(TemplateError):
+        template.Template("{{ 5 | as_mutable }}", hass).async_render()
+
 
 def test_average(hass: HomeAssistant) -> None:
     """Test the average filter."""
