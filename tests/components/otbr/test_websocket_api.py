@@ -154,7 +154,7 @@ async def test_create_network_no_entry(
     assert msg["error"]["code"] == "not_loaded"
 
 
-async def test_get_info_fetch_fails_1(
+async def test_create_network_fails_1(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     otbr_config_entry,
@@ -180,7 +180,7 @@ async def test_get_info_fetch_fails_1(
     assert msg["error"]["code"] == "set_enabled_failed"
 
 
-async def test_get_info_fetch_fails_2(
+async def test_create_network_fails_2(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     otbr_config_entry,
@@ -208,7 +208,7 @@ async def test_get_info_fetch_fails_2(
     assert msg["error"]["code"] == "create_active_dataset_failed"
 
 
-async def test_get_info_fetch_fails_3(
+async def test_create_network_fails_3(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     otbr_config_entry,
