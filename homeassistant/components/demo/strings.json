@@ -98,6 +98,7 @@
     },
     "sensor": {
       "thermostat_mode": {
+        "name": "Thermostat mode",
         "state": {
           "away": "Away",
           "comfort": "Comfort",

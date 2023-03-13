@@ -152,8 +152,11 @@ async def test_xiaomi_battery_voltage(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-async def test_xiaomi_HHCCJCY01(hass: HomeAssistant) -> None:
-    """This device has multiple advertisements before all sensors are visible. Test that this works."""
+async def test_xiaomi_hhccjcy01(hass: HomeAssistant) -> None:
+    """Test HHCCJCY01 multiple advertisements.
+
+    This device has multiple advertisements before all sensors are visible.
+    """
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="C4:7C:8D:6A:3E:7A",
@@ -230,8 +233,11 @@ async def test_xiaomi_HHCCJCY01(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-async def test_xiaomi_HHCCJCY01_not_connectable(hass: HomeAssistant) -> None:
-    """This device has multiple advertisements before all sensors are visible but not connectable."""
+async def test_xiaomi_hhccjcy01_not_connectable(hass: HomeAssistant) -> None:
+    """Test HHCCJCY01 when sensors are not connectable.
+
+    This device has multiple advertisements before all sensors are visible but not connectable.
+    """
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="C4:7C:8D:6A:3E:7A",
@@ -311,10 +317,14 @@ async def test_xiaomi_HHCCJCY01_not_connectable(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-async def test_xiaomi_HHCCJCY01_only_some_sources_connectable(
+async def test_xiaomi_hhccjcy01_only_some_sources_connectable(
     hass: HomeAssistant,
 ) -> None:
-    """This device has multiple advertisements before all sensors are visible and some sources are connectable."""
+    """Test HHCCJCY01 partial sources.
+
+    This device has multiple advertisements before all sensors are visible
+    and some sources are connectable.
+    """
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="C4:7C:8D:6A:3E:7A",
@@ -399,8 +409,12 @@ async def test_xiaomi_HHCCJCY01_only_some_sources_connectable(
     await hass.async_block_till_done()
 
 
-async def test_xiaomi_CGDK2(hass: HomeAssistant) -> None:
-    """This device has encrypion so we need to retrieve its bindkey from the configentry."""
+async def test_xiaomi_cgdk2_bind_key(hass: HomeAssistant) -> None:
+    """Test CGDK2 bind key.
+
+    This device has encryption so we need to retrieve its bind key
+    from the config entry.
+    """
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="58:2D:34:12:20:89",
@@ -436,8 +450,11 @@ async def test_xiaomi_CGDK2(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-async def test_hhcc_HHCCJCY10(hass: HomeAssistant) -> None:
-    """This device used a different UUID compared to the other Xiaomi sensors."""
+async def test_hhccjcy10_uuid(hass: HomeAssistant) -> None:
+    """Test HHCCJCY10 UUID.
+
+    This device uses a different UUID compared to the other Xiaomi sensors.
+    """
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="DC:23:4D:E5:5B:FC",

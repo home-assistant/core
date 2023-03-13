@@ -1,4 +1,4 @@
-"""This component encapsulates the NVR/camera API and subscription."""
+"""Module which encapsulates the NVR/camera API and subscription."""
 from __future__ import annotations
 
 import asyncio
@@ -109,23 +109,30 @@ class ReolinkHost:
                     enable_rtsp=enable_rtsp,
                 )
             except ReolinkError:
+                ports = ""
                 if enable_onvif:
-                    _LOGGER.error(
-                        "Failed to enable ONVIF on %s. "
-                        "Set it to ON to receive notifications",
-                        self._api.nvr_name,
-                    )
+                    ports += "ONVIF "
 
                 if enable_rtmp:
-                    _LOGGER.error(
-                        "Failed to enable RTMP on %s. Set it to ON",
-                        self._api.nvr_name,
-                    )
+                    ports += "RTMP "
                 elif enable_rtsp:
-                    _LOGGER.error(
-                        "Failed to enable RTSP on %s. Set it to ON",
-                        self._api.nvr_name,
-                    )
+                    ports += "RTSP "
+
+                ir.async_create_issue(
+                    self._hass,
+                    DOMAIN,
+                    "enable_port",
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="enable_port",
+                    translation_placeholders={
+                        "name": self._api.nvr_name,
+                        "ports": ports,
+                        "info_link": "https://support.reolink.com/hc/en-us/articles/900004435763-How-to-Set-up-Reolink-Ports-Settings-via-Reolink-Client-New-Client-",
+                    },
+                )
+        else:
+            ir.async_delete_issue(self._hass, DOMAIN, "enable_port")
 
         self._unique_id = format_mac(self._api.mac_address)
 

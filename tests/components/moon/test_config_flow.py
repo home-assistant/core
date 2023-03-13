@@ -1,11 +1,8 @@
 """Tests for the Moon config flow."""
 from unittest.mock import MagicMock
 
-import pytest
-
 from homeassistant.components.moon.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_NAME
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -34,34 +31,16 @@ async def test_full_user_flow(
     assert result2.get("data") == {}
 
 
-@pytest.mark.parametrize("source", [SOURCE_USER, SOURCE_IMPORT])
 async def test_single_instance_allowed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    source: str,
 ) -> None:
     """Test we abort if already setup."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": source}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == "single_instance_allowed"
-
-
-async def test_import_flow(
-    hass: HomeAssistant,
-    mock_setup_entry: MagicMock,
-) -> None:
-    """Test the import configuration flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={CONF_NAME: "My Moon"},
-    )
-
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
-    assert result.get("title") == "My Moon"
-    assert result.get("data") == {}

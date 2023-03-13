@@ -116,7 +116,9 @@ async def test_controlling_state_via_topic(
 
 
 async def test_controlling_validation_state_via_topic(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the validation of a received state."""
     assert await async_setup_component(
@@ -148,26 +150,39 @@ async def test_controlling_validation_state_via_topic(
     assert state.state == "yes"
 
     # test pattern error
-    with pytest.raises(ValueError):
-        async_fire_mqtt_message(hass, "state-topic", "other")
-        await hass.async_block_till_done()
+    caplog.clear()
+    async_fire_mqtt_message(hass, "state-topic", "other")
+    await hass.async_block_till_done()
+    assert (
+        "ValueError: Entity text.test provides state other which does not match expected pattern (y|n)"
+        in caplog.text
+    )
     state = hass.states.get("text.test")
     assert state.state == "yes"
 
     # test text size to large
-    with pytest.raises(ValueError):
-        async_fire_mqtt_message(hass, "state-topic", "yesyesyesyes")
-        await hass.async_block_till_done()
+    caplog.clear()
+    async_fire_mqtt_message(hass, "state-topic", "yesyesyesyes")
+    await hass.async_block_till_done()
+    assert (
+        "ValueError: Entity text.test provides state yesyesyesyes which is too long (maximum length 10)"
+        in caplog.text
+    )
     state = hass.states.get("text.test")
     assert state.state == "yes"
 
     # test text size to small
-    with pytest.raises(ValueError):
-        async_fire_mqtt_message(hass, "state-topic", "y")
-        await hass.async_block_till_done()
+    caplog.clear()
+    async_fire_mqtt_message(hass, "state-topic", "y")
+    await hass.async_block_till_done()
+    assert (
+        "ValueError: Entity text.test provides state y which is too short (minimum length 2)"
+        in caplog.text
+    )
     state = hass.states.get("text.test")
     assert state.state == "yes"
 
+    # test with valid text
     async_fire_mqtt_message(hass, "state-topic", "no")
     await hass.async_block_till_done()
     state = hass.states.get("text.test")
