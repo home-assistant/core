@@ -438,3 +438,39 @@ async def test_entity_category_inheritance(
     assert entity_entry
     assert entity_entry.device_id == switch_entity_entry.device_id
     assert entity_entry.entity_category is EntityCategory.CONFIG
+
+
+@pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
+async def test_entity_options(
+    hass: HomeAssistant,
+    target_domain: Platform,
+) -> None:
+    """Test the source entity is stored as an entity option."""
+    registry = er.async_get(hass)
+
+    switch_entity_entry = registry.async_get_or_create("switch", "test", "unique")
+    registry.async_update_entity(
+        switch_entity_entry.entity_id, entity_category=EntityCategory.CONFIG
+    )
+
+    # Add the config entry
+    switch_as_x_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            CONF_ENTITY_ID: switch_entity_entry.id,
+            CONF_TARGET_DOMAIN: target_domain,
+        },
+        title="ABC",
+    )
+    switch_as_x_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(switch_as_x_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_entry = registry.async_get(f"{target_domain}.abc")
+    assert entity_entry
+    assert entity_entry.device_id == switch_entity_entry.device_id
+    assert entity_entry.options == {
+        DOMAIN: {"entity_id": switch_entity_entry.entity_id}
+    }

@@ -31,6 +31,7 @@ from .helpers import (
     entity_registry,
     issue_registry,
     recorder,
+    template,
 )
 from .helpers.dispatcher import async_dispatcher_send
 from .helpers.typing import ConfigType
@@ -244,6 +245,7 @@ async def load_registries(hass: core.HomeAssistant) -> None:
         entity_registry.async_load(hass),
         issue_registry.async_load(hass),
         hass.async_add_executor_job(_cache_uname_processor),
+        template.async_load_custom_jinja(hass),
     )
 
 
@@ -508,7 +510,9 @@ async def async_setup_multi_components(
 ) -> None:
     """Set up multiple domains. Log on failure."""
     futures = {
-        domain: hass.async_create_task(async_setup_component(hass, domain, config))
+        domain: hass.async_create_task(
+            async_setup_component(hass, domain, config), f"setup component {domain}"
+        )
         for domain in domains
     }
     await asyncio.wait(futures.values())

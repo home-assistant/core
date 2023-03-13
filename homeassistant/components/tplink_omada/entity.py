@@ -1,23 +1,23 @@
 """Base entity definitions."""
-from tplink_omada_client.devices import OmadaSwitch, OmadaSwitchPortDetails
+from typing import Generic, TypeVar
 
-from homeassistant.helpers import device_registry
+from tplink_omada_client.devices import OmadaDevice
+
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import OmadaCoordinator
 
+T = TypeVar("T")
 
-class OmadaSwitchDeviceEntity(
-    CoordinatorEntity[OmadaCoordinator[OmadaSwitchPortDetails]]
-):
-    """Common base class for all entities attached to Omada network switches."""
 
-    def __init__(
-        self, coordinator: OmadaCoordinator[OmadaSwitchPortDetails], device: OmadaSwitch
-    ) -> None:
-        """Initialize the switch."""
+class OmadaDeviceEntity(CoordinatorEntity[OmadaCoordinator[T]], Generic[T]):
+    """Common base class for all entities associated with Omada SDN Devices."""
+
+    def __init__(self, coordinator: OmadaCoordinator[T], device: OmadaDevice) -> None:
+        """Initialize the device."""
         super().__init__(coordinator)
         self.device = device
 
@@ -25,7 +25,7 @@ class OmadaSwitchDeviceEntity(
     def device_info(self) -> DeviceInfo:
         """Return information about the device."""
         return DeviceInfo(
-            connections={(device_registry.CONNECTION_NETWORK_MAC, self.device.mac)},
+            connections={(dr.CONNECTION_NETWORK_MAC, self.device.mac)},
             identifiers={(DOMAIN, (self.device.mac))},
             manufacturer="TP-Link",
             model=self.device.model_display_name,

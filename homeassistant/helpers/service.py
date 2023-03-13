@@ -514,6 +514,16 @@ async def async_get_all_descriptions(
 
 
 @callback
+def remove_entity_service_fields(call: ServiceCall) -> dict[Any, Any]:
+    """Remove entity service fields."""
+    return {
+        key: val
+        for key, val in call.data.items()
+        if key not in cv.ENTITY_SERVICE_FIELDS
+    }
+
+
+@callback
 @bind_hass
 def async_set_service_schema(
     hass: HomeAssistant, domain: str, service: str, schema: dict[str, Any]
@@ -567,11 +577,7 @@ async def entity_service_call(  # noqa: C901
 
     # If the service function is a string, we'll pass it the service call data
     if isinstance(func, str):
-        data: dict | ServiceCall = {
-            key: val
-            for key, val in call.data.items()
-            if key not in cv.ENTITY_SERVICE_FIELDS
-        }
+        data: dict | ServiceCall = remove_entity_service_fields(call)
     # If the service function is not a string, we pass the service call
     else:
         data = call

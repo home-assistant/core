@@ -32,6 +32,8 @@ from .conftest import (
     TEST_STATE,
 )
 
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+
 
 @pytest.mark.parametrize(
     ("integration_type", "input_form_step", "patched_method", "config", "entry_title"),
@@ -166,3 +168,4 @@ async def test_step_reauth(
 
     assert len(hass.config_entries.async_entries()) == 1
     assert hass.config_entries.async_entries()[0].data[CONF_API_KEY] == new_api_key
+    await hass.async_block_till_done()

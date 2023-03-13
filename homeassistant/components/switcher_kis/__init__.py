@@ -12,7 +12,7 @@ from homeassistant.const import CONF_DEVICE_ID, EVENT_HOMEASSISTANT_STOP, Platfo
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
-    device_registry,
+    device_registry as dr,
     update_coordinator,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -165,10 +165,10 @@ class SwitcherDataUpdateCoordinator(
     @callback
     def async_setup(self) -> None:
         """Set up the coordinator."""
-        dev_reg = device_registry.async_get(self.hass)
+        dev_reg = dr.async_get(self.hass)
         dev_reg.async_get_or_create(
             config_entry_id=self.entry.entry_id,
-            connections={(device_registry.CONNECTION_NETWORK_MAC, self.mac_address)},
+            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
             identifiers={(DOMAIN, self.device_id)},
             manufacturer="Switcher",
             name=self.name,

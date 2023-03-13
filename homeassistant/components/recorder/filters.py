@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Collection, Iterable
-import json
 from typing import Any
 
 from sqlalchemy import Column, Text, cast, not_, or_
@@ -10,13 +9,14 @@ from sqlalchemy.sql.elements import ColumnElement
 
 from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS
+from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.typing import ConfigType
 
-from .db_schema import ENTITY_ID_IN_EVENT, OLD_ENTITY_ID_IN_EVENT, States
+from .db_schema import ENTITY_ID_IN_EVENT, OLD_ENTITY_ID_IN_EVENT, States, StatesMeta
 
 DOMAIN = "history"
 HISTORY_FILTERS = "history_filters"
-JSON_NULL = json.dumps(None)
+JSON_NULL = json_dumps(None)
 
 GLOB_TO_SQL_CHARS = {
     ord("*"): "%",
@@ -194,7 +194,10 @@ class Filters:
         return i_entities
 
     def states_entity_filter(self) -> ColumnElement | None:
-        """Generate the entity filter query."""
+        """Generate the States.entity_id filter query.
+
+        This is no longer used except by the legacy queries.
+        """
 
         def _encoder(data: Any) -> Any:
             """Nothing to encode for states since there is no json."""
@@ -203,9 +206,19 @@ class Filters:
         # The type annotation should be improved so the type ignore can be removed
         return self._generate_filter_for_columns((States.entity_id,), _encoder)  # type: ignore[arg-type]
 
+    def states_metadata_entity_filter(self) -> ColumnElement | None:
+        """Generate the StatesMeta.entity_id filter query."""
+
+        def _encoder(data: Any) -> Any:
+            """Nothing to encode for states since there is no json."""
+            return data
+
+        # The type annotation should be improved so the type ignore can be removed
+        return self._generate_filter_for_columns((StatesMeta.entity_id,), _encoder)  # type: ignore[arg-type]
+
     def events_entity_filter(self) -> ColumnElement:
         """Generate the entity filter query."""
-        _encoder = json.dumps
+        _encoder = json_dumps
         return or_(
             # sqlalchemy's SQLite json implementation always
             # wraps everything with JSON_QUOTE so it resolves to 'null'

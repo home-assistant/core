@@ -12,6 +12,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
+    RepeatMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_DEFAULT_NAME
@@ -34,6 +35,16 @@ _LOGGER = logging.getLogger(__name__)
 SERVICE_TRANSFER = "transfer"
 
 ATTR_TRANSFER = "transfer_id"
+
+REPEAT_MODE_MAPPING_TO_HA = {
+    "loop": RepeatMode.ALL,
+    "disabled": RepeatMode.OFF,
+    "loop_one": RepeatMode.ONE,
+}
+
+REPEAT_MODE_MAPPING_TO_ROON = {
+    value: key for key, value in REPEAT_MODE_MAPPING_TO_HA.items()
+}
 
 
 async def async_setup_entry(
@@ -84,6 +95,7 @@ class RoonDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.PREVIOUS_TRACK
         | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.REPEAT_SET
         | MediaPlayerEntityFeature.SHUFFLE_SET
         | MediaPlayerEntityFeature.SEEK
         | MediaPlayerEntityFeature.TURN_ON
@@ -262,6 +274,9 @@ class RoonDevice(MediaPlayerEntity):
         self._attr_unique_id = self.player_data["dev_id"]
         self._zone_id = self.player_data["zone_id"]
         self._output_id = self.player_data["output_id"]
+        self._attr_repeat = REPEAT_MODE_MAPPING_TO_HA.get(
+            self.player_data["settings"]["loop"]
+        )
         self._attr_shuffle = self.player_data["settings"]["shuffle"]
         self._attr_name = self.player_data["display_name"]
 
@@ -331,7 +346,7 @@ class RoonDevice(MediaPlayerEntity):
 
     def set_volume_level(self, volume: float) -> None:
         """Send new volume_level to device."""
-        volume = int(volume * 100)
+        volume = volume * 100
         self._server.roonapi.set_volume_percent(self.output_id, volume)
 
     def mute_volume(self, mute=True):
@@ -372,6 +387,12 @@ class RoonDevice(MediaPlayerEntity):
     def set_shuffle(self, shuffle: bool) -> None:
         """Set shuffle state."""
         self._server.roonapi.shuffle(self.output_id, shuffle)
+
+    def set_repeat(self, repeat: RepeatMode) -> None:
+        """Set repeat mode."""
+        if repeat not in REPEAT_MODE_MAPPING_TO_ROON:
+            raise ValueError(f"Unsupported repeat mode: {repeat}")
+        self._server.roonapi.repeat(self.output_id, REPEAT_MODE_MAPPING_TO_ROON[repeat])
 
     def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
         """Send the play_media command to the media player."""
