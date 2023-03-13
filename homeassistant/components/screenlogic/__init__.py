@@ -109,7 +109,7 @@ async def async_get_connect_info(
     }
 
 
-class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
+class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to manage the data update for the Screenlogic component."""
 
     def __init__(

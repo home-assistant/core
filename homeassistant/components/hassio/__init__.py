@@ -69,6 +69,7 @@ from .const import (
     ATTR_VERSION,
     DATA_KEY_ADDONS,
     DATA_KEY_CORE,
+    DATA_KEY_HOST,
     DATA_KEY_OS,
     DATA_KEY_SUPERVISOR,
     DOMAIN,
@@ -96,7 +97,7 @@ from .handler import (  # noqa: F401
 )
 from .http import HassIOView
 from .ingress import async_setup_ingress_view
-from .repairs import SupervisorRepairs
+from .issues import SupervisorIssues
 from .websocket_api import async_load_websocket_api
 
 _LOGGER = logging.getLogger(__name__)
@@ -125,7 +126,7 @@ DATA_SUPERVISOR_STATS = "hassio_supervisor_stats"
 DATA_ADDONS_CHANGELOGS = "hassio_addons_changelogs"
 DATA_ADDONS_INFO = "hassio_addons_info"
 DATA_ADDONS_STATS = "hassio_addons_stats"
-DATA_SUPERVISOR_REPAIRS = "supervisor_repairs"
+DATA_SUPERVISOR_ISSUES = "supervisor_issues"
 HASSIO_UPDATE_INTERVAL = timedelta(minutes=5)
 
 ADDONS_COORDINATOR = "hassio_addons_coordinator"
@@ -604,9 +605,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         hass.config_entries.flow.async_init(DOMAIN, context={"source": "system"})
     )
 
-    # Start listening for problems with supervisor and making repairs
-    hass.data[DATA_SUPERVISOR_REPAIRS] = repairs = SupervisorRepairs(hass, hassio)
-    await repairs.setup()
+    # Start listening for problems with supervisor and making issues
+    hass.data[DATA_SUPERVISOR_ISSUES] = issues = SupervisorIssues(hass, hassio)
+    await issues.setup()
 
     return True
 
@@ -663,6 +664,22 @@ def async_register_os_in_dev_reg(
         model=SupervisorEntityModel.OS,
         sw_version=os_dict[ATTR_VERSION],
         name="Home Assistant Operating System",
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
+    dev_reg.async_get_or_create(config_entry_id=entry_id, **params)
+
+
+@callback
+def async_register_host_in_dev_reg(
+    entry_id: str,
+    dev_reg: dr.DeviceRegistry,
+) -> None:
+    """Register host in the device registry."""
+    params = DeviceInfo(
+        identifiers={(DOMAIN, "host")},
+        manufacturer="Home Assistant",
+        model=SupervisorEntityModel.HOST,
+        name="Home Assistant Host",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
     dev_reg.async_get_or_create(config_entry_id=entry_id, **params)
@@ -777,6 +794,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             **supervisor_info,
             **get_supervisor_stats(self.hass),
         }
+        new_data[DATA_KEY_HOST] = get_host_info(self.hass) or {}
 
         # If this is the initial refresh, register all addons and return the dict
         if not self.data:
@@ -789,6 +807,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             async_register_supervisor_in_dev_reg(
                 self.entry_id, self.dev_reg, new_data[DATA_KEY_SUPERVISOR]
             )
+            async_register_host_in_dev_reg(self.entry_id, self.dev_reg)
             if self.is_hass_os:
                 async_register_os_in_dev_reg(
                     self.entry_id, self.dev_reg, new_data[DATA_KEY_OS]

@@ -7,7 +7,7 @@ import python_otbr_api
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import BASE_URL
+from . import BASE_URL, DATASET_CH16
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
@@ -27,13 +27,7 @@ async def test_get_info(
 ) -> None:
     """Test async_get_info."""
 
-    mock_response = (
-        "0E080000000000010000000300001035060004001FFFE00208F642646DA209B1C00708FDF57B5A"
-        "0FE2AAF60510DE98B5BA1A528FEE049D4B4B01835375030D4F70656E5468726561642048410102"
-        "25A40410F5DD18371BFD29E1A601EF6FFAD94C030C0402A0F7F8"
-    )
-
-    aioclient_mock.get(f"{BASE_URL}/node/dataset/active", text=mock_response)
+    aioclient_mock.get(f"{BASE_URL}/node/dataset/active", text=DATASET_CH16.hex())
 
     await websocket_client.send_json(
         {
@@ -47,7 +41,7 @@ async def test_get_info(
     assert msg["success"]
     assert msg["result"] == {
         "url": BASE_URL,
-        "active_dataset_tlvs": mock_response.lower(),
+        "active_dataset_tlvs": DATASET_CH16.hex().lower(),
     }
 
 
@@ -110,7 +104,11 @@ async def test_create_network(
         "python_otbr_api.OTBR.create_active_dataset"
     ) as create_dataset_mock, patch(
         "python_otbr_api.OTBR.set_enabled"
-    ) as set_enabled_mock:
+    ) as set_enabled_mock, patch(
+        "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
+    ) as get_active_dataset_tlvs_mock, patch(
+        "homeassistant.components.thread.dataset_store.DatasetStore.async_add"
+    ) as mock_add:
         await websocket_client.send_json(
             {
                 "id": 5,
@@ -131,6 +129,8 @@ async def test_create_network(
     assert len(set_enabled_mock.mock_calls) == 2
     assert set_enabled_mock.mock_calls[0][1][0] is False
     assert set_enabled_mock.mock_calls[1][1][0] is True
+    get_active_dataset_tlvs_mock.assert_called_once()
+    mock_add.assert_called_once_with("Open Thread Border Router", DATASET_CH16.hex())
 
 
 async def test_create_network_no_entry(
@@ -154,7 +154,7 @@ async def test_create_network_no_entry(
     assert msg["error"]["code"] == "not_loaded"
 
 
-async def test_get_info_fetch_fails_1(
+async def test_create_network_fails_1(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     otbr_config_entry,
@@ -180,7 +180,7 @@ async def test_get_info_fetch_fails_1(
     assert msg["error"]["code"] == "set_enabled_failed"
 
 
-async def test_get_info_fetch_fails_2(
+async def test_create_network_fails_2(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     otbr_config_entry,
@@ -208,7 +208,7 @@ async def test_get_info_fetch_fails_2(
     assert msg["error"]["code"] == "create_active_dataset_failed"
 
 
-async def test_get_info_fetch_fails_3(
+async def test_create_network_fails_3(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     otbr_config_entry,
@@ -234,6 +234,59 @@ async def test_get_info_fetch_fails_3(
     assert msg["id"] == 5
     assert not msg["success"]
     assert msg["error"]["code"] == "set_enabled_failed"
+
+
+async def test_create_network_fails_4(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    otbr_config_entry,
+    websocket_client,
+) -> None:
+    """Test create network."""
+    await async_setup_component(hass, "otbr", {})
+
+    with patch("python_otbr_api.OTBR.set_enabled"), patch(
+        "python_otbr_api.OTBR.create_active_dataset"
+    ), patch(
+        "python_otbr_api.OTBR.get_active_dataset_tlvs",
+        side_effect=python_otbr_api.OTBRError,
+    ):
+        await websocket_client.send_json(
+            {
+                "id": 5,
+                "type": "otbr/create_network",
+            }
+        )
+        msg = await websocket_client.receive_json()
+
+    assert msg["id"] == 5
+    assert not msg["success"]
+    assert msg["error"]["code"] == "get_active_dataset_tlvs_failed"
+
+
+async def test_create_network_fails_5(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    otbr_config_entry,
+    websocket_client,
+) -> None:
+    """Test create network."""
+    await async_setup_component(hass, "otbr", {})
+
+    with patch("python_otbr_api.OTBR.set_enabled"), patch(
+        "python_otbr_api.OTBR.create_active_dataset"
+    ), patch("python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=None):
+        await websocket_client.send_json(
+            {
+                "id": 5,
+                "type": "otbr/create_network",
+            }
+        )
+        msg = await websocket_client.receive_json()
+
+    assert msg["id"] == 5
+    assert not msg["success"]
+    assert msg["error"]["code"] == "get_active_dataset_tlvs_empty"
 
 
 async def test_get_extended_address(
