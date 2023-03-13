@@ -32,6 +32,7 @@ class ThreadRouterDiscoveryData:
 
     addresses: list[str] | None
     brand: str | None
+    extended_address: str | None
     extended_pan_id: str | None
     model_name: str | None
     network_name: str | None
@@ -55,6 +56,7 @@ def async_discovery_data_from_service(
         except UnicodeDecodeError:
             return None
 
+    ext_addr = service.properties.get(b"xa")
     ext_pan_id = service.properties.get(b"xp")
     network_name = try_decode(service.properties.get(b"nn"))
     model_name = try_decode(service.properties.get(b"mn"))
@@ -78,6 +80,7 @@ def async_discovery_data_from_service(
     return ThreadRouterDiscoveryData(
         addresses=service.parsed_addresses(),
         brand=brand,
+        extended_address=ext_addr.hex() if ext_addr is not None else None,
         extended_pan_id=ext_pan_id.hex() if ext_pan_id is not None else None,
         model_name=model_name,
         network_name=network_name,

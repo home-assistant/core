@@ -493,7 +493,7 @@ dynalite_devices==0.1.47
 eagle100==0.1.1
 
 # homeassistant.components.easyenergy
-easyenergy==0.1.2
+easyenergy==0.2.1
 
 # homeassistant.components.elgato
 elgato==4.0.1
@@ -550,7 +550,7 @@ fivem-api==0.1.2
 fjaraskupan==2.2.0
 
 # homeassistant.components.flipr
-flipr-api==1.4.4
+flipr-api==1.5.0
 
 # homeassistant.components.flux_led
 flux_led==0.28.35
@@ -1119,7 +1119,7 @@ pyblackbird==0.5
 pybotvac==0.0.23
 
 # homeassistant.components.braviatv
-pybravia==0.3.1
+pybravia==0.3.2
 
 # homeassistant.components.cloudflare
 pycfdns==2.0.1
@@ -1499,7 +1499,7 @@ python-nest==4.2.0
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
-python-otbr-api==1.0.8
+python-otbr-api==1.0.9
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0
@@ -1594,7 +1594,7 @@ regenmaschine==2022.11.0
 renault-api==0.1.12
 
 # homeassistant.components.reolink
-reolink-aio==0.5.3
+reolink-aio==0.5.5
 
 # homeassistant.components.python_script
 restrictedpython==6.0
