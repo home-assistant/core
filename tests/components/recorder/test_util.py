@@ -15,9 +15,12 @@ from sqlalchemy.sql.elements import TextClause
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import history, util
+from homeassistant.components.recorder import util
 from homeassistant.components.recorder.const import DOMAIN, SQLITE_URL_PREFIX
 from homeassistant.components.recorder.db_schema import RecorderRuns
+from homeassistant.components.recorder.history.modern import (
+    _get_single_entity_states_stmt,
+)
 from homeassistant.components.recorder.models import (
     UnsupportedDialect,
     process_timestamp,
@@ -905,26 +908,25 @@ def test_execute_stmt_lambda_element(
 
     with session_scope(hass=hass) as session:
         # No time window, we always get a list
-        stmt = history._get_single_entity_states_stmt(
-            instance.schema_version, dt_util.utcnow(), "sensor.on", False
-        )
+        metadata_id = instance.states_meta_manager.get("sensor.on", session)
+        stmt = _get_single_entity_states_stmt(dt_util.utcnow(), metadata_id, False)
         rows = util.execute_stmt_lambda_element(session, stmt)
         assert isinstance(rows, list)
         assert rows[0].state == new_state.state
-        assert rows[0].entity_id == new_state.entity_id
+        assert rows[0].metadata_id == metadata_id
 
         # Time window >= 2 days, we get a ChunkedIteratorResult
         rows = util.execute_stmt_lambda_element(session, stmt, now, one_week_from_now)
         assert isinstance(rows, ChunkedIteratorResult)
         row = next(rows)
         assert row.state == new_state.state
-        assert row.entity_id == new_state.entity_id
+        assert row.metadata_id == metadata_id
 
         # Time window < 2 days, we get a list
         rows = util.execute_stmt_lambda_element(session, stmt, now, tomorrow)
         assert isinstance(rows, list)
         assert rows[0].state == new_state.state
-        assert rows[0].entity_id == new_state.entity_id
+        assert rows[0].metadata_id == metadata_id
 
         with patch.object(session, "execute", MockExecutor):
             rows = util.execute_stmt_lambda_element(session, stmt, now, tomorrow)
