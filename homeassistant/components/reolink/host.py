@@ -15,7 +15,6 @@ from homeassistant.components import webhook
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.network import NoURLAvailableError, get_url
@@ -134,11 +133,16 @@ class ReolinkHost:
 
         await self.subscribe()
 
-        _LOGGER.debug("Waiting for initial ONVIF state on webhook '%s'", self.webhook_id)
+        _LOGGER.debug(
+            "Waiting for initial ONVIF state on webhook '%s'", self.webhook_id
+        )
         try:
             await asyncio.wait_for(self._webhook_reachable.wait(), timeout=15)
         except asyncio.TimeoutError:
-            _LOGGER.debug("Did not receive initial ONVIF state on webhook '%s' after 15 seconds", self.webhook_id)
+            _LOGGER.debug(
+                "Did not receive initial ONVIF state on webhook '%s' after 15 seconds",
+                self.webhook_id,
+            )
             ir.async_create_issue(
                 self._hass,
                 DOMAIN,

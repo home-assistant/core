@@ -40,9 +40,6 @@ def reolink_connect(mock_get_source_ip: None) -> Generator[MagicMock, None, None
         "homeassistant.components.reolink.host.webhook.async_register",
         return_value=True,
     ), patch(
-        "homeassistant.helpers.aiohttp_client.aiohttp.ClientSession.post",
-        AsyncMock(),
-    ), patch(
         "homeassistant.components.reolink.host.asyncio.Event.wait", AsyncMock()
     ), patch(
         "homeassistant.components.reolink.host.Host", autospec=True

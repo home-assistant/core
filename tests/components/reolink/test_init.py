@@ -1,8 +1,8 @@
 """Test the Reolink init."""
+import asyncio
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-import aiohttp
 import pytest
 from reolink_aio.exceptions import ReolinkError
 
@@ -124,7 +124,7 @@ async def test_webhook_repair_issue(
     """Test repairs issue is raised when the webhook url is unreachable."""
     with patch(
         "homeassistant.components.reolink.host.asyncio.Event.wait",
-        AsyncMock(side_effect=aiohttp.ClientError()),
+        AsyncMock(side_effect=asyncio.TimeoutError()),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
