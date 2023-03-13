@@ -150,7 +150,7 @@ class EventProcessor:
             #
             return result.yield_per(1024)
 
-        with session_scope(hass=self.hass) as session:
+        with session_scope(hass=self.hass, read_only=True) as session:
             metadata_ids: list[int] | None = None
             if self.entity_ids:
                 instance = get_instance(self.hass)
