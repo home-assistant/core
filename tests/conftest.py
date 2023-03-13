@@ -1159,6 +1159,16 @@ def enable_migrate_event_type_ids() -> bool:
 
 
 @pytest.fixture
+def enable_migrate_entity_ids() -> bool:
+    """Fixture to control enabling of recorder's entity_id migration.
+
+    To enable context id migration, tests can be marked with:
+    @pytest.mark.parametrize("enable_migrate_entity_ids", [True])
+    """
+    return False
+
+
+@pytest.fixture
 def recorder_config() -> dict[str, Any] | None:
     """Fixture to override recorder config.
 
@@ -1221,6 +1231,9 @@ def hass_recorder(
     enable_nightly_purge: bool,
     enable_statistics: bool,
     enable_statistics_table_validation: bool,
+    enable_migrate_context_ids: bool,
+    enable_migrate_event_type_ids: bool,
+    enable_migrate_entity_ids: bool,
     hass_storage,
 ) -> Generator[Callable[..., HomeAssistant], None, None]:
     """Home Assistant fixture with in-memory recorder."""
@@ -1237,6 +1250,24 @@ def hass_recorder(
         if enable_statistics_table_validation
         else itertools.repeat(set())
     )
+    migrate_states_context_ids = (
+        recorder.Recorder._migrate_states_context_ids
+        if enable_migrate_context_ids
+        else None
+    )
+    migrate_events_context_ids = (
+        recorder.Recorder._migrate_events_context_ids
+        if enable_migrate_context_ids
+        else None
+    )
+    migrate_event_type_ids = (
+        recorder.Recorder._migrate_event_type_ids
+        if enable_migrate_event_type_ids
+        else None
+    )
+    migrate_entity_ids = (
+        recorder.Recorder._migrate_entity_ids if enable_migrate_entity_ids else None
+    )
     with patch(
         "homeassistant.components.recorder.Recorder.async_nightly_tasks",
         side_effect=nightly,
@@ -1248,6 +1279,22 @@ def hass_recorder(
     ), patch(
         "homeassistant.components.recorder.migration.statistics_validate_db_schema",
         side_effect=stats_validate,
+        autospec=True,
+    ), patch(
+        "homeassistant.components.recorder.Recorder._migrate_events_context_ids",
+        side_effect=migrate_events_context_ids,
+        autospec=True,
+    ), patch(
+        "homeassistant.components.recorder.Recorder._migrate_states_context_ids",
+        side_effect=migrate_states_context_ids,
+        autospec=True,
+    ), patch(
+        "homeassistant.components.recorder.Recorder._migrate_event_type_ids",
+        side_effect=migrate_event_type_ids,
+        autospec=True,
+    ), patch(
+        "homeassistant.components.recorder.Recorder._migrate_entity_ids",
+        side_effect=migrate_entity_ids,
         autospec=True,
     ):
 
@@ -1302,6 +1349,7 @@ async def async_setup_recorder_instance(
     enable_statistics_table_validation: bool,
     enable_migrate_context_ids: bool,
     enable_migrate_event_type_ids: bool,
+    enable_migrate_entity_ids: bool,
 ) -> AsyncGenerator[RecorderInstanceGenerator, None]:
     """Yield callable to setup recorder instance."""
     # pylint: disable-next=import-outside-toplevel
@@ -1317,13 +1365,23 @@ async def async_setup_recorder_instance(
         if enable_statistics_table_validation
         else itertools.repeat(set())
     )
-    migrate_context_ids = (
-        recorder.Recorder._migrate_context_ids if enable_migrate_context_ids else None
+    migrate_states_context_ids = (
+        recorder.Recorder._migrate_states_context_ids
+        if enable_migrate_context_ids
+        else None
+    )
+    migrate_events_context_ids = (
+        recorder.Recorder._migrate_events_context_ids
+        if enable_migrate_context_ids
+        else None
     )
     migrate_event_type_ids = (
         recorder.Recorder._migrate_event_type_ids
         if enable_migrate_event_type_ids
         else None
+    )
+    migrate_entity_ids = (
+        recorder.Recorder._migrate_entity_ids if enable_migrate_entity_ids else None
     )
     with patch(
         "homeassistant.components.recorder.Recorder.async_nightly_tasks",
@@ -1338,12 +1396,20 @@ async def async_setup_recorder_instance(
         side_effect=stats_validate,
         autospec=True,
     ), patch(
-        "homeassistant.components.recorder.Recorder._migrate_context_ids",
-        side_effect=migrate_context_ids,
+        "homeassistant.components.recorder.Recorder._migrate_events_context_ids",
+        side_effect=migrate_events_context_ids,
+        autospec=True,
+    ), patch(
+        "homeassistant.components.recorder.Recorder._migrate_states_context_ids",
+        side_effect=migrate_states_context_ids,
         autospec=True,
     ), patch(
         "homeassistant.components.recorder.Recorder._migrate_event_type_ids",
         side_effect=migrate_event_type_ids,
+        autospec=True,
+    ), patch(
+        "homeassistant.components.recorder.Recorder._migrate_entity_ids",
+        side_effect=migrate_entity_ids,
         autospec=True,
     ):
 
