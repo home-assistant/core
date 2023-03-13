@@ -1041,6 +1041,19 @@ def _apply_update(  # noqa: C901
             "ix_statistics_short_term_statistic_id_start",
             quiet=True,
         )
+    elif new_version == 40:
+        # ix_events_event_type_id is a left-prefix of ix_events_event_type_id_time_fired_ts
+        _drop_index(session_maker, "events", "ix_events_event_type_id")
+        # ix_states_metadata_id is a left-prefix of ix_states_metadata_id_last_updated_ts
+        _drop_index(session_maker, "states", "ix_states_metadata_id")
+        # ix_statistics_metadata_id is a left-prefix of ix_statistics_statistic_id_start_ts
+        _drop_index(session_maker, "statistics", "ix_statistics_metadata_id")
+        # ix_statistics_short_term_metadata_id is a left-prefix of ix_statistics_short_term_statistic_id_start_ts
+        _drop_index(
+            session_maker,
+            "statistics_short_term",
+            "ix_statistics_short_term_metadata_id",
+        )
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
