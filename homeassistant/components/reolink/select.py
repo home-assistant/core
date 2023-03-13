@@ -73,6 +73,7 @@ SELECT_ENTITIES = (
         icon="mdi:message-reply-text-outline",
         get_options=lambda api, ch: list(api.quick_reply_dict(ch).values()),
         supported=lambda api, ch: api.supported(ch, "quick_reply"),
+        value=lambda api, ch: api.quick_reply_dict(ch)[api.quick_reply_file(ch)],
         method=lambda api, ch, mess: api.set_quick_reply(
             ch, file_id=[k for k, v in api.quick_reply_dict(ch).items() if v == mess][0]
         ),
