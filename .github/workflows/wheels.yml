@@ -54,6 +54,9 @@ jobs:
             # OpenCV headless installation
             echo "CI_BUILD=1"
             echo "ENABLE_HEADLESS=1"
+
+            # Use C-Extension for sqlalchemy
+            echo "REQUIRE_SQLALCHEMY_CEXT=1"
           ) > .env_file
 
       - name: Upload env_file
