@@ -141,14 +141,14 @@ class ReolinkHost:
         await self.subscribe()
 
         _LOGGER.debug(
-            "Waiting for initial ONVIF state on webhook '%s'", self.webhook_id
+            "Waiting for initial ONVIF state on webhook '%s'", self._webhook_url
         )
         try:
             await asyncio.wait_for(self._webhook_reachable.wait(), timeout=15)
         except asyncio.TimeoutError:
             _LOGGER.debug(
                 "Did not receive initial ONVIF state on webhook '%s' after 15 seconds",
-                self.webhook_id,
+                self._webhook_url,
             )
             ir.async_create_issue(
                 self._hass,
