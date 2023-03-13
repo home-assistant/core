@@ -17,7 +17,13 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 
-from .const import CONF_PROTOCOL, CONF_USE_HTTPS, DOMAIN, CONF_HA_URL, CONF_CUSTOM_HA_URL
+from .const import (
+    CONF_CUSTOM_HA_URL,
+    CONF_HA_URL,
+    CONF_PROTOCOL,
+    CONF_USE_HTTPS,
+    DOMAIN,
+)
 from .exceptions import ReolinkException, UserNotAdmin
 from .host import ReolinkHost
 
@@ -35,13 +41,13 @@ class ReolinkOptionsFlowHandler(config_entries.OptionsFlow):
         self.config_entry = config_entry
 
     def get_ha_url(self) -> str:
-        """Get the Home Assistant URL from the network configuration"""
+        """Get the Home Assistant URL from the network configuration."""
         try:
             ha_url = get_url(self.hass, prefer_external=False)
         except NoURLAvailableError:
             try:
                 ha_url = get_url(self.hass, prefer_external=True)
-            except NoURLAvailableError as err:
+            except NoURLAvailableError:
                 ha_url = ""
         return ha_url
 
