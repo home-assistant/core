@@ -381,6 +381,7 @@ class MQTT:
     """Home Assistant MQTT client."""
 
     _mqttc: mqtt.Client
+    _last_subscribe: float
 
     def __init__(
         self,
@@ -398,7 +399,6 @@ class MQTT:
         self._wildcard_subscriptions: list[Subscription] = []
         self.connected = False
         self._ha_started = asyncio.Event()
-        self._last_subscribe = time.time()
         self._cleanup_on_unload: list[Callable[[], None]] = []
 
         self._paho_lock = asyncio.Lock()  # Prevents parallel calls to the MQTT client
@@ -622,7 +622,6 @@ class MQTT:
 
         # Only subscribe if currently connected.
         if self.connected:
-            self._last_subscribe = time.time() + self._subscribe_debouncer.timeout
             self._async_queue_subscriptions(((topic, qos),))
 
         @callback
