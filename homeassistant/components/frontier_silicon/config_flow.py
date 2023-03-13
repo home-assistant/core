@@ -69,7 +69,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=import_info[CONF_NAME] or "Radio",
             data={
-                CONF_WEBFSAPI_URL: self._webfsapi_url,
+                CONF_WEBFSAPI_URL: webfsapi_url,
                 CONF_PIN: import_info[CONF_PIN],
             },
         )
