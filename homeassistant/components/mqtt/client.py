@@ -526,6 +526,8 @@ class MQTT:
 
         # stop waiting for any pending subscriptions
         await self._subscribe_debouncer.async_cleanup()
+        # reset timeout to initial subscribe cooldown
+        self._subscribe_debouncer.set_timeout(INITIAL_SUBSCRIBE_COOLDOWN)
 
         # wait for ACKs to be processed
         async with self._pending_operations_condition:
@@ -690,6 +692,7 @@ class MQTT:
             results = await self.hass.async_add_executor_job(
                 _process_client_subscriptions
             )
+        self._last_subscribe = time.time()
 
         tasks: list[Coroutine[Any, Any, None]] = []
         errors: list[int] = []
@@ -897,6 +900,9 @@ class MQTT:
                 self._pending_operations_condition.notify_all()
 
     async def _discovery_cooldown(self) -> None:
+        """Wait until all discovery and subscriptions are processed."""
+        # Await INITIAL_SUBSCRIBE_COOLDOWN first
+        await asyncio.sleep(INITIAL_SUBSCRIBE_COOLDOWN)
         now = time.time()
         # Reset discovery and subscribe cooldowns
         self._mqtt_data.last_discovery = now
@@ -905,7 +911,8 @@ class MQTT:
         last_discovery = self._mqtt_data.last_discovery
         last_subscribe = self._last_subscribe
         wait_until = max(
-            last_discovery + DISCOVERY_COOLDOWN, last_subscribe + DISCOVERY_COOLDOWN
+            last_discovery + DISCOVERY_COOLDOWN,
+            last_subscribe + DISCOVERY_COOLDOWN,
         )
         while now < wait_until:
             await asyncio.sleep(wait_until - now)
@@ -913,7 +920,8 @@ class MQTT:
             last_discovery = self._mqtt_data.last_discovery
             last_subscribe = self._last_subscribe
             wait_until = max(
-                last_discovery + DISCOVERY_COOLDOWN, last_subscribe + DISCOVERY_COOLDOWN
+                last_discovery + DISCOVERY_COOLDOWN,
+                last_subscribe + DISCOVERY_COOLDOWN,
             )
 
 

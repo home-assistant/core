@@ -1493,6 +1493,11 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     expected.append(call("test/state", 1))
     assert mqtt_client_mock.subscribe.mock_calls == expected
 
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
+    await hass.async_block_till_done()
+
 
 @pytest.mark.parametrize(
     "mqtt_config_entry_data",
