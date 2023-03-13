@@ -86,7 +86,7 @@ async def test_entry_reloading(
     assert config_entry.title == "New Name"
 
 
-async def test_http_no_repair_issue(
+async def test_no_repair_issue(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test no repairs issue is raised when http local url is used."""
@@ -99,6 +99,8 @@ async def test_http_no_repair_issue(
 
     issue_registry = ir.async_get(hass)
     assert (const.DOMAIN, "https_webhook") not in issue_registry.issues
+    assert (const.DOMAIN, "enable_port") not in issue_registry.issues
+    assert (const.DOMAIN, "firmware_update") not in issue_registry.issues
 
 
 async def test_https_repair_issue(
@@ -116,15 +118,24 @@ async def test_https_repair_issue(
     assert (const.DOMAIN, "https_webhook") in issue_registry.issues
 
 
-async def test_no_firmware_repair_issue(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+@pytest.mark.parametrize("protocol", ["rtsp", "rtmp"])
+async def test_port_repair_issue(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_connect: MagicMock,
+    protocol: str,
 ) -> None:
-    """Test no firmware issue is raised when firmware is new enough."""
+    """Test repairs issue is raised when auto enable of ports fails."""
+    reolink_connect.set_net_port = AsyncMock(side_effect=ReolinkError("Test error"))
+    reolink_connect.onvif_enabled = False
+    reolink_connect.rtsp_enabled = False
+    reolink_connect.rtmp_enabled = False
+    reolink_connect.protocol = protocol
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     issue_registry = ir.async_get(hass)
-    assert (const.DOMAIN, "firmware_update") not in issue_registry.issues
+    assert (const.DOMAIN, "enable_port") in issue_registry.issues
 
 
 async def test_firmware_repair_issue(

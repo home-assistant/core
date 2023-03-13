@@ -1118,7 +1118,7 @@ class EventBus:
         )
 
         filterable_job = _FilterableJob(
-            HassJob(_onetime_listener, "onetime listen {event_type} {listener}"),
+            HassJob(_onetime_listener, f"onetime listen {event_type} {listener}"),
             None,
             False,
         )

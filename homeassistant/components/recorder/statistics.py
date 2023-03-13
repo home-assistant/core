@@ -925,7 +925,7 @@ def get_metadata(
     statistic_source: str | None = None,
 ) -> dict[str, tuple[int, StatisticMetaData]]:
     """Return metadata for statistic_ids."""
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         return get_metadata_with_session(
             session,
             statistic_ids=statistic_ids,
@@ -985,7 +985,7 @@ def list_statistic_ids(
     statistic_ids_set = set(statistic_ids) if statistic_ids else None
 
     # Query the database
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         metadata = get_metadata_with_session(
             session, statistic_type=statistic_type, statistic_ids=statistic_ids
         )
@@ -1589,7 +1589,7 @@ def statistic_during_period(
 
     result: dict[str, Any] = {}
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         # Fetch metadata for the given statistic_id
         if not (
             metadata := get_metadata_with_session(session, statistic_ids=[statistic_id])
@@ -1814,7 +1814,7 @@ def statistics_during_period(
     If end_time is omitted, returns statistics newer than or equal to start_time.
     If statistic_ids is omitted, returns statistics for all statistics ids.
     """
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         return _statistics_during_period_with_session(
             hass,
             session,
@@ -1866,7 +1866,7 @@ def _get_last_statistics(
 ) -> dict[str, list[dict]]:
     """Return the last number_of_stats statistics for a given statistic_id."""
     statistic_ids = [statistic_id]
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         # Fetch metadata for the given statistic_id
         metadata = get_metadata_with_session(session, statistic_ids=statistic_ids)
         if not metadata:
@@ -1940,10 +1940,7 @@ def _latest_short_term_statistics_stmt(
                 .group_by(StatisticsShortTerm.metadata_id)
             ).subquery()
         ),
-        (
-            StatisticsShortTerm.metadata_id  # pylint: disable=comparison-with-callable
-            == most_recent_statistic_row.c.metadata_id
-        )
+        (StatisticsShortTerm.metadata_id == most_recent_statistic_row.c.metadata_id)
         & (StatisticsShortTerm.start_ts == most_recent_statistic_row.c.start_max),
     )
     return stmt
@@ -1956,7 +1953,7 @@ def get_latest_short_term_statistics(
     metadata: dict[str, tuple[int, StatisticMetaData]] | None = None,
 ) -> dict[str, list[dict]]:
     """Return the latest short term statistics for a list of statistic_ids."""
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         # Fetch metadata for the given statistic_ids
         if not metadata:
             metadata = get_metadata_with_session(session, statistic_ids=statistic_ids)

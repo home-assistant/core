@@ -460,7 +460,7 @@ class HomeAssistantHTTP:
         # This will now raise a RunTimeError.
         # To work around this we now prevent the router from getting frozen
         # pylint: disable-next=protected-access
-        self.app._router.freeze = lambda: None  # type: ignore[assignment]
+        self.app._router.freeze = lambda: None  # type: ignore[method-assign]
 
         self.runner = web.AppRunner(self.app)
         await self.runner.setup()

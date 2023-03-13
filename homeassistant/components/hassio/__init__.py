@@ -96,7 +96,7 @@ from .handler import (  # noqa: F401
 )
 from .http import HassIOView
 from .ingress import async_setup_ingress_view
-from .repairs import SupervisorRepairs
+from .issues import SupervisorIssues
 from .websocket_api import async_load_websocket_api
 
 _LOGGER = logging.getLogger(__name__)
@@ -115,15 +115,17 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 DATA_CORE_INFO = "hassio_core_info"
+DATA_CORE_STATS = "hassio_core_stats"
 DATA_HOST_INFO = "hassio_host_info"
 DATA_STORE = "hassio_store"
 DATA_INFO = "hassio_info"
 DATA_OS_INFO = "hassio_os_info"
 DATA_SUPERVISOR_INFO = "hassio_supervisor_info"
+DATA_SUPERVISOR_STATS = "hassio_supervisor_stats"
 DATA_ADDONS_CHANGELOGS = "hassio_addons_changelogs"
 DATA_ADDONS_INFO = "hassio_addons_info"
 DATA_ADDONS_STATS = "hassio_addons_stats"
-DATA_SUPERVISOR_REPAIRS = "supervisor_repairs"
+DATA_SUPERVISOR_ISSUES = "supervisor_issues"
 HASSIO_UPDATE_INTERVAL = timedelta(minutes=5)
 
 ADDONS_COORDINATOR = "hassio_addons_coordinator"
@@ -229,6 +231,7 @@ MAP_SERVICE_API = {
 HARDWARE_INTEGRATIONS = {
     "odroid-c2": "hardkernel",
     "odroid-c4": "hardkernel",
+    "odroid-m1": "hardkernel",
     "odroid-n2": "hardkernel",
     "odroid-xu4": "hardkernel",
     "rpi2": "raspberry_pi",
@@ -298,6 +301,26 @@ def get_addons_stats(hass):
     Async friendly.
     """
     return hass.data.get(DATA_ADDONS_STATS)
+
+
+@callback
+@bind_hass
+def get_core_stats(hass):
+    """Return core stats.
+
+    Async friendly.
+    """
+    return hass.data.get(DATA_CORE_STATS)
+
+
+@callback
+@bind_hass
+def get_supervisor_stats(hass):
+    """Return supervisor stats.
+
+    Async friendly.
+    """
+    return hass.data.get(DATA_SUPERVISOR_STATS)
 
 
 @callback
@@ -581,9 +604,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         hass.config_entries.flow.async_init(DOMAIN, context={"source": "system"})
     )
 
-    # Start listening for problems with supervisor and making repairs
-    hass.data[DATA_SUPERVISOR_REPAIRS] = repairs = SupervisorRepairs(hass, hassio)
-    await repairs.setup()
+    # Start listening for problems with supervisor and making issues
+    hass.data[DATA_SUPERVISOR_ISSUES] = issues = SupervisorIssues(hass, hassio)
+    await issues.setup()
 
     return True
 
@@ -746,8 +769,14 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         if self.is_hass_os:
             new_data[DATA_KEY_OS] = get_os_info(self.hass)
 
-        new_data[DATA_KEY_CORE] = get_core_info(self.hass)
-        new_data[DATA_KEY_SUPERVISOR] = supervisor_info
+        new_data[DATA_KEY_CORE] = {
+            **(get_core_info(self.hass) or {}),
+            **get_core_stats(self.hass),
+        }
+        new_data[DATA_KEY_SUPERVISOR] = {
+            **supervisor_info,
+            **get_supervisor_stats(self.hass),
+        }
 
         # If this is the initial refresh, register all addons and return the dict
         if not self.data:
@@ -804,12 +833,16 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         (
             self.hass.data[DATA_INFO],
             self.hass.data[DATA_CORE_INFO],
+            self.hass.data[DATA_CORE_STATS],
             self.hass.data[DATA_SUPERVISOR_INFO],
+            self.hass.data[DATA_SUPERVISOR_STATS],
             self.hass.data[DATA_OS_INFO],
         ) = await asyncio.gather(
             self.hassio.get_info(),
             self.hassio.get_core_info(),
+            self.hassio.get_core_stats(),
             self.hassio.get_supervisor_info(),
+            self.hassio.get_supervisor_stats(),
             self.hassio.get_os_info(),
         )
 

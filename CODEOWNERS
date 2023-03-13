@@ -401,6 +401,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/frontend/ @home-assistant/frontend
 /tests/components/frontend/ @home-assistant/frontend
 /homeassistant/components/frontier_silicon/ @wlcrs
+/tests/components/frontier_silicon/ @wlcrs
 /homeassistant/components/fully_kiosk/ @cgarwood
 /tests/components/fully_kiosk/ @cgarwood
 /homeassistant/components/garages_amsterdam/ @klaasnicolaas
@@ -1056,8 +1057,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/seven_segments/ @fabaff
 /homeassistant/components/sfr_box/ @epenet
 /tests/components/sfr_box/ @epenet
-/homeassistant/components/sharkiq/ @JeffResc @funkybunch @AritroSaha10
-/tests/components/sharkiq/ @JeffResc @funkybunch @AritroSaha10
+/homeassistant/components/sharkiq/ @JeffResc @funkybunch
+/tests/components/sharkiq/ @JeffResc @funkybunch
 /homeassistant/components/shell_command/ @home-assistant/core
 /tests/components/shell_command/ @home-assistant/core
 /homeassistant/components/shelly/ @balloob @bieniu @thecode @chemelli74 @bdraco

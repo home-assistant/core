@@ -318,6 +318,7 @@ async def test_setup_get_templated_headers_params(hass: HomeAssistant) -> None:
         },
     )
     await async_setup_component(hass, "homeassistant", {})
+    await hass.async_block_till_done()
 
     assert respx.calls.last.request.headers["Accept"] == CONTENT_TYPE_JSON
     assert respx.calls.last.request.headers["User-Agent"] == "Mozilla/5.0"
