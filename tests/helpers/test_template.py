@@ -243,6 +243,67 @@ def test_iterating_domain_states(hass: HomeAssistant) -> None:
     )
 
 
+async def test_import(hass: HomeAssistant) -> None:
+    """Test that imports work from the config/custom_jinja folder."""
+    await template.async_load_custom_jinja(hass)
+    assert "test.jinja" in template._get_hass_loader(hass).sources
+    assert "inner/inner_test.jinja" in template._get_hass_loader(hass).sources
+    assert (
+        template.Template(
+            """
+            {% import 'test.jinja' as t %}
+            {{ t.test_macro() }} {{ t.test_variable }}
+            """,
+            hass,
+        ).async_render()
+        == "macro variable"
+    )
+
+    assert (
+        template.Template(
+            """
+            {% import 'inner/inner_test.jinja' as t %}
+            {{ t.test_macro() }} {{ t.test_variable }}
+            """,
+            hass,
+        ).async_render()
+        == "inner macro inner variable"
+    )
+
+    with pytest.raises(TemplateError):
+        template.Template(
+            """
+            {% import 'notfound.jinja' as t %}
+            {{ t.test_macro() }} {{ t.test_variable }}
+            """,
+            hass,
+        ).async_render()
+
+
+async def test_import_change(hass: HomeAssistant) -> None:
+    """Test that a change in HassLoader results in updated imports."""
+    await template.async_load_custom_jinja(hass)
+    to_test = template.Template(
+        """
+        {% import 'test.jinja' as t %}
+        {{ t.test_macro() }} {{ t.test_variable }}
+        """,
+        hass,
+    )
+    assert to_test.async_render() == "macro variable"
+
+    template._get_hass_loader(hass).sources = {
+        "test.jinja": """
+            {% macro test_macro() -%}
+            macro2
+            {%- endmacro %}
+
+            {% set test_variable = "variable2" %}
+            """
+    }
+    assert to_test.async_render() == "macro2 variable2"
+
+
 def test_loop_controls(hass: HomeAssistant) -> None:
     """Test that loop controls are enabled."""
     assert (
