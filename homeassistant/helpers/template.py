@@ -1471,29 +1471,19 @@ def state_attr(hass: HomeAssistant, entity_id: str, name: str) -> Any:
     return None
 
 
-def has_value(hass: HomeAssistant, entity_id: str | State | Iterable | None) -> bool:
+def has_value(hass: HomeAssistant, entity_id: str | State) -> bool:
     """Test if an entity has a valid value."""
-    # Entity is a non-existing object
-    if entity_id is None:
-        return False
-
-    # If entity is a string or object then make it a list first.
-    if isinstance(entity_id, (str, State)):
-        entity_id = [entity_id]
-
-    # Loop through entity items provided.
     value: str | None
-    for entity in entity_id:
-        if isinstance(entity, str):
-            if state_obj := _get_state(hass, entity):
-                value = state_obj.state
-            else:
-                value = None if valid_entity_id(entity) else entity
+    if isinstance(entity_id, str):
+        if state_obj := _get_state(hass, entity_id):
+            value = state_obj.state
+        else:
+            value = None if valid_entity_id(entity_id) else entity_id
 
-            if value is None or value in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
-                return False
-        elif entity is None or entity.state in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
+        if value is None or value in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
             return False
+    elif entity_id.state in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
+        return False
 
     return True
 
