@@ -25,7 +25,6 @@ from .exceptions import ReolinkSetupException, ReolinkWebhookException, UserNotA
 
 DEFAULT_TIMEOUT = 60
 SUBSCRIPTION_RENEW_THRESHOLD = 300
-CHECK_WEBHOOK_TEXT = "check reolink webhook"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -135,12 +134,11 @@ class ReolinkHost:
 
         await self.subscribe()
 
-        _LOGGER.debug("Checking webhook '%s' is reachable", self.webhook_id)
-        session = async_get_clientsession(self._hass, verify_ssl=False)
+        _LOGGER.debug("Waiting for initial ONVIF state on webhook '%s'", self.webhook_id)
         try:
-            await session.post(self._webhook_url, data=CHECK_WEBHOOK_TEXT)
-            await asyncio.wait_for(self._webhook_reachable.wait(), timeout=5)
-        except (asyncio.TimeoutError, aiohttp.ClientError):
+            await asyncio.wait_for(self._webhook_reachable.wait(), timeout=15)
+        except asyncio.TimeoutError:
+            _LOGGER.debug("Did not receive initial ONVIF state on webhook '%s' after 15 seconds", self.webhook_id)
             ir.async_create_issue(
                 self._hass,
                 DOMAIN,
@@ -329,6 +327,8 @@ class ReolinkHost:
         """Handle incoming webhook from Reolink for inbound messages and calls."""
 
         _LOGGER.debug("Webhook '%s' called", webhook_id)
+        if not self._webhook_reachable.is_set():
+            self._webhook_reachable.set()
 
         if not request.body_exists:
             _LOGGER.debug("Webhook '%s' triggered without payload", webhook_id)
@@ -339,11 +339,6 @@ class ReolinkHost:
             _LOGGER.debug(
                 "Webhook '%s' triggered with unknown payload: %s", webhook_id, data
             )
-            return
-
-        if data == CHECK_WEBHOOK_TEXT:
-            _LOGGER.debug("Webhook '%s' check received", webhook_id)
-            self._webhook_reachable.set()
             return
 
         channels = await self._api.ONVIF_event_callback(data)
