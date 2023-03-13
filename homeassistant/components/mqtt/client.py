@@ -900,8 +900,6 @@ class MQTT:
 
     async def _discovery_cooldown(self) -> None:
         """Wait until all discovery and subscriptions are processed."""
-        # Await DISCOVERY_COOLDOWN first
-        await asyncio.sleep(INITIAL_SUBSCRIBE_COOLDOWN)
         now = time.time()
         # Reset discovery and subscribe cooldowns
         self._mqtt_data.last_discovery = now
