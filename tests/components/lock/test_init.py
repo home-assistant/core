@@ -23,7 +23,7 @@ from homeassistant.components.lock import (
     _async_open,
     _async_unlock,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 
 
 class MockLockEntity(LockEntity):
@@ -32,6 +32,7 @@ class MockLockEntity(LockEntity):
     def __init__(
         self,
         code_format: str | None = None,
+        lock_option_default_code: str | None = None,
         supported_features: LockEntityFeature = LockEntityFeature(0),
     ) -> None:
         """Initialize mock lock entity."""
@@ -39,6 +40,7 @@ class MockLockEntity(LockEntity):
         self.calls_open = MagicMock()
         if code_format is not None:
             self._attr_code_format = code_format
+        self.lock_option_default_code = lock_option_default_code
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
@@ -53,6 +55,11 @@ class MockLockEntity(LockEntity):
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
         self.calls_open(kwargs)
+
+    @callback
+    def async_registry_entry_updated(self) -> None:
+        """Run when the entity registry entry has been updated."""
+        self._lock_option_default_code = self.lock_option_default_code
 
 
 async def test_lock_default(hass: HomeAssistant) -> None:
@@ -150,3 +157,23 @@ async def test_lock_unlock_with_code(hass: HomeAssistant) -> None:
         )
     await _async_unlock(lock, ServiceCall(DOMAIN, SERVICE_UNLOCK, {ATTR_CODE: "1234"}))
     assert not lock.is_locked
+
+
+async def test_lock_with_default_code(hass: HomeAssistant) -> None:
+    """Test lock entity with default code."""
+    lock = MockLockEntity(
+        code_format=r"^\d{4}$",
+        supported_features=LockEntityFeature.OPEN,
+        lock_option_default_code="1234",
+    )
+    lock.hass = hass
+
+    assert lock.state_attributes == {"code_format": r"^\d{4}$"}
+
+    await _async_open(lock, ServiceCall(DOMAIN, SERVICE_OPEN, {}))
+    await _async_lock(lock, ServiceCall(DOMAIN, SERVICE_LOCK, {}))
+    await _async_unlock(lock, ServiceCall(DOMAIN, SERVICE_UNLOCK, {}))
+
+    await _async_open(lock, ServiceCall(DOMAIN, SERVICE_OPEN, {ATTR_CODE: ""}))
+    await _async_lock(lock, ServiceCall(DOMAIN, SERVICE_LOCK, {ATTR_CODE: ""}))
+    await _async_unlock(lock, ServiceCall(DOMAIN, SERVICE_UNLOCK, {ATTR_CODE: ""}))
