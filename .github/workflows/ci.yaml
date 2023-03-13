@@ -72,6 +72,7 @@ jobs:
       postgresql_groups: ${{ steps.info.outputs.postgresql_groups }}
       python_versions: ${{ steps.info.outputs.python_versions }}
       test_full_suite: ${{ steps.info.outputs.test_full_suite }}
+      test_partial_suite: ${{ steps.info.outputs.test_partial_suite }}
       test_group_count: ${{ steps.info.outputs.test_group_count }}
       test_groups: ${{ steps.info.outputs.test_groups }}
       tests_glob: ${{ steps.info.outputs.tests_glob }}
@@ -120,9 +121,10 @@ jobs:
           mariadb_groups=${MARIADB_VERSIONS}
           postgresql_groups=${POSTGRESQL_VERSIONS}
           test_full_suite="true"
+          test_partial_suite="false"
           test_groups="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
           test_group_count=10
-          tests="[]"
+          tests="[integration]"
           tests_glob=""
 
           if [[ "${{ steps.integrations.outputs.changes }}" != "[]" ]];
@@ -155,6 +157,7 @@ jobs:
             mariadb_groups="[]"
             postgresql_groups="[]"
             test_full_suite="false"
+            test_partial_suite="true"
           fi
 
           # We need to run the full suite on certain branches.
@@ -182,6 +185,8 @@ jobs:
           echo "python_versions=${ALL_PYTHON_VERSIONS}" >> $GITHUB_OUTPUT
           echo "test_full_suite: ${test_full_suite}"
           echo "test_full_suite=${test_full_suite}" >> $GITHUB_OUTPUT
+          echo "test_partial_suite: ${test_partial_suite}"
+          echo "test_partial_suite=${test_partial_suite}" >> $GITHUB_OUTPUT
           echo "integrations_glob: ${integrations_glob}"
           echo "integrations_glob=${integrations_glob}" >> $GITHUB_OUTPUT
           echo "test_group_count: ${test_group_count}"
@@ -273,18 +278,18 @@ jobs:
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
               needs.info.outputs.pre-commit_cache_key }}
-      - name: Run black (fully)
-        if: needs.info.outputs.test_full_suite == 'true'
-        run: |
-          . venv/bin/activate
-          pre-commit run --hook-stage manual black --all-files --show-diff-on-failure
       - name: Run black (partially)
-        if: needs.info.outputs.test_full_suite == 'false'
+        if: needs.info.outputs.test_partial_suite == 'true'
         shell: bash
         run: |
           . venv/bin/activate
           shopt -s globstar
           pre-commit run --hook-stage manual black --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*} --show-diff-on-failure
+      - name: Run black (fully)
+        if: needs.info.outputs.test_full_suite == 'true'
+        run: |
+          . venv/bin/activate
+          pre-commit run --hook-stage manual black --all-files --show-diff-on-failure
 
   lint-flake8:
     name: Check flake8
@@ -322,18 +327,18 @@ jobs:
       - name: Register flake8 problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/flake8.json"
-      - name: Run flake8 (fully)
-        if: needs.info.outputs.test_full_suite == 'true'
-        run: |
-          . venv/bin/activate
-          pre-commit run --hook-stage manual flake8 --all-files
       - name: Run flake8 (partially)
-        if: needs.info.outputs.test_full_suite == 'false'
+        if: needs.info.outputs.test_partial_suite == 'true'
         shell: bash
         run: |
           . venv/bin/activate
           shopt -s globstar
           pre-commit run --hook-stage manual flake8 --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*}
+      - name: Run flake8 (fully)
+        if: needs.info.outputs.test_full_suite == 'true'
+        run: |
+          . venv/bin/activate
+          pre-commit run --hook-stage manual flake8 --all-files
 
   lint-ruff:
     name: Check ruff
@@ -371,18 +376,18 @@ jobs:
       - name: Register ruff problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/ruff.json"
-      - name: Run ruff (fully)
-        if: needs.info.outputs.test_full_suite == 'true'
-        run: |
-          . venv/bin/activate
-          pre-commit run --hook-stage manual ruff --all-files --show-diff-on-failure
       - name: Run ruff (partially)
-        if: needs.info.outputs.test_full_suite == 'false'
+        if: needs.info.outputs.test_partial_suite == 'true'
         shell: bash
         run: |
           . venv/bin/activate
           shopt -s globstar
           pre-commit run --hook-stage manual ruff --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*} --show-diff-on-failure
+      - name: Run ruff (fully)
+        if: needs.info.outputs.test_full_suite == 'true'
+        run: |
+          . venv/bin/activate
+          pre-commit run --hook-stage manual ruff --all-files --show-diff-on-failure
 
   lint-isort:
     name: Check isort
@@ -456,18 +461,18 @@ jobs:
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
               needs.info.outputs.pre-commit_cache_key }}
 
-      - name: Run pyupgrade (fully)
-        if: needs.info.outputs.test_full_suite == 'true'
-        run: |
-          . venv/bin/activate
-          pre-commit run --hook-stage manual pyupgrade --all-files --show-diff-on-failure
       - name: Run pyupgrade (partially)
-        if: needs.info.outputs.test_full_suite == 'false'
+        if: needs.info.outputs.test_partial_suite == 'true'
         shell: bash
         run: |
           . venv/bin/activate
           shopt -s globstar
           pre-commit run --hook-stage manual pyupgrade --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*} --show-diff-on-failure
+      - name: Run pyupgrade (fully)
+        if: needs.info.outputs.test_full_suite == 'true'
+        run: |
+          . venv/bin/activate
+          pre-commit run --hook-stage manual pyupgrade --all-files --show-diff-on-failure
 
       - name: Register yamllint problem matcher
         run: |
@@ -485,18 +490,17 @@ jobs:
           . venv/bin/activate
           pre-commit run --hook-stage manual check-json --all-files
 
+      - name: Run prettier (partially)
+        if: needs.info.outputs.test_partial_suite == 'true'
+        shell: bash
+        run: |
+          . venv/bin/activate
+          pre-commit run --hook-stage manual prettier --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*}
       - name: Run prettier (fully)
         if: needs.info.outputs.test_full_suite == 'true'
         run: |
           . venv/bin/activate
           pre-commit run --hook-stage manual prettier --all-files
-
-      - name: Run prettier (partially)
-        if: needs.info.outputs.test_full_suite == 'false'
-        shell: bash
-        run: |
-          . venv/bin/activate
-          pre-commit run --hook-stage manual prettier --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*}
 
       - name: Register check executables problem matcher
         run: |
@@ -526,18 +530,18 @@ jobs:
         with:
           args: hadolint Dockerfile.dev
 
-      - name: Run bandit (fully)
-        if: needs.info.outputs.test_full_suite == 'true'
-        run: |
-          . venv/bin/activate
-          pre-commit run --hook-stage manual bandit --all-files --show-diff-on-failure
       - name: Run bandit (partially)
-        if: needs.info.outputs.test_full_suite == 'false'
+        if: needs.info.outputs.test_partial_suite == 'true'
         shell: bash
         run: |
           . venv/bin/activate
           shopt -s globstar
           pre-commit run --hook-stage manual bandit --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*} --show-diff-on-failure
+      - name: Run bandit (fully)
+        if: needs.info.outputs.test_full_suite == 'true'
+        run: |
+          . venv/bin/activate
+          pre-commit run --hook-stage manual bandit --all-files --show-diff-on-failure
 
   base:
     name: Prepare dependencies
@@ -701,19 +705,19 @@ jobs:
       - name: Register pylint problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/pylint.json"
+      - name: Run pylint (partially)
+        if: needs.info.outputs.test_partial_suite == 'true'
+        shell: bash
+        run: |
+          . venv/bin/activate
+          python --version
+          pylint --ignore-missing-annotations=y homeassistant/components/${{ needs.info.outputs.integrations_glob }}
       - name: Run pylint (fully)
         if: needs.info.outputs.test_full_suite == 'true'
         run: |
           . venv/bin/activate
           python --version
           pylint --ignore-missing-annotations=y homeassistant
-      - name: Run pylint (partially)
-        if: needs.info.outputs.test_full_suite == 'false'
-        shell: bash
-        run: |
-          . venv/bin/activate
-          python --version
-          pylint --ignore-missing-annotations=y homeassistant/components/${{ needs.info.outputs.integrations_glob }}
 
   mypy:
     name: Check mypy
@@ -763,19 +767,19 @@ jobs:
       - name: Register mypy problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/mypy.json"
+      - name: Run mypy (partially)
+        if: needs.info.outputs.test_partial_suite == 'true'
+        shell: bash
+        run: |
+          . venv/bin/activate
+          python --version
+          mypy homeassistant/components/${{ needs.info.outputs.integrations_glob }}
       - name: Run mypy (fully)
         if: needs.info.outputs.test_full_suite == 'true'
         run: |
           . venv/bin/activate
           python --version
           mypy homeassistant pylint
-      - name: Run mypy (partially)
-        if: needs.info.outputs.test_full_suite == 'false'
-        shell: bash
-        run: |
-          . venv/bin/activate
-          python --version
-          mypy homeassistant/components/${{ needs.info.outputs.integrations_glob }}
 
   pip-check:
     runs-on: ubuntu-22.04
@@ -813,14 +817,14 @@ jobs:
           . venv/bin/activate
           ./script/pip_check $PIP_CACHE
 
-  pytest:
+  pytest-partial:
     runs-on: ubuntu-22.04
     if: |
       (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
       && github.event.inputs.lint-only != 'true'
       && github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
-      && (needs.info.outputs.test_full_suite == 'true' || needs.info.outputs.tests_glob)
+      && needs.info.outputs.test_partial_suite =='true'
     needs:
       - info
       - base
@@ -830,6 +834,110 @@ jobs:
       - lint-other
       - lint-ruff
       - mypy
+    strategy:
+      fail-fast: false
+      matrix:
+        integration: ${{ fromJson(needs.info.outputs.tests) }}
+        python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
+    name: >-
+      Run tests Python ${{ matrix.python-version }} (${{ matrix.integration }})
+    steps:
+      - name: Install additional OS dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install \
+            bluez \
+            ffmpeg
+      - name: Check out code from GitHub
+        uses: actions/checkout@v3.3.0
+      - name: Set up Python ${{ matrix.python-version }}
+        id: python
+        uses: actions/setup-python@v4.5.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          check-latest: true
+      - name: Restore full Python ${{ matrix.python-version }} virtual environment
+        id: cache-venv
+        uses: actions/cache/restore@v3.3.0
+        with:
+          path: venv
+          fail-on-cache-miss: true
+          key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.info.outputs.python_cache_key }}
+      - name: Register Python problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/python.json"
+      - name: Install Pytest Annotation plugin
+        run: |
+          . venv/bin/activate
+          # Ideally this should be part of our dependencies
+          # However this plugin is fairly new and doesn't run correctly
+          # on a non-GitHub environment.
+          pip install pytest-github-actions-annotate-failures==0.1.3
+      - name: Register pytest slow test problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
+      - name: Compile English translations
+        run: |
+          . venv/bin/activate
+          if [[ ! -f "homeassistant/components/${{ matrix.integration }}/strings.json" ]]; then
+            echo "::warning:: missing file tests/components/${{ matrix.integration }}/sensors.py"
+          else
+            python3 -m script.translations develop --integration ${{ matrix.integration }}
+          fi
+      - name: Run pytest (partially)
+        timeout-minutes: 10
+        shell: bash
+        run: |
+          . venv/bin/activate
+          python --version
+
+          if [[ ! -f "tests/components/${{ matrix.integration }}/__init__.py" ]]; then
+            echo "::error:: missing file tests/components/${{ matrix.integration }}/__init__.py"
+            exit 1
+          fi
+
+          python3 -X dev -m pytest \
+            -qq \
+            --timeout=9 \
+            -n auto \
+            --cov="homeassistant.components.${{ matrix.integration }}" \
+            --cov-report=xml \
+            --cov-report=term-missing \
+            -o console_output_style=count \
+            --durations=0 \
+            --durations-min=1 \
+            -p no:sugar \
+            tests/components/${{ matrix.integration }}
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v3.1.2
+        with:
+          name: coverage-${{ matrix.python-version }}-${{ matrix.integration }}
+          path: coverage.xml
+      - name: Check dirty
+        run: |
+          ./script/check_dirty
+
+  pytest:
+    runs-on: ubuntu-22.04
+    if: |
+      (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
+      && github.event.inputs.lint-only != 'true'
+      && github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.mypy-only != 'true'
+      && (needs.info.outputs.test_full_suite == 'true' || needs.info.outputs.tests_glob)
+      && !failure('pytest-partial')
+
+    needs:
+      - info
+      - base
+      - gen-requirements-all
+      - hassfest
+      - lint-isort
+      - lint-other
+      - lint-ruff
+      - mypy
+      - pytest-partial
     strategy:
       fail-fast: false
       matrix:
@@ -896,31 +1004,6 @@ jobs:
             -o console_output_style=count \
             -p no:sugar \
             tests
-      - name: Run pytest (partially)
-        if: needs.info.outputs.test_full_suite == 'false'
-        timeout-minutes: 10
-        shell: bash
-        run: |
-          . venv/bin/activate
-          python --version
-
-          if [[ ! -f "tests/components/${{ matrix.group }}/__init__.py" ]]; then
-            echo "::error:: missing file tests/components/${{ matrix.group }}/__init__.py"
-            exit 1
-          fi
-
-          python3 -X dev -m pytest \
-            -qq \
-            --timeout=9 \
-            -n auto \
-            --cov="homeassistant.components.${{ matrix.group }}" \
-            --cov-report=xml \
-            --cov-report=term-missing \
-            -o console_output_style=count \
-            --durations=0 \
-            --durations-min=1 \
-            -p no:sugar \
-            tests/components/${{ matrix.group }}
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v3.1.2
         with:
@@ -1054,6 +1137,7 @@ jobs:
       && github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
       && needs.info.outputs.postgresql_groups != '[]'
+      && !failure('pytest-partial')
     needs:
       - info
       - base
@@ -1063,6 +1147,7 @@ jobs:
       - lint-other
       - lint-ruff
       - mypy
+      - pytest-partial
     strategy:
       fail-fast: false
       matrix:
@@ -1153,6 +1238,14 @@ jobs:
     needs:
       - info
       - pytest
+      - pytest-partial
+      - pytest-postgres
+      - pytest-mariadb
+    if: |
+      !failure('pytest')
+      || !failure('0ytest-partial')
+      || !failure('pytest-mariadb')
+      || !failure('pytest-postgres')
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.3.0
@@ -1164,5 +1257,4 @@ jobs:
         with:
           flags: full-suite
       - name: Upload coverage to Codecov (partial coverage)
-        if: needs.info.outputs.test_full_suite == 'false'
         uses: codecov/codecov-action@v3.1.1
