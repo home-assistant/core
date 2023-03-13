@@ -330,6 +330,6 @@ class IkeaAirPurifierChannel(ZigbeeChannel):
 @registries.CHANNEL_ONLY_CLUSTERS.register(0xFC80)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(0xFC80)
 class IkeaRemote(ZigbeeChannel):
-    """Ikea Mater remote channel."""
+    """Ikea Matter remote channel."""
 
     REPORT_CONFIG = ()
