@@ -68,7 +68,7 @@ class Base(DeclarativeBase):
     """Base class for tables."""
 
 
-SCHEMA_VERSION = 39
+SCHEMA_VERSION = 40
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -229,7 +229,7 @@ class Events(Base):
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
     )
     event_type_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("event_types.event_type_id"), index=True
+        Integer, ForeignKey("event_types.event_type_id")
     )
     event_data_rel: Mapped[EventData | None] = relationship("EventData")
     event_type_rel: Mapped[EventTypes | None] = relationship("EventTypes")
@@ -426,7 +426,7 @@ class States(Base):
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
     )
     metadata_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("states_meta.metadata_id"), index=True
+        Integer, ForeignKey("states_meta.metadata_id")
     )
     states_meta_rel: Mapped[StatesMeta | None] = relationship("StatesMeta")
 
@@ -617,7 +617,6 @@ class StatisticsBase:
     metadata_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey(f"{TABLE_STATISTICS_META}.id", ondelete="CASCADE"),
-        index=True,
     )
     start: Mapped[datetime | None] = mapped_column(
         DATETIME_TYPE, index=True

@@ -241,7 +241,7 @@ aiopurpleair==2022.12.1
 aiopvapi==2.0.4
 
 # homeassistant.components.pvpc_hourly_pricing
-aiopvpc==4.0.1
+aiopvpc==4.1.0
 
 # homeassistant.components.lidarr
 # homeassistant.components.radarr
@@ -1979,7 +1979,7 @@ pysmartthings==0.7.6
 pysmarty==0.8
 
 # homeassistant.components.edl21
-pysml==0.0.8
+pysml==0.0.9
 
 # homeassistant.components.snmp
 pysnmplib==5.0.21
@@ -2524,7 +2524,7 @@ total_connect_client==2023.2
 tp-connected==0.0.4
 
 # homeassistant.components.tplink_omada
-tplink-omada-client==1.1.0
+tplink-omada-client==1.1.3
 
 # homeassistant.components.transmission
 transmission-rpc==3.4.0
