@@ -64,6 +64,11 @@
           "blackwhite": "Black&White"
         }
       }
+      "auto_quick_reply_message": {
+        "state": {
+          "off": "Off"
+        }
+      }
     }
   }
 }

@@ -71,6 +71,7 @@ SELECT_ENTITIES = (
         key="auto_quick_reply_message",
         name="Auto quick reply message",
         icon="mdi:message-reply-text-outline",
+        translation_key="auto_quick_reply_message",
         get_options=lambda api, ch: list(api.quick_reply_dict(ch).values()),
         supported=lambda api, ch: api.supported(ch, "quick_reply"),
         value=lambda api, ch: api.quick_reply_dict(ch)[api.quick_reply_file(ch)],
