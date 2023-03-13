@@ -36,7 +36,7 @@
       "drop": {
         "name": "Drop"
       },
-      "Formaldehyde": {
+      "feeding": {
         "name": "Feeding"
       },
       "formaldehyde": {
@@ -275,7 +275,7 @@
         }
       },
       "decibel_sensitivity": {
-        "name": "Sound detection densitivit",
+        "name": "Sound detection sensitivit",
         "state": {
           "0": "Low sensitivity",
           "1": "High sensitivity"
@@ -564,9 +564,6 @@
         "name": "Side brush life"
       },
       "smoke_amount": {
-        "name": "Smoke amount"
-      },
-      "somke_amount": {
         "name": "Smoke amount"
       },
       "sous_vide_status": {

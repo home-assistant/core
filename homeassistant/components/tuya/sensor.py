@@ -722,7 +722,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             icon="mdi:smoke-detector",
             entity_category=EntityCategory.DIAGNOSTIC,
             state_class=SensorStateClass.MEASUREMENT,
-            translation_key="somke_amount",
+            translation_key="smoke_amount",
         ),
         *BATTERY_SENSORS,
     ),
