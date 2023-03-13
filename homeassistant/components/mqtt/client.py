@@ -314,6 +314,11 @@ class EnsureJobAfterCooldown:
         self._task: asyncio.Future | None = None
         self._timer: asyncio.TimerHandle | None = None
 
+    @property
+    def timeout(self) -> float:
+        """Return the current timeout."""
+        return self._timeout
+
     def set_timeout(self, timeout: float) -> None:
         """Set a new timeout period."""
         self._timeout = timeout
@@ -617,7 +622,7 @@ class MQTT:
 
         # Only subscribe if currently connected.
         if self.connected:
-            self._last_subscribe = time.time()
+            self._last_subscribe = time.time() + self._subscribe_debouncer.timeout
             self._async_queue_subscriptions(((topic, qos),))
 
         @callback
@@ -901,8 +906,8 @@ class MQTT:
 
     async def _discovery_cooldown(self) -> None:
         """Wait until all discovery and subscriptions are processed."""
-        # Await INITIAL_SUBSCRIBE_COOLDOWN first
-        await asyncio.sleep(INITIAL_SUBSCRIBE_COOLDOWN)
+        # Await DISCOVERY_COOLDOWN first
+        await asyncio.sleep(DISCOVERY_COOLDOWN)
         now = time.time()
         # Reset discovery and subscribe cooldowns
         self._mqtt_data.last_discovery = now
