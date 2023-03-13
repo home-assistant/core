@@ -319,6 +319,15 @@ class Entity(ABC):
         """Return the name of the entity."""
         if hasattr(self, "_attr_name"):
             return self._attr_name
+        if self.translation_key is not None and self.has_entity_name:
+            assert self.platform
+            name_translation_key = (
+                f"component.{self.platform.platform_name}.entity.{self.platform.domain}"
+                f".{self.translation_key}.name"
+            )
+            if name_translation_key in self.platform.entity_translations:
+                name: str = self.platform.entity_translations[name_translation_key]
+                return name
         if hasattr(self, "entity_description"):
             return self.entity_description.name
         return None
