@@ -158,6 +158,7 @@ class ReolinkHost:
                 severity=ir.IssueSeverity.WARNING,
                 translation_key="webhook_url",
                 translation_placeholders={
+                    "name": self._api.nvr_name,
                     "base_url": self._base_url,
                     "network_link": "https://my.home-assistant.io/redirect/network/",
                 },
