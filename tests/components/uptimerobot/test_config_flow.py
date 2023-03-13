@@ -76,7 +76,7 @@ async def test_form_read_only(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "exception,error_key",
+    ("exception", "error_key"),
     [
         (Exception, "unknown"),
         (UptimeRobotException, "cannot_connect"),
@@ -182,7 +182,6 @@ async def test_reauthentication(
         "homeassistant.components.uptimerobot.async_setup_entry",
         return_value=True,
     ):
-
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_API_KEY: MOCK_UPTIMEROBOT_API_KEY},
@@ -221,7 +220,6 @@ async def test_reauthentication_failure(
         "homeassistant.components.uptimerobot.async_setup_entry",
         return_value=True,
     ):
-
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_API_KEY: MOCK_UPTIMEROBOT_API_KEY},
@@ -263,7 +261,6 @@ async def test_reauthentication_failure_no_existing_entry(
         "homeassistant.components.uptimerobot.async_setup_entry",
         return_value=True,
     ):
-
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_API_KEY: MOCK_UPTIMEROBOT_API_KEY},
@@ -305,7 +302,6 @@ async def test_reauthentication_failure_account_not_matching(
         "homeassistant.components.uptimerobot.async_setup_entry",
         return_value=True,
     ):
-
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_API_KEY: MOCK_UPTIMEROBOT_API_KEY},

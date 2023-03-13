@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 from aiohttp import CookieJar
 import async_timeout
 from pyisy import ISY, ISYConnectionError, ISYInvalidAuthError, ISYResponseParseError
+from pyisy.constants import CONFIG_NETWORKING, CONFIG_PORTAL
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -43,7 +44,6 @@ from .const import (
     ISY_CONF_FIRMWARE,
     ISY_CONF_MODEL,
     ISY_CONF_NAME,
-    ISY_CONF_NETWORKING,
     MANUFACTURER,
     PLATFORMS,
     SCHEME_HTTP,
@@ -220,9 +220,11 @@ async def async_setup_entry(
         numbers = isy_data.variables[Platform.NUMBER]
         for vtype, _, vid in isy.variables.children:
             numbers.append(isy.variables[vtype][vid])
-    if isy.conf[ISY_CONF_NETWORKING]:
+    if (
+        isy.conf[CONFIG_NETWORKING] or isy.conf[CONFIG_PORTAL]
+    ) and isy.networking.nobjs:
         isy_data.devices[CONF_NETWORK] = _create_service_device_info(
-            isy, name=ISY_CONF_NETWORKING, unique_id=CONF_NETWORK
+            isy, name=CONFIG_NETWORKING, unique_id=CONF_NETWORK
         )
         for resource in isy.networking.nobjs:
             isy_data.net_resources.append(resource)

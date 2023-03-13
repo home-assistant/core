@@ -24,7 +24,6 @@ async def test_info(
         "homeassistant.components.backup.websocket.BackupManager.get_backups",
         return_value={TEST_BACKUP.slug: TEST_BACKUP},
     ):
-
         await client.send_json({"id": 1, "type": "backup/info"})
         msg = await client.receive_json()
 

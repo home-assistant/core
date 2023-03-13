@@ -60,7 +60,7 @@ from homeassistant.util import dt
 from tests.common import async_fire_time_changed
 
 
-async def test_climate_find_valid_targets():
+async def test_climate_find_valid_targets() -> None:
     """Test function to return temperature from valid targets."""
 
     valid_targets = [10, 16, 17, 18, 19, 20]

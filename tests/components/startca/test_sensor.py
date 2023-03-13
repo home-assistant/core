@@ -4,10 +4,15 @@ from http import HTTPStatus
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.startca.sensor import StartcaData
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, UnitOfInformation
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from tests.test_util.aiohttp import AiohttpClientMocker
 
-async def test_capped_setup(hass, aioclient_mock):
+
+async def test_capped_setup(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test the default setup."""
     config = {
         "platform": "startca",
@@ -103,7 +108,9 @@ async def test_capped_setup(hass, aioclient_mock):
     assert state.state == "95.05"
 
 
-async def test_unlimited_setup(hass, aioclient_mock):
+async def test_unlimited_setup(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test the default setup."""
     config = {
         "platform": "startca",
@@ -199,7 +206,9 @@ async def test_unlimited_setup(hass, aioclient_mock):
     assert state.state == "inf"
 
 
-async def test_bad_return_code(hass, aioclient_mock):
+async def test_bad_return_code(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test handling a return code that isn't HTTP OK."""
     aioclient_mock.get(
         "https://www.start.ca/support/usage/api?key=NOTAKEY",
@@ -212,7 +221,9 @@ async def test_bad_return_code(hass, aioclient_mock):
     assert result is False
 
 
-async def test_bad_json_decode(hass, aioclient_mock):
+async def test_bad_json_decode(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test decoding invalid json result."""
     aioclient_mock.get(
         "https://www.start.ca/support/usage/api?key=NOTAKEY", text="this is not xml"

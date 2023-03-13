@@ -5,10 +5,11 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
-async def test_state(hass):
+async def test_state(hass: HomeAssistant) -> None:
     """Test Air Quality state."""
     config = {"air_quality": {"platform": "demo"}}
 
@@ -21,7 +22,7 @@ async def test_state(hass):
     assert state.state == "14"
 
 
-async def test_attributes(hass):
+async def test_attributes(hass: HomeAssistant) -> None:
     """Test Air Quality attributes."""
     config = {"air_quality": {"platform": "demo"}}
 

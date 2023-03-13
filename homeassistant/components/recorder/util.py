@@ -1,10 +1,12 @@
 """SQLAlchemy util functions."""
 from __future__ import annotations
 
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Generator, Iterable, Sequence
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta
 import functools
+from functools import partial
+from itertools import islice
 import logging
 import os
 import time
@@ -17,8 +19,7 @@ from awesomeversion import (
 )
 import ciso8601
 from sqlalchemy import text
-from sqlalchemy.engine.cursor import CursorFetchStrategy
-from sqlalchemy.engine.row import Row
+from sqlalchemy.engine import Result, Row
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
@@ -36,9 +37,17 @@ from .db_schema import (
     TABLES_TO_CHECK,
     RecorderRuns,
 )
-from .models import StatisticPeriod, UnsupportedDialect, process_timestamp
+from .models import (
+    DatabaseEngine,
+    DatabaseOptimizer,
+    StatisticPeriod,
+    UnsupportedDialect,
+    process_timestamp,
+)
 
 if TYPE_CHECKING:
+    from sqlite3.dbapi2 import Cursor as SQLiteCursor
+
     from . import Recorder
 
 _RecorderT = TypeVar("_RecorderT", bound="Recorder")
@@ -51,44 +60,33 @@ QUERY_RETRY_WAIT = 0.1
 SQLITE3_POSTFIXES = ["", "-wal", "-shm"]
 DEFAULT_YIELD_STATES_ROWS = 32768
 
+
 # Our minimum versions for each database
 #
 # Older MariaDB suffers https://jira.mariadb.org/browse/MDEV-25020
 # which is fixed in 10.5.17, 10.6.9, 10.7.5, 10.8.4
 #
-MIN_VERSION_MARIA_DB = AwesomeVersion(
-    "10.3.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
-)
-RECOMMENDED_MIN_VERSION_MARIA_DB = AwesomeVersion(
-    "10.5.17", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
-)
-MARIA_DB_106 = AwesomeVersion(
-    "10.6.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
-)
-RECOMMENDED_MIN_VERSION_MARIA_DB_106 = AwesomeVersion(
-    "10.6.9", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
-)
-MARIA_DB_107 = AwesomeVersion(
-    "10.7.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
-)
-RECOMMENDED_MIN_VERSION_MARIA_DB_107 = AwesomeVersion(
-    "10.7.5", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
-)
-MARIA_DB_108 = AwesomeVersion(
-    "10.8.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
-)
-RECOMMENDED_MIN_VERSION_MARIA_DB_108 = AwesomeVersion(
-    "10.8.4", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
-)
-MIN_VERSION_MYSQL = AwesomeVersion(
-    "8.0.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
-)
-MIN_VERSION_PGSQL = AwesomeVersion(
-    "12.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
-)
-MIN_VERSION_SQLITE = AwesomeVersion(
-    "3.31.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
-)
+def _simple_version(version: str) -> AwesomeVersion:
+    """Return a simple version."""
+    return AwesomeVersion(version, ensure_strategy=AwesomeVersionStrategy.SIMPLEVER)
+
+
+MIN_VERSION_MARIA_DB = _simple_version("10.3.0")
+RECOMMENDED_MIN_VERSION_MARIA_DB = _simple_version("10.5.17")
+MARIADB_WITH_FIXED_IN_QUERIES_105 = _simple_version("10.5.17")
+MARIA_DB_106 = _simple_version("10.6.0")
+MARIADB_WITH_FIXED_IN_QUERIES_106 = _simple_version("10.6.9")
+RECOMMENDED_MIN_VERSION_MARIA_DB_106 = _simple_version("10.6.9")
+MARIA_DB_107 = _simple_version("10.7.0")
+RECOMMENDED_MIN_VERSION_MARIA_DB_107 = _simple_version("10.7.5")
+MARIADB_WITH_FIXED_IN_QUERIES_107 = _simple_version("10.7.5")
+MARIA_DB_108 = _simple_version("10.8.0")
+RECOMMENDED_MIN_VERSION_MARIA_DB_108 = _simple_version("10.8.4")
+MARIADB_WITH_FIXED_IN_QUERIES_108 = _simple_version("10.8.4")
+MIN_VERSION_MYSQL = _simple_version("8.0.0")
+MIN_VERSION_PGSQL = _simple_version("12.0")
+MIN_VERSION_SQLITE = _simple_version("3.31.0")
+
 
 # This is the maximum time after the recorder ends the session
 # before we no longer consider startup to be a "restart" and we
@@ -112,8 +110,14 @@ def session_scope(
     hass: HomeAssistant | None = None,
     session: Session | None = None,
     exception_filter: Callable[[Exception], bool] | None = None,
+    read_only: bool = False,
 ) -> Generator[Session, None, None]:
-    """Provide a transactional scope around a series of operations."""
+    """Provide a transactional scope around a series of operations.
+
+    read_only is used to indicate that the session is only used for reading
+    data and that no commit is required. It does not prevent the session
+    from writing and is not a security measure.
+    """
     if session is None and hass is not None:
         session = get_instance(hass).get_session()
 
@@ -123,34 +127,17 @@ def session_scope(
     need_rollback = False
     try:
         yield session
-        if session.get_transaction():
+        if session.get_transaction() and not read_only:
             need_rollback = True
             session.commit()
     except Exception as err:  # pylint: disable=broad-except
-        _LOGGER.error("Error executing query: %s", err)
+        _LOGGER.error("Error executing query: %s", err, exc_info=True)
         if need_rollback:
             session.rollback()
         if not exception_filter or not exception_filter(err):
             raise
     finally:
         session.close()
-
-
-def commit(session: Session, work: Any) -> bool:
-    """Commit & retry work: Either a model or in a function."""
-    for _ in range(0, RETRIES):
-        try:
-            if callable(work):
-                work(session)
-            else:
-                session.add(work)
-            session.commit()
-            return True
-        except OperationalError as err:
-            _LOGGER.error("Error executing query: %s", err)
-            session.rollback()
-            time.sleep(QUERY_RETRY_WAIT)
-    return False
 
 
 def execute(
@@ -160,9 +147,12 @@ def execute(
 
     This method also retries a few times in the case of stale connections.
     """
+    debug = _LOGGER.isEnabledFor(logging.DEBUG)
     for tryno in range(0, RETRIES):
         try:
-            timer_start = time.perf_counter()
+            if debug:
+                timer_start = time.perf_counter()
+
             if to_native:
                 result = [
                     row
@@ -175,7 +165,7 @@ def execute(
             else:
                 result = qry.all()
 
-            if _LOGGER.isEnabledFor(logging.DEBUG):
+            if debug:
                 elapsed = time.perf_counter() - timer_start
                 if to_native:
                     _LOGGER.debug(
@@ -207,8 +197,8 @@ def execute_stmt_lambda_element(
     stmt: StatementLambdaElement,
     start_time: datetime | None = None,
     end_time: datetime | None = None,
-    yield_per: int | None = DEFAULT_YIELD_STATES_ROWS,
-) -> list[Row]:
+    yield_per: int = DEFAULT_YIELD_STATES_ROWS,
+) -> Sequence[Row] | Result:
     """Execute a StatementLambdaElement.
 
     If the time window passed is greater than one day
@@ -225,8 +215,8 @@ def execute_stmt_lambda_element(
     for tryno in range(RETRIES):
         try:
             if use_all:
-                return executed.all()  # type: ignore[no-any-return]
-            return executed.yield_per(yield_per)  # type: ignore[no-any-return]
+                return executed.all()
+            return executed.yield_per(yield_per)
         except SQLAlchemyError as err:
             _LOGGER.error("Error executing query: %s", err)
             if tryno == RETRIES - 1:
@@ -257,7 +247,7 @@ def dburl_to_path(dburl: str) -> str:
     return dburl.removeprefix(SQLITE_URL_PREFIX)
 
 
-def last_run_was_recently_clean(cursor: CursorFetchStrategy) -> bool:
+def last_run_was_recently_clean(cursor: SQLiteCursor) -> bool:
     """Verify the last recorder run was recently clean."""
 
     cursor.execute("SELECT end FROM recorder_runs ORDER BY start DESC LIMIT 1;")
@@ -278,7 +268,7 @@ def last_run_was_recently_clean(cursor: CursorFetchStrategy) -> bool:
     return True
 
 
-def basic_sanity_check(cursor: CursorFetchStrategy) -> bool:
+def basic_sanity_check(cursor: SQLiteCursor) -> bool:
     """Check tables to make sure select does not fail."""
 
     for table in TABLES_TO_CHECK:
@@ -305,7 +295,7 @@ def validate_sqlite_database(dbpath: str) -> bool:
     return True
 
 
-def run_checks_on_open_db(dbpath: str, cursor: CursorFetchStrategy) -> None:
+def run_checks_on_open_db(dbpath: str, cursor: SQLiteCursor) -> None:
     """Run checks that will generate a sqlite3 exception if there is corruption."""
     sanity_check_passed = basic_sanity_check(cursor)
     last_run_was_clean = last_run_was_recently_clean(cursor)
@@ -469,9 +459,10 @@ def setup_connection_for_dialect(
     dialect_name: str,
     dbapi_connection: Any,
     first_connection: bool,
-) -> AwesomeVersion | None:
+) -> DatabaseEngine | None:
     """Execute statements needed for dialect connection."""
     version: AwesomeVersion | None = None
+    slow_range_in_select = False
     if dialect_name == SupportedDialect.SQLITE:
         if first_connection:
             old_isolation = dbapi_connection.isolation_level
@@ -538,6 +529,16 @@ def setup_connection_for_dialect(
                         version or version_string, "MySQL", MIN_VERSION_MYSQL
                     )
 
+            slow_range_in_select = bool(
+                not version
+                or version < MARIADB_WITH_FIXED_IN_QUERIES_105
+                or MARIA_DB_106 <= version < MARIADB_WITH_FIXED_IN_QUERIES_106
+                or MARIA_DB_107 <= version < MARIADB_WITH_FIXED_IN_QUERIES_107
+                or MARIA_DB_108 <= version < MARIADB_WITH_FIXED_IN_QUERIES_108
+            )
+
+        # Ensure all times are using UTC to avoid issues with daylight savings
+        execute_on_connection(dbapi_connection, "SET time_zone = '+00:00'")
     elif dialect_name == SupportedDialect.POSTGRESQL:
         if first_connection:
             # server_version_num was added in 2006
@@ -552,7 +553,14 @@ def setup_connection_for_dialect(
     else:
         _fail_unsupported_dialect(dialect_name)
 
-    return version
+    if not first_connection:
+        return None
+
+    return DatabaseEngine(
+        dialect=SupportedDialect(dialect_name),
+        version=version,
+        optimizer=DatabaseOptimizer(slow_range_in_select=slow_range_in_select),
+    )
 
 
 def end_incomplete_runs(session: Session, start_time: datetime) -> None:
@@ -566,31 +574,36 @@ def end_incomplete_runs(session: Session, start_time: datetime) -> None:
         session.add(run)
 
 
+def _is_retryable_error(instance: Recorder, err: OperationalError) -> bool:
+    """Return True if the error is retryable."""
+    assert instance.engine is not None
+    return bool(
+        instance.engine.dialect.name == SupportedDialect.MYSQL
+        and isinstance(err.orig, BaseException)
+        and err.orig.args
+        and err.orig.args[0] in RETRYABLE_MYSQL_ERRORS
+    )
+
+
+_FuncType = Callable[Concatenate[_RecorderT, _P], bool]
+
+
 def retryable_database_job(
     description: str,
-) -> Callable[
-    [Callable[Concatenate[_RecorderT, _P], bool]],
-    Callable[Concatenate[_RecorderT, _P], bool],
-]:
+) -> Callable[[_FuncType[_RecorderT, _P]], _FuncType[_RecorderT, _P]]:
     """Try to execute a database job.
 
     The job should return True if it finished, and False if it needs to be rescheduled.
     """
 
-    def decorator(
-        job: Callable[Concatenate[_RecorderT, _P], bool]
-    ) -> Callable[Concatenate[_RecorderT, _P], bool]:
+    def decorator(job: _FuncType[_RecorderT, _P]) -> _FuncType[_RecorderT, _P]:
         @functools.wraps(job)
         def wrapper(instance: _RecorderT, *args: _P.args, **kwargs: _P.kwargs) -> bool:
             try:
                 return job(instance, *args, **kwargs)
             except OperationalError as err:
-                assert instance.engine is not None
-                if (
-                    instance.engine.dialect.name == SupportedDialect.MYSQL
-                    and err.orig
-                    and err.orig.args[0] in RETRYABLE_MYSQL_ERRORS
-                ):
+                if _is_retryable_error(instance, err):
+                    assert isinstance(err.orig, BaseException)
                     _LOGGER.info(
                         "%s; %s not completed, retrying", err.orig.args[1], description
                     )
@@ -602,6 +615,46 @@ def retryable_database_job(
 
             # Failed with permanent error
             return True
+
+        return wrapper
+
+    return decorator
+
+
+_WrappedFuncType = Callable[Concatenate[_RecorderT, _P], None]
+
+
+def database_job_retry_wrapper(
+    description: str, attempts: int = 5
+) -> Callable[[_WrappedFuncType[_RecorderT, _P]], _WrappedFuncType[_RecorderT, _P]]:
+    """Try to execute a database job multiple times.
+
+    This wrapper handles InnoDB deadlocks and lock timeouts.
+
+    This is different from retryable_database_job in that it will retry the job
+    attempts number of times instead of returning False if the job fails.
+    """
+
+    def decorator(
+        job: _WrappedFuncType[_RecorderT, _P]
+    ) -> _WrappedFuncType[_RecorderT, _P]:
+        @functools.wraps(job)
+        def wrapper(instance: _RecorderT, *args: _P.args, **kwargs: _P.kwargs) -> None:
+            for attempt in range(attempts):
+                try:
+                    job(instance, *args, **kwargs)
+                    return
+                except OperationalError as err:
+                    if attempt == attempts - 1 or not _is_retryable_error(
+                        instance, err
+                    ):
+                        raise
+                    assert isinstance(err.orig, BaseException)
+                    _LOGGER.info(
+                        "%s; %s failed, retrying", err.orig.args[1], description
+                    )
+                    time.sleep(instance.db_retry_wait)
+                    # Failed with retryable error
 
         return wrapper
 
@@ -763,3 +816,19 @@ def resolve_period(
             end_time += offset
 
     return (start_time, end_time)
+
+
+def take(take_num: int, iterable: Iterable) -> list[Any]:
+    """Return first n items of the iterable as a list.
+
+    From itertools recipes
+    """
+    return list(islice(iterable, take_num))
+
+
+def chunked(iterable: Iterable, chunked_num: int) -> Iterable[Any]:
+    """Break *iterable* into lists of length *n*.
+
+    From more-itertools
+    """
+    return iter(partial(take, chunked_num, iter(iterable)), [])

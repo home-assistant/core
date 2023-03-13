@@ -120,7 +120,7 @@ async def async_setup_platform(
 
 
 class NswRuralFireServiceLocationEvent(GeolocationEvent):
-    """This represents an external event with NSW Rural Fire Service data."""
+    """Represents an external event with NSW Rural Fire Service data."""
 
     _attr_should_poll = False
     _attr_source = SOURCE

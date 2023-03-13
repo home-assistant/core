@@ -11,10 +11,11 @@ import pytest
 import voluptuous as vol
 
 import homeassistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, selector, template
 
 
-def test_boolean():
+def test_boolean() -> None:
     """Test boolean validation."""
     schema = vol.Schema(cv.boolean)
 
@@ -39,7 +40,7 @@ def test_boolean():
         assert not schema(value)
 
 
-def test_latitude():
+def test_latitude() -> None:
     """Test latitude validation."""
     schema = vol.Schema(cv.latitude)
 
@@ -51,7 +52,7 @@ def test_latitude():
         schema(value)
 
 
-def test_longitude():
+def test_longitude() -> None:
     """Test longitude validation."""
     schema = vol.Schema(cv.longitude)
 
@@ -63,7 +64,7 @@ def test_longitude():
         schema(value)
 
 
-def test_port():
+def test_port() -> None:
     """Test TCP/UDP network port."""
     schema = vol.Schema(cv.port)
 
@@ -75,7 +76,7 @@ def test_port():
         schema(value)
 
 
-def test_isfile():
+def test_isfile() -> None:
     """Validate that the value is an existing file."""
     schema = vol.Schema(cv.isfile)
 
@@ -94,7 +95,7 @@ def test_isfile():
         schema("test.txt")
 
 
-def test_url():
+def test_url() -> None:
     """Test URL."""
     schema = vol.Schema(cv.url)
 
@@ -120,7 +121,7 @@ def test_url():
         assert schema(value)
 
 
-def test_url_no_path():
+def test_url_no_path() -> None:
     """Test URL."""
     schema = vol.Schema(cv.url_no_path)
 
@@ -139,7 +140,7 @@ def test_url_no_path():
         assert schema(value)
 
 
-def test_platform_config():
+def test_platform_config() -> None:
     """Test platform config validation."""
     options = ({}, {"hello": "world"})
     for value in options:
@@ -151,7 +152,7 @@ def test_platform_config():
         cv.PLATFORM_SCHEMA_BASE(value)
 
 
-def test_ensure_list():
+def test_ensure_list() -> None:
     """Test ensure_list."""
     schema = vol.Schema(cv.ensure_list)
     assert [] == schema(None)
@@ -162,7 +163,7 @@ def test_ensure_list():
     assert [{"1": "2"}] == schema({"1": "2"})
 
 
-def test_entity_id():
+def test_entity_id() -> None:
     """Test entity ID validation."""
     schema = vol.Schema(cv.entity_id)
 
@@ -173,7 +174,7 @@ def test_entity_id():
 
 
 @pytest.mark.parametrize("validator", [cv.entity_ids, cv.entity_ids_or_uuids])
-def test_entity_ids(validator):
+def test_entity_ids(validator) -> None:
     """Test entity ID validation."""
     schema = vol.Schema(validator)
 
@@ -195,7 +196,7 @@ def test_entity_ids(validator):
     assert schema("sensor.LIGHT, light.kitchen ") == ["sensor.light", "light.kitchen"]
 
 
-def test_entity_ids_or_uuids():
+def test_entity_ids_or_uuids() -> None:
     """Test entity ID validation."""
     schema = vol.Schema(cv.entity_ids_or_uuids)
 
@@ -221,7 +222,7 @@ def test_entity_ids_or_uuids():
     assert schema(f"{valid_uuid}, {valid_uuid2} ") == [valid_uuid, valid_uuid2]
 
 
-def test_entity_domain():
+def test_entity_domain() -> None:
     """Test entity domain validation."""
     schema = vol.Schema(cv.entity_domain("sensor"))
 
@@ -246,7 +247,7 @@ def test_entity_domain():
     assert schema("binary_sensor.LIGHT") == "binary_sensor.light"
 
 
-def test_entities_domain():
+def test_entities_domain() -> None:
     """Test entities domain validation."""
     schema = vol.Schema(cv.entities_domain("sensor"))
 
@@ -270,7 +271,7 @@ def test_entities_domain():
     assert schema(["sensor.light", "SENSOR.demo"]) == ["sensor.light", "sensor.demo"]
 
 
-def test_ensure_list_csv():
+def test_ensure_list_csv() -> None:
     """Test ensure_list_csv."""
     schema = vol.Schema(cv.ensure_list_csv)
 
@@ -281,7 +282,7 @@ def test_ensure_list_csv():
     assert schema("string1, string2 ") == ["string1", "string2"]
 
 
-def test_event_schema():
+def test_event_schema() -> None:
     """Test event_schema validation."""
     options = (
         {},
@@ -301,7 +302,7 @@ def test_event_schema():
         cv.EVENT_SCHEMA(value)
 
 
-def test_icon():
+def test_icon() -> None:
     """Test icon validation."""
     schema = vol.Schema(cv.icon)
 
@@ -313,7 +314,7 @@ def test_icon():
     schema("custom:prefix")
 
 
-def test_time_period():
+def test_time_period() -> None:
     """Test time_period validation."""
     schema = vol.Schema(cv.time_period)
 
@@ -362,12 +363,12 @@ def test_time_period():
         assert schema(value) == result
 
 
-def test_remove_falsy():
+def test_remove_falsy() -> None:
     """Test remove falsy."""
     assert cv.remove_falsy([0, None, 1, "1", {}, [], ""]) == [1, "1"]
 
 
-def test_service():
+def test_service() -> None:
     """Test service validation."""
     schema = vol.Schema(cv.service)
 
@@ -377,7 +378,7 @@ def test_service():
     schema("homeassistant.turn_on")
 
 
-def test_service_schema():
+def test_service_schema() -> None:
     """Test service_schema validation."""
     options = (
         {},
@@ -421,7 +422,7 @@ def test_service_schema():
     }
 
 
-def test_entity_service_schema():
+def test_entity_service_schema() -> None:
     """Test make_entity_service_schema validation."""
     schema = cv.make_entity_service_schema(
         {vol.Required("required"): cv.positive_int, vol.Optional("optional"): cv.string}
@@ -460,7 +461,7 @@ def test_entity_service_schema():
         assert "metadata" not in validated
 
 
-def test_entity_service_schema_with_metadata():
+def test_entity_service_schema_with_metadata() -> None:
     """Test make_entity_service_schema with overridden metadata key."""
     schema = cv.make_entity_service_schema({vol.Required("metadata"): cv.positive_int})
 
@@ -475,7 +476,7 @@ def test_entity_service_schema_with_metadata():
         assert "metadata" in validated
 
 
-def test_slug():
+def test_slug() -> None:
     """Test slug validation."""
     schema = vol.Schema(cv.slug)
 
@@ -487,7 +488,7 @@ def test_slug():
         schema(value)
 
 
-def test_string(hass):
+def test_string(hass: HomeAssistant) -> None:
     """Test string validation."""
     schema = vol.Schema(cv.string)
 
@@ -517,7 +518,7 @@ def test_string(hass):
         assert schema(result) == text
 
 
-def test_string_with_no_html():
+def test_string_with_no_html() -> None:
     """Test string with no html validation."""
     schema = vol.Schema(cv.string_with_no_html)
 
@@ -537,7 +538,7 @@ def test_string_with_no_html():
         schema(value)
 
 
-def test_temperature_unit():
+def test_temperature_unit() -> None:
     """Test temperature unit validation."""
     schema = vol.Schema(cv.temperature_unit)
 
@@ -548,7 +549,7 @@ def test_temperature_unit():
     schema("F")
 
 
-def test_x10_address():
+def test_x10_address() -> None:
     """Test x10 addr validator."""
     schema = vol.Schema(cv.x10_address)
     with pytest.raises(vol.Invalid):
@@ -560,11 +561,16 @@ def test_x10_address():
     schema("C11")
 
 
-def test_template():
+def test_template(hass: HomeAssistant) -> None:
     """Test template validator."""
     schema = vol.Schema(cv.template)
 
-    for value in (None, "{{ partial_print }", "{% if True %}Hello", ["test"]):
+    for value in (
+        None,
+        "{{ partial_print }",
+        "{% if True %}Hello",
+        ["test"],
+    ):
         with pytest.raises(vol.Invalid):
             schema(value)
 
@@ -573,12 +579,43 @@ def test_template():
         "Hello",
         "{{ beer }}",
         "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
+        # Function added as an extension by Home Assistant
+        "{{ expand('group.foo')|map(attribute='entity_id')|list }}",
+        # Filter added as an extension by Home Assistant
+        "{{ ['group.foo']|expand|map(attribute='entity_id')|list }}",
     )
     for value in options:
         schema(value)
 
 
-def test_dynamic_template():
+async def test_template_no_hass(hass: HomeAssistant) -> None:
+    """Test template validator."""
+    schema = vol.Schema(cv.template)
+
+    for value in (
+        None,
+        "{{ partial_print }",
+        "{% if True %}Hello",
+        ["test"],
+        # Filter added as an extension by Home Assistant
+        "{{ ['group.foo']|expand|map(attribute='entity_id')|list }}",
+    ):
+        with pytest.raises(vol.Invalid):
+            await hass.async_add_executor_job(schema, value)
+
+    options = (
+        1,
+        "Hello",
+        "{{ beer }}",
+        "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
+        # Function added as an extension by Home Assistant
+        "{{ expand('group.foo')|map(attribute='entity_id')|list }}",
+    )
+    for value in options:
+        await hass.async_add_executor_job(schema, value)
+
+
+def test_dynamic_template(hass: HomeAssistant) -> None:
     """Test dynamic template validator."""
     schema = vol.Schema(cv.dynamic_template)
 
@@ -596,12 +633,43 @@ def test_dynamic_template():
     options = (
         "{{ beer }}",
         "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
+        # Function added as an extension by Home Assistant
+        "{{ expand('group.foo')|map(attribute='entity_id')|list }}",
+        # Filter added as an extension by Home Assistant
+        "{{ ['group.foo']|expand|map(attribute='entity_id')|list }}",
     )
     for value in options:
         schema(value)
 
 
-def test_template_complex():
+async def test_dynamic_template_no_hass(hass: HomeAssistant) -> None:
+    """Test dynamic template validator."""
+    schema = vol.Schema(cv.dynamic_template)
+
+    for value in (
+        None,
+        1,
+        "{{ partial_print }",
+        "{% if True %}Hello",
+        ["test"],
+        "just a string",
+        # Filter added as an extension by Home Assistant
+        "{{ ['group.foo']|expand|map(attribute='entity_id')|list }}",
+    ):
+        with pytest.raises(vol.Invalid):
+            await hass.async_add_executor_job(schema, value)
+
+    options = (
+        "{{ beer }}",
+        "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
+        # Function added as an extension by Home Assistant
+        "{{ expand('group.foo')|map(attribute='entity_id')|list }}",
+    )
+    for value in options:
+        await hass.async_add_executor_job(schema, value)
+
+
+def test_template_complex() -> None:
     """Test template_complex validator."""
     schema = vol.Schema(cv.template_complex)
 
@@ -635,7 +703,7 @@ def test_template_complex():
         assert schema(value) == value
 
 
-def test_time_zone():
+def test_time_zone() -> None:
     """Test time zone validation."""
     schema = vol.Schema(cv.time_zone)
 
@@ -646,7 +714,7 @@ def test_time_zone():
     schema("UTC")
 
 
-def test_date():
+def test_date() -> None:
     """Test date validation."""
     schema = vol.Schema(cv.date)
 
@@ -658,7 +726,7 @@ def test_date():
     schema("2016-11-23")
 
 
-def test_time():
+def test_time() -> None:
     """Test date validation."""
     schema = vol.Schema(cv.time)
 
@@ -671,7 +739,7 @@ def test_time():
     schema("23:42")
 
 
-def test_datetime():
+def test_datetime() -> None:
     """Test date time validation."""
     schema = vol.Schema(cv.datetime)
     for value in [date.today(), "Wrong DateTime"]:
@@ -682,7 +750,7 @@ def test_datetime():
     schema("2016-11-23T18:59:08")
 
 
-def test_multi_select():
+def test_multi_select() -> None:
     """Test multi select validation.
 
     Expected behavior:
@@ -698,7 +766,7 @@ def test_multi_select():
     schema(["robban", "paulus"])
 
 
-def test_multi_select_in_serializer():
+def test_multi_select_in_serializer() -> None:
     """Test multi_select with custom_serializer."""
     assert cv.custom_serializer(cv.multi_select({"paulus": "Paulus"})) == {
         "type": "multi_select",
@@ -706,21 +774,21 @@ def test_multi_select_in_serializer():
     }
 
 
-def test_boolean_in_serializer():
+def test_boolean_in_serializer() -> None:
     """Test boolean with custom_serializer."""
     assert cv.custom_serializer(cv.boolean) == {
         "type": "boolean",
     }
 
 
-def test_string_in_serializer():
+def test_string_in_serializer() -> None:
     """Test string with custom_serializer."""
     assert cv.custom_serializer(cv.string) == {
         "type": "string",
     }
 
 
-def test_selector_in_serializer():
+def test_selector_in_serializer() -> None:
     """Test selector with custom_serializer."""
     assert cv.custom_serializer(selector.selector({"text": {}})) == {
         "selector": {
@@ -731,7 +799,7 @@ def test_selector_in_serializer():
     }
 
 
-def test_positive_time_period_dict_in_serializer():
+def test_positive_time_period_dict_in_serializer() -> None:
     """Test positive_time_period_dict with custom_serializer."""
     assert cv.custom_serializer(cv.positive_time_period_dict) == {
         "type": "positive_time_period_dict",
@@ -750,9 +818,8 @@ def version(monkeypatch):
     monkeypatch.setattr(homeassistant.const, "__version__", "0.5.0")
 
 
-def test_deprecated_with_no_optionals(caplog, schema):
-    """
-    Test deprecation behaves correctly when optional params are None.
+def test_deprecated_with_no_optionals(caplog: pytest.LogCaptureFixture, schema) -> None:
+    """Test deprecation behaves correctly when optional params are None.
 
     Expected behavior:
         - Outputs the appropriate deprecation warning if key is detected
@@ -782,9 +849,10 @@ def test_deprecated_with_no_optionals(caplog, schema):
     assert test_data == output
 
 
-def test_deprecated_or_removed_param_and_raise(caplog, schema):
-    """
-    Test removed or deprecation options and fail the config validation by raising an exception.
+def test_deprecated_or_removed_param_and_raise(
+    caplog: pytest.LogCaptureFixture, schema
+) -> None:
+    """Test removed or deprecation options and fail the config validation by raising an exception.
 
     Expected behavior:
         - Outputs the appropriate deprecation or removed from support error if key is detected
@@ -822,9 +890,10 @@ def test_deprecated_or_removed_param_and_raise(caplog, schema):
     assert test_data == output
 
 
-def test_deprecated_with_replacement_key(caplog, schema):
-    """
-    Test deprecation behaves correctly when only a replacement key is provided.
+def test_deprecated_with_replacement_key(
+    caplog: pytest.LogCaptureFixture, schema
+) -> None:
+    """Test deprecation behaves correctly when only a replacement key is provided.
 
     Expected behavior:
         - Outputs the appropriate deprecation warning if key is detected
@@ -860,9 +929,8 @@ def test_deprecated_with_replacement_key(caplog, schema):
     assert test_data == output
 
 
-def test_deprecated_with_default(caplog, schema):
-    """
-    Test deprecation behaves correctly with a default value.
+def test_deprecated_with_default(caplog: pytest.LogCaptureFixture, schema) -> None:
+    """Test deprecation behaves correctly with a default value.
 
     This is likely a scenario that would never occur.
 
@@ -889,9 +957,10 @@ def test_deprecated_with_default(caplog, schema):
     assert test_data == output
 
 
-def test_deprecated_with_replacement_key_and_default(caplog, schema):
-    """
-    Test deprecation with a replacement key and default.
+def test_deprecated_with_replacement_key_and_default(
+    caplog: pytest.LogCaptureFixture, schema
+) -> None:
+    """Test deprecation with a replacement key and default.
 
     Expected behavior:
         - Outputs the appropriate deprecation warning if key is detected
@@ -946,7 +1015,7 @@ def test_deprecated_with_replacement_key_and_default(caplog, schema):
     assert {"jupiter": True} == output
 
 
-def test_deprecated_cant_find_module():
+def test_deprecated_cant_find_module() -> None:
     """Test if the current module cannot be inspected."""
     with patch("inspect.getmodule", return_value=None):
         # This used to raise.
@@ -964,7 +1033,9 @@ def test_deprecated_cant_find_module():
         )
 
 
-def test_deprecated_or_removed_logger_with_config_attributes(caplog):
+def test_deprecated_or_removed_logger_with_config_attributes(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test if the logger outputs the correct message if the line and file attribute is available in config."""
     file: str = "configuration.yaml"
     line: int = 54
@@ -1001,7 +1072,9 @@ def test_deprecated_or_removed_logger_with_config_attributes(caplog):
     assert len(caplog.records) == 0
 
 
-def test_deprecated_logger_with_one_config_attribute(caplog):
+def test_deprecated_logger_with_one_config_attribute(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test if the logger outputs the correct message if only one of line and file attribute is available in config."""
     file: str = "configuration.yaml"
     line: int = 54
@@ -1035,7 +1108,9 @@ def test_deprecated_logger_with_one_config_attribute(caplog):
     assert len(caplog.records) == 0
 
 
-def test_deprecated_logger_without_config_attributes(caplog):
+def test_deprecated_logger_without_config_attributes(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test if the logger outputs the correct message if the line and file attribute is not available in config."""
     file: str = "configuration.yaml"
     line: int = 54
@@ -1054,7 +1129,7 @@ def test_deprecated_logger_without_config_attributes(caplog):
     assert len(caplog.records) == 0
 
 
-def test_key_dependency():
+def test_key_dependency() -> None:
     """Test key_dependency validator."""
     schema = vol.Schema(cv.key_dependency("beer", "soda"))
 
@@ -1068,7 +1143,7 @@ def test_key_dependency():
         schema(value)
 
 
-def test_has_at_most_one_key():
+def test_has_at_most_one_key() -> None:
     """Test has_at_most_one_key validator."""
     schema = vol.Schema(cv.has_at_most_one_key("beer", "soda"))
 
@@ -1080,7 +1155,7 @@ def test_has_at_most_one_key():
         schema(value)
 
 
-def test_has_at_least_one_key():
+def test_has_at_least_one_key() -> None:
     """Test has_at_least_one_key validator."""
     schema = vol.Schema(cv.has_at_least_one_key("beer", "soda"))
 
@@ -1092,7 +1167,7 @@ def test_has_at_least_one_key():
         schema(value)
 
 
-def test_enum():
+def test_enum() -> None:
     """Test enum validator."""
 
     class TestEnum(enum.Enum):
@@ -1122,7 +1197,7 @@ def test_socket_timeout():  # pylint: disable=invalid-name
     assert schema(1) == 1.0
 
 
-def test_matches_regex():
+def test_matches_regex() -> None:
     """Test matches_regex validator."""
     schema = vol.Schema(cv.matches_regex(".*uiae.*"))
 
@@ -1136,7 +1211,7 @@ def test_matches_regex():
     assert schema(test_str) == test_str
 
 
-def test_is_regex():
+def test_is_regex() -> None:
     """Test the is_regex validator."""
     schema = vol.Schema(cv.is_regex)
 
@@ -1150,7 +1225,7 @@ def test_is_regex():
     schema(valid_re)
 
 
-def test_comp_entity_ids():
+def test_comp_entity_ids() -> None:
     """Test config validation for component entity IDs."""
     schema = vol.Schema(cv.comp_entity_ids)
 
@@ -1170,7 +1245,7 @@ def test_comp_entity_ids():
             schema(invalid)
 
 
-def test_uuid4_hex(caplog):
+def test_uuid4_hex(caplog: pytest.LogCaptureFixture) -> None:
     """Test uuid validation."""
     schema = vol.Schema(cv.uuid4_hex)
 
@@ -1191,7 +1266,7 @@ def test_uuid4_hex(caplog):
     assert schema(_hex.upper()) == _hex
 
 
-def test_key_value_schemas():
+def test_key_value_schemas() -> None:
     """Test key value schemas."""
     schema = vol.Schema(
         cv.key_value_schemas(
@@ -1227,7 +1302,7 @@ def test_key_value_schemas():
         schema({"mode": mode, "data": data})
 
 
-def test_key_value_schemas_with_default():
+def test_key_value_schemas_with_default() -> None:
     """Test key value schemas."""
     schema = vol.Schema(
         cv.key_value_schemas(
@@ -1266,7 +1341,7 @@ def test_key_value_schemas_with_default():
     schema({"mode": "{{ 1 + 1}}"})
 
 
-def test_script(caplog):
+def test_script(caplog: pytest.LogCaptureFixture) -> None:
     """Test script validation is user friendly."""
     for data, msg in (
         ({"delay": "{{ invalid"}, "should be format 'HH:MM'"),
@@ -1298,7 +1373,7 @@ def test_script(caplog):
         assert msg in str(excinfo.value)
 
 
-def test_whitespace():
+def test_whitespace() -> None:
     """Test whitespace validation."""
     schema = vol.Schema(cv.whitespace)
 
@@ -1319,7 +1394,7 @@ def test_whitespace():
         assert schema(value)
 
 
-def test_currency():
+def test_currency() -> None:
     """Test currency validator."""
     schema = vol.Schema(cv.currency)
 
@@ -1334,7 +1409,7 @@ def test_currency():
         assert schema(value)
 
 
-def test_historic_currency():
+def test_historic_currency() -> None:
     """Test historic currency validator."""
     schema = vol.Schema(cv.historic_currency)
 
@@ -1346,7 +1421,7 @@ def test_historic_currency():
         assert schema(value)
 
 
-def test_country():
+def test_country() -> None:
     """Test country validator."""
     schema = vol.Schema(cv.country)
 
@@ -1358,7 +1433,7 @@ def test_country():
         assert schema(value)
 
 
-def test_language():
+def test_language() -> None:
     """Test language validator."""
     schema = vol.Schema(cv.language)
 
@@ -1368,3 +1443,28 @@ def test_language():
 
     for value in ("en", "sv"):
         assert schema(value)
+
+
+def test_positive_time_period_template() -> None:
+    """Test positive time period template validation."""
+    schema = vol.Schema(cv.positive_time_period_template)
+
+    with pytest.raises(vol.MultipleInvalid):
+        schema({})
+    with pytest.raises(vol.MultipleInvalid):
+        schema({5: 5})
+    with pytest.raises(vol.MultipleInvalid):
+        schema({"invalid": 5})
+    with pytest.raises(vol.MultipleInvalid):
+        schema("invalid")
+
+    # Time periods pass
+    schema("00:01")
+    schema("00:00:01")
+    schema("00:00:00.500")
+    schema({"minutes": 5})
+
+    # Templates are not evaluated and will pass
+    schema("{{ 'invalid' }}")
+    schema({"{{ 'invalid' }}": 5})
+    schema({"minutes": "{{ 'invalid' }}"})

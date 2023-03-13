@@ -39,6 +39,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     UnitOfLength,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -66,7 +67,7 @@ CONFIG_LEGACY = {
 }
 
 
-async def test_setup(hass):
+async def test_setup(hass: HomeAssistant) -> None:
     """Test the general setup of the platform."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
@@ -204,7 +205,7 @@ async def test_setup(hass):
         await hass.async_block_till_done()
 
 
-async def test_setup_with_custom_location(hass):
+async def test_setup_with_custom_location(hass: HomeAssistant) -> None:
     """Test the setup with a custom location."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry("1234", "Title 1", 20.5, (-31.1, 150.1))
@@ -234,7 +235,7 @@ async def test_setup_with_custom_location(hass):
         )
 
 
-async def test_setup_as_legacy_platform(hass):
+async def test_setup_as_legacy_platform(hass: HomeAssistant) -> None:
     """Test the setup with a custom location."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry("1234", "Title 1", 20.5, (-31.1, 150.1))
