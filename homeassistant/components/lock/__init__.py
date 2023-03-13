@@ -152,7 +152,7 @@ class LockEntity(Entity):
     _attr_is_jammed: bool | None = None
     _attr_state: None = None
     _attr_supported_features: LockEntityFeature = LockEntityFeature(0)
-    _lock_option_default_code: str | None = None
+    _lock_option_default_code: str = ""
     __code_format_cmp: re.Pattern[str] | None = None
 
     @property
@@ -265,4 +265,4 @@ class LockEntity(Entity):
                 self._lock_option_default_code = custom_default_lock_code
             return
 
-        self._lock_option_default_code = None
+        self._lock_option_default_code = ""

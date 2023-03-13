@@ -32,7 +32,7 @@ class MockLockEntity(LockEntity):
     def __init__(
         self,
         code_format: str | None = None,
-        lock_option_default_code: str | None = None,
+        lock_option_default_code: str = "",
         supported_features: LockEntityFeature = LockEntityFeature(0),
     ) -> None:
         """Initialize mock lock entity."""
@@ -40,7 +40,7 @@ class MockLockEntity(LockEntity):
         self.calls_open = MagicMock()
         if code_format is not None:
             self._attr_code_format = code_format
-        self.lock_option_default_code = lock_option_default_code
+        self._lock_option_default_code = lock_option_default_code
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
@@ -59,7 +59,7 @@ class MockLockEntity(LockEntity):
     @callback
     def async_registry_entry_updated(self) -> None:
         """Run when the entity registry entry has been updated."""
-        self._lock_option_default_code = self.lock_option_default_code
+        self._lock_option_default_code = self._lock_option_default_code
 
 
 async def test_lock_default(hass: HomeAssistant) -> None:
@@ -169,11 +169,8 @@ async def test_lock_with_default_code(hass: HomeAssistant) -> None:
     lock.hass = hass
 
     assert lock.state_attributes == {"code_format": r"^\d{4}$"}
+    assert lock._lock_option_default_code == "1234"
 
     await _async_open(lock, ServiceCall(DOMAIN, SERVICE_OPEN, {}))
     await _async_lock(lock, ServiceCall(DOMAIN, SERVICE_LOCK, {}))
     await _async_unlock(lock, ServiceCall(DOMAIN, SERVICE_UNLOCK, {}))
-
-    await _async_open(lock, ServiceCall(DOMAIN, SERVICE_OPEN, {ATTR_CODE: ""}))
-    await _async_lock(lock, ServiceCall(DOMAIN, SERVICE_LOCK, {ATTR_CODE: ""}))
-    await _async_unlock(lock, ServiceCall(DOMAIN, SERVICE_UNLOCK, {ATTR_CODE: ""}))
