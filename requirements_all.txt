@@ -1201,7 +1201,7 @@ nextcord==2.0.0a8
 nextdns==1.3.0
 
 # homeassistant.components.nibe_heatpump
-nibe==2.0.0
+nibe==2.1.2
 
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1
