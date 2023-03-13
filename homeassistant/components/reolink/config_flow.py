@@ -79,7 +79,7 @@ class ReolinkOptionsFlowHandler(config_entries.OptionsFlow):
                     ): vol.In(["rtsp", "rtmp", "flv"]),
                     vol.Optional(
                         CONF_HA_URL,
-                        default=ha_url,
+                        description={"suggested_value": ha_url},
                     ): str,
                 }
             ),
