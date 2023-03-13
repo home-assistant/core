@@ -1600,7 +1600,7 @@ reolink-aio==0.5.3
 restrictedpython==6.0
 
 # homeassistant.components.rflink
-rflink==0.0.63
+rflink==0.0.65
 
 # homeassistant.components.ring
 ring_doorbell==0.7.2
