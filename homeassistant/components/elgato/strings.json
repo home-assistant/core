@@ -45,7 +45,7 @@
         "name": "Charging voltage"
       },
       "voltage": {
-        "name": "Voltage"
+        "name": "Battery voltage"
       }
     },
     "switch": {
