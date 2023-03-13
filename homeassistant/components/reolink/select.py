@@ -67,6 +67,14 @@ SELECT_ENTITIES = (
         supported=lambda api, ch: api.supported(ch, "ptz_presets"),
         method=lambda api, ch, name: api.set_ptz_command(ch, preset=name),
     ),
+    ReolinkSelectEntityDescription(
+        key="quick_reply_message",
+        name="Quick reply message",
+        icon="mdi:message-reply-text-outline",
+        get_options=lambda api, ch: list(api.quick_reply_dict(ch).values()),
+        supported=lambda api, ch: api.supported(ch, "quick_reply"),
+        method=lambda api, ch, mess: api.set_quick_reply(ch, file_id=[k for k, v in d.items() if v == mess][0]),
+    ),
 )
 
 

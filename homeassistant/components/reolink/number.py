@@ -175,6 +175,19 @@ NUMBER_ENTITIES = (
         value=lambda api, ch: api.ai_sensitivity(ch, "dog_cat"),
         method=lambda api, ch, value: api.set_ai_sensitivity(ch, int(value), "dog_cat"),
     ),
+    ReolinkNumberEntityDescription(
+        key="quick_reply_time",
+        name="Quick reply time",
+        icon="mdi:message-reply-text-outline",
+        entity_category=EntityCategory.CONFIG,
+        native_step=1,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        native_min_value=1,
+        native_max_value=60,
+        supported=lambda api, ch: api.supported(ch, "quick_reply"),
+        value=lambda api, ch: api.quick_reply_time(ch),
+        method=lambda api, ch, value: api.set_quick_reply(ch, time=int(value)),
+    ),
 )
 
 
