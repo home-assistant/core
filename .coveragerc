@@ -1508,7 +1508,7 @@ omit =
     homeassistant/components/zeversolar/coordinator.py
     homeassistant/components/zeversolar/entity.py
     homeassistant/components/zeversolar/sensor.py
-    homeassistant/components/zha/api.py
+    homeassistant/components/zha/websocket_api.py
     homeassistant/components/zha/core/channels/*
     homeassistant/components/zha/core/device.py
     homeassistant/components/zha/core/gateway.py
