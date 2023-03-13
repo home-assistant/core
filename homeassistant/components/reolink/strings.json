@@ -34,7 +34,7 @@
       "init": {
         "data": {
           "protocol": "Protocol",
-          "ha_url": "Home Assistant URL (Advanced network configuration only)",
+          "ha_url": "Home Assistant URL (Advanced network configuration only)"
         }
       }
     }
