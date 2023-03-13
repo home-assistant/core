@@ -912,7 +912,7 @@ class MQTT:
         wait_until = max(
             last_discovery + DISCOVERY_COOLDOWN, last_subscribe + DISCOVERY_COOLDOWN
         )
-        while now < wait_until:
+        while now < wait_until or self._pending_subscriptions:
             await asyncio.sleep(wait_until - now)
             now = time.time()
             last_discovery = self._mqtt_data.last_discovery
