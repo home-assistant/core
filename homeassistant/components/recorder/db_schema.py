@@ -68,7 +68,7 @@ class Base(DeclarativeBase):
     """Base class for tables."""
 
 
-SCHEMA_VERSION = 40
+SCHEMA_VERSION = 41
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -348,7 +348,9 @@ class EventTypes(Base):
     __table_args__ = (_DEFAULT_TABLE_ARGS,)
     __tablename__ = TABLE_EVENT_TYPES
     event_type_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
-    event_type: Mapped[str | None] = mapped_column(String(MAX_LENGTH_EVENT_EVENT_TYPE))
+    event_type: Mapped[str | None] = mapped_column(
+        String(MAX_LENGTH_EVENT_EVENT_TYPE), index=True
+    )
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
@@ -597,7 +599,9 @@ class StatesMeta(Base):
     __table_args__ = (_DEFAULT_TABLE_ARGS,)
     __tablename__ = TABLE_STATES_META
     metadata_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
-    entity_id: Mapped[str | None] = mapped_column(String(MAX_LENGTH_STATE_ENTITY_ID))
+    entity_id: Mapped[str | None] = mapped_column(
+        String(MAX_LENGTH_STATE_ENTITY_ID), index=True
+    )
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
