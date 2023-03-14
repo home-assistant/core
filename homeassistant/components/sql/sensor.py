@@ -10,7 +10,7 @@ from sqlalchemy.engine import Result
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
 
-from homeassistant.components.recorder import CONF_DB_URL
+from homeassistant.components.recorder import CONF_DB_URL, get_instance
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     SensorDeviceClass,
@@ -136,7 +136,6 @@ async def async_setup_sensor(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the SQL sensor."""
-
     try:
         engine = sqlalchemy.create_engine(db_url, future=True)
         sessmaker = scoped_session(sessionmaker(bind=engine, future=True))
@@ -163,6 +162,8 @@ async def async_setup_sensor(
         else:
             query_str = query_str.replace(";", "") + " LIMIT 1;"
 
+    use_database_executor = db_url == get_instance(hass).db_url
+
     async_add_entities(
         [
             SQLSensor(
@@ -176,6 +177,7 @@ async def async_setup_sensor(
                 yaml,
                 device_class,
                 state_class,
+                use_database_executor,
             )
         ],
         True,
@@ -200,6 +202,7 @@ class SQLSensor(SensorEntity):
         yaml: bool,
         device_class: SensorDeviceClass | None,
         state_class: SensorStateClass | None,
+        use_database_executor: bool,
     ) -> None:
         """Initialize the SQL sensor."""
         self._query = query
@@ -212,6 +215,7 @@ class SQLSensor(SensorEntity):
         self.sessionmaker = sessmaker
         self._attr_extra_state_attributes = {}
         self._attr_unique_id = unique_id
+        self._use_database_executor = use_database_executor
         if not yaml and unique_id:
             self._attr_device_info = DeviceInfo(
                 entry_type=DeviceEntryType.SERVICE,
@@ -220,9 +224,15 @@ class SQLSensor(SensorEntity):
                 name=name,
             )
 
-    def update(self) -> None:
-        """Retrieve sensor data from the query."""
+    async def async_update(self) -> None:
+        """Retrieve sensor data from the query using the right executor."""
+        if self._use_database_executor:
+            await get_instance(self.hass).async_add_executor_job(self._update)
+        else:
+            await self.hass.async_add_executor_job(self._update)
 
+    def _update(self) -> None:
+        """Retrieve sensor data from the query."""
         data = None
         self._attr_extra_state_attributes = {}
         sess: scoped_session = self.sessionmaker()
