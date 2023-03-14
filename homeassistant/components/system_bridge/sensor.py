@@ -505,7 +505,7 @@ async def async_setup_entry(
                     coordinator,
                     SystemBridgeSensorEntityDescription(
                         key=f"processes_load_cpu_{index}",
-                        name=f"Load cpu {index}",
+                        name=f"Load CPU {index}",
                         entity_registry_enabled_default=False,
                         state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=PERCENTAGE,
