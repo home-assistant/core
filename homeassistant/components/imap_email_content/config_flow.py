@@ -88,8 +88,6 @@ def try_connection(config: dict[str, str]) -> bool:
 
 def validate_senders(user_input: dict[str, Any]) -> str | None:
     """Validate the senders."""
-    if CONF_SENDERS not in user_input:
-        return None
 
     senders = user_input[CONF_SENDERS]
     regex = r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b"
@@ -162,7 +160,7 @@ async def async_validate_input(
             vol.Optional(CONF_NAME, description=def_value(CONF_NAME))
         ] = _TEXT_SELECTOR
 
-    if not await hass.async_add_executor_job(try_connection, user_input):
+    if not errors and not await hass.async_add_executor_job(try_connection, user_input):
         errors["base"] = "cannot_connect"
 
     return vol.Schema(filled_schema)
@@ -214,9 +212,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Check for duplicate entries
 
         match_data = {
-            CONF_NAME: user_input.get(CONF_NAME, user_input[CONF_USERNAME]),
             CONF_USERNAME: user_input.get(CONF_USERNAME),
-            CONF_FOLDER: user_input.get(CONF_FOLDER),
             CONF_SERVER: user_input.get(CONF_SERVER),
         }
         if CONF_FOLDER in user_input:
@@ -231,7 +227,11 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass, user_input, validated_user_input, errors
         )
         if not errors:
-            title = validated_user_input.pop(CONF_NAME)
+            title = (
+                validated_user_input.pop(CONF_NAME)
+                if CONF_NAME in validated_user_input
+                else validated_user_input[CONF_USERNAME]
+            )
             return self.async_create_entry(
                 title=title, data=CONFIG_SCHEMA(validated_user_input)
             )

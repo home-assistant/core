@@ -4,11 +4,16 @@ import datetime
 import email
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from unittest.mock import MagicMock
 
 from homeassistant.components.imap_email_content import sensor as imap_email_content
+from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.template import Template
+from homeassistant.setup import async_setup_component
+
+from .test_config_flow import MOCK_CONFIG
 
 
 class FakeEMailReader:
@@ -229,3 +234,16 @@ async def test_template(hass: HomeAssistant) -> None:
     sensor.async_schedule_update_ha_state(True)
     await hass.async_block_till_done()
     assert sensor.state == "Test from sender@test.com with message Test Message"
+
+
+async def test_component_setup_and_migration(
+    hass: HomeAssistant, mock_client: MagicMock
+) -> None:
+    """Test setup from configuration.yaml and migration to entry."""
+    mock_client.connect.return_value = True
+    config = MOCK_CONFIG.copy()
+    config[CONF_PLATFORM] = imap_email_content.DOMAIN
+    assert await async_setup_component(hass, "sensor", {"sensor": [config]})
+    await hass.async_block_till_done()
+    entry = hass.config_entries.async_entries(imap_email_content.DOMAIN)[0]
+    assert entry.data == MOCK_CONFIG

@@ -15,6 +15,7 @@ from homeassistant.const import (
     ATTR_DATE,
     CONF_NAME,
     CONF_PASSWORD,
+    CONF_PLATFORM,
     CONF_PORT,
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
@@ -25,6 +26,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.ssl import client_context
 
@@ -44,7 +46,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_SERVER): cv.string,
         vol.Required(CONF_SENDERS): [cv.string],
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.string,
         vol.Optional(CONF_FOLDER, default="INBOX"): cv.string,
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     }
@@ -68,7 +70,7 @@ async def async_setup_entry(
         config[CONF_VERIFY_SSL],
     )
     if (value_template := config.get(CONF_VALUE_TEMPLATE)) is not None:
-        value_template.hass = hass
+        value_template = Template(value_template, hass)
     sensor = EmailContentSensor(
         hass,
         reader,
@@ -105,6 +107,7 @@ async def async_setup_platform(
             return
 
     # Migrate yaml config to config entry
+    config.pop(CONF_PLATFORM)
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
