@@ -727,7 +727,6 @@ async def test_start_end_types(
     assert result
     assert not result.get("success")
     assert "error" in result
-    assert result.get("error")
     assert "code" in result["error"]
     assert result["error"]["code"] == "invalid_format"
 
