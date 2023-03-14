@@ -6,7 +6,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import BINARY_SENSORS, DOMAIN
+from . import DOMAIN
+
+BINARY_SENSORS = (
+    "nextcloud_system_enable_avatars",
+    "nextcloud_system_enable_previews",
+    "nextcloud_system_filelocking.enabled",
+    "nextcloud_system_debug",
+)
 
 
 def setup_platform(
