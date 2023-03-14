@@ -191,7 +191,7 @@ class NextcloudEntity(CoordinatorEntity):
         name: str,
         server_unique_id: str,
     ) -> None:
-        """Initialize a Pi-hole entity."""
+        """Initialize a Nextcloud entity."""
         super().__init__(coordinator)
         self.api: NextcloudMonitorWrapper = api
         self._name = name
