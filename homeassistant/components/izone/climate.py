@@ -247,6 +247,8 @@ class ControllerDevice(ClimateEntity):
 
         if available:
             _LOGGER.info("Reconnected controller %s ", self._controller.device_uid)
+        elif ex is None:
+            _LOGGER.info("Controller %s disconnected", self._controller.device_uid)
         else:
             _LOGGER.info(
                 "Controller %s disconnected due to exception: %s",
