@@ -139,7 +139,7 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
 
         mode = HVACMode.OFF
         if _get_value(self._coil_use_room_sensor) == "ON":
-            if _get_value(self._coil_cooling_with_room_sensor) == "ON":
+            if _get_value(self._coil_cooling_with_room_sensor) != "OFF":
                 mode = HVACMode.HEAT_COOL
             else:
                 mode = HVACMode.HEAT

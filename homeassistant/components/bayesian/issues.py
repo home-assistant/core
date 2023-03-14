@@ -1,4 +1,4 @@
-"""Helpers for generating repairs."""
+"""Helpers for generating issues."""
 from __future__ import annotations
 
 from homeassistant.core import HomeAssistant

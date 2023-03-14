@@ -159,11 +159,9 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
         """Fetch data from the Screenlogic gateway."""
         try:
             await self._async_update_configured_data()
-        except ScreenLogicError as error:
-            _LOGGER.warning("Update error - attempting reconnect: %s", error)
+        except (ScreenLogicError, ScreenLogicWarning) as ex:
+            _LOGGER.warning("Update error - attempting reconnect: %s", ex)
             await self._async_reconnect_update_data()
-        except ScreenLogicWarning as warn:
-            raise UpdateFailed(f"Incomplete update: {warn}") from warn
 
         return None
 
