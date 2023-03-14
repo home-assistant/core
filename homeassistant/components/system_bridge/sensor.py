@@ -159,7 +159,6 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="kernel",
         name="Kernel",
-        state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:devices",
         value=lambda data: data.system.platform,
     ),
@@ -193,7 +192,6 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="os",
         name="Operating System",
-        state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:devices",
         value=lambda data: f"{data.system.platform} {data.system.platform_version}",
     ),
@@ -232,7 +230,6 @@ BATTERY_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         key="battery_time_remaining",
         name="Battery Time Remaining",
         device_class=SensorDeviceClass.TIMESTAMP,
-        state_class=SensorStateClass.MEASUREMENT,
         value=battery_time_remaining,
     ),
 )

@@ -616,14 +616,17 @@ async def test_controlling_state_via_topic2(
     async_fire_mqtt_message(
         hass, "test_light_rgb", '{"state":"ON", "color_mode":"col_temp"}'
     )
-    assert "Invalid color mode received" in caplog.text
+    assert "Invalid color mode 'col_temp' received" in caplog.text
     caplog.clear()
 
     # Incomplete color
     async_fire_mqtt_message(
         hass, "test_light_rgb", '{"state":"ON", "color_mode":"rgb"}'
     )
-    assert "Invalid or incomplete color value received" in caplog.text
+    assert (
+        "Invalid or incomplete color value '{'state': 'ON', 'color_mode': 'rgb'}' received"
+        in caplog.text
+    )
     caplog.clear()
 
     # Invalid color
@@ -632,7 +635,10 @@ async def test_controlling_state_via_topic2(
         "test_light_rgb",
         '{"state":"ON", "color_mode":"rgb", "color":{"r":64,"g":128,"b":"cow"}}',
     )
-    assert "Invalid or incomplete color value received" in caplog.text
+    assert (
+        "Invalid or incomplete color value '{'state': 'ON', 'color_mode': 'rgb', 'color': {'r': 64, 'g': 128, 'b': 'cow'}}' received"
+        in caplog.text
+    )
 
 
 async def test_sending_mqtt_commands_and_optimistic(
