@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 import python_otbr_api
 
 from homeassistant.components import websocket_api
+from homeassistant.components.thread import async_add_dataset
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
@@ -95,6 +96,17 @@ async def websocket_create_network(
     except HomeAssistantError as exc:
         connection.send_error(msg["id"], "set_enabled_failed", str(exc))
         return
+
+    try:
+        dataset_tlvs = await data.get_active_dataset_tlvs()
+    except HomeAssistantError as exc:
+        connection.send_error(msg["id"], "get_active_dataset_tlvs_failed", str(exc))
+        return
+    if not dataset_tlvs:
+        connection.send_error(msg["id"], "get_active_dataset_tlvs_empty", "")
+        return
+
+    await async_add_dataset(hass, DOMAIN, dataset_tlvs.hex())
 
     connection.send_result(msg["id"])
 
