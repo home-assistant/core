@@ -24,8 +24,11 @@ ARP: Final = "arp"
 CAPSMAN: Final = "capsman"
 DHCP: Final = "dhcp"
 WIRELESS: Final = "wireless"
+WIFIWAVE2: Final = "wifiwave2"
 IS_WIRELESS: Final = "is_wireless"
 IS_CAPSMAN: Final = "is_capsman"
+IS_WIFIWAVE2: Final = "is_wifiwave2"
+
 
 MIKROTIK_SERVICES: Final = {
     ARP: "/ip/arp/getall",
@@ -34,8 +37,10 @@ MIKROTIK_SERVICES: Final = {
     IDENTITY: "/system/identity/getall",
     INFO: "/system/routerboard/getall",
     WIRELESS: "/interface/wireless/registration-table/getall",
+    WIFIWAVE2: "/interface/wifiwave2/registration-table/print",
     IS_WIRELESS: "/interface/wireless/print",
     IS_CAPSMAN: "/caps-man/interface/print",
+    IS_WIFIWAVE2: "/interface/wifiwave2/print",
 }
 
 
