@@ -1,6 +1,6 @@
 """Fixtures for local calendar."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Generator
 from http import HTTPStatus
 from pathlib import Path
 from typing import Any
