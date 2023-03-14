@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-import asyncio
 from dataclasses import asdict, dataclass
 import logging
 from typing import Any
@@ -16,10 +15,10 @@ from aiohttp.web_exceptions import (
 )
 
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_per_platform, discovery
+from homeassistant.helpers import engine, engine_component
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.setup import async_prepare_setup_platform
 
 from .const import (
     DOMAIN,
@@ -35,58 +34,39 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def async_get_provider(hass: HomeAssistant, domain: str | None = None) -> Provider:
+def async_get_provider(
+    hass: HomeAssistant, provider: str | None = None
+) -> Provider | None:
     """Return provider."""
-    if domain is None:
-        domain = next(iter(hass.data[DOMAIN]))
+    component: engine_component.EngineComponent[Provider] | None = hass.data.get(DOMAIN)
 
-    return hass.data[DOMAIN][domain]
+    if component is None:
+        return None
+
+    if provider is None:
+        providers = component.async_get_engines()
+        return providers[0] if providers else None
+
+    return component.async_get_engine(provider)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up STT."""
-    providers = hass.data[DOMAIN] = {}
-
-    async def async_setup_platform(p_type, p_config=None, discovery_info=None):
-        """Set up a TTS platform."""
-        if p_config is None:
-            p_config = {}
-
-        platform = await async_prepare_setup_platform(hass, config, DOMAIN, p_type)
-        if platform is None:
-            return
-
-        try:
-            provider = await platform.async_get_engine(hass, p_config, discovery_info)
-            if provider is None:
-                _LOGGER.error("Error setting up platform %s", p_type)
-                return
-
-            provider.name = p_type
-            provider.hass = hass
-
-            providers[provider.name] = provider
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Error setting up platform: %s", p_type)
-            return
-
-    setup_tasks = [
-        asyncio.create_task(async_setup_platform(p_type, p_config))
-        for p_type, p_config in config_per_platform(config, DOMAIN)
-    ]
-
-    if setup_tasks:
-        await asyncio.wait(setup_tasks)
-
-    # Add discovery support
-    async def async_platform_discovered(platform, info):
-        """Handle for discovered platform."""
-        await async_setup_platform(platform, discovery_info=info)
-
-    discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
-
-    hass.http.register_view(SpeechToTextView(providers))
+    hass.data[DOMAIN] = engine_component.EngineComponent(_LOGGER, DOMAIN, hass, config)
+    hass.http.register_view(SpeechToTextView(hass.data[DOMAIN]))
     return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up a config entry."""
+    component: engine_component.EngineComponent[Provider] = hass.data[DOMAIN]
+    return await component.async_setup_entry(entry)
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    component: engine_component.EngineComponent[Provider] = hass.data[DOMAIN]
+    return await component.async_unload_entry(entry)
 
 
 @dataclass
@@ -115,7 +95,7 @@ class SpeechResult:
     result: SpeechResultState
 
 
-class Provider(ABC):
+class Provider(engine.Engine, ABC):
     """Represent a single STT provider."""
 
     hass: HomeAssistant | None = None
@@ -182,15 +162,15 @@ class SpeechToTextView(HomeAssistantView):
     url = "/api/stt/{provider}"
     name = "api:stt:provider"
 
-    def __init__(self, providers: dict[str, Provider]) -> None:
+    def __init__(self, engines: engine_component.EngineComponent[Provider]) -> None:
         """Initialize a tts view."""
-        self.providers = providers
+        self.engines = engines
 
     async def post(self, request: web.Request, provider: str) -> web.Response:
         """Convert Speech (audio) to text."""
-        if provider not in self.providers:
+        stt_provider = self.engines.async_get_engine(provider)
+        if stt_provider is None:
             raise HTTPNotFound()
-        stt_provider: Provider = self.providers[provider]
 
         # Get metadata
         try:
@@ -212,9 +192,9 @@ class SpeechToTextView(HomeAssistantView):
 
     async def get(self, request: web.Request, provider: str) -> web.Response:
         """Return provider specific audio information."""
-        if provider not in self.providers:
+        stt_provider = self.engines.async_get_engine(provider)
+        if stt_provider is None:
             raise HTTPNotFound()
-        stt_provider: Provider = self.providers[provider]
 
         return self.json(
             {

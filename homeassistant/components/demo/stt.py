@@ -14,16 +14,15 @@ from homeassistant.components.stt import (
     SpeechResult,
     SpeechResultState,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 SUPPORT_LANGUAGES = ["en", "de"]
 
 
-async def async_get_engine(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
 ) -> Provider:
     """Set up Demo speech component."""
     return DemoProvider()

@@ -16,6 +16,8 @@ from homeassistant.components.stt import (
     SpeechResult,
     SpeechResultState,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 
@@ -43,7 +45,10 @@ SUPPORT_LANGUAGES = [
 ]
 
 
-async def async_get_engine(hass, config, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+) -> Provider:
     """Set up Cloud speech component."""
     cloud: Cloud = hass.data[DOMAIN]
 

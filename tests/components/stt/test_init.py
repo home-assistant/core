@@ -18,9 +18,8 @@ from homeassistant.components.stt import (
     async_get_provider,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
-from tests.common import mock_platform
+from tests.common import MockConfigEntry, mock_platform
 from tests.typing import ClientSessionGenerator
 
 
@@ -80,21 +79,35 @@ def mock_provider() -> MockProvider:
     return MockProvider()
 
 
+@pytest.fixture
+def mock_config_entry(hass) -> MockConfigEntry:
+    """Mock config entry."""
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+    return config_entry
+
+
 @pytest.fixture(autouse=True)
-async def mock_setup(hass: HomeAssistant, mock_provider: MockProvider) -> None:
+async def mock_setup(
+    hass: HomeAssistant, mock_provider: MockProvider, mock_config_entry: MockConfigEntry
+) -> None:
     """Set up a test provider."""
     mock_platform(
-        hass, "test.stt", Mock(async_get_engine=AsyncMock(return_value=mock_provider))
+        hass,
+        "test.stt",
+        Mock(async_setup_entry=AsyncMock(return_value=mock_provider)),
     )
-    assert await async_setup_component(hass, "stt", {"stt": {"platform": "test"}})
+    assert await hass.config_entries.async_forward_entry_setup(mock_config_entry, "stt")
 
 
 async def test_get_provider_info(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test engine that doesn't exist."""
     client = await hass_client()
-    response = await client.get("/api/stt/test")
+    response = await client.get(f"/api/stt/{mock_config_entry.entry_id}")
     assert response.status == HTTPStatus.OK
     assert await response.json() == {
         "languages": ["en"],
@@ -116,12 +129,14 @@ async def test_get_non_existing_provider_info(
 
 
 async def test_stream_audio(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test streaming audio and getting response."""
     client = await hass_client()
     response = await client.post(
-        "/api/stt/test",
+        f"/api/stt/{mock_config_entry.entry_id}",
         headers={
             "X-Speech-Content": (
                 "format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=1;"
@@ -155,6 +170,7 @@ async def test_stream_audio(
 async def test_metadata_errors(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
     header: str | None,
     status: int,
     error: str,
@@ -165,11 +181,15 @@ async def test_metadata_errors(
     if header:
         headers["X-Speech-Content"] = header
 
-    response = await client.post("/api/stt/test", headers=headers)
+    response = await client.post(
+        f"/api/stt/{mock_config_entry.entry_id}", headers=headers
+    )
     assert response.status == status
     assert await response.text() == error
 
 
-async def test_get_provider(hass: HomeAssistant, mock_provider: MockProvider) -> None:
+async def test_get_provider(
+    hass: HomeAssistant, mock_provider: MockProvider, mock_config_entry: MockConfigEntry
+) -> None:
     """Test we can get STT providers."""
-    assert mock_provider == async_get_provider(hass, "test")
+    assert mock_provider == async_get_provider(hass, mock_config_entry.entry_id)
