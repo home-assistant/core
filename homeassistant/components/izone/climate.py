@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from contextlib import suppress
 import logging
 from typing import Any
 
@@ -30,6 +29,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import InvalidStateError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
@@ -120,6 +120,19 @@ def _return_on_connection_error(ret=None):
                 return func(*args, **kwargs)
             except ConnectionError:
                 return ret
+
+        return wrapped_f
+
+    return wrap
+
+
+def _reraise_on_connection_error():
+    def wrap(func):
+        def wrapped_f(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except ConnectionError as err:
+                raise InvalidStateError from err
 
         return wrapped_f
 
@@ -258,6 +271,7 @@ class ControllerDevice(ClimateEntity):
         return f"iZone Controller {self._controller.device_uid}"
 
     @property
+    @_return_on_connection_error({})
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the optional state attributes."""
         return {
@@ -287,7 +301,8 @@ class ControllerDevice(ClimateEntity):
         }
 
     @property
-    def hvac_mode(self) -> HVACMode:
+    @_return_on_connection_error()
+    def hvac_mode(self) -> HVACMode | None:
         """Return current operation ie. heat, cool, idle."""
         if not self._controller.is_on:
             return HVACMode.OFF
@@ -329,7 +344,8 @@ class ControllerDevice(ClimateEntity):
         return self._controller.temp_return
 
     @property
-    def control_zone_name(self):
+    @_return_on_connection_error()
+    def control_zone_name(self) -> str | None:
         """Return the zone that currently controls the AC unit (if target temp not set by controller)."""
         if self._attr_supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
             return None
@@ -340,6 +356,7 @@ class ControllerDevice(ClimateEntity):
         return zone.name
 
     @property
+    @_return_on_connection_error()
     def control_zone_setpoint(self) -> float | None:
         """Return the temperature setpoint of the zone that currently controls the AC unit (if target temp not set by controller)."""
         if self._attr_supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
@@ -359,22 +376,24 @@ class ControllerDevice(ClimateEntity):
         return self.control_zone_setpoint
 
     @property
-    def supply_temperature(self) -> float:
+    @_return_on_connection_error()
+    def supply_temperature(self) -> float | None:
         """Return the current supply, or in duct, temperature."""
         return self._controller.temp_supply
 
     @property
-    def target_temperature_step(self) -> float | None:
+    def target_temperature_step(self) -> float:
         """Return the supported step of target temperature."""
         return 0.5
 
     @property
+    @_return_on_connection_error()
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
         return _IZONE_FAN_TO_HA[self._controller.fan]
 
     @property
-    def fan_modes(self) -> list[str] | None:
+    def fan_modes(self) -> list[str]:
         """Return the list of available fan modes."""
         return list(self._fan_to_pizone)
 
@@ -390,45 +409,43 @@ class ControllerDevice(ClimateEntity):
         """Return the maximum temperature."""
         return self._controller.temp_max
 
+    @_reraise_on_connection_error()
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if not self.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
             self.async_schedule_update_ha_state(True)
             return
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
-            with suppress(ConnectionError):
-                await self._controller.set_temp_setpoint(temp)
+            await self._controller.set_temp_setpoint(temp)
 
+    @_reraise_on_connection_error()
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         fan = self._fan_to_pizone[fan_mode]
-        with suppress(ConnectionError):
-            await self._controller.set_fan(fan)
+        await self._controller.set_fan(fan)
 
+    @_reraise_on_connection_error()
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         if hvac_mode == HVACMode.OFF:
-            with suppress(ConnectionError):
-                await self._controller.set_on(False)
+            await self._controller.set_on(False)
             return
         if not self._controller.is_on:
-            with suppress(ConnectionError):
-                await self._controller.set_on(True)
+            await self._controller.set_on(True)
         if self._controller.free_air:
             return
         mode = self._state_to_pizone[hvac_mode]
-        with suppress(ConnectionError):
-            await self._controller.set_mode(mode)
+        await self._controller.set_mode(mode)
 
+    @_reraise_on_connection_error()
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode."""
-        with suppress(ConnectionError):
-            await self._controller.set_free_air(preset_mode == PRESET_ECO)
+        await self._controller.set_free_air(preset_mode == PRESET_ECO)
 
+    @_reraise_on_connection_error()
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
-        with suppress(ConnectionError):
-            await self._controller.set_on(True)
+        await self._controller.set_on(True)
 
 
 class ZoneDevice(ClimateEntity):
@@ -523,6 +540,7 @@ class ZoneDevice(ClimateEntity):
         return self._attr_supported_features & ~ClimateEntityFeature.TARGET_TEMPERATURE
 
     @property
+    @_return_on_connection_error()
     def hvac_mode(self) -> HVACMode | None:
         """Return current operation ie. heat, cool, idle."""
         mode = self._zone.mode
@@ -532,16 +550,19 @@ class ZoneDevice(ClimateEntity):
         return None
 
     @property
+    @_return_on_connection_error([])
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available operation modes."""
         return list(self._state_to_pizone)
 
     @property
-    def current_temperature(self) -> float:
+    @_return_on_connection_error()
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._zone.temp_current
 
     @property
+    @_return_on_connection_error()
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self._zone.type != Zone.Type.AUTO:
@@ -554,70 +575,75 @@ class ZoneDevice(ClimateEntity):
         return 0.5
 
     @property
+    @_return_on_connection_error(0.0)
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self._controller.min_temp
 
     @property
+    @_return_on_connection_error(50.0)
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self._controller.max_temp
 
     @property
-    def airflow_min(self):
+    @_return_on_connection_error(0)
+    def airflow_min(self) -> int:
         """Return the minimum air flow."""
         return self._zone.airflow_min
 
     @property
-    def airflow_max(self):
+    @_return_on_connection_error(100)
+    def airflow_max(self) -> int:
         """Return the maximum air flow."""
         return self._zone.airflow_max
 
+    @_reraise_on_connection_error()
     async def async_set_airflow_min(self, **kwargs):
         """Set new airflow minimum."""
-        with suppress(ConnectionError):
-            await self._zone.set_airflow_min(int(kwargs[ATTR_AIRFLOW]))
+        await self._zone.set_airflow_min(int(kwargs[ATTR_AIRFLOW]))
         self.async_write_ha_state()
 
+    @_reraise_on_connection_error()
     async def async_set_airflow_max(self, **kwargs):
         """Set new airflow maximum."""
-        with suppress(ConnectionError):
-            await self._zone.set_airflow_max(int(kwargs[ATTR_AIRFLOW]))
+        await self._zone.set_airflow_max(int(kwargs[ATTR_AIRFLOW]))
         self.async_write_ha_state()
 
+    @_reraise_on_connection_error()
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if self._zone.mode != Zone.Mode.AUTO:
             return
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
-            with suppress(ConnectionError):
-                await self._zone.set_temp_setpoint(temp)
+            await self._zone.set_temp_setpoint(temp)
 
+    @_reraise_on_connection_error()
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         mode = self._state_to_pizone[hvac_mode]
-        with suppress(ConnectionError):
-            await self._zone.set_mode(mode)
+        await self._zone.set_mode(mode)
         self.async_write_ha_state()
 
     @property
+    @_return_on_connection_error(False)
     def is_on(self):
         """Return true if on."""
         return self._zone.mode != Zone.Mode.CLOSE
 
+    @_reraise_on_connection_error()
     async def async_turn_on(self) -> None:
         """Turn device on (open zone)."""
-        with suppress(ConnectionError):
-            if self._zone.type == Zone.Type.AUTO:
-                await self._zone.set_mode(Zone.Mode.AUTO)
-            else:
-                await self._zone.set_mode(Zone.Mode.OPEN)
+        if self._zone.type == Zone.Type.AUTO:
+            await self._zone.set_mode(Zone.Mode.AUTO)
+        else:
+            await self._zone.set_mode(Zone.Mode.OPEN)
         self.async_write_ha_state()
 
+    @_reraise_on_connection_error()
     async def async_turn_off(self) -> None:
         """Turn device off (close zone)."""
-        with suppress(ConnectionError):
-            await self._zone.set_mode(Zone.Mode.CLOSE)
+        await self._zone.set_mode(Zone.Mode.CLOSE)
         self.async_write_ha_state()
 
     @property
@@ -626,6 +652,7 @@ class ZoneDevice(ClimateEntity):
         return self._zone.index
 
     @property
+    @_return_on_connection_error({})
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the optional state attributes."""
         return {
