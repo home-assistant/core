@@ -312,7 +312,7 @@ async def async_setup_entry(
                 coordinator,
                 SystemBridgeSensorEntityDescription(
                     key=f"display_{display['name']}_resolution_x",
-                    name=f"Display {display['name'].lower()} resolution x",
+                    name=f"Display {display['name']} resolution x",
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=PIXELS,
                     icon="mdi:monitor",
@@ -326,7 +326,7 @@ async def async_setup_entry(
                 coordinator,
                 SystemBridgeSensorEntityDescription(
                     key=f"display_{display['name']}_resolution_y",
-                    name=f"Display {display['name'].lower()} resolution y",
+                    name=f"Display {display['name']} resolution y",
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=PIXELS,
                     icon="mdi:monitor",
@@ -340,7 +340,7 @@ async def async_setup_entry(
                 coordinator,
                 SystemBridgeSensorEntityDescription(
                     key=f"display_{display['name']}_refresh_rate",
-                    name=f"Display {display['name'].lower()} refresh rate",
+                    name=f"Display {display['name']} refresh rate",
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=UnitOfFrequency.HERTZ,
                     device_class=SensorDeviceClass.FREQUENCY,
@@ -497,26 +497,23 @@ async def async_setup_entry(
             ),
         ]
 
-    if coordinator.data.cpu.count is not None:
-        for index in range(coordinator.data.cpu.count):
-            entities = [
-                *entities,
-                SystemBridgeSensor(
-                    coordinator,
-                    SystemBridgeSensorEntityDescription(
-                        key=f"processes_load_cpu_{index}",
-                        name=f"Load CPU {index}",
-                        entity_registry_enabled_default=False,
-                        state_class=SensorStateClass.MEASUREMENT,
-                        native_unit_of_measurement=PERCENTAGE,
-                        icon="mdi:percent",
-                        value=lambda data, k=index: getattr(
-                            data.cpu, f"usage_{k}", None
-                        ),
-                    ),
-                    entry.data[CONF_PORT],
+    for index in range(coordinator.data.cpu.count):
+        entities = [
+            *entities,
+            SystemBridgeSensor(
+                coordinator,
+                SystemBridgeSensorEntityDescription(
+                    key=f"processes_load_cpu_{index}",
+                    name=f"Load CPU {index}",
+                    entity_registry_enabled_default=False,
+                    state_class=SensorStateClass.MEASUREMENT,
+                    native_unit_of_measurement=PERCENTAGE,
+                    icon="mdi:percent",
+                    value=lambda data, k=index: getattr(data.cpu, f"usage_{k}", None),
                 ),
-            ]
+                entry.data[CONF_PORT],
+            ),
+        ]
 
     async_add_entities(entities)
 
