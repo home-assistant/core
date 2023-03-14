@@ -148,7 +148,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady("Unable to connect") from err
     if dataset_tlvs:
         _warn_on_default_network_settings(hass, entry, dataset_tlvs)
-        await async_add_dataset(hass, entry.title, dataset_tlvs.hex())
+        await async_add_dataset(hass, DOMAIN, dataset_tlvs.hex())
 
     hass.data[DOMAIN] = otbrdata
 

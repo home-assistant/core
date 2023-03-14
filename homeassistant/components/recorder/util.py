@@ -110,8 +110,14 @@ def session_scope(
     hass: HomeAssistant | None = None,
     session: Session | None = None,
     exception_filter: Callable[[Exception], bool] | None = None,
+    read_only: bool = False,
 ) -> Generator[Session, None, None]:
-    """Provide a transactional scope around a series of operations."""
+    """Provide a transactional scope around a series of operations.
+
+    read_only is used to indicate that the session is only used for reading
+    data and that no commit is required. It does not prevent the session
+    from writing and is not a security measure.
+    """
     if session is None and hass is not None:
         session = get_instance(hass).get_session()
 
@@ -121,7 +127,7 @@ def session_scope(
     need_rollback = False
     try:
         yield session
-        if session.get_transaction():
+        if session.get_transaction() and not read_only:
             need_rollback = True
             session.commit()
     except Exception as err:  # pylint: disable=broad-except
