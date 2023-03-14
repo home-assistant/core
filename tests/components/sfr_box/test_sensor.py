@@ -11,7 +11,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-pytestmark = pytest.mark.usefixtures("system_get_info", "dsl_get_info")
+pytestmark = pytest.mark.usefixtures("system_get_info", "dsl_get_info", "wan_get_info")
 
 
 @pytest.fixture(autouse=True)
