@@ -4,9 +4,10 @@ from __future__ import annotations
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
-from . import DOMAIN
+from .const import DOMAIN
+from .entity import NextcloudEntity
 
 SENSORS = (
     "nextcloud_system_version",
@@ -71,34 +72,10 @@ def setup_platform(
     add_entities(sensors, True)
 
 
-class NextcloudSensor(SensorEntity):
+class NextcloudSensor(NextcloudEntity, SensorEntity):
     """Represents a Nextcloud sensor."""
 
-    def __init__(self, item):
-        """Initialize the Nextcloud sensor."""
-        self._name = item
-        self._state = None
-
     @property
-    def icon(self):
-        """Return the icon for this sensor."""
-        return "mdi:cloud"
-
-    @property
-    def name(self):
-        """Return the name for this sensor."""
-        return self._name
-
-    @property
-    def native_value(self):
+    def native_value(self) -> StateType:
         """Return the state for this sensor."""
         return self._state
-
-    @property
-    def unique_id(self):
-        """Return the unique ID for this sensor."""
-        return f"{self.hass.data[DOMAIN]['instance']}#{self._name}"
-
-    def update(self) -> None:
-        """Update the sensor."""
-        self._state = self.hass.data[DOMAIN][self._name]
