@@ -371,7 +371,7 @@ async def async_setup_entry(
                 coordinator,
                 SystemBridgeSensorEntityDescription(
                     key=f"gpu_{index}_core_clock_speed",
-                    name=f"{gpu['name'].lower()} clock speed",
+                    name=f"{gpu['name']} clock speed",
                     entity_registry_enabled_default=False,
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=UnitOfFrequency.MEGAHERTZ,
@@ -385,7 +385,7 @@ async def async_setup_entry(
                 coordinator,
                 SystemBridgeSensorEntityDescription(
                     key=f"gpu_{index}_memory_clock_speed",
-                    name=f"{gpu['name'].lower()} memory clock speed",
+                    name=f"{gpu['name']} memory clock speed",
                     entity_registry_enabled_default=False,
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=UnitOfFrequency.MEGAHERTZ,
@@ -399,7 +399,7 @@ async def async_setup_entry(
                 coordinator,
                 SystemBridgeSensorEntityDescription(
                     key=f"gpu_{index}_memory_free",
-                    name=f"{gpu['name'].lower()} memory free",
+                    name=f"{gpu['name']} memory free",
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=UnitOfInformation.GIGABYTES,
                     device_class=SensorDeviceClass.DATA_SIZE,
@@ -412,7 +412,7 @@ async def async_setup_entry(
                 coordinator,
                 SystemBridgeSensorEntityDescription(
                     key=f"gpu_{index}_memory_used_percentage",
-                    name=f"{gpu['name'].lower()} memory used %",
+                    name=f"{gpu['name']} memory used %",
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=PERCENTAGE,
                     icon="mdi:memory",
@@ -426,7 +426,7 @@ async def async_setup_entry(
                 coordinator,
                 SystemBridgeSensorEntityDescription(
                     key=f"gpu_{index}_memory_used",
-                    name=f"{gpu['name'].lower()} memory used",
+                    name=f"{gpu['name']} memory used",
                     entity_registry_enabled_default=False,
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=UnitOfInformation.GIGABYTES,
@@ -440,7 +440,7 @@ async def async_setup_entry(
                 coordinator,
                 SystemBridgeSensorEntityDescription(
                     key=f"gpu_{index}_fan_speed",
-                    name=f"{gpu['name'].lower()} fan speed",
+                    name=f"{gpu['name']} fan speed",
                     entity_registry_enabled_default=False,
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
@@ -455,7 +455,7 @@ async def async_setup_entry(
                 coordinator,
                 SystemBridgeSensorEntityDescription(
                     key=f"gpu_{index}_power_usage",
-                    name=f"{gpu['name'].lower()} power usage",
+                    name=f"{gpu['name']} power usage",
                     entity_registry_enabled_default=False,
                     device_class=SensorDeviceClass.POWER,
                     state_class=SensorStateClass.MEASUREMENT,
@@ -470,7 +470,7 @@ async def async_setup_entry(
                 coordinator,
                 SystemBridgeSensorEntityDescription(
                     key=f"gpu_{index}_temperature",
-                    name=f"{gpu['name'].lower()} temperature",
+                    name=f"{gpu['name']} temperature",
                     entity_registry_enabled_default=False,
                     device_class=SensorDeviceClass.TEMPERATURE,
                     state_class=SensorStateClass.MEASUREMENT,
@@ -485,7 +485,7 @@ async def async_setup_entry(
                 coordinator,
                 SystemBridgeSensorEntityDescription(
                     key=f"gpu_{index}_usage_percentage",
-                    name=f"{gpu['name'].lower()} usage %",
+                    name=f"{gpu['name']} usage %",
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=PERCENTAGE,
                     icon="mdi:percent",
