@@ -5,8 +5,9 @@ import asyncio
 from collections.abc import Awaitable, Callable, Iterable
 import dataclasses
 from functools import partial, wraps
+import importlib
 import logging
-from typing import TYPE_CHECKING, Any, TypedDict, TypeGuard, TypeVar
+from typing import TYPE_CHECKING, Any, TypedDict, TypeGuard, TypeVar, cast
 
 import voluptuous as vol
 
@@ -42,6 +43,7 @@ from . import (
     entity_registry,
     template,
 )
+from .selector import TargetSelector
 from .typing import ConfigType, TemplateVarsType
 
 if TYPE_CHECKING:
@@ -56,6 +58,67 @@ CONF_SERVICE_ENTITY_ID = "entity_id"
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_DESCRIPTION_CACHE = "service_description_cache"
+
+
+def validate_attribute_option(attribute_option: str) -> Any:
+    """Validate attribute option."""
+    domain, enum, option = attribute_option.split(".", 3)
+
+    integration = importlib.import_module(f"homeassistant.components.{domain}")
+
+    try:
+        attribute_enum = getattr(integration, enum)
+    except AttributeError as exc:
+        raise vol.Invalid(f"Unknown attribute enum {domain}.{enum}") from exc
+
+    try:
+        return getattr(attribute_enum, option).value
+    except AttributeError as exc:
+        raise vol.Invalid(f"Unknown attribute option {enum}.{option}") from exc
+
+
+def validate_supported_feature(supported_feature: str) -> Any:
+    """Validate supported feature."""
+    domain, enum, feature = supported_feature.split(".", 3)
+
+    integration = importlib.import_module(f"homeassistant.components.{domain}")
+
+    try:
+        feature_enum = getattr(integration, enum)
+    except AttributeError as exc:
+        raise vol.Invalid(f"Unknown feature enum {domain}.{enum}") from exc
+
+    try:
+        return getattr(feature_enum, feature).value
+    except AttributeError as exc:
+        raise vol.Invalid(f"Unknown supported feature {enum}.{feature}") from exc
+
+
+# Basic schemas which translate attribute and supported feature enum names
+# to their values. Full validation is done by hassfest.services
+_FIELD_SCHEMA = vol.Schema(
+    {
+        vol.Optional("filter"): {
+            vol.Optional("attribute"): {
+                vol.Required(str): [vol.All(str, validate_attribute_option)],
+            },
+            vol.Optional("supported_features"): [
+                vol.All(str, validate_supported_feature)
+            ],
+        },
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+_SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Optional("target"): vol.Any(TargetSelector.CONFIG_SCHEMA, None),
+        vol.Optional("fields"): vol.Schema({str: _FIELD_SCHEMA}),
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+_SERVICES_SCHEMA = vol.Schema({cv.slug: _SERVICE_SCHEMA})
 
 
 class ServiceParams(TypedDict):
@@ -421,13 +484,16 @@ async def async_extract_config_entry_ids(
 def _load_services_file(hass: HomeAssistant, integration: Integration) -> JSON_TYPE:
     """Load services file for an integration."""
     try:
-        return load_yaml(str(integration.file_path / "services.yaml"))
+        return cast(
+            JSON_TYPE,
+            _SERVICES_SCHEMA(load_yaml(str(integration.file_path / "services.yaml"))),
+        )
     except FileNotFoundError:
         _LOGGER.warning(
             "Unable to find services.yaml for the %s integration", integration.domain
         )
         return {}
-    except HomeAssistantError:
+    except (HomeAssistantError, vol.Invalid):
         _LOGGER.warning(
             "Unable to parse services.yaml for the %s integration", integration.domain
         )

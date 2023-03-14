@@ -227,11 +227,46 @@ def test_device_selector_schema(schema, valid_selections, invalid_selections) ->
             ("light.abc123", "binary_sensor.abc123", FAKE_UUID),
             (None,),
         ),
+        (
+            {
+                "filter": [
+                    {"supported_features": ["LightEntityFeature.EFFECT"]},
+                ]
+            },
+            ("light.abc123", "blah.blah", FAKE_UUID),
+            (None,),
+        ),
+        (
+            {
+                "filter": [
+                    {"supported_features": [8]},
+                ]
+            },
+            ("light.abc123", "blah.blah", FAKE_UUID),
+            (None,),
+        ),
     ),
 )
 def test_entity_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test entity selector."""
     _test_selector("entity", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema",
+    (
+        # Invalid feature
+        {"filter": [{"supported_features": ["blah"]}]},
+        # Unknown feature enum
+        {"filter": [{"supported_features": ["FooEntityFeature.blah"]}]},
+        # Unknown feature enum member
+        {"filter": [{"supported_features": ["LightEntityFeature.blah"]}]},
+    ),
+)
+def test_entity_selector_schema_error(schema) -> None:
+    """Test number selector."""
+    with pytest.raises(vol.Invalid):
+        selector.validate_selector({"entity": schema})
 
 
 @pytest.mark.parametrize(
@@ -359,7 +394,7 @@ def test_addon_selector_schema(schema, valid_selections, invalid_selections) -> 
 
 @pytest.mark.parametrize(
     ("schema", "valid_selections", "invalid_selections"),
-    (({}, (1, "one", None), ()),),  # Everything can be coarced to bool
+    (({}, (1, "one", None), ()),),  # Everything can be coerced to bool
 )
 def test_boolean_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test boolean selector."""

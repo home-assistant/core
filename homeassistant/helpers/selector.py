@@ -79,6 +79,55 @@ class Selector(Generic[_T]):
         return {"selector": {self.selector_type: self.config}}
 
 
+def _validate_supported_feature(supported_feature: int | str) -> int:
+    # pylint: disable=import-outside-toplevel
+    from homeassistant.components.alarm_control_panel import (
+        AlarmControlPanelEntityFeature,
+    )
+    from homeassistant.components.calendar import CalendarEntityFeature
+    from homeassistant.components.camera import CameraEntityFeature
+    from homeassistant.components.climate import ClimateEntityFeature
+    from homeassistant.components.cover import CoverEntityFeature
+    from homeassistant.components.fan import FanEntityFeature
+    from homeassistant.components.humidifier import HumidifierEntityFeature
+    from homeassistant.components.light import LightEntityFeature
+    from homeassistant.components.lock import LockEntityFeature
+    from homeassistant.components.media_player import MediaPlayerEntityFeature
+    from homeassistant.components.remote import RemoteEntityFeature
+    from homeassistant.components.siren import SirenEntityFeature
+    from homeassistant.components.update import UpdateEntityFeature
+    from homeassistant.components.vacuum import VacuumEntityFeature
+    from homeassistant.components.water_heater import WaterHeaterEntityFeature
+
+    if isinstance(supported_feature, int):
+        return supported_feature
+
+    known_entity_features = {
+        "AlarmControlPanelEntityFeature": AlarmControlPanelEntityFeature,
+        "CalendarEntityFeature": CalendarEntityFeature,
+        "CameraEntityFeature": CameraEntityFeature,
+        "ClimateEntityFeature": ClimateEntityFeature,
+        "CoverEntityFeature": CoverEntityFeature,
+        "FanEntityFeature": FanEntityFeature,
+        "HumidifierEntityFeature": HumidifierEntityFeature,
+        "LightEntityFeature": LightEntityFeature,
+        "LockEntityFeature": LockEntityFeature,
+        "MediaPlayerEntityFeature": MediaPlayerEntityFeature,
+        "RemoteEntityFeature": RemoteEntityFeature,
+        "SirenEntityFeature": SirenEntityFeature,
+        "UpdateEntityFeature": UpdateEntityFeature,
+        "VacuumEntityFeature": VacuumEntityFeature,
+        "WaterHeaterEntityFeature": WaterHeaterEntityFeature,
+    }
+
+    _, enum, feature = supported_feature.split(".", 2)
+
+    try:
+        return cast(int, getattr(known_entity_features[enum], feature).value)
+    except (AttributeError, KeyError) as exc:
+        raise vol.Invalid(f"Unknown supported feature {supported_feature}") from exc
+
+
 ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
     {
         # Integration that provided the entity
@@ -88,7 +137,9 @@ ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
         # Device class of the entity
         vol.Optional("device_class"): vol.All(cv.ensure_list, [str]),
         # Features supported by the entity
-        vol.Optional("supported_features"): [int],
+        vol.Optional("supported_features"): [
+            vol.All(vol.Any(int, str), _validate_supported_feature)
+        ],
     }
 )
 
@@ -99,7 +150,7 @@ class EntityFilterSelectorConfig(TypedDict, total=False):
     integration: str
     domain: str | list[str]
     device_class: str | list[str]
-    supported_features: list[int]
+    supported_features: list[int | str]
 
 
 DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
