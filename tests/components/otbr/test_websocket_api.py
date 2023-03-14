@@ -30,15 +30,9 @@ async def test_get_info(
 
     aioclient_mock.get(f"{BASE_URL}/node/dataset/active", text=DATASET_CH16.hex())
 
-    await websocket_client.send_json(
-        {
-            "id": 5,
-            "type": "otbr/info",
-        }
-    )
+    await websocket_client.send_json_auto_id({"type": "otbr/info"})
 
     msg = await websocket_client.receive_json()
-    assert msg["id"] == 5
     assert msg["success"]
     assert msg["result"] == {
         "url": BASE_URL,
@@ -54,15 +48,9 @@ async def test_get_info_no_entry(
     """Test async_get_info."""
     await async_setup_component(hass, "otbr", {})
     websocket_client = await hass_ws_client(hass)
-    await websocket_client.send_json(
-        {
-            "id": 5,
-            "type": "otbr/info",
-        }
-    )
+    await websocket_client.send_json_auto_id({"type": "otbr/info"})
 
     msg = await websocket_client.receive_json()
-    assert msg["id"] == 5
     assert not msg["success"]
     assert msg["error"]["code"] == "not_loaded"
 
@@ -74,21 +62,13 @@ async def test_get_info_fetch_fails(
     websocket_client,
 ) -> None:
     """Test async_get_info."""
-    await async_setup_component(hass, "otbr", {})
-
     with patch(
         "python_otbr_api.OTBR.get_active_dataset_tlvs",
         side_effect=python_otbr_api.OTBRError,
     ):
-        await websocket_client.send_json(
-            {
-                "id": 5,
-                "type": "otbr/info",
-            }
-        )
+        await websocket_client.send_json_auto_id({"type": "otbr/info"})
         msg = await websocket_client.receive_json()
 
-    assert msg["id"] == 5
     assert not msg["success"]
     assert msg["error"]["code"] == "get_dataset_failed"
 
@@ -110,15 +90,9 @@ async def test_create_network(
     ) as get_active_dataset_tlvs_mock, patch(
         "homeassistant.components.thread.dataset_store.DatasetStore.async_add"
     ) as mock_add:
-        await websocket_client.send_json(
-            {
-                "id": 5,
-                "type": "otbr/create_network",
-            }
-        )
+        await websocket_client.send_json_auto_id({"type": "otbr/create_network"})
 
         msg = await websocket_client.receive_json()
-        assert msg["id"] == 5
         assert msg["success"]
         assert msg["result"] is None
 
@@ -142,15 +116,9 @@ async def test_create_network_no_entry(
     """Test create network."""
     await async_setup_component(hass, "otbr", {})
     websocket_client = await hass_ws_client(hass)
-    await websocket_client.send_json(
-        {
-            "id": 5,
-            "type": "otbr/create_network",
-        }
-    )
+    await websocket_client.send_json_auto_id({"type": "otbr/create_network"})
 
     msg = await websocket_client.receive_json()
-    assert msg["id"] == 5
     assert not msg["success"]
     assert msg["error"]["code"] == "not_loaded"
 
@@ -162,21 +130,13 @@ async def test_create_network_fails_1(
     websocket_client,
 ) -> None:
     """Test create network."""
-    await async_setup_component(hass, "otbr", {})
-
     with patch(
         "python_otbr_api.OTBR.set_enabled",
         side_effect=python_otbr_api.OTBRError,
     ):
-        await websocket_client.send_json(
-            {
-                "id": 5,
-                "type": "otbr/create_network",
-            }
-        )
+        await websocket_client.send_json_auto_id({"type": "otbr/create_network"})
         msg = await websocket_client.receive_json()
 
-    assert msg["id"] == 5
     assert not msg["success"]
     assert msg["error"]["code"] == "set_enabled_failed"
 
@@ -188,23 +148,15 @@ async def test_create_network_fails_2(
     websocket_client,
 ) -> None:
     """Test create network."""
-    await async_setup_component(hass, "otbr", {})
-
     with patch(
         "python_otbr_api.OTBR.set_enabled",
     ), patch(
         "python_otbr_api.OTBR.create_active_dataset",
         side_effect=python_otbr_api.OTBRError,
     ):
-        await websocket_client.send_json(
-            {
-                "id": 5,
-                "type": "otbr/create_network",
-            }
-        )
+        await websocket_client.send_json_auto_id({"type": "otbr/create_network"})
         msg = await websocket_client.receive_json()
 
-    assert msg["id"] == 5
     assert not msg["success"]
     assert msg["error"]["code"] == "create_active_dataset_failed"
 
@@ -216,23 +168,15 @@ async def test_create_network_fails_3(
     websocket_client,
 ) -> None:
     """Test create network."""
-    await async_setup_component(hass, "otbr", {})
-
     with patch(
         "python_otbr_api.OTBR.set_enabled",
         side_effect=[None, python_otbr_api.OTBRError],
     ), patch(
         "python_otbr_api.OTBR.create_active_dataset",
     ):
-        await websocket_client.send_json(
-            {
-                "id": 5,
-                "type": "otbr/create_network",
-            }
-        )
+        await websocket_client.send_json_auto_id({"type": "otbr/create_network"})
         msg = await websocket_client.receive_json()
 
-    assert msg["id"] == 5
     assert not msg["success"]
     assert msg["error"]["code"] == "set_enabled_failed"
 
@@ -244,23 +188,15 @@ async def test_create_network_fails_4(
     websocket_client,
 ) -> None:
     """Test create network."""
-    await async_setup_component(hass, "otbr", {})
-
     with patch("python_otbr_api.OTBR.set_enabled"), patch(
         "python_otbr_api.OTBR.create_active_dataset"
     ), patch(
         "python_otbr_api.OTBR.get_active_dataset_tlvs",
         side_effect=python_otbr_api.OTBRError,
     ):
-        await websocket_client.send_json(
-            {
-                "id": 5,
-                "type": "otbr/create_network",
-            }
-        )
+        await websocket_client.send_json_auto_id({"type": "otbr/create_network"})
         msg = await websocket_client.receive_json()
 
-    assert msg["id"] == 5
     assert not msg["success"]
     assert msg["error"]["code"] == "get_active_dataset_tlvs_failed"
 
@@ -272,20 +208,12 @@ async def test_create_network_fails_5(
     websocket_client,
 ) -> None:
     """Test create network."""
-    await async_setup_component(hass, "otbr", {})
-
     with patch("python_otbr_api.OTBR.set_enabled"), patch(
         "python_otbr_api.OTBR.create_active_dataset"
     ), patch("python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=None):
-        await websocket_client.send_json(
-            {
-                "id": 5,
-                "type": "otbr/create_network",
-            }
-        )
+        await websocket_client.send_json_auto_id({"type": "otbr/create_network"})
         msg = await websocket_client.receive_json()
 
-    assert msg["id"] == 5
     assert not msg["success"]
     assert msg["error"]["code"] == "get_active_dataset_tlvs_empty"
 
@@ -486,15 +414,9 @@ async def test_get_extended_address(
         "python_otbr_api.OTBR.get_extended_address",
         return_value=bytes.fromhex("4EF6C4F3FF750626"),
     ):
-        await websocket_client.send_json(
-            {
-                "id": 5,
-                "type": "otbr/get_extended_address",
-            }
-        )
+        await websocket_client.send_json_auto_id({"type": "otbr/get_extended_address"})
         msg = await websocket_client.receive_json()
 
-    assert msg["id"] == 5
     assert msg["success"]
     assert msg["result"] == {"extended_address": "4EF6C4F3FF750626".lower()}
 
@@ -507,15 +429,9 @@ async def test_get_extended_address_no_entry(
     """Test get extended address."""
     await async_setup_component(hass, "otbr", {})
     websocket_client = await hass_ws_client(hass)
-    await websocket_client.send_json(
-        {
-            "id": 5,
-            "type": "otbr/get_extended_address",
-        }
-    )
+    await websocket_client.send_json_auto_id({"type": "otbr/get_extended_address"})
 
     msg = await websocket_client.receive_json()
-    assert msg["id"] == 5
     assert not msg["success"]
     assert msg["error"]["code"] == "not_loaded"
 
@@ -527,20 +443,12 @@ async def test_get_extended_address_fetch_fails(
     websocket_client,
 ) -> None:
     """Test get extended address."""
-    await async_setup_component(hass, "otbr", {})
-
     with patch(
         "python_otbr_api.OTBR.get_extended_address",
         side_effect=python_otbr_api.OTBRError,
     ):
-        await websocket_client.send_json(
-            {
-                "id": 5,
-                "type": "otbr/get_extended_address",
-            }
-        )
+        await websocket_client.send_json_auto_id({"type": "otbr/get_extended_address"})
         msg = await websocket_client.receive_json()
 
-    assert msg["id"] == 5
     assert not msg["success"]
     assert msg["error"]["code"] == "get_extended_address_failed"
