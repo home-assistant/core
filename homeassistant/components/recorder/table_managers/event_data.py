@@ -14,7 +14,7 @@ from homeassistant.util.json import JSON_ENCODE_EXCEPTIONS
 from . import BaseTableManager
 from ..const import SQLITE_MAX_BIND_VARS
 from ..db_schema import EventData
-from ..queries import find_shared_data_ids
+from ..queries import get_shared_event_datas
 from ..util import chunked
 
 if TYPE_CHECKING:
@@ -84,7 +84,7 @@ class EventDataManager(BaseTableManager):
         with session.no_autoflush:
             for hashs_chunk in chunked(hashes, SQLITE_MAX_BIND_VARS):
                 for data_id, shared_data in session.execute(
-                    find_shared_data_ids(hashs_chunk)
+                    get_shared_event_datas(hashs_chunk)
                 ):
                     results[shared_data] = self._id_map[shared_data] = cast(
                         int, data_id
