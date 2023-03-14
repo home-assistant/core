@@ -1,30 +1,32 @@
 # serializer version: 1
 # name: test_sensors
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': 'http://192.168.0.1',
-    'connections': set({
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': 'http://192.168.0.1',
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'sfr_box',
+          'e4:5d:51:00:11:22',
+        ),
+      }),
+      'is_new': False,
+      'manufacturer': None,
+      'model': 'NB6VAC-FXC-r0',
+      'name': 'SFR Box',
+      'name_by_user': None,
+      'suggested_area': None,
+      'sw_version': 'NB6VAC-MAIN-R4.0.44k',
+      'via_device_id': None,
     }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'sfr_box',
-        'e4:5d:51:00:11:22',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': None,
-    'model': 'NB6VAC-FXC-r0',
-    'name': 'SFR Box',
-    'name_by_user': None,
-    'suggested_area': None,
-    'sw_version': 'NB6VAC-MAIN-R4.0.44k',
-    'via_device_id': None,
-  })
+  ])
 # ---
 # name: test_sensors.1
   list([
