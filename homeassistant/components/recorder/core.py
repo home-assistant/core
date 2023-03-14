@@ -80,15 +80,14 @@ from .models import (
 from .pool import POOL_SIZE, MutexPool, RecorderPool
 from .queries import (
     find_shared_attributes_id,
-    find_shared_data_id,
     get_shared_attributes,
-    get_shared_event_datas,
     has_entity_ids_to_migrate,
     has_event_type_to_migrate,
     has_events_context_ids_to_migrate,
     has_states_context_ids_to_migrate,
 )
 from .run_history import RunHistory
+from .table_managers.event_data import EventDataManager
 from .table_managers.event_types import EventTypeManager
 from .table_managers.states_meta import StatesMetaManager
 from .tasks import (
@@ -144,7 +143,6 @@ EXPIRE_AFTER_COMMITS = 120
 # - How frequently states with overlapping attributes will change
 # - How much memory our low end hardware has
 STATE_ATTRIBUTES_ID_CACHE_SIZE = 2048
-EVENT_DATA_ID_CACHE_SIZE = 2048
 
 
 SHUTDOWN_TASK = object()
@@ -220,11 +218,10 @@ class Recorder(threading.Thread):
         self._commits_without_expire = 0
         self._old_states: dict[str | None, States] = {}
         self._state_attributes_ids: LRU = LRU(STATE_ATTRIBUTES_ID_CACHE_SIZE)
-        self._event_data_ids: LRU = LRU(EVENT_DATA_ID_CACHE_SIZE)
-        self.event_type_manager = EventTypeManager()
-        self.states_meta_manager = StatesMetaManager()
+        self.event_data_manager = EventDataManager(self)
+        self.event_type_manager = EventTypeManager(self)
+        self.states_meta_manager = StatesMetaManager(self)
         self._pending_state_attributes: dict[str, StateAttributes] = {}
-        self._pending_event_data: dict[str, EventData] = {}
         self._pending_expunge: list[States] = []
         self.event_session: Session | None = None
         self._get_session: Callable[[], Session] | None = None
@@ -780,7 +777,7 @@ class Recorder(threading.Thread):
 
         assert self.event_session is not None
         self._pre_process_state_change_events(state_change_events)
-        self._pre_process_non_state_change_events(non_state_change_events)
+        self.event_data_manager.load(non_state_change_events, self.event_session)
         self.event_type_manager.load(non_state_change_events, self.event_session)
         self.states_meta_manager.load(state_change_events, self.event_session)
 
@@ -806,26 +803,6 @@ class Recorder(threading.Thread):
                         get_shared_attributes(hash_chunk)
                     ).fetchall():
                         self._state_attributes_ids[shared_attrs] = id_
-
-    def _pre_process_non_state_change_events(self, events: list[Event]) -> None:
-        """Load startup event attributes from the database.
-
-        Since the _event_data_ids cache is empty at startup
-        we restore it from the database to avoid having to look up
-        the data in the database for every event until its primed.
-        """
-        assert self.event_session is not None
-        if hashes := {
-            EventData.hash_shared_data_bytes(shared_event_bytes)
-            for event in events
-            if (shared_event_bytes := self._serialize_event_data_from_event(event))
-        }:
-            with self.event_session.no_autoflush:
-                for hash_chunk in chunked(hashes, SQLITE_MAX_BIND_VARS):
-                    for id_, shared_data in self.event_session.execute(
-                        get_shared_event_datas(hash_chunk)
-                    ).fetchall():
-                        self._event_data_ids[shared_data] = id_
 
     def _guarded_process_one_task_or_recover(self, task: RecorderTask) -> None:
         """Process a task, guarding against exceptions to ensure the loop does not collapse."""
@@ -973,32 +950,6 @@ class Recorder(threading.Thread):
                 return cast(int, attributes_id[0])
         return None
 
-    def _find_shared_data_in_db(self, data_hash: int, shared_data: str) -> int | None:
-        """Find shared event data in the db from the hash and shared_attrs."""
-        #
-        # Avoid the event session being flushed since it will
-        # commit all the pending events and states to the database.
-        #
-        # The lookup has already have checked to see if the data is cached
-        # or going to be written in the next commit so there is no
-        # need to flush before checking the database.
-        #
-        assert self.event_session is not None
-        with self.event_session.no_autoflush:
-            if data_id := self.event_session.execute(
-                find_shared_data_id(data_hash, shared_data)
-            ).first():
-                return cast(int, data_id[0])
-        return None
-
-    def _serialize_event_data_from_event(self, event: Event) -> bytes | None:
-        """Serialize event data."""
-        try:
-            return EventData.shared_data_bytes_from_event(event, self.dialect_name)
-        except JSON_ENCODE_EXCEPTIONS as ex:
-            _LOGGER.warning("Event is not JSON serializable: %s: %s", event, ex)
-            return None
-
     def _process_non_state_changed_event_into_session(self, event: Event) -> None:
         """Process any event into the session except state changed."""
         event_session = self.event_session
@@ -1021,29 +972,28 @@ class Recorder(threading.Thread):
             event_session.add(dbevent)
             return
 
-        if not (shared_data_bytes := self._serialize_event_data_from_event(event)):
+        event_data_manager = self.event_data_manager
+        if not (shared_data_bytes := event_data_manager.serialize_from_event(event)):
             return
 
         # Map the event data to the EventData table
         shared_data = shared_data_bytes.decode("utf-8")
         # Matching attributes found in the pending commit
-        if pending_event_data := self._pending_event_data.get(shared_data):
+        if pending_event_data := event_data_manager.get_pending(shared_data):
             dbevent.event_data_rel = pending_event_data
         # Matching attributes id found in the cache
-        elif data_id := self._event_data_ids.get(shared_data):
+        elif (data_hash := EventData.hash_shared_data_bytes(shared_data_bytes)) and (
+            data_id := self.event_data_manager.get(
+                shared_data, data_hash, event_session
+            )
+        ):
             dbevent.data_id = data_id
         else:
-            data_hash = EventData.hash_shared_data_bytes(shared_data_bytes)
-            # Matching attributes found in the database
-            if data_id := self._find_shared_data_in_db(data_hash, shared_data):
-                self._event_data_ids[shared_data] = dbevent.data_id = data_id
             # No matching attributes found, save them in the DB
-            else:
-                dbevent_data = EventData(shared_data=shared_data, hash=data_hash)
-                dbevent.event_data_rel = self._pending_event_data[
-                    shared_data
-                ] = dbevent_data
-                event_session.add(dbevent_data)
+            dbevent_data = EventData(shared_data=shared_data, hash=data_hash)
+            event_data_manager.add_pending(dbevent_data)
+            event_session.add(dbevent_data)
+            dbevent.event_data_rel = dbevent_data
 
         event_session.add(dbevent)
 
@@ -1184,9 +1134,7 @@ class Recorder(threading.Thread):
                 state_attr.shared_attrs
             ] = state_attr.attributes_id
         self._pending_state_attributes = {}
-        for event_data in self._pending_event_data.values():
-            self._event_data_ids[event_data.shared_data] = event_data.data_id
-        self._pending_event_data = {}
+        self.event_data_manager.post_commit_pending()
         self.event_type_manager.post_commit_pending()
         self.states_meta_manager.post_commit_pending()
 
@@ -1212,9 +1160,8 @@ class Recorder(threading.Thread):
         """Close the event session."""
         self._old_states.clear()
         self._state_attributes_ids.clear()
-        self._event_data_ids.clear()
         self._pending_state_attributes.clear()
-        self._pending_event_data.clear()
+        self.event_data_manager.reset()
         self.event_type_manager.reset()
         self.states_meta_manager.reset()
 

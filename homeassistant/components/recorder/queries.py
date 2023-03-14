@@ -85,12 +85,12 @@ def find_shared_attributes_id(
     )
 
 
-def find_shared_data_id(attr_hash: int, shared_data: str) -> StatementLambdaElement:
-    """Find a data_id by hash and shared_data."""
+def find_shared_data_ids(hashes: list[int]) -> StatementLambdaElement:
+    """Find a data_id by hashes."""
     return lambda_stmt(
-        lambda: select(EventData.data_id)
-        .filter(EventData.hash == attr_hash)
-        .filter(EventData.shared_data == shared_data)
+        lambda: select(EventData.data_id, EventData.shared_data).filter(
+            EventData.hash.in_(hashes)
+        )
     )
 
 
