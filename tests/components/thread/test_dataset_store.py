@@ -83,6 +83,17 @@ async def test_delete_preferred_dataset(hass: HomeAssistant) -> None:
     assert len(store.datasets) == 1
 
 
+async def test_get_dataset(hass: HomeAssistant) -> None:
+    """Test get the preferred dataset."""
+    assert await dataset_store.async_get_dataset(hass, "blah") is None
+
+    await dataset_store.async_add_dataset(hass, "source", DATASET_1)
+    store = await dataset_store.async_get_store(hass)
+    dataset_id = list(store.datasets.values())[0].id
+
+    assert (await dataset_store.async_get_dataset(hass, dataset_id)) == DATASET_1
+
+
 async def test_get_preferred_dataset(hass: HomeAssistant) -> None:
     """Test get the preferred dataset."""
     assert await dataset_store.async_get_preferred_dataset(hass) is None

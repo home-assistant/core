@@ -79,6 +79,11 @@ class OTBRData:
         return await self.api.create_active_dataset(dataset)
 
     @_handle_otbr_error
+    async def set_active_dataset_tlvs(self, dataset: bytes) -> None:
+        """Set current active operational dataset in TLVS format."""
+        await self.api.set_active_dataset_tlvs(dataset)
+
+    @_handle_otbr_error
     async def get_extended_address(self) -> bytes:
         """Get extended address (EUI-64)."""
         return await self.api.get_extended_address()
