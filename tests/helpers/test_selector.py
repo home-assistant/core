@@ -230,7 +230,7 @@ def test_device_selector_schema(schema, valid_selections, invalid_selections) ->
         (
             {
                 "filter": [
-                    {"supported_features": ["LightEntityFeature.EFFECT"]},
+                    {"supported_features": ["light.LightEntityFeature.EFFECT"]},
                 ]
             },
             ("light.abc123", "blah.blah", FAKE_UUID),
@@ -258,9 +258,9 @@ def test_entity_selector_schema(schema, valid_selections, invalid_selections) ->
         # Invalid feature
         {"filter": [{"supported_features": ["blah"]}]},
         # Unknown feature enum
-        {"filter": [{"supported_features": ["FooEntityFeature.blah"]}]},
+        {"filter": [{"supported_features": ["blah.FooEntityFeature.blah"]}]},
         # Unknown feature enum member
-        {"filter": [{"supported_features": ["LightEntityFeature.blah"]}]},
+        {"filter": [{"supported_features": ["light.LightEntityFeature.blah"]}]},
     ),
 )
 def test_entity_selector_schema_error(schema) -> None:
