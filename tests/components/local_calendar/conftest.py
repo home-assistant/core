@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 CALENDAR_NAME = "Light Schedule"
 FRIENDLY_NAME = "Light schedule"
@@ -150,7 +150,7 @@ ClientFixture = Callable[[], Awaitable[Client]]
 @pytest.fixture
 async def ws_client(
     hass: HomeAssistant,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
 ) -> ClientFixture:
     """Fixture for creating the test websocket client."""
 
