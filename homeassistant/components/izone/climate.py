@@ -128,9 +128,9 @@ def _return_on_connection_error(ret=None):
 
 def _reraise_on_connection_error():
     def wrap(func):
-        def wrapped_f(*args, **kwargs):
+        async def wrapped_f(*args, **kwargs):
             try:
-                return func(*args, **kwargs)
+                return await func(*args, **kwargs)
             except ConnectionError as err:
                 raise InvalidStateError from err
 
