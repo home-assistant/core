@@ -1,5 +1,4 @@
 """Tests for 1-Wire config flow."""
-from collections.abc import Awaitable, Callable
 from unittest.mock import MagicMock, patch
 
 import aiohttp
@@ -14,6 +13,8 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from . import setup_owproxy_mock_devices
+
+from tests.typing import WebSocketGenerator
 
 
 async def remove_device(
@@ -33,7 +34,7 @@ async def remove_device(
 
 
 @pytest.mark.usefixtures("owproxy_with_connerror")
-async def test_connect_failure(hass: HomeAssistant, config_entry: ConfigEntry):
+async def test_connect_failure(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Test connection failure raises ConfigEntryNotReady."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -45,7 +46,7 @@ async def test_connect_failure(hass: HomeAssistant, config_entry: ConfigEntry):
 
 async def test_listing_failure(
     hass: HomeAssistant, config_entry: ConfigEntry, owproxy: MagicMock
-):
+) -> None:
     """Test listing failure raises ConfigEntryNotReady."""
     owproxy.return_value.dir.side_effect = protocol.OwnetError()
 
@@ -58,7 +59,7 @@ async def test_listing_failure(
 
 
 @pytest.mark.usefixtures("owproxy")
-async def test_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+async def test_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Test being able to unload an entry."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -78,9 +79,7 @@ async def test_registry_cleanup(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     owproxy: MagicMock,
-    hass_ws_client: Callable[
-        [HomeAssistant], Awaitable[aiohttp.ClientWebSocketResponse]
-    ],
+    hass_ws_client: WebSocketGenerator,
 ):
     """Test being able to remove a disconnected device."""
     assert await async_setup_component(hass, "config", {})

@@ -20,13 +20,13 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.json import JSON_DUMP
 import homeassistant.util.dt as dt_util
 
-from .const import LOGBOOK_ENTITIES_FILTER
+from .const import DOMAIN
 from .helpers import (
     async_determine_event_types,
     async_filter_entities,
     async_subscribe_events,
 )
-from .models import async_event_to_row
+from .models import LogbookConfig, async_event_to_row
 from .processor import EventProcessor
 
 MAX_PENDING_LOGBOOK_EVENTS = 2048
@@ -83,6 +83,7 @@ async def _async_send_historical_events(
     formatter: Callable[[int, Any], dict[str, Any]],
     event_processor: EventProcessor,
     partial: bool,
+    force_send: bool = False,
 ) -> dt | None:
     """Select historical data from the database and deliver it to the websocket.
 
@@ -116,7 +117,7 @@ async def _async_send_historical_events(
         # if its the last one (not partial) so
         # consumers of the api know their request was
         # answered but there were no results
-        if last_event_time or not partial:
+        if last_event_time or not partial or force_send:
             connection.send_message(message)
         return last_event_time
 
@@ -150,7 +151,7 @@ async def _async_send_historical_events(
     # if its the last one (not partial) so
     # consumers of the api know their request was
     # answered but there were no results
-    if older_query_last_event_time or not partial:
+    if older_query_last_event_time or not partial or force_send:
         connection.send_message(older_message)
 
     # Returns the time of the newest event
@@ -360,7 +361,8 @@ async def ws_event_stream(
 
     entities_filter: EntityFilter | None = None
     if not event_processor.limited_select:
-        entities_filter = hass.data[LOGBOOK_ENTITIES_FILTER]
+        logbook_config: LogbookConfig = hass.data[DOMAIN]
+        entities_filter = logbook_config.entity_filter
 
     async_subscribe_events(
         hass,
@@ -384,7 +386,16 @@ async def ws_event_stream(
         messages.event_message,
         event_processor,
         partial=True,
+        # Force a send since the wait for the sync task
+        # can take a a while if the recorder is busy and
+        # we want to make sure the client is not still spinning
+        # because it is waiting for the first message
+        force_send=True,
     )
+
+    if msg_id not in connection.subscriptions:
+        # Unsubscribe happened while sending historical events
+        return
 
     live_stream.task = asyncio.create_task(
         _async_events_consumer(
@@ -395,10 +406,6 @@ async def ws_event_stream(
             event_processor,
         )
     )
-
-    if msg_id not in connection.subscriptions:
-        # Unsubscribe happened while sending historical events
-        return
 
     live_stream.wait_sync_task = asyncio.create_task(
         get_instance(hass).async_block_till_done()

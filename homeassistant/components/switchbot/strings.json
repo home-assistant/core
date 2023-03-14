@@ -24,7 +24,7 @@
         }
       },
       "lock_auth": {
-        "description": "Please provide your SwitchBot app username and password. This data won't be saved and only used to retrieve your locks encryption key.",
+        "description": "Please provide your SwitchBot app username and password. This data won't be saved and only used to retrieve your locks encryption key. Usernames and passwords are case sensitive.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
@@ -40,11 +40,11 @@
     },
     "error": {
       "encryption_key_invalid": "Key ID or Encryption key is invalid",
-      "auth_failed": "Authentication failed"
+      "auth_failed": "Authentication failed: {error_detail}"
     },
     "abort": {
       "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_unconfigured_devices": "No unconfigured devices found.",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "switchbot_unsupported_type": "Unsupported Switchbot Type."

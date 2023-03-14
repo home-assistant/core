@@ -14,6 +14,11 @@ from .const import DOMAIN
 from .entity import PowerWallEntity
 from .models import PowerwallRuntimeData
 
+CONNECTED_GRID_STATUSES = {
+    GridStatus.TRANSITION_TO_GRID,
+    GridStatus.CONNECTED,
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -101,7 +106,7 @@ class PowerWallGridStatusSensor(PowerWallEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Grid is online."""
-        return self.data.grid_status == GridStatus.CONNECTED
+        return self.data.grid_status in CONNECTED_GRID_STATUSES
 
 
 class PowerWallChargingStatusSensor(PowerWallEntity, BinarySensorEntity):

@@ -39,6 +39,7 @@ from . import (
     device_registry as dev_reg,
     entity_registry as ent_reg,
     service,
+    translation,
 )
 from .device_registry import DeviceRegistry
 from .entity_registry import EntityRegistry, RegistryEntryDisabler, RegistryEntryHider
@@ -124,6 +125,7 @@ class EntityPlatform:
         self.entity_namespace = entity_namespace
         self.config_entry: config_entries.ConfigEntry | None = None
         self.entities: dict[str, Entity] = {}
+        self.entity_translations: dict[str, Any] = {}
         self._tasks: list[asyncio.Task[None]] = []
         # Stop tracking tasks after setup is completed
         self._setup_complete = False
@@ -158,12 +160,16 @@ class EntityPlatform:
     ) -> asyncio.Semaphore | None:
         """Get or create a semaphore for parallel updates.
 
-        Semaphore will be created on demand because we base it off if update method is async or not.
+        Semaphore will be created on demand because we base it off if update
+        method is async or not.
 
-        If parallel updates is set to 0, we skip the semaphore.
-        If parallel updates is set to a number, we initialize the semaphore to that number.
-        The default value for parallel requests is decided based on the first entity that is added to Home Assistant.
-        It's 0 if the entity defines the async_update method, else it's 1.
+        - If parallel updates is set to 0, we skip the semaphore.
+        - If parallel updates is set to a number, we initialize the semaphore
+          to that number.
+
+        The default value for parallel requests is decided based on the first
+        entity that is added to Home Assistant. It's 0 if the entity defines
+        the async_update method, else it's 1.
         """
         if self.parallel_updates_created:
             return self.parallel_updates
@@ -206,9 +212,9 @@ class EntityPlatform:
             return
 
         @callback
-        def async_create_setup_task() -> Coroutine[
-            Any, Any, None
-        ] | asyncio.Future[None]:
+        def async_create_setup_task() -> (
+            Coroutine[Any, Any, None] | asyncio.Future[None]
+        ):
             """Get task to set up platform."""
             if getattr(platform, "async_setup_platform", None):
                 return platform.async_setup_platform(  # type: ignore[union-attr]
@@ -271,6 +277,15 @@ class EntityPlatform:
         logger = self.logger
         hass = self.hass
         full_name = f"{self.domain}.{self.platform_name}"
+
+        try:
+            self.entity_translations = await translation.async_get_translations(
+                hass, hass.config.language, "entity", {self.platform_name}
+            )
+        except Exception as err:  # pylint: disable=broad-exception-caught
+            _LOGGER.debug(
+                "Could not load translations for %s", self.platform_name, exc_info=err
+            )
 
         logger.info("Setting up %s", full_name)
         warn_task = hass.loop.call_later(
@@ -371,6 +386,7 @@ class EntityPlatform:
         """Schedule adding entities for a single platform async."""
         task = self.hass.async_create_task(
             self.async_add_entities(new_entities, update_before_add=update_before_add),
+            f"EntityPlatform async_add_entities {self.domain}.{self.platform_name}",
         )
 
         if not self._setup_complete:
@@ -385,6 +401,7 @@ class EntityPlatform:
         task = self.config_entry.async_create_task(
             self.hass,
             self.async_add_entities(new_entities, update_before_add=update_before_add),
+            f"EntityPlatform async_add_entities_for_entry {self.domain}.{self.platform_name}",
         )
 
         if not self._setup_complete:
@@ -414,7 +431,7 @@ class EntityPlatform:
         This method must be run in the event loop.
         """
         # handle empty list from component/platform
-        if not new_entities:
+        if not new_entities:  # type: ignore[truthy-iterable]
             return
 
         hass = self.hass
@@ -566,7 +583,9 @@ class EntityPlatform:
                     "via_device",
                 ):
                     if key in device_info:
-                        processed_dev_info[key] = device_info[key]  # type: ignore[literal-required]
+                        processed_dev_info[key] = device_info[
+                            key  # type: ignore[literal-required]
+                        ]
 
                 if "configuration_url" in device_info:
                     if device_info["configuration_url"] is None:
@@ -586,7 +605,9 @@ class EntityPlatform:
                             )
 
                 try:
-                    device = device_registry.async_get_or_create(**processed_dev_info)  # type: ignore[arg-type]
+                    device = device_registry.async_get_or_create(
+                        **processed_dev_info  # type: ignore[arg-type]
+                    )
                     device_id = device.id
                 except RequiredParameterMissing:
                     pass

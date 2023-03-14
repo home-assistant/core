@@ -3,32 +3,20 @@ import logging
 from unittest.mock import AsyncMock
 
 from hole.exceptions import HoleError
+import pytest
 
 from homeassistant.components import pi_hole, switch
 from homeassistant.components.pi_hole.const import (
     CONF_STATISTICS_ONLY,
-    DEFAULT_LOCATION,
-    DEFAULT_NAME,
-    DEFAULT_SSL,
-    DEFAULT_VERIFY_SSL,
     SERVICE_DISABLE,
     SERVICE_DISABLE_ATTR_DURATION,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_LOCATION,
-    CONF_NAME,
-    CONF_SSL,
-    CONF_VERIFY_SSL,
-)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 
 from . import (
-    CONF_CONFIG_ENTRY,
-    CONF_DATA,
-    CONF_DATA_DEFAULTS,
+    CONFIG_DATA,
+    CONFIG_DATA_DEFAULTS,
     SWITCH_ENTITY_ID,
     _create_mocked_hole,
     _patch_init_hole,
@@ -37,10 +25,12 @@ from . import (
 from tests.common import MockConfigEntry
 
 
-async def test_setup_with_defaults(hass: HomeAssistant):
+async def test_setup_with_defaults(hass: HomeAssistant) -> None:
     """Tests component setup with default config."""
     mocked_hole = _create_mocked_hole()
-    entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=CONF_DATA_DEFAULTS)
+    entry = MockConfigEntry(
+        domain=pi_hole.DOMAIN, data={**CONFIG_DATA_DEFAULTS, CONF_STATISTICS_ONLY: True}
+    )
     entry.add_to_hass(hass)
     with _patch_init_hole(mocked_hole):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -86,11 +76,11 @@ async def test_setup_with_defaults(hass: HomeAssistant):
     assert state.state == "off"
 
 
-async def test_setup_name_config(hass: HomeAssistant):
+async def test_setup_name_config(hass: HomeAssistant) -> None:
     """Tests component setup with a custom name."""
     mocked_hole = _create_mocked_hole()
     entry = MockConfigEntry(
-        domain=pi_hole.DOMAIN, data={**CONF_DATA_DEFAULTS, CONF_NAME: "Custom"}
+        domain=pi_hole.DOMAIN, data={**CONFIG_DATA_DEFAULTS, CONF_NAME: "Custom"}
     )
     entry.add_to_hass(hass)
     with _patch_init_hole(mocked_hole):
@@ -104,10 +94,10 @@ async def test_setup_name_config(hass: HomeAssistant):
     )
 
 
-async def test_switch(hass: HomeAssistant, caplog):
+async def test_switch(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     """Test Pi-hole switch."""
     mocked_hole = _create_mocked_hole()
-    entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=CONF_DATA)
+    entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=CONFIG_DATA)
     entry.add_to_hass(hass)
 
     with _patch_init_hole(mocked_hole):
@@ -151,17 +141,17 @@ async def test_switch(hass: HomeAssistant, caplog):
         assert errors[-1].message == "Unable to disable Pi-hole: Error2"
 
 
-async def test_disable_service_call(hass: HomeAssistant):
+async def test_disable_service_call(hass: HomeAssistant) -> None:
     """Test disable service call with no Pi-hole named."""
 
     mocked_hole = _create_mocked_hole()
     with _patch_init_hole(mocked_hole):
-        entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=CONF_DATA)
+        entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=CONFIG_DATA)
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
 
         entry = MockConfigEntry(
-            domain=pi_hole.DOMAIN, data={**CONF_DATA_DEFAULTS, CONF_NAME: "Custom"}
+            domain=pi_hole.DOMAIN, data={**CONFIG_DATA_DEFAULTS, CONF_NAME: "Custom"}
         )
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -177,21 +167,14 @@ async def test_disable_service_call(hass: HomeAssistant):
 
         await hass.async_block_till_done()
 
-        mocked_hole.disable.assert_called_once_with(1)
+        mocked_hole.disable.assert_called_with(1)
 
 
-async def test_unload(hass: HomeAssistant):
+async def test_unload(hass: HomeAssistant) -> None:
     """Test unload entities."""
     entry = MockConfigEntry(
         domain=pi_hole.DOMAIN,
-        data={
-            CONF_NAME: DEFAULT_NAME,
-            CONF_HOST: "pi.hole",
-            CONF_LOCATION: DEFAULT_LOCATION,
-            CONF_SSL: DEFAULT_SSL,
-            CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
-            CONF_STATISTICS_ONLY: True,
-        },
+        data={**CONFIG_DATA_DEFAULTS, CONF_HOST: "pi.hole"},
     )
     entry.add_to_hass(hass)
     mocked_hole = _create_mocked_hole()
@@ -199,38 +182,20 @@ async def test_unload(hass: HomeAssistant):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
     assert entry.entry_id in hass.data[pi_hole.DOMAIN]
-
     assert await hass.config_entries.async_unload(entry.entry_id)
+
     await hass.async_block_till_done()
+
     assert entry.entry_id not in hass.data[pi_hole.DOMAIN]
 
 
-async def test_migrate(hass: HomeAssistant):
-    """Test migrate from old config entry."""
-    entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=CONF_DATA)
-    entry.add_to_hass(hass)
-
+async def test_remove_obsolete(hass: HomeAssistant) -> None:
+    """Test removing obsolete config entry parameters."""
     mocked_hole = _create_mocked_hole()
-    with _patch_init_hole(mocked_hole):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert entry.data == CONF_CONFIG_ENTRY
-
-
-async def test_migrate_statistics_only(hass: HomeAssistant):
-    """Test migrate from old config entry with statistics only."""
-    conf_data = {**CONF_DATA}
-    conf_data[CONF_API_KEY] = ""
-    entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=conf_data)
+    entry = MockConfigEntry(
+        domain=pi_hole.DOMAIN, data={**CONFIG_DATA_DEFAULTS, CONF_STATISTICS_ONLY: True}
+    )
     entry.add_to_hass(hass)
-
-    mocked_hole = _create_mocked_hole()
     with _patch_init_hole(mocked_hole):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    config_entry_data = {**CONF_CONFIG_ENTRY}
-    config_entry_data[CONF_STATISTICS_ONLY] = True
-    config_entry_data[CONF_API_KEY] = ""
-    assert entry.data == config_entry_data
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        assert CONF_STATISTICS_ONLY not in entry.data

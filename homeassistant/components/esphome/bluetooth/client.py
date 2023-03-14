@@ -43,6 +43,7 @@ CCCD_NOTIFY_BYTES = b"\x01\x00"
 CCCD_INDICATE_BYTES = b"\x02\x00"
 
 MIN_BLUETOOTH_PROXY_VERSION_HAS_CACHE = 3
+MIN_BLUETOOTH_PROXY_HAS_PAIRING = 4
 
 DEFAULT_MAX_WRITE_WITHOUT_RESPONSE = DEFAULT_MTU - GATT_HEADER_SIZE
 _LOGGER = logging.getLogger(__name__)
@@ -61,27 +62,31 @@ def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
     """Define a wrapper throw BleakError if not connected."""
 
     async def _async_wrap_bluetooth_connected_operation(
-        self: "ESPHomeClient", *args: Any, **kwargs: Any
+        self: ESPHomeClient, *args: Any, **kwargs: Any
     ) -> Any:
         disconnected_event = (
             self._disconnected_event  # pylint: disable=protected-access
         )
         if not disconnected_event:
             raise BleakError("Not connected")
-        task = asyncio.create_task(func(self, *args, **kwargs))
-        done, _ = await asyncio.wait(
-            (task, disconnected_event.wait()),
+        action_task = asyncio.create_task(func(self, *args, **kwargs))
+        disconnect_task = asyncio.create_task(disconnected_event.wait())
+        await asyncio.wait(
+            (action_task, disconnect_task),
             return_when=asyncio.FIRST_COMPLETED,
         )
-        if disconnected_event.is_set():
-            task.cancel()
+        if disconnect_task.done():
+            action_task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
-                await task
+                await action_task
+
             raise BleakError(
-                f"{self._source_name}: {self._ble_device.name} - {self._ble_device.address}: "  # pylint: disable=protected-access
+                f"{self._source_name}: "  # pylint: disable=protected-access
+                f"{self._ble_device.name} - "  # pylint: disable=protected-access
+                f" {self._ble_device.address}: "  # pylint: disable=protected-access
                 "Disconnected during operation"
             )
-        return next(iter(done)).result()
+        return action_task.result()
 
     return cast(_WrapFuncType, _async_wrap_bluetooth_connected_operation)
 
@@ -90,7 +95,7 @@ def api_error_as_bleak_error(func: _WrapFuncType) -> _WrapFuncType:
     """Define a wrapper throw esphome api errors as BleakErrors."""
 
     async def _async_wrap_bluetooth_operation(
-        self: "ESPHomeClient", *args: Any, **kwargs: Any
+        self: ESPHomeClient, *args: Any, **kwargs: Any
     ) -> Any:
         try:
             return await func(self, *args, **kwargs)
@@ -105,8 +110,8 @@ def api_error_as_bleak_error(func: _WrapFuncType) -> _WrapFuncType:
             # that we find out about the disconnection during the operation
             # before the callback is delivered.
 
-            # pylint: disable=protected-access
             if ex.error.error == -1:
+                # pylint: disable=protected-access
                 _LOGGER.debug(
                     "%s: %s - %s: BLE device disconnected during %s operation",
                     self._source_name,
@@ -228,7 +233,9 @@ class ESPHomeClient(BaseBleakClient):
         """Connect to a specified Peripheral.
 
         Keyword Args:
-            timeout (float): Timeout for required ``BleakScanner.find_device_by_address`` call. Defaults to 10.0.
+            timeout (float): Timeout for required
+                ``BleakScanner.find_device_by_address`` call. Defaults to 10.0.
+
         Returns:
             Boolean representing connection status.
         """
@@ -380,13 +387,33 @@ class ESPHomeClient(BaseBleakClient):
     @api_error_as_bleak_error
     async def pair(self, *args: Any, **kwargs: Any) -> bool:
         """Attempt to pair."""
-        raise NotImplementedError("Pairing is not available in ESPHome.")
+        if self._connection_version < MIN_BLUETOOTH_PROXY_HAS_PAIRING:
+            raise NotImplementedError(
+                "Pairing is not available in ESPHome with version {self._connection_version}."
+            )
+        response = await self._client.bluetooth_device_pair(self._address_as_int)
+        if response.paired:
+            return True
+        _LOGGER.error(
+            "Pairing with %s failed due to error: %s", self.address, response.error
+        )
+        return False
 
     @verify_connected
     @api_error_as_bleak_error
     async def unpair(self) -> bool:
         """Attempt to unpair."""
-        raise NotImplementedError("Pairing is not available in ESPHome.")
+        if self._connection_version < MIN_BLUETOOTH_PROXY_HAS_PAIRING:
+            raise NotImplementedError(
+                "Unpairing is not available in ESPHome with version {self._connection_version}."
+            )
+        response = await self._client.bluetooth_device_unpair(self._address_as_int)
+        if response.success:
+            return True
+        _LOGGER.error(
+            "Unpairing with %s failed due to error: %s", self.address, response.error
+        )
+        return False
 
     @api_error_as_bleak_error
     async def get_services(
@@ -395,7 +422,8 @@ class ESPHomeClient(BaseBleakClient):
         """Get all services registered for this GATT server.
 
         Returns:
-           A :py:class:`bleak.backends.service.BleakGATTServiceCollection` with this device's services tree.
+           A :py:class:`bleak.backends.service.BleakGATTServiceCollection`
+           with this device's services tree.
         """
         address_as_int = self._address_as_int
         domain_data = self.domain_data
@@ -494,9 +522,12 @@ class ESPHomeClient(BaseBleakClient):
         """Perform read operation on the specified GATT characteristic.
 
         Args:
-            char_specifier (BleakGATTCharacteristic, int, str or UUID): The characteristic to read from,
-                specified by either integer handle, UUID or directly by the
-                BleakGATTCharacteristic object representing it.
+            char_specifier (BleakGATTCharacteristic, int, str or UUID):
+                The characteristic to read from, specified by either integer
+                handle, UUID or directly by the BleakGATTCharacteristic
+                object representing it.
+            **kwargs: Unused
+
         Returns:
             (bytearray) The read data.
         """
@@ -512,6 +543,8 @@ class ESPHomeClient(BaseBleakClient):
 
         Args:
             handle (int): The handle of the descriptor to read from.
+            **kwargs: Unused
+
         Returns:
             (bytearray) The read data.
         """
@@ -530,11 +563,13 @@ class ESPHomeClient(BaseBleakClient):
         """Perform a write operation of the specified GATT characteristic.
 
         Args:
-            char_specifier (BleakGATTCharacteristic, int, str or UUID): The characteristic to write
-                to, specified by either integer handle, UUID or directly by the
-                BleakGATTCharacteristic object representing it.
+            char_specifier (BleakGATTCharacteristic, int, str or UUID):
+                The characteristic to write to, specified by either integer
+                handle, UUID or directly by the BleakGATTCharacteristic object
+                representing it.
             data (bytes or bytearray): The data to send.
-            response (bool): If write-with-response operation should be done. Defaults to `False`.
+            response (bool): If write-with-response operation should be done.
+                Defaults to `False`.
         """
         characteristic = self._resolve_characteristic(char_specifier)
         await self._client.bluetooth_gatt_write(
@@ -566,17 +601,22 @@ class ESPHomeClient(BaseBleakClient):
     ) -> None:
         """Activate notifications/indications on a characteristic.
 
-        Callbacks must accept two inputs. The first will be a integer handle of the characteristic generating the
-        data and the second will be a ``bytearray`` containing the data sent from the connected server.
+        Callbacks must accept two inputs. The first will be a integer handle of the
+        characteristic generating the data and the second will be a ``bytearray``
+        containing the data sent from the connected server.
+
         .. code-block:: python
             def callback(sender: int, data: bytearray):
                 print(f"{sender}: {data}")
             client.start_notify(char_uuid, callback)
+
         Args:
-            char_specifier (BleakGATTCharacteristic, int, str or UUID): The characteristic to activate
-                notifications/indications on a characteristic, specified by either integer handle,
-                UUID or directly by the BleakGATTCharacteristic object representing it.
+            characteristic (BleakGATTCharacteristic):
+                The characteristic to activate notifications/indications on a
+                characteristic, specified by either integer handle, UUID or
+                directly by the BleakGATTCharacteristic object representing it.
             callback (function): The function to be called on notification.
+            kwargs: Unused.
         """
         ble_handle = characteristic.handle
         if ble_handle in self._notify_cancels:
@@ -645,9 +685,10 @@ class ESPHomeClient(BaseBleakClient):
         """Deactivate notification/indication on a specified characteristic.
 
         Args:
-            char_specifier (BleakGATTCharacteristic, int, str or UUID): The characteristic to deactivate
-                notification/indication on, specified by either integer handle, UUID or
-                directly by the BleakGATTCharacteristic object representing it.
+            char_specifier (BleakGATTCharacteristic, int, str or UUID):
+                The characteristic to deactivate notification/indication on,
+                specified by either integer handle, UUID or directly by the
+                BleakGATTCharacteristic object representing it.
         """
         characteristic = self._resolve_characteristic(char_specifier)
         # Do not raise KeyError if notifications are not enabled on this characteristic

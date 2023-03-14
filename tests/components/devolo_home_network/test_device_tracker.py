@@ -11,13 +11,13 @@ from homeassistant.components.devolo_home_network.const import (
     WIFI_BANDS,
 )
 from homeassistant.const import (
-    FREQUENCY_GIGAHERTZ,
     STATE_HOME,
     STATE_NOT_HOME,
     STATE_UNAVAILABLE,
+    UnitOfFrequency,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt
 
 from . import configure_integration
@@ -26,22 +26,25 @@ from .mock import MockDevice
 
 from tests.common import async_fire_time_changed
 
-STATION = CONNECTED_STATIONS["connected_stations"][0]
+STATION = CONNECTED_STATIONS[0]
 SERIAL = DISCOVERY_INFO.properties["SN"]
 
 
-async def test_device_tracker(hass: HomeAssistant, mock_device: MockDevice):
+async def test_device_tracker(
+    hass: HomeAssistant, mock_device: MockDevice, entity_registry: er.EntityRegistry
+) -> None:
     """Test device tracker states."""
-    state_key = f"{PLATFORM}.{DOMAIN}_{SERIAL}_{STATION['mac_address'].lower().replace(':', '_')}"
+    state_key = (
+        f"{PLATFORM}.{DOMAIN}_{SERIAL}_{STATION.mac_address.lower().replace(':', '_')}"
+    )
     entry = configure_integration(hass)
-    er = entity_registry.async_get(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt.utcnow() + LONG_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     # Enable entity
-    er.async_update_entity(state_key, disabled_by=None)
+    entity_registry.async_update_entity(state_key, disabled_by=None)
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt.utcnow() + LONG_UPDATE_INTERVAL)
     await hass.async_block_till_done()
@@ -49,10 +52,10 @@ async def test_device_tracker(hass: HomeAssistant, mock_device: MockDevice):
     state = hass.states.get(state_key)
     assert state is not None
     assert state.state == STATE_HOME
-    assert state.attributes["wifi"] == WIFI_APTYPE[STATION["vap_type"]]
+    assert state.attributes["wifi"] == WIFI_APTYPE[STATION.vap_type]
     assert (
         state.attributes["band"]
-        == f"{WIFI_BANDS[STATION['band']]} {FREQUENCY_GIGAHERTZ}"
+        == f"{WIFI_BANDS[STATION.band]} {UnitOfFrequency.GIGAHERTZ}"
     )
 
     # Emulate state change
@@ -80,15 +83,18 @@ async def test_device_tracker(hass: HomeAssistant, mock_device: MockDevice):
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_restoring_clients(hass: HomeAssistant, mock_device: MockDevice):
+async def test_restoring_clients(
+    hass: HomeAssistant, mock_device: MockDevice, entity_registry: er.EntityRegistry
+) -> None:
     """Test restoring existing device_tracker entities."""
-    state_key = f"{PLATFORM}.{DOMAIN}_{SERIAL}_{STATION['mac_address'].lower().replace(':', '_')}"
+    state_key = (
+        f"{PLATFORM}.{DOMAIN}_{SERIAL}_{STATION.mac_address.lower().replace(':', '_')}"
+    )
     entry = configure_integration(hass)
-    er = entity_registry.async_get(hass)
-    er.async_get_or_create(
+    entity_registry.async_get_or_create(
         PLATFORM,
         DOMAIN,
-        f"{SERIAL}_{STATION['mac_address']}",
+        f"{SERIAL}_{STATION.mac_address}",
         config_entry=entry,
     )
 

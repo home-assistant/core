@@ -1,9 +1,10 @@
 """The tests for the Recorder component."""
 from __future__ import annotations
 
-# pylint: disable=protected-access
 import asyncio
+from collections.abc import Callable
 from datetime import datetime, timedelta
+from pathlib import Path
 import sqlite3
 import threading
 from typing import cast
@@ -32,17 +33,21 @@ from homeassistant.components.recorder.const import (
     EVENT_RECORDER_5MIN_STATISTICS_GENERATED,
     EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,
     KEEPALIVE_TIME,
+    SupportedDialect,
 )
 from homeassistant.components.recorder.db_schema import (
     SCHEMA_VERSION,
     EventData,
     Events,
+    EventTypes,
     RecorderRuns,
     StateAttributes,
     States,
+    StatesMeta,
     StatisticsRuns,
 )
 from homeassistant.components.recorder.models import process_timestamp
+from homeassistant.components.recorder.queries import select_event_type_ids
 from homeassistant.components.recorder.services import (
     SERVICE_DISABLE,
     SERVICE_ENABLE,
@@ -51,6 +56,7 @@ from homeassistant.components.recorder.services import (
 )
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import (
+    EVENT_COMPONENT_LOADED,
     EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
@@ -59,7 +65,7 @@ from homeassistant.const import (
     STATE_UNLOCKED,
 )
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
-from homeassistant.helpers import recorder as recorder_helper
+from homeassistant.helpers import entity_registry as er, recorder as recorder_helper
 from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util import dt as dt_util
 
@@ -72,11 +78,14 @@ from .common import (
 )
 
 from tests.common import (
-    SetupRecorderInstanceT,
+    MockEntity,
+    MockEntityPlatform,
     async_fire_time_changed,
     fire_time_changed,
     get_test_home_assistant,
+    mock_platform,
 )
+from tests.typing import RecorderInstanceGenerator
 
 
 def _default_recorder(hass):
@@ -97,14 +106,18 @@ def _default_recorder(hass):
 
 
 async def test_shutdown_before_startup_finishes(
-    async_setup_recorder_instance: SetupRecorderInstanceT, hass: HomeAssistant, tmp_path
-):
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
+    recorder_db_url: str,
+    tmp_path: Path,
+) -> None:
     """Test shutdown before recorder starts is clean."""
-
-    # On-disk database because this test does not play nice with the
-    # MutexPool
+    if recorder_db_url == "sqlite://":
+        # On-disk database because this test does not play nice with the
+        # MutexPool
+        recorder_db_url = "sqlite:///" + str(tmp_path / "pytest.db")
     config = {
-        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db"),
+        recorder.CONF_DB_URL: recorder_db_url,
         recorder.CONF_COMMIT_INTERVAL: 1,
     }
     hass.state = CoreState.not_running
@@ -126,13 +139,17 @@ async def test_shutdown_before_startup_finishes(
     assert run_info.run_id == 1
     assert run_info.start is not None
     assert run_info.end is not None
+    # We patched out engine to prevent the close from happening
+    # so we need to manually close the session
+    session.close()
+    await hass.async_add_executor_job(instance._shutdown)
 
 
 async def test_canceled_before_startup_finishes(
-    async_setup_recorder_instance: SetupRecorderInstanceT,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-):
+) -> None:
     """Test recorder shuts down when its startup future is canceled out from under it."""
     hass.state = CoreState.not_running
     recorder_helper.async_initialize_recorder(hass)
@@ -148,9 +165,14 @@ async def test_canceled_before_startup_finishes(
         "Recorder startup was externally canceled before it could complete"
         in caplog.text
     )
+    # We patched out engine to prevent the close from happening
+    # so we need to manually close the session
+    await hass.async_add_executor_job(instance._shutdown)
 
 
-async def test_shutdown_closes_connections(recorder_mock, hass):
+async def test_shutdown_closes_connections(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
     """Test shutdown closes connections."""
 
     hass.state = CoreState.not_running
@@ -176,8 +198,8 @@ async def test_shutdown_closes_connections(recorder_mock, hass):
 
 
 async def test_state_gets_saved_when_set_before_start_event(
-    async_setup_recorder_instance: SetupRecorderInstanceT, hass: HomeAssistant
-):
+    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
+) -> None:
     """Test we can record an event when starting with not running."""
 
     hass.state = CoreState.not_running
@@ -202,7 +224,7 @@ async def test_state_gets_saved_when_set_before_start_event(
         assert db_states[0].event_id is None
 
 
-async def test_saving_state(recorder_mock, hass: HomeAssistant):
+async def test_saving_state(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test saving and restoring a state."""
     entity_id = "test.recorder"
     state = "restoring_from_db"
@@ -214,19 +236,69 @@ async def test_saving_state(recorder_mock, hass: HomeAssistant):
 
     with session_scope(hass=hass) as session:
         db_states = []
-        for db_state, db_state_attributes in session.query(States, StateAttributes):
+        for db_state, db_state_attributes, states_meta in (
+            session.query(States, StateAttributes, StatesMeta)
+            .outerjoin(
+                StateAttributes, States.attributes_id == StateAttributes.attributes_id
+            )
+            .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
+        ):
+            db_state.entity_id = states_meta.entity_id
             db_states.append(db_state)
             state = db_state.to_native()
             state.attributes = db_state_attributes.to_native()
         assert len(db_states) == 1
         assert db_states[0].event_id is None
 
-    assert state == _state_with_context(hass, entity_id)
+    assert state.as_dict() == _state_with_context(hass, entity_id).as_dict()
+
+
+@pytest.mark.parametrize(
+    ("dialect_name", "expected_attributes"),
+    (
+        (SupportedDialect.MYSQL, {"test_attr": 5, "test_attr_10": "silly\0stuff"}),
+        (SupportedDialect.POSTGRESQL, {"test_attr": 5, "test_attr_10": "silly"}),
+        (SupportedDialect.SQLITE, {"test_attr": 5, "test_attr_10": "silly\0stuff"}),
+    ),
+)
+async def test_saving_state_with_nul(
+    recorder_mock: Recorder, hass: HomeAssistant, dialect_name, expected_attributes
+) -> None:
+    """Test saving and restoring a state with nul in attributes."""
+    entity_id = "test.recorder"
+    state = "restoring_from_db"
+    attributes = {"test_attr": 5, "test_attr_10": "silly\0stuff"}
+
+    with patch(
+        "homeassistant.components.recorder.core.Recorder.dialect_name", dialect_name
+    ):
+        hass.states.async_set(entity_id, state, attributes)
+        await async_wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        db_states = []
+        for db_state, db_state_attributes, states_meta in (
+            session.query(States, StateAttributes, StatesMeta)
+            .outerjoin(
+                StateAttributes, States.attributes_id == StateAttributes.attributes_id
+            )
+            .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
+        ):
+            db_state.entity_id = states_meta.entity_id
+            db_states.append(db_state)
+            state = db_state.to_native()
+            state.attributes = db_state_attributes.to_native()
+        assert len(db_states) == 1
+        assert db_states[0].event_id is None
+
+    expected = _state_with_context(hass, entity_id)
+    expected.attributes = expected_attributes
+    assert state.as_dict() == expected.as_dict()
 
 
 async def test_saving_many_states(
-    async_setup_recorder_instance: SetupRecorderInstanceT, hass: HomeAssistant
-):
+    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
+) -> None:
     """Test we expire after many commits."""
     instance = await async_setup_recorder_instance(
         hass, {recorder.CONF_COMMIT_INTERVAL: 0}
@@ -253,8 +325,8 @@ async def test_saving_many_states(
 
 
 async def test_saving_state_with_intermixed_time_changes(
-    recorder_mock, hass: HomeAssistant
-):
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
     """Test saving states with intermixed time changes."""
     entity_id = "test.recorder"
     state = "restoring_from_db"
@@ -276,7 +348,11 @@ async def test_saving_state_with_intermixed_time_changes(
         assert db_states[0].event_id is None
 
 
-def test_saving_state_with_exception(hass, hass_recorder, caplog):
+def test_saving_state_with_exception(
+    hass_recorder: Callable[..., HomeAssistant],
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test saving and restoring a state."""
     hass = hass_recorder()
 
@@ -314,7 +390,11 @@ def test_saving_state_with_exception(hass, hass_recorder, caplog):
     assert "Error saving events" not in caplog.text
 
 
-def test_saving_state_with_sqlalchemy_exception(hass, hass_recorder, caplog):
+def test_saving_state_with_sqlalchemy_exception(
+    hass_recorder: Callable[..., HomeAssistant],
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test saving state when there is an SQLAlchemyError."""
     hass = hass_recorder()
 
@@ -353,8 +433,10 @@ def test_saving_state_with_sqlalchemy_exception(hass, hass_recorder, caplog):
 
 
 async def test_force_shutdown_with_queue_of_writes_that_generate_exceptions(
-    async_setup_recorder_instance, hass, caplog
-):
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test forcing shutdown."""
     instance = await async_setup_recorder_instance(hass)
 
@@ -382,7 +464,7 @@ async def test_force_shutdown_with_queue_of_writes_that_generate_exceptions(
     assert "Error saving events" not in caplog.text
 
 
-def test_saving_event(hass, hass_recorder):
+def test_saving_event(hass_recorder: Callable[..., HomeAssistant]) -> None:
     """Test saving and restoring an event."""
     hass = hass_recorder()
 
@@ -410,16 +492,19 @@ def test_saving_event(hass, hass_recorder):
     events: list[Event] = []
 
     with session_scope(hass=hass) as session:
-        for select_event, event_data in (
-            session.query(Events, EventData)
-            .filter_by(event_type=event_type)
+        for select_event, event_data, event_types in (
+            session.query(Events, EventData, EventTypes)
+            .filter(Events.event_type_id.in_(select_event_type_ids((event_type,))))
+            .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
             .outerjoin(EventData, Events.data_id == EventData.data_id)
         ):
             select_event = cast(Events, select_event)
             event_data = cast(EventData, event_data)
+            event_types = cast(EventTypes, event_types)
 
             native_event = select_event.to_native()
             native_event.data = event_data.to_native()
+            native_event.event_type = event_types.event_type
             events.append(native_event)
 
     db_event = events[0]
@@ -434,7 +519,9 @@ def test_saving_event(hass, hass_recorder):
     )
 
 
-def test_saving_state_with_commit_interval_zero(hass_recorder):
+def test_saving_state_with_commit_interval_zero(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
     """Test saving a state with a commit interval of zero."""
     hass = hass_recorder({"commit_interval": 0})
     get_instance(hass).commit_interval == 0
@@ -462,11 +549,16 @@ def _add_entities(hass, entity_ids):
 
     with session_scope(hass=hass) as session:
         states = []
-        for state, state_attributes in session.query(States, StateAttributes).outerjoin(
-            StateAttributes, States.attributes_id == StateAttributes.attributes_id
+        for db_state, db_state_attributes, states_meta in (
+            session.query(States, StateAttributes, StatesMeta)
+            .outerjoin(
+                StateAttributes, States.attributes_id == StateAttributes.attributes_id
+            )
+            .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
         ):
-            native_state = state.to_native()
-            native_state.attributes = state_attributes.to_native()
+            db_state.entity_id = states_meta.entity_id
+            native_state = db_state.to_native()
+            native_state.attributes = db_state_attributes.to_native()
             states.append(native_state)
         return states
 
@@ -480,15 +572,19 @@ def _add_events(hass, events):
 
     with session_scope(hass=hass) as session:
         events = []
-        for event, event_data in session.query(Events, EventData).outerjoin(
-            EventData, Events.data_id == EventData.data_id
+        for event, event_data, event_types in (
+            session.query(Events, EventData, EventTypes)
+            .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
+            .outerjoin(EventData, Events.data_id == EventData.data_id)
         ):
             event = cast(Events, event)
             event_data = cast(EventData, event_data)
+            event_types = cast(EventTypes, event_types)
 
             native_event = event.to_native()
             if event_data:
                 native_event.data = event_data.to_native()
+            native_event.event_type = event_types.event_type
             events.append(native_event)
         return events
 
@@ -499,22 +595,26 @@ def _state_with_context(hass, entity_id):
     return hass.states.get(entity_id)
 
 
-def test_setup_without_migration(hass_recorder):
+def test_setup_without_migration(hass_recorder: Callable[..., HomeAssistant]) -> None:
     """Verify the schema version without a migration."""
     hass = hass_recorder()
     assert recorder.get_instance(hass).schema_version == SCHEMA_VERSION
 
 
-# pylint: disable=redefined-outer-name,invalid-name
-def test_saving_state_include_domains(hass_recorder):
+# pylint: disable=invalid-name
+def test_saving_state_include_domains(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
     """Test saving and restoring a state."""
     hass = hass_recorder({"include": {"domains": "test2"}})
     states = _add_entities(hass, ["test.recorder", "test2.recorder"])
     assert len(states) == 1
-    assert _state_with_context(hass, "test2.recorder") == states[0]
+    assert _state_with_context(hass, "test2.recorder").as_dict() == states[0].as_dict()
 
 
-def test_saving_state_include_domains_globs(hass_recorder):
+def test_saving_state_include_domains_globs(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
     """Test saving and restoring a state."""
     hass = hass_recorder(
         {"include": {"domains": "test2", "entity_globs": "*.included_*"}}
@@ -523,19 +623,31 @@ def test_saving_state_include_domains_globs(hass_recorder):
         hass, ["test.recorder", "test2.recorder", "test3.included_entity"]
     )
     assert len(states) == 2
-    assert _state_with_context(hass, "test2.recorder") == states[0]
-    assert _state_with_context(hass, "test3.included_entity") == states[1]
+    state_map = {state.entity_id: state for state in states}
+
+    assert (
+        _state_with_context(hass, "test2.recorder").as_dict()
+        == state_map["test2.recorder"].as_dict()
+    )
+    assert (
+        _state_with_context(hass, "test3.included_entity").as_dict()
+        == state_map["test3.included_entity"].as_dict()
+    )
 
 
-def test_saving_state_incl_entities(hass_recorder):
+def test_saving_state_incl_entities(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
     """Test saving and restoring a state."""
     hass = hass_recorder({"include": {"entities": "test2.recorder"}})
     states = _add_entities(hass, ["test.recorder", "test2.recorder"])
     assert len(states) == 1
-    assert _state_with_context(hass, "test2.recorder") == states[0]
+    assert _state_with_context(hass, "test2.recorder").as_dict() == states[0].as_dict()
 
 
-def test_saving_event_exclude_event_type(hass_recorder):
+def test_saving_event_exclude_event_type(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
     """Test saving and restoring an event."""
     hass = hass_recorder(
         {
@@ -556,15 +668,19 @@ def test_saving_event_exclude_event_type(hass_recorder):
     assert events[0].event_type == "test2"
 
 
-def test_saving_state_exclude_domains(hass_recorder):
+def test_saving_state_exclude_domains(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
     """Test saving and restoring a state."""
     hass = hass_recorder({"exclude": {"domains": "test"}})
     states = _add_entities(hass, ["test.recorder", "test2.recorder"])
     assert len(states) == 1
-    assert _state_with_context(hass, "test2.recorder") == states[0]
+    assert _state_with_context(hass, "test2.recorder").as_dict() == states[0].as_dict()
 
 
-def test_saving_state_exclude_domains_globs(hass_recorder):
+def test_saving_state_exclude_domains_globs(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
     """Test saving and restoring a state."""
     hass = hass_recorder(
         {"exclude": {"domains": "test", "entity_globs": "*.excluded_*"}}
@@ -573,18 +689,22 @@ def test_saving_state_exclude_domains_globs(hass_recorder):
         hass, ["test.recorder", "test2.recorder", "test2.excluded_entity"]
     )
     assert len(states) == 1
-    assert _state_with_context(hass, "test2.recorder") == states[0]
+    assert _state_with_context(hass, "test2.recorder").as_dict() == states[0].as_dict()
 
 
-def test_saving_state_exclude_entities(hass_recorder):
+def test_saving_state_exclude_entities(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
     """Test saving and restoring a state."""
     hass = hass_recorder({"exclude": {"entities": "test.recorder"}})
     states = _add_entities(hass, ["test.recorder", "test2.recorder"])
     assert len(states) == 1
-    assert _state_with_context(hass, "test2.recorder") == states[0]
+    assert _state_with_context(hass, "test2.recorder").as_dict() == states[0].as_dict()
 
 
-def test_saving_state_exclude_domain_include_entity(hass_recorder):
+def test_saving_state_exclude_domain_include_entity(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
     """Test saving and restoring a state."""
     hass = hass_recorder(
         {"include": {"entities": "test.recorder"}, "exclude": {"domains": "test"}}
@@ -593,7 +713,9 @@ def test_saving_state_exclude_domain_include_entity(hass_recorder):
     assert len(states) == 2
 
 
-def test_saving_state_exclude_domain_glob_include_entity(hass_recorder):
+def test_saving_state_exclude_domain_glob_include_entity(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
     """Test saving and restoring a state."""
     hass = hass_recorder(
         {
@@ -607,18 +729,22 @@ def test_saving_state_exclude_domain_glob_include_entity(hass_recorder):
     assert len(states) == 3
 
 
-def test_saving_state_include_domain_exclude_entity(hass_recorder):
+def test_saving_state_include_domain_exclude_entity(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
     """Test saving and restoring a state."""
     hass = hass_recorder(
         {"exclude": {"entities": "test.recorder"}, "include": {"domains": "test"}}
     )
     states = _add_entities(hass, ["test.recorder", "test2.recorder", "test.ok"])
     assert len(states) == 1
-    assert _state_with_context(hass, "test.ok") == states[0]
+    assert _state_with_context(hass, "test.ok").as_dict() == states[0].as_dict()
     assert _state_with_context(hass, "test.ok").state == "state2"
 
 
-def test_saving_state_include_domain_glob_exclude_entity(hass_recorder):
+def test_saving_state_include_domain_glob_exclude_entity(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
     """Test saving and restoring a state."""
     hass = hass_recorder(
         {
@@ -630,11 +756,13 @@ def test_saving_state_include_domain_glob_exclude_entity(hass_recorder):
         hass, ["test.recorder", "test2.recorder", "test.ok", "test2.included_entity"]
     )
     assert len(states) == 1
-    assert _state_with_context(hass, "test.ok") == states[0]
+    assert _state_with_context(hass, "test.ok").as_dict() == states[0].as_dict()
     assert _state_with_context(hass, "test.ok").state == "state2"
 
 
-def test_saving_state_and_removing_entity(hass, hass_recorder):
+def test_saving_state_and_removing_entity(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
     """Test saving the state of a removed entity."""
     hass = hass_recorder()
     entity_id = "lock.mine"
@@ -645,7 +773,11 @@ def test_saving_state_and_removing_entity(hass, hass_recorder):
     wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
-        states = list(session.query(States))
+        states = list(
+            session.query(StatesMeta.entity_id, States.state)
+            .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
+            .order_by(States.last_updated_ts)
+        )
         assert len(states) == 3
         assert states[0].entity_id == entity_id
         assert states[0].state == STATE_LOCKED
@@ -655,7 +787,41 @@ def test_saving_state_and_removing_entity(hass, hass_recorder):
         assert states[2].state is None
 
 
-def test_recorder_setup_failure(hass):
+def test_saving_state_with_oversized_attributes(
+    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test saving states is limited to 16KiB of JSON encoded attributes."""
+    hass = hass_recorder()
+    massive_dict = {"a": "b" * 16384}
+    attributes = {"test_attr": 5, "test_attr_10": "nice"}
+    hass.states.set("switch.sane", "on", attributes)
+    hass.states.set("switch.too_big", "on", massive_dict)
+    wait_recording_done(hass)
+    states = []
+
+    with session_scope(hass=hass) as session:
+        for db_state, db_state_attributes, states_meta in (
+            session.query(States, StateAttributes, StatesMeta)
+            .outerjoin(
+                StateAttributes, States.attributes_id == StateAttributes.attributes_id
+            )
+            .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
+        ):
+            db_state.entity_id = states_meta.entity_id
+            native_state = db_state.to_native()
+            native_state.attributes = db_state_attributes.to_native()
+            states.append(native_state)
+
+    assert "switch.too_big" in caplog.text
+
+    assert len(states) == 2
+    assert _state_with_context(hass, "switch.sane").as_dict() == states[0].as_dict()
+    assert states[1].state == "on"
+    assert states[1].entity_id == "switch.too_big"
+    assert states[1].attributes == {}
+
+
+def test_recorder_setup_failure(hass: HomeAssistant) -> None:
     """Test some exceptions."""
     recorder_helper.async_initialize_recorder(hass)
     with patch.object(Recorder, "_setup_connection") as setup, patch(
@@ -670,7 +836,7 @@ def test_recorder_setup_failure(hass):
     hass.stop()
 
 
-def test_recorder_validate_schema_failure(hass):
+def test_recorder_validate_schema_failure(hass: HomeAssistant) -> None:
     """Test some exceptions."""
     recorder_helper.async_initialize_recorder(hass)
     with patch(
@@ -687,7 +853,7 @@ def test_recorder_validate_schema_failure(hass):
     hass.stop()
 
 
-def test_recorder_setup_failure_without_event_listener(hass):
+def test_recorder_setup_failure_without_event_listener(hass: HomeAssistant) -> None:
     """Test recorder setup failure when the event listener is not setup."""
     recorder_helper.async_initialize_recorder(hass)
     with patch.object(Recorder, "_setup_connection") as setup, patch(
@@ -701,7 +867,7 @@ def test_recorder_setup_failure_without_event_listener(hass):
     hass.stop()
 
 
-async def test_defaults_set(hass):
+async def test_defaults_set(hass: HomeAssistant) -> None:
     """Test the config defaults are set."""
     recorder_config = None
 
@@ -729,7 +895,7 @@ def run_tasks_at_time(hass, test_time):
 
 
 @pytest.mark.parametrize("enable_nightly_purge", [True])
-def test_auto_purge(hass_recorder):
+def test_auto_purge(hass_recorder: Callable[..., HomeAssistant]) -> None:
     """Test periodic purge scheduling."""
     hass = hass_recorder()
 
@@ -787,7 +953,9 @@ def test_auto_purge(hass_recorder):
 
 
 @pytest.mark.parametrize("enable_nightly_purge", [True])
-def test_auto_purge_auto_repack_on_second_sunday(hass_recorder):
+def test_auto_purge_auto_repack_on_second_sunday(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
     """Test periodic purge scheduling does a repack on the 2nd sunday."""
     hass = hass_recorder()
 
@@ -825,7 +993,9 @@ def test_auto_purge_auto_repack_on_second_sunday(hass_recorder):
 
 
 @pytest.mark.parametrize("enable_nightly_purge", [True])
-def test_auto_purge_auto_repack_disabled_on_second_sunday(hass_recorder):
+def test_auto_purge_auto_repack_disabled_on_second_sunday(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
     """Test periodic purge scheduling does not auto repack on the 2nd sunday if disabled."""
     hass = hass_recorder({CONF_AUTO_REPACK: False})
 
@@ -863,7 +1033,9 @@ def test_auto_purge_auto_repack_disabled_on_second_sunday(hass_recorder):
 
 
 @pytest.mark.parametrize("enable_nightly_purge", [True])
-def test_auto_purge_no_auto_repack_on_not_second_sunday(hass_recorder):
+def test_auto_purge_no_auto_repack_on_not_second_sunday(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
     """Test periodic purge scheduling does not do a repack unless its the 2nd sunday."""
     hass = hass_recorder()
 
@@ -902,7 +1074,7 @@ def test_auto_purge_no_auto_repack_on_not_second_sunday(hass_recorder):
 
 
 @pytest.mark.parametrize("enable_nightly_purge", [True])
-def test_auto_purge_disabled(hass_recorder):
+def test_auto_purge_disabled(hass_recorder: Callable[..., HomeAssistant]) -> None:
     """Test periodic db cleanup still run when auto purge is disabled."""
     hass = hass_recorder({CONF_AUTO_PURGE: False})
 
@@ -938,7 +1110,7 @@ def test_auto_purge_disabled(hass_recorder):
 
 
 @pytest.mark.parametrize("enable_statistics", [True])
-def test_auto_statistics(hass_recorder, freezer):
+def test_auto_statistics(hass_recorder: Callable[..., HomeAssistant], freezer) -> None:
     """Test periodic statistics scheduling."""
     hass = hass_recorder()
 
@@ -1027,7 +1199,7 @@ def test_auto_statistics(hass_recorder, freezer):
     dt_util.set_default_time_zone(original_tz)
 
 
-def test_statistics_runs_initiated(hass_recorder):
+def test_statistics_runs_initiated(hass_recorder: Callable[..., HomeAssistant]) -> None:
     """Test statistics_runs is initiated when DB is created."""
     now = dt_util.utcnow()
     with patch(
@@ -1047,7 +1219,7 @@ def test_statistics_runs_initiated(hass_recorder):
 
 
 @pytest.mark.freeze_time("2022-09-13 09:00:00+02:00")
-def test_compile_missing_statistics(tmpdir, freezer):
+def test_compile_missing_statistics(tmpdir, freezer) -> None:
     """Test missing statistics are compiled on startup."""
     now = dt_util.utcnow().replace(minute=0, second=0, microsecond=0)
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
@@ -1112,57 +1284,68 @@ def test_compile_missing_statistics(tmpdir, freezer):
     hass.stop()
 
 
-def test_saving_sets_old_state(hass_recorder):
+def test_saving_sets_old_state(hass_recorder: Callable[..., HomeAssistant]) -> None:
     """Test saving sets old state."""
     hass = hass_recorder()
 
-    hass.states.set("test.one", "on", {})
-    hass.states.set("test.two", "on", {})
+    hass.states.set("test.one", "s1", {})
+    hass.states.set("test.two", "s2", {})
     wait_recording_done(hass)
-    hass.states.set("test.one", "off", {})
-    hass.states.set("test.two", "off", {})
+    hass.states.set("test.one", "s3", {})
+    hass.states.set("test.two", "s4", {})
     wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
-        states = list(session.query(States))
+        states = list(
+            session.query(
+                StatesMeta.entity_id, States.state_id, States.old_state_id, States.state
+            ).outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
+        )
         assert len(states) == 4
+        states_by_state = {state.state: state for state in states}
 
-        assert states[0].entity_id == "test.one"
-        assert states[1].entity_id == "test.two"
-        assert states[2].entity_id == "test.one"
-        assert states[3].entity_id == "test.two"
+        assert states_by_state["s1"].entity_id == "test.one"
+        assert states_by_state["s2"].entity_id == "test.two"
+        assert states_by_state["s3"].entity_id == "test.one"
+        assert states_by_state["s4"].entity_id == "test.two"
 
-        assert states[0].old_state_id is None
-        assert states[1].old_state_id is None
-        assert states[2].old_state_id == states[0].state_id
-        assert states[3].old_state_id == states[1].state_id
+        assert states_by_state["s1"].old_state_id is None
+        assert states_by_state["s2"].old_state_id is None
+        assert states_by_state["s3"].old_state_id == states_by_state["s1"].state_id
+        assert states_by_state["s4"].old_state_id == states_by_state["s2"].state_id
 
 
-def test_saving_state_with_serializable_data(hass_recorder, caplog):
+def test_saving_state_with_serializable_data(
+    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+) -> None:
     """Test saving data that cannot be serialized does not crash."""
     hass = hass_recorder()
 
     hass.bus.fire("bad_event", {"fail": CannotSerializeMe()})
-    hass.states.set("test.one", "on", {"fail": CannotSerializeMe()})
+    hass.states.set("test.one", "s1", {"fail": CannotSerializeMe()})
     wait_recording_done(hass)
-    hass.states.set("test.two", "on", {})
+    hass.states.set("test.two", "s2", {})
     wait_recording_done(hass)
-    hass.states.set("test.two", "off", {})
+    hass.states.set("test.two", "s3", {})
     wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
-        states = list(session.query(States))
+        states = list(
+            session.query(
+                StatesMeta.entity_id, States.state_id, States.old_state_id, States.state
+            ).outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
+        )
         assert len(states) == 2
-
-        assert states[0].entity_id == "test.two"
-        assert states[1].entity_id == "test.two"
-        assert states[0].old_state_id is None
-        assert states[1].old_state_id == states[0].state_id
+        states_by_state = {state.state: state for state in states}
+        assert states_by_state["s2"].entity_id == "test.two"
+        assert states_by_state["s3"].entity_id == "test.two"
+        assert states_by_state["s2"].old_state_id is None
+        assert states_by_state["s3"].old_state_id == states_by_state["s2"].state_id
 
     assert "State is not JSON serializable" in caplog.text
 
 
-def test_has_services(hass_recorder):
+def test_has_services(hass_recorder: Callable[..., HomeAssistant]) -> None:
     """Test the services exist."""
     hass = hass_recorder()
 
@@ -1172,7 +1355,9 @@ def test_has_services(hass_recorder):
     assert hass.services.has_service(DOMAIN, SERVICE_PURGE_ENTITIES)
 
 
-def test_service_disable_events_not_recording(hass, hass_recorder):
+def test_service_disable_events_not_recording(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
     """Test that events are not recorded when recorder is disabled using service."""
     hass = hass_recorder()
 
@@ -1203,7 +1388,11 @@ def test_service_disable_events_not_recording(hass, hass_recorder):
     event = events[0]
 
     with session_scope(hass=hass) as session:
-        db_events = list(session.query(Events).filter_by(event_type=event_type))
+        db_events = list(
+            session.query(Events)
+            .filter(Events.event_type_id.in_(select_event_type_ids((event_type,))))
+            .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
+        )
         assert len(db_events) == 0
 
     assert hass.services.call(
@@ -1223,16 +1412,19 @@ def test_service_disable_events_not_recording(hass, hass_recorder):
 
     db_events = []
     with session_scope(hass=hass) as session:
-        for select_event, event_data in (
-            session.query(Events, EventData)
-            .filter_by(event_type=event_type)
+        for select_event, event_data, event_types in (
+            session.query(Events, EventData, EventTypes)
+            .filter(Events.event_type_id.in_(select_event_type_ids((event_type,))))
+            .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
             .outerjoin(EventData, Events.data_id == EventData.data_id)
         ):
             select_event = cast(Events, select_event)
             event_data = cast(EventData, event_data)
+            event_types = cast(EventTypes, event_types)
 
             native_event = select_event.to_native()
             native_event.data = event_data.to_native()
+            native_event.event_type = event_types.event_type
             db_events.append(native_event)
 
     assert len(db_events) == 1
@@ -1247,7 +1439,9 @@ def test_service_disable_events_not_recording(hass, hass_recorder):
     )
 
 
-def test_service_disable_states_not_recording(hass, hass_recorder):
+def test_service_disable_states_not_recording(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
     """Test that state changes are not recorded when recorder is disabled using service."""
     hass = hass_recorder()
 
@@ -1278,10 +1472,14 @@ def test_service_disable_states_not_recording(hass, hass_recorder):
         db_states = list(session.query(States))
         assert len(db_states) == 1
         assert db_states[0].event_id is None
-        assert db_states[0].to_native() == _state_with_context(hass, "test.two")
+        db_states[0].entity_id = "test.two"
+        assert (
+            db_states[0].to_native().as_dict()
+            == _state_with_context(hass, "test.two").as_dict()
+        )
 
 
-def test_service_disable_run_information_recorded(tmpdir):
+def test_service_disable_run_information_recorded(tmpdir) -> None:
     """Test that runs are still recorded when recorder is disabled."""
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
@@ -1329,7 +1527,9 @@ class CannotSerializeMe:
     """A class that the JSONEncoder cannot serialize."""
 
 
-async def test_database_corruption_while_running(hass, tmpdir, caplog):
+async def test_database_corruption_while_running(
+    hass: HomeAssistant, tmpdir, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test we can recover from sqlite3 db corruption."""
 
     def _create_tmpdir_for_test_db():
@@ -1385,6 +1585,7 @@ async def test_database_corruption_while_running(hass, tmpdir, caplog):
         with session_scope(hass=hass) as session:
             db_states = list(session.query(States))
             assert len(db_states) == 1
+            db_states[0].entity_id = "test.two"
             assert db_states[0].event_id is None
             return db_states[0].to_native()
 
@@ -1400,11 +1601,12 @@ async def test_database_corruption_while_running(hass, tmpdir, caplog):
     hass.stop()
 
 
-def test_entity_id_filter(hass_recorder):
+def test_entity_id_filter(hass_recorder: Callable[..., HomeAssistant]) -> None:
     """Test that entity ID filtering filters string and list."""
     hass = hass_recorder(
         {"include": {"domains": "hello"}, "exclude": {"domains": "hidden_domain"}}
     )
+    event_types = ("hello",)
 
     for idx, data in enumerate(
         (
@@ -1419,7 +1621,11 @@ def test_entity_id_filter(hass_recorder):
         wait_recording_done(hass)
 
         with session_scope(hass=hass) as session:
-            db_events = list(session.query(Events).filter_by(event_type="hello"))
+            db_events = list(
+                session.query(Events).filter(
+                    Events.event_type_id.in_(select_event_type_ids(event_types))
+                )
+            )
             assert len(db_events) == idx + 1, data
 
     for data in (
@@ -1430,28 +1636,45 @@ def test_entity_id_filter(hass_recorder):
         wait_recording_done(hass)
 
         with session_scope(hass=hass) as session:
-            db_events = list(session.query(Events).filter_by(event_type="hello"))
+            db_events = list(
+                session.query(Events).filter(
+                    Events.event_type_id.in_(select_event_type_ids(event_types))
+                )
+            )
             # Keep referring idx + 1, as no new events are being added
             assert len(db_events) == idx + 1, data
 
 
 async def test_database_lock_and_unlock(
-    async_setup_recorder_instance: SetupRecorderInstanceT,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
-    tmp_path,
-):
+    recorder_db_url: str,
+    tmp_path: Path,
+) -> None:
     """Test writing events during lock getting written after unlocking."""
-    # Use file DB, in memory DB cannot do write locks.
+    if recorder_db_url.startswith(("mysql://", "postgresql://")):
+        # Database locking is only used for SQLite
+        return
+
+    if recorder_db_url == "sqlite://":
+        # Use file DB, in memory DB cannot do write locks.
+        recorder_db_url = "sqlite:///" + str(tmp_path / "pytest.db")
     config = {
         recorder.CONF_COMMIT_INTERVAL: 0,
-        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db"),
+        recorder.CONF_DB_URL: recorder_db_url,
     }
     await async_setup_recorder_instance(hass, config)
     await hass.async_block_till_done()
+    event_type = "EVENT_TEST"
+    event_types = (event_type,)
 
     def _get_db_events():
         with session_scope(hass=hass) as session:
-            return list(session.query(Events).filter_by(event_type=event_type))
+            return list(
+                session.query(Events).filter(
+                    Events.event_type_id.in_(select_event_type_ids(event_types))
+                )
+            )
 
     instance = get_instance(hass)
 
@@ -1459,7 +1682,6 @@ async def test_database_lock_and_unlock(
 
     assert not await instance.lock_database()
 
-    event_type = "EVENT_TEST"
     event_data = {"test_attr": 5, "test_attr_10": "nice"}
     hass.bus.async_fire(event_type, event_data)
     task = asyncio.create_task(async_wait_recording_done(hass))
@@ -1478,22 +1700,36 @@ async def test_database_lock_and_unlock(
 
 
 async def test_database_lock_and_overflow(
-    async_setup_recorder_instance: SetupRecorderInstanceT,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
-    tmp_path,
-):
+    recorder_db_url: str,
+    tmp_path: Path,
+) -> None:
     """Test writing events during lock leading to overflow the queue causes the database to unlock."""
+    if recorder_db_url.startswith(("mysql://", "postgresql://")):
+        # Database locking is only used for SQLite
+        return
+
     # Use file DB, in memory DB cannot do write locks.
+    if recorder_db_url == "sqlite://":
+        # Use file DB, in memory DB cannot do write locks.
+        recorder_db_url = "sqlite:///" + str(tmp_path / "pytest.db")
     config = {
         recorder.CONF_COMMIT_INTERVAL: 0,
-        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db"),
+        recorder.CONF_DB_URL: recorder_db_url,
     }
     await async_setup_recorder_instance(hass, config)
     await hass.async_block_till_done()
+    event_type = "EVENT_TEST"
+    event_types = (event_type,)
 
     def _get_db_events():
         with session_scope(hass=hass) as session:
-            return list(session.query(Events).filter_by(event_type=event_type))
+            return list(
+                session.query(Events).filter(
+                    Events.event_type_id.in_(select_event_type_ids(event_types))
+                )
+            )
 
     instance = get_instance(hass)
 
@@ -1502,7 +1738,6 @@ async def test_database_lock_and_overflow(
     ):
         await instance.lock_database()
 
-        event_type = "EVENT_TEST"
         event_data = {"test_attr": 5, "test_attr_10": "nice"}
         hass.bus.fire(event_type, event_data)
 
@@ -1516,9 +1751,11 @@ async def test_database_lock_and_overflow(
         assert not instance.unlock_database()
 
 
-async def test_database_lock_timeout(recorder_mock, hass, recorder_db_url):
+async def test_database_lock_timeout(
+    recorder_mock: Recorder, hass: HomeAssistant, recorder_db_url: str
+) -> None:
     """Test locking database timeout when recorder stopped."""
-    if recorder_db_url.startswith("mysql://"):
+    if recorder_db_url.startswith(("mysql://", "postgresql://")):
         # This test is specific for SQLite: Locking is not implemented for other engines
         return
 
@@ -1543,19 +1780,23 @@ async def test_database_lock_timeout(recorder_mock, hass, recorder_db_url):
             block_task.event.set()
 
 
-async def test_database_lock_without_instance(recorder_mock, hass):
+async def test_database_lock_without_instance(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
     """Test database lock doesn't fail if instance is not initialized."""
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
 
     instance = get_instance(hass)
-    with patch.object(instance, "engine", None):
+    with patch.object(instance, "engine"):
         try:
             assert await instance.lock_database()
         finally:
             assert instance.unlock_database()
 
 
-async def test_in_memory_database(hass, caplog):
+async def test_in_memory_database(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test connecting to an in-memory recorder is not allowed."""
     assert not await async_setup_component(
         hass, recorder.DOMAIN, {recorder.DOMAIN: {recorder.CONF_DB_URL: "sqlite://"}}
@@ -1564,10 +1805,10 @@ async def test_in_memory_database(hass, caplog):
 
 
 async def test_database_connection_keep_alive(
-    async_setup_recorder_instance: SetupRecorderInstanceT,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-):
+) -> None:
     """Test we keep alive socket based dialects."""
     with patch("homeassistant.components.recorder.Recorder.dialect_name"):
         instance = await async_setup_recorder_instance(hass)
@@ -1584,13 +1825,13 @@ async def test_database_connection_keep_alive(
 
 
 async def test_database_connection_keep_alive_disabled_on_sqlite(
-    async_setup_recorder_instance: SetupRecorderInstanceT,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     recorder_db_url: str,
-):
+) -> None:
     """Test we do not do keep alive for sqlite."""
-    if recorder_db_url.startswith("mysql://"):
+    if recorder_db_url.startswith(("mysql://", "postgresql://")):
         # This test is specific for SQLite, keepalive runs on other engines
         return
 
@@ -1605,7 +1846,9 @@ async def test_database_connection_keep_alive_disabled_on_sqlite(
     assert "Sending keepalive" not in caplog.text
 
 
-def test_deduplication_event_data_inside_commit_interval(hass_recorder, caplog):
+def test_deduplication_event_data_inside_commit_interval(
+    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+) -> None:
     """Test deduplication of event data inside the commit interval."""
     hass = hass_recorder()
 
@@ -1617,9 +1860,11 @@ def test_deduplication_event_data_inside_commit_interval(hass_recorder, caplog):
     wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
+        event_types = ("this_event",)
         events = list(
             session.query(Events)
-            .filter(Events.event_type == "this_event")
+            .filter(Events.event_type_id.in_(select_event_type_ids(event_types)))
+            .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
             .outerjoin(EventData, (Events.data_id == EventData.data_id))
         )
         assert len(events) == 20
@@ -1630,7 +1875,9 @@ def test_deduplication_event_data_inside_commit_interval(hass_recorder, caplog):
 # Patch STATE_ATTRIBUTES_ID_CACHE_SIZE since otherwise
 # the CI can fail because the test takes too long to run
 @patch("homeassistant.components.recorder.core.STATE_ATTRIBUTES_ID_CACHE_SIZE", 5)
-def test_deduplication_state_attributes_inside_commit_interval(hass_recorder, caplog):
+def test_deduplication_state_attributes_inside_commit_interval(
+    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+) -> None:
     """Test deduplication of state attributes inside the commit interval."""
     hass = hass_recorder()
 
@@ -1653,9 +1900,7 @@ def test_deduplication_state_attributes_inside_commit_interval(hass_recorder, ca
 
     with session_scope(hass=hass) as session:
         states = list(
-            session.query(States)
-            .filter(States.entity_id == entity_id)
-            .outerjoin(
+            session.query(States).outerjoin(
                 StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
             )
         )
@@ -1665,7 +1910,9 @@ def test_deduplication_state_attributes_inside_commit_interval(hass_recorder, ca
         assert first_attributes_id == last_attributes_id
 
 
-async def test_async_block_till_done(async_setup_recorder_instance, hass):
+async def test_async_block_till_done(
+    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
+) -> None:
     """Test we can block until recordering is done."""
     instance = await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
@@ -1678,7 +1925,7 @@ async def test_async_block_till_done(async_setup_recorder_instance, hass):
 
     def _fetch_states():
         with session_scope(hass=hass) as session:
-            return list(session.query(States).filter(States.entity_id == entity_id))
+            return list(session.query(States))
 
     await async_block_recorder(hass, 0.1)
     await instance.async_block_till_done()
@@ -1688,7 +1935,7 @@ async def test_async_block_till_done(async_setup_recorder_instance, hass):
 
 
 @pytest.mark.parametrize(
-    "db_url, echo",
+    ("db_url", "echo"),
     (
         ("sqlite://blabla", None),
         ("mariadb://blabla", False),
@@ -1698,7 +1945,9 @@ async def test_async_block_till_done(async_setup_recorder_instance, hass):
         ("postgresql://blabla", False),
     ),
 )
-async def test_disable_echo(hass, db_url, echo, caplog):
+async def test_disable_echo(
+    hass: HomeAssistant, db_url, echo, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test echo is disabled for non sqlite databases."""
     recorder_helper.async_initialize_recorder(hass)
 
@@ -1718,7 +1967,7 @@ async def test_disable_echo(hass, db_url, echo, caplog):
 
 
 @pytest.mark.parametrize(
-    "config_url, expected_connect_args",
+    ("config_url", "expected_connect_args"),
     (
         (
             "mariadb://user:password@SERVER_IP/DB_NAME",
@@ -1754,7 +2003,9 @@ async def test_disable_echo(hass, db_url, echo, caplog):
         ),
     ),
 )
-async def test_mysql_missing_utf8mb4(hass, config_url, expected_connect_args):
+async def test_mysql_missing_utf8mb4(
+    hass: HomeAssistant, config_url, expected_connect_args
+) -> None:
     """Test recorder fails to setup if charset=utf8mb4 is missing from db_url."""
     recorder_helper.async_initialize_recorder(hass)
 
@@ -1784,7 +2035,7 @@ async def test_mysql_missing_utf8mb4(hass, config_url, expected_connect_args):
         "mysql://user:password@SERVER_IP/DB_NAME?blah=bleh&charset=other",
     ),
 )
-async def test_connect_args_priority(hass, config_url):
+async def test_connect_args_priority(hass: HomeAssistant, config_url) -> None:
     """Test connect_args has priority over URL query."""
     connect_params = []
     recorder_helper.async_initialize_recorder(hass)
@@ -1806,6 +2057,10 @@ async def test_connect_args_priority(hass, config_url):
         def create_connect_args(self, url):
             return ([], {"charset": "invalid"})
 
+        @property
+        def name(self) -> str:
+            return "mysql"
+
         @classmethod
         def dbapi(cls):
             ...
@@ -1821,6 +2076,9 @@ async def test_connect_args_priority(hass, config_url):
 
         def on_connect_url(self, url):
             return False
+
+        def _builtin_onconnect(self):
+            ...
 
     class MockEntrypoint:
         def engine_created(*_):
@@ -1844,3 +2102,61 @@ async def test_connect_args_priority(hass, config_url):
             },
         )
     assert connect_params[0]["charset"] == "utf8mb4"
+
+
+async def test_excluding_attributes_by_integration(
+    recorder_mock: Recorder, hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test that an integration's recorder platform can exclude attributes."""
+    state = "restoring_from_db"
+    attributes = {"test_attr": 5, "excluded": 10}
+    mock_platform(
+        hass,
+        "fake_integration.recorder",
+        Mock(exclude_attributes=lambda hass: {"excluded"}),
+    )
+    hass.config.components.add("fake_integration")
+    hass.bus.async_fire(EVENT_COMPONENT_LOADED, {"component": "fake_integration"})
+    await hass.async_block_till_done()
+
+    entity_id = "test.fake_integration_recorder"
+    platform = MockEntityPlatform(hass, platform_name="fake_integration")
+    entity_platform = MockEntity(entity_id=entity_id, extra_state_attributes=attributes)
+    await platform.async_add_entities([entity_platform])
+
+    await async_wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        db_states = []
+        for db_state, db_state_attributes, states_meta in (
+            session.query(States, StateAttributes, StatesMeta)
+            .outerjoin(
+                StateAttributes, States.attributes_id == StateAttributes.attributes_id
+            )
+            .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
+        ):
+            db_state.entity_id = states_meta.entity_id
+            db_states.append(db_state)
+            state = db_state.to_native()
+            state.attributes = db_state_attributes.to_native()
+        assert len(db_states) == 1
+        assert db_states[0].event_id is None
+
+    expected = _state_with_context(hass, entity_id)
+    expected.attributes = {"test_attr": 5}
+    assert state.as_dict() == expected.as_dict()
+
+
+async def test_lru_increases_with_many_entities(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test that the recorder's internal LRU cache increases with many entities."""
+    # We do not actually want to record 4096 entities so we mock the entity count
+    mock_entity_count = 4096
+    with patch.object(
+        hass.states, "async_entity_ids_count", return_value=mock_entity_count
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
+        await async_wait_recording_done(hass)
+
+    assert recorder_mock._state_attributes_ids.get_size() == mock_entity_count * 2

@@ -1,19 +1,18 @@
 """Tests for the diagnostics data provided by the CPU Speed integration."""
 from unittest.mock import patch
 
-from aiohttp import ClientSession
-
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(
     hass: HomeAssistant,
-    hass_client: ClientSession,
+    hass_client: ClientSessionGenerator,
     init_integration: MockConfigEntry,
-):
+) -> None:
     """Test diagnostics."""
     info = {
         "hz_actual": (3200000001, 0),

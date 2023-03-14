@@ -101,7 +101,11 @@ def valid_mode_configuration(config: ConfigType) -> ConfigType:
 
 
 def valid_humidity_range_configuration(config: ConfigType) -> ConfigType:
-    """Validate that the target_humidity range configuration is valid, throws if it isn't."""
+    """Validate humidity range.
+
+    Ensures that the target_humidity range configuration is valid,
+    throws if it isn't.
+    """
     if config[CONF_TARGET_HUMIDITY_MIN] >= config[CONF_TARGET_HUMIDITY_MAX]:
         raise ValueError("target_humidity_max must be > target_humidity_min")
     if config[CONF_TARGET_HUMIDITY_MAX] > 100:
@@ -147,7 +151,8 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-# Configuring MQTT Humidifiers under the humidifier platform key was deprecated in HA Core 2022.6
+# Configuring MQTT Humidifiers under the humidifier platform key was deprecated in
+# HA Core 2022.6
 # Setup for the legacy YAML format was removed in HA Core 2022.12
 PLATFORM_SCHEMA = vol.All(
     warn_for_legacy_schema(humidifier.DOMAIN),
@@ -171,7 +176,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT humidifier through configuration.yaml and dynamically through MQTT discovery."""
+    """Set up MQTT humidifier through YAML and through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )

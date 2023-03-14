@@ -59,7 +59,7 @@ class LogiSensor(SensorEntity):
 
     _attr_attribution = ATTRIBUTION
 
-    def __init__(self, camera, time_zone, description: SensorEntityDescription):
+    def __init__(self, camera, time_zone, description: SensorEntityDescription) -> None:
         """Initialize a sensor for Logi Circle camera."""
         self.entity_description = description
         self._camera = camera

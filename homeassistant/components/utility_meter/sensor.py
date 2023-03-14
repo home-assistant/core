@@ -8,6 +8,7 @@ import logging
 from typing import Any
 
 from croniter import croniter
+from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -274,7 +275,7 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
         return data
 
     @classmethod
-    def from_dict(cls, restored: dict[str, Any]) -> UtilitySensorExtraStoredData | None:
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
         """Initialize a stored sensor state from a dict."""
         extra = SensorExtraStoredData.from_dict(restored)
         if extra is None:

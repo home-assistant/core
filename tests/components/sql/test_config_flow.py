@@ -6,7 +6,7 @@ from unittest.mock import patch
 from sqlalchemy.exc import SQLAlchemyError
 
 from homeassistant import config_entries
-from homeassistant.components.recorder import DEFAULT_DB_FILE, DEFAULT_URL
+from homeassistant.components.recorder import Recorder
 from homeassistant.components.sql.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -21,7 +21,7 @@ from . import (
 from tests.common import MockConfigEntry
 
 
-async def test_form(recorder_mock, hass: HomeAssistant) -> None:
+async def test_form(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -43,7 +43,6 @@ async def test_form(recorder_mock, hass: HomeAssistant) -> None:
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Get Value"
     assert result2["options"] == {
-        "db_url": "sqlite://",
         "name": "Get Value",
         "query": "SELECT 5 as value",
         "column": "value",
@@ -53,57 +52,7 @@ async def test_form(recorder_mock, hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_import_flow_success(recorder_mock, hass: HomeAssistant) -> None:
-    """Test a successful import of yaml."""
-
-    with patch(
-        "homeassistant.components.sql.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=ENTRY_CONFIG,
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Get Value"
-    assert result2["options"] == {
-        "db_url": "sqlite://",
-        "name": "Get Value",
-        "query": "SELECT 5 as value",
-        "column": "value",
-        "unit_of_measurement": "MiB",
-        "value_template": None,
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_import_flow_already_exist(recorder_mock, hass: HomeAssistant) -> None:
-    """Test import of yaml already exist."""
-
-    MockConfigEntry(
-        domain=DOMAIN,
-        data=ENTRY_CONFIG,
-    ).add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.sql.async_setup_entry",
-        return_value=True,
-    ):
-        result3 = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=ENTRY_CONFIG,
-        )
-        await hass.async_block_till_done()
-
-    assert result3["type"] == FlowResultType.ABORT
-    assert result3["reason"] == "already_configured"
-
-
-async def test_flow_fails_db_url(recorder_mock, hass: HomeAssistant) -> None:
+async def test_flow_fails_db_url(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test config flow fails incorrect db url."""
     result4 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -124,7 +73,9 @@ async def test_flow_fails_db_url(recorder_mock, hass: HomeAssistant) -> None:
     assert result4["errors"] == {"db_url": "db_url_invalid"}
 
 
-async def test_flow_fails_invalid_query(recorder_mock, hass: HomeAssistant) -> None:
+async def test_flow_fails_invalid_query(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
     """Test config flow fails incorrect db url."""
     result4 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -161,7 +112,6 @@ async def test_flow_fails_invalid_query(recorder_mock, hass: HomeAssistant) -> N
     assert result5["type"] == FlowResultType.CREATE_ENTRY
     assert result5["title"] == "Get Value"
     assert result5["options"] == {
-        "db_url": "sqlite://",
         "name": "Get Value",
         "query": "SELECT 5 as value",
         "column": "value",
@@ -170,7 +120,7 @@ async def test_flow_fails_invalid_query(recorder_mock, hass: HomeAssistant) -> N
     }
 
 
-async def test_options_flow(recorder_mock, hass: HomeAssistant) -> None:
+async def test_options_flow(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test options config flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -211,7 +161,6 @@ async def test_options_flow(recorder_mock, hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "name": "Get Value",
-        "db_url": "sqlite://",
         "query": "SELECT 5 as size",
         "column": "size",
         "unit_of_measurement": "MiB",
@@ -219,7 +168,7 @@ async def test_options_flow(recorder_mock, hass: HomeAssistant) -> None:
 
 
 async def test_options_flow_name_previously_removed(
-    recorder_mock, hass: HomeAssistant
+    recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
     """Test options config flow where the name was missing."""
     entry = MockConfigEntry(
@@ -263,14 +212,15 @@ async def test_options_flow_name_previously_removed(
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "name": "Get Value Title",
-        "db_url": "sqlite://",
         "query": "SELECT 5 as size",
         "column": "size",
         "unit_of_measurement": "MiB",
     }
 
 
-async def test_options_flow_fails_db_url(recorder_mock, hass: HomeAssistant) -> None:
+async def test_options_flow_fails_db_url(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
     """Test options flow fails incorrect db url."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -313,7 +263,7 @@ async def test_options_flow_fails_db_url(recorder_mock, hass: HomeAssistant) -> 
 
 
 async def test_options_flow_fails_invalid_query(
-    recorder_mock, hass: HomeAssistant
+    recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
     """Test options flow fails incorrect query and template."""
     entry = MockConfigEntry(
@@ -362,14 +312,15 @@ async def test_options_flow_fails_invalid_query(
     assert result4["type"] == FlowResultType.CREATE_ENTRY
     assert result4["data"] == {
         "name": "Get Value",
-        "db_url": "sqlite://",
         "query": "SELECT 5 as size",
         "column": "size",
         "unit_of_measurement": "MiB",
     }
 
 
-async def test_options_flow_db_url_empty(recorder_mock, hass: HomeAssistant) -> None:
+async def test_options_flow_db_url_empty(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
     """Test options config flow with leaving db_url empty."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -413,12 +364,9 @@ async def test_options_flow_db_url_empty(recorder_mock, hass: HomeAssistant) -> 
         )
         await hass.async_block_till_done()
 
-    db_url = DEFAULT_URL.format(hass_config_path=hass.config.path(DEFAULT_DB_FILE))
-
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "name": "Get Value",
-        "db_url": db_url,
         "query": "SELECT 5 as size",
         "column": "size",
         "unit_of_measurement": "MiB",

@@ -164,6 +164,7 @@ class TemperatureSensor(SHCEntity, SensorEntity):
     """Representation of an SHC temperature reporting sensor."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
@@ -339,6 +340,7 @@ class ValveTappetSensor(SHCEntity, SensorEntity):
     """Representation of an SHC valve tappet reporting sensor."""
 
     _attr_icon = "mdi:gauge"
+    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:

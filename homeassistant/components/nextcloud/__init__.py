@@ -34,6 +34,8 @@ from .const import (
     SCAN_INTERVAL,
 )
 
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 NEXTCLOUD_SCHEMA = vol.Schema(
@@ -62,7 +64,6 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 class NextcloudMonitorWrapper:
     """TThis is an object containing a dictionary representation of dat returned by Nextcloud's monitoring api.
-
     Attributes:
         nextcloud_url (str): Full https url to a nextcloud instance
         user (str): Username of the Nextcloud user with access to the monitor api

@@ -1,12 +1,12 @@
 """Define fixtures available for all tests."""
 from unittest.mock import MagicMock, patch
 
-from pytest import fixture
+import pytest
 
 from . import MOCK_HISTORY, MOCK_STATUS, MOCK_VERSION
 
 
-@fixture
+@pytest.fixture
 def nzbget_api(hass):
     """Mock NZBGetApi for easier testing."""
     with patch("homeassistant.components.nzbget.coordinator.NZBGetAPI") as mock_api:

@@ -78,13 +78,13 @@ async def async_setup_scanner(
     return True
 
 
-class TileDeviceTracker(CoordinatorEntity, TrackerEntity):
+class TileDeviceTracker(CoordinatorEntity[DataUpdateCoordinator[None]], TrackerEntity):
     """Representation of a network infrastructure device."""
 
     _attr_icon = DEFAULT_ICON
 
     def __init__(
-        self, entry: ConfigEntry, coordinator: DataUpdateCoordinator, tile: Tile
+        self, entry: ConfigEntry, coordinator: DataUpdateCoordinator[None], tile: Tile
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)

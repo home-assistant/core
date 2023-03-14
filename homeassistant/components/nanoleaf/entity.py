@@ -11,10 +11,12 @@ from homeassistant.helpers.update_coordinator import (
 from .const import DOMAIN
 
 
-class NanoleafEntity(CoordinatorEntity):
+class NanoleafEntity(CoordinatorEntity[DataUpdateCoordinator[None]]):
     """Representation of a Nanoleaf entity."""
 
-    def __init__(self, nanoleaf: Nanoleaf, coordinator: DataUpdateCoordinator) -> None:
+    def __init__(
+        self, nanoleaf: Nanoleaf, coordinator: DataUpdateCoordinator[None]
+    ) -> None:
         """Initialize an Nanoleaf entity."""
         super().__init__(coordinator)
         self._nanoleaf = nanoleaf
