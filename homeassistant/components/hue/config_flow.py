@@ -150,8 +150,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         self._async_abort_entries_match({"host": user_input["host"]})
-        bridge = await self._get_bridge(user_input[CONF_HOST])
-        if bridge is None:
+        if (bridge := await self._get_bridge(user_input[CONF_HOST])) is None:
             return self.async_abort(reason="cannot_connect")
         self.bridge = bridge
         return await self.async_step_link()
