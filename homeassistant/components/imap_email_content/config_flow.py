@@ -1,5 +1,6 @@
 """Config flow for imap_email_content integration."""
 import re
+from types import MappingProxyType
 from typing import Any
 
 import voluptuous as vol
@@ -13,7 +14,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import (
@@ -52,18 +53,31 @@ DATA_SCHEMA = vol.Schema(
     }
 )
 
+CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_SERVER): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.positive_int,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_SENDERS): [cv.string],
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.string,
+        vol.Optional(CONF_FOLDER, default="INBOX"): cv.string,
+        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+    }
+)
+
 
 def try_connection(config: dict[str, str]) -> bool:
     """Test the imap configuration."""
-    reader = EmailReader(
-        config[CONF_USERNAME],
-        config[CONF_PASSWORD],
-        config[CONF_SERVER],
-        config[CONF_PORT],
-        config[CONF_FOLDER],
-        config[CONF_VERIFY_SSL],
-    )
     try:
+        reader = EmailReader(
+            config[CONF_USERNAME],
+            config[CONF_PASSWORD],
+            config[CONF_SERVER],
+            config[CONF_PORT],
+            config[CONF_FOLDER],
+            config[CONF_VERIFY_SSL],
+        )
         if reader.connect():
             return True
     # pylint: disable-next=broad-exception-caught
@@ -102,11 +116,12 @@ def validate_senders(user_input: dict[str, Any]) -> str | None:
     return senders_str
 
 
-async def validate_input(
+async def async_validate_input(
     hass: HomeAssistant,
-    user_input: dict[str, Any],
+    user_input: dict[str, Any] | MappingProxyType[str, Any],
     validated_input: dict[str, Any],
     errors: dict[str, str],
+    options_flow: bool = False,
 ) -> vol.Schema:
     """Validate user input."""
     validated_input.update(user_input)
@@ -117,49 +132,74 @@ async def validate_input(
     def def_value(value: str, default: Any = None) -> dict[str, Any]:
         return {"suggested_value": user_input.get(value, default)}
 
-    filled_schema = vol.Schema(
-        {
-            vol.Optional(CONF_NAME, description=def_value(CONF_NAME)): _TEXT_SELECTOR,
-            vol.Required(
-                CONF_SERVER, description=def_value(CONF_SERVER)
-            ): _TEXT_SELECTOR,
-            vol.Optional(
-                CONF_PORT, description=def_value(CONF_PORT, DEFAULT_PORT)
-            ): _PORT_SELECTOR,
-            vol.Required(
-                CONF_USERNAME, description=def_value(CONF_USERNAME)
-            ): _TEXT_SELECTOR,
-            vol.Required(
-                CONF_PASSWORD, description=def_value(CONF_PASSWORD)
-            ): _PASSWORD_SELECTOR,
-            vol.Required(
-                CONF_SENDERS,
-                description={
-                    "suggested_value": senders_str or user_input.get(CONF_SENDERS)
-                },
-            ): _TEXTBOX_SELECTOR,
-            vol.Optional(
-                CONF_VALUE_TEMPLATE, description=def_value(CONF_VALUE_TEMPLATE)
-            ): _TEXTBOX_SELECTOR,
-            vol.Optional(
-                CONF_FOLDER, description=def_value(CONF_FOLDER)
-            ): _TEXT_SELECTOR,
-            vol.Optional(
-                CONF_VERIFY_SSL, default=user_input.get(CONF_VERIFY_SSL, True)
-            ): cv.boolean,
-        }
-    )
+    filled_schema = {
+        vol.Required(CONF_SERVER, description=def_value(CONF_SERVER)): _TEXT_SELECTOR,
+        vol.Optional(
+            CONF_PORT, description=def_value(CONF_PORT, DEFAULT_PORT)
+        ): _PORT_SELECTOR,
+        vol.Required(
+            CONF_USERNAME, description=def_value(CONF_USERNAME)
+        ): _TEXT_SELECTOR,
+        vol.Required(
+            CONF_PASSWORD, description=def_value(CONF_PASSWORD)
+        ): _PASSWORD_SELECTOR,
+        vol.Required(
+            CONF_SENDERS,
+            description={
+                "suggested_value": senders_str or user_input.get(CONF_SENDERS)
+            },
+        ): _TEXTBOX_SELECTOR,
+        vol.Optional(
+            CONF_VALUE_TEMPLATE, description=def_value(CONF_VALUE_TEMPLATE)
+        ): _TEXTBOX_SELECTOR,
+        vol.Optional(CONF_FOLDER, description=def_value(CONF_FOLDER)): _TEXT_SELECTOR,
+        vol.Optional(
+            CONF_VERIFY_SSL, default=user_input.get(CONF_VERIFY_SSL, True)
+        ): cv.boolean,
+    }
+    if not options_flow:
+        filled_schema[
+            vol.Optional(CONF_NAME, description=def_value(CONF_NAME))
+        ] = _TEXT_SELECTOR
 
     if not await hass.async_add_executor_job(try_connection, user_input):
         errors["base"] = "cannot_connect"
 
-    if CONF_NAME not in user_input:
-        validated_input[CONF_NAME] = validated_input[CONF_USERNAME]
-
-    return filled_schema
+    return vol.Schema(filled_schema)
 
 
-class ImapEmailContentConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class ImapEmailContentOptionsFlow(config_entries.OptionsFlow):
+    """Option flow handler."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the options."""
+        validated_user_input: dict[str, Any] = {}
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            schema = await async_validate_input(
+                self.hass, user_input, validated_user_input, errors
+            )
+            if not errors:
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry,
+                    data=CONFIG_SCHEMA(validated_user_input),
+                )
+                return self.async_create_entry(title="", data={})
+        else:
+            schema = await async_validate_input(
+                self.hass, self.config_entry.data, validated_user_input, errors
+            )
+
+        return self.async_show_form(step_id="init", data_schema=schema, errors=errors)
+
+
+class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow setup."""
 
     VERSION = 1
@@ -172,6 +212,7 @@ class ImapEmailContentConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
 
         # Check for duplicate entries
+
         match_data = {
             CONF_NAME: user_input.get(CONF_NAME, user_input[CONF_USERNAME]),
             CONF_USERNAME: user_input.get(CONF_USERNAME),
@@ -186,14 +227,14 @@ class ImapEmailContentConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         validated_user_input: dict[str, Any] = {}
         errors: dict[str, str] = {}
-        schema = await validate_input(
+        schema = await async_validate_input(
             self.hass, user_input, validated_user_input, errors
         )
         if not errors:
-            title = validated_user_input.get(
-                CONF_NAME, validated_user_input[CONF_USERNAME]
+            title = validated_user_input.pop(CONF_NAME)
+            return self.async_create_entry(
+                title=title, data=CONFIG_SCHEMA(validated_user_input)
             )
-            return self.async_create_entry(title=title, data=validated_user_input)
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
@@ -201,3 +242,11 @@ class ImapEmailContentConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Import a config entry from configuration.yaml."""
         # To be removed when YAML import is removed
         return await self.async_step_user(import_config)
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> ImapEmailContentOptionsFlow:
+        """Get the options flow for this handler."""
+        return ImapEmailContentOptionsFlow(config_entry)

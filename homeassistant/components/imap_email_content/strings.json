@@ -2,6 +2,8 @@
   "config": {
     "step": {
       "user": {
+        "title": "IMAP email content sensor setup",
+        "description": "Provide settings for the email content sensor.\n\nNote:\nBy default the subject of the last matching email is used as state.",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "server": "[%key:common::config_flow::data::host%]",
@@ -27,6 +29,29 @@
     "deprecated_yaml": {
       "title": "The IMAP Email content YAML configuration is being removed",
       "description": "Configuring IMAP Email content using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the IMAP Email content YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "[%key:component::imap_email_content::config::step::user::title%]",
+        "description": "[%key:component::imap_email_content::config::step::user::description%]",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "server": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "senders": "[%key:component::imap_email_content::config::step::user::data::senders%]",
+          "folder": "[%key:component::imap_email_content::config::step::user::data::folder%]",
+          "value_template": "[%key:component::imap_email_content::config::step::user::data::value_template%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_senders": "[%key:component::imap_email_content::config::error::invalid_senders%]"
     }
   }
 }
