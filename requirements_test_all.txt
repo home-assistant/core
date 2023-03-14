@@ -1113,7 +1113,7 @@ pyaussiebb==0.0.15
 pybalboa==1.0.1
 
 # homeassistant.components.blackbird
-pyblackbird==0.5
+pyblackbird==0.6
 
 # homeassistant.components.neato
 pybotvac==0.0.23
