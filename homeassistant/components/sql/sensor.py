@@ -245,8 +245,11 @@ class SQLSensor(SensorEntity):
                 elif isinstance(value, date):
                     value = value.isoformat()
                 elif isinstance(value, (bytes, bytearray)):
-                    value = value.hex()
+                    value = f"0x{value.hex()}"
                 self._attr_extra_state_attributes[key] = value
+
+        if data is not None and isinstance(data, (bytes, bytearray)):
+            data = f"0x{data.hex()}"
 
         if data is not None and self._template is not None:
             self._attr_native_value = (

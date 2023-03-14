@@ -63,6 +63,16 @@ YAML_CONFIG = {
     }
 }
 
+YAML_CONFIG_BINARY = {
+    "sql": {
+        CONF_DB_URL: "sqlite://",
+        CONF_NAME: "Get Binary Value",
+        CONF_QUERY: "SELECT cast(x'd34324324230392032' as blob) as value, cast(x'd343aa' as blob) as test_attr",
+        CONF_COLUMN_NAME: "value",
+        CONF_UNIQUE_ID: "unique_id_12345",
+    }
+}
+
 YAML_CONFIG_INVALID = {
     "sql": {
         CONF_QUERY: "SELECT 5 as value",
