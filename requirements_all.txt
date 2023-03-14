@@ -241,7 +241,7 @@ aiopurpleair==2022.12.1
 aiopvapi==2.0.4
 
 # homeassistant.components.pvpc_hourly_pricing
-aiopvpc==4.0.1
+aiopvpc==4.1.0
 
 # homeassistant.components.lidarr
 # homeassistant.components.radarr
@@ -422,7 +422,7 @@ beautifulsoup4==4.11.1
 # beewi_smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.34.9
+bellows==0.34.10
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.12.1
@@ -1573,7 +1573,7 @@ pydaikin==2.9.0
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==108
+pydeconz==110
 
 # homeassistant.components.delijn
 pydelijn==1.0.0
@@ -2398,7 +2398,7 @@ spotipy==2.22.1
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==2.0.5.post1
+sqlalchemy==2.0.6
 
 # homeassistant.components.srp_energy
 srpenergy==1.3.6
@@ -2706,7 +2706,7 @@ zeroconf==0.47.3
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.93
+zha-quirks==0.0.94
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9

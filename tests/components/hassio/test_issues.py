@@ -1,4 +1,4 @@
-"""Test repairs from supervisor issues."""
+"""Test issues from supervisor issues."""
 from __future__ import annotations
 
 import os
@@ -145,12 +145,12 @@ def assert_repair_in_list(issues: list[dict[str, Any]], unhealthy: bool, reason:
     } in issues
 
 
-async def test_unhealthy_repairs(
+async def test_unhealthy_issues(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test repairs added for unhealthy systems."""
+    """Test issues added for unhealthy systems."""
     mock_resolution_info(aioclient_mock, unhealthy=["docker", "setup"])
 
     result = await async_setup_component(hass, "hassio", {})
@@ -166,12 +166,12 @@ async def test_unhealthy_repairs(
     assert_repair_in_list(msg["result"]["issues"], unhealthy=True, reason="setup")
 
 
-async def test_unsupported_repairs(
+async def test_unsupported_issues(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test repairs added for unsupported systems."""
+    """Test issues added for unsupported systems."""
     mock_resolution_info(aioclient_mock, unsupported=["content_trust", "os"])
 
     result = await async_setup_component(hass, "hassio", {})
@@ -189,12 +189,12 @@ async def test_unsupported_repairs(
     assert_repair_in_list(msg["result"]["issues"], unhealthy=False, reason="os")
 
 
-async def test_unhealthy_repairs_add_remove(
+async def test_unhealthy_issues_add_remove(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test unhealthy repairs added and removed from dispatches."""
+    """Test unhealthy issues added and removed from dispatches."""
     mock_resolution_info(aioclient_mock)
 
     result = await async_setup_component(hass, "hassio", {})
@@ -245,12 +245,12 @@ async def test_unhealthy_repairs_add_remove(
     assert msg["result"] == {"issues": []}
 
 
-async def test_unsupported_repairs_add_remove(
+async def test_unsupported_issues_add_remove(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test unsupported repairs added and removed from dispatches."""
+    """Test unsupported issues added and removed from dispatches."""
     mock_resolution_info(aioclient_mock)
 
     result = await async_setup_component(hass, "hassio", {})
@@ -301,12 +301,12 @@ async def test_unsupported_repairs_add_remove(
     assert msg["result"] == {"issues": []}
 
 
-async def test_reset_repairs_supervisor_restart(
+async def test_reset_issues_supervisor_restart(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Unsupported/unhealthy repairs reset on supervisor restart."""
+    """Unsupported/unhealthy issues reset on supervisor restart."""
     mock_resolution_info(aioclient_mock, unsupported=["os"], unhealthy=["docker"])
 
     result = await async_setup_component(hass, "hassio", {})
