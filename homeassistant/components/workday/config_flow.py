@@ -140,6 +140,28 @@ class WorkdayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self._async_show_form(step_id="user", user_input=user_input)
 
+    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
+        """Handle import from YAML."""
+        await self.async_set_unique_id(user_input[CONF_NAME])
+        self._abort_if_unique_id_configured()
+
+        data: dict[str, Any] = {
+            CONF_NAME: user_input[CONF_NAME],
+            CONF_COUNTRY: user_input[CONF_COUNTRY],
+        }
+        options: dict[str, Any] = {
+            CONF_PROVINCE: user_input[CONF_PROVINCE],
+            CONF_WORKDAYS: user_input[CONF_WORKDAYS],
+            CONF_EXCLUDES: user_input[CONF_EXCLUDES],
+            CONF_OFFSET: user_input[CONF_OFFSET],
+            CONF_ADD_HOLIDAYS: user_input[CONF_ADD_HOLIDAYS],
+            CONF_REMOVE_HOLIDAYS: user_input[CONF_REMOVE_HOLIDAYS],
+        }
+
+        return self.async_create_entry(
+            title=user_input[CONF_NAME], data=data, options=options
+        )
+
     @callback
     def _async_show_form(
         self,

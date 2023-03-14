@@ -35,5 +35,11 @@
       "no_such_holiday": "Tried to remove a holiday that doesn't exist",
       "invalid_holidays": "No holidays to remove or invalid holidays"
     }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "title": "The Workday YAML configuration is being removed",
+      "description": "Configuring Worday in configuration.yaml is being removed in Home Assistant 2023.5.\n\nYour configuration has been imported into the UI automatically. Remove the Workday YAML configuration from your configuration.yaml and restart Home Assistant to fix this issue."
+    }
   }
 }
