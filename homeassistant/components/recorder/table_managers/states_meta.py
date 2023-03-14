@@ -27,11 +27,11 @@ class StatesMetaManager:
     def load(self, events: list[Event], session: Session) -> None:
         """Load the entity_id to metadata_id mapping into memory."""
         self.get_many(
-            (
+            {
                 event.data["new_state"].entity_id
                 for event in events
                 if event.data.get("new_state") is not None
-            ),
+            },
             session,
         )
 

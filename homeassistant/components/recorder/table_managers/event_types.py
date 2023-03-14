@@ -27,7 +27,7 @@ class EventTypeManager:
     def load(self, events: list[Event], session: Session) -> None:
         """Load the event_type to event_type_ids mapping into memory."""
         self.get_many(
-            (event.event_type for event in events if event.event_type is not None),
+            {event.event_type for event in events if event.event_type is not None},
             session,
         )
 
