@@ -793,13 +793,13 @@ class Recorder(threading.Thread):
         until its primed.
         """
         assert self.event_session is not None
-        if hashes := [
+        if hashes := {
             StateAttributes.hash_shared_attrs_bytes(shared_attrs_bytes)
             for event in events
             if (
                 shared_attrs_bytes := self._serialize_state_attributes_from_event(event)
             )
-        ]:
+        }:
             with self.event_session.no_autoflush:
                 for hash_chunk in chunked(hashes, SQLITE_MAX_BIND_VARS):
                     for id_, shared_attrs in self.event_session.execute(
@@ -815,11 +815,11 @@ class Recorder(threading.Thread):
         the data in the database for every event until its primed.
         """
         assert self.event_session is not None
-        if hashes := [
+        if hashes := {
             EventData.hash_shared_data_bytes(shared_event_bytes)
             for event in events
             if (shared_event_bytes := self._serialize_event_data_from_event(event))
-        ]:
+        }:
             with self.event_session.no_autoflush:
                 for hash_chunk in chunked(hashes, SQLITE_MAX_BIND_VARS):
                     for id_, shared_data in self.event_session.execute(

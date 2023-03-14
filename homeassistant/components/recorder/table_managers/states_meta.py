@@ -9,8 +9,10 @@ from sqlalchemy.orm.session import Session
 
 from homeassistant.core import Event
 
+from ..const import SQLITE_MAX_BIND_VARS
 from ..db_schema import StatesMeta
 from ..queries import find_all_states_metadata_ids, find_states_metadata_ids
+from ..util import chunked
 
 CACHE_SIZE = 8192
 
@@ -27,11 +29,11 @@ class StatesMetaManager:
     def load(self, events: list[Event], session: Session) -> None:
         """Load the entity_id to metadata_id mapping into memory."""
         self.get_many(
-            (
+            {
                 event.data["new_state"].entity_id
                 for event in events
                 if event.data.get("new_state") is not None
-            ),
+            },
             session,
         )
 
@@ -60,10 +62,13 @@ class StatesMetaManager:
             return results
 
         with session.no_autoflush:
-            for metadata_id, entity_id in session.execute(
-                find_states_metadata_ids(missing)
-            ):
-                results[entity_id] = self._id_map[entity_id] = cast(int, metadata_id)
+            for missing_chunk in chunked(missing, SQLITE_MAX_BIND_VARS):
+                for metadata_id, entity_id in session.execute(
+                    find_states_metadata_ids(missing_chunk)
+                ):
+                    results[entity_id] = self._id_map[entity_id] = cast(
+                        int, metadata_id
+                    )
 
         return results
 

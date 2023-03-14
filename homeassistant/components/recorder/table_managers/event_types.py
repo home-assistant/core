@@ -9,8 +9,10 @@ from sqlalchemy.orm.session import Session
 
 from homeassistant.core import Event
 
+from ..const import SQLITE_MAX_BIND_VARS
 from ..db_schema import EventTypes
 from ..queries import find_event_type_ids
+from ..util import chunked
 
 CACHE_SIZE = 2048
 
@@ -27,7 +29,7 @@ class EventTypeManager:
     def load(self, events: list[Event], session: Session) -> None:
         """Load the event_type to event_type_ids mapping into memory."""
         self.get_many(
-            (event.event_type for event in events if event.event_type is not None),
+            {event.event_type for event in events if event.event_type is not None},
             session,
         )
 
@@ -51,12 +53,13 @@ class EventTypeManager:
             return results
 
         with session.no_autoflush:
-            for event_type_id, event_type in session.execute(
-                find_event_type_ids(missing)
-            ):
-                results[event_type] = self._id_map[event_type] = cast(
-                    int, event_type_id
-                )
+            for missing_chunk in chunked(missing, SQLITE_MAX_BIND_VARS):
+                for event_type_id, event_type in session.execute(
+                    find_event_type_ids(missing_chunk)
+                ):
+                    results[event_type] = self._id_map[event_type] = cast(
+                        int, event_type_id
+                    )
 
         return results
 
