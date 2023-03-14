@@ -197,6 +197,7 @@ FLOWS = {
         "icloud",
         "ifttt",
         "imap",
+        "imap_email_content",
         "inkbird",
         "insteon",
         "intellifire",

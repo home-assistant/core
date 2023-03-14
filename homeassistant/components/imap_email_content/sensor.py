@@ -10,6 +10,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_DATE,
     CONF_NAME,
@@ -23,20 +24,17 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.ssl import client_context
 
-_LOGGER = logging.getLogger(__name__)
+from .const import CONF_FOLDER, CONF_SENDERS, CONF_SERVER, DEFAULT_PORT, DOMAIN
 
-CONF_SERVER = "server"
-CONF_SENDERS = "senders"
-CONF_FOLDER = "folder"
+_LOGGER = logging.getLogger(__name__)
 
 ATTR_FROM = "from"
 ATTR_BODY = "body"
 ATTR_SUBJECT = "subject"
-
-DEFAULT_PORT = 993
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -53,13 +51,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Email sensor platform."""
+    """Set up entry."""
+    config = config_entry.data
+
     reader = EmailReader(
         config[CONF_USERNAME],
         config[CONF_PASSWORD],
@@ -68,7 +67,6 @@ def setup_platform(
         config[CONF_FOLDER],
         config[CONF_VERIFY_SSL],
     )
-
     if (value_template := config.get(CONF_VALUE_TEMPLATE)) is not None:
         value_template.hass = hass
     sensor = EmailContentSensor(
@@ -80,7 +78,40 @@ def setup_platform(
     )
 
     if sensor.connected:
-        add_entities([sensor], True)
+        async_add_entities([sensor], update_before_add=True)
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the Email sensor platform."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2023.7.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
+
+    # Check for existing entry
+    name = config.get(CONF_NAME) or config[CONF_USERNAME]
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.data[CONF_NAME] == name:
+            return
+
+    # Migrate yaml config to config entry
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
+    )
 
 
 class EmailReader:

@@ -2479,7 +2479,7 @@
     "imap_email_content": {
       "name": "IMAP Email Content",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_push"
     },
     "incomfort": {
