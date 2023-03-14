@@ -41,7 +41,7 @@ class FakeStore(LocalCalendarStore):
 
 
 @pytest.fixture(name="store", autouse=True)
-def mock_store() -> None:
+def mock_store() -> Generator[None, None, None]:
     """Test cleanup, remove any media storage persisted during the test."""
 
     stores: dict[Path, FakeStore] = {}
@@ -117,7 +117,7 @@ def event_fields(data: dict[str, str]) -> dict[str, str]:
 class Client:
     """Test client with helper methods for calendar websocket."""
 
-    def __init__(self, client):
+    def __init__(self, client: ClientWebSocketResponse) -> None:
         """Initialize Client."""
         self.client = client
         self.id = 0
