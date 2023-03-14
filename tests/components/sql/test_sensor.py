@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
-from . import YAML_CONFIG, init_integration
+from . import YAML_CONFIG, YAML_CONFIG_BINARY, init_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -304,3 +304,15 @@ async def test_attributes_from_yaml_setup(
     assert state.attributes["device_class"] == SensorDeviceClass.DATA_RATE
     assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
     assert state.attributes["unit_of_measurement"] == "MiB"
+
+
+async def test_binary_data_from_yaml_setup(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test binary data from yaml config."""
+
+    assert await async_setup_component(hass, DOMAIN, YAML_CONFIG_BINARY)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.get_binary_value")
+    assert state.state == "0xd34324324230392032"
+    assert state.attributes["test_attr"] == "0xd343aa"
