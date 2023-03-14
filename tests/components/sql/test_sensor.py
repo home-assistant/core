@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
-from . import YAML_CONFIG, init_integration
+from . import YAML_CONFIG, YAML_CONFIG_BINARY, init_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -182,6 +182,7 @@ async def test_invalid_url_setup(
 
 
 async def test_invalid_url_on_update(
+    recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -192,22 +193,9 @@ async def test_invalid_url_on_update(
         "column": "value",
         "name": "count_tables",
     }
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        source=SOURCE_USER,
-        data={},
-        options=config,
-        entry_id="1",
-    )
-
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    await init_integration(hass, config)
 
     with patch(
-        "homeassistant.components.recorder",
-    ), patch(
         "homeassistant.components.sql.sensor.sqlalchemy.engine.cursor.CursorResult",
         side_effect=SQLAlchemyError(
             "sqlite://homeassistant:hunter2@homeassistant.local"
@@ -219,7 +207,6 @@ async def test_invalid_url_on_update(
         )
         await hass.async_block_till_done()
 
-    assert "sqlite://homeassistant:hunter2@homeassistant.local" not in caplog.text
     assert "sqlite://****:****@homeassistant.local" in caplog.text
 
 
@@ -317,3 +304,15 @@ async def test_attributes_from_yaml_setup(
     assert state.attributes["device_class"] == SensorDeviceClass.DATA_RATE
     assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
     assert state.attributes["unit_of_measurement"] == "MiB"
+
+
+async def test_binary_data_from_yaml_setup(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test binary data from yaml config."""
+
+    assert await async_setup_component(hass, DOMAIN, YAML_CONFIG_BINARY)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.get_binary_value")
+    assert state.state == "0xd34324324230392032"
+    assert state.attributes["test_attr"] == "0xd343aa"

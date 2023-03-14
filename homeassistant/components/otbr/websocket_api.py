@@ -106,7 +106,7 @@ async def websocket_create_network(
         connection.send_error(msg["id"], "get_active_dataset_tlvs_empty", "")
         return
 
-    await async_add_dataset(hass, data.dataset_source, dataset_tlvs.hex())
+    await async_add_dataset(hass, DOMAIN, dataset_tlvs.hex())
 
     connection.send_result(msg["id"])
 
