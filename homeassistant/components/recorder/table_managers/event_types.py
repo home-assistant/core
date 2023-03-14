@@ -17,6 +17,8 @@ from ..util import chunked
 
 if TYPE_CHECKING:
     from ..core import Recorder
+
+
 CACHE_SIZE = 2048
 
 
