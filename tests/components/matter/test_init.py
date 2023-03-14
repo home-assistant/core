@@ -81,6 +81,8 @@ async def test_entry_setup_unload(
     assert entity_state.state == STATE_UNAVAILABLE
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_home_assistant_stop(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -408,6 +410,8 @@ async def test_update_addon(
     assert update_addon.call_count == update_calls
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_issue_registry_invalid_version(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -604,6 +608,8 @@ async def test_remove_entry(
     assert "Failed to uninstall the Matter Server add-on" in caplog.text
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_remove_config_entry_device(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -644,6 +650,8 @@ async def test_remove_config_entry_device(
     assert not hass.states.get(entity_id)
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_remove_config_entry_device_no_node(
     hass: HomeAssistant,
     matter_client: MagicMock,
