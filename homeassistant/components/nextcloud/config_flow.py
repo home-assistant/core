@@ -1,4 +1,4 @@
-"""Config flow to configure the Pi-hole integration."""
+"""Config flow to configure the Nextcloud integration."""
 from __future__ import annotations
 
 import asyncio
