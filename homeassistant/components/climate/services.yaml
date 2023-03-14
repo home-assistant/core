@@ -7,7 +7,7 @@ set_aux_heat:
     entity:
       domain: climate
       supported_features:
-        - 64 # ClimateEntityFeature.AUX_HEAT
+        - climate.ClimateEntityFeature.AUX_HEAT
   fields:
     aux_heat:
       name: Auxiliary heating
@@ -23,7 +23,7 @@ set_preset_mode:
     entity:
       domain: climate
       supported_features:
-        - 16 # ClimateEntityFeature.PRESET_MODE
+        - climate.ClimateEntityFeature.PRESET_MODE
   fields:
     preset_mode:
       name: Preset mode
@@ -40,15 +40,15 @@ set_temperature:
     entity:
       domain: climate
       supported_features:
-        - 1 # ClimateEntityFeature.TARGET_TEMPERATURE
-        - 2 # ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        - climate.ClimateEntityFeature.TARGET_TEMPERATURE
+        - climate.ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
   fields:
     temperature:
       name: Temperature
       description: New target temperature for HVAC.
       filter:
         supported_features:
-          - 1 # ClimateEntityFeature.TARGET_TEMPERATURE
+          - climate.ClimateEntityFeature.TARGET_TEMPERATURE
       selector:
         number:
           min: 0
@@ -60,7 +60,7 @@ set_temperature:
       description: New target high temperature for HVAC.
       filter:
         supported_features:
-          - 2 # ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+          - climate.ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
       advanced: true
       selector:
         number:
@@ -73,7 +73,7 @@ set_temperature:
       description: New target low temperature for HVAC.
       filter:
         supported_features:
-          - 2 # ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+          - climate.ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
       advanced: true
       selector:
         number:
@@ -109,7 +109,7 @@ set_humidity:
     entity:
       domain: climate
       supported_features:
-        - 4 # ClimateEntityFeature.TARGET_HUMIDITY
+        - climate.ClimateEntityFeature.TARGET_HUMIDITY
   fields:
     humidity:
       name: Humidity
@@ -128,7 +128,7 @@ set_fan_mode:
     entity:
       domain: climate
       supported_features:
-        - 8 # ClimateEntityFeature.FAN_MODE
+        - climate.ClimateEntityFeature.FAN_MODE
   fields:
     fan_mode:
       name: Fan mode
@@ -173,7 +173,7 @@ set_swing_mode:
     entity:
       domain: climate
       supported_features:
-        - 32 # ClimateEntityFeature.SWING_MODE
+        - climate.ClimateEntityFeature.SWING_MODE
   fields:
     swing_mode:
       name: Swing mode
