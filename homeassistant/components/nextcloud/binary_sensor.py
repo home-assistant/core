@@ -6,7 +6,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN
+from .const import DOMAIN
+from .entity import NextcloudEntity
 
 BINARY_SENSORS = (
     "nextcloud_system_enable_avatars",
@@ -32,34 +33,10 @@ def setup_platform(
     add_entities(binary_sensors, True)
 
 
-class NextcloudBinarySensor(BinarySensorEntity):
+class NextcloudBinarySensor(NextcloudEntity, BinarySensorEntity):
     """Represents a Nextcloud binary sensor."""
 
-    def __init__(self, item):
-        """Initialize the Nextcloud binary sensor."""
-        self._name = item
-        self._is_on = None
-
     @property
-    def icon(self):
-        """Return the icon for this binary sensor."""
-        return "mdi:cloud"
-
-    @property
-    def name(self):
-        """Return the name for this binary sensor."""
-        return self._name
-
-    @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        return self._is_on == "yes"
-
-    @property
-    def unique_id(self):
-        """Return the unique ID for this binary sensor."""
-        return f"{self.hass.data[DOMAIN]['instance']}#{self._name}"
-
-    def update(self) -> None:
-        """Update the binary sensor."""
-        self._is_on = self.hass.data[DOMAIN][self._name]
+        return self._state == "yes"
