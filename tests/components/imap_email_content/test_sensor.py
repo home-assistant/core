@@ -15,6 +15,8 @@ from homeassistant.setup import async_setup_component
 
 from .test_config_flow import MOCK_CONFIG
 
+from tests.common import MockConfigEntry
+
 
 class FakeEMailReader:
     """A test class for sending test emails."""
@@ -243,7 +245,31 @@ async def test_component_setup_and_migration(
     mock_client.connect.return_value = True
     config = MOCK_CONFIG.copy()
     config[CONF_PLATFORM] = imap_email_content.DOMAIN
+    assert await async_setup_component(hass, "sensor", {"sensor": config})
+    await hass.async_block_till_done()
+    entries = hass.config_entries.async_entries(imap_email_content.DOMAIN)
+    entry = entries[0]
+    assert entry.data == MOCK_CONFIG
+
+
+async def test_migration_happens_once(
+    hass: HomeAssistant, mock_client: MagicMock
+) -> None:
+    """Test skipping migration to entry."""
+
+    # Set up entry of previously imported yaml config
+    entry = MockConfigEntry(
+        domain=imap_email_content.DOMAIN, data=MOCK_CONFIG, title="email_email_com"
+    )
+    entry.add_to_hass(hass)
+
+    mock_client.connect.return_value = True
+    config = MOCK_CONFIG.copy()
+    config[CONF_PLATFORM] = imap_email_content.DOMAIN
+
     assert await async_setup_component(hass, "sensor", {"sensor": [config]})
     await hass.async_block_till_done()
-    entry = hass.config_entries.async_entries(imap_email_content.DOMAIN)[0]
+    entries = hass.config_entries.async_entries(imap_email_content.DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
     assert entry.data == MOCK_CONFIG

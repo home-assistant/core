@@ -28,6 +28,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import slugify
 from homeassistant.util.ssl import client_context
 
 from .const import CONF_FOLDER, CONF_SENDERS, CONF_SERVER, DEFAULT_PORT, DOMAIN
@@ -103,7 +104,7 @@ async def async_setup_platform(
     # Check for existing entry
     name = config.get(CONF_NAME) or config[CONF_USERNAME]
     for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.data[CONF_NAME] == name:
+        if entry.title == slugify(name):
             return
 
     # Migrate yaml config to config entry
