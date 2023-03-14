@@ -113,7 +113,12 @@ class EventDataManager(BaseTableManager):
         self._id_map.clear()
         self._pending.clear()
 
-    def evict_purged(self, shared_datas: Iterable[str]) -> None:
-        """Evict purged shared_datas from the cache when they are no longer used."""
-        for shared_data in shared_datas:
-            self._id_map.pop(shared_data, None)
+    def evict_purged(self, data_ids: set[int]) -> None:
+        """Evict purged data_ids from the cache when they are no longer used."""
+        id_map = self._id_map
+        event_data_ids_reversed = {
+            data_id: shared_data for shared_data, data_id in id_map.items()
+        }
+        # Evict any purged data from the cache
+        for purged_data_id in data_ids.intersection(event_data_ids_reversed):
+            id_map.pop(event_data_ids_reversed[purged_data_id], None)

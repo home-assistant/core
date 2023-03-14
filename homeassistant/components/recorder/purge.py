@@ -480,21 +480,6 @@ def _evict_purged_states_from_old_states_cache(
         old_states.pop(old_state_reversed[purged_state_id], None)
 
 
-def _evict_purged_data_from_data_cache(
-    instance: Recorder, purged_data_ids: set[int]
-) -> None:
-    """Evict purged data ids from the data ids cache."""
-    # Make a map from data_id to the data json
-    event_data_ids = instance._event_data_ids  # pylint: disable=protected-access
-    event_data_ids_reversed = {
-        data_id: data for data, data_id in event_data_ids.items()
-    }
-
-    # Evict any purged data from the event_data_ids cache
-    for purged_attribute_id in purged_data_ids.intersection(event_data_ids_reversed):
-        event_data_ids.pop(event_data_ids_reversed[purged_attribute_id], None)
-
-
 def _evict_purged_attributes_from_attributes_cache(
     instance: Recorder, purged_attributes_ids: set[int]
 ) -> None:
@@ -540,7 +525,7 @@ def _purge_batch_data_ids(
         _LOGGER.debug("Deleted %s data events", deleted_rows)
 
     # Evict any entries in the event_data_ids cache referring to a purged state
-    _evict_purged_data_from_data_cache(instance, data_ids)
+    instance.event_data_manager.evict_purged(data_ids)
 
 
 def _purge_statistics_runs(session: Session, statistics_runs: list[int]) -> None:
