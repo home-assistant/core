@@ -1,8 +1,6 @@
 """Test the repairs websocket API."""
-from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, Mock
 
-from aiohttp import ClientWebSocketResponse
 from freezegun import freeze_time
 import pytest
 
@@ -489,7 +487,7 @@ async def test_non_compliant_platform(
 @freeze_time("2022-07-21 08:22:00")
 async def test_sync_methods(
     hass: HomeAssistant,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test sync method for creating and deleting an issue."""
 
