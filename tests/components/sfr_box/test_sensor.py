@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.sfr_box import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -31,10 +32,8 @@ async def test_sensors(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device_entries = dr.async_entries_for_config_entry(
-        device_registry, config_entry.entry_id
-    )
-    assert device_entries == snapshot
+    device_entry = device_registry.async_get_device({(DOMAIN, "e4:5d:51:00:11:22")})
+    assert device_entry == snapshot
 
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, config_entry.entry_id
