@@ -1056,7 +1056,7 @@ def _apply_update(  # noqa: C901
         )
     elif new_version == 41:
         _create_index(session_maker, "event_types", "ix_event_types_event_type")
-        _create_index(session_maker, "states_metadata", "ix_states_metadata_entity_id")
+        _create_index(session_maker, "states_meta", "ix_states_meta_entity_id")
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
