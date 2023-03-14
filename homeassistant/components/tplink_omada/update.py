@@ -1,6 +1,7 @@
 """Support for TPLink Omada device firmware updates."""
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import Any, NamedTuple
 
 from tplink_omada_client.devices import OmadaFirmwareUpdate, OmadaListDevice
@@ -10,12 +11,14 @@ from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_call_later
 
 from .const import DOMAIN
 from .controller import OmadaSiteController
 from .coordinator import OmadaCoordinator
 from .entity import OmadaDeviceEntity
+
+POLL_DELAY_IDLE = 6 * 60 * 60
+POLL_DELAY_UPGRADE = 60
 
 
 class FirmwareUpdateStatus(NamedTuple):
@@ -25,24 +28,39 @@ class FirmwareUpdateStatus(NamedTuple):
     firmware: OmadaFirmwareUpdate | None
 
 
-async def _get_firmware_updates(client: OmadaSiteClient) -> list[FirmwareUpdateStatus]:
-    devices = await client.get_devices()
-    return [
-        FirmwareUpdateStatus(
-            device=d,
-            firmware=None
-            if not d.need_upgrade
-            else await client.get_firmware_details(d),
+class OmadaFirmwareUpdateCoodinator(OmadaCoordinator[FirmwareUpdateStatus]):
+    """Coordinator for getting details about ports on a switch."""
+
+    def __init__(self, hass: HomeAssistant, omada_client: OmadaSiteClient) -> None:
+        """Initialize my coordinator."""
+        super().__init__(hass, omada_client, "Firmware Updates", POLL_DELAY_IDLE)
+
+    async def _get_firmware_updates(self) -> list[FirmwareUpdateStatus]:
+        devices = await self.omada_client.get_devices()
+
+        updates = [
+            FirmwareUpdateStatus(
+                device=d,
+                firmware=None
+                if not d.need_upgrade
+                else await self.omada_client.get_firmware_details(d),
+            )
+            for d in devices
+        ]
+
+        # During a firmware upgrade, poll more frequently
+        self.update_interval = timedelta(
+            seconds=(
+                POLL_DELAY_UPGRADE
+                if any(u.device.fw_download for u in updates)
+                else POLL_DELAY_IDLE
+            )
         )
-        for d in devices
-    ]
+        return updates
 
-
-async def _poll_firmware_updates(
-    client: OmadaSiteClient,
-) -> dict[str, FirmwareUpdateStatus]:
-    """Poll the state of Omada Devices firmware update availability."""
-    return {d.device.mac: d for d in await _get_firmware_updates(client)}
+    async def poll_update(self) -> dict[str, FirmwareUpdateStatus]:
+        """Poll the state of Omada Devices firmware update availability."""
+        return {d.device.mac: d for d in await self._get_firmware_updates()}
 
 
 async def async_setup_entry(
@@ -56,13 +74,7 @@ async def async_setup_entry(
 
     devices = await omada_client.get_devices()
 
-    coordinator = OmadaCoordinator[FirmwareUpdateStatus](
-        hass,
-        omada_client,
-        "Firmware Updates",
-        _poll_firmware_updates,
-        poll_delay=6 * 60 * 60,
-    )
+    coordinator = OmadaFirmwareUpdateCoodinator(hass, omada_client)
 
     async_add_entities(OmadaDeviceUpdate(coordinator, device) for device in devices)
     await coordinator.async_request_refresh()
@@ -84,7 +96,7 @@ class OmadaDeviceUpdate(
 
     def __init__(
         self,
-        coordinator: OmadaCoordinator[FirmwareUpdateStatus],
+        coordinator: OmadaFirmwareUpdateCoodinator,
         device: OmadaListDevice,
     ) -> None:
         """Initialize the update entity."""
@@ -123,12 +135,5 @@ class OmadaDeviceUpdate(
             self._attr_installed_version = status.device.firmware_version
             self._attr_latest_version = status.device.firmware_version
         self._attr_in_progress = status.device.fw_download
-
-        if self._attr_in_progress:
-            # While firmware update is in progress, poll more frequently
-            async def do_refresh(*_: Any) -> None:
-                await self.coordinator.async_request_refresh()
-
-            async_call_later(self.hass, 60, do_refresh)
 
         self.async_write_ha_state()
