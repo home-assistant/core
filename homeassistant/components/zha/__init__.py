@@ -107,7 +107,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         zha_data.setdefault(platform, [])
 
     if config.get(CONF_ENABLE_QUIRKS, True):
-        setup_quirks(config)
+        setup_quirks(custom_quirks_path=config.get(CONF_CUSTOM_QUIRKS_PATH))
 
     # temporary code to remove the ZHA storage file from disk.
     # this will be removed in 2022.10.0
