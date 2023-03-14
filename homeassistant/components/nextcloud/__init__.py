@@ -126,7 +126,7 @@ class NextcloudMonitorWrapper:
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Pi-hole integration."""
+    """Set up the Nextcloud integration."""
 
     hass.data[DOMAIN] = {}
     return True
