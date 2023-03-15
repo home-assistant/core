@@ -3492,7 +3492,6 @@ async def test_or_condition_with_disabled_condition(hass: HomeAssistant) -> None
             },
         ],
     }
-    return
     config = cv.CONDITION_SCHEMA(config)
     config = await condition.async_validate_condition_config(hass, config)
     test = await condition.async_from_config(hass, config)
