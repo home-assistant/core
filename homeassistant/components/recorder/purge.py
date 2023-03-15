@@ -641,7 +641,7 @@ def _purge_filtered_data(instance: Recorder, session: Session) -> bool:
         for (event_type_id, event_type) in session.query(
             EventTypes.event_type_id, EventTypes.event_type
         ).all()
-        if event_type in instance.exclude_t
+        if event_type in instance.exclude_event_types
     ]
     has_more_events_to_purge = False
     if excluded_event_type_ids:

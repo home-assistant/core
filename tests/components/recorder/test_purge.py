@@ -1167,7 +1167,7 @@ async def test_purge_filtered_events_state_changed(
     assert instance.entity_filter("sensor.excluded") is False
     assert instance.entity_filter("sensor.old_format") is False
     assert instance.entity_filter("sensor.keep") is True
-    assert "excluded_event" in instance.exclude_t
+    assert "excluded_event" in instance.exclude_event_types
 
     def _add_db_entries(hass: HomeAssistant) -> None:
         with session_scope(hass=hass) as session:
