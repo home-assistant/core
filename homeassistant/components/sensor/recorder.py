@@ -529,11 +529,11 @@ def _compile_statistics(  # noqa: C901
             if entity_id in last_stats:
                 # We have compiled history for this sensor before,
                 # use that as a starting point.
-                last_reset = old_last_reset = _timestamp_to_isoformat_or_none(
-                    last_stats[entity_id][0]["last_reset"]
-                )
-                new_state = old_state = last_stats[entity_id][0]["state"]
-                _sum = last_stats[entity_id][0]["sum"] or 0.0
+                last_stat = last_stats[entity_id][0]
+                last_reset = _timestamp_to_isoformat_or_none(last_stat["last_reset"])
+                old_last_reset = last_reset
+                new_state = old_state = last_stat["state"]
+                _sum = last_stat["sum"] or 0.0
 
             for fstate, state in fstates:
                 reset = False
@@ -596,7 +596,7 @@ def _compile_statistics(  # noqa: C901
 
                 if reset:
                     # The sensor has been reset, update the sum
-                    if old_state is not None:
+                    if old_state is not None and new_state is not None:
                         _sum += new_state - old_state
                     # ..and update the starting point
                     new_state = fstate

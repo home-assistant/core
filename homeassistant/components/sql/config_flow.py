@@ -11,13 +11,14 @@ from sqlalchemy.orm import Session, scoped_session, sessionmaker
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.recorder import CONF_DB_URL, DEFAULT_DB_FILE, DEFAULT_URL
+from homeassistant.components.recorder import CONF_DB_URL
 from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 
 from .const import CONF_COLUMN_NAME, CONF_QUERY, DOMAIN
+from .util import resolve_db_url
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,34 +86,37 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the user step."""
         errors = {}
-        db_url_default = DEFAULT_URL.format(
-            hass_config_path=self.hass.config.path(DEFAULT_DB_FILE)
-        )
 
         if user_input is not None:
-            db_url = user_input.get(CONF_DB_URL, db_url_default)
+            db_url = user_input.get(CONF_DB_URL)
             query = user_input[CONF_QUERY]
             column = user_input[CONF_COLUMN_NAME]
             uom = user_input.get(CONF_UNIT_OF_MEASUREMENT)
             value_template = user_input.get(CONF_VALUE_TEMPLATE)
             name = user_input[CONF_NAME]
+            db_url_for_validation = None
 
             try:
                 validate_sql_select(query)
+                db_url_for_validation = resolve_db_url(self.hass, db_url)
                 await self.hass.async_add_executor_job(
-                    validate_query, db_url, query, column
+                    validate_query, db_url_for_validation, query, column
                 )
             except SQLAlchemyError:
                 errors["db_url"] = "db_url_invalid"
             except ValueError:
                 errors["query"] = "query_invalid"
 
+            add_db_url = (
+                {CONF_DB_URL: db_url} if db_url == db_url_for_validation else {}
+            )
+
             if not errors:
                 return self.async_create_entry(
                     title=name,
                     data={},
                     options={
-                        CONF_DB_URL: db_url,
+                        **add_db_url,
                         CONF_QUERY: query,
                         CONF_COLUMN_NAME: column,
                         CONF_UNIT_OF_MEASUREMENT: uom,
@@ -140,32 +144,32 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Manage SQL options."""
         errors = {}
-        db_url_default = DEFAULT_URL.format(
-            hass_config_path=self.hass.config.path(DEFAULT_DB_FILE)
-        )
 
         if user_input is not None:
-            db_url = user_input.get(CONF_DB_URL, db_url_default)
+            db_url = user_input.get(CONF_DB_URL)
             query = user_input[CONF_QUERY]
             column = user_input[CONF_COLUMN_NAME]
             name = self.entry.options.get(CONF_NAME, self.entry.title)
 
             try:
                 validate_sql_select(query)
+                db_url_for_validation = resolve_db_url(self.hass, db_url)
                 await self.hass.async_add_executor_job(
-                    validate_query, db_url, query, column
+                    validate_query, db_url_for_validation, query, column
                 )
             except SQLAlchemyError:
                 errors["db_url"] = "db_url_invalid"
             except ValueError:
                 errors["query"] = "query_invalid"
             else:
+                new_user_input = user_input
+                if new_user_input.get(CONF_DB_URL) and db_url == db_url_for_validation:
+                    new_user_input.pop(CONF_DB_URL)
                 return self.async_create_entry(
                     title="",
                     data={
                         CONF_NAME: name,
-                        CONF_DB_URL: db_url,
-                        **user_input,
+                        **new_user_input,
                     },
                 )
 
@@ -176,7 +180,7 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_DB_URL,
                         description={
-                            "suggested_value": self.entry.options[CONF_DB_URL]
+                            "suggested_value": self.entry.options.get(CONF_DB_URL)
                         },
                     ): selector.TextSelector(),
                     vol.Required(

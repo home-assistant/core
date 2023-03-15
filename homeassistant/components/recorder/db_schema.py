@@ -25,14 +25,11 @@ from sqlalchemy import (
     SmallInteger,
     String,
     Text,
-    distinct,
     type_coerce,
 )
 from sqlalchemy.dialects import mysql, oracle, postgresql, sqlite
 from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.orm import DeclarativeBase, Mapped, aliased, mapped_column, relationship
-from sqlalchemy.orm.query import RowReturningQuery
-from sqlalchemy.orm.session import Session
 from typing_extensions import Self
 
 from homeassistant.const import (
@@ -71,14 +68,16 @@ class Base(DeclarativeBase):
     """Base class for tables."""
 
 
-SCHEMA_VERSION = 36
+SCHEMA_VERSION = 41
 
 _LOGGER = logging.getLogger(__name__)
 
 TABLE_EVENTS = "events"
 TABLE_EVENT_DATA = "event_data"
+TABLE_EVENT_TYPES = "event_types"
 TABLE_STATES = "states"
 TABLE_STATE_ATTRIBUTES = "state_attributes"
+TABLE_STATES_META = "states_meta"
 TABLE_RECORDER_RUNS = "recorder_runs"
 TABLE_SCHEMA_CHANGES = "schema_changes"
 TABLE_STATISTICS = "statistics"
@@ -96,8 +95,10 @@ ALL_TABLES = [
     TABLE_STATE_ATTRIBUTES,
     TABLE_EVENTS,
     TABLE_EVENT_DATA,
+    TABLE_EVENT_TYPES,
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
+    TABLE_STATES_META,
     TABLE_STATISTICS,
     TABLE_STATISTICS_META,
     TABLE_STATISTICS_RUNS,
@@ -112,7 +113,7 @@ TABLES_TO_CHECK = [
 ]
 
 LAST_UPDATED_INDEX_TS = "ix_states_last_updated_ts"
-ENTITY_ID_LAST_UPDATED_INDEX_TS = "ix_states_entity_id_last_updated_ts"
+METADATA_ID_LAST_UPDATED_INDEX_TS = "ix_states_metadata_id_last_updated_ts"
 EVENTS_CONTEXT_ID_BIN_INDEX = "ix_events_context_id_bin"
 STATES_CONTEXT_ID_BIN_INDEX = "ix_states_context_id_bin"
 CONTEXT_ID_BIN_MAX_LENGTH = 16
@@ -179,7 +180,9 @@ class Events(Base):
     __table_args__ = (
         # Used for fetching events at a specific time
         # see logbook
-        Index("ix_events_event_type_time_fired_ts", "event_type", "time_fired_ts"),
+        Index(
+            "ix_events_event_type_id_time_fired_ts", "event_type_id", "time_fired_ts"
+        ),
         Index(
             EVENTS_CONTEXT_ID_BIN_INDEX,
             "context_id_bin",
@@ -190,7 +193,9 @@ class Events(Base):
     )
     __tablename__ = TABLE_EVENTS
     event_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
-    event_type: Mapped[str | None] = mapped_column(String(MAX_LENGTH_EVENT_EVENT_TYPE))
+    event_type: Mapped[str | None] = mapped_column(
+        String(MAX_LENGTH_EVENT_EVENT_TYPE)
+    )  # no longer used
     event_data: Mapped[str | None] = mapped_column(
         Text().with_variant(mysql.LONGTEXT, "mysql", "mariadb")
     )
@@ -223,13 +228,17 @@ class Events(Base):
     context_parent_id_bin: Mapped[bytes | None] = mapped_column(
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
     )
+    event_type_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("event_types.event_type_id")
+    )
     event_data_rel: Mapped[EventData | None] = relationship("EventData")
+    event_type_rel: Mapped[EventTypes | None] = relationship("EventTypes")
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
             "<recorder.Events("
-            f"id={self.event_id}, type='{self.event_type}', "
+            f"id={self.event_id}, event_type_id='{self.event_type_id}', "
             f"origin_idx='{self.origin_idx}', time_fired='{self._time_fired_isotime}'"
             f", data_id={self.data_id})>"
         )
@@ -250,7 +259,7 @@ class Events(Base):
     def from_event(event: Event) -> Events:
         """Create an event database object from a native event."""
         return Events(
-            event_type=event.event_type,
+            event_type=None,
             event_data=None,
             origin_idx=EVENT_ORIGIN_TO_IDX.get(event.origin),
             time_fired=None,
@@ -333,13 +342,32 @@ class EventData(Base):
             return {}
 
 
+class EventTypes(Base):
+    """Event type history."""
+
+    __table_args__ = (_DEFAULT_TABLE_ARGS,)
+    __tablename__ = TABLE_EVENT_TYPES
+    event_type_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
+    event_type: Mapped[str | None] = mapped_column(
+        String(MAX_LENGTH_EVENT_EVENT_TYPE), index=True
+    )
+
+    def __repr__(self) -> str:
+        """Return string representation of instance for debugging."""
+        return (
+            "<recorder.EventTypes("
+            f"id={self.event_type_id}, event_type='{self.event_type}'"
+            ")>"
+        )
+
+
 class States(Base):
     """State change history."""
 
     __table_args__ = (
         # Used for fetching the state of entities at a specific time
         # (get_states in history.py)
-        Index(ENTITY_ID_LAST_UPDATED_INDEX_TS, "entity_id", "last_updated_ts"),
+        Index(METADATA_ID_LAST_UPDATED_INDEX_TS, "metadata_id", "last_updated_ts"),
         Index(
             STATES_CONTEXT_ID_BIN_INDEX,
             "context_id_bin",
@@ -350,7 +378,9 @@ class States(Base):
     )
     __tablename__ = TABLE_STATES
     state_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
-    entity_id: Mapped[str | None] = mapped_column(String(MAX_LENGTH_STATE_ENTITY_ID))
+    entity_id: Mapped[str | None] = mapped_column(
+        String(MAX_LENGTH_STATE_ENTITY_ID)
+    )  # no longer used for new rows
     state: Mapped[str | None] = mapped_column(String(MAX_LENGTH_STATE_STATE))
     attributes: Mapped[str | None] = mapped_column(
         Text().with_variant(mysql.LONGTEXT, "mysql", "mariadb")
@@ -397,11 +427,16 @@ class States(Base):
     context_parent_id_bin: Mapped[bytes | None] = mapped_column(
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
     )
+    metadata_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("states_meta.metadata_id")
+    )
+    states_meta_rel: Mapped[StatesMeta | None] = relationship("StatesMeta")
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
-            f"<recorder.States(id={self.state_id}, entity_id='{self.entity_id}',"
+            f"<recorder.States(id={self.state_id}, entity_id='{self.entity_id}'"
+            f" metadata_id={self.metadata_id},"
             f" state='{self.state}', event_id='{self.event_id}',"
             f" last_updated='{self._last_updated_isotime}',"
             f" old_state_id={self.old_state_id}, attributes_id={self.attributes_id})>"
@@ -559,6 +594,25 @@ class StateAttributes(Base):
             return {}
 
 
+class StatesMeta(Base):
+    """Metadata for states."""
+
+    __table_args__ = (_DEFAULT_TABLE_ARGS,)
+    __tablename__ = TABLE_STATES_META
+    metadata_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
+    entity_id: Mapped[str | None] = mapped_column(
+        String(MAX_LENGTH_STATE_ENTITY_ID), index=True
+    )
+
+    def __repr__(self) -> str:
+        """Return string representation of instance for debugging."""
+        return (
+            "<recorder.StatesMeta("
+            f"id={self.metadata_id}, entity_id='{self.entity_id}'"
+            ")>"
+        )
+
+
 class StatisticsBase:
     """Statistics base class."""
 
@@ -568,7 +622,6 @@ class StatisticsBase:
     metadata_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey(f"{TABLE_STATISTICS_META}.id", ondelete="CASCADE"),
-        index=True,
     )
     start: Mapped[datetime | None] = mapped_column(
         DATETIME_TYPE, index=True
@@ -698,27 +751,6 @@ class RecorderRuns(Base):
             f" closed_incorrect={self.closed_incorrect},"
             f" created='{self.created.isoformat(sep=' ', timespec='seconds')}')>"
         )
-
-    def entity_ids(self, point_in_time: datetime | None = None) -> list[str]:
-        """Return the entity ids that existed in this run.
-
-        Specify point_in_time if you want to know which existed at that point
-        in time inside the run.
-        """
-        session = Session.object_session(self)
-
-        assert session is not None, "RecorderRuns need to be persisted"
-
-        query: RowReturningQuery[tuple[str]] = session.query(distinct(States.entity_id))
-
-        query = query.filter(States.last_updated >= self.start)
-
-        if point_in_time is not None:
-            query = query.filter(States.last_updated < point_in_time)
-        elif self.end is not None:
-            query = query.filter(States.last_updated < self.end)
-
-        return [row[0] for row in query]
 
     def to_native(self, validate_entity_id: bool = True) -> Self:
         """Return self, native format is this model."""

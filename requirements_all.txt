@@ -241,7 +241,7 @@ aiopurpleair==2022.12.1
 aiopvapi==2.0.4
 
 # homeassistant.components.pvpc_hourly_pricing
-aiopvpc==4.0.1
+aiopvpc==4.1.0
 
 # homeassistant.components.lidarr
 # homeassistant.components.radarr
@@ -422,7 +422,7 @@ beautifulsoup4==4.11.1
 # beewi_smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.34.9
+bellows==0.34.10
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.12.1
@@ -467,7 +467,7 @@ bluetooth-auto-recovery==1.0.3
 bluetooth-data-tools==0.3.1
 
 # homeassistant.components.bond
-bond-async==0.1.22
+bond-async==0.1.23
 
 # homeassistant.components.bosch_shc
 boschshcpy==0.2.35
@@ -492,7 +492,7 @@ brunt==1.2.0
 bt_proximity==0.2.1
 
 # homeassistant.components.bthome
-bthome-ble==2.8.0
+bthome-ble==2.9.0
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
@@ -625,7 +625,7 @@ dynalite_devices==0.1.47
 eagle100==0.1.1
 
 # homeassistant.components.easyenergy
-easyenergy==0.1.2
+easyenergy==0.2.1
 
 # homeassistant.components.ebusd
 ebusdpy==0.0.17
@@ -722,7 +722,7 @@ fixerio==1.0.0a0
 fjaraskupan==2.2.0
 
 # homeassistant.components.flipr
-flipr-api==1.4.4
+flipr-api==1.5.0
 
 # homeassistant.components.flux_led
 flux_led==0.28.35
@@ -1201,7 +1201,7 @@ nextcord==2.0.0a8
 nextdns==1.3.0
 
 # homeassistant.components.nibe_heatpump
-nibe==2.0.0
+nibe==2.1.4
 
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1
@@ -1531,7 +1531,7 @@ pyblackbird==0.5
 pybotvac==0.0.23
 
 # homeassistant.components.braviatv
-pybravia==0.3.1
+pybravia==0.3.2
 
 # homeassistant.components.nissan_leaf
 pycarwings2==2.14
@@ -1573,7 +1573,7 @@ pydaikin==2.9.0
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==108
+pydeconz==110
 
 # homeassistant.components.delijn
 pydelijn==1.0.0
@@ -1979,7 +1979,7 @@ pysmartthings==0.7.6
 pysmarty==0.8
 
 # homeassistant.components.edl21
-pysml==0.0.8
+pysml==0.0.9
 
 # homeassistant.components.snmp
 pysnmplib==5.0.21
@@ -2097,7 +2097,7 @@ python-nest==4.2.0
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
-python-otbr-api==1.0.8
+python-otbr-api==1.0.9
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0
@@ -2237,7 +2237,7 @@ regenmaschine==2022.11.0
 renault-api==0.1.12
 
 # homeassistant.components.reolink
-reolink-aio==0.5.3
+reolink-aio==0.5.5
 
 # homeassistant.components.python_script
 restrictedpython==6.0
@@ -2246,7 +2246,7 @@ restrictedpython==6.0
 rfk101py==0.0.1
 
 # homeassistant.components.rflink
-rflink==0.0.63
+rflink==0.0.65
 
 # homeassistant.components.ring
 ring_doorbell==0.7.2
@@ -2398,7 +2398,7 @@ spotipy==2.22.1
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==2.0.5.post1
+sqlalchemy==2.0.6
 
 # homeassistant.components.srp_energy
 srpenergy==1.3.6
@@ -2524,7 +2524,7 @@ total_connect_client==2023.2
 tp-connected==0.0.4
 
 # homeassistant.components.tplink_omada
-tplink-omada-client==1.1.0
+tplink-omada-client==1.1.3
 
 # homeassistant.components.transmission
 transmission-rpc==3.4.0
@@ -2706,7 +2706,7 @@ zeroconf==0.47.3
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.93
+zha-quirks==0.0.94
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9
