@@ -140,8 +140,11 @@ class ControllerDevice(ClimateEntity):
 
         # If mode RAS, or mode master with CtrlZone 13 then can set master temperature,
         # otherwise the unit determines which zone to use as target. See interface manual p. 8
+        # It appears some systems may have a different numbering system, so will trigger
+        # this if the control zone is > total zones.
         if (
-            controller.ras_mode == "master" and controller.zone_ctrl == 13
+            controller.ras_mode == "master"
+            and controller.zone_ctrl > controller.zones_total
         ) or controller.ras_mode == "RAS":
             self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
 
