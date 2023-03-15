@@ -128,8 +128,9 @@ class SamsungTVDevice(MediaPlayerEntity):
         self._app_list_event: asyncio.Event = asyncio.Event()
 
         self._attr_supported_features = SUPPORT_SAMSUNGTV
-        if self._turn_on or self._on_script or self._mac:
-            # Add turn-on if turn_on trigger or on_script YAML or mac is available
+        if self._on_script or self._mac:
+            # (deprecated) add turn-on if on_script YAML or mac is available
+            # Triggers have not yet been registered so this is adjusted in the property
             self._attr_supported_features |= MediaPlayerEntityFeature.TURN_ON
         if self._ssdp_rendering_control_location:
             self._attr_supported_features |= MediaPlayerEntityFeature.VOLUME_SET
@@ -156,6 +157,15 @@ class SamsungTVDevice(MediaPlayerEntity):
 
         self._dmr_device: DmrDevice | None = None
         self._upnp_server: AiohttpNotifyServer | None = None
+
+    @property
+    def supported_features(self) -> MediaPlayerEntityFeature:
+        """Flag media player features that are supported."""
+        # `turn_on` triggers are not yet registered during initialisation,
+        # so this property needs to be dynamic
+        if self._turn_on:
+            return self._attr_supported_features | MediaPlayerEntityFeature.TURN_ON
+        return self._attr_supported_features
 
     def _update_sources(self) -> None:
         self._attr_source_list = list(SOURCES)
