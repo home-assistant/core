@@ -4,14 +4,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pycarwings2.pycarwings2 import Leaf
-
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import LeafEntity
+from . import LeafDataStore, LeafEntity
 from .const import DATA_CLIMATE, DATA_LEAF
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,7 +36,7 @@ def setup_platform(
 class LeafClimateSwitch(LeafEntity, SwitchEntity):
     """Nissan Leaf Climate Control switch."""
 
-    def __init__(self, car: Leaf) -> None:
+    def __init__(self, car: LeafDataStore) -> None:
         """Set up climate control switch."""
         super().__init__(car)
         self._attr_unique_id = f"{self.car.leaf.vin.lower()}_climatecontrol"

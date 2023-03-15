@@ -35,8 +35,7 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_ON,
     STATE_UNAVAILABLE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
     __version__,
 )
 from homeassistant.core import (
@@ -115,8 +114,10 @@ def get_accessory(  # noqa: C901
     """Take state and return an accessory object if supported."""
     if not aid:
         _LOGGER.warning(
-            'The entity "%s" is not supported, since it '
-            "generates an invalid aid, please change it",
+            (
+                'The entity "%s" is not supported, since it '
+                "generates an invalid aid, please change it"
+            ),
             state.entity_id,
         )
         return None
@@ -184,8 +185,8 @@ def get_accessory(  # noqa: C901
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         if device_class == SensorDeviceClass.TEMPERATURE or unit in (
-            TEMP_CELSIUS,
-            TEMP_FAHRENHEIT,
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
         ):
             a_type = "TemperatureSensor"
         elif device_class == SensorDeviceClass.HUMIDITY and unit == PERCENTAGE:
@@ -200,6 +201,10 @@ def get_accessory(  # noqa: C901
             or SensorDeviceClass.PM25 in state.entity_id
         ):
             a_type = "PM25Sensor"
+        elif device_class == SensorDeviceClass.NITROGEN_DIOXIDE:
+            a_type = "NitrogenDioxideSensor"
+        elif device_class == SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS:
+            a_type = "VolatileOrganicCompoundsSensor"
         elif (
             device_class == SensorDeviceClass.GAS
             or SensorDeviceClass.GAS in state.entity_id
@@ -209,7 +214,7 @@ def get_accessory(  # noqa: C901
             a_type = "CarbonMonoxideSensor"
         elif device_class == SensorDeviceClass.CO2 or "co2" in state.entity_id:
             a_type = "CarbonDioxideSensor"
-        elif device_class == SensorDeviceClass.ILLUMINANCE or unit in ("lm", LIGHT_LUX):
+        elif device_class == SensorDeviceClass.ILLUMINANCE or unit == LIGHT_LUX:
             a_type = "LightSensor"
 
     elif state.domain == "switch":
@@ -354,12 +359,12 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             if state is not None:
                 battery_found = state.state
             else:
-                self.linked_battery_sensor = None
                 _LOGGER.warning(
                     "%s: Battery sensor state missing: %s",
                     self.entity_id,
                     self.linked_battery_sensor,
                 )
+                self.linked_battery_sensor = None
 
         if not battery_found:
             return
@@ -653,7 +658,7 @@ class HomeIIDManager(IIDManager):  # type: ignore[misc]
         """Get IID for object."""
         aid = obj.broker.aid
         if isinstance(obj, Characteristic):
-            service = obj.service
+            service: Service = obj.service
             iid = self._iid_storage.get_or_allocate_iid(
                 aid, service.type_id, service.unique_id, obj.type_id, obj.unique_id
             )
@@ -663,6 +668,7 @@ class HomeIIDManager(IIDManager):  # type: ignore[misc]
             )
         if iid in self.objs:
             raise RuntimeError(
-                f"Cannot assign IID {iid} to {obj} as it is already in use by: {self.objs[iid]}"
+                f"Cannot assign IID {iid} to {obj} as it is already in use by:"
+                f" {self.objs[iid]}"
             )
         return iid

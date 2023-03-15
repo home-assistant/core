@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import Callable, Sequence
+from contextlib import suppress
 import logging
 import os
 from pathlib import Path
@@ -26,6 +27,7 @@ from .const import (
     CONF_ALLOWLIST_EXTERNAL_URLS,
     CONF_AUTH_MFA_MODULES,
     CONF_AUTH_PROVIDERS,
+    CONF_COUNTRY,
     CONF_CURRENCY,
     CONF_CUSTOMIZE,
     CONF_CUSTOMIZE_DOMAIN,
@@ -34,6 +36,7 @@ from .const import (
     CONF_EXTERNAL_URL,
     CONF_ID,
     CONF_INTERNAL_URL,
+    CONF_LANGUAGE,
     CONF_LATITUDE,
     CONF_LEGACY_TEMPLATES,
     CONF_LONGITUDE,
@@ -49,10 +52,12 @@ from .const import (
 )
 from .core import DOMAIN as CONF_CORE, ConfigSource, HomeAssistant, callback
 from .exceptions import HomeAssistantError
+from .generated.currencies import HISTORIC_CURRENCIES
 from .helpers import (
     config_per_platform,
     config_validation as cv,
     extract_domain_configs,
+    issue_registry as ir,
 )
 from .helpers.entity_values import EntityValues
 from .helpers.typing import ConfigType
@@ -199,6 +204,50 @@ CUSTOMIZE_CONFIG_SCHEMA = vol.Schema(
     }
 )
 
+
+def _raise_issue_if_historic_currency(hass: HomeAssistant, currency: str) -> None:
+    if currency not in HISTORIC_CURRENCIES:
+        ir.async_delete_issue(hass, "homeassistant", "historic_currency")
+        return
+
+    ir.async_create_issue(
+        hass,
+        "homeassistant",
+        "historic_currency",
+        is_fixable=False,
+        learn_more_url="homeassistant://config/general",
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="historic_currency",
+        translation_placeholders={"currency": currency},
+    )
+
+
+def _raise_issue_if_no_country(hass: HomeAssistant, country: str | None) -> None:
+    if country is not None:
+        ir.async_delete_issue(hass, "homeassistant", "country_not_configured")
+        return
+
+    ir.async_create_issue(
+        hass,
+        "homeassistant",
+        "country_not_configured",
+        is_fixable=False,
+        learn_more_url="homeassistant://config/general",
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="country_not_configured",
+    )
+
+
+def _validate_currency(data: Any) -> Any:
+    try:
+        return cv.currency(data)
+    except vol.InInvalid:
+        with suppress(vol.InInvalid):
+            currency = cv.historic_currency(data)
+            return currency
+        raise
+
+
 CORE_CONFIG_SCHEMA = vol.All(
     CUSTOMIZE_CONFIG_SCHEMA.extend(
         {
@@ -228,8 +277,10 @@ CORE_CONFIG_SCHEMA = vol.All(
                         {
                             CONF_TYPE: vol.NotIn(
                                 ["insecure_example"],
-                                "The insecure_example auth provider"
-                                " is for testing only.",
+                                (
+                                    "The insecure_example auth provider"
+                                    " is for testing only."
+                                ),
                             )
                         }
                     )
@@ -250,10 +301,12 @@ CORE_CONFIG_SCHEMA = vol.All(
                 ],
                 _no_duplicate_auth_mfa_module,
             ),
-            # pylint: disable=no-value-for-parameter
+            # pylint: disable-next=no-value-for-parameter
             vol.Optional(CONF_MEDIA_DIRS): cv.schema_with_slug_keys(vol.IsDir()),
             vol.Optional(CONF_LEGACY_TEMPLATES): cv.boolean,
-            vol.Optional(CONF_CURRENCY): cv.currency,
+            vol.Optional(CONF_CURRENCY): _validate_currency,
+            vol.Optional(CONF_COUNTRY): cv.country,
+            vol.Optional(CONF_LANGUAGE): cv.language,
         }
     ),
     _filter_bad_internal_external_urls,
@@ -277,7 +330,7 @@ async def async_ensure_config_exists(hass: HomeAssistant) -> bool:
     if os.path.isfile(config_path):
         return True
 
-    print(
+    print(  # noqa: T201
         "Unable to find configuration. Creating default one in", hass.config.config_dir
     )
     return await async_create_default_config(hass)
@@ -331,7 +384,7 @@ def _write_default_config(config_dir: str) -> bool:
         return True
 
     except OSError:
-        print("Unable to create default configuration file", config_path)
+        print("Unable to create default configuration file", config_path)  # noqa: T201
         return False
 
 
@@ -533,6 +586,8 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
             CONF_EXTERNAL_URL,
             CONF_INTERNAL_URL,
             CONF_CURRENCY,
+            CONF_COUNTRY,
+            CONF_LANGUAGE,
         )
     ):
         hac.config_source = ConfigSource.YAML
@@ -547,9 +602,14 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
         (CONF_MEDIA_DIRS, "media_dirs"),
         (CONF_LEGACY_TEMPLATES, "legacy_templates"),
         (CONF_CURRENCY, "currency"),
+        (CONF_COUNTRY, "country"),
+        (CONF_LANGUAGE, "language"),
     ):
         if key in config:
             setattr(hac, attr, config[key])
+
+    _raise_issue_if_historic_currency(hass, hass.config.currency)
+    _raise_issue_if_no_country(hass, hass.config.country)
 
     if CONF_TIME_ZONE in config:
         hac.set_time_zone(config[CONF_TIME_ZONE])
@@ -705,7 +765,7 @@ async def merge_packages_config(
                 continue
             # If component name is given with a trailing description, remove it
             # when looking for component
-            domain = comp_name.split(" ")[0]
+            domain = comp_name.partition(" ")[0]
 
             try:
                 integration = await async_get_integration_with_requirements(
@@ -804,8 +864,8 @@ async def async_process_component_config(  # noqa: C901
         config_validator, "async_validate_config"
     ):
         try:
-            return await config_validator.async_validate_config(  # type: ignore[no-any-return]
-                hass, config
+            return (  # type: ignore[no-any-return]
+                await config_validator.async_validate_config(hass, config)
             )
         except (vol.Invalid, HomeAssistantError) as ex:
             async_log_exception(ex, domain, config, hass, integration.documentation)
@@ -842,7 +902,10 @@ async def async_process_component_config(  # noqa: C901
             continue
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
-                "Unknown error validating %s platform config with %s component platform schema",
+                (
+                    "Unknown error validating %s platform config with %s component"
+                    " platform schema"
+                ),
                 p_name,
                 domain,
             )
@@ -882,7 +945,10 @@ async def async_process_component_config(  # noqa: C901
                 continue
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception(
-                    "Unknown error validating config for %s platform for %s component with PLATFORM_SCHEMA",
+                    (
+                        "Unknown error validating config for %s platform for %s"
+                        " component with PLATFORM_SCHEMA"
+                    ),
                     p_name,
                     domain,
                 )
@@ -910,7 +976,7 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> str | None:
 
     This method is a coroutine.
     """
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from .helpers import check_config
 
     res = await check_config.async_check_ha_config_file(hass)
@@ -928,7 +994,7 @@ def async_notify_setup_error(
 
     This method must be run in the event loop.
     """
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from .components import persistent_notification
 
     if (errors := hass.data.get(DATA_PERSISTENT_ERRORS)) is None:

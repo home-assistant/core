@@ -9,8 +9,9 @@ from functools import cached_property
 import logging
 import random
 import time
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any
 
+from typing_extensions import Self
 from zigpy import types
 import zigpy.device
 import zigpy.exceptions
@@ -57,6 +58,7 @@ from .const import (
     ATTR_POWER_SOURCE,
     ATTR_QUIRK_APPLIED,
     ATTR_QUIRK_CLASS,
+    ATTR_ROUTES,
     ATTR_RSSI,
     ATTR_SIGNATURE,
     ATTR_VALUE,
@@ -88,8 +90,6 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 _UPDATE_ALIVE_INTERVAL = (60, 90)
 _CHECKIN_GRACE_PERIODS = 2
-
-_ZHADeviceSelfT = TypeVar("_ZHADeviceSelfT", bound="ZHADevice")
 
 
 class DeviceStatus(Enum):
@@ -345,12 +345,12 @@ class ZHADevice(LogMixin):
 
     @classmethod
     def new(
-        cls: type[_ZHADeviceSelfT],
+        cls,
         hass: HomeAssistant,
         zigpy_dev: zigpy.device.Device,
         gateway: ZHAGateway,
         restored: bool = False,
-    ) -> _ZHADeviceSelfT:
+    ) -> Self:
         """Create new device."""
         zha_dev = cls(hass, zigpy_dev, gateway)
         zha_dev.channels = channels.Channels.new(zha_dev)
@@ -396,7 +396,10 @@ class ZHADevice(LogMixin):
             or not self._channels.pools
         ):
             self.debug(
-                "last_seen is %s seconds ago and ping attempts have been exhausted, marking the device unavailable",
+                (
+                    "last_seen is %s seconds ago and ping attempts have been exhausted,"
+                    " marking the device unavailable"
+                ),
                 difference,
             )
             self.update_available(False)
@@ -421,7 +424,10 @@ class ZHADevice(LogMixin):
     def update_available(self, available: bool) -> None:
         """Update device availability and signal entities."""
         self.debug(
-            "Update device availability -  device available: %s - new availability: %s - changed: %s",
+            (
+                "Update device availability -  device available: %s - new availability:"
+                " %s - changed: %s"
+            ),
             self.available,
             available,
             self.available ^ available,
@@ -431,7 +437,8 @@ class ZHADevice(LogMixin):
         if availability_changed and available:
             # reinit channels then signal entities
             self.debug(
-                "Device availability changed and device became available, reinitializing channels"
+                "Device availability changed and device became available,"
+                " reinitializing channels"
             )
             self.hass.async_create_task(self._async_became_available())
             return
@@ -523,20 +530,32 @@ class ZHADevice(LogMixin):
             for entity_ref in self.gateway.device_registry[self.ieee]
         ]
 
-        # Return the neighbor information
+        topology = self.gateway.application_controller.topology
         device_info[ATTR_NEIGHBORS] = [
             {
-                "device_type": neighbor.neighbor.device_type.name,
-                "rx_on_when_idle": neighbor.neighbor.rx_on_when_idle.name,
-                "relationship": neighbor.neighbor.relationship.name,
-                "extended_pan_id": str(neighbor.neighbor.extended_pan_id),
-                "ieee": str(neighbor.neighbor.ieee),
-                "nwk": str(neighbor.neighbor.nwk),
-                "permit_joining": neighbor.neighbor.permit_joining.name,
-                "depth": str(neighbor.neighbor.depth),
-                "lqi": str(neighbor.neighbor.lqi),
+                "device_type": neighbor.device_type.name,
+                "rx_on_when_idle": neighbor.rx_on_when_idle.name,
+                "relationship": neighbor.relationship.name,
+                "extended_pan_id": str(neighbor.extended_pan_id),
+                "ieee": str(neighbor.ieee),
+                "nwk": str(neighbor.nwk),
+                "permit_joining": neighbor.permit_joining.name,
+                "depth": str(neighbor.depth),
+                "lqi": str(neighbor.lqi),
             }
-            for neighbor in self._zigpy_device.neighbors
+            for neighbor in topology.neighbors[self.ieee]
+        ]
+
+        device_info[ATTR_ROUTES] = [
+            {
+                "dest_nwk": str(route.DstNWK),
+                "route_status": str(route.RouteStatus.name),
+                "memory_constrained": bool(route.MemoryConstrained),
+                "many_to_one": bool(route.ManyToOne),
+                "route_record_required": bool(route.RouteRecordRequired),
+                "next_hop": str(route.NextHop),
+            }
+            for route in topology.routes[self.ieee]
         ]
 
         # Return endpoint device type Names
@@ -549,8 +568,10 @@ class ZHADevice(LogMixin):
             else:
                 names.append(
                     {
-                        ATTR_NAME: f"unknown {endpoint.device_type} device_type "
-                        f"of 0x{(endpoint.profile_id or 0xFFFF):04x} profile id"
+                        ATTR_NAME: (
+                            f"unknown {endpoint.device_type} device_type "
+                            f"of 0x{(endpoint.profile_id or 0xFFFF):04x} profile id"
+                        )
                     }
                 )
         device_info[ATTR_ENDPOINT_NAMES] = names
@@ -683,7 +704,8 @@ class ZHADevice(LogMixin):
             )
         except KeyError as exc:
             raise ValueError(
-                f"Cluster {cluster_id} not found on endpoint {endpoint_id} while issuing command {command} with args {args}"
+                f"Cluster {cluster_id} not found on endpoint {endpoint_id} while"
+                f" issuing command {command} with args {args}"
             ) from exc
         commands: dict[int, ZCLCommandDef] = (
             cluster.server_commands
@@ -692,17 +714,18 @@ class ZHADevice(LogMixin):
         )
         if args is not None:
             self.warning(
-                "args [%s] are deprecated and should be passed with the params key. The parameter names are: %s",
+                (
+                    "args [%s] are deprecated and should be passed with the params key."
+                    " The parameter names are: %s"
+                ),
                 args,
                 [field.name for field in commands[command].schema.fields],
             )
             response = await getattr(cluster, commands[command].name)(*args)
         else:
             assert params is not None
-            response = await (
-                getattr(cluster, commands[command].name)(
-                    **convert_to_zcl_values(params, commands[command].schema)
-                )
+            response = await getattr(cluster, commands[command].name)(
+                **convert_to_zcl_values(params, commands[command].schema)
             )
         self.debug(
             "Issued cluster command: %s %s %s %s %s %s %s %s",
@@ -777,7 +800,10 @@ class ZHADevice(LogMixin):
             await self._zigpy_device.endpoints[endpoint_id].remove_from_group(group_id)
         except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
             self.debug(
-                "Failed to remove endpoint: %s for device '%s' from group: 0x%04x ex: %s",
+                (
+                    "Failed to remove endpoint: %s for device '%s' from group: 0x%04x"
+                    " ex: %s"
+                ),
                 endpoint_id,
                 self._zigpy_device.ieee,
                 group_id,

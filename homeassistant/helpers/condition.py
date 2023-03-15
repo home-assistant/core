@@ -12,6 +12,8 @@ import re
 import sys
 from typing import Any, cast
 
+import voluptuous as vol
+
 from homeassistant.components import zone as zone_cmp
 from homeassistant.components.device_automation import condition as device_condition
 from homeassistant.components.sensor import SensorDeviceClass
@@ -29,6 +31,7 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_ENABLED,
     CONF_ENTITY_ID,
+    CONF_FOR,
     CONF_ID,
     CONF_MATCH,
     CONF_STATE,
@@ -57,7 +60,7 @@ import homeassistant.util.dt as dt_util
 
 from . import config_validation as cv, entity_registry as er
 from .sun import get_astral_event_date
-from .template import Template
+from .template import Template, attach as template_attach, render_complex
 from .trace import (
     TraceElement,
     trace_append_element,
@@ -80,7 +83,7 @@ INPUT_ENTITY_ID = re.compile(
     r"^input_(?:select|text|number|boolean|datetime)\.(?!.+__)(?!_)[\da-z_]+(?<!_)$"
 )
 
-ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool]
+ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool | None]
 
 
 def condition_trace_append(variables: TemplateVarsType, path: str) -> TraceElement:
@@ -139,7 +142,7 @@ def trace_condition_function(condition: ConditionCheckerType) -> ConditionChecke
     """Wrap a condition function to enable basic tracing."""
 
     @ft.wraps(condition)
-    def wrapper(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
+    def wrapper(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool | None:
         """Trace condition."""
         with trace_condition(variables):
             result = condition(hass, variables)
@@ -173,9 +176,9 @@ async def async_from_config(
         @trace_condition_function
         def disabled_condition(
             hass: HomeAssistant, variables: TemplateVarsType = None
-        ) -> bool:
-            """Condition not enabled, will always pass."""
-            return True
+        ) -> bool | None:
+            """Condition not enabled, will act as if it didn't exist."""
+            return None
 
         return disabled_condition
 
@@ -204,7 +207,7 @@ async def async_and_from_config(
         for index, check in enumerate(checks):
             try:
                 with trace_path(["conditions", str(index)]):
-                    if not check(hass, variables):
+                    if check(hass, variables) is False:
                         return False
             except ConditionError as ex:
                 errors.append(
@@ -235,7 +238,7 @@ async def async_or_from_config(
         for index, check in enumerate(checks):
             try:
                 with trace_path(["conditions", str(index)]):
-                    if check(hass, variables):
+                    if check(hass, variables) is True:
                         return True
             except ConditionError as ex:
                 errors.append(
@@ -385,7 +388,10 @@ def async_numeric_state(  # noqa: C901
             except (ValueError, TypeError) as ex:
                 raise ConditionErrorMessage(
                     "numeric_state",
-                    f"the 'below' entity {below} state '{below_entity.state}' cannot be processed as a number",
+                    (
+                        f"the 'below' entity {below} state '{below_entity.state}'"
+                        " cannot be processed as a number"
+                    ),
                 ) from ex
         elif fvalue >= below:
             condition_trace_set_result(False, state=fvalue, wanted_state_below=below)
@@ -413,7 +419,10 @@ def async_numeric_state(  # noqa: C901
             except (ValueError, TypeError) as ex:
                 raise ConditionErrorMessage(
                     "numeric_state",
-                    f"the 'above' entity {above} state '{above_entity.state}' cannot be processed as a number",
+                    (
+                        f"the 'above' entity {above} state '{above_entity.state}'"
+                        " cannot be processed as a number"
+                    ),
                 ) from ex
         elif fvalue <= above:
             condition_trace_set_result(False, state=fvalue, wanted_state_above=above)
@@ -475,6 +484,7 @@ def state(
     req_state: Any,
     for_period: timedelta | None = None,
     attribute: str | None = None,
+    variables: TemplateVarsType = None,
 ) -> bool:
     """Test if state matches requirements.
 
@@ -528,7 +538,14 @@ def state(
         condition_trace_set_result(is_state, state=value, wanted_state=state_value)
         return is_state
 
-    duration = dt_util.utcnow() - for_period
+    try:
+        for_period = cv.positive_time_period(render_complex(for_period, variables))
+    except TemplateError as ex:
+        raise ConditionErrorMessage("state", f"template error: {ex}") from ex
+    except vol.Invalid as ex:
+        raise ConditionErrorMessage("state", f"schema error: {ex}") from ex
+
+    duration = dt_util.utcnow() - cast(timedelta, for_period)
     duration_ok = duration > entity.last_changed
     condition_trace_set_result(duration_ok, state=value, duration=duration)
     return duration_ok
@@ -538,7 +555,7 @@ def state_from_config(config: ConfigType) -> ConditionCheckerType:
     """Wrap action method with state based condition."""
     entity_ids = config.get(CONF_ENTITY_ID, [])
     req_states: str | list[str] = config.get(CONF_STATE, [])
-    for_period = config.get("for")
+    for_period = config.get(CONF_FOR)
     attribute = config.get(CONF_ATTRIBUTE)
     match = config.get(CONF_MATCH, ENTITY_MATCH_ALL)
 
@@ -548,12 +565,15 @@ def state_from_config(config: ConfigType) -> ConditionCheckerType:
     @trace_condition_function
     def if_state(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Test if condition."""
+        template_attach(hass, for_period)
         errors = []
         result: bool = match != ENTITY_MATCH_ANY
         for index, entity_id in enumerate(entity_ids):
             try:
                 with trace_path(["entity_id", str(index)]), trace_condition(variables):
-                    if state(hass, entity_id, req_states, for_period, attribute):
+                    if state(
+                        hass, entity_id, req_states, for_period, attribute, variables
+                    ):
                         result = True
                     elif match == ENTITY_MATCH_ALL:
                         return False
@@ -605,8 +625,8 @@ def sun(
     # Special case: before sunrise OR after sunset
     # This will handle the very rare case in the polar region when the sun rises/sets
     # but does not set/rise.
-    # However this entire condition does not handle those full days of darkness or light,
-    # the following should be used instead:
+    # However this entire condition does not handle those full days of darkness
+    # or light, the following should be used instead:
     #
     #    condition:
     #      condition: state
@@ -889,7 +909,10 @@ def zone_from_config(config: ConfigType) -> ConditionCheckerType:
                     errors.append(
                         ConditionErrorMessage(
                             "zone",
-                            f"error matching {entity_id} with {zone_entity_id}: {ex.message}",
+                            (
+                                f"error matching {entity_id} with {zone_entity_id}:"
+                                f" {ex.message}"
+                            ),
                         )
                     )
 

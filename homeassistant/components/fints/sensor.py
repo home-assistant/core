@@ -208,7 +208,6 @@ class FinTsClient:
         holdings_accounts = []
 
         for account in self.client.get_sepa_accounts():
-
             if self.is_balance_account(account):
                 balance_accounts.append(account)
 

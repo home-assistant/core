@@ -1,5 +1,4 @@
 """The tests for hue logbook."""
-
 from homeassistant.components.hue.const import ATTR_HUE_EVENT, CONF_SUBTYPE, DOMAIN
 from homeassistant.components.hue.v1.hue_event import CONF_LAST_UPDATED
 from homeassistant.config_entries import ConfigEntry
@@ -10,6 +9,7 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_UNIQUE_ID,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 
@@ -35,7 +35,7 @@ SAMPLE_V2_EVENT = {
 }
 
 
-async def test_humanify_hue_events(hass, mock_bridge_v2):
+async def test_humanify_hue_events(hass: HomeAssistant, mock_bridge_v2) -> None:
     """Test hue events when the devices are present in the registry."""
     await setup_platform(hass, mock_bridge_v2, "sensor")
     hass.config.components.add("recorder")
@@ -74,7 +74,9 @@ async def test_humanify_hue_events(hass, mock_bridge_v2):
     assert v2_event["message"] == "first button pressed initially"
 
 
-async def test_humanify_hue_events_devices_removed(hass, mock_bridge_v2):
+async def test_humanify_hue_events_devices_removed(
+    hass: HomeAssistant, mock_bridge_v2
+) -> None:
     """Test hue events when the devices have been removed from the registry."""
     await setup_platform(hass, mock_bridge_v2, "sensor")
     hass.config.components.add("recorder")

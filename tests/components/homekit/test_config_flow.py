@@ -2,7 +2,7 @@
 from unittest.mock import patch
 
 import pytest
-import voluptuous
+import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.homekit.const import (
@@ -11,8 +11,8 @@ from homeassistant.components.homekit.const import (
     SHORT_BRIDGE_NAME,
 )
 from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_IMPORT
-from homeassistant.const import CONF_NAME, CONF_PORT
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import CONF_NAME, CONF_PORT, EntityCategory
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import RegistryEntry, RegistryEntryHider
 from homeassistant.helpers.entityfilter import CONF_INCLUDE_DOMAINS
 from homeassistant.setup import async_setup_component
@@ -43,7 +43,7 @@ def _mock_config_entry_with_options_populated():
     )
 
 
-async def test_setup_in_bridge_mode(hass, mock_get_source_ip):
+async def test_setup_in_bridge_mode(hass: HomeAssistant, mock_get_source_ip) -> None:
     """Test we can setup a new instance in bridge mode."""
 
     result = await hass.config_entries.flow.async_init(
@@ -93,7 +93,9 @@ async def test_setup_in_bridge_mode(hass, mock_get_source_ip):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_setup_in_bridge_mode_name_taken(hass, mock_get_source_ip):
+async def test_setup_in_bridge_mode_name_taken(
+    hass: HomeAssistant, mock_get_source_ip
+) -> None:
     """Test we can setup a new instance in bridge mode when the name is taken."""
 
     entry = MockConfigEntry(
@@ -151,8 +153,8 @@ async def test_setup_in_bridge_mode_name_taken(hass, mock_get_source_ip):
 
 
 async def test_setup_creates_entries_for_accessory_mode_devices(
-    hass, mock_get_source_ip
-):
+    hass: HomeAssistant, mock_get_source_ip
+) -> None:
     """Test we can setup a new instance and we create entries for accessory mode devices."""
     hass.states.async_set("camera.one", "on")
     hass.states.async_set("camera.existing", "on")
@@ -241,7 +243,7 @@ async def test_setup_creates_entries_for_accessory_mode_devices(
     assert len(mock_setup_entry.mock_calls) == 7
 
 
-async def test_import(hass, mock_get_source_ip):
+async def test_import(hass: HomeAssistant, mock_get_source_ip) -> None:
     """Test we can import instance."""
 
     ignored_entry = MockConfigEntry(domain=DOMAIN, data={}, source=SOURCE_IGNORE)
@@ -283,7 +285,9 @@ async def test_import(hass, mock_get_source_ip):
     assert len(mock_setup_entry.mock_calls) == 2
 
 
-async def test_options_flow_exclude_mode_advanced(hass, mock_get_source_ip):
+async def test_options_flow_exclude_mode_advanced(
+    hass: HomeAssistant, mock_get_source_ip
+) -> None:
     """Test config flow options in exclude mode with advanced options."""
 
     config_entry = _mock_config_entry_with_options_populated()
@@ -336,7 +340,9 @@ async def test_options_flow_exclude_mode_advanced(hass, mock_get_source_ip):
     }
 
 
-async def test_options_flow_exclude_mode_basic(hass, mock_get_source_ip):
+async def test_options_flow_exclude_mode_basic(
+    hass: HomeAssistant, mock_get_source_ip
+) -> None:
     """Test config flow options in exclude mode."""
 
     config_entry = _mock_config_entry_with_options_populated()
@@ -390,13 +396,13 @@ async def test_options_flow_exclude_mode_basic(hass, mock_get_source_ip):
 @patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True)
 async def test_options_flow_devices(
     port_mock,
-    hass,
+    hass: HomeAssistant,
     demo_cleanup,
     device_reg,
     entity_reg,
     mock_get_source_ip,
-    mock_async_zeroconf,
-):
+    mock_async_zeroconf: None,
+) -> None:
     """Test devices can be bridged."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -480,8 +486,8 @@ async def test_options_flow_devices(
 
 @patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True)
 async def test_options_flow_devices_preserved_when_advanced_off(
-    port_mock, hass, mock_get_source_ip, mock_async_zeroconf
-):
+    port_mock, hass: HomeAssistant, mock_get_source_ip, mock_async_zeroconf: None
+) -> None:
     """Test devices are preserved if they were added in advanced mode but it was turned off."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -552,8 +558,8 @@ async def test_options_flow_devices_preserved_when_advanced_off(
 
 
 async def test_options_flow_include_mode_with_non_existant_entity(
-    hass, mock_get_source_ip
-):
+    hass: HomeAssistant, mock_get_source_ip
+) -> None:
     """Test config flow options in include mode with a non-existent entity."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -612,8 +618,8 @@ async def test_options_flow_include_mode_with_non_existant_entity(
 
 
 async def test_options_flow_exclude_mode_with_non_existant_entity(
-    hass, mock_get_source_ip
-):
+    hass: HomeAssistant, mock_get_source_ip
+) -> None:
     """Test config flow options in exclude mode with a non-existent entity."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -672,7 +678,9 @@ async def test_options_flow_exclude_mode_with_non_existant_entity(
     await hass.config_entries.async_unload(config_entry.entry_id)
 
 
-async def test_options_flow_include_mode_basic(hass, mock_get_source_ip):
+async def test_options_flow_include_mode_basic(
+    hass: HomeAssistant, mock_get_source_ip
+) -> None:
     """Test config flow options in include mode."""
 
     config_entry = _mock_config_entry_with_options_populated()
@@ -718,7 +726,9 @@ async def test_options_flow_include_mode_basic(hass, mock_get_source_ip):
     await hass.config_entries.async_unload(config_entry.entry_id)
 
 
-async def test_options_flow_exclude_mode_with_cameras(hass, mock_get_source_ip):
+async def test_options_flow_exclude_mode_with_cameras(
+    hass: HomeAssistant, mock_get_source_ip
+) -> None:
     """Test config flow options in exclude mode with cameras."""
 
     config_entry = _mock_config_entry_with_options_populated()
@@ -825,7 +835,9 @@ async def test_options_flow_exclude_mode_with_cameras(hass, mock_get_source_ip):
     await hass.config_entries.async_unload(config_entry.entry_id)
 
 
-async def test_options_flow_include_mode_with_cameras(hass, mock_get_source_ip):
+async def test_options_flow_include_mode_with_cameras(
+    hass: HomeAssistant, mock_get_source_ip
+) -> None:
     """Test config flow options in include mode with cameras."""
 
     config_entry = _mock_config_entry_with_options_populated()
@@ -959,7 +971,9 @@ async def test_options_flow_include_mode_with_cameras(hass, mock_get_source_ip):
     await hass.config_entries.async_unload(config_entry.entry_id)
 
 
-async def test_options_flow_with_camera_audio(hass, mock_get_source_ip):
+async def test_options_flow_with_camera_audio(
+    hass: HomeAssistant, mock_get_source_ip
+) -> None:
     """Test config flow options with cameras that support audio."""
 
     config_entry = _mock_config_entry_with_options_populated()
@@ -1093,7 +1107,9 @@ async def test_options_flow_with_camera_audio(hass, mock_get_source_ip):
     await hass.config_entries.async_unload(config_entry.entry_id)
 
 
-async def test_options_flow_blocked_when_from_yaml(hass, mock_get_source_ip):
+async def test_options_flow_blocked_when_from_yaml(
+    hass: HomeAssistant, mock_get_source_ip
+) -> None:
     """Test config flow options."""
 
     config_entry = MockConfigEntry(
@@ -1135,8 +1151,12 @@ async def test_options_flow_blocked_when_from_yaml(hass, mock_get_source_ip):
 
 @patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True)
 async def test_options_flow_include_mode_basic_accessory(
-    port_mock, hass, mock_get_source_ip, hk_driver, mock_async_zeroconf
-):
+    port_mock,
+    hass: HomeAssistant,
+    mock_get_source_ip,
+    hk_driver,
+    mock_async_zeroconf: None,
+) -> None:
     """Test config flow options in include mode with a single accessory."""
     config_entry = _mock_config_entry_with_options_populated()
     await async_init_entry(hass, config_entry)
@@ -1234,7 +1254,9 @@ async def test_options_flow_include_mode_basic_accessory(
     await hass.config_entries.async_unload(config_entry.entry_id)
 
 
-async def test_converting_bridge_to_accessory_mode(hass, hk_driver, mock_get_source_ip):
+async def test_converting_bridge_to_accessory_mode(
+    hass: HomeAssistant, hk_driver, mock_get_source_ip
+) -> None:
     """Test we can convert a bridge to accessory mode."""
 
     result = await hass.config_entries.flow.async_init(
@@ -1352,8 +1374,13 @@ def _get_schema_default(schema, key_name):
 
 @patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True)
 async def test_options_flow_exclude_mode_skips_category_entities(
-    port_mock, hass, mock_get_source_ip, hk_driver, mock_async_zeroconf, entity_reg
-):
+    port_mock,
+    hass: HomeAssistant,
+    mock_get_source_ip,
+    hk_driver,
+    mock_async_zeroconf: None,
+    entity_reg,
+) -> None:
     """Ensure exclude mode does not offer category entities."""
     config_entry = _mock_config_entry_with_options_populated()
     await async_init_entry(hass, config_entry)
@@ -1416,7 +1443,7 @@ async def test_options_flow_exclude_mode_skips_category_entities(
 
     # sonos_config_switch.entity_id is a config category entity
     # so it should not be selectable since it will always be excluded
-    with pytest.raises(voluptuous.error.MultipleInvalid):
+    with pytest.raises(vol.error.MultipleInvalid):
         await hass.config_entries.options.async_configure(
             result2["flow_id"],
             user_input={"entities": [sonos_config_switch.entity_id]},
@@ -1452,8 +1479,13 @@ async def test_options_flow_exclude_mode_skips_category_entities(
 
 @patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True)
 async def test_options_flow_exclude_mode_skips_hidden_entities(
-    port_mock, hass, mock_get_source_ip, hk_driver, mock_async_zeroconf, entity_reg
-):
+    port_mock,
+    hass: HomeAssistant,
+    mock_get_source_ip,
+    hk_driver,
+    mock_async_zeroconf: None,
+    entity_reg,
+) -> None:
     """Ensure exclude mode does not offer hidden entities."""
     config_entry = _mock_config_entry_with_options_populated()
     await async_init_entry(hass, config_entry)
@@ -1506,7 +1538,7 @@ async def test_options_flow_exclude_mode_skips_hidden_entities(
 
     # sonos_hidden_switch.entity_id is a hidden entity
     # so it should not be selectable since it will always be excluded
-    with pytest.raises(voluptuous.error.MultipleInvalid):
+    with pytest.raises(vol.error.MultipleInvalid):
         await hass.config_entries.options.async_configure(
             result2["flow_id"],
             user_input={"entities": [sonos_hidden_switch.entity_id]},
@@ -1532,8 +1564,13 @@ async def test_options_flow_exclude_mode_skips_hidden_entities(
 
 @patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True)
 async def test_options_flow_include_mode_allows_hidden_entities(
-    port_mock, hass, mock_get_source_ip, hk_driver, mock_async_zeroconf, entity_reg
-):
+    port_mock,
+    hass: HomeAssistant,
+    mock_get_source_ip,
+    hk_driver,
+    mock_async_zeroconf: None,
+    entity_reg,
+) -> None:
     """Ensure include mode does not offer hidden entities."""
     config_entry = _mock_config_entry_with_options_populated()
     await async_init_entry(hass, config_entry)

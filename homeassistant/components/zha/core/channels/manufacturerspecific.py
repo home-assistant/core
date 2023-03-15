@@ -110,6 +110,11 @@ class OppleRemote(ZigbeeChannel):
                 "motion_sensitivity": True,
                 "trigger_indicator": True,
             }
+        elif self.cluster.endpoint.model == "lumi.motion.agl04":
+            self.ZCL_INIT_ATTRS = {
+                "detection_interval": True,
+                "motion_sensitivity": True,
+            }
         elif self.cluster.endpoint.model == "lumi.motion.ac01":
             self.ZCL_INIT_ATTRS = {
                 "presence": True,
@@ -120,11 +125,23 @@ class OppleRemote(ZigbeeChannel):
         elif self.cluster.endpoint.model in ("lumi.plug.mmeu01", "lumi.plug.maeu01"):
             self.ZCL_INIT_ATTRS = {
                 "power_outage_memory": True,
+                "consumer_connected": True,
+            }
+        elif self.cluster.endpoint.model == "aqara.feeder.acn001":
+            self.ZCL_INIT_ATTRS = {
+                "portions_dispensed": True,
+                "weight_dispensed": True,
+                "error_detected": True,
+                "disable_led_indicator": True,
+                "child_lock": True,
+                "feeding_mode": True,
+                "serving_size": True,
+                "portion_weight": True,
             }
 
     async def async_initialize_channel_specific(self, from_cache: bool) -> None:
         """Initialize channel specific."""
-        if self.cluster.endpoint.model == "lumi.motion.ac02":
+        if self.cluster.endpoint.model in ("lumi.motion.ac02", "lumi.motion.agl04"):
             interval = self.cluster.get("detection_interval", self.cluster.get(0x0102))
             if interval is not None:
                 self.debug("Loaded detection interval at startup: %s", interval)
@@ -208,7 +225,8 @@ class InovelliConfigEntityChannel(ZigbeeChannel):
         "switch_type": False,
         "button_delay": False,
         "smart_bulb_mode": False,
-        "double_tap_up_for_full_brightness": True,
+        "double_tap_up_for_max_brightness": True,
+        "double_tap_down_for_min_brightness": True,
         "led_color_when_on": True,
         "led_color_when_off": True,
         "led_intensity_when_on": True,

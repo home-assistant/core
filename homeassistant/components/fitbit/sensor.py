@@ -24,9 +24,10 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
+from homeassistant.helpers.json import save_json
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util.json import load_json, save_json
+from homeassistant.util.json import load_json
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
@@ -86,7 +87,10 @@ def request_app_setup(
         if os.path.isfile(config_path):
             config_file = load_json(config_path)
             if config_file == DEFAULT_CONFIG:
-                error_msg = f"You didn't correctly modify {FITBIT_CONFIG_FILE}, please try again."
+                error_msg = (
+                    f"You didn't correctly modify {FITBIT_CONFIG_FILE}, please try"
+                    " again."
+                )
 
                 configurator.notify_errors(hass, _CONFIGURING["fitbit"], error_msg)
             else:
@@ -365,8 +369,7 @@ class FitbitSensor(SensorEntity):
             self._attr_name = f"{self.extra.get('deviceVersion')} Battery"
             self._attr_unique_id = f"{self._attr_unique_id}_{self.extra.get('id')}"
 
-        if (unit_type := description.unit_type) == "":
-            split_resource = description.key.rsplit("/", maxsplit=1)[-1]
+        if description.unit_type:
             try:
                 measurement_system = FITBIT_MEASUREMENTS[self.client.system]
             except KeyError:
@@ -374,8 +377,9 @@ class FitbitSensor(SensorEntity):
                     measurement_system = FITBIT_MEASUREMENTS["metric"]
                 else:
                     measurement_system = FITBIT_MEASUREMENTS["en_US"]
+            split_resource = description.key.rsplit("/", maxsplit=1)[-1]
             unit_type = measurement_system[split_resource]
-        self._attr_native_unit_of_measurement = unit_type
+            self._attr_native_unit_of_measurement = unit_type
 
     @property
     def icon(self) -> str | None:
@@ -446,7 +450,7 @@ class FitbitSensor(SensorEntity):
                     self._attr_native_value = raw_state
                 else:
                     try:
-                        self._attr_native_value = f"{int(raw_state):,}"
+                        self._attr_native_value = int(raw_state)
                     except TypeError:
                         self._attr_native_value = raw_state
 

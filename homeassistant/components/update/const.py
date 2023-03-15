@@ -1,13 +1,13 @@
 """Constants for the update component."""
 from __future__ import annotations
 
-from enum import IntEnum
+from enum import IntFlag
 from typing import Final
 
 DOMAIN: Final = "update"
 
 
-class UpdateEntityFeature(IntEnum):
+class UpdateEntityFeature(IntFlag):
     """Supported features of the update entity."""
 
     INSTALL = 1

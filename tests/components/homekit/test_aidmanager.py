@@ -10,6 +10,7 @@ from homeassistant.components.homekit.aidmanager import (
     get_aid_storage_filename_for_entry_id,
     get_system_unique_id,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.storage import STORAGE_DIR
 
@@ -28,7 +29,7 @@ def entity_reg(hass):
     return mock_registry(hass)
 
 
-async def test_aid_generation(hass, device_reg, entity_reg):
+async def test_aid_generation(hass: HomeAssistant, device_reg, entity_reg) -> None:
     """Test generating aids."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -98,7 +99,7 @@ async def test_aid_generation(hass, device_reg, entity_reg):
         )
 
 
-async def test_no_aid_collision(hass, device_reg, entity_reg):
+async def test_no_aid_collision(hass: HomeAssistant, device_reg, entity_reg) -> None:
     """Test generating aids."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -126,8 +127,8 @@ async def test_no_aid_collision(hass, device_reg, entity_reg):
 
 
 async def test_aid_generation_no_unique_ids_handles_collision(
-    hass, device_reg, entity_reg
-):
+    hass: HomeAssistant, device_reg, entity_reg
+) -> None:
     """Test colliding aids is stable."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)

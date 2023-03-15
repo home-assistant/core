@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import device_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntry
@@ -44,7 +45,12 @@ async def velbus_connect_task(
     controller: Velbus, hass: HomeAssistant, entry_id: str
 ) -> None:
     """Task to offload the long running connect."""
-    await controller.connect()
+    try:
+        await controller.connect()
+    except ConnectionError as ex:
+        raise PlatformNotReady(
+            f"Connection error while connecting to Velbus {entry_id}: {ex}"
+        ) from ex
 
 
 def _migrate_device_identifiers(hass: HomeAssistant, entry_id: str) -> None:
@@ -139,7 +145,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Handle a clear cache service call."""
         # clear the cache
         with suppress(FileNotFoundError):
-            if call.data[CONF_ADDRESS]:
+            if CONF_ADDRESS in call.data and call.data[CONF_ADDRESS]:
                 await hass.async_add_executor_job(
                     os.unlink,
                     hass.config.path(
@@ -194,3 +200,21 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         shutil.rmtree,
         hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}"),
     )
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+    cache_path = hass.config.path(STORAGE_DIR, f"velbuscache-{config_entry.entry_id}/")
+    if config_entry.version == 1:
+        # This is the config entry migration for adding the new program selection
+        # clean the velbusCache
+        if os.path.isdir(cache_path):
+            await hass.async_add_executor_job(shutil.rmtree, cache_path)
+        # set the new version
+        config_entry.version = 2
+        # update the entry
+        hass.config_entries.async_update_entry(config_entry)
+
+    _LOGGER.debug("Migration to version %s successful", config_entry.version)
+    return True

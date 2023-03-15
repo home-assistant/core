@@ -8,6 +8,7 @@ from pyrituals import AuthenticationException
 from homeassistant import config_entries
 from homeassistant.components.rituals_perfume_genie.const import ACCOUNT_HASH, DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.core import HomeAssistant
 
 TEST_EMAIL = "rituals@example.com"
 VALID_PASSWORD = "passw0rd"
@@ -22,7 +23,7 @@ def _mock_account(*_):
     return account
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -52,7 +53,7 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass):
+async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -74,7 +75,7 @@ async def test_form_invalid_auth(hass):
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_auth_exception(hass):
+async def test_form_auth_exception(hass: HomeAssistant) -> None:
     """Test we handle auth exception."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -96,7 +97,7 @@ async def test_form_auth_exception(hass):
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

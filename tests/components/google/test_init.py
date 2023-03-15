@@ -7,6 +7,7 @@ import http
 import time
 from typing import Any
 from unittest.mock import Mock, patch
+import zoneinfo
 
 from aiohttp.client_exceptions import ClientError
 import pytest
@@ -56,28 +57,36 @@ def assert_state(actual: State | None, expected: State | None) -> None:
 @pytest.fixture(
     params=[
         (
+            DOMAIN,
             SERVICE_ADD_EVENT,
             {"calendar_id": CALENDAR_ID},
             None,
         ),
         (
+            DOMAIN,
+            SERVICE_CREATE_EVENT,
+            {},
+            {"entity_id": TEST_API_ENTITY},
+        ),
+        (
+            "calendar",
             SERVICE_CREATE_EVENT,
             {},
             {"entity_id": TEST_API_ENTITY},
         ),
     ],
-    ids=("add_event", "create_event"),
+    ids=("google.add_event", "google.create_event", "calendar.create_event"),
 )
 def add_event_call_service(
     hass: HomeAssistant,
     request: Any,
 ) -> Callable[dict[str, Any], Awaitable[None]]:
     """Fixture for calling the add or create event service."""
-    (service_call, data, target) = request.param
+    (domain, service_call, data, target) = request.param
 
     async def call_service(params: dict[str, Any]) -> None:
         await hass.services.async_call(
-            DOMAIN,
+            domain,
             service_call,
             {
                 **data,
@@ -152,11 +161,12 @@ async def test_calendar_yaml_missing_required_fields(
     component_setup: ComponentSetup,
     calendars_config: list[dict[str, Any]],
     mock_calendars_yaml: None,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test setup with a missing schema fields, ignores the error and continues."""
-    assert await component_setup()
+    assert not await component_setup()
 
-    assert not hass.states.get(TEST_YAML_ENTITY)
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 @pytest.mark.parametrize("calendars_config", [[{"missing-cal_id": "invalid-schema"}]])
@@ -165,23 +175,12 @@ async def test_invalid_calendar_yaml(
     component_setup: ComponentSetup,
     calendars_config: list[dict[str, Any]],
     mock_calendars_yaml: None,
-    mock_calendars_list: ApiResult,
-    test_api_calendar: dict[str, Any],
-    mock_events_list: ApiResult,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test setup with missing entity id fields fails to load the platform."""
-    mock_calendars_list({"items": [test_api_calendar]})
-    mock_events_list({})
+    assert not await component_setup()
 
-    assert await component_setup()
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    entry = entries[0]
-    assert entry.state is ConfigEntryState.LOADED
-
-    assert not hass.states.get(TEST_YAML_ENTITY)
-    assert not hass.states.get(TEST_API_ENTITY)
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_calendar_yaml_error(
@@ -197,6 +196,26 @@ async def test_calendar_yaml_error(
 
     with patch("homeassistant.components.google.open", side_effect=FileNotFoundError()):
         assert await component_setup()
+
+    assert not hass.states.get(TEST_YAML_ENTITY)
+    assert hass.states.get(TEST_API_ENTITY)
+
+
+@pytest.mark.parametrize("calendars_config", [None])
+async def test_empty_calendar_yaml(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    calendars_config: list[dict[str, Any]],
+    mock_calendars_yaml: None,
+    mock_calendars_list: ApiResult,
+    test_api_calendar: dict[str, Any],
+    mock_events_list: ApiResult,
+) -> None:
+    """Test an empty yaml file is equivalent to a missing yaml file."""
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
+
+    assert await component_setup()
 
     assert not hass.states.get(TEST_YAML_ENTITY)
     assert hass.states.get(TEST_API_ENTITY)
@@ -278,7 +297,7 @@ async def test_multiple_config_entries(
 
 
 @pytest.mark.parametrize(
-    "date_fields,expected_error,error_match",
+    ("date_fields", "expected_error", "error_match"),
     [
         (
             {},
@@ -417,7 +436,7 @@ async def test_add_event_invalid_params(
 
 
 @pytest.mark.parametrize(
-    "date_fields,start_timedelta,end_timedelta",
+    ("date_fields", "start_timedelta", "end_timedelta"),
     [
         (
             {"in": {"days": 3}},
@@ -526,7 +545,7 @@ async def test_add_event_date_time(
     mock_events_list({})
     assert await component_setup()
 
-    start_datetime = datetime.datetime.now()
+    start_datetime = datetime.datetime.now(tz=zoneinfo.ZoneInfo("America/Regina"))
     delta = datetime.timedelta(days=3, hours=3)
     end_datetime = start_datetime + delta
 
@@ -663,7 +682,7 @@ async def test_expired_token_requires_reauth(
 
 
 @pytest.mark.parametrize(
-    "calendars_config,expect_write_calls",
+    ("calendars_config", "expect_write_calls"),
     [
         (
             [
@@ -768,7 +787,7 @@ async def test_assign_unique_id(
 
     mock_calendar_get(
         "primary",
-        {"id": EMAIL_ADDRESS, "summary": "Personal", "accessRole": "reader"},
+        {"id": EMAIL_ADDRESS, "summary": "Personal", "accessRole": "owner"},
     )
 
     mock_calendars_list({"items": [test_api_calendar]})
@@ -780,7 +799,7 @@ async def test_assign_unique_id(
 
 
 @pytest.mark.parametrize(
-    "config_entry_unique_id,request_status,config_entry_status",
+    ("config_entry_unique_id", "request_status", "config_entry_status"),
     [
         (None, http.HTTPStatus.BAD_REQUEST, ConfigEntryState.SETUP_RETRY),
         (

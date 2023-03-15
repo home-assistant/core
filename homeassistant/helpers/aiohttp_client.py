@@ -20,9 +20,10 @@ from homeassistant.const import APPLICATION_NAME, EVENT_HOMEASSISTANT_CLOSE, __v
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.loader import bind_hass
 from homeassistant.util import ssl as ssl_util
+from homeassistant.util.json import json_loads
 
 from .frame import warn_use
-from .json import json_dumps, json_loads
+from .json import json_dumps
 
 if TYPE_CHECKING:
     from aiohttp.typedefs import JSONDecoder
@@ -37,6 +38,20 @@ SERVER_SOFTWARE = "{0}/{1} aiohttp/{2} Python/{3[0]}.{3[1]}".format(
 )
 
 WARN_CLOSE_MSG = "closes the Home Assistant aiohttp session"
+
+#
+# The default connection limit of 100 meant that you could only have
+# 100 concurrent connections.
+#
+# This was effectively a limit of 100 devices and than
+# the supervisor API would fail as soon as it was hit.
+#
+# We now apply the 100 limit per host, so that we can have 100 connections
+# to a single host, but can have more than 4096 connections in total to
+# prevent a single host from using all available connections.
+#
+MAXIMUM_CONNECTIONS = 4096
+MAXIMUM_CONNECTIONS_PER_HOST = 100
 
 
 class HassClientResponse(aiohttp.ClientResponse):
@@ -123,10 +138,15 @@ def _async_create_clientsession(
     # It's important that we identify as Home Assistant
     # If a package requires a different user agent, override it by passing a headers
     # dictionary to the request method.
-    # pylint: disable=protected-access
-    clientsession._default_headers = MappingProxyType({USER_AGENT: SERVER_SOFTWARE})  # type: ignore[assignment]
+    # pylint: disable-next=protected-access
+    clientsession._default_headers = MappingProxyType(  # type: ignore[assignment]
+        {USER_AGENT: SERVER_SOFTWARE},
+    )
 
-    clientsession.close = warn_use(clientsession.close, WARN_CLOSE_MSG)  # type: ignore[assignment]
+    clientsession.close = warn_use(  # type: ignore[assignment]
+        clientsession.close,
+        WARN_CLOSE_MSG,
+    )
 
     if auto_cleanup_method:
         auto_cleanup_method(hass, clientsession)
@@ -255,7 +275,12 @@ def _async_get_connector(
     else:
         ssl_context = False
 
-    connector = aiohttp.TCPConnector(enable_cleanup_closed=True, ssl=ssl_context)
+    connector = aiohttp.TCPConnector(
+        enable_cleanup_closed=True,
+        ssl=ssl_context,
+        limit=MAXIMUM_CONNECTIONS,
+        limit_per_host=MAXIMUM_CONNECTIONS_PER_HOST,
+    )
     hass.data[key] = connector
 
     async def _async_close_connector(event: Event) -> None:

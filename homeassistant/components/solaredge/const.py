@@ -14,6 +14,7 @@ from homeassistant.const import (
     ENERGY_MEGA_WATT_HOUR
 )
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfPower
 
 from .models import SolarEdgeSensorEntityDescription
 
@@ -46,7 +47,7 @@ SENSOR_TYPES = [
         name="Lifetime energy",
         icon="mdi:solar-power",
         state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement=ENERGY_MEGA_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
     ),
     SolarEdgeSensorEntityDescription(
@@ -55,7 +56,7 @@ SENSOR_TYPES = [
         name="Energy this year",
         entity_registry_enabled_default=False,
         icon="mdi:solar-power",
-        native_unit_of_measurement=ENERGY_MEGA_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
     ),
     SolarEdgeSensorEntityDescription(
@@ -64,7 +65,7 @@ SENSOR_TYPES = [
         name="Energy this month",
         entity_registry_enabled_default=False,
         icon="mdi:solar-power",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
     ),
     SolarEdgeSensorEntityDescription(
@@ -73,7 +74,7 @@ SENSOR_TYPES = [
         name="Energy today",
         entity_registry_enabled_default=False,
         icon="mdi:solar-power",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
     ),
     SolarEdgeSensorEntityDescription(
@@ -82,7 +83,7 @@ SENSOR_TYPES = [
         name="Current Power",
         icon="mdi:solar-power",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
     ),
     SolarEdgeSensorEntityDescription(
@@ -155,7 +156,7 @@ SENSOR_TYPES = [
         name="Imported Energy",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
     ),
     SolarEdgeSensorEntityDescription(
@@ -164,7 +165,7 @@ SENSOR_TYPES = [
         name="Production Energy",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
     ),
     SolarEdgeSensorEntityDescription(
@@ -173,7 +174,7 @@ SENSOR_TYPES = [
         name="Consumption Energy",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
     ),
     SolarEdgeSensorEntityDescription(
@@ -182,7 +183,7 @@ SENSOR_TYPES = [
         name="SelfConsumption Energy",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
     ),
     SolarEdgeSensorEntityDescription(
@@ -191,7 +192,7 @@ SENSOR_TYPES = [
         name="Exported Energy",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
     ),
     SolarEdgeSensorEntityDescription(

@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "data": {
-          "title": "Setup Syncthing integration",
+          "title": "Set up Syncthing integration",
           "url": "[%key:common::config_flow::data::url%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
           "token": "Token"

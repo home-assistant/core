@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Setup Transmission Client",
+        "title": "Set up Transmission Client",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "host": "[%key:common::config_flow::data::host%]",

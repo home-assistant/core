@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import OrderedDict
 from collections.abc import Callable
 import queue
-from ssl import PROTOCOL_TLS, SSLContext, SSLError
+from ssl import PROTOCOL_TLS_CLIENT, SSLContext, SSLError
 from types import MappingProxyType
 from typing import Any
 
@@ -27,6 +27,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.selector import (
     BooleanSelector,
     FileSelector,
@@ -42,6 +44,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 from .client import MqttClientSetup
 from .config_integration import CONFIG_SCHEMA_ENTRY
@@ -58,7 +61,10 @@ from .const import (
     CONF_DISCOVERY_PREFIX,
     CONF_KEEPALIVE,
     CONF_TLS_INSECURE,
+    CONF_TRANSPORT,
     CONF_WILL_MESSAGE,
+    CONF_WS_HEADERS,
+    CONF_WS_PATH,
     DEFAULT_BIRTH,
     DEFAULT_DISCOVERY,
     DEFAULT_ENCODING,
@@ -66,14 +72,18 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_PREFIX,
     DEFAULT_PROTOCOL,
+    DEFAULT_TRANSPORT,
     DEFAULT_WILL,
+    DEFAULT_WS_PATH,
     DOMAIN,
     SUPPORTED_PROTOCOLS,
+    TRANSPORT_TCP,
+    TRANSPORT_WEBSOCKETS,
 )
 from .util import (
-    MQTT_WILL_BIRTH_SCHEMA,
     async_create_certificate_temp_files,
     get_file_path,
+    valid_birth_will,
     valid_publish_topic,
 )
 
@@ -109,15 +119,29 @@ PROTOCOL_SELECTOR = SelectSelector(
         mode=SelectSelectorMode.DROPDOWN,
     )
 )
+SUPPORTED_TRANSPORTS = [
+    SelectOptionDict(value=TRANSPORT_TCP, label="TCP"),
+    SelectOptionDict(value=TRANSPORT_WEBSOCKETS, label="WebSocket"),
+]
+TRANSPORT_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=SUPPORTED_TRANSPORTS,
+        mode=SelectSelectorMode.DROPDOWN,
+    )
+)
+WS_HEADERS_SELECTOR = TextSelector(
+    TextSelectorConfig(type=TextSelectorType.TEXT, multiline=True)
+)
 CA_VERIFICATION_MODES = [
-    SelectOptionDict(value="off", label="Off"),
-    SelectOptionDict(value="auto", label="Auto"),
-    SelectOptionDict(value="custom", label="Custom"),
+    "off",
+    "auto",
+    "custom",
 ]
 BROKER_VERIFICATION_SELECTOR = SelectSelector(
     SelectSelectorConfig(
         options=CA_VERIFICATION_MODES,
         mode=SelectSelectorMode.DROPDOWN,
+        translation_key=SET_CA_CERT,
     )
 )
 
@@ -136,7 +160,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _hassio_discovery = None
+    _hassio_discovery: dict[str, Any] | None = None
 
     @staticmethod
     @callback
@@ -326,7 +350,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_BIRTH_MESSAGE,
                     _birth_will("birth"),
                     "bad_birth",
-                    MQTT_WILL_BIRTH_SCHEMA,
+                    valid_birth_will,
                 )
             if not user_input["birth_enable"]:
                 options_config[CONF_BIRTH_MESSAGE] = {}
@@ -336,7 +360,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_WILL_MESSAGE,
                     _birth_will("will"),
                     "bad_will",
-                    MQTT_WILL_BIRTH_SCHEMA,
+                    valid_birth_will,
                 )
             if not user_input["will_enable"]:
                 options_config[CONF_WILL_MESSAGE] = {}
@@ -482,8 +506,8 @@ async def async_get_broker_settings(
             return False
         certificate_id: str | None = user_input.get(CONF_CERTIFICATE)
         if certificate_id:
-            with process_uploaded_file(hass, certificate_id) as certiticate_file:
-                certificate = certiticate_file.read_text(encoding=DEFAULT_ENCODING)
+            with process_uploaded_file(hass, certificate_id) as certificate_file:
+                certificate = certificate_file.read_text(encoding=DEFAULT_ENCODING)
 
         # Return to form for file upload CA cert or client cert and key
         if (
@@ -493,14 +517,16 @@ async def async_get_broker_settings(
             or not certificate
             and user_input.get(SET_CA_CERT, "off") == "custom"
             and not certificate_id
+            or user_input.get(CONF_TRANSPORT) == TRANSPORT_WEBSOCKETS
+            and CONF_WS_PATH not in user_input
         ):
             return False
 
         if client_certificate_id:
             with process_uploaded_file(
                 hass, client_certificate_id
-            ) as client_certiticate_file:
-                client_certificate = client_certiticate_file.read_text(
+            ) as client_certificate_file:
+                client_certificate = client_certificate_file.read_text(
                     encoding=DEFAULT_ENCODING
                 )
         if client_key_id:
@@ -526,6 +552,23 @@ async def async_get_broker_settings(
             del validated_user_input[SET_CA_CERT]
         if SET_CLIENT_CERT in validated_user_input:
             del validated_user_input[SET_CLIENT_CERT]
+        if validated_user_input.get(CONF_TRANSPORT, TRANSPORT_TCP) == TRANSPORT_TCP:
+            if CONF_WS_PATH in validated_user_input:
+                del validated_user_input[CONF_WS_PATH]
+            if CONF_WS_HEADERS in validated_user_input:
+                del validated_user_input[CONF_WS_HEADERS]
+            return True
+        try:
+            validated_user_input[CONF_WS_HEADERS] = json_loads(
+                validated_user_input.get(CONF_WS_HEADERS, "{}")
+            )
+            schema = vol.Schema({cv.string: cv.template})
+            schema(validated_user_input[CONF_WS_HEADERS])
+        except JSON_DECODE_EXCEPTIONS + (  # pylint: disable=wrong-exception-operation
+            vol.MultipleInvalid,
+        ):
+            errors["base"] = "bad_ws_headers"
+            return False
         return True
 
     if user_input:
@@ -551,7 +594,8 @@ async def async_get_broker_settings(
         current_user = current_config.get(CONF_USERNAME)
         current_pass = current_config.get(CONF_PASSWORD)
 
-    # Treat the previous post as an update of the current settings (if there was a basic broker setup step)
+    # Treat the previous post as an update of the current settings
+    # (if there was a basic broker setup step)
     current_config.update(user_input_basic)
 
     # Get default settings for advanced broker options
@@ -562,6 +606,13 @@ async def async_get_broker_settings(
     current_client_key = current_config.get(CONF_CLIENT_KEY)
     current_tls_insecure = current_config.get(CONF_TLS_INSECURE, False)
     current_protocol = current_config.get(CONF_PROTOCOL, DEFAULT_PROTOCOL)
+    current_transport = current_config.get(CONF_TRANSPORT, DEFAULT_TRANSPORT)
+    current_ws_path = current_config.get(CONF_WS_PATH, DEFAULT_WS_PATH)
+    current_ws_headers = (
+        json_dumps(current_config.get(CONF_WS_HEADERS))
+        if CONF_WS_HEADERS in current_config
+        else None
+    )
     advanced_broker_options |= bool(
         current_client_id
         or current_keepalive != DEFAULT_KEEPALIVE
@@ -572,6 +623,7 @@ async def async_get_broker_settings(
         or current_protocol != DEFAULT_PROTOCOL
         or current_config.get(SET_CA_CERT, "off") != "off"
         or current_config.get(SET_CLIENT_CERT)
+        or current_transport == TRANSPORT_WEBSOCKETS
     )
 
     # Build form
@@ -665,6 +717,21 @@ async def async_get_broker_settings(
             description={"suggested_value": current_protocol},
         )
     ] = PROTOCOL_SELECTOR
+    fields[
+        vol.Optional(
+            CONF_TRANSPORT,
+            description={"suggested_value": current_transport},
+        )
+    ] = TRANSPORT_SELECTOR
+    if current_transport == TRANSPORT_WEBSOCKETS:
+        fields[
+            vol.Optional(CONF_WS_PATH, description={"suggested_value": current_ws_path})
+        ] = TEXT_SELECTOR
+        fields[
+            vol.Optional(
+                CONF_WS_HEADERS, description={"suggested_value": current_ws_headers}
+            )
+        ] = WS_HEADERS_SELECTOR
 
     # Show form
     return False
@@ -683,7 +750,11 @@ def try_connection(
     result: queue.Queue[bool] = queue.Queue(maxsize=1)
 
     def on_connect(
-        client_: mqtt.Client, userdata: None, flags: dict[str, Any], result_code: int
+        client_: mqtt.Client,
+        userdata: None,
+        flags: dict[str, Any],
+        result_code: int,
+        properties: mqtt.Properties | None = None,
     ) -> None:
         """Handle connection result."""
         result.put(result_code == mqtt.CONNACK_ACCEPTED)
@@ -704,10 +775,10 @@ def try_connection(
 
 def check_certicate_chain() -> str | None:
     """Check the MQTT certificates."""
-    if client_certiticate := get_file_path(CONF_CLIENT_CERT):
+    if client_certificate := get_file_path(CONF_CLIENT_CERT):
         try:
-            with open(client_certiticate, "rb") as client_certiticate_file:
-                load_pem_x509_certificate(client_certiticate_file.read())
+            with open(client_certificate, "rb") as client_certificate_file:
+                load_pem_x509_certificate(client_certificate_file.read())
         except ValueError:
             return "bad_client_cert"
     # Check we can serialize the private key file
@@ -718,10 +789,10 @@ def check_certicate_chain() -> str | None:
         except (TypeError, ValueError):
             return "bad_client_key"
     # Check the certificate chain
-    context = SSLContext(PROTOCOL_TLS)
-    if client_certiticate and private_key:
+    context = SSLContext(PROTOCOL_TLS_CLIENT)
+    if client_certificate and private_key:
         try:
-            context.load_cert_chain(client_certiticate, private_key)
+            context.load_cert_chain(client_certificate, private_key)
         except SSLError:
             return "bad_client_cert_key"
     # try to load the custom CA file

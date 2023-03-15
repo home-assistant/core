@@ -10,8 +10,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -34,6 +34,12 @@ BINARY_SENSORS: tuple[PlugwiseBinarySensorEntityDescription, ...] = (
         name="Compressor state",
         icon="mdi:hvac",
         icon_off="mdi:hvac-off",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PlugwiseBinarySensorEntityDescription(
+        key="cooling_enabled",
+        name="Cooling enabled",
+        icon="mdi:snowflake-thermometer",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PlugwiseBinarySensorEntityDescription(

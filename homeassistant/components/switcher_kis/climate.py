@@ -5,7 +5,7 @@ import asyncio
 from typing import Any, cast
 
 from aioswitcher.api import SwitcherBaseResponse, SwitcherType2Api
-from aioswitcher.api.remotes import SwitcherBreezeRemote, SwitcherBreezeRemoteManager
+from aioswitcher.api.remotes import SwitcherBreezeRemote
 from aioswitcher.device import (
     DeviceCategory,
     DeviceState,
@@ -26,7 +26,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry
@@ -37,6 +37,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SwitcherDataUpdateCoordinator
 from .const import SIGNAL_DEVICE_ADD
+from .utils import get_breeze_remote_manager
 
 DEVICE_MODE_TO_HA = {
     ThermostatMode.COOL: HVACMode.COOL,
@@ -64,13 +65,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Switcher climate from config entry."""
-    remote_manager = SwitcherBreezeRemoteManager()
 
     async def async_add_climate(coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Get remote and add climate from Switcher device."""
         if coordinator.data.device_type.category == DeviceCategory.THERMOSTAT:
             remote: SwitcherBreezeRemote = await hass.async_add_executor_job(
-                remote_manager.get_remote, coordinator.data.remote_id
+                get_breeze_remote_manager(hass).get_remote, coordinator.data.remote_id
             )
             async_add_entities([SwitcherClimateEntity(coordinator, remote)])
 
@@ -102,9 +102,8 @@ class SwitcherClimateEntity(
         self._attr_min_temp = remote.min_temperature
         self._attr_max_temp = remote.max_temperature
         self._attr_target_temperature_step = 1
-        self._attr_temperature_unit = TEMP_CELSIUS
+        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-        self._attr_supported_features = 0
         self._attr_hvac_modes = [HVACMode.OFF]
         for mode in remote.modes_features:
             self._attr_hvac_modes.append(DEVICE_MODE_TO_HA[mode])

@@ -11,8 +11,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import ATTR_VERSION, DATA_UPDATED, DOMAIN as IPERF3_DOMAIN, SENSOR_TYPES
 
-ICON = "mdi:speedometer"
-
 ATTR_PROTOCOL = "Protocol"
 ATTR_REMOTE_HOST = "Remote Server"
 ATTR_REMOTE_PORT = "Remote Port"
@@ -41,10 +39,9 @@ class Iperf3Sensor(RestoreEntity, SensorEntity):
     """A Iperf3 sensor implementation."""
 
     _attr_attribution = "Data retrieved using Iperf3"
-    _attr_icon = ICON
     _attr_should_poll = False
 
-    def __init__(self, iperf3_data, description: SensorEntityDescription):
+    def __init__(self, iperf3_data, description: SensorEntityDescription) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self._iperf3_data = iperf3_data

@@ -8,12 +8,12 @@ from datetime import timedelta
 from functools import cached_property
 from typing import Any, Generic, TypeVar
 
-from nibe.coil import Coil
+from nibe.coil import Coil, CoilData
 from nibe.connection import Connection
-from nibe.connection.nibegw import NibeGW
-from nibe.exceptions import CoilNotFoundException, CoilReadException
-from nibe.heatpump import HeatPump, Model
-from tenacity import RetryError, retry, retry_if_exception_type, stop_after_attempt
+from nibe.connection.modbus import Modbus
+from nibe.connection.nibegw import NibeGW, ProductInfo
+from nibe.exceptions import CoilNotFoundException, ReadException
+from nibe.heatpump import HeatPump, Model, Series
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -34,8 +34,11 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import (
     CONF_CONNECTION_TYPE,
+    CONF_CONNECTION_TYPE_MODBUS,
     CONF_CONNECTION_TYPE_NIBEGW,
     CONF_LISTENING_PORT,
+    CONF_MODBUS_UNIT,
+    CONF_MODBUS_URL,
     CONF_REMOTE_READ_PORT,
     CONF_REMOTE_WRITE_PORT,
     CONF_WORD_SWAP,
@@ -45,6 +48,8 @@ from .const import (
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CLIMATE,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
@@ -57,12 +62,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Nibe Heat Pump from a config entry."""
 
     heatpump = HeatPump(Model[entry.data[CONF_MODEL]])
-    heatpump.word_swap = entry.data[CONF_WORD_SWAP]
-    await hass.async_add_executor_job(heatpump.initialize)
+    await heatpump.initialize()
 
+    connection: Connection
     connection_type = entry.data[CONF_CONNECTION_TYPE]
 
     if connection_type == CONF_CONNECTION_TYPE_NIBEGW:
+        heatpump.word_swap = entry.data[CONF_WORD_SWAP]
         connection = NibeGW(
             heatpump,
             entry.data[CONF_IP_ADDRESS],
@@ -70,13 +76,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_REMOTE_WRITE_PORT],
             listening_port=entry.data[CONF_LISTENING_PORT],
         )
+    elif connection_type == CONF_CONNECTION_TYPE_MODBUS:
+        connection = Modbus(
+            heatpump, entry.data[CONF_MODBUS_URL], entry.data[CONF_MODBUS_UNIT]
+        )
     else:
         raise HomeAssistantError(f"Connection type {connection_type} is not supported.")
 
     await connection.start()
 
+    assert heatpump.model
+
+    async def _async_stop(_):
+        await connection.stop()
+
     entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, connection.stop)
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop)
     )
 
     coordinator = Coordinator(hass, heatpump, connection)
@@ -85,13 +100,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     data[entry.entry_id] = coordinator
 
     reg = dr.async_get(hass)
-    reg.async_get_or_create(
+    device_entry = reg.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.unique_id or entry.entry_id)},
         manufacturer="NIBE Energy Systems",
-        model=heatpump.model.name,
         name=heatpump.model.name,
     )
+
+    def _on_product_info(product_info: ProductInfo):
+        reg.async_update_device(
+            device_id=device_entry.id,
+            model=product_info.model,
+            sw_version=str(product_info.firmware_version),
+        )
+
+    if hasattr(connection, "PRODUCT_INFO_EVENT") and hasattr(connection, "subscribe"):
+        connection.subscribe(connection.PRODUCT_INFO_EVENT, _on_product_info)
+    else:
+        reg.async_update_device(device_id=device_entry.id, model=heatpump.model.name)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -143,6 +169,8 @@ class ContextCoordinator(
         self, update_callback: CALLBACK_TYPE, context: Any = None
     ) -> Callable[[], None]:
         """Wrap standard function to prune cached callback database."""
+        assert isinstance(context, set)
+        context -= {None}
         release = super().async_add_listener(update_callback, context)
         self.__dict__.pop("context_callbacks", None)
 
@@ -154,7 +182,7 @@ class ContextCoordinator(
         return release_update
 
 
-class Coordinator(ContextCoordinator[dict[int, Coil], int]):
+class Coordinator(ContextCoordinator[dict[int, CoilData], int]):
     """Update coordinator for nibe heat pumps."""
 
     config_entry: ConfigEntry
@@ -171,18 +199,24 @@ class Coordinator(ContextCoordinator[dict[int, Coil], int]):
         )
 
         self.data = {}
-        self.seed: dict[int, Coil] = {}
+        self.seed: dict[int, CoilData] = {}
         self.connection = connection
         self.heatpump = heatpump
         self.task: asyncio.Task | None = None
 
         heatpump.subscribe(heatpump.COIL_UPDATE_EVENT, self._on_coil_update)
 
-    def _on_coil_update(self, coil: Coil):
+    def _on_coil_update(self, data: CoilData):
         """Handle callback on coil updates."""
-        self.data[coil.address] = coil
-        self.seed[coil.address] = coil
+        coil = data.coil
+        self.data[coil.address] = data
+        self.seed[coil.address] = data
         self.async_update_context_listeners([coil.address])
+
+    @property
+    def series(self) -> Series:
+        """Return which series of pump we are connected to."""
+        return self.heatpump.series
 
     @property
     def coils(self) -> list[Coil]:
@@ -201,8 +235,8 @@ class Coordinator(ContextCoordinator[dict[int, Coil], int]):
 
     def get_coil_value(self, coil: Coil) -> int | str | float | None:
         """Return a coil with data and check for validity."""
-        if coil := self.data.get(coil.address):
-            return coil.value
+        if coil_with_data := self.data.get(coil.address):
+            return coil_with_data.value
         return None
 
     def get_coil_float(self, coil: Coil) -> float | None:
@@ -213,48 +247,51 @@ class Coordinator(ContextCoordinator[dict[int, Coil], int]):
 
     async def async_write_coil(self, coil: Coil, value: int | float | str) -> None:
         """Write coil and update state."""
-        coil.value = value
-        coil = await self.connection.write_coil(coil)
+        data = CoilData(coil, value)
+        await self.connection.write_coil(data)
 
-        self.data[coil.address] = coil
+        self.data[coil.address] = data
 
         self.async_update_context_listeners([coil.address])
 
-    async def _async_update_data(self) -> dict[int, Coil]:
+    async def async_read_coil(self, coil: Coil) -> CoilData:
+        """Read coil and update state using callbacks."""
+        return await self.connection.read_coil(coil)
+
+    async def _async_update_data(self) -> dict[int, CoilData]:
         self.task = asyncio.current_task()
         try:
             return await self._async_update_data_internal()
         finally:
             self.task = None
 
-    async def _async_update_data_internal(self) -> dict[int, Coil]:
-        @retry(
-            retry=retry_if_exception_type(CoilReadException),
-            stop=stop_after_attempt(COIL_READ_RETRIES),
-        )
-        async def read_coil(coil: Coil):
-            return await self.connection.read_coil(coil)
+    async def _async_update_data_internal(self) -> dict[int, CoilData]:
+        result: dict[int, CoilData] = {}
 
-        result: dict[int, Coil] = {}
+        def _get_coils() -> Iterable[Coil]:
+            for address in sorted(self.context_callbacks.keys()):
+                if seed := self.seed.pop(address, None):
+                    self.logger.debug("Skipping seeded coil: %d", address)
+                    result[address] = seed
+                    continue
 
-        for address in self.context_callbacks.keys():
-            if seed := self.seed.pop(address, None):
-                self.logger.debug("Skipping seeded coil: %d", address)
-                result[address] = seed
-                continue
+                try:
+                    coil = self.heatpump.get_coil_by_address(address)
+                except CoilNotFoundException as exception:
+                    self.logger.debug("Skipping missing coil: %s", exception)
+                    continue
+                yield coil
 
-            try:
-                coil = self.heatpump.get_coil_by_address(address)
-            except CoilNotFoundException as exception:
-                self.logger.debug("Skipping missing coil: %s", exception)
-                continue
-
-            try:
-                result[coil.address] = await read_coil(coil)
-            except (CoilReadException, RetryError) as exception:
+        try:
+            async for data in self.connection.read_coils(_get_coils()):
+                result[data.coil.address] = data
+                self.seed.pop(data.coil.address, None)
+        except ReadException as exception:
+            if not result:
                 raise UpdateFailed(f"Failed to update: {exception}") from exception
-
-            self.seed.pop(coil.address, None)
+            self.logger.debug(
+                "Some coils failed to update, and may be unsupported: %s", exception
+            )
 
         return result
 
@@ -293,7 +330,7 @@ class CoilEntity(CoordinatorEntity[Coordinator]):
             self.coordinator.data or {}
         )
 
-    def _async_read_coil(self, coil: Coil):
+    def _async_read_coil(self, data: CoilData):
         """Update state of entity based on coil data."""
 
     async def _async_write_coil(self, value: int | float | str):
@@ -301,10 +338,9 @@ class CoilEntity(CoordinatorEntity[Coordinator]):
         await self.coordinator.async_write_coil(self._coil, value)
 
     def _handle_coordinator_update(self) -> None:
-        coil = self.coordinator.data.get(self._coil.address)
-        if coil is None:
+        data = self.coordinator.data.get(self._coil.address)
+        if data is None:
             return
 
-        self._coil = coil
-        self._async_read_coil(coil)
+        self._async_read_coil(data)
         self.async_write_ha_state()

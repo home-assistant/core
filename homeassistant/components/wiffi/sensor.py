@@ -5,7 +5,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEGREE, PRESSURE_MBAR, TEMP_CELSIUS
+from homeassistant.const import DEGREE, LIGHT_LUX, UnitOfPressure, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -31,8 +31,9 @@ UOM_TO_DEVICE_CLASS_MAP = {
 # map to convert wiffi unit of measurements to common HA uom's
 UOM_MAP = {
     WIFFI_UOM_DEGREE: DEGREE,
-    WIFFI_UOM_TEMP_CELSIUS: TEMP_CELSIUS,
-    WIFFI_UOM_MILLI_BAR: PRESSURE_MBAR,
+    WIFFI_UOM_TEMP_CELSIUS: UnitOfTemperature.CELSIUS,
+    WIFFI_UOM_MILLI_BAR: UnitOfPressure.MBAR,
+    WIFFI_UOM_LUX: LIGHT_LUX,
 }
 
 

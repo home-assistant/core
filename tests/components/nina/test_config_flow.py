@@ -54,7 +54,6 @@ async def test_show_set_form(hass: HomeAssistant) -> None:
         "pynina.baseApi.BaseAPI._makeRequest",
         wraps=mocked_request_function,
     ):
-
         result: dict[str, Any] = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -69,7 +68,6 @@ async def test_step_user_connection_error(hass: HomeAssistant) -> None:
         "pynina.baseApi.BaseAPI._makeRequest",
         side_effect=ApiError("Could not connect to Api"),
     ):
-
         result: dict[str, Any] = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=deepcopy(DUMMY_DATA)
         )
@@ -84,7 +82,6 @@ async def test_step_user_unexpected_exception(hass: HomeAssistant) -> None:
         "pynina.baseApi.BaseAPI._makeRequest",
         side_effect=Exception("DUMMY"),
     ):
-
         result: dict[str, Any] = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=deepcopy(DUMMY_DATA)
         )
@@ -101,7 +98,6 @@ async def test_step_user(hass: HomeAssistant) -> None:
         "homeassistant.components.nina.async_setup_entry",
         return_value=True,
     ):
-
         result: dict[str, Any] = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=deepcopy(DUMMY_DATA)
         )
@@ -116,7 +112,6 @@ async def test_step_user_no_selection(hass: HomeAssistant) -> None:
         "pynina.baseApi.BaseAPI._makeRequest",
         wraps=mocked_request_function,
     ):
-
         result: dict[str, Any] = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data={}
         )
@@ -303,7 +298,9 @@ async def test_options_flow_entity_removal(hass: HomeAssistant) -> None:
     with patch(
         "pynina.baseApi.BaseAPI._makeRequest",
         wraps=mocked_request_function,
-    ):
+    ), patch(
+        "homeassistant.components.nina._async_update_listener"
+    ) as mock_update_listener:
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -330,3 +327,4 @@ async def test_options_flow_entity_removal(hass: HomeAssistant) -> None:
         )
 
         assert len(entries) == 2
+        assert len(mock_update_listener.mock_calls) == 1

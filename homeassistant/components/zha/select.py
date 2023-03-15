@@ -4,18 +4,18 @@ from __future__ import annotations
 from enum import Enum
 import functools
 import logging
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any
 
+from typing_extensions import Self
 from zigpy import types
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.clusters.security import IasWd
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNKNOWN, EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
@@ -35,10 +35,6 @@ if TYPE_CHECKING:
     from .core.channels.base import ZigbeeChannel
     from .core.device import ZHADevice
 
-
-_ZCLEnumSelectEntitySelfT = TypeVar(
-    "_ZCLEnumSelectEntitySelfT", bound="ZCLEnumSelectEntity"
-)
 
 CONFIG_DIAGNOSTIC_MATCH = functools.partial(
     ZHA_ENTITIES.config_diagnostic_match, Platform.SELECT
@@ -164,12 +160,12 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
 
     @classmethod
     def create_entity(
-        cls: type[_ZCLEnumSelectEntitySelfT],
+        cls,
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
         **kwargs: Any,
-    ) -> _ZCLEnumSelectEntitySelfT | None:
+    ) -> Self | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
@@ -269,6 +265,26 @@ class TuyaPowerOnStateSelectEntity(ZCLEnumSelectEntity, id_suffix="power_on_stat
     _attr_name = "Power on state"
 
 
+class TuyaBacklightMode(types.enum8):
+    """Tuya switch backlight mode enum."""
+
+    Off = 0x00
+    LightWhenOn = 0x01
+    LightWhenOff = 0x02
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_ON_OFF,
+    models={"TS011F", "TS0121", "TS0001", "TS0002", "TS0003", "TS0004"},
+)
+class TuyaBacklightModeSelectEntity(ZCLEnumSelectEntity, id_suffix="backlight_mode"):
+    """Representation of a ZHA backlight mode select entity."""
+
+    _select_attr = "backlight_mode"
+    _enum = TuyaBacklightMode
+    _attr_name = "Backlight mode"
+
+
 class MoesBacklightMode(types.enum8):
     """MOES switch backlight mode enum."""
 
@@ -316,7 +332,8 @@ class AqaraMotionSensitivities(types.enum8):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    channel_names="opple_cluster", models={"lumi.motion.ac01", "lumi.motion.ac02"}
+    channel_names="opple_cluster",
+    models={"lumi.motion.ac01", "lumi.motion.ac02", "lumi.motion.agl04"},
 )
 class AqaraMotionSensitivity(ZCLEnumSelectEntity, id_suffix="motion_sensitivity"):
     """Representation of a ZHA motion sensitivity configuration entity."""
@@ -456,3 +473,20 @@ class InovelliSwitchTypeEntity(ZCLEnumSelectEntity, id_suffix="switch_type"):
     _select_attr = "switch_type"
     _enum = InovelliSwitchType
     _attr_name: str = "Switch type"
+
+
+class AqaraFeedingMode(types.enum8):
+    """Feeding mode."""
+
+    Manual = 0x00
+    Schedule = 0x01
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederMode(ZCLEnumSelectEntity, id_suffix="feeding_mode"):
+    """Representation of an Aqara pet feeder mode configuration entity."""
+
+    _select_attr = "feeding_mode"
+    _enum = AqaraFeedingMode
+    _attr_name = "Mode"
+    _attr_icon: str = "mdi:wrench-clock"

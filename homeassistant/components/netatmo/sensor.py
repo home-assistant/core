@@ -19,13 +19,14 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
-    LENGTH_MILLIMETERS,
     PERCENTAGE,
-    POWER_WATT,
-    PRESSURE_MBAR,
-    SOUND_PRESSURE_DB,
-    SPEED_KILOMETERS_PER_HOUR,
-    TEMP_CELSIUS,
+    EntityCategory,
+    UnitOfPower,
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSoundPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -34,11 +35,11 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_URL_ENERGY,
+    CONF_URL_PUBLIC_WEATHER,
     CONF_URL_WEATHER,
     CONF_WEATHER_AREAS,
     DATA_HANDLER,
@@ -87,7 +88,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         name="Temperature",
         netatmo_name="temperature",
         entity_registry_enabled_default=True,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
@@ -112,9 +113,9 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         name="Pressure",
         netatmo_name="pressure",
         entity_registry_enabled_default=True,
-        native_unit_of_measurement=PRESSURE_MBAR,
+        native_unit_of_measurement=UnitOfPressure.MBAR,
         state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.PRESSURE,
+        device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
     ),
     NetatmoSensorEntityDescription(
         key="pressure_trend",
@@ -128,8 +129,8 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         name="Noise",
         netatmo_name="noise",
         entity_registry_enabled_default=True,
-        native_unit_of_measurement=SOUND_PRESSURE_DB,
-        icon="mdi:volume-high",
+        native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
+        device_class=SensorDeviceClass.SOUND_PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     NetatmoSensorEntityDescription(
@@ -146,27 +147,27 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         name="Rain",
         netatmo_name="rain",
         entity_registry_enabled_default=True,
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:weather-rainy",
     ),
     NetatmoSensorEntityDescription(
         key="sum_rain_1",
         name="Rain last hour",
         netatmo_name="sum_rain_1",
         entity_registry_enabled_default=False,
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.TOTAL,
-        icon="mdi:weather-rainy",
     ),
     NetatmoSensorEntityDescription(
         key="sum_rain_24",
         name="Rain today",
         netatmo_name="sum_rain_24",
         entity_registry_enabled_default=True,
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        icon="mdi:weather-rainy",
     ),
     NetatmoSensorEntityDescription(
         key="battery_percent",
@@ -199,9 +200,8 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         name="Wind Strength",
         netatmo_name="wind_strength",
         entity_registry_enabled_default=True,
-        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
-        device_class=SensorDeviceClass.SPEED,
-        icon="mdi:weather-windy",
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     NetatmoSensorEntityDescription(
@@ -225,9 +225,8 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         name="Gust Strength",
         netatmo_name="gust_strength",
         entity_registry_enabled_default=False,
-        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
-        device_class=SensorDeviceClass.SPEED,
-        icon="mdi:weather-windy",
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     NetatmoSensorEntityDescription(
@@ -266,7 +265,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         name="Power",
         netatmo_name="power",
         entity_registry_enabled_default=True,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.POWER,
     ),
@@ -702,6 +701,7 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
         self._device_name = f"{self._area_name}"
         self._attr_name = f"{description.name}"
         self._show_on_map = area.show_on_map
+        self._config_url = CONF_URL_PUBLIC_WEATHER
         self._attr_unique_id = (
             f"{self._device_name.replace(' ', '-')}-{description.key}"
         )

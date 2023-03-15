@@ -1,7 +1,7 @@
 """The BSB-Lan integration."""
 import dataclasses
 
-from bsblan import BSBLAN, Device, Info, State
+from bsblan import BSBLAN, Device, Info, State, StaticState
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -28,6 +28,7 @@ class HomeAssistantBSBLANData:
     client: BSBLAN
     device: Device
     info: Info
+    static: StaticState
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -54,11 +55,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     device = await bsblan.device()
     info = await bsblan.info()
+    static = await bsblan.static_values()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = HomeAssistantBSBLANData(
         client=bsblan,
         coordinator=coordinator,
         device=device,
         info=info,
+        static=static,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

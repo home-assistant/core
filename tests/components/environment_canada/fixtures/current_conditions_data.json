@@ -1,0 +1,235 @@
+{
+  "alerts": {
+    "warnings": {
+      "value": [],
+      "label": "Warnings"
+    },
+    "watches": {
+      "value": [],
+      "label": "Watches"
+    },
+    "advisories": {
+      "value": [
+        {
+          "title": "Frost Advisory",
+          "date": "Monday October 03, 2022 at 15:05 EDT"
+        }
+      ],
+      "label": "Advisories"
+    },
+    "statements": {
+      "value": [],
+      "label": "Statements"
+    },
+    "endings": {
+      "value": [],
+      "label": "Endings"
+    }
+  },
+  "conditions": {
+    "temperature": {
+      "label": "Temperature",
+      "value": 14.9,
+      "unit": "C"
+    },
+    "dewpoint": {
+      "label": "Dew Point",
+      "value": 1.4,
+      "unit": "C"
+    },
+    "wind_chill": {
+      "label": "Wind Chill",
+      "value": null
+    },
+    "humidex": {
+      "label": "Humidex",
+      "value": null
+    },
+    "pressure": {
+      "label": "Pressure",
+      "value": 102.7,
+      "unit": "kPa"
+    },
+    "tendency": {
+      "label": "Tendency",
+      "value": "falling"
+    },
+    "humidity": {
+      "label": "Humidity",
+      "value": 40,
+      "unit": "%"
+    },
+    "visibility": {
+      "label": "Visibility",
+      "value": 24.1,
+      "unit": "km"
+    },
+    "condition": {
+      "label": "Condition",
+      "value": "Mainly Sunny"
+    },
+    "wind_speed": {
+      "label": "Wind Speed",
+      "value": 1,
+      "unit": "km/h"
+    },
+    "wind_gust": {
+      "label": "Wind Gust",
+      "value": null
+    },
+    "wind_dir": {
+      "label": "Wind Direction",
+      "value": "N"
+    },
+    "wind_bearing": {
+      "label": "Wind Bearing",
+      "value": 0,
+      "unit": "degrees"
+    },
+    "high_temp": {
+      "label": "High Temperature",
+      "value": 18,
+      "unit": "C"
+    },
+    "low_temp": {
+      "label": "Low Temperature",
+      "value": -1,
+      "unit": "C"
+    },
+    "uv_index": {
+      "label": "UV Index",
+      "value": 5
+    },
+    "pop": {
+      "label": "Chance of Precip.",
+      "value": null
+    },
+    "icon_code": {
+      "label": "Icon Code",
+      "value": "01"
+    },
+    "precip_yesterday": {
+      "label": "Precipitation Yesterday",
+      "value": 0.0,
+      "unit": "mm"
+    },
+    "normal_high": {
+      "label": "Normal High Temperature",
+      "value": 15,
+      "unit": "C"
+    },
+    "normal_low": {
+      "label": "Normal Low Temperature",
+      "value": 6,
+      "unit": "C"
+    },
+    "text_summary": {
+      "label": "Forecast",
+      "value": "Tonight. Clear. Fog patches developing after midnight. Low minus 1 with frost."
+    }
+  },
+  "daily_forecasts": [
+    {
+      "period": "Monday night",
+      "text_summary": "Clear. Fog patches developing after midnight. Low minus 1 with frost.",
+      "icon_code": "30",
+      "temperature": -1,
+      "temperature_class": "low",
+      "precip_probability": 0
+    },
+    {
+      "period": "Tuesday",
+      "text_summary": "Sunny. Fog patches dissipating in the morning. High 18. UV index 5 or moderate.",
+      "icon_code": "00",
+      "temperature": 18,
+      "temperature_class": "high",
+      "precip_probability": 0
+    },
+    {
+      "period": "Tuesday night",
+      "text_summary": "Clear. Fog patches developing overnight. Low plus 3.",
+      "icon_code": "30",
+      "temperature": 3,
+      "temperature_class": "low",
+      "precip_probability": 0
+    },
+    {
+      "period": "Wednesday",
+      "text_summary": "Sunny. High 20.",
+      "icon_code": "00",
+      "temperature": 20,
+      "temperature_class": "high",
+      "precip_probability": 0
+    },
+    {
+      "period": "Wednesday night",
+      "text_summary": "Clear. Low 9.",
+      "icon_code": "30",
+      "temperature": 9,
+      "temperature_class": "low",
+      "precip_probability": 0
+    },
+    {
+      "period": "Thursday",
+      "text_summary": "A mix of sun and cloud. High 20.",
+      "icon_code": "02",
+      "temperature": 20,
+      "temperature_class": "high",
+      "precip_probability": 0
+    },
+    {
+      "period": "Thursday night",
+      "text_summary": "Showers. Low 7.",
+      "icon_code": "12",
+      "temperature": 7,
+      "temperature_class": "low",
+      "precip_probability": 0
+    },
+    {
+      "period": "Friday",
+      "text_summary": "Cloudy with 40 percent chance of showers. High 13.",
+      "icon_code": "12",
+      "temperature": 13,
+      "temperature_class": "high",
+      "precip_probability": 40
+    },
+    {
+      "period": "Friday night",
+      "text_summary": "Cloudy periods. Low plus 1.",
+      "icon_code": "32",
+      "temperature": 1,
+      "temperature_class": "low",
+      "precip_probability": 0
+    },
+    {
+      "period": "Saturday",
+      "text_summary": "A mix of sun and cloud. High 10.",
+      "icon_code": "02",
+      "temperature": 10,
+      "temperature_class": "high",
+      "precip_probability": 0
+    },
+    {
+      "period": "Saturday night",
+      "text_summary": "Cloudy periods. Low plus 3.",
+      "icon_code": "32",
+      "temperature": 3,
+      "temperature_class": "low",
+      "precip_probability": 0
+    },
+    {
+      "period": "Sunday",
+      "text_summary": "A mix of sun and cloud. High 12.",
+      "icon_code": "02",
+      "temperature": 12,
+      "temperature_class": "high",
+      "precip_probability": 0
+    }
+  ],
+  "metadata": {
+    "attribution": "Data provided by Environment Canada",
+    "timestamp": "2022/10/3",
+    "location": "Ottawa (Kanata - Orl\u00e9ans)",
+    "station": "Ottawa Macdonald-Cartier Intl Airport"
+  }
+}

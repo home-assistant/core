@@ -1,11 +1,13 @@
 """Support for restoring entity states on startup."""
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 import asyncio
 from datetime import datetime, timedelta
 import logging
-from typing import Any, TypeVar, cast
+from typing import Any, cast
+
+from typing_extensions import Self
 
 from homeassistant.const import ATTR_RESTORED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, State, callback, valid_entity_id
@@ -32,10 +34,8 @@ STATE_DUMP_INTERVAL = timedelta(minutes=15)
 # How long should a saved state be preserved if the entity no longer exists
 STATE_EXPIRATION = timedelta(days=7)
 
-_StoredStateSelfT = TypeVar("_StoredStateSelfT", bound="StoredState")
 
-
-class ExtraStoredData:
+class ExtraStoredData(ABC):
     """Object to hold extra stored data."""
 
     @abstractmethod
@@ -82,7 +82,7 @@ class StoredState:
         return result
 
     @classmethod
-    def from_dict(cls: type[_StoredStateSelfT], json_dict: dict) -> _StoredStateSelfT:
+    def from_dict(cls, json_dict: dict) -> Self:
         """Initialize a stored state from a dict."""
         extra_data_dict = json_dict.get("extra_data")
         extra_data = RestoredExtraData(extra_data_dict) if extra_data_dict else None
@@ -303,7 +303,9 @@ class RestoreEntity(Entity):
         """Get data stored for an entity, if any."""
         if self.hass is None or self.entity_id is None:
             # Return None if this entity isn't added to hass yet
-            _LOGGER.warning("Cannot get last state. Entity not added to hass")  # type: ignore[unreachable]
+            _LOGGER.warning(  # type: ignore[unreachable]
+                "Cannot get last state. Entity not added to hass"
+            )
             return None
         data = await RestoreStateData.async_get_instance(self.hass)
         if self.entity_id not in data.last_states:

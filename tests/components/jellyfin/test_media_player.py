@@ -2,8 +2,6 @@
 from datetime import timedelta
 from unittest.mock import MagicMock
 
-from aiohttp import ClientSession
-
 from homeassistant.components.jellyfin.const import DOMAIN
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ALBUM_ARTIST,
@@ -36,6 +34,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.typing import WebSocketGenerator
 
 
 async def test_media_player(
@@ -249,7 +248,7 @@ async def test_services(
 
 async def test_browse_media(
     hass: HomeAssistant,
-    hass_ws_client: ClientSession,
+    hass_ws_client: WebSocketGenerator,
     init_integration: MockConfigEntry,
     mock_jellyfin: MagicMock,
     mock_api: MagicMock,
