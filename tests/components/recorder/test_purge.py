@@ -2061,7 +2061,7 @@ async def test_purge_entities_keep_days(
         recorder.DOMAIN,
         SERVICE_PURGE_ENTITIES,
         {
-            "entity_id": ["sensor.one"],
+            "entity_id": "sensor.purge",
             "keep_days": 1,
         },
     )
@@ -2072,13 +2072,13 @@ async def test_purge_entities_keep_days(
         get_significant_states, hass, one_month_ago
     )
     assert len(states["sensor.keep"]) == 2
-    assert len(states["sensor.purge"]) == 2
+    assert len(states["sensor.purge"]) == 1
 
     await hass.services.async_call(
         recorder.DOMAIN,
         SERVICE_PURGE_ENTITIES,
         {
-            "entity_id": ["sensor.one"],
+            "entity_id": "sensor.purge",
             "keep_days": 0,
         },
     )
@@ -2089,4 +2089,4 @@ async def test_purge_entities_keep_days(
         get_significant_states, hass, one_month_ago
     )
     assert len(states["sensor.keep"]) == 2
-    assert len(states["sensor.purge"]) == 1
+    assert "sensor.purge" not in states
