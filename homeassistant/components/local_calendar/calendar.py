@@ -106,10 +106,7 @@ class LocalCalendarEntity(CalendarEntity):
     async def async_create_event(self, **kwargs: Any) -> None:
         """Add a new event to calendar."""
         event = _parse_event(kwargs)
-        try:
-            EventStore(self._calendar).add(event)
-        except EventStoreError as err:
-            raise HomeAssistantError("Error while creating event: {err}") from err
+        EventStore(self._calendar).add(event)
         await self._async_store()
         await self.async_update_ha_state(force_refresh=True)
 
