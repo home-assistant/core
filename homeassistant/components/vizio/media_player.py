@@ -337,6 +337,8 @@ class VizioDevice(MediaPlayerEntity):
         @callback
         def apps_list_update() -> None:
             """Update list of all apps."""
+            if not self._apps_coordinator:
+                return
             self._all_apps = self._apps_coordinator.data
             self.async_write_ha_state()
 
