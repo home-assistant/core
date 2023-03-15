@@ -89,7 +89,13 @@ class StatesMetaManager(BaseTableManager):
         if not missing:
             return results
 
-        thread_safe = from_recorder or not self.recorder.event_loop_stated
+        # Only update the cache if we are in the recorder thread
+        # or the recorder event loop has not started yet since
+        # there is a chance that we could have just deleted all
+        # instances of an entity_id from the database via purge
+        # and we do not want to add it back to the cache from another
+        # thread (history query).
+        update_cache = from_recorder or not self.recorder.event_loop_stated
 
         with session.no_autoflush:
             for missing_chunk in chunked(missing, SQLITE_MAX_BIND_VARS):
@@ -97,9 +103,10 @@ class StatesMetaManager(BaseTableManager):
                     find_states_metadata_ids(missing_chunk)
                 ):
                     metadata_id = cast(int, metadata_id)
-                    self._id_map[entity_id] = metadata_id
-                    if thread_safe:
-                        results[entity_id] = metadata_id
+                    results[entity_id] = metadata_id
+
+                    if update_cache:
+                        self._id_map[entity_id] = metadata_id
 
         return results
 
