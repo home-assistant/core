@@ -5,11 +5,13 @@ from datetime import timedelta
 from typing import Any, NamedTuple
 
 from tplink_omada_client.devices import OmadaFirmwareUpdate, OmadaListDevice
+from tplink_omada_client.exceptions import OmadaClientException, RequestFailed
 from tplink_omada_client.omadasiteclient import OmadaSiteClient
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -118,10 +120,18 @@ class OmadaDeviceUpdate(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install a firmware update."""
-        await self._omada_client.start_firmware_upgrade(
-            self.coordinator.data[self._mac].device
-        )
-        await self.coordinator.async_request_refresh()
+        try:
+            await self._omada_client.start_firmware_upgrade(
+                self.coordinator.data[self._mac].device
+            )
+        except RequestFailed as ex:
+            raise HomeAssistantError("Firmware update request rejected") from ex
+        except OmadaClientException as ex:
+            raise HomeAssistantError(
+                "Unable to send Firmware update request. Check the controller is online."
+            ) from ex
+        finally:
+            await self.coordinator.async_request_refresh()
 
     @callback
     def _handle_coordinator_update(self) -> None:
