@@ -38,6 +38,7 @@ SERVICE_PURGE_ENTITIES_SCHEMA = vol.Schema(
         vol.Optional(ATTR_ENTITY_GLOBS, default=[]): vol.All(
             cv.ensure_list, [cv.string]
         ),
+        vol.Optional(ATTR_KEEP_DAYS, default=0): cv.positive_int,
     }
 ).extend(cv.ENTITY_SERVICE_FIELDS)
 
@@ -69,9 +70,10 @@ def _async_register_purge_entities_service(
         """Handle calls to the purge entities service."""
         entity_ids = await async_extract_entity_ids(hass, service)
         domains = service.data.get(ATTR_DOMAINS, [])
+        keep_days = service.data.get(ATTR_KEEP_DAYS, 0)
         entity_globs = service.data.get(ATTR_ENTITY_GLOBS, [])
         entity_filter = generate_filter(domains, list(entity_ids), [], [], entity_globs)
-        purge_before = dt_util.utcnow()
+        purge_before = dt_util.utcnow() - timedelta(days=keep_days)
         instance.queue_task(PurgeEntitiesTask(entity_filter, purge_before))
 
     hass.services.async_register(
