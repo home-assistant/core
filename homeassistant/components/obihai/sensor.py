@@ -105,7 +105,7 @@ class ObihaiServiceSensors(ObihaiEntity, SensorEntity):
     @property
     def device_class(self):
         """Return the device class for uptime sensor."""
-        if self.name == "Last Reboot":
+        if self.name == "Last reboot":
             return SensorDeviceClass.TIMESTAMP
         return None
 

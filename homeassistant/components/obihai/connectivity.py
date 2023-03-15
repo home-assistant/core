@@ -48,7 +48,7 @@ class ObihaiConnection:
         self.username = username
         self.password = password
         self.device_info: DeviceInfo
-        self.serial: str = ""
+        self.serial: str
         self.services: list = []
         self.line_services: list = []
         self.call_direction: list = []
