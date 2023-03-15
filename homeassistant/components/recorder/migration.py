@@ -1457,7 +1457,9 @@ def migrate_entity_ids(instance: Recorder) -> bool:
     with session_scope(session=instance.get_session()) as session:
         if states := session.execute(find_entity_ids_to_migrate()).all():
             entity_ids = {entity_id for _, entity_id in states}
-            entity_id_to_metadata_id = states_meta_manager.get_many(entity_ids, session, True)
+            entity_id_to_metadata_id = states_meta_manager.get_many(
+                entity_ids, session, True
+            )
             if missing_entity_ids := {
                 # We should never see _EMPTY_ENTITY_ID in the states table
                 # but we need to be defensive so we don't fail the migration
