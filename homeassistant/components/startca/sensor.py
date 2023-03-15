@@ -212,7 +212,7 @@ class StartcaData:
     async def async_update(self):
         """Get the Start.ca bandwidth data from the web service."""
         _LOGGER.debug("Updating Start.ca usage data")
-        url = f"https://www.start.ca/support/usage/api?key={self.api_key}"
+        url = f"https://portal.start.ca/account/usage/api?key={self.api_key}"
         async with async_timeout.timeout(REQUEST_TIMEOUT):
             req = await self.websession.get(url)
         if req.status != HTTPStatus.OK:
