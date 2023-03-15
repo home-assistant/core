@@ -29,7 +29,6 @@ class ControllerUpdateCoordinator:
         ctrl: pizone.Controller,
     ) -> None:
         """Initialise the update coordinator."""
-        self._entry = entry
         self._controller = ctrl
         self._available_listeners: list[CALLBACK_TYPE] = []
         self._available = True
@@ -52,7 +51,7 @@ class ControllerUpdateCoordinator:
                 return
             self._set_available(False)
 
-        self._entry.async_on_unload(
+        entry.async_on_unload(
             async_dispatcher_connect(
                 hass, DISPATCH_CONTROLLER_DISCONNECTED, controller_disconnected
             )
@@ -70,7 +69,7 @@ class ControllerUpdateCoordinator:
                 return
             self._set_available(True)
 
-        self._entry.async_on_unload(
+        entry.async_on_unload(
             async_dispatcher_connect(
                 hass, DISPATCH_CONTROLLER_RECONNECTED, controller_reconnected
             )
