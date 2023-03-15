@@ -15,14 +15,19 @@ class BaseTableManager(Generic[_DataT]):
     """Base class for table managers."""
 
     def __init__(self, recorder: "Recorder") -> None:
-        """Initialize the table manager."""
+        """Initialize the table manager.
+
+        The table manager is responsible for managing the id mappings
+        for a table. When data is committed to the database, the
+        manager will move the data from the pending to the id map.
+        """
         self.active = False
         self.recorder = recorder
         self._pending: dict[str, _DataT] = {}
         self._id_map: MutableMapping[str, int] = {}
 
     def get_from_cache(self, data: str) -> int | None:
-        """Resolve shared_data to the data_id without accessing the underlying database.
+        """Resolve data to the id without accessing the underlying database.
 
         This call is not thread-safe and must be called from the
         recorder thread.
@@ -51,7 +56,11 @@ class BaseLRUTableManager(BaseTableManager[_DataT]):
     """Base class for LRU table managers."""
 
     def __init__(self, recorder: "Recorder", lru_size: int) -> None:
-        """Initialize the table manager."""
+        """Initialize the LRU table manager.
+
+        We keep track of the most recently used items
+        and evict the least recently used items when the cache is full.
+        """
         super().__init__(recorder)
         self._id_map: MutableMapping[str, int] = LRU(lru_size)
 
