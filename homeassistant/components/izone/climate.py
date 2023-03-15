@@ -29,7 +29,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import InvalidStateError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
@@ -132,7 +132,7 @@ def _reraise_on_connection_error():
             try:
                 return await func(*args, **kwargs)
             except ConnectionError as err:
-                raise InvalidStateError from err
+                raise HomeAssistantError("Connection error with server") from err
 
         return wrapped_f
 
