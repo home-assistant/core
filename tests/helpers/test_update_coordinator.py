@@ -20,10 +20,10 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
 
-KNOWN_ERRORS = [
-    (asyncio.TimeoutError, asyncio.TimeoutError, "Timeout fetching test data"),
+KNOWN_ERRORS: list[tuple[Exception, type[Exception], str]] = [
+    (asyncio.TimeoutError(), asyncio.TimeoutError, "Timeout fetching test data"),
     (
-        requests.exceptions.Timeout,
+        requests.exceptions.Timeout(),
         requests.exceptions.Timeout,
         "Timeout fetching test data",
     ),
@@ -32,9 +32,9 @@ KNOWN_ERRORS = [
         urllib.error.URLError,
         "Timeout fetching test data",
     ),
-    (aiohttp.ClientError, aiohttp.ClientError, "Error requesting test data"),
+    (aiohttp.ClientError(), aiohttp.ClientError, "Error requesting test data"),
     (
-        requests.exceptions.RequestException,
+        requests.exceptions.RequestException(),
         requests.exceptions.RequestException,
         "Error requesting test data",
     ),
@@ -44,14 +44,16 @@ KNOWN_ERRORS = [
         "Error requesting test data",
     ),
     (
-        update_coordinator.UpdateFailed,
+        update_coordinator.UpdateFailed(),
         update_coordinator.UpdateFailed,
         "Error fetching test data",
     ),
 ]
 
 
-def get_crd(hass, update_interval):
+def get_crd(
+    hass: HomeAssistant, update_interval: timedelta | None
+) -> update_coordinator.DataUpdateCoordinator[int]:
     """Make coordinator mocks."""
     calls = 0
 
@@ -74,18 +76,22 @@ DEFAULT_UPDATE_INTERVAL = timedelta(seconds=10)
 
 
 @pytest.fixture
-def crd(hass):
+def crd(hass: HomeAssistant) -> update_coordinator.DataUpdateCoordinator[int]:
     """Coordinator mock with default update interval."""
     return get_crd(hass, DEFAULT_UPDATE_INTERVAL)
 
 
 @pytest.fixture
-def crd_without_update_interval(hass):
+def crd_without_update_interval(
+    hass: HomeAssistant,
+) -> update_coordinator.DataUpdateCoordinator[int]:
     """Coordinator mock that never automatically updates."""
     return get_crd(hass, None)
 
 
-async def test_async_refresh(crd) -> None:
+async def test_async_refresh(
+    crd: update_coordinator.DataUpdateCoordinator[int],
+) -> None:
     """Test async_refresh for update coordinator."""
     assert crd.data is None
     await crd.async_refresh()
@@ -110,7 +116,9 @@ async def test_async_refresh(crd) -> None:
     assert updates == [2]
 
 
-async def test_update_context(crd: update_coordinator.DataUpdateCoordinator[int]):
+async def test_update_context(
+    crd: update_coordinator.DataUpdateCoordinator[int],
+) -> None:
     """Test update contexts for the update coordinator."""
     await crd.async_refresh()
     assert not set(crd.async_contexts())
@@ -134,7 +142,9 @@ async def test_update_context(crd: update_coordinator.DataUpdateCoordinator[int]
     assert not set(crd.async_contexts())
 
 
-async def test_request_refresh(crd) -> None:
+async def test_request_refresh(
+    crd: update_coordinator.DataUpdateCoordinator[int],
+) -> None:
     """Test request refresh for update coordinator."""
     assert crd.data is None
     await crd.async_request_refresh()
@@ -150,7 +160,9 @@ async def test_request_refresh(crd) -> None:
     crd._unschedule_refresh()
 
 
-async def test_request_refresh_no_auto_update(crd_without_update_interval) -> None:
+async def test_request_refresh_no_auto_update(
+    crd_without_update_interval: update_coordinator.DataUpdateCoordinator[int],
+) -> None:
     """Test request refresh for update coordinator without automatic update."""
     crd = crd_without_update_interval
     assert crd.data is None
@@ -172,7 +184,9 @@ async def test_request_refresh_no_auto_update(crd_without_update_interval) -> No
     KNOWN_ERRORS,
 )
 async def test_refresh_known_errors(
-    err_msg, crd, caplog: pytest.LogCaptureFixture
+    err_msg: tuple[Exception, type[Exception], str],
+    crd: update_coordinator.DataUpdateCoordinator[int],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test raising known errors."""
     crd.update_method = AsyncMock(side_effect=err_msg[0])
@@ -185,7 +199,9 @@ async def test_refresh_known_errors(
     assert err_msg[2] in caplog.text
 
 
-async def test_refresh_fail_unknown(crd, caplog: pytest.LogCaptureFixture) -> None:
+async def test_refresh_fail_unknown(
+    crd: update_coordinator.DataUpdateCoordinator[int], caplog: pytest.LogCaptureFixture
+) -> None:
     """Test raising unknown error."""
     await crd.async_refresh()
 
@@ -198,7 +214,9 @@ async def test_refresh_fail_unknown(crd, caplog: pytest.LogCaptureFixture) -> No
     assert "Unexpected error fetching test data" in caplog.text
 
 
-async def test_refresh_no_update_method(crd) -> None:
+async def test_refresh_no_update_method(
+    crd: update_coordinator.DataUpdateCoordinator[int],
+) -> None:
     """Test raising error is no update method is provided."""
     await crd.async_refresh()
 
@@ -208,7 +226,9 @@ async def test_refresh_no_update_method(crd) -> None:
         await crd.async_refresh()
 
 
-async def test_update_interval(hass: HomeAssistant, crd) -> None:
+async def test_update_interval(
+    hass: HomeAssistant, crd: update_coordinator.DataUpdateCoordinator[int]
+) -> None:
     """Test update interval works."""
     # Test we don't update without subscriber
     async_fire_time_changed(hass, utcnow() + crd.update_interval)
@@ -239,7 +259,8 @@ async def test_update_interval(hass: HomeAssistant, crd) -> None:
 
 
 async def test_update_interval_not_present(
-    hass: HomeAssistant, crd_without_update_interval
+    hass: HomeAssistant,
+    crd_without_update_interval: update_coordinator.DataUpdateCoordinator[int],
 ) -> None:
     """Test update never happens with no update interval."""
     crd = crd_without_update_interval
@@ -271,7 +292,9 @@ async def test_update_interval_not_present(
     assert crd.data is None
 
 
-async def test_refresh_recover(crd, caplog: pytest.LogCaptureFixture) -> None:
+async def test_refresh_recover(
+    crd: update_coordinator.DataUpdateCoordinator[int], caplog: pytest.LogCaptureFixture
+) -> None:
     """Test recovery of freshing data."""
     crd.last_update_success = False
 
@@ -281,7 +304,9 @@ async def test_refresh_recover(crd, caplog: pytest.LogCaptureFixture) -> None:
     assert "Fetching test data recovered" in caplog.text
 
 
-async def test_coordinator_entity(crd: update_coordinator.DataUpdateCoordinator[int]):
+async def test_coordinator_entity(
+    crd: update_coordinator.DataUpdateCoordinator[int],
+) -> None:
     """Test the CoordinatorEntity class."""
     context = object()
     entity = update_coordinator.CoordinatorEntity(crd, context)
@@ -316,7 +341,9 @@ async def test_coordinator_entity(crd: update_coordinator.DataUpdateCoordinator[
     assert len(crd._listeners) == 0
 
 
-async def test_async_set_updated_data(crd) -> None:
+async def test_async_set_updated_data(
+    crd: update_coordinator.DataUpdateCoordinator[int],
+) -> None:
     """Test async_set_updated_data for update coordinator."""
     assert crd.data is None
 
@@ -350,7 +377,9 @@ async def test_async_set_updated_data(crd) -> None:
     assert crd._unsub_refresh is not old_refresh
 
 
-async def test_stop_refresh_on_ha_stop(hass: HomeAssistant, crd) -> None:
+async def test_stop_refresh_on_ha_stop(
+    hass: HomeAssistant, crd: update_coordinator.DataUpdateCoordinator[int]
+) -> None:
     """Test no update interval refresh when Home Assistant is stopping."""
     # Add subscriber
     update_callback = Mock()
@@ -388,7 +417,9 @@ async def test_stop_refresh_on_ha_stop(hass: HomeAssistant, crd) -> None:
     KNOWN_ERRORS,
 )
 async def test_async_config_entry_first_refresh_failure(
-    err_msg, crd, caplog: pytest.LogCaptureFixture
+    err_msg: tuple[Exception, type[Exception], str],
+    crd: update_coordinator.DataUpdateCoordinator[int],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test async_config_entry_first_refresh raises ConfigEntryNotReady on failure.
 
@@ -407,7 +438,7 @@ async def test_async_config_entry_first_refresh_failure(
 
 
 async def test_async_config_entry_first_refresh_success(
-    crd, caplog: pytest.LogCaptureFixture
+    crd: update_coordinator.DataUpdateCoordinator[int], caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test first refresh successfully."""
     await crd.async_config_entry_first_refresh()
@@ -426,7 +457,9 @@ async def test_not_schedule_refresh_if_system_option_disable_polling(
     assert crd._unsub_refresh is None
 
 
-async def test_async_set_update_error(crd, caplog: pytest.LogCaptureFixture) -> None:
+async def test_async_set_update_error(
+    crd: update_coordinator.DataUpdateCoordinator[int], caplog: pytest.LogCaptureFixture
+) -> None:
     """Test manually setting an update failure."""
     update_callback = Mock()
     crd.async_add_listener(update_callback)
