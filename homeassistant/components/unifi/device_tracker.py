@@ -105,7 +105,7 @@ def async_client_is_connected_fn(controller: UniFiController, obj_id: str) -> bo
     """Check if device object is disabled."""
     client = controller.api.clients[obj_id]
 
-    if client.is_wired != (obj_id not in controller.wireless_clients):
+    if controller.wireless_clients.is_wireless(client) and client.is_wired:
         if not controller.option_ignore_wired_bug:
             return False  # Wired bug in action
 

@@ -45,17 +45,17 @@ from .entity import (
 @callback
 def async_client_rx_value_fn(controller: UniFiController, client: Client) -> float:
     """Calculate receiving data transfer value."""
-    if client.mac not in controller.wireless_clients:
-        return client.wired_rx_bytes_r / 1000000
-    return client.rx_bytes_r / 1000000
+    if controller.wireless_clients.is_wireless(client):
+        return client.rx_bytes_r / 1000000
+    return client.wired_rx_bytes_r / 1000000
 
 
 @callback
 def async_client_tx_value_fn(controller: UniFiController, client: Client) -> float:
     """Calculate transmission data transfer value."""
-    if client.mac not in controller.wireless_clients:
-        return client.wired_tx_bytes_r / 1000000
-    return client.tx_bytes_r / 1000000
+    if controller.wireless_clients.is_wireless(client):
+        return client.tx_bytes_r / 1000000
+    return client.wired_tx_bytes_r / 1000000
 
 
 @callback
