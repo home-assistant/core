@@ -11,7 +11,7 @@ import queue
 import sqlite3
 import threading
 import time
-from typing import Any, TypeVar, cast
+from typing import Any, TypeVar
 
 import async_timeout
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, func, select
@@ -75,7 +75,6 @@ from .models import (
 )
 from .pool import POOL_SIZE, MutexPool, RecorderPool
 from .queries import (
-    find_shared_attributes_id,
     has_entity_ids_to_migrate,
     has_event_type_to_migrate,
     has_events_context_ids_to_migrate,
@@ -891,24 +890,6 @@ class Recorder(threading.Thread):
         # Commit if the commit interval is zero
         if not self.commit_interval:
             self._commit_event_session_or_retry()
-
-    def _find_shared_attr_in_db(self, attr_hash: int, shared_attrs: str) -> int | None:
-        """Find shared attributes in the db from the hash and shared_attrs."""
-        #
-        # Avoid the event session being flushed since it will
-        # commit all the pending events and states to the database.
-        #
-        # The lookup has already have checked to see if the data is cached
-        # or going to be written in the next commit so there is no
-        # need to flush before checking the database.
-        #
-        assert self.event_session is not None
-        with self.event_session.no_autoflush:
-            if attributes_id := self.event_session.execute(
-                find_shared_attributes_id(attr_hash, shared_attrs)
-            ).first():
-                return cast(int, attributes_id[0])
-        return None
 
     def _process_non_state_changed_event_into_session(self, event: Event) -> None:
         """Process any event into the session except state changed."""
