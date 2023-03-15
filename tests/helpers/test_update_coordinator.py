@@ -365,7 +365,7 @@ async def test_async_set_updated_data(
     def update_callback():
         updates.append(crd.data)
 
-    crd.async_add_listener(update_callback)
+    remove_callbacks = crd.async_add_listener(update_callback)
     crd.async_set_updated_data(200)
     assert updates == [200]
     assert crd._unsub_refresh is not None
@@ -375,6 +375,9 @@ async def test_async_set_updated_data(
     crd.async_set_updated_data(300)
     # We have created a new refresh listener
     assert crd._unsub_refresh is not old_refresh
+
+    # Remove callbacks to avoid lingering timers
+    remove_callbacks()
 
 
 async def test_stop_refresh_on_ha_stop(
@@ -462,7 +465,7 @@ async def test_async_set_update_error(
 ) -> None:
     """Test manually setting an update failure."""
     update_callback = Mock()
-    crd.async_add_listener(update_callback)
+    remove_callbacks = crd.async_add_listener(update_callback)
 
     crd.async_set_update_error(aiohttp.ClientError("Client Failure #1"))
     assert crd.last_update_success is False
@@ -486,3 +489,6 @@ async def test_async_set_update_error(
     assert crd.last_update_success is False
     assert "Client Failure #2" not in caplog.text
     update_callback.assert_called_once()
+
+    # Remove callbacks to avoid lingering timers
+    remove_callbacks()
