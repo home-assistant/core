@@ -952,24 +952,24 @@ class Recorder(threading.Thread):
 
     def _process_non_state_changed_event_into_session(self, event: Event) -> None:
         """Process any event into the session except state changed."""
-        event_session = self.event_session
-        assert event_session is not None
+        session = self.event_session
+        assert session is not None
         dbevent = Events.from_event(event)
 
         # Map the event_type to the EventTypes table
         event_type_manager = self.event_type_manager
         if pending_event_types := event_type_manager.get_pending(event.event_type):
             dbevent.event_type_rel = pending_event_types
-        elif event_type_id := event_type_manager.get(event.event_type, event_session):
+        elif event_type_id := event_type_manager.get(event.event_type, session):
             dbevent.event_type_id = event_type_id
         else:
             event_types = EventTypes(event_type=event.event_type)
             event_type_manager.add_pending(event_types)
-            event_session.add(event_types)
+            session.add(event_types)
             dbevent.event_type_rel = event_types
 
         if not event.data:
-            event_session.add(dbevent)
+            session.add(dbevent)
             return
 
         event_data_manager = self.event_data_manager
@@ -984,17 +984,17 @@ class Recorder(threading.Thread):
         # Matching attributes id found in the cache
         elif (data_id := event_data_manager.get_from_cache(shared_data)) or (
             (hash_ := EventData.hash_shared_data_bytes(shared_data_bytes))
-            and (data_id := event_data_manager.get(shared_data, hash_, event_session))
+            and (data_id := event_data_manager.get(shared_data, hash_, session))
         ):
             dbevent.data_id = data_id
         else:
             # No matching attributes found, save them in the DB
             dbevent_data = EventData(shared_data=shared_data, hash=hash_)
             event_data_manager.add_pending(dbevent_data)
-            event_session.add(dbevent_data)
+            session.add(dbevent_data)
             dbevent.event_data_rel = dbevent_data
 
-        event_session.add(dbevent)
+        session.add(dbevent)
 
     def _serialize_state_attributes_from_event(self, event: Event) -> bytes | None:
         """Serialize state changed event data."""
