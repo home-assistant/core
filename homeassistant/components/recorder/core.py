@@ -84,6 +84,7 @@ from .run_history import RunHistory
 from .table_managers.event_data import EventDataManager
 from .table_managers.event_types import EventTypeManager
 from .table_managers.state_attributes import StateAttributesManager
+from .table_managers.states import StatesManager
 from .table_managers.states_meta import StatesMetaManager
 from .tasks import (
     AdjustLRUSizeTask,
@@ -200,14 +201,13 @@ class Recorder(threading.Thread):
 
         self.schema_version = 0
         self._commits_without_expire = 0
-        self._old_states: dict[str | None, States] = {}
+        self.states_manager = StatesManager()
         self.event_data_manager = EventDataManager(self)
         self.event_type_manager = EventTypeManager(self)
         self.states_meta_manager = StatesMetaManager(self)
         self.state_attributes_manager = StateAttributesManager(
             self, exclude_attributes_by_domain
         )
-        self._pending_expunge: list[States] = []
         self.event_session: Session | None = None
         self._get_session: Callable[[], Session] | None = None
         self._completed_first_database_setup: bool | None = None
@@ -985,14 +985,13 @@ class Recorder(threading.Thread):
             session.add(dbstate_attributes)
             dbstate.state_attributes = dbstate_attributes
 
-        if old_state := self._old_states.pop(entity_id, None):
-            if old_state.state_id:
-                dbstate.old_state_id = old_state.state_id
-            else:
-                dbstate.old_state = old_state
+        states_manager = self.states_manager
+        if old_state := states_manager.pop_pending(entity_id):
+            dbstate.old_state = old_state
+        elif old_state_id := states_manager.pop_committed(entity_id):
+            dbstate.old_state_id = old_state_id
         if event.data.get("new_state"):
-            self._old_states[entity_id] = dbstate
-            self._pending_expunge.append(dbstate)
+            states_manager.add_pending(entity_id, dbstate)
         else:
             dbstate.state = None
 
@@ -1043,18 +1042,11 @@ class Recorder(threading.Thread):
         self._commits_without_expire += 1
 
         self.event_session.commit()
-        if self._pending_expunge:
-            for dbstate in self._pending_expunge:
-                # Expunge the state so its not expired
-                # until we use it later for dbstate.old_state
-                if dbstate in self.event_session:
-                    self.event_session.expunge(dbstate)
-            self._pending_expunge = []
-
         # We just committed the state attributes to the database
         # and we now know the attributes_ids.  We can save
         # many selects for matching attributes by loading them
-        # into the LRU cache now.
+        # into the LRU or committed now.
+        self.states_manager.post_commit_pending()
         self.state_attributes_manager.post_commit_pending()
         self.event_data_manager.post_commit_pending()
         self.event_type_manager.post_commit_pending()
@@ -1080,7 +1072,7 @@ class Recorder(threading.Thread):
 
     def _close_event_session(self) -> None:
         """Close the event session."""
-        self._old_states.clear()
+        self.states_manager.reset()
         self.state_attributes_manager.reset()
         self.event_data_manager.reset()
         self.event_type_manager.reset()

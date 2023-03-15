@@ -459,24 +459,7 @@ def _purge_state_ids(instance: Recorder, session: Session, state_ids: set[int]) 
     _LOGGER.debug("Deleted %s states", deleted_rows)
 
     # Evict eny entries in the old_states cache referring to a purged state
-    _evict_purged_states_from_old_states_cache(instance, state_ids)
-
-
-def _evict_purged_states_from_old_states_cache(
-    instance: Recorder, purged_state_ids: set[int]
-) -> None:
-    """Evict purged states from the old states cache."""
-    # Make a map from old_state_id to entity_id
-    old_states = instance._old_states  # pylint: disable=protected-access
-    old_state_reversed = {
-        old_state.state_id: entity_id
-        for entity_id, old_state in old_states.items()
-        if old_state.state_id
-    }
-
-    # Evict any purged state from the old states cache
-    for purged_state_id in purged_state_ids.intersection(old_state_reversed):
-        old_states.pop(old_state_reversed[purged_state_id], None)
+    instance.states_manager.evict_purged(state_ids)
 
 
 def _purge_batch_attributes_ids(
