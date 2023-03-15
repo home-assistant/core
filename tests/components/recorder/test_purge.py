@@ -4,6 +4,7 @@ import json
 import sqlite3
 from unittest.mock import patch
 
+from freezegun import freeze_time
 import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError
 from sqlalchemy.orm.session import Session
@@ -25,6 +26,7 @@ from homeassistant.components.recorder.db_schema import (
     StatisticsRuns,
     StatisticsShortTerm,
 )
+from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.components.recorder.purge import purge_old_data
 from homeassistant.components.recorder.queries import select_event_type_ids
 from homeassistant.components.recorder.services import (
@@ -2021,3 +2023,70 @@ async def test_purge_old_states_purges_the_state_metadata_ids(
         assert finished
         assert states.count() == 0
         assert states_meta.count() == 0
+
+
+async def test_purge_entities_keep_days(
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
+) -> None:
+    """Test purging states with an entity filter and keep_days."""
+    instance = await async_setup_recorder_instance(hass, {})
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+    start = dt_util.utcnow()
+    two_days_ago = start - timedelta(days=2)
+    one_week_ago = start - timedelta(days=7)
+    one_month_ago = start - timedelta(days=30)
+    with freeze_time(one_week_ago):
+        hass.states.async_set("sensor.keep", "initial")
+        hass.states.async_set("sensor.purge", "initial")
+
+    await async_wait_recording_done(hass)
+
+    with freeze_time(two_days_ago):
+        hass.states.async_set("sensor.purge", "two_days_ago")
+
+    await async_wait_recording_done(hass)
+
+    hass.states.async_set("sensor.purge", "now")
+    hass.states.async_set("sensor.keep", "now")
+    await async_recorder_block_till_done(hass)
+
+    states = await instance.async_add_executor_job(
+        get_significant_states, hass, one_month_ago
+    )
+    assert len(states["sensor.keep"]) == 2
+    assert len(states["sensor.purge"]) == 3
+
+    await hass.services.async_call(
+        recorder.DOMAIN,
+        SERVICE_PURGE_ENTITIES,
+        {
+            "entity_id": "sensor.purge",
+            "keep_days": 1,
+        },
+    )
+    await async_recorder_block_till_done(hass)
+    await async_wait_purge_done(hass)
+
+    states = await instance.async_add_executor_job(
+        get_significant_states, hass, one_month_ago
+    )
+    assert len(states["sensor.keep"]) == 2
+    assert len(states["sensor.purge"]) == 1
+
+    await hass.services.async_call(
+        recorder.DOMAIN,
+        SERVICE_PURGE_ENTITIES,
+        {
+            "entity_id": "sensor.purge",
+        },
+    )
+    await async_recorder_block_till_done(hass)
+    await async_wait_purge_done(hass)
+
+    states = await instance.async_add_executor_job(
+        get_significant_states, hass, one_month_ago
+    )
+    assert len(states["sensor.keep"]) == 2
+    assert "sensor.purge" not in states
