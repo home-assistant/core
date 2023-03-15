@@ -4,9 +4,10 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable, Iterable
 import dataclasses
-from functools import partial, wraps
-import importlib
+from enum import Enum
+from functools import cache, partial, wraps
 import logging
+from types import ModuleType
 from typing import TYPE_CHECKING, Any, TypedDict, TypeGuard, TypeVar, cast
 
 import voluptuous as vol
@@ -60,38 +61,83 @@ _LOGGER = logging.getLogger(__name__)
 SERVICE_DESCRIPTION_CACHE = "service_description_cache"
 
 
-def validate_attribute_option(attribute_option: str) -> Any:
-    """Validate attribute option."""
-    domain, enum, option = attribute_option.split(".", 3)
+@cache
+def _base_components() -> dict[str, ModuleType]:
+    """Return a cached lookup of base components."""
+    # pylint: disable=import-outside-toplevel
+    from homeassistant.components import (
+        alarm_control_panel,
+        calendar,
+        camera,
+        climate,
+        cover,
+        fan,
+        humidifier,
+        light,
+        lock,
+        media_player,
+        remote,
+        siren,
+        update,
+        vacuum,
+        water_heater,
+    )
 
-    integration = importlib.import_module(f"homeassistant.components.{domain}")
+    return {
+        "alarm_control_panel": alarm_control_panel,
+        "calendar": calendar,
+        "camera": camera,
+        "climate": climate,
+        "cover": cover,
+        "fan": fan,
+        "humidifier": humidifier,
+        "light": light,
+        "lock": lock,
+        "media_player": media_player,
+        "remote": remote,
+        "siren": siren,
+        "update": update,
+        "vacuum": vacuum,
+        "water_heater": water_heater,
+    }
+
+
+def _validate_option_or_feature(option_or_feature: str, label: str) -> Any:
+    """Validate attribute option or supported feature."""
+    try:
+        domain, enum, option = option_or_feature.split(".", 2)
+    except ValueError as exc:
+        raise vol.Invalid(
+            f"Invalid {label} '{option_or_feature}', expected "
+            "<domain>.<enum>.<member>"
+        ) from exc
+
+    base_components = _base_components()
+    if not (base_component := base_components.get(domain)):
+        raise vol.Invalid(f"Unknown base component '{domain}'")
 
     try:
-        attribute_enum = getattr(integration, enum)
+        attribute_enum = getattr(base_component, enum)
     except AttributeError as exc:
-        raise vol.Invalid(f"Unknown attribute enum {domain}.{enum}") from exc
+        raise vol.Invalid(f"Unknown {label} enum '{domain}.{enum}'") from exc
+
+    if not issubclass(attribute_enum, Enum):
+        raise vol.Invalid(f"Expected {label} '{domain}.{enum}' to be an enum")
 
     try:
         return getattr(attribute_enum, option).value
     except AttributeError as exc:
-        raise vol.Invalid(f"Unknown attribute option {enum}.{option}") from exc
+        raise vol.Invalid(f"Unknown {label} '{enum}.{option}'") from exc
+
+
+def validate_attribute_option(attribute_option: str) -> Any:
+    """Validate attribute option."""
+    return _validate_option_or_feature(attribute_option, "attribute option")
 
 
 def validate_supported_feature(supported_feature: str) -> Any:
     """Validate supported feature."""
-    domain, enum, feature = supported_feature.split(".", 3)
-
-    integration = importlib.import_module(f"homeassistant.components.{domain}")
-
-    try:
-        feature_enum = getattr(integration, enum)
-    except AttributeError as exc:
-        raise vol.Invalid(f"Unknown feature enum {domain}.{enum}") from exc
-
-    try:
-        return getattr(feature_enum, feature).value
-    except AttributeError as exc:
-        raise vol.Invalid(f"Unknown supported feature {enum}.{feature}") from exc
+    return _validate_option_or_feature(supported_feature, "supported feature")
 
 
 # Basic schemas which translate attribute and supported feature enum names

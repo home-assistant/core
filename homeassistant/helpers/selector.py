@@ -130,12 +130,18 @@ def _validate_supported_feature(supported_feature: int | str) -> int:
 
     known_entity_features = _entity_features()
 
-    _, enum, feature = supported_feature.split(".", 2)
+    try:
+        _, enum, feature = supported_feature.split(".", 2)
+    except ValueError as exc:
+        raise vol.Invalid(
+            f"Invalid supported feature '{supported_feature}', expected "
+            "<domain>.<enum>.<member>"
+        ) from exc
 
     try:
         return cast(int, getattr(known_entity_features[enum], feature).value)
     except (AttributeError, KeyError) as exc:
-        raise vol.Invalid(f"Unknown supported feature {supported_feature}") from exc
+        raise vol.Invalid(f"Unknown supported feature '{supported_feature}'") from exc
 
 
 ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
