@@ -1,7 +1,7 @@
 """Managers for each table."""
 
 from typing import TYPE_CHECKING, Generic, TypeVar
-
+from collections.abc import MutableMapping
 from lru import LRU  # pylint: disable=no-name-in-module
 
 if TYPE_CHECKING:
@@ -18,7 +18,7 @@ class BaseTableManager(Generic[_DataT]):
         self.active = False
         self.recorder = recorder
         self._pending: dict[str, _DataT] = {}
-        self._id_map: dict[str, int] = {}
+        self._id_map: MutableMapping[str, int] = {}
 
     def get_from_cache(self, data: str) -> int | None:
         """Resolve shared_data to the data_id without accessing the underlying database.
@@ -52,7 +52,7 @@ class BaseLRUTableManager(BaseTableManager[_DataT]):
     def __init__(self, recorder: "Recorder", lru_size: int) -> None:
         """Initialize the table manager."""
         super().__init__(recorder)
-        self._id_map: dict[str, int] = LRU(lru_size)
+        self._id_map: MutableMapping[str, int] = LRU(lru_size)
 
     def adjust_lru_size(self, new_size: int) -> None:
         """Adjust the LRU cache size.
