@@ -9,7 +9,10 @@ import voluptuous as vol
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import generate_filter
-from homeassistant.helpers.service import async_extract_entity_ids
+from homeassistant.helpers.service import (
+    async_extract_entity_ids,
+    async_register_admin_service,
+)
 import homeassistant.util.dt as dt_util
 
 from .const import ATTR_APPLY_FILTER, ATTR_KEEP_DAYS, ATTR_REPACK, DOMAIN
@@ -57,8 +60,12 @@ def _async_register_purge_service(hass: HomeAssistant, instance: Recorder) -> No
         purge_before = dt_util.utcnow() - timedelta(days=keep_days)
         instance.queue_task(PurgeTask(purge_before, repack, apply_filter))
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_PURGE, async_handle_purge_service, schema=SERVICE_PURGE_SCHEMA
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_PURGE,
+        async_handle_purge_service,
+        schema=SERVICE_PURGE_SCHEMA,
     )
 
 
@@ -76,7 +83,8 @@ def _async_register_purge_entities_service(
         purge_before = dt_util.utcnow() - timedelta(days=keep_days)
         instance.queue_task(PurgeEntitiesTask(entity_filter, purge_before))
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_PURGE_ENTITIES,
         async_handle_purge_entities_service,
@@ -89,7 +97,8 @@ def _async_register_enable_service(hass: HomeAssistant, instance: Recorder) -> N
     async def async_handle_enable_service(service: ServiceCall) -> None:
         instance.set_enable(True)
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_ENABLE,
         async_handle_enable_service,
@@ -102,7 +111,8 @@ def _async_register_disable_service(hass: HomeAssistant, instance: Recorder) -> 
     async def async_handle_disable_service(service: ServiceCall) -> None:
         instance.set_enable(False)
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_DISABLE,
         async_handle_disable_service,
