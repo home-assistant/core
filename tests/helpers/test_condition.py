@@ -1,5 +1,6 @@
 """Test the condition helper."""
 from datetime import datetime, timedelta
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -16,7 +17,7 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConditionError, HomeAssistantError
 from homeassistant.helpers import (
     condition,
@@ -33,13 +34,13 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
 @pytest.fixture(autouse=True)
-def setup_comp(hass):
+def setup_comp(hass: HomeAssistant) -> None:
     """Initialize components."""
     hass.config.set_time_zone(hass.config.time_zone)
     hass.loop.run_until_complete(
@@ -69,7 +70,7 @@ def assert_element(trace_element, expected_element, path):
 
 
 @pytest.fixture(autouse=True)
-def prepare_condition_trace():
+def prepare_condition_trace() -> None:
     """Clear previous trace."""
     trace.trace_clear()
 
@@ -1177,7 +1178,9 @@ async def test_state_for_template(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("for_template", [{"{{invalid}}": 5}, {"hours": "{{ 1/0 }}"}])
-async def test_state_for_invalid_template(hass: HomeAssistant, for_template) -> None:
+async def test_state_for_invalid_template(
+    hass: HomeAssistant, for_template: dict[str, Any]
+) -> None:
     """Test state with invalid templated duration."""
     config = {
         "condition": "and",
@@ -2217,7 +2220,7 @@ async def assert_automation_condition_trace(hass_ws_client, automation_id, expec
 
 
 async def test_if_action_before_sunrise_no_offset(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls: list[ServiceCall]
 ) -> None:
     """Test if action was before sunrise.
 
@@ -2288,7 +2291,7 @@ async def test_if_action_before_sunrise_no_offset(
 
 
 async def test_if_action_after_sunrise_no_offset(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls: list[ServiceCall]
 ) -> None:
     """Test if action was after sunrise.
 
@@ -2359,7 +2362,7 @@ async def test_if_action_after_sunrise_no_offset(
 
 
 async def test_if_action_before_sunrise_with_offset(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls: list[ServiceCall]
 ) -> None:
     """Test if action was before sunrise with offset.
 
@@ -2482,7 +2485,7 @@ async def test_if_action_before_sunrise_with_offset(
 
 
 async def test_if_action_before_sunset_with_offset(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls: list[ServiceCall]
 ) -> None:
     """Test if action was before sunset with offset.
 
@@ -2605,7 +2608,7 @@ async def test_if_action_before_sunset_with_offset(
 
 
 async def test_if_action_after_sunrise_with_offset(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls: list[ServiceCall]
 ) -> None:
     """Test if action was after sunrise with offset.
 
@@ -2752,7 +2755,7 @@ async def test_if_action_after_sunrise_with_offset(
 
 
 async def test_if_action_after_sunset_with_offset(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls: list[ServiceCall]
 ) -> None:
     """Test if action was after sunset with offset.
 
@@ -2827,7 +2830,7 @@ async def test_if_action_after_sunset_with_offset(
 
 
 async def test_if_action_after_and_before_during(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls: list[ServiceCall]
 ) -> None:
     """Test if action was after sunrise and before sunset.
 
@@ -2930,7 +2933,7 @@ async def test_if_action_after_and_before_during(
 
 
 async def test_if_action_before_or_after_during(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls: list[ServiceCall]
 ) -> None:
     """Test if action was before sunrise or after sunset.
 
@@ -3053,7 +3056,7 @@ async def test_if_action_before_or_after_during(
 
 
 async def test_if_action_before_sunrise_no_offset_kotzebue(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls: list[ServiceCall]
 ) -> None:
     """Test if action was before sunrise.
 
@@ -3130,7 +3133,7 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(
 
 
 async def test_if_action_after_sunrise_no_offset_kotzebue(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls: list[ServiceCall]
 ) -> None:
     """Test if action was after sunrise.
 
@@ -3207,7 +3210,7 @@ async def test_if_action_after_sunrise_no_offset_kotzebue(
 
 
 async def test_if_action_before_sunset_no_offset_kotzebue(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls: list[ServiceCall]
 ) -> None:
     """Test if action was before sunrise.
 
@@ -3284,7 +3287,7 @@ async def test_if_action_before_sunset_no_offset_kotzebue(
 
 
 async def test_if_action_after_sunset_no_offset_kotzebue(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls: list[ServiceCall]
 ) -> None:
     """Test if action was after sunrise.
 
