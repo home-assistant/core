@@ -3,7 +3,8 @@
     "step": {
       "user": {
         "data": {
-          "device_unique_id": "Device id"
+          "username": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       },
       "confirm": {
@@ -15,7 +16,10 @@
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     },
     "error": {
-      "invalid_id": "Invalid device_id. You can find your device id in your Anova app."
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "no_devices_found": "No devices were found. Make sure you have at least one Anova device online"
     }
   }
 }

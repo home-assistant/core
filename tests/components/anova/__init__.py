@@ -8,6 +8,7 @@ from anova_wifi import AnovaPrecisionCookerBinarySensor, AnovaPrecisionCookerSen
 
 from homeassistant.components.anova.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt
 
@@ -15,7 +16,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 DEVICE_UNIQUE_ID = "abc123def"
 
-CONF_INPUT = {"device_unique_id": DEVICE_UNIQUE_ID}
+CONF_INPUT = {CONF_USERNAME: "sample@gmail.com", CONF_PASSWORD: "sample"}
 
 ONLINE_UPDATE = {
     "sensors": {
@@ -44,7 +45,11 @@ def create_entry(hass: HomeAssistant) -> ConfigEntry:
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Anova",
-        data={"device_unique_id": DEVICE_UNIQUE_ID},
+        data={
+            "device_key": DEVICE_UNIQUE_ID,
+            "jwt": "jwt_sample",
+            "type": "type_sample",
+        },
         unique_id=DEVICE_UNIQUE_ID,
     )
     entry.add_to_hass(hass)

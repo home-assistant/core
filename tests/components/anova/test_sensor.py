@@ -56,7 +56,7 @@ async def test_update_failed(hass: HomeAssistant) -> None:
     with pytest.raises(UpdateFailed):
         entry = create_entry(hass)
         config_entries.current_entry.set(entry)
-        ac = AnovaCoordinator(hass, AnovaPrecisionCooker(None))
+        ac = AnovaCoordinator(hass, AnovaPrecisionCooker(None, "", "", ""))
         with patch(
             "homeassistant.components.anova.AnovaPrecisionCooker.update",
             side_effect=AnovaOffline(),

@@ -20,7 +20,7 @@ class AnovaCoordinator(DataUpdateCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
-        anova_api: AnovaPrecisionCooker,
+        anova_device: AnovaPrecisionCooker,
     ) -> None:
         """Set up Anova Coordinator."""
         super().__init__(
@@ -30,8 +30,8 @@ class AnovaCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=30),
         )
         assert self.config_entry is not None
-        self._device_unique_id = self.config_entry.data["device_unique_id"]
-        self.anova_api = anova_api
+        self._device_unique_id = anova_device.device_key
+        self.anova_device = anova_device
         self.device_info: DeviceInfo | None = None
 
     @callback
@@ -47,7 +47,7 @@ class AnovaCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         try:
-            async with async_timeout.timeout(10):
-                return await self.anova_api.update(self._device_unique_id)
+            async with async_timeout.timeout(5):
+                return await self.anova_device.update()
         except AnovaOffline as err:
             raise UpdateFailed(err) from err
