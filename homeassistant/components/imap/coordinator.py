@@ -36,7 +36,7 @@ async def connect_to_server(data: Mapping[str, Any]) -> IMAP4_SSL:
     return client
 
 
-class ImapDataUpdateCoordinator(DataUpdateCoordinator[int]):
+class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
     """Base class for imap client."""
 
     config_entry: ConfigEntry
@@ -108,7 +108,7 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
         """Initiate imap client."""
         super().__init__(hass, imap_client, timedelta(seconds=10))
 
-    async def _async_update_data(self) -> int:
+    async def _async_update_data(self) -> int | None:
         """Update the number of unread emails."""
         return await self._async_fetch_number_of_messages()
 
@@ -121,6 +121,11 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
         super().__init__(hass, imap_client, None)
         self._push_wait_task: asyncio.Task[None] | None = None
 
+    async def _async_update_data(self) -> int | None:
+        """Update the number of unread emails."""
+        await self.async_start()
+        return None
+
     async def async_start(self) -> None:
         """Start coordinator."""
         self._push_wait_task = self.hass.async_create_background_task(
@@ -130,8 +135,14 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
     async def _async_wait_push_loop(self) -> None:
         """Wait for data push from server."""
         while True:
+            await self._async_reconnect_if_needed()
             try:
-                await self._async_reconnect_if_needed()
+                number_of_messages = await self._async_fetch_number_of_messages()
+            except UpdateFailed as ex:
+                self.async_set_update_error(ex)
+            else:
+                self.async_set_updated_data(number_of_messages)
+            try:
                 idle: asyncio.Future = await self.imap_client.idle_start()
                 await self.imap_client.wait_server_push()
                 self.imap_client.idle_done()
@@ -147,13 +158,6 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                 await self._cleanup()
                 await asyncio.sleep(BACKOFF_TIME)
                 continue
-
-            try:
-                number_of_messages = await self._async_fetch_number_of_messages()
-            except UpdateFailed as ex:
-                self.async_set_update_error(ex)
-            else:
-                self.async_set_updated_data(number_of_messages)
 
     async def shutdown(self, *_) -> None:
         """Close resources."""
