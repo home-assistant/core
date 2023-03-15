@@ -574,6 +574,7 @@ omit =
     homeassistant/components/izone/__init__.py
     homeassistant/components/izone/climate.py
     homeassistant/components/izone/discovery.py
+    homeassistant/components/izone/update_coordinator.py
     homeassistant/components/joaoapps_join/*
     homeassistant/components/juicenet/__init__.py
     homeassistant/components/juicenet/device.py
