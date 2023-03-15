@@ -129,11 +129,6 @@ class FreeboxCamera(FreeboxHomeBaseClass, FFmpegCamera):
         self.update_node(node)
 
     @property
-    def supported_features(self) -> CameraEntityFeature:
-        """Flag supported features."""
-        return self._supported_features
-
-    @property
     def flip(self) -> bool:
         """Return flip."""
         return self._flip
