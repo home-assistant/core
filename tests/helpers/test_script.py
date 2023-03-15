@@ -4182,6 +4182,7 @@ async def test_script_logging(
     assert "Script with % Name: Test message with name 1" in caplog.text
 
 
+@pytest.mark.parametrize("wait_for_stop_scripts_at_shutdown", [True])
 async def test_shutdown_at(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -4213,6 +4214,7 @@ async def test_shutdown_at(
     assert_action_trace(expected_trace)
 
 
+@pytest.mark.parametrize("wait_for_stop_scripts_at_shutdown", [True])
 async def test_shutdown_after(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -4251,6 +4253,7 @@ async def test_shutdown_after(
     assert_action_trace(expected_trace)
 
 
+@pytest.mark.parametrize("wait_for_stop_scripts_at_shutdown", [True])
 async def test_start_script_after_shutdown(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:

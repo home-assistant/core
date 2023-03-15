@@ -66,6 +66,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     SERVICE_CALL_LIMIT,
     Context,
+    Event,
     HassJob,
     HomeAssistant,
     callback,
@@ -1074,7 +1075,9 @@ class _QueuedScriptRun(_ScriptRun):
         super()._finish()
 
 
-async def _async_stop_scripts_after_shutdown(hass, point_in_time):
+async def _async_stop_scripts_after_shutdown(
+    hass: HomeAssistant, point_in_time: datetime
+) -> None:
     """Stop running Script objects started after shutdown."""
     hass.data[DATA_NEW_SCRIPT_RUNS_NOT_ALLOWED] = None
     running_scripts = [
@@ -1091,7 +1094,7 @@ async def _async_stop_scripts_after_shutdown(hass, point_in_time):
         )
 
 
-async def _async_stop_scripts_at_shutdown(hass, event):
+async def _async_stop_scripts_at_shutdown(hass: HomeAssistant, event: Event) -> None:
     """Stop running Script objects started before shutdown."""
     async_call_later(
         hass, _SHUTDOWN_MAX_WAIT, partial(_async_stop_scripts_after_shutdown, hass)
