@@ -140,6 +140,9 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                 number_of_messages = await self._async_fetch_number_of_messages()
             except UpdateFailed as ex:
                 self.async_set_update_error(ex)
+                await self._cleanup()
+                await asyncio.sleep(BACKOFF_TIME)
+                continue
             else:
                 self.async_set_updated_data(number_of_messages)
             try:
