@@ -153,11 +153,6 @@ class FreeboxCamera(FreeboxHomeBaseClass, FFmpegCamera):
         await self.set_home_endpoint_value(self._command_motion_detection, False)
         self._attr_motion_detection_enabled = False
 
-    @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state."""
-        return True  # Cameras default to False
-
     async def async_update_signal(self) -> None:
         """Update the camera node."""
         self.update_node(self._router.home_devices[self._id])
