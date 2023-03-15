@@ -213,3 +213,4 @@ class XiaomiPlugConsumerConnected(BinarySensor, id_suffix="consumer_connected"):
 
     SENSOR_ATTR = "consumer_connected"
     _attr_name: str = "Consumer connected"
+    _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PLUG

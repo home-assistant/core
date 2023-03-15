@@ -378,7 +378,7 @@ async def test_duplicate_entity_validator(do_config) -> None:
             CONF_TYPE: SERIAL,
             CONF_BAUDRATE: 9600,
             CONF_BYTESIZE: 8,
-            CONF_METHOD: "rtu",
+            CONF_METHOD: "ascii",
             CONF_PORT: TEST_PORT_SERIAL,
             CONF_PARITY: "E",
             CONF_STOPBITS: 1,
