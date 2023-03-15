@@ -179,7 +179,7 @@ class Recorder(threading.Thread):
         db_max_retries: int,
         db_retry_wait: int,
         entity_filter: Callable[[str], bool],
-        exclude_t: list[str],
+        exclude_event_types: set[str],
         exclude_attributes_by_domain: dict[str, set[str]],
     ) -> None:
         """Initialize the recorder."""
@@ -212,7 +212,7 @@ class Recorder(threading.Thread):
         # it can be used to see if an entity is being recorded and is called
         # by is_entity_recorder and the sensor recorder.
         self.entity_filter = entity_filter
-        self.exclude_t = set(exclude_t)
+        self.exclude_event_types = exclude_event_types
 
         self.schema_version = 0
         self._commits_without_expire = 0
@@ -385,7 +385,7 @@ class Recorder(threading.Thread):
     @callback
     def _async_event_filter(self, event: Event) -> bool:
         """Filter events."""
-        if event.event_type in self.exclude_t:
+        if event.event_type in self.exclude_event_types:
             return False
 
         if (entity_id := event.data.get(ATTR_ENTITY_ID)) is None:
