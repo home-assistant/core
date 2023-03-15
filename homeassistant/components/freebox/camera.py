@@ -69,7 +69,7 @@ def add_entities(hass: HomeAssistant, router, async_add_entities, tracked):
     new_tracked = []
 
     for nodeid, node in router.home_devices.items():
-        if (node["category"] != "camera") or (nodeid in tracked):
+        if (node["category"] != Platform.CAMERA) or (nodeid in tracked):
             continue
         new_tracked.append(FreeboxCamera(hass, router, node))
         tracked.add(nodeid)
