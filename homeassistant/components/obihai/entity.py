@@ -14,6 +14,8 @@ class ObihaiEntity(Entity):
         """Initialize monitor sensor."""
         self._pyobihai = requester.pyobihai
 
-        self._attr_unique_id = f"{requester.serial}-{service_name}"
+        self._attr_unique_id = (
+            f"{requester.serial}-{'-'.join(service_name.split())}".lower()
+        )
         self._attr_name = service_name
         self._attr_device_info = requester.device_info
