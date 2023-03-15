@@ -1027,7 +1027,7 @@ class Recorder(threading.Thread):
         states_meta_manager = self.states_meta_manager
         if pending_states_meta := states_meta_manager.get_pending(entity_id):
             dbstate.states_meta_rel = pending_states_meta
-        elif metadata_id := states_meta_manager.get(entity_id, event_session):
+        elif metadata_id := states_meta_manager.get(entity_id, event_session, True):
             dbstate.metadata_id = metadata_id
         else:
             states_meta = StatesMeta(entity_id=entity_id)
