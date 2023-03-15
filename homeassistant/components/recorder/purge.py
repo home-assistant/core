@@ -1,7 +1,7 @@
 """Purge old data helper."""
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 from datetime import datetime
 from itertools import zip_longest
 import logging
@@ -143,11 +143,9 @@ def _purge_legacy_format(
     ) = _select_legacy_event_state_and_attributes_and_data_ids_to_purge(
         session, purge_before
     )
-    if state_ids:
-        _purge_state_ids(instance, session, state_ids)
+    _purge_state_ids(instance, session, state_ids)
     _purge_unused_attributes_ids(instance, session, attributes_ids)
-    if event_ids:
-        _purge_event_ids(session, event_ids)
+    _purge_event_ids(session, event_ids)
     _purge_unused_data_ids(instance, session, data_ids)
     return bool(event_ids or state_ids or attributes_ids or data_ids)
 
@@ -447,6 +445,8 @@ def _select_legacy_event_state_and_attributes_and_data_ids_to_purge(
 
 def _purge_state_ids(instance: Recorder, session: Session, state_ids: set[int]) -> None:
     """Disconnect states and delete by state id."""
+    if not state_ids:
+        return
 
     # Update old_state_id to NULL before deleting to ensure
     # the delete does not fail due to a foreign key constraint
@@ -558,8 +558,10 @@ def _purge_short_term_statistics(
     _LOGGER.debug("Deleted %s short term statistics", deleted_rows)
 
 
-def _purge_event_ids(session: Session, event_ids: Iterable[int]) -> None:
+def _purge_event_ids(session: Session, event_ids: set[int]) -> None:
     """Delete by event id."""
+    if not event_ids:
+        return
     deleted_rows = session.execute(delete_event_rows(event_ids))
     _LOGGER.debug("Deleted %s events", deleted_rows)
 
@@ -677,7 +679,7 @@ def _purge_filtered_states(
     if not to_purge:
         return True
     state_ids, attributes_ids, event_ids = zip(*to_purge)
-    filtered_event_ids = [id_ for id_ in event_ids if id_ is not None]
+    filtered_event_ids = {id_ for id_ in event_ids if id_ is not None}
     _LOGGER.debug(
         "Selected %s state_ids to remove that should be filtered", len(state_ids)
     )
@@ -723,7 +725,7 @@ def _purge_filtered_events(
     )
     state_ids: set[int] = {state.state_id for state in states}
     _purge_state_ids(instance, session, state_ids)
-    _purge_event_ids(session, event_ids)
+    _purge_event_ids(session, set(event_ids))
     if unused_data_ids_set := _select_unused_event_data_ids(
         session, set(data_ids), database_engine
     ):
