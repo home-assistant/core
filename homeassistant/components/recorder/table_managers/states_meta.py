@@ -2,29 +2,33 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from lru import LRU  # pylint: disable=no-name-in-module
 from sqlalchemy.orm.session import Session
 
 from homeassistant.core import Event
 
+from . import BaseTableManager
 from ..const import SQLITE_MAX_BIND_VARS
 from ..db_schema import StatesMeta
 from ..queries import find_all_states_metadata_ids, find_states_metadata_ids
 from ..util import chunked
 
+if TYPE_CHECKING:
+    from ..core import Recorder
+
 CACHE_SIZE = 8192
 
 
-class StatesMetaManager:
+class StatesMetaManager(BaseTableManager):
     """Manage the StatesMeta table."""
 
-    def __init__(self) -> None:
+    def __init__(self, recorder: Recorder) -> None:
         """Initialize the states meta manager."""
         self._id_map: dict[str, int] = LRU(CACHE_SIZE)
         self._pending: dict[str, StatesMeta] = {}
-        self.active = False
+        super().__init__(recorder)
 
     def load(self, events: list[Event], session: Session) -> None:
         """Load the entity_id to metadata_id mapping into memory."""
