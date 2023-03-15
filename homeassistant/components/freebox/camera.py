@@ -81,8 +81,6 @@ def add_entities(hass: HomeAssistant, router, async_add_entities, tracked):
 class FreeboxCamera(FreeboxHomeBaseClass, FFmpegCamera):
     """Representation of a Freebox camera."""
 
-    _attr_should_poll = True
-
     def __init__(
         self, hass: HomeAssistant, router: FreeboxRouter, node: dict[str, Any]
     ) -> None:
