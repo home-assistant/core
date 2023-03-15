@@ -479,28 +479,6 @@ def _evict_purged_states_from_old_states_cache(
         old_states.pop(old_state_reversed[purged_state_id], None)
 
 
-def _evict_purged_attributes_from_attributes_cache(
-    instance: Recorder, purged_attributes_ids: set[int]
-) -> None:
-    """Evict purged attribute ids from the attribute ids cache."""
-    # Make a map from attributes_id to the attributes json
-    state_attributes_ids = (
-        instance._state_attributes_ids  # pylint: disable=protected-access
-    )
-    state_attributes_ids_reversed = {
-        attributes_id: attributes
-        for attributes, attributes_id in state_attributes_ids.items()
-    }
-
-    # Evict any purged attributes from the state_attributes_ids cache
-    for purged_attribute_id in purged_attributes_ids.intersection(
-        state_attributes_ids_reversed
-    ):
-        state_attributes_ids.pop(
-            state_attributes_ids_reversed[purged_attribute_id], None
-        )
-
-
 def _purge_batch_attributes_ids(
     instance: Recorder, session: Session, attributes_ids: set[int]
 ) -> None:
@@ -512,7 +490,7 @@ def _purge_batch_attributes_ids(
         _LOGGER.debug("Deleted %s attribute states", deleted_rows)
 
     # Evict any entries in the state_attributes_ids cache referring to a purged state
-    _evict_purged_attributes_from_attributes_cache(instance, attributes_ids)
+    instance.state_attributes_manager.evict_purged(attributes_ids)
 
 
 def _purge_batch_data_ids(
