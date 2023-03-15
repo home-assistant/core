@@ -649,7 +649,7 @@ def _purge_filtered_data(instance: Recorder, session: Session) -> bool:
             instance, session, excluded_event_type_ids, now_timestamp
         )
 
-    # Purge has completed
+    # Purge has completed if there are not more state or events to purge
     return not (has_more_states_to_purge or has_more_events_to_purge)
 
 
