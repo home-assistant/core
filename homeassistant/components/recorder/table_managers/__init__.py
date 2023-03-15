@@ -1,7 +1,8 @@
 """Managers for each table."""
 
-from typing import TYPE_CHECKING, Generic, TypeVar
 from collections.abc import MutableMapping
+from typing import TYPE_CHECKING, Generic, TypeVar
+
 from lru import LRU  # pylint: disable=no-name-in-module
 
 if TYPE_CHECKING:
