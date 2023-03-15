@@ -59,6 +59,10 @@ class EventDataManager(BaseTableManager):
         """Resolve shared_datas to the data_id."""
         return self.get_many(((shared_data, data_hash),), session)[shared_data]
 
+    def get_from_cache(self, shared_data: str) -> int | None:
+        """Resolve shared_data to the data_id without accessing the underlying database."""
+        return self._id_map.get(shared_data)
+
     def get_many(
         self, shared_data_data_hashs: Iterable[tuple[str, int]], session: Session
     ) -> dict[str, int | None]:

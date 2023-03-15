@@ -982,10 +982,10 @@ class Recorder(threading.Thread):
         if pending_event_data := event_data_manager.get_pending(shared_data):
             dbevent.event_data_rel = pending_event_data
         # Matching attributes id found in the cache
+        elif data_id := event_data_manager.get_from_cache(shared_data):
+            dbevent.data_id = data_id
         elif (data_hash := EventData.hash_shared_data_bytes(shared_data_bytes)) and (
-            data_id := self.event_data_manager.get(
-                shared_data, data_hash, event_session
-            )
+            data_id := event_data_manager.get(shared_data, data_hash, event_session)
         ):
             dbevent.data_id = data_id
         else:
