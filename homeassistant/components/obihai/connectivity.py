@@ -3,7 +3,9 @@ from __future__ import annotations
 
 from pyobihai import PyObihai
 
-from .const import DEFAULT_PASSWORD, DEFAULT_USERNAME, LOGGER
+from homeassistant.helpers.entity import DeviceInfo
+
+from .const import DEFAULT_PASSWORD, DEFAULT_USERNAME, DOMAIN, LOGGER, OBIHAI
 
 
 def get_pyobihai(
@@ -45,7 +47,8 @@ class ObihaiConnection:
         self.host = host
         self.username = username
         self.password = password
-        self.serial: str
+        self.device_info: DeviceInfo
+        self.serial: str = ""
         self.services: list = []
         self.line_services: list = []
         self.call_direction: list = []
@@ -60,6 +63,15 @@ class ObihaiConnection:
                 return False
 
         self.serial = self.pyobihai.get_device_serial()
+        self.device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.serial)},
+            name=OBIHAI,
+            manufacturer=OBIHAI,
+            model=self.pyobihai.get_model_name(),
+            sw_version=self.pyobihai.get_software_version(),
+            hw_version=self.pyobihai.get_hardware_version(),
+        )
+
         self.services = self.pyobihai.get_state()
         self.line_services = self.pyobihai.get_line_state()
         self.call_direction = self.pyobihai.get_call_direction()

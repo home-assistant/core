@@ -1,13 +1,23 @@
 """The Obihai integration."""
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .const import PLATFORMS
+from .connectivity import ObihaiConnection
+from .const import DOMAIN, PLATFORMS
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
+    requester = ObihaiConnection(
+        entry.data[CONF_HOST],
+        username=entry.data[CONF_USERNAME],
+        password=entry.data[CONF_PASSWORD],
+    )
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = requester
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
