@@ -149,12 +149,12 @@ class StateAttributesManager(BaseLRUTableManager[StateAttributes]):
         recorder thread.
         """
         id_map = self._id_map
-        event_attributes_ids_reversed = {
+        state_attributes_ids_reversed = {
             attributes_id: shared_attrs
             for shared_attrs, attributes_id in id_map.items()
         }
         # Evict any purged data from the cache
         for purged_attributes_id in attributes_ids.intersection(
-            event_attributes_ids_reversed
+            state_attributes_ids_reversed
         ):
-            id_map.pop(event_attributes_ids_reversed[purged_attributes_id], None)
+            id_map.pop(state_attributes_ids_reversed[purged_attributes_id], None)
