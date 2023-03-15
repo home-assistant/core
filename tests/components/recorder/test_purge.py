@@ -26,6 +26,7 @@ from homeassistant.components.recorder.db_schema import (
     StatisticsShortTerm,
 )
 from homeassistant.components.recorder.purge import purge_old_data
+from homeassistant.components.recorder.queries import select_event_type_ids
 from homeassistant.components.recorder.services import (
     SERVICE_PURGE,
     SERVICE_PURGE_ENTITIES,
@@ -676,8 +677,8 @@ def _convert_pending_states_to_meta(instance: Recorder, session: Session) -> Non
     """Convert pending states to use states_metadata."""
     entity_ids: set[str] = set()
     states: set[States] = set()
+    states_meta_objects: dict[str, StatesMeta] = {}
     for object in session:
-        states_meta_objects: dict[str, StatesMeta] = {}
         if isinstance(object, States):
             entity_ids.add(object.entity_id)
             states.add(object)
@@ -695,6 +696,33 @@ def _convert_pending_states_to_meta(instance: Recorder, session: Session) -> Non
         if entity_id not in states_meta_objects:
             states_meta_objects[entity_id] = StatesMeta(entity_id=entity_id)
         state.states_meta_rel = states_meta_objects[entity_id]
+
+
+def _convert_pending_events_to_event_types(
+    instance: Recorder, session: Session
+) -> None:
+    """Convert pending events to use event_type_ids."""
+    event_types: set[str] = set()
+    events: set[Events] = set()
+    event_types_objects: dict[str, EventTypes] = {}
+    for object in session:
+        if isinstance(object, Events):
+            event_types.add(object.event_type)
+            events.add(object)
+
+    event_type_to_event_type_ids = instance.event_type_manager.get_many(
+        event_types, session
+    )
+
+    for event in events:
+        event_type = event.event_type
+        event.event_type = None
+        if event_type_id := event_type_to_event_type_ids.get(event_type):
+            event.event_type_id = event_type_id
+            continue
+        if event_type not in event_types_objects:
+            event_types_objects[event_type] = EventTypes(event_type=event_type)
+        event.event_type_rel = event_types_objects[event_type]
 
 
 @pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
@@ -850,12 +878,24 @@ async def test_purge_filtered_states(
         )
         assert states_sensor_excluded.count() == 0
 
-        assert session.query(States).get(72).old_state_id is None
-        assert session.query(States).get(72).attributes_id == 71
-        assert session.query(States).get(73).old_state_id is None
-        assert session.query(States).get(73).attributes_id == 71
+        assert (
+            session.query(States).filter(States.state_id == 72).first().old_state_id
+            is None
+        )
+        assert (
+            session.query(States).filter(States.state_id == 72).first().attributes_id
+            == 71
+        )
+        assert (
+            session.query(States).filter(States.state_id == 73).first().old_state_id
+            is None
+        )
+        assert (
+            session.query(States).filter(States.state_id == 73).first().attributes_id
+            == 71
+        )
 
-        final_keep_state = session.query(States).get(74)
+        final_keep_state = session.query(States).filter(States.state_id == 74).first()
         assert final_keep_state.old_state_id == 62  # should have been kept
         assert final_keep_state.attributes_id == 71
 
@@ -867,7 +907,7 @@ async def test_purge_filtered_states(
     await async_wait_purge_done(hass)
 
     with session_scope(hass=hass) as session:
-        final_keep_state = session.query(States).get(74)
+        final_keep_state = session.query(States).filter(States.state_id == 74).first()
         assert final_keep_state.old_state_id == 62  # should have been kept
         assert final_keep_state.attributes_id == 71
 
@@ -1022,7 +1062,7 @@ async def test_purge_filtered_events(
 ) -> None:
     """Test filtered events are purged."""
     config: ConfigType = {"exclude": {"event_types": ["EVENT_PURGE"]}}
-    await async_setup_recorder_instance(hass, config)
+    instance = await async_setup_recorder_instance(hass, config)
 
     def _add_db_entries(hass: HomeAssistant) -> None:
         with session_scope(hass=hass) as session:
@@ -1050,14 +1090,17 @@ async def test_purge_filtered_events(
                     timestamp,
                     event_id,
                 )
+            _convert_pending_events_to_event_types(instance, session)
 
     service_data = {"keep_days": 10}
     _add_db_entries(hass)
 
     with session_scope(hass=hass) as session:
-        events_purge = session.query(Events).filter(Events.event_type == "EVENT_PURGE")
+        events_purge = session.query(Events).filter(
+            Events.event_type_id.in_(select_event_type_ids(("EVENT_PURGE",)))
+        )
         events_keep = session.query(Events).filter(
-            Events.event_type == EVENT_STATE_CHANGED
+            Events.event_type_id.in_(select_event_type_ids((EVENT_STATE_CHANGED,)))
         )
         states = session.query(States)
 
@@ -1073,9 +1116,11 @@ async def test_purge_filtered_events(
     await async_wait_purge_done(hass)
 
     with session_scope(hass=hass) as session:
-        events_purge = session.query(Events).filter(Events.event_type == "EVENT_PURGE")
+        events_purge = session.query(Events).filter(
+            Events.event_type_id.in_(select_event_type_ids(("EVENT_PURGE",)))
+        )
         events_keep = session.query(Events).filter(
-            Events.event_type == EVENT_STATE_CHANGED
+            Events.event_type_id.in_(select_event_type_ids((EVENT_STATE_CHANGED,)))
         )
         states = session.query(States)
         assert events_purge.count() == 60
@@ -1094,9 +1139,11 @@ async def test_purge_filtered_events(
     await async_wait_purge_done(hass)
 
     with session_scope(hass=hass) as session:
-        events_purge = session.query(Events).filter(Events.event_type == "EVENT_PURGE")
+        events_purge = session.query(Events).filter(
+            Events.event_type_id.in_(select_event_type_ids(("EVENT_PURGE",)))
+        )
         events_keep = session.query(Events).filter(
-            Events.event_type == EVENT_STATE_CHANGED
+            Events.event_type_id.in_(select_event_type_ids((EVENT_STATE_CHANGED,)))
         )
         states = session.query(States)
         assert events_purge.count() == 0
@@ -1109,10 +1156,18 @@ async def test_purge_filtered_events_state_changed(
     hass: HomeAssistant,
 ) -> None:
     """Test filtered state_changed events are purged. This should also remove all states."""
-    config: ConfigType = {"exclude": {"event_types": [EVENT_STATE_CHANGED]}}
+    config: ConfigType = {
+        "exclude": {
+            "event_types": ["excluded_event"],
+            "entities": ["sensor.excluded", "sensor.old_format"],
+        }
+    }
     instance = await async_setup_recorder_instance(hass, config)
     # Assert entity_id is NOT excluded
-    assert instance.entity_filter("sensor.excluded") is True
+    assert instance.entity_filter("sensor.excluded") is False
+    assert instance.entity_filter("sensor.old_format") is False
+    assert instance.entity_filter("sensor.keep") is True
+    assert "excluded_event" in instance.exclude_event_types
 
     def _add_db_entries(hass: HomeAssistant) -> None:
         with session_scope(hass=hass) as session:
@@ -1167,34 +1222,56 @@ async def test_purge_filtered_events_state_changed(
                 old_state_id=62,  # keep
             )
             session.add_all((state_1, state_2, state_3))
+            session.add(
+                Events(
+                    event_id=231,
+                    event_type="excluded_event",
+                    event_data="{}",
+                    origin="LOCAL",
+                    time_fired_ts=dt_util.utc_to_timestamp(timestamp),
+                )
+            )
+            session.add(
+                States(
+                    entity_id="sensor.old_format",
+                    state="remove",
+                    attributes="{}",
+                    last_changed_ts=dt_util.utc_to_timestamp(timestamp),
+                    last_updated_ts=dt_util.utc_to_timestamp(timestamp),
+                )
+            )
+            _convert_pending_events_to_event_types(instance, session)
+            _convert_pending_states_to_meta(instance, session)
 
     service_data = {"keep_days": 10, "apply_filter": True}
     _add_db_entries(hass)
 
     with session_scope(hass=hass) as session:
-        events_keep = session.query(Events).filter(Events.event_type == "EVENT_KEEP")
+        events_keep = session.query(Events).filter(
+            Events.event_type_id.in_(select_event_type_ids(("EVENT_KEEP",)))
+        )
         events_purge = session.query(Events).filter(
-            Events.event_type == EVENT_STATE_CHANGED
+            Events.event_type_id.in_(select_event_type_ids(("excluded_event",)))
         )
         states = session.query(States)
 
         assert events_keep.count() == 10
-        assert events_purge.count() == 60
-        assert states.count() == 63
+        assert events_purge.count() == 1
+        assert states.count() == 64
 
     await hass.services.async_call(recorder.DOMAIN, SERVICE_PURGE, service_data)
     await hass.async_block_till_done()
 
-    await async_recorder_block_till_done(hass)
-    await async_wait_purge_done(hass)
-
-    await async_recorder_block_till_done(hass)
-    await async_wait_purge_done(hass)
+    for _ in range(4):
+        await async_recorder_block_till_done(hass)
+        await async_wait_purge_done(hass)
 
     with session_scope(hass=hass) as session:
-        events_keep = session.query(Events).filter(Events.event_type == "EVENT_KEEP")
+        events_keep = session.query(Events).filter(
+            Events.event_type_id.in_(select_event_type_ids(("EVENT_KEEP",)))
+        )
         events_purge = session.query(Events).filter(
-            Events.event_type == EVENT_STATE_CHANGED
+            Events.event_type_id.in_(select_event_type_ids(("excluded_event",)))
         )
         states = session.query(States)
 
@@ -1202,9 +1279,18 @@ async def test_purge_filtered_events_state_changed(
         assert events_purge.count() == 0
         assert states.count() == 3
 
-        assert session.query(States).get(61).old_state_id is None
-        assert session.query(States).get(62).old_state_id is None
-        assert session.query(States).get(63).old_state_id == 62  # should have been kept
+        assert (
+            session.query(States).filter(States.state_id == 61).first().old_state_id
+            is None
+        )
+        assert (
+            session.query(States).filter(States.state_id == 62).first().old_state_id
+            is None
+        )
+        assert (
+            session.query(States).filter(States.state_id == 63).first().old_state_id
+            == 62
+        )  # should have been kept
 
 
 async def test_purge_entities(
@@ -1330,7 +1416,7 @@ async def test_purge_entities(
 
     _add_purge_records(hass)
 
-    # Confirm calling service without arguments matches all records (default filter behaviour)
+    # Confirm calling service without arguments matches all records (default filter behavior)
     with session_scope(hass=hass) as session:
         states = session.query(States)
         assert states.count() == 190
