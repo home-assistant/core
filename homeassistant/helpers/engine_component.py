@@ -1,14 +1,17 @@
 """Engine component helper."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 import logging
-from typing import Generic, Protocol, TypeVar, cast
+from types import ModuleType
+from typing import Generic, Protocol, TypeVar
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_prepare_setup_platform
 
-from .typing import ConfigType
+from . import discovery
+from .typing import ConfigType, DiscoveryInfoType
 
 
 class Engine:
@@ -46,6 +49,12 @@ class EnginePlatformModule(Protocol[_EngineT_co]):
     ) -> _EngineT_co:
         """Set up an integration platform from a config entry."""
 
+    async def async_setup_platform(
+        self,
+        hass: HomeAssistant,
+    ) -> _EngineT_co:
+        """Set up an integration platform async."""
+
 
 class EngineComponent(Generic[_EngineT_co]):
     """Track engines for a component."""
@@ -74,37 +83,78 @@ class EngineComponent(Generic[_EngineT_co]):
         """Return a wrapped engine."""
         return list(self._engines.values())
 
+    @callback
+    def async_setup_discovery(self) -> None:
+        """Initialize the engine component discovery."""
+
+        async def async_platform_discovered(
+            platform: str, info: DiscoveryInfoType | None
+        ) -> None:
+            """Handle for discovered platform."""
+            await self.async_setup_domain(platform)
+
+        discovery.async_listen_platform(
+            self.hass, self.domain, async_platform_discovered
+        )
+
+    async def async_setup_domain(self, domain: str) -> bool:
+        """Set up an integration."""
+
+        async def setup(platform: EnginePlatformModule[_EngineT_co]) -> _EngineT_co:
+            return await platform.async_setup_platform(self.hass)
+
+        return await self._async_do_setup(domain, domain, setup)
+
     async def async_setup_entry(self, config_entry: ConfigEntry) -> bool:
         """Set up a config entry."""
+
+        async def setup(platform: EnginePlatformModule[_EngineT_co]) -> _EngineT_co:
+            return await platform.async_setup_entry(self.hass, config_entry)
+
+        return await self._async_do_setup(
+            config_entry.entry_id, config_entry.domain, setup
+        )
+
+    async def _async_do_setup(
+        self,
+        key: str,
+        platform_domain: str,
+        get_setup_coro: Callable[[ModuleType], Awaitable[_EngineT_co]],
+    ) -> bool:
+        """Set up an entry."""
         platform = await async_prepare_setup_platform(
-            self.hass, self.config, self.domain, config_entry.domain
+            self.hass, self.config, self.domain, platform_domain
         )
 
         if platform is None:
             return False
 
-        key = config_entry.entry_id
-
         if key in self._engines:
             raise ValueError("Config entry has already been setup!")
 
         try:
-            engine = await cast(
-                EnginePlatformModule[_EngineT_co], platform
-            ).async_setup_entry(self.hass, config_entry)
+            engine = await get_setup_coro(platform)
             await engine.async_internal_added_to_hass()
             await engine.async_added_to_hass()
         except Exception:  # pylint: disable=broad-except
-            self.logger.exception("Error setting up entry %s", config_entry.entry_id)
+            self.logger.exception(
+                "Error getting engine for %s (%s)", key, platform_domain
+            )
             return False
 
         self._engines[key] = engine
         return True
 
+    async def async_unload_domain(self, domain: str) -> bool:
+        """Unload a domain."""
+        return await self._async_do_unload(domain)
+
     async def async_unload_entry(self, config_entry: ConfigEntry) -> bool:
         """Unload a config entry."""
-        key = config_entry.entry_id
+        return await self._async_do_unload(config_entry.entry_id)
 
+    async def _async_do_unload(self, key: str) -> bool:
+        """Unload an engine."""
         if (engine := self._engines.pop(key, None)) is None:
             raise ValueError("Config entry was never loaded!")
 
@@ -112,7 +162,7 @@ class EngineComponent(Generic[_EngineT_co]):
             await engine.async_internal_will_remove_from_hass()
             await engine.async_will_remove_from_hass()
         except Exception:  # pylint: disable=broad-except
-            self.logger.exception("Error unloading entry %s", config_entry.entry_id)
+            self.logger.exception("Error unloading entry %s", key)
             return False
 
         return True

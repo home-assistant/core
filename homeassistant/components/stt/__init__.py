@@ -52,8 +52,12 @@ def async_get_provider(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up STT."""
-    hass.data[DOMAIN] = engine_component.EngineComponent(_LOGGER, DOMAIN, hass, config)
-    hass.http.register_view(SpeechToTextView(hass.data[DOMAIN]))
+    engines: engine_component.EngineComponent[
+        Provider
+    ] = engine_component.EngineComponent(_LOGGER, DOMAIN, hass, config)
+    engines.async_setup_discovery()
+    hass.data[DOMAIN] = engines
+    hass.http.register_view(SpeechToTextView(engines))
     return True
 
 
