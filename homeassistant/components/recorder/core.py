@@ -198,8 +198,6 @@ class Recorder(threading.Thread):
         self.database_engine: DatabaseEngine | None = None
         # Database connection is ready, but non-live migration may be in progress
         db_connected: asyncio.Future[bool] = hass.data[DOMAIN].db_connected
-        # Set to true once events and states are being processed
-        self.event_loop_stated: bool = False
         self.async_db_connected: asyncio.Future[bool] = db_connected
         # Database is ready to use but live migration may be in progress
         self.async_db_ready: asyncio.Future[bool] = asyncio.Future()
@@ -750,7 +748,6 @@ class Recorder(threading.Thread):
         # Use a session for the event read loop
         # with a commit every time the event time
         # has changed. This reduces the disk io.
-        self.event_loop_stated = True
         queue_ = self._queue
         startup_tasks: list[RecorderTask] = []
         while not queue_.empty() and (task := queue_.get_nowait()):

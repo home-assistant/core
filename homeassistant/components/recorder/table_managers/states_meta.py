@@ -28,6 +28,7 @@ class StatesMetaManager(BaseTableManager):
         """Initialize the states meta manager."""
         self._id_map: dict[str, int] = LRU(CACHE_SIZE)
         self._pending: dict[str, StatesMeta] = {}
+        self._did_first_load = False
         super().__init__(recorder)
 
     def load(self, events: list[Event], session: Session) -> None:
@@ -36,6 +37,7 @@ class StatesMetaManager(BaseTableManager):
         This call is not thread-safe and must be called from the
         recorder thread.
         """
+        self._did_first_load = True
         self.get_many(
             {
                 event.data["new_state"].entity_id
@@ -95,7 +97,7 @@ class StatesMetaManager(BaseTableManager):
         # instances of an entity_id from the database via purge
         # and we do not want to add it back to the cache from another
         # thread (history query).
-        update_cache = from_recorder or not self.recorder.event_loop_stated
+        update_cache = from_recorder or not self._did_first_load
 
         with session.no_autoflush:
             for missing_chunk in chunked(missing, SQLITE_MAX_BIND_VARS):
