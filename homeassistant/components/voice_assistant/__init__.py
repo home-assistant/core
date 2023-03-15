@@ -1,37 +1,31 @@
 """The Voice Assistant integration."""
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass
+import logging
 from typing import Any
 from uuid import uuid4
 
+from aiohttp import web
+from aiohttp.web_exceptions import HTTPBadRequest, HTTPNotFound
 import voluptuous as vol
-from aiohttp.hdrs import istr
 
 from homeassistant import core
+from homeassistant.components import stt, websocket_api
+from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.components import websocket_api, stt
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers import singleton
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.helpers.typing import ConfigType
 
-
-from aiohttp import web
-from aiohttp.web_exceptions import (
-    HTTPBadRequest,
-    HTTPNotFound,
-)
-
-from .const import DOMAIN, DEFAULT_PIPELINE
+from .const import DEFAULT_PIPELINE, DOMAIN
 from .pipeline import Pipeline, PipelineRequest, PipelineResponse
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Sets up Voice Assistant integration."""
+    """Set up Voice Assistant integration."""
     hass.data[DOMAIN] = {
         DEFAULT_PIPELINE: Pipeline(
             name=DEFAULT_PIPELINE,
@@ -60,6 +54,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 @dataclass
 class Session:
+    """Pipeline session for bridging websocket/HTTP APIs."""
+
     pipeline: Pipeline
     connection: websocket_api.ActiveConnection
     msg: dict[str, Any]
@@ -69,15 +65,18 @@ class SessionManager:
     """Manages sessions between websocket/HTTP APIs."""
 
     def __init__(self, hass: HomeAssistant) -> None:
+        """Create session manager."""
         self.hass = hass
         self._sessions: dict[str, Session] = {}
 
     def add_session(self, session: Session) -> str:
+        """Add a new session. Returns a unique session id."""
         session_id = str(uuid4())
         self._sessions[session_id] = session
         return session_id
 
     def pop_session(self, session_id: str) -> Session | None:
+        """Remove and return a session by id."""
         return self._sessions.pop(session_id, None)
 
 
@@ -112,7 +111,6 @@ async def websocket_run(
         return
 
     session_manager = _get_session_manager(hass)
-    _LOGGER.info(session_manager)
     session_id = session_manager.add_session(Session(pipeline, connection, msg))
 
     connection.send_message(
@@ -121,15 +119,18 @@ async def websocket_run(
 
 
 class VoiceAssistantView(HomeAssistantView):
+    """HTTP endpoint for posting audio data."""
+
     requires_auth = True
     url = "/api/voice_assistant/{pipeline_name}"
     name = "api:voice_assistant:pipeline_name"
 
     def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize HTTP view."""
         self.hass = hass
 
     async def post(self, request: web.Request, pipeline_name: str) -> web.Response:
-        """Run a pipeline using audio from HTTP request (like /api/stt)"""
+        """Run a pipeline using audio from HTTP request (like /api/stt)."""
         pipeline = self.hass.data[DOMAIN].get(pipeline_name)
         if pipeline is None:
             raise HTTPNotFound()
@@ -141,17 +142,14 @@ class VoiceAssistantView(HomeAssistantView):
             raise HTTPBadRequest(text=str(err)) from err
 
         session: Session | None = None
-        try:
-            session_id = request.headers[istr("X-Pipeline-Session")]
+        session_id = request.rel_url.query.get("session_id")
+        if session_id is not None:
             session = _get_session_manager(self.hass).pop_session(session_id)
 
             if session is None:
                 raise HTTPBadRequest(text=f"No session for id {session_id}")
 
             _LOGGER.info("Resuming session: %s", session_id)
-        except KeyError:
-            # No session
-            pass
 
         context = self.context(request)
         pipeline_request = PipelineRequest(
