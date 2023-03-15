@@ -100,7 +100,7 @@ async def test_if_fires_on_turn_on_request(
             blocking=True,
         )
 
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
     assert len(calls) == 2
     assert calls[0].data["some"] == device.id
     assert calls[0].data["id"] == 0
