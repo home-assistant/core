@@ -983,15 +983,13 @@ class Recorder(threading.Thread):
             dbevent.event_data_rel = pending_event_data
         # Matching attributes id found in the cache
         elif (data_id := event_data_manager.get_from_cache(shared_data)) or (
-            (data_hash := EventData.hash_shared_data_bytes(shared_data_bytes))
-            and (
-                data_id := event_data_manager.get(shared_data, data_hash, event_session)
-            )
+            (hash_ := EventData.hash_shared_data_bytes(shared_data_bytes))
+            and (data_id := event_data_manager.get(shared_data, hash_, event_session))
         ):
             dbevent.data_id = data_id
         else:
             # No matching attributes found, save them in the DB
-            dbevent_data = EventData(shared_data=shared_data, hash=data_hash)
+            dbevent_data = EventData(shared_data=shared_data, hash=hash_)
             event_data_manager.add_pending(dbevent_data)
             event_session.add(dbevent_data)
             dbevent.event_data_rel = dbevent_data
