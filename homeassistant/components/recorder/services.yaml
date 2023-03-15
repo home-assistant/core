@@ -54,6 +54,7 @@ purge_entities:
     keep_days:
       name: Days to keep
       description: Number of history days to keep in database of matching rows. The default of 0 days will remove all matching rows.
+      default: 0
       selector:
         number:
           min: 0
