@@ -459,7 +459,7 @@ def _purge_state_ids(instance: Recorder, session: Session, state_ids: set[int]) 
     _LOGGER.debug("Deleted %s states", deleted_rows)
 
     # Evict eny entries in the old_states cache referring to a purged state
-    instance.states_manager.evict_purged(state_ids)
+    instance.states_manager.evict_purged_state_ids(state_ids)
 
 
 def _purge_batch_attributes_ids(
@@ -559,6 +559,7 @@ def _purge_old_entity_ids(instance: Recorder, session: Session) -> None:
 
     # Evict any entries in the event_type cache referring to a purged state
     instance.states_meta_manager.evict_purged(purge_entity_ids)
+    instance.states_manager.evict_purged_entity_ids(purge_entity_ids)
 
 
 def _purge_filtered_data(instance: Recorder, session: Session) -> bool:

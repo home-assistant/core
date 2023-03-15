@@ -62,7 +62,7 @@ class StatesManager:
         self._last_committed_id.clear()
         self._pending.clear()
 
-    def evict_purged(self, purged_state_ids: set[int]) -> None:
+    def evict_purged_state_ids(self, purged_state_ids: set[int]) -> None:
         """Evict purged states from the committed states.
 
         When we purge states we need to make sure the next call to record a state
@@ -79,3 +79,13 @@ class StatesManager:
             last_committed_ids_reversed
         ):
             last_committed_ids.pop(last_committed_ids_reversed[purged_state_id], None)
+
+    def evict_purged_entity_ids(self, purged_entity_ids: set[str]) -> None:
+        """Evict purged entity_ids from the committed states.
+
+        When we purge states we need to make sure the next call to record a state
+        does not link the old_state_id to the purged state.
+        """
+        last_committed_ids = self._last_committed_id
+        for entity_id in purged_entity_ids:
+            last_committed_ids.pop(entity_id, None)
