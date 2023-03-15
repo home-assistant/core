@@ -133,19 +133,10 @@ class FreeboxCamera(FreeboxHomeBaseClass, FFmpegCamera):
         """Return flip."""
         return self._flip
 
-    @property
-    def command_flip(self) -> Any | str:
-        """Return command_flip."""
-        return self._command_flip
-
-    def set_flip(self, state: bool) -> None:
-        """Update flip."""
-        self._flip = state
-
     async def async_flip(self, entity: FreeboxCamera) -> None:
         """Flip the camera stream."""
-        entity.set_flip(not entity.flip)
-        await entity.set_home_endpoint_value(entity.command_flip, entity.flip)
+        self._flip = not entity.flip
+        await entity.set_home_endpoint_value(entity._command_flip, entity.flip)
 
     @property
     def motion_detection_enabled(self) -> bool:
