@@ -138,11 +138,6 @@ class FreeboxCamera(FreeboxHomeBaseClass, FFmpegCamera):
         self._flip = not entity.flip
         await entity.set_home_endpoint_value(entity._command_flip, entity.flip)
 
-    @property
-    def motion_detection_enabled(self) -> bool:
-        """Return the camera motion detection status."""
-        return self._attr_motion_detection_enabled
-
     async def async_enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""
         await self.set_home_endpoint_value(self._command_motion_detection, True)
