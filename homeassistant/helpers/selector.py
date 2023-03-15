@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any, Generic, Literal, TypedDict, TypeVar, cast
+from enum import IntFlag
+from functools import cache
+from typing import Any, Generic, Literal, Type, TypedDict, TypeVar, cast
 from uuid import UUID
 
 from typing_extensions import Required
@@ -79,7 +81,9 @@ class Selector(Generic[_T]):
         return {"selector": {self.selector_type: self.config}}
 
 
-def _validate_supported_feature(supported_feature: int | str) -> int:
+@cache
+def _entity_features() -> dict[str, Type[IntFlag]]:
+    """Return a cached lookup of entity feature enums."""
     # pylint: disable=import-outside-toplevel
     from homeassistant.components.alarm_control_panel import (
         AlarmControlPanelEntityFeature,
@@ -99,10 +103,7 @@ def _validate_supported_feature(supported_feature: int | str) -> int:
     from homeassistant.components.vacuum import VacuumEntityFeature
     from homeassistant.components.water_heater import WaterHeaterEntityFeature
 
-    if isinstance(supported_feature, int):
-        return supported_feature
-
-    known_entity_features = {
+    return {
         "AlarmControlPanelEntityFeature": AlarmControlPanelEntityFeature,
         "CalendarEntityFeature": CalendarEntityFeature,
         "CameraEntityFeature": CameraEntityFeature,
@@ -119,6 +120,15 @@ def _validate_supported_feature(supported_feature: int | str) -> int:
         "VacuumEntityFeature": VacuumEntityFeature,
         "WaterHeaterEntityFeature": WaterHeaterEntityFeature,
     }
+
+
+def _validate_supported_feature(supported_feature: int | str) -> int:
+    """Validate a supported feature and resolve an enum string to its value."""
+
+    if isinstance(supported_feature, int):
+        return supported_feature
+
+    known_entity_features = _entity_features()
 
     _, enum, feature = supported_feature.split(".", 2)
 
