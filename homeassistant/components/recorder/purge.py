@@ -14,7 +14,7 @@ from sqlalchemy.orm.session import Session
 import homeassistant.util.dt as dt_util
 
 from .const import SQLITE_MAX_BIND_VARS
-from .db_schema import Events, EventTypes, States, StatesMeta
+from .db_schema import Events, States, StatesMeta
 from .models import DatabaseEngine
 from .queries import (
     attributes_ids_exist_in_states,
@@ -638,15 +638,18 @@ def _purge_filtered_data(instance: Recorder, session: Session) -> bool:
         )
 
     # Check if excluded event_types are in database
-    excluded_event_type_ids: list[str] = [
-        event_type_id
-        for (event_type_id, event_type) in session.query(
-            EventTypes.event_type_id, EventTypes.event_type
-        ).all()
-        if event_type in instance.exclude_event_types
-    ]
     has_more_events_to_purge = False
-    if excluded_event_type_ids:
+    if (
+        event_type_to_event_type_ids := instance.event_type_manager.get_many(
+            instance.exclude_event_types, session
+        )
+    ) and (
+        excluded_event_type_ids := [
+            event_type_id
+            for event_type_id in event_type_to_event_type_ids.values()
+            if event_type_id is not None
+        ]
+    ):
         has_more_events_to_purge = _purge_filtered_events(
             instance, session, excluded_event_type_ids, now_timestamp
         )
@@ -698,7 +701,7 @@ def _purge_filtered_states(
 def _purge_filtered_events(
     instance: Recorder,
     session: Session,
-    excluded_event_type_ids: list[str],
+    excluded_event_type_ids: list[int],
     purge_before_timestamp: float,
 ) -> bool:
     """Remove filtered events and linked states.
