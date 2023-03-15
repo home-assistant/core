@@ -103,6 +103,6 @@ class ImapSensor(
         )
 
     @property
-    def native_value(self) -> int:
+    def native_value(self) -> int | None:
         """Return the number of emails found."""
         return self.coordinator.data
