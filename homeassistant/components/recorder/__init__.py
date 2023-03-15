@@ -142,12 +142,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass_config_path=hass.config.path(DEFAULT_DB_FILE)
     )
     exclude = conf[CONF_EXCLUDE]
-    exclude_t = exclude.get(CONF_EVENT_TYPES, [])
+    exclude_t: set[str] = set(exclude.get(CONF_EVENT_TYPES, []))
     if EVENT_STATE_CHANGED in exclude_t:
-        _LOGGER.warning(
-            "State change events are excluded, recorder will not record state changes."
-            "This will become an error in Home Assistant Core 2022.2"
-        )
+        _LOGGER.error("State change events cannot be excluded, use a filter instead")
+        exclude_t.remove(EVENT_STATE_CHANGED)
     instance = hass.data[DATA_INSTANCE] = Recorder(
         hass=hass,
         auto_purge=auto_purge,
