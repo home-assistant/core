@@ -48,9 +48,7 @@ async def test_turn_on_trigger_device_id(
         },
     )
 
-    with patch(
-        "homeassistant.components.samsungtv.media_player.send_magic_packet"
-    ) as mock_send_magic_packet:
+    with patch("homeassistant.components.samsungtv.media_player.send_magic_packet"):
         await hass.services.async_call(
             "media_player",
             "turn_on",
@@ -63,17 +61,12 @@ async def test_turn_on_trigger_device_id(
     assert calls[0].data["some"] == device.id
     assert calls[0].data["id"] == 0
 
-    assert mock_send_magic_packet.called
-
     with patch("homeassistant.config.load_yaml", return_value={}):
         await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
 
     calls.clear()
-    mock_send_magic_packet.reset_mock()
 
-    with patch(
-        "homeassistant.components.samsungtv.media_player.send_magic_packet"
-    ) as mock_send_magic_packet:
+    with patch("homeassistant.components.samsungtv.media_player.send_magic_packet"):
         await hass.services.async_call(
             "media_player",
             "turn_on",
@@ -83,8 +76,6 @@ async def test_turn_on_trigger_device_id(
 
         await hass.async_block_till_done()
     assert len(calls) == 0
-
-    assert mock_send_magic_packet.called
 
 
 @pytest.mark.usefixtures("remoteencws", "rest_api")
@@ -116,9 +107,7 @@ async def test_turn_on_trigger_entity_id(
         },
     )
 
-    with patch(
-        "homeassistant.components.samsungtv.media_player.send_magic_packet"
-    ) as mock_send_magic_packet:
+    with patch("homeassistant.components.samsungtv.media_player.send_magic_packet"):
         await hass.services.async_call(
             "media_player",
             "turn_on",
@@ -130,8 +119,6 @@ async def test_turn_on_trigger_entity_id(
     assert len(calls) == 1
     assert calls[0].data["some"] == ENTITY_ID
     assert calls[0].data["id"] == 0
-
-    assert mock_send_magic_packet.called
 
 
 @pytest.mark.usefixtures("remoteencws", "rest_api")

@@ -90,9 +90,7 @@ async def test_if_fires_on_turn_on_request(
         },
     )
 
-    with patch(
-        "homeassistant.components.samsungtv.media_player.send_magic_packet"
-    ) as mock_send_magic_packet:
+    with patch("homeassistant.components.samsungtv.media_player.send_magic_packet"):
         await hass.services.async_call(
             "media_player",
             "turn_on",
