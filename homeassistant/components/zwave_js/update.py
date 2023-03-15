@@ -46,14 +46,14 @@ async def async_setup_entry(
     """Set up Z-Wave button from config entry."""
     client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
 
-    semaphore = asyncio.Semaphore(3)
+    lock = asyncio.Lock()
 
     @callback
     def async_add_firmware_update_entity(node: ZwaveNode) -> None:
         """Add firmware update entity."""
         driver = client.driver
         assert driver is not None  # Driver is ready before platforms are loaded.
-        async_add_entities([ZWaveNodeFirmwareUpdate(driver, node, semaphore)])
+        async_add_entities([ZWaveNodeFirmwareUpdate(driver, node, lock)])
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
@@ -78,12 +78,12 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
     _attr_should_poll = False
 
     def __init__(
-        self, driver: Driver, node: ZwaveNode, semaphore: asyncio.Semaphore
+        self, driver: Driver, node: ZwaveNode, lock: asyncio.Lock
     ) -> None:
         """Initialize a Z-Wave device firmware update entity."""
         self.driver = driver
         self.node = node
-        self.semaphore = semaphore
+        self.lock = lock
         self._latest_version_firmware: NodeFirmwareUpdateInfo | None = None
         self._status_unsub: Callable[[], None] | None = None
         self._poll_unsub: Callable[[], None] | None = None
@@ -143,7 +143,9 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
 
     async def _async_update(self, _: HomeAssistant | datetime | None = None) -> None:
         """Update the entity."""
-        self._poll_unsub = None
+        if self._poll_unsub:
+            self._poll_unsub()
+            self._poll_unsub = None
 
         # If device is asleep/dead, wait for it to wake up/become alive before
         # attempting an update
@@ -158,13 +160,13 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
                     )
                 return
 
+        await self.lock.acquire()
         try:
-            async with self.semaphore:
-                available_firmware_updates = (
-                    await self.driver.controller.async_get_available_firmware_updates(
-                        self.node, API_KEY_FIRMWARE_UPDATE_SERVICE
-                    )
+            available_firmware_updates = (
+                await self.driver.controller.async_get_available_firmware_updates(
+                    self.node, API_KEY_FIRMWARE_UPDATE_SERVICE
                 )
+            )
         except FailedZWaveCommand as err:
             LOGGER.debug(
                 "Failed to get firmware updates for node %s: %s",
@@ -193,6 +195,12 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
                 self._attr_latest_version = self._attr_installed_version
                 self.async_write_ha_state()
         finally:
+            # Add a five minute delay before releasing the lock and queueing the next
+            # update. Useful especially at startup because all the entities get created
+            # in parallel and this ensures the first requests get spaced out, avoiding
+            # a network traffic flood.
+            await asyncio.sleep(300)
+            self.lock.release()
             self._poll_unsub = async_call_later(
                 self.hass, timedelta(days=1), self._async_update
             )
