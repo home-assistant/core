@@ -270,10 +270,10 @@ def expected_lingering_tasks() -> bool:
 
 
 @pytest.fixture
-def wait_for_stop_scripts_at_shutdown() -> bool:
-    """Add ability to bypass _async_stop_scripts_at_shutdown.
+def wait_for_stop_scripts_after_shutdown() -> bool:
+    """Add ability to bypass _schedule_stop_scripts_after_shutdown.
 
-    _async_stop_scripts_at_shutdown leaves a lingering timer.
+    _schedule_stop_scripts_after_shutdown leaves a lingering timer.
 
     Parametrize to True to bypass the pytest failure.
     @pytest.mark.parametrize("wait_for_stop_scripts_at_shutdown", [True])
@@ -283,14 +283,15 @@ def wait_for_stop_scripts_at_shutdown() -> bool:
 
 @pytest.fixture(autouse=True)
 def skip_stop_scripts(
-    wait_for_stop_scripts_at_shutdown: bool,
+    wait_for_stop_scripts_after_shutdown: bool,
 ) -> Generator[None, None, None]:
-    """Add ability to bypass _async_stop_scripts_at_shutdown."""
-    if wait_for_stop_scripts_at_shutdown:
+    """Add ability to bypass _schedule_stop_scripts_after_shutdown."""
+    if wait_for_stop_scripts_after_shutdown:
         yield
         return
     with patch(
-        "homeassistant.helpers.script._async_stop_scripts_at_shutdown", AsyncMock()
+        "homeassistant.helpers.script._schedule_stop_scripts_after_shutdown",
+        AsyncMock(),
     ):
         yield
 

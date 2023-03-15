@@ -1075,6 +1075,14 @@ class _QueuedScriptRun(_ScriptRun):
         super()._finish()
 
 
+@callback
+def _schedule_stop_scripts_after_shutdown(hass: HomeAssistant) -> None:
+    """Stop running Script objects started after shutdown."""
+    async_call_later(
+        hass, _SHUTDOWN_MAX_WAIT, partial(_async_stop_scripts_after_shutdown, hass)
+    )
+
+
 async def _async_stop_scripts_after_shutdown(
     hass: HomeAssistant, point_in_time: datetime
 ) -> None:
@@ -1096,9 +1104,7 @@ async def _async_stop_scripts_after_shutdown(
 
 async def _async_stop_scripts_at_shutdown(hass: HomeAssistant, event: Event) -> None:
     """Stop running Script objects started before shutdown."""
-    async_call_later(
-        hass, _SHUTDOWN_MAX_WAIT, partial(_async_stop_scripts_after_shutdown, hass)
-    )
+    _schedule_stop_scripts_after_shutdown(hass)
 
     running_scripts = [
         script
