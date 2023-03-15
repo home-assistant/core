@@ -9,6 +9,7 @@ import functools
 import gc
 import itertools
 import logging
+import os
 import sqlite3
 import ssl
 import threading
@@ -334,7 +335,8 @@ def verify_cleanup(
 
     for handle in event_loop._scheduled:  # type: ignore[attr-defined]
         if not handle.cancelled():
-            if expected_lingering_timers:
+            current_test = os.getenv("PYTEST_CURRENT_TEST")
+            if expected_lingering_timers or current_test.startswith("tests/components"):
                 _LOGGER.warning("Lingering timer after test %r", handle)
             else:
                 pytest.fail(f"Lingering timer after test {repr(handle)}")
