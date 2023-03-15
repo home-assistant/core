@@ -8,19 +8,18 @@ import pizone
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 
-from .const import (
-    DISPATCH_CONTROLLER_DISCONNECTED,
-    DISPATCH_CONTROLLER_RECONNECTED,
-    IZONE,
-)
+from .const import DISPATCH_CONTROLLER_DISCONNECTED, DISPATCH_CONTROLLER_RECONNECTED
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class ControllerUpdateCoordinator:
-    """Coordinate updates for a controller. This works similarly to homeassistant.helpers.update_coordinator.DataUpdateCoordinator."""
+    """Coordinate updates for a controller.
+
+    This works similarly to homeassistant.helpers.update_coordinator.DataUpdateCoordinator.
+    """
 
     def __init__(
         self,
@@ -32,12 +31,6 @@ class ControllerUpdateCoordinator:
         self._controller = ctrl
         self._available_listeners: list[CALLBACK_TYPE] = []
         self._available = True
-        self._device_info = DeviceInfo(
-            identifiers={(IZONE, ctrl.device_uid)},
-            manufacturer="IZone",
-            model=ctrl.sys_type,
-            name=f"iZone Controller {ctrl.device_uid}",
-        )
 
         @callback
         def controller_disconnected(ctrl: pizone.Controller, _: Exception) -> None:
@@ -98,11 +91,6 @@ class ControllerUpdateCoordinator:
     def async_remove_available_listener(self, update_callback: CALLBACK_TYPE) -> None:
         """Remove data update."""
         self._available_listeners.remove(update_callback)
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info for the controller."""
-        return self._device_info
 
     @property
     def controller(self) -> pizone.Controller:
