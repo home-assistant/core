@@ -1,0 +1,10 @@
+# serializer version: 1
+# name: test_setup
+  IssueRegistryItemSnapshot({
+    'created': <ANY>,
+    'dismissed_version': None,
+    'domain': 'samsungtv',
+    'is_persistent': False,
+    'issue_id': 'deprecated_yaml',
+  })
+# ---

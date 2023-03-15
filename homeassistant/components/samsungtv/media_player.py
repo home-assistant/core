@@ -33,10 +33,13 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_component
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_component,
+    issue_registry as ir,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
@@ -143,7 +146,7 @@ class SamsungTVDevice(MediaPlayerEntity):
             self._attr_device_info["identifiers"] = {(DOMAIN, self.unique_id)}
         if self._mac:
             self._attr_device_info["connections"] = {
-                (CONNECTION_NETWORK_MAC, self._mac)
+                (dr.CONNECTION_NETWORK_MAC, self._mac)
             }
 
         # Mark the end of a shutdown command (need to wait 15 seconds before
@@ -465,10 +468,20 @@ class SamsungTVDevice(MediaPlayerEntity):
         """Turn the media player on."""
         if self._turn_on:
             await self._turn_on.async_run(self.hass, self._context)
-        # on_script is deprecated - replaced by turn_on trigger
-        if self._on_script:
+        elif self._on_script:
+            # YAML on_script is deprecated - replaced by turn_on trigger
             await self._on_script.async_run(context=self._context)
         elif self._mac:
+            # WOL is deprecated - replaced by turn_on trigger
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                "deprecated_wol",
+                breaks_in_ha_version="2023.6.0",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="deprecated_wol",
+            )
             await self.hass.async_add_executor_job(self._wake_on_lan)
 
     async def async_select_source(self, source: str) -> None:

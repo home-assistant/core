@@ -21,6 +21,7 @@ from samsungtvws.encrypted.remote import (
 )
 from samsungtvws.exceptions import ConnectionFailure, HttpApiError, UnauthorizedError
 from samsungtvws.remote import ChannelEmitCommand, SendRemoteKey
+from syrupy.assertion import SnapshotAssertion
 from websockets.exceptions import ConnectionClosedError, WebSocketException
 
 from homeassistant.components.media_player import (
@@ -77,6 +78,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -1076,7 +1078,9 @@ async def test_turn_on_with_turnon(hass: HomeAssistant, delay: Mock) -> None:
 
 
 @pytest.mark.usefixtures("remotews", "rest_api")
-async def test_turn_on_wol(hass: HomeAssistant) -> None:
+async def test_turn_on_wol(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, snapshot: SnapshotAssertion
+) -> None:
     """Test turn on."""
     entry = MockConfigEntry(
         domain=SAMSUNGTV_DOMAIN,
@@ -1094,6 +1098,10 @@ async def test_turn_on_wol(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
     assert mock_send_magic_packet.called
+
+    # ensure deprecated_yaml issue is raised
+    issue = issue_registry.async_get_issue(SAMSUNGTV_DOMAIN, "deprecated_wol")
+    assert issue == snapshot
 
 
 async def test_turn_on_without_turnon(hass: HomeAssistant, remote: Mock) -> None:

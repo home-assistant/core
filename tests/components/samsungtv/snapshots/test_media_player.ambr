@@ -1,0 +1,10 @@
+# serializer version: 1
+# name: test_turn_on_wol
+  IssueRegistryItemSnapshot({
+    'created': <ANY>,
+    'dismissed_version': None,
+    'domain': 'samsungtv',
+    'is_persistent': False,
+    'issue_id': 'deprecated_wol',
+  })
+# ---
