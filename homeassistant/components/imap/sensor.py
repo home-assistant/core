@@ -15,7 +15,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ImapDataUpdateCoordinator
+from . import ImapPollingDataUpdateCoordinator, ImapPushDataUpdateCoordinator
 from .const import (
     CONF_CHARSET,
     CONF_FOLDER,
@@ -69,18 +69,26 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Imap sensor."""
 
-    coordinator: ImapDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: ImapPushDataUpdateCoordinator | ImapPollingDataUpdateCoordinator = (
+        hass.data[DOMAIN][entry.entry_id]
+    )
 
     async_add_entities([ImapSensor(coordinator)])
 
 
-class ImapSensor(CoordinatorEntity[ImapDataUpdateCoordinator], SensorEntity):
+class ImapSensor(
+    CoordinatorEntity[ImapPushDataUpdateCoordinator | ImapPollingDataUpdateCoordinator],
+    SensorEntity,
+):
     """Representation of an IMAP sensor."""
 
     _attr_icon = "mdi:email-outline"
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: ImapDataUpdateCoordinator) -> None:
+    def __init__(
+        self,
+        coordinator: ImapPushDataUpdateCoordinator | ImapPollingDataUpdateCoordinator,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         # To be removed when YAML import is removed
@@ -98,8 +106,3 @@ class ImapSensor(CoordinatorEntity[ImapDataUpdateCoordinator], SensorEntity):
     def native_value(self) -> int:
         """Return the number of emails found."""
         return self.coordinator.data
-
-    async def async_update(self) -> None:
-        """Check for idle state before updating."""
-        if not await self.coordinator.imap_client.stop_wait_server_push():
-            await super().async_update()
