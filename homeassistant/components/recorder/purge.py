@@ -721,15 +721,13 @@ def _purge_filtered_events(
     _LOGGER.debug(
         "Selected %s event_ids to remove that should be filtered", len(event_ids_set)
     )
-    if event_ids_set:
+    states: list[Row[tuple[int]]] = (
+        session.query(States.state_id).filter(States.event_id.in_(event_ids_set)).all()
+    )
+    if states:
         # These are legacy states that are linked to an event that are no longer
         # created but since we did not remove them when we stopped adding new ones
         # we will need to purge them here.
-        states: list[Row[tuple[int]]] = (
-            session.query(States.state_id)
-            .filter(States.event_id.in_(event_ids_set))
-            .all()
-        )
         state_ids: set[int] = {state.state_id for state in states}
         _purge_state_ids(instance, session, state_ids)
     _purge_event_ids(session, event_ids_set)
