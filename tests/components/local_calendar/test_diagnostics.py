@@ -36,7 +36,7 @@ async def test_empty_calendar(
         "system_timezone": "tzlocal()",  # Will by python system timezone
         "timezone": "America/Regina",  # HomeAssistant timezone set by fixture
         "now": "2023-03-13T13:05:00-06:00",
-        "ics": "***",
+        "ics": "",
     }
 
 
