@@ -1522,7 +1522,7 @@ pybalboa==1.0.1
 pybbox==0.0.5-alpha
 
 # homeassistant.components.blackbird
-pyblackbird==0.5
+pyblackbird==0.6
 
 # homeassistant.components.bluetooth_tracker
 # pybluez==0.22
