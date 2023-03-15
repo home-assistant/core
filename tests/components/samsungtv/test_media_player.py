@@ -1099,7 +1099,7 @@ async def test_turn_on_wol(
         await hass.async_block_till_done()
     assert mock_send_magic_packet.called
 
-    # ensure deprecated_yaml issue is raised
+    # ensure deprecated_wol issue is raised
     issue = issue_registry.async_get_issue(SAMSUNGTV_DOMAIN, "deprecated_wol")
     assert issue == snapshot
 
