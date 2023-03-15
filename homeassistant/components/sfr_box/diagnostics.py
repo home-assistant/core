@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .models import DomainData
 
-TO_REDACT = {"mac_addr", "serial_number"}
+TO_REDACT = {"mac_addr", "serial_number", "ip_addr", "ipv6_addr"}
 
 
 async def async_get_config_entry_diagnostics(
@@ -33,8 +33,6 @@ async def async_get_config_entry_diagnostics(
             "system": async_redact_data(
                 dataclasses.asdict(data.system.data), TO_REDACT
             ),
-            "wan": async_redact_data(
-                dataclasses.asdict(await data.system.box.wan_get_info()), TO_REDACT
-            ),
+            "wan": async_redact_data(dataclasses.asdict(data.wan.data), TO_REDACT),
         },
     }

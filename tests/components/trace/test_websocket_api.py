@@ -1,7 +1,8 @@
 """Test Trace websocket API."""
 import asyncio
+from collections import defaultdict
 import json
-from typing import Any, DefaultDict
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -391,7 +392,7 @@ async def test_get_trace(
     trace_list = response["result"]
 
     # Get all traces and generate expected stored traces
-    traces = DefaultDict(list)
+    traces = defaultdict(list)
     for trace in trace_list:
         item_id = trace["item_id"]
         run_id = trace["run_id"]
@@ -448,7 +449,7 @@ async def test_restore_traces(
     trace_list = response["result"]
 
     # Get all traces and generate expected stored traces
-    traces = DefaultDict(list)
+    traces = defaultdict(list)
     contexts = {}
     for trace in trace_list:
         item_id = trace["item_id"]

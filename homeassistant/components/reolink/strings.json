@@ -46,6 +46,10 @@
     "enable_port": {
       "title": "Reolink port not enabled",
       "description": "Failed to automatically enable {ports}port(s) on {name}. Use the [Reolink client]({info_link}) to manually set it to ON"
+    },
+    "firmware_update": {
+      "title": "Reolink firmware update required",
+      "description": "\"{name}\" with model \"{model}\" and hardware version \"{hw_version}\" is running a old firmware version \"{current_firmware}\", while at least firmware version \"{required_firmware}\" is required for proper operation of the Reolink integration. The latest firmware can be downloaded from the [Reolink download center]({download_link})."
     }
   },
   "entity": {
@@ -62,6 +66,11 @@
           "auto": "Auto",
           "color": "Color",
           "blackwhite": "Black&White"
+        }
+      },
+      "auto_quick_reply_message": {
+        "state": {
+          "off": "Off"
         }
       }
     }

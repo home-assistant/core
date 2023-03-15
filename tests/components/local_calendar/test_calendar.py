@@ -28,6 +28,7 @@ async def test_empty_calendar(
     assert len(events) == 0
 
     state = hass.states.get(TEST_ENTITY)
+    assert state
     assert state.name == FRIENDLY_NAME
     assert state.state == STATE_OFF
     assert dict(state.attributes) == {
@@ -140,6 +141,7 @@ async def test_active_event(
     )
 
     state = hass.states.get(TEST_ENTITY)
+    assert state
     assert state.name == FRIENDLY_NAME
     assert state.state == STATE_ON
     assert dict(state.attributes) == {
@@ -176,6 +178,7 @@ async def test_upcoming_event(
     )
 
     state = hass.states.get(TEST_ENTITY)
+    assert state
     assert state.name == FRIENDLY_NAME
     assert state.state == STATE_OFF
     assert dict(state.attributes) == {
@@ -642,9 +645,10 @@ async def test_invalid_rrule(
             },
         },
     )
+    assert resp
     assert not resp.get("success")
     assert "error" in resp
-    assert resp.get("error").get("code") == "invalid_format"
+    assert resp["error"].get("code") == "invalid_format"
 
 
 @pytest.mark.parametrize(
@@ -720,9 +724,10 @@ async def test_start_end_types(
             },
         },
     )
+    assert result
     assert not result.get("success")
     assert "error" in result
-    assert "code" in result.get("error")
+    assert "code" in result["error"]
     assert result["error"]["code"] == "invalid_format"
 
 
@@ -743,9 +748,10 @@ async def test_end_before_start(
             },
         },
     )
+    assert result
     assert not result.get("success")
     assert "error" in result
-    assert "code" in result.get("error")
+    assert "code" in result["error"]
     assert result["error"]["code"] == "invalid_format"
 
 
@@ -767,9 +773,10 @@ async def test_invalid_recurrence_rule(
             },
         },
     )
+    assert result
     assert not result.get("success")
     assert "error" in result
-    assert "code" in result.get("error")
+    assert "code" in result["error"]
     assert result["error"]["code"] == "invalid_format"
 
 
@@ -790,9 +797,10 @@ async def test_invalid_date_formats(
             },
         },
     )
+    assert result
     assert not result.get("success")
     assert "error" in result
-    assert "code" in result.get("error")
+    assert "code" in result["error"]
     assert result["error"]["code"] == "invalid_format"
 
 
@@ -815,9 +823,30 @@ async def test_update_invalid_event_id(
             },
         },
     )
+    assert resp
     assert not resp.get("success")
     assert "error" in resp
-    assert resp.get("error").get("code") == "failed"
+    assert resp["error"].get("code") == "failed"
+
+
+async def test_delete_invalid_event_id(
+    ws_client: ClientFixture,
+    setup_integration: None,
+    hass: HomeAssistant,
+) -> None:
+    """Test deleting an event with an invalid event uid."""
+    client = await ws_client()
+    resp = await client.cmd(
+        "delete",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "uid-does-not-exist",
+        },
+    )
+    assert resp
+    assert not resp.get("success")
+    assert "error" in resp
+    assert resp["error"].get("code") == "failed"
 
 
 @pytest.mark.parametrize(

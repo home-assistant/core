@@ -123,6 +123,42 @@
       'aliases': set({
       }),
       'area_id': None,
+      'capabilities': dict({
+        'options': list([
+          'adsl_ppp',
+          'adsl_routed',
+          'ftth_routed',
+          'grps_ppp',
+          'unknown',
+        ]),
+      }),
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'sensor',
+      'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+      'entity_id': 'sensor.sfr_box_wan_mode',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+      'original_icon': None,
+      'original_name': 'WAN mode',
+      'platform': 'sfr_box',
+      'supported_features': 0,
+      'translation_key': 'wan_mode',
+      'unique_id': 'e4:5d:51:00:11:22_wan_mode',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
       'device_class': None,
@@ -680,5 +716,25 @@
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '12251',
+  })
+# ---
+# name: test_sensors[sensor.sfr_box_wan_mode]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'SFR Box WAN mode',
+      'options': list([
+        'adsl_ppp',
+        'adsl_routed',
+        'ftth_routed',
+        'grps_ppp',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sfr_box_wan_mode',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'adsl_routed',
   })
 # ---
