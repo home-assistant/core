@@ -118,7 +118,7 @@ class FreeboxCamera(FreeboxHomeBaseClass, FFmpegCamera):
             node["show_endpoints"], ATTR_ACTIVATION
         )
         self._timestamp = self.get_command_id(node["show_endpoints"], ATTR_TIMESTAMP)
-        self._volume_micro = self.get_command_id(node["show_endpoints"], ATTR_VOLUME)
+        self._mic_volume = self.get_command_id(node["show_endpoints"], ATTR_VOLUME)
         self._sound_detection = self.get_command_id(
             node["show_endpoints"], ATTR_SOUND_DETECTION
         )
