@@ -85,15 +85,6 @@ def find_shared_attributes_id(
     )
 
 
-def find_shared_data_id(attr_hash: int, shared_data: str) -> StatementLambdaElement:
-    """Find a data_id by hash and shared_data."""
-    return lambda_stmt(
-        lambda: select(EventData.data_id)
-        .filter(EventData.hash == attr_hash)
-        .filter(EventData.shared_data == shared_data)
-    )
-
-
 def _state_attrs_exist(attr: int | None) -> Select:
     """Check if a state attributes id exists in the states table."""
     # https://github.com/sqlalchemy/sqlalchemy/issues/9189
