@@ -150,12 +150,12 @@ class EventProcessor:
             #
             return result.yield_per(1024)
 
-        with session_scope(hass=self.hass) as session:
+        with session_scope(hass=self.hass, read_only=True) as session:
             metadata_ids: list[int] | None = None
             if self.entity_ids:
                 instance = get_instance(self.hass)
                 entity_id_to_metadata_id = instance.states_meta_manager.get_many(
-                    self.entity_ids, session
+                    self.entity_ids, session, False
                 )
                 metadata_ids = [
                     metadata_id

@@ -68,7 +68,7 @@ class Base(DeclarativeBase):
     """Base class for tables."""
 
 
-SCHEMA_VERSION = 38
+SCHEMA_VERSION = 41
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -229,7 +229,7 @@ class Events(Base):
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
     )
     event_type_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("event_types.event_type_id"), index=True
+        Integer, ForeignKey("event_types.event_type_id")
     )
     event_data_rel: Mapped[EventData | None] = relationship("EventData")
     event_type_rel: Mapped[EventTypes | None] = relationship("EventTypes")
@@ -348,7 +348,9 @@ class EventTypes(Base):
     __table_args__ = (_DEFAULT_TABLE_ARGS,)
     __tablename__ = TABLE_EVENT_TYPES
     event_type_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
-    event_type: Mapped[str | None] = mapped_column(String(MAX_LENGTH_EVENT_EVENT_TYPE))
+    event_type: Mapped[str | None] = mapped_column(
+        String(MAX_LENGTH_EVENT_EVENT_TYPE), index=True
+    )
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
@@ -426,14 +428,15 @@ class States(Base):
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
     )
     metadata_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("states_meta.metadata_id"), index=True
+        Integer, ForeignKey("states_meta.metadata_id")
     )
     states_meta_rel: Mapped[StatesMeta | None] = relationship("StatesMeta")
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
-            f"<recorder.States(id={self.state_id}, entity_id='{self.entity_id}',"
+            f"<recorder.States(id={self.state_id}, entity_id='{self.entity_id}'"
+            f" metadata_id={self.metadata_id},"
             f" state='{self.state}', event_id='{self.event_id}',"
             f" last_updated='{self._last_updated_isotime}',"
             f" old_state_id={self.old_state_id}, attributes_id={self.attributes_id})>"
@@ -597,7 +600,9 @@ class StatesMeta(Base):
     __table_args__ = (_DEFAULT_TABLE_ARGS,)
     __tablename__ = TABLE_STATES_META
     metadata_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
-    entity_id: Mapped[str | None] = mapped_column(String(MAX_LENGTH_STATE_ENTITY_ID))
+    entity_id: Mapped[str | None] = mapped_column(
+        String(MAX_LENGTH_STATE_ENTITY_ID), index=True
+    )
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
@@ -617,7 +622,6 @@ class StatisticsBase:
     metadata_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey(f"{TABLE_STATISTICS_META}.id", ondelete="CASCADE"),
-        index=True,
     )
     start: Mapped[datetime | None] = mapped_column(
         DATETIME_TYPE, index=True

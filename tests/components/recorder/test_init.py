@@ -100,7 +100,7 @@ def _default_recorder(hass):
         db_max_retries=10,
         db_retry_wait=3,
         entity_filter=CONFIG_SCHEMA({DOMAIN: {}}),
-        exclude_t=[],
+        exclude_event_types=set(),
         exclude_attributes_by_domain={},
     )
 

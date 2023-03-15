@@ -9,7 +9,7 @@ from typing import Any
 from ical.calendar import Calendar
 from ical.calendar_stream import IcsCalendarStream
 from ical.event import Event
-from ical.store import EventStore
+from ical.store import EventStore, EventStoreError
 from ical.types import Range, Recur
 from pydantic import ValidationError
 import voluptuous as vol
@@ -24,6 +24,7 @@ from homeassistant.components.calendar import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -119,11 +120,14 @@ class LocalCalendarEntity(CalendarEntity):
         range_value: Range = Range.NONE
         if recurrence_range == Range.THIS_AND_FUTURE:
             range_value = Range.THIS_AND_FUTURE
-        EventStore(self._calendar).delete(
-            uid,
-            recurrence_id=recurrence_id,
-            recurrence_range=range_value,
-        )
+        try:
+            EventStore(self._calendar).delete(
+                uid,
+                recurrence_id=recurrence_id,
+                recurrence_range=range_value,
+            )
+        except EventStoreError as err:
+            raise HomeAssistantError("Error while deleting event: {err}") from err
         await self._async_store()
         await self.async_update_ha_state(force_refresh=True)
 
@@ -139,12 +143,15 @@ class LocalCalendarEntity(CalendarEntity):
         range_value: Range = Range.NONE
         if recurrence_range == Range.THIS_AND_FUTURE:
             range_value = Range.THIS_AND_FUTURE
-        EventStore(self._calendar).edit(
-            uid,
-            new_event,
-            recurrence_id=recurrence_id,
-            recurrence_range=range_value,
-        )
+        try:
+            EventStore(self._calendar).edit(
+                uid,
+                new_event,
+                recurrence_id=recurrence_id,
+                recurrence_range=range_value,
+            )
+        except EventStoreError as err:
+            raise HomeAssistantError("Error while updating event: {err}") from err
         await self._async_store()
         await self.async_update_ha_state(force_refresh=True)
 

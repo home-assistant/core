@@ -14,7 +14,7 @@ from operator import itemgetter
 import os
 import re
 from statistics import mean
-from typing import TYPE_CHECKING, Any, Literal, cast
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
 
 from sqlalchemy import Select, and_, bindparam, func, lambda_stmt, select, text
 from sqlalchemy.engine import Engine
@@ -164,6 +164,24 @@ STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
 
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class BaseStatisticsRow(TypedDict, total=False):
+    """A processed row of statistic data."""
+
+    start: float
+
+
+class StatisticsRow(BaseStatisticsRow, total=False):
+    """A processed row of statistic data."""
+
+    end: float
+    last_reset: float | None
+    state: float | None
+    sum: float | None
+    min: float | None
+    max: float | None
+    mean: float | None
 
 
 def _get_unit_class(unit: str | None) -> str | None:
@@ -925,7 +943,7 @@ def get_metadata(
     statistic_source: str | None = None,
 ) -> dict[str, tuple[int, StatisticMetaData]]:
     """Return metadata for statistic_ids."""
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         return get_metadata_with_session(
             session,
             statistic_ids=statistic_ids,
@@ -985,7 +1003,7 @@ def list_statistic_ids(
     statistic_ids_set = set(statistic_ids) if statistic_ids else None
 
     # Query the database
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         metadata = get_metadata_with_session(
             session, statistic_type=statistic_type, statistic_ids=statistic_ids
         )
@@ -1048,14 +1066,14 @@ def list_statistic_ids(
 
 
 def _reduce_statistics(
-    stats: dict[str, list[dict[str, Any]]],
+    stats: dict[str, list[StatisticsRow]],
     same_period: Callable[[float, float], bool],
     period_start_end: Callable[[float], tuple[float, float]],
     period: timedelta,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-) -> dict[str, list[dict[str, Any]]]:
+) -> dict[str, list[StatisticsRow]]:
     """Reduce hourly statistics to daily or monthly statistics."""
-    result: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    result: dict[str, list[StatisticsRow]] = defaultdict(list)
     period_seconds = period.total_seconds()
     _want_mean = "mean" in types
     _want_min = "min" in types
@@ -1067,16 +1085,15 @@ def _reduce_statistics(
         max_values: list[float] = []
         mean_values: list[float] = []
         min_values: list[float] = []
-        prev_stat: dict[str, Any] = stat_list[0]
+        prev_stat: StatisticsRow = stat_list[0]
+        fake_entry: StatisticsRow = {"start": stat_list[-1]["start"] + period_seconds}
 
         # Loop over the hourly statistics + a fake entry to end the period
-        for statistic in chain(
-            stat_list, ({"start": stat_list[-1]["start"] + period_seconds},)
-        ):
+        for statistic in chain(stat_list, (fake_entry,)):
             if not same_period(prev_stat["start"], statistic["start"]):
                 start, end = period_start_end(prev_stat["start"])
                 # The previous statistic was the last entry of the period
-                row: dict[str, Any] = {
+                row: StatisticsRow = {
                     "start": start,
                     "end": end,
                 }
@@ -1146,9 +1163,9 @@ def reduce_day_ts_factory() -> (
 
 
 def _reduce_statistics_per_day(
-    stats: dict[str, list[dict[str, Any]]],
+    stats: dict[str, list[StatisticsRow]],
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-) -> dict[str, list[dict[str, Any]]]:
+) -> dict[str, list[StatisticsRow]]:
     """Reduce hourly statistics to daily statistics."""
     _same_day_ts, _day_start_end_ts = reduce_day_ts_factory()
     return _reduce_statistics(
@@ -1196,9 +1213,9 @@ def reduce_week_ts_factory() -> (
 
 
 def _reduce_statistics_per_week(
-    stats: dict[str, list[dict[str, Any]]],
+    stats: dict[str, list[StatisticsRow]],
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-) -> dict[str, list[dict[str, Any]]]:
+) -> dict[str, list[StatisticsRow]]:
     """Reduce hourly statistics to weekly statistics."""
     _same_week_ts, _week_start_end_ts = reduce_week_ts_factory()
     return _reduce_statistics(
@@ -1248,9 +1265,9 @@ def reduce_month_ts_factory() -> (
 
 
 def _reduce_statistics_per_month(
-    stats: dict[str, list[dict[str, Any]]],
+    stats: dict[str, list[StatisticsRow]],
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-) -> dict[str, list[dict[str, Any]]]:
+) -> dict[str, list[StatisticsRow]]:
     """Reduce hourly statistics to monthly statistics."""
     _same_month_ts, _month_start_end_ts = reduce_month_ts_factory()
     return _reduce_statistics(
@@ -1589,7 +1606,7 @@ def statistic_during_period(
 
     result: dict[str, Any] = {}
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         # Fetch metadata for the given statistic_id
         if not (
             metadata := get_metadata_with_session(session, statistic_ids=[statistic_id])
@@ -1724,7 +1741,7 @@ def _statistics_during_period_with_session(
     period: Literal["5minute", "day", "hour", "week", "month"],
     units: dict[str, str] | None,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-) -> dict[str, list[dict[str, Any]]]:
+) -> dict[str, list[StatisticsRow]]:
     """Return statistic data points during UTC period start_time - end_time.
 
     If end_time is omitted, returns statistics newer than or equal to start_time.
@@ -1808,13 +1825,13 @@ def statistics_during_period(
     period: Literal["5minute", "day", "hour", "week", "month"],
     units: dict[str, str] | None,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-) -> dict[str, list[dict[str, Any]]]:
+) -> dict[str, list[StatisticsRow]]:
     """Return statistic data points during UTC period start_time - end_time.
 
     If end_time is omitted, returns statistics newer than or equal to start_time.
     If statistic_ids is omitted, returns statistics for all statistics ids.
     """
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         return _statistics_during_period_with_session(
             hass,
             session,
@@ -1863,10 +1880,10 @@ def _get_last_statistics(
     convert_units: bool,
     table: type[StatisticsBase],
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-) -> dict[str, list[dict]]:
+) -> dict[str, list[StatisticsRow]]:
     """Return the last number_of_stats statistics for a given statistic_id."""
     statistic_ids = [statistic_id]
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         # Fetch metadata for the given statistic_id
         metadata = get_metadata_with_session(session, statistic_ids=statistic_ids)
         if not metadata:
@@ -1902,7 +1919,7 @@ def get_last_statistics(
     statistic_id: str,
     convert_units: bool,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-) -> dict[str, list[dict]]:
+) -> dict[str, list[StatisticsRow]]:
     """Return the last number_of_stats statistics for a statistic_id."""
     return _get_last_statistics(
         hass, number_of_stats, statistic_id, convert_units, Statistics, types
@@ -1915,7 +1932,7 @@ def get_last_short_term_statistics(
     statistic_id: str,
     convert_units: bool,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-) -> dict[str, list[dict]]:
+) -> dict[str, list[StatisticsRow]]:
     """Return the last number_of_stats short term statistics for a statistic_id."""
     return _get_last_statistics(
         hass, number_of_stats, statistic_id, convert_units, StatisticsShortTerm, types
@@ -1951,9 +1968,9 @@ def get_latest_short_term_statistics(
     statistic_ids: list[str],
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
     metadata: dict[str, tuple[int, StatisticMetaData]] | None = None,
-) -> dict[str, list[dict]]:
+) -> dict[str, list[StatisticsRow]]:
     """Return the latest short term statistics for a list of statistic_ids."""
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         # Fetch metadata for the given statistic_ids
         if not metadata:
             metadata = get_metadata_with_session(session, statistic_ids=statistic_ids)
@@ -2054,10 +2071,10 @@ def _sorted_statistics_to_dict(
     start_time: datetime | None,
     units: dict[str, str] | None,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-) -> dict[str, list[dict]]:
+) -> dict[str, list[StatisticsRow]]:
     """Convert SQL results into JSON friendly data structure."""
     assert stats, "stats must not be empty"  # Guard against implementation error
-    result: dict = defaultdict(list)
+    result: dict[str, list[StatisticsRow]] = defaultdict(list)
     metadata = dict(_metadata.values())
     need_stat_at_start_time: set[int] = set()
     start_time_ts = start_time.timestamp() if start_time else None
@@ -2123,7 +2140,7 @@ def _sorted_statistics_to_dict(
         # attribute lookups, and dict lookups as much as possible.
         #
         for db_state in stats_list:
-            row: dict[str, Any] = {
+            row: StatisticsRow = {
                 "start": (start_ts := db_state[start_ts_idx]),
                 "end": start_ts + table_duration_seconds,
             }

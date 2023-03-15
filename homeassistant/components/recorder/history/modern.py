@@ -115,7 +115,7 @@ def get_significant_states(
     compressed_state_format: bool = False,
 ) -> MutableMapping[str, list[State | dict[str, Any]]]:
     """Wrap get_significant_states_with_session with an sql session."""
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         return get_significant_states_with_session(
             hass,
             session,
@@ -242,7 +242,7 @@ def get_significant_states_with_session(
     if entity_ids:
         instance = recorder.get_instance(hass)
         entity_id_to_metadata_id = instance.states_meta_manager.get_many(
-            entity_ids, session
+            entity_ids, session, False
         )
         metadata_ids = [
             metadata_id
@@ -360,12 +360,12 @@ def state_changes_during_period(
     entity_id = entity_id.lower() if entity_id is not None else None
     entity_ids = [entity_id] if entity_id is not None else None
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         metadata_id: int | None = None
         entity_id_to_metadata_id = None
         if entity_id:
             instance = recorder.get_instance(hass)
-            metadata_id = instance.states_meta_manager.get(entity_id, session)
+            metadata_id = instance.states_meta_manager.get(entity_id, session, False)
             entity_id_to_metadata_id = {entity_id: metadata_id}
         stmt = _state_changed_during_period_stmt(
             start_time,
@@ -424,9 +424,11 @@ def get_last_state_changes(
     entity_id_lower = entity_id.lower()
     entity_ids = [entity_id_lower]
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         instance = recorder.get_instance(hass)
-        if not (metadata_id := instance.states_meta_manager.get(entity_id, session)):
+        if not (
+            metadata_id := instance.states_meta_manager.get(entity_id, session, False)
+        ):
             return {}
         entity_id_to_metadata_id: dict[str, int | None] = {entity_id_lower: metadata_id}
         stmt = _get_last_state_changes_stmt(number_of_states, metadata_id)
