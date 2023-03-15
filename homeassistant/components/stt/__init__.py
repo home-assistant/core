@@ -17,7 +17,7 @@ from aiohttp.web_exceptions import (
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import engine, engine_component
+from homeassistant.helpers import engine_component
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -95,7 +95,7 @@ class SpeechResult:
     result: SpeechResultState
 
 
-class Provider(engine.Engine, ABC):
+class Provider(engine_component.Engine, ABC):
     """Represent a single STT provider."""
 
     hass: HomeAssistant | None = None
