@@ -1,6 +1,7 @@
 """Data update coordinator for the Nextcloud integration."""
 
 import logging
+from typing import Any
 
 from nextcloudmonitor import NextcloudMonitor, NextcloudMonitorError
 
@@ -14,7 +15,7 @@ from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class NextcloudDataUpdateCoordinator(DataUpdateCoordinator):
+class NextcloudDataUpdateCoordinator(DataUpdateCoordinator["dict[str, Any]"]):
     """Nextcloud data update coordinator."""
 
     configuration_url: str
@@ -22,7 +23,7 @@ class NextcloudDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(
         self, hass: HomeAssistant, ncm: NextcloudMonitor, config: ConfigType
     ) -> None:
-        """Initialize the Fritzbox Smarthome device coordinator."""
+        """Initialize the Nextcloud coordinator."""
         self.config = config
         self.ncm = ncm
         self.url = config[CONF_URL]
@@ -37,7 +38,7 @@ class NextcloudDataUpdateCoordinator(DataUpdateCoordinator):
     # Use recursion to create list of sensors & values based on nextcloud api data
     def _get_data_points(
         self, api_data: dict, key_path: str = "", leaf: bool = False
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Use Recursion to discover data-points and values.
 
         Get dictionary of data-points by recursing through dict returned by api until
@@ -61,14 +62,14 @@ class NextcloudDataUpdateCoordinator(DataUpdateCoordinator):
                 leaf = False
         return result
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch all Nextcloud data."""
 
-        def _update_data():
+        def _update_data() -> None:
             try:
                 self.ncm.update()
             except NextcloudMonitorError as ex:
                 raise UpdateFailed from ex
-            return self._get_data_points(self.ncm.data)
 
-        return await self.hass.async_add_executor_job(_update_data)
+        await self.hass.async_add_executor_job(_update_data)
+        return self._get_data_points(self.ncm.data)

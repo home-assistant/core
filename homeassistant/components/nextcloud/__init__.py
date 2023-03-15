@@ -52,18 +52,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.error("Nextcloud setup failed - Check configuration")
         return False
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][conf[CONF_URL]] = coordinator = NextcloudDataUpdateCoordinator(
+    coordinator = NextcloudDataUpdateCoordinator(
         hass,
         ncm,
         conf,
     )
+    hass.data[DOMAIN] = coordinator
 
     await coordinator.async_config_entry_first_refresh()
 
     for platform in PLATFORMS:
-        discovery.load_platform(
-            hass, platform, DOMAIN, {CONF_URL: conf[CONF_URL]}, config
-        )
+        discovery.load_platform(hass, platform, DOMAIN, {}, config)
 
     return True

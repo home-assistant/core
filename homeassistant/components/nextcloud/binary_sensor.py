@@ -2,14 +2,13 @@
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
-from .entity import NextcloudEntity
 from .coordinator import NextcloudDataUpdateCoordinator
+from .entity import NextcloudEntity
 
 BINARY_SENSORS = (
     "nextcloud_system_enable_avatars",
@@ -28,9 +27,7 @@ def setup_platform(
     """Set up the Nextcloud sensors."""
     if discovery_info is None:
         return
-    coordinator: NextcloudDataUpdateCoordinator = hass.data[DOMAIN][
-        discovery_info[CONF_URL]
-    ]
+    coordinator: NextcloudDataUpdateCoordinator = hass.data[DOMAIN]
 
     add_entities(
         [

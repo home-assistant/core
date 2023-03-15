@@ -1,4 +1,6 @@
-"""Entity for the Nextcloud integration."""
+"""Base entity for the Nextcloud integration."""
+
+from typing import Any
 
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -8,15 +10,16 @@ from .coordinator import NextcloudDataUpdateCoordinator
 class NextcloudEntity(CoordinatorEntity[NextcloudDataUpdateCoordinator]):
     """Basis Nextcloud entity."""
 
-    def __init__(self, coordinator, item) -> None:
+    icon = "mdi:cloud"
+
+    def __init__(self, coordinator: NextcloudDataUpdateCoordinator, item: str) -> None:
         """Initialize the Nextcloud sensor."""
         super().__init__(coordinator)
         self.item = item
         self._attr_name = item
-        self._attr_icon = "mdi:cloud"
 
     @property
-    def data(self) -> dict:
+    def data(self) -> dict[str, Any]:
         """Return Nextcloud data."""
         return self.coordinator.data
 
