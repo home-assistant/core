@@ -21,10 +21,7 @@ class Engine:
         """
 
     async def async_added_to_hass(self) -> None:
-        """Run when service about to be added to hass.
-
-        Not to be extended by integrations.
-        """
+        """Run when service about to be added to hass."""
 
     async def async_internal_will_remove_from_hass(self) -> None:
         """Prepare to remove the service from Home Assistant.
