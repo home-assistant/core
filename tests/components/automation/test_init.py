@@ -1,11 +1,9 @@
 """The tests for the automation component."""
 import asyncio
-from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
 from unittest.mock import Mock, patch
 
-from aiohttp import ClientWebSocketResponse
 import pytest
 
 import homeassistant.components.automation as automation
@@ -1437,7 +1435,7 @@ async def test_automation_bad_config_validation(
 async def test_automation_with_error_in_script(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test automation with an error in script."""
     assert await async_setup_component(

@@ -225,7 +225,7 @@ async def test_template_position(hass: HomeAssistant, start_ha) -> None:
         },
     ],
 )
-async def test_template_not_optimistic(hass, start_ha):
+async def test_template_not_optimistic(hass: HomeAssistant, start_ha) -> None:
     """Test the is_closed attribute."""
     state = hass.states.get("cover.test_template_cover")
     assert state.state == STATE_UNKNOWN

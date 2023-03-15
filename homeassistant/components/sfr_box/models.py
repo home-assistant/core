@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 
 from sfrbox_api.bridge import SFRBox
-from sfrbox_api.models import DslInfo, SystemInfo
+from sfrbox_api.models import DslInfo, SystemInfo, WanInfo
 
 from .coordinator import SFRDataUpdateCoordinator
 
@@ -14,3 +14,4 @@ class DomainData:
     box: SFRBox
     dsl: SFRDataUpdateCoordinator[DslInfo]
     system: SFRDataUpdateCoordinator[SystemInfo]
+    wan: SFRDataUpdateCoordinator[WanInfo]

@@ -36,6 +36,7 @@ X_AUTH_TOKEN = "X-Supervisor-Token"
 X_INGRESS_PATH = "X-Ingress-Path"
 X_HASS_USER_ID = "X-Hass-User-ID"
 X_HASS_IS_ADMIN = "X-Hass-Is-Admin"
+X_HASS_SOURCE = "X-Hass-Source"
 
 WS_TYPE = "type"
 WS_ID = "id"
@@ -67,6 +68,7 @@ DATA_KEY_ADDONS = "addons"
 DATA_KEY_OS = "os"
 DATA_KEY_SUPERVISOR = "supervisor"
 DATA_KEY_CORE = "core"
+DATA_KEY_HOST = "host"
 
 
 class SupervisorEntityModel(str, Enum):
@@ -76,3 +78,4 @@ class SupervisorEntityModel(str, Enum):
     OS = "Home Assistant Operating System"
     CORE = "Home Assistant Core"
     SUPERVIOSR = "Home Assistant Supervisor"
+    HOST = "Home Assistant Host"
