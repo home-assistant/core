@@ -41,7 +41,7 @@
       'wan': dict({
         'infra': 'adsl',
         'infra6': '',
-        'ip_addr': '1.2.3.4',
+        'ip_addr': '**REDACTED**',
         'ipv6_addr': '',
         'mode': 'adsl/routed',
         'status': 'up',
