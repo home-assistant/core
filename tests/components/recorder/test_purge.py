@@ -684,7 +684,7 @@ def _convert_pending_states_to_meta(instance: Recorder, session: Session) -> Non
             states.add(object)
 
     entity_id_to_metadata_ids = instance.states_meta_manager.get_many(
-        entity_ids, session
+        entity_ids, session, True
     )
 
     for state in states:
@@ -1974,6 +1974,7 @@ async def test_purge_old_states_purges_the_state_metadata_ids(
             return instance.states_meta_manager.get_many(
                 ["sensor.one", "sensor.two", "sensor.three", "sensor.unused"],
                 session,
+                True,
             )
 
     entity_id_to_metadata_id = await instance.async_add_executor_job(_insert_states)
