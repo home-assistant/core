@@ -54,8 +54,9 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if controller_info:
                 return await self.create_entity(user_input, controller_info)
 
+        data_schema = self.add_suggested_values_to_schema(DATA_SCHEMA, user_input)
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=data_schema, errors=errors
         )
 
     async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
@@ -71,10 +72,14 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Dialog that informs the user that reauth is required."""
         if user_input:
             return await self.async_step_user(user_input)
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=DATA_SCHEMA,
-        )
+        if self.reauth_entry:
+            data_schema = self.add_suggested_values_to_schema(
+                DATA_SCHEMA, self.reauth_entry.data
+            )
+            return self.async_show_form(
+                step_id="reauth_confirm", data_schema=data_schema
+            )
+        return self.async_show_form(step_id="reauth_confirm", data_schema=DATA_SCHEMA)
 
     async def _login(self, user_input: dict[str, str]) -> AioLivisi:
         """Login into Livisi Smart Home."""
