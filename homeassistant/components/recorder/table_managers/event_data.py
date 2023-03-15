@@ -47,7 +47,11 @@ class EventDataManager(BaseTableManager):
             return None
 
     def load(self, events: list[Event], session: Session) -> None:
-        """Load the shared_datas to data_ids mapping into memory from events."""
+        """Load the shared_datas to data_ids mapping into memory from events.
+
+        This call is not thread-safe and must be called from the
+        recorder thread.
+        """
         if hashes := {
             EventData.hash_shared_data_bytes(shared_event_bytes)
             for event in events
@@ -56,17 +60,29 @@ class EventDataManager(BaseTableManager):
             self._load_from_hashes(hashes, session)
 
     def get(self, shared_data: str, data_hash: int, session: Session) -> int | None:
-        """Resolve shared_datas to the data_id."""
+        """Resolve shared_datas to the data_id.
+
+        This call is not thread-safe and must be called from the
+        recorder thread.
+        """
         return self.get_many(((shared_data, data_hash),), session)[shared_data]
 
     def get_from_cache(self, shared_data: str) -> int | None:
-        """Resolve shared_data to the data_id without accessing the underlying database."""
+        """Resolve shared_data to the data_id without accessing the underlying database.
+
+        This call is not thread-safe and must be called from the
+        recorder thread.
+        """
         return self._id_map.get(shared_data)
 
     def get_many(
         self, shared_data_data_hashs: Iterable[tuple[str, int]], session: Session
     ) -> dict[str, int | None]:
-        """Resolve shared_datas to data_ids."""
+        """Resolve shared_datas to data_ids.
+
+        This call is not thread-safe and must be called from the
+        recorder thread.
+        """
         results: dict[str, int | None] = {}
         missing_hashes: set[int] = set()
         for shared_data, data_hash in shared_data_data_hashs:
@@ -83,7 +99,11 @@ class EventDataManager(BaseTableManager):
     def _load_from_hashes(
         self, hashes: Iterable[int], session: Session
     ) -> dict[str, int | None]:
-        """Load the shared_datas to data_ids mapping into memory from a list of hashes."""
+        """Load the shared_datas to data_ids mapping into memory from a list of hashes.
+
+        This call is not thread-safe and must be called from the
+        recorder thread.
+        """
         results: dict[str, int | None] = {}
         with session.no_autoflush:
             for hashs_chunk in chunked(hashes, SQLITE_MAX_BIND_VARS):
@@ -97,28 +117,48 @@ class EventDataManager(BaseTableManager):
         return results
 
     def get_pending(self, shared_data: str) -> EventData | None:
-        """Get pending EventData that have not be assigned ids yet."""
+        """Get pending EventData that have not be assigned ids yet.
+
+        This call is not thread-safe and must be called from the
+        recorder thread.
+        """
         return self._pending.get(shared_data)
 
     def add_pending(self, db_event_data: EventData) -> None:
-        """Add a pending EventData that will be committed at the next interval."""
+        """Add a pending EventData that will be committed at the next interval.
+
+        This call is not thread-safe and must be called from the
+        recorder thread.
+        """
         assert db_event_data.shared_data is not None
         shared_data: str = db_event_data.shared_data
         self._pending[shared_data] = db_event_data
 
     def post_commit_pending(self) -> None:
-        """Call after commit to load the data_ids of the new EventData into the LRU."""
+        """Call after commit to load the data_ids of the new EventData into the LRU.
+
+        This call is not thread-safe and must be called from the
+        recorder thread.
+        """
         for shared_data, db_event_data in self._pending.items():
             self._id_map[shared_data] = db_event_data.data_id
         self._pending.clear()
 
     def reset(self) -> None:
-        """Reset the event manager after the database has been reset or changed."""
+        """Reset the event manager after the database has been reset or changed.
+
+        This call is not thread-safe and must be called from the
+        recorder thread.
+        """
         self._id_map.clear()
         self._pending.clear()
 
     def evict_purged(self, data_ids: set[int]) -> None:
-        """Evict purged data_ids from the cache when they are no longer used."""
+        """Evict purged data_ids from the cache when they are no longer used.
+
+        This call is not thread-safe and must be called from the
+        recorder thread.
+        """
         id_map = self._id_map
         event_data_ids_reversed = {
             data_id: shared_data for shared_data, data_id in id_map.items()

@@ -32,20 +32,32 @@ class EventTypeManager(BaseTableManager):
         super().__init__(recorder)
 
     def load(self, events: list[Event], session: Session) -> None:
-        """Load the event_type to event_type_ids mapping into memory."""
+        """Load the event_type to event_type_ids mapping into memory.
+
+        This call is not thread-safe and must be called from the
+        recorder thread.
+        """
         self.get_many(
             {event.event_type for event in events if event.event_type is not None},
             session,
         )
 
     def get(self, event_type: str, session: Session) -> int | None:
-        """Resolve event_type to the event_type_id."""
+        """Resolve event_type to the event_type_id.
+
+        This call is not thread-safe and must be called from the
+        recorder thread.
+        """
         return self.get_many((event_type,), session)[event_type]
 
     def get_many(
         self, event_types: Iterable[str], session: Session
     ) -> dict[str, int | None]:
-        """Resolve event_types to event_type_ids."""
+        """Resolve event_types to event_type_ids.
+
+        This call is not thread-safe and must be called from the
+        recorder thread.
+        """
         results: dict[str, int | None] = {}
         missing: list[str] = []
         for event_type in event_types:
@@ -69,27 +81,47 @@ class EventTypeManager(BaseTableManager):
         return results
 
     def get_pending(self, event_type: str) -> EventTypes | None:
-        """Get pending EventTypes that have not be assigned ids yet."""
+        """Get pending EventTypes that have not be assigned ids yet.
+
+        This call is not thread-safe and must be called from the
+        recorder thread.
+        """
         return self._pending.get(event_type)
 
     def add_pending(self, db_event_type: EventTypes) -> None:
-        """Add a pending EventTypes that will be committed at the next interval."""
+        """Add a pending EventTypes that will be committed at the next interval.
+
+        This call is not thread-safe and must be called from the
+        recorder thread.
+        """
         assert db_event_type.event_type is not None
         event_type: str = db_event_type.event_type
         self._pending[event_type] = db_event_type
 
     def post_commit_pending(self) -> None:
-        """Call after commit to load the event_type_ids of the new EventTypes into the LRU."""
+        """Call after commit to load the event_type_ids of the new EventTypes into the LRU.
+
+        This call is not thread-safe and must be called from the
+        recorder thread.
+        """
         for event_type, db_event_types in self._pending.items():
             self._id_map[event_type] = db_event_types.event_type_id
         self._pending.clear()
 
     def reset(self) -> None:
-        """Reset the event manager after the database has been reset or changed."""
+        """Reset the event manager after the database has been reset or changed.
+
+        This call is not thread-safe and must be called from the
+        recorder thread.
+        """
         self._id_map.clear()
         self._pending.clear()
 
     def evict_purged(self, event_types: Iterable[str]) -> None:
-        """Evict purged event_types from the cache when they are no longer used."""
+        """Evict purged event_types from the cache when they are no longer used.
+
+        This call is not thread-safe and must be called from the
+        recorder thread.
+        """
         for event_type in event_types:
             self._id_map.pop(event_type, None)
