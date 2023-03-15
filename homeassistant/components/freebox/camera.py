@@ -180,7 +180,7 @@ class FreeboxCamera(FreeboxHomeBaseClass, FFmpegCamera):
             elif endpoint["name"] == ATTR_TIMESTAMP:
                 self._timestamp = endpoint["value"]
             elif endpoint["name"] == ATTR_VOLUME:
-                self._volume_micro = endpoint["value"]
+                self._mic_volume = endpoint["value"]
             elif endpoint["name"] == ATTR_SOUND_DETECTION:
                 self._sound_detection = endpoint["value"]
             elif endpoint["name"] == ATTR_SOUND_TRIGGER:
