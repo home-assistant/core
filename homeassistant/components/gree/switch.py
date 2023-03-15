@@ -26,6 +26,7 @@ async def async_setup_entry(
         async_add_entities(
             [
                 GreePanelLightSwitchEntity(coordinator),
+                GreeHealthModeSwitchEntity(coordinator),
                 GreeQuietModeSwitchEntity(coordinator),
                 GreeFreshAirSwitchEntity(coordinator),
                 GreeXFanSwitchEntity(coordinator),
@@ -71,6 +72,42 @@ class GreePanelLightSwitchEntity(GreeEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         self.coordinator.device.light = False
+        await self.coordinator.push_state_update()
+        self.async_write_ha_state()
+
+
+class GreeHealthModeSwitchEntity(GreeEntity, SwitchEntity):
+    """Representation of the health mode on the device."""
+
+    def __init__(self, coordinator):
+        """Initialize the Gree device."""
+        super().__init__(coordinator, "Health mode")
+        self._attr_entity_registry_enabled_default = False
+
+    @property
+    def icon(self) -> str | None:
+        """Return the icon for the device."""
+        return "mdi:pine-tree"
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return SwitchDeviceClass.SWITCH
+
+    @property
+    def is_on(self) -> bool:
+        """Return if the health mode is turned on."""
+        return self.coordinator.device.anion
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the entity on."""
+        self.coordinator.device.anion = True
+        await self.coordinator.push_state_update()
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the entity off."""
+        self.coordinator.device.anion = False
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
 
