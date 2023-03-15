@@ -5,5 +5,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/anova",
   "iot_class": "cloud_polling",
-  "requirements": ["anova-wifi==0.4.2"]
+  "requirements": ["anova-wifi==0.4.3"]
 }
