@@ -67,8 +67,3 @@ def mock_router(mock_device_registry_devices):
         instance.lan.get_hosts_list = AsyncMock(return_value=DATA_LAN_GET_HOSTS_LIST)
         instance.close = AsyncMock()
         yield service_mock
-    with patch("homeassistant.components.freebox.router.FreeboxRouter") as service_mock:
-        instance = service_mock.return_value
-        instance.open = AsyncMock()
-        instance.api = AsyncMock(return_value="V6")
-        yield service_mock
