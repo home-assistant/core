@@ -43,7 +43,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Z-Wave button from config entry."""
+    """Set up Z-Wave update entity from config entry."""
     client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
 
     lock = asyncio.Lock()
