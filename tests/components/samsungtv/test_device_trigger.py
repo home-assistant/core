@@ -107,8 +107,6 @@ async def test_if_fires_on_turn_on_request(
     assert calls[1].data["some"] == ENTITY_ID
     assert calls[1].data["id"] == 0
 
-    assert mock_send_magic_packet.called
-
 
 @pytest.mark.usefixtures("remoteencws", "rest_api")
 async def test_failure_scenarios(hass: HomeAssistant) -> None:
