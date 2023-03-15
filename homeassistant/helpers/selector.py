@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping, Sequence
 from enum import IntFlag
 from functools import cache
-from typing import Any, Generic, Literal, Type, TypedDict, TypeVar, cast
+from typing import Any, Generic, Literal, TypedDict, TypeVar, cast
 from uuid import UUID
 
 from typing_extensions import Required
@@ -82,7 +82,7 @@ class Selector(Generic[_T]):
 
 
 @cache
-def _entity_features() -> dict[str, Type[IntFlag]]:
+def _entity_features() -> dict[str, type[IntFlag]]:
     """Return a cached lookup of entity feature enums."""
     # pylint: disable=import-outside-toplevel
     from homeassistant.components.alarm_control_panel import (
