@@ -2079,7 +2079,6 @@ async def test_purge_entities_keep_days(
         SERVICE_PURGE_ENTITIES,
         {
             "entity_id": "sensor.purge",
-            "keep_days": 0,
         },
     )
     await async_recorder_block_till_done(hass)
