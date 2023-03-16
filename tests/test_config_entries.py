@@ -3210,6 +3210,9 @@ async def test_setup_retrying_during_shutdown(hass: HomeAssistant) -> None:
 
     assert len(mock_call.return_value.mock_calls) == 0
 
+    # Cleanup to avoid lingering timer
+    entry.async_cancel_retry_setup()
+
 
 @pytest.mark.parametrize(
     ("matchers", "reason"),
