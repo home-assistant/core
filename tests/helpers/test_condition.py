@@ -1,4 +1,5 @@
 """Test the condition helper."""
+from collections.abc import Generator
 from datetime import datetime, timedelta
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -29,7 +30,7 @@ from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_mock_service
+from tests.common import MockConfigEntry, async_mock_service
 from tests.typing import WebSocketGenerator
 
 
@@ -40,12 +41,14 @@ def calls(hass: HomeAssistant) -> list[ServiceCall]:
 
 
 @pytest.fixture(autouse=True)
-def setup_comp(hass: HomeAssistant) -> None:
+async def setup_sun(hass: HomeAssistant) -> Generator[None, None, None]:
     """Initialize components."""
     hass.config.set_time_zone(hass.config.time_zone)
-    hass.loop.run_until_complete(
-        async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {}})
-    )
+    entry = MockConfigEntry(data={}, domain=sun.DOMAIN)
+    entry.add_to_hass(hass)
+    await hass.async_block_till_done()
+    yield
+    await entry.async_unload(hass)
 
 
 def assert_element(trace_element, expected_element, path):
