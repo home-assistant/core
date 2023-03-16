@@ -8,9 +8,7 @@ from enum import Enum
 import time
 from typing import Any
 
-from aiohttp import StreamReader
-
-from homeassistant.components import conversation, stt
+from homeassistant.components import conversation
 from homeassistant.core import Context, HomeAssistant
 
 DEFAULT_TIMEOUT = 30  # seconds
@@ -20,9 +18,7 @@ DEFAULT_TIMEOUT = 30  # seconds
 class PipelineRequest:
     """Request to start a pipeline run."""
 
-    stt_audio: StreamReader | None
-    stt_metadata: stt.SpeechMetadata | None
-    stt_text: str | None = None
+    intent_input: str | None = None
     conversation_id: str | None = None
 
 
@@ -31,12 +27,8 @@ class PipelineEventType(str, Enum):
 
     RUN_START = "run-start"
     RUN_FINISH = "run-finish"
-    STT_START = "stt-start"
-    STT_FINISH = "stt-finish"
     INTENT_START = "intent-start"
     INTENT_FINISH = "intent-finish"
-    TTS_START = "tts-start"
-    TTS_FINISH = "tts-finish"
     ERROR = "error"
 
 
@@ -59,9 +51,7 @@ class Pipeline:
 
     name: str
     language: str
-    stt_engine: str | None
-    agent_id: str | None
-    tts_engine: str | None
+    conversation_engine: str | None
 
     async def run(
         self,
@@ -94,10 +84,10 @@ class Pipeline:
             )
         )
 
-        stt_text = request.stt_text
+        intent_input = request.intent_input
 
         # Run intent recognition
-        if stt_text is None:
+        if intent_input is None:
             event_callback(
                 PipelineEvent(
                     PipelineEventType.ERROR,
@@ -112,17 +102,17 @@ class Pipeline:
         event_callback(
             PipelineEvent(
                 PipelineEventType.INTENT_START,
-                {"agent_id": self.agent_id or "default"},
+                {"engine": self.conversation_engine or "default"},
             )
         )
 
         conversation_result = await conversation.async_converse(
             hass=hass,
-            text=stt_text,
+            text=intent_input,
             conversation_id=request.conversation_id,
             context=context,
             language=self.language,
-            agent_id=self.agent_id,
+            agent_id=self.conversation_engine,
         )
 
         tts_text: str | None = conversation_result.response.speech.get("plain", {}).get(
@@ -157,7 +147,7 @@ class Pipeline:
             PipelineEvent(
                 PipelineEventType.RUN_FINISH,
                 {
-                    "stt_text": stt_text,
+                    "intent_input": intent_input,
                     "conversation_result": conversation_result,
                     "tts_url": tts_url,
                 },

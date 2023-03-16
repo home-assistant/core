@@ -20,7 +20,7 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
     {
         vol.Required("type"): "voice_assistant/run",
         vol.Optional("pipeline", default="default"): str,
-        vol.Required("stt_text"): str,
+        vol.Required("intent_input"): str,
         vol.Optional("conversation_id"): vol.Any(str, None),
         vol.Optional("timeout"): vol.Any(float, int),
     }
@@ -48,9 +48,7 @@ async def websocket_run(
             hass,
             connection.context(msg),
             request=PipelineRequest(
-                stt_audio=None,
-                stt_metadata=None,
-                stt_text=msg["stt_text"],
+                intent_input=msg["intent_input"],
                 conversation_id=msg.get("conversation_id"),
             ),
             event_callback=lambda event: connection.send_event(
