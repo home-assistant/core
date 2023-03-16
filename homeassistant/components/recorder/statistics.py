@@ -818,7 +818,6 @@ def _update_statistics(
         )
 
 
-
 def get_metadata_with_session(
     instance: Recorder,
     session: Session,
