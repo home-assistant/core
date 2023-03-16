@@ -50,24 +50,7 @@ async def test_text_only_pipeline(
     msg = await client.receive_json()
     assert msg["event"]["type"] == "intent-finish"
     assert msg["event"]["data"] == {
-        "speech": {
-            "plain": {
-                "speech": "Sorry, I couldn't understand that",
-                "extra_data": None,
-            }
-        },
-        "card": {},
-        "language": "en",
-        "response_type": "error",
-        "data": {"code": "no_intent_match"},
-    }
-
-    # run finish
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "run-finish"
-    assert msg["event"]["data"] == {
-        "intent_input": "Are the lights on?",
-        "conversation_result": {
+        "intent_output": {
             "response": {
                 "speech": {
                     "plain": {
@@ -81,8 +64,13 @@ async def test_text_only_pipeline(
                 "data": {"code": "no_intent_match"},
             },
             "conversation_id": None,
-        },
+        }
     }
+
+    # run finish
+    msg = await client.receive_json()
+    assert msg["event"]["type"] == "run-finish"
+    assert msg["event"]["data"] == {}
 
 
 async def test_conversation_timeout(

@@ -113,16 +113,12 @@ class Pipeline:
         event_callback(
             PipelineEvent(
                 PipelineEventType.INTENT_FINISH,
-                conversation_result.response.as_dict(),
+                {"intent_output": conversation_result.as_dict()},
             )
         )
 
         event_callback(
             PipelineEvent(
                 PipelineEventType.RUN_FINISH,
-                {
-                    "intent_input": intent_input,
-                    "conversation_result": conversation_result,
-                },
             )
         )
