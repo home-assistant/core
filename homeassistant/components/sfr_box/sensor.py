@@ -1,10 +1,9 @@
 """SFR Box sensor platform."""
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 from dataclasses import dataclass
-from itertools import chain
 from typing import Generic, TypeVar
 
-from sfrbox_api.models import DslInfo, SystemInfo
+from sfrbox_api.models import DslInfo, SystemInfo, WanInfo
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -47,28 +46,28 @@ class SFRBoxSensorEntityDescription(SensorEntityDescription, SFRBoxSensorMixin[_
 DSL_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[DslInfo], ...] = (
     SFRBoxSensorEntityDescription[DslInfo](
         key="linemode",
-        name="Line mode",
+        name="DSL line mode",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda x: x.linemode,
     ),
     SFRBoxSensorEntityDescription[DslInfo](
         key="counter",
-        name="Counter",
+        name="DSL counter",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda x: x.counter,
     ),
     SFRBoxSensorEntityDescription[DslInfo](
         key="crc",
-        name="CRC",
+        name="DSL CRC",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda x: x.crc,
     ),
     SFRBoxSensorEntityDescription[DslInfo](
         key="noise_down",
-        name="Noise down",
+        name="DSL noise down",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -78,7 +77,7 @@ DSL_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[DslInfo], ...] = (
     ),
     SFRBoxSensorEntityDescription[DslInfo](
         key="noise_up",
-        name="Noise up",
+        name="DSL noise up",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -88,7 +87,7 @@ DSL_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[DslInfo], ...] = (
     ),
     SFRBoxSensorEntityDescription[DslInfo](
         key="attenuation_down",
-        name="Attenuation down",
+        name="DSL attenuation down",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -98,7 +97,7 @@ DSL_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[DslInfo], ...] = (
     ),
     SFRBoxSensorEntityDescription[DslInfo](
         key="attenuation_up",
-        name="Attenuation up",
+        name="DSL attenuation up",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -108,7 +107,7 @@ DSL_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[DslInfo], ...] = (
     ),
     SFRBoxSensorEntityDescription[DslInfo](
         key="rate_down",
-        name="Rate down",
+        name="DSL rate down",
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
@@ -116,7 +115,7 @@ DSL_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[DslInfo], ...] = (
     ),
     SFRBoxSensorEntityDescription[DslInfo](
         key="rate_up",
-        name="Rate up",
+        name="DSL rate up",
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
@@ -124,7 +123,7 @@ DSL_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[DslInfo], ...] = (
     ),
     SFRBoxSensorEntityDescription[DslInfo](
         key="line_status",
-        name="Line status",
+        name="DSL line status",
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -141,7 +140,7 @@ DSL_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[DslInfo], ...] = (
     ),
     SFRBoxSensorEntityDescription[DslInfo](
         key="training",
-        name="Training",
+        name="DSL training",
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -196,6 +195,24 @@ SYSTEM_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[SystemInfo], ...] = (
         value_fn=lambda x: x.temperature / 1000,
     ),
 )
+WAN_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[WanInfo], ...] = (
+    SFRBoxSensorEntityDescription[WanInfo](
+        key="mode",
+        name="WAN mode",
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        options=[
+            "adsl_ppp",
+            "adsl_routed",
+            "ftth_routed",
+            "grps_ppp",
+            "unknown",
+        ],
+        translation_key="wan_mode",
+        value_fn=lambda x: x.mode.replace("/", "_"),
+    ),
+)
 
 
 async def async_setup_entry(
@@ -204,16 +221,19 @@ async def async_setup_entry(
     """Set up the sensors."""
     data: DomainData = hass.data[DOMAIN][entry.entry_id]
 
-    entities: Iterable[SFRBoxSensor] = chain(
-        (
+    entities: list[SFRBoxSensor] = [
+        SFRBoxSensor(data.system, description, data.system.data)
+        for description in SYSTEM_SENSOR_TYPES
+    ]
+    entities.extend(
+        SFRBoxSensor(data.wan, description, data.system.data)
+        for description in WAN_SENSOR_TYPES
+    )
+    if data.system.data.net_infra == "adsl":
+        entities.extend(
             SFRBoxSensor(data.dsl, description, data.system.data)
             for description in DSL_SENSOR_TYPES
-        ),
-        (
-            SFRBoxSensor(data.system, description, data.system.data)
-            for description in SYSTEM_SENSOR_TYPES
-        ),
-    )
+        )
 
     async_add_entities(entities)
 

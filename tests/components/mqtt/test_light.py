@@ -169,7 +169,6 @@ mqtt:
 
 """
 import copy
-from pathlib import Path
 from unittest.mock import call, patch
 
 import pytest
@@ -229,7 +228,7 @@ from .test_common import (
 
 from tests.common import async_fire_mqtt_message, mock_restore_cache
 from tests.components.light import common
-from tests.typing import MqttMockHAClientGenerator
+from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {light.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
@@ -636,8 +635,8 @@ async def test_brightness_from_rgb_controlling_scale(
             }
         },
     )
+    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
     await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -650,10 +649,29 @@ async def test_brightness_from_rgb_controlling_scale(
     state = hass.states.get("light.test")
     assert state.attributes.get("brightness") == 255
 
-    async_fire_mqtt_message(hass, "test_scale_rgb/rgb/status", "127,0,0")
+    async_fire_mqtt_message(hass, "test_scale_rgb/rgb/status", "128,64,32")
 
     state = hass.states.get("light.test")
-    assert state.attributes.get("brightness") == 127
+    assert state.attributes.get("brightness") == 128
+    assert state.attributes.get("rgb_color") == (255, 128, 64)
+
+    mqtt_mock.async_publish.reset_mock()
+    await common.async_turn_on(hass, "light.test", brightness=191)
+    await hass.async_block_till_done()
+
+    mqtt_mock.async_publish.assert_has_calls(
+        [
+            call("test_scale_rgb/set", "on", 0, False),
+            call("test_scale_rgb/rgb/set", "191,95,47", 0, False),
+        ],
+        any_order=True,
+    )
+    async_fire_mqtt_message(hass, "test_scale_rgb/rgb/status", "191,95,47")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.test")
+    assert state.attributes.get("brightness") == 191
+    assert state.attributes.get("rgb_color") == (255, 127, 63)
 
 
 async def test_controlling_state_via_topic_with_templates(
@@ -3015,16 +3033,12 @@ async def test_publishing_with_custom_encoding(
 
 async def test_reloadable(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-    tmp_path: Path,
+    mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = light.DOMAIN
     config = DEFAULT_CONFIG
-    await help_test_reloadable(
-        hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, domain, config
-    )
+    await help_test_reloadable(hass, mqtt_client_mock, domain, config)
 
 
 @pytest.mark.parametrize(
@@ -3291,12 +3305,11 @@ async def test_setup_manual_entity_from_yaml(hass: HomeAssistant) -> None:
 
 async def test_unload_entry(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    tmp_path: Path,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test unloading the config entry."""
     domain = light.DOMAIN
     config = DEFAULT_CONFIG
     await help_test_unload_config_entry_with_platform(
-        hass, mqtt_mock_entry_with_yaml_config, tmp_path, domain, config
+        hass, mqtt_mock_entry_no_yaml_config, domain, config
     )

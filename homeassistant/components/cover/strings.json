@@ -27,13 +27,15 @@
       "tilt_position": "{entity_name} tilt position changes"
     }
   },
-  "state": {
+  "entity_component": {
     "_": {
-      "open": "[%key:common::state::open%]",
-      "opening": "Opening",
-      "closed": "[%key:common::state::closed%]",
-      "closing": "Closing",
-      "stopped": "Stopped"
+      "state": {
+        "open": "[%key:common::state::open%]",
+        "opening": "Opening",
+        "closed": "[%key:common::state::closed%]",
+        "closing": "Closing",
+        "stopped": "Stopped"
+      }
     }
   }
 }

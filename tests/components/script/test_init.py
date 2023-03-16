@@ -1127,6 +1127,7 @@ async def test_recursive_script_indirect(
 @pytest.mark.parametrize(
     "script_mode", [SCRIPT_MODE_PARALLEL, SCRIPT_MODE_QUEUED, SCRIPT_MODE_RESTART]
 )
+@pytest.mark.parametrize("wait_for_stop_scripts_after_shutdown", [True])
 async def test_recursive_script_turn_on(
     hass: HomeAssistant, script_mode, caplog: pytest.LogCaptureFixture
 ) -> None:

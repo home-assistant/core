@@ -11,10 +11,9 @@ import queue
 import sqlite3
 import threading
 import time
-from typing import Any, TypeVar, cast
+from typing import Any, TypeVar
 
 import async_timeout
-from lru import LRU  # pylint: disable=no-name-in-module
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, func, select
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
@@ -30,7 +29,6 @@ from homeassistant.const import (
     MATCH_ALL,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
-from homeassistant.helpers.entity import entity_sources
 from homeassistant.helpers.event import (
     async_track_time_change,
     async_track_time_interval,
@@ -40,7 +38,6 @@ from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 import homeassistant.util.dt as dt_util
 from homeassistant.util.enum import try_parse_enum
-from homeassistant.util.json import JSON_ENCODE_EXCEPTIONS
 
 from . import migration, statistics
 from .const import (
@@ -52,7 +49,6 @@ from .const import (
     MAX_QUEUE_BACKLOG,
     MYSQLDB_PYMYSQL_URL_PREFIX,
     MYSQLDB_URL_PREFIX,
-    SQLITE_MAX_BIND_VARS,
     SQLITE_URL_PREFIX,
     SupportedDialect,
 )
@@ -61,8 +57,10 @@ from .db_schema import (
     Base,
     EventData,
     Events,
+    EventTypes,
     StateAttributes,
     States,
+    StatesMeta,
     Statistics,
     StatisticsRuns,
     StatisticsShortTerm,
@@ -77,12 +75,17 @@ from .models import (
 )
 from .pool import POOL_SIZE, MutexPool, RecorderPool
 from .queries import (
-    find_shared_attributes_id,
-    find_shared_data_id,
-    get_shared_attributes,
-    get_shared_event_datas,
+    has_entity_ids_to_migrate,
+    has_event_type_to_migrate,
+    has_events_context_ids_to_migrate,
+    has_states_context_ids_to_migrate,
 )
 from .run_history import RunHistory
+from .table_managers.event_data import EventDataManager
+from .table_managers.event_types import EventTypeManager
+from .table_managers.state_attributes import StateAttributesManager
+from .table_managers.states import StatesManager
+from .table_managers.states_meta import StatesMetaManager
 from .tasks import (
     AdjustLRUSizeTask,
     AdjustStatisticsTask,
@@ -90,12 +93,16 @@ from .tasks import (
     ClearStatisticsTask,
     CommitTask,
     DatabaseLockTask,
+    EntityIDMigrationTask,
+    EventsContextIDMigrationTask,
     EventTask,
+    EventTypeIDMigrationTask,
     ImportStatisticsTask,
     KeepAliveTask,
     PerodicCleanupTask,
     PurgeTask,
     RecorderTask,
+    StatesContextIDMigrationTask,
     StatisticsTask,
     StopTask,
     SynchronizeTask,
@@ -104,7 +111,6 @@ from .tasks import (
 )
 from .util import (
     build_mysqldb_conv,
-    chunked,
     dburl_to_path,
     end_incomplete_runs,
     is_second_sunday,
@@ -124,15 +130,6 @@ DEFAULT_URL = "sqlite:///{hass_config_path}"
 # Controls how often we clean up
 # States and Events objects
 EXPIRE_AFTER_COMMITS = 120
-
-# The number of attribute ids to cache in memory
-#
-# Based on:
-# - The number of overlapping attributes
-# - How frequently states with overlapping attributes will change
-# - How much memory our low end hardware has
-STATE_ATTRIBUTES_ID_CACHE_SIZE = 2048
-EVENT_DATA_ID_CACHE_SIZE = 2048
 
 SHUTDOWN_TASK = object()
 
@@ -168,7 +165,7 @@ class Recorder(threading.Thread):
         db_max_retries: int,
         db_retry_wait: int,
         entity_filter: Callable[[str], bool],
-        exclude_t: list[str],
+        exclude_event_types: set[str],
         exclude_attributes_by_domain: dict[str, set[str]],
     ) -> None:
         """Initialize the recorder."""
@@ -195,22 +192,22 @@ class Recorder(threading.Thread):
         self._queue_watch = threading.Event()
         self.engine: Engine | None = None
         self.run_history = RunHistory()
-        self._entity_sources = entity_sources(hass)
 
         # The entity_filter is exposed on the recorder instance so that
         # it can be used to see if an entity is being recorded and is called
         # by is_entity_recorder and the sensor recorder.
         self.entity_filter = entity_filter
-        self.exclude_t = set(exclude_t)
+        self.exclude_event_types = exclude_event_types
 
         self.schema_version = 0
         self._commits_without_expire = 0
-        self._old_states: dict[str | None, States] = {}
-        self._state_attributes_ids: LRU = LRU(STATE_ATTRIBUTES_ID_CACHE_SIZE)
-        self._event_data_ids: LRU = LRU(EVENT_DATA_ID_CACHE_SIZE)
-        self._pending_state_attributes: dict[str, StateAttributes] = {}
-        self._pending_event_data: dict[str, EventData] = {}
-        self._pending_expunge: list[States] = []
+        self.states_manager = StatesManager()
+        self.event_data_manager = EventDataManager(self)
+        self.event_type_manager = EventTypeManager(self)
+        self.states_meta_manager = StatesMetaManager(self)
+        self.state_attributes_manager = StateAttributesManager(
+            self, exclude_attributes_by_domain
+        )
         self.event_session: Session | None = None
         self._get_session: Callable[[], Session] | None = None
         self._completed_first_database_setup: bool | None = None
@@ -219,7 +216,6 @@ class Recorder(threading.Thread):
         self.migration_is_live = False
         self._database_lock_task: DatabaseLockTask | None = None
         self._db_executor: DBInterruptibleThreadPoolExecutor | None = None
-        self._exclude_attributes_by_domain = exclude_attributes_by_domain
 
         self._event_listener: CALLBACK_TYPE | None = None
         self._queue_watcher: CALLBACK_TYPE | None = None
@@ -373,7 +369,7 @@ class Recorder(threading.Thread):
     @callback
     def _async_event_filter(self, event: Event) -> bool:
         """Filter events."""
-        if event.event_type in self.exclude_t:
+        if event.event_type in self.exclude_event_types:
             return False
 
         if (entity_id := event.data.get(ATTR_ENTITY_ID)) is None:
@@ -495,11 +491,9 @@ class Recorder(threading.Thread):
         If the number of entities has increased, increase the size of the LRU
         cache to avoid thrashing.
         """
-        state_attributes_lru = self._state_attributes_ids
-        current_size = state_attributes_lru.get_size()
         new_size = self.hass.states.async_entity_ids_count() * 2
-        if new_size > current_size:
-            state_attributes_lru.set_size(new_size)
+        self.state_attributes_manager.adjust_lru_size(new_size)
+        self.states_meta_manager.adjust_lru_size(new_size)
 
     @callback
     def async_periodic_statistics(self) -> None:
@@ -640,12 +634,13 @@ class Recorder(threading.Thread):
             self.migration_is_live = migration.live_migration(schema_status)
 
         self.hass.add_job(self.async_connection_success)
+        database_was_ready = self.migration_is_live or schema_status.valid
 
-        if self.migration_is_live or schema_status.valid:
+        if database_was_ready:
             # If the migrate is live or the schema is valid, we need to
             # wait for startup to complete. If its not live, we need to continue
             # on.
-            self.hass.add_job(self.async_set_db_ready)
+            self._activate_and_set_db_ready()
 
             # We wait to start a live migration until startup has finished
             # since it can be cpu intensive and we do not want it to compete
@@ -656,7 +651,6 @@ class Recorder(threading.Thread):
                 # Make sure we cleanly close the run if
                 # we restart before startup finishes
                 self._shutdown()
-                self.hass.add_job(self.async_set_db_ready)
                 return
 
         if not schema_status.valid:
@@ -674,11 +668,12 @@ class Recorder(threading.Thread):
                     "Database Migration Failed",
                     "recorder_database_migration",
                 )
-                self.hass.add_job(self.async_set_db_ready)
+                self._activate_and_set_db_ready()
                 self._shutdown()
                 return
 
-        self.hass.add_job(self.async_set_db_ready)
+        if not database_was_ready:
+            self._activate_and_set_db_ready()
 
         # Catch up with missed statistics
         with session_scope(session=self.get_session()) as session:
@@ -689,6 +684,46 @@ class Recorder(threading.Thread):
         self.hass.add_job(self._async_set_recorder_ready_migration_done)
         self._run_event_loop()
         self._shutdown()
+
+    def _activate_and_set_db_ready(self) -> None:
+        """Activate the table managers or schedule migrations and mark the db as ready."""
+        with session_scope(session=self.get_session()) as session:
+            if (
+                self.schema_version < 36
+                or session.execute(has_events_context_ids_to_migrate()).scalar()
+            ):
+                self.queue_task(StatesContextIDMigrationTask())
+
+            if (
+                self.schema_version < 36
+                or session.execute(has_states_context_ids_to_migrate()).scalar()
+            ):
+                self.queue_task(EventsContextIDMigrationTask())
+
+            if (
+                self.schema_version < 37
+                or session.execute(has_event_type_to_migrate()).scalar()
+            ):
+                self.queue_task(EventTypeIDMigrationTask())
+            else:
+                _LOGGER.debug("Activating event_types manager as all data is migrated")
+                self.event_type_manager.active = True
+
+            if (
+                self.schema_version < 38
+                or session.execute(has_entity_ids_to_migrate()).scalar()
+            ):
+                self.queue_task(EntityIDMigrationTask())
+            else:
+                _LOGGER.debug("Activating states_meta manager as all data is migrated")
+                self.states_meta_manager.active = True
+
+        # We must only set the db ready after we have set the table managers
+        # to active if there is no data to migrate.
+        #
+        # This ensures that the history queries will use the new tables
+        # and not the old ones as soon as the API is available.
+        self.hass.add_job(self.async_set_db_ready)
 
     def _run_event_loop(self) -> None:
         """Run the event loop for the recorder."""
@@ -722,51 +757,11 @@ class Recorder(threading.Thread):
                 else:
                     non_state_change_events.append(event_)
 
-        self._pre_process_state_change_events(state_change_events)
-        self._pre_process_non_state_change_events(non_state_change_events)
-
-    def _pre_process_state_change_events(self, events: list[Event]) -> None:
-        """Load startup state attributes from the database.
-
-        Since the _state_attributes_ids cache is empty at startup
-        we restore it from the database to avoid having to look up
-        the attributes in the database for every state change
-        until its primed.
-        """
         assert self.event_session is not None
-        if hashes := [
-            StateAttributes.hash_shared_attrs_bytes(shared_attrs_bytes)
-            for event in events
-            if (
-                shared_attrs_bytes := self._serialize_state_attributes_from_event(event)
-            )
-        ]:
-            with self.event_session.no_autoflush:
-                for hash_chunk in chunked(hashes, SQLITE_MAX_BIND_VARS):
-                    for id_, shared_attrs in self.event_session.execute(
-                        get_shared_attributes(hash_chunk)
-                    ).fetchall():
-                        self._state_attributes_ids[shared_attrs] = id_
-
-    def _pre_process_non_state_change_events(self, events: list[Event]) -> None:
-        """Load startup event attributes from the database.
-
-        Since the _event_data_ids cache is empty at startup
-        we restore it from the database to avoid having to look up
-        the data in the database for every event until its primed.
-        """
-        assert self.event_session is not None
-        if hashes := [
-            EventData.hash_shared_data_bytes(shared_event_bytes)
-            for event in events
-            if (shared_event_bytes := self._serialize_event_data_from_event(event))
-        ]:
-            with self.event_session.no_autoflush:
-                for hash_chunk in chunked(hashes, SQLITE_MAX_BIND_VARS):
-                    for id_, shared_data in self.event_session.execute(
-                        get_shared_event_datas(hash_chunk)
-                    ).fetchall():
-                        self._event_data_ids[shared_data] = id_
+        self.event_data_manager.load(non_state_change_events, self.event_session)
+        self.event_type_manager.load(non_state_change_events, self.event_session)
+        self.states_meta_manager.load(state_change_events, self.event_session)
+        self.state_attributes_manager.load(state_change_events, self.event_session)
 
     def _guarded_process_one_task_or_recover(self, task: RecorderTask) -> None:
         """Process a task, guarding against exceptions to ensure the loop does not collapse."""
@@ -896,140 +891,113 @@ class Recorder(threading.Thread):
         if not self.commit_interval:
             self._commit_event_session_or_retry()
 
-    def _find_shared_attr_in_db(self, attr_hash: int, shared_attrs: str) -> int | None:
-        """Find shared attributes in the db from the hash and shared_attrs."""
-        #
-        # Avoid the event session being flushed since it will
-        # commit all the pending events and states to the database.
-        #
-        # The lookup has already have checked to see if the data is cached
-        # or going to be written in the next commit so there is no
-        # need to flush before checking the database.
-        #
-        assert self.event_session is not None
-        with self.event_session.no_autoflush:
-            if attributes_id := self.event_session.execute(
-                find_shared_attributes_id(attr_hash, shared_attrs)
-            ).first():
-                return cast(int, attributes_id[0])
-        return None
-
-    def _find_shared_data_in_db(self, data_hash: int, shared_data: str) -> int | None:
-        """Find shared event data in the db from the hash and shared_attrs."""
-        #
-        # Avoid the event session being flushed since it will
-        # commit all the pending events and states to the database.
-        #
-        # The lookup has already have checked to see if the data is cached
-        # or going to be written in the next commit so there is no
-        # need to flush before checking the database.
-        #
-        assert self.event_session is not None
-        with self.event_session.no_autoflush:
-            if data_id := self.event_session.execute(
-                find_shared_data_id(data_hash, shared_data)
-            ).first():
-                return cast(int, data_id[0])
-        return None
-
-    def _serialize_event_data_from_event(self, event: Event) -> bytes | None:
-        """Serialize event data."""
-        try:
-            return EventData.shared_data_bytes_from_event(event, self.dialect_name)
-        except JSON_ENCODE_EXCEPTIONS as ex:
-            _LOGGER.warning("Event is not JSON serializable: %s: %s", event, ex)
-            return None
-
     def _process_non_state_changed_event_into_session(self, event: Event) -> None:
         """Process any event into the session except state changed."""
-        assert self.event_session is not None
+        session = self.event_session
+        assert session is not None
         dbevent = Events.from_event(event)
+
+        # Map the event_type to the EventTypes table
+        event_type_manager = self.event_type_manager
+        if pending_event_types := event_type_manager.get_pending(event.event_type):
+            dbevent.event_type_rel = pending_event_types
+        elif event_type_id := event_type_manager.get(event.event_type, session):
+            dbevent.event_type_id = event_type_id
+        else:
+            event_types = EventTypes(event_type=event.event_type)
+            event_type_manager.add_pending(event_types)
+            session.add(event_types)
+            dbevent.event_type_rel = event_types
+
         if not event.data:
-            self.event_session.add(dbevent)
+            session.add(dbevent)
             return
-        if not (shared_data_bytes := self._serialize_event_data_from_event(event)):
+
+        event_data_manager = self.event_data_manager
+        if not (shared_data_bytes := event_data_manager.serialize_from_event(event)):
             return
+
+        # Map the event data to the EventData table
         shared_data = shared_data_bytes.decode("utf-8")
         # Matching attributes found in the pending commit
-        if pending_event_data := self._pending_event_data.get(shared_data):
+        if pending_event_data := event_data_manager.get_pending(shared_data):
             dbevent.event_data_rel = pending_event_data
         # Matching attributes id found in the cache
-        elif data_id := self._event_data_ids.get(shared_data):
+        elif (data_id := event_data_manager.get_from_cache(shared_data)) or (
+            (hash_ := EventData.hash_shared_data_bytes(shared_data_bytes))
+            and (data_id := event_data_manager.get(shared_data, hash_, session))
+        ):
             dbevent.data_id = data_id
         else:
-            data_hash = EventData.hash_shared_data_bytes(shared_data_bytes)
-            # Matching attributes found in the database
-            if data_id := self._find_shared_data_in_db(data_hash, shared_data):
-                self._event_data_ids[shared_data] = dbevent.data_id = data_id
             # No matching attributes found, save them in the DB
-            else:
-                dbevent_data = EventData(shared_data=shared_data, hash=data_hash)
-                dbevent.event_data_rel = self._pending_event_data[
-                    shared_data
-                ] = dbevent_data
-                self.event_session.add(dbevent_data)
+            dbevent_data = EventData(shared_data=shared_data, hash=hash_)
+            event_data_manager.add_pending(dbevent_data)
+            session.add(dbevent_data)
+            dbevent.event_data_rel = dbevent_data
 
-        self.event_session.add(dbevent)
-
-    def _serialize_state_attributes_from_event(self, event: Event) -> bytes | None:
-        """Serialize state changed event data."""
-        try:
-            return StateAttributes.shared_attrs_bytes_from_event(
-                event,
-                self._entity_sources,
-                self._exclude_attributes_by_domain,
-                self.dialect_name,
-            )
-        except JSON_ENCODE_EXCEPTIONS as ex:
-            _LOGGER.warning(
-                "State is not JSON serializable: %s: %s",
-                event.data.get("new_state"),
-                ex,
-            )
-            return None
+        session.add(dbevent)
 
     def _process_state_changed_event_into_session(self, event: Event) -> None:
         """Process a state_changed event into the session."""
-        assert self.event_session is not None
+        state_attributes_manager = self.state_attributes_manager
         dbstate = States.from_event(event)
-        if not (
-            shared_attrs_bytes := self._serialize_state_attributes_from_event(event)
+        if (entity_id := dbstate.entity_id) is None or not (
+            shared_attrs_bytes := state_attributes_manager.serialize_from_event(event)
         ):
             return
 
+        assert self.event_session is not None
+        session = self.event_session
+        # Map the entity_id to the StatesMeta table
+        states_meta_manager = self.states_meta_manager
+        if pending_states_meta := states_meta_manager.get_pending(entity_id):
+            dbstate.states_meta_rel = pending_states_meta
+        elif metadata_id := states_meta_manager.get(entity_id, session, True):
+            dbstate.metadata_id = metadata_id
+        else:
+            states_meta = StatesMeta(entity_id=entity_id)
+            states_meta_manager.add_pending(states_meta)
+            session.add(states_meta)
+            dbstate.states_meta_rel = states_meta
+
+        # Map the event data to the StateAttributes table
         shared_attrs = shared_attrs_bytes.decode("utf-8")
         dbstate.attributes = None
         # Matching attributes found in the pending commit
-        if pending_attributes := self._pending_state_attributes.get(shared_attrs):
-            dbstate.state_attributes = pending_attributes
+        if pending_event_data := state_attributes_manager.get_pending(shared_attrs):
+            dbstate.state_attributes = pending_event_data
         # Matching attributes id found in the cache
-        elif attributes_id := self._state_attributes_ids.get(shared_attrs):
+        elif (
+            attributes_id := state_attributes_manager.get_from_cache(shared_attrs)
+        ) or (
+            (hash_ := StateAttributes.hash_shared_attrs_bytes(shared_attrs_bytes))
+            and (
+                attributes_id := state_attributes_manager.get(
+                    shared_attrs, hash_, session
+                )
+            )
+        ):
             dbstate.attributes_id = attributes_id
         else:
-            attr_hash = StateAttributes.hash_shared_attrs_bytes(shared_attrs_bytes)
-            # Matching attributes found in the database
-            if attributes_id := self._find_shared_attr_in_db(attr_hash, shared_attrs):
-                dbstate.attributes_id = attributes_id
-                self._state_attributes_ids[shared_attrs] = attributes_id
             # No matching attributes found, save them in the DB
-            else:
-                dbstate_attributes = StateAttributes(
-                    shared_attrs=shared_attrs, hash=attr_hash
-                )
-                dbstate.state_attributes = dbstate_attributes
-                self._pending_state_attributes[shared_attrs] = dbstate_attributes
-                self.event_session.add(dbstate_attributes)
+            dbstate_attributes = StateAttributes(shared_attrs=shared_attrs, hash=hash_)
+            state_attributes_manager.add_pending(dbstate_attributes)
+            session.add(dbstate_attributes)
+            dbstate.state_attributes = dbstate_attributes
 
-        if old_state := self._old_states.pop(dbstate.entity_id, None):
-            if old_state.state_id:
-                dbstate.old_state_id = old_state.state_id
-            else:
-                dbstate.old_state = old_state
+        states_manager = self.states_manager
+        if old_state := states_manager.pop_pending(entity_id):
+            dbstate.old_state = old_state
+        elif old_state_id := states_manager.pop_committed(entity_id):
+            dbstate.old_state_id = old_state_id
         if event.data.get("new_state"):
-            self._old_states[dbstate.entity_id] = dbstate
-            self._pending_expunge.append(dbstate)
+            states_manager.add_pending(entity_id, dbstate)
         else:
             dbstate.state = None
+
+        if states_meta_manager.active:
+            dbstate.entity_id = None
+
         self.event_session.add(dbstate)
 
     def _handle_database_error(self, err: Exception) -> bool:
@@ -1074,26 +1042,15 @@ class Recorder(threading.Thread):
         self._commits_without_expire += 1
 
         self.event_session.commit()
-        if self._pending_expunge:
-            for dbstate in self._pending_expunge:
-                # Expunge the state so its not expired
-                # until we use it later for dbstate.old_state
-                if dbstate in self.event_session:
-                    self.event_session.expunge(dbstate)
-            self._pending_expunge = []
-
         # We just committed the state attributes to the database
         # and we now know the attributes_ids.  We can save
         # many selects for matching attributes by loading them
-        # into the LRU cache now.
-        for state_attr in self._pending_state_attributes.values():
-            self._state_attributes_ids[
-                state_attr.shared_attrs
-            ] = state_attr.attributes_id
-        self._pending_state_attributes = {}
-        for event_data in self._pending_event_data.values():
-            self._event_data_ids[event_data.shared_data] = event_data.data_id
-        self._pending_event_data = {}
+        # into the LRU or committed now.
+        self.states_manager.post_commit_pending()
+        self.state_attributes_manager.post_commit_pending()
+        self.event_data_manager.post_commit_pending()
+        self.event_type_manager.post_commit_pending()
+        self.states_meta_manager.post_commit_pending()
 
         # Expire is an expensive operation (frequently more expensive
         # than the flush and commit itself) so we only
@@ -1115,11 +1072,11 @@ class Recorder(threading.Thread):
 
     def _close_event_session(self) -> None:
         """Close the event session."""
-        self._old_states.clear()
-        self._state_attributes_ids.clear()
-        self._event_data_ids.clear()
-        self._pending_state_attributes.clear()
-        self._pending_event_data.clear()
+        self.states_manager.reset()
+        self.state_attributes_manager.reset()
+        self.event_data_manager.reset()
+        self.event_type_manager.reset()
+        self.states_meta_manager.reset()
 
         if not self.event_session:
             return
@@ -1145,6 +1102,26 @@ class Recorder(threading.Thread):
     def _post_schema_migration(self, old_version: int, new_version: int) -> None:
         """Run post schema migration tasks."""
         migration.post_schema_migration(self, old_version, new_version)
+
+    def _migrate_states_context_ids(self) -> bool:
+        """Migrate states context ids if needed."""
+        return migration.migrate_states_context_ids(self)
+
+    def _migrate_events_context_ids(self) -> bool:
+        """Migrate events context ids if needed."""
+        return migration.migrate_events_context_ids(self)
+
+    def _migrate_event_type_ids(self) -> bool:
+        """Migrate event type ids if needed."""
+        return migration.migrate_event_type_ids(self)
+
+    def _migrate_entity_ids(self) -> bool:
+        """Migrate entity_ids if needed."""
+        return migration.migrate_entity_ids(self)
+
+    def _post_migrate_entity_ids(self) -> bool:
+        """Post migrate entity_ids if needed."""
+        return migration.post_migrate_entity_ids(self)
 
     def _send_keep_alive(self) -> None:
         """Send a keep alive to keep the db connection open."""

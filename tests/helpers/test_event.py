@@ -10,6 +10,7 @@ from astral import LocationInfo
 import astral.sun
 import async_timeout
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import jinja2
 import pytest
 
@@ -1406,7 +1407,7 @@ async def test_track_template_result_super_template_initially_false(
     ],
 )
 async def test_track_template_result_super_template_2(
-    hass: HomeAssistant, availability_template
+    hass: HomeAssistant, availability_template: str
 ) -> None:
     """Test tracking template with super template listening to different entities."""
     specific_runs = []
@@ -1545,7 +1546,7 @@ async def test_track_template_result_super_template_2(
     ],
 )
 async def test_track_template_result_super_template_2_initially_false(
-    hass: HomeAssistant, availability_template
+    hass: HomeAssistant, availability_template: str
 ) -> None:
     """Test tracking template with super template listening to different entities."""
     specific_runs = []
@@ -2209,7 +2210,7 @@ async def test_track_template_result_errors(
     hass.states.async_set("switch.not_exist", "on")
     await hass.async_block_till_done()
 
-    assert len(syntax_error_runs) == 1
+    assert len(syntax_error_runs) == 0
     assert len(not_exist_runs) == 2
     assert not_exist_runs[1][0].data.get("entity_id") == "switch.not_exist"
     assert not_exist_runs[1][1] == template_not_exist
@@ -2227,6 +2228,56 @@ async def test_track_template_result_errors(
         assert not_exist_runs[2][1] == template_not_exist
         assert not_exist_runs[2][2] == "on"
         assert isinstance(not_exist_runs[2][3], TemplateError)
+
+
+async def test_track_template_result_transient_errors(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test tracking template with transient errors in the template."""
+    hass.states.async_set("sensor.error", "unknown")
+    template_that_raises_sometimes = Template(
+        "{{ states('sensor.error') | float }}", hass
+    )
+
+    sometimes_error_runs = []
+
+    @ha.callback
+    def sometimes_error_listener(event, updates):
+        track_result = updates.pop()
+        sometimes_error_runs.append(
+            (
+                event,
+                track_result.template,
+                track_result.last_result,
+                track_result.result,
+            )
+        )
+
+    info = async_track_template_result(
+        hass,
+        [TrackTemplate(template_that_raises_sometimes, None)],
+        sometimes_error_listener,
+    )
+    await hass.async_block_till_done()
+
+    assert sometimes_error_runs == []
+    assert "ValueError" in caplog.text
+    assert "ValueError" in repr(info)
+    caplog.clear()
+
+    hass.states.async_set("sensor.error", "unavailable")
+    await hass.async_block_till_done()
+    assert len(sometimes_error_runs) == 1
+    assert isinstance(sometimes_error_runs[0][3], TemplateError)
+    sometimes_error_runs.clear()
+    assert "ValueError" in repr(info)
+
+    hass.states.async_set("sensor.error", "4")
+    await hass.async_block_till_done()
+    assert len(sometimes_error_runs) == 1
+    assert sometimes_error_runs[0][3] == 4.0
+    sometimes_error_runs.clear()
+    assert "ValueError" not in repr(info)
 
 
 async def test_static_string(hass: HomeAssistant) -> None:
@@ -3848,7 +3899,9 @@ async def test_periodic_task_duplicate_time(hass: HomeAssistant) -> None:
 
 # DST starts early morning March 28th 2021
 @pytest.mark.freeze_time("2021-03-28 01:28:00+01:00")
-async def test_periodic_task_entering_dst(hass: HomeAssistant, freezer) -> None:
+async def test_periodic_task_entering_dst(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test periodic task behavior when entering dst."""
     hass.config.set_time_zone("Europe/Vienna")
     specific_runs = []
@@ -3894,7 +3947,9 @@ async def test_periodic_task_entering_dst(hass: HomeAssistant, freezer) -> None:
 
 # DST starts early morning March 28th 2021
 @pytest.mark.freeze_time("2021-03-28 01:59:59+01:00")
-async def test_periodic_task_entering_dst_2(hass: HomeAssistant, freezer) -> None:
+async def test_periodic_task_entering_dst_2(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test periodic task behavior when entering dst.
 
     This tests a task firing every second in the range 0..58 (not *:*:59)
@@ -3945,7 +4000,9 @@ async def test_periodic_task_entering_dst_2(hass: HomeAssistant, freezer) -> Non
 
 # DST ends early morning October 31st 2021
 @pytest.mark.freeze_time("2021-10-31 02:28:00+02:00")
-async def test_periodic_task_leaving_dst(hass: HomeAssistant, freezer) -> None:
+async def test_periodic_task_leaving_dst(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test periodic task behavior when leaving dst."""
     hass.config.set_time_zone("Europe/Vienna")
     specific_runs = []
@@ -4019,7 +4076,9 @@ async def test_periodic_task_leaving_dst(hass: HomeAssistant, freezer) -> None:
 
 # DST ends early morning October 31st 2021
 @pytest.mark.freeze_time("2021-10-31 02:28:00+02:00")
-async def test_periodic_task_leaving_dst_2(hass: HomeAssistant, freezer) -> None:
+async def test_periodic_task_leaving_dst_2(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test periodic task behavior when leaving dst."""
     hass.config.set_time_zone("Europe/Vienna")
     specific_runs = []

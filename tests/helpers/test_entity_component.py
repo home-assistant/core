@@ -18,6 +18,8 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity_component import EntityComponent, async_update_entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -90,7 +92,7 @@ async def test_setup_recovers_when_setup_raises(hass: HomeAssistant) -> None:
 )
 @patch("homeassistant.setup.async_setup_component", return_value=True)
 async def test_setup_does_discovery(
-    mock_setup_component, mock_setup, hass: HomeAssistant
+    mock_setup_component: AsyncMock, mock_setup: AsyncMock, hass: HomeAssistant
 ) -> None:
     """Test setup for discovery."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
@@ -108,10 +110,17 @@ async def test_setup_does_discovery(
 
 
 @patch("homeassistant.helpers.entity_platform.async_track_time_interval")
-async def test_set_scan_interval_via_config(mock_track, hass: HomeAssistant) -> None:
+async def test_set_scan_interval_via_config(
+    mock_track: Mock, hass: HomeAssistant
+) -> None:
     """Test the setting of the scan interval via configuration."""
 
-    def platform_setup(hass, config, add_entities, discovery_info=None):
+    def platform_setup(
+        hass: HomeAssistant,
+        config: ConfigType,
+        add_entities: AddEntitiesCallback,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> None:
         """Test the platform setup."""
         add_entities([MockEntity(should_poll=True)])
 
@@ -131,7 +140,12 @@ async def test_set_scan_interval_via_config(mock_track, hass: HomeAssistant) -> 
 async def test_set_entity_namespace_via_config(hass: HomeAssistant) -> None:
     """Test setting an entity namespace."""
 
-    def platform_setup(hass, config, add_entities, discovery_info=None):
+    def platform_setup(
+        hass: HomeAssistant,
+        config: ConfigType,
+        add_entities: AddEntitiesCallback,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> None:
         """Test the platform setup."""
         add_entities([MockEntity(name="beer"), MockEntity(name=None)])
 

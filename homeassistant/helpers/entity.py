@@ -319,6 +319,15 @@ class Entity(ABC):
         """Return the name of the entity."""
         if hasattr(self, "_attr_name"):
             return self._attr_name
+        if self.translation_key is not None and self.has_entity_name:
+            assert self.platform
+            name_translation_key = (
+                f"component.{self.platform.platform_name}.entity.{self.platform.domain}"
+                f".{self.translation_key}.name"
+            )
+            if name_translation_key in self.platform.entity_translations:
+                name: str = self.platform.entity_translations[name_translation_key]
+                return name
         if hasattr(self, "entity_description"):
             return self.entity_description.name
         return None
@@ -702,7 +711,10 @@ class Entity(ABC):
         been executed, the intermediate state transitions will be missed.
         """
         if force_refresh:
-            self.hass.async_create_task(self.async_update_ha_state(force_refresh))
+            self.hass.async_create_task(
+                self.async_update_ha_state(force_refresh),
+                f"Entity schedule update ha state {self.entity_id}",
+            )
         else:
             self.async_write_ha_state()
 
@@ -722,7 +734,9 @@ class Entity(ABC):
         try:
             task: asyncio.Future[None]
             if hasattr(self, "async_update"):
-                task = self.hass.async_create_task(self.async_update())
+                task = self.hass.async_create_task(
+                    self.async_update(), f"Entity async update {self.entity_id}"
+                )
             elif hasattr(self, "update"):
                 task = self.hass.async_add_executor_job(self.update)
             else:

@@ -1,7 +1,6 @@
 """The tests for the Legacy Mqtt vacuum platform."""
 from copy import deepcopy
 import json
-from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -65,7 +64,7 @@ from .test_common import (
 
 from tests.common import async_fire_mqtt_message
 from tests.components.vacuum import common
-from tests.typing import MqttMockHAClientGenerator
+from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {
@@ -998,16 +997,12 @@ async def test_publishing_with_custom_encoding(
 
 async def test_reloadable(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-    tmp_path: Path,
+    mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = vacuum.DOMAIN
     config = DEFAULT_CONFIG
-    await help_test_reloadable(
-        hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, domain, config
-    )
+    await help_test_reloadable(hass, mqtt_client_mock, domain, config)
 
 
 @pytest.mark.parametrize(
