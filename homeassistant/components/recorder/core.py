@@ -691,36 +691,44 @@ class Recorder(threading.Thread):
 
     def _activate_and_set_db_ready(self) -> None:
         """Activate the table managers or schedule migrations and mark the db as ready."""
-        with session_scope(session=self.get_session()) as session:
-            if (
-                self.schema_version < 36
-                or session.execute(has_events_context_ids_to_migrate()).scalar()
-            ):
-                self.queue_task(StatesContextIDMigrationTask())
+        session = self.event_session
+        assert session is not None
 
-            if (
-                self.schema_version < 36
-                or session.execute(has_states_context_ids_to_migrate()).scalar()
-            ):
-                self.queue_task(EventsContextIDMigrationTask())
+        # Prime the statistics meta manager as soon as possible
+        # since we want the frontend queries to avoid a thundering
+        # herd of queries to find the statistics meta data if
+        # there are a lot of statistics graphs on the frontend.
+        self.statistics_meta_manager.load(session)
 
-            if (
-                self.schema_version < 37
-                or session.execute(has_event_type_to_migrate()).scalar()
-            ):
-                self.queue_task(EventTypeIDMigrationTask())
-            else:
-                _LOGGER.debug("Activating event_types manager as all data is migrated")
-                self.event_type_manager.active = True
+        if (
+            self.schema_version < 36
+            or session.execute(has_events_context_ids_to_migrate()).scalar()
+        ):
+            self.queue_task(StatesContextIDMigrationTask())
 
-            if (
-                self.schema_version < 38
-                or session.execute(has_entity_ids_to_migrate()).scalar()
-            ):
-                self.queue_task(EntityIDMigrationTask())
-            else:
-                _LOGGER.debug("Activating states_meta manager as all data is migrated")
-                self.states_meta_manager.active = True
+        if (
+            self.schema_version < 36
+            or session.execute(has_states_context_ids_to_migrate()).scalar()
+        ):
+            self.queue_task(EventsContextIDMigrationTask())
+
+        if (
+            self.schema_version < 37
+            or session.execute(has_event_type_to_migrate()).scalar()
+        ):
+            self.queue_task(EventTypeIDMigrationTask())
+        else:
+            _LOGGER.debug("Activating event_types manager as all data is migrated")
+            self.event_type_manager.active = True
+
+        if (
+            self.schema_version < 38
+            or session.execute(has_entity_ids_to_migrate()).scalar()
+        ):
+            self.queue_task(EntityIDMigrationTask())
+        else:
+            _LOGGER.debug("Activating states_meta manager as all data is migrated")
+            self.states_meta_manager.active = True
 
         # We must only set the db ready after we have set the table managers
         # to active if there is no data to migrate.
@@ -767,7 +775,6 @@ class Recorder(threading.Thread):
         self.event_type_manager.load(non_state_change_events, session)
         self.states_meta_manager.load(state_change_events, session)
         self.state_attributes_manager.load(state_change_events, session)
-        self.statistics_meta_manager.load(session)
 
     def _guarded_process_one_task_or_recover(self, task: RecorderTask) -> None:
         """Process a task, guarding against exceptions to ensure the loop does not collapse."""
