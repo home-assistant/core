@@ -41,8 +41,8 @@ DEFAULT_NAME = "Workday Sensor"
 DEFAULT_OFFSET = 0
 
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
-    vol.All(
+PLATFORM_SCHEMA = vol.All(
+    PARENT_PLATFORM_SCHEMA.extend(
         {
             vol.Required(CONF_COUNTRY): valid_country,
             vol.Optional(CONF_EXCLUDES, default=DEFAULT_EXCLUDES): vol.All(
@@ -60,9 +60,9 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
             vol.Optional(CONF_REMOVE_HOLIDAYS, default=[]): vol.All(
                 cv.ensure_list, [cv.string]
             ),
-        },
-        valid_province_for_country,
-    )
+        }
+    ),
+    valid_province_for_country,
 )
 
 

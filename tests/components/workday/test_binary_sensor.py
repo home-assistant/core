@@ -391,7 +391,7 @@ class TestWorkdaySetup:
 
     def test_setup_component_invalidprovince(self):
         """Set up workday component."""
-        with assert_setup_component(1, "binary_sensor"):
+        with assert_setup_component(0, "binary_sensor"):
             setup_component(self.hass, "binary_sensor", self.config_invalidprovince)
 
         entity = self.hass.states.get("binary_sensor.workday_sensor")
