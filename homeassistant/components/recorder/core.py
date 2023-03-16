@@ -672,7 +672,7 @@ class Recorder(threading.Thread):
                     "Database Migration Failed",
                     "recorder_database_migration",
                 )
-                self._activate_and_set_db_ready()
+                self.hass.add_job(self.async_set_db_ready)
                 self._shutdown()
                 return
 
