@@ -48,9 +48,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Preload other coordinators (based on net infrastructure)
     tasks = [data.wan.async_config_entry_first_refresh()]
-    if system_info.net_infra == "adsl":
+    if (net_infra := system_info.net_infra) == "adsl":
         tasks.append(data.dsl.async_config_entry_first_refresh())
-    elif system_info.net_infra == "ftth":
+    elif net_infra == "ftth":
         tasks.append(data.ftth.async_config_entry_first_refresh())
     await asyncio.gather(*tasks)
 
