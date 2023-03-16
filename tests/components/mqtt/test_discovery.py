@@ -1588,7 +1588,7 @@ async def test_clean_up_registry_monitoring(
 
     # Enload the entry
     # The monitoring should be cleared
-    await help_test_unload_config_entry(hass, tmp_path, {})
+    await help_test_unload_config_entry(hass)
     assert len(hooks) == 0
 
 
