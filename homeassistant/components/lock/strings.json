@@ -17,6 +17,7 @@
   },
   "entity_component": {
     "_": {
+      "name": "[%key:component::lock::title%]",
       "state": {
         "locked": "[%key:common::state::locked%]",
         "unlocked": "[%key:common::state::unlocked%]"

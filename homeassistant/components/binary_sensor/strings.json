@@ -108,6 +108,7 @@
   },
   "entity_component": {
     "_": {
+      "name": "[%key:component::binary_sensor::title%]",
       "state": {
         "off": "[%key:common::state::off%]",
         "on": "[%key:common::state::on%]"

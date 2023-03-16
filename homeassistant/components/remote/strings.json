@@ -18,6 +18,7 @@
   },
   "entity_component": {
     "_": {
+      "name": "[%key:component::remote::title%]",
       "state": {
         "off": "[%key:common::state::off%]",
         "on": "[%key:common::state::on%]"
