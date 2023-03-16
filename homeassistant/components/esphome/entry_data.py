@@ -204,17 +204,15 @@ class RuntimeEntryData:
         current_state = current_state_by_type[key]
         if current_state == state:
             _LOGGER.debug(
-                "%s: ignoring duplicate update with state_type %s and key %s: %s",
+                "%s: ignoring duplicate update with and key %s: %s",
                 self.name,
-                state_type,
                 key,
                 state,
             )
             return
         _LOGGER.debug(
-            "%s: dispatching update with state_type %s and key %s: %s",
+            "%s: dispatching update with key %s: %s",
             self.name,
-            state_type,
             key,
             state,
         )
