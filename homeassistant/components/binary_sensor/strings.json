@@ -106,114 +106,168 @@
       "turned_off": "{entity_name} turned off"
     }
   },
-  "state": {
+  "entity_component": {
+    "_": {
+      "state": {
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]"
+      }
+    },
     "battery": {
-      "off": "Normal",
-      "on": "Low"
+      "state": {
+        "off": "Normal",
+        "on": "Low"
+      }
     },
     "battery_charging": {
-      "off": "Not charging",
-      "on": "Charging"
+      "state": {
+        "off": "Not charging",
+        "on": "Charging"
+      }
     },
     "carbon_monoxide": {
-      "off": "[%key:component::binary_sensor::state::gas::off%]",
-      "on": "[%key:component::binary_sensor::state::gas::on%]"
+      "state": {
+        "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+        "on": "[key:component::binary_sensor::entity_component::gas::state::on%]"
+      }
     },
     "cold": {
-      "off": "[%key:component::binary_sensor::state::battery::off%]",
-      "on": "Cold"
+      "state": {
+        "off": "[%key:component::binary_sensor::entity_component::battery::state::off%]",
+        "on": "Cold"
+      }
     },
     "connectivity": {
-      "off": "[%key:common::state::disconnected%]",
-      "on": "[%key:common::state::connected%]"
+      "state": {
+        "off": "[%key:common::state::disconnected%]",
+        "on": "[%key:common::state::connected%]"
+      }
     },
     "door": {
-      "off": "[%key:common::state::closed%]",
-      "on": "[%key:common::state::open%]"
+      "state": {
+        "off": "[%key:common::state::closed%]",
+        "on": "[%key:common::state::open%]"
+      }
     },
     "garage_door": {
-      "off": "[%key:common::state::closed%]",
-      "on": "[%key:common::state::open%]"
+      "state": {
+        "off": "[%key:common::state::closed%]",
+        "on": "[%key:common::state::open%]"
+      }
     },
     "gas": {
-      "off": "Clear",
-      "on": "Detected"
+      "state": {
+        "off": "Clear",
+        "on": "Detected"
+      }
     },
     "heat": {
-      "off": "[%key:component::binary_sensor::state::battery::off%]",
-      "on": "Hot"
+      "state": {
+        "off": "[%key:component::binary_sensor::entity_component::battery::state::off%]",
+        "on": "Hot"
+      }
     },
     "light": {
-      "off": "No light",
-      "on": "Light detected"
+      "state": {
+        "off": "No light",
+        "on": "Light detected"
+      }
     },
     "lock": {
-      "off": "[%key:common::state::locked%]",
-      "on": "[%key:common::state::unlocked%]"
+      "state": {
+        "off": "[%key:common::state::locked%]",
+        "on": "[%key:common::state::unlocked%]"
+      }
     },
     "moisture": {
-      "off": "Dry",
-      "on": "Wet"
+      "state": {
+        "off": "Dry",
+        "on": "Wet"
+      }
     },
     "motion": {
-      "off": "[%key:component::binary_sensor::state::gas::off%]",
-      "on": "[%key:component::binary_sensor::state::gas::on%]"
+      "state": {
+        "off": "[key:component::binary_sensor::entity_component::gas::state::off%]",
+        "on": "[key:component::binary_sensor::entity_component::gas::state::on%]"
+      }
     },
     "moving": {
-      "off": "Not moving",
-      "on": "Moving"
+      "state": {
+        "off": "Not moving",
+        "on": "Moving"
+      }
     },
     "occupancy": {
-      "off": "[%key:component::binary_sensor::state::gas::off%]",
-      "on": "[%key:component::binary_sensor::state::gas::on%]"
+      "state": {
+        "off": "[key:component::binary_sensor::entity_component::gas::state::off%]",
+        "on": "[key:component::binary_sensor::entity_component::gas::state::on%]"
+      }
     },
     "opening": {
-      "off": "[%key:common::state::closed%]",
-      "on": "[%key:common::state::open%]"
+      "state": {
+        "off": "[%key:common::state::closed%]",
+        "on": "[%key:common::state::open%]"
+      }
     },
     "plug": {
-      "off": "Unplugged",
-      "on": "Plugged in"
+      "state": {
+        "off": "Unplugged",
+        "on": "Plugged in"
+      }
     },
     "presence": {
-      "off": "[%key:component::device_tracker::state::_::not_home%]",
-      "on": "[%key:component::device_tracker::state::_::home%]"
+      "state": {
+        "off": "[%key:component::device_tracker::entity_component::_::state::not_home%]",
+        "on": "[%key:component::device_tracker::entity_component::_::state::home%]"
+      }
     },
     "problem": {
-      "off": "OK",
-      "on": "Problem"
+      "state": {
+        "off": "OK",
+        "on": "Problem"
+      }
     },
     "running": {
-      "off": "Not running",
-      "on": "Running"
+      "state": {
+        "off": "Not running",
+        "on": "Running"
+      }
     },
     "safety": {
-      "off": "Safe",
-      "on": "Unsafe"
+      "state": {
+        "off": "Safe",
+        "on": "Unsafe"
+      }
     },
     "smoke": {
-      "off": "[%key:component::binary_sensor::state::gas::off%]",
-      "on": "[%key:component::binary_sensor::state::gas::on%]"
+      "state": {
+        "off": "[key:component::binary_sensor::entity_component::gas::state::off%]",
+        "on": "[key:component::binary_sensor::entity_component::gas::state::on%]"
+      }
     },
     "sound": {
-      "off": "[%key:component::binary_sensor::state::gas::off%]",
-      "on": "[%key:component::binary_sensor::state::gas::on%]"
+      "state": {
+        "off": "[key:component::binary_sensor::entity_component::gas::state::off%]",
+        "on": "[key:component::binary_sensor::entity_component::gas::state::on%]"
+      }
     },
     "update": {
-      "off": "Up-to-date",
-      "on": "Update available"
+      "state": {
+        "off": "Up-to-date",
+        "on": "Update available"
+      }
     },
     "vibration": {
-      "off": "[%key:component::binary_sensor::state::gas::off%]",
-      "on": "[%key:component::binary_sensor::state::gas::on%]"
+      "state": {
+        "off": "[key:component::binary_sensor::entity_component::gas::state::off%]",
+        "on": "[key:component::binary_sensor::entity_component::gas::state::on%]"
+      }
     },
     "window": {
-      "off": "[%key:common::state::closed%]",
-      "on": "[%key:common::state::open%]"
-    },
-    "_": {
-      "off": "[%key:common::state::off%]",
-      "on": "[%key:common::state::on%]"
+      "state": {
+        "off": "[%key:common::state::closed%]",
+        "on": "[%key:common::state::open%]"
+      }
     }
   },
   "device_class": {
