@@ -114,182 +114,156 @@
       }
     },
     "battery": {
-      "name": "Battery",
       "state": {
         "off": "Normal",
         "on": "Low"
       }
     },
     "battery_charging": {
-      "name": "Battery charging",
       "state": {
         "off": "Not charging",
         "on": "Charging"
       }
     },
     "carbon_monoxide": {
-      "name": "Carbon monoxide",
       "state": {
         "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
         "on": "[key:component::binary_sensor::entity_component::gas::state::on%]"
       }
     },
     "cold": {
-      "name": "Cold",
       "state": {
         "off": "[%key:component::binary_sensor::entity_component::battery::state::off%]",
         "on": "Cold"
       }
     },
     "connectivity": {
-      "name": "Connectivity",
       "state": {
         "off": "[%key:common::state::disconnected%]",
         "on": "[%key:common::state::connected%]"
       }
     },
     "door": {
-      "name": "Door",
       "state": {
         "off": "[%key:common::state::closed%]",
         "on": "[%key:common::state::open%]"
       }
     },
     "garage_door": {
-      "name": "Garage door",
       "state": {
         "off": "[%key:common::state::closed%]",
         "on": "[%key:common::state::open%]"
       }
     },
     "gas": {
-      "name": "Gas",
       "state": {
         "off": "Clear",
         "on": "Detected"
       }
     },
     "heat": {
-      "name": "Heat",
       "state": {
         "off": "[%key:component::binary_sensor::entity_component::battery::state::off%]",
         "on": "Hot"
       }
     },
     "light": {
-      "name": "Light",
       "state": {
         "off": "No light",
         "on": "Light detected"
       }
     },
     "lock": {
-      "name": "Lock",
       "state": {
         "off": "[%key:common::state::locked%]",
         "on": "[%key:common::state::unlocked%]"
       }
     },
     "moisture": {
-      "name": "Moisture",
       "state": {
         "off": "Dry",
         "on": "Wet"
       }
     },
     "motion": {
-      "name": "Motion",
       "state": {
         "off": "[key:component::binary_sensor::entity_component::gas::state::off%]",
         "on": "[key:component::binary_sensor::entity_component::gas::state::on%]"
       }
     },
     "moving": {
-      "name": "Moving",
       "state": {
         "off": "Not moving",
         "on": "Moving"
       }
     },
     "occupancy": {
-      "name": "Occupancy",
       "state": {
         "off": "[key:component::binary_sensor::entity_component::gas::state::off%]",
         "on": "[key:component::binary_sensor::entity_component::gas::state::on%]"
       }
     },
     "opening": {
-      "name": "Opening",
       "state": {
         "off": "[%key:common::state::closed%]",
         "on": "[%key:common::state::open%]"
       }
     },
     "plug": {
-      "name": "Plug",
       "state": {
         "off": "Unplugged",
         "on": "Plugged in"
       }
     },
     "presence": {
-      "name": "Presence",
       "state": {
         "off": "[%key:component::device_tracker::entity_component::_::state::not_home%]",
         "on": "[%key:component::device_tracker::entity_component::_::state::home%]"
       }
     },
     "problem": {
-      "name": "Problem",
       "state": {
         "off": "OK",
         "on": "Problem"
       }
     },
     "running": {
-      "name": "Running",
       "state": {
         "off": "Not running",
         "on": "Running"
       }
     },
     "safety": {
-      "name": "Safety",
       "state": {
         "off": "Safe",
         "on": "Unsafe"
       }
     },
     "smoke": {
-      "name": "Smoke",
       "state": {
         "off": "[key:component::binary_sensor::entity_component::gas::state::off%]",
         "on": "[key:component::binary_sensor::entity_component::gas::state::on%]"
       }
     },
     "sound": {
-      "name": "Sound",
       "state": {
         "off": "[key:component::binary_sensor::entity_component::gas::state::off%]",
         "on": "[key:component::binary_sensor::entity_component::gas::state::on%]"
       }
     },
     "update": {
-      "name": "Update",
       "state": {
         "off": "Up-to-date",
         "on": "Update available"
       }
     },
     "vibration": {
-      "name": "Vibration",
       "state": {
         "off": "[key:component::binary_sensor::entity_component::gas::state::off%]",
         "on": "[key:component::binary_sensor::entity_component::gas::state::on%]"
       }
     },
     "window": {
-      "name": "Window",
       "state": {
         "off": "[%key:common::state::closed%]",
         "on": "[%key:common::state::open%]"
