@@ -16,7 +16,7 @@ from pymodbus.client import (
 from pymodbus.constants import Defaults
 from pymodbus.exceptions import ModbusException
 from pymodbus.pdu import ModbusResponse
-from pymodbus.transaction import ModbusRtuFramer
+from pymodbus.transaction import ModbusAsciiFramer, ModbusRtuFramer, ModbusSocketFramer
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -279,9 +279,12 @@ class ModbusHub:
         }
         if self._config_type == SERIAL:
             # serial configuration
+            if client_config[CONF_METHOD] == "ascii":
+                self._pb_params["framer"] = ModbusAsciiFramer
+            else:
+                self._pb_params["framer"] = ModbusRtuFramer
             self._pb_params.update(
                 {
-                    "method": client_config[CONF_METHOD],
                     "baudrate": client_config[CONF_BAUDRATE],
                     "stopbits": client_config[CONF_STOPBITS],
                     "bytesize": client_config[CONF_BYTESIZE],
@@ -293,6 +296,8 @@ class ModbusHub:
             self._pb_params["host"] = client_config[CONF_HOST]
             if self._config_type == RTUOVERTCP:
                 self._pb_params["framer"] = ModbusRtuFramer
+            else:
+                self._pb_params["framer"] = ModbusSocketFramer
 
         Defaults.Timeout = client_config[CONF_TIMEOUT]
         if CONF_MSG_WAIT in client_config:

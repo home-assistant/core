@@ -8,7 +8,6 @@ from typing import Any
 from unittest.mock import patch
 import urllib
 
-from aiohttp import ClientWebSocketResponse
 from aiohttp.client_exceptions import ClientError
 from gcal_sync.auth import API_BASE_URL
 import pytest
@@ -32,7 +31,7 @@ from .conftest import (
 
 from tests.common import async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 TEST_ENTITY = TEST_API_ENTITY
 TEST_ENTITY_NAME = TEST_API_ENTITY_NAME
@@ -134,7 +133,7 @@ ClientFixture = Callable[[], Awaitable[Client]]
 @pytest.fixture
 async def ws_client(
     hass: HomeAssistant,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
 ) -> ClientFixture:
     """Fixture for creating the test websocket client."""
 

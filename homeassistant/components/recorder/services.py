@@ -71,7 +71,8 @@ def _async_register_purge_entities_service(
         domains = service.data.get(ATTR_DOMAINS, [])
         entity_globs = service.data.get(ATTR_ENTITY_GLOBS, [])
         entity_filter = generate_filter(domains, list(entity_ids), [], [], entity_globs)
-        instance.queue_task(PurgeEntitiesTask(entity_filter))
+        purge_before = dt_util.utcnow()
+        instance.queue_task(PurgeEntitiesTask(entity_filter, purge_before))
 
     hass.services.async_register(
         DOMAIN,

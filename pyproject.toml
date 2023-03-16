@@ -50,7 +50,7 @@ dependencies    = [
     "pyyaml==6.0",
     "requests==2.28.2",
     "typing-extensions>=4.5.0,<5.0",
-    "ulid-transform==0.4.0",
+    "ulid-transform==0.4.2",
     "voluptuous==0.13.1",
     "voluptuous-serialize==2.6.0",
     "yarl==1.8.1",
@@ -268,12 +268,12 @@ ignore = [
     "D202",  # No blank lines allowed after function docstring
     "D203",  # 1 blank line required before class docstring
     "D213",  # Multi-line docstring summary should start at the second line
-    "D404",  # First word of the docstring should not be This
     "D406",  # Section name should end with a newline
     "D407",  # Section name underlining
-    "D411",  # Missing blank line before section
     "E501",  # line too long
     "E731",  # do not assign a lambda expression, use a def
+    # Ignored due to performance: https://github.com/charliermarsh/ruff/issues/2923
+    "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
 ]
 
 [tool.ruff.flake8-import-conventions.extend-aliases]
