@@ -10,6 +10,7 @@ import threading
 from typing import cast
 from unittest.mock import Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
 
@@ -1219,7 +1220,7 @@ def test_statistics_runs_initiated(hass_recorder: Callable[..., HomeAssistant]) 
 
 
 @pytest.mark.freeze_time("2022-09-13 09:00:00+02:00")
-def test_compile_missing_statistics(tmpdir, freezer) -> None:
+def test_compile_missing_statistics(tmpdir, freezer: FrozenDateTimeFactory) -> None:
     """Test missing statistics are compiled on startup."""
     now = dt_util.utcnow().replace(minute=0, second=0, microsecond=0)
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")

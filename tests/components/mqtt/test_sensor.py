@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import mqtt, sensor
@@ -1278,7 +1279,7 @@ async def test_cleanup_triggers_and_restoring_state(
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
     tmp_path: Path,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test cleanup old triggers at reloading and restoring the state."""
     domain = sensor.DOMAIN
@@ -1338,7 +1339,7 @@ async def test_cleanup_triggers_and_restoring_state(
 async def test_skip_restoring_state_with_over_due_expire_trigger(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test restoring a state with over due expire timer."""
 

@@ -80,7 +80,7 @@ async def test_registry_cleanup(
     config_entry: ConfigEntry,
     owproxy: MagicMock,
     hass_ws_client: WebSocketGenerator,
-):
+) -> None:
     """Test being able to remove a disconnected device."""
     assert await async_setup_component(hass, "config", {})
 

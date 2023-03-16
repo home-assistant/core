@@ -1,6 +1,7 @@
 """The tests for the demo sensor component."""
 from datetime import timedelta
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant import core as ha
@@ -13,7 +14,9 @@ from tests.common import mock_restore_cache_with_extra_data
 
 
 @pytest.mark.parametrize(("entity_id", "delta"), (("sensor.total_energy_kwh", 0.5),))
-async def test_energy_sensor(hass: HomeAssistant, entity_id, delta, freezer) -> None:
+async def test_energy_sensor(
+    hass: HomeAssistant, entity_id, delta, freezer: FrozenDateTimeFactory
+) -> None:
     """Test energy sensors increase periodically."""
     assert await async_setup_component(
         hass, SENSOR_DOMAIN, {SENSOR_DOMAIN: {"platform": DOMAIN}}
@@ -32,7 +35,9 @@ async def test_energy_sensor(hass: HomeAssistant, entity_id, delta, freezer) -> 
 
 
 @pytest.mark.parametrize(("entity_id", "delta"), (("sensor.total_energy_kwh", 0.5),))
-async def test_restore_state(hass: HomeAssistant, entity_id, delta, freezer) -> None:
+async def test_restore_state(
+    hass: HomeAssistant, entity_id, delta, freezer: FrozenDateTimeFactory
+) -> None:
     """Test energy sensors restore state."""
     fake_state = ha.State(
         entity_id,

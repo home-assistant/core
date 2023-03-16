@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta
 
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -104,7 +105,7 @@ async def test_midnight_turnover_before_midnight_inside_period(
 
 
 async def test_midnight_turnover_after_midnight_inside_period(
-    hass: HomeAssistant, freezer, hass_tz_info
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_tz_info
 ) -> None:
     """Test midnight turnover setting before midnight inside period ."""
     test_time = datetime(2019, 1, 10, 21, 0, 0, tzinfo=hass_tz_info)
@@ -163,7 +164,7 @@ async def test_after_happens_tomorrow(hass: HomeAssistant) -> None:
 
 
 async def test_midnight_turnover_after_midnight_outside_period(
-    hass: HomeAssistant, freezer, hass_tz_info
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_tz_info
 ) -> None:
     """Test midnight turnover setting before midnight inside period ."""
     test_time = datetime(2019, 1, 10, 20, 0, 0, tzinfo=hass_tz_info)
@@ -197,7 +198,7 @@ async def test_midnight_turnover_after_midnight_outside_period(
 
 
 async def test_from_sunrise_to_sunset(
-    hass: HomeAssistant, freezer, hass_tz_info
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_tz_info
 ) -> None:
     """Test period from sunrise to sunset."""
     test_time = datetime(2019, 1, 12, tzinfo=hass_tz_info)
@@ -256,7 +257,7 @@ async def test_from_sunrise_to_sunset(
 
 
 async def test_from_sunset_to_sunrise(
-    hass: HomeAssistant, freezer, hass_tz_info
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_tz_info
 ) -> None:
     """Test period from sunset to sunrise."""
     test_time = datetime(2019, 1, 12, tzinfo=hass_tz_info)
@@ -311,7 +312,9 @@ async def test_from_sunset_to_sunrise(
     assert state.state == STATE_OFF
 
 
-async def test_offset(hass: HomeAssistant, freezer, hass_tz_info) -> None:
+async def test_offset(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_tz_info
+) -> None:
     """Test offset."""
     after = datetime(2019, 1, 10, 18, 0, 0, tzinfo=hass_tz_info) + timedelta(
         hours=1, minutes=34
@@ -365,7 +368,9 @@ async def test_offset(hass: HomeAssistant, freezer, hass_tz_info) -> None:
     assert state.state == STATE_OFF
 
 
-async def test_offset_overnight(hass: HomeAssistant, freezer, hass_tz_info) -> None:
+async def test_offset_overnight(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_tz_info
+) -> None:
     """Test offset overnight."""
     after = datetime(2019, 1, 10, 18, 0, 0, tzinfo=hass_tz_info) + timedelta(
         hours=1, minutes=34
@@ -397,7 +402,7 @@ async def test_offset_overnight(hass: HomeAssistant, freezer, hass_tz_info) -> N
 
 
 async def test_norwegian_case_winter(
-    hass: HomeAssistant, freezer, hass_tz_info
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_tz_info
 ) -> None:
     """Test location in Norway where the sun doesn't set in summer."""
     hass.config.latitude = 69.6
@@ -465,7 +470,7 @@ async def test_norwegian_case_winter(
 
 
 async def test_norwegian_case_summer(
-    hass: HomeAssistant, freezer, hass_tz_info
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_tz_info
 ) -> None:
     """Test location in Norway where the sun doesn't set in summer."""
     hass.config.latitude = 69.6
@@ -534,7 +539,9 @@ async def test_norwegian_case_summer(
     assert state.state == STATE_OFF
 
 
-async def test_sun_offset(hass: HomeAssistant, freezer, hass_tz_info) -> None:
+async def test_sun_offset(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_tz_info
+) -> None:
     """Test sun event with offset."""
     test_time = datetime(2019, 1, 12, tzinfo=hass_tz_info)
     sunrise = dt_util.as_local(
@@ -608,7 +615,9 @@ async def test_sun_offset(hass: HomeAssistant, freezer, hass_tz_info) -> None:
     assert state.state == STATE_ON
 
 
-async def test_dst(hass: HomeAssistant, freezer, hass_tz_info) -> None:
+async def test_dst(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_tz_info
+) -> None:
     """Test sun event with offset."""
     hass.config.time_zone = "CET"
     dt_util.set_default_time_zone(dt_util.get_time_zone("CET"))

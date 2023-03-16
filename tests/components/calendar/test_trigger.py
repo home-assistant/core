@@ -15,6 +15,7 @@ import secrets
 from typing import Any
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import calendar
@@ -642,7 +643,7 @@ async def test_event_payload(
 
 
 async def test_trigger_timestamp_window_edge(
-    hass: HomeAssistant, calls, fake_schedule, freezer
+    hass: HomeAssistant, calls, fake_schedule, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test that events in the edge of a scan are included."""
     freezer.move_to("2022-04-19 11:00:00+00:00")
