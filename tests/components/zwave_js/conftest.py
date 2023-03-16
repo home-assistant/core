@@ -13,6 +13,16 @@ from zwave_js_server.version import VersionInfo
 
 from tests.common import MockConfigEntry, load_fixture
 
+# Misc fixtures
+
+
+@pytest.fixture(name="skip_update_delay", autouse=True)
+def skip_update_delay_fixture():
+    """Set the UPDATE_DELAY_TIME constant to 0."""
+    with patch("homeassistant.components.zwave_js.update.UPDATE_DELAY_TIME", 0):
+        yield
+
+
 # Add-on fixtures
 
 
@@ -233,6 +243,9 @@ def create_backup_fixture():
         "homeassistant.components.hassio.addon_manager.async_create_backup"
     ) as create_backup:
         yield create_backup
+
+
+# State fixtures
 
 
 @pytest.fixture(name="controller_state", scope="session")
@@ -599,6 +612,9 @@ def light_express_controls_ezmultipli_state_fixture():
 def lock_home_connect_620_state_fixture():
     """Load the Home Connect 620 lock node state fixture data."""
     return json.loads(load_fixture("zwave_js/lock_home_connect_620_state.json"))
+
+
+# model fixtures
 
 
 @pytest.fixture(name="client")
