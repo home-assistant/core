@@ -1522,7 +1522,7 @@ pybalboa==1.0.1
 pybbox==0.0.5-alpha
 
 # homeassistant.components.blackbird
-pyblackbird==0.5
+pyblackbird==0.6
 
 # homeassistant.components.bluetooth_tracker
 # pybluez==0.22
@@ -2653,7 +2653,7 @@ xboxapi==2.0.1
 xiaomi-ble==0.16.4
 
 # homeassistant.components.knx
-xknx==2.6.0
+xknx==2.7.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
