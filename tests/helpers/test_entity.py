@@ -952,6 +952,8 @@ async def test_friendly_name(
     state = hass.states.async_all()[0]
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name
 
+    await entity_platform.async_shutdown()
+
 
 async def test_translation_key(hass: HomeAssistant) -> None:
     """Test translation key property."""
