@@ -1,7 +1,6 @@
 """Support managing StatesMeta."""
 from __future__ import annotations
 
-from collections.abc import Callable
 import logging
 import threading
 from typing import TYPE_CHECKING, Literal, cast
@@ -53,27 +52,6 @@ def _generate_get_metadata_stmt(
     elif statistic_type == "sum":
         stmt += lambda q: q.where(StatisticsMeta.has_sum == true())
     return stmt
-
-
-def _generate_filter(
-    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
-    statistic_source: str | None = None,
-) -> Callable[[tuple[int, StatisticMetaData]], bool]:
-    """Generate a filter function for metadata."""
-    if not statistic_type and not statistic_source:
-        return lambda _: True
-
-    def _filter(id_meta: tuple[int, StatisticMetaData]) -> bool:
-        meta = id_meta[1]
-        if statistic_source is not None and meta["source"] != statistic_source:
-            return False
-        if statistic_type == "mean" and not meta["has_mean"]:
-            return False
-        if statistic_type == "sum" and not meta["has_sum"]:
-            return False
-        return True
-
-    return _filter
 
 
 def _statistics_meta_to_id_statistics_metadata(
@@ -234,6 +212,9 @@ class StatisticsMetaManager:
             )
 
         if statistic_type is not None or statistic_source is not None:
+            # This was originally implemented but we never used it
+            # so the code was ripped out to reduce the maintenance
+            # burden.
             raise ValueError(
                 "Providing statistic_type and statistic_source is mutually exclusive of statistic_ids"
             )
