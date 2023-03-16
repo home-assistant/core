@@ -35,6 +35,14 @@
         "closed": "[%key:common::state::closed%]",
         "closing": "Closing",
         "stopped": "Stopped"
+      },
+      "state_attributes": {
+        "current_position": {
+          "name": "Position"
+        },
+        "current_tilt_position": {
+          "name": "Tilt position"
+        }
       }
     }
   }
