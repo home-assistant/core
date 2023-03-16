@@ -61,7 +61,7 @@ async def websocket_run(
     # Cancel pipeline if user unsubscribes
     connection.subscriptions[msg["id"]] = run_task.cancel
 
+    connection.send_result(msg["id"])
+
     # Task contains a timeout
     await run_task
-
-    connection.send_result(msg["id"])

@@ -27,6 +27,10 @@ async def test_text_only_pipeline(
         {"id": 5, "type": "voice_assistant/run", "intent_input": "Are the lights on?"}
     )
 
+    # result
+    msg = await client.receive_json()
+    assert msg["success"]
+
     # run start
     msg = await client.receive_json()
     assert msg["event"]["type"] == "run-start"
@@ -41,10 +45,6 @@ async def test_text_only_pipeline(
     # run finish
     msg = await client.receive_json()
     assert msg["event"]["type"] == "run-finish"
-
-    # result
-    msg = await client.receive_json()
-    assert msg["success"]
 
 
 async def test_conversation_timeout(
@@ -67,6 +67,10 @@ async def test_conversation_timeout(
                 "timeout": 0.5,
             }
         )
+
+        # result
+        msg = await client.receive_json()
+        assert msg["success"]
 
         # run start
         msg = await client.receive_json()
@@ -103,6 +107,10 @@ async def test_pipeline_timeout(
                 "timeout": 0.5,
             }
         )
+
+        # result
+        msg = await client.receive_json()
+        assert msg["success"]
 
         # timeout error
         msg = await client.receive_json()

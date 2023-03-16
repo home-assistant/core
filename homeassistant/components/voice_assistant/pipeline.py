@@ -5,11 +5,11 @@ import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
-import time
 from typing import Any
 
 from homeassistant.components import conversation
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.util.dt import utcnow
 
 DEFAULT_TIMEOUT = 30  # seconds
 
@@ -38,7 +38,7 @@ class PipelineEvent:
 
     type: PipelineEventType
     data: dict[str, Any] | None = None
-    timestamp: int = field(default_factory=time.monotonic_ns)
+    timestamp: str = field(default_factory=lambda: utcnow().isoformat())
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the event."""
@@ -84,20 +84,7 @@ class Pipeline:
             )
         )
 
-        intent_input = request.intent_input
-
-        # Run intent recognition
-        if intent_input is None:
-            event_callback(
-                PipelineEvent(
-                    PipelineEventType.ERROR,
-                    {
-                        "code": "speech_not_recognized",
-                        "message": "no speech returned from agent",
-                    },
-                )
-            )
-            return
+        intent_input = request.intent_input or ""
 
         event_callback(
             PipelineEvent(
@@ -115,33 +102,18 @@ class Pipeline:
             agent_id=self.conversation_engine,
         )
 
-        tts_text: str | None = conversation_result.response.speech.get("plain", {}).get(
-            "speech"
-        )
+        tts_input: str | None = conversation_result.response.speech.get(
+            "plain", {}
+        ).get("speech")
         event_callback(
             PipelineEvent(
                 PipelineEventType.INTENT_FINISH,
                 {
-                    "speech": tts_text,
+                    "speech": tts_input,
                     "response": conversation_result.response.as_dict(),
                 },
             )
         )
-
-        # Run text to speech
-        if tts_text is None:
-            event_callback(
-                PipelineEvent(
-                    PipelineEventType.ERROR,
-                    {
-                        "code": "response_has_no_speech",
-                        "message": "no speech returned from agent",
-                    },
-                )
-            )
-            return
-
-        tts_url = None
 
         event_callback(
             PipelineEvent(
@@ -149,7 +121,6 @@ class Pipeline:
                 {
                     "intent_input": intent_input,
                     "conversation_result": conversation_result,
-                    "tts_url": tts_url,
                 },
             )
         )
