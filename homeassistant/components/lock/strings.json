@@ -18,8 +18,11 @@
   "entity_component": {
     "_": {
       "state": {
+        "jammed": "Jammed",
         "locked": "[%key:common::state::locked%]",
-        "unlocked": "[%key:common::state::unlocked%]"
+        "locking": "Locking",
+        "unlocked": "[%key:common::state::unlocked%]",
+        "unlocking": "Unlocking"
       }
     }
   }
