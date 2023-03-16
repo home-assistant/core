@@ -130,4 +130,4 @@ class HassIODiscovery(HomeAssistantView):
         for entry in self.hass.config_entries.async_entries(service):
             if entry.source != config_entries.SOURCE_HASSIO:
                 continue
-            await self.hass.config_entries.async_remove(entry)
+            await self.hass.config_entries.async_remove(entry.entry_id)

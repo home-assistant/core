@@ -23,6 +23,7 @@ from homeassistant.helpers.entity_component import (
     DEFAULT_SCAN_INTERVAL,
     EntityComponent,
 )
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
@@ -81,11 +82,11 @@ async def test_polling_updates_entities_with_exception(hass: HomeAssistant) -> N
     update_ok = []
     update_err = []
 
-    def update_mock():
+    def update_mock() -> None:
         """Mock normal update."""
         update_ok.append(None)
 
-    def update_mock_err():
+    def update_mock_err() -> None:
         """Mock error update."""
         update_err.append(None)
         raise AssertionError("Fake error update")
@@ -161,10 +162,17 @@ async def test_update_state_adds_entities_with_update_before_add_false(
 
 
 @patch("homeassistant.helpers.entity_platform.async_track_time_interval")
-async def test_set_scan_interval_via_platform(mock_track, hass: HomeAssistant) -> None:
+async def test_set_scan_interval_via_platform(
+    mock_track: Mock, hass: HomeAssistant
+) -> None:
     """Test the setting of the scan interval via platform."""
 
-    def platform_setup(hass, config, add_entities, discovery_info=None):
+    def platform_setup(
+        hass: HomeAssistant,
+        config: ConfigType,
+        add_entities: entity_platform.AddEntitiesCallback,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> None:
         """Test the platform setup."""
         add_entities([MockEntity(should_poll=True)])
 
@@ -192,7 +200,7 @@ async def test_adding_entities_with_generator_and_thread_callback(
     """
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    def create_entity(number):
+    def create_entity(number: int) -> MockEntity:
         """Create entity helper."""
         entity = MockEntity(unique_id=f"unique{number}")
         entity.entity_id = async_generate_entity_id(DOMAIN + ".{}", "Number", hass=hass)
@@ -402,7 +410,7 @@ async def test_raise_error_on_update(hass: HomeAssistant) -> None:
     entity1 = MockEntity(name="test_1")
     entity2 = MockEntity(name="test_2")
 
-    def _raise():
+    def _raise() -> None:
         """Raise an exception."""
         raise AssertionError
 
@@ -1490,7 +1498,10 @@ class SlowEntity(MockEntity):
     ),
 )
 async def test_entity_name_influences_entity_id(
-    hass: HomeAssistant, has_entity_name, entity_name, expected_entity_id
+    hass: HomeAssistant,
+    has_entity_name: bool,
+    entity_name: str | None,
+    expected_entity_id: str,
 ) -> None:
     """Test entity_id is influenced by entity name."""
     registry = er.async_get(hass)

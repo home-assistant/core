@@ -79,7 +79,6 @@ light:
   brightness_scale: 99
 """
 import copy
-from pathlib import Path
 from unittest.mock import call, patch
 
 import pytest
@@ -131,7 +130,7 @@ from .test_common import (
 
 from tests.common import async_fire_mqtt_message, mock_restore_cache
 from tests.components.light import common
-from tests.typing import MqttMockHAClientGenerator
+from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {
@@ -616,14 +615,17 @@ async def test_controlling_state_via_topic2(
     async_fire_mqtt_message(
         hass, "test_light_rgb", '{"state":"ON", "color_mode":"col_temp"}'
     )
-    assert "Invalid color mode received" in caplog.text
+    assert "Invalid color mode 'col_temp' received" in caplog.text
     caplog.clear()
 
     # Incomplete color
     async_fire_mqtt_message(
         hass, "test_light_rgb", '{"state":"ON", "color_mode":"rgb"}'
     )
-    assert "Invalid or incomplete color value received" in caplog.text
+    assert (
+        "Invalid or incomplete color value '{'state': 'ON', 'color_mode': 'rgb'}' received"
+        in caplog.text
+    )
     caplog.clear()
 
     # Invalid color
@@ -632,7 +634,10 @@ async def test_controlling_state_via_topic2(
         "test_light_rgb",
         '{"state":"ON", "color_mode":"rgb", "color":{"r":64,"g":128,"b":"cow"}}',
     )
-    assert "Invalid or incomplete color value received" in caplog.text
+    assert (
+        "Invalid or incomplete color value '{'state': 'ON', 'color_mode': 'rgb', 'color': {'r': 64, 'g': 128, 'b': 'cow'}}' received"
+        in caplog.text
+    )
 
 
 async def test_sending_mqtt_commands_and_optimistic(
@@ -2274,16 +2279,12 @@ async def test_publishing_with_custom_encoding(
 
 async def test_reloadable(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-    tmp_path: Path,
+    mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = light.DOMAIN
     config = DEFAULT_CONFIG
-    await help_test_reloadable(
-        hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, domain, config
-    )
+    await help_test_reloadable(hass, mqtt_client_mock, domain, config)
 
 
 @pytest.mark.parametrize(

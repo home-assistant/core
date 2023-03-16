@@ -10,10 +10,12 @@
       "leaves": "{entity_name} leaves a zone"
     }
   },
-  "state": {
+  "entity_component": {
     "_": {
-      "home": "[%key:common::state::home%]",
-      "not_home": "[%key:common::state::not_home%]"
+      "state": {
+        "home": "[%key:common::state::home%]",
+        "not_home": "[%key:common::state::not_home%]"
+      }
     }
   }
 }

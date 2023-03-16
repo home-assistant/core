@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
 from .const import DOMAIN
-from .entity import ReolinkCoordinatorEntity
+from .entity import ReolinkChannelCoordinatorEntity
 
 
 @dataclass
@@ -67,6 +67,18 @@ SELECT_ENTITIES = (
         supported=lambda api, ch: api.supported(ch, "ptz_presets"),
         method=lambda api, ch, name: api.set_ptz_command(ch, preset=name),
     ),
+    ReolinkSelectEntityDescription(
+        key="auto_quick_reply_message",
+        name="Auto quick reply message",
+        icon="mdi:message-reply-text-outline",
+        translation_key="auto_quick_reply_message",
+        get_options=lambda api, ch: list(api.quick_reply_dict(ch).values()),
+        supported=lambda api, ch: api.supported(ch, "quick_reply"),
+        value=lambda api, ch: api.quick_reply_dict(ch)[api.quick_reply_file(ch)],
+        method=lambda api, ch, mess: api.set_quick_reply(
+            ch, file_id=[k for k, v in api.quick_reply_dict(ch).items() if v == mess][0]
+        ),
+    ),
 )
 
 
@@ -86,7 +98,7 @@ async def async_setup_entry(
     )
 
 
-class ReolinkSelectEntity(ReolinkCoordinatorEntity, SelectEntity):
+class ReolinkSelectEntity(ReolinkChannelCoordinatorEntity, SelectEntity):
     """Base select entity class for Reolink IP cameras."""
 
     entity_description: ReolinkSelectEntityDescription

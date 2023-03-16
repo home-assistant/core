@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import datetime
+import logging
 import threading
 from typing import TYPE_CHECKING, Any
 
@@ -17,6 +18,9 @@ from .const import DOMAIN, EXCLUDE_ATTRIBUTES
 from .db_schema import Statistics, StatisticsShortTerm
 from .models import StatisticData, StatisticMetaData
 from .util import periodic_db_cleanups
+
+_LOGGER = logging.getLogger(__name__)
+
 
 if TYPE_CHECKING:
     from .core import Recorder
@@ -110,13 +114,14 @@ class PurgeEntitiesTask(RecorderTask):
     """Object to store entity information about purge task."""
 
     entity_filter: Callable[[str], bool]
+    purge_before: datetime
 
     def run(self, instance: Recorder) -> None:
         """Purge entities from the database."""
-        if purge.purge_entity_data(instance, self.entity_filter):
+        if purge.purge_entity_data(instance, self.entity_filter, self.purge_before):
             return
         # Schedule a new purge task if this one didn't finish
-        instance.queue_task(PurgeEntitiesTask(self.entity_filter))
+        instance.queue_task(PurgeEntitiesTask(self.entity_filter, self.purge_before))
 
 
 @dataclass
@@ -339,3 +344,85 @@ class AdjustLRUSizeTask(RecorderTask):
     def run(self, instance: Recorder) -> None:
         """Handle the task to adjust the size."""
         instance._adjust_lru_size()  # pylint: disable=[protected-access]
+
+
+@dataclass
+class StatesContextIDMigrationTask(RecorderTask):
+    """An object to insert into the recorder queue to migrate states context ids."""
+
+    commit_before = False
+
+    def run(self, instance: Recorder) -> None:
+        """Run context id migration task."""
+        if (
+            not instance._migrate_states_context_ids()  # pylint: disable=[protected-access]
+        ):
+            # Schedule a new migration task if this one didn't finish
+            instance.queue_task(StatesContextIDMigrationTask())
+
+
+@dataclass
+class EventsContextIDMigrationTask(RecorderTask):
+    """An object to insert into the recorder queue to migrate events context ids."""
+
+    commit_before = False
+
+    def run(self, instance: Recorder) -> None:
+        """Run context id migration task."""
+        if (
+            not instance._migrate_events_context_ids()  # pylint: disable=[protected-access]
+        ):
+            # Schedule a new migration task if this one didn't finish
+            instance.queue_task(EventsContextIDMigrationTask())
+
+
+@dataclass
+class EventTypeIDMigrationTask(RecorderTask):
+    """An object to insert into the recorder queue to migrate event type ids."""
+
+    commit_before = True
+    # We have to commit before to make sure there are
+    # no new pending event_types about to be added to
+    # the db since this happens live
+
+    def run(self, instance: Recorder) -> None:
+        """Run event type id migration task."""
+        if not instance._migrate_event_type_ids():  # pylint: disable=[protected-access]
+            # Schedule a new migration task if this one didn't finish
+            instance.queue_task(EventTypeIDMigrationTask())
+
+
+@dataclass
+class EntityIDMigrationTask(RecorderTask):
+    """An object to insert into the recorder queue to migrate entity_ids to StatesMeta."""
+
+    commit_before = True
+    # We have to commit before to make sure there are
+    # no new pending states_meta about to be added to
+    # the db since this happens live
+
+    def run(self, instance: Recorder) -> None:
+        """Run entity_id migration task."""
+        if not instance._migrate_entity_ids():  # pylint: disable=[protected-access]
+            # Schedule a new migration task if this one didn't finish
+            instance.queue_task(EntityIDMigrationTask())
+        else:
+            # The migration has finished, now we start the post migration
+            # to remove the old entity_id data from the states table
+            # at this point we can also start using the StatesMeta table
+            # so we set active to True
+            instance.states_meta_manager.active = True
+            instance.queue_task(EntityIDPostMigrationTask())
+
+
+@dataclass
+class EntityIDPostMigrationTask(RecorderTask):
+    """An object to insert into the recorder queue to cleanup after entity_ids migration."""
+
+    def run(self, instance: Recorder) -> None:
+        """Run entity_id post migration task."""
+        if (
+            not instance._post_migrate_entity_ids()  # pylint: disable=[protected-access]
+        ):
+            # Schedule a new migration task if this one didn't finish
+            instance.queue_task(EntityIDPostMigrationTask())
