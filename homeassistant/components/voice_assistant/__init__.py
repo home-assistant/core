@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
+import secrets
 from typing import Any
-from uuid import uuid4
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPBadRequest, HTTPNotFound
@@ -13,7 +13,6 @@ import voluptuous as vol
 from homeassistant import core
 from homeassistant.components import stt, websocket_api
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import singleton
 from homeassistant.helpers.typing import ConfigType
@@ -42,16 +41,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Rhasspy from a config entry."""
-    return True
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a config entry."""
-    return True
-
-
 @dataclass
 class Session:
     """Pipeline session for bridging websocket/HTTP APIs."""
@@ -71,7 +60,7 @@ class SessionManager:
 
     def add_session(self, session: Session) -> str:
         """Add a new session. Returns a unique session id."""
-        session_id = str(uuid4())
+        session_id = secrets.token_urlsafe(16)
         self._sessions[session_id] = session
         return session_id
 
