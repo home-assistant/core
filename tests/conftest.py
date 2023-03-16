@@ -11,7 +11,6 @@ import itertools
 import logging
 import sqlite3
 import ssl
-import sys
 import threading
 from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar, cast
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
@@ -107,11 +106,6 @@ logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
 asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
 # Disable fixtures overriding our beautiful policy
 asyncio.set_event_loop_policy = lambda policy: None
-
-if sys.version_info[:2] >= (3, 11):
-    from .asyncio_legacy import legacy_coroutine
-
-    setattr(asyncio, "coroutine", legacy_coroutine)
 
 
 def _utcnow() -> datetime.datetime:
