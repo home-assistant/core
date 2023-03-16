@@ -37,7 +37,7 @@ from .helpers import get_device_info, get_valueless_base_unique_id
 
 PARALLEL_UPDATES = 1
 
-UPDATE_DELAY_TIME = 300
+UPDATE_DELAY = 300
 
 
 async def async_setup_entry(
@@ -199,7 +199,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             # update. Useful especially at startup because all the entities get created
             # in parallel and this ensures the first requests get spaced out, avoiding
             # a network traffic flood.
-            await asyncio.sleep(UPDATE_DELAY_TIME)
+            await asyncio.sleep(UPDATE_DELAY)
             self.lock.release()
             self._poll_unsub = async_call_later(
                 self.hass, timedelta(days=1), self._async_update
