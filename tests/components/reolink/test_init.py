@@ -165,4 +165,3 @@ async def test_firmware_repair_issue(
 
     issue_registry = ir.async_get(hass)
     assert (const.DOMAIN, "firmware_update") in issue_registry.issues
-
