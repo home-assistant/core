@@ -5,7 +5,6 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable, Iterator, MutableMapping
 from datetime import datetime
 from itertools import groupby
-import logging
 from operator import itemgetter
 from typing import Any, cast
 
@@ -24,12 +23,7 @@ import homeassistant.util.dt as dt_util
 from ... import recorder
 from ..db_schema import RecorderRuns, StateAttributes, States, StatesMeta
 from ..filters import Filters
-from ..models import (
-    LazyState,
-    process_timestamp,
-    process_timestamp_to_utc_isoformat,
-    row_to_compressed_state,
-)
+from ..models import LazyState, process_timestamp, row_to_compressed_state
 from ..util import execute_stmt_lambda_element, session_scope
 from .const import (
     IGNORE_DOMAINS_ENTITY_ID_LIKE,
@@ -39,9 +33,6 @@ from .const import (
     SIGNIFICANT_DOMAINS_ENTITY_ID_LIKE,
     STATE_KEY,
 )
-
-_LOGGER = logging.getLogger(__name__)
-
 
 _BASE_STATES = (
     States.metadata_id,
@@ -751,27 +742,27 @@ def _sorted_states_to_dict(
         # changes so we can filter out duplicate states
         last_updated_ts_idx = field_map["last_updated_ts"]
         if compressed_state_format:
-            for row in group:
-                if (state := row[state_idx]) != prev_state:
-                    ent_results.append(
-                        {
-                            attr_state: state,
-                            attr_time: row[last_updated_ts_idx],
-                        }
-                    )
-                    prev_state = state
+            # Compressed state format uses the timestamp directly
+            ent_results.extend(
+                {
+                    attr_state: (prev_state := state),
+                    attr_time: row[last_updated_ts_idx],
+                }
+                for row in group
+                if (state := row[state_idx]) != prev_state
+            )
+            continue
 
-        for row in group:
-            if (state := row[state_idx]) != prev_state:
-                ent_results.append(
-                    {
-                        attr_state: state,
-                        attr_time: process_timestamp_to_utc_isoformat(
-                            dt_util.utc_from_timestamp(row[last_updated_ts_idx])
-                        ),
-                    }
-                )
-                prev_state = state
+        # Non-compressed state format returns an ISO formatted string
+        _utc_from_timestamp = dt_util.utc_from_timestamp
+        ent_results.extend(
+            {
+                attr_state: (prev_state := state),
+                attr_time: _utc_from_timestamp(row[last_updated_ts_idx]).isoformat(),
+            }
+            for row in group
+            if (state := row[state_idx]) != prev_state
+        )
 
     # If there are no states beyond the initial state,
     # the state a was never popped from initial_states
