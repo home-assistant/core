@@ -35,12 +35,7 @@ async def test_empty_calendar(
 ) -> None:
     """Test diagnostics against an empty calendar."""
     data = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
-    assert data == {
-        "system_timezone": "tzlocal()",  # Will by python system timezone
-        "timezone": "America/Regina",  # HomeAssistant timezone set by fixture
-        "now": "2023-03-13T13:05:00-06:00",
-        "ics": "",
-    }
+    assert data == snapshot
 
 
 @freeze_time("2023-03-13 12:05:00-07:00")
@@ -68,9 +63,4 @@ async def test_api_date_time_event(
     )
 
     data = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
-    assert data == {
-        "system_timezone": "tzlocal()",
-        "timezone": "America/Regina",
-        "now": "2023-03-13T13:05:00-06:00",
-        "ics": TEST_ICS,
-    }
+    assert data == snapshot
