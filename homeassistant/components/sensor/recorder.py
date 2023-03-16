@@ -473,7 +473,7 @@ def _compile_statistics(  # noqa: C901
         entity_id,
         statistics_unit,
         state_class,
-        fstates,
+        valid_float_states,
     ) in to_process:
         # Check metadata
         if old_metadata := old_metadatas.get(entity_id):
@@ -515,20 +515,20 @@ def _compile_statistics(  # noqa: C901
         if "max" in wanted_statistics[entity_id]:
             stat["max"] = max(
                 *itertools.islice(
-                    zip(*fstates),  # type: ignore[typeddict-item]
+                    zip(*valid_float_states),  # type: ignore[typeddict-item]
                     1,
                 )
             )
         if "min" in wanted_statistics[entity_id]:
             stat["min"] = min(
                 *itertools.islice(
-                    zip(*fstates),  # type: ignore[typeddict-item]
+                    zip(*valid_float_states),  # type: ignore[typeddict-item]
                     1,
                 )
             )
 
         if "mean" in wanted_statistics[entity_id]:
-            stat["mean"] = _time_weighted_average(fstates, start, end)
+            stat["mean"] = _time_weighted_average(valid_float_states, start, end)
 
         if "sum" in wanted_statistics[entity_id]:
             last_reset = old_last_reset = None
@@ -543,7 +543,7 @@ def _compile_statistics(  # noqa: C901
                 new_state = old_state = last_stat["state"]
                 _sum = last_stat["sum"] or 0.0
 
-            for fstate, state in fstates:
+            for fstate, state in valid_float_states:
                 reset = False
                 if (
                     state_class != SensorStateClass.TOTAL_INCREASING
