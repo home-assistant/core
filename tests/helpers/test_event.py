@@ -14,7 +14,6 @@ from freezegun.api import FrozenDateTimeFactory
 import jinja2
 import pytest
 
-from homeassistant.components import sun
 from homeassistant.const import MATCH_ALL
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant, callback
@@ -3421,7 +3420,6 @@ async def test_track_sunrise(hass: HomeAssistant) -> None:
     # Setup sun component
     hass.config.latitude = latitude
     hass.config.longitude = longitude
-    assert await async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {}})
 
     location = LocationInfo(
         latitude=hass.config.latitude, longitude=hass.config.longitude
@@ -3486,7 +3484,6 @@ async def test_track_sunrise_update_location(hass: HomeAssistant) -> None:
     # Setup sun component
     hass.config.latitude = 32.87336
     hass.config.longitude = 117.22743
-    assert await async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {}})
 
     location = LocationInfo(
         latitude=hass.config.latitude, longitude=hass.config.longitude
@@ -3508,7 +3505,7 @@ async def test_track_sunrise_update_location(hass: HomeAssistant) -> None:
     # Track sunrise
     runs = []
     with freeze_time(utc_now):
-        async_track_sunrise(hass, callback(lambda: runs.append(1)))
+        unsub = async_track_sunrise(hass, callback(lambda: runs.append(1)))
 
     # Mimic sunrise
     with freeze_time(next_rising):
@@ -3549,6 +3546,8 @@ async def test_track_sunrise_update_location(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         assert len(runs) == 2
 
+    unsub()
+
 
 async def test_track_sunset(hass: HomeAssistant) -> None:
     """Test track the sunset."""
@@ -3560,7 +3559,6 @@ async def test_track_sunset(hass: HomeAssistant) -> None:
     # Setup sun component
     hass.config.latitude = latitude
     hass.config.longitude = longitude
-    assert await async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {}})
 
     # Get next sunrise/sunset
     utc_now = datetime(2014, 5, 24, 12, 0, 0, tzinfo=dt_util.UTC)
