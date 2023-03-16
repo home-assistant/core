@@ -288,6 +288,7 @@ class StatisticsMetaManager:
             StatisticsMeta.statistic_id == statistic_id
         ).update({StatisticsMeta.unit_of_measurement: new_unit})
         self._clear_cache([statistic_id])
+        self.get(session, statistic_id)
 
     def update_statistic_id(
         self,
@@ -302,6 +303,7 @@ class StatisticsMetaManager:
             & (StatisticsMeta.source == source)
         ).update({StatisticsMeta.statistic_id: new_statistic_id})
         self._clear_cache([old_statistic_id, new_statistic_id])
+        self.get(session, new_statistic_id)
 
     def delete(self, session: Session, statistic_ids: list[str]) -> None:
         """Clear statistics for a list of statistic_ids."""
