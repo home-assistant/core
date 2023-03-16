@@ -13,7 +13,7 @@ from tests.typing import RecorderInstanceGenerator
 async def test_passing_mutually_exclusive_options_to_get_many(
     async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
 ) -> None:
-    """Test we expire after many commits."""
+    """Test passing mutually exclusive options to get_many."""
     instance = await async_setup_recorder_instance(
         hass, {recorder.CONF_COMMIT_INTERVAL: 0}
     )
