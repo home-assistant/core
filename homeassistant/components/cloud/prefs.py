@@ -18,7 +18,6 @@ from .const import (
     PREF_ALEXA_DEFAULT_EXPOSE,
     PREF_ALEXA_ENTITY_CONFIGS,
     PREF_ALEXA_REPORT_STATE,
-    PREF_ALIASES,
     PREF_CLOUD_USER,
     PREF_CLOUDHOOKS,
     PREF_DISABLE_2FA,
@@ -30,7 +29,6 @@ from .const import (
     PREF_GOOGLE_LOCAL_WEBHOOK_ID,
     PREF_GOOGLE_REPORT_STATE,
     PREF_GOOGLE_SECURE_DEVICES_PIN,
-    PREF_OVERRIDE_NAME,
     PREF_REMOTE_DOMAIN,
     PREF_SHOULD_EXPOSE,
     PREF_TTS_DEFAULT_VOICE,
@@ -118,9 +116,7 @@ class CloudPreferences:
         self,
         *,
         entity_id,
-        override_name=UNDEFINED,
         disable_2fa=UNDEFINED,
-        aliases=UNDEFINED,
         should_expose=UNDEFINED,
     ):
         """Update config for a Google entity."""
@@ -129,9 +125,7 @@ class CloudPreferences:
 
         changes = {}
         for key, value in (
-            (PREF_OVERRIDE_NAME, override_name),
             (PREF_DISABLE_2FA, disable_2fa),
-            (PREF_ALIASES, aliases),
             (PREF_SHOULD_EXPOSE, should_expose),
         ):
             if value is not UNDEFINED:
