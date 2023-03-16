@@ -122,7 +122,7 @@
       }
     },
     "battery_charging": {
-      "name": "Battery charging",
+      "name": "Charging",
       "state": {
         "off": "Not charging",
         "on": "Charging"
