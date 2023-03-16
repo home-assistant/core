@@ -1,6 +1,7 @@
 {
   "entity_component": {
     "_": {
+      "name": "Timer",
       "state": {
         "active": "[%key:common::state::active%]",
         "idle": "[%key:common::state::idle%]",

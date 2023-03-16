@@ -16,6 +16,7 @@
   },
   "entity_component": {
     "_": {
+      "name": "[%key:component::vacuum::title%]",
       "state": {
         "cleaning": "Cleaning",
         "docked": "Docked",

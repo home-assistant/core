@@ -29,6 +29,7 @@
   },
   "entity_component": {
     "_": {
+      "name": "[%key:component::cover::title%]",
       "state": {
         "open": "[%key:common::state::open%]",
         "opening": "Opening",
@@ -44,6 +45,36 @@
           "name": "Tilt position"
         }
       }
+    },
+    "awning": {
+      "name": "Awning"
+    },
+    "blind": {
+      "name": "Blind"
+    },
+    "curtain": {
+      "name": "Curtain"
+    },
+    "damper": {
+      "name": "Damper"
+    },
+    "door": {
+      "name": "Door"
+    },
+    "garage": {
+      "name": "Garage"
+    },
+    "gate": {
+      "name": "Gate"
+    },
+    "shade": {
+      "name": "Shade"
+    },
+    "shutter": {
+      "name": "Shutter"
+    },
+    "window": {
+      "name": "Window"
     }
   }
 }

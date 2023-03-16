@@ -21,6 +21,7 @@
   },
   "entity_component": {
     "_": {
+      "name": "[%key:component::media_player::title%]",
       "state": {
         "off": "[%key:common::state::off%]",
         "on": "[%key:common::state::on%]",
@@ -30,6 +31,15 @@
         "standby": "[%key:common::state::standby%]",
         "buffering": "Buffering"
       }
+    },
+    "tv": {
+      "name": "TV"
+    },
+    "speaker": {
+      "name": "Speaker"
+    },
+    "receiver": {
+      "name": "Receiver"
     }
   }
 }

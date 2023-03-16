@@ -1,6 +1,7 @@
 {
   "entity_component": {
     "_": {
+      "name": "Weather",
       "state": {
         "clear-night": "Clear, night",
         "cloudy": "Cloudy",

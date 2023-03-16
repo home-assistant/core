@@ -2,6 +2,7 @@
   "title": "Alert",
   "entity_component": {
     "_": {
+      "name": "[%key:component::alert::title%]",
       "state": {
         "idle": "[%key:common::state::idle%]",
         "off": "Acknowledged",
