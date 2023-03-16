@@ -37,6 +37,7 @@ from homeassistant.components.recorder.statistics import (
     list_statistic_ids,
 )
 from homeassistant.components.recorder.table_managers.statistics_meta import (
+    StatisticsMetaManager,
     _generate_get_metadata_stmt,
 )
 from homeassistant.components.recorder.util import session_scope
@@ -1565,6 +1566,7 @@ async def test_validate_db_schema_fix_utf8_issue(
         "homeassistant.components.recorder.core.Recorder.dialect_name", "mysql"
     ), patch(
         "homeassistant.components.recorder.table_managers.statistics_meta.StatisticsMetaManager.update_or_add",
+        wraps=StatisticsMetaManager.update_or_add,
         side_effect=[utf8_error, DEFAULT, DEFAULT],
     ):
         await async_setup_recorder_instance(hass)
