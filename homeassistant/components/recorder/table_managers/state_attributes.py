@@ -15,7 +15,7 @@ from . import BaseLRUTableManager
 from ..const import SQLITE_MAX_BIND_VARS
 from ..db_schema import StateAttributes
 from ..queries import get_shared_attributes
-from ..util import chunked
+from ..util import chunked, execute_stmt_lambda_element
 
 if TYPE_CHECKING:
     from ..core import Recorder
@@ -113,7 +113,7 @@ class StateAttributesManager(BaseLRUTableManager[StateAttributes]):
         results: dict[str, int | None] = {}
         with session.no_autoflush:
             for hashs_chunk in chunked(hashes, SQLITE_MAX_BIND_VARS):
-                for attributes_id, shared_attrs in session.execute(
+                for attributes_id, shared_attrs in execute_stmt_lambda_element(
                     get_shared_attributes(hashs_chunk)
                 ):
                     results[shared_attrs] = self._id_map[shared_attrs] = cast(

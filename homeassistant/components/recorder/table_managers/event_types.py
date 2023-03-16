@@ -12,7 +12,7 @@ from . import BaseLRUTableManager
 from ..const import SQLITE_MAX_BIND_VARS
 from ..db_schema import EventTypes
 from ..queries import find_event_type_ids
-from ..util import chunked
+from ..util import chunked, execute_stmt_lambda_element
 
 if TYPE_CHECKING:
     from ..core import Recorder
@@ -68,7 +68,7 @@ class EventTypeManager(BaseLRUTableManager[EventTypes]):
 
         with session.no_autoflush:
             for missing_chunk in chunked(missing, SQLITE_MAX_BIND_VARS):
-                for event_type_id, event_type in session.execute(
+                for event_type_id, event_type in execute_stmt_lambda_element(
                     find_event_type_ids(missing_chunk)
                 ):
                     results[event_type] = self._id_map[event_type] = cast(
