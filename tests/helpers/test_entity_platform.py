@@ -541,6 +541,7 @@ async def test_using_prescribed_entity_id_which_is_registered(
     """Test not allowing predefined entity ID that already registered."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     await component.async_setup({})
+
     # Register test_domain.world
     entity_registry.async_get_or_create(
         DOMAIN, "test", "1234", suggested_object_id="world"
