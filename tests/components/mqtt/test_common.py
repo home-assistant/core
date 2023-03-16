@@ -25,7 +25,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.generated.mqtt import MQTT
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -68,7 +68,6 @@ _StateDataType = list[tuple[_MqttMessageType, str | None, _AttributesType | None
 MQTT_YAML_SCHEMA = vol.Schema({mqtt.DOMAIN: PLATFORM_CONFIG_SCHEMA_BASE})
 
 
-@callback
 def help_test_validate_platform_config(
     hass: HomeAssistant, domain: str, config: ConfigType
 ) -> ConfigType | None:
@@ -1859,7 +1858,6 @@ async def help_test_reloadable(
     new_config = {
         mqtt.DOMAIN: {domain: [new_config_1, new_config_2, new_config_extra]},
     }
-    assert isinstance(module_hass_config.load_yaml_config_file, MagicMock)
     module_hass_config.load_yaml_config_file.return_value = new_config
     # Reload the mqtt entry with the new config
     await hass.services.async_call(
