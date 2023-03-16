@@ -1,7 +1,6 @@
 """Test the bootstrapping."""
 import asyncio
 from collections.abc import Generator
-from datetime import timedelta
 import glob
 import os
 from typing import Any
@@ -15,12 +14,10 @@ from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATIONS
 from homeassistant.core import HomeAssistant, async_get_hass, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.util import dt
 
 from .common import (
     MockModule,
     MockPlatform,
-    async_fire_time_changed,
     get_test_config_dir,
     mock_coro,
     mock_entity_platform,
@@ -554,6 +551,7 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
     assert "Waiting on integrations to complete setup" in caplog.text
 
 
+@patch("homeassistant.components.cloud.STARTUP_REPAIR_DELAY", 0)
 async def test_setup_hass_invalid_yaml(
     mock_enable_logging: Mock,
     mock_is_virtual_env: Mock,
@@ -580,11 +578,6 @@ async def test_setup_hass_invalid_yaml(
 
     assert "safe_mode" in hass.config.components
     assert len(mock_mount_local_lib_path.mock_calls) == 0
-
-    # Avoid lingering timer
-    # `cloud.async_setup.async_startup_repairs` triggers after 1 hour
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(hours=1))
-    await hass.async_block_till_done()
 
 
 async def test_setup_hass_config_dir_nonexistent(
@@ -614,6 +607,7 @@ async def test_setup_hass_config_dir_nonexistent(
     )
 
 
+@patch("homeassistant.components.cloud.STARTUP_REPAIR_DELAY", 0)
 async def test_setup_hass_safe_mode(
     mock_enable_logging: Mock,
     mock_is_virtual_env: Mock,
@@ -646,13 +640,9 @@ async def test_setup_hass_safe_mode(
     assert "browser" not in hass.config.components
     assert len(browser_setup.mock_calls) == 0
 
-    # Avoid lingering timer
-    # `cloud.async_setup.async_startup_repairs` triggers after 1 hour
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(hours=1))
-    await hass.async_block_till_done()
-
 
 @pytest.mark.parametrize("hass_config", [{"homeassistant": {"non-existing": 1}}])
+@patch("homeassistant.components.cloud.STARTUP_REPAIR_DELAY", 0)
 async def test_setup_hass_invalid_core_config(
     mock_hass_config: None,
     mock_enable_logging: Mock,
@@ -677,11 +667,6 @@ async def test_setup_hass_invalid_core_config(
 
     assert "safe_mode" in hass.config.components
 
-    # Avoid lingering timer
-    # `cloud.async_setup.async_startup_repairs` triggers after 1 hour
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(hours=1))
-    await hass.async_block_till_done()
-
 
 @pytest.mark.parametrize(
     "hass_config",
@@ -696,6 +681,7 @@ async def test_setup_hass_invalid_core_config(
         }
     ],
 )
+@patch("homeassistant.components.cloud.STARTUP_REPAIR_DELAY", 0)
 async def test_setup_safe_mode_if_no_frontend(
     mock_hass_config: None,
     mock_enable_logging: Mock,
@@ -728,11 +714,6 @@ async def test_setup_safe_mode_if_no_frontend(
     assert hass.config.skip_pip
     assert hass.config.internal_url == "http://192.168.1.100:8123"
     assert hass.config.external_url == "https://abcdef.ui.nabu.casa"
-
-    # Avoid lingering timer
-    # `cloud.async_setup.async_startup_repairs` triggers after 1 hour
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(hours=1))
-    await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize("load_registries", [False])
