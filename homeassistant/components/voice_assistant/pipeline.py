@@ -95,18 +95,9 @@ class Pipeline:
         timeout: int | float | None = DEFAULT_TIMEOUT,
     ) -> None:
         """Run a pipeline with an optional timeout."""
-        task = self.run_task(hass, context, request, event_callback)
-        await asyncio.wait_for(task, timeout=timeout)
-
-    def run_task(
-        self,
-        hass: HomeAssistant,
-        context: Context,
-        request: PipelineRequest,
-        event_callback: Callable[[PipelineEvent], None],
-    ) -> asyncio.Task:
-        """Create a task that will run a pipeline."""
-        return asyncio.create_task(self._run(hass, context, request, event_callback))
+        await asyncio.wait_for(
+            self._run(hass, context, request, event_callback), timeout=timeout
+        )
 
     async def _run(
         self,

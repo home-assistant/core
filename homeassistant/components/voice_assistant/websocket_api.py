@@ -41,21 +41,26 @@ async def websocket_run(
         )
         return
 
-    run_task = pipeline.run_task(
-        hass,
-        connection.context(msg),
-        request=PipelineRequest(
-            stt_audio=None,
-            stt_metadata=None,
-            stt_text=msg["stt_text"],
-            conversation_id=msg.get("conversation_id"),
-        ),
-        event_callback=lambda event: connection.send_event(msg["id"], event.as_dict()),
+    timeout = msg.get("timeout", DEFAULT_TIMEOUT)
+    run_task = hass.async_create_task(
+        pipeline.run(
+            hass,
+            connection.context(msg),
+            request=PipelineRequest(
+                stt_audio=None,
+                stt_metadata=None,
+                stt_text=msg["stt_text"],
+                conversation_id=msg.get("conversation_id"),
+            ),
+            event_callback=lambda event: connection.send_event(
+                msg["id"], event.as_dict()
+            ),
+            timeout=timeout,
+        )
     )
 
     # Cancel pipeline in lambda
     connection.subscriptions[msg["id"]] = run_task.cancel
 
-    timeout = msg.get("timeout", DEFAULT_TIMEOUT)
-    await asyncio.wait_for(run_task, timeout=timeout)
+    await run_task
     connection.send_result(msg["id"])
