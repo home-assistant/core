@@ -39,6 +39,7 @@ from homeassistant.helpers.storage import Store
 
 from .dashboard import async_get_dashboard
 
+_SENTINEL = object()
 SAVE_DELAY = 120
 _LOGGER = logging.getLogger(__name__)
 
@@ -201,7 +202,7 @@ class RuntimeEntryData:
         key = state.key
         state_type = type(state)
         current_state_by_type = self.state[state_type]
-        current_state = current_state_by_type[key]
+        current_state = current_state_by_type.get(key, _SENTINEL)
         if current_state == state:
             _LOGGER.debug(
                 "%s: ignoring duplicate update with and key %s: %s",
