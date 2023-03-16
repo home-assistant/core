@@ -10,10 +10,10 @@ from astral import LocationInfo
 import astral.sun
 import async_timeout
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import jinja2
 import pytest
 
-from homeassistant.components import sun
 from homeassistant.const import MATCH_ALL
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant, callback
@@ -1406,7 +1406,7 @@ async def test_track_template_result_super_template_initially_false(
     ],
 )
 async def test_track_template_result_super_template_2(
-    hass: HomeAssistant, availability_template
+    hass: HomeAssistant, availability_template: str
 ) -> None:
     """Test tracking template with super template listening to different entities."""
     specific_runs = []
@@ -1545,7 +1545,7 @@ async def test_track_template_result_super_template_2(
     ],
 )
 async def test_track_template_result_super_template_2_initially_false(
-    hass: HomeAssistant, availability_template
+    hass: HomeAssistant, availability_template: str
 ) -> None:
     """Test tracking template with super template listening to different entities."""
     specific_runs = []
@@ -3420,7 +3420,6 @@ async def test_track_sunrise(hass: HomeAssistant) -> None:
     # Setup sun component
     hass.config.latitude = latitude
     hass.config.longitude = longitude
-    assert await async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {}})
 
     location = LocationInfo(
         latitude=hass.config.latitude, longitude=hass.config.longitude
@@ -3485,7 +3484,6 @@ async def test_track_sunrise_update_location(hass: HomeAssistant) -> None:
     # Setup sun component
     hass.config.latitude = 32.87336
     hass.config.longitude = 117.22743
-    assert await async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {}})
 
     location = LocationInfo(
         latitude=hass.config.latitude, longitude=hass.config.longitude
@@ -3507,7 +3505,7 @@ async def test_track_sunrise_update_location(hass: HomeAssistant) -> None:
     # Track sunrise
     runs = []
     with freeze_time(utc_now):
-        async_track_sunrise(hass, callback(lambda: runs.append(1)))
+        unsub = async_track_sunrise(hass, callback(lambda: runs.append(1)))
 
     # Mimic sunrise
     with freeze_time(next_rising):
@@ -3548,6 +3546,8 @@ async def test_track_sunrise_update_location(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         assert len(runs) == 2
 
+    unsub()
+
 
 async def test_track_sunset(hass: HomeAssistant) -> None:
     """Test track the sunset."""
@@ -3559,7 +3559,6 @@ async def test_track_sunset(hass: HomeAssistant) -> None:
     # Setup sun component
     hass.config.latitude = latitude
     hass.config.longitude = longitude
-    assert await async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {}})
 
     # Get next sunrise/sunset
     utc_now = datetime(2014, 5, 24, 12, 0, 0, tzinfo=dt_util.UTC)
@@ -3898,7 +3897,9 @@ async def test_periodic_task_duplicate_time(hass: HomeAssistant) -> None:
 
 # DST starts early morning March 28th 2021
 @pytest.mark.freeze_time("2021-03-28 01:28:00+01:00")
-async def test_periodic_task_entering_dst(hass: HomeAssistant, freezer) -> None:
+async def test_periodic_task_entering_dst(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test periodic task behavior when entering dst."""
     hass.config.set_time_zone("Europe/Vienna")
     specific_runs = []
@@ -3944,7 +3945,9 @@ async def test_periodic_task_entering_dst(hass: HomeAssistant, freezer) -> None:
 
 # DST starts early morning March 28th 2021
 @pytest.mark.freeze_time("2021-03-28 01:59:59+01:00")
-async def test_periodic_task_entering_dst_2(hass: HomeAssistant, freezer) -> None:
+async def test_periodic_task_entering_dst_2(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test periodic task behavior when entering dst.
 
     This tests a task firing every second in the range 0..58 (not *:*:59)
@@ -3995,7 +3998,9 @@ async def test_periodic_task_entering_dst_2(hass: HomeAssistant, freezer) -> Non
 
 # DST ends early morning October 31st 2021
 @pytest.mark.freeze_time("2021-10-31 02:28:00+02:00")
-async def test_periodic_task_leaving_dst(hass: HomeAssistant, freezer) -> None:
+async def test_periodic_task_leaving_dst(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test periodic task behavior when leaving dst."""
     hass.config.set_time_zone("Europe/Vienna")
     specific_runs = []
@@ -4069,7 +4074,9 @@ async def test_periodic_task_leaving_dst(hass: HomeAssistant, freezer) -> None:
 
 # DST ends early morning October 31st 2021
 @pytest.mark.freeze_time("2021-10-31 02:28:00+02:00")
-async def test_periodic_task_leaving_dst_2(hass: HomeAssistant, freezer) -> None:
+async def test_periodic_task_leaving_dst_2(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test periodic task behavior when leaving dst."""
     hass.config.set_time_zone("Europe/Vienna")
     specific_runs = []

@@ -231,25 +231,6 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 vol.Optional("trigger_type"): {str: cv.string_with_no_html},
                 vol.Optional("trigger_subtype"): {str: cv.string_with_no_html},
             },
-            vol.Optional("state"): cv.schema_with_slug_keys(
-                cv.schema_with_slug_keys(
-                    cv.string_with_no_html, slug_validator=translation_key_validator
-                ),
-                slug_validator=vol.Any("_", cv.slug),
-            ),
-            vol.Optional("state_attributes"): cv.schema_with_slug_keys(
-                cv.schema_with_slug_keys(
-                    {
-                        vol.Optional("name"): str,
-                        vol.Optional("state"): cv.schema_with_slug_keys(
-                            cv.string_with_no_html,
-                            slug_validator=translation_key_validator,
-                        ),
-                    },
-                    slug_validator=translation_key_validator,
-                ),
-                slug_validator=vol.Any("_", cv.slug),
-            ),
             vol.Optional("system_health"): {
                 vol.Optional("info"): cv.schema_with_slug_keys(
                     cv.string_with_no_html, slug_validator=translation_key_validator
@@ -283,25 +264,49 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                     ),
                 )
             },
-            vol.Optional("entity"): {
-                str: {
-                    str: {
-                        vol.Optional("state_attributes"): {
-                            str: {
+            vol.Optional("entity_component"): cv.schema_with_slug_keys(
+                {
+                    vol.Optional("name"): str,
+                    vol.Optional("state"): cv.schema_with_slug_keys(
+                        cv.string_with_no_html,
+                        slug_validator=translation_key_validator,
+                    ),
+                    vol.Optional("state_attributes"): cv.schema_with_slug_keys(
+                        {
+                            vol.Optional("name"): str,
+                            vol.Optional("state"): cv.schema_with_slug_keys(
+                                cv.string_with_no_html,
+                                slug_validator=translation_key_validator,
+                            ),
+                        },
+                        slug_validator=translation_key_validator,
+                    ),
+                },
+                slug_validator=vol.Any("_", cv.slug),
+            ),
+            vol.Optional("entity"): cv.schema_with_slug_keys(
+                cv.schema_with_slug_keys(
+                    {
+                        vol.Optional("name"): cv.string_with_no_html,
+                        vol.Optional("state"): cv.schema_with_slug_keys(
+                            cv.string_with_no_html,
+                            slug_validator=translation_key_validator,
+                        ),
+                        vol.Optional("state_attributes"): cv.schema_with_slug_keys(
+                            {
                                 vol.Optional("name"): cv.string_with_no_html,
                                 vol.Optional("state"): cv.schema_with_slug_keys(
                                     cv.string_with_no_html,
                                     slug_validator=translation_key_validator,
                                 ),
-                            }
-                        },
-                        vol.Optional("state"): cv.schema_with_slug_keys(
-                            cv.string_with_no_html,
+                            },
                             slug_validator=translation_key_validator,
                         ),
-                    }
-                }
-            },
+                    },
+                    slug_validator=translation_key_validator,
+                ),
+                slug_validator=cv.slug,
+            ),
         }
     )
 

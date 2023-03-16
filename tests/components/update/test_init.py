@@ -1,8 +1,6 @@
 """The tests for the Update component."""
-from collections.abc import Awaitable, Callable
 from unittest.mock import MagicMock, patch
 
-from aiohttp import ClientWebSocketResponse
 import pytest
 
 from homeassistant.components.update import (
@@ -40,6 +38,7 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockEntityPlatform, mock_restore_cache
+from tests.typing import WebSocketGenerator
 
 
 class MockUpdateEntity(UpdateEntity):
@@ -681,7 +680,7 @@ async def test_restore_state(
 async def test_release_notes(
     hass: HomeAssistant,
     enable_custom_integrations: None,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test getting the release notes over the websocket connection."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
@@ -707,7 +706,7 @@ async def test_release_notes(
 async def test_release_notes_entity_not_found(
     hass: HomeAssistant,
     enable_custom_integrations: None,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test getting the release notes for not found entity."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
@@ -734,7 +733,7 @@ async def test_release_notes_entity_not_found(
 async def test_release_notes_entity_does_not_support_release_notes(
     hass: HomeAssistant,
     enable_custom_integrations: None,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test getting the release notes for entity that does not support release notes."""
     platform = getattr(hass.components, f"test.{DOMAIN}")

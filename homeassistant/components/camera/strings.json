@@ -1,10 +1,13 @@
 {
   "title": "Camera",
-  "state": {
+  "entity_component": {
     "_": {
-      "recording": "Recording",
-      "streaming": "Streaming",
-      "idle": "[%key:common::state::idle%]"
+      "name": "[%key:component::camera::title%]",
+      "state": {
+        "recording": "Recording",
+        "streaming": "Streaming",
+        "idle": "[%key:common::state::idle%]"
+      }
     }
   }
 }

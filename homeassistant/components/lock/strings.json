@@ -15,10 +15,16 @@
       "unlocked": "{entity_name} unlocked"
     }
   },
-  "state": {
+  "entity_component": {
     "_": {
-      "locked": "[%key:common::state::locked%]",
-      "unlocked": "[%key:common::state::unlocked%]"
+      "name": "[%key:component::lock::title%]",
+      "state": {
+        "jammed": "Jammed",
+        "locked": "[%key:common::state::locked%]",
+        "locking": "Locking",
+        "unlocked": "[%key:common::state::unlocked%]",
+        "unlocking": "Unlocking"
+      }
     }
   }
 }

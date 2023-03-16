@@ -678,7 +678,7 @@ async def test_device_registry_calls(hass: HomeAssistant) -> None:
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert len(dev_reg.devices) == 5
+        assert len(dev_reg.devices) == 6
 
     supervisor_mock_data = {
         "version": "1.0.0",
@@ -709,11 +709,11 @@ async def test_device_registry_calls(hass: HomeAssistant) -> None:
     ):
         async_fire_time_changed(hass, dt_util.now() + timedelta(hours=1))
         await hass.async_block_till_done()
-        assert len(dev_reg.devices) == 4
+        assert len(dev_reg.devices) == 5
 
         async_fire_time_changed(hass, dt_util.now() + timedelta(hours=2))
         await hass.async_block_till_done()
-        assert len(dev_reg.devices) == 4
+        assert len(dev_reg.devices) == 5
 
     supervisor_mock_data = {
         "version": "1.0.0",
@@ -763,7 +763,7 @@ async def test_device_registry_calls(hass: HomeAssistant) -> None:
     ):
         async_fire_time_changed(hass, dt_util.now() + timedelta(hours=3))
         await hass.async_block_till_done()
-        assert len(dev_reg.devices) == 4
+        assert len(dev_reg.devices) == 5
 
 
 async def test_coordinator_updates(

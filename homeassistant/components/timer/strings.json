@@ -1,9 +1,12 @@
 {
-  "state": {
+  "entity_component": {
     "_": {
-      "active": "[%key:common::state::active%]",
-      "idle": "[%key:common::state::idle%]",
-      "paused": "[%key:common::state::paused%]"
+      "name": "Timer",
+      "state": {
+        "active": "[%key:common::state::active%]",
+        "idle": "[%key:common::state::idle%]",
+        "paused": "[%key:common::state::paused%]"
+      }
     }
   }
 }

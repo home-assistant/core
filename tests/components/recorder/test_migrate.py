@@ -28,11 +28,15 @@ from homeassistant.components.recorder.db_schema import (
     EventTypes,
     RecorderRuns,
     States,
+    StatesMeta,
 )
 from homeassistant.components.recorder.queries import select_event_type_ids
 from homeassistant.components.recorder.tasks import (
-    ContextIDMigrationTask,
+    EntityIDMigrationTask,
+    EntityIDPostMigrationTask,
+    EventsContextIDMigrationTask,
     EventTypeIDMigrationTask,
+    StatesContextIDMigrationTask,
 )
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant
@@ -54,10 +58,13 @@ ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
 
 def _get_native_states(hass, entity_id):
     with session_scope(hass=hass) as session:
-        return [
-            state.to_native()
-            for state in session.query(States).filter(States.entity_id == entity_id)
-        ]
+        instance = recorder.get_instance(hass)
+        metadata_id = instance.states_meta_manager.get(entity_id, session, True)
+        states = []
+        for dbstate in session.query(States).filter(States.metadata_id == metadata_id):
+            dbstate.entity_id = entity_id
+            states.append(dbstate.to_native())
+        return states
 
 
 async def test_schema_update_calls(recorder_db_url: str, hass: HomeAssistant) -> None:
@@ -552,7 +559,7 @@ def test_raise_if_exception_missing_empty_cause_str() -> None:
 
 
 @pytest.mark.parametrize("enable_migrate_context_ids", [True])
-async def test_migrate_context_ids(
+async def test_migrate_events_context_ids(
     async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
 ) -> None:
     """Test we can migrate old uuid context ids and ulid context ids to binary format."""
@@ -626,7 +633,7 @@ async def test_migrate_context_ids(
 
     await async_wait_recording_done(hass)
     # This is a threadsafe way to add a task to the recorder
-    instance.queue_task(ContextIDMigrationTask())
+    instance.queue_task(EventsContextIDMigrationTask())
     await async_recorder_block_till_done(hass)
 
     def _object_as_dict(obj):
@@ -693,6 +700,137 @@ async def test_migrate_context_ids(
     assert invalid_context_id_event["context_id_bin"] == b"\x00" * 16
     assert invalid_context_id_event["context_user_id_bin"] is None
     assert invalid_context_id_event["context_parent_id_bin"] is None
+
+
+@pytest.mark.parametrize("enable_migrate_context_ids", [True])
+async def test_migrate_states_context_ids(
+    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
+) -> None:
+    """Test we can migrate old uuid context ids and ulid context ids to binary format."""
+    instance = await async_setup_recorder_instance(hass)
+    await async_wait_recording_done(hass)
+
+    test_uuid = uuid.uuid4()
+    uuid_hex = test_uuid.hex
+    uuid_bin = test_uuid.bytes
+
+    def _insert_events():
+        with session_scope(hass=hass) as session:
+            session.add_all(
+                (
+                    States(
+                        entity_id="state.old_uuid_context_id",
+                        last_updated_ts=1677721632.452529,
+                        context_id=uuid_hex,
+                        context_id_bin=None,
+                        context_user_id=None,
+                        context_user_id_bin=None,
+                        context_parent_id=None,
+                        context_parent_id_bin=None,
+                    ),
+                    States(
+                        entity_id="state.empty_context_id",
+                        last_updated_ts=1677721632.552529,
+                        context_id=None,
+                        context_id_bin=None,
+                        context_user_id=None,
+                        context_user_id_bin=None,
+                        context_parent_id=None,
+                        context_parent_id_bin=None,
+                    ),
+                    States(
+                        entity_id="state.ulid_context_id",
+                        last_updated_ts=1677721632.552529,
+                        context_id="01ARZ3NDEKTSV4RRFFQ69G5FAV",
+                        context_id_bin=None,
+                        context_user_id="9400facee45711eaa9308bfd3d19e474",
+                        context_user_id_bin=None,
+                        context_parent_id="01ARZ3NDEKTSV4RRFFQ69G5FA2",
+                        context_parent_id_bin=None,
+                    ),
+                    States(
+                        entity_id="state.invalid_context_id",
+                        last_updated_ts=1677721632.552529,
+                        context_id="invalid",
+                        context_id_bin=None,
+                        context_user_id=None,
+                        context_user_id_bin=None,
+                        context_parent_id=None,
+                        context_parent_id_bin=None,
+                    ),
+                )
+            )
+
+    await instance.async_add_executor_job(_insert_events)
+
+    await async_wait_recording_done(hass)
+    # This is a threadsafe way to add a task to the recorder
+    instance.queue_task(StatesContextIDMigrationTask())
+    await async_recorder_block_till_done(hass)
+
+    def _object_as_dict(obj):
+        return {c.key: getattr(obj, c.key) for c in inspect(obj).mapper.column_attrs}
+
+    def _fetch_migrated_states():
+        with session_scope(hass=hass) as session:
+            events = (
+                session.query(States)
+                .filter(
+                    States.entity_id.in_(
+                        [
+                            "state.old_uuid_context_id",
+                            "state.empty_context_id",
+                            "state.ulid_context_id",
+                            "state.invalid_context_id",
+                        ]
+                    )
+                )
+                .all()
+            )
+            assert len(events) == 4
+            return {state.entity_id: _object_as_dict(state) for state in events}
+
+    states_by_entity_id = await instance.async_add_executor_job(_fetch_migrated_states)
+
+    old_uuid_context_id = states_by_entity_id["state.old_uuid_context_id"]
+    assert old_uuid_context_id["context_id"] is None
+    assert old_uuid_context_id["context_user_id"] is None
+    assert old_uuid_context_id["context_parent_id"] is None
+    assert old_uuid_context_id["context_id_bin"] == uuid_bin
+    assert old_uuid_context_id["context_user_id_bin"] is None
+    assert old_uuid_context_id["context_parent_id_bin"] is None
+
+    empty_context_id = states_by_entity_id["state.empty_context_id"]
+    assert empty_context_id["context_id"] is None
+    assert empty_context_id["context_user_id"] is None
+    assert empty_context_id["context_parent_id"] is None
+    assert empty_context_id["context_id_bin"] == b"\x00" * 16
+    assert empty_context_id["context_user_id_bin"] is None
+    assert empty_context_id["context_parent_id_bin"] is None
+
+    ulid_context_id = states_by_entity_id["state.ulid_context_id"]
+    assert ulid_context_id["context_id"] is None
+    assert ulid_context_id["context_user_id"] is None
+    assert ulid_context_id["context_parent_id"] is None
+    assert (
+        bytes_to_ulid(ulid_context_id["context_id_bin"]) == "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+    )
+    assert (
+        ulid_context_id["context_user_id_bin"]
+        == b"\x94\x00\xfa\xce\xe4W\x11\xea\xa90\x8b\xfd=\x19\xe4t"
+    )
+    assert (
+        bytes_to_ulid(ulid_context_id["context_parent_id_bin"])
+        == "01ARZ3NDEKTSV4RRFFQ69G5FA2"
+    )
+
+    invalid_context_id = states_by_entity_id["state.invalid_context_id"]
+    assert invalid_context_id["context_id"] is None
+    assert invalid_context_id["context_user_id"] is None
+    assert invalid_context_id["context_parent_id"] is None
+    assert invalid_context_id["context_id_bin"] == b"\x00" * 16
+    assert invalid_context_id["context_user_id_bin"] is None
+    assert invalid_context_id["context_parent_id_bin"] is None
 
 
 @pytest.mark.parametrize("enable_migrate_event_type_ids", [True])
@@ -764,3 +902,121 @@ async def test_migrate_event_type_ids(
     events_by_type = await instance.async_add_executor_job(_fetch_migrated_events)
     assert len(events_by_type["event_type_one"]) == 2
     assert len(events_by_type["event_type_two"]) == 1
+
+
+@pytest.mark.parametrize("enable_migrate_entity_ids", [True])
+async def test_migrate_entity_ids(
+    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
+) -> None:
+    """Test we can migrate entity_ids to the StatesMeta table."""
+    instance = await async_setup_recorder_instance(hass)
+    await async_wait_recording_done(hass)
+
+    def _insert_events():
+        with session_scope(hass=hass) as session:
+            session.add_all(
+                (
+                    States(
+                        entity_id="sensor.one",
+                        state="one_1",
+                        last_updated_ts=1.452529,
+                    ),
+                    States(
+                        entity_id="sensor.two",
+                        state="two_2",
+                        last_updated_ts=2.252529,
+                    ),
+                    States(
+                        entity_id="sensor.two",
+                        state="two_1",
+                        last_updated_ts=3.152529,
+                    ),
+                )
+            )
+
+    await instance.async_add_executor_job(_insert_events)
+
+    await async_wait_recording_done(hass)
+    # This is a threadsafe way to add a task to the recorder
+    instance.queue_task(EntityIDMigrationTask())
+    await async_recorder_block_till_done(hass)
+
+    def _fetch_migrated_states():
+        with session_scope(hass=hass) as session:
+            states = (
+                session.query(
+                    States.state,
+                    States.metadata_id,
+                    States.last_updated_ts,
+                    StatesMeta.entity_id,
+                )
+                .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
+                .all()
+            )
+            assert len(states) == 3
+            result = {}
+            for state in states:
+                result.setdefault(state.entity_id, []).append(
+                    {
+                        "state_id": state.entity_id,
+                        "last_updated_ts": state.last_updated_ts,
+                        "state": state.state,
+                    }
+                )
+            return result
+
+    states_by_entity_id = await instance.async_add_executor_job(_fetch_migrated_states)
+    assert len(states_by_entity_id["sensor.two"]) == 2
+    assert len(states_by_entity_id["sensor.one"]) == 1
+
+
+@pytest.mark.parametrize("enable_migrate_entity_ids", [True])
+async def test_post_migrate_entity_ids(
+    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
+) -> None:
+    """Test we can migrate entity_ids to the StatesMeta table."""
+    instance = await async_setup_recorder_instance(hass)
+    await async_wait_recording_done(hass)
+
+    def _insert_events():
+        with session_scope(hass=hass) as session:
+            session.add_all(
+                (
+                    States(
+                        entity_id="sensor.one",
+                        state="one_1",
+                        last_updated_ts=1.452529,
+                    ),
+                    States(
+                        entity_id="sensor.two",
+                        state="two_2",
+                        last_updated_ts=2.252529,
+                    ),
+                    States(
+                        entity_id="sensor.two",
+                        state="two_1",
+                        last_updated_ts=3.152529,
+                    ),
+                )
+            )
+
+    await instance.async_add_executor_job(_insert_events)
+
+    await async_wait_recording_done(hass)
+    # This is a threadsafe way to add a task to the recorder
+    instance.queue_task(EntityIDPostMigrationTask())
+    await async_recorder_block_till_done(hass)
+
+    def _fetch_migrated_states():
+        with session_scope(hass=hass) as session:
+            states = session.query(
+                States.state,
+                States.entity_id,
+            ).all()
+            assert len(states) == 3
+            return {state.state: state.entity_id for state in states}
+
+    states_by_state = await instance.async_add_executor_job(_fetch_migrated_states)
+    assert states_by_state["one_1"] is None
+    assert states_by_state["two_2"] is None
+    assert states_by_state["two_1"] is None

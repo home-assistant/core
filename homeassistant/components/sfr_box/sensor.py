@@ -3,7 +3,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Generic, TypeVar
 
-from sfrbox_api.models import DslInfo, SystemInfo
+from sfrbox_api.models import DslInfo, SystemInfo, WanInfo
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -195,6 +195,24 @@ SYSTEM_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[SystemInfo], ...] = (
         value_fn=lambda x: x.temperature / 1000,
     ),
 )
+WAN_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[WanInfo], ...] = (
+    SFRBoxSensorEntityDescription[WanInfo](
+        key="mode",
+        name="WAN mode",
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        options=[
+            "adsl_ppp",
+            "adsl_routed",
+            "ftth_routed",
+            "grps_ppp",
+            "unknown",
+        ],
+        translation_key="wan_mode",
+        value_fn=lambda x: x.mode.replace("/", "_"),
+    ),
+)
 
 
 async def async_setup_entry(
@@ -207,6 +225,10 @@ async def async_setup_entry(
         SFRBoxSensor(data.system, description, data.system.data)
         for description in SYSTEM_SENSOR_TYPES
     ]
+    entities.extend(
+        SFRBoxSensor(data.wan, description, data.system.data)
+        for description in WAN_SENSOR_TYPES
+    )
     if data.system.data.net_infra == "adsl":
         entities.extend(
             SFRBoxSensor(data.dsl, description, data.system.data)

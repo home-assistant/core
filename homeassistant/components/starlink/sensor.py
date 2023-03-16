@@ -66,7 +66,8 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         icon="mdi:speedometer",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
-        value_fn=lambda data: round(data.status["pop_ping_latency_ms"]),
+        suggested_display_precision=0,
+        value_fn=lambda data: data.status["pop_ping_latency_ms"],
     ),
     StarlinkSensorEntityDescription(
         key="azimuth",
@@ -76,7 +77,8 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DEGREE,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: round(data.status["direction_azimuth"]),
+        suggested_display_precision=0,
+        value_fn=lambda data: data.status["direction_azimuth"],
     ),
     StarlinkSensorEntityDescription(
         key="elevation",
@@ -86,7 +88,8 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DEGREE,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: round(data.status["direction_elevation"]),
+        suggested_display_precision=0,
+        value_fn=lambda data: data.status["direction_elevation"],
     ),
     StarlinkSensorEntityDescription(
         key="uplink_throughput",
@@ -95,7 +98,8 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.BITS_PER_SECOND,
-        value_fn=lambda data: round(data.status["uplink_throughput_bps"]),
+        suggested_display_precision=0,
+        value_fn=lambda data: data.status["uplink_throughput_bps"],
     ),
     StarlinkSensorEntityDescription(
         key="downlink_throughput",
@@ -104,7 +108,8 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.BITS_PER_SECOND,
-        value_fn=lambda data: round(data.status["downlink_throughput_bps"]),
+        suggested_display_precision=0,
+        value_fn=lambda data: data.status["downlink_throughput_bps"],
     ),
     StarlinkSensorEntityDescription(
         key="last_boot_time",

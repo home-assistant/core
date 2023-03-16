@@ -373,32 +373,35 @@ async def test_caching(hass: HomeAssistant) -> None:
         "homeassistant.helpers.translation._merge_resources",
         side_effect=translation._merge_resources,
     ) as mock_merge:
-        load1 = await translation.async_get_translations(hass, "en", "state")
+        load1 = await translation.async_get_translations(hass, "en", "entity_component")
         assert len(mock_merge.mock_calls) == 1
 
-        load2 = await translation.async_get_translations(hass, "en", "state")
+        load2 = await translation.async_get_translations(hass, "en", "entity_component")
         assert len(mock_merge.mock_calls) == 1
 
         assert load1 == load2
 
         for key in load1:
-            assert key.startswith("component.sensor.state.") or key.startswith(
-                "component.light.state."
+            assert key.startswith(
+                (
+                    "component.sensor.entity_component.",
+                    "component.light.entity_component.",
+                )
             )
 
     load_sensor_only = await translation.async_get_translations(
-        hass, "en", "state", integrations={"sensor"}
+        hass, "en", "entity_component", integrations={"sensor"}
     )
     assert load_sensor_only
     for key in load_sensor_only:
-        assert key.startswith("component.sensor.state.")
+        assert key.startswith("component.sensor.entity_component.")
 
     load_light_only = await translation.async_get_translations(
-        hass, "en", "state", integrations={"light"}
+        hass, "en", "entity_component", integrations={"light"}
     )
     assert load_light_only
     for key in load_light_only:
-        assert key.startswith("component.light.state.")
+        assert key.startswith("component.light.entity_component.")
 
     hass.config.components.add("media_player")
 

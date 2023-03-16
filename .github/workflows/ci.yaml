@@ -79,7 +79,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.3.0
+        uses: actions/checkout@v3.4.0
       - name: Generate partial Python venv restore key
         id: generate_python_cache_key
         run: >-
@@ -203,7 +203,7 @@ jobs:
       - info
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.3.0
+        uses: actions/checkout@v3.4.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v4.5.0
@@ -212,7 +212,7 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v3.3.0
+        uses: actions/cache@v3.3.1
         with:
           path: venv
           key: >-
@@ -227,7 +227,7 @@ jobs:
           pip install "$(cat requirements_test.txt | grep pre-commit)"
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v3.3.0
+        uses: actions/cache@v3.3.1
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           lookup-only: true
@@ -248,7 +248,7 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.3.0
+        uses: actions/checkout@v3.4.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v4.5.0
         id: python
@@ -257,7 +257,7 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.3.0
+        uses: actions/cache/restore@v3.3.1
         with:
           path: venv
           fail-on-cache-miss: true
@@ -266,7 +266,7 @@ jobs:
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v3.3.0
+        uses: actions/cache/restore@v3.3.1
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
@@ -294,7 +294,7 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.3.0
+        uses: actions/checkout@v3.4.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v4.5.0
         id: python
@@ -303,7 +303,7 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.3.0
+        uses: actions/cache/restore@v3.3.1
         with:
           path: venv
           fail-on-cache-miss: true
@@ -312,7 +312,7 @@ jobs:
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v3.3.0
+        uses: actions/cache/restore@v3.3.1
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
@@ -343,7 +343,7 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.3.0
+        uses: actions/checkout@v3.4.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v4.5.0
         id: python
@@ -352,7 +352,7 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.3.0
+        uses: actions/cache/restore@v3.3.1
         with:
           path: venv
           fail-on-cache-miss: true
@@ -361,7 +361,7 @@ jobs:
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v3.3.0
+        uses: actions/cache/restore@v3.3.1
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
@@ -392,7 +392,7 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.3.0
+        uses: actions/checkout@v3.4.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v4.5.0
         id: python
@@ -401,7 +401,7 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.3.0
+        uses: actions/cache/restore@v3.3.1
         with:
           path: venv
           fail-on-cache-miss: true
@@ -410,7 +410,7 @@ jobs:
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v3.3.0
+        uses: actions/cache/restore@v3.3.1
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
@@ -430,7 +430,7 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.3.0
+        uses: actions/checkout@v3.4.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v4.5.0
         id: python
@@ -439,7 +439,7 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.3.0
+        uses: actions/cache/restore@v3.3.1
         with:
           path: venv
           fail-on-cache-miss: true
@@ -448,7 +448,7 @@ jobs:
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v3.3.0
+        uses: actions/cache/restore@v3.3.1
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
@@ -549,7 +549,7 @@ jobs:
         python-version: ${{ fromJSON(needs.info.outputs.python_versions) }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.3.0
+        uses: actions/checkout@v3.4.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v4.5.0
@@ -563,7 +563,7 @@ jobs:
             env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v3.3.0
+        uses: actions/cache@v3.3.1
         with:
           path: venv
           lookup-only: true
@@ -572,7 +572,7 @@ jobs:
             needs.info.outputs.python_cache_key }}
       - name: Restore pip wheel cache
         if: steps.cache-venv.outputs.cache-hit != 'true'
-        uses: actions/cache@v3.3.0
+        uses: actions/cache@v3.3.1
         with:
           path: ${{ env.PIP_CACHE }}
           key: >-
@@ -617,7 +617,7 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.3.0
+        uses: actions/checkout@v3.4.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v4.5.0
@@ -626,7 +626,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.3.0
+        uses: actions/cache/restore@v3.3.1
         with:
           path: venv
           fail-on-cache-miss: true
@@ -649,7 +649,7 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.3.0
+        uses: actions/checkout@v3.4.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v4.5.0
@@ -658,7 +658,7 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.3.0
+        uses: actions/cache/restore@v3.3.1
         with:
           path: venv
           fail-on-cache-miss: true
@@ -682,7 +682,7 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.3.0
+        uses: actions/checkout@v3.4.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v4.5.0
@@ -691,7 +691,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.3.0
+        uses: actions/cache/restore@v3.3.1
         with:
           path: venv
           fail-on-cache-miss: true
@@ -726,7 +726,7 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.3.0
+        uses: actions/checkout@v3.4.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v4.5.0
@@ -742,7 +742,7 @@ jobs:
             env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.3.0
+        uses: actions/cache/restore@v3.3.1
         with:
           path: venv
           fail-on-cache-miss: true
@@ -750,7 +750,7 @@ jobs:
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
       - name: Restore mypy cache
-        uses: actions/cache@v3.3.0
+        uses: actions/cache@v3.3.1
         with:
           path: .mypy_cache
           key: >-
@@ -792,7 +792,7 @@ jobs:
     name: Run pip check ${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.3.0
+        uses: actions/checkout@v3.4.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v4.5.0
@@ -801,7 +801,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.3.0
+        uses: actions/cache/restore@v3.3.1
         with:
           path: venv
           fail-on-cache-miss: true
@@ -845,7 +845,7 @@ jobs:
             bluez \
             ffmpeg
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.3.0
+        uses: actions/checkout@v3.4.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v4.5.0
@@ -854,7 +854,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.3.0
+        uses: actions/cache/restore@v3.3.1
         with:
           path: venv
           fail-on-cache-miss: true
@@ -971,7 +971,7 @@ jobs:
             ffmpeg \
             libmariadb-dev-compat
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.3.0
+        uses: actions/checkout@v3.4.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v4.5.0
@@ -980,7 +980,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.3.0
+        uses: actions/cache/restore@v3.3.1
         with:
           path: venv
           fail-on-cache-miss: true
@@ -1003,6 +1003,10 @@ jobs:
         run: |
           . venv/bin/activate
           pip install mysqlclient sqlalchemy_utils
+      - name: Compile English translations
+        run: |
+          . venv/bin/activate
+          python3 -m script.translations develop --all
       - name: Run pytest (partially)
         timeout-minutes: 20
         shell: bash
@@ -1075,7 +1079,7 @@ jobs:
             ffmpeg \
             postgresql-server-dev-14
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.3.0
+        uses: actions/checkout@v3.4.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v4.5.0
@@ -1084,7 +1088,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.3.0
+        uses: actions/cache/restore@v3.3.1
         with:
           path: venv
           fail-on-cache-miss: true
@@ -1107,6 +1111,10 @@ jobs:
         run: |
           . venv/bin/activate
           pip install psycopg2 sqlalchemy_utils
+      - name: Compile English translations
+        run: |
+          . venv/bin/activate
+          python3 -m script.translations develop --all
       - name: Run pytest (partially)
         timeout-minutes: 20
         shell: bash
@@ -1147,7 +1155,7 @@ jobs:
       - pytest
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.3.0
+        uses: actions/checkout@v3.4.0
       - name: Download all coverage artifacts
         uses: actions/download-artifact@v3
       - name: Upload coverage to Codecov (full coverage)
