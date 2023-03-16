@@ -14,7 +14,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = {
         DEFAULT_PIPELINE: Pipeline(
             name=DEFAULT_PIPELINE,
-            language=hass.config.language,
+            language=None,
             conversation_engine=None,
         )
     }

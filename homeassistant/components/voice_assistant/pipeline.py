@@ -18,7 +18,7 @@ DEFAULT_TIMEOUT = 30  # seconds
 class PipelineRequest:
     """Request to start a pipeline run."""
 
-    intent_input: str | None = None
+    intent_input: str
     conversation_id: str | None = None
 
 
@@ -42,7 +42,11 @@ class PipelineEvent:
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the event."""
-        return {"type": self.type, "timestamp": self.timestamp, "data": self.data or {}}
+        return {
+            "type": self.type,
+            "timestamp": self.timestamp,
+            "data": self.data or {},
+        }
 
 
 @dataclass
@@ -50,7 +54,7 @@ class Pipeline:
     """A voice assistant pipeline."""
 
     name: str
-    language: str
+    language: str | None
     conversation_engine: str | None
 
     async def run(
@@ -74,22 +78,26 @@ class Pipeline:
         event_callback: Callable[[PipelineEvent], None],
     ) -> None:
         """Run a pipeline."""
+        language = self.language or hass.config.language
         event_callback(
             PipelineEvent(
                 PipelineEventType.RUN_START,
                 {
                     "pipeline": self.name,
-                    "language": self.language,
+                    "language": language,
                 },
             )
         )
 
-        intent_input = request.intent_input or ""
+        intent_input = request.intent_input
 
         event_callback(
             PipelineEvent(
                 PipelineEventType.INTENT_START,
-                {"engine": self.conversation_engine or "default"},
+                {
+                    "engine": self.conversation_engine or "default",
+                    "intent_input": intent_input,
+                },
             )
         )
 
@@ -98,20 +106,14 @@ class Pipeline:
             text=intent_input,
             conversation_id=request.conversation_id,
             context=context,
-            language=self.language,
+            language=language,
             agent_id=self.conversation_engine,
         )
 
-        tts_input: str | None = conversation_result.response.speech.get(
-            "plain", {}
-        ).get("speech")
         event_callback(
             PipelineEvent(
                 PipelineEventType.INTENT_FINISH,
-                {
-                    "speech": tts_input,
-                    "response": conversation_result.response.as_dict(),
-                },
+                conversation_result.response.as_dict(),
             )
         )
 

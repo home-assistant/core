@@ -10,15 +10,15 @@ from homeassistant.setup import async_setup_component
 from tests.typing import WebSocketGenerator
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 async def init_components(hass):
     """Initialize relevant components with empty configs."""
-    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "voice_assistant", {})
 
 
 async def test_text_only_pipeline(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, init_components
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test events from a pipeline run with text input (no STT/TTS)."""
     client = await hass_ws_client(hass)
@@ -34,17 +34,55 @@ async def test_text_only_pipeline(
     # run start
     msg = await client.receive_json()
     assert msg["event"]["type"] == "run-start"
+    assert msg["event"]["data"] == {
+        "pipeline": "default",
+        "language": hass.config.language,
+    }
 
     # intent
     msg = await client.receive_json()
     assert msg["event"]["type"] == "intent-start"
+    assert msg["event"]["data"] == {
+        "engine": "default",
+        "intent_input": "Are the lights on?",
+    }
 
     msg = await client.receive_json()
     assert msg["event"]["type"] == "intent-finish"
+    assert msg["event"]["data"] == {
+        "speech": {
+            "plain": {
+                "speech": "Sorry, I couldn't understand that",
+                "extra_data": None,
+            }
+        },
+        "card": {},
+        "language": "en",
+        "response_type": "error",
+        "data": {"code": "no_intent_match"},
+    }
 
     # run finish
     msg = await client.receive_json()
     assert msg["event"]["type"] == "run-finish"
+    assert msg["event"]["data"] == {
+        "intent_input": "Are the lights on?",
+        "conversation_result": {
+            "response": {
+                "speech": {
+                    "plain": {
+                        "speech": "Sorry, I couldn't understand that",
+                        "extra_data": None,
+                    }
+                },
+                "card": {},
+                "language": "en",
+                "response_type": "error",
+                "data": {"code": "no_intent_match"},
+            },
+            "conversation_id": None,
+        },
+    }
 
 
 async def test_conversation_timeout(
@@ -64,7 +102,7 @@ async def test_conversation_timeout(
                 "id": 5,
                 "type": "voice_assistant/run",
                 "intent_input": "Are the lights on?",
-                "timeout": 0.5,
+                "timeout": 0.00001,
             }
         )
 
@@ -75,10 +113,18 @@ async def test_conversation_timeout(
         # run start
         msg = await client.receive_json()
         assert msg["event"]["type"] == "run-start"
+        assert msg["event"]["data"] == {
+            "pipeline": "default",
+            "language": hass.config.language,
+        }
 
         # intent
         msg = await client.receive_json()
         assert msg["event"]["type"] == "intent-start"
+        assert msg["event"]["data"] == {
+            "engine": "default",
+            "intent_input": "Are the lights on?",
+        }
 
         # timeout error
         msg = await client.receive_json()
@@ -104,7 +150,7 @@ async def test_pipeline_timeout(
                 "id": 5,
                 "type": "voice_assistant/run",
                 "intent_input": "Are the lights on?",
-                "timeout": 0.5,
+                "timeout": 0.0001,
             }
         )
 
