@@ -102,6 +102,7 @@ async def test_no_repair_issue(
     assert (const.DOMAIN, "https_webhook") not in issue_registry.issues
     assert (const.DOMAIN, "webhook_url") not in issue_registry.issues
     assert (const.DOMAIN, "enable_port") not in issue_registry.issues
+    assert (const.DOMAIN, "firmware_update") not in issue_registry.issues
 
 
 async def test_https_repair_issue(
@@ -152,3 +153,16 @@ async def test_webhook_repair_issue(
 
     issue_registry = ir.async_get(hass)
     assert (const.DOMAIN, "webhook_url") in issue_registry.issues
+
+
+async def test_firmware_repair_issue(
+    hass: HomeAssistant, config_entry: MockConfigEntry, reolink_connect: MagicMock
+) -> None:
+    """Test firmware issue is raised when too old firmware is used."""
+    reolink_connect.sw_version_update_required = True
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue_registry = ir.async_get(hass)
+    assert (const.DOMAIN, "firmware_update") in issue_registry.issues
+

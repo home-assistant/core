@@ -5,7 +5,6 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable, Iterator, MutableMapping
 from datetime import datetime
 from itertools import groupby
-import logging
 from operator import itemgetter
 from typing import Any, cast
 
@@ -24,12 +23,7 @@ import homeassistant.util.dt as dt_util
 from ... import recorder
 from ..db_schema import RecorderRuns, StateAttributes, States, StatesMeta
 from ..filters import Filters
-from ..models import (
-    LazyState,
-    process_timestamp,
-    process_timestamp_to_utc_isoformat,
-    row_to_compressed_state,
-)
+from ..models import LazyState, process_timestamp, row_to_compressed_state
 from ..util import execute_stmt_lambda_element, session_scope
 from .const import (
     IGNORE_DOMAINS_ENTITY_ID_LIKE,
@@ -39,9 +33,6 @@ from .const import (
     SIGNIFICANT_DOMAINS_ENTITY_ID_LIKE,
     STATE_KEY,
 )
-
-_LOGGER = logging.getLogger(__name__)
-
 
 _BASE_STATES = (
     States.metadata_id,
@@ -242,7 +233,7 @@ def get_significant_states_with_session(
     if entity_ids:
         instance = recorder.get_instance(hass)
         entity_id_to_metadata_id = instance.states_meta_manager.get_many(
-            entity_ids, session
+            entity_ids, session, False
         )
         metadata_ids = [
             metadata_id
@@ -365,7 +356,7 @@ def state_changes_during_period(
         entity_id_to_metadata_id = None
         if entity_id:
             instance = recorder.get_instance(hass)
-            metadata_id = instance.states_meta_manager.get(entity_id, session)
+            metadata_id = instance.states_meta_manager.get(entity_id, session, False)
             entity_id_to_metadata_id = {entity_id: metadata_id}
         stmt = _state_changed_during_period_stmt(
             start_time,
@@ -426,7 +417,9 @@ def get_last_state_changes(
 
     with session_scope(hass=hass, read_only=True) as session:
         instance = recorder.get_instance(hass)
-        if not (metadata_id := instance.states_meta_manager.get(entity_id, session)):
+        if not (
+            metadata_id := instance.states_meta_manager.get(entity_id, session, False)
+        ):
             return {}
         entity_id_to_metadata_id: dict[str, int | None] = {entity_id_lower: metadata_id}
         stmt = _get_last_state_changes_stmt(number_of_states, metadata_id)
@@ -708,7 +701,7 @@ def _sorted_states_to_dict(
     # Append all changes to it
     for metadata_id, group in states_iter:
         attr_cache: dict[str, dict[str, Any]] = {}
-        prev_state: Column | str
+        prev_state: Column | str | None = None
         if not (entity_id := metadata_id_to_entity_id.get(metadata_id)):
             continue
         ent_results = result[entity_id]
@@ -739,6 +732,7 @@ def _sorted_states_to_dict(
             )
 
         state_idx = field_map["state"]
+        last_updated_ts_idx = field_map["last_updated_ts"]
 
         #
         # minimal_response only makes sense with last_updated == last_updated
@@ -747,29 +741,28 @@ def _sorted_states_to_dict(
         #
         # With minimal response we do not care about attribute
         # changes so we can filter out duplicate states
-        last_updated_ts_idx = field_map["last_updated_ts"]
         if compressed_state_format:
-            for row in group:
-                if (state := row[state_idx]) != prev_state:
-                    ent_results.append(
-                        {
-                            attr_state: state,
-                            attr_time: row[last_updated_ts_idx],
-                        }
-                    )
-                    prev_state = state
+            # Compressed state format uses the timestamp directly
+            ent_results.extend(
+                {
+                    attr_state: (prev_state := state),
+                    attr_time: row[last_updated_ts_idx],
+                }
+                for row in group
+                if (state := row[state_idx]) != prev_state
+            )
+            continue
 
-        for row in group:
-            if (state := row[state_idx]) != prev_state:
-                ent_results.append(
-                    {
-                        attr_state: state,
-                        attr_time: process_timestamp_to_utc_isoformat(
-                            dt_util.utc_from_timestamp(row[last_updated_ts_idx])
-                        ),
-                    }
-                )
-                prev_state = state
+        # Non-compressed state format returns an ISO formatted string
+        _utc_from_timestamp = dt_util.utc_from_timestamp
+        ent_results.extend(
+            {
+                attr_state: (prev_state := state),  # noqa: F841
+                attr_time: _utc_from_timestamp(row[last_updated_ts_idx]).isoformat(),
+            }
+            for row in group
+            if (state := row[state_idx]) != prev_state
+        )
 
     # If there are no states beyond the initial state,
     # the state a was never popped from initial_states

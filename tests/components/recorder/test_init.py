@@ -100,7 +100,7 @@ def _default_recorder(hass):
         db_max_retries=10,
         db_retry_wait=3,
         entity_filter=CONFIG_SCHEMA({DOMAIN: {}}),
-        exclude_t=[],
+        exclude_event_types=set(),
         exclude_attributes_by_domain={},
     )
 
@@ -1872,9 +1872,11 @@ def test_deduplication_event_data_inside_commit_interval(
         assert all(event.data_id == first_data_id for event in events)
 
 
-# Patch STATE_ATTRIBUTES_ID_CACHE_SIZE since otherwise
+# Patch CACHE_SIZE since otherwise
 # the CI can fail because the test takes too long to run
-@patch("homeassistant.components.recorder.core.STATE_ATTRIBUTES_ID_CACHE_SIZE", 5)
+@patch(
+    "homeassistant.components.recorder.table_managers.state_attributes.CACHE_SIZE", 5
+)
 def test_deduplication_state_attributes_inside_commit_interval(
     hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -2159,4 +2161,8 @@ async def test_lru_increases_with_many_entities(
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
         await async_wait_recording_done(hass)
 
-    assert recorder_mock._state_attributes_ids.get_size() == mock_entity_count * 2
+    assert (
+        recorder_mock.state_attributes_manager._id_map.get_size()
+        == mock_entity_count * 2
+    )
+    assert recorder_mock.states_meta_manager._id_map.get_size() == mock_entity_count * 2

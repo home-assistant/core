@@ -1054,6 +1054,9 @@ def _apply_update(  # noqa: C901
             "statistics_short_term",
             "ix_statistics_short_term_metadata_id",
         )
+    elif new_version == 41:
+        _create_index(session_maker, "event_types", "ix_event_types_event_type")
+        _create_index(session_maker, "states_meta", "ix_states_meta_entity_id")
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
@@ -1454,7 +1457,9 @@ def migrate_entity_ids(instance: Recorder) -> bool:
     with session_scope(session=instance.get_session()) as session:
         if states := session.execute(find_entity_ids_to_migrate()).all():
             entity_ids = {entity_id for _, entity_id in states}
-            entity_id_to_metadata_id = states_meta_manager.get_many(entity_ids, session)
+            entity_id_to_metadata_id = states_meta_manager.get_many(
+                entity_ids, session, True
+            )
             if missing_entity_ids := {
                 # We should never see _EMPTY_ENTITY_ID in the states table
                 # but we need to be defensive so we don't fail the migration
