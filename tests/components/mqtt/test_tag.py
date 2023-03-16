@@ -1,7 +1,6 @@
 """The tests for MQTT tag scanner."""
 import copy
 import json
-from pathlib import Path
 from unittest.mock import ANY, patch
 
 import pytest
@@ -893,7 +892,6 @@ async def test_unload_entry(
     device_registry: dr.DeviceRegistry,
     mqtt_mock: MqttMockHAClient,
     tag_mock,
-    tmp_path: Path,
 ) -> None:
     """Test unloading the MQTT entry."""
 
@@ -910,7 +908,7 @@ async def test_unload_entry(
 
     tag_mock.reset_mock()
 
-    await help_test_unload_config_entry(hass, tmp_path, {})
+    await help_test_unload_config_entry(hass)
     await hass.async_block_till_done()
 
     # Fake tag scan, should not be processed
