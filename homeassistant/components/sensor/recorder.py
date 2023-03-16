@@ -153,27 +153,28 @@ def _float_or_none(state: str) -> float | None:
         return None
 
 
-def _normalize_states(
-    hass: HomeAssistant,
-    old_metadatas: dict[str, tuple[int, StatisticMetaData]],
+def _entity_history_to_float_and_state(
     entity_history: Iterable[State],
-    entity_id: str,
-) -> tuple[str | None, list[tuple[float, State]]]:
-    """Normalize units."""
-    old_metadata = old_metadatas[entity_id][1] if entity_id in old_metadatas else None
-    state_unit: str | None = None
-    fstates: list[tuple[float, State]] = [
+) -> list[tuple[float, State]]:
+    """Return a list of (float, state) tuples for the given entity."""
+    return [
         (fstate, state)
         for state in entity_history
         if (fstate := _float_or_none(state.state)) is not None
     ]
 
-    if not fstates:
-        return None, fstates
 
-    state_unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-
+def _normalize_states(
+    hass: HomeAssistant,
+    old_metadatas: dict[str, tuple[int, StatisticMetaData]],
+    fstates: list[tuple[float, State]],
+    entity_id: str,
+) -> tuple[str | None, list[tuple[float, State]]]:
+    """Normalize units."""
+    state_unit: str | None = None
     statistics_unit: str | None
+    state_unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+    old_metadata = old_metadatas[entity_id][1] if entity_id in old_metadatas else None
     if not old_metadata:
         # We've not seen this sensor before, the first valid state determines the unit
         # used for statistics
@@ -427,44 +428,41 @@ def _compile_statistics(  # noqa: C901
             entity_ids=entities_significant_history,
         )
         history_list = {**history_list, **_history_list}
-    # If there are no recent state changes, the sensor's state may already be pruned
-    # from the recorder. Get the state from the state machine instead.
-    for _state in sensor_states:
-        if (
-            _state.entity_id not in history_list
-            and _float_or_none(_state.state) is not None
-        ):
-            history_list[_state.entity_id] = [_state]
 
-    # Only lookup metadata for entities that have valid history
+    entities_with_float_states: dict[str, list[tuple[float, State]]] = {}
+    for _state in sensor_states:
+        entity_id = _state.entity_id
+        # If there are no recent state changes, the sensor's state may already be pruned
+        # from the recorder. Get the state from the state machine instead.
+        if not (entity_history := history_list.get(entity_id, [_state])):
+            continue
+        if not (float_states := _entity_history_to_float_and_state(entity_history)):
+            continue
+        entities_with_float_states[entity_id] = float_states
+
+    # Only lookup metadata for entities that have valid fstates
     # since it will result in cache misses for statistic_ids
     # that are not in the metadata table and we are not working
     # with them anyway.
     old_metadatas = statistics.get_metadata_with_session(
-        get_instance(hass), session, statistic_ids=list(history_list)
+        get_instance(hass), session, statistic_ids=list(entities_with_float_states)
     )
-
-    to_process = []
-    to_query = []
+    to_process: list[tuple[str, str | None, str, list[tuple[float, State]]]] = []
+    to_query: list[str] = []
     for _state in sensor_states:
         entity_id = _state.entity_id
-        if entity_id not in history_list:
+        if not (maybe_float_states := entities_with_float_states.get(entity_id)):
             continue
-
-        entity_history = history_list[entity_id]
-        statistics_unit, fstates = _normalize_states(
+        statistics_unit, valid_float_states = _normalize_states(
             hass,
             old_metadatas,
-            entity_history,
+            maybe_float_states,
             entity_id,
         )
-
-        if not fstates:
+        if not valid_float_states:
             continue
-
-        state_class = _state.attributes[ATTR_STATE_CLASS]
-
-        to_process.append((entity_id, statistics_unit, state_class, fstates))
+        state_class: str = _state.attributes[ATTR_STATE_CLASS]
+        to_process.append((entity_id, statistics_unit, state_class, valid_float_states))
         if "sum" in wanted_statistics[entity_id]:
             to_query.append(entity_id)
 
