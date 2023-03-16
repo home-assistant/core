@@ -82,7 +82,7 @@ class StateAttributesManager(BaseLRUTableManager[StateAttributes]):
         return self.get_many(((shared_attr, data_hash),), session)[shared_attr]
 
     def get_many(
-        self, shared_attrs_data_hashs: Iterable[tuple[str, int]], session: Session
+        self, shared_attrs_data_hashes: Iterable[tuple[str, int]], session: Session
     ) -> dict[str, int | None]:
         """Resolve shared_attrs to attributes_ids.
 
@@ -91,7 +91,7 @@ class StateAttributesManager(BaseLRUTableManager[StateAttributes]):
         """
         results: dict[str, int | None] = {}
         missing_hashes: set[int] = set()
-        for shared_attrs, data_hash in shared_attrs_data_hashs:
+        for shared_attrs, data_hash in shared_attrs_data_hashes:
             if (attributes_id := self._id_map.get(shared_attrs)) is None:
                 missing_hashes.add(data_hash)
 
