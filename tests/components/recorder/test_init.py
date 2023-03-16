@@ -563,32 +563,6 @@ def _add_entities(hass, entity_ids):
         return states
 
 
-def _add_events(hass, events):
-    with session_scope(hass=hass) as session:
-        session.query(Events).delete(synchronize_session=False)
-    for event_type in events:
-        hass.bus.fire(event_type)
-    wait_recording_done(hass)
-
-    with session_scope(hass=hass) as session:
-        events = []
-        for event, event_data, event_types in (
-            session.query(Events, EventData, EventTypes)
-            .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
-            .outerjoin(EventData, Events.data_id == EventData.data_id)
-        ):
-            event = cast(Events, event)
-            event_data = cast(EventData, event_data)
-            event_types = cast(EventTypes, event_types)
-
-            native_event = event.to_native()
-            if event_data:
-                native_event.data = event_data.to_native()
-            native_event.event_type = event_types.event_type
-            events.append(native_event)
-        return events
-
-
 def _state_with_context(hass, entity_id):
     # We don't restore context unless we need it by joining the
     # events table on the event_id for state_changed events
@@ -645,25 +619,53 @@ def test_saving_state_incl_entities(
     assert _state_with_context(hass, "test2.recorder").as_dict() == states[0].as_dict()
 
 
-def test_saving_event_exclude_event_type(
-    hass_recorder: Callable[..., HomeAssistant]
+async def test_saving_event_exclude_event_type(
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
 ) -> None:
     """Test saving and restoring an event."""
-    hass = hass_recorder(
-        {
-            "exclude": {
-                "event_types": [
-                    "service_registered",
-                    "homeassistant_start",
-                    "component_loaded",
-                    "core_config_updated",
-                    "homeassistant_started",
-                    "test",
-                ]
-            }
+    config = {
+        "exclude": {
+            "event_types": [
+                "service_registered",
+                "homeassistant_start",
+                "component_loaded",
+                "core_config_updated",
+                "homeassistant_started",
+                "test",
+            ]
         }
-    )
-    events = _add_events(hass, ["test", "test2"])
+    }
+    instance = await async_setup_recorder_instance(hass, config)
+    events = ["test", "test2"]
+    for event_type in events:
+        hass.bus.async_fire(event_type)
+
+    await async_wait_recording_done(hass)
+
+    def _get_events(hass: HomeAssistant, event_types: list[str]) -> list[Event]:
+        with session_scope(hass=hass) as session:
+            events = []
+            for event, event_data, event_types in (
+                session.query(Events, EventData, EventTypes)
+                .outerjoin(
+                    EventTypes, (Events.event_type_id == EventTypes.event_type_id)
+                )
+                .outerjoin(EventData, Events.data_id == EventData.data_id)
+                .where(EventTypes.event_type.in_(event_types))
+            ):
+                event = cast(Events, event)
+                event_data = cast(EventData, event_data)
+                event_types = cast(EventTypes, event_types)
+
+                native_event = event.to_native()
+                if event_data:
+                    native_event.data = event_data.to_native()
+                native_event.event_type = event_types.event_type
+                events.append(native_event)
+            return events
+
+    events = await instance.async_add_executor_job(_get_events, hass, ["test", "test2"])
     assert len(events) == 1
     assert events[0].event_type == "test2"
 
