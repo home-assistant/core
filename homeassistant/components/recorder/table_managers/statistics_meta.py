@@ -100,6 +100,91 @@ class StatisticsMetaManager:
         self.recorder = recorder
         self._stat_id_to_id_meta: dict[str, tuple[int, StatisticMetaData]] = {}
 
+    def _clear_cache(self, statistic_ids: list[str]) -> None:
+        """Clear the cache."""
+        for statistic_id in statistic_ids:
+            self._stat_id_to_id_meta.pop(statistic_id, None)
+
+    def _process_into_results(
+        self,
+        results: dict[str, tuple[int, StatisticMetaData]],
+        session: Session,
+        statistic_ids: list[str] | None = None,
+        statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+        statistic_source: str | None = None,
+    ) -> None:
+        """Fetch meta data and process it into results and/or cache."""
+        # Only update the cache if we are in the recorder thread
+        update_cache = self.recorder.thread_id == threading.get_ident()
+        with session.no_autoflush:
+            stat_id_to_id_meta = self._stat_id_to_id_meta
+            for row in execute_stmt_lambda_element(
+                session,
+                _generate_get_metadata_stmt(
+                    statistic_ids, statistic_type, statistic_source
+                ),
+            ):
+                statistics_meta = cast(StatisticsMeta, row)
+                id_meta = _statistics_meta_to_id_statistics_metadata(statistics_meta)
+                statistic_id = cast(str, statistics_meta.statistic_id)
+                results[statistic_id] = id_meta
+                if update_cache:
+                    stat_id_to_id_meta[statistic_id] = id_meta
+
+    def _add_metadata(
+        self, session: Session, statistic_id: str, new_metadata: StatisticMetaData
+    ) -> int:
+        """Add metadata to the database."""
+        meta = StatisticsMeta.from_meta(new_metadata)
+        session.add(meta)
+        session.flush()  # Flush to get the metadata id assigned
+        _LOGGER.debug(
+            "Added new statistics metadata for %s, new_metadata: %s",
+            statistic_id,
+            new_metadata,
+        )
+        if self.recorder.thread_id == threading.get_ident():
+            id_meta = _statistics_meta_to_id_statistics_metadata(meta)
+            self._stat_id_to_id_meta[statistic_id] = id_meta
+        return meta.id
+
+    def _update_metadata(
+        self,
+        session: Session,
+        statistic_id: str,
+        new_metadata: StatisticMetaData,
+        old_metadata_dict: dict[str, tuple[int, StatisticMetaData]],
+    ) -> int:
+        """Update metadata in the database."""
+        metadata_id, old_metadata = old_metadata_dict[statistic_id]
+        if (
+            old_metadata["has_mean"] != new_metadata["has_mean"]
+            or old_metadata["has_sum"] != new_metadata["has_sum"]
+            or old_metadata["name"] != new_metadata["name"]
+            or old_metadata["unit_of_measurement"]
+            != new_metadata["unit_of_measurement"]
+        ):
+            session.query(StatisticsMeta).filter_by(statistic_id=statistic_id).update(
+                {
+                    StatisticsMeta.has_mean: new_metadata["has_mean"],
+                    StatisticsMeta.has_sum: new_metadata["has_sum"],
+                    StatisticsMeta.name: new_metadata["name"],
+                    StatisticsMeta.unit_of_measurement: new_metadata[
+                        "unit_of_measurement"
+                    ],
+                },
+                synchronize_session=False,
+            )
+            self._stat_id_to_id_meta.pop(statistic_id, None)
+            _LOGGER.debug(
+                "Updated statistics metadata for %s, old_metadata: %s, new_metadata: %s",
+                statistic_id,
+                old_metadata,
+                new_metadata,
+            )
+
+        return metadata_id
+
     def load(self, session: Session) -> None:
         """Load the statistic_id to metadata_id mapping into memory.
 
@@ -171,87 +256,6 @@ class StatisticsMetaManager:
 
         return results
 
-    def _process_into_results(
-        self,
-        results: dict[str, tuple[int, StatisticMetaData]],
-        session: Session,
-        statistic_ids: list[str] | None = None,
-        statistic_type: Literal["mean"] | Literal["sum"] | None = None,
-        statistic_source: str | None = None,
-    ) -> None:
-        """Fetch meta data and process it into results and/or cache."""
-        # Only update the cache if we are in the recorder thread
-        update_cache = self.recorder.thread_id == threading.get_ident()
-        with session.no_autoflush:
-            stat_id_to_id_meta = self._stat_id_to_id_meta
-            for row in execute_stmt_lambda_element(
-                session,
-                _generate_get_metadata_stmt(
-                    statistic_ids, statistic_type, statistic_source
-                ),
-            ):
-                id_meta = _statistics_meta_to_id_statistics_metadata(
-                    cast(StatisticsMeta, row)
-                )
-                statistic_id = row.statistic_id
-                results[statistic_id] = id_meta
-                if update_cache:
-                    stat_id_to_id_meta[statistic_id] = id_meta
-
-    def _add_metadata(
-        self, session: Session, statistic_id: str, new_metadata: StatisticMetaData
-    ) -> int:
-        """Add metadata to the database."""
-        meta = StatisticsMeta.from_meta(new_metadata)
-        session.add(meta)
-        session.flush()  # Flush to get the metadata id assigned
-        _LOGGER.debug(
-            "Added new statistics metadata for %s, new_metadata: %s",
-            statistic_id,
-            new_metadata,
-        )
-        if self.recorder.thread_id == threading.get_ident():
-            id_meta = _statistics_meta_to_id_statistics_metadata(meta)
-            self._stat_id_to_id_meta[statistic_id] = id_meta
-        return meta.id
-
-    def _update_metadata(
-        self,
-        session: Session,
-        statistic_id: str,
-        new_metadata: StatisticMetaData,
-        old_metadata_dict: dict[str, tuple[int, StatisticMetaData]],
-    ) -> int:
-        """Update metadata in the database."""
-        metadata_id, old_metadata = old_metadata_dict[statistic_id]
-        if (
-            old_metadata["has_mean"] != new_metadata["has_mean"]
-            or old_metadata["has_sum"] != new_metadata["has_sum"]
-            or old_metadata["name"] != new_metadata["name"]
-            or old_metadata["unit_of_measurement"]
-            != new_metadata["unit_of_measurement"]
-        ):
-            session.query(StatisticsMeta).filter_by(statistic_id=statistic_id).update(
-                {
-                    StatisticsMeta.has_mean: new_metadata["has_mean"],
-                    StatisticsMeta.has_sum: new_metadata["has_sum"],
-                    StatisticsMeta.name: new_metadata["name"],
-                    StatisticsMeta.unit_of_measurement: new_metadata[
-                        "unit_of_measurement"
-                    ],
-                },
-                synchronize_session=False,
-            )
-            self._stat_id_to_id_meta.pop(statistic_id, None)
-            _LOGGER.debug(
-                "Updated statistics metadata for %s, old_metadata: %s, new_metadata: %s",
-                statistic_id,
-                old_metadata,
-                new_metadata,
-            )
-
-        return metadata_id
-
     def update_or_add(
         self,
         session: Session,
@@ -272,17 +276,35 @@ class StatisticsMetaManager:
             session, statistic_id, new_metadata, old_metadata_dict
         )
 
-    def clear_cache(self, statistic_ids: list[str]) -> None:
-        """Clear the cache."""
-        for statistic_id in statistic_ids:
-            self._stat_id_to_id_meta.pop(statistic_id, None)
+    def update_unit_of_measurement(
+        self, session: Session, statistic_id: str, new_unit: str | None
+    ) -> None:
+        """Update the unit of measurement for a statistic_id."""
+        session.query(StatisticsMeta).filter(
+            StatisticsMeta.statistic_id == statistic_id
+        ).update({StatisticsMeta.unit_of_measurement: new_unit})
+        self._clear_cache([statistic_id])
+
+    def update_statistic_id(
+        self,
+        session: Session,
+        source: str,
+        old_statistic_id: str,
+        new_statistic_id: str,
+    ) -> None:
+        """Update the statistic_id for a statistic_id."""
+        session.query(StatisticsMeta).filter(
+            (StatisticsMeta.statistic_id == old_statistic_id)
+            & (StatisticsMeta.source == source)
+        ).update({StatisticsMeta.statistic_id: new_statistic_id})
+        self._clear_cache([old_statistic_id, new_statistic_id])
 
     def delete(self, session: Session, statistic_ids: list[str]) -> None:
         """Clear statistics for a list of statistic_ids."""
         session.query(StatisticsMeta).filter(
             StatisticsMeta.statistic_id.in_(statistic_ids)
         ).delete(synchronize_session=False)
-        self.clear_cache(statistic_ids)
+        self._clear_cache(statistic_ids)
 
     def reset(self) -> None:
         """Reset the cache."""

@@ -22,12 +22,10 @@ from homeassistant.components.recorder.models import (
 )
 from homeassistant.components.recorder.statistics import (
     STATISTIC_UNIT_TO_UNIT_CONVERTER,
-    _generate_get_metadata_stmt,
     _generate_max_mean_min_statistic_in_sub_period_stmt,
     _generate_statistics_at_time_stmt,
     _generate_statistics_during_period_stmt,
     _statistics_during_period_with_session,
-    _update_or_add_metadata,
     async_add_external_statistics,
     async_import_statistics,
     delete_statistics_duplicates,
@@ -37,6 +35,9 @@ from homeassistant.components.recorder.statistics import (
     get_latest_short_term_statistics,
     get_metadata,
     list_statistic_ids,
+)
+from homeassistant.components.recorder.table_managers.statistics_meta import (
+    _generate_get_metadata_stmt,
 )
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.sensor import UNIT_CONVERTERS
@@ -1562,9 +1563,8 @@ async def test_validate_db_schema_fix_utf8_issue(
     with patch(
         "homeassistant.components.recorder.core.Recorder.dialect_name", "mysql"
     ), patch(
-        "homeassistant.components.recorder.statistics._update_or_add_metadata",
+        "homeassistant.components.recorder.table_managers.statistics_meta.StatisticsMetaManager.update_or_add",
         side_effect=[utf8_error, DEFAULT, DEFAULT],
-        wraps=_update_or_add_metadata,
     ):
         await async_setup_recorder_instance(hass)
         await async_wait_recording_done(hass)

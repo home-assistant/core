@@ -827,6 +827,7 @@ def get_metadata_with_session(
     statistic_source: str | None = None,
 ) -> dict[str, tuple[int, StatisticMetaData]]:
     """Fetch meta data.
+
     Returns a dict of (metadata_id, StatisticMetaData) tuples indexed by statistic_id.
     If statistic_ids is given, fetch metadata only for the listed statistics_ids.
     If statistic_type is given, fetch metadata only for statistic_ids supporting it.
@@ -849,6 +850,7 @@ def get_metadata(
     """Return metadata for statistic_ids."""
     with session_scope(hass=hass, read_only=True) as session:
         return get_metadata_with_session(
+            get_instance(hass),
             session,
             statistic_ids=statistic_ids,
             statistic_type=statistic_type,
@@ -872,22 +874,17 @@ def update_statistics_metadata(
     statistics_meta_manager = instance.statistics_meta_manager
     if new_unit_of_measurement is not UNDEFINED:
         with session_scope(session=instance.get_session()) as session:
-            session.query(StatisticsMeta).filter(
-                StatisticsMeta.statistic_id == statistic_id
-            ).update({StatisticsMeta.unit_of_measurement: new_unit_of_measurement})
-            statistics_meta_manager.clear_cache([statistic_id])
-    if new_statistic_id is not UNDEFINED:
+            statistics_meta_manager.update_unit_of_measurement(
+                session, statistic_id, new_unit_of_measurement
+            )
+    if new_statistic_id is not UNDEFINED and new_statistic_id is not None:
         with session_scope(
             session=instance.get_session(),
             exception_filter=_filter_unique_constraint_integrity_error(instance),
         ) as session:
-            session.query(StatisticsMeta).filter(
-                (StatisticsMeta.statistic_id == statistic_id)
-                & (StatisticsMeta.source == DOMAIN)
-            ).update({StatisticsMeta.statistic_id: new_statistic_id})
-            statistics_meta_manager.clear_cache([statistic_id])
-            if new_statistic_id:
-                statistics_meta_manager.clear_cache([new_statistic_id])
+            statistics_meta_manager.update_statistic_id(
+                session, DOMAIN, statistic_id, new_statistic_id
+            )
 
 
 def list_statistic_ids(
@@ -2364,10 +2361,10 @@ def change_statistics_unit(
         )
         for table in tables:
             _change_statistics_unit_for_table(session, table, metadata_id, convert)
-        session.query(StatisticsMeta).filter(
-            StatisticsMeta.statistic_id == statistic_id
-        ).update({StatisticsMeta.unit_of_measurement: new_unit})
-        statistics_meta_manager.clear_cache([statistic_id])
+
+        statistics_meta_manager.update_unit_of_measurement(
+            session, statistic_id, new_unit
+        )
 
 
 @callback
