@@ -10,7 +10,6 @@ from screenlogicpy.const import (
     SL_GATEWAY_IP,
     SL_GATEWAY_NAME,
     SL_GATEWAY_PORT,
-    ScreenLogicWarning,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -52,8 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await gateway.async_connect(**connect_info)
     except ScreenLogicError as ex:
-        _LOGGER.error("Error while connecting to the gateway %s: %s", connect_info, ex)
-        raise ConfigEntryNotReady from ex
+        raise ConfigEntryNotReady(ex.msg) from ex
 
     coordinator = ScreenlogicDataUpdateCoordinator(
         hass, config_entry=entry, gateway=gateway
@@ -166,10 +164,8 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 await self.gateway.async_connect(**connect_info)
 
             await self._async_update_configured_data()
-        except ScreenLogicWarning as warn:
-            _LOGGER.warning(warn.args[0])
         except ScreenLogicError as ex:
             if self.gateway.is_connected:
                 await self.gateway.async_disconnect()
-            raise UpdateFailed(ex) from ex
+            raise UpdateFailed(ex.msg) from ex
         return None
