@@ -6,6 +6,8 @@ set_aux_heat:
   target:
     entity:
       domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.AUX_HEAT
   fields:
     aux_heat:
       name: Auxiliary heating
@@ -20,6 +22,8 @@ set_preset_mode:
   target:
     entity:
       domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.PRESET_MODE
   fields:
     preset_mode:
       name: Preset mode
@@ -35,10 +39,16 @@ set_temperature:
   target:
     entity:
       domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.TARGET_TEMPERATURE
+        - climate.ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
   fields:
     temperature:
       name: Temperature
       description: New target temperature for HVAC.
+      filter:
+        supported_features:
+          - climate.ClimateEntityFeature.TARGET_TEMPERATURE
       selector:
         number:
           min: 0
@@ -48,6 +58,9 @@ set_temperature:
     target_temp_high:
       name: Target temperature high
       description: New target high temperature for HVAC.
+      filter:
+        supported_features:
+          - climate.ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
       advanced: true
       selector:
         number:
@@ -58,6 +71,9 @@ set_temperature:
     target_temp_low:
       name: Target temperature low
       description: New target low temperature for HVAC.
+      filter:
+        supported_features:
+          - climate.ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
       advanced: true
       selector:
         number:
@@ -92,6 +108,8 @@ set_humidity:
   target:
     entity:
       domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.TARGET_HUMIDITY
   fields:
     humidity:
       name: Humidity
@@ -109,6 +127,8 @@ set_fan_mode:
   target:
     entity:
       domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.FAN_MODE
   fields:
     fan_mode:
       name: Fan mode
@@ -152,6 +172,8 @@ set_swing_mode:
   target:
     entity:
       domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.SWING_MODE
   fields:
     swing_mode:
       name: Swing mode
