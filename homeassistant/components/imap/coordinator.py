@@ -20,7 +20,7 @@ from .errors import InvalidAuth, InvalidFolder
 
 _LOGGER = logging.getLogger(__name__)
 
-BACKOFF_TIME = 10
+BACKOFF_TIME = 30
 
 
 async def connect_to_server(data: Mapping[str, Any]) -> IMAP4_SSL:
@@ -29,10 +29,10 @@ async def connect_to_server(data: Mapping[str, Any]) -> IMAP4_SSL:
     await client.wait_hello_from_server()
     await client.login(data[CONF_USERNAME], data[CONF_PASSWORD])
     if client.protocol.state != AUTH:
-        raise InvalidAuth
+        raise InvalidAuth("Invalid username or password")
     await client.select(data[CONF_FOLDER])
     if client.protocol.state != SELECTED:
-        raise InvalidFolder
+        raise InvalidFolder(f"Folder {data[CONF_FOLDER]} is invalid")
     return client
 
 
@@ -64,19 +64,14 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
         if self.imap_client is None:
             self.imap_client = await connect_to_server(self.config_entry.data)
 
-    async def _async_fetch_number_of_messages(self) -> int:
+    async def _async_fetch_number_of_messages(self) -> int | None:
         """Fetch number of messages."""
-        try:
-            await self._async_reconnect_if_needed()
-            await self.imap_client.noop()
-            result, lines = await self.imap_client.search(
-                self.config_entry.data[CONF_SEARCH],
-                charset=self.config_entry.data[CONF_CHARSET],
-            )
-        except (AioImapException, asyncio.TimeoutError) as err:
-            await self._cleanup()
-            raise UpdateFailed(err) from err
-
+        await self._async_reconnect_if_needed()
+        await self.imap_client.noop()
+        result, lines = await self.imap_client.search(
+            self.config_entry.data[CONF_SEARCH],
+            charset=self.config_entry.data[CONF_CHARSET],
+        )
         if result != "OK":
             raise UpdateFailed(
                 f"Invalid response for search '{self.config_entry.data[CONF_SEARCH]}': {result} / {lines[0]}"
@@ -92,7 +87,8 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                 await self.imap_client.stop_wait_server_push()
                 await self.imap_client.logout()
                 await self.imap_client.close()
-            except AioImapException:
+            except (AioImapException, asyncio.TimeoutError) as ex:
+                self.async_set_update_error(ex)
                 _LOGGER.warning("Error while cleaning up imap connection")
             self.imap_client = None
 
@@ -110,7 +106,18 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
 
     async def _async_update_data(self) -> int | None:
         """Update the number of unread emails."""
-        return await self._async_fetch_number_of_messages()
+        try:
+            return await self._async_fetch_number_of_messages()
+        except (
+            UpdateFailed,
+            InvalidAuth,
+            InvalidFolder,
+            AioImapException,
+            asyncio.TimeoutError,
+        ) as ex:
+            self.async_set_update_error(ex)
+            await self._cleanup()
+            return None
 
 
 class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
@@ -135,10 +142,16 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
     async def _async_wait_push_loop(self) -> None:
         """Wait for data push from server."""
         while True:
-            await self._async_reconnect_if_needed()
             try:
                 number_of_messages = await self._async_fetch_number_of_messages()
-            except UpdateFailed as ex:
+            except (
+                UpdateFailed,
+                InvalidAuth,
+                InvalidFolder,
+                AioImapException,
+                asyncio.TimeoutError,
+            ) as ex:
+                self.async_set_updated_data(None)
                 self.async_set_update_error(ex)
                 await self._cleanup()
                 await asyncio.sleep(BACKOFF_TIME)
@@ -154,8 +167,9 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
 
             except (AioImapException, asyncio.TimeoutError):
                 _LOGGER.warning(
-                    "Lost %s (will attempt to reconnect)",
+                    "Lost %s (will attempt to reconnect after %s s)",
                     self.config_entry.data[CONF_SERVER],
+                    BACKOFF_TIME,
                 )
                 self.async_set_update_error(UpdateFailed("Lost connection"))
                 await self._cleanup()
