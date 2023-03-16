@@ -2,7 +2,8 @@
 from unittest.mock import ANY, call
 
 import homeassistant.components.mqtt_statestream as statestream
-from homeassistant.core import HomeAssistant, State
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_state_change_event
@@ -10,13 +11,13 @@ from tests.typing import MqttMockHAClient
 
 
 async def add_statestream(
-    hass,
+    hass: HomeAssistant,
     base_topic=None,
     publish_attributes=None,
     publish_timestamps=None,
     publish_include=None,
     publish_exclude=None,
-):
+) -> bool:
     """Add a mqtt_statestream component."""
     config = {}
     if base_topic:
@@ -46,6 +47,52 @@ async def test_setup_succeeds_without_attributes(
 ) -> None:
     """Test the success of the setup with a valid base_topic."""
     assert await add_statestream(hass, base_topic="pub")
+
+
+async def test_setup_and_stop_waits_for_ha(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
+    """Test the success of the setup with a valid base_topic."""
+    e_id = "fake.entity"
+
+    # HA still starting up
+    hass.state = CoreState.starting
+
+    assert await add_statestream(hass, base_topic="pub")
+    await hass.async_block_till_done()
+    # Set a state of an entity
+    mock_state_change_event(hass, State(e_id, "on"))
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    # Make sure 'on' was not published to pub/fake/entity/state
+    mqtt_mock.async_publish.assert_not_called()
+
+    # HA finished start up
+    hass.state = CoreState.running
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    # Change a state of an entity
+    mock_state_change_event(hass, State(e_id, "off"))
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    mqtt_mock.async_publish.assert_called_with("pub/fake/entity/state", "off", 1, True)
+    assert mqtt_mock.async_publish.called
+    mqtt_mock.reset_mock()
+
+    # HA is shutting down
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    # Change a state of an entity
+    mock_state_change_event(hass, State(e_id, "on"))
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    # Make sure 'on' was not published to pub/fake/entity/state
+    mqtt_mock.async_publish.assert_not_called()
 
 
 async def test_setup_succeeds_with_attributes(

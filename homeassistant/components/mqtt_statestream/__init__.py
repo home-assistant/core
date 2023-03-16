@@ -1,12 +1,24 @@
 """Publish simple item state changes via MQTT."""
+import asyncio
 import json
 
 import voluptuous as vol
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import valid_publish_topic
-from homeassistant.const import MATCH_ALL
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
+    MATCH_ALL,
+)
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    CoreState,
+    Event,
+    HomeAssistant,
+    State,
+    callback,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
@@ -38,15 +50,23 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the MQTT state feed."""
-    conf = config[DOMAIN]
+    callback_handler: CALLBACK_TYPE
+
+    conf: ConfigType = config[DOMAIN]
     publish_filter = convert_include_exclude_filter(conf)
-    base_topic = conf.get(CONF_BASE_TOPIC)
-    publish_attributes = conf.get(CONF_PUBLISH_ATTRIBUTES)
-    publish_timestamps = conf.get(CONF_PUBLISH_TIMESTAMPS)
+    base_topic: str = conf[CONF_BASE_TOPIC]
+    publish_attributes: bool = conf[CONF_PUBLISH_ATTRIBUTES]
+    publish_timestamps: bool = conf[CONF_PUBLISH_TIMESTAMPS]
+    ha_started = asyncio.Event()
     if not base_topic.endswith("/"):
         base_topic = f"{base_topic}/"
 
-    async def _state_publisher(entity_id, old_state, new_state):
+    async def _state_publisher(
+        entity_id: str, old_state: State | None, new_state: State | None
+    ) -> None:
+        if not ha_started.is_set():
+            return
+
         if new_state is None:
             return
 
@@ -81,5 +101,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 encoded_val = json.dumps(val, cls=JSONEncoder)
                 await mqtt.async_publish(hass, mybase + key, encoded_val, 1, True)
 
-    async_track_state_change(hass, MATCH_ALL, _state_publisher)
+    if hass.state == CoreState.running:
+        ha_started.set()
+    else:
+
+        @callback
+        def _ha_started(_: Event) -> None:
+            ha_started.set()
+
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _ha_started)
+
+    @callback
+    def _ha_stopping(_: Event) -> None:
+        callback_handler()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _ha_stopping)
+
+    callback_handler = async_track_state_change(hass, MATCH_ALL, _state_publisher)
     return True
