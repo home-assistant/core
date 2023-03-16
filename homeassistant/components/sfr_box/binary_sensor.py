@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Generic, TypeVar
 
-from sfrbox_api.models import DslInfo, SystemInfo, WanInfo
+from sfrbox_api.models import DslInfo, FtthInfo, SystemInfo, WanInfo
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -48,6 +48,15 @@ DSL_SENSOR_TYPES: tuple[SFRBoxBinarySensorEntityDescription[DslInfo], ...] = (
         value_fn=lambda x: x.status == "up",
     ),
 )
+FTTH_SENSOR_TYPES: tuple[SFRBoxBinarySensorEntityDescription[FtthInfo], ...] = (
+    SFRBoxBinarySensorEntityDescription[FtthInfo](
+        key="status",
+        name="FTTH status",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda x: x.status == "up",
+    ),
+)
 WAN_SENSOR_TYPES: tuple[SFRBoxBinarySensorEntityDescription[WanInfo], ...] = (
     SFRBoxBinarySensorEntityDescription[WanInfo](
         key="status",
@@ -69,10 +78,15 @@ async def async_setup_entry(
         SFRBoxBinarySensor(data.wan, description, data.system.data)
         for description in WAN_SENSOR_TYPES
     ]
-    if data.system.data.net_infra == "adsl":
+    if (net_infra := data.system.data.net_infra) == "adsl":
         entities.extend(
             SFRBoxBinarySensor(data.dsl, description, data.system.data)
             for description in DSL_SENSOR_TYPES
+        )
+    elif net_infra == "ftth":
+        entities.extend(
+            SFRBoxBinarySensor(data.ftth, description, data.system.data)
+            for description in FTTH_SENSOR_TYPES
         )
 
     async_add_entities(entities)

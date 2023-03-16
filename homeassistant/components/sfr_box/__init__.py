@@ -36,6 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     data = DomainData(
         box=box,
         dsl=SFRDataUpdateCoordinator(hass, box, "dsl", lambda b: b.dsl_get_info()),
+        ftth=SFRDataUpdateCoordinator(hass, box, "ftth", lambda b: b.ftth_get_info()),
         system=SFRDataUpdateCoordinator(
             hass, box, "system", lambda b: b.system_get_info()
         ),
@@ -49,6 +50,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     tasks = [data.wan.async_config_entry_first_refresh()]
     if system_info.net_infra == "adsl":
         tasks.append(data.dsl.async_config_entry_first_refresh())
+    elif system_info.net_infra == "ftth":
+        tasks.append(data.ftth.async_config_entry_first_refresh())
     await asyncio.gather(*tasks)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data
