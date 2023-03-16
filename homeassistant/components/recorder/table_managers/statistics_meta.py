@@ -146,6 +146,7 @@ class StatisticsMetaManager:
             statistic_id,
             new_metadata,
         )
+        # Only update the cache if we are in the recorder thread
         if self.recorder.thread_id == threading.get_ident():
             id_meta = _statistics_meta_to_id_statistics_metadata(meta)
             self._stat_id_to_id_meta[statistic_id] = id_meta
