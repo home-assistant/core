@@ -198,14 +198,28 @@ class RuntimeEntryData:
     @callback
     def async_update_state(self, state: EntityState) -> None:
         """Distribute an update of state information to the target."""
-        subscription_key = (type(state), state.key)
-        self.state[type(state)][state.key] = state
+        key = state.key
+        state_type = type(state)
+        current_state_by_type = self.state[state_type]
+        current_state = current_state_by_type[key]
+        if current_state == state:
+            _LOGGER.debug(
+                "%s: ignoring duplicate update with state_type %s and key %s: %s",
+                self.name,
+                state_type,
+                key,
+                state,
+            )
+            return
         _LOGGER.debug(
-            "%s: dispatching update with key %s: %s",
+            "%s: dispatching update with state_type %s and key %s: %s",
             self.name,
-            subscription_key,
+            state_type,
+            key,
             state,
         )
+        current_state_by_type[key] = state
+        subscription_key = (state_type, key)
         if subscription_key in self.state_subscriptions:
             self.state_subscriptions[subscription_key]()
 
