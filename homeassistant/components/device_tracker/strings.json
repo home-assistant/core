@@ -21,7 +21,7 @@
           "name": "Battery"
         },
         "gps_accuracy": {
-          "name": "GPS Accuracy"
+          "name": "GPS accuracy"
         },
         "latitude": {
           "name": "Latitude"
