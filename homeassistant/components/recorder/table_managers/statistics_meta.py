@@ -161,32 +161,32 @@ class StatisticsMetaManager:
     ) -> int:
         """Update metadata in the database."""
         metadata_id, old_metadata = old_metadata_dict[statistic_id]
-        if (
+        if not (
             old_metadata["has_mean"] != new_metadata["has_mean"]
             or old_metadata["has_sum"] != new_metadata["has_sum"]
             or old_metadata["name"] != new_metadata["name"]
             or old_metadata["unit_of_measurement"]
             != new_metadata["unit_of_measurement"]
         ):
-            session.query(StatisticsMeta).filter_by(statistic_id=statistic_id).update(
-                {
-                    StatisticsMeta.has_mean: new_metadata["has_mean"],
-                    StatisticsMeta.has_sum: new_metadata["has_sum"],
-                    StatisticsMeta.name: new_metadata["name"],
-                    StatisticsMeta.unit_of_measurement: new_metadata[
-                        "unit_of_measurement"
-                    ],
-                },
-                synchronize_session=False,
-            )
-            self._stat_id_to_id_meta.pop(statistic_id, None)
-            _LOGGER.debug(
-                "Updated statistics metadata for %s, old_metadata: %s, new_metadata: %s",
-                statistic_id,
-                old_metadata,
-                new_metadata,
-            )
+            return metadata_id
 
+        session.query(StatisticsMeta).filter_by(statistic_id=statistic_id).update(
+            {
+                StatisticsMeta.has_mean: new_metadata["has_mean"],
+                StatisticsMeta.has_sum: new_metadata["has_sum"],
+                StatisticsMeta.name: new_metadata["name"],
+                StatisticsMeta.unit_of_measurement: new_metadata["unit_of_measurement"],
+            },
+            synchronize_session=False,
+        )
+        self._clear_cache([statistic_id])
+        self.get(session, statistic_id)
+        _LOGGER.debug(
+            "Updated statistics metadata for %s, old_metadata: %s, new_metadata: %s",
+            statistic_id,
+            old_metadata,
+            new_metadata,
+        )
         return metadata_id
 
     def load(self, session: Session) -> None:
