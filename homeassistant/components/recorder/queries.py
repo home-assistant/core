@@ -74,17 +74,6 @@ def find_states_metadata_ids(entity_ids: Iterable[str]) -> StatementLambdaElemen
     )
 
 
-def find_shared_attributes_id(
-    data_hash: int, shared_attrs: str
-) -> StatementLambdaElement:
-    """Find an attributes_id by hash and shared_attrs."""
-    return lambda_stmt(
-        lambda: select(StateAttributes.attributes_id)
-        .filter(StateAttributes.hash == data_hash)
-        .filter(StateAttributes.shared_attrs == shared_attrs)
-    )
-
-
 def _state_attrs_exist(attr: int | None) -> Select:
     """Check if a state attributes id exists in the states table."""
     # https://github.com/sqlalchemy/sqlalchemy/issues/9189
