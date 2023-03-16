@@ -395,10 +395,6 @@ def _compile_statistics(  # noqa: C901
 
     sensor_states = _get_sensor_states(hass)
     wanted_statistics = _wanted_statistics(sensor_states)
-    old_metadatas = statistics.get_metadata_with_session(
-        get_instance(hass), session, statistic_ids=[i.entity_id for i in sensor_states]
-    )
-
     # Get history between start and end
     entities_full_history = [
         i.entity_id for i in sensor_states if "sum" in wanted_statistics[i.entity_id]
@@ -432,6 +428,14 @@ def _compile_statistics(  # noqa: C901
     for _state in sensor_states:
         if _state.entity_id not in history_list:
             history_list[_state.entity_id] = [_state]
+
+    # Only lookup metadata for entities that have history
+    # since it will result in cache misses for statistic_ids
+    # that are not in the metadata table and we are not working
+    # with them anyway.
+    old_metadatas = statistics.get_metadata_with_session(
+        get_instance(hass), session, statistic_ids=list(history_list)
+    )
 
     to_process = []
     to_query = []
