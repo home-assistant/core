@@ -581,7 +581,8 @@ async def test_setup_hass_invalid_yaml(
     assert "safe_mode" in hass.config.components
     assert len(mock_mount_local_lib_path.mock_calls) == 0
 
-    # Avoid lingering timer: `async_startup_repairs` triggers after 1 hour
+    # Avoid lingering timer
+    # `cloud.async_setup.async_startup_repairs` triggers after 1 hour
     async_fire_time_changed(hass, dt.utcnow() + timedelta(hours=1))
     await hass.async_block_till_done()
 
@@ -645,7 +646,8 @@ async def test_setup_hass_safe_mode(
     assert "browser" not in hass.config.components
     assert len(browser_setup.mock_calls) == 0
 
-    # Avoid lingering timer: `async_startup_repairs` triggers after 1 hour
+    # Avoid lingering timer
+    # `cloud.async_setup.async_startup_repairs` triggers after 1 hour
     async_fire_time_changed(hass, dt.utcnow() + timedelta(hours=1))
     await hass.async_block_till_done()
 
@@ -675,7 +677,8 @@ async def test_setup_hass_invalid_core_config(
 
     assert "safe_mode" in hass.config.components
 
-    # Avoid lingering timer: `async_startup_repairs` triggers after 1 hour
+    # Avoid lingering timer
+    # `cloud.async_setup.async_startup_repairs` triggers after 1 hour
     async_fire_time_changed(hass, dt.utcnow() + timedelta(hours=1))
     await hass.async_block_till_done()
 
@@ -726,7 +729,8 @@ async def test_setup_safe_mode_if_no_frontend(
     assert hass.config.internal_url == "http://192.168.1.100:8123"
     assert hass.config.external_url == "https://abcdef.ui.nabu.casa"
 
-    # Avoid lingering timer: `async_startup_repairs` triggers after 1 hour
+    # Avoid lingering timer
+    # `cloud.async_setup.async_startup_repairs` triggers after 1 hour
     async_fire_time_changed(hass, dt.utcnow() + timedelta(hours=1))
     await hass.async_block_till_done()
 
