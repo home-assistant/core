@@ -249,12 +249,33 @@ class DenonDevice(MediaPlayerEntity):
 
         self._telnet_was_healthy: bool | None = None
 
-    async def _telnet_callback(self, zone, event, parameter):
+        self._properties = [
+            k for k, v in self.__class__.__dict__.items() if isinstance(v, property)
+        ]
+        self._property_hash = hash(0)
+
+    async def _telnet_callback(self, zone, event, parameter) -> None:
         """Process a telnet command callback."""
+        # There are multiple checks implemented which reduce unnecessary updates of the ha state machine
         if zone != self._receiver.zone:
             return
-
-        self.async_write_ha_state()
+        # Some updates trigger multiple events like one for artist and one for title for one change
+        # We skip every event except the last one
+        if event == "NS" and not parameter.startswith("E4"):
+            return
+        if event == "TA" and not parameter.startwith("ANNAME"):
+            return
+        if event == "HD" and not parameter.startswith("ALBUM"):
+            return
+        # Some event types fire more events than there are changes.
+        # Thus, we check if there are changes before calling self.async_write_ha_state.
+        property_values = ""
+        for prop in self._properties:
+            property_values += str(getattr(self, prop, ""))
+        property_hash = hash(property_values)
+        if property_hash != self._property_hash:
+            self._property_hash = property_hash
+            self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Register for telnet events."""
@@ -276,7 +297,6 @@ class DenonDevice(MediaPlayerEntity):
         if (
             telnet_is_healthy := receiver.telnet_connected and receiver.telnet_healthy
         ) and self._telnet_was_healthy:
-            await receiver.input.async_update_media_state()
             return
 
         # if async_update raises an exception, we don't want to skip the next update
