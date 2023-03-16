@@ -86,6 +86,7 @@ from .table_managers.event_types import EventTypeManager
 from .table_managers.state_attributes import StateAttributesManager
 from .table_managers.states import StatesManager
 from .table_managers.states_meta import StatesMetaManager
+from .table_managers.statistics_meta import StatisticsMetaManager
 from .tasks import (
     AdjustLRUSizeTask,
     AdjustStatisticsTask,
@@ -172,6 +173,7 @@ class Recorder(threading.Thread):
         threading.Thread.__init__(self, name="Recorder")
 
         self.hass = hass
+        self.thread_id: int | None = None
         self.auto_purge = auto_purge
         self.auto_repack = auto_repack
         self.keep_days = keep_days
@@ -208,6 +210,7 @@ class Recorder(threading.Thread):
         self.state_attributes_manager = StateAttributesManager(
             self, exclude_attributes_by_domain
         )
+        self.statistics_meta_manager = StatisticsMetaManager(self)
         self.event_session: Session | None = None
         self._get_session: Callable[[], Session] | None = None
         self._completed_first_database_setup: bool | None = None
@@ -613,6 +616,7 @@ class Recorder(threading.Thread):
 
     def run(self) -> None:
         """Start processing events to save."""
+        self.thread_id = threading.get_ident()
         setup_result = self._setup_recorder()
 
         if not setup_result:
@@ -758,10 +762,12 @@ class Recorder(threading.Thread):
                     non_state_change_events.append(event_)
 
         assert self.event_session is not None
-        self.event_data_manager.load(non_state_change_events, self.event_session)
-        self.event_type_manager.load(non_state_change_events, self.event_session)
-        self.states_meta_manager.load(state_change_events, self.event_session)
-        self.state_attributes_manager.load(state_change_events, self.event_session)
+        session = self.event_session
+        self.event_data_manager.load(non_state_change_events, session)
+        self.event_type_manager.load(non_state_change_events, session)
+        self.states_meta_manager.load(state_change_events, session)
+        self.state_attributes_manager.load(state_change_events, session)
+        self.statistics_meta_manager.load(session)
 
     def _guarded_process_one_task_or_recover(self, task: RecorderTask) -> None:
         """Process a task, guarding against exceptions to ensure the loop does not collapse."""
@@ -1077,6 +1083,7 @@ class Recorder(threading.Thread):
         self.event_data_manager.reset()
         self.event_type_manager.reset()
         self.states_meta_manager.reset()
+        self.statistics_meta_manager.reset()
 
         if not self.event_session:
             return

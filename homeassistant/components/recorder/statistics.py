@@ -21,7 +21,7 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import OperationalError, SQLAlchemyError, StatementError
 from sqlalchemy.orm.session import Session
-from sqlalchemy.sql.expression import literal_column, true
+from sqlalchemy.sql.expression import literal_column
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 import voluptuous as vol
 
@@ -130,16 +130,6 @@ QUERY_STATISTICS_SUMMARY_SUM = (
         order_by=StatisticsShortTerm.start_ts.desc(),
     )
     .label("rownum"),
-)
-
-QUERY_STATISTIC_META = (
-    StatisticsMeta.id,
-    StatisticsMeta.statistic_id,
-    StatisticsMeta.source,
-    StatisticsMeta.unit_of_measurement,
-    StatisticsMeta.has_mean,
-    StatisticsMeta.has_sum,
-    StatisticsMeta.name,
 )
 
 
@@ -371,56 +361,6 @@ def get_start_time() -> datetime:
     current_period = now.replace(minute=current_period_minutes, second=0, microsecond=0)
     last_period = current_period - timedelta(minutes=5)
     return last_period
-
-
-def _update_or_add_metadata(
-    session: Session,
-    new_metadata: StatisticMetaData,
-    old_metadata_dict: dict[str, tuple[int, StatisticMetaData]],
-) -> int:
-    """Get metadata_id for a statistic_id.
-
-    If the statistic_id is previously unknown, add it. If it's already known, update
-    metadata if needed.
-
-    Updating metadata source is not possible.
-    """
-    statistic_id = new_metadata["statistic_id"]
-    if statistic_id not in old_metadata_dict:
-        meta = StatisticsMeta.from_meta(new_metadata)
-        session.add(meta)
-        session.flush()  # Flush to get the metadata id assigned
-        _LOGGER.debug(
-            "Added new statistics metadata for %s, new_metadata: %s",
-            statistic_id,
-            new_metadata,
-        )
-        return meta.id
-
-    metadata_id, old_metadata = old_metadata_dict[statistic_id]
-    if (
-        old_metadata["has_mean"] != new_metadata["has_mean"]
-        or old_metadata["has_sum"] != new_metadata["has_sum"]
-        or old_metadata["name"] != new_metadata["name"]
-        or old_metadata["unit_of_measurement"] != new_metadata["unit_of_measurement"]
-    ):
-        session.query(StatisticsMeta).filter_by(statistic_id=statistic_id).update(
-            {
-                StatisticsMeta.has_mean: new_metadata["has_mean"],
-                StatisticsMeta.has_sum: new_metadata["has_sum"],
-                StatisticsMeta.name: new_metadata["name"],
-                StatisticsMeta.unit_of_measurement: new_metadata["unit_of_measurement"],
-            },
-            synchronize_session=False,
-        )
-        _LOGGER.debug(
-            "Updated statistics metadata for %s, old_metadata: %s, new_metadata: %s",
-            statistic_id,
-            old_metadata,
-            new_metadata,
-        )
-
-    return metadata_id
 
 
 def _find_duplicates(
@@ -750,6 +690,7 @@ def compile_statistics(instance: Recorder, start: datetime, fire_events: bool) -
     """
     start = dt_util.as_utc(start)
     end = start + timedelta(minutes=5)
+    statistics_meta_manager = instance.statistics_meta_manager
 
     # Return if we already have 5-minute statistics for the requested period
     with session_scope(
@@ -782,7 +723,7 @@ def compile_statistics(instance: Recorder, start: datetime, fire_events: bool) -
 
         # Insert collected statistics in the database
         for stats in platform_stats:
-            metadata_id = _update_or_add_metadata(
+            metadata_id = statistics_meta_manager.update_or_add(
                 session, stats["meta"], current_metadata
             )
             _insert_statistics(
@@ -877,92 +818,10 @@ def _update_statistics(
         )
 
 
-def _generate_get_metadata_stmt(
-    statistic_ids: list[str] | None = None,
-    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
-    statistic_source: str | None = None,
-) -> StatementLambdaElement:
-    """Generate a statement to fetch metadata."""
-    stmt = lambda_stmt(lambda: select(*QUERY_STATISTIC_META))
-    if statistic_ids:
-        stmt += lambda q: q.where(
-            # https://github.com/python/mypy/issues/2608
-            StatisticsMeta.statistic_id.in_(statistic_ids)  # type:ignore[arg-type]
-        )
-    if statistic_source is not None:
-        stmt += lambda q: q.where(StatisticsMeta.source == statistic_source)
-    if statistic_type == "mean":
-        stmt += lambda q: q.where(StatisticsMeta.has_mean == true())
-    elif statistic_type == "sum":
-        stmt += lambda q: q.where(StatisticsMeta.has_sum == true())
-    return stmt
-
-
-def get_metadata_with_session(
-    session: Session,
-    *,
-    statistic_ids: list[str] | None = None,
-    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
-    statistic_source: str | None = None,
-) -> dict[str, tuple[int, StatisticMetaData]]:
-    """Fetch meta data.
-
-    Returns a dict of (metadata_id, StatisticMetaData) tuples indexed by statistic_id.
-
-    If statistic_ids is given, fetch metadata only for the listed statistics_ids.
-    If statistic_type is given, fetch metadata only for statistic_ids supporting it.
-    """
-
-    # Fetch metatadata from the database
-    stmt = _generate_get_metadata_stmt(statistic_ids, statistic_type, statistic_source)
-    result = execute_stmt_lambda_element(session, stmt)
-    if not result:
-        return {}
-
-    return {
-        meta.statistic_id: (
-            meta.id,
-            {
-                "has_mean": meta.has_mean,
-                "has_sum": meta.has_sum,
-                "name": meta.name,
-                "source": meta.source,
-                "statistic_id": meta.statistic_id,
-                "unit_of_measurement": meta.unit_of_measurement,
-            },
-        )
-        for meta in result
-    }
-
-
-def get_metadata(
-    hass: HomeAssistant,
-    *,
-    statistic_ids: list[str] | None = None,
-    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
-    statistic_source: str | None = None,
-) -> dict[str, tuple[int, StatisticMetaData]]:
-    """Return metadata for statistic_ids."""
-    with session_scope(hass=hass, read_only=True) as session:
-        return get_metadata_with_session(
-            session,
-            statistic_ids=statistic_ids,
-            statistic_type=statistic_type,
-            statistic_source=statistic_source,
-        )
-
-
-def _clear_statistics_with_session(session: Session, statistic_ids: list[str]) -> None:
-    """Clear statistics for a list of statistic_ids."""
-    session.query(StatisticsMeta).filter(
-        StatisticsMeta.statistic_id.in_(statistic_ids)
-    ).delete(synchronize_session=False)
-
-
 def clear_statistics(instance: Recorder, statistic_ids: list[str]) -> None:
     """Clear statistics for a list of statistic_ids."""
     with session_scope(session=instance.get_session()) as session:
-        _clear_statistics_with_session(session, statistic_ids)
+        instance.statistics_meta_manager.delete(session, statistic_ids)
 
 
 def update_statistics_metadata(
@@ -972,11 +831,13 @@ def update_statistics_metadata(
     new_unit_of_measurement: str | None | UndefinedType,
 ) -> None:
     """Update statistics metadata for a statistic_id."""
+    statistics_meta_manager = instance.statistics_meta_manager
     if new_unit_of_measurement is not UNDEFINED:
         with session_scope(session=instance.get_session()) as session:
             session.query(StatisticsMeta).filter(
                 StatisticsMeta.statistic_id == statistic_id
             ).update({StatisticsMeta.unit_of_measurement: new_unit_of_measurement})
+            statistics_meta_manager.clear_cache([statistic_id])
     if new_statistic_id is not UNDEFINED:
         with session_scope(
             session=instance.get_session(),
@@ -986,6 +847,9 @@ def update_statistics_metadata(
                 (StatisticsMeta.statistic_id == statistic_id)
                 & (StatisticsMeta.source == DOMAIN)
             ).update({StatisticsMeta.statistic_id: new_statistic_id})
+            statistics_meta_manager.clear_cache([statistic_id])
+            if new_statistic_id:
+                statistics_meta_manager.clear_cache([new_statistic_id])
 
 
 def list_statistic_ids(
@@ -1004,7 +868,7 @@ def list_statistic_ids(
 
     # Query the database
     with session_scope(hass=hass, read_only=True) as session:
-        metadata = get_metadata_with_session(
+        metadata = get_instance(hass).statistics_meta_manager.get_many(
             session, statistic_type=statistic_type, statistic_ids=statistic_ids
         )
 
@@ -1609,11 +1473,13 @@ def statistic_during_period(
     with session_scope(hass=hass, read_only=True) as session:
         # Fetch metadata for the given statistic_id
         if not (
-            metadata := get_metadata_with_session(session, statistic_ids=[statistic_id])
+            metadata := get_instance(hass).statistics_meta_manager.get(
+                session, statistic_id
+            )
         ):
             return result
 
-        metadata_id = metadata[statistic_id][0]
+        metadata_id = metadata[0]
 
         oldest_stat = _first_statistic(session, Statistics, metadata_id)
         oldest_5_min_stat = None
@@ -1724,7 +1590,7 @@ def statistic_during_period(
             else:
                 result["change"] = None
 
-    state_unit = unit = metadata[statistic_id][1]["unit_of_measurement"]
+    state_unit = unit = metadata[1]["unit_of_measurement"]
     if state := hass.states.get(statistic_id):
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
     convert = _get_statistic_to_display_unit_converter(unit, state_unit, units)
@@ -1749,7 +1615,9 @@ def _statistics_during_period_with_session(
     """
     metadata = None
     # Fetch metadata for the given (or all) statistic_ids
-    metadata = get_metadata_with_session(session, statistic_ids=statistic_ids)
+    metadata = get_instance(hass).statistics_meta_manager.get_many(
+        session, statistic_ids=statistic_ids
+    )
     if not metadata:
         return {}
 
@@ -1885,7 +1753,9 @@ def _get_last_statistics(
     statistic_ids = [statistic_id]
     with session_scope(hass=hass, read_only=True) as session:
         # Fetch metadata for the given statistic_id
-        metadata = get_metadata_with_session(session, statistic_ids=statistic_ids)
+        metadata = get_instance(hass).statistics_meta_manager.get_many(
+            session, statistic_ids=statistic_ids
+        )
         if not metadata:
             return {}
         metadata_id = metadata[statistic_id][0]
@@ -1973,7 +1843,9 @@ def get_latest_short_term_statistics(
     with session_scope(hass=hass, read_only=True) as session:
         # Fetch metadata for the given statistic_ids
         if not metadata:
-            metadata = get_metadata_with_session(session, statistic_ids=statistic_ids)
+            metadata = get_instance(hass).statistics_meta_manager.get_many(
+                session, statistic_ids=statistic_ids
+            )
         if not metadata:
             return {}
         metadata_ids = [
@@ -2318,16 +2190,20 @@ def _filter_unique_constraint_integrity_error(
 
 
 def _import_statistics_with_session(
+    instance: Recorder,
     session: Session,
     metadata: StatisticMetaData,
     statistics: Iterable[StatisticData],
     table: type[StatisticsBase],
 ) -> bool:
     """Import statistics to the database."""
-    old_metadata_dict = get_metadata_with_session(
+    statistics_meta_manager = instance.statistics_meta_manager
+    old_metadata_dict = statistics_meta_manager.get_many(
         session, statistic_ids=[metadata["statistic_id"]]
     )
-    metadata_id = _update_or_add_metadata(session, metadata, old_metadata_dict)
+    metadata_id = statistics_meta_manager.update_or_add(
+        session, metadata, old_metadata_dict
+    )
     for stat in statistics:
         if stat_id := _statistics_exists(session, table, metadata_id, stat["start"]):
             _update_statistics(session, table, stat_id, stat)
@@ -2350,7 +2226,9 @@ def import_statistics(
         session=instance.get_session(),
         exception_filter=_filter_unique_constraint_integrity_error(instance),
     ) as session:
-        return _import_statistics_with_session(session, metadata, statistics, table)
+        return _import_statistics_with_session(
+            instance, session, metadata, statistics, table
+        )
 
 
 @retryable_database_job("adjust_statistics")
@@ -2364,7 +2242,9 @@ def adjust_statistics(
     """Process an add_statistics job."""
 
     with session_scope(session=instance.get_session()) as session:
-        metadata = get_metadata_with_session(session, statistic_ids=[statistic_id])
+        metadata = instance.statistics_meta_manager.get_many(
+            session, statistic_ids=[statistic_id]
+        )
         if statistic_id not in metadata:
             return True
 
@@ -2423,10 +2303,9 @@ def change_statistics_unit(
     old_unit: str,
 ) -> None:
     """Change statistics unit for a statistic_id."""
+    statistics_meta_manager = instance.statistics_meta_manager
     with session_scope(session=instance.get_session()) as session:
-        metadata = get_metadata_with_session(session, statistic_ids=[statistic_id]).get(
-            statistic_id
-        )
+        metadata = statistics_meta_manager.get(session, statistic_id)
 
         # Guard against the statistics being removed or updated before the
         # change_statistics_unit job executes
@@ -2450,6 +2329,7 @@ def change_statistics_unit(
         session.query(StatisticsMeta).filter(
             StatisticsMeta.statistic_id == statistic_id
         ).update({StatisticsMeta.unit_of_measurement: new_unit})
+        statistics_meta_manager.clear_cache([statistic_id])
 
 
 @callback
@@ -2495,16 +2375,19 @@ def _validate_db_schema_utf8(
         "statistic_id": statistic_id,
         "unit_of_measurement": None,
     }
+    statistics_meta_manager = instance.statistics_meta_manager
 
     # Try inserting some metadata which needs utfmb4 support
     try:
         with session_scope(session=session_maker()) as session:
-            old_metadata_dict = get_metadata_with_session(
+            old_metadata_dict = statistics_meta_manager.get_many(
                 session, statistic_ids=[statistic_id]
             )
             try:
-                _update_or_add_metadata(session, metadata, old_metadata_dict)
-                _clear_statistics_with_session(session, statistic_ids=[statistic_id])
+                statistics_meta_manager.update_or_add(
+                    session, metadata, old_metadata_dict
+                )
+                statistics_meta_manager.delete(session, statistic_ids=[statistic_id])
             except OperationalError as err:
                 if err.orig and err.orig.args[0] == 1366:
                     _LOGGER.debug(
@@ -2524,6 +2407,7 @@ def _validate_db_schema(
 ) -> set[str]:
     """Do some basic checks for common schema errors caused by manual migration."""
     schema_errors: set[str] = set()
+    statistics_meta_manager = instance.statistics_meta_manager
 
     # Wrong precision is only an issue for MySQL / MariaDB / PostgreSQL
     if instance.dialect_name not in (
@@ -2586,7 +2470,9 @@ def _validate_db_schema(
     try:
         with session_scope(session=session_maker()) as session:
             for table in tables:
-                _import_statistics_with_session(session, metadata, (statistics,), table)
+                _import_statistics_with_session(
+                    instance, session, metadata, (statistics,), table
+                )
                 stored_statistics = _statistics_during_period_with_session(
                     hass,
                     session,
@@ -2625,7 +2511,7 @@ def _validate_db_schema(
                     table.__tablename__,
                     "µs precision",
                 )
-            _clear_statistics_with_session(session, statistic_ids=[statistic_id])
+            statistics_meta_manager.delete(session, statistic_ids=[statistic_id])
     except Exception as exc:  # pylint: disable=broad-except
         _LOGGER.exception("Error when validating DB schema: %s", exc)
 
