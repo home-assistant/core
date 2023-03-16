@@ -732,6 +732,7 @@ def _sorted_states_to_dict(
             )
 
         state_idx = field_map["state"]
+        last_updated_ts_idx = field_map["last_updated_ts"]
 
         #
         # minimal_response only makes sense with last_updated == last_updated
@@ -740,7 +741,6 @@ def _sorted_states_to_dict(
         #
         # With minimal response we do not care about attribute
         # changes so we can filter out duplicate states
-        last_updated_ts_idx = field_map["last_updated_ts"]
         if compressed_state_format:
             # Compressed state format uses the timestamp directly
             ent_results.extend(
