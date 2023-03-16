@@ -18,12 +18,7 @@ async def setup_nuki_integration(hass):
     entry = MockConfigEntry(
         domain="nuki",
         unique_id=ID_HEX,
-        data={
-            "host": HOST,
-            "port": 8080,
-            "token": "test-token",
-            "webhook_enabled": False,
-        },
+        data={"host": HOST, "port": 8080, "token": "test-token"},
     )
     entry.add_to_hass(hass)
 
