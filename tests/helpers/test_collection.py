@@ -296,6 +296,7 @@ async def test_attach_entity_component_collection(hass: HomeAssistant) -> None:
 async def test_entity_component_collection_abort(hass: HomeAssistant) -> None:
     """Test aborted entity adding is handled."""
     ent_comp = entity_component.EntityComponent(_LOGGER, "test", hass)
+    await ent_comp.async_setup({})
     coll = MockObservableCollection(_LOGGER)
 
     async_update_config_calls = []
