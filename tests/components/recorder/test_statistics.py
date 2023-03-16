@@ -1521,7 +1521,8 @@ def test_delete_metadata_duplicates_no_duplicates(
     hass = hass_recorder()
     wait_recording_done(hass)
     with session_scope(hass=hass) as session:
-        delete_statistics_meta_duplicates(session)
+        instance = recorder.get_instance(hass)
+        delete_statistics_meta_duplicates(instance, session)
     assert "duplicated statistics_meta rows" not in caplog.text
 
 

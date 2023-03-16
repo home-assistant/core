@@ -145,9 +145,16 @@ def _parse_float(state: str) -> float:
     return fstate
 
 
+def _float_or_none(state: str) -> float | None:
+    """Return a float or None."""
+    try:
+        return _parse_float(state)
+    except (ValueError, TypeError):
+        return None
+
+
 def _normalize_states(
     hass: HomeAssistant,
-    session: Session,
     old_metadatas: dict[str, tuple[int, StatisticMetaData]],
     entity_history: Iterable[State],
     entity_id: str,
@@ -155,14 +162,11 @@ def _normalize_states(
     """Normalize units."""
     old_metadata = old_metadatas[entity_id][1] if entity_id in old_metadatas else None
     state_unit: str | None = None
-
-    fstates: list[tuple[float, State]] = []
-    for state in entity_history:
-        try:
-            fstate = _parse_float(state.state)
-        except (ValueError, TypeError):  # TypeError to guard for NULL state in DB
-            continue
-        fstates.append((fstate, state))
+    fstates: list[tuple[float, State]] = [
+        (fstate, state)
+        for state in entity_history
+        if (fstate := _float_or_none(state.state)) is not None
+    ]
 
     if not fstates:
         return None, fstates
@@ -426,10 +430,13 @@ def _compile_statistics(  # noqa: C901
     # If there are no recent state changes, the sensor's state may already be pruned
     # from the recorder. Get the state from the state machine instead.
     for _state in sensor_states:
-        if _state.entity_id not in history_list:
+        if (
+            _state.entity_id not in history_list
+            and _float_or_none(_state.state) is not None
+        ):
             history_list[_state.entity_id] = [_state]
 
-    # Only lookup metadata for entities that have history
+    # Only lookup metadata for entities that have valid history
     # since it will result in cache misses for statistic_ids
     # that are not in the metadata table and we are not working
     # with them anyway.
@@ -447,7 +454,6 @@ def _compile_statistics(  # noqa: C901
         entity_history = history_list[entity_id]
         statistics_unit, fstates = _normalize_states(
             hass,
-            session,
             old_metadatas,
             entity_history,
             entity_id,
