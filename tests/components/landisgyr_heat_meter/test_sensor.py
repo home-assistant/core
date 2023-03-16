@@ -83,18 +83,18 @@ async def test_create_sensors(
     await hass.services.async_call(
         HA_DOMAIN,
         SERVICE_UPDATE_ENTITY,
-        {ATTR_ENTITY_ID: "sensor.heat_meter_heat_usage"},
+        {ATTR_ENTITY_ID: "sensor.heat_meter_heat_usage_gj"},
         blocking=True,
     )
     await hass.async_block_till_done()
 
     # check if 26 attributes have been created
-    assert len(hass.states.async_all()) == 27
+    assert len(hass.states.async_all()) == 25
 
-    state = hass.states.get("sensor.heat_meter_heat_usage")
+    state = hass.states.get("sensor.heat_meter_heat_usage_gj")
     assert state
-    assert state.state == "34.16669"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.MEGA_WATT_HOUR
+    assert state.state == "123.0"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.GIGA_JOULE
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
 
@@ -132,17 +132,17 @@ async def test_restore_state(mock_heat_meter, hass: HomeAssistant) -> None:
         [
             (
                 State(
-                    "sensor.heat_meter_heat_usage",
+                    "sensor.heat_meter_heat_usage_gj",
                     "34167",
                     attributes={
                         ATTR_LAST_RESET: last_reset,
-                        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.MEGA_WATT_HOUR,
+                        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.GIGA_JOULE,
                         ATTR_STATE_CLASS: SensorStateClass.TOTAL,
                     },
                 ),
                 {
                     "native_value": 34167,
-                    "native_unit_of_measurement": UnitOfEnergy.MEGA_WATT_HOUR,
+                    "native_unit_of_measurement": UnitOfEnergy.GIGA_JOULE,
                     "icon": "mdi:fire",
                     "last_reset": last_reset,
                 },
@@ -194,10 +194,10 @@ async def test_restore_state(mock_heat_meter, hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     # restore from cache
-    state = hass.states.get("sensor.heat_meter_heat_usage")
+    state = hass.states.get("sensor.heat_meter_heat_usage_gj")
     assert state
     assert state.state == "34167"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.MEGA_WATT_HOUR
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.GIGA_JOULE
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
 
     state = hass.states.get("sensor.heat_meter_volume_usage")
@@ -240,21 +240,21 @@ async def test_exception_on_polling(mock_heat_meter, hass: HomeAssistant) -> Non
     await hass.services.async_call(
         HA_DOMAIN,
         SERVICE_UPDATE_ENTITY,
-        {ATTR_ENTITY_ID: "sensor.heat_meter_heat_usage"},
+        {ATTR_ENTITY_ID: "sensor.heat_meter_heat_usage_gj"},
         blocking=True,
     )
     await hass.async_block_till_done()
 
     # check if initial setup succeeded
-    state = hass.states.get("sensor.heat_meter_heat_usage")
+    state = hass.states.get("sensor.heat_meter_heat_usage_gj")
     assert state
-    assert state.state == "34.16669"
+    assert state.state == "123.0"
 
     # Now 'disable' the connection and wait for polling and see if it fails
     mock_heat_meter().read.side_effect = serial.serialutil.SerialException
     async_fire_time_changed(hass, dt_util.utcnow() + POLLING_INTERVAL)
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.heat_meter_heat_usage")
+    state = hass.states.get("sensor.heat_meter_heat_usage_gj")
     assert state.state == STATE_UNAVAILABLE
 
     # Now 'enable' and see if next poll succeeds
@@ -270,6 +270,6 @@ async def test_exception_on_polling(mock_heat_meter, hass: HomeAssistant) -> Non
     mock_heat_meter().read.side_effect = None
     async_fire_time_changed(hass, dt_util.utcnow() + POLLING_INTERVAL)
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.heat_meter_heat_usage")
+    state = hass.states.get("sensor.heat_meter_heat_usage_gj")
     assert state
-    assert state.state == "34.44447"
+    assert state.state == "124.0"
