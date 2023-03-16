@@ -28,6 +28,7 @@
   },
   "entity_component": {
     "_": {
+      "name": "[%key:component::alarm_control_panel::title%]",
       "state": {
         "armed": "Armed",
         "disarmed": "Disarmed",

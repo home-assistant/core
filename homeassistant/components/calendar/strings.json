@@ -2,6 +2,7 @@
   "title": "Calendar",
   "entity_component": {
     "_": {
+      "name": "[%key:component::calendar::title%]",
       "state": {
         "off": "[%key:common::state::off%]",
         "on": "[%key:common::state::on%]"
