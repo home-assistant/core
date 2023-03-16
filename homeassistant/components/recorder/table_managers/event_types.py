@@ -69,7 +69,7 @@ class EventTypeManager(BaseLRUTableManager[EventTypes]):
         with session.no_autoflush:
             for missing_chunk in chunked(missing, SQLITE_MAX_BIND_VARS):
                 for event_type_id, event_type in execute_stmt_lambda_element(
-                    find_event_type_ids(missing_chunk)
+                    session, find_event_type_ids(missing_chunk)
                 ):
                     results[event_type] = self._id_map[event_type] = cast(
                         int, event_type_id

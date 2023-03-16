@@ -99,7 +99,7 @@ class StatesMetaManager(BaseLRUTableManager[StatesMeta]):
         with session.no_autoflush:
             for missing_chunk in chunked(missing, SQLITE_MAX_BIND_VARS):
                 for metadata_id, entity_id in execute_stmt_lambda_element(
-                    find_states_metadata_ids(missing_chunk)
+                    session, find_states_metadata_ids(missing_chunk)
                 ):
                     metadata_id = cast(int, metadata_id)
                     results[entity_id] = metadata_id
