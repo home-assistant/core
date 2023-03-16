@@ -50,28 +50,45 @@ def valid_country(value: Any) -> str:
     return value
 
 
+def valid_province_for_country(value: dict[str, Any]) -> dict[str, Any]:
+    """Validate that, if the given value object has a province, the province is valid for the country."""
+    if CONF_PROVINCE in value:
+        try:
+            # it is safe to get CONF_COUNTRY since we've already checked that it is present
+            # in the first item of the WORKDAY_SCHEMA
+            holidays.country_holidays(value[CONF_COUNTRY], subdiv=value[CONF_PROVINCE])
+        except NotImplementedError as exc:
+            raise vol.Invalid(
+                f"Province {value[CONF_PROVINCE]} is not supported for country {value[CONF_COUNTRY]}."
+            ) from exc
+    return value
+
+
 DATE_VALIDATOR = HolidayBase().__keytransform__
 
 
 WORKDAY_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_COUNTRY): valid_country,
-        vol.Optional(CONF_EXCLUDES, default=DEFAULT_EXCLUDES): vol.All(
-            cv.ensure_list, [vol.In(ALLOWED_DAYS)]
-        ),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_OFFSET, default=DEFAULT_OFFSET): vol.Coerce(int),
-        vol.Optional(CONF_PROVINCE): cv.string,
-        vol.Optional(CONF_WORKDAYS, default=DEFAULT_WORKDAYS): vol.All(
-            cv.ensure_list, [vol.In(ALLOWED_DAYS)]
-        ),
-        vol.Optional(CONF_ADD_HOLIDAYS, default=[]): vol.All(
-            cv.ensure_list, [DATE_VALIDATOR]
-        ),
-        vol.Optional(CONF_REMOVE_HOLIDAYS, default=[]): vol.All(
-            cv.ensure_list, [cv.string]
-        ),
-    }
+    vol.All(
+        {
+            vol.Required(CONF_COUNTRY): valid_country,
+            vol.Optional(CONF_EXCLUDES, default=DEFAULT_EXCLUDES): vol.All(
+                cv.ensure_list, [vol.In(ALLOWED_DAYS)]
+            ),
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_OFFSET, default=DEFAULT_OFFSET): vol.Coerce(int),
+            vol.Optional(CONF_PROVINCE): cv.string,
+            vol.Optional(CONF_WORKDAYS, default=DEFAULT_WORKDAYS): vol.All(
+                cv.ensure_list, [vol.In(ALLOWED_DAYS)]
+            ),
+            vol.Optional(CONF_ADD_HOLIDAYS, default=[]): vol.All(
+                cv.ensure_list, [DATE_VALIDATOR]
+            ),
+            vol.Optional(CONF_REMOVE_HOLIDAYS, default=[]): vol.All(
+                cv.ensure_list, [cv.string]
+            ),
+        }
+    ),
+    valid_province_for_country,
 )
 
 CONFIG_SCHEMA = vol.Schema(

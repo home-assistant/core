@@ -19,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt
 
-from . import valid_country
+from . import valid_country, valid_province_for_country
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,24 +42,27 @@ DEFAULT_OFFSET = 0
 
 
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_COUNTRY): valid_country,
-        vol.Optional(CONF_EXCLUDES, default=DEFAULT_EXCLUDES): vol.All(
-            cv.ensure_list, [vol.In(ALLOWED_DAYS)]
-        ),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_OFFSET, default=DEFAULT_OFFSET): vol.Coerce(int),
-        vol.Optional(CONF_PROVINCE): cv.string,
-        vol.Optional(CONF_WORKDAYS, default=DEFAULT_WORKDAYS): vol.All(
-            cv.ensure_list, [vol.In(ALLOWED_DAYS)]
-        ),
-        vol.Optional(CONF_ADD_HOLIDAYS, default=[]): vol.All(
-            cv.ensure_list, [cv.string]
-        ),
-        vol.Optional(CONF_REMOVE_HOLIDAYS, default=[]): vol.All(
-            cv.ensure_list, [cv.string]
-        ),
-    }
+    vol.All(
+        {
+            vol.Required(CONF_COUNTRY): valid_country,
+            vol.Optional(CONF_EXCLUDES, default=DEFAULT_EXCLUDES): vol.All(
+                cv.ensure_list, [vol.In(ALLOWED_DAYS)]
+            ),
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_OFFSET, default=DEFAULT_OFFSET): vol.Coerce(int),
+            vol.Optional(CONF_PROVINCE): cv.string,
+            vol.Optional(CONF_WORKDAYS, default=DEFAULT_WORKDAYS): vol.All(
+                cv.ensure_list, [vol.In(ALLOWED_DAYS)]
+            ),
+            vol.Optional(CONF_ADD_HOLIDAYS, default=[]): vol.All(
+                cv.ensure_list, [cv.string]
+            ),
+            vol.Optional(CONF_REMOVE_HOLIDAYS, default=[]): vol.All(
+                cv.ensure_list, [cv.string]
+            ),
+        },
+        valid_province_for_country,
+    )
 )
 
 
