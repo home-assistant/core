@@ -1309,6 +1309,8 @@ build.json @home-assistant/supervisor
 /tests/components/vizio/ @raman325
 /homeassistant/components/vlc_telnet/ @rodripf @MartinHjelmare
 /tests/components/vlc_telnet/ @rodripf @MartinHjelmare
+/homeassistant/components/voice_assistant/ @balloob @synesthesiam
+/tests/components/voice_assistant/ @balloob @synesthesiam
 /homeassistant/components/volumio/ @OnFreund
 /tests/components/volumio/ @OnFreund
 /homeassistant/components/volvooncall/ @molobrakos

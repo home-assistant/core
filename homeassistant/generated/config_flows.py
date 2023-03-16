@@ -478,6 +478,7 @@ FLOWS = {
         "vilfo",
         "vizio",
         "vlc_telnet",
+        "voice_assistant",
         "volumio",
         "volvooncall",
         "vulcan",
