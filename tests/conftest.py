@@ -299,6 +299,10 @@ def expected_lingering_timers() -> bool:
 
     This should be removed when all lingering timers have been cleaned up.
     """
+    current_test = os.getenv("PYTEST_CURRENT_TEST")
+    if current_test and current_test.startswith("tests/components"):
+        # As a starting point, we ignore components
+        return True
     return False
 
 
@@ -335,8 +339,7 @@ def verify_cleanup(
 
     for handle in event_loop._scheduled:  # type: ignore[attr-defined]
         if not handle.cancelled():
-            current_test = os.getenv("PYTEST_CURRENT_TEST")
-            if expected_lingering_timers or current_test.startswith("tests/components"):
+            if expected_lingering_timers:
                 _LOGGER.warning("Lingering timer after test %r", handle)
             else:
                 pytest.fail(f"Lingering timer after test {repr(handle)}")
