@@ -4,12 +4,11 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, cast
 
-from lru import LRU  # pylint: disable=no-name-in-module
 from sqlalchemy.orm.session import Session
 
 from homeassistant.core import Event
 
-from . import BaseTableManager
+from . import BaseLRUTableManager
 from ..const import SQLITE_MAX_BIND_VARS
 from ..db_schema import StatesMeta
 from ..queries import find_all_states_metadata_ids, find_states_metadata_ids
@@ -21,15 +20,13 @@ if TYPE_CHECKING:
 CACHE_SIZE = 8192
 
 
-class StatesMetaManager(BaseTableManager):
+class StatesMetaManager(BaseLRUTableManager[StatesMeta]):
     """Manage the StatesMeta table."""
 
     def __init__(self, recorder: Recorder) -> None:
         """Initialize the states meta manager."""
-        self._id_map: dict[str, int] = LRU(CACHE_SIZE)
-        self._pending: dict[str, StatesMeta] = {}
         self._did_first_load = False
-        super().__init__(recorder)
+        super().__init__(recorder, CACHE_SIZE)
 
     def load(self, events: list[Event], session: Session) -> None:
         """Load the entity_id to metadata_id mapping into memory.
@@ -112,14 +109,6 @@ class StatesMetaManager(BaseTableManager):
 
         return results
 
-    def get_pending(self, entity_id: str) -> StatesMeta | None:
-        """Get pending StatesMeta that have not be assigned ids yet.
-
-        This call is not thread-safe and must be called from the
-        recorder thread.
-        """
-        return self._pending.get(entity_id)
-
     def add_pending(self, db_states_meta: StatesMeta) -> None:
         """Add a pending StatesMeta that will be committed at the next interval.
 
@@ -138,15 +127,6 @@ class StatesMetaManager(BaseTableManager):
         """
         for entity_id, db_states_meta in self._pending.items():
             self._id_map[entity_id] = db_states_meta.metadata_id
-        self._pending.clear()
-
-    def reset(self) -> None:
-        """Reset the states meta manager after the database has been reset or changed.
-
-        This call is not thread-safe and must be called from the
-        recorder thread.
-        """
-        self._id_map.clear()
         self._pending.clear()
 
     def evict_purged(self, entity_ids: Iterable[str]) -> None:

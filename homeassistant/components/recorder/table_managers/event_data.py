@@ -5,13 +5,12 @@ from collections.abc import Iterable
 import logging
 from typing import TYPE_CHECKING, cast
 
-from lru import LRU  # pylint: disable=no-name-in-module
 from sqlalchemy.orm.session import Session
 
 from homeassistant.core import Event
 from homeassistant.util.json import JSON_ENCODE_EXCEPTIONS
 
-from . import BaseTableManager
+from . import BaseLRUTableManager
 from ..const import SQLITE_MAX_BIND_VARS
 from ..db_schema import EventData
 from ..queries import get_shared_event_datas
@@ -26,14 +25,12 @@ CACHE_SIZE = 2048
 _LOGGER = logging.getLogger(__name__)
 
 
-class EventDataManager(BaseTableManager):
+class EventDataManager(BaseLRUTableManager[EventData]):
     """Manage the EventData table."""
 
     def __init__(self, recorder: Recorder) -> None:
         """Initialize the event type manager."""
-        self._id_map: dict[str, int] = LRU(CACHE_SIZE)
-        self._pending: dict[str, EventData] = {}
-        super().__init__(recorder)
+        super().__init__(recorder, CACHE_SIZE)
         self.active = True  # always active
 
     def serialize_from_event(self, event: Event) -> bytes | None:
@@ -66,14 +63,6 @@ class EventDataManager(BaseTableManager):
         recorder thread.
         """
         return self.get_many(((shared_data, data_hash),), session)[shared_data]
-
-    def get_from_cache(self, shared_data: str) -> int | None:
-        """Resolve shared_data to the data_id without accessing the underlying database.
-
-        This call is not thread-safe and must be called from the
-        recorder thread.
-        """
-        return self._id_map.get(shared_data)
 
     def get_many(
         self, shared_data_data_hashs: Iterable[tuple[str, int]], session: Session
@@ -116,14 +105,6 @@ class EventDataManager(BaseTableManager):
 
         return results
 
-    def get_pending(self, shared_data: str) -> EventData | None:
-        """Get pending EventData that have not be assigned ids yet.
-
-        This call is not thread-safe and must be called from the
-        recorder thread.
-        """
-        return self._pending.get(shared_data)
-
     def add_pending(self, db_event_data: EventData) -> None:
         """Add a pending EventData that will be committed at the next interval.
 
@@ -142,15 +123,6 @@ class EventDataManager(BaseTableManager):
         """
         for shared_data, db_event_data in self._pending.items():
             self._id_map[shared_data] = db_event_data.data_id
-        self._pending.clear()
-
-    def reset(self) -> None:
-        """Reset the event manager after the database has been reset or changed.
-
-        This call is not thread-safe and must be called from the
-        recorder thread.
-        """
-        self._id_map.clear()
         self._pending.clear()
 
     def evict_purged(self, data_ids: set[int]) -> None:
