@@ -440,7 +440,7 @@ def _compile_statistics(  # noqa: C901
             continue
         entities_with_float_states[entity_id] = float_states
 
-    # Only lookup metadata for entities that have valid fstates
+    # Only lookup metadata for entities that have valid float states
     # since it will result in cache misses for statistic_ids
     # that are not in the metadata table and we are not working
     # with them anyway.
