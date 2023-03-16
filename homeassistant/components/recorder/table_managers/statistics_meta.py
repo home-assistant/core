@@ -108,17 +108,17 @@ class StatisticsMetaManager:
         for statistic_id in statistic_ids:
             self._stat_id_to_id_meta.pop(statistic_id, None)
 
-    def _process_into_results(
+    def _get_from_database(
         self,
-        results: dict[str, tuple[int, StatisticMetaData]],
         session: Session,
         statistic_ids: list[str] | None = None,
         statistic_type: Literal["mean"] | Literal["sum"] | None = None,
         statistic_source: str | None = None,
-    ) -> None:
+    ) -> dict[str, tuple[int, StatisticMetaData]]:
         """Fetch meta data and process it into results and/or cache."""
         # Only update the cache if we are in the recorder thread
         update_cache = self.recorder.thread_id == threading.get_ident()
+        results: dict[str, tuple[int, StatisticMetaData]] = {}
         with session.no_autoflush:
             stat_id_to_id_meta = self._stat_id_to_id_meta
             for row in execute_stmt_lambda_element(
@@ -133,6 +133,7 @@ class StatisticsMetaManager:
                 results[statistic_id] = id_meta
                 if update_cache:
                     stat_id_to_id_meta[statistic_id] = id_meta
+        return results
 
     def _add_metadata(
         self, session: Session, statistic_id: str, new_metadata: StatisticMetaData
@@ -224,41 +225,35 @@ class StatisticsMetaManager:
         from_recorder to True to ensure any missing entity_ids
         are added to the cache.
         """
-        results: dict[str, tuple[int, StatisticMetaData]] = {}
-
         if statistic_ids is None:
             # Fetch metadata from the database
-            self._process_into_results(
-                results,
+            return self._get_from_database(
                 session,
-                statistic_ids,
-                statistic_type,
-                statistic_source,
+                statistic_type=statistic_type,
+                statistic_source=statistic_source,
             )
-            return results
 
-        missing: list[str] = []
-        _filter = _generate_filter(statistic_type, statistic_source)
+        if statistic_type is not None or statistic_source is not None:
+            raise ValueError(
+                "Providing statistic_type and statistic_source is mutually exclusive of statistic_ids"
+            )
+
+        results: dict[str, tuple[int, StatisticMetaData]] = {}
+        missing_statistic_id: list[str] = []
+
         for statistic_id in statistic_ids:
-            id_meta = self._stat_id_to_id_meta.get(statistic_id)
-            if id_meta is None:
-                missing.append(statistic_id)
-            elif _filter(id_meta):
+            if id_meta := self._stat_id_to_id_meta.get(statistic_id):
                 results[statistic_id] = id_meta
+            else:
+                missing_statistic_id.append(statistic_id)
 
-        if not missing:
+        if not missing_statistic_id:
             return results
 
         # Fetch metadata from the database
-        self._process_into_results(
-            results,
-            session,
-            missing,
-            statistic_type,
-            statistic_source,
+        return results | self._get_from_database(
+            session, statistic_ids=missing_statistic_id
         )
-
-        return results
 
     def update_or_add(
         self,
