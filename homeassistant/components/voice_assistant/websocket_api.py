@@ -44,7 +44,7 @@ async def websocket_run(
 
     async for event in pipeline.run(
         hass,
-        connection.context,
+        connection.context(msg),
         request=PipelineRequest(
             stt_audio=None,
             stt_metadata=None,

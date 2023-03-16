@@ -20,7 +20,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             name=DEFAULT_PIPELINE,
             language=hass.config.language,
             stt_engine="cloud",
-            agent_id="homeassistant",
+            agent_id=None,
             tts_engine="cloud",
         )
     }

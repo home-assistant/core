@@ -56,9 +56,9 @@ class Pipeline:
 
     name: str
     language: str
-    stt_engine: str
-    agent_id: str
-    tts_engine: str
+    stt_engine: str | None
+    agent_id: str | None
+    tts_engine: str | None
 
     # output format for tts (bytes or media src url) - can be dynamic
     # get supported codecs for tts
@@ -126,20 +126,17 @@ class Pipeline:
             )
             return
 
-        agent = await conversation.get_agent_manager(hass).async_get_agent(
-            self.agent_id
-        )
         yield PipelineEvent(
             PipelineEventType.INTENT_START,
-            {"agent_id": self.agent_id},
+            {"agent_id": self.agent_id or "default"},
         )
-        conversation_result = await agent.async_process(
-            conversation.ConversationInput(
-                text=stt_text,
-                context=context,
-                conversation_id=request.conversation_id,
-                language=self.language,
-            )
+        conversation_result = await conversation.async_converse(
+            hass=hass,
+            text=stt_text,
+            conversation_id=request.conversation_id,
+            context=context,
+            language=self.language,
+            agent_id=self.agent_id,
         )
 
         tts_text: str | None = conversation_result.response.speech.get("plain", {}).get(
