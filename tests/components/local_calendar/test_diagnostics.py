@@ -11,6 +11,8 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 TEST_ICS = """BEGIN:VCALENDAR
+PRODID:-//github.com/allenporter/ical//4.5.0//EN
+VERSION:***
 BEGIN:VEVENT
 DTSTAMP:20230313T190500
 UID:***
@@ -18,6 +20,7 @@ DTSTART:19970714T110000
 DTEND:19970714T220000
 SUMMARY:***
 CREATED:20230313T190500
+RRULE:FREQ=DAILY
 SEQUENCE:***
 END:VEVENT
 END:VCALENDAR"""
@@ -59,6 +62,7 @@ async def test_api_date_time_event(
                 "summary": "Bastille Day Party",
                 "dtstart": "1997-07-14T17:00:00+00:00",
                 "dtend": "1997-07-15T04:00:00+00:00",
+                "rrule": "FREQ=DAILY",
             },
         },
     )
