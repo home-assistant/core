@@ -4,9 +4,9 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from enum import Enum
 from typing import Any
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.components import conversation
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.util.dt import utcnow
@@ -22,7 +22,7 @@ class PipelineRequest:
     conversation_id: str | None = None
 
 
-class PipelineEventType(str, Enum):
+class PipelineEventType(StrEnum):
     """Event types emitted during a pipeline run."""
 
     RUN_START = "run-start"
