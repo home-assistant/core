@@ -83,7 +83,13 @@ class Pipeline:
         self, hass: HomeAssistant, context: Context, request: PipelineRequest
     ) -> AsyncIterable[PipelineEvent]:
         """Run a pipeline."""
-        yield PipelineEvent(PipelineEventType.RUN_START, {})
+        yield PipelineEvent(
+            PipelineEventType.RUN_START,
+            {
+                "pipeline": self.name,
+                "language": self.language,
+            },
+        )
 
         # TODO validate that pipeline contains valid engines for STT/TTS
 

@@ -19,7 +19,7 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "voice_assistant/run",
-        vol.Required("pipeline"): str,
+        vol.Optional("pipeline", default="default"): str,
         vol.Required("stt_text"): str,
         vol.Optional("conversation_id"): vol.Any(str, None),
     }
