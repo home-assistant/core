@@ -7,7 +7,6 @@ from datetime import datetime, timedelta
 from http import HTTPStatus
 import json
 from unittest.mock import Mock, patch
-from urllib.parse import urlencode
 
 import pytest
 import voluptuous as vol
@@ -517,8 +516,10 @@ async def test_logbook_describe_event(
 
     # Test today entries with filter by end_time
     end_time = start_date + timedelta(hours=24)
-    query = urlencode({"end_time": end_time})
-    response = await client.get(f"/api/logbook/{start_date.isoformat()}?{query}")
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}",
+        params={"end_time": end_time.isoformat()},
+    )
     results = await response.json()
     assert len(results) == 1
     event = results[0]
@@ -590,8 +591,10 @@ async def test_exclude_described_event(
 
     # Test today entries with filter by end_time
     end_time = start_date + timedelta(hours=24)
-    query = urlencode({"end_time": end_time})
-    response = await client.get(f"/api/logbook/{start_date.isoformat()}?{query}")
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}",
+        params={"end_time": end_time.isoformat()},
+    )
     results = await response.json()
     assert len(results) == 1
     event = results[0]
@@ -622,8 +625,10 @@ async def test_logbook_view_end_time_entity(
 
     # Test today entries with filter by end_time
     end_time = start_date + timedelta(hours=24)
-    query = urlencode({"end_time": end_time.isoformat()})
-    response = await client.get(f"/api/logbook/{start_date.isoformat()}?{query}")
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}",
+        params={"end_time": end_time.isoformat()},
+    )
     assert response.status == HTTPStatus.OK
     response_json = await response.json()
     assert len(response_json) == 2
@@ -632,8 +637,10 @@ async def test_logbook_view_end_time_entity(
 
     # Test entries for 3 days with filter by entity_id
     end_time = start + timedelta(hours=72)
-    query = urlencode({"end_time": end_time.isoformat(), "entity": "switch.test"})
-    response = await client.get(f"/api/logbook/{start_date.isoformat()}?{query}")
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}",
+        params={"end_time": end_time.isoformat(), "entity": "switch.test"},
+    )
     assert response.status == HTTPStatus.OK
     response_json = await response.json()
     assert len(response_json) == 1
@@ -645,8 +652,10 @@ async def test_logbook_view_end_time_entity(
 
     # Test entries from today to 3 days with filter by entity_id
     end_time = start_date + timedelta(hours=72)
-    query = urlencode({"end_time": end_time.isoformat(), "entity": "switch.test"})
-    response = await client.get(f"/api/logbook/{start_date.isoformat()}?{query}")
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}",
+        params={"end_time": end_time.isoformat(), "entity": "switch.test"},
+    )
     response_json = await response.json()
     assert response.status == HTTPStatus.OK
     assert len(response_json) == 1
@@ -693,8 +702,10 @@ async def test_logbook_entity_filter_with_automations(
 
     # Test today entries with filter by end_time
     end_time = start_date + timedelta(hours=24)
-    query = urlencode({"end_time": end_time.isoformat()})
-    response = await client.get(f"/api/logbook/{start_date.isoformat()}?{query}")
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}",
+        params={"end_time": end_time.isoformat()},
+    )
     assert response.status == HTTPStatus.OK
     json_dict = await response.json()
 
@@ -706,10 +717,13 @@ async def test_logbook_entity_filter_with_automations(
 
     # Test entries for 3 days with filter by entity_id
     end_time = start + timedelta(hours=72)
-    query = urlencode(
-        {"end_time": end_time.isoformat(), "entity": "alarm_control_panel.area_001"}
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}",
+        params={
+            "end_time": end_time.isoformat(),
+            "entity": "alarm_control_panel.area_001",
+        },
     )
-    response = await client.get(f"/api/logbook/{start_date.isoformat()}?{query}")
     assert response.status == HTTPStatus.OK
     json_dict = await response.json()
     assert len(json_dict) == 1
@@ -721,10 +735,13 @@ async def test_logbook_entity_filter_with_automations(
 
     # Test entries from today to 3 days with filter by entity_id
     end_time = start_date + timedelta(hours=72)
-    query = urlencode(
-        {"end_time": end_time.isoformat(), "entity": "alarm_control_panel.area_002"}
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}",
+        params={
+            "end_time": end_time.isoformat(),
+            "entity": "alarm_control_panel.area_002",
+        },
     )
-    response = await client.get(f"/api/logbook/{start_date.isoformat()}?{query}")
     assert response.status == HTTPStatus.OK
     json_dict = await response.json()
     assert len(json_dict) == 1
@@ -761,8 +778,10 @@ async def test_logbook_entity_no_longer_in_state_machine(
 
     # Test today entries with filter by end_time
     end_time = start_date + timedelta(hours=24)
-    query = urlencode({"end_time": end_time.isoformat()})
-    response = await client.get(f"/api/logbook/{start_date.isoformat()}?{query}")
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}",
+        params={"end_time": end_time.isoformat()},
+    )
     assert response.status == HTTPStatus.OK
     json_dict = await response.json()
     assert json_dict[0]["name"] == "area 001"
@@ -1053,8 +1072,10 @@ async def test_logbook_entity_context_id(
 
     # Test today entries with filter by end_time
     end_time = start_date + timedelta(hours=24)
-    query = urlencode({"end_time": end_time.isoformat()})
-    response = await client.get(f"/api/logbook/{start_date.isoformat()}?{query}")
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}",
+        params={"end_time": end_time.isoformat()},
+    )
     assert response.status == HTTPStatus.OK
     json_dict = await response.json()
 
@@ -1158,8 +1179,10 @@ async def test_logbook_context_id_automation_script_started_manually(
 
     # Test today entries with filter by end_time
     end_time = start_date + timedelta(hours=24)
-    query = urlencode({"end_time": end_time.isoformat()})
-    response = await client.get(f"/api/logbook/{start_date.isoformat()}?{query}")
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}",
+        params={"end_time": end_time.isoformat()},
+    )
     assert response.status == HTTPStatus.OK
     json_dict = await response.json()
 
@@ -1315,8 +1338,10 @@ async def test_logbook_entity_context_parent_id(
 
     # Test today entries with filter by end_time
     end_time = start_date + timedelta(hours=24)
-    query = urlencode({"end_time": end_time.isoformat()})
-    response = await client.get(f"/api/logbook/{start_date.isoformat()}?{query}")
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}",
+        params={"end_time": end_time.isoformat()},
+    )
     assert response.status == HTTPStatus.OK
     json_dict = await response.json()
 
@@ -1432,8 +1457,10 @@ async def test_logbook_context_from_template(
 
     # Test today entries with filter by end_time
     end_time = start_date + timedelta(hours=24)
-    query = urlencode({"end_time": end_time.isoformat()})
-    response = await client.get(f"/api/logbook/{start_date.isoformat()}?{query}")
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}",
+        params={"end_time": end_time.isoformat()},
+    )
     assert response.status == HTTPStatus.OK
     json_dict = await response.json()
 
