@@ -45,4 +45,4 @@ class NextcloudBinarySensor(NextcloudEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        return self.data.get(self.item) == "yes"
+        return self.coordinator.data.get(self.item) == "yes"

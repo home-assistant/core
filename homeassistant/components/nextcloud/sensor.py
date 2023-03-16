@@ -84,4 +84,4 @@ class NextcloudSensor(NextcloudEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state for this sensor."""
-        return self.data.get(self.item)
+        return self.coordinator.data.get(self.item)

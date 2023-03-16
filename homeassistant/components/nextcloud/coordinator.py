@@ -15,10 +15,8 @@ from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class NextcloudDataUpdateCoordinator(DataUpdateCoordinator["dict[str, Any]"]):
+class NextcloudDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Nextcloud data update coordinator."""
-
-    configuration_url: str
 
     def __init__(
         self, hass: HomeAssistant, ncm: NextcloudMonitor, config: ConfigType
