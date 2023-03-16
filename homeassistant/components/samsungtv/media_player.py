@@ -481,6 +481,10 @@ class SamsungTVDevice(MediaPlayerEntity):
                 is_fixable=False,
                 severity=ir.IssueSeverity.WARNING,
                 translation_key="deprecated_wol",
+                translation_placeholders={
+                    "mac": self._mac,
+                    "on_action_url": "https://www.home-assistant.io/integrations/samsungtv/#turn-on-action",
+                },
             )
             await self.hass.async_add_executor_job(self._wake_on_lan)
 
