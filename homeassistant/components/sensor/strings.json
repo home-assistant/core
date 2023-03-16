@@ -114,6 +114,9 @@
     "aqi": {
       "name": "Air quality index"
     },
+    "atmospheric_pressure": {
+      "name": "Atmospheric pressure"
+    },
     "battery": {
       "name": "Battery"
     },

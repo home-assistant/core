@@ -10,130 +10,130 @@
       "name": "[%key:component::number::title%]"
     },
     "apparent_power": {
-      "name": "Apparent power"
+      "name": "[%key:component::sensor::entity_component::apparent_power::name%]"
     },
     "aqi": {
-      "name": "Air quality index"
+      "name": "[%key:component::sensor::entity_component::aqi::name%]"
     },
     "atmospheric_pressure": {
-      "name": "Atmospheric pressure"
+      "name": "[%key:component::sensor::entity_component::atmospheric_pressure::name%]"
     },
     "battery": {
-      "name": "Battery"
+      "name": "[%key:component::sensor::entity_component::battery::name%]"
     },
     "carbon_dioxide": {
-      "name": "Carbon dioxide"
+      "name": "[%key:component::sensor::entity_component::carbon_dioxide::name%]"
     },
     "carbon_monoxide": {
-      "name": "Carbon monoxide"
+      "name": "[%key:component::sensor::entity_component::carbon_monoxide::name%]"
     },
     "current": {
-      "name": "Current"
+      "name": "[%key:component::sensor::entity_component::current::name%]"
     },
     "data_rate": {
-      "name": "Data rate"
+      "name": "[%key:component::sensor::entity_component::data_rate::name%]"
     },
     "distance": {
-      "name": "Distance"
+      "name": "[%key:component::sensor::entity_component::distance::name%]"
     },
     "energy": {
-      "name": "Energy"
+      "name": "[%key:component::sensor::entity_component::energy::name%]"
     },
     "energy_storage": {
-      "name": "Stored energy"
+      "name": "[%key:component::sensor::entity_component::energy_storage::name%]"
     },
     "frequency": {
-      "name": "Frequency"
+      "name": "[%key:component::sensor::entity_component::frequency::name%]"
     },
     "gas": {
-      "name": "Gas"
+      "name": "[%key:component::sensor::entity_component::gas::name%]"
     },
     "humidity": {
-      "name": "Humidity"
+      "name": "[%key:component::sensor::entity_component::humidity::name%]"
     },
     "illuminance": {
-      "name": "Illuminance"
+      "name": "[%key:component::sensor::entity_component::illuminance::name%]"
     },
     "irradiance": {
-      "name": "Irradiance"
+      "name": "[%key:component::sensor::entity_component::irradiance::name%]"
     },
     "moisture": {
-      "name": "Moisture"
+      "name": "[%key:component::sensor::entity_component::moisture::name%]"
     },
     "nitrogen_dioxide": {
-      "name": "Nitrogen dioxide"
+      "name": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]"
     },
     "nitrogen_monoxide": {
-      "name": "Nitrogen monoxide"
+      "name": "[%key:component::sensor::entity_component::nitrogen_monoxide::name%]"
     },
     "nitrous_oxide": {
-      "name": "Nitrous oxide"
+      "name": "[%key:component::sensor::entity_component::nitrous_oxide::name%]"
     },
     "ozone": {
-      "name": "Ozone"
+      "name": "[%key:component::sensor::entity_component::ozone::name%]"
     },
     "pm1": {
-      "name": "Particulate matter 0.1 μm"
+      "name": "[%key:component::sensor::entity_component::pm1::name%]"
     },
     "pm10": {
-      "name": "Particulate matter 10 μm"
+      "name": "[%key:component::sensor::entity_component::pm10::name%]"
     },
     "pm25": {
-      "name": "Particulate matter 2.5 μm"
+      "name": "[%key:component::sensor::entity_component::pm25::name%]"
     },
     "power_factor": {
-      "name": "Power factor"
+      "name": "[%key:component::sensor::entity_component::power_factor::name%]"
     },
     "power": {
-      "name": "Power"
+      "name": "[%key:component::sensor::entity_component::power::name%]"
     },
     "precipitation": {
-      "name": "Precipitation"
+      "name": "[%key:component::sensor::entity_component::precipitation::name%]"
     },
     "precipitation_intensity": {
-      "name": "Precipitation intensity"
+      "name": "[%key:component::sensor::entity_component::precipitation_intensity::name%]"
     },
     "pressure": {
-      "name": "Pressure"
+      "name": "[%key:component::sensor::entity_component::pressure::name%]"
     },
     "reactive_power": {
-      "name": "Reactive power"
+      "name": "[%key:component::sensor::entity_component::reactive_power::name%]"
     },
     "signal_strength": {
-      "name": "Signal strength"
+      "name": "[%key:component::sensor::entity_component::signal_strength::name%]"
     },
     "sound_pressure": {
-      "name": "Sound pressure"
+      "name": "[%key:component::sensor::entity_component::sound_pressure::name%]"
     },
     "speed": {
-      "name": "Speed"
+      "name": "[%key:component::sensor::entity_component::speed::name%]"
     },
     "sulphur_dioxide": {
-      "name": "Sulphur dioxide"
+      "name": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
     },
     "temperature": {
-      "name": "Temperature"
+      "name": "[%key:component::sensor::entity_component::temperature::name%]"
     },
     "volatile_organic_compounds": {
-      "name": "VOCs"
+      "name": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]"
     },
     "voltage": {
-      "name": "Voltage"
+      "name": "[%key:component::sensor::entity_component::voltage::name%]"
     },
     "volume": {
-      "name": "Volume"
+      "name": "[%key:component::sensor::entity_component::volume::name%]"
     },
     "volume_storage": {
-      "name": "Stored volume"
+      "name": "[%key:component::sensor::entity_component::volume_storage::name%]"
     },
     "water": {
-      "name": "Water"
+      "name": "[%key:component::sensor::entity_component::water::name%]"
     },
     "weight": {
-      "name": "Weight"
+      "name": "[%key:component::sensor::entity_component::weight::name%]"
     },
     "wind_speed": {
-      "name": "Wind speed"
+      "name": "[%key:component::sensor::entity_component::wind_speed::name%]"
     }
   }
 }
