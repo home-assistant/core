@@ -79,7 +79,7 @@ def _get_session_manager(hass: HomeAssistant) -> SessionManager:
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "voice_assistant/run",
-        vol.Required("name"): str,
+        vol.Required("pipeline"): str,
         vol.Optional("stt_text"): str,
         vol.Optional("conversation_id"): vol.Any(str, None),
     }
@@ -91,16 +91,19 @@ async def websocket_run(
     msg: dict[str, Any],
 ) -> None:
     """Run a pipeline."""
-    pipeline_name = msg["name"]
-    pipeline = hass.data[DOMAIN].get(pipeline_name)
+    pipeline_id = msg["pipeline"]
+    pipeline = hass.data[DOMAIN].get(pipeline_id)
     if pipeline is None:
         connection.send_error(
-            msg["id"], "pipeline_not_found", f"Pipeline not found: {pipeline_name}"
+            msg["id"], "pipeline_not_found", f"Pipeline not found: {pipeline_id}"
         )
         return
 
     session_manager = _get_session_manager(hass)
     session_id = session_manager.add_session(Session(pipeline, connection, msg))
+    connection.subscriptions[msg["id"]] = lambda: session_manager.pop_session(
+        session_id
+    )
 
     connection.send_message(
         {"id": msg["id"], "type": "session", "session_id": session_id}
