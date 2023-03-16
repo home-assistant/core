@@ -1,5 +1,4 @@
 """Voice Assistant Websocket API."""
-import asyncio
 from typing import Any
 
 import voluptuous as vol
@@ -8,7 +7,7 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN
-from .pipeline import PipelineRequest, DEFAULT_TIMEOUT
+from .pipeline import DEFAULT_TIMEOUT, PipelineRequest
 
 
 @callback
@@ -41,6 +40,8 @@ async def websocket_run(
         )
         return
 
+    # Run pipeline with a timeout.
+    # Events are sent over the websocket connection.
     timeout = msg.get("timeout", DEFAULT_TIMEOUT)
     run_task = hass.async_create_task(
         pipeline.run(
@@ -59,8 +60,10 @@ async def websocket_run(
         )
     )
 
-    # Cancel pipeline in lambda
+    # Cancel pipeline if user unsubscribes
     connection.subscriptions[msg["id"]] = run_task.cancel
 
+    # Task contains a timeout
     await run_task
+
     connection.send_result(msg["id"])

@@ -2,12 +2,12 @@
 import asyncio
 from unittest.mock import patch
 
-from homeassistant.core import Context, HomeAssistant
-from homeassistant.setup import async_setup_component
-
 import pytest
 
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
+
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
@@ -64,7 +64,7 @@ async def test_conversation_timeout(
                 "id": 5,
                 "type": "voice_assistant/run",
                 "stt_text": "Are the lights on?",
-                "timeout": 1,
+                "timeout": 0.5,
             }
         )
 
@@ -100,7 +100,7 @@ async def test_pipeline_timeout(
                 "id": 5,
                 "type": "voice_assistant/run",
                 "stt_text": "Are the lights on?",
-                "timeout": 1,
+                "timeout": 0.5,
             }
         )
 

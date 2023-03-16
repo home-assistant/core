@@ -1,16 +1,12 @@
 """The Voice Assistant integration."""
 from __future__ import annotations
 
-import logging
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DEFAULT_PIPELINE, DOMAIN
 from .pipeline import Pipeline
 from .websocket_api import async_register_websocket_api
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

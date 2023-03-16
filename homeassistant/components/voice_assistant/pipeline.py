@@ -63,29 +63,6 @@ class Pipeline:
     agent_id: str | None
     tts_engine: str | None
 
-    # output format for tts (bytes or media src url) - can be dynamic
-    # get supported codecs for tts
-    # raise error in get_provider
-    # pcm output for azure?
-    # pass in voice instead of gender
-    #
-    # pipeline platform?
-    # output stream of events
-    #
-    # binary handler for websocket?
-    #
-    # NOTE: Use collection helper for storage
-    # collection.async_add_change_set_listener(_collection_changed)
-    # collection.StorageCollectionWebsocket(
-    #     storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
-    # ).async_setup(hass)
-    #
-    # TODO: Add intent parse/executed events to conversation
-    #
-    # Test conversation agent timeouts, etc.
-    # Cancel pipelines on unsubscribe?
-    # Runtime wrapper with task
-
     async def run(
         self,
         hass: HomeAssistant,
@@ -117,29 +94,7 @@ class Pipeline:
             )
         )
 
-        # TODO validate that pipeline contains valid engines for STT/TTS
-
         stt_text = request.stt_text
-        # if stt_text is None:
-        #     # Run speech to text
-        #     if (request.stt_audio is None) or (request.stt_metadata is None):
-        #         yield PipelineEvent(
-        #             PipelineEventType.ERROR,
-        #             {
-        #                 "code": "bad_input",
-        #                 "message": "STT audio and metadata is required if text is missing",
-        #             },
-        #         )
-
-        #     stt_provider = stt.async_get_provider(hass, self.stt_engine)
-        #     yield PipelineEvent(
-        #         PipelineEventType.STT_START, {"engine": self.stt_engine}
-        #     )
-        #     stt_result = await stt_provider.async_process_audio_stream(
-        #         request.stt_metadata, request.stt_audio
-        #     )
-        #     stt_text = stt_result.text
-        #     yield PipelineEvent(PipelineEventType.STT_FINISH, {"text": stt_text})
 
         # Run intent recognition
         if stt_text is None:
@@ -197,19 +152,6 @@ class Pipeline:
             return
 
         tts_url = None
-
-        # Only output STT if we also did TTS
-        # if request.stt_audio is not None:
-        #     speech_manager: tts.SpeechManager = hass.data[tts.DOMAIN]
-        #     yield PipelineEvent(
-        #         PipelineEventType.TTS_START,
-        #         {"engine": self.tts_engine},
-        #     )
-        #     tts_url = await speech_manager.async_get_url_path(self.tts_engine, tts_text)
-        #     yield PipelineEvent(
-        #         PipelineEventType.TTS_FINISH,
-        #         {"url": tts_url},
-        #     )
 
         event_callback(
             PipelineEvent(
