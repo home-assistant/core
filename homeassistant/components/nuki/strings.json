@@ -2,7 +2,7 @@
   "issues": {
     "local_https_url": {
       "title": "Local Network address configured with an HTTPS URL",
-      "description": "You Local Network address for Home Assistant is configured with an HTTPS URL. This needs to be an HTTP URL for the Nuki bridge to be able to push events to Home Assistant."
+      "description": "Your local network address for Home Assistant is configured with an HTTPS URL. This needs to be an HTTP URL for the Nuki bridge to be able to push events to Home Assistant. You can modify your local network adress under Settings > Network."
     }
   },
   "config": {

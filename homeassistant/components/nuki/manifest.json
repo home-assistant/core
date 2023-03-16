@@ -3,7 +3,7 @@
   "name": "Nuki",
   "codeowners": ["@pschmitt", "@pvizeli", "@pree"],
   "config_flow": true,
-  "dependencies": ["http"],
+  "dependencies": ["webhook"],
   "dhcp": [
     {
       "hostname": "nuki_bridge_*"
