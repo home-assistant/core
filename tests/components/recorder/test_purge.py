@@ -82,7 +82,7 @@ async def test_purge_old_states(
 
         events = session.query(Events).filter(Events.event_type == "state_changed")
         assert events.count() == 0
-        assert "test.recorder2" in instance._old_states
+        assert "test.recorder2" in instance.states_manager._last_committed_id
 
         purge_before = dt_util.utcnow() - timedelta(days=4)
 
@@ -98,7 +98,7 @@ async def test_purge_old_states(
         assert states.count() == 2
         assert state_attributes.count() == 1
 
-        assert "test.recorder2" in instance._old_states
+        assert "test.recorder2" in instance.states_manager._last_committed_id
 
         states_after_purge = list(session.query(States))
         # Since these states are deleted in batches, we can't guarantee the order
@@ -115,7 +115,7 @@ async def test_purge_old_states(
         assert states.count() == 2
         assert state_attributes.count() == 1
 
-        assert "test.recorder2" in instance._old_states
+        assert "test.recorder2" in instance.states_manager._last_committed_id
 
         # run purge_old_data again
         purge_before = dt_util.utcnow()
@@ -130,7 +130,7 @@ async def test_purge_old_states(
         assert states.count() == 0
         assert state_attributes.count() == 0
 
-        assert "test.recorder2" not in instance._old_states
+        assert "test.recorder2" not in instance.states_manager._last_committed_id
 
     # Add some more states
     await _add_test_states(hass)
@@ -144,7 +144,7 @@ async def test_purge_old_states(
 
         events = session.query(Events).filter(Events.event_type == "state_changed")
         assert events.count() == 0
-        assert "test.recorder2" in instance._old_states
+        assert "test.recorder2" in instance.states_manager._last_committed_id
 
         state_attributes = session.query(StateAttributes)
         assert state_attributes.count() == 3
