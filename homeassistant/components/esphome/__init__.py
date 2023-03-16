@@ -345,6 +345,10 @@ async def async_setup_entry(  # noqa: C901
             disconnect_cb()
         entry_data.disconnect_callbacks = []
         entry_data.available = False
+        # Clear out the states so that we will always dispatch
+        # the next state update of that type when the device reconnects
+        for state_keys in entry_data.state.values():
+            state_keys.clear()
         entry_data.async_update_device_state(hass)
 
     async def on_connect_error(err: Exception) -> None:
@@ -760,7 +764,7 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"esphome_{self._entry_id}_on_device_update",
+                self._entry_data.signal_device_updated,
                 self._on_device_update,
             )
         )
