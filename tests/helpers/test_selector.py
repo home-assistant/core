@@ -69,10 +69,9 @@ def _test_selector(
 
     # Serialize selector
     selector_instance = selector.selector({selector_type: schema})
-    assert (
-        selector.selector(selector_instance.serialize()["selector"]).config
-        == selector_instance.config
-    )
+    assert selector_instance.serialize() == {
+        "selector": {selector_type: selector_instance.config}
+    }
     # Test serialized selector can be dumped to YAML
     yaml.dump(selector_instance.serialize())
 
@@ -239,7 +238,12 @@ def test_device_selector_schema(schema, valid_selections, invalid_selections) ->
         (
             {
                 "filter": [
-                    {"supported_features": [8]},
+                    {
+                        "supported_features": [
+                            "light.LightEntityFeature.EFFECT",
+                            "light.LightEntityFeature.TRANSITION",
+                        ]
+                    },
                 ]
             },
             ("light.abc123", "blah.blah", FAKE_UUID),
@@ -255,6 +259,8 @@ def test_entity_selector_schema(schema, valid_selections, invalid_selections) ->
 @pytest.mark.parametrize(
     "schema",
     (
+        # Feature should be string specifying an enum member, not an int
+        {"filter": [{"supported_features": [1]}]},
         # Invalid feature
         {"filter": [{"supported_features": ["blah"]}]},
         # Unknown feature enum
