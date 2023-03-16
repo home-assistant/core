@@ -396,7 +396,7 @@ def _compile_statistics(  # noqa: C901
     sensor_states = _get_sensor_states(hass)
     wanted_statistics = _wanted_statistics(sensor_states)
     old_metadatas = statistics.get_metadata_with_session(
-        session, statistic_ids=[i.entity_id for i in sensor_states]
+        get_instance(hass), session, statistic_ids=[i.entity_id for i in sensor_states]
     )
 
     # Get history between start and end

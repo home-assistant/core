@@ -818,6 +818,45 @@ def _update_statistics(
         )
 
 
+
+def get_metadata_with_session(
+    instance: Recorder,
+    session: Session,
+    *,
+    statistic_ids: list[str] | None = None,
+    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+    statistic_source: str | None = None,
+) -> dict[str, tuple[int, StatisticMetaData]]:
+    """Fetch meta data.
+    Returns a dict of (metadata_id, StatisticMetaData) tuples indexed by statistic_id.
+    If statistic_ids is given, fetch metadata only for the listed statistics_ids.
+    If statistic_type is given, fetch metadata only for statistic_ids supporting it.
+    """
+    return instance.statistics_meta_manager.get_many(
+        session,
+        statistic_ids=statistic_ids,
+        statistic_type=statistic_type,
+        statistic_source=statistic_source,
+    )
+
+
+def get_metadata(
+    hass: HomeAssistant,
+    *,
+    statistic_ids: list[str] | None = None,
+    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+    statistic_source: str | None = None,
+) -> dict[str, tuple[int, StatisticMetaData]]:
+    """Return metadata for statistic_ids."""
+    with session_scope(hass=hass, read_only=True) as session:
+        return get_metadata_with_session(
+            session,
+            statistic_ids=statistic_ids,
+            statistic_type=statistic_type,
+            statistic_source=statistic_source,
+        )
+
+
 def clear_statistics(instance: Recorder, statistic_ids: list[str]) -> None:
     """Clear statistics for a list of statistic_ids."""
     with session_scope(session=instance.get_session()) as session:
