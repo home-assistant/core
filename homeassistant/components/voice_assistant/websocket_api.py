@@ -1,4 +1,5 @@
 """Voice Assistant Websocket API."""
+import asyncio
 from typing import Any
 
 import voluptuous as vol
@@ -7,7 +8,7 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN
-from .pipeline import PipelineRequest
+from .pipeline import PipelineRequest, DEFAULT_TIMEOUT
 
 
 @callback
@@ -22,6 +23,7 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
         vol.Optional("pipeline", default="default"): str,
         vol.Required("stt_text"): str,
         vol.Optional("conversation_id"): vol.Any(str, None),
+        vol.Optional("timeout"): vol.Any(float, int),
     }
 )
 @websocket_api.async_response
@@ -39,10 +41,7 @@ async def websocket_run(
         )
         return
 
-    connection.subscriptions[msg["id"]] = lambda: None
-    connection.send_result(msg["id"])
-
-    async for event in pipeline.run(
+    run_task = pipeline.run_task(
         hass,
         connection.context(msg),
         request=PipelineRequest(
@@ -51,5 +50,12 @@ async def websocket_run(
             stt_text=msg["stt_text"],
             conversation_id=msg.get("conversation_id"),
         ),
-    ):
-        connection.send_event(msg["id"], event.as_dict())
+        event_callback=lambda event: connection.send_event(msg["id"], event.as_dict()),
+    )
+
+    # Cancel pipeline in lambda
+    connection.subscriptions[msg["id"]] = run_task.cancel
+
+    timeout = msg.get("timeout", DEFAULT_TIMEOUT)
+    await asyncio.wait_for(run_task, timeout=timeout)
+    connection.send_result(msg["id"])

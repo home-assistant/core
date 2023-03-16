@@ -1,7 +1,8 @@
 """Classes for voice assistant pipelines."""
 from __future__ import annotations
 
-from collections.abc import AsyncIterable
+import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
 import time
@@ -11,6 +12,8 @@ from aiohttp import StreamReader
 
 from homeassistant.components import conversation, stt
 from homeassistant.core import Context, HomeAssistant
+
+DEFAULT_TIMEOUT = 30  # seconds
 
 
 @dataclass
@@ -78,17 +81,49 @@ class Pipeline:
     # ).async_setup(hass)
     #
     # TODO: Add intent parse/executed events to conversation
+    #
+    # Test conversation agent timeouts, etc.
+    # Cancel pipelines on unsubscribe?
+    # Runtime wrapper with task
 
     async def run(
-        self, hass: HomeAssistant, context: Context, request: PipelineRequest
-    ) -> AsyncIterable[PipelineEvent]:
+        self,
+        hass: HomeAssistant,
+        context: Context,
+        request: PipelineRequest,
+        event_callback: Callable[[PipelineEvent], None],
+        timeout: int | float | None = DEFAULT_TIMEOUT,
+    ) -> None:
+        """Run a pipeline with an optional timeout."""
+        task = self.run_task(hass, context, request, event_callback)
+        await asyncio.wait_for(task, timeout=timeout)
+
+    def run_task(
+        self,
+        hass: HomeAssistant,
+        context: Context,
+        request: PipelineRequest,
+        event_callback: Callable[[PipelineEvent], None],
+    ) -> asyncio.Task:
+        """Create a task that will run a pipeline."""
+        return asyncio.create_task(self._run(hass, context, request, event_callback))
+
+    async def _run(
+        self,
+        hass: HomeAssistant,
+        context: Context,
+        request: PipelineRequest,
+        event_callback: Callable[[PipelineEvent], None],
+    ) -> None:
         """Run a pipeline."""
-        yield PipelineEvent(
-            PipelineEventType.RUN_START,
-            {
-                "pipeline": self.name,
-                "language": self.language,
-            },
+        event_callback(
+            PipelineEvent(
+                PipelineEventType.RUN_START,
+                {
+                    "pipeline": self.name,
+                    "language": self.language,
+                },
+            )
         )
 
         # TODO validate that pipeline contains valid engines for STT/TTS
@@ -117,19 +152,24 @@ class Pipeline:
 
         # Run intent recognition
         if stt_text is None:
-            yield PipelineEvent(
-                PipelineEventType.ERROR,
-                {
-                    "code": "speech_not_recognized",
-                    "message": "no speech returned from agent",
-                },
+            event_callback(
+                PipelineEvent(
+                    PipelineEventType.ERROR,
+                    {
+                        "code": "speech_not_recognized",
+                        "message": "no speech returned from agent",
+                    },
+                )
             )
             return
 
-        yield PipelineEvent(
-            PipelineEventType.INTENT_START,
-            {"agent_id": self.agent_id or "default"},
+        event_callback(
+            PipelineEvent(
+                PipelineEventType.INTENT_START,
+                {"agent_id": self.agent_id or "default"},
+            )
         )
+
         conversation_result = await conversation.async_converse(
             hass=hass,
             text=stt_text,
@@ -142,19 +182,26 @@ class Pipeline:
         tts_text: str | None = conversation_result.response.speech.get("plain", {}).get(
             "speech"
         )
-        yield PipelineEvent(
-            PipelineEventType.INTENT_FINISH,
-            {"speech": tts_text, "response": conversation_result.response.as_dict()},
+        event_callback(
+            PipelineEvent(
+                PipelineEventType.INTENT_FINISH,
+                {
+                    "speech": tts_text,
+                    "response": conversation_result.response.as_dict(),
+                },
+            )
         )
 
         # Run text to speech
         if tts_text is None:
-            yield PipelineEvent(
-                PipelineEventType.ERROR,
-                {
-                    "code": "response_has_no_speech",
-                    "message": "no speech returned from agent",
-                },
+            event_callback(
+                PipelineEvent(
+                    PipelineEventType.ERROR,
+                    {
+                        "code": "response_has_no_speech",
+                        "message": "no speech returned from agent",
+                    },
+                )
             )
             return
 
@@ -173,11 +220,13 @@ class Pipeline:
         #         {"url": tts_url},
         #     )
 
-        yield PipelineEvent(
-            PipelineEventType.RUN_FINISH,
-            {
-                "stt_text": stt_text,
-                "conversation_result": conversation_result,
-                "tts_url": tts_url,
-            },
+        event_callback(
+            PipelineEvent(
+                PipelineEventType.RUN_FINISH,
+                {
+                    "stt_text": stt_text,
+                    "conversation_result": conversation_result,
+                    "tts_url": tts_url,
+                },
+            )
         )
