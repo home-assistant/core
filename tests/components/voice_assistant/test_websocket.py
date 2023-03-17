@@ -24,7 +24,12 @@ async def test_text_only_pipeline(
     client = await hass_ws_client(hass)
 
     await client.send_json(
-        {"id": 5, "type": "voice_assistant/run", "intent_input": "Are the lights on?"}
+        {
+            "id": 5,
+            "type": "voice_assistant/run",
+            "intent_input": "Are the lights on?",
+            "stop_stage": "intent",
+        }
     )
 
     # result
@@ -90,6 +95,7 @@ async def test_conversation_timeout(
                 "id": 5,
                 "type": "voice_assistant/run",
                 "intent_input": "Are the lights on?",
+                "stop_stage": "intent",
                 "timeout": 0.00001,
             }
         )
@@ -138,6 +144,7 @@ async def test_pipeline_timeout(
                 "id": 5,
                 "type": "voice_assistant/run",
                 "intent_input": "Are the lights on?",
+                "stop_stage": "intent",
                 "timeout": 0.0001,
             }
         )
