@@ -104,6 +104,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "enable_statistics": "bool",
     "enable_statistics_table_validation": "bool",
     "entity_registry": "EntityRegistry",
+    "freezer": "FrozenDateTimeFactory",
     "hass_access_token": "str",
     "hass_admin_credential": "Credentials",
     "hass_admin_user": "MockUser",
