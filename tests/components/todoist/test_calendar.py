@@ -155,7 +155,7 @@ async def test_calendar_custom_project_unique_id(
 async def test_all_day_event(
     todoist_api, hass: HomeAssistant, hass_client: ClientSessionGenerator, api
 ) -> None:
-    """Test for an all day calednar event."""
+    """Test for an all day calendar event."""
     todoist_api.return_value = api
     assert await setup.async_setup_component(
         hass,
