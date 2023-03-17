@@ -437,7 +437,7 @@ class TodoistProjectData:
             return CalendarEvent(
                 summary=self.event[SUMMARY],
                 start=start.date(),
-                end=start.date(),
+                end=start.date() + timedelta(days=1),
             )
 
         return CalendarEvent(
@@ -618,7 +618,7 @@ class TodoistProjectData:
                 event = CalendarEvent(
                     summary=task.content,
                     start=due_date_value,
-                    end=due_date_value + timedelta(days=1),
+                    end=due_date_value,
                 )
                 events.append(event)
         return events
