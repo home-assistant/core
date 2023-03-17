@@ -40,11 +40,10 @@ async def async_setup_entry(
         shc_devices: list[dict[str, Any]] = coordinator.data
         entities: list[BinarySensorEntity] = []
         for device in shc_devices:
-            if device["id"] not in known_devices:
-                if device["type"] == WDS_DEVICE_TYPE:
-                    livisi_binary: BinarySensorEntity = LivisiWindowDoorSensor(
-                        config_entry, coordinator, device
-                    )
+            if device["id"] not in known_devices and device["type"] == WDS_DEVICE_TYPE:
+                livisi_binary: BinarySensorEntity = LivisiWindowDoorSensor(
+                    config_entry, coordinator, device
+                )
                 LOGGER.debug("Include device type: %s", device["type"])
                 coordinator.devices.add(device["id"])
                 known_devices.add(device["id"])
