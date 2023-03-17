@@ -1,15 +1,23 @@
 """Tests for diagnostics platform of local calendar."""
 
 from freezegun import freeze_time
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY, ClientFixture
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
+
+
+@pytest.fixture(autouse=True)
+async def setup_diag(hass):
+    """Set up diagnostics platform."""
+    assert await async_setup_component(hass, "diagnostics", {})
 
 
 @freeze_time("2023-03-13 12:05:00-07:00")
