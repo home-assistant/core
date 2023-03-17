@@ -132,7 +132,7 @@
       "name": "Carbon monoxide",
       "state": {
         "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-        "on": "[key:component::binary_sensor::entity_component::gas::state::on%]"
+        "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
       }
     },
     "cold": {
@@ -201,8 +201,8 @@
     "motion": {
       "name": "Motion",
       "state": {
-        "off": "[key:component::binary_sensor::entity_component::gas::state::off%]",
-        "on": "[key:component::binary_sensor::entity_component::gas::state::on%]"
+        "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+        "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
       }
     },
     "moving": {
@@ -215,8 +215,8 @@
     "occupancy": {
       "name": "Occupancy",
       "state": {
-        "off": "[key:component::binary_sensor::entity_component::gas::state::off%]",
-        "on": "[key:component::binary_sensor::entity_component::gas::state::on%]"
+        "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+        "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
       }
     },
     "opening": {
@@ -264,15 +264,15 @@
     "smoke": {
       "name": "Smoke",
       "state": {
-        "off": "[key:component::binary_sensor::entity_component::gas::state::off%]",
-        "on": "[key:component::binary_sensor::entity_component::gas::state::on%]"
+        "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+        "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
       }
     },
     "sound": {
       "name": "Sound",
       "state": {
-        "off": "[key:component::binary_sensor::entity_component::gas::state::off%]",
-        "on": "[key:component::binary_sensor::entity_component::gas::state::on%]"
+        "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+        "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
       }
     },
     "update": {
@@ -285,8 +285,8 @@
     "vibration": {
       "name": "Vibration",
       "state": {
-        "off": "[key:component::binary_sensor::entity_component::gas::state::off%]",
-        "on": "[key:component::binary_sensor::entity_component::gas::state::on%]"
+        "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+        "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
       }
     },
     "window": {
