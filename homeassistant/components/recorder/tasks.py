@@ -444,7 +444,7 @@ class EntityIDPostMigrationTask(RecorderTask):
 class EventIdMigrationTask(RecorderTask):
     """An object to insert into the recorder queue to cleanup legacy event_ids in the states table.
 
-    This task should only every be queued if the ix_states_event_id index exists
+    This task should only be queued if the ix_states_event_id index exists
     since it is used to scan the states table and it will be removed after this
     task is run if its no longer needed.
     """
