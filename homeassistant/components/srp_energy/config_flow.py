@@ -7,7 +7,7 @@ from srpenergy.client import SrpEnergyClient
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_ID, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -49,6 +49,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         default_title: str = DEFAULT_NAME
 
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
         if self.hass.config.location_name:
             default_title = self.hass.config.location_name
 
@@ -76,7 +79,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_ID): str,
                     vol.Required(CONF_USERNAME): str,
                     vol.Required(CONF_PASSWORD): str,
-                    vol.Required(CONF_NAME, default=default_title): str,
                     vol.Optional(CONF_IS_TOU, default=False): bool,
                 }
             ),

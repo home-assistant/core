@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, UnitOfEnergy
+from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -43,7 +43,6 @@ async def async_setup_entry(
     if entry and entry.data:
         api = hass.data[DOMAIN][entry.entry_id]
         is_time_of_use = entry.data[CONF_IS_TOU]
-        entry_name = entry.data[CONF_NAME]
 
     async def async_update_data():
         """Fetch data from API endpoint.

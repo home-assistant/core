@@ -3,13 +3,7 @@ from unittest.mock import MagicMock
 
 from homeassistant import config_entries
 from homeassistant.components.srp_energy import CONF_IS_TOU, DOMAIN
-from homeassistant.const import (
-    CONF_ID,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_SOURCE,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_SOURCE, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -124,42 +118,4 @@ async def test_flow_entry_already_configured(
     )
 
     assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-async def test_two_entries(
-    hass,
-    mock_srp_energy,
-    mock_srp_energy_config_flow,
-) -> None:
-    """Test configuring two entries."""
-
-    user_input_one = {
-        CONF_ID: "123456789",
-        CONF_USERNAME: "abba2",
-        CONF_PASSWORD: "ana2",
-        CONF_NAME: "Home",
-        CONF_IS_TOU: False,
-    }
-
-    user_input_two = {
-        CONF_ID: "987654321",
-        CONF_USERNAME: "2abba",
-        CONF_PASSWORD: "2ana2",
-        CONF_NAME: "Cabin",
-        CONF_IS_TOU: True,
-    }
-
-    for user_input in (user_input_one, user_input_two):
-        config_entry = MockConfigEntry(
-            domain=DOMAIN,
-            data=user_input,
-            unique_id=user_input[CONF_ID],
-        )
-
-        config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    domain_entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(domain_entries) == 2
+    assert result["reason"] == "single_instance_allowed"

@@ -2,13 +2,7 @@
 from srpenergy.client import SrpEnergyClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_ID,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    Platform,
-)
+from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import (  # noqa: F401
@@ -31,7 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api_account_id: str = entry.data[CONF_ID]
     api_username: str = entry.data[CONF_USERNAME]
     api_password: str = entry.data[CONF_PASSWORD]
-    name: str = entry.data[CONF_NAME]
+    name: str = DEFAULT_NAME
 
     LOGGER.debug("Configuring %s using account_id %s", name, api_account_id)
 

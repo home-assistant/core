@@ -1,30 +1,18 @@
 """Tests for the SRP Energy integration."""
 
 from homeassistant.components.srp_energy import CONF_IS_TOU
-from homeassistant.const import CONF_ID, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 
 ACCNT_ID = "123456789"
-ACCNT_ID_2 = "987654321"
 ACCNT_IS_TOU = False
 ACCNT_USERNAME = "abba"
 ACCNT_PASSWORD = "ana"
 ACCNT_NAME = "Home"
-ACCNT_NAME_2 = "Cabin"
-
 
 TEST_USER_INPUT = {
     CONF_ID: ACCNT_ID,
     CONF_USERNAME: ACCNT_USERNAME,
     CONF_PASSWORD: ACCNT_PASSWORD,
-    CONF_NAME: ACCNT_NAME,
-    CONF_IS_TOU: ACCNT_IS_TOU,
-}
-
-TEST_USER_INPUT_2 = {
-    CONF_ID: ACCNT_ID_2,
-    CONF_USERNAME: ACCNT_USERNAME,
-    CONF_PASSWORD: ACCNT_PASSWORD,
-    CONF_NAME: ACCNT_NAME_2,
     CONF_IS_TOU: ACCNT_IS_TOU,
 }
 
