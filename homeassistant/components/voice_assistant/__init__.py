@@ -16,7 +16,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             name=DEFAULT_PIPELINE,
             language=None,
             conversation_engine=None,
-            tts_engine="cloud",
+            tts_engine=None,
         )
     }
     async_register_websocket_api(hass)

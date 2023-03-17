@@ -28,7 +28,6 @@ async def test_text_only_pipeline(
             "id": 5,
             "type": "voice_assistant/run",
             "intent_input": "Are the lights on?",
-            "stop_stage": "intent",
         }
     )
 
@@ -95,7 +94,6 @@ async def test_conversation_timeout(
                 "id": 5,
                 "type": "voice_assistant/run",
                 "intent_input": "Are the lights on?",
-                "stop_stage": "intent",
                 "timeout": 0.00001,
             }
         )
@@ -136,7 +134,7 @@ async def test_pipeline_timeout(
         await asyncio.sleep(3600)
 
     with patch(
-        "homeassistant.components.voice_assistant.pipeline.Pipeline._run",
+        "homeassistant.components.voice_assistant.pipeline.TextPipelineRequest._execute",
         new=sleepy_run,
     ):
         await client.send_json(
@@ -144,7 +142,6 @@ async def test_pipeline_timeout(
                 "id": 5,
                 "type": "voice_assistant/run",
                 "intent_input": "Are the lights on?",
-                "stop_stage": "intent",
                 "timeout": 0.0001,
             }
         )
