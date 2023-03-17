@@ -43,8 +43,12 @@
         "groups_members": {
           "name": "Group members"
         },
-        "is_volume_mutes": {
-          "name": "Muted"
+        "is_volume_muted": {
+          "name": "Muted",
+          "state": {
+            "true": "[%key:common::state::true%]",
+            "false": "[%key:common::state::false%]"
+          }
         },
         "media_album_artist": {
           "name": "Album artist"
@@ -114,14 +118,18 @@
           "name": "Series"
         },
         "repeat": {
-          "name": "Repeat"
-        },
-        "shuffle": {
-          "name": "Shuffle",
+          "name": "Repeat",
           "state": {
             "all": "All",
             "off": "Off",
             "one": "One"
+          }
+        },
+        "shuffle": {
+          "name": "Shuffle",
+          "state": {
+            "true": "[%key:common::state::on%]",
+            "false": "[%key:common::state::off%]"
           }
         },
         "source": {
