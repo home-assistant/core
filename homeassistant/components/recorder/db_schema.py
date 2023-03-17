@@ -527,7 +527,7 @@ def _generate_combined_set(
     integration_attrs: frozenset[set] | None,
 ) -> set[str]:
     """Generate a combined set of attributes to exclude."""
-    combined_set: set[str] = set(*ALL_DOMAIN_EXCLUDE_ATTRS)
+    combined_set: set[str] = set(ALL_DOMAIN_EXCLUDE_ATTRS)
     if base_platform_attrs is not None:
         combined_set |= base_platform_attrs
     if integration_attrs is not None:
