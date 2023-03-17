@@ -77,7 +77,9 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int]):
                 f"Invalid response for search '{self.config_entry.data[CONF_SEARCH]}': {result} / {lines[0]}"
             )
         if self.support_push:
-            self.hass.async_create_task(self.async_wait_server_push())
+            self.hass.async_create_background_task(
+                self.async_wait_server_push(), "Wait for IMAP data push"
+            )
         return len(lines[0].split())
 
     async def async_wait_server_push(self) -> None:
@@ -100,5 +102,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int]):
     async def shutdown(self, *_) -> None:
         """Close resources."""
         if self.imap_client:
+            if self.imap_client.has_pending_idle():
+                self.imap_client.idle_done()
             await self.imap_client.stop_wait_server_push()
             await self.imap_client.logout()

@@ -10,10 +10,36 @@
       "leaves": "{entity_name} leaves a zone"
     }
   },
-  "state": {
+  "entity_component": {
     "_": {
-      "home": "[%key:common::state::home%]",
-      "not_home": "[%key:common::state::not_home%]"
+      "name": "[%key:component::device_tracker::title%]",
+      "state": {
+        "home": "[%key:common::state::home%]",
+        "not_home": "[%key:common::state::not_home%]"
+      },
+      "state_attributes": {
+        "battery": {
+          "name": "Battery"
+        },
+        "gps_accuracy": {
+          "name": "GPS accuracy"
+        },
+        "latitude": {
+          "name": "Latitude"
+        },
+        "longitude": {
+          "name": "Longitude"
+        },
+        "source_type": {
+          "name": "Source",
+          "state": {
+            "bluetooth_le": "Bluetooth LE",
+            "bluetooth": "Bluetooth",
+            "gps": "GPS",
+            "router": "Router"
+          }
+        }
+      }
     }
   }
 }

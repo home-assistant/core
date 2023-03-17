@@ -1460,8 +1460,8 @@ async def test_parse_qr_code_string(
 
 
 async def test_try_parse_dsk_from_qr_code_string(
-    hass, integration, client, hass_ws_client
-):
+    hass: HomeAssistant, integration, client, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test try_parse_dsk_from_qr_code_string websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -1524,7 +1524,9 @@ async def test_try_parse_dsk_from_qr_code_string(
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
-async def test_supports_feature(hass, integration, client, hass_ws_client):
+async def test_supports_feature(
+    hass: HomeAssistant, integration, client, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test supports_feature websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -3888,8 +3890,8 @@ async def test_subscribe_firmware_update_status_initial_value(
 
 
 async def test_subscribe_controller_firmware_update_status(
-    hass, integration, client, hass_ws_client
-):
+    hass: HomeAssistant, integration, client, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test the subscribe_firmware_update_status websocket command for a node."""
     ws_client = await hass_ws_client(hass)
     device = get_device(hass, client.driver.controller.nodes[1])
@@ -3954,8 +3956,8 @@ async def test_subscribe_controller_firmware_update_status(
 
 
 async def test_subscribe_controller_firmware_update_status_initial_value(
-    hass, client, integration, hass_ws_client
-):
+    hass: HomeAssistant, client, integration, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test subscribe_firmware_update_status cmd with in progress update for node."""
     ws_client = await hass_ws_client(hass)
     device = get_device(hass, client.driver.controller.nodes[1])

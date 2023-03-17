@@ -42,7 +42,7 @@ async def test_import_dataset(hass: HomeAssistant) -> None:
     ) as mock_add:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
-    mock_add.assert_called_once_with(config_entry.title, DATASET_CH16.hex())
+    mock_add.assert_called_once_with(otbr.DOMAIN, DATASET_CH16.hex())
     assert not issue_registry.async_get_issue(
         domain=otbr.DOMAIN, issue_id=f"insecure_thread_network_{config_entry.entry_id}"
     )
@@ -72,7 +72,7 @@ async def test_import_insecure_dataset(hass: HomeAssistant, dataset: bytes) -> N
     ) as mock_add:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
-    mock_add.assert_called_once_with(config_entry.title, dataset.hex())
+    mock_add.assert_called_once_with(otbr.DOMAIN, dataset.hex())
     assert issue_registry.async_get_issue(
         domain=otbr.DOMAIN, issue_id=f"insecure_thread_network_{config_entry.entry_id}"
     )
