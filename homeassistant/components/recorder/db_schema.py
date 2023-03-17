@@ -535,7 +535,7 @@ def _generate_combined_set(
     return combined_set
 
 
-@lru_cache
+@lru_cache(512)
 def _cached_attrs_json_bytes_strip_null(
     attrs: ReadOnlyDict[str, Any],
     base_platform_attrs: frozenset[str] | None,
@@ -548,7 +548,7 @@ def _cached_attrs_json_bytes_strip_null(
     )
 
 
-@lru_cache
+@lru_cache(512)
 def _cached_attrs_json_bytes(
     attrs: ReadOnlyDict[str, Any],
     base_platform_attrs: frozenset[str] | None,
