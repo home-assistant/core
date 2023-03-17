@@ -119,7 +119,11 @@ class StatisticsMetaManager:
         """Add metadata to the database."""
         meta = StatisticsMeta.from_meta(new_metadata)
         session.add(meta)
-        session.flush()  # Flush to get the metadata id assigned
+        # Commit to get the metadata id assigned and make it safe to add
+        # to the cache. If we do not commit here, there is a race condition
+        # where the cache is updated before the commit and the cache is
+        # inconsistent with the database.
+        session.commit()
         _LOGGER.debug(
             "Added new statistics metadata for %s, new_metadata: %s",
             statistic_id,
