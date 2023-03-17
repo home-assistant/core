@@ -129,8 +129,8 @@ def help_assert_message(
         match &= msg.payload == payload
     if qos is not None:
         match &= msg.qos == qos
-    if topic is not None:
-        retain &= msg.retain == retain
+    if retain is not None:
+        match &= msg.retain == retain
     return match
 
 
