@@ -171,7 +171,7 @@ aiogithubapi==22.10.1
 aioguardian==2022.07.0
 
 # homeassistant.components.harmony
-aioharmony==0.2.9
+aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
 aiohomekit==2.6.1
