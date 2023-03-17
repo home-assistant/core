@@ -263,6 +263,22 @@ def expected_lingering_tasks() -> bool:
     return False
 
 
+@pytest.fixture(autouse=True)
+def expected_lingering_timers() -> bool:
+    """Temporary ability to bypass test failures.
+
+    Parametrize to True to bypass the pytest failure.
+    @pytest.mark.parametrize("expected_lingering_timers", [True])
+
+    This should be removed when all lingering timers have been cleaned up.
+    """
+    current_test = os.getenv("PYTEST_CURRENT_TEST")
+    if current_test and current_test.startswith("tests/components"):
+        # As a starting point, we ignore components
+        return True
+    return False
+
+
 @pytest.fixture
 def wait_for_stop_scripts_after_shutdown() -> bool:
     """Add ability to bypass _schedule_stop_scripts_after_shutdown.
@@ -288,22 +304,6 @@ def skip_stop_scripts(
         AsyncMock(),
     ):
         yield
-
-
-@pytest.fixture(autouse=True)
-def expected_lingering_timers() -> bool:
-    """Temporary ability to bypass test failures.
-
-    Parametrize to True to bypass the pytest failure.
-    @pytest.mark.parametrize("expected_lingering_timers", [True])
-
-    This should be removed when all lingering timers have been cleaned up.
-    """
-    current_test = os.getenv("PYTEST_CURRENT_TEST")
-    if current_test and current_test.startswith("tests/components"):
-        # As a starting point, we ignore components
-        return True
-    return False
 
 
 @pytest.fixture(autouse=True)
