@@ -605,6 +605,7 @@ class Entity(ABC):
             # Polling returned after the entity has already been removed
             return
 
+        entity_id = self.entity_id
         entry = self.registry_entry
         if entry and entry.disabled_by:
             if not self._disabled_reported:
@@ -615,7 +616,7 @@ class Entity(ABC):
                         "Entity %s is incorrectly being triggered for updates while it"
                         " is disabled. This is a bug in the %s integration"
                     ),
-                    self.entity_id,
+                    entity_id,
                     self.platform.platform_name,
                 )
             return
@@ -664,7 +665,7 @@ class Entity(ABC):
             report_issue = self._suggest_report_issue()
             _LOGGER.warning(
                 "Updating state for %s (%s) took %.3f seconds. Please %s",
-                self.entity_id,
+                entity_id,
                 type(self),
                 end - start,
                 report_issue,
@@ -672,7 +673,7 @@ class Entity(ABC):
 
         # Overwrite properties that have been set in the config file.
         if customize := self.hass.data.get(DATA_CUSTOMIZE):
-            attr.update(customize.get(self.entity_id))
+            attr.update(customize.get(entity_id))
 
         if (
             self._context_set is not None
@@ -682,7 +683,7 @@ class Entity(ABC):
             self._context_set = None
 
         self.hass.states.async_set(
-            self.entity_id, state, attr, self.force_update, self._context
+            entity_id, state, attr, self.force_update, self._context
         )
 
     def schedule_update_ha_state(self, force_refresh: bool = False) -> None:
