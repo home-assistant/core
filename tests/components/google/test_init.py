@@ -597,7 +597,7 @@ async def test_add_event_failure(
 
     with pytest.raises(HomeAssistantError):
         await add_event_call_service(
-            {"start_date": "2022-05-01", "end_date": "2022-05-01"}
+            {"start_date": "2022-05-01", "end_date": "2022-05-02"}
         )
 
 

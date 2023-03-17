@@ -114,13 +114,14 @@ class PurgeEntitiesTask(RecorderTask):
     """Object to store entity information about purge task."""
 
     entity_filter: Callable[[str], bool]
+    purge_before: datetime
 
     def run(self, instance: Recorder) -> None:
         """Purge entities from the database."""
-        if purge.purge_entity_data(instance, self.entity_filter):
+        if purge.purge_entity_data(instance, self.entity_filter, self.purge_before):
             return
         # Schedule a new purge task if this one didn't finish
-        instance.queue_task(PurgeEntitiesTask(self.entity_filter))
+        instance.queue_task(PurgeEntitiesTask(self.entity_filter, self.purge_before))
 
 
 @dataclass
@@ -148,6 +149,18 @@ class StatisticsTask(RecorderTask):
             return
         # Schedule a new statistics task if this one didn't finish
         instance.queue_task(StatisticsTask(self.start, self.fire_events))
+
+
+@dataclass
+class CompileMissingStatisticsTask(RecorderTask):
+    """An object to insert into the recorder queue to run a compile missing statistics."""
+
+    def run(self, instance: Recorder) -> None:
+        """Run statistics task to compile missing statistics."""
+        if statistics.compile_missing_statistics(instance):
+            return
+        # Schedule a new statistics task if this one didn't finish
+        instance.queue_task(CompileMissingStatisticsTask())
 
 
 @dataclass

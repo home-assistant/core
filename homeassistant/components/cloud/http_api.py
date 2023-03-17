@@ -559,8 +559,6 @@ async def google_assistant_list(
         "type": "cloud/google_assistant/entities/update",
         "entity_id": str,
         vol.Optional("should_expose"): vol.Any(None, bool),
-        vol.Optional("override_name"): str,
-        vol.Optional("aliases"): [str],
         vol.Optional("disable_2fa"): bool,
     }
 )

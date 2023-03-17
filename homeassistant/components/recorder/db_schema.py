@@ -435,7 +435,8 @@ class States(Base):
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
-            f"<recorder.States(id={self.state_id}, entity_id='{self.entity_id}',"
+            f"<recorder.States(id={self.state_id}, entity_id='{self.entity_id}'"
+            f" metadata_id={self.metadata_id},"
             f" state='{self.state}', event_id='{self.event_id}',"
             f" last_updated='{self._last_updated_isotime}',"
             f" old_state_id={self.old_state_id}, attributes_id={self.attributes_id})>"
