@@ -268,7 +268,6 @@ class StatisticsMetaManager:
         """Commit and clear the metadata."""
         session.commit()
         self._clear_cache(statistic_ids)
-        self.get_many(session, statistic_ids)
 
     def _commit_and_refresh(self, session: Session, statistic_ids: list[str]) -> None:
         """Commit and refresh the metadata."""
