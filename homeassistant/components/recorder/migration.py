@@ -873,7 +873,7 @@ def _apply_update(  # noqa: C901
             # There may be duplicated statistics_meta entries, delete duplicates
             # and try again
             with session_scope(session=session_maker()) as session:
-                delete_statistics_meta_duplicates(session)
+                delete_statistics_meta_duplicates(instance, session)
             _create_index(
                 session_maker, "statistics_meta", "ix_statistics_meta_statistic_id"
             )
