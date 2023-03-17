@@ -844,7 +844,10 @@ def get_index_by_name(session: Session, table_name: str, index_name: str) -> str
             possible_index["name"]
             for possible_index in indexes
             if possible_index["name"]
-            and possible_index["name"].endswith(f"_{index_name}")
+            and (
+                possible_index["name"] == index_name
+                or possible_index["name"].endswith(f"_{index_name}")
+            )
         ),
         None,
     )

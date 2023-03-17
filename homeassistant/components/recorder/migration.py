@@ -1538,14 +1538,15 @@ def cleanup_legacy_states_event_ids(instance: Recorder) -> bool:
     session_maker = instance.get_session
     _LOGGER.debug("Cleanup legacy entity_ids")
     with session_scope(session=session_maker()) as session:
-        cursor_result = session.connection().execute(has_used_states_event_ids())
+        result = session.execute(has_used_states_event_ids()).scalar()
         # In the future we may migrate existing states to the new format
         # but in practice very few of these still exist in production and
         # removing the index is the likely all that needs to happen.
-        all_gone = not cursor_result or cursor_result.rowcount == 0
+        all_gone = not result
 
     if all_gone:
-        # Drop the old indexes since they are no longer needed
+        # Only drop the index if there are no more event_ids in the states table
+        # ex all NULL
         _drop_index(session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX)
 
     return True
