@@ -118,10 +118,20 @@ class StatisticsMetaManager:
                     stat_id_to_id_meta[statistic_id] = id_meta
         return results
 
+    def _assert_in_recorder_thread(self) -> None:
+        """Assert that we are in the recorder thread."""
+        if self.recorder.thread_id != threading.get_ident():
+            raise RuntimeError("Detected unsafe call not in recorder thread")
+
     def _add_metadata(
         self, session: Session, statistic_id: str, new_metadata: StatisticMetaData
     ) -> int:
-        """Add metadata to the database."""
+        """Add metadata to the database.
+
+        This call is not thread-safe and must be called from the
+        recorder thread.
+        """
+        self._assert_in_recorder_thread()
         meta = StatisticsMeta.from_meta(new_metadata)
         session.add(meta)
         # Flush to assign an ID
@@ -140,7 +150,11 @@ class StatisticsMetaManager:
         new_metadata: StatisticMetaData,
         old_metadata_dict: dict[str, tuple[int, StatisticMetaData]],
     ) -> tuple[bool, int]:
-        """Update metadata in the database."""
+        """Update metadata in the database.
+
+        This call is not thread-safe and must be called from the
+        recorder thread.
+        """
         metadata_id, old_metadata = old_metadata_dict[statistic_id]
         if not (
             old_metadata["has_mean"] != new_metadata["has_mean"]
@@ -151,6 +165,7 @@ class StatisticsMetaManager:
         ):
             return False, metadata_id
 
+        self._assert_in_recorder_thread()
         session.query(StatisticsMeta).filter_by(statistic_id=statistic_id).update(
             {
                 StatisticsMeta.has_mean: new_metadata["has_mean"],
@@ -246,6 +261,9 @@ class StatisticsMetaManager:
         Returns a tuple of (updated, metadata_id).
 
         updated is True if the metadata was updated, False if it was not updated.
+
+        This call is not thread-safe and must be called from the
+        recorder thread.
         """
         statistic_id = new_metadata["statistic_id"]
         if statistic_id not in old_metadata_dict:
@@ -257,7 +275,12 @@ class StatisticsMetaManager:
     def update_unit_of_measurement(
         self, session: Session, statistic_id: str, new_unit: str | None
     ) -> None:
-        """Update the unit of measurement for a statistic_id."""
+        """Update the unit of measurement for a statistic_id.
+
+        This call is not thread-safe and must be called from the
+        recorder thread.
+        """
+        self._assert_in_recorder_thread()
         session.query(StatisticsMeta).filter(
             StatisticsMeta.statistic_id == statistic_id
         ).update({StatisticsMeta.unit_of_measurement: new_unit})
@@ -270,7 +293,12 @@ class StatisticsMetaManager:
         old_statistic_id: str,
         new_statistic_id: str,
     ) -> None:
-        """Update the statistic_id for a statistic_id."""
+        """Update the statistic_id for a statistic_id.
+
+        This call is not thread-safe and must be called from the
+        recorder thread.
+        """
+        self._assert_in_recorder_thread()
         session.query(StatisticsMeta).filter(
             (StatisticsMeta.statistic_id == old_statistic_id)
             & (StatisticsMeta.source == source)
@@ -278,7 +306,12 @@ class StatisticsMetaManager:
         self._clear_cache([old_statistic_id, new_statistic_id])
 
     def delete(self, session: Session, statistic_ids: list[str]) -> None:
-        """Clear statistics for a list of statistic_ids."""
+        """Clear statistics for a list of statistic_ids.
+
+        This call is not thread-safe and must be called from the
+        recorder thread.
+        """
+        self._assert_in_recorder_thread()
         session.query(StatisticsMeta).filter(
             StatisticsMeta.statistic_id.in_(statistic_ids)
         ).delete(synchronize_session=False)
