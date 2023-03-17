@@ -86,8 +86,8 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                 if self.imap_client.has_pending_idle():
                     self.imap_client.idle_done()
                 await self.imap_client.stop_wait_server_push()
-                await self.imap_client.logout()
                 await self.imap_client.close()
+                await self.imap_client.logout()
             except (AioImapException, asyncio.TimeoutError) as ex:
                 if log_error:
                     self.async_set_update_error(ex)
