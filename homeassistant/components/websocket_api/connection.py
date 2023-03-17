@@ -66,6 +66,11 @@ class ActiveConnection:
         self.send_message(messages.result_message(msg_id, result))
 
     @callback
+    def send_event(self, msg_id: int, event: Any | None = None) -> None:
+        """Send a event message."""
+        self.send_message(messages.event_message(msg_id, event))
+
+    @callback
     def send_error(self, msg_id: int, code: str, message: str) -> None:
         """Send a error message."""
         self.send_message(messages.error_message(msg_id, code, message))
