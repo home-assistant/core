@@ -182,8 +182,8 @@ async def test_all_day_event(
 
     expected = [
         {
-            "start": {"date": "2023-03-17"},
-            "end": {"date": "2023-03-18"},
+            "start": {"date": dt.now().strftime("%Y-%m-%d")},
+            "end": {"date": (dt.now() + timedelta(days=1)).strftime("%Y-%m-%d")},
             "summary": "A task",
             "description": None,
             "location": None,
