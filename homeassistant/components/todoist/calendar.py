@@ -1,9 +1,7 @@
 """Support for Todoist task management (https://todoist.com)."""
 from __future__ import annotations
 
-import asyncio
 from datetime import date, datetime, timedelta
-from itertools import chain
 import logging
 from typing import Any
 import uuid
@@ -25,6 +23,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt
 
 from .const import (
@@ -56,6 +55,7 @@ from .const import (
     START,
     SUMMARY,
 )
+from .coordinator import TodoistCoordinator
 from .types import CalData, CustomProject, ProjectData, TodoistEvent
 
 _LOGGER = logging.getLogger(__name__)
@@ -121,13 +121,16 @@ async def async_setup_platform(
     collaborator_id_lookup = {}
 
     api = TodoistAPIAsync(token)
+    coordinator = TodoistCoordinator(hass, _LOGGER, SCAN_INTERVAL, api)
+    await coordinator.async_refresh()
 
     # Setup devices:
     # Grab all projects.
     projects = await api.get_projects()
 
-    collaborator_tasks = (api.get_collaborators(project.id) for project in projects)
-    collaborators = list(chain.from_iterable(await asyncio.gather(*collaborator_tasks)))
+    # collaborator_tasks = (api.get_collaborators(project.id) for project in projects)
+    # collaborators = list(chain.from_iterable(await asyncio.gather(*collaborator_tasks)))
+    collaborators = []
 
     # Grab all labels
     labels = await api.get_labels()
@@ -138,7 +141,7 @@ async def async_setup_platform(
         # Project is an object, not a dict!
         # Because of that, we convert what we need to a dict.
         project_data: ProjectData = {CONF_NAME: project.name, CONF_ID: project.id}
-        project_devices.append(TodoistProjectEntity(project_data, labels, api))
+        project_devices.append(TodoistProjectEntity(coordinator, project_data, labels))
         # Cache the names so we can easily look up name->ID.
         project_id_lookup[project.name.lower()] = project.id
 
@@ -171,9 +174,9 @@ async def async_setup_platform(
         # Create the custom project and add it to the devices array.
         project_devices.append(
             TodoistProjectEntity(
+                coordinator,
                 {"id": None, "name": extra_project["name"]},
                 labels,
-                api,
                 due_date_days=project_due_date,
                 whitelisted_labels=project_label_filter,
                 whitelisted_projects=project_id_filter,
@@ -279,23 +282,24 @@ async def async_setup_platform(
     )
 
 
-class TodoistProjectEntity(CalendarEntity):
+class TodoistProjectEntity(CoordinatorEntity, CalendarEntity):
     """A device for getting the next Task from a Todoist Project."""
 
     def __init__(
         self,
+        coordinator: TodoistCoordinator,
         data: ProjectData,
         labels: list[Label],
-        api: TodoistAPIAsync,
         due_date_days: int | None = None,
         whitelisted_labels: list[str] | None = None,
         whitelisted_projects: list[str] | None = None,
     ) -> None:
         """Create the Todoist Calendar Entity."""
+        super().__init__(coordinator=coordinator)
         self.data = TodoistProjectData(
             data,
             labels,
-            api,
+            coordinator,
             due_date_days=due_date_days,
             whitelisted_labels=whitelisted_labels,
             whitelisted_projects=whitelisted_projects,
@@ -318,6 +322,7 @@ class TodoistProjectEntity(CalendarEntity):
 
     async def async_update(self) -> None:
         """Update all Todoist Calendars."""
+        await super().async_update()
         await self.data.async_update()
         # Set Todoist-specific data that can't easily be grabbed
         self._cal_data["all_tasks"] = [
@@ -385,7 +390,7 @@ class TodoistProjectData:
         self,
         project_data: ProjectData,
         labels: list[Label],
-        api: TodoistAPIAsync,
+        coordinator: TodoistCoordinator,
         due_date_days: int | None = None,
         whitelisted_labels: list[str] | None = None,
         whitelisted_projects: list[str] | None = None,
@@ -393,7 +398,7 @@ class TodoistProjectData:
         """Initialize a Todoist Project."""
         self.event: TodoistEvent | None = None
 
-        self._api = api
+        self._coordinator = coordinator
         self._name = project_data[CONF_NAME]
         # If no ID is defined, fetch all tasks.
         self._id = project_data.get(CONF_ID)
@@ -581,8 +586,8 @@ class TodoistProjectData:
         self, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all tasks in a specific time frame."""
+        tasks = self._coordinator.data
         if self._id is None:
-            tasks = await self._api.get_tasks()
             project_task_data = [
                 task
                 for task in tasks
@@ -590,7 +595,7 @@ class TodoistProjectData:
                 or task.project_id in self._project_id_whitelist
             ]
         else:
-            project_task_data = await self._api.get_tasks(project_id=self._id)
+            project_task_data = [task for task in tasks if task.project_id == self._id]
 
         events = []
         for task in project_task_data:
@@ -612,15 +617,15 @@ class TodoistProjectData:
                 event = CalendarEvent(
                     summary=task.content,
                     start=due_date_value,
-                    end=due_date_value,
+                    end=due_date_value + timedelta(days=1),
                 )
                 events.append(event)
         return events
 
     async def async_update(self) -> None:
         """Get the latest data."""
+        tasks = self._coordinator.data
         if self._id is None:
-            tasks = await self._api.get_tasks()
             project_task_data = [
                 task
                 for task in tasks
@@ -628,7 +633,7 @@ class TodoistProjectData:
                 or task.project_id in self._project_id_whitelist
             ]
         else:
-            project_task_data = await self._api.get_tasks(project_id=self._id)
+            project_task_data = [task for task in tasks if task.project_id == self._id]
 
         # If we have no data, we can just return right away.
         if not project_task_data:
