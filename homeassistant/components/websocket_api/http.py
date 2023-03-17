@@ -275,6 +275,14 @@ class WebSocketHandler:
                 if msg.type in (WSMsgType.CLOSE, WSMsgType.CLOSED, WSMsgType.CLOSING):
                     break
 
+                if msg.type == WSMsgType.BINARY:
+                    if len(msg.data) < 2:
+                        disconnect_warn = "Received invalid binary message."
+                        break
+                    handler = msg.data[0]
+                    payload = msg.data[1:]
+                    connection.async_handle_binary(handler, payload)
+
                 if msg.type != WSMsgType.TEXT:
                     disconnect_warn = "Received non-Text message."
                     break

@@ -1,13 +1,20 @@
 """Test Websocket API http module."""
 import asyncio
 from datetime import timedelta
+from typing import Any
 from unittest.mock import patch
 
 from aiohttp import ServerDisconnectedError, WSMsgType, web
 import pytest
 
-from homeassistant.components.websocket_api import const, http
-from homeassistant.core import HomeAssistant
+from homeassistant.components.websocket_api import (
+    async_register_command,
+    const,
+    http,
+    websocket_command,
+)
+from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.util.dt import utcnow
 
 from tests.common import async_fire_time_changed
@@ -155,3 +162,52 @@ async def test_prepare_fail(
         await hass_ws_client(hass)
 
     assert "Timeout preparing request" in caplog.text
+
+
+async def test_binary_message(
+    hass: HomeAssistant, websocket_client, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test binary messages."""
+    binary_payload = asyncio.Future()
+
+    # Register a handler
+    @callback
+    @websocket_command(
+        {
+            "type": "get_binary_message_handler",
+        }
+    )
+    def get_binary_message_handler(
+        hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+    ):
+        unsub = None
+
+        @callback
+        def binary_message_handler(
+            hass: HomeAssistant, connection: ActiveConnection, payload: bytes
+        ):
+            nonlocal unsub
+            binary_payload.set_result(payload)
+            unsub()
+
+        prefix, unsub = connection.async_register_binary_handler(binary_message_handler)
+
+        connection.send_result(msg["id"], {"prefix": prefix})
+
+    async_register_command(hass, get_binary_message_handler)
+
+    # Open connection to handler and get binary ID back
+    await websocket_client.send_json({"id": 5, "type": "get_binary_message_handler"})
+    result = await websocket_client.receive_json()
+    assert result["id"] == 5
+    assert result["type"] == const.TYPE_RESULT
+    assert result["success"]
+    assert result["result"]["prefix"] == 1
+
+    # Send message to binary
+    await websocket_client.send_bytes(
+        result["result"]["prefix"].to_bytes(1, "big") + b"test"
+    )
+
+    # Verify received
+    assert await binary_payload == b"test"

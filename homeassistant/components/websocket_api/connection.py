@@ -25,6 +25,9 @@ current_connection = ContextVar["ActiveConnection | None"](
     "current_connection", default=None
 )
 
+MessageHandler = Callable[[HomeAssistant, "ActiveConnection", dict[str, Any]], None]
+BinaryHandler = Callable[[HomeAssistant, "ActiveConnection", bytes], None]
+
 
 class ActiveConnection:
     """Handle an active websocket client connection."""
@@ -46,7 +49,10 @@ class ActiveConnection:
         self.subscriptions: dict[Hashable, Callable[[], Any]] = {}
         self.last_id = 0
         self.supported_features: dict[str, float] = {}
-        self.handlers = self.hass.data[const.DOMAIN]
+        self.handlers: dict[str, tuple[MessageHandler, vol.Schema]] = self.hass.data[
+            const.DOMAIN
+        ]
+        self.binary_handlers: dict[int, BinaryHandler] = {}
         current_connection.set(self)
 
     def get_description(self, request: web.Request | None) -> str:
@@ -59,6 +65,28 @@ class ActiveConnection:
     def context(self, msg: dict[str, Any]) -> Context:
         """Return a context."""
         return Context(user_id=self.user.id)
+
+    @callback
+    def async_register_binary_handler(
+        self, handler: BinaryHandler
+    ) -> tuple[int, Callable[[], None]]:
+        """Register a temporary binary handler for this connection.
+
+        Returns a binary prefix (1 byte) and a callback to unregister the handler.
+        """
+        prefix = 1
+        while prefix in self.binary_handlers and prefix < 256:
+            prefix += 1
+        if prefix == 256:
+            raise RuntimeError("Too many binary handlers registered")
+        self.binary_handlers[prefix] = handler
+
+        @callback
+        def unsub() -> None:
+            """Unregister the handler."""
+            self.binary_handlers.pop(prefix)
+
+        return prefix, unsub
 
     @callback
     def send_result(self, msg_id: int, result: Any | None = None) -> None:
@@ -74,6 +102,16 @@ class ActiveConnection:
     def send_error(self, msg_id: int, code: str, message: str) -> None:
         """Send a error message."""
         self.send_message(messages.error_message(msg_id, code, message))
+
+    @callback
+    def async_handle_binary(self, handler_id: int, payload: bytes) -> None:
+        """Handle a single incoming binary message."""
+        if handler := self.binary_handlers.get(handler_id):
+            handler(self.hass, self, payload)
+        else:
+            self.logger.error(
+                "Received binary message for non-existing handler", handler_id
+            )
 
     @callback
     def async_handle(self, msg: dict[str, Any]) -> None:
