@@ -14,7 +14,7 @@ import time
 from typing import Any, TypeVar
 
 import async_timeout
-from sqlalchemy import create_engine, event as sqlalchemy_event, exc, func, select
+from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -62,17 +62,10 @@ from .db_schema import (
     States,
     StatesMeta,
     Statistics,
-    StatisticsRuns,
     StatisticsShortTerm,
 )
 from .executor import DBInterruptibleThreadPoolExecutor
-from .models import (
-    DatabaseEngine,
-    StatisticData,
-    StatisticMetaData,
-    UnsupportedDialect,
-    process_timestamp,
-)
+from .models import DatabaseEngine, StatisticData, StatisticMetaData, UnsupportedDialect
 from .pool import POOL_SIZE, MutexPool, RecorderPool
 from .queries import (
     has_entity_ids_to_migrate,
@@ -86,12 +79,14 @@ from .table_managers.event_types import EventTypeManager
 from .table_managers.state_attributes import StateAttributesManager
 from .table_managers.states import StatesManager
 from .table_managers.states_meta import StatesMetaManager
+from .table_managers.statistics_meta import StatisticsMetaManager
 from .tasks import (
     AdjustLRUSizeTask,
     AdjustStatisticsTask,
     ChangeStatisticsUnitTask,
     ClearStatisticsTask,
     CommitTask,
+    CompileMissingStatisticsTask,
     DatabaseLockTask,
     EntityIDMigrationTask,
     EventsContextIDMigrationTask,
@@ -172,6 +167,7 @@ class Recorder(threading.Thread):
         threading.Thread.__init__(self, name="Recorder")
 
         self.hass = hass
+        self.thread_id: int | None = None
         self.auto_purge = auto_purge
         self.auto_repack = auto_repack
         self.keep_days = keep_days
@@ -208,6 +204,7 @@ class Recorder(threading.Thread):
         self.state_attributes_manager = StateAttributesManager(
             self, exclude_attributes_by_domain
         )
+        self.statistics_meta_manager = StatisticsMetaManager(self)
         self.event_session: Session | None = None
         self._get_session: Callable[[], Session] | None = None
         self._completed_first_database_setup: bool | None = None
@@ -613,6 +610,7 @@ class Recorder(threading.Thread):
 
     def run(self) -> None:
         """Start processing events to save."""
+        self.thread_id = threading.get_ident()
         setup_result = self._setup_recorder()
 
         if not setup_result:
@@ -668,7 +666,7 @@ class Recorder(threading.Thread):
                     "Database Migration Failed",
                     "recorder_database_migration",
                 )
-                self._activate_and_set_db_ready()
+                self.hass.add_job(self.async_set_db_ready)
                 self._shutdown()
                 return
 
@@ -676,9 +674,7 @@ class Recorder(threading.Thread):
             self._activate_and_set_db_ready()
 
         # Catch up with missed statistics
-        with session_scope(session=self.get_session()) as session:
-            self._schedule_compile_missing_statistics(session)
-
+        self._schedule_compile_missing_statistics()
         _LOGGER.debug("Recorder processing the queue")
         self._adjust_lru_size()
         self.hass.add_job(self._async_set_recorder_ready_migration_done)
@@ -687,7 +683,14 @@ class Recorder(threading.Thread):
 
     def _activate_and_set_db_ready(self) -> None:
         """Activate the table managers or schedule migrations and mark the db as ready."""
-        with session_scope(session=self.get_session()) as session:
+        with session_scope(session=self.get_session(), read_only=True) as session:
+            # Prime the statistics meta manager as soon as possible
+            # since we want the frontend queries to avoid a thundering
+            # herd of queries to find the statistics meta data if
+            # there are a lot of statistics graphs on the frontend.
+            if self.schema_version >= 23:
+                self.statistics_meta_manager.load(session)
+
             if (
                 self.schema_version < 36
                 or session.execute(has_events_context_ids_to_migrate()).scalar()
@@ -758,10 +761,11 @@ class Recorder(threading.Thread):
                     non_state_change_events.append(event_)
 
         assert self.event_session is not None
-        self.event_data_manager.load(non_state_change_events, self.event_session)
-        self.event_type_manager.load(non_state_change_events, self.event_session)
-        self.states_meta_manager.load(state_change_events, self.event_session)
-        self.state_attributes_manager.load(state_change_events, self.event_session)
+        session = self.event_session
+        self.event_data_manager.load(non_state_change_events, session)
+        self.event_type_manager.load(non_state_change_events, session)
+        self.states_meta_manager.load(state_change_events, session)
+        self.state_attributes_manager.load(state_change_events, session)
 
     def _guarded_process_one_task_or_recover(self, task: RecorderTask) -> None:
         """Process a task, guarding against exceptions to ensure the loop does not collapse."""
@@ -1077,6 +1081,7 @@ class Recorder(threading.Thread):
         self.event_data_manager.reset()
         self.event_type_manager.reset()
         self.states_meta_manager.reset()
+        self.statistics_meta_manager.reset()
 
         if not self.event_session:
             return
@@ -1282,26 +1287,9 @@ class Recorder(threading.Thread):
 
         self._open_event_session()
 
-    def _schedule_compile_missing_statistics(self, session: Session) -> None:
+    def _schedule_compile_missing_statistics(self) -> None:
         """Add tasks for missing statistics runs."""
-        now = dt_util.utcnow()
-        last_period_minutes = now.minute - now.minute % 5
-        last_period = now.replace(minute=last_period_minutes, second=0, microsecond=0)
-        start = now - timedelta(days=self.keep_days)
-        start = start.replace(minute=0, second=0, microsecond=0)
-
-        # Find the newest statistics run, if any
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-        # pylint: disable-next=not-callable
-        if last_run := session.query(func.max(StatisticsRuns.start)).scalar():
-            start = max(start, process_timestamp(last_run) + timedelta(minutes=5))
-
-        # Add tasks
-        while start < last_period:
-            end = start + timedelta(minutes=5)
-            _LOGGER.debug("Compiling missing statistics for %s-%s", start, end)
-            self.queue_task(StatisticsTask(start, end >= last_period))
-            start = end
+        self.queue_task(CompileMissingStatisticsTask())
 
     def _end_session(self) -> None:
         """End the recorder session."""

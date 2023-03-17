@@ -370,19 +370,16 @@ turn_on:
           unit_of_measurement: "%"
     white:
       name: White
-      description:
-        Set the light to white mode and change its brightness, where 0 turns
-        the light off, 1 is the minimum brightness and 255 is the maximum
-        brightness supported by the light.
+      description: Set the light to white mode.
       filter:
         attribute:
           supported_color_modes:
             - light.ColorMode.WHITE
       advanced: true
       selector:
-        number:
-          min: 0
-          max: 255
+        constant:
+          value: true
+          label: Enabled
     profile:
       name: Profile
       description: Name of a light profile to use.
@@ -749,6 +746,18 @@ toggle:
           min: 0
           max: 100
           unit_of_measurement: "%"
+    white:
+      name: White
+      description: Set the light to white mode.
+      filter:
+        attribute:
+          supported_color_modes:
+            - light.ColorMode.WHITE
+      advanced: true
+      selector:
+        constant:
+          value: true
+          label: Enabled
     profile:
       name: Profile
       description: Name of a light profile to use.
