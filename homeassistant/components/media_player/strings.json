@@ -46,8 +46,8 @@
         "is_volume_muted": {
           "name": "Muted",
           "state": {
-            "true": "[%key:common::state::true%]",
-            "false": "[%key:common::state::false%]"
+            "true": "[%key:common::state::yes%]",
+            "false": "[%key:common::state::no%]"
           }
         },
         "media_album_artist": {

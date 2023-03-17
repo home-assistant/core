@@ -3,8 +3,8 @@
     "state": {
       "off": "Off",
       "on": "On",
-      "true": "Yes",
-      "false": "No",
+      "yes": "Yes",
+      "no": "No",
       "open": "Open",
       "closed": "Closed",
       "connected": "Connected",
