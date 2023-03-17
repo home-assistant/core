@@ -131,12 +131,11 @@ def get_data(hass: HomeAssistant, config: Mapping[str, Any]) -> CO2SignalRespons
         _LOGGER.exception("Unexpected exception")
         raise UnknownError from err
 
-    else:
-        if "error" in data:
-            raise UnknownError(data["error"])
+    if "error" in data:
+        raise UnknownError(data["error"])
 
-        if data.get("status") != "ok":
-            _LOGGER.exception("Unexpected response: %s", data)
-            raise UnknownError
+    if data.get("status") != "ok":
+        _LOGGER.exception("Unexpected response: %s", data)
+        raise UnknownError
 
     return cast(CO2SignalResponse, data)

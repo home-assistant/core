@@ -14,7 +14,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -83,7 +83,7 @@ async def async_setup_entry(
 class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     """AdvantageAir AC unit."""
 
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_max_temp = 32
     _attr_min_temp = 16
@@ -115,6 +115,30 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     def fan_mode(self) -> str | None:
         """Return the current fan modes."""
         return ADVANTAGE_AIR_FAN_MODES.get(self._ac["fan"])
+
+    async def async_turn_on(self) -> None:
+        """Set the HVAC State to on."""
+        await self.aircon(
+            {
+                self.ac_key: {
+                    "info": {
+                        "state": ADVANTAGE_AIR_STATE_ON,
+                    }
+                }
+            }
+        )
+
+    async def async_turn_off(self) -> None:
+        """Set the HVAC State to off."""
+        await self.aircon(
+            {
+                self.ac_key: {
+                    "info": {
+                        "state": ADVANTAGE_AIR_STATE_OFF,
+                    }
+                }
+            }
+        )
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC Mode and State."""
@@ -149,7 +173,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
 class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
     """AdvantageAir Zone control."""
 
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_max_temp = 32
     _attr_min_temp = 16
@@ -181,24 +205,32 @@ class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
         """Return the target temperature."""
         return self._zone["setTemp"]
 
+    async def async_turn_on(self) -> None:
+        """Set the HVAC State to on."""
+        await self.aircon(
+            {
+                self.ac_key: {
+                    "zones": {self.zone_key: {"state": ADVANTAGE_AIR_STATE_OPEN}}
+                }
+            }
+        )
+
+    async def async_turn_off(self) -> None:
+        """Set the HVAC State to off."""
+        await self.aircon(
+            {
+                self.ac_key: {
+                    "zones": {self.zone_key: {"state": ADVANTAGE_AIR_STATE_CLOSE}}
+                }
+            }
+        )
+
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC Mode and State."""
         if hvac_mode == HVACMode.OFF:
-            await self.aircon(
-                {
-                    self.ac_key: {
-                        "zones": {self.zone_key: {"state": ADVANTAGE_AIR_STATE_CLOSE}}
-                    }
-                }
-            )
+            await self.async_turn_off()
         else:
-            await self.aircon(
-                {
-                    self.ac_key: {
-                        "zones": {self.zone_key: {"state": ADVANTAGE_AIR_STATE_OPEN}}
-                    }
-                }
-            )
+            await self.async_turn_on()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the Temperature."""

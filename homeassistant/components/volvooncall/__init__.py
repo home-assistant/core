@@ -23,6 +23,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
@@ -238,7 +239,7 @@ class VolvoData:
             raise InvalidAuth from exc
 
 
-class VolvoUpdateCoordinator(DataUpdateCoordinator):
+class VolvoUpdateCoordinator(DataUpdateCoordinator[None]):
     """Volvo coordinator."""
 
     def __init__(self, hass: HomeAssistant, volvo_data: VolvoData) -> None:
@@ -253,14 +254,14 @@ class VolvoUpdateCoordinator(DataUpdateCoordinator):
 
         self.volvo_data = volvo_data
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
 
         async with async_timeout.timeout(10):
             await self.volvo_data.update()
 
 
-class VolvoEntity(CoordinatorEntity):
+class VolvoEntity(CoordinatorEntity[VolvoUpdateCoordinator]):
     """Base class for all VOC entities."""
 
     def __init__(
@@ -313,6 +314,16 @@ class VolvoEntity(CoordinatorEntity):
     def assumed_state(self):
         """Return true if unable to access real state of entity."""
         return True
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return a inique set of attributes for each vehicle."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.vehicle.vin)},
+            name=self._vehicle_name,
+            model=self.vehicle.vehicle_type,
+            manufacturer="Volvo",
+        )
 
     @property
     def extra_state_attributes(self):

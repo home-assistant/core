@@ -5,10 +5,11 @@ import asyncio
 from collections.abc import Callable
 from contextlib import suppress
 import datetime as dt
+from logging import DEBUG, WARNING
 
 from httpx import RemoteProtocolError, TransportError
 from onvif import ONVIFCamera, ONVIFService
-from zeep.exceptions import Fault
+from zeep.exceptions import Fault, XMLParseError
 
 from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
@@ -18,7 +19,7 @@ from .const import LOGGER
 from .models import Event
 from .parsers import PARSERS
 
-UNHANDLED_TOPICS = set()
+UNHANDLED_TOPICS: set[str] = set()
 SUBSCRIPTION_ERRORS = (
     Fault,
     asyncio.TimeoutError,
@@ -121,20 +122,36 @@ class EventManager:
 
         if self._subscription:
             # Suppressed. The subscription may no longer exist.
-            with suppress(*SUBSCRIPTION_ERRORS):
+            try:
                 await self._subscription.Unsubscribe()
+            except (XMLParseError, *SUBSCRIPTION_ERRORS) as err:
+                LOGGER.debug(
+                    (
+                        "Failed to unsubscribe ONVIF PullPoint subscription for '%s';"
+                        " This is normal if the device restarted: %s"
+                    ),
+                    self.unique_id,
+                    err,
+                )
             self._subscription = None
 
         try:
             restarted = await self.async_start()
-        except SUBSCRIPTION_ERRORS:
+        except (XMLParseError, *SUBSCRIPTION_ERRORS) as err:
             restarted = False
+            # Device may not support subscriptions so log at debug level
+            # when we get an XMLParseError
+            LOGGER.log(
+                DEBUG if isinstance(err, XMLParseError) else WARNING,
+                (
+                    "Failed to restart ONVIF PullPoint subscription for '%s'; "
+                    "Retrying later: %s"
+                ),
+                self.unique_id,
+                err,
+            )
 
         if not restarted:
-            LOGGER.warning(
-                "Failed to restart ONVIF PullPoint subscription for '%s'. Retrying",
-                self.unique_id,
-            )
             # Try again in a minute
             self._unsub_refresh = async_call_later(self.hass, 60, self.async_restart)
         elif self._listeners:
@@ -174,11 +191,17 @@ class EventManager:
                 ).total_seconds() < 7200:
                     await self.async_renew()
             except RemoteProtocolError:
-                # Likley a shutdown event, nothing to see here
+                # Likely a shutdown event, nothing to see here
                 return
-            except SUBSCRIPTION_ERRORS as err:
-                LOGGER.warning(
-                    "Failed to fetch ONVIF PullPoint subscription messages for '%s': %s",
+            except (XMLParseError, *SUBSCRIPTION_ERRORS) as err:
+                # Device may not support subscriptions so log at debug level
+                # when we get an XMLParseError
+                LOGGER.log(
+                    DEBUG if isinstance(err, XMLParseError) else WARNING,
+                    (
+                        "Failed to fetch ONVIF PullPoint subscription messages for"
+                        " '%s': %s"
+                    ),
                     self.unique_id,
                     err,
                 )

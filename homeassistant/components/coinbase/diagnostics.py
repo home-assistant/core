@@ -1,5 +1,7 @@
 """Diagnostics support for Coinbase."""
 
+from typing import Any
+
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, CONF_ID
@@ -20,7 +22,7 @@ TO_REDACT = {
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
-) -> dict:
+) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     instance: CoinbaseData = hass.data[DOMAIN][entry.entry_id]
 

@@ -83,7 +83,6 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         """Init Tuya vacuum."""
         super().__init__(device, device_manager)
 
-        self._attr_supported_features = 0
         self._attr_fan_speed_list = []
 
         self._attr_supported_features |= VacuumEntityFeature.SEND_COMMAND

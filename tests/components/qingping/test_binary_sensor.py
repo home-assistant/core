@@ -1,8 +1,7 @@
 """Test the Qingping binary sensors."""
-
-
 from homeassistant.components.qingping.const import DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME
+from homeassistant.core import HomeAssistant
 
 from . import LIGHT_AND_SIGNAL_SERVICE_INFO
 
@@ -10,7 +9,7 @@ from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 
-async def test_binary_sensors(hass):
+async def test_binary_sensors(hass: HomeAssistant) -> None:
     """Test setting up creates the binary sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,

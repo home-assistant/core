@@ -24,7 +24,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN, LOGGER
 
 
-class TautulliDataUpdateCoordinator(DataUpdateCoordinator):
+class TautulliDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Data update coordinator for the Tautulli integration."""
 
     config_entry: ConfigEntry

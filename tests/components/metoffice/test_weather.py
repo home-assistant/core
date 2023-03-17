@@ -4,9 +4,11 @@ from datetime import timedelta
 import json
 
 from freezegun import freeze_time
+import requests_mock
 
 from homeassistant.components.metoffice.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import async_get as get_dev_reg
 from homeassistant.util import utcnow
 
@@ -22,7 +24,9 @@ from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
 
 
 @freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.timezone.utc))
-async def test_site_cannot_connect(hass, requests_mock):
+async def test_site_cannot_connect(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> None:
     """Test we handle cannot connect error."""
 
     requests_mock.get("/public/data/val/wxfcs/all/json/sitelist/", text="")
@@ -49,7 +53,9 @@ async def test_site_cannot_connect(hass, requests_mock):
 
 
 @freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.timezone.utc))
-async def test_site_cannot_update(hass, requests_mock):
+async def test_site_cannot_update(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> None:
     """Test we handle cannot connect error."""
 
     # all metoffice test data encapsulated in here
@@ -95,7 +101,9 @@ async def test_site_cannot_update(hass, requests_mock):
 
 
 @freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.timezone.utc))
-async def test_one_weather_site_running(hass, requests_mock):
+async def test_one_weather_site_running(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> None:
     """Test the Met Office weather platform."""
 
     # all metoffice test data encapsulated in here
@@ -176,7 +184,9 @@ async def test_one_weather_site_running(hass, requests_mock):
 
 
 @freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.timezone.utc))
-async def test_two_weather_sites_running(hass, requests_mock):
+async def test_two_weather_sites_running(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> None:
     """Test we handle two different weather sites both running."""
 
     # all metoffice test data encapsulated in here

@@ -31,7 +31,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the Broadlink flow."""
         self.device = None
 
@@ -39,8 +39,10 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Define a device for the config flow."""
         if device.type not in DEVICE_TYPES:
             _LOGGER.error(
-                "Unsupported device: %s. If it worked before, please open "
-                "an issue at https://github.com/home-assistant/core/issues",
+                (
+                    "Unsupported device: %s. If it worked before, please open "
+                    "an issue at https://github.com/home-assistant/core/issues"
+                ),
                 hex(device.devtype),
             )
             raise AbortFlow("not_supported")
@@ -175,9 +177,11 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(device.mac.hex())
             if self.source == config_entries.SOURCE_IMPORT:
                 _LOGGER.warning(
-                    "%s (%s at %s) is ready to be configured. Click "
-                    "Configuration in the sidebar, click Integrations and "
-                    "click Configure on the device to complete the setup",
+                    (
+                        "%s (%s at %s) is ready to be configured. Click "
+                        "Configuration in the sidebar, click Integrations and "
+                        "click Configure on the device to complete the setup"
+                    ),
                     device.name,
                     device.model,
                     device.host[0],

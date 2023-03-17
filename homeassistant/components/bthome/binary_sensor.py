@@ -1,8 +1,6 @@
 """Support for BTHome binary sensors."""
 from __future__ import annotations
 
-from typing import Optional
-
 from bthome_ble import (
     BinarySensorDeviceClass as BTHomeBinarySensorDeviceClass,
     SensorUpdate,
@@ -22,9 +20,10 @@ from homeassistant.components.bluetooth.passive_update_processor import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 from .const import DOMAIN
-from .device import device_key_to_bluetooth_entity_key, sensor_device_info_to_hass
+from .device import device_key_to_bluetooth_entity_key
 
 BINARY_SENSOR_DESCRIPTIONS = {
     BTHomeBinarySensorDeviceClass.BATTERY: BinarySensorEntityDescription(
@@ -147,7 +146,7 @@ def sensor_update_to_bluetooth_data_update(
     """Convert a binary sensor update to a bluetooth data update."""
     return PassiveBluetoothDataUpdate(
         devices={
-            device_id: sensor_device_info_to_hass(device_info)
+            device_id: sensor_device_info_to_hass_device_info(device_info)
             for device_id, device_info in sensor_update.devices.items()
         },
         entity_descriptions={
@@ -187,7 +186,7 @@ async def async_setup_entry(
 
 
 class BTHomeBluetoothBinarySensorEntity(
-    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[Optional[bool]]],
+    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[bool | None]],
     BinarySensorEntity,
 ):
     """Representation of a BTHome binary sensor."""

@@ -7,14 +7,26 @@ from homeassistant.components.shelly.const import (
     EVENT_SHELLY_CLICK,
 )
 from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import (
+    async_entries_for_config_entry,
+    async_get as async_get_dev_reg,
+)
 from homeassistant.setup import async_setup_component
+
+from . import init_integration
 
 from tests.components.logbook.common import MockRow, mock_humanify
 
 
-async def test_humanify_shelly_click_event_block_device(hass, coap_wrapper):
+async def test_humanify_shelly_click_event_block_device(
+    hass: HomeAssistant, mock_block_device
+) -> None:
     """Test humanifying Shelly click event for block device."""
-    assert coap_wrapper
+    entry = await init_integration(hass, 1)
+    dev_reg = async_get_dev_reg(hass)
+    device = async_entries_for_config_entry(dev_reg, entry.entry_id)[0]
+
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
 
@@ -24,7 +36,7 @@ async def test_humanify_shelly_click_event_block_device(hass, coap_wrapper):
             MockRow(
                 EVENT_SHELLY_CLICK,
                 {
-                    ATTR_DEVICE_ID: coap_wrapper.device_id,
+                    ATTR_DEVICE_ID: device.id,
                     ATTR_DEVICE: "shellyix3-12345678",
                     ATTR_CLICK_TYPE: "single",
                     ATTR_CHANNEL: 1,
@@ -57,9 +69,14 @@ async def test_humanify_shelly_click_event_block_device(hass, coap_wrapper):
     )
 
 
-async def test_humanify_shelly_click_event_rpc_device(hass, rpc_wrapper):
+async def test_humanify_shelly_click_event_rpc_device(
+    hass: HomeAssistant, mock_rpc_device
+) -> None:
     """Test humanifying Shelly click event for rpc device."""
-    assert rpc_wrapper
+    entry = await init_integration(hass, 2)
+    dev_reg = async_get_dev_reg(hass)
+    device = async_entries_for_config_entry(dev_reg, entry.entry_id)[0]
+
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
 
@@ -69,7 +86,7 @@ async def test_humanify_shelly_click_event_rpc_device(hass, rpc_wrapper):
             MockRow(
                 EVENT_SHELLY_CLICK,
                 {
-                    ATTR_DEVICE_ID: rpc_wrapper.device_id,
+                    ATTR_DEVICE_ID: device.id,
                     ATTR_DEVICE: "shellyplus1pm-12345678",
                     ATTR_CLICK_TYPE: "single_push",
                     ATTR_CHANNEL: 1,

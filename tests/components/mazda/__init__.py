@@ -1,7 +1,7 @@
 """Tests for the Mazda Connected Services integration."""
 
 import json
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from pymazda import Client as MazdaAPI
 
@@ -35,6 +35,7 @@ async def init_integration(
     get_ev_vehicle_status_fixture = json.loads(
         load_fixture("mazda/get_ev_vehicle_status.json")
     )
+    get_hvac_setting_fixture = json.loads(load_fixture("mazda/get_hvac_setting.json"))
 
     config_entry = MockConfigEntry(domain=DOMAIN, data=FIXTURE_USER_INPUT)
     config_entry.add_to_hass(hass)
@@ -61,6 +62,13 @@ async def init_integration(
     client_mock.stop_engine = AsyncMock()
     client_mock.turn_off_hazard_lights = AsyncMock()
     client_mock.turn_on_hazard_lights = AsyncMock()
+    client_mock.refresh_vehicle_status = AsyncMock()
+    client_mock.get_hvac_setting = AsyncMock(return_value=get_hvac_setting_fixture)
+    client_mock.get_assumed_hvac_setting = Mock(return_value=get_hvac_setting_fixture)
+    client_mock.get_assumed_hvac_mode = Mock(return_value=True)
+    client_mock.set_hvac_setting = AsyncMock()
+    client_mock.turn_on_hvac = AsyncMock()
+    client_mock.turn_off_hvac = AsyncMock()
 
     with patch(
         "homeassistant.components.mazda.config_flow.MazdaAPI",

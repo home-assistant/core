@@ -62,7 +62,7 @@ class NexiaHoldSwitch(NexiaThermostatZoneEntity, SwitchEntity):
         if self._zone.get_current_mode() == OPERATION_MODE_OFF:
             await self._zone.call_permanent_off()
         else:
-            await self._zone.call_permanent_hold()
+            await self._zone.set_permanent_hold()
         self._signal_zone_update()
 
     async def async_turn_off(self, **kwargs: Any) -> None:

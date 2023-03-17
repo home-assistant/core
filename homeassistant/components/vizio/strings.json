@@ -35,7 +35,7 @@
     "abort": {
       "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "updated_entry": "This entry has already been setup but the name, apps, and/or options defined in the configuration do not match the previously imported configuration, so the configuration entry has been updated accordingly."
+      "updated_entry": "This entry has already been set up but the name, apps, and/or options defined in the configuration do not match the previously imported configuration, so the configuration entry has been updated accordingly."
     }
   },
   "options": {

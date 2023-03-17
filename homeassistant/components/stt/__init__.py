@@ -231,7 +231,8 @@ class SpeechToTextView(HomeAssistantView):
 def metadata_from_header(request: web.Request) -> SpeechMetadata:
     """Extract STT metadata from header.
 
-    X-Speech-Content: format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=1; language=de_de
+    X-Speech-Content:
+        format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=1; language=de_de
     """
     try:
         data = request.headers[istr("X-Speech-Content")].split(";")

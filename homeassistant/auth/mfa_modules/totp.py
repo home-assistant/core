@@ -19,7 +19,7 @@ from . import (
     SetupFlow,
 )
 
-REQUIREMENTS = ["pyotp==2.7.0", "PyQRCode==1.2.1"]
+REQUIREMENTS = ["pyotp==2.8.0", "PyQRCode==1.2.1"]
 
 CONFIG_SCHEMA = MULTI_FACTOR_AUTH_MODULE_SCHEMA.extend({}, extra=vol.PREVENT_EXTRA)
 
@@ -47,8 +47,10 @@ def _generate_qr_code(data: str) -> str:
             .decode("ascii")
             .replace("\n", "")
             .replace(
-                '<?xml version="1.0" encoding="UTF-8"?>'
-                '<svg xmlns="http://www.w3.org/2000/svg"',
+                (
+                    '<?xml version="1.0" encoding="UTF-8"?>'
+                    '<svg xmlns="http://www.w3.org/2000/svg"'
+                ),
                 "<svg",
             )
         )
@@ -206,9 +208,7 @@ class TotpSetupFlow(SetupFlow):
                 result = await self._auth_module.async_setup_user(
                     self._user_id, {"secret": self._ota_secret}
                 )
-                return self.async_create_entry(
-                    title=self._auth_module.name, data={"result": result}
-                )
+                return self.async_create_entry(data={"result": result})
 
             errors["base"] = "invalid_code"
 

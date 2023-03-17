@@ -6,10 +6,9 @@ import pytest
 from homeassistant.components import automation
 from homeassistant.components.button import DOMAIN
 from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import device_registry
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntryHider
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -17,21 +16,7 @@ from tests.common import (
     assert_lists_same,
     async_get_device_automations,
     async_mock_service,
-    mock_device_registry,
-    mock_registry,
 )
-
-
-@pytest.fixture
-def device_reg(hass: HomeAssistant) -> device_registry.DeviceRegistry:
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture
-def entity_reg(hass: HomeAssistant) -> EntityRegistry:
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
 
 
 @pytest.fixture
@@ -42,17 +27,19 @@ def calls(hass: HomeAssistant) -> list[ServiceCall]:
 
 async def test_get_triggers(
     hass: HomeAssistant,
-    device_reg: device_registry.DeviceRegistry,
-    entity_reg: EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test we get the expected triggers from a button."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
     expected_triggers = [
         {
             "platform": "device",
@@ -70,29 +57,29 @@ async def test_get_triggers(
 
 
 @pytest.mark.parametrize(
-    "hidden_by,entity_category",
+    ("hidden_by", "entity_category"),
     (
-        (RegistryEntryHider.INTEGRATION, None),
-        (RegistryEntryHider.USER, None),
+        (er.RegistryEntryHider.INTEGRATION, None),
+        (er.RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
     ),
 )
 async def test_get_triggers_hidden_auxiliary(
     hass,
-    device_reg,
-    entity_reg,
-    hidden_by,
-    entity_category,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    hidden_by: er.RegistryEntryHider | None,
+    entity_category: EntityCategory | None,
 ):
     """Test we get the expected triggers from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -117,7 +104,7 @@ async def test_get_triggers_hidden_auxiliary(
     assert_lists_same(triggers, expected_triggers)
 
 
-async def test_if_fires_on_state_change(hass, calls):
+async def test_if_fires_on_state_change(hass: HomeAssistant, calls) -> None:
     """Test for turn_on and turn_off triggers firing."""
     hass.states.async_set("button.entity", "unknown")
 
@@ -138,10 +125,12 @@ async def test_if_fires_on_state_change(hass, calls):
                         "service": "test.automation",
                         "data": {
                             "some": (
-                                "to - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }} - "
-                                "{{ trigger.id}}"
+                                "to - {{ trigger.platform }} "
+                                "- {{ trigger.entity_id }} "
+                                "- {{ trigger.from_state.state }} "
+                                "- {{ trigger.to_state.state }} "
+                                "- {{ trigger.for }} "
+                                "- {{ trigger.id }}"
                             )
                         },
                     },

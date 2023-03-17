@@ -23,6 +23,7 @@ from homeassistant.components.knx.const import (
     CONF_KNX_MCAST_PORT,
     CONF_KNX_RATE_LIMIT,
     CONF_KNX_STATE_UPDATER,
+    DEFAULT_ROUTING_IA,
     DOMAIN as KNX_DOMAIN,
 )
 from homeassistant.core import HomeAssistant
@@ -57,6 +58,9 @@ class KNXTestKit:
 
         async def patch_xknx_start():
             """Patch `xknx.start` for unittests."""
+            self.xknx.cemi_handler.send_telegram = AsyncMock(
+                side_effect=self._outgoing_telegrams.put
+            )
             # after XKNX.__init__() to not overwrite it by the config entry again
             # before StateUpdater starts to avoid slow down of tests
             self.xknx.rate_limit = 0
@@ -71,7 +75,6 @@ class KNXTestKit:
             mock = Mock()
             mock.start = AsyncMock(side_effect=patch_xknx_start)
             mock.stop = AsyncMock()
-            mock.send_telegram = AsyncMock(side_effect=self._outgoing_telegrams.put)
             return mock
 
         def fish_xknx(*args, **kwargs):
@@ -224,7 +227,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_KNX_STATE_UPDATER: CONF_KNX_DEFAULT_STATE_UPDATER,
             CONF_KNX_MCAST_PORT: DEFAULT_MCAST_PORT,
             CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
-            CONF_KNX_INDIVIDUAL_ADDRESS: XKNX.DEFAULT_ADDRESS,
+            CONF_KNX_INDIVIDUAL_ADDRESS: DEFAULT_ROUTING_IA,
         },
     )
 

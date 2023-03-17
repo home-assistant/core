@@ -1,6 +1,6 @@
 """Tests for handling accessories on a Lutron Caseta bridge via HomeKit."""
-
 from homeassistant.const import STATE_OFF
+from homeassistant.core import HomeAssistant
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,
@@ -12,7 +12,7 @@ from ..common import (
 )
 
 
-async def test_lutron_caseta_bridge_setup(hass):
+async def test_lutron_caseta_bridge_setup(hass: HomeAssistant) -> None:
     """Test that a Lutron Caseta bridge can be correctly setup in HA via HomeKit."""
     accessories = await setup_accessories_from_file(hass, "lutron_caseta_bridge.json")
     await setup_test_accessories(hass, accessories)
@@ -41,7 +41,7 @@ async def test_lutron_caseta_bridge_setup(hass):
                         EntityTestInfo(
                             entity_id="fan.caseta_r_wireless_fan_speed_control",
                             friendly_name="Caséta® Wireless Fan Speed Control",
-                            unique_id="homekit-39024290-2",
+                            unique_id="00:00:00:00:00:00_21474836482_2",
                             unit_of_measurement=None,
                             supported_features=1,
                             state=STATE_OFF,

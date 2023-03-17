@@ -51,8 +51,9 @@ def async_process_play_media_url(
             "Not signing path for content with query param"
         )
     elif parsed.path.startswith(PATHS_WITHOUT_AUTH):
-        # We don't sign this path if it doesn't need auth. Although signing itself can't hurt,
-        # some devices are unable to handle long URLs and the auth signature might push it over.
+        # We don't sign this path if it doesn't need auth. Although signing itself can't
+        # hurt, some devices are unable to handle long URLs and the auth signature might
+        # push it over.
         pass
     else:
         signed_path = async_sign_path(

@@ -163,7 +163,7 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
             _LOGGER.warning("Unknown state: %s", device.status)
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         if self.type_id == TYPE_RECORDER or self.type == TYPE_PLAYBACK:
             return (

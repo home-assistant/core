@@ -21,10 +21,12 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from . import statistics, websocket_api
-from .const import (
+from .const import (  # noqa: F401
     CONF_DB_INTEGRITY_CHECK,
     DATA_INSTANCE,
     DOMAIN,
+    EVENT_RECORDER_5MIN_STATISTICS_GENERATED,
+    EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,
     EXCLUDE_ATTRIBUTES,
     SQLITE_URL_PREFIX,
 )
@@ -41,7 +43,7 @@ DEFAULT_DB_FILE = "home-assistant_v2.db"
 DEFAULT_DB_INTEGRITY_CHECK = True
 DEFAULT_DB_MAX_RETRIES = 10
 DEFAULT_DB_RETRY_WAIT = 3
-DEFAULT_COMMIT_INTERVAL = 1
+DEFAULT_COMMIT_INTERVAL = 5
 
 CONF_AUTO_PURGE = "auto_purge"
 CONF_AUTO_REPACK = "auto_repack"
@@ -69,7 +71,10 @@ ALLOW_IN_MEMORY_DB = False
 def validate_db_url(db_url: str) -> Any:
     """Validate database URL."""
     # Don't allow on-memory sqlite databases
-    if (db_url == SQLITE_URL_PREFIX or ":memory:" in db_url) and not ALLOW_IN_MEMORY_DB:
+    if (
+        db_url == SQLITE_URL_PREFIX
+        or (db_url.startswith(SQLITE_URL_PREFIX) and ":memory:" in db_url)
+    ) and not ALLOW_IN_MEMORY_DB:
         raise vol.Invalid("In-memory SQLite database is not supported")
 
     return db_url
@@ -137,12 +142,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass_config_path=hass.config.path(DEFAULT_DB_FILE)
     )
     exclude = conf[CONF_EXCLUDE]
-    exclude_t = exclude.get(CONF_EVENT_TYPES, [])
-    if EVENT_STATE_CHANGED in exclude_t:
-        _LOGGER.warning(
-            "State change events are excluded, recorder will not record state changes."
-            "This will become an error in Home Assistant Core 2022.2"
-        )
+    exclude_event_types: set[str] = set(exclude.get(CONF_EVENT_TYPES, []))
+    if EVENT_STATE_CHANGED in exclude_event_types:
+        _LOGGER.error("State change events cannot be excluded, use a filter instead")
+        exclude_event_types.remove(EVENT_STATE_CHANGED)
     instance = hass.data[DATA_INSTANCE] = Recorder(
         hass=hass,
         auto_purge=auto_purge,
@@ -153,7 +156,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         db_max_retries=db_max_retries,
         db_retry_wait=db_retry_wait,
         entity_filter=entity_filter,
-        exclude_t=exclude_t,
+        exclude_event_types=exclude_event_types,
         exclude_attributes_by_domain=exclude_attributes_by_domain,
     )
     instance.async_initialize()

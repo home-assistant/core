@@ -1,9 +1,9 @@
-"""
-Regression tests for Netamo Smart CO Alarm.
+"""Regression tests for Netamo Smart CO Alarm.
 
 https://github.com/home-assistant/core/issues/78903
 """
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,
@@ -15,7 +15,7 @@ from ..common import (
 )
 
 
-async def test_netamo_smart_co_alarm_setup(hass):
+async def test_netamo_smart_co_alarm_setup(hass: HomeAssistant) -> None:
     """Test that a Netamo Smart CO Alarm can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "netamo_smart_co_alarm.json")
     await setup_test_accessories(hass, accessories)
@@ -35,14 +35,14 @@ async def test_netamo_smart_co_alarm_setup(hass):
                 EntityTestInfo(
                     entity_id="binary_sensor.smart_co_alarm_carbon_monoxide_sensor",
                     friendly_name="Smart CO Alarm Carbon Monoxide Sensor",
-                    unique_id="homekit-1234-22",
+                    unique_id="00:00:00:00:00:00_1_22",
                     state="off",
                 ),
                 EntityTestInfo(
                     entity_id="binary_sensor.smart_co_alarm_low_battery",
                     friendly_name="Smart CO Alarm Low Battery",
                     entity_category=EntityCategory.DIAGNOSTIC,
-                    unique_id="homekit-1234-36",
+                    unique_id="00:00:00:00:00:00_1_36",
                     state="off",
                 ),
             ],

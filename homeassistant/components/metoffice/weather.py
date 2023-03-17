@@ -15,7 +15,7 @@ from homeassistant.components.weather import (
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PRESSURE_HPA, SPEED_MILES_PER_HOUR, TEMP_CELSIUS
+from homeassistant.const import UnitOfPressure, UnitOfSpeed, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -82,9 +82,9 @@ class MetOfficeWeather(
     _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
 
-    _attr_native_temperature_unit = TEMP_CELSIUS
-    _attr_native_pressure_unit = PRESSURE_HPA
-    _attr_native_wind_speed_unit = SPEED_MILES_PER_HOUR
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_pressure_unit = UnitOfPressure.HPA
+    _attr_native_wind_speed_unit = UnitOfSpeed.MILES_PER_HOUR
 
     def __init__(
         self,

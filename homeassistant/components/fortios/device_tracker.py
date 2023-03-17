@@ -1,5 +1,4 @@
-"""
-Support to use FortiOS device like FortiGate as device tracker.
+"""Support to use FortiOS device like FortiGate as device tracker.
 
 This component is part of the device_tracker platform.
 """
@@ -68,7 +67,7 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> FortiOSDeviceScanner
 
 
 class FortiOSDeviceScanner(DeviceScanner):
-    """This class queries a FortiOS unit for connected devices."""
+    """Class which queries a FortiOS unit for connected devices."""
 
     def __init__(self, fgt) -> None:
         """Initialize the scanner."""

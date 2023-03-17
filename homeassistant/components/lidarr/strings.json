@@ -28,15 +28,5 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "upcoming_days": "Number of upcoming days to display on calendar",
-          "max_records": "Number of maximum records to display on wanted and queue"
-        }
-      }
-    }
   }
 }

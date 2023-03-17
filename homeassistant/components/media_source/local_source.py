@@ -5,6 +5,7 @@ import logging
 import mimetypes
 from pathlib import Path
 import shutil
+from typing import Any
 
 from aiohttp import web
 from aiohttp.web_request import FileField
@@ -191,8 +192,7 @@ class LocalSource(MediaSource):
 
 
 class LocalMediaView(http.HomeAssistantView):
-    """
-    Local Media Finder View.
+    """Local Media Finder View.
 
     Returns media files in config/media.
     """
@@ -323,7 +323,7 @@ class UploadMediaView(http.HomeAssistantView):
 @websocket_api.require_admin
 @websocket_api.async_response
 async def websocket_remove_media(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Remove media."""
     try:

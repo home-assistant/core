@@ -3,7 +3,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from hole.exceptions import HoleError
 
-from homeassistant.components.pi_hole.const import CONF_STATISTICS_ONLY
+from homeassistant.components.pi_hole.const import (
+    DEFAULT_LOCATION,
+    DEFAULT_NAME,
+    DEFAULT_SSL,
+    DEFAULT_VERIFY_SSL,
+)
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -47,7 +52,16 @@ API_KEY = "apikey"
 SSL = False
 VERIFY_SSL = True
 
-CONF_DATA = {
+CONFIG_DATA_DEFAULTS = {
+    CONF_HOST: f"{HOST}:{PORT}",
+    CONF_LOCATION: DEFAULT_LOCATION,
+    CONF_NAME: DEFAULT_NAME,
+    CONF_SSL: DEFAULT_SSL,
+    CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
+    CONF_API_KEY: API_KEY,
+}
+
+CONFIG_DATA = {
     CONF_HOST: f"{HOST}:{PORT}",
     CONF_LOCATION: LOCATION,
     CONF_NAME: NAME,
@@ -56,34 +70,39 @@ CONF_DATA = {
     CONF_VERIFY_SSL: VERIFY_SSL,
 }
 
-CONF_CONFIG_FLOW_USER = {
+CONFIG_FLOW_USER = {
     CONF_HOST: HOST,
     CONF_PORT: PORT,
     CONF_LOCATION: LOCATION,
     CONF_NAME: NAME,
-    CONF_STATISTICS_ONLY: False,
     CONF_SSL: SSL,
     CONF_VERIFY_SSL: VERIFY_SSL,
 }
 
-CONF_CONFIG_FLOW_API_KEY = {
+CONFIG_FLOW_API_KEY = {
     CONF_API_KEY: API_KEY,
 }
 
-CONF_CONFIG_ENTRY = {
+CONFIG_ENTRY_WITH_API_KEY = {
     CONF_HOST: f"{HOST}:{PORT}",
     CONF_LOCATION: LOCATION,
     CONF_NAME: NAME,
-    CONF_STATISTICS_ONLY: False,
     CONF_API_KEY: API_KEY,
     CONF_SSL: SSL,
     CONF_VERIFY_SSL: VERIFY_SSL,
 }
 
+CONFIG_ENTRY_WITHOUT_API_KEY = {
+    CONF_HOST: f"{HOST}:{PORT}",
+    CONF_LOCATION: LOCATION,
+    CONF_NAME: NAME,
+    CONF_SSL: SSL,
+    CONF_VERIFY_SSL: VERIFY_SSL,
+}
 SWITCH_ENTITY_ID = "switch.pi_hole"
 
 
-def _create_mocked_hole(raise_exception=False, has_versions=True):
+def _create_mocked_hole(raise_exception=False, has_versions=True, has_data=True):
     mocked_hole = MagicMock()
     type(mocked_hole).get_data = AsyncMock(
         side_effect=HoleError("") if raise_exception else None
@@ -93,7 +112,10 @@ def _create_mocked_hole(raise_exception=False, has_versions=True):
     )
     type(mocked_hole).enable = AsyncMock()
     type(mocked_hole).disable = AsyncMock()
-    mocked_hole.data = ZERO_DATA
+    if has_data:
+        mocked_hole.data = ZERO_DATA
+    else:
+        mocked_hole.data = []
     if has_versions:
         mocked_hole.versions = SAMPLE_VERSIONS
     else:
@@ -108,4 +130,10 @@ def _patch_init_hole(mocked_hole):
 def _patch_config_flow_hole(mocked_hole):
     return patch(
         "homeassistant.components.pi_hole.config_flow.Hole", return_value=mocked_hole
+    )
+
+
+def _patch_setup_hole():
+    return patch(
+        "homeassistant.components.pi_hole.async_setup_entry", return_value=True
     )

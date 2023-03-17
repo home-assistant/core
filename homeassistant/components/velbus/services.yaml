@@ -24,6 +24,29 @@ scan:
       selector:
         text:
 
+clear_cache:
+  name: Clear cache
+  description: Clears the velbuscache and then starts a new scan
+  fields:
+    interface:
+      name: Interface
+      description: The velbus interface to send the command to, this will be the same value as used during configuration
+      required: true
+      example: "192.168.1.5:27015"
+      default: ""
+      selector:
+        text:
+    address:
+      name: Address
+      description: >
+        The module address in decimal format, if this is provided we only clear this module, if nothing is provided we clear the whole cache directory (all modules)
+        The decimal addresses are displayed in front of the modules listed at the integration page.
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 254
+
 set_memo_text:
   name: Set memo text
   description: >

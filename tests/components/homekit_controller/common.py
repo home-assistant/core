@@ -9,23 +9,28 @@ import os
 from typing import Any, Final
 from unittest import mock
 
-from aiohomekit.model import Accessories, AccessoriesState, Accessory
+from aiohomekit.model import (
+    Accessories,
+    AccessoriesState,
+    Accessory,
+    mixin as model_mixin,
+)
 from aiohomekit.testing import FakeController, FakePairing
 from aiohomekit.zeroconf import HomeKitService
 
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.homekit_controller.const import (
     CONTROLLER,
+    DEBOUNCE_COOLDOWN,
     DOMAIN,
     HOMEKIT_ACCESSORY_DISPATCH,
     IDENTIFIER_ACCESSORY_ID,
-    IDENTIFIER_SERIAL_NUMBER,
 )
 from homeassistant.components.homekit_controller.utils import async_get_controller
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -73,8 +78,7 @@ class EntityTestInfo:
 
 @dataclass
 class DeviceTriggerInfo:
-    """
-    Describe a automation trigger we expect to be created.
+    """Describe a automation trigger we expect to be created.
 
     We only use these for a stateless characteristic like a doorbell.
     """
@@ -142,6 +146,7 @@ class Helper:
             # If they are enabled, then HA will pick up the changes next time
             # we yield control
             await time_changed(self.hass, 60)
+            await time_changed(self.hass, DEBOUNCE_COOLDOWN)
 
         await self.hass.async_block_till_done()
 
@@ -161,6 +166,7 @@ class Helper:
     async def poll_and_get_state(self) -> State:
         """Trigger a time based poll and return the current entity state."""
         await time_changed(self.hass, 60)
+        await time_changed(self.hass, DEBOUNCE_COOLDOWN)
 
         state = self.hass.states.get(self.entity_id)
         assert state is not None
@@ -320,7 +326,6 @@ async def assert_devices_and_entities_created(
 
         device = device_registry.async_get_device(
             {
-                (IDENTIFIER_SERIAL_NUMBER, expected.serial_number),
                 (IDENTIFIER_ACCESSORY_ID, expected.unique_id),
             }
         )
@@ -336,21 +341,15 @@ async def assert_devices_and_entities_created(
 
         # We might have matched the device by one identifier only
         # Lets check that the other one is correct. Otherwise the test might silently be wrong.
-        serial_number_set = False
         accessory_id_set = False
 
         for key, value in device.identifiers:
-            if key == IDENTIFIER_SERIAL_NUMBER:
-                assert value == expected.serial_number
-                serial_number_set = True
-
-            elif key == IDENTIFIER_ACCESSORY_ID:
+            if key == IDENTIFIER_ACCESSORY_ID:
                 assert value == expected.unique_id
                 accessory_id_set = True
 
         # If unique_id or serial is provided it MUST actually appear in the device registry entry.
         assert (not expected.unique_id) ^ accessory_id_set
-        assert (not expected.serial_number) ^ serial_number_set
 
         for entity_info in expected.entities:
             entity = entity_registry.async_get(entity_info.entity_id)
@@ -410,3 +409,8 @@ async def remove_device(ws_client, device_id, config_entry_id):
     )
     response = await ws_client.receive_json()
     return response["success"]
+
+
+def get_next_aid():
+    """Get next aid."""
+    return model_mixin.id_counter + 1

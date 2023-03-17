@@ -1,0 +1,8 @@
+{
+  "issues": {
+    "pending_removal": {
+      "title": "The Magicseaweed integration is being removed",
+      "description": "The Magicseaweed integration is pending removal from Home Assistant and will no longer be available as of Home Assistant 2023.3.\n\nRemove the YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    }
+  }
+}

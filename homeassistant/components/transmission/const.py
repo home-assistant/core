@@ -18,7 +18,7 @@ SUPPORTED_ORDER_MODES = {
         torrents, key=lambda t: t.ratio, reverse=True
     ),
 }
-
+CONF_ENTRY_ID = "entry_id"
 CONF_LIMIT = "limit"
 CONF_ORDER = "order"
 
@@ -44,3 +44,7 @@ DATA_UPDATED = "transmission_data_updated"
 EVENT_STARTED_TORRENT = "transmission_started_torrent"
 EVENT_REMOVED_TORRENT = "transmission_removed_torrent"
 EVENT_DOWNLOADED_TORRENT = "transmission_downloaded_torrent"
+
+STATE_UP_DOWN = "up_down"
+STATE_SEEDING = "seeding"
+STATE_DOWNLOADING = "downloading"

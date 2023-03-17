@@ -3,22 +3,23 @@ from __future__ import annotations
 
 import functools
 import logging
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any
 
+from typing_extensions import Self
 import zigpy.exceptions
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.foundation import Status
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, EntityCategory, Platform
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
 from .core.const import (
+    CHANNEL_BASIC,
     CHANNEL_INOVELLI,
     CHANNEL_ON_OFF,
     DATA_ZHA,
@@ -31,10 +32,6 @@ from .entity import ZhaEntity, ZhaGroupEntity
 if TYPE_CHECKING:
     from .core.channels.base import ZigbeeChannel
     from .core.device import ZHADevice
-
-_ZHASwitchConfigurationEntitySelfT = TypeVar(
-    "_ZHASwitchConfigurationEntitySelfT", bound="ZHASwitchConfigurationEntity"
-)
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.SWITCH)
 GROUP_MATCH = functools.partial(ZHA_ENTITIES.group_match, Platform.SWITCH)
@@ -159,7 +156,7 @@ class SwitchGroup(ZhaGroupEntity, SwitchEntity):
         self.async_write_ha_state()
 
     async def async_update(self) -> None:
-        """Query all members and determine the light group state."""
+        """Query all members and determine the switch group state."""
         all_states = [self.hass.states.get(x) for x in self._entity_ids]
         states: list[State] = list(filter(None, all_states))
         on_states = [state for state in states if state.state == STATE_ON]
@@ -173,16 +170,17 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
 
     _attr_entity_category = EntityCategory.CONFIG
     _zcl_attribute: str
-    _zcl_inverter_attribute: str = ""
+    _zcl_inverter_attribute: str | None = None
+    _force_inverted: bool = False
 
     @classmethod
     def create_entity(
-        cls: type[_ZHASwitchConfigurationEntitySelfT],
+        cls,
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
         **kwargs: Any,
-    ) -> _ZHASwitchConfigurationEntitySelfT | None:
+    ) -> Self | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
@@ -225,18 +223,23 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
         self.async_write_ha_state()
 
     @property
+    def inverted(self) -> bool:
+        """Return True if the switch is inverted."""
+        if self._zcl_inverter_attribute:
+            return bool(self._channel.cluster.get(self._zcl_inverter_attribute))
+        return self._force_inverted
+
+    @property
     def is_on(self) -> bool:
         """Return if the switch is on based on the statemachine."""
         val = bool(self._channel.cluster.get(self._zcl_attribute))
-        invert = bool(self._channel.cluster.get(self._zcl_inverter_attribute))
-        return (not val) if invert else val
+        return (not val) if self.inverted else val
 
     async def async_turn_on_off(self, state: bool) -> None:
         """Turn the entity on or off."""
         try:
-            invert = bool(self._channel.cluster.get(self._zcl_inverter_attribute))
             result = await self._channel.cluster.write_attributes(
-                {self._zcl_attribute: not state if invert else state}
+                {self._zcl_attribute: not state if self.inverted else state}
             )
         except zigpy.exceptions.ZigbeeException as ex:
             self.error("Could not set value: %s", ex)
@@ -257,15 +260,15 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
     async def async_update(self) -> None:
         """Attempt to retrieve the state of the entity."""
         await super().async_update()
-        _LOGGER.error("Polling current state")
+        self.error("Polling current state")
         if self._channel:
             value = await self._channel.get_attribute_value(
                 self._zcl_attribute, from_cache=False
             )
-            invert = await self._channel.get_attribute_value(
+            await self._channel.get_attribute_value(
                 self._zcl_inverter_attribute, from_cache=False
             )
-            _LOGGER.debug("read value=%s, inverter=%s", value, bool(invert))
+            self.debug("read value=%s, inverted=%s", value, self.inverted)
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -290,6 +293,33 @@ class P1MotionTriggerIndicatorSwitch(
     """Representation of a ZHA motion triggering configuration entity."""
 
     _zcl_attribute: str = "trigger_indicator"
+    _attr_name = "LED trigger indicator"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="opple_cluster", models={"lumi.plug.mmeu01", "lumi.plug.maeu01"}
+)
+class XiaomiPlugPowerOutageMemorySwitch(
+    ZHASwitchConfigurationEntity, id_suffix="power_outage_memory"
+):
+    """Representation of a ZHA power outage memory configuration entity."""
+
+    _zcl_attribute: str = "power_outage_memory"
+    _attr_name = "Power outage memory"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_BASIC,
+    manufacturers={"Philips", "Signify Netherlands B.V."},
+    models={"SML001", "SML002", "SML003", "SML004"},
+)
+class HueMotionTriggerIndicatorSwitch(
+    ZHASwitchConfigurationEntity, id_suffix="trigger_indicator"
+):
+    """Representation of a ZHA motion triggering configuration entity."""
+
+    _zcl_attribute: str = "trigger_indicator"
+    _attr_name = "LED trigger indicator"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -300,6 +330,7 @@ class ChildLock(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
     """ZHA BinarySensor."""
 
     _zcl_attribute: str = "child_lock"
+    _attr_name = "Child lock"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -310,6 +341,7 @@ class DisableLed(ZHASwitchConfigurationEntity, id_suffix="disable_led"):
     """ZHA BinarySensor."""
 
     _zcl_attribute: str = "disable_led"
+    _attr_name = "Disable LED"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -336,12 +368,24 @@ class InovelliSmartBulbMode(ZHASwitchConfigurationEntity, id_suffix="smart_bulb_
     channel_names=CHANNEL_INOVELLI,
 )
 class InovelliDoubleTapForFullBrightness(
-    ZHASwitchConfigurationEntity, id_suffix="double_tap_up_for_full_brightness"
+    ZHASwitchConfigurationEntity, id_suffix="double_tap_up_for_max_brightness"
 ):
     """Inovelli double tap for full brightness control."""
 
-    _zcl_attribute: str = "double_tap_up_for_full_brightness"
+    _zcl_attribute: str = "double_tap_up_for_max_brightness"
     _attr_name: str = "Double tap full brightness"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_INOVELLI,
+)
+class InovelliDoubleTapForMinBrightness(
+    ZHASwitchConfigurationEntity, id_suffix="double_tap_down_for_min_brightness"
+):
+    """Inovelli double tap down for minimum brightness control."""
+
+    _zcl_attribute: str = "double_tap_down_for_min_brightness"
+    _attr_name: str = "Double tap minimum brightness"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -388,3 +432,48 @@ class InovelliRelayClickInOnOffMode(
 
     _zcl_attribute: str = "relay_click_in_on_off_mode"
     _attr_name: str = "Disable relay click in on off mode"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_INOVELLI,
+)
+class InovelliDisableDoubleTapClearNotificationsMode(
+    ZHASwitchConfigurationEntity, id_suffix="disable_clear_notifications_double_tap"
+):
+    """Inovelli disable clear notifications double tap control."""
+
+    _zcl_attribute: str = "disable_clear_notifications_double_tap"
+    _attr_name: str = "Disable config 2x tap to clear notifications"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederLEDIndicator(
+    ZHASwitchConfigurationEntity, id_suffix="disable_led_indicator"
+):
+    """Representation of a LED indicator configuration entity."""
+
+    _zcl_attribute: str = "disable_led_indicator"
+    _attr_name = "LED indicator"
+    _force_inverted = True
+    _attr_icon: str = "mdi:led-on"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederChildLock(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
+    """Representation of a child lock configuration entity."""
+
+    _zcl_attribute: str = "child_lock"
+    _attr_name = "Child lock"
+    _attr_icon: str = "mdi:account-lock"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_ON_OFF,
+    models={"TS011F"},
+)
+class TuyaChildLockSwitch(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
+    """Representation of a child lock configuration entity."""
+
+    _zcl_attribute: str = "child_lock"
+    _attr_name = "Child lock"
+    _attr_icon: str = "mdi:account-lock"

@@ -15,7 +15,7 @@ from .common import CONF_USERNAME, CONFIG, DOMAIN
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass, mock_account):
+async def test_form(hass: HomeAssistant, mock_account) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -42,7 +42,7 @@ async def test_form(hass, mock_account):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_already_configured(hass):
+async def test_already_configured(hass: HomeAssistant) -> None:
     """Test we handle already configured."""
     MockConfigEntry(
         domain=litterrobot.DOMAIN,
@@ -59,7 +59,7 @@ async def test_already_configured(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_form_invalid_auth(hass):
+async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -77,7 +77,7 @@ async def test_form_invalid_auth(hass):
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -95,7 +95,7 @@ async def test_form_cannot_connect(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_unknown_error(hass):
+async def test_form_unknown_error(hass: HomeAssistant) -> None:
     """Test we handle unknown error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -140,7 +140,6 @@ async def test_step_reauth(hass: HomeAssistant, mock_account: Account) -> None:
         "homeassistant.components.litterrobot.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_PASSWORD: CONFIG[litterrobot.DOMAIN][CONF_PASSWORD]},
@@ -190,7 +189,6 @@ async def test_step_reauth_failed(hass: HomeAssistant, mock_account: Account) ->
         "homeassistant.components.litterrobot.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_PASSWORD: CONFIG[litterrobot.DOMAIN][CONF_PASSWORD]},

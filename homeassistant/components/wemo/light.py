@@ -76,8 +76,7 @@ def async_setup_bridge(
                 known_light_ids.add(light_id)
                 new_lights.append(WemoLight(coordinator, light))
 
-        if new_lights:
-            async_add_entities(new_lights)
+        async_add_entities(new_lights)
 
     async_update_lights()
     config_entry.async_on_unload(coordinator.async_add_listener(async_update_lights))

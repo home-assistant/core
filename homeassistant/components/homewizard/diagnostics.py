@@ -12,7 +12,14 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .coordinator import HWEnergyDeviceUpdateCoordinator
 
-TO_REDACT = {CONF_IP_ADDRESS, "serial", "wifi_ssid"}
+TO_REDACT = {
+    CONF_IP_ADDRESS,
+    "serial",
+    "wifi_ssid",
+    "unique_meter_id",
+    "unique_id",
+    "gas_unique_id",
+}
 
 
 async def async_get_config_entry_diagnostics(
@@ -22,10 +29,13 @@ async def async_get_config_entry_diagnostics(
     coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     meter_data = {
-        "device": asdict(coordinator.data["device"]),
-        "data": asdict(coordinator.data["data"]),
-        "state": asdict(coordinator.data["state"])
-        if coordinator.data["state"] is not None
+        "device": asdict(coordinator.data.device),
+        "data": asdict(coordinator.data.data),
+        "state": asdict(coordinator.data.state)
+        if coordinator.data.state is not None
+        else None,
+        "system": asdict(coordinator.data.system)
+        if coordinator.data.system is not None
         else None,
     }
 

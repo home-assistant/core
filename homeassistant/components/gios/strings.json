@@ -22,5 +22,19 @@
     "info": {
       "can_reach_server": "Reach GIO\u015a server"
     }
+  },
+  "entity": {
+    "sensor": {
+      "aqi": {
+        "state": {
+          "very_bad": "Very bad",
+          "bad": "Bad",
+          "sufficient": "Sufficient",
+          "moderate": "Moderate",
+          "good": "Good",
+          "very_good": "Very good"
+        }
+      }
+    }
   }
 }

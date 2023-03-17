@@ -6,7 +6,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CURRENCY_CENT, VOLUME_LITERS
+from homeassistant.const import CURRENCY_CENT, UnitOfVolume
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -40,7 +40,6 @@ CONF_ALLOWED_FUEL_TYPES = [
 ]
 CONF_DEFAULT_FUEL_TYPES = ["E10", "U91"]
 
-ATTRIBUTION = "Data provided by NSW Government FuelCheck"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STATION_ID): cv.positive_int,
@@ -88,6 +87,8 @@ class StationPriceSensor(
 ):
     """Implementation of a sensor that reports the fuel price for a station."""
 
+    _attr_attribution = "Data provided by NSW Government FuelCheck"
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator[StationPriceData],
@@ -121,13 +122,12 @@ class StationPriceSensor(
         return {
             ATTR_STATION_ID: self._station_id,
             ATTR_STATION_NAME: self._get_station_name(),
-            ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
     @property
     def native_unit_of_measurement(self) -> str:
         """Return the units of measurement."""
-        return f"{CURRENCY_CENT}/{VOLUME_LITERS}"
+        return f"{CURRENCY_CENT}/{UnitOfVolume.LITERS}"
 
     def _get_station_name(self):
         default_name = f"station {self._station_id}"

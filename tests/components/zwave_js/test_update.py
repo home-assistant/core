@@ -5,7 +5,7 @@ from datetime import timedelta
 import pytest
 from zwave_js_server.event import Event
 from zwave_js_server.exceptions import FailedZWaveCommand
-from zwave_js_server.model.firmware import FirmwareUpdateStatus
+from zwave_js_server.model.node.firmware import NodeFirmwareUpdateStatus
 
 from homeassistant.components.update import (
     ATTR_AUTO_UPDATE,
@@ -21,11 +21,13 @@ from homeassistant.components.update import (
 from homeassistant.components.zwave_js.const import DOMAIN, SERVICE_REFRESH_VALUE
 from homeassistant.components.zwave_js.helpers import get_valueless_base_unique_id
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_registry import async_get
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.typing import WebSocketGenerator
 
 UPDATE_ENTITY = "update.z_wave_thermostat_firmware"
 FIRMWARE_UPDATES = {
@@ -69,14 +71,13 @@ FIRMWARE_UPDATE_MULTIPLE_FILES = {
 
 
 async def test_update_entity_states(
-    hass,
+    hass: HomeAssistant,
     client,
     climate_radio_thermostat_ct100_plus_different_endpoints,
-    controller_node,
     integration,
-    caplog,
-    hass_ws_client,
-):
+    caplog: pytest.LogCaptureFixture,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test update entity states."""
     ws_client = await hass_ws_client(hass)
 
@@ -155,11 +156,11 @@ async def test_update_entity_states(
 
 
 async def test_update_entity_install_raises(
-    hass,
+    hass: HomeAssistant,
     client,
     climate_radio_thermostat_ct100_plus_different_endpoints,
     integration,
-):
+) -> None:
     """Test update entity install raises exception."""
     client.async_send_command.return_value = FIRMWARE_UPDATES
 
@@ -181,11 +182,11 @@ async def test_update_entity_install_raises(
 
 
 async def test_update_entity_sleep(
-    hass,
+    hass: HomeAssistant,
     client,
     zen_31,
     integration,
-):
+) -> None:
     """Test update occurs when device is asleep after it wakes up."""
     event = Event(
         "sleep",
@@ -218,11 +219,11 @@ async def test_update_entity_sleep(
 
 
 async def test_update_entity_dead(
-    hass,
+    hass: HomeAssistant,
     client,
     zen_31,
     integration,
-):
+) -> None:
     """Test update occurs when device is dead after it becomes alive."""
     event = Event(
         "dead",
@@ -255,11 +256,11 @@ async def test_update_entity_dead(
 
 
 async def test_update_entity_ha_not_running(
-    hass,
+    hass: HomeAssistant,
     client,
     zen_31,
-    hass_ws_client,
-):
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test update occurs after HA starts."""
     await hass.async_stop()
 
@@ -279,11 +280,11 @@ async def test_update_entity_ha_not_running(
 
 
 async def test_update_entity_update_failure(
-    hass,
+    hass: HomeAssistant,
     client,
     climate_radio_thermostat_ct100_plus_different_endpoints,
     integration,
-):
+) -> None:
     """Test update entity update failed."""
     assert len(client.async_send_command.call_args_list) == 0
     client.async_send_command.side_effect = FailedZWaveCommand("test", 260, "test")
@@ -304,11 +305,11 @@ async def test_update_entity_update_failure(
 
 
 async def test_update_entity_progress(
-    hass,
+    hass: HomeAssistant,
     client,
     climate_radio_thermostat_ct100_plus_different_endpoints,
     integration,
-):
+) -> None:
     """Test update entity progress."""
     node = climate_radio_thermostat_ct100_plus_different_endpoints
     client.async_send_command.return_value = FIRMWARE_UPDATES
@@ -376,7 +377,7 @@ async def test_update_entity_progress(
             "event": "firmware update finished",
             "nodeId": node.node_id,
             "result": {
-                "status": FirmwareUpdateStatus.OK_NO_RESTART,
+                "status": NodeFirmwareUpdateStatus.OK_NO_RESTART,
                 "success": True,
                 "reInterview": False,
             },
@@ -399,12 +400,12 @@ async def test_update_entity_progress(
 
 
 async def test_update_entity_install_failed(
-    hass,
+    hass: HomeAssistant,
     client,
     climate_radio_thermostat_ct100_plus_different_endpoints,
     integration,
-    caplog,
-):
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test update entity install returns error status."""
     node = climate_radio_thermostat_ct100_plus_different_endpoints
     client.async_send_command.return_value = FIRMWARE_UPDATES
@@ -467,7 +468,7 @@ async def test_update_entity_install_failed(
             "event": "firmware update finished",
             "nodeId": node.node_id,
             "result": {
-                "status": FirmwareUpdateStatus.ERROR_TIMEOUT,
+                "status": NodeFirmwareUpdateStatus.ERROR_TIMEOUT,
                 "success": False,
                 "reInterview": False,
             },
@@ -492,11 +493,11 @@ async def test_update_entity_install_failed(
 
 
 async def test_update_entity_reload(
-    hass,
+    hass: HomeAssistant,
     client,
     climate_radio_thermostat_ct100_plus_different_endpoints,
     integration,
-):
+) -> None:
     """Test update entity maintains state after reload."""
     assert hass.states.get(UPDATE_ENTITY).state == STATE_OFF
 

@@ -46,15 +46,15 @@ async def _mock_backup_generation(manager: BackupManager):
         "pathlib.Path.mkdir",
         MagicMock(),
     ), patch(
-        "homeassistant.components.backup.manager.json_util.save_json"
-    ) as mocked_json_util, patch(
+        "homeassistant.components.backup.manager.save_json"
+    ) as mocked_save_json, patch(
         "homeassistant.components.backup.manager.HAVERSION",
         "2025.1.0",
     ):
         await manager.generate_backup()
 
-        assert mocked_json_util.call_count == 1
-        assert mocked_json_util.call_args[0][1]["homeassistant"] == {
+        assert mocked_save_json.call_count == 1
+        assert mocked_save_json.call_args[0][1]["homeassistant"] == {
             "version": "2025.1.0"
         }
 
@@ -142,7 +142,7 @@ async def test_removing_non_existing_backup(
 async def test_getting_backup_that_does_not_exist(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-):
+) -> None:
     """Test getting backup that does not exist."""
     manager = BackupManager(hass)
     manager.backups = {TEST_BACKUP.slug: TEST_BACKUP}
@@ -154,8 +154,8 @@ async def test_getting_backup_that_does_not_exist(
 
         assert (
             f"Removing tracked backup ({TEST_BACKUP.slug}) that "
-            f"does not exists on the expected path {TEST_BACKUP.path}" in caplog.text
-        )
+            f"does not exists on the expected path {TEST_BACKUP.path}"
+        ) in caplog.text
 
 
 async def test_generate_backup_when_backing_up(hass: HomeAssistant) -> None:

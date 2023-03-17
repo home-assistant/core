@@ -1,7 +1,7 @@
 """Make sure that a H.A.A. fan can be setup."""
-
 from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntityFeature
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,
@@ -13,7 +13,7 @@ from ..common import (
 )
 
 
-async def test_haa_fan_setup(hass):
+async def test_haa_fan_setup(hass: HomeAssistant) -> None:
     """Test that a H.A.A. fan can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "haa_fan.json")
     await setup_test_accessories(hass, accessories)
@@ -46,7 +46,7 @@ async def test_haa_fan_setup(hass):
                         EntityTestInfo(
                             entity_id="switch.haa_c718b3",
                             friendly_name="HAA-C718B3",
-                            unique_id="homekit-C718B3-2-8",
+                            unique_id="00:00:00:00:00:00_2_8",
                             state="off",
                         )
                     ],
@@ -56,7 +56,7 @@ async def test_haa_fan_setup(hass):
                 EntityTestInfo(
                     entity_id="fan.haa_c718b3",
                     friendly_name="HAA-C718B3",
-                    unique_id="homekit-C718B3-1-8",
+                    unique_id="00:00:00:00:00:00_1_8",
                     state="on",
                     supported_features=FanEntityFeature.SET_SPEED,
                     capabilities={
@@ -66,14 +66,14 @@ async def test_haa_fan_setup(hass):
                 EntityTestInfo(
                     entity_id="button.haa_c718b3_setup",
                     friendly_name="HAA-C718B3 Setup",
-                    unique_id="homekit-C718B3-1-aid:1-sid:1010-cid:1012",
+                    unique_id="00:00:00:00:00:00_1_1010_1012",
                     entity_category=EntityCategory.CONFIG,
                     state="unknown",
                 ),
                 EntityTestInfo(
                     entity_id="button.haa_c718b3_update",
                     friendly_name="HAA-C718B3 Update",
-                    unique_id="homekit-C718B3-1-aid:1-sid:1010-cid:1011",
+                    unique_id="00:00:00:00:00:00_1_1010_1011",
                     entity_category=EntityCategory.CONFIG,
                     state="unknown",
                 ),

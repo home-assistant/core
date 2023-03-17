@@ -4,11 +4,10 @@ from __future__ import annotations
 from collections.abc import Callable
 from functools import wraps
 import logging
-from typing import Any, TypeVar
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 import plexapi.exceptions
 import requests.exceptions
-from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
@@ -389,7 +388,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
         return self.session.media_episode
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         if self.device and "playback" in self._device_protocol_capabilities:
             return (

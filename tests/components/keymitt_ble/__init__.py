@@ -2,10 +2,11 @@
 from unittest.mock import patch
 
 from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import AdvertisementData
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.const import CONF_ADDRESS
+
+from tests.components.bluetooth import generate_advertisement_data
 
 DOMAIN = "keymitt_ble"
 
@@ -32,16 +33,16 @@ def patch_async_setup_entry(return_value=True):
 
 SERVICE_INFO = BluetoothServiceInfoBleak(
     name="mibp",
-    service_uuids=["00001831-0000-1000-8000-00805f9b34fb"],
+    service_uuids=["0000abcd-0000-1000-8000-00805f9b34fb"],
     address="aa:bb:cc:dd:ee:ff",
     manufacturer_data={},
     service_data={},
     rssi=-60,
     source="local",
-    advertisement=AdvertisementData(
+    advertisement=generate_advertisement_data(
         local_name="mibp",
         manufacturer_data={},
-        service_uuids=["00001831-0000-1000-8000-00805f9b34fb"],
+        service_uuids=["0000abcd-0000-1000-8000-00805f9b34fb"],
     ),
     device=BLEDevice("aa:bb:cc:dd:ee:ff", "mibp"),
     time=0,

@@ -84,9 +84,10 @@ class CalendarEventListener:
 
     async def _fetch_events(self, last_endtime: datetime.datetime) -> None:
         """Update the set of eligible events."""
-        # Use a sliding window for selecting in scope events in the next interval. The event
-        # search range is offset, then the fire time of the returned events are offset again below.
-        # Event time ranges are exclusive so the end time is expanded by 1sec
+        # Use a sliding window for selecting in scope events in the next interval.
+        # The event search range is offset, then the fire time of the returned events
+        # are offset again below. Event time ranges are exclusive so the end time
+        # is expanded by 1sec.
         start_time = last_endtime - self._offset
         end_time = start_time + UPDATE_INTERVAL + datetime.timedelta(seconds=1)
         _LOGGER.debug(

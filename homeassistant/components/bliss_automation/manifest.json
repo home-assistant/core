@@ -1,0 +1,6 @@
+{
+  "domain": "bliss_automation",
+  "name": "Bliss Automation",
+  "integration_type": "virtual",
+  "supported_by": "motion_blinds"
+}
