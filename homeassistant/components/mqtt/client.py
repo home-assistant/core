@@ -620,7 +620,8 @@ class MQTT:
             self._async_untrack_subscription(subscription)
             self._matching_subscriptions.cache_clear()
             # make sure we allow retained payloads when resubscribing
-            del self._retained_init[subscription]
+            if subscription in self._retained_init:
+                del self._retained_init[subscription]
             # Only unsubscribe if currently connected
             if self.connected:
                 self._async_unsubscribe(topic)
