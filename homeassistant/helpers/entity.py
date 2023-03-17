@@ -579,6 +579,25 @@ class Entity(ABC):
             return f"{state:.{FLOAT_PRECISION}}"
         return str(state)
 
+    def _friendly_name(self) -> str | None:
+        """Return the friendly name.
+
+        If has_entity_name is False, this returns self.name
+        If has_entity_name is True, this returns device.name + self.name
+        """
+        if not self.has_entity_name or not self.registry_entry:
+            return self.name
+
+        device_registry = dr.async_get(self.hass)
+        if not (device_id := self.registry_entry.device_id) or not (
+            device_entry := device_registry.async_get(device_id)
+        ):
+            return self.name
+
+        if not self.name:
+            return device_entry.name_by_user or device_entry.name
+        return f"{device_entry.name_by_user or device_entry.name} {self.name}"
+
     @callback
     def _async_write_ha_state(self) -> None:
         """Write the state to the state machine."""
@@ -586,7 +605,8 @@ class Entity(ABC):
             # Polling returned after the entity has already been removed
             return
 
-        if self.registry_entry and self.registry_entry.disabled_by:
+        entry = self.registry_entry
+        if entry and entry.disabled_by:
             if not self._disabled_reported:
                 self._disabled_reported = True
                 assert self.platform is not None
@@ -614,8 +634,6 @@ class Entity(ABC):
         if (unit_of_measurement := self.unit_of_measurement) is not None:
             attr[ATTR_UNIT_OF_MEASUREMENT] = unit_of_measurement
 
-        entry = self.registry_entry
-
         if assumed_state := self.assumed_state:
             attr[ATTR_ASSUMED_STATE] = assumed_state
 
@@ -633,26 +651,7 @@ class Entity(ABC):
         if (icon := (entry and entry.icon) or self.icon) is not None:
             attr[ATTR_ICON] = icon
 
-        def friendly_name() -> str | None:
-            """Return the friendly name.
-
-            If has_entity_name is False, this returns self.name
-            If has_entity_name is True, this returns device.name + self.name
-            """
-            if not self.has_entity_name or not self.registry_entry:
-                return self.name
-
-            device_registry = dr.async_get(self.hass)
-            if not (device_id := self.registry_entry.device_id) or not (
-                device_entry := device_registry.async_get(device_id)
-            ):
-                return self.name
-
-            if not self.name:
-                return device_entry.name_by_user or device_entry.name
-            return f"{device_entry.name_by_user or device_entry.name} {self.name}"
-
-        if (name := (entry and entry.name) or friendly_name()) is not None:
+        if (name := (entry and entry.name) or self._friendly_name()) is not None:
             attr[ATTR_FRIENDLY_NAME] = name
 
         if (supported_features := self.supported_features) is not None:
@@ -672,8 +671,8 @@ class Entity(ABC):
             )
 
         # Overwrite properties that have been set in the config file.
-        if DATA_CUSTOMIZE in self.hass.data:
-            attr.update(self.hass.data[DATA_CUSTOMIZE].get(self.entity_id))
+        if customize := self.hass.data.get(DATA_CUSTOMIZE):
+            attr.update(customize.get(self.entity_id))
 
         if (
             self._context_set is not None
