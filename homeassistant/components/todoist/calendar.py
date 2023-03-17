@@ -1,7 +1,9 @@
 """Support for Todoist task management (https://todoist.com)."""
 from __future__ import annotations
 
+import asyncio
 from datetime import date, datetime, timedelta
+from itertools import chain
 import logging
 from typing import Any
 import uuid
@@ -128,8 +130,8 @@ async def async_setup_platform(
     # Grab all projects.
     projects = await api.get_projects()
 
-    # collaborator_tasks = (api.get_collaborators(project.id) for project in projects)
-    # collaborators = list(chain.from_iterable(await asyncio.gather(*collaborator_tasks)))
+    collaborator_tasks = (api.get_collaborators(project.id) for project in projects)
+    collaborators = list(chain.from_iterable(await asyncio.gather(*collaborator_tasks)))
     collaborators = []
 
     # Grab all labels
