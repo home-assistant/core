@@ -267,6 +267,7 @@ class StatisticsMetaManager:
         session.query(StatisticsMeta).filter(
             StatisticsMeta.statistic_id == statistic_id
         ).update({StatisticsMeta.unit_of_measurement: new_unit})
+        session.commit()
         self._clear_cache([statistic_id])
         self.get(session, statistic_id)
 
@@ -282,6 +283,7 @@ class StatisticsMetaManager:
             (StatisticsMeta.statistic_id == old_statistic_id)
             & (StatisticsMeta.source == source)
         ).update({StatisticsMeta.statistic_id: new_statistic_id})
+        session.commit()
         self._clear_cache([old_statistic_id, new_statistic_id])
         self.get(session, new_statistic_id)
 
@@ -290,6 +292,7 @@ class StatisticsMetaManager:
         session.query(StatisticsMeta).filter(
             StatisticsMeta.statistic_id.in_(statistic_ids)
         ).delete(synchronize_session=False)
+        session.commit()
         self._clear_cache(statistic_ids)
 
     def reset(self) -> None:
