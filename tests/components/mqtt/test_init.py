@@ -1358,7 +1358,7 @@ async def test_replaying_payload_same_topic(
     async_fire_mqtt_message(
         hass, "test/state", "online", qos=0, retain=False
     )  # Simulate new message played back on new subscriptions
-    # After connecting the retain f.lag will not be set, even if the
+    # After connecting the retain flag will not be set, even if the
     # payload published was retained, we cannot see that
     await hass.async_block_till_done()
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
