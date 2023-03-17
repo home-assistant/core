@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import html
 import re
 
-import aiohttp
+from aiohttp import ClientSession
 import voluptuous as vol
 import yarl
 
@@ -135,7 +135,7 @@ def _extract_blueprint_from_community_topic(
 
 
 async def fetch_blueprint_from_community_post(
-    session: aiohttp.ClientSession, url: str
+    session: ClientSession, url: str
 ) -> ImportedBlueprint:
     """Get blueprints from a community post url.
 
@@ -152,7 +152,7 @@ async def fetch_blueprint_from_community_post(
 
 
 async def fetch_blueprint_from_github_url(
-    session: aiohttp.ClientSession, url: str
+    session: ClientSession, url: str
 ) -> ImportedBlueprint:
     """Get a blueprint from a github url."""
     import_url = _get_github_import_url(url)
@@ -172,7 +172,7 @@ async def fetch_blueprint_from_github_url(
 
 
 async def fetch_blueprint_from_github_gist_url(
-    session: aiohttp.ClientSession, url: str
+    session: ClientSession, url: str
 ) -> ImportedBlueprint:
     """Get a blueprint from a Github Gist."""
     if not url.startswith("https://gist.github.com/"):
@@ -217,7 +217,7 @@ async def fetch_blueprint_from_github_gist_url(
 
 
 async def fetch_blueprint_from_url(
-    session: aiohttp.ClientSession, url: str
+    session: ClientSession, url: str
 ) -> ImportedBlueprint:
     """Get a blueprint from a url."""
     for func in (
