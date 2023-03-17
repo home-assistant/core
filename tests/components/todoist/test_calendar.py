@@ -1,5 +1,5 @@
 """Unit tests for the Todoist calendar platform."""
-from datetime import datetime, timedelta
+from datetime import timedelta
 from http import HTTPStatus
 from unittest.mock import AsyncMock, patch
 import urllib
