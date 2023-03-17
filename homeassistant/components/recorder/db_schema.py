@@ -116,6 +116,7 @@ LAST_UPDATED_INDEX_TS = "ix_states_last_updated_ts"
 METADATA_ID_LAST_UPDATED_INDEX_TS = "ix_states_metadata_id_last_updated_ts"
 EVENTS_CONTEXT_ID_BIN_INDEX = "ix_events_context_id_bin"
 STATES_CONTEXT_ID_BIN_INDEX = "ix_states_context_id_bin"
+LEGACY_STATES_EVENT_ID_INDEX = "ix_states_event_id"
 CONTEXT_ID_BIN_MAX_LENGTH = 16
 
 _DEFAULT_TABLE_ARGS = {
