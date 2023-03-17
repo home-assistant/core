@@ -196,13 +196,6 @@ class StatisticsMetaManager:
 
         If statistic_ids is given, fetch metadata only for the listed statistics_ids.
         If statistic_type is given, fetch metadata only for statistic_ids supporting it.
-
-        This call is not thread-safe after startup since
-        purge can remove all references to an entity_id.
-
-        When calling this method from the recorder thread, set
-        from_recorder to True to ensure any missing entity_ids
-        are added to the cache.
         """
         if statistic_ids is None:
             # Fetch metadata from the database
