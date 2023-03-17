@@ -63,7 +63,7 @@ class StatesMetaManager(BaseLRUTableManager[StatesMeta]):
         This call is always thread-safe.
         """
         with session.no_autoflush:
-            return dict(tuple(session.execute(find_all_states_metadata_ids())))  # type: ignore[arg-type]
+            return dict(tuple(execute_stmt_lambda_element(session, find_all_states_metadata_ids())))  # type: ignore[arg-type]
 
     def get_many(
         self, entity_ids: Iterable[str], session: Session, from_recorder: bool
