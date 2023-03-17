@@ -10,14 +10,12 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .entity import LivisiEntity
 
 from .const import (
     DOMAIN,
-    LIVISI_REACHABILITY_CHANGE,
     LIVISI_STATE_CHANGE,
     LOGGER,
     WDS_DEVICE_TYPE,
@@ -55,34 +53,24 @@ async def async_setup_entry(
     )
 
 
-class LivisiWindowDoorSensor(LivisiEntity, BinarySensorEntity):
-    """Represents a Livisi Window/Door Sensor as a Binary Sensor Entity."""
+class LivisiBinarySensor(LivisiEntity, BinarySensorEntity):
+    """Represents a Livisi Binary Sensor."""
 
     def __init__(
         self,
         config_entry: ConfigEntry,
         coordinator: LivisiDataUpdateCoordinator,
         device: dict[str, Any],
+        capabilityName: str,
     ) -> None:
         """Initialize the Livisi sensor."""
         super().__init__(config_entry, coordinator, device)
-        self._capability_id = self.capabilities["WindowDoorSensor"]
-
-        self._attr_device_class = (
-            BinarySensorDeviceClass.DOOR
-            if (device.get("tags", {}).get("typeCategory", "") == "TCDoorId")
-            else BinarySensorDeviceClass.WINDOW
-        )
+        self._capability_id = self.capabilities[capabilityName]
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
 
-        response = await self.coordinator.async_get_wds_state(self._capability_id)
-        if response is None:
-            self._attr_available = False
-        else:
-            self._attr_is_on = response
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -96,3 +84,32 @@ class LivisiWindowDoorSensor(LivisiEntity, BinarySensorEntity):
         """Update the state of the device."""
         self._attr_is_on = state
         self.async_write_ha_state()
+
+
+class LivisiWindowDoorSensor(LivisiBinarySensor):
+    """Represents a Livisi Window/Door Sensor as a Binary Sensor Entity."""
+
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        coordinator: LivisiDataUpdateCoordinator,
+        device: dict[str, Any],
+    ) -> None:
+        """Initialize the Livisi window/door sensor."""
+        super().__init__(config_entry, coordinator, device, "WindowDoorSensor")
+
+        self._attr_device_class = (
+            BinarySensorDeviceClass.DOOR
+            if (device.get("tags", {}).get("typeCategory", "") == "TCDoorId")
+            else BinarySensorDeviceClass.WINDOW
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Get current state."""
+        await super().async_added_to_hass()
+
+        response = await self.coordinator.async_get_wds_state(self._capability_id)
+        if response is None:
+            self._attr_available = False
+        else:
+            self._attr_is_on = response
