@@ -615,8 +615,6 @@ async def test_registry_respect_entity_namespace(
     await platform.async_add_entities([entity])
     assert entity.entity_id == "test_domain.ns_device_name"
 
-    await platform.async_shutdown()
-
 
 async def test_registry_respect_entity_disabled(hass: HomeAssistant) -> None:
     """Test that the registry respects entity disabled."""
@@ -693,8 +691,6 @@ async def test_entity_registry_updates_name(hass: HomeAssistant) -> None:
     state = hass.states.get("test_domain.world")
     assert state.name == "after update"
 
-    await platform.async_shutdown()
-
 
 async def test_setup_entry(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
@@ -721,8 +717,6 @@ async def test_setup_entry(
     assert (
         entity_registry.entities["test_domain.test1"].config_entry_id == "super-mock-id"
     )
-
-    await entity_platform.async_shutdown()
 
 
 async def test_setup_entry_platform_not_ready(
@@ -908,8 +902,6 @@ async def test_entity_registry_updates_entity_id(hass: HomeAssistant) -> None:
     assert hass.states.get("test_domain.world") is None
     assert hass.states.get("test_domain.planet") is not None
 
-    await platform.async_shutdown()
-
 
 async def test_entity_registry_updates_invalid_entity_id(hass: HomeAssistant) -> None:
     """Test that we can't update to an invalid entity id."""
@@ -959,8 +951,6 @@ async def test_entity_registry_updates_invalid_entity_id(hass: HomeAssistant) ->
     assert hass.states.get("test_domain.world") is not None
     assert hass.states.get("invalid_entity_id") is None
     assert hass.states.get("diff_domain.world") is None
-
-    await platform.async_shutdown()
 
 
 async def test_device_info_called(hass: HomeAssistant) -> None:
@@ -1026,8 +1016,6 @@ async def test_device_info_called(hass: HomeAssistant) -> None:
     assert device.hw_version == "test-hw"
     assert device.via_device_id == via.id
 
-    await entity_platform.async_shutdown()
-
 
 async def test_device_info_not_overrides(hass: HomeAssistant) -> None:
     """Test device info is forwarded correctly."""
@@ -1073,8 +1061,6 @@ async def test_device_info_not_overrides(hass: HomeAssistant) -> None:
     assert device.id == device2.id
     assert device2.manufacturer == "test-manufacturer"
     assert device2.model == "test-model"
-
-    await entity_platform.async_shutdown()
 
 
 async def test_device_info_invalid_url(
@@ -1127,8 +1113,6 @@ async def test_device_info_invalid_url(
         in caplog.text
     )
 
-    await entity_platform.async_shutdown()
-
 
 async def test_device_info_homeassistant_url(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
@@ -1174,8 +1158,6 @@ async def test_device_info_homeassistant_url(
     assert device is not None
     assert device.identifiers == {("mqtt", "1234")}
     assert device.configuration_url == "homeassistant://config/mqtt"
-
-    await entity_platform.async_shutdown()
 
 
 async def test_device_info_change_to_no_url(
@@ -1223,8 +1205,6 @@ async def test_device_info_change_to_no_url(
     assert device is not None
     assert device.identifiers == {("mqtt", "1234")}
     assert device.configuration_url is None
-
-    await entity_platform.async_shutdown()
 
 
 async def test_entity_disabled_by_integration(hass: HomeAssistant) -> None:
@@ -1432,10 +1412,6 @@ async def test_platforms_sharing_services(hass: HomeAssistant) -> None:
     assert entity1 in entities
     assert entity2 in entities
 
-    await entity_platform1.async_shutdown()
-    await entity_platform2.async_shutdown()
-    await entity_platform3.async_shutdown()
-
 
 async def test_invalid_entity_id(hass: HomeAssistant) -> None:
     """Test specifying an invalid entity id."""
@@ -1487,8 +1463,6 @@ async def test_setup_entry_with_entities_that_block_forever(
     assert "test_domain" in caplog.text
     assert "test" in caplog.text
 
-    await mock_entity_platform.async_shutdown()
-
 
 async def test_two_platforms_add_same_entity(hass: HomeAssistant) -> None:
     """Test two platforms in the same domain adding an entity with the same name."""
@@ -1525,9 +1499,6 @@ async def test_two_platforms_add_same_entity(hass: HomeAssistant) -> None:
     }
     assert entity1 in entities
     assert entity2 in entities
-
-    await entity_platform1.async_shutdown()
-    await entity_platform2.async_shutdown()
 
 
 class SlowEntity(MockEntity):
@@ -1586,5 +1557,3 @@ async def test_entity_name_influences_entity_id(
 
     assert len(hass.states.async_entity_ids()) == 1
     assert registry.async_get(expected_entity_id) is not None
-
-    await entity_platform.async_shutdown()
