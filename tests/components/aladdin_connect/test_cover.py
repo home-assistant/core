@@ -1,6 +1,8 @@
 """Test the Aladdin Connect Cover."""
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from AIOAladdinConnect import session_manager
+
 from homeassistant.components.aladdin_connect.const import DOMAIN
 from homeassistant.components.aladdin_connect.cover import SCAN_INTERVAL
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
@@ -13,6 +15,7 @@ from homeassistant.const import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
@@ -97,6 +100,7 @@ async def test_cover_operation(
 
     assert await async_setup_component(hass, "homeassistant", {})
     await hass.async_block_till_done()
+
     mock_aladdinconnect_api.async_get_door_status = AsyncMock(return_value=STATE_OPEN)
     mock_aladdinconnect_api.get_door_status.return_value = STATE_OPEN
     with patch(
@@ -192,3 +196,33 @@ async def test_cover_operation(
         await hass.async_block_till_done()
 
     assert hass.states.get("cover.home").state == STATE_UNKNOWN
+
+    mock_aladdinconnect_api.get_doors.side_effect = session_manager.ConnectionError
+
+    with patch(
+        "homeassistant.components.aladdin_connect.AladdinConnectClient",
+        return_value=mock_aladdinconnect_api,
+    ):
+        async_fire_time_changed(
+            hass,
+            utcnow() + SCAN_INTERVAL,
+        )
+        await hass.async_block_till_done()
+
+        assert hass.states.get("cover.home").state == STATE_UNAVAILABLE
+
+    mock_aladdinconnect_api.get_doors.side_effect = session_manager.InvalidPasswordError
+    mock_aladdinconnect_api.login.return_value = False
+    mock_aladdinconnect_api.login.side_effect = session_manager.InvalidPasswordError
+
+    with patch(
+        "homeassistant.components.aladdin_connect.AladdinConnectClient",
+        return_value=mock_aladdinconnect_api,
+    ):
+        async_fire_time_changed(
+            hass,
+            utcnow() + SCAN_INTERVAL,
+        )
+        await hass.async_block_till_done()
+        hass.states.get("cover.home")
+        assert hass.states.get("cover.home").state == STATE_UNAVAILABLE
