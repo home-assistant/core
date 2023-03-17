@@ -935,7 +935,7 @@ async def test_track_template_time_change(
     with patch(
         "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
     ):
-        async_track_template(hass, template_error, error_callback)
+        unsub = async_track_template(hass, template_error, error_callback)
         await hass.async_block_till_done()
         assert not calls
 
@@ -946,6 +946,8 @@ async def test_track_template_time_change(
 
     assert len(calls) == 1
     assert calls[0] == (None, None, None)
+
+    unsub()
 
 
 async def test_track_template_result(hass: HomeAssistant) -> None:
@@ -1437,7 +1439,7 @@ async def test_track_template_result_super_template_2(
                     _super_template_as_boolean(track_result.result)
                 )
 
-    async_track_template_result(
+    info = async_track_template_result(
         hass,
         [
             TrackTemplate(template_availability, None),
@@ -1459,7 +1461,7 @@ async def test_track_template_result_super_template_2(
                     _super_template_as_boolean(track_result.result)
                 )
 
-    async_track_template_result(
+    info2 = async_track_template_result(
         hass,
         [
             TrackTemplate(template_availability, None),
@@ -1480,7 +1482,7 @@ async def test_track_template_result_super_template_2(
                     _super_template_as_boolean(track_result.result)
                 )
 
-    async_track_template_result(
+    info3 = async_track_template_result(
         hass,
         [
             TrackTemplate(template_availability, None),
@@ -1529,6 +1531,10 @@ async def test_track_template_result_super_template_2(
     assert specific_runs == [5, 30]
     assert wildcard_runs == [(0, 5), (5, 30)]
     assert wildercard_runs == [(0, 10), (10, 35)]
+
+    info.async_remove()
+    info2.async_remove()
+    info3.async_remove()
 
 
 @pytest.mark.parametrize(
@@ -1579,7 +1585,7 @@ async def test_track_template_result_super_template_2_initially_false(
                     _super_template_as_boolean(track_result.result)
                 )
 
-    async_track_template_result(
+    info = async_track_template_result(
         hass,
         [
             TrackTemplate(template_availability, None),
@@ -1601,7 +1607,7 @@ async def test_track_template_result_super_template_2_initially_false(
                     _super_template_as_boolean(track_result.result)
                 )
 
-    async_track_template_result(
+    info2 = async_track_template_result(
         hass,
         [
             TrackTemplate(template_availability, None),
@@ -1622,7 +1628,7 @@ async def test_track_template_result_super_template_2_initially_false(
                     _super_template_as_boolean(track_result.result)
                 )
 
-    async_track_template_result(
+    info3 = async_track_template_result(
         hass,
         [
             TrackTemplate(template_availability, None),
@@ -1668,6 +1674,10 @@ async def test_track_template_result_super_template_2_initially_false(
     assert specific_runs == [5, 30]
     assert wildcard_runs == [(0, 5), (5, 30)]
     assert wildercard_runs == [(0, 10), (10, 35)]
+
+    info.async_remove()
+    info2.async_remove()
+    info3.async_remove()
 
 
 async def test_track_template_result_complex(hass: HomeAssistant) -> None:
@@ -2351,6 +2361,8 @@ async def test_track_template_rate_limit(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert refresh_runs == [0, 1, 2, 4]
 
+    info.async_remove()
+
 
 async def test_track_template_rate_limit_super(hass: HomeAssistant) -> None:
     """Test template rate limit with super template."""
@@ -2423,6 +2435,8 @@ async def test_track_template_rate_limit_super(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert refresh_runs == [0, 1, 4]
 
+    info.async_remove()
+
 
 async def test_track_template_rate_limit_super_2(hass: HomeAssistant) -> None:
     """Test template rate limit with rate limited super template."""
@@ -2489,6 +2503,8 @@ async def test_track_template_rate_limit_super_2(hass: HomeAssistant) -> None:
     hass.states.async_set("sensor.six", "any")
     await hass.async_block_till_done()
     assert refresh_runs == [1, 5]
+
+    info.async_remove()
 
 
 async def test_track_template_rate_limit_super_3(hass: HomeAssistant) -> None:
@@ -2561,6 +2577,8 @@ async def test_track_template_rate_limit_super_3(hass: HomeAssistant) -> None:
     hass.states.async_set("sensor.seven", "any")
     await hass.async_block_till_done()
     assert refresh_runs == [1, 2, 5, 6, 7]
+
+    info.async_remove()
 
 
 async def test_track_template_rate_limit_suppress_listener(hass: HomeAssistant) -> None:
@@ -2657,6 +2675,8 @@ async def test_track_template_rate_limit_suppress_listener(hass: HomeAssistant) 
     }
     assert refresh_runs == [0, 1, 2, 4]
 
+    info.async_remove()
+
 
 async def test_track_template_rate_limit_five(hass: HomeAssistant) -> None:
     """Test template rate limit of 5 seconds."""
@@ -2689,6 +2709,8 @@ async def test_track_template_rate_limit_five(hass: HomeAssistant) -> None:
     hass.states.async_set("sensor.three", "any")
     await hass.async_block_till_done()
     assert refresh_runs == [0, 1]
+
+    info.async_remove()
 
 
 async def test_track_template_has_default_rate_limit(hass: HomeAssistant) -> None:
@@ -2723,6 +2745,8 @@ async def test_track_template_has_default_rate_limit(hass: HomeAssistant) -> Non
     hass.states.async_set("sensor.three", "any")
     await hass.async_block_till_done()
     assert refresh_runs == [1, 2]
+
+    info.async_remove()
 
 
 async def test_track_template_unavailable_states_has_default_rate_limit(
@@ -3310,6 +3334,8 @@ async def test_async_track_template_result_multiple_templates_mixing_listeners(
             TrackTemplateResult(template_2, None, True),
         ]
     ]
+
+    info.async_remove()
 
 
 async def test_track_same_state_simple_no_trigger(hass: HomeAssistant) -> None:
