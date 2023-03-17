@@ -30,7 +30,7 @@ DOMAIN = "conversation"
 
 REGEX_TYPE = type(re.compile(""))
 DATA_CONFIG = "conversation_config"
-EVENT_PROCESSED = f"{DOMAIN}.processed"
+EVENT_PROCESSED = "conversation_processed"
 
 SERVICE_PROCESS = "process"
 SERVICE_RELOAD = "reload"
