@@ -73,6 +73,7 @@ CONF_FIELDS = "fields"
 DEFAULT_CACHE = True
 DEFAULT_CACHE_DIR = "tts"
 DEFAULT_TIME_MEMORY = 300
+DEFAULT_TTS_ENGINE = "cloud"
 
 SERVICE_CLEAR_CACHE = "clear_cache"
 SERVICE_SAY = "say"
@@ -398,7 +399,7 @@ class SpeechManager:
 
     async def async_get_url_path(
         self,
-        engine: str,
+        engine: str | None,
         message: str,
         cache: bool | None = None,
         language: str | None = None,
@@ -408,6 +409,7 @@ class SpeechManager:
 
         This method is a coroutine.
         """
+        engine = engine or DEFAULT_TTS_ENGINE
         language, options = self.process_options(engine, language, options)
         cache_key = self._generate_cache_key(message, language, options, engine)
         use_cache = cache if cache is not None else self.use_cache
@@ -434,13 +436,14 @@ class SpeechManager:
 
     async def async_get_tts_audio(
         self,
-        engine: str,
+        engine: str | None,
         message: str,
         cache: bool | None = None,
         language: str | None = None,
         options: dict | None = None,
     ) -> tuple[str, bytes]:
         """Fetch TTS audio."""
+        engine = engine or DEFAULT_TTS_ENGINE
         language, options = self.process_options(engine, language, options)
         cache_key = self._generate_cache_key(message, language, options, engine)
         use_cache = cache if cache is not None else self.use_cache
