@@ -132,7 +132,6 @@ async def async_setup_platform(
 
     collaborator_tasks = (api.get_collaborators(project.id) for project in projects)
     collaborators = list(chain.from_iterable(await asyncio.gather(*collaborator_tasks)))
-    collaborators = []
 
     # Grab all labels
     labels = await api.get_labels()
