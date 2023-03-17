@@ -7,6 +7,7 @@ import importlib
 import sys
 from unittest.mock import ANY, DEFAULT, MagicMock, patch, sentinel
 
+import py
 import pytest
 from sqlalchemy import create_engine, select
 from sqlalchemy.exc import OperationalError
@@ -1327,7 +1328,9 @@ def _create_engine_28(*args, **kwargs):
     return engine
 
 
-def test_delete_metadata_duplicates(caplog: pytest.LogCaptureFixture, tmpdir) -> None:
+def test_delete_metadata_duplicates(
+    caplog: pytest.LogCaptureFixture, tmpdir: py.path.local
+) -> None:
     """Test removal of duplicated statistics."""
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
@@ -1419,7 +1422,7 @@ def test_delete_metadata_duplicates(caplog: pytest.LogCaptureFixture, tmpdir) ->
 
 
 def test_delete_metadata_duplicates_many(
-    caplog: pytest.LogCaptureFixture, tmpdir
+    caplog: pytest.LogCaptureFixture, tmpdir: py.path.local
 ) -> None:
     """Test removal of duplicated statistics."""
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
