@@ -3208,33 +3208,62 @@ async def test_debug_info_qos_retain(
     start_dt = datetime(2019, 1, 1, 0, 0, 0)
     with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
         dt_utcnow.return_value = start_dt
+        # simulate the first message was replayed from the broker with retained flag
+        async_fire_mqtt_message(hass, "sensor/abc", "123", qos=0, retain=True)
+        # simulate an update message
         async_fire_mqtt_message(hass, "sensor/abc", "123", qos=0, retain=False)
+        # simpulate someone else subscribed and retained messages were replayed
         async_fire_mqtt_message(hass, "sensor/abc", "123", qos=1, retain=True)
+        # simulate an update message
+        async_fire_mqtt_message(hass, "sensor/abc", "123", qos=1, retain=False)
+        # simulate an update message
         async_fire_mqtt_message(hass, "sensor/abc", "123", qos=2, retain=False)
 
     debug_info_data = debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"][0]["subscriptions"]) == 1
+    # The replayed retained payload was processed
+    messages = debug_info_data["entities"][0]["subscriptions"][0]["messages"]
+    assert {
+        "payload": "123",
+        "qos": 0,
+        "retain": True,
+        "time": start_dt,
+        "topic": "sensor/abc",
+    } in messages
+    # The not retained update was processed normally
     assert {
         "payload": "123",
         "qos": 0,
         "retain": False,
         "time": start_dt,
         "topic": "sensor/abc",
-    } in debug_info_data["entities"][0]["subscriptions"][0]["messages"]
+    } in messages
+    # Since the MQTT client has not lost the connection and has not resubscribed
+    # The retained payload is not replayed and filtered out as it already
+    # received a value and appears to be received on an existing subscription
     assert {
         "payload": "123",
         "qos": 1,
         "retain": True,
         "time": start_dt,
         "topic": "sensor/abc",
-    } in debug_info_data["entities"][0]["subscriptions"][0]["messages"]
+    } not in messages
+    # The not retained update was processed normally
+    assert {
+        "payload": "123",
+        "qos": 1,
+        "retain": False,
+        "time": start_dt,
+        "topic": "sensor/abc",
+    } in messages
+    # The not retained update was processed normally
     assert {
         "payload": "123",
         "qos": 2,
         "retain": False,
         "time": start_dt,
         "topic": "sensor/abc",
-    } in debug_info_data["entities"][0]["subscriptions"][0]["messages"]
+    } in messages
 
 
 async def test_publish_json_from_template(
