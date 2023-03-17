@@ -1342,6 +1342,8 @@ async def test_replaying_payload_same_topic(
         hass, "test/state", "online", qos=0, retain=True
     )  # Simulate a (retained) message played back on new subscriptions
     await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
+    await hass.async_block_till_done()
     # The retained message playback should only be processed by the new subscription
     # The existing subscription already got the latest update,
     # hence the existing subscription should not receive the replayed payload.
@@ -1359,6 +1361,8 @@ async def test_replaying_payload_same_topic(
     # After connecting the retain f.lag will not be set, even if the
     # payload published was retained, we cannot see that
     await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
+    await hass.async_block_till_done()
     assert len(calls_a) == 1
     assert len(calls_b) == 1
 
@@ -1367,13 +1371,14 @@ async def test_replaying_payload_same_topic(
     calls_b = []
     mqtt_client_mock.reset_mock()
     mqtt_client_mock.on_disconnect(None, None, 0)
-    with patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0):
-        mqtt_client_mock.on_connect(None, None, None, 0)
-        await hass.async_block_till_done()
+    mqtt_client_mock.on_connect(None, None, None, 0)
+    await hass.async_block_till_done()
     mqtt_client_mock.subscribe.assert_called()
     async_fire_mqtt_message(
         hass, "test/state", "online", qos=0, retain=True
     )  # Simulate a (retained) message played back after reconnecting
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
     await hass.async_block_till_done()
     # Both subscriptions should replay
     assert len(calls_a) == 1
@@ -1415,6 +1420,8 @@ async def test_replaying_payload_wildcard_topic(
     async_fire_mqtt_message(hass, "test/state1", "new_value_1", qos=0, retain=True)
     async_fire_mqtt_message(hass, "test/state2", "new_value_2", qos=0, retain=True)
     await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
+    await hass.async_block_till_done()
     assert len(calls_a) == 2
     mqtt_client_mock.subscribe.assert_called()
     calls_a = []
@@ -1425,6 +1432,8 @@ async def test_replaying_payload_wildcard_topic(
     # Simulate (retained) messages being played back on new subscriptions
     async_fire_mqtt_message(hass, "test/state1", "initial_value_1", qos=0, retain=True)
     async_fire_mqtt_message(hass, "test/state2", "initial_value_2", qos=0, retain=True)
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
     await hass.async_block_till_done()
     # The retained messages playback should be processed by all subscriptions
     assert len(calls_a) == 2
