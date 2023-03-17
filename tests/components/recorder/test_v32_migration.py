@@ -6,6 +6,7 @@ import importlib
 import sys
 from unittest.mock import patch
 
+import py
 import pytest
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import Session
@@ -51,7 +52,9 @@ def _create_engine_test(*args, **kwargs):
     return engine
 
 
-async def test_migrate_times(caplog: pytest.LogCaptureFixture, tmpdir) -> None:
+async def test_migrate_times(
+    caplog: pytest.LogCaptureFixture, tmpdir: py.path.local
+) -> None:
     """Test we can migrate times."""
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"

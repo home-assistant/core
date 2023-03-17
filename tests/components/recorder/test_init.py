@@ -11,6 +11,7 @@ from typing import cast
 from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import py
 import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
 
@@ -1222,7 +1223,9 @@ def test_statistics_runs_initiated(hass_recorder: Callable[..., HomeAssistant]) 
 
 
 @pytest.mark.freeze_time("2022-09-13 09:00:00+02:00")
-def test_compile_missing_statistics(tmpdir, freezer: FrozenDateTimeFactory) -> None:
+def test_compile_missing_statistics(
+    tmpdir: py.path.local, freezer: FrozenDateTimeFactory
+) -> None:
     """Test missing statistics are compiled on startup."""
     now = dt_util.utcnow().replace(minute=0, second=0, microsecond=0)
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
@@ -1482,7 +1485,7 @@ def test_service_disable_states_not_recording(
         )
 
 
-def test_service_disable_run_information_recorded(tmpdir) -> None:
+def test_service_disable_run_information_recorded(tmpdir: py.path.local) -> None:
     """Test that runs are still recorded when recorder is disabled."""
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
@@ -1531,7 +1534,7 @@ class CannotSerializeMe:
 
 
 async def test_database_corruption_while_running(
-    hass: HomeAssistant, tmpdir, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, tmpdir: py.path.local, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we can recover from sqlite3 db corruption."""
 
