@@ -579,7 +579,7 @@ class Entity(ABC):
             return f"{state:.{FLOAT_PRECISION}}"
         return str(state)
 
-    def _friendly_name(self) -> str | None:
+    def _friendly_name_internal(self) -> str | None:
         """Return the friendly name.
 
         If has_entity_name is False, this returns self.name
@@ -654,7 +654,9 @@ class Entity(ABC):
         if (icon := (entry and entry.icon) or self.icon) is not None:
             attr[ATTR_ICON] = icon
 
-        if (name := (entry and entry.name) or self._friendly_name()) is not None:
+        if (
+            name := (entry and entry.name) or self._friendly_name_internal()
+        ) is not None:
             attr[ATTR_FRIENDLY_NAME] = name
 
         if (supported_features := self.supported_features) is not None:
