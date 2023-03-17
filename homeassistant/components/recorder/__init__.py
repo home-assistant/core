@@ -128,7 +128,7 @@ def is_entity_recorded(hass: HomeAssistant, entity_id: str) -> bool:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
-    exclude_attributes_by_domain: dict[str, set[str]] = {}
+    exclude_attributes_by_domain: dict[str, frozenset[str]] = {}
     hass.data[EXCLUDE_ATTRIBUTES] = exclude_attributes_by_domain
     conf = config[DOMAIN]
     entity_filter = convert_include_exclude_filter(conf)

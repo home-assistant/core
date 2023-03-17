@@ -305,7 +305,9 @@ class AddRecorderPlatformTask(RecorderTask):
         platforms: dict[str, Any] = hass.data[DOMAIN].recorder_platforms
         platforms[domain] = platform
         if hasattr(self.platform, "exclude_attributes"):
-            hass.data[EXCLUDE_ATTRIBUTES][domain] = platform.exclude_attributes(hass)
+            hass.data[EXCLUDE_ATTRIBUTES][domain] = frozenset(
+                platform.exclude_attributes(hass)
+            )
 
 
 @dataclass

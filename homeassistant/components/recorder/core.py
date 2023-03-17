@@ -161,7 +161,7 @@ class Recorder(threading.Thread):
         db_retry_wait: int,
         entity_filter: Callable[[str], bool],
         exclude_event_types: set[str],
-        exclude_attributes_by_domain: dict[str, set[str]],
+        exclude_attributes_by_domain: dict[str, frozenset[str]],
     ) -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self, name="Recorder")

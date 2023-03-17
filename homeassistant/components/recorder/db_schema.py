@@ -47,6 +47,7 @@ from homeassistant.util.json import (
     json_loads,
     json_loads_object,
 )
+from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from .const import ALL_DOMAIN_EXCLUDE_ATTRS, SupportedDialect
 from .models import (
@@ -521,6 +522,33 @@ class States(Base):
         )
 
 
+@lru_cache
+def _cached_attrs_json_bytes_strip_null(
+    attrs: ReadOnlyDict[str, Any],
+    base_platform_attrs: frozenset[str],
+    integration_attrs: frozenset[set],
+) -> bytes:
+    """Cache the result of json_bytes_strip_null with some attributes excluded."""
+    combined_set = ALL_DOMAIN_EXCLUDE_ATTRS | base_platform_attrs | integration_attrs
+    return json_bytes_strip_null(
+        {k: v for k, v in attrs.items() if k not in combined_set}
+    )
+
+
+@lru_cache
+def _cached_attrs_json_bytes(
+    attrs: ReadOnlyDict[str, Any],
+    base_platform_attrs: frozenset[str],
+    integration_attrs: frozenset[set],
+) -> bytes:
+    """Cache the result of json_bytes with some attributes excluded."""
+    combined_set = ALL_DOMAIN_EXCLUDE_ATTRS | base_platform_attrs | integration_attrs
+    return json_bytes({k: v for k, v in attrs.items() if k not in combined_set})
+
+
+_EMPTY_FROZEN_SET: frozenset[str] = frozenset()
+
+
 class StateAttributes(Base):
     """State attribute change history."""
 
@@ -544,7 +572,7 @@ class StateAttributes(Base):
     def shared_attrs_bytes_from_event(
         event: Event,
         entity_sources: dict[str, dict[str, str]],
-        exclude_attrs_by_domain: dict[str, set[str]],
+        exclude_attrs_by_domain: dict[str, frozenset[str]],
         dialect: SupportedDialect | None,
     ) -> bytes:
         """Create shared_attrs from a state_changed event."""
@@ -553,17 +581,17 @@ class StateAttributes(Base):
         if state is None:
             return b"{}"
         domain = split_entity_id(state.entity_id)[0]
-        exclude_attrs = set(ALL_DOMAIN_EXCLUDE_ATTRS)
-        if base_platform_attrs := exclude_attrs_by_domain.get(domain):
-            exclude_attrs |= base_platform_attrs
-        if (entity_info := entity_sources.get(state.entity_id)) and (
-            integration_attrs := exclude_attrs_by_domain.get(entity_info["domain"])
-        ):
-            exclude_attrs |= integration_attrs
-        encoder = json_bytes_strip_null if dialect == PSQL_DIALECT else json_bytes
-        bytes_result = encoder(
-            {k: v for k, v in state.attributes.items() if k not in exclude_attrs}
-        )
+        base_platform_attrs = exclude_attrs_by_domain.get(domain, _EMPTY_FROZEN_SET)
+        integration_attrs = _EMPTY_FROZEN_SET
+        if entity_info := entity_sources.get(state.entity_id):
+            integration_attrs = exclude_attrs_by_domain.get(
+                entity_info["domain"], _EMPTY_FROZEN_SET
+            )
+        if dialect == PSQL_DIALECT:
+            encoder = _cached_attrs_json_bytes_strip_null
+        else:
+            encoder = _cached_attrs_json_bytes
+        bytes_result = encoder(state.attributes, base_platform_attrs, integration_attrs)
         if len(bytes_result) > MAX_STATE_ATTRS_BYTES:
             _LOGGER.warning(
                 "State attributes for %s exceed maximum size of %s bytes. "
