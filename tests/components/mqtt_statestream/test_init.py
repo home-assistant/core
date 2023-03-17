@@ -2,7 +2,7 @@
 from unittest.mock import ANY, call
 
 import homeassistant.components.mqtt_statestream as statestream
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.setup import async_setup_component
 
@@ -55,8 +55,8 @@ async def test_setup_and_stop_waits_for_ha(
     """Test the success of the setup with a valid base_topic."""
     e_id = "fake.entity"
 
-    # HA still starting up
-    hass.state = CoreState.starting
+    # HA is not running
+    hass.state = CoreState.not_running
 
     assert await add_statestream(hass, base_topic="pub")
     await hass.async_block_till_done()
@@ -68,9 +68,8 @@ async def test_setup_and_stop_waits_for_ha(
     # Make sure 'on' was not published to pub/fake/entity/state
     mqtt_mock.async_publish.assert_not_called()
 
-    # HA finished start up
-    hass.state = CoreState.running
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    # HA is starting up
+    await hass.async_start()
     await hass.async_block_till_done()
 
     # Change a state of an entity
