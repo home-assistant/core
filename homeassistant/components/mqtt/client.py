@@ -376,7 +376,7 @@ class MQTT:
 
         self._simple_subscriptions: dict[str, list[Subscription]] = {}
         self._wildcard_subscriptions: list[Subscription] = []
-        self._retained_init: dict[Subscription, bool] = {}
+        self._retained_init: dict[Subscription, set[str]] = {}
         self.connected = False
         self._ha_started = asyncio.Event()
         self._cleanup_on_unload: list[Callable[[], None]] = []
@@ -801,15 +801,12 @@ class MQTT:
         subscriptions = self._matching_subscriptions(msg.topic)
 
         for subscription in subscriptions:
-            if (init_status := self._retained_init.get(subscription)) is None:
-                if subscription in self._wildcard_subscriptions:
-                    self._retained_init[subscription] = False
-                else:
-                    self._retained_init[subscription] = msg.retain
-
-            if msg.retain and init_status is True:
-                # do not replay already initialized subscriptions
+            init_status = self._retained_init.setdefault(subscription, set())
+            # skip already initialized subscriptions
+            if msg.retain and msg.topic in init_status:
                 continue
+            # remember the subscription had an initial payload
+            self._retained_init[subscription].add(msg.topic)
 
             payload: SubscribePayloadType = msg.payload
             if subscription.encoding is not None:
