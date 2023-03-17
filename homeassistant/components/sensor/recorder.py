@@ -384,7 +384,15 @@ def compile_statistics(
 
     Note: This will query the database and must not be run in the event loop
     """
-    with recorder_util.session_scope(hass=hass) as session:
+    # There is already an active session when this code is called since
+    # it is called from the recorder statistics. We need to make sure
+    # this session never gets committed since it would be out of sync
+    # with the recorder statistics session so we mark it as read only.
+    #
+    # If we ever need to write to the database from this function we
+    # will need to refactor the recorder statistics to use a single
+    # session.
+    with recorder_util.session_scope(hass=hass, read_only=True) as session:
         compiled = _compile_statistics(hass, session, start, end)
     return compiled
 
