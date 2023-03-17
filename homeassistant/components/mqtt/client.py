@@ -619,6 +619,8 @@ class MQTT:
             """Remove subscription."""
             self._async_untrack_subscription(subscription)
             self._matching_subscriptions.cache_clear()
+            # make sure we allow retained payloads when resubscribing
+            del self._retained_init[subscription]
             # Only unsubscribe if currently connected
             if self.connected:
                 self._async_unsubscribe(topic)
@@ -713,7 +715,6 @@ class MQTT:
         # pylint: disable-next=import-outside-toplevel
         import paho.mqtt.client as mqtt
 
-        self._retained_init.clear()
         if result_code != mqtt.CONNACK_ACCEPTED:
             _LOGGER.error(
                 "Unable to connect to the MQTT broker: %s",
@@ -758,6 +759,7 @@ class MQTT:
         """Resubscribe on reconnect."""
         # Group subscriptions to only re-subscribe once for each topic.
         self._max_qos.clear()
+        self._retained_init.clear()
         keyfunc = attrgetter("topic")
         self._async_queue_subscriptions(
             [
