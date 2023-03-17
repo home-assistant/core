@@ -134,7 +134,7 @@ class StatisticsMetaManager:
         statistic_id: str,
         new_metadata: StatisticMetaData,
         old_metadata_dict: dict[str, tuple[int, StatisticMetaData]],
-    ) -> int:
+    ) -> tuple[bool, int]:
         """Update metadata in the database."""
         metadata_id, old_metadata = old_metadata_dict[statistic_id]
         if not (
@@ -144,7 +144,7 @@ class StatisticsMetaManager:
             or old_metadata["unit_of_measurement"]
             != new_metadata["unit_of_measurement"]
         ):
-            return metadata_id
+            return False, metadata_id
 
         session.query(StatisticsMeta).filter_by(statistic_id=statistic_id).update(
             {
@@ -162,7 +162,7 @@ class StatisticsMetaManager:
             old_metadata,
             new_metadata,
         )
-        return metadata_id
+        return True, metadata_id
 
     def load(self, session: Session) -> None:
         """Load the statistic_id to metadata_id mapping into memory.
@@ -237,17 +237,21 @@ class StatisticsMetaManager:
         session: Session,
         new_metadata: StatisticMetaData,
         old_metadata_dict: dict[str, tuple[int, StatisticMetaData]],
-    ) -> int:
+    ) -> tuple[bool, int]:
         """Get metadata_id for a statistic_id.
 
         If the statistic_id is previously unknown, add it. If it's already known, update
         metadata if needed.
 
         Updating metadata source is not possible.
+
+        Returns a tuple of (updated, metadata_id).
+
+        updated is True if the metadata was updated, False if it was not updated.
         """
         statistic_id = new_metadata["statistic_id"]
         if statistic_id not in old_metadata_dict:
-            return self._add_metadata(session, statistic_id, new_metadata)
+            return True, self._add_metadata(session, statistic_id, new_metadata)
         return self._update_metadata(
             session, statistic_id, new_metadata, old_metadata_dict
         )
