@@ -46,10 +46,10 @@
           }
         },
         "color_temp": {
-          "name": "Color temperature in mireds"
+          "name": "Color temperature (mireds)"
         },
         "color_temp_kelvin": {
-          "name": "Color temperature in Kelvin"
+          "name": "Color temperature (Kelvin)"
         },
         "effect": {
           "name": "Effect"
@@ -58,16 +58,16 @@
           "name": "Available effects"
         },
         "max_color_temp_kelvin": {
-          "name": "Maximum color temperature in Kelvin"
+          "name": "Maximum color temperature (Kelvin)"
         },
         "min_color_temp_kelvin": {
-          "name": "Minimum color temperature in Kelvin"
+          "name": "Minimum color temperature (Kelvin)"
         },
         "max_mireds": {
-          "name": "Maximum color temperature in mireds"
+          "name": "Maximum color temperature (mireds)"
         },
         "min_mireds": {
-          "name": "Minimum color temperature in mireds"
+          "name": "Minimum color temperature (mireds)"
         },
         "supported_color_modes": {
           "name": "Available color modes",
