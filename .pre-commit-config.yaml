@@ -5,12 +5,6 @@ repos:
       - id: ruff
         args:
           - --fix
-  - repo: https://github.com/asottile/pyupgrade
-    rev: v3.3.1
-    hooks:
-      - id: pyupgrade
-        args: [--py310-plus]
-        stages: [manual]
   - repo: https://github.com/PyCQA/autoflake
     rev: v2.0.0
     hooks:
