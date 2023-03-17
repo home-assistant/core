@@ -10,10 +10,10 @@ from typing import Any
 from aioimaplib import AUTH, IMAP4_SSL, SELECTED, AioImapException
 import async_timeout
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_CHARSET, CONF_FOLDER, CONF_SEARCH, CONF_SERVER, DOMAIN
@@ -111,7 +111,6 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
         try:
             return await self._async_fetch_number_of_messages()
         except (
-            InvalidFolder,
             AioImapException,
             UpdateFailed,
             asyncio.TimeoutError,
@@ -119,6 +118,11 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
             self.async_set_update_error(ex)
             await self._cleanup()
             raise UpdateFailed() from ex
+        except InvalidFolder as ex:
+            _LOGGER.warning("Selected mailbox folder is invalid")
+            self.async_set_update_error(ex)
+            await self._cleanup()
+            raise ConfigEntryError("Selected mailbox folder is invalid.") from ex
         except InvalidAuth as ex:
             _LOGGER.warning("Username or password incorrect, starting reauthentication")
             self.async_set_update_error(ex)
@@ -158,9 +162,18 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                 self.async_set_update_error(ex)
                 await self._cleanup()
                 await asyncio.sleep(BACKOFF_TIME)
+            except InvalidFolder as ex:
+                _LOGGER.warning("Selected mailbox folder is invalid")
+                self.config_entry.async_set_state(
+                    self.hass,
+                    ConfigEntryState.SETUP_ERROR,
+                    "Selected mailbox folder is invalid.",
+                )
+                self.async_set_update_error(ex)
+                await self._cleanup()
+                await asyncio.sleep(BACKOFF_TIME)
             except (
                 UpdateFailed,
-                InvalidFolder,
                 AioImapException,
                 asyncio.TimeoutError,
             ) as ex:
