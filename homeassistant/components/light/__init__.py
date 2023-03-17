@@ -276,7 +276,7 @@ LIGHT_TURN_ON_SCHEMA = {
     vol.Exclusive(ATTR_XY_COLOR, COLOR_GROUP): vol.All(
         vol.Coerce(tuple), vol.ExactSequence((cv.small_float, cv.small_float))
     ),
-    vol.Exclusive(ATTR_WHITE, COLOR_GROUP): VALID_BRIGHTNESS,
+    vol.Exclusive(ATTR_WHITE, COLOR_GROUP): vol.Any(True, VALID_BRIGHTNESS),
     ATTR_FLASH: VALID_FLASH,
     ATTR_EFFECT: cv.string,
 }
@@ -556,6 +556,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
             elif ColorMode.XY in supported_color_modes:
                 params[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
+
+        # If white is set to True, set it to the light's brightness
+        # Add a warning in Home Assistant Core 2023.5 if the brightness is set to an
+        # integer.
+        if params.get(ATTR_WHITE) is True:
+            params[ATTR_WHITE] = light.brightness
 
         # If both white and brightness are specified, override white
         if (
