@@ -605,8 +605,10 @@ class Entity(ABC):
             # Polling returned after the entity has already been removed
             return
 
+        hass = self.hass
         entity_id = self.entity_id
         entry = self.registry_entry
+
         if entry and entry.disabled_by:
             if not self._disabled_reported:
                 self._disabled_reported = True
@@ -672,7 +674,7 @@ class Entity(ABC):
             )
 
         # Overwrite properties that have been set in the config file.
-        if customize := self.hass.data.get(DATA_CUSTOMIZE):
+        if customize := hass.data.get(DATA_CUSTOMIZE):
             attr.update(customize.get(entity_id))
 
         if (
@@ -682,9 +684,7 @@ class Entity(ABC):
             self._context = None
             self._context_set = None
 
-        self.hass.states.async_set(
-            entity_id, state, attr, self.force_update, self._context
-        )
+        hass.states.async_set(entity_id, state, attr, self.force_update, self._context)
 
     def schedule_update_ha_state(self, force_refresh: bool = False) -> None:
         """Schedule an update ha state change task.
