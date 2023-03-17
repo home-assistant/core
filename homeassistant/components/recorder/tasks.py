@@ -152,6 +152,18 @@ class StatisticsTask(RecorderTask):
 
 
 @dataclass
+class CompileMissingStatisticsTask(RecorderTask):
+    """An object to insert into the recorder queue to run a compile missing statistics."""
+
+    def run(self, instance: Recorder) -> None:
+        """Run statistics task to compile missing statistics."""
+        if statistics.compile_missing_statistics(instance):
+            return
+        # Schedule a new statistics task if this one didn't finish
+        instance.queue_task(CompileMissingStatisticsTask())
+
+
+@dataclass
 class ImportStatisticsTask(RecorderTask):
     """An object to insert into the recorder queue to run an import statistics task."""
 
