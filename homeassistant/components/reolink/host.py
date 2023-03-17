@@ -329,9 +329,7 @@ class ReolinkHost:
         self, hass: HomeAssistant, webhook_id: str, request: Request
     ):
         """Shield the incoming webhook callback from cancellation."""
-        hass.async_create_task(
-            self.handle_webhook_shielded(hass, webhook_id, request)
-        )
+        hass.async_create_task(self.handle_webhook_shielded(hass, webhook_id, request))
 
     async def handle_webhook_shielded(
         self, hass: HomeAssistant, webhook_id: str, request: Request
