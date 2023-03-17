@@ -91,6 +91,10 @@ async def test_migrate_times(
     )
     number_of_migrations = 5
 
+    def _get_states_index_names():
+        with session_scope(hass=hass) as session:
+            return inspect(session.connection()).get_indexes("states")
+
     with patch.object(recorder, "db_schema", old_db_schema), patch.object(
         recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
     ), patch.object(core, "StatesMeta", old_db_schema.StatesMeta), patch.object(
@@ -113,6 +117,8 @@ async def test_migrate_times(
         "homeassistant.components.recorder.Recorder._migrate_entity_ids",
     ), patch(
         "homeassistant.components.recorder.Recorder._post_migrate_entity_ids"
+    ), patch(
+        "homeassistant.components.recorder.Recorder._cleanup_legacy_states_event_ids"
     ):
         hass = await async_test_home_assistant(asyncio.get_running_loop())
         recorder_helper.async_initialize_recorder(hass)
@@ -132,10 +138,17 @@ async def test_migrate_times(
         await hass.async_block_till_done()
         await recorder.get_instance(hass).async_block_till_done()
 
+        states_indexes = await recorder.get_instance(hass).async_add_executor_job(
+            _get_states_index_names
+        )
+        states_index_names = {index["name"] for index in states_indexes}
+
         await hass.async_stop()
         await hass.async_block_till_done()
 
         dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
+
+    assert "ix_states_event_id" in states_index_names
 
     # Test that the duplicates are removed during migration from schema 23
     hass = await async_test_home_assistant(asyncio.get_running_loop())
@@ -186,13 +199,20 @@ async def test_migrate_times(
         with session_scope(hass=hass) as session:
             return inspect(session.connection()).get_indexes("events")
 
-    indexes = await recorder.get_instance(hass).async_add_executor_job(
+    events_indexes = await recorder.get_instance(hass).async_add_executor_job(
         _get_events_index_names
     )
-    index_names = {index["name"] for index in indexes}
+    events_index_names = {index["name"] for index in events_indexes}
 
-    assert "ix_events_context_id_bin" in index_names
-    assert "ix_events_context_id" not in index_names
+    assert "ix_events_context_id_bin" in events_index_names
+    assert "ix_events_context_id" not in events_index_names
+
+    states_indexes = await recorder.get_instance(hass).async_add_executor_job(
+        _get_states_index_names
+    )
+    states_index_names = {index["name"] for index in states_indexes}
+
+    assert "ix_states_event_id" not in states_index_names
 
     await hass.async_stop()
     dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
