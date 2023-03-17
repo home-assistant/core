@@ -1,7 +1,7 @@
 """Support managing StatesMeta."""
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from typing import TYPE_CHECKING, cast
 
 from sqlalchemy.orm.session import Session
@@ -63,7 +63,14 @@ class StatesMetaManager(BaseLRUTableManager[StatesMeta]):
         This call is always thread-safe.
         """
         with session.no_autoflush:
-            return dict(tuple(session.execute(find_all_states_metadata_ids())))  # type: ignore[arg-type]
+            return dict(
+                cast(
+                    Sequence[tuple[int, str]],
+                    execute_stmt_lambda_element(
+                        session, find_all_states_metadata_ids()
+                    ),
+                )
+            )
 
     def get_many(
         self, entity_ids: Iterable[str], session: Session, from_recorder: bool
