@@ -726,7 +726,7 @@ def compile_statistics(instance: Recorder, start: datetime, fire_events: bool) -
 
         # Insert collected statistics in the database
         for stats in platform_stats:
-            metadata_id = statistics_meta_manager.update_or_add(
+            _, metadata_id = statistics_meta_manager.update_or_add(
                 session, stats["meta"], current_metadata
             )
             _insert_statistics(
@@ -2239,7 +2239,7 @@ def _import_statistics_with_session(
     old_metadata_dict = statistics_meta_manager.get_many(
         session, statistic_ids=[metadata["statistic_id"]]
     )
-    metadata_id = statistics_meta_manager.update_or_add(
+    _, metadata_id = statistics_meta_manager.update_or_add(
         session, metadata, old_metadata_dict
     )
     for stat in statistics:
