@@ -12,7 +12,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .entity import LivisiEntity
 
 from .const import (
     DOMAIN,
@@ -31,6 +32,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up binary_sensor device."""
     coordinator: LivisiDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    known_devices = set()
 
     @callback
     def handle_coordinator_update() -> None:
@@ -38,15 +40,14 @@ async def async_setup_entry(
         shc_devices: list[dict[str, Any]] = coordinator.data
         entities: list[BinarySensorEntity] = []
         for device in shc_devices:
-            if (
-                device["type"] == WDS_DEVICE_TYPE
-                and device["id"] not in coordinator.devices
-            ):
-                livisi_binary: BinarySensorEntity = create_entity(
-                    config_entry, device, coordinator
-                )
+            if device["id"] not in known_devices:
+                if device["type"] == WDS_DEVICE_TYPE:
+                    livisi_binary: BinarySensorEntity = LivisiWindowDoorSensor(
+                        config_entry, coordinator, device
+                    )
                 LOGGER.debug("Include device type: %s", device["type"])
                 coordinator.devices.add(device["id"])
+                known_devices.add(device["id"])
                 entities.append(livisi_binary)
         async_add_entities(entities)
 
@@ -55,69 +56,31 @@ async def async_setup_entry(
     )
 
 
-def create_entity(
-    config_entry: ConfigEntry,
-    device: dict[str, Any],
-    coordinator: LivisiDataUpdateCoordinator,
-) -> BinarySensorEntity:
-    """Create Binary Sensor Entity."""
-    config_details: dict[str, Any] = device["config"]
-    capabilities: list = device["capabilities"]
-    room_id: str = device["location"]
-    room_name: str = coordinator.rooms[room_id]
-    livisi_binary = LivisiWindowSensor(
-        config_entry,
-        coordinator,
-        unique_id=f"{device['id']}_window_sensor_state",
-        manufacturer=device["manufacturer"],
-        device_type=device["type"],
-        name=config_details["name"],
-        capability_id=capabilities[0],
-        room=room_name,
-    )
-    return livisi_binary
-
-
-class LivisiWindowSensor(
-    CoordinatorEntity[LivisiDataUpdateCoordinator], BinarySensorEntity
-):
-    """Represents the Livisi Binary Sensor."""
+class LivisiWindowDoorSensor(LivisiEntity, BinarySensorEntity):
+    """Represents a Livisi Window/Door Sensor as a Binary Sensor Entity."""
 
     def __init__(
         self,
         config_entry: ConfigEntry,
         coordinator: LivisiDataUpdateCoordinator,
-        unique_id: str,
-        manufacturer: str,
-        device_type: str,
-        name: str,
-        capability_id: str,
-        room: str,
+        device: dict[str, Any],
     ) -> None:
-        """Initialize the Livisi Binary."""
-        self.config_entry = config_entry
-        self._attr_unique_id = unique_id
-        self._attr_name = name
-        self._attr_device_class = BinarySensorDeviceClass.WINDOW
-        self._attr_state_class = BinarySensorDeviceClass.OPENING
-        self._capability_id = capability_id
-        self.aio_livisi = coordinator.aiolivisi
-        self._attr_available = False
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unique_id)},
-            manufacturer=manufacturer,
-            model=device_type,
-            name=name,
-            suggested_area=room,
-            via_device=(DOMAIN, config_entry.entry_id),
+        """Initialize the Livisi sensor."""
+        super().__init__(config_entry, coordinator, device)
+        self._capability_id = self.capabilities["WindowDoorSensor"]
+
+        self._attr_device_class = (
+            BinarySensorDeviceClass.DOOR
+            if (device.get("tags", {}).get("typeCategory", "") == "TCDoorId")
+            else BinarySensorDeviceClass.WINDOW
         )
-        super().__init__(coordinator)
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
+        await super().async_added_to_hass()
+
         response = await self.coordinator.async_get_wds_state(self._capability_id)
         if response is None:
-            self._attr_is_on = False
             self._attr_available = False
         else:
             self._attr_is_on = response
@@ -128,22 +91,9 @@ class LivisiWindowSensor(
                 self.update_states,
             )
         )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{LIVISI_REACHABILITY_CHANGE}_{self.unique_id}",
-                self.update_reachability,
-            )
-        )
 
     @callback
     def update_states(self, state: bool) -> None:
-        """Update the states of the switch device."""
+        """Update the state of the device."""
         self._attr_is_on = state
-        self.async_write_ha_state()
-
-    @callback
-    def update_reachability(self, is_reachable: bool) -> None:
-        """Update the reachability of the switch device."""
-        self._attr_available = is_reachable
         self.async_write_ha_state()

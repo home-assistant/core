@@ -148,6 +148,12 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
                 f"{LIVISI_STATE_CHANGE}_{event_data.source}",
                 event_data.onState,
             )
+        if event_data.isOpen is not None:
+            async_dispatcher_send(
+                self.hass,
+                f"{LIVISI_STATE_CHANGE}_{event_data.source}",
+                event_data.isOpen,
+            )
         if event_data.vrccData is not None:
             async_dispatcher_send(
                 self.hass,
