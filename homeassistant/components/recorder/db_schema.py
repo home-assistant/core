@@ -386,9 +386,7 @@ class States(Base):
     attributes: Mapped[str | None] = mapped_column(
         Text().with_variant(mysql.LONGTEXT, "mysql", "mariadb")
     )  # no longer used for new rows
-    event_id: Mapped[int | None] = mapped_column(  # no longer used for new rows
-        Integer, ForeignKey("events.event_id", ondelete="CASCADE"), index=True
-    )
+    event_id: Mapped[int | None] = mapped_column(Integer)  # no longer used for new rows
     last_changed: Mapped[datetime | None] = mapped_column(
         DATETIME_TYPE
     )  # no longer used for new rows
