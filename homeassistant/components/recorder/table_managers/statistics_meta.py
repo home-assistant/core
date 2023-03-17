@@ -123,16 +123,12 @@ class StatisticsMetaManager:
         # to the cache. If we do not commit here, there is a race condition
         # where the cache is updated before the commit and the cache is
         # inconsistent with the database.
-        session.commit()
+        self._commit_and_refresh(session, [statistic_id])
         _LOGGER.debug(
             "Added new statistics metadata for %s, new_metadata: %s",
             statistic_id,
             new_metadata,
         )
-        # Only update the cache if we are in the recorder thread
-        if self.recorder.thread_id == threading.get_ident():
-            id_meta = _statistics_meta_to_id_statistics_metadata(meta)
-            self._stat_id_to_id_meta[statistic_id] = id_meta
         return meta.id
 
     def _update_metadata(
@@ -162,8 +158,7 @@ class StatisticsMetaManager:
             },
             synchronize_session=False,
         )
-        self._clear_cache([statistic_id])
-        self.get(session, statistic_id)
+        self._commit_and_refresh(session, [statistic_id])
         _LOGGER.debug(
             "Updated statistics metadata for %s, old_metadata: %s, new_metadata: %s",
             statistic_id,
@@ -267,9 +262,18 @@ class StatisticsMetaManager:
         session.query(StatisticsMeta).filter(
             StatisticsMeta.statistic_id == statistic_id
         ).update({StatisticsMeta.unit_of_measurement: new_unit})
+        self._commit_and_refresh(session, [statistic_id])
+
+    def _commit_and_clear(self, session: Session, statistic_ids: list[str]) -> None:
+        """Commit and clear the metadata."""
         session.commit()
-        self._clear_cache([statistic_id])
-        self.get(session, statistic_id)
+        self._clear_cache(statistic_ids)
+        self.get_many(session, statistic_ids)
+
+    def _commit_and_refresh(self, session: Session, statistic_ids: list[str]) -> None:
+        """Commit and refresh the metadata."""
+        self._commit_and_clear(session, statistic_ids)
+        self.get_many(session, statistic_ids)
 
     def update_statistic_id(
         self,
@@ -283,17 +287,14 @@ class StatisticsMetaManager:
             (StatisticsMeta.statistic_id == old_statistic_id)
             & (StatisticsMeta.source == source)
         ).update({StatisticsMeta.statistic_id: new_statistic_id})
-        session.commit()
-        self._clear_cache([old_statistic_id, new_statistic_id])
-        self.get(session, new_statistic_id)
+        self._commit_and_refresh(session, [old_statistic_id, new_statistic_id])
 
     def delete(self, session: Session, statistic_ids: list[str]) -> None:
         """Clear statistics for a list of statistic_ids."""
         session.query(StatisticsMeta).filter(
             StatisticsMeta.statistic_id.in_(statistic_ids)
         ).delete(synchronize_session=False)
-        session.commit()
-        self._clear_cache(statistic_ids)
+        self._commit_and_clear(session, statistic_ids)
 
     def reset(self) -> None:
         """Reset the cache."""
