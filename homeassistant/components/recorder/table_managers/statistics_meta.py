@@ -94,8 +94,13 @@ class StatisticsMetaManager:
         statistic_source: str | None = None,
     ) -> dict[str, tuple[int, StatisticMetaData]]:
         """Fetch meta data and process it into results and/or cache."""
-        # Only update the cache if we are in the recorder thread
-        update_cache = self.recorder.thread_id == threading.get_ident()
+        # Only update the cache if we are in the recorder thread and there are no
+        # new objects that are not yet committed to the database in the session.
+        update_cache = (
+            not session.new
+            and not session.dirty
+            and self.recorder.thread_id == threading.get_ident()
+        )
         results: dict[str, tuple[int, StatisticMetaData]] = {}
         with session.no_autoflush:
             stat_id_to_id_meta = self._stat_id_to_id_meta
