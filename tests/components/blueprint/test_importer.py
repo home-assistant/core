@@ -7,6 +7,7 @@ import pytest
 from homeassistant.components.blueprint import importer
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import aiohttp_client
 
 from tests.common import load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -99,8 +100,9 @@ async def test_fetch_blueprint_from_community_url(
     aioclient_mock.get(
         "https://community.home-assistant.io/t/test-topic/123.json", text=community_post
     )
+    session = aiohttp_client.async_get_clientsession(hass)
     imported_blueprint = await importer.fetch_blueprint_from_url(
-        hass, "https://community.home-assistant.io/t/test-topic/123/2"
+        session, "https://community.home-assistant.io/t/test-topic/123/2"
     )
     assert isinstance(imported_blueprint, importer.ImportedBlueprint)
     assert imported_blueprint.blueprint.domain == "automation"
@@ -134,7 +136,8 @@ async def test_fetch_blueprint_from_github_url(
         ).read_text(),
     )
 
-    imported_blueprint = await importer.fetch_blueprint_from_url(hass, url)
+    session = aiohttp_client.async_get_clientsession(hass)
+    imported_blueprint = await importer.fetch_blueprint_from_url(session, url)
     assert isinstance(imported_blueprint, importer.ImportedBlueprint)
     assert imported_blueprint.blueprint.domain == "automation"
     assert imported_blueprint.blueprint.inputs == {
@@ -154,9 +157,10 @@ async def test_fetch_blueprint_from_github_gist_url(
         "https://api.github.com/gists/e717ce85dd0d2f1bdcdfc884ea25a344",
         text=load_fixture("blueprint/github_gist.json"),
     )
+    session = aiohttp_client.async_get_clientsession(hass)
 
     url = "https://gist.github.com/balloob/e717ce85dd0d2f1bdcdfc884ea25a344"
-    imported_blueprint = await importer.fetch_blueprint_from_url(hass, url)
+    imported_blueprint = await importer.fetch_blueprint_from_url(session, url)
     assert isinstance(imported_blueprint, importer.ImportedBlueprint)
     assert imported_blueprint.blueprint.domain == "automation"
     assert imported_blueprint.blueprint.inputs == snapshot

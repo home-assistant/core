@@ -5,12 +5,12 @@ from dataclasses import dataclass
 import html
 import re
 
+import aiohttp
 import voluptuous as vol
 import yarl
 
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.util import yaml
 
 from .models import Blueprint
@@ -135,7 +135,7 @@ def _extract_blueprint_from_community_topic(
 
 
 async def fetch_blueprint_from_community_post(
-    hass: HomeAssistant, url: str
+    session: aiohttp.ClientSession, url: str
 ) -> ImportedBlueprint:
     """Get blueprints from a community post url.
 
@@ -144,7 +144,6 @@ async def fetch_blueprint_from_community_post(
     Caller needs to implement own timeout.
     """
     import_url = _get_community_post_import_url(url)
-    session = aiohttp_client.async_get_clientsession(hass)
 
     resp = await session.get(import_url, raise_for_status=True)
     json_resp = await resp.json()
@@ -153,11 +152,10 @@ async def fetch_blueprint_from_community_post(
 
 
 async def fetch_blueprint_from_github_url(
-    hass: HomeAssistant, url: str
+    session: aiohttp.ClientSession, url: str
 ) -> ImportedBlueprint:
     """Get a blueprint from a github url."""
     import_url = _get_github_import_url(url)
-    session = aiohttp_client.async_get_clientsession(hass)
 
     resp = await session.get(import_url, raise_for_status=True)
     raw_yaml = await resp.text()
@@ -174,14 +172,13 @@ async def fetch_blueprint_from_github_url(
 
 
 async def fetch_blueprint_from_github_gist_url(
-    hass: HomeAssistant, url: str
+    session: aiohttp.ClientSession, url: str
 ) -> ImportedBlueprint:
     """Get a blueprint from a Github Gist."""
     if not url.startswith("https://gist.github.com/"):
         raise UnsupportedUrl("Not a GitHub gist url")
 
     parsed_url = yarl.URL(url)
-    session = aiohttp_client.async_get_clientsession(hass)
 
     resp = await session.get(
         f"https://api.github.com/gists/{parsed_url.parts[2]}",
@@ -219,7 +216,9 @@ async def fetch_blueprint_from_github_gist_url(
     )
 
 
-async def fetch_blueprint_from_url(hass: HomeAssistant, url: str) -> ImportedBlueprint:
+async def fetch_blueprint_from_url(
+    session: aiohttp.ClientSession, url: str
+) -> ImportedBlueprint:
     """Get a blueprint from a url."""
     for func in (
         fetch_blueprint_from_community_post,
@@ -227,7 +226,7 @@ async def fetch_blueprint_from_url(hass: HomeAssistant, url: str) -> ImportedBlu
         fetch_blueprint_from_github_gist_url,
     ):
         try:
-            imported_bp = await func(hass, url)
+            imported_bp = await func(session, url)
             imported_bp.blueprint.update_metadata(source_url=url)
             return imported_bp
         except UnsupportedUrl:

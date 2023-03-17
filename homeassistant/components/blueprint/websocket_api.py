@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.util import yaml
 
 from . import importer, models
@@ -73,7 +73,10 @@ async def ws_import_blueprint(
 ) -> None:
     """Import a blueprint."""
     async with async_timeout.timeout(10):
-        imported_blueprint = await importer.fetch_blueprint_from_url(hass, msg["url"])
+        session = aiohttp_client.async_get_clientsession(hass)
+        imported_blueprint = await importer.fetch_blueprint_from_url(
+            session, msg["url"]
+        )
 
     if imported_blueprint is None:
         connection.send_error(
