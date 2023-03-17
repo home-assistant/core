@@ -522,14 +522,27 @@ class States(Base):
         )
 
 
+def _generate_combined_set(
+    base_platform_attrs: frozenset[str] | None,
+    integration_attrs: frozenset[set] | None,
+) -> set[str]:
+    """Generate a combined set of attributes to exclude."""
+    combined_set: set[str] = set(*ALL_DOMAIN_EXCLUDE_ATTRS)
+    if base_platform_attrs is not None:
+        combined_set |= base_platform_attrs
+    if integration_attrs is not None:
+        combined_set |= integration_attrs  # type: ignore[arg-type]
+    return combined_set
+
+
 @lru_cache
 def _cached_attrs_json_bytes_strip_null(
     attrs: ReadOnlyDict[str, Any],
-    base_platform_attrs: frozenset[str],
-    integration_attrs: frozenset[set],
+    base_platform_attrs: frozenset[str] | None,
+    integration_attrs: frozenset[set] | None,
 ) -> bytes:
     """Cache the result of json_bytes_strip_null with some attributes excluded."""
-    combined_set = ALL_DOMAIN_EXCLUDE_ATTRS | base_platform_attrs | integration_attrs
+    combined_set = _generate_combined_set(base_platform_attrs, integration_attrs)
     return json_bytes_strip_null(
         {k: v for k, v in attrs.items() if k not in combined_set}
     )
@@ -538,15 +551,12 @@ def _cached_attrs_json_bytes_strip_null(
 @lru_cache
 def _cached_attrs_json_bytes(
     attrs: ReadOnlyDict[str, Any],
-    base_platform_attrs: frozenset[str],
-    integration_attrs: frozenset[set],
+    base_platform_attrs: frozenset[str] | None,
+    integration_attrs: frozenset[set] | None,
 ) -> bytes:
     """Cache the result of json_bytes with some attributes excluded."""
-    combined_set = ALL_DOMAIN_EXCLUDE_ATTRS | base_platform_attrs | integration_attrs
+    combined_set = _generate_combined_set(base_platform_attrs, integration_attrs)
     return json_bytes({k: v for k, v in attrs.items() if k not in combined_set})
-
-
-_EMPTY_FROZEN_SET: frozenset[str] = frozenset()
 
 
 class StateAttributes(Base):
@@ -581,12 +591,10 @@ class StateAttributes(Base):
         if state is None:
             return b"{}"
         domain = split_entity_id(state.entity_id)[0]
-        base_platform_attrs = exclude_attrs_by_domain.get(domain, _EMPTY_FROZEN_SET)
-        integration_attrs = _EMPTY_FROZEN_SET
+        base_platform_attrs = exclude_attrs_by_domain.get(domain)
+        integration_attrs = None
         if entity_info := entity_sources.get(state.entity_id):
-            integration_attrs = exclude_attrs_by_domain.get(
-                entity_info["domain"], _EMPTY_FROZEN_SET
-            )
+            integration_attrs = exclude_attrs_by_domain.get(entity_info["domain"])
         if dialect == PSQL_DIALECT:
             encoder = _cached_attrs_json_bytes_strip_null
         else:
