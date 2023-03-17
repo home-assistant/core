@@ -28,7 +28,6 @@ from homeassistant.util.location import async_detect_location_info
 
 from .const import (
     DOMAIN,
-    PREF_ALEXA_DEFAULT_EXPOSE,
     PREF_ALEXA_REPORT_STATE,
     PREF_ENABLE_ALEXA,
     PREF_ENABLE_GOOGLE,
@@ -70,7 +69,6 @@ async def async_setup(hass):
     websocket_api.async_register_command(hass, google_assistant_update)
 
     websocket_api.async_register_command(hass, alexa_list)
-    websocket_api.async_register_command(hass, alexa_update)
     websocket_api.async_register_command(hass, alexa_sync)
 
     websocket_api.async_register_command(hass, thingtalk_convert)
@@ -350,7 +348,6 @@ async def websocket_subscription(
         vol.Optional(PREF_ENABLE_ALEXA): bool,
         vol.Optional(PREF_ALEXA_REPORT_STATE): bool,
         vol.Optional(PREF_GOOGLE_REPORT_STATE): bool,
-        vol.Optional(PREF_ALEXA_DEFAULT_EXPOSE): [str],
         vol.Optional(PREF_GOOGLE_DEFAULT_EXPOSE): [str],
         vol.Optional(PREF_GOOGLE_SECURE_DEVICES_PIN): vol.Any(None, str),
         vol.Optional(PREF_TTS_DEFAULT_VOICE): vol.All(
@@ -609,35 +606,6 @@ async def alexa_list(
         )
 
     connection.send_result(msg["id"], result)
-
-
-@websocket_api.require_admin
-@_require_cloud_login
-@websocket_api.websocket_command(
-    {
-        "type": "cloud/alexa/entities/update",
-        "entity_id": str,
-        vol.Optional("should_expose"): vol.Any(None, bool),
-    }
-)
-@websocket_api.async_response
-@_ws_handle_cloud_errors
-async def alexa_update(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
-) -> None:
-    """Update alexa entity config."""
-    cloud = hass.data[DOMAIN]
-    changes = dict(msg)
-    changes.pop("type")
-    changes.pop("id")
-
-    await cloud.client.prefs.async_update_alexa_entity_config(**changes)
-
-    connection.send_result(
-        msg["id"], cloud.client.prefs.alexa_entity_configs.get(msg["entity_id"])
-    )
 
 
 @websocket_api.require_admin

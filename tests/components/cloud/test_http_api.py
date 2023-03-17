@@ -15,6 +15,7 @@ from homeassistant.components.alexa.entities import LightCapabilities
 from homeassistant.components.cloud.const import DOMAIN
 from homeassistant.components.google_assistant.helpers import GoogleEntity
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util.location import LocationInfo
 
 from . import mock_cloud, mock_cloud_prefs
@@ -403,7 +404,6 @@ async def test_websocket_status(
             "google_secure_devices_pin": None,
             "google_default_expose": None,
             "alexa_default_expose": None,
-            "alexa_entity_configs": {},
             "alexa_report_state": True,
             "google_report_state": True,
             "remote_enabled": False,
@@ -521,7 +521,6 @@ async def test_websocket_update_preferences(
             "google_enabled": False,
             "google_secure_devices_pin": "1234",
             "google_default_expose": ["light", "switch"],
-            "alexa_default_expose": ["sensor", "media_player"],
             "tts_default_voice": ["en-GB", "male"],
         }
     )
@@ -532,7 +531,6 @@ async def test_websocket_update_preferences(
     assert not setup_api.alexa_enabled
     assert setup_api.google_secure_devices_pin == "1234"
     assert setup_api.google_default_expose == ["light", "switch"]
-    assert setup_api.alexa_default_expose == ["sensor", "media_player"]
     assert setup_api.tts_default_voice == ("en-GB", "male")
 
 
@@ -782,37 +780,31 @@ async def test_list_alexa_entities(
 
 
 async def test_update_alexa_entity(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, setup_api, mock_cloud_login
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    setup_api,
+    mock_cloud_login,
 ) -> None:
     """Test that we can update config of an Alexa entity."""
+    entry = entity_registry.async_get_or_create(
+        "light", "test", "unique", suggested_object_id="kitchen"
+    )
     client = await hass_ws_client(hass)
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 5,
-            "type": "cloud/alexa/entities/update",
-            "entity_id": "light.kitchen",
+            "type": "homeassistant/expose_entity",
+            "assistant": "cloud.alexa",
+            "entity_id": entry.entity_id,
             "should_expose": False,
         }
     )
     response = await client.receive_json()
 
     assert response["success"]
-    prefs = hass.data[DOMAIN].client.prefs
-    assert prefs.alexa_entity_configs["light.kitchen"] == {"should_expose": False}
-
-    await client.send_json(
-        {
-            "id": 6,
-            "type": "cloud/alexa/entities/update",
-            "entity_id": "light.kitchen",
-            "should_expose": None,
-        }
-    )
-    response = await client.receive_json()
-
-    assert response["success"]
-    prefs = hass.data[DOMAIN].client.prefs
-    assert prefs.alexa_entity_configs["light.kitchen"] == {"should_expose": None}
+    assert entity_registry.async_get(entry.entity_id).options["cloud.alexa"] == {
+        "should_expose": False
+    }
 
 
 async def test_sync_alexa_entities_timeout(
