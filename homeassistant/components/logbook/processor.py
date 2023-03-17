@@ -155,7 +155,7 @@ class EventProcessor:
             if self.entity_ids:
                 instance = get_instance(self.hass)
                 entity_id_to_metadata_id = instance.states_meta_manager.get_many(
-                    self.entity_ids, session
+                    self.entity_ids, session, False
                 )
                 metadata_ids = [
                     metadata_id

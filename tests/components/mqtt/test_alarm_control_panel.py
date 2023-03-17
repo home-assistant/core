@@ -1,7 +1,6 @@
 """The tests the MQTT alarm control panel component."""
 import copy
 import json
-from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -64,11 +63,12 @@ from .test_common import (
     help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
+    help_test_validate_platform_config,
 )
 
 from tests.common import async_fire_mqtt_message
 from tests.components.alarm_control_panel import common
-from tests.typing import MqttMockHAClientGenerator
+from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 CODE_NUMBER = "1234"
 CODE_TEXT = "HELLO_CODE"
@@ -173,26 +173,18 @@ async def test_fail_setup_without_state_or_command_topic(
 ) -> None:
     """Test for failing setup with no state or command topic."""
     assert (
-        await async_setup_component(
-            hass,
-            mqtt.DOMAIN,
-            config,
-        )
-        is valid
+        help_test_validate_platform_config(hass, alarm_control_panel.DOMAIN, config)
+        == valid
     )
 
 
+@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
 async def test_update_state_via_state_topic(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test updating with via state topic."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
-        DEFAULT_CONFIG,
-    )
+    await mqtt_mock_entry_no_yaml_config()
     await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
 
     entity_id = "alarm_control_panel.test"
 
@@ -1057,16 +1049,12 @@ async def test_publishing_with_custom_encoding(
 
 async def test_reloadable(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-    tmp_path: Path,
+    mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = alarm_control_panel.DOMAIN
     config = DEFAULT_CONFIG
-    await help_test_reloadable(
-        hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, domain, config
-    )
+    await help_test_reloadable(hass, mqtt_client_mock, domain, config)
 
 
 async def test_setup_manual_entity_from_yaml(hass: HomeAssistant) -> None:
@@ -1078,12 +1066,11 @@ async def test_setup_manual_entity_from_yaml(hass: HomeAssistant) -> None:
 
 async def test_unload_entry(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    tmp_path: Path,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test unloading the config entry."""
     domain = alarm_control_panel.DOMAIN
     config = DEFAULT_CONFIG
     await help_test_unload_config_entry_with_platform(
-        hass, mqtt_mock_entry_with_yaml_config, tmp_path, domain, config
+        hass, mqtt_mock_entry_no_yaml_config, domain, config
     )

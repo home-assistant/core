@@ -908,7 +908,7 @@ def test_execute_stmt_lambda_element(
 
     with session_scope(hass=hass) as session:
         # No time window, we always get a list
-        metadata_id = instance.states_meta_manager.get("sensor.on", session)
+        metadata_id = instance.states_meta_manager.get("sensor.on", session, True)
         stmt = _get_single_entity_states_stmt(dt_util.utcnow(), metadata_id, False)
         rows = util.execute_stmt_lambda_element(session, stmt)
         assert isinstance(rows, list)

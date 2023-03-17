@@ -2208,6 +2208,7 @@ async def test_trigger_condition_explicit_id(hass: HomeAssistant, calls) -> None
         (SCRIPT_MODE_SINGLE, "script1: Already running"),
     ),
 )
+@pytest.mark.parametrize("wait_for_stop_scripts_after_shutdown", [True])
 async def test_recursive_automation_starting_script(
     hass: HomeAssistant,
     automation_mode,
@@ -2318,6 +2319,7 @@ async def test_recursive_automation_starting_script(
 
 
 @pytest.mark.parametrize("automation_mode", SCRIPT_MODE_CHOICES)
+@pytest.mark.parametrize("wait_for_stop_scripts_after_shutdown", [True])
 async def test_recursive_automation(
     hass: HomeAssistant, automation_mode, caplog: pytest.LogCaptureFixture
 ) -> None:

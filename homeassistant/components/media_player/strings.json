@@ -19,15 +19,27 @@
       "changed_states": "{entity_name} changed states"
     }
   },
-  "state": {
+  "entity_component": {
     "_": {
-      "off": "[%key:common::state::off%]",
-      "on": "[%key:common::state::on%]",
-      "playing": "Playing",
-      "paused": "[%key:common::state::paused%]",
-      "idle": "[%key:common::state::idle%]",
-      "standby": "[%key:common::state::standby%]",
-      "buffering": "Buffering"
+      "name": "[%key:component::media_player::title%]",
+      "state": {
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]",
+        "playing": "Playing",
+        "paused": "[%key:common::state::paused%]",
+        "idle": "[%key:common::state::idle%]",
+        "standby": "[%key:common::state::standby%]",
+        "buffering": "Buffering"
+      }
+    },
+    "tv": {
+      "name": "TV"
+    },
+    "speaker": {
+      "name": "Speaker"
+    },
+    "receiver": {
+      "name": "Receiver"
     }
   }
 }
