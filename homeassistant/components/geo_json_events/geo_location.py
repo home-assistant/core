@@ -77,9 +77,7 @@ async def async_setup_platform(
         _LOGGER.debug("Adding geolocation %s", new_entity)
         async_add_entities([new_entity], True)
 
-    async_dispatcher_connect(
-        hass, manager.async_event_new_entity(), async_add_geolocation
-    )
+    async_dispatcher_connect(hass, manager.signal_new_entity, async_add_geolocation)
 
     await manager.async_init()
 

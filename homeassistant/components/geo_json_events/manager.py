@@ -7,7 +7,7 @@ import logging
 from aio_geojson_generic_client import GenericFeedManager
 from aio_geojson_generic_client.feed_entry import GenericFeedEntry
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -41,8 +41,10 @@ class GeoJsonFeedEntityManager:
             url,
             filter_radius=radius_in_km,
         )
-        self._unique_id = f"{coordinates}-{url}-{radius_in_km}"
         self._scan_interval = scan_interval
+        self.signal_new_entity = (
+            f"{DOMAIN}_new_geolocation_{coordinates}-{url}-{radius_in_km}"
+        )
 
     async def async_init(self) -> None:
         """Schedule initial and regular updates based on configured time interval."""
@@ -64,16 +66,11 @@ class GeoJsonFeedEntityManager:
         """Get feed entry by external id."""
         return self._feed_manager.feed_entries.get(external_id)
 
-    @callback
-    def async_event_new_entity(self):
-        """Return manager specific event to signal new entity."""
-        return f"{DOMAIN}_new_geolocation_{self._unique_id}"
-
     async def _generate_entity(self, external_id: str) -> None:
         """Generate new entity."""
         async_dispatcher_send(
             self._hass,
-            self.async_event_new_entity(),
+            self.signal_new_entity,
             self,
             external_id,
         )
