@@ -70,11 +70,11 @@ UNHEALTHY_REASONS = {
 }
 
 
-class SupervisorRepairs:
-    """Create repairs from supervisor events."""
+class SupervisorIssues:
+    """Create issues from supervisor events."""
 
     def __init__(self, hass: HomeAssistant, client: HassIO) -> None:
-        """Initialize supervisor repairs."""
+        """Initialize supervisor issues."""
         self._hass = hass
         self._client = client
         self._unsupported_reasons: set[str] = set()
@@ -87,7 +87,7 @@ class SupervisorRepairs:
 
     @unhealthy_reasons.setter
     def unhealthy_reasons(self, reasons: set[str]) -> None:
-        """Set unhealthy reasons. Create or delete repairs as necessary."""
+        """Set unhealthy reasons. Create or delete issues as necessary."""
         for unhealthy in reasons - self.unhealthy_reasons:
             if unhealthy in UNHEALTHY_REASONS:
                 translation_key = f"unhealthy_{unhealthy}"
@@ -119,7 +119,7 @@ class SupervisorRepairs:
 
     @unsupported_reasons.setter
     def unsupported_reasons(self, reasons: set[str]) -> None:
-        """Set unsupported reasons. Create or delete repairs as necessary."""
+        """Set unsupported reasons. Create or delete issues as necessary."""
         for unsupported in reasons - UNSUPPORTED_SKIP_REPAIR - self.unsupported_reasons:
             if unsupported in UNSUPPORTED_REASONS:
                 translation_key = f"unsupported_{unsupported}"
@@ -149,18 +149,18 @@ class SupervisorRepairs:
         await self.update()
 
         async_dispatcher_connect(
-            self._hass, EVENT_SUPERVISOR_EVENT, self._supervisor_events_to_repairs
+            self._hass, EVENT_SUPERVISOR_EVENT, self._supervisor_events_to_issues
         )
 
     async def update(self) -> None:
-        """Update repairs from Supervisor resolution center."""
+        """Update issuess from Supervisor resolution center."""
         data = await self._client.get_resolution_info()
         self.unhealthy_reasons = set(data[ATTR_UNHEALTHY])
         self.unsupported_reasons = set(data[ATTR_UNSUPPORTED])
 
     @callback
-    def _supervisor_events_to_repairs(self, event: dict[str, Any]) -> None:
-        """Create repairs from supervisor events."""
+    def _supervisor_events_to_issues(self, event: dict[str, Any]) -> None:
+        """Create issues from supervisor events."""
         if ATTR_WS_EVENT not in event:
             return
 

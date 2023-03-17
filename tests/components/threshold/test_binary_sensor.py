@@ -1,4 +1,5 @@
 """The test for the threshold sensor platform."""
+
 import pytest
 
 from homeassistant.const import (
@@ -567,3 +568,20 @@ async def test_sensor_upper_zero_threshold(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.threshold")
     assert state.state == "on"
+
+
+async def test_sensor_no_lower_upper(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test if no lower or upper has been provided."""
+    config = {
+        "binary_sensor": {
+            "platform": "threshold",
+            "entity_id": "sensor.test_monitored",
+        }
+    }
+
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+
+    assert "Lower or Upper thresholds not provided" in caplog.text

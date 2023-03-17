@@ -14,13 +14,11 @@ from homeassistant.components.unifi.const import (
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
-    DOMAIN as UNIFI_DOMAIN,
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 import homeassistant.util.dt as dt_util
 
@@ -198,24 +196,6 @@ async def test_bandwidth_sensors(
     assert hass.states.get("sensor.wired_client_rx")
     assert hass.states.get("sensor.wired_client_tx")
 
-    # Try to add the sensors again, using a signal
-
-    clients_connected = {wired_client["mac"], wireless_client["mac"]}
-    devices_connected = set()
-
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-
-    async_dispatcher_send(
-        hass,
-        controller.signal_update,
-        clients_connected,
-        devices_connected,
-    )
-    await hass.async_block_till_done()
-
-    assert len(hass.states.async_all()) == 5
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 4
-
 
 @pytest.mark.parametrize(
     ("initial_uptime", "event_uptime", "new_uptime"),
@@ -310,24 +290,6 @@ async def test_uptime_sensors(
     assert len(hass.states.async_all()) == 2
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1
     assert hass.states.get("sensor.client1_uptime")
-
-    # Try to add the sensors again, using a signal
-
-    clients_connected = {uptime_client["mac"]}
-    devices_connected = set()
-
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-
-    async_dispatcher_send(
-        hass,
-        controller.signal_update,
-        clients_connected,
-        devices_connected,
-    )
-    await hass.async_block_till_done()
-
-    assert len(hass.states.async_all()) == 2
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1
 
 
 async def test_remove_sensors(

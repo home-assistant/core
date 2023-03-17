@@ -914,7 +914,10 @@ async def test_entity_description_fallback() -> None:
     ),
 )
 async def test_friendly_name(
-    hass: HomeAssistant, has_entity_name, entity_name, expected_friendly_name
+    hass: HomeAssistant,
+    has_entity_name: bool,
+    entity_name: str | None,
+    expected_friendly_name: str | None,
 ) -> None:
     """Test entity_id is influenced by entity name."""
 

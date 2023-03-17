@@ -13,7 +13,9 @@ from homeassistant.components.recorder.db_schema import (
     DEVICE_ID_IN_EVENT,
     EventData,
     Events,
+    EventTypes,
     States,
+    StatesMeta,
 )
 
 from .common import (
@@ -33,8 +35,10 @@ def _select_device_id_context_ids_sub_query(
     json_quotable_device_ids: list[str],
 ) -> Select:
     """Generate a subquery to find context ids for multiple devices."""
-    inner = select_events_context_id_subquery(start_day, end_day, event_types).where(
-        apply_event_device_id_matchers(json_quotable_device_ids)
+    inner = (
+        select_events_context_id_subquery(start_day, end_day, event_types)
+        .where(apply_event_device_id_matchers(json_quotable_device_ids))
+        .subquery()
     )
     return select(inner.c.context_id_bin).group_by(inner.c.context_id_bin)
 
@@ -58,11 +62,14 @@ def _apply_devices_context_union(
             select_events_context_only()
             .select_from(devices_cte)
             .outerjoin(Events, devices_cte.c.context_id_bin == Events.context_id_bin)
-        ).outerjoin(EventData, (Events.data_id == EventData.data_id)),
+            .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
+            .outerjoin(EventData, (Events.data_id == EventData.data_id)),
+        ),
         apply_states_context_hints(
             select_states_context_only()
             .select_from(devices_cte)
             .outerjoin(States, devices_cte.c.context_id_bin == States.context_id_bin)
+            .outerjoin(StatesMeta, (States.metadata_id == StatesMeta.metadata_id))
         ),
     )
 
