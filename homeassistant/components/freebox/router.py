@@ -28,6 +28,7 @@ from .const import (
     APP_DESC,
     CONNECTION_SENSORS_KEYS,
     DOMAIN,
+    HOME_COMPATIBLE_PLATFORM,
     STORAGE_KEY,
     STORAGE_VERSION,
 )
@@ -157,18 +158,16 @@ class FreeboxRouter:
         """Update Home devices (light, cover, alarm, sensors ...)."""
         new_device = False
         # Home sensors (alarm, pir, switch, remote ...)
-        if self.home_granted is True:
-            try:
-                home_nodes: list[Any] = await self._api.home.get_home_nodes() or []
-            except InsufficientPermissionsError:
-                self.home_granted = False
-                _LOGGER.warning("Home access is not granted")
-                return
-        else:
+        try:
+            home_nodes: list[Any] = await self._api.home.get_home_nodes() or []
+        except InsufficientPermissionsError:
+            self.home_granted = False
+            _LOGGER.warning("Home access is not granted")
             return
+
         for home_node in home_nodes:
             if home_node["category"] in [
-                "camera",
+                HOME_COMPATIBLE_PLATFORM,
             ]:
                 if self.home_devices.get(home_node["id"]) is None:
                     new_device = True

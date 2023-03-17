@@ -12,7 +12,7 @@ from homeassistant.components.ffmpeg.camera import (
     FFmpegCamera,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -129,6 +129,10 @@ class FreeboxCamera(FreeboxHomeBaseClass, FFmpegCamera):
         self.update_node(node)
 
     @property
+    def command_flip(self) -> Any | str:
+        """Return command_flip."""
+        return self._command_flip
+
     def flip(self) -> bool:
         """Return flip."""
         return self._flip
@@ -136,7 +140,7 @@ class FreeboxCamera(FreeboxHomeBaseClass, FFmpegCamera):
     async def async_flip(self, entity: FreeboxCamera) -> None:
         """Flip the camera stream."""
         self._flip = not entity.flip
-        await entity.set_home_endpoint_value(entity._command_flip, entity.flip)
+        await entity.set_home_endpoint_value(entity.command_flip, entity.flip)
 
     async def async_enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""

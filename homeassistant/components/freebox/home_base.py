@@ -8,7 +8,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    MODEL_ALARM,
+    MODEL_CAMERA,
+    MODEL_DWS,
+    MODEL_IOHOME,
+    MODEL_KBF,
+    MODEL_PIR,
+    MODEL_RTS,
+)
 from .router import FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,13 +39,13 @@ class FreeboxHomeBaseClass(Entity):
         self._node = node
         self._sub_node = sub_node
         self._id = node["id"]
-        self._name = node["label"].strip()
-        self._device_name = self._name
-        self._unique_id = f"{self._router.mac}-node_{self._id}"
+        self._attr_name = node["label"].strip()
+        self._device_name = self._attr_name
+        self._attr_unique_id = f"{self._router.mac}-node_{self._id}"
 
         if sub_node is not None:
-            self._name += " " + sub_node["label"].strip()
-            self._unique_id += "-" + sub_node["name"].strip()
+            self._attr_name += " " + sub_node["label"].strip()
+            self._attr_unique_id += "-" + sub_node["name"].strip()
 
         self._available = True
         self._firmware = node["props"].get("FwVersion")
@@ -45,36 +54,21 @@ class FreeboxHomeBaseClass(Entity):
         self._remove_signal_update: Any
 
         if node["category"] == "pir":
-            self._model = "F-HAPIR01A"
+            self._model = MODEL_PIR
         elif node["category"] == "camera":
-            self._model = "F-HACAM01A"
+            self._model = MODEL_CAMERA
         elif node["category"] == "dws":
-            self._model = "F-HADWS01A"
+            self._model = MODEL_DWS
         elif node["category"] == "kfb":
-            self._model = "F-HAKFB01A"
+            self._model = MODEL_KBF
         elif node["category"] == "alarm":
-            self._model = "F-MSEC07A"
+            self._model = MODEL_ALARM
         elif node["type"].get("inherit") == "node::rts":
             self._manufacturer = "Somfy"
-            self._model = "RTS"
+            self._model = MODEL_RTS
         elif node["type"].get("inherit") == "node::ios":
             self._manufacturer = "Somfy"
-            self._model = "IOHome"
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique id."""
-        return self._unique_id
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        return self._name
-
-    @property
-    def should_poll(self):
-        """Return True if entity has to be polled for state."""
-        return False
+            self._model = MODEL_IOHOME
 
     @property
     def device_info(self):
@@ -92,9 +86,9 @@ class FreeboxHomeBaseClass(Entity):
         self._node = self._router.home_devices[self._id]
         # Update name
         if self._sub_node is None:
-            self._name = self._node["label"].strip()
+            self._attr_name = self._node["label"].strip()
         else:
-            self._name = (
+            self._attr_name = (
                 self._node["label"].strip() + " " + self._sub_node["label"].strip()
             )
         self.async_write_ha_state()
