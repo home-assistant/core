@@ -35,7 +35,7 @@
           "name": "App ID"
         },
         "app_name": {
-          "name": "App name"
+          "name": "App"
         },
         "entity_picture_local": {
           "name": "Local accessible entity picture"
@@ -99,7 +99,7 @@
           "name": "Position"
         },
         "media_position_updated_at": {
-          "name": "Position updated at"
+          "name": "Position updated"
         },
         "media_title": {
           "name": "Title"
