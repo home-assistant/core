@@ -22,7 +22,7 @@ import homeassistant.util.dt as dt_util
 from tests.common import async_fire_time_changed, get_fixture_path
 
 
-async def test_setup(recorder_mock, hass):
+async def test_setup(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test the history statistics sensor setup."""
 
     config = {
@@ -30,7 +30,7 @@ async def test_setup(recorder_mock, hass):
             "platform": "history_stats",
             "entity_id": "binary_sensor.test_id",
             "state": "on",
-            "start": "{{ now().replace(hour=0)"
+            "start": "{{ utcnow().replace(hour=0)"
             ".replace(minute=0).replace(second=0) }}",
             "duration": "02:00",
             "name": "Test",
@@ -44,7 +44,9 @@ async def test_setup(recorder_mock, hass):
     assert state.state == "0.0"
 
 
-async def test_setup_multiple_states(recorder_mock, hass):
+async def test_setup_multiple_states(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
     """Test the history statistics sensor setup for multiple states."""
 
     config = {
@@ -52,7 +54,7 @@ async def test_setup_multiple_states(recorder_mock, hass):
             "platform": "history_stats",
             "entity_id": "binary_sensor.test_id",
             "state": ["on", "true"],
-            "start": "{{ now().replace(hour=0)"
+            "start": "{{ utcnow().replace(hour=0)"
             ".replace(minute=0).replace(second=0) }}",
             "duration": "02:00",
             "name": "Test",
@@ -74,7 +76,7 @@ async def test_setup_multiple_states(recorder_mock, hass):
             "entity_id": "binary_sensor.test_id",
             "name": "Test",
             "state": "on",
-            "start": "{{ now() }}",
+            "start": "{{ utcnow() }}",
             "duration": "TEST",
         },
         {
@@ -82,20 +84,20 @@ async def test_setup_multiple_states(recorder_mock, hass):
             "entity_id": "binary_sensor.test_id",
             "name": "Test",
             "state": "on",
-            "start": "{{ now() }}",
+            "start": "{{ utcnow() }}",
         },
         {
             "platform": "history_stats",
             "entity_id": "binary_sensor.test_id",
             "name": "Test",
             "state": "on",
-            "start": "{{ as_timestamp(now()) - 3600 }}",
-            "end": "{{ now() }}",
+            "start": "{{ as_timestamp(utcnow()) - 3600 }}",
+            "end": "{{ utcnow() }}",
             "duration": "01:00",
         },
     ],
 )
-def test_setup_invalid_config(config):
+def test_setup_invalid_config(config) -> None:
     """Test the history statistics sensor setup with invalid config."""
 
     with pytest.raises(vol.Invalid):
@@ -224,7 +226,7 @@ async def test_reload(recorder_mock: Recorder, hass: HomeAssistant) -> None:
                 "entity_id": "binary_sensor.test_id",
                 "name": "test",
                 "state": "on",
-                "start": "{{ as_timestamp(now()) - 3600 }}",
+                "start": "{{ as_timestamp(utcnow()) - 3600 }}",
                 "duration": "01:00",
             },
         },
@@ -290,8 +292,8 @@ async def test_measure_multiple(recorder_mock: Recorder, hass: HomeAssistant) ->
                         "entity_id": "input_select.test_id",
                         "name": "sensor1",
                         "state": ["orange", "blue"],
-                        "start": "{{ as_timestamp(now()) - 3600 }}",
-                        "end": "{{ now() }}",
+                        "start": "{{ as_timestamp(utcnow()) - 3600 }}",
+                        "end": "{{ utcnow() }}",
                         "type": "time",
                     },
                     {
@@ -299,8 +301,8 @@ async def test_measure_multiple(recorder_mock: Recorder, hass: HomeAssistant) ->
                         "entity_id": "unknown.test_id",
                         "name": "sensor2",
                         "state": ["orange", "blue"],
-                        "start": "{{ as_timestamp(now()) - 3600 }}",
-                        "end": "{{ now() }}",
+                        "start": "{{ as_timestamp(utcnow()) - 3600 }}",
+                        "end": "{{ utcnow() }}",
                         "type": "time",
                     },
                     {
@@ -308,8 +310,8 @@ async def test_measure_multiple(recorder_mock: Recorder, hass: HomeAssistant) ->
                         "entity_id": "input_select.test_id",
                         "name": "sensor3",
                         "state": ["orange", "blue"],
-                        "start": "{{ as_timestamp(now()) - 3600 }}",
-                        "end": "{{ now() }}",
+                        "start": "{{ as_timestamp(utcnow()) - 3600 }}",
+                        "end": "{{ utcnow() }}",
                         "type": "count",
                     },
                     {
@@ -317,8 +319,8 @@ async def test_measure_multiple(recorder_mock: Recorder, hass: HomeAssistant) ->
                         "entity_id": "input_select.test_id",
                         "name": "sensor4",
                         "state": ["orange", "blue"],
-                        "start": "{{ as_timestamp(now()) - 3600 }}",
-                        "end": "{{ now() }}",
+                        "start": "{{ as_timestamp(utcnow()) - 3600 }}",
+                        "end": "{{ utcnow() }}",
                         "type": "ratio",
                     },
                 ]
@@ -369,8 +371,8 @@ async def test_measure(recorder_mock: Recorder, hass: HomeAssistant) -> None:
                         "entity_id": "binary_sensor.test_id",
                         "name": "sensor1",
                         "state": "on",
-                        "start": "{{ as_timestamp(now()) - 3600 }}",
-                        "end": "{{ now() }}",
+                        "start": "{{ as_timestamp(utcnow()) - 3600 }}",
+                        "end": "{{ utcnow() }}",
                         "type": "time",
                     },
                     {
@@ -378,8 +380,8 @@ async def test_measure(recorder_mock: Recorder, hass: HomeAssistant) -> None:
                         "entity_id": "binary_sensor.test_id",
                         "name": "sensor2",
                         "state": "on",
-                        "start": "{{ as_timestamp(now()) - 3600 }}",
-                        "end": "{{ now() }}",
+                        "start": "{{ as_timestamp(utcnow()) - 3600 }}",
+                        "end": "{{ utcnow() }}",
                         "type": "time",
                     },
                     {
@@ -388,7 +390,7 @@ async def test_measure(recorder_mock: Recorder, hass: HomeAssistant) -> None:
                         "name": "sensor3",
                         "state": "on",
                         "start": "{{ as_timestamp(now()) - 3600 }}",
-                        "end": "{{ now() }}",
+                        "end": "{{ utcnow() }}",
                         "type": "count",
                     },
                     {
@@ -396,8 +398,8 @@ async def test_measure(recorder_mock: Recorder, hass: HomeAssistant) -> None:
                         "entity_id": "binary_sensor.test_id",
                         "name": "sensor4",
                         "state": "on",
-                        "start": "{{ as_timestamp(now()) - 3600 }}",
-                        "end": "{{ now() }}",
+                        "start": "{{ as_timestamp(utcnow()) - 3600 }}",
+                        "end": "{{ utcnow() }}",
                         "type": "ratio",
                     },
                 ]
@@ -451,8 +453,8 @@ async def test_async_on_entire_period(
                         "entity_id": "binary_sensor.test_on_id",
                         "name": "on_sensor1",
                         "state": "on",
-                        "start": "{{ as_timestamp(now()) - 3600 }}",
-                        "end": "{{ now() }}",
+                        "start": "{{ as_timestamp(utcnow()) - 3600 }}",
+                        "end": "{{ utcnow() }}",
                         "type": "time",
                     },
                     {
@@ -460,8 +462,8 @@ async def test_async_on_entire_period(
                         "entity_id": "binary_sensor.test_on_id",
                         "name": "on_sensor2",
                         "state": "on",
-                        "start": "{{ as_timestamp(now()) - 3600 }}",
-                        "end": "{{ now() }}",
+                        "start": "{{ as_timestamp(utcnow()) - 3600 }}",
+                        "end": "{{ utcnow() }}",
                         "type": "time",
                     },
                     {
@@ -469,8 +471,8 @@ async def test_async_on_entire_period(
                         "entity_id": "binary_sensor.test_on_id",
                         "name": "on_sensor3",
                         "state": "on",
-                        "start": "{{ as_timestamp(now()) - 3600 }}",
-                        "end": "{{ now() }}",
+                        "start": "{{ as_timestamp(utcnow()) - 3600 }}",
+                        "end": "{{ utcnow() }}",
                         "type": "count",
                     },
                     {
@@ -478,8 +480,8 @@ async def test_async_on_entire_period(
                         "entity_id": "binary_sensor.test_on_id",
                         "name": "on_sensor4",
                         "state": "on",
-                        "start": "{{ as_timestamp(now()) - 3600 }}",
-                        "end": "{{ now() }}",
+                        "start": "{{ as_timestamp(utcnow()) - 3600 }}",
+                        "end": "{{ utcnow() }}",
                         "type": "ratio",
                     },
                 ]
@@ -529,8 +531,8 @@ async def test_async_off_entire_period(
                     "entity_id": "binary_sensor.test_on_id",
                     "name": "on_sensor1",
                     "state": "on",
-                    "start": "{{ as_timestamp(now()) - 3600 }}",
-                    "end": "{{ now() }}",
+                    "start": "{{ as_timestamp(utcnow()) - 3600 }}",
+                    "end": "{{ utcnow() }}",
                     "type": "time",
                 },
                 {
@@ -538,8 +540,8 @@ async def test_async_off_entire_period(
                     "entity_id": "binary_sensor.test_on_id",
                     "name": "on_sensor2",
                     "state": "on",
-                    "start": "{{ as_timestamp(now()) - 3600 }}",
-                    "end": "{{ now() }}",
+                    "start": "{{ as_timestamp(utcnow()) - 3600 }}",
+                    "end": "{{ utcnow() }}",
                     "type": "time",
                 },
                 {
@@ -547,8 +549,8 @@ async def test_async_off_entire_period(
                     "entity_id": "binary_sensor.test_on_id",
                     "name": "on_sensor3",
                     "state": "on",
-                    "start": "{{ as_timestamp(now()) - 3600 }}",
-                    "end": "{{ now() }}",
+                    "start": "{{ as_timestamp(utcnow()) - 3600 }}",
+                    "end": "{{ utcnow() }}",
                     "type": "count",
                 },
                 {
@@ -556,8 +558,8 @@ async def test_async_off_entire_period(
                     "entity_id": "binary_sensor.test_on_id",
                     "name": "on_sensor4",
                     "state": "on",
-                    "start": "{{ as_timestamp(now()) - 3600 }}",
-                    "end": "{{ now() }}",
+                    "start": "{{ as_timestamp(utcnow()) - 3600 }}",
+                    "end": "{{ utcnow() }}",
                     "type": "ratio",
                 },
             ]
@@ -1226,7 +1228,7 @@ async def test_measure_from_end_going_backwards(
                         "name": "sensor1",
                         "state": "on",
                         "duration": {"hours": 1},
-                        "end": "{{ now() }}",
+                        "end": "{{ utcnow() }}",
                         "type": "time",
                     },
                     {
@@ -1235,7 +1237,7 @@ async def test_measure_from_end_going_backwards(
                         "name": "sensor2",
                         "state": "on",
                         "duration": {"hours": 1},
-                        "end": "{{ now() }}",
+                        "end": "{{ utcnow() }}",
                         "type": "time",
                     },
                     {
@@ -1244,7 +1246,7 @@ async def test_measure_from_end_going_backwards(
                         "name": "sensor3",
                         "state": "on",
                         "duration": {"hours": 1},
-                        "end": "{{ now() }}",
+                        "end": "{{ utcnow() }}",
                         "type": "count",
                     },
                     {
@@ -1253,7 +1255,7 @@ async def test_measure_from_end_going_backwards(
                         "name": "sensor4",
                         "state": "on",
                         "duration": {"hours": 1},
-                        "end": "{{ now() }}",
+                        "end": "{{ utcnow() }}",
                         "type": "ratio",
                     },
                 ]
@@ -1318,8 +1320,8 @@ async def test_measure_cet(recorder_mock: Recorder, hass: HomeAssistant) -> None
                         "entity_id": "binary_sensor.test_id",
                         "name": "sensor1",
                         "state": "on",
-                        "start": "{{ as_timestamp(now()) - 3600 }}",
-                        "end": "{{ now() }}",
+                        "start": "{{ as_timestamp(utcnow()) - 3600 }}",
+                        "end": "{{ utcnow() }}",
                         "type": "time",
                     },
                     {
@@ -1327,8 +1329,8 @@ async def test_measure_cet(recorder_mock: Recorder, hass: HomeAssistant) -> None
                         "entity_id": "binary_sensor.test_id",
                         "name": "sensor2",
                         "state": "on",
-                        "start": "{{ as_timestamp(now()) - 3600 }}",
-                        "end": "{{ now() }}",
+                        "start": "{{ as_timestamp(utcnow()) - 3600 }}",
+                        "end": "{{ utcnow() }}",
                         "type": "time",
                     },
                     {
@@ -1336,8 +1338,8 @@ async def test_measure_cet(recorder_mock: Recorder, hass: HomeAssistant) -> None
                         "entity_id": "binary_sensor.test_id",
                         "name": "sensor3",
                         "state": "on",
-                        "start": "{{ as_timestamp(now()) - 3600 }}",
-                        "end": "{{ now() }}",
+                        "start": "{{ as_timestamp(utcnow()) - 3600 }}",
+                        "end": "{{ utcnow() }}",
                         "type": "count",
                     },
                     {
@@ -1345,8 +1347,8 @@ async def test_measure_cet(recorder_mock: Recorder, hass: HomeAssistant) -> None
                         "entity_id": "binary_sensor.test_id",
                         "name": "sensor4",
                         "state": "on",
-                        "start": "{{ as_timestamp(now()) - 3600 }}",
-                        "end": "{{ now() }}",
+                        "start": "{{ as_timestamp(utcnow()) - 3600 }}",
+                        "end": "{{ utcnow() }}",
                         "type": "ratio",
                     },
                 ]
@@ -1493,8 +1495,8 @@ async def test_device_classes(recorder_mock: Recorder, hass: HomeAssistant) -> N
                     "entity_id": "binary_sensor.test_id",
                     "name": "time",
                     "state": "on",
-                    "start": "{{ as_timestamp(now()) - 3600 }}",
-                    "end": "{{ as_timestamp(now()) + 3600 }}",
+                    "start": "{{ as_timestamp(utcnow()) - 3600 }}",
+                    "end": "{{ as_timestamp(utcnow()) + 3600 }}",
                     "type": "time",
                 },
                 {
@@ -1502,8 +1504,8 @@ async def test_device_classes(recorder_mock: Recorder, hass: HomeAssistant) -> N
                     "entity_id": "binary_sensor.test_id",
                     "name": "count",
                     "state": "on",
-                    "start": "{{ as_timestamp(now()) - 3600 }}",
-                    "end": "{{ as_timestamp(now()) + 3600 }}",
+                    "start": "{{ as_timestamp(utcnow()) - 3600 }}",
+                    "end": "{{ as_timestamp(utcnow()) + 3600 }}",
                     "type": "count",
                 },
                 {
@@ -1511,8 +1513,8 @@ async def test_device_classes(recorder_mock: Recorder, hass: HomeAssistant) -> N
                     "entity_id": "binary_sensor.test_id",
                     "name": "ratio",
                     "state": "on",
-                    "start": "{{ as_timestamp(now()) - 3600 }}",
-                    "end": "{{ as_timestamp(now()) + 3600 }}",
+                    "start": "{{ as_timestamp(utcnow()) - 3600 }}",
+                    "end": "{{ as_timestamp(utcnow()) + 3600 }}",
                     "type": "ratio",
                 },
             ]

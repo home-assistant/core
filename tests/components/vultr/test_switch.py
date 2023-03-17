@@ -134,7 +134,7 @@ def test_invalid_switch_config() -> None:
 
 
 @pytest.mark.usefixtures("valid_config")
-def test_invalid_switches(hass: HomeAssistant):
+def test_invalid_switches(hass: HomeAssistant) -> None:
     """Test the VultrSwitch fails."""
     hass_devices = []
 

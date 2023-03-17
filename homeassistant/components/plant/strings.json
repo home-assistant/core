@@ -1,9 +1,11 @@
 {
   "title": "Plant Monitor",
-  "state": {
+  "entity_component": {
     "_": {
-      "ok": "[%key:component::binary_sensor::state::problem::off%]",
-      "problem": "[%key:component::binary_sensor::state::problem::on%]"
+      "state": {
+        "ok": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
+        "problem": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
+      }
     }
   }
 }

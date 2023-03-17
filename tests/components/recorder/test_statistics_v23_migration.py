@@ -52,7 +52,7 @@ def _create_engine_test(*args, **kwargs):
     return engine
 
 
-def test_delete_duplicates(caplog, tmpdir):
+def test_delete_duplicates(caplog: pytest.LogCaptureFixture, tmpdir) -> None:
     """Test removal of duplicated statistics."""
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
@@ -222,7 +222,7 @@ def test_delete_duplicates(caplog, tmpdir):
     assert "Found duplicated" not in caplog.text
 
 
-def test_delete_duplicates_many(caplog, tmpdir):
+def test_delete_duplicates_many(caplog: pytest.LogCaptureFixture, tmpdir) -> None:
     """Test removal of duplicated statistics."""
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
@@ -399,7 +399,9 @@ def test_delete_duplicates_many(caplog, tmpdir):
 
 
 @pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
-def test_delete_duplicates_non_identical(caplog, tmpdir):
+def test_delete_duplicates_non_identical(
+    caplog: pytest.LogCaptureFixture, tmpdir
+) -> None:
     """Test removal of duplicated statistics."""
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
@@ -570,7 +572,7 @@ def test_delete_duplicates_non_identical(caplog, tmpdir):
     ]
 
 
-def test_delete_duplicates_short_term(caplog, tmpdir):
+def test_delete_duplicates_short_term(caplog: pytest.LogCaptureFixture, tmpdir) -> None:
     """Test removal of duplicated statistics."""
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"

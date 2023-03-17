@@ -24,7 +24,6 @@ default_config = {
     "keepalive": 60,
     "port": 1883,
     "protocol": "3.1.1",
-    "tls_version": "auto",
     "transport": "tcp",
     "ws_headers": {},
     "ws_path": "/",

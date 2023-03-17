@@ -1446,8 +1446,8 @@ async def test_get_entries_ws(
 
     # Verify we skip broken integrations
     with patch(
-        "homeassistant.components.config.config_entries.async_get_integration",
-        side_effect=IntegrationNotFound("any"),
+        "homeassistant.components.config.config_entries.async_get_integrations",
+        return_value={"any": IntegrationNotFound("any")},
     ):
         await ws_client.send_json(
             {
@@ -1534,8 +1534,8 @@ async def test_get_entries_ws(
 
     # Verify we don't send config entries when only helpers are requested
     with patch(
-        "homeassistant.components.config.config_entries.async_get_integration",
-        side_effect=IntegrationNotFound("any"),
+        "homeassistant.components.config.config_entries.async_get_integrations",
+        return_value={"any": IntegrationNotFound("any")},
     ):
         await ws_client.send_json(
             {
@@ -1552,8 +1552,8 @@ async def test_get_entries_ws(
     # Verify we raise if something really goes wrong
 
     with patch(
-        "homeassistant.components.config.config_entries.async_get_integration",
-        side_effect=Exception,
+        "homeassistant.components.config.config_entries.async_get_integrations",
+        return_value={"any": Exception()},
     ):
         await ws_client.send_json(
             {

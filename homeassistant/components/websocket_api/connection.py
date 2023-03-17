@@ -46,6 +46,7 @@ class ActiveConnection:
         self.subscriptions: dict[Hashable, Callable[[], Any]] = {}
         self.last_id = 0
         self.supported_features: dict[str, float] = {}
+        self.handlers = self.hass.data[const.DOMAIN]
         current_connection.set(self)
 
     def get_description(self, request: web.Request | None) -> str:
@@ -72,12 +73,17 @@ class ActiveConnection:
     @callback
     def async_handle(self, msg: dict[str, Any]) -> None:
         """Handle a single incoming message."""
-        handlers = self.hass.data[const.DOMAIN]
-
-        try:
-            msg = messages.MINIMAL_MESSAGE_SCHEMA(msg)
-            cur_id = msg["id"]
-        except vol.Invalid:
+        if (
+            # Not using isinstance as we don't care about children
+            # as these are always coming from JSON
+            type(msg) is not dict  # pylint: disable=unidiomatic-typecheck
+            or (
+                not (cur_id := msg.get("id"))
+                or type(cur_id) is not int  # pylint: disable=unidiomatic-typecheck
+                or not (type_ := msg.get("type"))
+                or type(type_) is not str  # pylint: disable=unidiomatic-typecheck
+            )
+        ):
             self.logger.error("Received invalid command", msg)
             self.send_message(
                 messages.error_message(
@@ -96,8 +102,8 @@ class ActiveConnection:
             )
             return
 
-        if msg["type"] not in handlers:
-            self.logger.info("Received unknown command: {}".format(msg["type"]))
+        if not (handler_schema := self.handlers.get(type_)):
+            self.logger.info(f"Received unknown command: {type_}")
             self.send_message(
                 messages.error_message(
                     cur_id, const.ERR_UNKNOWN_COMMAND, "Unknown command."
@@ -105,7 +111,7 @@ class ActiveConnection:
             )
             return
 
-        handler, schema = handlers[msg["type"]]
+        handler, schema = handler_schema
 
         try:
             handler(self.hass, self, schema(msg))

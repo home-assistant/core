@@ -19,7 +19,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import CONF_ASSOCIATION_DATA, DOMAIN, UPDATE_SECONDS
 from .models import DormakabaDkeyData
 
-PLATFORMS: list[Platform] = [Platform.LOCK, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 

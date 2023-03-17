@@ -1,4 +1,4 @@
-"""This component provides binary sensors for UniFi Protect."""
+"""Component providing binary sensors for UniFi Protect."""
 from __future__ import annotations
 
 from copy import copy

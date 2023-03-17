@@ -1,5 +1,4 @@
 """Tests for 1-Wire config flow."""
-from collections.abc import Awaitable, Callable
 from unittest.mock import MagicMock, patch
 
 import aiohttp
@@ -14,6 +13,8 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from . import setup_owproxy_mock_devices
+
+from tests.typing import WebSocketGenerator
 
 
 async def remove_device(
@@ -78,9 +79,7 @@ async def test_registry_cleanup(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     owproxy: MagicMock,
-    hass_ws_client: Callable[
-        [HomeAssistant], Awaitable[aiohttp.ClientWebSocketResponse]
-    ],
+    hass_ws_client: WebSocketGenerator,
 ):
     """Test being able to remove a disconnected device."""
     assert await async_setup_component(hass, "config", {})

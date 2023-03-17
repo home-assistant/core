@@ -1,21 +1,23 @@
 {
-  "state": {
+  "entity_component": {
     "_": {
-      "clear-night": "Clear, night",
-      "cloudy": "Cloudy",
-      "exceptional": "Exceptional",
-      "fog": "Fog",
-      "hail": "Hail",
-      "lightning": "Lightning",
-      "lightning-rainy": "Lightning, rainy",
-      "partlycloudy": "Partly cloudy",
-      "pouring": "Pouring",
-      "rainy": "Rainy",
-      "snowy": "Snowy",
-      "snowy-rainy": "Snowy, rainy",
-      "sunny": "Sunny",
-      "windy": "Windy",
-      "windy-variant": "Windy"
+      "state": {
+        "clear-night": "Clear, night",
+        "cloudy": "Cloudy",
+        "exceptional": "Exceptional",
+        "fog": "Fog",
+        "hail": "Hail",
+        "lightning": "Lightning",
+        "lightning-rainy": "Lightning, rainy",
+        "partlycloudy": "Partly cloudy",
+        "pouring": "Pouring",
+        "rainy": "Rainy",
+        "snowy": "Snowy",
+        "snowy-rainy": "Snowy, rainy",
+        "sunny": "Sunny",
+        "windy": "Windy",
+        "windy-variant": "Windy"
+      }
     }
   }
 }

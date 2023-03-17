@@ -152,6 +152,11 @@ class RenaultVehicleProxy:
         return await self._vehicle.set_charge_start()
 
     @with_error_wrapping
+    async def set_charge_stop(self) -> models.KamereonVehicleChargingStartActionData:
+        """Stop vehicle charge."""
+        return await self._vehicle.set_charge_stop()
+
+    @with_error_wrapping
     async def set_ac_stop(self) -> models.KamereonVehicleHvacStartActionData:
         """Stop vehicle ac."""
         return await self._vehicle.set_ac_stop()

@@ -10,25 +10,25 @@ from functools import lru_cache, partial
 from itertools import chain, groupby
 import json
 import logging
+from operator import itemgetter
 import os
 import re
 from statistics import mean
-from typing import TYPE_CHECKING, Any, Literal, cast
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
 
-from sqlalchemy import bindparam, func, lambda_stmt, select, text
+from sqlalchemy import Select, and_, bindparam, func, lambda_stmt, select, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import OperationalError, SQLAlchemyError, StatementError
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import literal_column, true
 from sqlalchemy.sql.lambdas import StatementLambdaElement
-from sqlalchemy.sql.selectable import Subquery
 import voluptuous as vol
 
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import Event, HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.storage import STORAGE_DIR
@@ -55,7 +55,7 @@ from .const import (
     DOMAIN,
     EVENT_RECORDER_5MIN_STATISTICS_GENERATED,
     EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,
-    MAX_ROWS_TO_PURGE,
+    SQLITE_MAX_BIND_VARS,
     SupportedDialect,
 )
 from .db_schema import (
@@ -68,12 +68,13 @@ from .db_schema import (
 )
 from .models import (
     StatisticData,
+    StatisticDataTimestamp,
     StatisticMetaData,
     StatisticResult,
     datetime_to_timestamp_or_none,
-    timestamp_to_datetime_or_none,
 )
 from .util import (
+    database_job_retry_wrapper,
     execute,
     execute_stmt_lambda_element,
     get_instance,
@@ -163,6 +164,24 @@ STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
 
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class BaseStatisticsRow(TypedDict, total=False):
+    """A processed row of statistic data."""
+
+    start: float
+
+
+class StatisticsRow(BaseStatisticsRow, total=False):
+    """A processed row of statistic data."""
+
+    end: float
+    last_reset: float | None
+    state: float | None
+    sum: float | None
+    min: float | None
+    max: float | None
+    mean: float | None
 
 
 def _get_unit_class(unit: str | None) -> str | None:
@@ -337,7 +356,7 @@ def async_setup(hass: HomeAssistant) -> None:
     def setup_entity_registry_event_handler(hass: HomeAssistant) -> None:
         """Subscribe to event registry events."""
         hass.bus.async_listen(
-            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
             _async_entity_id_changed,
             event_filter=entity_registry_changed_filter,
         )
@@ -440,7 +459,7 @@ def _find_duplicates(
         )
         .filter(subquery.c.is_duplicate == 1)
         .order_by(table.metadata_id, table.start, table.id.desc())
-        .limit(1000 * MAX_ROWS_TO_PURGE)
+        .limit(1000 * SQLITE_MAX_BIND_VARS)
     )
     duplicates = execute(query)
     original_as_dict = {}
@@ -504,17 +523,20 @@ def _delete_duplicates_from_table(
         if not duplicate_ids:
             break
         all_non_identical_duplicates.extend(non_identical_duplicates)
-        for i in range(0, len(duplicate_ids), MAX_ROWS_TO_PURGE):
+        for i in range(0, len(duplicate_ids), SQLITE_MAX_BIND_VARS):
             deleted_rows = (
                 session.query(table)
-                .filter(table.id.in_(duplicate_ids[i : i + MAX_ROWS_TO_PURGE]))
+                .filter(table.id.in_(duplicate_ids[i : i + SQLITE_MAX_BIND_VARS]))
                 .delete(synchronize_session=False)
             )
             total_deleted_rows += deleted_rows
     return (total_deleted_rows, all_non_identical_duplicates)
 
 
-def delete_statistics_duplicates(hass: HomeAssistant, session: Session) -> None:
+@database_job_retry_wrapper("delete statistics duplicates", 3)
+def delete_statistics_duplicates(
+    instance: Recorder, hass: HomeAssistant, session: Session
+) -> None:
     """Identify and delete duplicated statistics.
 
     A backup will be made of duplicated statistics before it is deleted.
@@ -583,7 +605,7 @@ def _find_statistics_meta_duplicates(session: Session) -> list[int]:
         )
         .filter(subquery.c.is_duplicate == 1)
         .order_by(StatisticsMeta.statistic_id, StatisticsMeta.id.desc())
-        .limit(1000 * MAX_ROWS_TO_PURGE)
+        .limit(1000 * SQLITE_MAX_BIND_VARS)
     )
     duplicates = execute(query)
     statistic_id = None
@@ -608,10 +630,12 @@ def _delete_statistics_meta_duplicates(session: Session) -> int:
         duplicate_ids = _find_statistics_meta_duplicates(session)
         if not duplicate_ids:
             break
-        for i in range(0, len(duplicate_ids), MAX_ROWS_TO_PURGE):
+        for i in range(0, len(duplicate_ids), SQLITE_MAX_BIND_VARS):
             deleted_rows = (
                 session.query(StatisticsMeta)
-                .filter(StatisticsMeta.id.in_(duplicate_ids[i : i + MAX_ROWS_TO_PURGE]))
+                .filter(
+                    StatisticsMeta.id.in_(duplicate_ids[i : i + SQLITE_MAX_BIND_VARS])
+                )
                 .delete(synchronize_session=False)
             )
             total_deleted_rows += deleted_rows
@@ -643,6 +667,24 @@ def _compile_hourly_statistics_summary_mean_stmt(
     )
 
 
+def _compile_hourly_statistics_last_sum_stmt(
+    start_time_ts: float, end_time_ts: float
+) -> StatementLambdaElement:
+    """Generate the summary mean statement for hourly statistics."""
+    return lambda_stmt(
+        lambda: select(
+            subquery := (
+                select(*QUERY_STATISTICS_SUMMARY_SUM)
+                .filter(StatisticsShortTerm.start_ts >= start_time_ts)
+                .filter(StatisticsShortTerm.start_ts < end_time_ts)
+                .subquery()
+            )
+        )
+        .filter(subquery.c.rownum == 1)
+        .order_by(subquery.c.metadata_id)
+    )
+
+
 def _compile_hourly_statistics(session: Session, start: datetime) -> None:
     """Compile hourly statistics.
 
@@ -656,7 +698,7 @@ def _compile_hourly_statistics(session: Session, start: datetime) -> None:
     end_time_ts = end_time.timestamp()
 
     # Compute last hour's average, min, max
-    summary: dict[str, StatisticData] = {}
+    summary: dict[int, StatisticDataTimestamp] = {}
     stmt = _compile_hourly_statistics_summary_mean_stmt(start_time_ts, end_time_ts)
     stats = execute_stmt_lambda_element(session, stmt)
 
@@ -664,25 +706,15 @@ def _compile_hourly_statistics(session: Session, start: datetime) -> None:
         for stat in stats:
             metadata_id, _mean, _min, _max = stat
             summary[metadata_id] = {
-                "start": start_time,
+                "start_ts": start_time_ts,
                 "mean": _mean,
                 "min": _min,
                 "max": _max,
             }
 
+    stmt = _compile_hourly_statistics_last_sum_stmt(start_time_ts, end_time_ts)
     # Get last hour's last sum
-    subquery = (
-        session.query(*QUERY_STATISTICS_SUMMARY_SUM)
-        .filter(StatisticsShortTerm.start_ts >= bindparam("start_time_ts"))
-        .filter(StatisticsShortTerm.start_ts < bindparam("end_time_ts"))
-        .subquery()
-    )
-    query = (
-        session.query(subquery)
-        .filter(subquery.c.rownum == 1)
-        .order_by(subquery.c.metadata_id)
-    )
-    stats = execute(query.params(start_time_ts=start_time_ts, end_time_ts=end_time_ts))
+    stats = execute_stmt_lambda_element(session, stmt)
 
     if stats:
         for stat in stats:
@@ -690,22 +722,24 @@ def _compile_hourly_statistics(session: Session, start: datetime) -> None:
             if metadata_id in summary:
                 summary[metadata_id].update(
                     {
-                        "last_reset": timestamp_to_datetime_or_none(last_reset_ts),
+                        "last_reset_ts": last_reset_ts,
                         "state": state,
                         "sum": _sum,
                     }
                 )
             else:
                 summary[metadata_id] = {
-                    "start": start_time,
-                    "last_reset": timestamp_to_datetime_or_none(last_reset_ts),
+                    "start_ts": start_time_ts,
+                    "last_reset_ts": last_reset_ts,
                     "state": state,
                     "sum": _sum,
                 }
 
     # Insert compiled hourly statistics in the database
-    for metadata_id, summary_item in summary.items():
-        session.add(Statistics.from_stats(metadata_id, summary_item))
+    session.add_all(
+        Statistics.from_stats_ts(metadata_id, summary_item)
+        for metadata_id, summary_item in summary.items()
+    )
 
 
 @retryable_database_job("statistics")
@@ -718,36 +752,35 @@ def compile_statistics(instance: Recorder, start: datetime, fire_events: bool) -
     end = start + timedelta(minutes=5)
 
     # Return if we already have 5-minute statistics for the requested period
-    with session_scope(session=instance.get_session()) as session:
-        if session.query(StatisticsRuns).filter_by(start=start).first():
-            _LOGGER.debug("Statistics already compiled for %s-%s", start, end)
-            return True
-
-    _LOGGER.debug("Compiling statistics for %s-%s", start, end)
-    platform_stats: list[StatisticResult] = []
-    current_metadata: dict[str, tuple[int, StatisticMetaData]] = {}
-    # Collect statistics from all platforms implementing support
-    for domain, platform in instance.hass.data[DOMAIN].recorder_platforms.items():
-        if not hasattr(platform, "compile_statistics"):
-            continue
-        compiled: PlatformCompiledStatistics = platform.compile_statistics(
-            instance.hass, start, end
-        )
-        _LOGGER.debug(
-            "Statistics for %s during %s-%s: %s",
-            domain,
-            start,
-            end,
-            compiled.platform_stats,
-        )
-        platform_stats.extend(compiled.platform_stats)
-        current_metadata.update(compiled.current_metadata)
-
-    # Insert collected statistics in the database
     with session_scope(
         session=instance.get_session(),
         exception_filter=_filter_unique_constraint_integrity_error(instance),
     ) as session:
+        if session.query(StatisticsRuns).filter_by(start=start).first():
+            _LOGGER.debug("Statistics already compiled for %s-%s", start, end)
+            return True
+
+        _LOGGER.debug("Compiling statistics for %s-%s", start, end)
+        platform_stats: list[StatisticResult] = []
+        current_metadata: dict[str, tuple[int, StatisticMetaData]] = {}
+        # Collect statistics from all platforms implementing support
+        for domain, platform in instance.hass.data[DOMAIN].recorder_platforms.items():
+            if not hasattr(platform, "compile_statistics"):
+                continue
+            compiled: PlatformCompiledStatistics = platform.compile_statistics(
+                instance.hass, start, end
+            )
+            _LOGGER.debug(
+                "Statistics for %s during %s-%s: %s",
+                domain,
+                start,
+                end,
+                compiled.platform_stats,
+            )
+            platform_stats.extend(compiled.platform_stats)
+            current_metadata.update(compiled.current_metadata)
+
+        # Insert collected statistics in the database
         for stats in platform_stats:
             metadata_id = _update_or_add_metadata(
                 session, stats["meta"], current_metadata
@@ -910,7 +943,7 @@ def get_metadata(
     statistic_source: str | None = None,
 ) -> dict[str, tuple[int, StatisticMetaData]]:
     """Return metadata for statistic_ids."""
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         return get_metadata_with_session(
             session,
             statistic_ids=statistic_ids,
@@ -967,9 +1000,10 @@ def list_statistic_ids(
     period.
     """
     result = {}
+    statistic_ids_set = set(statistic_ids) if statistic_ids else None
 
     # Query the database
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         metadata = get_metadata_with_session(
             session, statistic_type=statistic_type, statistic_ids=statistic_ids
         )
@@ -989,26 +1023,31 @@ def list_statistic_ids(
             for _, meta in metadata.values()
         }
 
-    # Query all integrations with a registered recorder platform
-    for platform in hass.data[DOMAIN].recorder_platforms.values():
-        if not hasattr(platform, "list_statistic_ids"):
-            continue
-        platform_statistic_ids = platform.list_statistic_ids(
-            hass, statistic_ids=statistic_ids, statistic_type=statistic_type
-        )
-
-        for key, meta in platform_statistic_ids.items():
-            if key in result:
+    if not statistic_ids_set or statistic_ids_set.difference(result):
+        # If we want all statistic_ids, or some are missing, we need to query
+        # the integrations for the missing ones.
+        #
+        # Query all integrations with a registered recorder platform
+        for platform in hass.data[DOMAIN].recorder_platforms.values():
+            if not hasattr(platform, "list_statistic_ids"):
                 continue
-            result[key] = {
-                "display_unit_of_measurement": meta["unit_of_measurement"],
-                "has_mean": meta["has_mean"],
-                "has_sum": meta["has_sum"],
-                "name": meta["name"],
-                "source": meta["source"],
-                "unit_class": _get_unit_class(meta["unit_of_measurement"]),
-                "unit_of_measurement": meta["unit_of_measurement"],
-            }
+            platform_statistic_ids = platform.list_statistic_ids(
+                hass, statistic_ids=statistic_ids, statistic_type=statistic_type
+            )
+
+            for key, meta in platform_statistic_ids.items():
+                if key in result:
+                    # The database has a higher priority than the integration
+                    continue
+                result[key] = {
+                    "display_unit_of_measurement": meta["unit_of_measurement"],
+                    "has_mean": meta["has_mean"],
+                    "has_sum": meta["has_sum"],
+                    "name": meta["name"],
+                    "source": meta["source"],
+                    "unit_class": _get_unit_class(meta["unit_of_measurement"]),
+                    "unit_of_measurement": meta["unit_of_measurement"],
+                }
 
     # Return a list of statistic_id + metadata
     return [
@@ -1027,14 +1066,14 @@ def list_statistic_ids(
 
 
 def _reduce_statistics(
-    stats: dict[str, list[dict[str, Any]]],
+    stats: dict[str, list[StatisticsRow]],
     same_period: Callable[[float, float], bool],
     period_start_end: Callable[[float], tuple[float, float]],
     period: timedelta,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-) -> dict[str, list[dict[str, Any]]]:
+) -> dict[str, list[StatisticsRow]]:
     """Reduce hourly statistics to daily or monthly statistics."""
-    result: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    result: dict[str, list[StatisticsRow]] = defaultdict(list)
     period_seconds = period.total_seconds()
     _want_mean = "mean" in types
     _want_min = "min" in types
@@ -1046,16 +1085,15 @@ def _reduce_statistics(
         max_values: list[float] = []
         mean_values: list[float] = []
         min_values: list[float] = []
-        prev_stat: dict[str, Any] = stat_list[0]
+        prev_stat: StatisticsRow = stat_list[0]
+        fake_entry: StatisticsRow = {"start": stat_list[-1]["start"] + period_seconds}
 
         # Loop over the hourly statistics + a fake entry to end the period
-        for statistic in chain(
-            stat_list, ({"start": stat_list[-1]["start"] + period_seconds},)
-        ):
+        for statistic in chain(stat_list, (fake_entry,)):
             if not same_period(prev_stat["start"], statistic["start"]):
                 start, end = period_start_end(prev_stat["start"])
                 # The previous statistic was the last entry of the period
-                row: dict[str, Any] = {
+                row: StatisticsRow = {
                     "start": start,
                     "end": end,
                 }
@@ -1125,9 +1163,9 @@ def reduce_day_ts_factory() -> (
 
 
 def _reduce_statistics_per_day(
-    stats: dict[str, list[dict[str, Any]]],
+    stats: dict[str, list[StatisticsRow]],
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-) -> dict[str, list[dict[str, Any]]]:
+) -> dict[str, list[StatisticsRow]]:
     """Reduce hourly statistics to daily statistics."""
     _same_day_ts, _day_start_end_ts = reduce_day_ts_factory()
     return _reduce_statistics(
@@ -1175,9 +1213,9 @@ def reduce_week_ts_factory() -> (
 
 
 def _reduce_statistics_per_week(
-    stats: dict[str, list[dict[str, Any]]],
+    stats: dict[str, list[StatisticsRow]],
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-) -> dict[str, list[dict[str, Any]]]:
+) -> dict[str, list[StatisticsRow]]:
     """Reduce hourly statistics to weekly statistics."""
     _same_week_ts, _week_start_end_ts = reduce_week_ts_factory()
     return _reduce_statistics(
@@ -1227,9 +1265,9 @@ def reduce_month_ts_factory() -> (
 
 
 def _reduce_statistics_per_month(
-    stats: dict[str, list[dict[str, Any]]],
+    stats: dict[str, list[StatisticsRow]],
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-) -> dict[str, list[dict[str, Any]]]:
+) -> dict[str, list[StatisticsRow]]:
     """Reduce hourly statistics to monthly statistics."""
     _same_month_ts, _month_start_end_ts = reduce_month_ts_factory()
     return _reduce_statistics(
@@ -1237,7 +1275,8 @@ def _reduce_statistics_per_month(
     )
 
 
-def _statistics_during_period_stmt(
+def _generate_statistics_during_period_stmt(
+    columns: Select,
     start_time: datetime,
     end_time: datetime | None,
     metadata_ids: list[int] | None,
@@ -1249,21 +1288,6 @@ def _statistics_during_period_stmt(
     This prepares a lambda_stmt query, so we don't insert the parameters yet.
     """
     start_time_ts = start_time.timestamp()
-
-    columns = select(table.metadata_id, table.start_ts)
-    if "last_reset" in types:
-        columns = columns.add_columns(table.last_reset_ts)
-    if "max" in types:
-        columns = columns.add_columns(table.max)
-    if "mean" in types:
-        columns = columns.add_columns(table.mean)
-    if "min" in types:
-        columns = columns.add_columns(table.min)
-    if "state" in types:
-        columns = columns.add_columns(table.state)
-    if "sum" in types:
-        columns = columns.add_columns(table.sum)
-
     stmt = lambda_stmt(lambda: columns.filter(table.start_ts >= start_time_ts))
     if end_time is not None:
         end_time_ts = end_time.timestamp()
@@ -1274,6 +1298,23 @@ def _statistics_during_period_stmt(
             table.metadata_id.in_(metadata_ids)  # type:ignore[arg-type]
         )
     stmt += lambda q: q.order_by(table.metadata_id, table.start_ts)
+    return stmt
+
+
+def _generate_max_mean_min_statistic_in_sub_period_stmt(
+    columns: Select,
+    start_time: datetime | None,
+    end_time: datetime | None,
+    table: type[StatisticsBase],
+    metadata_id: int,
+) -> StatementLambdaElement:
+    stmt = lambda_stmt(lambda: columns.filter(table.metadata_id == metadata_id))
+    if start_time is not None:
+        start_time_ts = start_time.timestamp()
+        stmt += lambda q: q.filter(table.start_ts >= start_time_ts)
+    if end_time is not None:
+        end_time_ts = end_time.timestamp()
+        stmt += lambda q: q.filter(table.start_ts < end_time_ts)
     return stmt
 
 
@@ -1302,13 +1343,9 @@ def _get_max_mean_min_statistic_in_sub_period(
         # https://github.com/sqlalchemy/sqlalchemy/issues/9189
         # pylint: disable-next=not-callable
         columns = columns.add_columns(func.min(table.min))
-    stmt = lambda_stmt(lambda: columns.filter(table.metadata_id == metadata_id))
-    if start_time is not None:
-        start_time_ts = start_time.timestamp()
-        stmt += lambda q: q.filter(table.start_ts >= start_time_ts)
-    if end_time is not None:
-        end_time_ts = end_time.timestamp()
-        stmt += lambda q: q.filter(table.start_ts < end_time_ts)
+    stmt = _generate_max_mean_min_statistic_in_sub_period_stmt(
+        columns, start_time, end_time, table, metadata_id
+    )
     stats = cast(Sequence[Row[Any]], execute_stmt_lambda_element(session, stmt))
     if not stats:
         return
@@ -1569,7 +1606,7 @@ def statistic_during_period(
 
     result: dict[str, Any] = {}
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         # Fetch metadata for the given statistic_id
         if not (
             metadata := get_metadata_with_session(session, statistic_ids=[statistic_id])
@@ -1704,7 +1741,7 @@ def _statistics_during_period_with_session(
     period: Literal["5minute", "day", "hour", "week", "month"],
     units: dict[str, str] | None,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-) -> dict[str, list[dict[str, Any]]]:
+) -> dict[str, list[StatisticsRow]]:
     """Return statistic data points during UTC period start_time - end_time.
 
     If end_time is omitted, returns statistics newer than or equal to start_time.
@@ -1723,10 +1760,23 @@ def _statistics_during_period_with_session(
     table: type[Statistics | StatisticsShortTerm] = (
         Statistics if period != "5minute" else StatisticsShortTerm
     )
-    stmt = _statistics_during_period_stmt(
-        start_time, end_time, metadata_ids, table, types
+    columns = select(table.metadata_id, table.start_ts)  # type: ignore[call-overload]
+    if "last_reset" in types:
+        columns = columns.add_columns(table.last_reset_ts)
+    if "max" in types:
+        columns = columns.add_columns(table.max)
+    if "mean" in types:
+        columns = columns.add_columns(table.mean)
+    if "min" in types:
+        columns = columns.add_columns(table.min)
+    if "state" in types:
+        columns = columns.add_columns(table.state)
+    if "sum" in types:
+        columns = columns.add_columns(table.sum)
+    stmt = _generate_statistics_during_period_stmt(
+        columns, start_time, end_time, metadata_ids, table, types
     )
-    stats = execute_stmt_lambda_element(session, stmt)
+    stats = cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
 
     if not stats:
         return {}
@@ -1775,13 +1825,13 @@ def statistics_during_period(
     period: Literal["5minute", "day", "hour", "week", "month"],
     units: dict[str, str] | None,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-) -> dict[str, list[dict[str, Any]]]:
+) -> dict[str, list[StatisticsRow]]:
     """Return statistic data points during UTC period start_time - end_time.
 
     If end_time is omitted, returns statistics newer than or equal to start_time.
     If statistic_ids is omitted, returns statistics for all statistics ids.
     """
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         return _statistics_during_period_with_session(
             hass,
             session,
@@ -1830,10 +1880,10 @@ def _get_last_statistics(
     convert_units: bool,
     table: type[StatisticsBase],
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-) -> dict[str, list[dict]]:
+) -> dict[str, list[StatisticsRow]]:
     """Return the last number_of_stats statistics for a given statistic_id."""
     statistic_ids = [statistic_id]
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         # Fetch metadata for the given statistic_id
         metadata = get_metadata_with_session(session, statistic_ids=statistic_ids)
         if not metadata:
@@ -1843,7 +1893,7 @@ def _get_last_statistics(
             stmt = _get_last_statistics_stmt(metadata_id, number_of_stats)
         else:
             stmt = _get_last_statistics_short_term_stmt(metadata_id, number_of_stats)
-        stats = execute_stmt_lambda_element(session, stmt)
+        stats = cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
 
         if not stats:
             return {}
@@ -1869,7 +1919,7 @@ def get_last_statistics(
     statistic_id: str,
     convert_units: bool,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-) -> dict[str, list[dict]]:
+) -> dict[str, list[StatisticsRow]]:
     """Return the last number_of_stats statistics for a statistic_id."""
     return _get_last_statistics(
         hass, number_of_stats, statistic_id, convert_units, Statistics, types
@@ -1882,25 +1932,11 @@ def get_last_short_term_statistics(
     statistic_id: str,
     convert_units: bool,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-) -> dict[str, list[dict]]:
+) -> dict[str, list[StatisticsRow]]:
     """Return the last number_of_stats short term statistics for a statistic_id."""
     return _get_last_statistics(
         hass, number_of_stats, statistic_id, convert_units, StatisticsShortTerm, types
     )
-
-
-def _generate_most_recent_statistic_row(metadata_ids: list[int]) -> Subquery:
-    """Generate the subquery to find the most recent statistic row."""
-    return (
-        select(
-            StatisticsShortTerm.metadata_id,
-            # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-            # pylint: disable-next=not-callable
-            func.max(StatisticsShortTerm.start_ts).label("start_max"),
-        )
-        .where(StatisticsShortTerm.metadata_id.in_(metadata_ids))
-        .group_by(StatisticsShortTerm.metadata_id)
-    ).subquery()
 
 
 def _latest_short_term_statistics_stmt(
@@ -1908,13 +1944,20 @@ def _latest_short_term_statistics_stmt(
 ) -> StatementLambdaElement:
     """Create the statement for finding the latest short term stat rows."""
     stmt = lambda_stmt(lambda: select(*QUERY_STATISTICS_SHORT_TERM))
-    most_recent_statistic_row = _generate_most_recent_statistic_row(metadata_ids)
     stmt += lambda s: s.join(
-        most_recent_statistic_row,
         (
-            StatisticsShortTerm.metadata_id  # pylint: disable=comparison-with-callable
-            == most_recent_statistic_row.c.metadata_id
-        )
+            most_recent_statistic_row := (
+                select(
+                    StatisticsShortTerm.metadata_id,
+                    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+                    # pylint: disable-next=not-callable
+                    func.max(StatisticsShortTerm.start_ts).label("start_max"),
+                )
+                .where(StatisticsShortTerm.metadata_id.in_(metadata_ids))
+                .group_by(StatisticsShortTerm.metadata_id)
+            ).subquery()
+        ),
+        (StatisticsShortTerm.metadata_id == most_recent_statistic_row.c.metadata_id)
         & (StatisticsShortTerm.start_ts == most_recent_statistic_row.c.start_max),
     )
     return stmt
@@ -1925,9 +1968,9 @@ def get_latest_short_term_statistics(
     statistic_ids: list[str],
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
     metadata: dict[str, tuple[int, StatisticMetaData]] | None = None,
-) -> dict[str, list[dict]]:
+) -> dict[str, list[StatisticsRow]]:
     """Return the latest short term statistics for a list of statistic_ids."""
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         # Fetch metadata for the given statistic_ids
         if not metadata:
             metadata = get_metadata_with_session(session, statistic_ids=statistic_ids)
@@ -1939,7 +1982,7 @@ def get_latest_short_term_statistics(
             if statistic_id in metadata
         ]
         stmt = _latest_short_term_statistics_stmt(metadata_ids)
-        stats = execute_stmt_lambda_element(session, stmt)
+        stats = cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
         if not stats:
             return {}
 
@@ -1956,6 +1999,37 @@ def get_latest_short_term_statistics(
             None,
             types,
         )
+
+
+def _generate_statistics_at_time_stmt(
+    columns: Select,
+    table: type[StatisticsBase],
+    metadata_ids: set[int],
+    start_time_ts: float,
+) -> StatementLambdaElement:
+    """Create the statement for finding the statistics for a given time."""
+    return lambda_stmt(
+        lambda: columns.join(
+            (
+                most_recent_statistic_ids := (
+                    select(
+                        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+                        # pylint: disable-next=not-callable
+                        func.max(table.start_ts).label("max_start_ts"),
+                        table.metadata_id.label("max_metadata_id"),
+                    )
+                    .filter(table.start_ts < start_time_ts)
+                    .filter(table.metadata_id.in_(metadata_ids))
+                    .group_by(table.metadata_id)
+                    .subquery()
+                )
+            ),
+            and_(
+                table.start_ts == most_recent_statistic_ids.c.max_start_ts,
+                table.metadata_id == most_recent_statistic_ids.c.max_metadata_id,
+            ),
+        )
+    )
 
 
 def _statistics_at_time(
@@ -1979,23 +2053,9 @@ def _statistics_at_time(
         columns = columns.add_columns(table.state)
     if "sum" in types:
         columns = columns.add_columns(table.sum)
-
     start_time_ts = start_time.timestamp()
-    stmt = lambda_stmt(lambda: columns)
-
-    most_recent_statistic_ids = (
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-        # pylint: disable-next=not-callable
-        lambda_stmt(lambda: select(func.max(table.id).label("max_id")))
-        .filter(table.start_ts < start_time_ts)
-        .filter(table.metadata_id.in_(metadata_ids))
-        .group_by(table.metadata_id)
-        .subquery()
-    )
-
-    stmt += lambda q: q.join(
-        most_recent_statistic_ids,
-        table.id == most_recent_statistic_ids.c.max_id,
+    stmt = _generate_statistics_at_time_stmt(
+        columns, table, metadata_ids, start_time_ts
     )
     return cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
 
@@ -2003,7 +2063,7 @@ def _statistics_at_time(
 def _sorted_statistics_to_dict(
     hass: HomeAssistant,
     session: Session,
-    stats: Iterable[Row],
+    stats: Sequence[Row[Any]],
     statistic_ids: list[str] | None,
     _metadata: dict[str, tuple[int, StatisticMetaData]],
     convert_units: bool,
@@ -2011,22 +2071,24 @@ def _sorted_statistics_to_dict(
     start_time: datetime | None,
     units: dict[str, str] | None,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-) -> dict[str, list[dict]]:
+) -> dict[str, list[StatisticsRow]]:
     """Convert SQL results into JSON friendly data structure."""
-    result: dict = defaultdict(list)
+    assert stats, "stats must not be empty"  # Guard against implementation error
+    result: dict[str, list[StatisticsRow]] = defaultdict(list)
     metadata = dict(_metadata.values())
     need_stat_at_start_time: set[int] = set()
     start_time_ts = start_time.timestamp() if start_time else None
     # Identify metadata IDs for which no data was available at the requested start time
+    field_map: dict[str, int] = {key: idx for idx, key in enumerate(stats[0]._fields)}
+    metadata_id_idx = field_map["metadata_id"]
+    start_ts_idx = field_map["start_ts"]
     stats_by_meta_id: dict[int, list[Row]] = {}
     seen_statistic_ids: set[str] = set()
-    for meta_id, group in groupby(
-        stats,
-        lambda stat: stat.metadata_id,  # type: ignore[no-any-return]
-    ):
+    key_func = itemgetter(metadata_id_idx)
+    for meta_id, group in groupby(stats, key_func):
         stats_list = stats_by_meta_id[meta_id] = list(group)
         seen_statistic_ids.add(metadata[meta_id]["statistic_id"])
-        first_start_time_ts = stats_list[0].start_ts
+        first_start_time_ts = stats_list[0][start_ts_idx]
         if start_time_ts and first_start_time_ts > start_time_ts:
             need_stat_at_start_time.add(meta_id)
 
@@ -2046,14 +2108,17 @@ def _sorted_statistics_to_dict(
             session, need_stat_at_start_time, table, start_time, types
         ):
             for stat in tmp:
-                stats_by_meta_id[stat.metadata_id].insert(0, stat)
+                stats_by_meta_id[stat[metadata_id_idx]].insert(0, stat)
 
-    _want_mean = "mean" in types
-    _want_min = "min" in types
-    _want_max = "max" in types
-    _want_last_reset = "last_reset" in types
-    _want_state = "state" in types
-    _want_sum = "sum" in types
+    # Figure out which fields we need to extract from the SQL result
+    # and which indices they have in the result so we can avoid the overhead
+    # of doing a dict lookup for each row
+    mean_idx = field_map["mean"] if "mean" in types else None
+    min_idx = field_map["min"] if "min" in types else None
+    max_idx = field_map["max"] if "max" in types else None
+    last_reset_ts_idx = field_map["last_reset_ts"] if "last_reset" in types else None
+    state_idx = field_map["state"] if "state" in types else None
+    sum_idx = field_map["sum"] if "sum" in types else None
     # Append all statistic entries, and optionally do unit conversion
     table_duration_seconds = table.duration.total_seconds()
     for meta_id, stats_list in stats_by_meta_id.items():
@@ -2066,25 +2131,44 @@ def _sorted_statistics_to_dict(
             convert = _get_statistic_to_display_unit_converter(unit, state_unit, units)
         else:
             convert = None
-        ent_results = result[statistic_id]
+        ent_results_append = result[statistic_id].append
+        #
+        # The below loop is a red hot path for energy, and every
+        # optimization counts in here.
+        #
+        # Specifically, we want to avoid function calls,
+        # attribute lookups, and dict lookups as much as possible.
+        #
         for db_state in stats_list:
-            row: dict[str, Any] = {
-                "start": (start_ts := db_state.start_ts),
+            row: StatisticsRow = {
+                "start": (start_ts := db_state[start_ts_idx]),
                 "end": start_ts + table_duration_seconds,
             }
-            if _want_mean:
-                row["mean"] = convert(db_state.mean) if convert else db_state.mean
-            if _want_min:
-                row["min"] = convert(db_state.min) if convert else db_state.min
-            if _want_max:
-                row["max"] = convert(db_state.max) if convert else db_state.max
-            if _want_last_reset:
-                row["last_reset"] = db_state.last_reset_ts
-            if _want_state:
-                row["state"] = convert(db_state.state) if convert else db_state.state
-            if _want_sum:
-                row["sum"] = convert(db_state.sum) if convert else db_state.sum
-            ent_results.append(row)
+            if last_reset_ts_idx is not None:
+                row["last_reset"] = db_state[last_reset_ts_idx]
+            if convert:
+                if mean_idx is not None:
+                    row["mean"] = convert(db_state[mean_idx])
+                if min_idx is not None:
+                    row["min"] = convert(db_state[min_idx])
+                if max_idx is not None:
+                    row["max"] = convert(db_state[max_idx])
+                if state_idx is not None:
+                    row["state"] = convert(db_state[state_idx])
+                if sum_idx is not None:
+                    row["sum"] = convert(db_state[sum_idx])
+            else:
+                if mean_idx is not None:
+                    row["mean"] = db_state[mean_idx]
+                if min_idx is not None:
+                    row["min"] = db_state[min_idx]
+                if max_idx is not None:
+                    row["max"] = db_state[max_idx]
+                if state_idx is not None:
+                    row["state"] = db_state[state_idx]
+                if sum_idx is not None:
+                    row["sum"] = db_state[sum_idx]
+            ent_results_append(row)
 
     return result
 

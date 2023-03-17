@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/airnow",
   "iot_class": "cloud_polling",
   "loggers": ["pyairnow"],
-  "requirements": ["pyairnow==1.1.0"]
+  "requirements": ["pyairnow==1.2.1"]
 }

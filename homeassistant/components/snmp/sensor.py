@@ -145,7 +145,7 @@ async def async_setup_platform(
             ContextData(),
         ]
     get_result = await getCmd(*request_args, ObjectType(ObjectIdentity(baseoid)))
-    errindication, _, _, _ = await get_result
+    errindication, _, _, _ = get_result
 
     if errindication and not accept_errors:
         _LOGGER.error("Please check the details in the configuration file")
@@ -207,7 +207,7 @@ class SnmpData:
         get_result = await getCmd(
             *self._request_args, ObjectType(ObjectIdentity(self._baseoid))
         )
-        errindication, errstatus, errindex, restable = await get_result
+        errindication, errstatus, errindex, restable = get_result
 
         if errindication and not self._accept_errors:
             _LOGGER.error("SNMP error: %s", errindication)

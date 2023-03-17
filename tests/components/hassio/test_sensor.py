@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components.hassio import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -44,12 +44,10 @@ def mock_all(aioclient_mock, request):
         json={
             "result": "ok",
             "data": {
-                "result": "ok",
-                "data": {
-                    "chassis": "vm",
-                    "operating_system": "Debian GNU/Linux 10 (buster)",
-                    "kernel": "4.19.0-6-amd64",
-                },
+                "agent_version": "1.0.0",
+                "chassis": "vm",
+                "operating_system": "Debian GNU/Linux 10 (buster)",
+                "kernel": "4.19.0-6-amd64",
             },
         },
     )
@@ -113,6 +111,38 @@ def mock_all(aioclient_mock, request):
             },
         },
     )
+    aioclient_mock.get(
+        "http://127.0.0.1/core/stats",
+        json={
+            "result": "ok",
+            "data": {
+                "cpu_percent": 0.99,
+                "memory_usage": 182611968,
+                "memory_limit": 3977146368,
+                "memory_percent": 4.59,
+                "network_rx": 362570232,
+                "network_tx": 82374138,
+                "blk_read": 46010945536,
+                "blk_write": 15051526144,
+            },
+        },
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/supervisor/stats",
+        json={
+            "result": "ok",
+            "data": {
+                "cpu_percent": 0.99,
+                "memory_usage": 182611968,
+                "memory_limit": 3977146368,
+                "memory_percent": 4.59,
+                "network_rx": 362570232,
+                "network_tx": 82374138,
+                "blk_read": 46010945536,
+                "blk_write": 15051526144,
+            },
+        },
+    )
     aioclient_mock.get("http://127.0.0.1/addons/test/changelog", text="")
     aioclient_mock.get(
         "http://127.0.0.1/addons/test/info",
@@ -147,6 +177,9 @@ def mock_all(aioclient_mock, request):
     [
         ("sensor.home_assistant_operating_system_version", "1.0.0"),
         ("sensor.home_assistant_operating_system_newest_version", "1.0.0"),
+        ("sensor.home_assistant_host_os_agent_version", "1.0.0"),
+        ("sensor.home_assistant_core_cpu_percent", "0.99"),
+        ("sensor.home_assistant_supervisor_cpu_percent", "0.99"),
         ("sensor.test_version", "2.0.0"),
         ("sensor.test_newest_version", "2.0.1"),
         ("sensor.test2_version", "3.1.0"),
@@ -158,7 +191,11 @@ def mock_all(aioclient_mock, request):
     ],
 )
 async def test_sensor(
-    hass: HomeAssistant, entity_id, expected, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    entity_id,
+    expected,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test hassio OS and addons sensor."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
@@ -177,8 +214,7 @@ async def test_sensor(
     assert hass.states.get(entity_id) is None
 
     # Enable the entity.
-    ent_reg = entity_registry.async_get(hass)
-    ent_reg.async_update_entity(entity_id, disabled_by=None)
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 

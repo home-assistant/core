@@ -74,7 +74,6 @@ from .const import (  # noqa: F401
     CONF_QOS,
     CONF_STATE_TOPIC,
     CONF_TLS_INSECURE,
-    CONF_TLS_VERSION,
     CONF_TOPIC,
     CONF_TRANSPORT,
     CONF_WILL_MESSAGE,
@@ -160,7 +159,6 @@ CONFIG_SCHEMA = vol.Schema(
             cv.deprecated(CONF_PORT),  # Deprecated in HA Core 2022.3
             cv.deprecated(CONF_PROTOCOL),  # Deprecated in HA Core 2022.11
             cv.deprecated(CONF_TLS_INSECURE),  # Deprecated in HA Core 2022.11
-            cv.deprecated(CONF_TLS_VERSION),  # Deprecated June 2020
             cv.deprecated(CONF_USERNAME),  # Deprecated in HA Core 2022.3
             cv.deprecated(CONF_WILL_MESSAGE),  # Deprecated in HA Core 2022.3
             CONFIG_SCHEMA_BASE,
@@ -369,7 +367,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     mqtt_data.client = MQTT(hass, entry, conf)
     # Restore saved subscriptions
     if mqtt_data.subscriptions_to_restore:
-        mqtt_data.client.subscriptions = mqtt_data.subscriptions_to_restore
+        mqtt_data.client.async_restore_tracked_subscriptions(
+            mqtt_data.subscriptions_to_restore
+        )
         mqtt_data.subscriptions_to_restore = []
     mqtt_data.reload_dispatchers.append(
         entry.add_update_listener(_async_config_entry_updated)
@@ -730,7 +730,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await mqtt_client.async_disconnect()
     # Store remaining subscriptions to be able to restore or reload them
     # when the entry is set up again
-    if mqtt_client.subscriptions:
-        mqtt_data.subscriptions_to_restore = mqtt_client.subscriptions
+    if subscriptions := mqtt_client.subscriptions:
+        mqtt_data.subscriptions_to_restore = subscriptions
 
     return True

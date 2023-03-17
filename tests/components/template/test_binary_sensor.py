@@ -16,7 +16,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, CoreState, HomeAssistant, State
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -804,22 +804,18 @@ async def test_no_update_template_match_all(
         },
     ],
 )
-async def test_unique_id(hass: HomeAssistant, start_ha) -> None:
+async def test_unique_id(
+    hass: HomeAssistant, start_ha, entity_registry: er.EntityRegistry
+) -> None:
     """Test unique_id option only creates one binary sensor per id."""
     assert len(hass.states.async_all()) == 2
 
-    ent_reg = entity_registry.async_get(hass)
-
-    assert len(ent_reg.entities) == 2
-    assert (
-        ent_reg.async_get_entity_id("binary_sensor", "template", "group-id-sensor-id")
-        is not None
+    assert len(entity_registry.entities) == 2
+    assert entity_registry.async_get_entity_id(
+        "binary_sensor", "template", "group-id-sensor-id"
     )
-    assert (
-        ent_reg.async_get_entity_id(
-            "binary_sensor", "template", "not-so-unique-anymore"
-        )
-        is not None
+    assert entity_registry.async_get_entity_id(
+        "binary_sensor", "template", "not-so-unique-anymore"
     )
 
 
@@ -1052,7 +1048,9 @@ async def test_restore_state(
         },
     ],
 )
-async def test_trigger_entity(hass: HomeAssistant, start_ha) -> None:
+async def test_trigger_entity(
+    hass: HomeAssistant, start_ha, entity_registry: er.EntityRegistry
+) -> None:
     """Test trigger entity works."""
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.hello_name")
@@ -1075,14 +1073,13 @@ async def test_trigger_entity(hass: HomeAssistant, start_ha) -> None:
     assert state.attributes.get("plus_one") == 3
     assert state.context is context
 
-    ent_reg = entity_registry.async_get(hass)
-    assert len(ent_reg.entities) == 2
+    assert len(entity_registry.entities) == 2
     assert (
-        ent_reg.entities["binary_sensor.hello_name"].unique_id
+        entity_registry.entities["binary_sensor.hello_name"].unique_id
         == "listening-test-event-hello_name-id"
     )
     assert (
-        ent_reg.entities["binary_sensor.via_list"].unique_id
+        entity_registry.entities["binary_sensor.via_list"].unique_id
         == "listening-test-event-via_list-id"
     )
 

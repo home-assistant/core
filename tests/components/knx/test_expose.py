@@ -3,6 +3,8 @@ from datetime import timedelta
 import time
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.knx import CONF_KNX_EXPOSE, DOMAIN, KNX_ADDRESS
 from homeassistant.components.knx.schema import ExposeSchema
 from homeassistant.const import CONF_ATTRIBUTE, CONF_ENTITY_ID, CONF_TYPE
@@ -201,7 +203,7 @@ async def test_expose_cooldown(hass: HomeAssistant, knx: KNXTestKit) -> None:
 
 
 async def test_expose_conversion_exception(
-    hass: HomeAssistant, knx: KNXTestKit
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, knx: KNXTestKit
 ) -> None:
     """Test expose throws exception."""
 
@@ -230,8 +232,11 @@ async def test_expose_conversion_exception(
         "on",
         {attribute: 101},
     )
-
     await knx.assert_no_telegram()
+    assert (
+        'Could not expose fake.entity fake_attribute value "101.0" to KNX:'
+        in caplog.text
+    )
 
 
 @patch("time.localtime")

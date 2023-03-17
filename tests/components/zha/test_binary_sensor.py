@@ -7,6 +7,7 @@ import zigpy.zcl.clusters.measurement as measurement
 import zigpy.zcl.clusters.security as security
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
+from homeassistant.core import HomeAssistant
 
 from .common import (
     async_enable_traffic,
@@ -83,14 +84,14 @@ async def async_test_iaszone_on_off(hass, cluster, entity_id):
     ],
 )
 async def test_binary_sensor(
-    hass,
+    hass: HomeAssistant,
     zigpy_device_mock,
     zha_device_joined_restored,
     device,
     on_off_test,
     cluster_name,
     reporting,
-):
+) -> None:
     """Test ZHA binary_sensor platform."""
     zigpy_device = zigpy_device_mock(device)
     zha_device = await zha_device_joined_restored(zigpy_device)

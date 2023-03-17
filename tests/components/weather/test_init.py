@@ -145,11 +145,11 @@ async def create_entity(hass: HomeAssistant, **kwargs):
 )
 async def test_temperature(
     hass: HomeAssistant,
-    enable_custom_integrations,
+    enable_custom_integrations: None,
     native_unit: str,
     state_unit: str,
     unit_system,
-):
+) -> None:
     """Test temperature."""
     hass.config.units = unit_system
     native_value = 38
@@ -181,11 +181,11 @@ async def test_temperature(
 )
 async def test_temperature_no_unit(
     hass: HomeAssistant,
-    enable_custom_integrations,
+    enable_custom_integrations: None,
     native_unit: str,
     state_unit: str,
     unit_system,
-):
+) -> None:
     """Test temperature when the entity does not declare a native unit."""
     hass.config.units = unit_system
     native_value = 38
@@ -214,11 +214,11 @@ async def test_temperature_no_unit(
 )
 async def test_pressure(
     hass: HomeAssistant,
-    enable_custom_integrations,
+    enable_custom_integrations: None,
     native_unit: str,
     state_unit: str,
     unit_system,
-):
+) -> None:
     """Test pressure."""
     hass.config.units = unit_system
     native_value = 30
@@ -244,11 +244,11 @@ async def test_pressure(
 )
 async def test_pressure_no_unit(
     hass: HomeAssistant,
-    enable_custom_integrations,
+    enable_custom_integrations: None,
     native_unit: str,
     state_unit: str,
     unit_system,
-):
+) -> None:
     """Test pressure when the entity does not declare a native unit."""
     hass.config.units = unit_system
     native_value = 30
@@ -284,11 +284,11 @@ async def test_pressure_no_unit(
 )
 async def test_wind_speed(
     hass: HomeAssistant,
-    enable_custom_integrations,
+    enable_custom_integrations: None,
     native_unit: str,
     state_unit: str,
     unit_system,
-):
+) -> None:
     """Test wind speed."""
     hass.config.units = unit_system
     native_value = 10
@@ -320,11 +320,11 @@ async def test_wind_speed(
 )
 async def test_wind_speed_no_unit(
     hass: HomeAssistant,
-    enable_custom_integrations,
+    enable_custom_integrations: None,
     native_unit: str,
     state_unit: str,
     unit_system,
-):
+) -> None:
     """Test wind speed when the entity does not declare a native unit."""
     hass.config.units = unit_system
     native_value = 10
@@ -356,11 +356,11 @@ async def test_wind_speed_no_unit(
 )
 async def test_visibility(
     hass: HomeAssistant,
-    enable_custom_integrations,
+    enable_custom_integrations: None,
     native_unit: str,
     state_unit: str,
     unit_system,
-):
+) -> None:
     """Test visibility."""
     hass.config.units = unit_system
     native_value = 10
@@ -387,11 +387,11 @@ async def test_visibility(
 )
 async def test_visibility_no_unit(
     hass: HomeAssistant,
-    enable_custom_integrations,
+    enable_custom_integrations: None,
     native_unit: str,
     state_unit: str,
     unit_system,
-):
+) -> None:
     """Test visibility when the entity does not declare a native unit."""
     hass.config.units = unit_system
     native_value = 10
@@ -418,11 +418,11 @@ async def test_visibility_no_unit(
 )
 async def test_precipitation(
     hass: HomeAssistant,
-    enable_custom_integrations,
+    enable_custom_integrations: None,
     native_unit: str,
     state_unit: str,
     unit_system,
-):
+) -> None:
     """Test precipitation."""
     hass.config.units = unit_system
     native_value = 30
@@ -451,11 +451,11 @@ async def test_precipitation(
 )
 async def test_precipitation_no_unit(
     hass: HomeAssistant,
-    enable_custom_integrations,
+    enable_custom_integrations: None,
     native_unit: str,
     state_unit: str,
     unit_system,
-):
+) -> None:
     """Test precipitation when the entity does not declare a native unit."""
     hass.config.units = unit_system
     native_value = 30
@@ -476,8 +476,8 @@ async def test_precipitation_no_unit(
 
 async def test_wind_bearing_and_ozone(
     hass: HomeAssistant,
-    enable_custom_integrations,
-):
+    enable_custom_integrations: None,
+) -> None:
     """Test wind bearing."""
     wind_bearing_value = 180
     ozone_value = 10
@@ -493,8 +493,8 @@ async def test_wind_bearing_and_ozone(
 
 async def test_none_forecast(
     hass: HomeAssistant,
-    enable_custom_integrations,
-):
+    enable_custom_integrations: None,
+) -> None:
     """Test that conversion with None values succeeds."""
     entity0 = await create_entity(
         hass,
@@ -514,7 +514,9 @@ async def test_none_forecast(
     assert forecast.get(ATTR_FORECAST_PRECIPITATION) is None
 
 
-async def test_custom_units(hass: HomeAssistant, enable_custom_integrations) -> None:
+async def test_custom_units(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test custom unit."""
     wind_speed_value = 5
     wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
@@ -630,7 +632,7 @@ async def test_custom_units(hass: HomeAssistant, enable_custom_integrations) -> 
 
 
 async def test_backwards_compatibility(
-    hass: HomeAssistant, enable_custom_integrations
+    hass: HomeAssistant, enable_custom_integrations: None
 ) -> None:
     """Test backwards compatibility."""
     wind_speed_value = 5
@@ -746,7 +748,7 @@ async def test_backwards_compatibility(
 
 
 async def test_backwards_compatibility_convert_values(
-    hass: HomeAssistant, enable_custom_integrations
+    hass: HomeAssistant, enable_custom_integrations: None
 ) -> None:
     """Test backward compatibility for converting values."""
     wind_speed_value = 5

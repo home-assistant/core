@@ -66,7 +66,7 @@ async def test_browsing(hass: HomeAssistant) -> None:
         await media_source.async_browse_media(hass, "media-source://tts/non-existing")
 
 
-async def test_resolving(hass, mock_get_tts_audio):
+async def test_resolving(hass: HomeAssistant, mock_get_tts_audio) -> None:
     """Test resolving."""
     media = await media_source.async_resolve_media(
         hass, "media-source://tts/demo?message=Hello%20World", None

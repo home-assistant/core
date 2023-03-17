@@ -244,8 +244,6 @@ async def test_controller_setup(
     assert controller.mac is None
 
     assert controller.signal_reachable == "unifi-reachable-1"
-    assert controller.signal_update == "unifi-update-1"
-    assert controller.signal_remove == "unifi-remove-1"
     assert controller.signal_options_update == "unifi-options-1"
     assert controller.signal_heartbeat_missed == "unifi-heartbeat-missed"
 
@@ -354,8 +352,11 @@ async def test_reset_fails(
 
 
 async def test_connection_state_signalling(
-    hass, aioclient_mock, mock_unifi_websocket, mock_device_registry
-):
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_unifi_websocket,
+    mock_device_registry,
+) -> None:
     """Verify connection statesignalling and connection state are working."""
     client = {
         "hostname": "client",
@@ -383,8 +384,8 @@ async def test_connection_state_signalling(
 
 
 async def test_wireless_client_event_calls_update_wireless_devices(
-    hass, aioclient_mock, mock_unifi_websocket
-):
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+) -> None:
     """Call update_wireless_devices method when receiving wireless client event."""
     client_1_dict = {
         "essid": "ssid",
@@ -417,7 +418,9 @@ async def test_wireless_client_event_calls_update_wireless_devices(
         assert wireless_clients_mock.assert_called_once
 
 
-async def test_reconnect_mechanism(hass, aioclient_mock, mock_unifi_websocket):
+async def test_reconnect_mechanism(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+) -> None:
     """Verify reconnect prints only on first reconnection try."""
     await setup_unifi_integration(hass, aioclient_mock)
 
@@ -454,8 +457,11 @@ async def test_reconnect_mechanism(hass, aioclient_mock, mock_unifi_websocket):
     ],
 )
 async def test_reconnect_mechanism_exceptions(
-    hass, aioclient_mock, mock_unifi_websocket, exception
-):
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_unifi_websocket,
+    exception,
+) -> None:
     """Verify async_reconnect calls expected methods."""
     await setup_unifi_integration(hass, aioclient_mock)
 
@@ -502,8 +508,8 @@ async def test_get_unifi_controller_verify_ssl_false(hass: HomeAssistant) -> Non
     ],
 )
 async def test_get_unifi_controller_fails_to_connect(
-    hass, side_effect, raised_exception
-):
+    hass: HomeAssistant, side_effect, raised_exception
+) -> None:
     """Check that get_unifi_controller can handle controller being unavailable."""
     with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
         "aiounifi.Controller.login", side_effect=side_effect

@@ -1,7 +1,7 @@
 """The Livisi Smart Home integration."""
 from __future__ import annotations
 
-import asyncio
+from typing import Final
 
 from aiohttp import ClientConnectorError
 from aiolivisi import AioLivisi
@@ -16,7 +16,7 @@ from homeassistant.helpers import aiohttp_client, device_registry as dr
 from .const import DOMAIN
 from .coordinator import LivisiDataUpdateCoordinator
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SWITCH]
+PLATFORMS: Final = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: core.HomeAssistant, entry: ConfigEntry) -> bool:
@@ -41,7 +41,9 @@ async def async_setup_entry(hass: core.HomeAssistant, entry: ConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await coordinator.async_config_entry_first_refresh()
-    asyncio.create_task(coordinator.ws_connect())
+    entry.async_create_background_task(
+        hass, coordinator.ws_connect(), "livisi-ws_connect"
+    )
     return True
 
 

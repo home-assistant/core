@@ -1,18 +1,16 @@
-"""Test the SFR Box sensors."""
+"""Test the SFR Box binary sensors."""
 from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import check_device_registry, check_entities
-from .const import EXPECTED_ENTITIES
-
-pytestmark = pytest.mark.usefixtures("system_get_info", "dsl_get_info")
+pytestmark = pytest.mark.usefixtures("system_get_info", "dsl_get_info", "wan_get_info")
 
 
 @pytest.fixture(autouse=True)
@@ -27,14 +25,21 @@ async def test_binary_sensors(
     config_entry: ConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test for SFR Box binary sensors."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    check_device_registry(device_registry, EXPECTED_ENTITIES["expected_device"])
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    assert device_entries == snapshot
 
-    expected_entities = EXPECTED_ENTITIES[Platform.BINARY_SENSOR]
-    assert len(entity_registry.entities) == len(expected_entities)
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    assert entity_entries == snapshot
 
-    check_entities(hass, entity_registry, expected_entities)
+    for entity in entity_entries:
+        assert hass.states.get(entity.entity_id) == snapshot(name=entity.entity_id)
