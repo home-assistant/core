@@ -137,7 +137,7 @@
           "name": "Available sound modes"
         },
         "volume_level": {
-          "name": "Volume level"
+          "name": "Volume"
         }
       }
     }
