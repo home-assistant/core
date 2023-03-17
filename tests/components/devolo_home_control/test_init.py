@@ -65,7 +65,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
 async def test_remove_device(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-):
+) -> None:
     """Test removing a device."""
     assert await async_setup_component(hass, "config", {})
     entry = configure_integration(hass)
