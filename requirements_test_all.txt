@@ -308,7 +308,7 @@ ambiclimate==0.2.1
 androidtv[async]==0.0.70
 
 # homeassistant.components.anova
-anova-wifi==0.4.3
+anova-wifi==0.5.2
 
 # homeassistant.components.anthemav
 anthemav==1.4.1

@@ -14,10 +14,10 @@ from homeassistant.const import UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import AnovaCoordinator
+from .entity import AnovaEntity
 
 SENSOR_DESCRIPTIONS: list[SensorEntityDescription] = [
     SensorEntityDescription(
@@ -79,13 +79,13 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id]
     await coordinator.async_config_entry_first_refresh()
     sensors = [
-        AnovaEntity(coordinator, description) for description in SENSOR_DESCRIPTIONS
+        AnovaSensor(coordinator, description) for description in SENSOR_DESCRIPTIONS
     ]
     async_add_entities(sensors)
 
 
-class AnovaEntity(CoordinatorEntity[AnovaCoordinator], SensorEntity):
-    """An entity using CoordinatorEntity."""
+class AnovaSensor(AnovaEntity, SensorEntity):
+    """A sensor using anova coordinator."""
 
     def __init__(
         self, coordinator: AnovaCoordinator, description: SensorEntityDescription
