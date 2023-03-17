@@ -142,6 +142,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "requests_mock": "requests_mock.Mocker",
     "snapshot": "SnapshotAssertion",
     "tmp_path": "Path",
+    "tmpdir": "py.path.local",
 }
 _TEST_FUNCTION_MATCH = TypeHintMatch(
     function_name="test_*",
