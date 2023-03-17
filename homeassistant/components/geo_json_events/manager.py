@@ -7,13 +7,12 @@ import logging
 from aio_geojson_generic_client import GenericFeedManager
 from aio_geojson_generic_client.feed_entry import GenericFeedEntry
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 
-from .geo_location import GeoJsonLocationEvent
+DOMAIN = "geo_json_events"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +23,6 @@ class GeoJsonFeedEntityManager:
     def __init__(
         self,
         hass: HomeAssistant,
-        async_add_entities: AddEntitiesCallback,
         scan_interval: timedelta,
         coordinates: tuple[float, float],
         url: str,
@@ -43,7 +41,7 @@ class GeoJsonFeedEntityManager:
             url,
             filter_radius=radius_in_km,
         )
-        self._async_add_entities = async_add_entities
+        self._unique_id = f"{coordinates}-{url}-{radius_in_km}"
         self._scan_interval = scan_interval
 
     async def async_init(self) -> None:
@@ -66,11 +64,19 @@ class GeoJsonFeedEntityManager:
         """Get feed entry by external id."""
         return self._feed_manager.feed_entries.get(external_id)
 
+    @callback
+    def async_event_new_entity(self):
+        """Return manager specific event to signal new entity."""
+        return f"{DOMAIN}_new_geolocation_{self._unique_id}"
+
     async def _generate_entity(self, external_id: str) -> None:
         """Generate new entity."""
-        new_entity = GeoJsonLocationEvent(self, external_id)
-        # Add new entities to HA.
-        self._async_add_entities([new_entity], True)
+        async_dispatcher_send(
+            self._hass,
+            self.async_event_new_entity(),
+            self,
+            external_id,
+        )
 
     async def _update_entity(self, external_id: str) -> None:
         """Update entity."""

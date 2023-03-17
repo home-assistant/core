@@ -64,8 +64,23 @@ async def async_setup_platform(
     radius_in_km: float = config[CONF_RADIUS]
     # Initialize the entity manager.
     manager = GeoJsonFeedEntityManager(
-        hass, async_add_entities, scan_interval, coordinates, url, radius_in_km
+        hass, scan_interval, coordinates, url, radius_in_km
     )
+
+    @callback
+    def async_add_geolocation(
+        feed_manager: GenericFeedManager,
+        external_id: str,
+    ) -> None:
+        """Add geolocation entity from feed."""
+        new_entity = GeoJsonLocationEvent(feed_manager, external_id)
+        _LOGGER.debug("Adding geolocation %s", new_entity)
+        async_add_entities([new_entity], True)
+
+    async_dispatcher_connect(
+        hass, manager.async_event_new_entity(), async_add_geolocation
+    )
+
     await manager.async_init()
 
     async def start_feed_manager(event: Event) -> None:
