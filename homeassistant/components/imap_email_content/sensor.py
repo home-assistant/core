@@ -107,8 +107,11 @@ class EmailReader:
     @property
     def last_unread_id(self) -> int | None:
         """Return last email uid received."""
+        # We assume the last id in the list is the last unread id
+        # We cannot know if that is the newest one, because it could arrive later
+        # https://stackoverflow.com/questions/12409862/python-imap-the-order-of-uids
         if self._unread_ids:
-            return max(int(uid) for uid in self._unread_ids)
+            return int(self._unread_ids[-1])
         return self._last_id
 
     def connect(self):
