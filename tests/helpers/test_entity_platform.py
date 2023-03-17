@@ -559,6 +559,7 @@ async def test_name_which_conflict_with_registered(
     """Test not generating conflicting entity ID based on name."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     await component.async_setup({})
+
     # Register test_domain.world
     entity_registry.async_get_or_create(
         DOMAIN, "test", "1234", suggested_object_id="world"
