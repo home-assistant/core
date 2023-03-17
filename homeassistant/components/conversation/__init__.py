@@ -30,6 +30,7 @@ DOMAIN = "conversation"
 
 REGEX_TYPE = type(re.compile(""))
 DATA_CONFIG = "conversation_config"
+EVENT_PROCESSED = f"{DOMAIN}.processed"
 
 SERVICE_PROCESS = "process"
 SERVICE_RELOAD = "reload"
@@ -293,6 +294,16 @@ async def async_converse(
             language=language,
         )
     )
+
+    hass.bus.fire(
+        EVENT_PROCESSED,
+        {
+            **result.as_dict(),
+            "text": text,
+            "language": language,
+        },
+    )
+
     return result
 
 
