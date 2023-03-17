@@ -405,7 +405,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         base["params"] = data
         return base
 
-    async def async_handle_light_on_service(
+    async def async_handle_light_on_service(  # noqa: C901
         light: LightEntity, call: ServiceCall
     ) -> None:
         """Handle turning a light on.
