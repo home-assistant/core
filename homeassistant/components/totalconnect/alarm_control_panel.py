@@ -51,7 +51,7 @@ async def async_setup_entry(
                 )
             )
 
-    async_add_entities(alarms, True)
+    async_add_entities(alarms)
 
     # Set up services
     platform = entity_platform.async_get_current_platform()
@@ -86,7 +86,7 @@ class TotalConnectAlarm(
         name,
         location_id,
         partition_id,
-    ):
+    ) -> None:
         """Initialize the TotalConnect status."""
         super().__init__(coordinator)
         self._location_id = location_id

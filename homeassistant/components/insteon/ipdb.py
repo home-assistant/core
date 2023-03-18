@@ -1,5 +1,5 @@
 """Utility methods for the Insteon platform."""
-from pyinsteon.device_types import (
+from pyinsteon.device_types.ipdb import (
     AccessControl_Morningstar,
     ClimateControl_Thermostat,
     ClimateControl_WirelessThermostat,

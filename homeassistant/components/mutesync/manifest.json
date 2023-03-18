@@ -1,10 +1,10 @@
 {
   "domain": "mutesync",
   "name": "mutesync",
+  "codeowners": ["@currentoor"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/mutesync",
-  "requirements": ["mutesync==0.0.1"],
   "iot_class": "local_polling",
-  "codeowners": ["@currentoor"],
-  "loggers": ["mutesync"]
+  "loggers": ["mutesync"],
+  "requirements": ["mutesync==0.0.1"]
 }

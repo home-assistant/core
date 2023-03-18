@@ -92,9 +92,11 @@ class NetatmoBase(Entity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info for the sensor."""
-        manufacturer, model = DEVICE_DESCRIPTION_MAP[
-            getattr(NetatmoDeviceType, self._model)
-        ]
+        if "." in self._model:
+            netatmo_device = NetatmoDeviceType(self._model.partition(".")[2])
+        else:
+            netatmo_device = getattr(NetatmoDeviceType, self._model)
+        manufacturer, model = DEVICE_DESCRIPTION_MAP[netatmo_device]
         return DeviceInfo(
             configuration_url=self._config_url,
             identifiers={(DOMAIN, self._id)},

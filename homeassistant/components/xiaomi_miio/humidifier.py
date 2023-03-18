@@ -71,7 +71,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Humidifier from a config entry."""
-    if not config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
+    if config_entry.data[CONF_FLOW_TYPE] != CONF_DEVICE:
         return
 
     entities: list[HumidifierEntity] = []

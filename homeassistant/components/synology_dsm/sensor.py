@@ -19,12 +19,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DISKS,
     PERCENTAGE,
+    EntityCategory,
     UnitOfDataRate,
     UnitOfInformation,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 

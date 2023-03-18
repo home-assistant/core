@@ -4,13 +4,14 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine
 from functools import partial
-from typing import Any, Optional, Protocol, cast
+from typing import Any, Protocol, cast
 
 from homeassistant.const import CONF_DESCRIPTION, CONF_NAME
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_per_platform, discovery, template
+from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.service import async_set_service_schema
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.setup import async_prepare_setup_platform, async_start_setup
@@ -71,7 +72,7 @@ def async_setup_legacy(
             p_config = {}
 
         platform = cast(
-            Optional[LegacyNotifyPlatform],
+            LegacyNotifyPlatform | None,
             await async_prepare_setup_platform(hass, config, DOMAIN, integration_name),
         )
 
@@ -144,7 +145,7 @@ def async_setup_legacy(
 
 
 @callback
-def check_templates_warn(hass: HomeAssistant, tpl: template.Template) -> None:
+def check_templates_warn(hass: HomeAssistant, tpl: Template) -> None:
     """Warn user that passing templates to notify service is deprecated."""
     if tpl.is_static or hass.data.get("notify_template_warned"):
         return
@@ -217,7 +218,12 @@ class BaseNotificationService:
     hass: HomeAssistant = None  # type: ignore[assignment]
 
     # Name => target
-    registered_targets: dict[str, str]
+    registered_targets: dict[str, Any]
+
+    @property
+    def targets(self) -> dict[str, Any] | None:
+        """Return a dictionary of registered targets."""
+        return None
 
     def send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message.
@@ -238,8 +244,8 @@ class BaseNotificationService:
     async def _async_notify_message_service(self, service: ServiceCall) -> None:
         """Handle sending notification message service calls."""
         kwargs = {}
-        message = service.data[ATTR_MESSAGE]
-
+        message: Template = service.data[ATTR_MESSAGE]
+        title: Template | None
         if title := service.data.get(ATTR_TITLE):
             check_templates_warn(self.hass, title)
             title.hass = self.hass
@@ -279,7 +285,7 @@ class BaseNotificationService:
 
     async def async_register_services(self) -> None:
         """Create or update the notify services."""
-        if hasattr(self, "targets"):
+        if self.targets is not None:
             stale_targets = set(self.registered_targets)
 
             for name, target in self.targets.items():

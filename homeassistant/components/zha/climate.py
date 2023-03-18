@@ -1,5 +1,4 @@
-"""
-Climate on Zigbee Home Automation networks.
+"""Climate on Zigbee Home Automation networks.
 
 For more details on this platform, please refer to the documentation
 at https://home-assistant.io/components/zha.climate/
@@ -772,8 +771,7 @@ class StelproFanHeater(Thermostat):
     },
 )
 class ZONNSMARTThermostat(Thermostat):
-    """
-    ZONNSMART Thermostat implementation.
+    """ZONNSMART Thermostat implementation.
 
     Notice that this device uses two holiday presets (2: HolidayMode,
     3: HolidayModeTemp), but only one of them can be set.

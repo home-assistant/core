@@ -90,7 +90,7 @@ class BSBLANClimate(
     ) -> None:
         """Initialize BSBLAN climate device."""
         super().__init__(client, device, info, static, entry)
-        super(CoordinatorEntity, self).__init__(coordinator)
+        CoordinatorEntity.__init__(self, coordinator)
         self._attr_unique_id = f"{format_mac(device.MAC)}-climate"
 
         self._attr_min_temp = float(static.min_temp.value)

@@ -131,7 +131,7 @@ async def test_flow_works(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "extra_status,expected_title",
+    ("extra_status", "expected_title"),
     [
         ({"UPSNAME": "Friendly Name"}, "Friendly Name"),
         ({"MODEL": "MODEL X"}, "MODEL X"),

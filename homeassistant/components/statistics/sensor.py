@@ -14,6 +14,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.sensor import (
+    DEVICE_CLASS_STATE_CLASSES,
     PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
@@ -47,6 +48,7 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.enum import try_parse_enum
 
 from . import DOMAIN, PLATFORMS
 
@@ -144,7 +146,7 @@ STATS_DATETIME = {
 }
 
 # Statistics which retain the unit of the source entity
-STAT_NUMERIC_RETAIN_UNIT = {
+STATS_NUMERIC_RETAIN_UNIT = {
     STAT_AVERAGE_LINEAR,
     STAT_AVERAGE_STEP,
     STAT_AVERAGE_TIMELESS,
@@ -166,7 +168,7 @@ STAT_NUMERIC_RETAIN_UNIT = {
 }
 
 # Statistics which produce percentage ratio from binary_sensor source entity
-STAT_BINARY_PERCENTAGE = {
+STATS_BINARY_PERCENTAGE = {
     STAT_AVERAGE_STEP,
     STAT_AVERAGE_TIMELESS,
     STAT_MEAN,
@@ -296,15 +298,9 @@ class StatisticsSensor(SensorEntity):
         self.ages: deque[datetime] = deque(maxlen=self._samples_max_buffer_size)
         self.attributes: dict[str, StateType] = {}
 
-        self._state_characteristic_fn: Callable[[], StateType | datetime]
-        if self.is_binary:
-            self._state_characteristic_fn = getattr(
-                self, f"_stat_binary_{self._state_characteristic}"
-            )
-        else:
-            self._state_characteristic_fn = getattr(
-                self, f"_stat_{self._state_characteristic}"
-            )
+        self._state_characteristic_fn: Callable[
+            [], StateType | datetime
+        ] = self._callable_characteristic_fn(self._state_characteristic)
 
         self._update_listener: CALLBACK_TYPE | None = None
 
@@ -368,11 +364,11 @@ class StatisticsSensor(SensorEntity):
     def _derive_unit_of_measurement(self, new_state: State) -> str | None:
         base_unit: str | None = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         unit: str | None
-        if self.is_binary and self._state_characteristic in STAT_BINARY_PERCENTAGE:
+        if self.is_binary and self._state_characteristic in STATS_BINARY_PERCENTAGE:
             unit = PERCENTAGE
         elif not base_unit:
             unit = None
-        elif self._state_characteristic in STAT_NUMERIC_RETAIN_UNIT:
+        elif self._state_characteristic in STATS_NUMERIC_RETAIN_UNIT:
             unit = base_unit
         elif self._state_characteristic in STATS_NOT_A_NUMBER:
             unit = None
@@ -393,11 +389,24 @@ class StatisticsSensor(SensorEntity):
     @property
     def device_class(self) -> SensorDeviceClass | None:
         """Return the class of this device."""
-        if self._state_characteristic in STAT_NUMERIC_RETAIN_UNIT:
-            _state = self.hass.states.get(self._source_entity_id)
-            return None if _state is None else _state.attributes.get(ATTR_DEVICE_CLASS)
         if self._state_characteristic in STATS_DATETIME:
             return SensorDeviceClass.TIMESTAMP
+        if self._state_characteristic in STATS_NUMERIC_RETAIN_UNIT:
+            source_state = self.hass.states.get(self._source_entity_id)
+            if source_state is None:
+                return None
+            source_device_class = source_state.attributes.get(ATTR_DEVICE_CLASS)
+            if source_device_class is None:
+                return None
+            sensor_device_class = try_parse_enum(SensorDeviceClass, source_device_class)
+            if sensor_device_class is None:
+                return None
+            sensor_state_classes = DEVICE_CLASS_STATE_CLASSES.get(
+                sensor_device_class, set()
+            )
+            if SensorStateClass.MEASUREMENT not in sensor_state_classes:
+                return None
+            return sensor_device_class
         return None
 
     @property
@@ -562,6 +571,18 @@ class StatisticsSensor(SensorEntity):
                 if self._precision == 0:
                     value = int(value)
         self._value = value
+
+    def _callable_characteristic_fn(
+        self, characteristic: str
+    ) -> Callable[[], StateType | datetime]:
+        """Return the function callable of one characteristic function."""
+        function: Callable[[], StateType | datetime] = getattr(
+            self,
+            f"_stat_binary_{characteristic}"
+            if self.is_binary
+            else f"_stat_{characteristic}",
+        )
+        return function
 
     # Statistics for numeric sensor
 

@@ -1,5 +1,4 @@
 """Test the Google Nest Device Access config flow."""
-
 from __future__ import annotations
 
 from typing import Any
@@ -21,6 +20,7 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.components.nest.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
@@ -197,7 +197,9 @@ async def oauth(hass, hass_client_no_auth, aioclient_mock, current_request_with_
 
 
 @pytest.mark.parametrize("nest_test_config", [TEST_CONFIGFLOW_APP_CREDS])
-async def test_app_credentials(hass, oauth, subscriber, setup_platform):
+async def test_app_credentials(
+    hass: HomeAssistant, oauth, subscriber, setup_platform
+) -> None:
     """Check full flow."""
     await setup_platform()
 
@@ -229,7 +231,9 @@ async def test_app_credentials(hass, oauth, subscriber, setup_platform):
 
 
 @pytest.mark.parametrize("nest_test_config", [TEST_CONFIGFLOW_APP_CREDS])
-async def test_config_flow_restart(hass, oauth, subscriber, setup_platform):
+async def test_config_flow_restart(
+    hass: HomeAssistant, oauth, subscriber, setup_platform
+) -> None:
     """Check with auth implementation is re-initialized when aborting the flow."""
     await setup_platform()
 
@@ -280,7 +284,9 @@ async def test_config_flow_restart(hass, oauth, subscriber, setup_platform):
 
 
 @pytest.mark.parametrize("nest_test_config", [TEST_CONFIGFLOW_APP_CREDS])
-async def test_config_flow_wrong_project_id(hass, oauth, subscriber, setup_platform):
+async def test_config_flow_wrong_project_id(
+    hass: HomeAssistant, oauth, subscriber, setup_platform
+) -> None:
     """Check the case where the wrong project ids are entered."""
     await setup_platform()
 
@@ -331,11 +337,11 @@ async def test_config_flow_wrong_project_id(hass, oauth, subscriber, setup_platf
 
 @pytest.mark.parametrize("nest_test_config", [TEST_CONFIGFLOW_APP_CREDS])
 async def test_config_flow_pubsub_configuration_error(
-    hass,
+    hass: HomeAssistant,
     oauth,
     setup_platform,
     mock_subscriber,
-):
+) -> None:
     """Check full flow fails with configuration error."""
     await setup_platform()
 
@@ -354,8 +360,8 @@ async def test_config_flow_pubsub_configuration_error(
 
 @pytest.mark.parametrize("nest_test_config", [TEST_CONFIGFLOW_APP_CREDS])
 async def test_config_flow_pubsub_subscriber_error(
-    hass, oauth, setup_platform, mock_subscriber
-):
+    hass: HomeAssistant, oauth, setup_platform, mock_subscriber
+) -> None:
     """Check full flow with a subscriber error."""
     await setup_platform()
 
@@ -374,7 +380,7 @@ async def test_config_flow_pubsub_subscriber_error(
 
 
 @pytest.mark.parametrize("nest_test_config", [TEST_CONFIGFLOW_YAML_ONLY])
-async def test_config_yaml_ignored(hass, oauth, setup_platform):
+async def test_config_yaml_ignored(hass: HomeAssistant, oauth, setup_platform) -> None:
     """Check full flow."""
     await setup_platform()
 
@@ -391,7 +397,9 @@ async def test_config_yaml_ignored(hass, oauth, setup_platform):
 
 
 @pytest.mark.parametrize("nest_test_config", [TEST_CONFIG_YAML_ONLY])
-async def test_web_reauth(hass, oauth, setup_platform, config_entry):
+async def test_web_reauth(
+    hass: HomeAssistant, oauth, setup_platform, config_entry
+) -> None:
     """Test Nest reauthentication."""
     await setup_platform()
 
@@ -415,7 +423,9 @@ async def test_web_reauth(hass, oauth, setup_platform, config_entry):
     assert entry.data.get("subscriber_id") == orig_subscriber_id  # Not updated
 
 
-async def test_multiple_config_entries(hass, oauth, setup_platform):
+async def test_multiple_config_entries(
+    hass: HomeAssistant, oauth, setup_platform
+) -> None:
     """Verify config flow can be started when existing config entry exists."""
     await setup_platform()
 
@@ -434,7 +444,9 @@ async def test_multiple_config_entries(hass, oauth, setup_platform):
     assert len(entries) == 2
 
 
-async def test_duplicate_config_entries(hass, oauth, setup_platform):
+async def test_duplicate_config_entries(
+    hass: HomeAssistant, oauth, setup_platform
+) -> None:
     """Verify that config entries must be for unique projects."""
     await setup_platform()
 
@@ -457,8 +469,8 @@ async def test_duplicate_config_entries(hass, oauth, setup_platform):
 
 
 async def test_reauth_multiple_config_entries(
-    hass, oauth, setup_platform, config_entry
-):
+    hass: HomeAssistant, oauth, setup_platform, config_entry
+) -> None:
     """Test Nest reauthentication with multiple existing config entries."""
     await setup_platform()
 
@@ -506,9 +518,11 @@ async def test_reauth_multiple_config_entries(
 
 
 @pytest.mark.parametrize(
-    "nest_test_config,auth_implementation", [(TEST_CONFIG_HYBRID, APP_AUTH_DOMAIN)]
+    ("nest_test_config", "auth_implementation"), [(TEST_CONFIG_HYBRID, APP_AUTH_DOMAIN)]
 )
-async def test_app_auth_yaml_reauth(hass, oauth, setup_platform, config_entry):
+async def test_app_auth_yaml_reauth(
+    hass: HomeAssistant, oauth, setup_platform, config_entry
+) -> None:
     """Test reauth for deprecated app auth credentails upgrade instructions."""
 
     await setup_platform()
@@ -569,9 +583,12 @@ async def test_app_auth_yaml_reauth(hass, oauth, setup_platform, config_entry):
 
 
 @pytest.mark.parametrize(
-    "nest_test_config,auth_implementation", [(TEST_CONFIG_YAML_ONLY, WEB_AUTH_DOMAIN)]
+    ("nest_test_config", "auth_implementation"),
+    [(TEST_CONFIG_YAML_ONLY, WEB_AUTH_DOMAIN)],
 )
-async def test_web_auth_yaml_reauth(hass, oauth, setup_platform, config_entry):
+async def test_web_auth_yaml_reauth(
+    hass: HomeAssistant, oauth, setup_platform, config_entry
+) -> None:
     """Test Nest reauthentication for Installed App Auth."""
 
     await setup_platform()
@@ -597,8 +614,8 @@ async def test_web_auth_yaml_reauth(hass, oauth, setup_platform, config_entry):
 
 @pytest.mark.parametrize("nest_test_config", [TEST_CONFIGFLOW_APP_CREDS])
 async def test_pubsub_subscription_strip_whitespace(
-    hass, oauth, subscriber, setup_platform
-):
+    hass: HomeAssistant, oauth, subscriber, setup_platform
+) -> None:
     """Check that project id has whitespace stripped on entry."""
     await setup_platform()
 
@@ -626,8 +643,8 @@ async def test_pubsub_subscription_strip_whitespace(
 
 @pytest.mark.parametrize("nest_test_config", [TEST_CONFIGFLOW_APP_CREDS])
 async def test_pubsub_subscription_auth_failure(
-    hass, oauth, setup_platform, mock_subscriber
-):
+    hass: HomeAssistant, oauth, setup_platform, mock_subscriber
+) -> None:
     """Check flow that creates a pub/sub subscription."""
     await setup_platform()
 
@@ -646,8 +663,13 @@ async def test_pubsub_subscription_auth_failure(
 
 @pytest.mark.parametrize("nest_test_config", [TEST_CONFIG_APP_CREDS])
 async def test_pubsub_subscriber_config_entry_reauth(
-    hass, oauth, setup_platform, subscriber, config_entry, auth_implementation
-):
+    hass: HomeAssistant,
+    oauth,
+    setup_platform,
+    subscriber,
+    config_entry,
+    auth_implementation,
+) -> None:
     """Test the pubsub subscriber id is preserved during reauth."""
     await setup_platform()
 
@@ -670,7 +692,9 @@ async def test_pubsub_subscriber_config_entry_reauth(
 
 
 @pytest.mark.parametrize("nest_test_config", [TEST_CONFIGFLOW_APP_CREDS])
-async def test_config_entry_title_from_home(hass, oauth, setup_platform, subscriber):
+async def test_config_entry_title_from_home(
+    hass: HomeAssistant, oauth, setup_platform, subscriber
+) -> None:
     """Test that the Google Home name is used for the config entry title."""
 
     device_manager = await subscriber.async_get_device_manager()
@@ -703,8 +727,8 @@ async def test_config_entry_title_from_home(hass, oauth, setup_platform, subscri
 
 @pytest.mark.parametrize("nest_test_config", [TEST_CONFIGFLOW_APP_CREDS])
 async def test_config_entry_title_multiple_homes(
-    hass, oauth, setup_platform, subscriber
-):
+    hass: HomeAssistant, oauth, setup_platform, subscriber
+) -> None:
     """Test handling of multiple Google Homes authorized."""
 
     device_manager = await subscriber.async_get_device_manager()
@@ -745,7 +769,9 @@ async def test_config_entry_title_multiple_homes(
 
 
 @pytest.mark.parametrize("nest_test_config", [TEST_CONFIGFLOW_APP_CREDS])
-async def test_title_failure_fallback(hass, oauth, setup_platform, mock_subscriber):
+async def test_title_failure_fallback(
+    hass: HomeAssistant, oauth, setup_platform, mock_subscriber
+) -> None:
     """Test exception handling when determining the structure names."""
     await setup_platform()
 
@@ -763,7 +789,9 @@ async def test_title_failure_fallback(hass, oauth, setup_platform, mock_subscrib
 
 
 @pytest.mark.parametrize("nest_test_config", [TEST_CONFIGFLOW_APP_CREDS])
-async def test_structure_missing_trait(hass, oauth, setup_platform, subscriber):
+async def test_structure_missing_trait(
+    hass: HomeAssistant, oauth, setup_platform, subscriber
+) -> None:
     """Test handling the case where a structure has no name set."""
 
     device_manager = await subscriber.async_get_device_manager()
@@ -790,7 +818,7 @@ async def test_structure_missing_trait(hass, oauth, setup_platform, subscriber):
 
 
 @pytest.mark.parametrize("nest_test_config", [NestTestConfig()])
-async def test_dhcp_discovery(hass, oauth, subscriber):
+async def test_dhcp_discovery(hass: HomeAssistant, oauth, subscriber) -> None:
     """Exercise discovery dhcp starts the config flow and kicks user to frontend creds flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -807,7 +835,9 @@ async def test_dhcp_discovery(hass, oauth, subscriber):
 
 
 @pytest.mark.parametrize("nest_test_config", [TEST_CONFIGFLOW_APP_CREDS])
-async def test_dhcp_discovery_with_creds(hass, oauth, subscriber, setup_platform):
+async def test_dhcp_discovery_with_creds(
+    hass: HomeAssistant, oauth, subscriber, setup_platform
+) -> None:
     """Exercise discovery dhcp with no config present (can't run)."""
     await setup_platform()
 

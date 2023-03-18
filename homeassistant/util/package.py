@@ -39,7 +39,7 @@ def is_installed(package: str) -> bool:
     try:
         pkg_resources.get_distribution(package)
         return True
-    except (pkg_resources.ResolutionError, pkg_resources.ExtractionError):
+    except (IndexError, pkg_resources.ResolutionError, pkg_resources.ExtractionError):
         req = pkg_resources.Requirement.parse(package)
     except ValueError:
         # This is a zip file. We no longer use this in Home Assistant,
@@ -52,7 +52,9 @@ def is_installed(package: str) -> bool:
         # was aborted while in progress see
         # https://github.com/home-assistant/core/issues/47699
         if installed_version is None:
-            _LOGGER.error("Installed version for %s resolved to None", req.project_name)  # type: ignore[unreachable]
+            _LOGGER.error(  # type: ignore[unreachable]
+                "Installed version for %s resolved to None", req.project_name
+            )
             return False
         return installed_version in req
     except PackageNotFoundError:
@@ -92,7 +94,14 @@ def install_package(
         args += ["--user"]
         env["PYTHONUSERBASE"] = os.path.abspath(target)
     _LOGGER.debug("Running pip command: args=%s", args)
-    with Popen(args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env) as process:
+    with Popen(
+        args,
+        stdin=PIPE,
+        stdout=PIPE,
+        stderr=PIPE,
+        env=env,
+        close_fds=False,  # required for posix_spawn
+    ) as process:
         _, stderr = process.communicate()
         if process.returncode != 0:
             _LOGGER.error(
@@ -119,6 +128,7 @@ async def async_get_user_site(deps_dir: str) -> str:
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.DEVNULL,
         env=env,
+        close_fds=False,  # required for posix_spawn
     )
     stdout, _ = await process.communicate()
     lib_dir = stdout.decode().strip()

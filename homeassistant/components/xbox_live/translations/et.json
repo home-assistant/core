@@ -1,8 +1,0 @@
-{
-    "issues": {
-        "pending_removal": {
-            "description": "Xbox Live'i integratsioon ootab Home Assistantist eemaldamist ja pole alates versioonist Home Assistant 2023.2 enam saadaval. \n\n Integratsioon eemaldatakse, kuna see on kasulik ainult p\u00e4randseadme Xbox 360 jaoks ja \u00fclesvoolu API n\u00f5uab n\u00fc\u00fcd tasulist tellimust. Uuemaid konsoole toetab Xboxi integratsioon tasuta. \n\n Selle probleemi lahendamiseks eemaldage Xbox Live'i YAML-i konfiguratsioon failist configuration.yaml ja taask\u00e4ivitage Home Assistant.",
-            "title": "Xbox Live'i integratsioon eemaldatakse"
-        }
-    }
-}

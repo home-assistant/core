@@ -1,11 +1,12 @@
 """Tests for the melnor integration."""
-
 from __future__ import annotations
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from bleak.backends.device import BLEDevice
 from melnor_bluetooth.device import Device
+import pytest
 
 from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
 from homeassistant.components.melnor.const import DOMAIN
@@ -50,6 +51,11 @@ FAKE_SERVICE_INFO_2 = BluetoothServiceInfoBleak(
     time=0,
     connectable=True,
 )
+
+
+@pytest.fixture(autouse=True)
+def mock_bluetooth(enable_bluetooth):
+    """Auto mock bluetooth."""
 
 
 class MockedValve:
@@ -113,7 +119,6 @@ def mock_melnor_device():
     """Return a mocked Melnor device."""
 
     with patch("melnor_bluetooth.device.Device") as mock:
-
         device = mock.return_value
 
         device.connect = AsyncMock(return_value=True)
@@ -137,12 +142,13 @@ def mock_melnor_device():
         return device
 
 
-def patch_async_setup_entry(return_value=True):
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     """Patch async setup entry to return True."""
-    return patch(
-        "homeassistant.components.melnor.async_setup_entry",
-        return_value=return_value,
-    )
+    with patch(
+        "homeassistant.components.melnor.async_setup_entry", return_value=True
+    ) as mock_setup:
+        yield mock_setup
 
 
 # pylint: disable=dangerous-default-value

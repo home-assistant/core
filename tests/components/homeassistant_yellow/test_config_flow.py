@@ -1,8 +1,6 @@
 """Test the Home Assistant Yellow config flow."""
 from unittest.mock import Mock, patch
 
-import pytest
-
 from homeassistant.components.homeassistant_yellow.const import DOMAIN
 from homeassistant.components.zha.core.const import DOMAIN as ZHA_DOMAIN
 from homeassistant.core import HomeAssistant
@@ -61,7 +59,6 @@ async def test_config_flow_single_entry(hass: HomeAssistant) -> None:
     mock_setup_entry.assert_not_called()
 
 
-@pytest.mark.skip(reason="Temporarily disabled")
 async def test_option_flow_install_multi_pan_addon(
     hass: HomeAssistant,
     addon_store_info,
@@ -130,7 +127,6 @@ async def test_option_flow_install_multi_pan_addon(
     assert result["type"] == FlowResultType.CREATE_ENTRY
 
 
-@pytest.mark.skip(reason="Temporarily disabled")
 async def test_option_flow_install_multi_pan_addon_zha(
     hass: HomeAssistant,
     addon_store_info,

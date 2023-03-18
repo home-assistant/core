@@ -1,7 +1,6 @@
 """Provide functionality to interact with Cast devices on the network."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 from contextlib import suppress
 from datetime import datetime
@@ -186,10 +185,11 @@ class CastDevice:
             self.hass, SIGNAL_CAST_REMOVED, self._async_cast_removed
         )
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_stop)
-        # asyncio.create_task is used to avoid delaying startup wrapup if the device
+        # async_create_background_task is used to avoid delaying startup wrapup if the device
         # is discovered already during startup but then fails to respond
-        asyncio.create_task(
-            async_create_catching_coro(self._async_connect_to_chromecast())
+        self.hass.async_create_background_task(
+            async_create_catching_coro(self._async_connect_to_chromecast()),
+            "cast-connect",
         )
 
     async def _async_tear_down(self) -> None:
@@ -375,7 +375,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             tts_base_url = None
             url_description = ""
             if "tts" in self.hass.config.components:
-                # pylint: disable=[import-outside-toplevel]
+                # pylint: disable-next=[import-outside-toplevel]
                 from homeassistant.components import tts
 
                 with suppress(KeyError):  # base_url not configured
@@ -476,8 +476,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
 
     # ========== Service Calls ==========
     def _media_controller(self):
-        """
-        Return media controller.
+        """Return media controller.
 
         First try from our own cast, then groups which our cast is a member in.
         """
@@ -753,8 +752,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         )
 
     def _media_status(self):
-        """
-        Return media status.
+        """Return media status.
 
         First try from our own cast, then groups which our cast is a member in.
         """

@@ -1,9 +1,11 @@
 {
   "domain": "mastodon",
   "name": "Mastodon",
-  "documentation": "https://www.home-assistant.io/integrations/mastodon",
-  "requirements": ["Mastodon.py==1.8.0"],
+
+
   "codeowners": ["@fabaff"],
+  "documentation": "https://www.home-assistant.io/integrations/mastodon",
   "iot_class": "cloud_push",
-  "loggers": ["mastodon"]
+  "loggers": ["mastodon"],
+  "requirements": ["Mastodon.py==1.8.0"]
 }

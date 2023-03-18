@@ -10,7 +10,7 @@ import zigpy.zcl.foundation as zcl_f
 
 import homeassistant.components.zha.core.const as zha_const
 from homeassistant.components.zha.core.helpers import async_get_zha_config_value
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
@@ -77,7 +77,7 @@ def update_attribute_cache(cluster):
             attrid = zigpy.types.uint16_t(attrid)
         attrs.append(make_attribute(attrid, value))
 
-    hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
+    hdr = make_zcl_header(zcl_f.GeneralCommand.Report_Attributes)
     hdr.frame_control.disable_default_response = True
     msg = zcl_f.GENERAL_COMMANDS[zcl_f.GeneralCommand.Report_Attributes].schema(
         attribute_reports=attrs
@@ -157,12 +157,10 @@ def find_entity_ids(domain, zha_device, hass):
     machine so that we can test state changes.
     """
 
-    registry = entity_registry.async_get(hass)
+    registry = er.async_get(hass)
     return [
         entity.entity_id
-        for entity in entity_registry.async_entries_for_device(
-            registry, zha_device.device_id
-        )
+        for entity in er.async_entries_for_device(registry, zha_device.device_id)
         if entity.domain == domain
     ]
 

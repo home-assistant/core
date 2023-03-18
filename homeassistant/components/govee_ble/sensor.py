@@ -1,8 +1,6 @@
 """Support for govee ble sensors."""
 from __future__ import annotations
 
-from typing import Optional, Union
-
 from govee_ble import DeviceClass, DeviceKey, SensorUpdate, Units
 from govee_ble.parser import ERROR
 
@@ -117,7 +115,7 @@ async def async_setup_entry(
 
 class GoveeBluetoothSensorEntity(
     PassiveBluetoothProcessorEntity[
-        PassiveBluetoothDataProcessor[Optional[Union[float, int, str]]]
+        PassiveBluetoothDataProcessor[float | int | str | None]
     ],
     SensorEntity,
 ):

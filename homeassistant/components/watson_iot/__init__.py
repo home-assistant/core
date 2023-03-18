@@ -131,7 +131,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 if key in out_event["fields"]:
                     key = f"{key}_"
                 # For each value we try to cast it as float
-                # But if we can not do it we store the value
+                # But if we cannot do it we store the value
                 # as string
                 try:
                     out_event["fields"][key] = float(value)

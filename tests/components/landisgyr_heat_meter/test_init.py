@@ -1,11 +1,11 @@
 """Test the Landis + Gyr Heat Meter init."""
-
 from unittest.mock import patch
 
 from homeassistant.components.landisgyr_heat_meter.const import (
     DOMAIN as LANDISGYR_HEAT_METER_DOMAIN,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
@@ -16,7 +16,7 @@ API_HEAT_METER_SERVICE = (
 
 
 @patch(API_HEAT_METER_SERVICE)
-async def test_unload_entry(_, hass):
+async def test_unload_entry(_, hass: HomeAssistant) -> None:
     """Test removing config entry."""
     mock_entry_data = {
         "device": "/dev/USB0",
@@ -39,7 +39,7 @@ async def test_unload_entry(_, hass):
 
 
 @patch(API_HEAT_METER_SERVICE)
-async def test_migrate_entry(_, hass):
+async def test_migrate_entry(_, hass: HomeAssistant) -> None:
     """Test successful migration of entry data from version 1 to 2."""
 
     mock_entry_data = {

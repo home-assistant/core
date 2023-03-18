@@ -18,10 +18,14 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_PICTURE, PERCENTAGE, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_ENTITY_PICTURE,
+    PERCENTAGE,
+    STATE_UNAVAILABLE,
+    EntityCategory,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -268,7 +272,7 @@ class AugustBatterySensor(AugustEntityMixin, SensorEntity, Generic[_T]):
         device,
         old_device,
         description: AugustSensorEntityDescription[_T],
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(data, device)
         self.entity_description = description

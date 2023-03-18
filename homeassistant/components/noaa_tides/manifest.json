@@ -1,9 +1,9 @@
 {
   "domain": "noaa_tides",
   "name": "NOAA Tides",
-  "documentation": "https://www.home-assistant.io/integrations/noaa_tides",
-  "requirements": ["noaa-coops==0.1.8"],
   "codeowners": ["@jdelaney72"],
+  "documentation": "https://www.home-assistant.io/integrations/noaa_tides",
   "iot_class": "cloud_polling",
-  "loggers": ["noaa_coops"]
+  "loggers": ["noaa_coops"],
+  "requirements": ["noaa-coops==0.1.8"]
 }

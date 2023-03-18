@@ -1,4 +1,5 @@
 """Tests for Renault sensors."""
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
@@ -6,6 +7,7 @@ import pytest
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import (
     check_device_registry,
@@ -15,13 +17,11 @@ from . import (
 )
 from .const import MOCK_VEHICLES
 
-from tests.common import mock_device_registry, mock_registry
-
 pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
 
 
 @pytest.fixture(autouse=True)
-def override_platforms():
+def override_platforms() -> Generator[None, None, None]:
     """Override PLATFORMS."""
     with patch("homeassistant.components.renault.PLATFORMS", [Platform.DEVICE_TRACKER]):
         yield
@@ -29,13 +29,13 @@ def override_platforms():
 
 @pytest.mark.usefixtures("fixtures_with_data")
 async def test_device_trackers(
-    hass: HomeAssistant, config_entry: ConfigEntry, vehicle_type: str
-):
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    vehicle_type: str,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test for Renault device trackers."""
-
-    entity_registry = mock_registry(hass)
-    device_registry = mock_device_registry(hass)
-
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -50,13 +50,13 @@ async def test_device_trackers(
 
 @pytest.mark.usefixtures("fixtures_with_no_data")
 async def test_device_tracker_empty(
-    hass: HomeAssistant, config_entry: ConfigEntry, vehicle_type: str
-):
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    vehicle_type: str,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test for Renault device trackers with empty data from Renault."""
-
-    entity_registry = mock_registry(hass)
-    device_registry = mock_device_registry(hass)
-
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -70,13 +70,13 @@ async def test_device_tracker_empty(
 
 @pytest.mark.usefixtures("fixtures_with_invalid_upstream_exception")
 async def test_device_tracker_errors(
-    hass: HomeAssistant, config_entry: ConfigEntry, vehicle_type: str
-):
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    vehicle_type: str,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test for Renault device trackers with temporary failure."""
-
-    entity_registry = mock_registry(hass)
-    device_registry = mock_device_registry(hass)
-
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -92,13 +92,13 @@ async def test_device_tracker_errors(
 @pytest.mark.usefixtures("fixtures_with_access_denied_exception")
 @pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
 async def test_device_tracker_access_denied(
-    hass: HomeAssistant, config_entry: ConfigEntry, vehicle_type: str
-):
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    vehicle_type: str,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test for Renault device trackers with access denied failure."""
-
-    entity_registry = mock_registry(hass)
-    device_registry = mock_device_registry(hass)
-
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -111,13 +111,13 @@ async def test_device_tracker_access_denied(
 @pytest.mark.usefixtures("fixtures_with_not_supported_exception")
 @pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
 async def test_device_tracker_not_supported(
-    hass: HomeAssistant, config_entry: ConfigEntry, vehicle_type: str
-):
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    vehicle_type: str,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test for Renault device trackers with not supported failure."""
-
-    entity_registry = mock_registry(hass)
-    device_registry = mock_device_registry(hass)
-
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 

@@ -1,4 +1,7 @@
-"""A Bluetooth passive coordinator that receives data from advertisements but can also poll."""
+"""A Bluetooth passive coordinator.
+
+Receives data from advertisements but can also poll.
+"""
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -23,8 +26,7 @@ _T = TypeVar("_T")
 class ActiveBluetoothDataUpdateCoordinator(
     PassiveBluetoothDataUpdateCoordinator, Generic[_T]
 ):
-    """
-    A coordinator that receives passive data from advertisements but can also poll.
+    """A coordinator that receives passive data from advertisements but can also poll.
 
     Unlike the passive processor coordinator, this coordinator does call a parser
     method to parse the data from the advertisement.
@@ -33,16 +35,19 @@ class ActiveBluetoothDataUpdateCoordinator(
     out if a poll is needed. This should return True if it is and False if it is
     not needed.
 
-    def needs_poll_method(svc_info: BluetoothServiceInfoBleak, last_poll: float | None) -> bool:
+    def needs_poll_method(
+        svc_info: BluetoothServiceInfoBleak,
+        last_poll: float | None
+    ) -> bool:
         return True
 
-    If there has been no poll since HA started, `last_poll` will be None. Otherwise it is
-    the number of seconds since one was last attempted.
+    If there has been no poll since HA started, `last_poll` will be None.
+    Otherwise it is the number of seconds since one was last attempted.
 
     If a poll is needed, the coordinator will call poll_method. This is a coroutine.
-    It should return the same type of data as your update_method. The expectation is that
-    data from advertisements and from polling are being parsed and fed into a shared
-    object that represents the current state of the device.
+    It should return the same type of data as your update_method. The expectation is
+    that data from advertisements and from polling are being parsed and fed into
+    a shared object that represents the current state of the device.
 
     async def poll_method(svc_info: BluetoothServiceInfoBleak) -> YourDataType:
         return YourDataType(....)
@@ -101,6 +106,8 @@ class ActiveBluetoothDataUpdateCoordinator(
 
     def needs_poll(self, service_info: BluetoothServiceInfoBleak) -> bool:
         """Return true if time to try and poll."""
+        if self.hass.is_stopping:
+            return False
         poll_age: float | None = None
         if self._last_poll:
             poll_age = monotonic_time_coarse() - self._last_poll

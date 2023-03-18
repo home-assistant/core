@@ -9,19 +9,22 @@ from typing import Any
 from ical.calendar import Calendar
 from ical.calendar_stream import IcsCalendarStream
 from ical.event import Event
-from ical.store import EventStore
+from ical.store import EventStore, EventStoreError
 from ical.types import Range, Recur
 from pydantic import ValidationError
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
+    EVENT_END,
     EVENT_RRULE,
+    EVENT_START,
     CalendarEntity,
     CalendarEntityFeature,
     CalendarEvent,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -117,11 +120,14 @@ class LocalCalendarEntity(CalendarEntity):
         range_value: Range = Range.NONE
         if recurrence_range == Range.THIS_AND_FUTURE:
             range_value = Range.THIS_AND_FUTURE
-        EventStore(self._calendar).delete(
-            uid,
-            recurrence_id=recurrence_id,
-            recurrence_range=range_value,
-        )
+        try:
+            EventStore(self._calendar).delete(
+                uid,
+                recurrence_id=recurrence_id,
+                recurrence_range=range_value,
+            )
+        except EventStoreError as err:
+            raise HomeAssistantError("Error while deleting event: {err}") from err
         await self._async_store()
         await self.async_update_ha_state(force_refresh=True)
 
@@ -137,12 +143,15 @@ class LocalCalendarEntity(CalendarEntity):
         range_value: Range = Range.NONE
         if recurrence_range == Range.THIS_AND_FUTURE:
             range_value = Range.THIS_AND_FUTURE
-        EventStore(self._calendar).edit(
-            uid,
-            new_event,
-            recurrence_id=recurrence_id,
-            recurrence_range=range_value,
-        )
+        try:
+            EventStore(self._calendar).edit(
+                uid,
+                new_event,
+                recurrence_id=recurrence_id,
+                recurrence_range=range_value,
+            )
+        except EventStoreError as err:
+            raise HomeAssistantError("Error while updating event: {err}") from err
         await self._async_store()
         await self.async_update_ha_state(force_refresh=True)
 
@@ -151,6 +160,21 @@ def _parse_event(event: dict[str, Any]) -> Event:
     """Parse an ical event from a home assistant event dictionary."""
     if rrule := event.get(EVENT_RRULE):
         event[EVENT_RRULE] = Recur.from_rrule(rrule)
+
+    # This function is called with new events created in the local timezone,
+    # however ical library does not properly return recurrence_ids for
+    # start dates with a timezone. For now, ensure any datetime is stored as a
+    # floating local time to ensure we still apply proper local timezone rules.
+    # This can be removed when ical is updated with a new recurrence_id format
+    # https://github.com/home-assistant/core/issues/87759
+    for key in (EVENT_START, EVENT_END):
+        if (
+            (value := event[key])
+            and isinstance(value, datetime)
+            and value.tzinfo is not None
+        ):
+            event[key] = dt_util.as_local(value).replace(tzinfo=None)
+
     try:
         return Event.parse_obj(event)
     except ValidationError as err:
@@ -162,8 +186,12 @@ def _get_calendar_event(event: Event) -> CalendarEvent:
     """Return a CalendarEvent from an API event."""
     return CalendarEvent(
         summary=event.summary,
-        start=event.start,
-        end=event.end,
+        start=dt_util.as_local(event.start)
+        if isinstance(event.start, datetime)
+        else event.start,
+        end=dt_util.as_local(event.end)
+        if isinstance(event.end, datetime)
+        else event.end,
         description=event.description,
         uid=event.uid,
         rrule=event.rrule.as_rrule_str() if event.rrule else None,
