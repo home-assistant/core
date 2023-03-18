@@ -10,7 +10,6 @@ from screenlogicpy.const import (
     SL_GATEWAY_IP,
     SL_GATEWAY_NAME,
     SL_GATEWAY_PORT,
-    ScreenLogicWarning,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -52,8 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await gateway.async_connect(**connect_info)
     except ScreenLogicError as ex:
-        _LOGGER.error("Error while connecting to the gateway %s: %s", connect_info, ex)
-        raise ConfigEntryNotReady from ex
+        raise ConfigEntryNotReady(ex.msg) from ex
 
     coordinator = ScreenlogicDataUpdateCoordinator(
         hass, config_entry=entry, gateway=gateway
@@ -157,25 +155,17 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     async def _async_update_data(self) -> None:
         """Fetch data from the Screenlogic gateway."""
-        try:
-            await self._async_update_configured_data()
-        except (ScreenLogicError, ScreenLogicWarning) as ex:
-            _LOGGER.warning("Update error - attempting reconnect: %s", ex)
-            await self._async_reconnect_update_data()
-
-        return None
-
-    async def _async_reconnect_update_data(self) -> None:
-        """Attempt to reconnect to the gateway and fetch data."""
         assert self.config_entry is not None
         try:
-            # Clean up the previous connection as we're about to create a new one
-            await self.gateway.async_disconnect()
-
-            connect_info = await async_get_connect_info(self.hass, self.config_entry)
-            await self.gateway.async_connect(**connect_info)
+            if not self.gateway.is_connected:
+                connect_info = await async_get_connect_info(
+                    self.hass, self.config_entry
+                )
+                await self.gateway.async_connect(**connect_info)
 
             await self._async_update_configured_data()
-
-        except (ScreenLogicError, ScreenLogicWarning) as ex:
-            raise UpdateFailed(ex) from ex
+        except ScreenLogicError as ex:
+            if self.gateway.is_connected:
+                await self.gateway.async_disconnect()
+            raise UpdateFailed(ex.msg) from ex
+        return None

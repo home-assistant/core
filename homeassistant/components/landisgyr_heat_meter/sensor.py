@@ -32,20 +32,11 @@ from homeassistant.helpers.update_coordinator import (
 from homeassistant.util import dt as dt_util
 
 from . import DOMAIN
-from .const import GJ_TO_MWH
 
 _LOGGER = logging.getLogger(__name__)
 
 
 HEAT_METER_SENSOR_TYPES = (
-    SensorEntityDescription(
-        key="heat_usage",
-        icon="mdi:fire",
-        name="Heat usage",
-        native_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL,
-    ),
     SensorEntityDescription(
         key="volume_usage_m3",
         icon="mdi:fire",
@@ -54,23 +45,14 @@ HEAT_METER_SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         state_class=SensorStateClass.TOTAL,
     ),
-    # Diagnostic entity for debugging, this will match the value in GJ indicated on the meter's display
     SensorEntityDescription(
         key="heat_usage_gj",
         icon="mdi:fire",
         name="Heat usage GJ",
-        native_unit_of_measurement="GJ",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    SensorEntityDescription(
-        key="heat_previous_year",
-        icon="mdi:fire",
-        name="Heat usage previous year",
-        native_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.GIGA_JOULE,
         device_class=SensorDeviceClass.ENERGY,
-        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL,
     ),
-    # Diagnostic entity for debugging, this will match the value in GJ of previous year indicated on the meter's display
     SensorEntityDescription(
         key="heat_previous_year_gj",
         icon="mdi:fire",
@@ -293,19 +275,4 @@ class HeatMeterSensor(
             else:
                 self._attr_native_value = asdict(self.coordinator.data)[self.key]
 
-        if self.key == "heat_usage":
-            self._attr_native_value = convert_gj_to_mwh(
-                self.coordinator.data.heat_usage_gj
-            )
-
-        if self.key == "heat_previous_year":
-            self._attr_native_value = convert_gj_to_mwh(
-                self.coordinator.data.heat_previous_year_gj
-            )
-
         self.async_write_ha_state()
-
-
-def convert_gj_to_mwh(gigajoule) -> float:
-    """Convert GJ to MWh using the conversion value."""
-    return round(gigajoule * GJ_TO_MWH, 5)

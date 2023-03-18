@@ -79,7 +79,6 @@ light:
   brightness_scale: 99
 """
 import copy
-from pathlib import Path
 from unittest.mock import call, patch
 
 import pytest
@@ -131,7 +130,7 @@ from .test_common import (
 
 from tests.common import async_fire_mqtt_message, mock_restore_cache
 from tests.components.light import common
-from tests.typing import MqttMockHAClientGenerator
+from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {
@@ -2280,16 +2279,12 @@ async def test_publishing_with_custom_encoding(
 
 async def test_reloadable(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-    tmp_path: Path,
+    mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = light.DOMAIN
     config = DEFAULT_CONFIG
-    await help_test_reloadable(
-        hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, domain, config
-    )
+    await help_test_reloadable(hass, mqtt_client_mock, domain, config)
 
 
 @pytest.mark.parametrize(

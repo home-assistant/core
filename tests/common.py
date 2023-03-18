@@ -37,6 +37,7 @@ from homeassistant.config import async_process_component_config
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
     EVENT_HOMEASSISTANT_CLOSE,
+    EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
     STATE_OFF,
     STATE_ON,
@@ -757,7 +758,7 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
 
     def __init__(
         self,
-        hass,
+        hass: HomeAssistant,
         logger=None,
         domain="test_domain",
         platform_name="test_platform",
@@ -782,6 +783,11 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
             scan_interval=scan_interval,
             entity_namespace=entity_namespace,
         )
+
+        async def _async_on_stop(_: Event) -> None:
+            await self.async_shutdown()
+
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_on_stop)
 
 
 class MockToggleEntity(entity.ToggleEntity):

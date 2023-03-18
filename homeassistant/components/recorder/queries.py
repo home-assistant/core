@@ -745,6 +745,13 @@ def batch_cleanup_entity_ids() -> StatementLambdaElement:
     )
 
 
+def has_used_states_event_ids() -> StatementLambdaElement:
+    """Check if there are used event_ids in the states table."""
+    return lambda_stmt(
+        lambda: select(States.state_id).filter(States.event_id.isnot(None)).limit(1)
+    )
+
+
 def has_events_context_ids_to_migrate() -> StatementLambdaElement:
     """Check if there are events context ids to migrate."""
     return lambda_stmt(
