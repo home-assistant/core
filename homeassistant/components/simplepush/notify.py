@@ -72,8 +72,8 @@ class SimplePushNotificationService(BaseNotificationService):
                 for attachment in attachments_data:
                     if not (
                         isinstance(attachment, dict)
-                        and "video" in attachment.keys()
-                        and "thumbnail" in attachment.keys()
+                        and "video" in attachment
+                        and "thumbnail" in attachment
                     ) and not isinstance(attachment, str):
                         _LOGGER.error("Attachment format is incorrect")
                         return
