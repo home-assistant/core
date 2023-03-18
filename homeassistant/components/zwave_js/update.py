@@ -37,9 +37,9 @@ from .helpers import get_device_info, get_valueless_base_unique_id
 
 PARALLEL_UPDATES = 1
 
-# In minutes
-UPDATE_DELAY = 5
 UPDATE_DELAY_STRING = "delay"
+# In minutes
+UPDATE_DELAY_INTERVAL = 5
 
 
 async def async_setup_entry(
@@ -55,10 +55,10 @@ async def async_setup_entry(
     def async_add_firmware_update_entity(node: ZwaveNode) -> None:
         """Add firmware update entity."""
         cnt[UPDATE_DELAY_STRING] += 1
-        delay_cnt = cnt[UPDATE_DELAY_STRING]
+        delay = timedelta(minutes=(cnt[UPDATE_DELAY_STRING] * UPDATE_DELAY_INTERVAL))
         driver = client.driver
         assert driver is not None  # Driver is ready before platforms are loaded.
-        async_add_entities([ZWaveNodeFirmwareUpdate(driver, node, delay_cnt)])
+        async_add_entities([ZWaveNodeFirmwareUpdate(driver, node, delay)])
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
@@ -82,7 +82,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(self, driver: Driver, node: ZwaveNode, delay_cnt: int) -> None:
+    def __init__(self, driver: Driver, node: ZwaveNode, delay: timedelta) -> None:
         """Initialize a Z-Wave device firmware update entity."""
         self.driver = driver
         self.node = node
@@ -93,7 +93,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         self._finished_unsub: Callable[[], None] | None = None
         self._finished_event = asyncio.Event()
         self._result: NodeFirmwareUpdateResult | None = None
-        self._delay_cnt: Final[int] = delay_cnt
+        self._delay: Final[timedelta] = delay
 
         # Entity class attributes
         self._attr_name = "Firmware"
@@ -294,11 +294,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
 
         # Spread updates out in 5 minute increments to avoid flooding the network
         self.async_on_remove(
-            async_call_later(
-                self.hass,
-                timedelta(minutes=(self._delay_cnt * UPDATE_DELAY)),
-                self._async_update,
-            )
+            async_call_later(self.hass, self._delay, self._async_update)
         )
 
     async def async_will_remove_from_hass(self) -> None:
