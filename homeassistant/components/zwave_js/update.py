@@ -28,7 +28,7 @@ from homeassistant.components.update import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -53,16 +53,11 @@ class ZWaveNodeFirmwareUpdateExtraStoredData(ExtraStoredData):
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the extra data."""
-        # We will simplify this upstream later
-        if latest_version_firmware := (
-            asdict(self.latest_version_firmware)
+        return {
+            "latest_version_firmware": asdict(self.latest_version_firmware)
             if self.latest_version_firmware
             else None
-        ):
-            latest_version_firmware["files"] = [
-                file_info.to_dict() for file_info in latest_version_firmware["files"]
-            ]
-        return {"latest_version_firmware": latest_version_firmware}
+        }
 
     @classmethod
     def from_dict(cls, data: dict) -> ZWaveNodeFirmwareUpdateExtraStoredData:
@@ -193,10 +188,11 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
 
         # If hass hasn't started yet, push the next update to the next day so that we
         # can preserve the offsets we've created between each node
-        if not self.hass.is_running:
+        if self.hass.state != CoreState.running:
             self._poll_unsub = async_call_later(
                 self.hass, timedelta(days=1), self._async_update
             )
+            return
 
         # If device is asleep/dead, wait for it to wake up/become alive before
         # attempting an update

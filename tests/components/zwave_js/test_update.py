@@ -21,7 +21,7 @@ from homeassistant.components.update import (
 from homeassistant.components.zwave_js.const import DOMAIN, SERVICE_REFRESH_VALUE
 from homeassistant.components.zwave_js.helpers import get_valueless_base_unique_id
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_registry import async_get
 from homeassistant.util import dt as dt_util
@@ -270,7 +270,7 @@ async def test_update_entity_ha_not_running(
     zen_31,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test update occurs after HA starts."""
+    """Test update occurs only after HA is running."""
     await hass.async_stop()
 
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
@@ -285,7 +285,16 @@ async def test_update_entity_ha_not_running(
 
     assert len(client.async_send_command.call_args_list) == 0
 
+    hass.state = CoreState.starting
+
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
+    await hass.async_block_till_done()
+
+    assert len(client.async_send_command.call_args_list) == 0
+
+    hass.state = CoreState.running
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
     await hass.async_block_till_done()
 
     assert len(client.async_send_command.call_args_list) == 1
@@ -574,7 +583,7 @@ async def test_update_entity_delay(
     zen_31,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test update occurs after HA starts."""
+    """Test update occurs on a delay after HA starts."""
     client.async_send_command.reset_mock()
     await hass.async_stop()
 
