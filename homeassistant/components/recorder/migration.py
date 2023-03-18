@@ -1548,6 +1548,7 @@ def cleanup_legacy_states_event_ids(instance: Recorder) -> bool:
         # Only drop the index if there are no more event_ids in the states table
         # ex all NULL
         _drop_index(session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX)
+        instance.has_legacy_events_index = False
 
     return True
 

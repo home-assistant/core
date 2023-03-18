@@ -74,7 +74,7 @@ def purge_old_data(
     with session_scope(session=instance.get_session()) as session:
         # Purge a max of SQLITE_MAX_BIND_VARS, based on the oldest states or events record
         has_more_to_purge = False
-        if _purging_legacy_format(session):
+        if instance.has_legacy_events_index and _purging_legacy_format(session):
             _LOGGER.debug(
                 "Purge running in legacy format as there are states with event_id"
                 " remaining"
