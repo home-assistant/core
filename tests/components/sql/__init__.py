@@ -23,7 +23,6 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 ENTRY_CONFIG = {
-    CONF_DB_URL: "sqlite://",
     CONF_NAME: "Get Value",
     CONF_QUERY: "SELECT 5 as value",
     CONF_COLUMN_NAME: "value",
@@ -31,7 +30,6 @@ ENTRY_CONFIG = {
 }
 
 ENTRY_CONFIG_INVALID_QUERY = {
-    CONF_DB_URL: "sqlite://",
     CONF_NAME: "Get Value",
     CONF_QUERY: "UPDATE 5 as value",
     CONF_COLUMN_NAME: "size",
@@ -39,14 +37,12 @@ ENTRY_CONFIG_INVALID_QUERY = {
 }
 
 ENTRY_CONFIG_INVALID_QUERY_OPT = {
-    CONF_DB_URL: "sqlite://",
     CONF_QUERY: "UPDATE 5 as value",
     CONF_COLUMN_NAME: "size",
     CONF_UNIT_OF_MEASUREMENT: "MiB",
 }
 
 ENTRY_CONFIG_NO_RESULTS = {
-    CONF_DB_URL: "sqlite://",
     CONF_NAME: "Get Value",
     CONF_QUERY: "SELECT kalle as value from no_table;",
     CONF_COLUMN_NAME: "value",
@@ -67,9 +63,18 @@ YAML_CONFIG = {
     }
 }
 
-YAML_CONFIG_INVALID = {
+YAML_CONFIG_BINARY = {
     "sql": {
         CONF_DB_URL: "sqlite://",
+        CONF_NAME: "Get Binary Value",
+        CONF_QUERY: "SELECT cast(x'd34324324230392032' as blob) as value, cast(x'd343aa' as blob) as test_attr",
+        CONF_COLUMN_NAME: "value",
+        CONF_UNIQUE_ID: "unique_id_12345",
+    }
+}
+
+YAML_CONFIG_INVALID = {
+    "sql": {
         CONF_QUERY: "SELECT 5 as value",
         CONF_COLUMN_NAME: "value",
         CONF_UNIT_OF_MEASUREMENT: "MiB",

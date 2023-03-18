@@ -320,12 +320,28 @@ class HassIO:
         return self.send_command(f"/addons/{addon}/info", method="get")
 
     @api_data
+    def get_core_stats(self):
+        """Return stats for the core.
+
+        This method returns a coroutine.
+        """
+        return self.send_command("/core/stats", method="get")
+
+    @api_data
     def get_addon_stats(self, addon):
         """Return stats for an Add-on.
 
         This method returns a coroutine.
         """
         return self.send_command(f"/addons/{addon}/stats", method="get")
+
+    @api_data
+    def get_supervisor_stats(self):
+        """Return stats for the supervisor.
+
+        This method returns a coroutine.
+        """
+        return self.send_command("/supervisor/stats", method="get")
 
     def get_addon_changelog(self, addon):
         """Return changelog for an Add-on.

@@ -1,9 +1,32 @@
 {
   "title": "Calendar",
-  "state": {
+  "entity_component": {
     "_": {
-      "off": "[%key:common::state::off%]",
-      "on": "[%key:common::state::on%]"
+      "name": "[%key:component::calendar::title%]",
+      "state": {
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]"
+      },
+      "state_attributes": {
+        "all_day": {
+          "name": "All day"
+        },
+        "description": {
+          "name": "Description"
+        },
+        "end_time": {
+          "name": "End time"
+        },
+        "location": {
+          "name": "Location"
+        },
+        "messages": {
+          "name": "Message"
+        },
+        "start_time": {
+          "name": "Start time"
+        }
+      }
     }
   }
 }
