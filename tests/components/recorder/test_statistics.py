@@ -1661,12 +1661,12 @@ async def test_validate_db_schema_fix_float_issue(
 @pytest.mark.parametrize(
     ("db_engine", "modification"),
     (
-        ("mysql", ["last_reset DATETIME(6)", "start DATETIME(6)"]),
+        ("mysql", ["last_reset_ts DOUBLE PRECISION", "start_ts DOUBLE PRECISION"]),
         (
             "postgresql",
             [
-                "last_reset TIMESTAMP(6) WITH TIME ZONE",
-                "start TIMESTAMP(6) WITH TIME ZONE",
+                "last_reset_ts DOUBLE PRECISION",
+                "start_ts DOUBLE PRECISION",
             ],
         ),
     ),
