@@ -282,6 +282,9 @@ class WebSocketHandler:
             # added a way to set the limit but there is no way to actually
             # reach the code to set the limit so we have to set it directly.
             #
+            # We already authenticated so we are less concerned about malicious
+            # clients at this point.
+            #
             wsock._writer._limit = 2**19  # type: ignore[union-attr] # pylint: disable=protected-access
 
             # Command phase
