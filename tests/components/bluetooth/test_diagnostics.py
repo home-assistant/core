@@ -341,7 +341,7 @@ async def test_diagnostics_macos(
                         ],
                         "device": {
                             "__type": "<class 'bleak.backends.device.BLEDevice'>",
-                            "repr": "generate_ble_device(44:44:33:11:23:45, wohand)",
+                            "repr": "BLEDevice(44:44:33:11:23:45, wohand)",
                         },
                         "connectable": True,
                         "manufacturer_data": {
@@ -369,7 +369,7 @@ async def test_diagnostics_macos(
                         ],
                         "device": {
                             "__type": "<class 'bleak.backends.device.BLEDevice'>",
-                            "repr": "generate_ble_device(44:44:33:11:23:45, wohand)",
+                            "repr": "BLEDevice(44:44:33:11:23:45, wohand)",
                         },
                         "connectable": True,
                         "manufacturer_data": {
@@ -533,7 +533,7 @@ async def test_diagnostics_remote_adapter(
                         "connectable": False,
                         "device": {
                             "__type": "<class 'bleak.backends.device.BLEDevice'>",
-                            "repr": "generate_ble_device(44:44:33:11:23:45, wohand)",
+                            "repr": "BLEDevice(44:44:33:11:23:45, wohand)",
                         },
                         "manufacturer_data": {
                             "1": {"__type": "<class 'bytes'>", "repr": "b'\\x01'"}
@@ -561,7 +561,7 @@ async def test_diagnostics_remote_adapter(
                         "connectable": True,
                         "device": {
                             "__type": "<class 'bleak.backends.device.BLEDevice'>",
-                            "repr": "generate_ble_device(44:44:33:11:23:45, wohand)",
+                            "repr": "BLEDevice(44:44:33:11:23:45, wohand)",
                         },
                         "manufacturer_data": {
                             "1": {"__type": "<class 'bytes'>", "repr": "b'\\x01'"}
