@@ -144,11 +144,12 @@ async def test_state_changed_event_sends_message(
     mqtt_mock.async_publish.assert_called_with(
         "pub/test_domain/test_platform_1234/state", "unknown", 1, True
     )
+    mqtt_mock.async_publish.reset_mock()
 
     state = hass.states.get("test_domain.test_platform_1234")
     assert state is not None
 
-    # Now remove it, nowthing should be published
+    # Now remove it, nothing should be published
     hass.states.async_remove("test_domain.test_platform_1234")
     await hass.async_block_till_done()
     await hass.async_block_till_done()
