@@ -339,7 +339,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
             tx_power=NO_RSSI_VALUE if tx_power is None else tx_power,
             platform_data=(),
         )
-        device = BLEDevice(  # type: ignore[no-untyped-call]
+        device = BLEDevice(
             address=address,
             name=local_name,
             details=self._details | details,
