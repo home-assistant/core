@@ -30,6 +30,7 @@ from homeassistant.util.ulid import ulid_to_bytes
 from .const import SupportedDialect
 from .db_schema import (
     CONTEXT_ID_BIN_MAX_LENGTH,
+    LEGACY_STATES_EVENT_ID_INDEX,
     SCHEMA_VERSION,
     STATISTICS_TABLES,
     TABLE_STATES,
@@ -51,6 +52,7 @@ from .queries import (
     find_event_type_to_migrate,
     find_events_context_ids_to_migrate,
     find_states_context_ids_to_migrate,
+    has_used_states_event_ids,
 )
 from .statistics import (
     correct_db_schema as statistics_correct_db_schema,
@@ -64,7 +66,12 @@ from .tasks import (
     PostSchemaMigrationTask,
     StatisticsTimestampMigrationCleanupTask,
 )
-from .util import database_job_retry_wrapper, retryable_database_job, session_scope
+from .util import (
+    database_job_retry_wrapper,
+    get_index_by_name,
+    retryable_database_job,
+    session_scope,
+)
 
 if TYPE_CHECKING:
     from . import Recorder
@@ -308,18 +315,7 @@ def _drop_index(
         with session_scope(session=session_maker()) as session, contextlib.suppress(
             SQLAlchemyError
         ):
-            connection = session.connection()
-            inspector = sqlalchemy.inspect(connection)
-            indexes = inspector.get_indexes(table_name)
-            if index_to_drop := next(
-                (
-                    possible_index["name"]
-                    for possible_index in indexes
-                    if possible_index["name"]
-                    and possible_index["name"].endswith(f"_{index_name}")
-                ),
-                None,
-            ):
+            if index_to_drop := get_index_by_name(session, table_name, index_name):
                 connection.execute(text(f"DROP INDEX {index_to_drop}"))
                 success = True
 
@@ -593,7 +589,7 @@ def _apply_update(  # noqa: C901
         # but it was removed in version 32
     elif new_version == 5:
         # Create supporting index for States.event_id foreign key
-        _create_index(session_maker, "states", "ix_states_event_id")
+        _create_index(session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX)
     elif new_version == 6:
         _add_columns(
             session_maker,
@@ -1527,6 +1523,33 @@ def post_migrate_entity_ids(instance: Recorder) -> bool:
 
     _LOGGER.debug("Cleanup legacy entity_ids done=%s", is_done)
     return is_done
+
+
+@retryable_database_job("cleanup_legacy_event_ids")
+def cleanup_legacy_states_event_ids(instance: Recorder) -> bool:
+    """Remove old event_id index from states.
+
+    We used to link states to events using the event_id column but we no
+    longer store state changed events in the events table.
+
+    If all old states have been purged and existing states are in the new
+    format we can drop the index since it can take up ~10MB per 1M rows.
+    """
+    session_maker = instance.get_session
+    _LOGGER.debug("Cleanup legacy entity_ids")
+    with session_scope(session=session_maker()) as session:
+        result = session.execute(has_used_states_event_ids()).scalar()
+        # In the future we may migrate existing states to the new format
+        # but in practice very few of these still exist in production and
+        # removing the index is the likely all that needs to happen.
+        all_gone = not result
+
+    if all_gone:
+        # Only drop the index if there are no more event_ids in the states table
+        # ex all NULL
+        _drop_index(session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX)
+
+    return True
 
 
 def _initialize_database(session: Session) -> bool:

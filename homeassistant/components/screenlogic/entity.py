@@ -101,20 +101,29 @@ class ScreenLogicPushEntity(ScreenlogicEntity):
         """Initialize the entity."""
         super().__init__(coordinator, data_key, enabled)
         self._update_message_code = message_code
+        self._last_update_success = True
 
     @callback
     def _async_data_updated(self) -> None:
         """Handle data updates."""
+        self._last_update_success = self.coordinator.last_update_success
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
-
+        await super().async_added_to_hass()
         self.async_on_remove(
             await self.gateway.async_subscribe_client(
                 self._async_data_updated, self._update_message_code
             )
         )
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        # For push entities, only take updates from the coordinator if availability changes.
+        if self.coordinator.last_update_success != self._last_update_success:
+            self._async_data_updated()
 
 
 class ScreenLogicCircuitEntity(ScreenLogicPushEntity):
