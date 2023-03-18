@@ -438,3 +438,17 @@ class EntityIDPostMigrationTask(RecorderTask):
         ):
             # Schedule a new migration task if this one didn't finish
             instance.queue_task(EntityIDPostMigrationTask())
+
+
+@dataclass
+class EventIdMigrationTask(RecorderTask):
+    """An object to insert into the recorder queue to cleanup legacy event_ids in the states table.
+
+    This task should only be queued if the ix_states_event_id index exists
+    since it is used to scan the states table and it will be removed after this
+    task is run if its no longer needed.
+    """
+
+    def run(self, instance: Recorder) -> None:
+        """Clean up the legacy event_id index on states."""
+        instance._cleanup_legacy_states_event_ids()  # pylint: disable=[protected-access]

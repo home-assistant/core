@@ -41,19 +41,26 @@ from homeassistant.util.enum import try_parse_enum
 
 from . import migration, statistics
 from .const import (
+    CONTEXT_ID_AS_BINARY_SCHEMA_VERSION,
     DB_WORKER_PREFIX,
     DOMAIN,
+    EVENT_TYPE_IDS_SCHEMA_VERSION,
     KEEPALIVE_TIME,
+    LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION,
     MARIADB_PYMYSQL_URL_PREFIX,
     MARIADB_URL_PREFIX,
     MAX_QUEUE_BACKLOG,
     MYSQLDB_PYMYSQL_URL_PREFIX,
     MYSQLDB_URL_PREFIX,
     SQLITE_URL_PREFIX,
+    STATES_META_SCHEMA_VERSION,
+    STATISTICS_ROWS_SCHEMA_VERSION,
     SupportedDialect,
 )
 from .db_schema import (
+    LEGACY_STATES_EVENT_ID_INDEX,
     SCHEMA_VERSION,
+    TABLE_STATES,
     Base,
     EventData,
     Events,
@@ -89,6 +96,7 @@ from .tasks import (
     CompileMissingStatisticsTask,
     DatabaseLockTask,
     EntityIDMigrationTask,
+    EventIdMigrationTask,
     EventsContextIDMigrationTask,
     EventTask,
     EventTypeIDMigrationTask,
@@ -108,6 +116,8 @@ from .util import (
     build_mysqldb_conv,
     dburl_to_path,
     end_incomplete_runs,
+    execute_stmt_lambda_element,
+    get_index_by_name,
     is_second_sunday,
     move_away_broken_database,
     session_scope,
@@ -688,24 +698,28 @@ class Recorder(threading.Thread):
             # since we want the frontend queries to avoid a thundering
             # herd of queries to find the statistics meta data if
             # there are a lot of statistics graphs on the frontend.
-            if self.schema_version >= 23:
+            if self.schema_version >= STATISTICS_ROWS_SCHEMA_VERSION:
                 self.statistics_meta_manager.load(session)
 
             if (
-                self.schema_version < 36
-                or session.execute(has_events_context_ids_to_migrate()).scalar()
+                self.schema_version < CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
+                or execute_stmt_lambda_element(
+                    session, has_events_context_ids_to_migrate()
+                )
             ):
                 self.queue_task(StatesContextIDMigrationTask())
 
             if (
-                self.schema_version < 36
-                or session.execute(has_states_context_ids_to_migrate()).scalar()
+                self.schema_version < CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
+                or execute_stmt_lambda_element(
+                    session, has_states_context_ids_to_migrate()
+                )
             ):
                 self.queue_task(EventsContextIDMigrationTask())
 
             if (
-                self.schema_version < 37
-                or session.execute(has_event_type_to_migrate()).scalar()
+                self.schema_version < EVENT_TYPE_IDS_SCHEMA_VERSION
+                or execute_stmt_lambda_element(session, has_event_type_to_migrate())
             ):
                 self.queue_task(EventTypeIDMigrationTask())
             else:
@@ -713,13 +727,22 @@ class Recorder(threading.Thread):
                 self.event_type_manager.active = True
 
             if (
-                self.schema_version < 38
-                or session.execute(has_entity_ids_to_migrate()).scalar()
+                self.schema_version < STATES_META_SCHEMA_VERSION
+                or execute_stmt_lambda_element(session, has_entity_ids_to_migrate())
             ):
                 self.queue_task(EntityIDMigrationTask())
             else:
                 _LOGGER.debug("Activating states_meta manager as all data is migrated")
                 self.states_meta_manager.active = True
+
+            if self.schema_version > LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION:
+                with contextlib.suppress(SQLAlchemyError):
+                    # If the index of event_ids on the states table is still present
+                    # we need to queue a task to remove it.
+                    if get_index_by_name(
+                        session, TABLE_STATES, LEGACY_STATES_EVENT_ID_INDEX
+                    ):
+                        self.queue_task(EventIdMigrationTask())
 
         # We must only set the db ready after we have set the table managers
         # to active if there is no data to migrate.
@@ -1002,7 +1025,7 @@ class Recorder(threading.Thread):
         if states_meta_manager.active:
             dbstate.entity_id = None
 
-        self.event_session.add(dbstate)
+        session.add(dbstate)
 
     def _handle_database_error(self, err: Exception) -> bool:
         """Handle a database error that may result in moving away the corrupt db."""
@@ -1015,9 +1038,9 @@ class Recorder(threading.Thread):
         return False
 
     def _event_session_has_pending_writes(self) -> bool:
-        return bool(
-            self.event_session and (self.event_session.new or self.event_session.dirty)
-        )
+        """Return True if there are pending writes in the event session."""
+        session = self.event_session
+        return bool(session and (session.new or session.dirty))
 
     def _commit_event_session_or_retry(self) -> None:
         """Commit the event session if there is work to do."""
@@ -1043,9 +1066,10 @@ class Recorder(threading.Thread):
 
     def _commit_event_session(self) -> None:
         assert self.event_session is not None
+        session = self.event_session
         self._commits_without_expire += 1
 
-        self.event_session.commit()
+        session.commit()
         # We just committed the state attributes to the database
         # and we now know the attributes_ids.  We can save
         # many selects for matching attributes by loading them
@@ -1061,7 +1085,7 @@ class Recorder(threading.Thread):
         # do it after EXPIRE_AFTER_COMMITS commits
         if self._commits_without_expire >= EXPIRE_AFTER_COMMITS:
             self._commits_without_expire = 0
-            self.event_session.expire_all()
+            session.expire_all()
 
     def _handle_sqlite_corruption(self) -> None:
         """Handle the sqlite3 database being corrupt."""
@@ -1127,6 +1151,10 @@ class Recorder(threading.Thread):
     def _post_migrate_entity_ids(self) -> bool:
         """Post migrate entity_ids if needed."""
         return migration.post_migrate_entity_ids(self)
+
+    def _cleanup_legacy_states_event_ids(self) -> bool:
+        """Cleanup legacy event_ids if needed."""
+        return migration.cleanup_legacy_states_event_ids(self)
 
     def _send_keep_alive(self) -> None:
         """Send a keep alive to keep the db connection open."""
