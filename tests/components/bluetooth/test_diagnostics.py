@@ -38,7 +38,7 @@ async def test_diagnostics(
         "homeassistant.components.bluetooth.scanner.HaScanner.discovered_devices_and_advertisement_data",
         {
             "44:44:33:11:23:45": (
-                generate_ble_device(name="x", rssi=-60, address="44:44:33:11:23:45"),
+                generate_ble_device(name="x", rssi=-127, address="44:44:33:11:23:45"),
                 generate_advertisement_data(local_name="x"),
             )
         },
@@ -175,7 +175,7 @@ async def test_diagnostics(
                                 ],
                                 "details": None,
                                 "name": "x",
-                                "rssi": -60,
+                                "rssi": -127,
                             }
                         ],
                         "last_detection": ANY,
@@ -202,7 +202,7 @@ async def test_diagnostics(
                                 ],
                                 "details": None,
                                 "name": "x",
-                                "rssi": -60,
+                                "rssi": -127,
                             }
                         ],
                         "last_detection": ANY,
@@ -229,7 +229,7 @@ async def test_diagnostics(
                                 ],
                                 "details": None,
                                 "name": "x",
-                                "rssi": -60,
+                                "rssi": -127,
                             }
                         ],
                         "last_detection": ANY,
@@ -267,7 +267,7 @@ async def test_diagnostics_macos(
         "homeassistant.components.bluetooth.scanner.HaScanner.discovered_devices_and_advertisement_data",
         {
             "44:44:33:11:23:45": (
-                generate_ble_device(name="x", rssi=-60, address="44:44:33:11:23:45"),
+                generate_ble_device(name="x", rssi=-127, address="44:44:33:11:23:45"),
                 switchbot_adv,
             )
         },
@@ -405,7 +405,7 @@ async def test_diagnostics_macos(
                                 ],
                                 "details": None,
                                 "name": "x",
-                                "rssi": -60,
+                                "rssi": -127,
                             }
                         ],
                         "last_detection": ANY,
