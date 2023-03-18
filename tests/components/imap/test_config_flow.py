@@ -1,6 +1,6 @@
 """Test the imap config flow."""
 import asyncio
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from aioimaplib import AioImapException
 import pytest
@@ -30,7 +30,7 @@ MOCK_CONFIG = {
 }
 
 
-async def test_form(hass: HomeAssistant) -> None:
+async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -40,10 +40,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.imap.config_flow.connect_to_server"
-    ) as mock_client, patch(
-        "homeassistant.components.imap.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    ) as mock_client:
         mock_client.return_value.search.return_value = (
             "OK",
             [b""],
@@ -196,7 +193,7 @@ async def test_form_invalid_search(hass: HomeAssistant) -> None:
     assert result2["errors"] == {CONF_SEARCH: "invalid_search"}
 
 
-async def test_reauth_success(hass: HomeAssistant) -> None:
+async def test_reauth_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we can reauth."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -219,10 +216,7 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.imap.config_flow.connect_to_server"
-    ) as mock_client, patch(
-        "homeassistant.components.imap.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    ) as mock_client:
         mock_client.return_value.search.return_value = (
             "OK",
             [b""],
