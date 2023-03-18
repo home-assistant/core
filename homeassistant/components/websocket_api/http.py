@@ -268,6 +268,22 @@ class WebSocketHandler:
             )
             async_dispatcher_send(self.hass, SIGNAL_WEBSOCKET_CONNECTED)
 
+            #
+            # https://github.com/aio-libs/aiohttp/issues/1367 added drains
+            # to the websocket writer to handle malicious clients and
+            # network issues. However, this causes a problem for us since
+            # we don't want to wait for the buffer to drain before we send
+            # the next one since it backs up into the queue which uses more memory.
+            #
+            # Set the limit to 512KiB since the default limit of 16KiB is way too
+            # low for our use case since the registries can be quite large.
+            #
+            # https://github.com/aio-libs/aiohttp/commit/b3c80ee3f7d5d8f0b8bc27afe52e4d46621eaf99
+            # added a way to set the limit but there is no way to actually
+            # reach the code to set the limit so we have to set it directly.
+            #
+            wsock._writer._limit = 2**19  # type: ignore[union-attr] # pylint: disable=protected-access
+
             # Command phase
             while not wsock.closed:
                 msg = await wsock.receive()
