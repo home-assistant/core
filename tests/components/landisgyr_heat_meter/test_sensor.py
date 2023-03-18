@@ -85,13 +85,9 @@ async def test_create_sensors(
 
     # check if 26 attributes have been created
     assert len(hass.states.async_all()) == 25
-    assert len(hass.states.async_all()) == 25
 
     state = hass.states.get("sensor.heat_meter_heat_usage_gj")
-    state = hass.states.get("sensor.heat_meter_heat_usage_gj")
     assert state
-    assert state.state == "123.0"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.GIGA_JOULE
     assert state.state == "123.0"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.GIGA_JOULE
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
