@@ -12,6 +12,7 @@ from . import (
     MockBleakClient,
     _get_manager,
     generate_advertisement_data,
+    generate_ble_device,
     inject_advertisement,
 )
 
@@ -37,7 +38,7 @@ async def test_diagnostics(
         "homeassistant.components.bluetooth.scanner.HaScanner.discovered_devices_and_advertisement_data",
         {
             "44:44:33:11:23:45": (
-                BLEDevice(name="x", rssi=-60, address="44:44:33:11:23:45"),
+                generate_ble_device(name="x", rssi=-60, address="44:44:33:11:23:45"),
                 generate_advertisement_data(local_name="x"),
             )
         },
@@ -257,7 +258,7 @@ async def test_diagnostics_macos(
     # because we cannot import the scanner class directly without it throwing an
     # error if the test is not running on linux since we won't have the correct
     # deps installed when testing on MacOS.
-    switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+    switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
     switchbot_adv = generate_advertisement_data(
         local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
     )
@@ -266,7 +267,7 @@ async def test_diagnostics_macos(
         "homeassistant.components.bluetooth.scanner.HaScanner.discovered_devices_and_advertisement_data",
         {
             "44:44:33:11:23:45": (
-                BLEDevice(name="x", rssi=-60, address="44:44:33:11:23:45"),
+                generate_ble_device(name="x", rssi=-60, address="44:44:33:11:23:45"),
                 switchbot_adv,
             )
         },
@@ -340,7 +341,7 @@ async def test_diagnostics_macos(
                         ],
                         "device": {
                             "__type": "<class 'bleak.backends.device.BLEDevice'>",
-                            "repr": "BLEDevice(44:44:33:11:23:45, wohand)",
+                            "repr": "generate_ble_device(44:44:33:11:23:45, wohand)",
                         },
                         "connectable": True,
                         "manufacturer_data": {
@@ -368,7 +369,7 @@ async def test_diagnostics_macos(
                         ],
                         "device": {
                             "__type": "<class 'bleak.backends.device.BLEDevice'>",
-                            "repr": "BLEDevice(44:44:33:11:23:45, wohand)",
+                            "repr": "generate_ble_device(44:44:33:11:23:45, wohand)",
                         },
                         "connectable": True,
                         "manufacturer_data": {
@@ -430,7 +431,7 @@ async def test_diagnostics_remote_adapter(
 ) -> None:
     """Test diagnostics for remote adapter."""
     manager = _get_manager()
-    switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+    switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
     switchbot_adv = generate_advertisement_data(
         local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
     )
@@ -532,7 +533,7 @@ async def test_diagnostics_remote_adapter(
                         "connectable": False,
                         "device": {
                             "__type": "<class 'bleak.backends.device.BLEDevice'>",
-                            "repr": "BLEDevice(44:44:33:11:23:45, wohand)",
+                            "repr": "generate_ble_device(44:44:33:11:23:45, wohand)",
                         },
                         "manufacturer_data": {
                             "1": {"__type": "<class 'bytes'>", "repr": "b'\\x01'"}
@@ -560,7 +561,7 @@ async def test_diagnostics_remote_adapter(
                         "connectable": True,
                         "device": {
                             "__type": "<class 'bleak.backends.device.BLEDevice'>",
-                            "repr": "BLEDevice(44:44:33:11:23:45, wohand)",
+                            "repr": "generate_ble_device(44:44:33:11:23:45, wohand)",
                         },
                         "manufacturer_data": {
                             "1": {"__type": "<class 'bytes'>", "repr": "b'\\x01'"}

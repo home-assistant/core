@@ -8,6 +8,7 @@ from homeassistant.components.bluetooth import (
     HaBluetoothConnector,
     async_scanner_by_source,
     async_scanner_devices_by_address,
+    generate_ble_device,
 )
 from homeassistant.core import HomeAssistant
 
@@ -56,7 +57,7 @@ async def test_async_scanner_devices_by_address_connectable(
     )
     unsetup = scanner.async_setup()
     cancel = manager.async_register_scanner(scanner, True)
-    switchbot_device = BLEDevice(
+    switchbot_device = generate_ble_device(
         "44:44:33:11:23:45",
         "wohand",
         {},
@@ -89,7 +90,7 @@ async def test_async_scanner_devices_by_address_non_connectable(
 ) -> None:
     """Test getting scanner devices by address with non-connectable devices."""
     manager = _get_manager()
-    switchbot_device = BLEDevice(
+    switchbot_device = generate_ble_device(
         "44:44:33:11:23:45",
         "wohand",
         {},
