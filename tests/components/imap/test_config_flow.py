@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 from aioimaplib import AioImapException
 import pytest
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.imap.const import (
     CONF_CHARSET,
     CONF_FOLDER,
@@ -181,10 +181,7 @@ async def test_form_invalid_search(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.imap.config_flow.connect_to_server"
     ) as mock_client:
-        mock_client.return_value.search.return_value = (
-            "BAD",
-            [b"Invalid search"],
-        )
+        mock_client.return_value.search.return_value = ("BAD", [b"Invalid search"])
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], MOCK_CONFIG
         )
@@ -203,10 +200,7 @@ async def test_reauth_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-        },
+        context={"source": config_entries.SOURCE_REAUTH, "entry_id": entry.entry_id},
         data=MOCK_CONFIG,
     )
 
@@ -223,9 +217,7 @@ async def test_reauth_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
         )
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_PASSWORD: "test-password",
-            },
+            {CONF_PASSWORD: "test-password"},
         )
 
     assert result2["type"] == FlowResultType.ABORT
@@ -243,10 +235,7 @@ async def test_reauth_failed(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-        },
+        context={"source": config_entries.SOURCE_REAUTH, "entry_id": entry.entry_id},
         data=MOCK_CONFIG,
     )
 
@@ -281,10 +270,7 @@ async def test_reauth_failed_conn_error(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-        },
+        context={"source": config_entries.SOURCE_REAUTH, "entry_id": entry.entry_id},
         data=MOCK_CONFIG,
     )
 
@@ -297,10 +283,61 @@ async def test_reauth_failed_conn_error(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_PASSWORD: "test-wrong-password",
-            },
+            {CONF_PASSWORD: "test-wrong-password"},
         )
 
         assert result2["type"] == FlowResultType.FORM
         assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_options_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+    """Test we show the options form."""
+
+    with patch(
+        "homeassistant.components.imap.coordinator.connect_to_server"
+    ) as mock_client_coordinator:
+        mock_client_coordinator.return_value.search.return_value = ("OK", [b""])
+        entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    new_config = MOCK_CONFIG.copy()
+    new_config["server"] = "imap2.server.com"
+    new_config["folder"] = "INBOX.Notifications"
+    new_config["charset"] = "utf-16"
+    new_config["search"] = "UnSeen UnDeleted!!INVALID"
+
+    with patch(
+        "homeassistant.components.imap.config_flow.connect_to_server"
+    ) as mock_client:
+        mock_client.return_value.search.return_value = ("BAD", [b"Invalid search"])
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"], MOCK_CONFIG
+        )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {CONF_SEARCH: "invalid_search"}
+
+    new_config["search"] = "UnSeen UnDeleted"
+
+    with patch(
+        "homeassistant.components.imap.config_flow.connect_to_server"
+    ) as mock_client:
+        mock_client.return_value.search.return_value = (
+            "OK",
+            [b""],
+        )
+        result3 = await hass.config_entries.options.async_configure(
+            result2["flow_id"],
+            new_config,
+        )
+    assert result3["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result3["data"] == {}
+    assert entry.data == new_config
+
+    await hass.async_block_till_done()
