@@ -116,6 +116,7 @@ LAST_UPDATED_INDEX_TS = "ix_states_last_updated_ts"
 METADATA_ID_LAST_UPDATED_INDEX_TS = "ix_states_metadata_id_last_updated_ts"
 EVENTS_CONTEXT_ID_BIN_INDEX = "ix_events_context_id_bin"
 STATES_CONTEXT_ID_BIN_INDEX = "ix_states_context_id_bin"
+LEGACY_STATES_EVENT_ID_INDEX = "ix_states_event_id"
 CONTEXT_ID_BIN_MAX_LENGTH = 16
 
 _DEFAULT_TABLE_ARGS = {
@@ -385,9 +386,7 @@ class States(Base):
     attributes: Mapped[str | None] = mapped_column(
         Text().with_variant(mysql.LONGTEXT, "mysql", "mariadb")
     )  # no longer used for new rows
-    event_id: Mapped[int | None] = mapped_column(  # no longer used for new rows
-        Integer, ForeignKey("events.event_id", ondelete="CASCADE"), index=True
-    )
+    event_id: Mapped[int | None] = mapped_column(Integer)  # no longer used for new rows
     last_changed: Mapped[datetime | None] = mapped_column(
         DATETIME_TYPE
     )  # no longer used for new rows

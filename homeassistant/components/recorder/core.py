@@ -46,6 +46,7 @@ from .const import (
     DOMAIN,
     EVENT_TYPE_IDS_SCHEMA_VERSION,
     KEEPALIVE_TIME,
+    LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION,
     MARIADB_PYMYSQL_URL_PREFIX,
     MARIADB_URL_PREFIX,
     MAX_QUEUE_BACKLOG,
@@ -57,7 +58,9 @@ from .const import (
     SupportedDialect,
 )
 from .db_schema import (
+    LEGACY_STATES_EVENT_ID_INDEX,
     SCHEMA_VERSION,
+    TABLE_STATES,
     Base,
     EventData,
     Events,
@@ -93,6 +96,7 @@ from .tasks import (
     CompileMissingStatisticsTask,
     DatabaseLockTask,
     EntityIDMigrationTask,
+    EventIdMigrationTask,
     EventsContextIDMigrationTask,
     EventTask,
     EventTypeIDMigrationTask,
@@ -113,6 +117,7 @@ from .util import (
     dburl_to_path,
     end_incomplete_runs,
     execute_stmt_lambda_element,
+    get_index_by_name,
     is_second_sunday,
     move_away_broken_database,
     session_scope,
@@ -730,6 +735,15 @@ class Recorder(threading.Thread):
                 _LOGGER.debug("Activating states_meta manager as all data is migrated")
                 self.states_meta_manager.active = True
 
+            if self.schema_version > LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION:
+                with contextlib.suppress(SQLAlchemyError):
+                    # If the index of event_ids on the states table is still present
+                    # we need to queue a task to remove it.
+                    if get_index_by_name(
+                        session, TABLE_STATES, LEGACY_STATES_EVENT_ID_INDEX
+                    ):
+                        self.queue_task(EventIdMigrationTask())
+
         # We must only set the db ready after we have set the table managers
         # to active if there is no data to migrate.
         #
@@ -1137,6 +1151,10 @@ class Recorder(threading.Thread):
     def _post_migrate_entity_ids(self) -> bool:
         """Post migrate entity_ids if needed."""
         return migration.post_migrate_entity_ids(self)
+
+    def _cleanup_legacy_states_event_ids(self) -> bool:
+        """Cleanup legacy event_ids if needed."""
+        return migration.cleanup_legacy_states_event_ids(self)
 
     def _send_keep_alive(self) -> None:
         """Send a keep alive to keep the db connection open."""
