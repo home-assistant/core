@@ -1,6 +1,8 @@
 """Test the ZCS Azzurro Inverter config flow."""
 from unittest.mock import patch
 
+from zcs_azzurro_api import Inverter
+
 from homeassistant import config_entries
 from homeassistant.components.zcs_azzurro_inverter.config_flow import (
     CannotConnect,
@@ -9,6 +11,7 @@ from homeassistant.components.zcs_azzurro_inverter.config_flow import (
 from homeassistant.components.zcs_azzurro_inverter.const import (
     DOMAIN,
     SCHEMA_CLIENT_KEY,
+    SCHEMA_FRIENDLY_NAME,
     SCHEMA_THINGS_KEY,
 )
 from homeassistant.core import HomeAssistant
@@ -16,6 +19,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 TEST_CLIENT = "testClient"
 TEST_PASSWORD = "testPassword"
+TEST_FRIENDLY_NAME = "testDisplayedName"
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -24,11 +28,11 @@ async def test_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.zcs_azzurro_inverter.config_flow.ZcsAzzurroHub.authenticate",
-        return_value=True,
+        return_value=Inverter(TEST_CLIENT, TEST_PASSWORD, name=TEST_FRIENDLY_NAME),
     ), patch(
         "homeassistant.components.zcs_azzurro_inverter.async_setup_entry",
         return_value=True,
@@ -38,15 +42,16 @@ async def test_form(hass: HomeAssistant) -> None:
             {
                 SCHEMA_CLIENT_KEY: TEST_CLIENT,
                 SCHEMA_THINGS_KEY: TEST_PASSWORD,
+                SCHEMA_FRIENDLY_NAME: TEST_FRIENDLY_NAME,
             },
         )
         await hass.async_block_till_done()
-
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Name of the device"
+    assert result2["title"] == TEST_FRIENDLY_NAME
     assert result2["data"] == {
         SCHEMA_CLIENT_KEY: TEST_CLIENT,
         SCHEMA_THINGS_KEY: TEST_PASSWORD,
+        SCHEMA_FRIENDLY_NAME: TEST_FRIENDLY_NAME,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
