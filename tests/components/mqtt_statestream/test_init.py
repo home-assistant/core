@@ -8,7 +8,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_state_change_event
+from tests.common import MockEntity, MockEntityPlatform, mock_state_change_event
 from tests.typing import MqttMockHAClient
 
 
@@ -136,8 +136,20 @@ async def test_state_changed_event_sends_message(
     assert mqtt_mock.async_publish.called
     mqtt_mock.async_publish.reset_mock()
 
-    # Renmoving the state does not publish a new state
-    hass.states.async_remove(e_id)
+    # Create a test entity and add it to hass
+    platform = MockEntityPlatform(hass)
+    entity = MockEntity(unique_id="1234")
+    await platform.async_add_entities([entity])
+
+    mqtt_mock.async_publish.assert_called_with(
+        "pub/test_domain/test_platform_1234/state", "unknown", 1, True
+    )
+
+    state = hass.states.get("test_domain.test_platform_1234")
+    assert state is not None
+
+    # Now remove it, nowthing should be published
+    hass.states.async_remove("test_domain.test_platform_1234")
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     mqtt_mock.async_publish.assert_not_called()
