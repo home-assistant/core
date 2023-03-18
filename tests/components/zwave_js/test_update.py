@@ -104,7 +104,7 @@ async def test_update_entity_states(
 
     client.async_send_command.return_value = FIRMWARE_UPDATES
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=2))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=2))
     await hass.async_block_till_done()
 
     state = hass.states.get(UPDATE_ENTITY)
@@ -139,6 +139,15 @@ async def test_update_entity_states(
 
     assert "There is no value to refresh for this entity" in caplog.text
 
+    client.async_send_command.return_value = {"updates": []}
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=3))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(UPDATE_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+
     # Assert a node firmware update entity is not created for the controller
     driver = client.driver
     node = driver.controller.nodes[1]
@@ -164,7 +173,7 @@ async def test_update_entity_install_raises(
     """Test update entity install raises exception."""
     client.async_send_command.return_value = FIRMWARE_UPDATES
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
     await hass.async_block_till_done()
 
     # Test failed installation by driver
@@ -197,7 +206,7 @@ async def test_update_entity_sleep(
 
     client.async_send_command.return_value = FIRMWARE_UPDATES
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
     await hass.async_block_till_done()
 
     # Because node is asleep we shouldn't attempt to check for firmware updates
@@ -234,7 +243,7 @@ async def test_update_entity_dead(
 
     client.async_send_command.return_value = FIRMWARE_UPDATES
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
     await hass.async_block_till_done()
 
     # Because node is asleep we shouldn't attempt to check for firmware updates
@@ -320,7 +329,7 @@ async def test_update_entity_progress(
     node = climate_radio_thermostat_ct100_plus_different_endpoints
     client.async_send_command.return_value = FIRMWARE_UPDATES
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
     await hass.async_block_till_done()
 
     state = hass.states.get(UPDATE_ENTITY)
@@ -416,7 +425,7 @@ async def test_update_entity_install_failed(
     node = climate_radio_thermostat_ct100_plus_different_endpoints
     client.async_send_command.return_value = FIRMWARE_UPDATES
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
     await hass.async_block_till_done()
 
     state = hass.states.get(UPDATE_ENTITY)
