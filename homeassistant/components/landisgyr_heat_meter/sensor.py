@@ -43,7 +43,7 @@ _LOGGER = logging.getLogger(__name__)
 class HeatMeterSensorEntityDescription(SensorEntityDescription):
     """Heat Meter sensor description."""
 
-    value_fn: Callable | None = None
+    value_fn: Callable = lambda value: value
     response_key: str | None = None
 
 
@@ -55,7 +55,6 @@ HEAT_METER_SENSOR_TYPES = (
         device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         state_class=SensorStateClass.TOTAL,
-        value_fn=lambda value: value,
         response_key="volume_usage_m3",
     ),
     HeatMeterSensorEntityDescription(
@@ -65,7 +64,6 @@ HEAT_METER_SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfEnergy.GIGA_JOULE,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
-        value_fn=lambda value: value,
         response_key="heat_usage_gj",
     ),
     HeatMeterSensorEntityDescription(
@@ -74,7 +72,6 @@ HEAT_METER_SENSOR_TYPES = (
         name="Heat previous year GJ",
         native_unit_of_measurement=UnitOfEnergy.GIGA_JOULE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda value: value,
         response_key="heat_previous_year_gj",
     ),
     HeatMeterSensorEntityDescription(
@@ -84,7 +81,6 @@ HEAT_METER_SENSOR_TYPES = (
         device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda value: value,
         response_key="volume_previous_year_m3",
     ),
     HeatMeterSensorEntityDescription(
@@ -92,7 +88,6 @@ HEAT_METER_SENSOR_TYPES = (
         name="Ownership number",
         icon="mdi:identifier",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda value: value,
         response_key="ownership_number",
     ),
     HeatMeterSensorEntityDescription(
@@ -100,7 +95,6 @@ HEAT_METER_SENSOR_TYPES = (
         name="Error number",
         icon="mdi:home-alert",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda value: value,
         response_key="error_number",
     ),
     HeatMeterSensorEntityDescription(
@@ -108,7 +102,6 @@ HEAT_METER_SENSOR_TYPES = (
         name="Device number",
         icon="mdi:identifier",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda value: value,
         response_key="device_number",
     ),
     HeatMeterSensorEntityDescription(
@@ -117,7 +110,6 @@ HEAT_METER_SENSOR_TYPES = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda value: value,
         response_key="measurement_period_minutes",
     ),
     HeatMeterSensorEntityDescription(
@@ -126,7 +118,6 @@ HEAT_METER_SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda value: value,
         response_key="power_max_kw",
     ),
     HeatMeterSensorEntityDescription(
@@ -135,7 +126,6 @@ HEAT_METER_SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda value: value,
         response_key="power_max_previous_year_kw",
     ),
     HeatMeterSensorEntityDescription(
@@ -144,7 +134,6 @@ HEAT_METER_SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         icon="mdi:water-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda value: value,
         response_key="flowrate_max_m3ph",
     ),
     HeatMeterSensorEntityDescription(
@@ -153,7 +142,6 @@ HEAT_METER_SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         icon="mdi:water-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda value: value,
         response_key="flowrate_max_previous_year_m3ph",
     ),
     HeatMeterSensorEntityDescription(
@@ -162,7 +150,6 @@ HEAT_METER_SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda value: value,
         response_key="return_temperature_max_c",
     ),
     HeatMeterSensorEntityDescription(
@@ -171,7 +158,6 @@ HEAT_METER_SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda value: value,
         response_key="return_temperature_max_previous_year_c",
     ),
     HeatMeterSensorEntityDescription(
@@ -180,7 +166,6 @@ HEAT_METER_SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda value: value,
         response_key="flow_temperature_max_c",
     ),
     HeatMeterSensorEntityDescription(
@@ -189,7 +174,6 @@ HEAT_METER_SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda value: value,
         response_key="flow_temperature_max_previous_year_c",
     ),
     HeatMeterSensorEntityDescription(
@@ -198,7 +182,6 @@ HEAT_METER_SENSOR_TYPES = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.HOURS,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda value: value,
         response_key="operating_hours",
     ),
     HeatMeterSensorEntityDescription(
@@ -207,7 +190,6 @@ HEAT_METER_SENSOR_TYPES = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.HOURS,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda value: value,
         response_key="flow_hours",
     ),
     HeatMeterSensorEntityDescription(
@@ -216,7 +198,6 @@ HEAT_METER_SENSOR_TYPES = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.HOURS,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda value: value,
         response_key="fault_hours",
     ),
     HeatMeterSensorEntityDescription(
@@ -225,7 +206,6 @@ HEAT_METER_SENSOR_TYPES = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.HOURS,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda value: value,
         response_key="fault_hours_previous_year",
     ),
     HeatMeterSensorEntityDescription(
@@ -233,7 +213,6 @@ HEAT_METER_SENSOR_TYPES = (
         name="Yearly set day",
         icon="mdi:clock-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda value: value,
         response_key="yearly_set_day",
     ),
     HeatMeterSensorEntityDescription(
@@ -241,7 +220,6 @@ HEAT_METER_SENSOR_TYPES = (
         name="Monthly set day",
         icon="mdi:clock-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda value: value,
         response_key="monthly_set_day",
     ),
     HeatMeterSensorEntityDescription(
@@ -259,14 +237,12 @@ HEAT_METER_SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         icon="mdi:water-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda value: value,
         response_key="measuring_range_m3ph",
     ),
     HeatMeterSensorEntityDescription(
         key="settings_and_firmware",
         name="Settings and firmware",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda value: value,
         response_key="settings_and_firmware",
     ),
 )
@@ -304,10 +280,12 @@ class HeatMeterSensor(
 ):
     """Representation of a Sensor."""
 
+    entity_description: HeatMeterSensorEntityDescription
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator[HeatMeterResponse],
-        description: SensorEntityDescription,
+        description: HeatMeterSensorEntityDescription,
         device: DeviceInfo,
     ) -> None:
         """Set up the sensor with the initial values."""
@@ -321,7 +299,10 @@ class HeatMeterSensor(
     @property
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
-
-        return self.entity_description.value_fn(  # type: ignore[attr-defined]
-            getattr(self.coordinator.data, self.entity_description.response_key, None)  # type: ignore[attr-defined]
-        )
+        if self.entity_description.response_key:
+            return self.entity_description.value_fn(
+                getattr(
+                    self.coordinator.data, self.entity_description.response_key, None
+                )
+            )
+        return None
