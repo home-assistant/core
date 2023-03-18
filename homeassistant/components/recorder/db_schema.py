@@ -68,7 +68,7 @@ class Base(DeclarativeBase):
     """Base class for tables."""
 
 
-SCHEMA_VERSION = 40
+SCHEMA_VERSION = 41
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -116,6 +116,7 @@ LAST_UPDATED_INDEX_TS = "ix_states_last_updated_ts"
 METADATA_ID_LAST_UPDATED_INDEX_TS = "ix_states_metadata_id_last_updated_ts"
 EVENTS_CONTEXT_ID_BIN_INDEX = "ix_events_context_id_bin"
 STATES_CONTEXT_ID_BIN_INDEX = "ix_states_context_id_bin"
+LEGACY_STATES_EVENT_ID_INDEX = "ix_states_event_id"
 CONTEXT_ID_BIN_MAX_LENGTH = 16
 
 _DEFAULT_TABLE_ARGS = {
@@ -348,7 +349,9 @@ class EventTypes(Base):
     __table_args__ = (_DEFAULT_TABLE_ARGS,)
     __tablename__ = TABLE_EVENT_TYPES
     event_type_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
-    event_type: Mapped[str | None] = mapped_column(String(MAX_LENGTH_EVENT_EVENT_TYPE))
+    event_type: Mapped[str | None] = mapped_column(
+        String(MAX_LENGTH_EVENT_EVENT_TYPE), index=True
+    )
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
@@ -383,9 +386,7 @@ class States(Base):
     attributes: Mapped[str | None] = mapped_column(
         Text().with_variant(mysql.LONGTEXT, "mysql", "mariadb")
     )  # no longer used for new rows
-    event_id: Mapped[int | None] = mapped_column(  # no longer used for new rows
-        Integer, ForeignKey("events.event_id", ondelete="CASCADE"), index=True
-    )
+    event_id: Mapped[int | None] = mapped_column(Integer)  # no longer used for new rows
     last_changed: Mapped[datetime | None] = mapped_column(
         DATETIME_TYPE
     )  # no longer used for new rows
@@ -433,7 +434,8 @@ class States(Base):
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
-            f"<recorder.States(id={self.state_id}, entity_id='{self.entity_id}',"
+            f"<recorder.States(id={self.state_id}, entity_id='{self.entity_id}'"
+            f" metadata_id={self.metadata_id},"
             f" state='{self.state}', event_id='{self.event_id}',"
             f" last_updated='{self._last_updated_isotime}',"
             f" old_state_id={self.old_state_id}, attributes_id={self.attributes_id})>"
@@ -597,7 +599,9 @@ class StatesMeta(Base):
     __table_args__ = (_DEFAULT_TABLE_ARGS,)
     __tablename__ = TABLE_STATES_META
     metadata_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
-    entity_id: Mapped[str | None] = mapped_column(String(MAX_LENGTH_STATE_ENTITY_ID))
+    entity_id: Mapped[str | None] = mapped_column(
+        String(MAX_LENGTH_STATE_ENTITY_ID), index=True
+    )
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""

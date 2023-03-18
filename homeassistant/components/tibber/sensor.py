@@ -6,7 +6,7 @@ import datetime
 from datetime import timedelta
 import logging
 from random import randrange
-from typing import Any
+from typing import Any, cast
 
 import aiohttp
 import tibber
@@ -614,7 +614,7 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
                         5 * 365 * 24, production=is_production
                     )
 
-                    _sum = 0
+                    _sum = 0.0
                     last_stats_time = None
                 else:
                     # hourly_consumption/production_data contains the last 30 days
@@ -641,8 +641,9 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
                         None,
                         {"sum"},
                     )
-                    _sum = stat[statistic_id][0]["sum"]
-                    last_stats_time = stat[statistic_id][0]["start"]
+                    first_stat = stat[statistic_id][0]
+                    _sum = cast(float, first_stat["sum"])
+                    last_stats_time = first_stat["start"]
 
                 statistics = []
 

@@ -114,13 +114,14 @@ class PurgeEntitiesTask(RecorderTask):
     """Object to store entity information about purge task."""
 
     entity_filter: Callable[[str], bool]
+    purge_before: datetime
 
     def run(self, instance: Recorder) -> None:
         """Purge entities from the database."""
-        if purge.purge_entity_data(instance, self.entity_filter):
+        if purge.purge_entity_data(instance, self.entity_filter, self.purge_before):
             return
         # Schedule a new purge task if this one didn't finish
-        instance.queue_task(PurgeEntitiesTask(self.entity_filter))
+        instance.queue_task(PurgeEntitiesTask(self.entity_filter, self.purge_before))
 
 
 @dataclass
@@ -148,6 +149,18 @@ class StatisticsTask(RecorderTask):
             return
         # Schedule a new statistics task if this one didn't finish
         instance.queue_task(StatisticsTask(self.start, self.fire_events))
+
+
+@dataclass
+class CompileMissingStatisticsTask(RecorderTask):
+    """An object to insert into the recorder queue to run a compile missing statistics."""
+
+    def run(self, instance: Recorder) -> None:
+        """Run statistics task to compile missing statistics."""
+        if statistics.compile_missing_statistics(instance):
+            return
+        # Schedule a new statistics task if this one didn't finish
+        instance.queue_task(CompileMissingStatisticsTask())
 
 
 @dataclass
@@ -425,3 +438,17 @@ class EntityIDPostMigrationTask(RecorderTask):
         ):
             # Schedule a new migration task if this one didn't finish
             instance.queue_task(EntityIDPostMigrationTask())
+
+
+@dataclass
+class EventIdMigrationTask(RecorderTask):
+    """An object to insert into the recorder queue to cleanup legacy event_ids in the states table.
+
+    This task should only be queued if the ix_states_event_id index exists
+    since it is used to scan the states table and it will be removed after this
+    task is run if its no longer needed.
+    """
+
+    def run(self, instance: Recorder) -> None:
+        """Clean up the legacy event_id index on states."""
+        instance._cleanup_legacy_states_event_ids()  # pylint: disable=[protected-access]
