@@ -18,10 +18,17 @@
   },
   "entity_component": {
     "_": {
+      "name": "[%key:component::switch::title%]",
       "state": {
         "off": "[%key:common::state::off%]",
         "on": "[%key:common::state::on%]"
       }
+    },
+    "switch": {
+      "name": "[%key:component::switch::entity_component::_::name%]"
+    },
+    "outlet": {
+      "name": "Outlet"
     }
   }
 }

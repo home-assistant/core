@@ -12,6 +12,7 @@
   },
   "entity_component": {
     "_": {
+      "name": "[%key:component::sun::title%]",
       "state": {
         "above_horizon": "Above horizon",
         "below_horizon": "Below horizon"

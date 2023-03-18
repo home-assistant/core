@@ -2,6 +2,7 @@
   "title": "Camera",
   "entity_component": {
     "_": {
+      "name": "[%key:component::camera::title%]",
       "state": {
         "recording": "Recording",
         "streaming": "Streaming",

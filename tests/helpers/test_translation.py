@@ -383,22 +383,25 @@ async def test_caching(hass: HomeAssistant) -> None:
 
         for key in load1:
             assert key.startswith(
-                "component.sensor.entity_component._.state."
-            ) or key.startswith("component.light.entity_component._.state.")
+                (
+                    "component.sensor.entity_component.",
+                    "component.light.entity_component.",
+                )
+            )
 
     load_sensor_only = await translation.async_get_translations(
         hass, "en", "entity_component", integrations={"sensor"}
     )
     assert load_sensor_only
     for key in load_sensor_only:
-        assert key.startswith("component.sensor.entity_component._.state.")
+        assert key.startswith("component.sensor.entity_component.")
 
     load_light_only = await translation.async_get_translations(
         hass, "en", "entity_component", integrations={"light"}
     )
     assert load_light_only
     for key in load_light_only:
-        assert key.startswith("component.light.entity_component._.state.")
+        assert key.startswith("component.light.entity_component.")
 
     hass.config.components.add("media_player")
 

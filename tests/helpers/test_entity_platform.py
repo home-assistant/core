@@ -46,6 +46,7 @@ async def test_polling_only_updates_entities_it_should_poll(
 ) -> None:
     """Test the polling of only updated entities."""
     component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
+    await component.async_setup({})
 
     no_poll_ent = MockEntity(should_poll=False)
     no_poll_ent.async_update = Mock()
@@ -78,6 +79,7 @@ async def test_polling_disabled_by_config_entry(hass: HomeAssistant) -> None:
 async def test_polling_updates_entities_with_exception(hass: HomeAssistant) -> None:
     """Test the updated entities that not break with an exception."""
     component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
+    await component.async_setup({})
 
     update_ok = []
     update_err = []
@@ -115,6 +117,7 @@ async def test_polling_updates_entities_with_exception(hass: HomeAssistant) -> N
 async def test_update_state_adds_entities(hass: HomeAssistant) -> None:
     """Test if updating poll entities cause an entity to be added works."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
 
     ent1 = MockEntity()
     ent2 = MockEntity(should_poll=True)
@@ -134,6 +137,7 @@ async def test_update_state_adds_entities_with_update_before_add_true(
 ) -> None:
     """Test if call update before add to state machine."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
 
     ent = MockEntity()
     ent.update = Mock(spec_set=True)
@@ -150,6 +154,7 @@ async def test_update_state_adds_entities_with_update_before_add_false(
 ) -> None:
     """Test if not call update before add to state machine."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
 
     ent = MockEntity()
     ent.update = Mock(spec_set=True)
@@ -199,6 +204,7 @@ async def test_adding_entities_with_generator_and_thread_callback(
     it into an async context.
     """
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
 
     def create_entity(number: int) -> MockEntity:
         """Create entity helper."""
@@ -259,6 +265,7 @@ async def test_platform_error_slow_setup(
 async def test_updated_state_used_for_entity_id(hass: HomeAssistant) -> None:
     """Test that first update results used for entity ID generation."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
 
     class MockEntityNameFetcher(MockEntity):
         """Mock entity that fetches a friendly name."""
@@ -407,6 +414,7 @@ async def test_raise_error_on_update(hass: HomeAssistant) -> None:
     """Test the add entity if they raise an error on update."""
     updates = []
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
     entity1 = MockEntity(name="test_1")
     entity2 = MockEntity(name="test_2")
 
@@ -431,6 +439,7 @@ async def test_raise_error_on_update(hass: HomeAssistant) -> None:
 async def test_async_remove_with_platform(hass: HomeAssistant) -> None:
     """Remove an entity from a platform."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
     entity1 = MockEntity(name="test_1")
     await component.async_add_entities([entity1])
     assert len(hass.states.async_entity_ids()) == 1
@@ -441,6 +450,7 @@ async def test_async_remove_with_platform(hass: HomeAssistant) -> None:
 async def test_async_remove_with_platform_update_finishes(hass: HomeAssistant) -> None:
     """Remove an entity when an update finishes after its been removed."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
     entity1 = MockEntity(name="test_1")
 
     async def _delayed_update(*args, **kwargs):
@@ -471,6 +481,7 @@ async def test_not_adding_duplicate_entities_with_unique_id(
     """
     caplog.set_level(logging.ERROR)
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
 
     ent1 = MockEntity(name="test1", unique_id="not_very_unique")
     await component.async_add_entities([ent1])
@@ -504,6 +515,7 @@ async def test_not_adding_duplicate_entities_with_unique_id(
 async def test_using_prescribed_entity_id(hass: HomeAssistant) -> None:
     """Test for using predefined entity ID."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
     await component.async_add_entities(
         [MockEntity(name="bla", entity_id="hello.world")]
     )
@@ -513,6 +525,7 @@ async def test_using_prescribed_entity_id(hass: HomeAssistant) -> None:
 async def test_using_prescribed_entity_id_with_unique_id(hass: HomeAssistant) -> None:
     """Test for amending predefined entity ID because currently exists."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
 
     await component.async_add_entities([MockEntity(entity_id="test_domain.world")])
     await component.async_add_entities(
@@ -527,6 +540,7 @@ async def test_using_prescribed_entity_id_which_is_registered(
 ) -> None:
     """Test not allowing predefined entity ID that already registered."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
     # Register test_domain.world
     entity_registry.async_get_or_create(
         DOMAIN, "test", "1234", suggested_object_id="world"
@@ -543,6 +557,7 @@ async def test_name_which_conflict_with_registered(
 ) -> None:
     """Test not generating conflicting entity ID based on name."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
 
     # Register test_domain.world
     entity_registry.async_get_or_create(
@@ -559,6 +574,7 @@ async def test_entity_with_name_and_entity_id_getting_registered(
 ) -> None:
     """Ensure that entity ID is used for registration."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
     await component.async_add_entities(
         [MockEntity(unique_id="1234", name="bla", entity_id="test_domain.world")]
     )
@@ -568,6 +584,7 @@ async def test_entity_with_name_and_entity_id_getting_registered(
 async def test_overriding_name_from_registry(hass: HomeAssistant) -> None:
     """Test that we can override a name via the Entity Registry."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
     mock_registry(
         hass,
         {
@@ -625,6 +642,7 @@ async def test_unique_id_conflict_has_priority_over_disabled_entity(
 ) -> None:
     """Test that an entity that is not unique has priority over a disabled entity."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
     entity1 = MockEntity(
         name="test1", unique_id="not_very_unique", enabled_by_default=False
     )
@@ -1192,6 +1210,7 @@ async def test_device_info_change_to_no_url(
 async def test_entity_disabled_by_integration(hass: HomeAssistant) -> None:
     """Test entity disabled by integration."""
     component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
+    await component.async_setup({})
 
     entity_default = MockEntity(unique_id="default")
     entity_disabled = MockEntity(
@@ -1254,6 +1273,7 @@ async def test_entity_disabled_by_device(hass: HomeAssistant) -> None:
 async def test_entity_hidden_by_integration(hass: HomeAssistant) -> None:
     """Test entity hidden by integration."""
     component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
+    await component.async_setup({})
 
     entity_default = MockEntity(unique_id="default")
     entity_hidden = MockEntity(
@@ -1273,6 +1293,7 @@ async def test_entity_hidden_by_integration(hass: HomeAssistant) -> None:
 async def test_entity_info_added_to_entity_registry(hass: HomeAssistant) -> None:
     """Test entity info is written to entity registry."""
     component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
+    await component.async_setup({})
 
     entity_default = MockEntity(
         capability_attributes={"max": 100},
@@ -1323,6 +1344,7 @@ async def test_override_restored_entities(
     hass.states.async_set("test_domain.world", "unavailable", {"restored": True})
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
 
     await component.async_add_entities(
         [MockEntity(unique_id="1234", state="on", entity_id="test_domain.world")], True

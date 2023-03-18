@@ -17,6 +17,7 @@
   },
   "entity_component": {
     "_": {
+      "name": "Thermostat",
       "state": {
         "off": "[%key:common::state::off%]",
         "heat": "Heat",
