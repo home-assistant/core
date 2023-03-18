@@ -87,6 +87,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         self._latest_version_firmware: NodeFirmwareUpdateInfo | None = None
         self._status_unsub: Callable[[], None] | None = None
         self._poll_unsub: Callable[[], None] | None = None
+        self._delay_unsub: Callable[[], None] | None = None
         self._progress_unsub: Callable[[], None] | None = None
         self._finished_unsub: Callable[[], None] | None = None
         self._finished_event = asyncio.Event()
@@ -140,6 +141,17 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         self._attr_in_progress = False
         if write_state:
             self.async_write_ha_state()
+
+    @callback
+    def _release_lock_and_schedule_update(self, _: datetime | None = None) -> None:
+        """Release the lock and schedule next update."""
+        self.lock.release()
+        self._poll_unsub = async_call_later(
+            self.hass, timedelta(days=1), self._async_update
+        )
+        if self._delay_unsub:
+            self._delay_unsub()
+            self._delay_unsub = None
 
     async def _async_update(self, _: HomeAssistant | datetime | None = None) -> None:
         """Update the entity."""
@@ -199,10 +211,10 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             # update. Useful especially at startup because all the entities get created
             # in parallel and this ensures the first requests get spaced out, avoiding
             # a network traffic flood.
-            await asyncio.sleep(UPDATE_DELAY)
-            self.lock.release()
-            self._poll_unsub = async_call_later(
-                self.hass, timedelta(days=1), self._async_update
+            self._delay_unsub = async_call_later(
+                self.hass,
+                timedelta(seconds=UPDATE_DELAY),
+                self._release_lock_and_schedule_update,
             )
 
     async def async_release_notes(self) -> str | None:
@@ -296,5 +308,9 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         if self._poll_unsub:
             self._poll_unsub()
             self._poll_unsub = None
+
+        if self._delay_unsub:
+            self._delay_unsub()
+            self._delay_unsub = None
 
         self._unsub_firmware_events_and_reset_progress(False)
