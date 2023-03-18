@@ -581,7 +581,7 @@ async def test_restart_takes_longer_than_watchdog_time(
 async def test_setup_and_stop_macos(
     hass: HomeAssistant, mock_bleak_scanner_start: MagicMock, macos_adapter: None
 ) -> None:
-    """Test we and setup and stop the scanner the passive scanner."""
+    """Test we enable use_bdaddr on MacOS."""
     entry = MockConfigEntry(
         domain=bluetooth.DOMAIN,
         data={},
