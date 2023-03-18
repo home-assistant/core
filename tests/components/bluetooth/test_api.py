@@ -8,11 +8,16 @@ from homeassistant.components.bluetooth import (
     HaBluetoothConnector,
     async_scanner_by_source,
     async_scanner_devices_by_address,
-    generate_ble_device,
 )
 from homeassistant.core import HomeAssistant
 
-from . import FakeScanner, MockBleakClient, _get_manager, generate_advertisement_data
+from . import (
+    FakeScanner,
+    MockBleakClient,
+    _get_manager,
+    generate_advertisement_data,
+    generate_ble_device,
+)
 
 
 async def test_scanner_by_source(hass: HomeAssistant, enable_bluetooth: None) -> None:
