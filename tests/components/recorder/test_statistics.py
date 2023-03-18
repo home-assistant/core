@@ -26,6 +26,7 @@ from homeassistant.components.recorder.statistics import (
     _generate_max_mean_min_statistic_in_sub_period_stmt,
     _generate_statistics_at_time_stmt,
     _generate_statistics_during_period_stmt,
+    _get_future_year,
     _statistics_during_period_with_session,
     async_add_external_statistics,
     async_import_statistics,
@@ -1612,7 +1613,8 @@ async def test_validate_db_schema_fix_float_issue(
     orig_error = MagicMock()
     orig_error.args = [1366]
     precise_number = 1.000000000000001
-    precise_time = datetime(2020, 10, 6, microsecond=1, tzinfo=dt_util.UTC)
+    fixed_future_year = _get_future_year()
+    precise_time = datetime(fixed_future_year, 10, 6, microsecond=1, tzinfo=dt_util.UTC)
     statistics = {
         "recorder.db_test": [
             {
@@ -1632,6 +1634,9 @@ async def test_validate_db_schema_fix_float_issue(
 
     with patch(
         "homeassistant.components.recorder.core.Recorder.dialect_name", db_engine
+    ), patch(
+        "homeassistant.components.recorder.statistics._get_future_year",
+        return_value=fixed_future_year,
     ), patch(
         "homeassistant.components.recorder.statistics._statistics_during_period_with_session",
         side_effect=fake_statistics,
