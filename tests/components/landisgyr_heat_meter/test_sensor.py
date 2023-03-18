@@ -5,10 +5,7 @@ from unittest.mock import patch
 
 import serial
 
-from homeassistant.components.homeassistant import (
-    DOMAIN as HA_DOMAIN,
-    SERVICE_UPDATE_ENTITY,
-)
+from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
 from homeassistant.components.landisgyr_heat_meter.const import DOMAIN, POLLING_INTERVAL
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
@@ -17,7 +14,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
@@ -74,13 +70,6 @@ async def test_create_sensors(
 
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await async_setup_component(hass, HA_DOMAIN, {})
-    await hass.async_block_till_done()
-    await hass.services.async_call(
-        HA_DOMAIN,
-        SERVICE_UPDATE_ENTITY,
-        {ATTR_ENTITY_ID: "sensor.heat_meter_heat_usage_gj"},
-        blocking=True,
-    )
     await hass.async_block_till_done()
 
     # check if 26 attributes have been created
@@ -140,13 +129,6 @@ async def test_exception_on_polling(mock_heat_meter, hass: HomeAssistant) -> Non
 
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await async_setup_component(hass, HA_DOMAIN, {})
-    await hass.async_block_till_done()
-    await hass.services.async_call(
-        HA_DOMAIN,
-        SERVICE_UPDATE_ENTITY,
-        {ATTR_ENTITY_ID: "sensor.heat_meter_heat_usage_gj"},
-        blocking=True,
-    )
     await hass.async_block_till_done()
 
     # check if initial setup succeeded
