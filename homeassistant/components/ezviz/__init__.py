@@ -57,7 +57,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Initialize EZVIZ cloud entities
     if PLATFORMS_BY_TYPE[sensor_type]:
-
         # Initiate reauth config flow if account token if not present.
         if not entry.data.get(CONF_SESSION_ID):
             raise ConfigEntryAuthFailed
