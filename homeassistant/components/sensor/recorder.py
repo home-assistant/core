@@ -145,31 +145,36 @@ def _parse_float(state: str) -> float:
     return fstate
 
 
+def _float_or_none(state: str) -> float | None:
+    """Return a float or None."""
+    try:
+        return _parse_float(state)
+    except (ValueError, TypeError):
+        return None
+
+
+def _entity_history_to_float_and_state(
+    entity_history: Iterable[State],
+) -> list[tuple[float, State]]:
+    """Return a list of (float, state) tuples for the given entity."""
+    return [
+        (fstate, state)
+        for state in entity_history
+        if (fstate := _float_or_none(state.state)) is not None
+    ]
+
+
 def _normalize_states(
     hass: HomeAssistant,
-    session: Session,
     old_metadatas: dict[str, tuple[int, StatisticMetaData]],
-    entity_history: Iterable[State],
+    fstates: list[tuple[float, State]],
     entity_id: str,
 ) -> tuple[str | None, list[tuple[float, State]]]:
     """Normalize units."""
-    old_metadata = old_metadatas[entity_id][1] if entity_id in old_metadatas else None
     state_unit: str | None = None
-
-    fstates: list[tuple[float, State]] = []
-    for state in entity_history:
-        try:
-            fstate = _parse_float(state.state)
-        except (ValueError, TypeError):  # TypeError to guard for NULL state in DB
-            continue
-        fstates.append((fstate, state))
-
-    if not fstates:
-        return None, fstates
-
-    state_unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-
     statistics_unit: str | None
+    state_unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+    old_metadata = old_metadatas[entity_id][1] if entity_id in old_metadatas else None
     if not old_metadata:
         # We've not seen this sensor before, the first valid state determines the unit
         # used for statistics
@@ -379,7 +384,15 @@ def compile_statistics(
 
     Note: This will query the database and must not be run in the event loop
     """
-    with recorder_util.session_scope(hass=hass) as session:
+    # There is already an active session when this code is called since
+    # it is called from the recorder statistics. We need to make sure
+    # this session never gets committed since it would be out of sync
+    # with the recorder statistics session so we mark it as read only.
+    #
+    # If we ever need to write to the database from this function we
+    # will need to refactor the recorder statistics to use a single
+    # session.
+    with recorder_util.session_scope(hass=hass, read_only=True) as session:
         compiled = _compile_statistics(hass, session, start, end)
     return compiled
 
@@ -395,10 +408,6 @@ def _compile_statistics(  # noqa: C901
 
     sensor_states = _get_sensor_states(hass)
     wanted_statistics = _wanted_statistics(sensor_states)
-    old_metadatas = statistics.get_metadata_with_session(
-        session, statistic_ids=[i.entity_id for i in sensor_states]
-    )
-
     # Get history between start and end
     entities_full_history = [
         i.entity_id for i in sensor_states if "sum" in wanted_statistics[i.entity_id]
@@ -427,34 +436,41 @@ def _compile_statistics(  # noqa: C901
             entity_ids=entities_significant_history,
         )
         history_list = {**history_list, **_history_list}
-    # If there are no recent state changes, the sensor's state may already be pruned
-    # from the recorder. Get the state from the state machine instead.
-    for _state in sensor_states:
-        if _state.entity_id not in history_list:
-            history_list[_state.entity_id] = [_state]
 
-    to_process = []
-    to_query = []
+    entities_with_float_states: dict[str, list[tuple[float, State]]] = {}
     for _state in sensor_states:
         entity_id = _state.entity_id
-        if entity_id not in history_list:
+        # If there are no recent state changes, the sensor's state may already be pruned
+        # from the recorder. Get the state from the state machine instead.
+        if not (entity_history := history_list.get(entity_id, [_state])):
             continue
+        if not (float_states := _entity_history_to_float_and_state(entity_history)):
+            continue
+        entities_with_float_states[entity_id] = float_states
 
-        entity_history = history_list[entity_id]
-        statistics_unit, fstates = _normalize_states(
+    # Only lookup metadata for entities that have valid float states
+    # since it will result in cache misses for statistic_ids
+    # that are not in the metadata table and we are not working
+    # with them anyway.
+    old_metadatas = statistics.get_metadata_with_session(
+        get_instance(hass), session, statistic_ids=list(entities_with_float_states)
+    )
+    to_process: list[tuple[str, str | None, str, list[tuple[float, State]]]] = []
+    to_query: list[str] = []
+    for _state in sensor_states:
+        entity_id = _state.entity_id
+        if not (maybe_float_states := entities_with_float_states.get(entity_id)):
+            continue
+        statistics_unit, valid_float_states = _normalize_states(
             hass,
-            session,
             old_metadatas,
-            entity_history,
+            maybe_float_states,
             entity_id,
         )
-
-        if not fstates:
+        if not valid_float_states:
             continue
-
-        state_class = _state.attributes[ATTR_STATE_CLASS]
-
-        to_process.append((entity_id, statistics_unit, state_class, fstates))
+        state_class: str = _state.attributes[ATTR_STATE_CLASS]
+        to_process.append((entity_id, statistics_unit, state_class, valid_float_states))
         if "sum" in wanted_statistics[entity_id]:
             to_query.append(entity_id)
 
@@ -465,7 +481,7 @@ def _compile_statistics(  # noqa: C901
         entity_id,
         statistics_unit,
         state_class,
-        fstates,
+        valid_float_states,
     ) in to_process:
         # Check metadata
         if old_metadata := old_metadatas.get(entity_id):
@@ -507,20 +523,20 @@ def _compile_statistics(  # noqa: C901
         if "max" in wanted_statistics[entity_id]:
             stat["max"] = max(
                 *itertools.islice(
-                    zip(*fstates),  # type: ignore[typeddict-item]
+                    zip(*valid_float_states),  # type: ignore[typeddict-item]
                     1,
                 )
             )
         if "min" in wanted_statistics[entity_id]:
             stat["min"] = min(
                 *itertools.islice(
-                    zip(*fstates),  # type: ignore[typeddict-item]
+                    zip(*valid_float_states),  # type: ignore[typeddict-item]
                     1,
                 )
             )
 
         if "mean" in wanted_statistics[entity_id]:
-            stat["mean"] = _time_weighted_average(fstates, start, end)
+            stat["mean"] = _time_weighted_average(valid_float_states, start, end)
 
         if "sum" in wanted_statistics[entity_id]:
             last_reset = old_last_reset = None
@@ -535,7 +551,7 @@ def _compile_statistics(  # noqa: C901
                 new_state = old_state = last_stat["state"]
                 _sum = last_stat["sum"] or 0.0
 
-            for fstate, state in fstates:
+            for fstate, state in valid_float_states:
                 reset = False
                 if (
                     state_class != SensorStateClass.TOTAL_INCREASING

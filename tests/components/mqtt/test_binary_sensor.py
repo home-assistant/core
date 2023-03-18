@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import binary_sensor, mqtt
@@ -54,7 +55,7 @@ from tests.common import (
     async_fire_time_changed,
     mock_restore_cache,
 )
-from tests.typing import MqttMockHAClientGenerator
+from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {
@@ -1071,16 +1072,12 @@ async def test_entity_debug_info_message(
 
 async def test_reloadable(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-    tmp_path: Path,
+    mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = binary_sensor.DOMAIN
     config = DEFAULT_CONFIG
-    await help_test_reloadable(
-        hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, domain, config
-    )
+    await help_test_reloadable(hass, mqtt_client_mock, domain, config)
 
 
 @pytest.mark.parametrize(
@@ -1092,7 +1089,7 @@ async def test_cleanup_triggers_and_restoring_state(
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
     tmp_path: Path,
-    freezer,
+    freezer: FrozenDateTimeFactory,
     payload1,
     state1,
     payload2,
@@ -1151,7 +1148,7 @@ async def test_cleanup_triggers_and_restoring_state(
 async def test_skip_restoring_state_with_over_due_expire_trigger(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test restoring a state with over due expire timer."""
 
@@ -1187,12 +1184,11 @@ async def test_setup_manual_entity_from_yaml(hass: HomeAssistant) -> None:
 
 async def test_unload_entry(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    tmp_path: Path,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test unloading the config entry."""
     domain = binary_sensor.DOMAIN
     config = DEFAULT_CONFIG
     await help_test_unload_config_entry_with_platform(
-        hass, mqtt_mock_entry_with_yaml_config, tmp_path, domain, config
+        hass, mqtt_mock_entry_no_yaml_config, domain, config
     )

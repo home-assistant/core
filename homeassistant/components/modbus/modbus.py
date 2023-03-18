@@ -137,8 +137,10 @@ async def async_modbus_setup(
         for name in hubs:
             if not await hubs[name].async_setup():
                 return False
+        hub_collect = hass.data[DOMAIN]
+    else:
+        hass.data[DOMAIN] = hub_collect = {}
 
-    hass.data[DOMAIN] = hub_collect = {}
     for conf_hub in config[DOMAIN]:
         my_hub = ModbusHub(hass, conf_hub)
         hub_collect[conf_hub[CONF_NAME]] = my_hub
