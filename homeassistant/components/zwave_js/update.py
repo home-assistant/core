@@ -20,6 +20,7 @@ from zwave_js_server.model.node.firmware import (
 )
 
 from homeassistant.components.update import (
+    ATTR_LATEST_VERSION,
     UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityFeature,
@@ -289,8 +290,12 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         )
 
         # Turn state off to start if there is no skipped version
-        if not getattr(self, "_UpdateEntity__skipped_version"):
+        if not (state := await self.async_get_last_state()):
             self._attr_latest_version = self._attr_installed_version
+        else:
+            self._attr_latest_version = state.attributes.get(
+                ATTR_LATEST_VERSION, self._attr_installed_version
+            )
 
         # Spread updates out in 5 minute increments to avoid flooding the network
         self.async_on_remove(
