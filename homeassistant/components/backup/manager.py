@@ -187,13 +187,8 @@ class BackupManager:
                 "compressed": True,
             }
             tar_file_path = Path(self.backup_dir, f"{backup_data['slug']}.tar")
-
-            if not self.backup_dir.exists():
-                LOGGER.debug("Creating backup directory")
-                self.hass.async_add_executor_job(self.backup_dir.mkdir)
-
-            await self.hass.async_add_executor_job(
-                self._generate_backup_contents,
+            size_in_bytes = await self.hass.async_add_executor_job(
+                self._mkdir_and_generate_backup_contents,
                 tar_file_path,
                 backup_data,
             )
@@ -202,7 +197,7 @@ class BackupManager:
                 name=backup_name,
                 date=date_str,
                 path=tar_file_path,
-                size=round(tar_file_path.stat().st_size / 1_048_576, 2),
+                size=round(size_in_bytes / 1_048_576, 2),
             )
             if self.loaded_backups:
                 self.backups[slug] = backup
@@ -221,12 +216,16 @@ class BackupManager:
                 if isinstance(result, Exception):
                     raise result
 
-    def _generate_backup_contents(
+    def _mkdir_and_generate_backup_contents(
         self,
         tar_file_path: Path,
         backup_data: dict[str, Any],
-    ) -> None:
-        """Generate backup contents."""
+    ) -> int:
+        """Generate backup contents and return the size."""
+        if not self.backup_dir.exists():
+            LOGGER.debug("Creating backup directory")
+            self.backup_dir.mkdir()
+
         with TemporaryDirectory() as tmp_dir, SecureTarFile(
             tar_file_path, "w", gzip=False
         ) as tar_file:
@@ -246,6 +245,7 @@ class BackupManager:
                     arcname="data",
                 )
             tar_file.add(tmp_dir_path, arcname=".")
+        return tar_file_path.stat().st_size
 
 
 def _generate_slug(date: str, name: str) -> str:
