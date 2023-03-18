@@ -287,6 +287,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             )
         )
 
+        # Spread updates out in 5 minute increments to avoid flooding the network
         self.async_on_remove(
             async_call_later(
                 self.hass,
