@@ -285,6 +285,7 @@ async def test_update_entity_ha_not_running(
 
     assert len(client.async_send_command.call_args_list) == 0
 
+    # Update should be delayed by a day because HA is not running
     hass.state = CoreState.starting
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
