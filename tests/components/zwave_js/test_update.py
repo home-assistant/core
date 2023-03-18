@@ -85,7 +85,7 @@ async def test_update_entity_states(
 
     client.async_send_command.return_value = {"updates": []}
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
     await hass.async_block_till_done()
 
     state = hass.states.get(UPDATE_ENTITY)
@@ -272,6 +272,12 @@ async def test_update_entity_ha_not_running(
     assert len(client.async_send_command.call_args_list) == 0
 
     await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(client.async_send_command.call_args_list) == 0
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
+    await hass.async_block_till_done()
 
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args_list[0][0][0]
@@ -289,7 +295,7 @@ async def test_update_entity_update_failure(
     assert len(client.async_send_command.call_args_list) == 0
     client.async_send_command.side_effect = FailedZWaveCommand("test", 260, "test")
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
     await hass.async_block_till_done()
 
     state = hass.states.get(UPDATE_ENTITY)
@@ -503,7 +509,7 @@ async def test_update_entity_reload(
 
     client.async_send_command.return_value = {"updates": []}
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
     await hass.async_block_till_done()
 
     state = hass.states.get(UPDATE_ENTITY)
@@ -512,7 +518,7 @@ async def test_update_entity_reload(
 
     client.async_send_command.return_value = FIRMWARE_UPDATES
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=2))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=2))
     await hass.async_block_till_done()
 
     state = hass.states.get(UPDATE_ENTITY)
@@ -543,7 +549,7 @@ async def test_update_entity_reload(
     await hass.async_block_till_done()
 
     # Trigger another update and make sure the skipped version is still skipped
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=4))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=4))
     await hass.async_block_till_done()
 
     state = hass.states.get(UPDATE_ENTITY)

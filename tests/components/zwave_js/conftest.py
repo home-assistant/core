@@ -13,16 +13,6 @@ from zwave_js_server.version import VersionInfo
 
 from tests.common import MockConfigEntry, load_fixture
 
-# Misc fixtures
-
-
-@pytest.fixture(name="skip_update_delay", autouse=True)
-def skip_update_delay_fixture():
-    """Set the UPDATE_DELAY constant to 0."""
-    with patch("homeassistant.components.zwave_js.update.UPDATE_DELAY", 0):
-        yield
-
-
 # Add-on fixtures
 
 

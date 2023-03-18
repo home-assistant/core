@@ -146,16 +146,16 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
 
     async def _async_update(self, _: HomeAssistant | datetime | None = None) -> None:
         """Update the entity."""
+        if self._poll_unsub:
+            self._poll_unsub()
+            self._poll_unsub = None
+
         # If hass hasn't started yet, push the next update to the next day so that we
         # can preserve the offsets we've created between each node
         if not self.hass.is_running:
             self._poll_unsub = async_call_later(
                 self.hass, timedelta(days=1), self._async_update
             )
-
-        if self._poll_unsub:
-            self._poll_unsub()
-            self._poll_unsub = None
 
         # If device is asleep/dead, wait for it to wake up/become alive before
         # attempting an update
@@ -289,6 +289,8 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         )
 
         # Spread updates out in 5 minute increments to avoid flooding the network
+        if not getattr(self, "_UpdateEntity__skipped_version"):
+            self._attr_latest_version = self._attr_installed_version
         self.async_on_remove(
             async_call_later(
                 self.hass,
