@@ -85,6 +85,9 @@ async def async_setup_entry(
     @callback
     def async_add_firmware_update_entity(node: ZwaveNode) -> None:
         """Add firmware update entity."""
+        # We need to delay the first update of each entity to avoid flooding the network
+        # so we maintain a counter to schedule first update in UPDATE_DELAY_INTERVAL
+        # minute increments.
         cnt[UPDATE_DELAY_STRING] += 1
         delay = timedelta(minutes=(cnt[UPDATE_DELAY_STRING] * UPDATE_DELAY_INTERVAL))
         driver = client.driver
