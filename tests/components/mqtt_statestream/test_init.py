@@ -1,6 +1,8 @@
 """The tests for the MQTT statestream component."""
 from unittest.mock import ANY, call
 
+import pytest
+
 import homeassistant.components.mqtt_statestream as statestream
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CoreState, HomeAssistant, State
@@ -94,6 +96,14 @@ async def test_setup_and_stop_waits_for_ha(
     mqtt_mock.async_publish.assert_not_called()
 
 
+async def test_startup_no_mqtt(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test startup without MQTT support."""
+    assert not await add_statestream(hass, base_topic="pub")
+    assert "MQTT integration is not available" in caplog.text
+
+
 async def test_setup_succeeds_with_attributes(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient
 ) -> None:
@@ -124,6 +134,13 @@ async def test_state_changed_event_sends_message(
     # Make sure 'on' was published to pub/fake/entity/state
     mqtt_mock.async_publish.assert_called_with("pub/fake/entity/state", "on", 1, True)
     assert mqtt_mock.async_publish.called
+    mqtt_mock.async_publish.reset_mock()
+
+    # Set a state of an entity
+    mock_state_change_event(hass, None)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    mqtt_mock.async_publish.assert_not_called()
 
 
 async def test_state_changed_event_sends_message_and_timestamp(
