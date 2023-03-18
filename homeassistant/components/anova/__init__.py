@@ -16,17 +16,25 @@ PLATFORMS = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Anova from a config entry."""
-    device = AnovaPrecisionCooker(
-        aiohttp_client.async_get_clientsession(hass),
-        entry.data["device_key"],
-        entry.data["type"],
-        entry.data["jwt"],
-    )
-    coordinator = AnovaCoordinator(hass, device)
-    await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-    firmware_version = coordinator.data["sensors"][AnovaPrecisionCookerSensor.FIRMWARE_VERSION]
-    coordinator.async_setup(firmware_version)
+    devices = [
+        AnovaPrecisionCooker(
+            aiohttp_client.async_get_clientsession(hass),
+            device[0],
+            device[1],
+            entry.data["jwt"],
+        )
+        for device in entry.data["devices"]
+    ]
+    coordinators = {
+        device.device_key: AnovaCoordinator(hass, device) for device in devices
+    }
+    for coordinator in coordinators.values():
+        await coordinator.async_config_entry_first_refresh()
+        firmware_version = coordinator.data["sensors"][
+            AnovaPrecisionCookerSensor.FIRMWARE_VERSION
+        ]
+        coordinator.async_setup(firmware_version)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 

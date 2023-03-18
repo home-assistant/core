@@ -76,12 +76,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Anova device."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-    await coordinator.async_config_entry_first_refresh()
-    sensors = [
-        AnovaSensor(coordinator, description) for description in SENSOR_DESCRIPTIONS
-    ]
-    async_add_entities(sensors)
+    coordinators = hass.data[DOMAIN][entry.entry_id]
+    for coordinator in coordinators.values():
+        await coordinator.async_config_entry_first_refresh()
+        sensors = [
+            AnovaSensor(coordinator, description) for description in SENSOR_DESCRIPTIONS
+        ]
+        async_add_entities(sensors)
 
 
 class AnovaSensor(AnovaEntity, SensorEntity):

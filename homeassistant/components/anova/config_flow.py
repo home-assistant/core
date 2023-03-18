@@ -28,6 +28,8 @@ class AnovaConfligFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_USERNAME],
                 user_input[CONF_PASSWORD],
             )
+            await self.async_set_unique_id(user_input[CONF_USERNAME].lower())
+            self._abort_if_unique_id_configured()
             try:
                 await api.authenticate()
             except AnovaOffline:
@@ -39,17 +41,14 @@ class AnovaConfligFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 try:
                     devices = await api.get_devices()
-                    for device in devices:
-                        await self.async_set_unique_id(device.device_key)
-                        self._abort_if_unique_id_configured()
-                        return self.async_create_entry(
-                            title="Anova",
-                            data={
-                                "device_key": device.device_key,
-                                "jwt": api.jwt,
-                                "type": device.type,
-                            },
-                        )
+                    device_list = [
+                        (device.device_key, device.type) for device in devices
+                    ]
+                    return self.async_create_entry(
+                        title="Anova",
+                        data={"jwt": api.jwt, "devices": device_list},
+                    )
+
                 except NoDevicesFound:
                     errors["base"] = "no_devices_found"
 
