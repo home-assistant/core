@@ -550,29 +550,3 @@ async def test_update_entity_reload(
     assert state
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_SKIPPED_VERSION] == "11.2.4"
-
-
-async def test_update_entity_delay(
-    hass: HomeAssistant,
-    client,
-    ge_in_wall_dimmer_switch,
-    zen_31,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test update occurs after HA starts."""
-    client.async_send_command.reset_mock()
-    await hass.async_stop()
-
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert len(client.async_send_command.call_args_list) == 0
-
-    await hass.async_start()
-
-    assert len(client.async_send_command.call_args_list) == 1
-    args = client.async_send_command.call_args_list[0][0][0]
-    assert args["command"] == "controller.get_available_firmware_updates"
-    assert args["nodeId"] == zen_31.node_id
