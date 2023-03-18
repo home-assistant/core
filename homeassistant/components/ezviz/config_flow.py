@@ -337,7 +337,6 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="ezviz_cloud_account_missing")
 
         if user_input is not None:
-
             user_input[CONF_URL] = entry.data[CONF_URL]
 
             try:
