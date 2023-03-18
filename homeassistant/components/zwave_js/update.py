@@ -57,7 +57,9 @@ async def async_setup_entry(
         cnt[UPDATE_DELAY_STRING] += 1
         driver = client.driver
         assert driver is not None  # Driver is ready before platforms are loaded.
-        async_add_entities([ZWaveNodeFirmwareUpdate(driver, node, cnt)])
+        async_add_entities(
+            [ZWaveNodeFirmwareUpdate(driver, node, cnt[UPDATE_DELAY_STRING])]
+        )
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
@@ -81,7 +83,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(self, driver: Driver, node: ZwaveNode, cnt: Counter) -> None:
+    def __init__(self, driver: Driver, node: ZwaveNode, delay_cnt: int) -> None:
         """Initialize a Z-Wave device firmware update entity."""
         self.driver = driver
         self.node = node
@@ -92,7 +94,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         self._finished_unsub: Callable[[], None] | None = None
         self._finished_event = asyncio.Event()
         self._result: NodeFirmwareUpdateResult | None = None
-        self._delay_cnt: Final[int] = cnt[UPDATE_DELAY_STRING]
+        self._delay_cnt: Final[int] = delay_cnt
 
         # Entity class attributes
         self._attr_name = "Firmware"
