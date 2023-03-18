@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections import Counter
 from collections.abc import Callable
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from typing import Any, Final
 
@@ -32,6 +33,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.restore_state import ExtraStoredData
 
 from .const import API_KEY_FIRMWARE_UPDATE_SERVICE, DATA_CLIENT, DOMAIN, LOGGER
 from .helpers import get_device_info, get_valueless_base_unique_id
@@ -41,6 +43,33 @@ PARALLEL_UPDATES = 1
 UPDATE_DELAY_STRING = "delay"
 # In minutes
 UPDATE_DELAY_INTERVAL = 5
+
+
+@dataclass
+class ZWaveNodeFirmwareUpdateExtraStoredData(ExtraStoredData):
+    """Extra stored data for Z-Wave node firmware update entity."""
+
+    latest_version_firmware: NodeFirmwareUpdateInfo | None
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the extra data."""
+        if latest_version_firmware := (
+            asdict(self.latest_version_firmware)
+            if self.latest_version_firmware
+            else None
+        ):
+            latest_version_firmware["files"] = [
+                file_info.to_dict() for file_info in latest_version_firmware["files"]
+            ]
+        return {"latest_version_firmware": latest_version_firmware}
+
+    @classmethod
+    def from_dict(cls, data: dict) -> ZWaveNodeFirmwareUpdateExtraStoredData:
+        """Initialize the extra data from a dict."""
+        if not (firmware_dict := data["latest_version_firmware"]):
+            return cls(None)
+
+        return cls(NodeFirmwareUpdateInfo.from_dict(firmware_dict))
 
 
 async def async_setup_entry(
@@ -103,6 +132,13 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         self._attr_installed_version = node.firmware_version
         # device may not be precreated in main handler yet
         self._attr_device_info = get_device_info(driver, node)
+
+    @property
+    def extra_restore_state_data(  # pylint: disable=[hass-return-type]
+        self,
+    ) -> ZWaveNodeFirmwareUpdateExtraStoredData:
+        """Return ZWave Node Firmware Update specific state data to be restored."""
+        return ZWaveNodeFirmwareUpdateExtraStoredData(self._latest_version_firmware)
 
     @callback
     def _update_on_status_change(self, _: dict[str, Any]) -> None:
@@ -289,11 +325,23 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             )
         )
 
-        # Turn state off to start if there is no skipped version
-        if state := await self.async_get_last_state():
-            self._attr_latest_version = state.attributes.get(
-                ATTR_LATEST_VERSION, self._attr_installed_version
+        # If we have a complete previous state, use that to set the latest version
+        if (state := await self.async_get_last_state()) and (
+            extra_data := await self.async_get_last_extra_data()
+        ):
+            self._attr_latest_version = state.attributes[ATTR_LATEST_VERSION]
+            self._latest_version_firmware = (
+                ZWaveNodeFirmwareUpdateExtraStoredData.from_dict(
+                    extra_data.as_dict()
+                ).latest_version_firmware
             )
+        # Since we don't have the complete previous state, we must set the latest
+        # version to the installed version. This has the unfortunate side effect of
+        # clearing out the skipped version attribute, but this will self correct
+        # after the next update. We have to do this because if we restore a newer
+        # latest version and the user chooses to install it before the next update
+        # occurs, the installation will fail because we don't have the firmware data
+        # cached.
         else:
             self._attr_latest_version = self._attr_installed_version
 
