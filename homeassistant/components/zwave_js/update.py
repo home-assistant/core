@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections import Counter
 from collections.abc import Callable
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, Final
 
 from awesomeversion import AwesomeVersion
 from zwave_js_server.client import Client as ZwaveClient
@@ -30,14 +31,15 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.start import async_at_start
 
 from .const import API_KEY_FIRMWARE_UPDATE_SERVICE, DATA_CLIENT, DOMAIN, LOGGER
 from .helpers import get_device_info, get_valueless_base_unique_id
 
 PARALLEL_UPDATES = 1
 
-UPDATE_DELAY = 300
+# In minutes
+UPDATE_DELAY = 5
+UPDATE_DELAY_STRING = "delay"
 
 
 async def async_setup_entry(
@@ -47,15 +49,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up Z-Wave update entity from config entry."""
     client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
-
-    lock = asyncio.Lock()
+    cnt: Counter = Counter()
 
     @callback
     def async_add_firmware_update_entity(node: ZwaveNode) -> None:
         """Add firmware update entity."""
+        cnt[UPDATE_DELAY_STRING] += 1
         driver = client.driver
         assert driver is not None  # Driver is ready before platforms are loaded.
-        async_add_entities([ZWaveNodeFirmwareUpdate(driver, node, lock)])
+        async_add_entities([ZWaveNodeFirmwareUpdate(driver, node, cnt)])
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
@@ -79,19 +81,18 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(self, driver: Driver, node: ZwaveNode, lock: asyncio.Lock) -> None:
+    def __init__(self, driver: Driver, node: ZwaveNode, cnt: Counter) -> None:
         """Initialize a Z-Wave device firmware update entity."""
         self.driver = driver
         self.node = node
-        self.lock = lock
         self._latest_version_firmware: NodeFirmwareUpdateInfo | None = None
         self._status_unsub: Callable[[], None] | None = None
         self._poll_unsub: Callable[[], None] | None = None
-        self._delay_unsub: Callable[[], None] | None = None
         self._progress_unsub: Callable[[], None] | None = None
         self._finished_unsub: Callable[[], None] | None = None
         self._finished_event = asyncio.Event()
         self._result: NodeFirmwareUpdateResult | None = None
+        self._delay_cnt: Final[int] = cnt[UPDATE_DELAY_STRING]
 
         # Entity class attributes
         self._attr_name = "Firmware"
@@ -142,19 +143,15 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         if write_state:
             self.async_write_ha_state()
 
-    @callback
-    def _release_lock_and_schedule_update(self, _: datetime | None = None) -> None:
-        """Release the lock and schedule next update."""
-        self.lock.release()
-        self._poll_unsub = async_call_later(
-            self.hass, timedelta(days=1), self._async_update
-        )
-        if self._delay_unsub:
-            self._delay_unsub()
-            self._delay_unsub = None
-
     async def _async_update(self, _: HomeAssistant | datetime | None = None) -> None:
         """Update the entity."""
+        # If hass hasn't started yet, push the next update to the next day so that we
+        # can preserve the offsets we've created between each node
+        if not self.hass.is_running:
+            self._poll_unsub = async_call_later(
+                self.hass, timedelta(days=1), self._async_update
+            )
+
         if self._poll_unsub:
             self._poll_unsub()
             self._poll_unsub = None
@@ -172,7 +169,6 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
                     )
                 return
 
-        await self.lock.acquire()
         try:
             available_firmware_updates = (
                 await self.driver.controller.async_get_available_firmware_updates(
@@ -207,14 +203,8 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
                 self._attr_latest_version = self._attr_installed_version
                 self.async_write_ha_state()
         finally:
-            # Add a five minute delay before releasing the lock and queueing the next
-            # update. Useful especially at startup because all the entities get created
-            # in parallel and this ensures the first requests get spaced out, avoiding
-            # a network traffic flood.
-            self._delay_unsub = async_call_later(
-                self.hass,
-                timedelta(seconds=UPDATE_DELAY),
-                self._release_lock_and_schedule_update,
+            self._poll_unsub = async_call_later(
+                self.hass, timedelta(days=1), self._async_update
             )
 
     async def async_release_notes(self) -> str | None:
@@ -297,7 +287,13 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             )
         )
 
-        self.async_on_remove(async_at_start(self.hass, self._async_update))
+        self.async_on_remove(
+            async_call_later(
+                self.hass,
+                timedelta(minutes=(self._delay_cnt * UPDATE_DELAY)),
+                self._async_update,
+            )
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Call when entity will be removed."""
@@ -308,9 +304,5 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         if self._poll_unsub:
             self._poll_unsub()
             self._poll_unsub = None
-
-        if self._delay_unsub:
-            self._delay_unsub()
-            self._delay_unsub = None
 
         self._unsub_firmware_events_and_reset_progress(False)
