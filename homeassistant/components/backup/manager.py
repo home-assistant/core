@@ -9,7 +9,7 @@ from pathlib import Path
 import tarfile
 from tarfile import TarError
 from tempfile import TemporaryDirectory
-from typing import Any, Protocol
+from typing import Any, Protocol, cast
 
 from securetar import SecureTarFile, atomic_contents_add
 
@@ -19,6 +19,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import integration_platform
 from homeassistant.helpers.json import save_json
 from homeassistant.util import dt
+from homeassistant.util.json import json_loads_object
 
 from .const import DOMAIN, EXCLUDE_FROM_BACKUP, LOGGER
 
@@ -100,11 +101,11 @@ class BackupManager:
             try:
                 with tarfile.open(backup_path, "r:") as backup_file:
                     if data_file := backup_file.extractfile("./backup.json"):
-                        data = json.loads(data_file.read())
+                        data = json_loads_object(data_file.read())
                         backup = Backup(
-                            slug=data["slug"],
-                            name=data["name"],
-                            date=data["date"],
+                            slug=cast(str, data["slug"]),
+                            name=cast(str, data["name"]),
+                            date=cast(str, data["date"]),
                             path=backup_path,
                             size=round(backup_path.stat().st_size / 1_048_576, 2),
                         )
