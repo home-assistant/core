@@ -183,9 +183,10 @@ class CommandSwitch(TemplateEntity, SwitchEntity):
         if self._command_state:
             payload = str(await self.hass.async_add_executor_job(self._query_state))
             if self._icon_template:
-                self._attr_icon = await self.hass.async_add_executor_job(  # type: ignore[func-returns-value]
+                icon = await self.hass.async_add_executor_job(
                     self._icon_template.render_with_possible_json_value, payload
                 )
+                self._attr_icon = icon
             if self._value_template:
                 payload = await self.hass.async_add_executor_job(
                     self._value_template.render_with_possible_json_value, payload
