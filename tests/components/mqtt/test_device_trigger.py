@@ -1,11 +1,9 @@
 """The tests for MQTT device triggers."""
 import json
-from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config as hass_config
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.mqtt import _LOGGER, DOMAIN, debug_info
@@ -1443,7 +1441,6 @@ async def test_unload_entry(
     calls,
     device_registry: dr.DeviceRegistry,
     mqtt_mock: MqttMockHAClient,
-    tmp_path: Path,
 ) -> None:
     """Test unloading the MQTT entry."""
 
@@ -1486,7 +1483,7 @@ async def test_unload_entry(
     await hass.async_block_till_done()
     assert len(calls) == 1
 
-    await help_test_unload_config_entry(hass, tmp_path, {})
+    await help_test_unload_config_entry(hass)
 
     # Rediscover message and fake short press 2 (non impact)
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
@@ -1495,13 +1492,9 @@ async def test_unload_entry(
     await hass.async_block_till_done()
     assert len(calls) == 1
 
+    # Start entry again
     mqtt_entry = hass.config_entries.async_entries("mqtt")[0]
-
-    # Load the entry again
-    new_yaml_config_file = tmp_path / "configuration.yaml"
-    new_yaml_config_file.write_text("")
-    with patch.object(hass_config, "YAML_CONFIG_FILE", new_yaml_config_file):
-        await hass.config_entries.async_setup(mqtt_entry.entry_id)
+    await hass.config_entries.async_setup(mqtt_entry.entry_id)
 
     # Rediscover and fake short press 3
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)

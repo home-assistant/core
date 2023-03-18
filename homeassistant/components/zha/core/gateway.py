@@ -40,7 +40,9 @@ from .const import (
     ATTR_SIGNATURE,
     ATTR_TYPE,
     CONF_DATABASE,
+    CONF_DEVICE_PATH,
     CONF_RADIO_TYPE,
+    CONF_USE_THREAD,
     CONF_ZIGPY,
     DATA_ZHA,
     DATA_ZHA_BRIDGE_ID,
@@ -166,6 +168,15 @@ class ZHAGateway:
         )
         app_config[CONF_DATABASE] = database
         app_config[CONF_DEVICE] = self.config_entry.data[CONF_DEVICE]
+
+        # The bellows UART thread sometimes propagates a cancellation into the main Core
+        # event loop, when a connection to a TCP coordinator fails in a specific way
+        if (
+            CONF_USE_THREAD not in app_config
+            and RadioType[radio_type] is RadioType.ezsp
+            and app_config[CONF_DEVICE][CONF_DEVICE_PATH].startswith("socket://")
+        ):
+            app_config[CONF_USE_THREAD] = False
 
         app_config = app_controller_cls.SCHEMA(app_config)
 
@@ -382,7 +393,10 @@ class ZHAGateway:
             device_info = zha_device.zha_device_info
             zha_device.async_cleanup_handles()
             async_dispatcher_send(self._hass, f"{SIGNAL_REMOVE}_{str(zha_device.ieee)}")
-            asyncio.ensure_future(self._async_remove_device(zha_device, entity_refs))
+            self._hass.async_create_task(
+                self._async_remove_device(zha_device, entity_refs),
+                "ZHAGateway._async_remove_device",
+            )
             if device_info is not None:
                 async_dispatcher_send(
                     self._hass,

@@ -2,6 +2,7 @@
 from copy import deepcopy
 from http import HTTPStatus
 import json
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -1459,8 +1460,8 @@ async def test_parse_qr_code_string(
 
 
 async def test_try_parse_dsk_from_qr_code_string(
-    hass, integration, client, hass_ws_client
-):
+    hass: HomeAssistant, integration, client, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test try_parse_dsk_from_qr_code_string websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -1523,7 +1524,9 @@ async def test_try_parse_dsk_from_qr_code_string(
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
-async def test_supports_feature(hass, integration, client, hass_ws_client):
+async def test_supports_feature(
+    hass: HomeAssistant, integration, client, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test supports_feature websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -2983,12 +2986,18 @@ async def test_get_config_parameters(
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
+@pytest.mark.parametrize(
+    ("firmware_data", "expected_data"),
+    [({"target": "1"}, {"firmware_target": 1}), ({}, {})],
+)
 async def test_firmware_upload_view(
     hass: HomeAssistant,
     multisensor_6,
     integration,
     hass_client: ClientSessionGenerator,
     firmware_file,
+    firmware_data: dict[str, Any],
+    expected_data: dict[str, Any],
 ) -> None:
     """Test the HTTP firmware upload view."""
     client = await hass_client()
@@ -3001,15 +3010,19 @@ async def test_firmware_upload_view(
         "homeassistant.components.zwave_js.api.USER_AGENT",
         {"HomeAssistant": "0.0.0"},
     ):
+        data = {"file": firmware_file}
+        data.update(firmware_data)
+
         resp = await client.post(
-            f"/api/zwave_js/firmware/upload/{device.id}",
-            data={"file": firmware_file},
+            f"/api/zwave_js/firmware/upload/{device.id}", data=data
         )
+
+        update_data = NodeFirmwareUpdateData("file", bytes(10))
+        for attr, value in expected_data.items():
+            setattr(update_data, attr, value)
+
         mock_controller_cmd.assert_not_called()
-        assert mock_node_cmd.call_args[0][1:3] == (
-            multisensor_6,
-            [NodeFirmwareUpdateData("file", bytes(10))],
-        )
+        assert mock_node_cmd.call_args[0][1:3] == (multisensor_6, [update_data])
         assert mock_node_cmd.call_args[1] == {
             "additional_user_agent_components": {"HomeAssistant": "0.0.0"},
         }
@@ -3017,7 +3030,11 @@ async def test_firmware_upload_view(
 
 
 async def test_firmware_upload_view_controller(
-    hass, client, integration, hass_client: ClientSessionGenerator, firmware_file
+    hass: HomeAssistant,
+    client,
+    integration,
+    hass_client: ClientSessionGenerator,
+    firmware_file,
 ) -> None:
     """Test the HTTP firmware upload view for a controller."""
     hass_client = await hass_client()
@@ -3873,8 +3890,8 @@ async def test_subscribe_firmware_update_status_initial_value(
 
 
 async def test_subscribe_controller_firmware_update_status(
-    hass, integration, client, hass_ws_client
-):
+    hass: HomeAssistant, integration, client, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test the subscribe_firmware_update_status websocket command for a node."""
     ws_client = await hass_ws_client(hass)
     device = get_device(hass, client.driver.controller.nodes[1])
@@ -3939,8 +3956,8 @@ async def test_subscribe_controller_firmware_update_status(
 
 
 async def test_subscribe_controller_firmware_update_status_initial_value(
-    hass, client, integration, hass_ws_client
-):
+    hass: HomeAssistant, client, integration, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test subscribe_firmware_update_status cmd with in progress update for node."""
     ws_client = await hass_ws_client(hass)
     device = get_device(hass, client.driver.controller.nodes[1])

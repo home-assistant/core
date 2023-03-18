@@ -31,4 +31,4 @@ def install_multiple_zeroconf_catcher(hass_zc: HaZeroconf) -> None:
         return
 
     zeroconf.Zeroconf.__new__ = new_zeroconf_new  # type: ignore[assignment]
-    zeroconf.Zeroconf.__init__ = new_zeroconf_init  # type: ignore[assignment]
+    zeroconf.Zeroconf.__init__ = new_zeroconf_init  # type: ignore[method-assign]

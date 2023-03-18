@@ -71,4 +71,11 @@ BUTTON_TYPES: tuple[RenaultButtonEntityDescription, ...] = (
         name="Start charge",
         requires_electricity=True,
     ),
+    RenaultButtonEntityDescription(
+        async_press=lambda x: x.vehicle.set_charge_stop(),
+        key="stop_charge",
+        icon="mdi:ev-station",
+        name="Stop charge",
+        requires_electricity=True,
+    ),
 )
