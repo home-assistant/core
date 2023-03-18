@@ -136,8 +136,8 @@ async def test_state_changed_event_sends_message(
     assert mqtt_mock.async_publish.called
     mqtt_mock.async_publish.reset_mock()
 
-    # Set a state of an entity
-    mock_state_change_event(hass, None)
+    # Renmoving the state does not publish a new state
+    hass.states.async_remove(e_id)
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     mqtt_mock.async_publish.assert_not_called()
