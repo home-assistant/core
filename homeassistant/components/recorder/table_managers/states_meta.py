@@ -1,19 +1,18 @@
 """Support managing StatesMeta."""
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from typing import TYPE_CHECKING, cast
 
-from lru import LRU  # pylint: disable=no-name-in-module
 from sqlalchemy.orm.session import Session
 
 from homeassistant.core import Event
 
-from . import BaseTableManager
+from . import BaseLRUTableManager
 from ..const import SQLITE_MAX_BIND_VARS
 from ..db_schema import StatesMeta
 from ..queries import find_all_states_metadata_ids, find_states_metadata_ids
-from ..util import chunked
+from ..util import chunked, execute_stmt_lambda_element
 
 if TYPE_CHECKING:
     from ..core import Recorder
@@ -21,15 +20,13 @@ if TYPE_CHECKING:
 CACHE_SIZE = 8192
 
 
-class StatesMetaManager(BaseTableManager):
+class StatesMetaManager(BaseLRUTableManager[StatesMeta]):
     """Manage the StatesMeta table."""
 
     def __init__(self, recorder: Recorder) -> None:
         """Initialize the states meta manager."""
-        self._id_map: dict[str, int] = LRU(CACHE_SIZE)
-        self._pending: dict[str, StatesMeta] = {}
         self._did_first_load = False
-        super().__init__(recorder)
+        super().__init__(recorder, CACHE_SIZE)
 
     def load(self, events: list[Event], session: Session) -> None:
         """Load the entity_id to metadata_id mapping into memory.
@@ -66,7 +63,14 @@ class StatesMetaManager(BaseTableManager):
         This call is always thread-safe.
         """
         with session.no_autoflush:
-            return dict(tuple(session.execute(find_all_states_metadata_ids())))  # type: ignore[arg-type]
+            return dict(
+                cast(
+                    Sequence[tuple[int, str]],
+                    execute_stmt_lambda_element(
+                        session, find_all_states_metadata_ids()
+                    ),
+                )
+            )
 
     def get_many(
         self, entity_ids: Iterable[str], session: Session, from_recorder: bool
@@ -101,8 +105,8 @@ class StatesMetaManager(BaseTableManager):
 
         with session.no_autoflush:
             for missing_chunk in chunked(missing, SQLITE_MAX_BIND_VARS):
-                for metadata_id, entity_id in session.execute(
-                    find_states_metadata_ids(missing_chunk)
+                for metadata_id, entity_id in execute_stmt_lambda_element(
+                    session, find_states_metadata_ids(missing_chunk)
                 ):
                     metadata_id = cast(int, metadata_id)
                     results[entity_id] = metadata_id
@@ -111,14 +115,6 @@ class StatesMetaManager(BaseTableManager):
                         self._id_map[entity_id] = metadata_id
 
         return results
-
-    def get_pending(self, entity_id: str) -> StatesMeta | None:
-        """Get pending StatesMeta that have not be assigned ids yet.
-
-        This call is not thread-safe and must be called from the
-        recorder thread.
-        """
-        return self._pending.get(entity_id)
 
     def add_pending(self, db_states_meta: StatesMeta) -> None:
         """Add a pending StatesMeta that will be committed at the next interval.
@@ -138,15 +134,6 @@ class StatesMetaManager(BaseTableManager):
         """
         for entity_id, db_states_meta in self._pending.items():
             self._id_map[entity_id] = db_states_meta.metadata_id
-        self._pending.clear()
-
-    def reset(self) -> None:
-        """Reset the states meta manager after the database has been reset or changed.
-
-        This call is not thread-safe and must be called from the
-        recorder thread.
-        """
-        self._id_map.clear()
         self._pending.clear()
 
     def evict_purged(self, entity_ids: Iterable[str]) -> None:

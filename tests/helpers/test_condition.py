@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock, patch
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import sun
 import homeassistant.components.automation as automation
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
@@ -37,15 +36,6 @@ from tests.typing import WebSocketGenerator
 def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
-
-
-@pytest.fixture(autouse=True)
-def setup_comp(hass: HomeAssistant) -> None:
-    """Initialize components."""
-    hass.config.set_time_zone(hass.config.time_zone)
-    hass.loop.run_until_complete(
-        async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {}})
-    )
 
 
 def assert_element(trace_element, expected_element, path):
