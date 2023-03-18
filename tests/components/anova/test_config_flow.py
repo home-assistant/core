@@ -32,9 +32,8 @@ async def test_flow_user(hass: HomeAssistant) -> None:
         )
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["data"] == {
-            "device_key": DEVICE_UNIQUE_ID,
+            "devices": [(DEVICE_UNIQUE_ID, "type_sample")],
             "jwt": None,
-            "type": "type_sample",
         }
 
 

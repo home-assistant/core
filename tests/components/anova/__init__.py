@@ -46,11 +46,10 @@ def create_entry(hass: HomeAssistant) -> ConfigEntry:
         domain=DOMAIN,
         title="Anova",
         data={
-            "device_key": DEVICE_UNIQUE_ID,
+            "devices": [(DEVICE_UNIQUE_ID, "type_sample")],
             "jwt": "jwt_sample",
-            "type": "type_sample",
         },
-        unique_id=DEVICE_UNIQUE_ID,
+        unique_id="sample@gmail.com",
     )
     entry.add_to_hass(hass)
     return entry
