@@ -50,7 +50,7 @@ ADVERTISEMENT_DATA_DEFAULTS = {
 BLE_DEVICE_DEFAULTS = {
     "name": "",
     "rssi": -127,
-    "details": (),
+    "details": None,
 }
 
 
