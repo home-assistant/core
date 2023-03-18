@@ -40,11 +40,19 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
-class HeatMeterSensorEntityDescription(SensorEntityDescription):
+class HeatMeterSensorEntityDescriptionMixin:
+    """Mixin for additional Heat Meter sensor description attributes ."""
+
+    response_key: str
+
+
+@dataclass
+class HeatMeterSensorEntityDescription(
+    SensorEntityDescription, HeatMeterSensorEntityDescriptionMixin
+):
     """Heat Meter sensor description."""
 
     value_fn: Callable = lambda value: value
-    response_key: str | None = None
 
 
 HEAT_METER_SENSOR_TYPES = (
@@ -299,10 +307,6 @@ class HeatMeterSensor(
     @property
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
-        if self.entity_description.response_key:
-            return self.entity_description.value_fn(
-                getattr(
-                    self.coordinator.data, self.entity_description.response_key, None
-                )
-            )
-        return None
+        return self.entity_description.value_fn(
+            getattr(self.coordinator.data, self.entity_description.response_key, None)
+        )
