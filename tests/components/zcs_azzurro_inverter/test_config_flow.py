@@ -27,7 +27,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.zcs_azzurro_inverter.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.zcs_azzurro_inverter.config_flow.ZcsAzzurroHub.authenticate",
         return_value=True,
     ), patch(
         "homeassistant.components.zcs_azzurro_inverter.async_setup_entry",
@@ -58,7 +58,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.zcs_azzurro_inverter.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.zcs_azzurro_inverter.config_flow.ZcsAzzurroHub.authenticate",
         side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -80,7 +80,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.zcs_azzurro_inverter.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.zcs_azzurro_inverter.config_flow.ZcsAzzurroHub.authenticate",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
