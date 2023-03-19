@@ -1,7 +1,6 @@
 """Support for interfacing to the Logitech SqueezeBox API."""
 from __future__ import annotations
 
-import asyncio
 import json
 import logging
 from typing import Any
@@ -170,7 +169,9 @@ async def async_setup_entry(
         ] = async_call_later(hass, DISCOVERY_INTERVAL, _discovery)
 
     _LOGGER.debug("Adding player discovery job for LMS server: %s", host)
-    asyncio.create_task(_discovery())
+    config_entry.async_create_background_task(
+        hass, _discovery(), "squeezebox.media_player.discovery"
+    )
 
     # Register entity services
     platform = entity_platform.async_get_current_platform()
@@ -203,7 +204,7 @@ async def async_setup_entry(
 
     # Start server discovery task if not already running
     if hass.is_running:
-        asyncio.create_task(start_server_discovery(hass))
+        hass.async_create_task(start_server_discovery(hass))
     else:
         hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_START, start_server_discovery(hass)

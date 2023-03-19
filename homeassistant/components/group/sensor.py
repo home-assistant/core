@@ -1,4 +1,4 @@
-"""This platform allows several sensors to be grouped into one sensor to provide numeric combinations."""
+"""Platform allowing several sensors to be grouped into one sensor to provide numeric combinations."""
 from __future__ import annotations
 
 from collections.abc import Callable

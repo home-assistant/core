@@ -4,15 +4,11 @@ from unittest.mock import PropertyMock
 
 from freezegun import freeze_time
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker
 
 from homeassistant.components.recorder.const import SupportedDialect
 from homeassistant.components.recorder.db_schema import (
-    Base,
     EventData,
     Events,
-    RecorderRuns,
     StateAttributes,
     States,
 )
@@ -24,6 +20,7 @@ from homeassistant.components.recorder.models import (
 )
 from homeassistant.const import EVENT_STATE_CHANGED
 import homeassistant.core as ha
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import InvalidEntityFormatError
 from homeassistant.util import dt, dt as dt_util
 
@@ -34,6 +31,7 @@ def test_from_event_to_db_event() -> None:
     db_event = Events.from_event(event)
     dialect = SupportedDialect.MYSQL
     db_event.event_data = EventData.shared_data_bytes_from_event(event, dialect)
+    db_event.event_type = event.event_type
     assert event.as_dict() == db_event.to_native().as_dict()
 
 
@@ -59,8 +57,9 @@ def test_from_event_to_db_state_attributes() -> None:
     )
     db_attrs = StateAttributes()
     dialect = SupportedDialect.MYSQL
+
     db_attrs.shared_attrs = StateAttributes.shared_attrs_bytes_from_event(
-        event, {}, dialect
+        event, {}, {}, dialect
     )
     assert db_attrs.to_native() == attrs
 
@@ -120,7 +119,9 @@ def test_events_repr_without_timestamp() -> None:
     assert "2016-07-09 11:00:00+00:00" in repr(events)
 
 
-def test_handling_broken_json_state_attributes(caplog):
+def test_handling_broken_json_state_attributes(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test we handle broken json in state attributes."""
     state_attributes = StateAttributes(
         attributes_id=444, hash=1234, shared_attrs="{NOT_PARSE}"
@@ -145,78 +146,6 @@ def test_from_event_to_delete_state() -> None:
     assert db_state.state == ""
     assert db_state.last_changed_ts is None
     assert db_state.last_updated_ts == event.time_fired.timestamp()
-
-
-def test_entity_ids(recorder_db_url: str) -> None:
-    """Test if entity ids helper method works."""
-    if recorder_db_url.startswith("mysql://"):
-        # Dropping the database after this test will fail on MySQL
-        # because it will create an InnoDB deadlock.
-        return
-    engine = create_engine(recorder_db_url)
-    Base.metadata.create_all(engine)
-    session_factory = sessionmaker(bind=engine)
-
-    session = scoped_session(session_factory)
-    session.query(Events).delete()
-    session.query(States).delete()
-    session.query(RecorderRuns).delete()
-
-    run = RecorderRuns(
-        start=datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC),
-        end=datetime(2016, 7, 9, 23, 0, 0, tzinfo=dt.UTC),
-        closed_incorrect=False,
-        created=datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC),
-    )
-
-    session.add(run)
-    session.commit()
-
-    before_run = datetime(2016, 7, 9, 8, 0, 0, tzinfo=dt.UTC)
-    in_run = datetime(2016, 7, 9, 13, 0, 0, tzinfo=dt.UTC)
-    in_run2 = datetime(2016, 7, 9, 15, 0, 0, tzinfo=dt.UTC)
-    in_run3 = datetime(2016, 7, 9, 18, 0, 0, tzinfo=dt.UTC)
-    after_run = datetime(2016, 7, 9, 23, 30, 0, tzinfo=dt.UTC)
-
-    assert run.to_native() == run
-    assert run.entity_ids() == []
-
-    session.add(
-        States(
-            entity_id="sensor.temperature",
-            state="20",
-            last_changed=before_run,
-            last_updated=before_run,
-        )
-    )
-    session.add(
-        States(
-            entity_id="sensor.sound",
-            state="10",
-            last_changed=after_run,
-            last_updated=after_run,
-        )
-    )
-
-    session.add(
-        States(
-            entity_id="sensor.humidity",
-            state="76",
-            last_changed=in_run,
-            last_updated=in_run,
-        )
-    )
-    session.add(
-        States(
-            entity_id="sensor.lux",
-            state="5",
-            last_changed=in_run3,
-            last_updated=in_run3,
-        )
-    )
-
-    assert sorted(run.entity_ids()) == ["sensor.humidity", "sensor.lux"]
-    assert run.entity_ids(in_run2) == ["sensor.humidity"]
 
 
 def test_states_from_native_invalid_entity_id() -> None:
@@ -304,15 +233,19 @@ async def test_event_to_db_model() -> None:
     db_event = Events.from_event(event)
     dialect = SupportedDialect.MYSQL
     db_event.event_data = EventData.shared_data_bytes_from_event(event, dialect)
+    db_event.event_type = event.event_type
     native = db_event.to_native()
     assert native.as_dict() == event.as_dict()
 
     native = Events.from_event(event).to_native()
     event.data = {}
+    native.event_type = event.event_type
     assert native.as_dict() == event.as_dict()
 
 
-async def test_lazy_state_handles_include_json(caplog):
+async def test_lazy_state_handles_include_json(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test that the LazyState class handles invalid json."""
     row = PropertyMock(
         entity_id="sensor.invalid",
@@ -322,7 +255,9 @@ async def test_lazy_state_handles_include_json(caplog):
     assert "Error converting row to state attributes" in caplog.text
 
 
-async def test_lazy_state_prefers_shared_attrs_over_attrs(caplog):
+async def test_lazy_state_prefers_shared_attrs_over_attrs(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test that the LazyState prefers shared_attrs over attributes."""
     row = PropertyMock(
         entity_id="sensor.invalid",
@@ -332,7 +267,9 @@ async def test_lazy_state_prefers_shared_attrs_over_attrs(caplog):
     assert LazyState(row, {}, None).attributes == {"shared": True}
 
 
-async def test_lazy_state_handles_different_last_updated_and_last_changed(caplog):
+async def test_lazy_state_handles_different_last_updated_and_last_changed(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test that the LazyState handles different last_updated and last_changed."""
     now = datetime(2021, 6, 12, 3, 4, 1, 323, tzinfo=dt_util.UTC)
     row = PropertyMock(
@@ -361,7 +298,9 @@ async def test_lazy_state_handles_different_last_updated_and_last_changed(caplog
     }
 
 
-async def test_lazy_state_handles_same_last_updated_and_last_changed(caplog):
+async def test_lazy_state_handles_same_last_updated_and_last_changed(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test that the LazyState handles same last_updated and last_changed."""
     now = datetime(2021, 6, 12, 3, 4, 1, 323, tzinfo=dt_util.UTC)
     row = PropertyMock(
@@ -409,7 +348,7 @@ async def test_lazy_state_handles_same_last_updated_and_last_changed(caplog):
 @pytest.mark.parametrize(
     "time_zone", ["Europe/Berlin", "America/Chicago", "US/Hawaii", "UTC"]
 )
-def test_process_datetime_to_timestamp(time_zone, hass):
+def test_process_datetime_to_timestamp(time_zone, hass: HomeAssistant) -> None:
     """Test we can handle processing database datatimes to timestamps."""
     hass.config.set_time_zone(time_zone)
     utc_now = dt_util.utcnow()
@@ -421,7 +360,9 @@ def test_process_datetime_to_timestamp(time_zone, hass):
 @pytest.mark.parametrize(
     "time_zone", ["Europe/Berlin", "America/Chicago", "US/Hawaii", "UTC"]
 )
-def test_process_datetime_to_timestamp_freeze_time(time_zone, hass):
+def test_process_datetime_to_timestamp_freeze_time(
+    time_zone, hass: HomeAssistant
+) -> None:
     """Test we can handle processing database datatimes to timestamps.
 
     This test freezes time to make sure everything matches.
@@ -439,8 +380,8 @@ def test_process_datetime_to_timestamp_freeze_time(time_zone, hass):
     "time_zone", ["Europe/Berlin", "America/Chicago", "US/Hawaii", "UTC"]
 )
 async def test_process_datetime_to_timestamp_mirrors_utc_isoformat_behavior(
-    time_zone, hass
-):
+    time_zone, hass: HomeAssistant
+) -> None:
     """Test process_datetime_to_timestamp mirrors process_timestamp_to_utc_isoformat."""
     hass.config.set_time_zone(time_zone)
     datetime_with_tzinfo = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC)

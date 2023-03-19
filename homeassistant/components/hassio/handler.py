@@ -17,7 +17,7 @@ from homeassistant.const import SERVER_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import bind_hass
 
-from .const import ATTR_DISCOVERY, DOMAIN
+from .const import ATTR_DISCOVERY, DOMAIN, X_HASS_SOURCE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -320,12 +320,28 @@ class HassIO:
         return self.send_command(f"/addons/{addon}/info", method="get")
 
     @api_data
+    def get_core_stats(self):
+        """Return stats for the core.
+
+        This method returns a coroutine.
+        """
+        return self.send_command("/core/stats", method="get")
+
+    @api_data
     def get_addon_stats(self, addon):
         """Return stats for an Add-on.
 
         This method returns a coroutine.
         """
         return self.send_command(f"/addons/{addon}/stats", method="get")
+
+    @api_data
+    def get_supervisor_stats(self):
+        """Return stats for the supervisor.
+
+        This method returns a coroutine.
+        """
+        return self.send_command("/supervisor/stats", method="get")
 
     def get_addon_changelog(self, addon):
         """Return changelog for an Add-on.
@@ -445,6 +461,8 @@ class HassIO:
         payload=None,
         timeout=10,
         return_text=False,
+        *,
+        source="core.handler",
     ):
         """Send API command to Hass.io.
 
@@ -458,7 +476,8 @@ class HassIO:
                 headers={
                     aiohttp.hdrs.AUTHORIZATION: (
                         f"Bearer {os.environ.get('SUPERVISOR_TOKEN', '')}"
-                    )
+                    ),
+                    X_HASS_SOURCE: source,
                 },
                 timeout=aiohttp.ClientTimeout(total=timeout),
             )

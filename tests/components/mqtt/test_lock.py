@@ -58,7 +58,7 @@ from .test_common import (
 )
 
 from tests.common import async_fire_mqtt_message
-from tests.typing import MqttMockHAClientGenerator
+from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {lock.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
@@ -970,16 +970,12 @@ async def test_publishing_with_custom_encoding(
 
 async def test_reloadable(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-    tmp_path: Path,
+    mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = lock.DOMAIN
     config = DEFAULT_CONFIG
-    await help_test_reloadable(
-        hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, domain, config
-    )
+    await help_test_reloadable(hass, mqtt_client_mock, domain, config)
 
 
 @pytest.mark.parametrize(
@@ -1022,12 +1018,11 @@ async def test_setup_manual_entity_from_yaml(
 
 async def test_unload_entry(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    tmp_path: Path,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test unloading the config entry."""
     domain = lock.DOMAIN
     config = DEFAULT_CONFIG
     await help_test_unload_config_entry_with_platform(
-        hass, mqtt_mock_entry_with_yaml_config, tmp_path, domain, config
+        hass, mqtt_mock_entry_no_yaml_config, domain, config
     )

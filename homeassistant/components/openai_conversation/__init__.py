@@ -12,7 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, TemplateError
-from homeassistant.helpers import area_registry, intent, template
+from homeassistant.helpers import area_registry as ar, intent, template
 from homeassistant.util import ulid
 
 from .const import (
@@ -150,7 +150,7 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
         return template.Template(raw_prompt, self.hass).async_render(
             {
                 "ha_name": self.hass.config.location_name,
-                "areas": list(area_registry.async_get(self.hass).areas.values()),
+                "areas": list(ar.async_get(self.hass).areas.values()),
             },
             parse_result=False,
         )

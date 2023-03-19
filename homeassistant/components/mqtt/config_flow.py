@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import OrderedDict
 from collections.abc import Callable
 import queue
-from ssl import PROTOCOL_TLS, SSLContext, SSLError
+from ssl import PROTOCOL_TLS_CLIENT, SSLContext, SSLError
 from types import MappingProxyType
 from typing import Any
 
@@ -28,7 +28,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.json import JSON_DECODE_EXCEPTIONS, json_dumps, json_loads
+from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.selector import (
     BooleanSelector,
     FileSelector,
@@ -44,6 +44,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 from .client import MqttClientSetup
 from .config_integration import CONFIG_SCHEMA_ENTRY
@@ -788,7 +789,7 @@ def check_certicate_chain() -> str | None:
         except (TypeError, ValueError):
             return "bad_client_key"
     # Check the certificate chain
-    context = SSLContext(PROTOCOL_TLS)
+    context = SSLContext(PROTOCOL_TLS_CLIENT)
     if client_certificate and private_key:
         try:
             context.load_cert_chain(client_certificate, private_key)

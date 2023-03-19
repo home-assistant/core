@@ -9,22 +9,23 @@ from homeassistant.components.select import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_integration
 
 SELECT_ENTITY_ID = "select.test_clean_cycle_wait_time_minutes"
 
 
-async def test_wait_time_select(hass: HomeAssistant, mock_account) -> None:
+async def test_wait_time_select(
+    hass: HomeAssistant, mock_account, entity_registry: er.EntityRegistry
+) -> None:
     """Tests the wait time select entity."""
     await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
 
     select = hass.states.get(SELECT_ENTITY_ID)
     assert select
 
-    ent_reg = entity_registry.async_get(hass)
-    entity_entry = ent_reg.async_get(SELECT_ENTITY_ID)
+    entity_entry = entity_registry.async_get(SELECT_ENTITY_ID)
     assert entity_entry
     assert entity_entry.entity_category is EntityCategory.CONFIG
 

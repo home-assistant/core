@@ -177,7 +177,7 @@ async def test_async_browse_media(
             """Browse the children of this BrowseMedia."""
             nonlocal msg_id
             for child in children:
-                # Assert Spotify content is not passed through as Owntone media
+                # Assert Spotify content is not passed through as OwnTone media
                 assert not (
                     is_owntone_media_content_id(child["media_content_id"])
                     and "Spotify" in MediaContent(child["media_content_id"]).title

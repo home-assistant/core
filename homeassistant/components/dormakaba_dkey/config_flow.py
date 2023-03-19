@@ -132,7 +132,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             association_data = await lock.associate(user_input["activation_code"])
-        except BleakError:
+        except BleakError as err:
+            _LOGGER.warning("BleakError", exc_info=err)
             return self.async_abort(reason="cannot_connect")
         except dkey_errors.InvalidActivationCode:
             errors["base"] = "invalid_code"

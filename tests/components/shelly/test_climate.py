@@ -29,6 +29,7 @@ from tests.common import mock_restore_cache, mock_restore_cache_with_extra_data
 
 SENSOR_BLOCK_ID = 3
 DEVICE_BLOCK_ID = 4
+EMETER_BLOCK_ID = 5
 ENTITY_ID = f"{CLIMATE_DOMAIN}.test_name"
 
 
@@ -43,6 +44,7 @@ async def test_climate_hvac_mode(
         {"battery": 98, "valvePos": 50, "targetTemp": 21.0},
     )
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "valveError", 0)
+    monkeypatch.delattr(mock_block_device.blocks[EMETER_BLOCK_ID], "targetTemp")
     await init_integration(hass, 1, sleep_period=1000, model="SHTRV-01")
 
     # Make device online
@@ -195,6 +197,7 @@ async def test_block_restored_climate(
     """Test block restored climate."""
     monkeypatch.delattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "targetTemp")
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "valveError", 0)
+    monkeypatch.delattr(mock_block_device.blocks[EMETER_BLOCK_ID], "targetTemp")
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
     register_device(device_reg, entry)
     entity_id = register_entity(
@@ -257,6 +260,7 @@ async def test_block_restored_climate_us_customery(
     hass.config.units = US_CUSTOMARY_SYSTEM
     monkeypatch.delattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "targetTemp")
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "valveError", 0)
+    monkeypatch.delattr(mock_block_device.blocks[EMETER_BLOCK_ID], "targetTemp")
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
     register_device(device_reg, entry)
     entity_id = register_entity(

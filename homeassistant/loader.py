@@ -31,7 +31,7 @@ from .generated.mqtt import MQTT
 from .generated.ssdp import SSDP
 from .generated.usb import USB
 from .generated.zeroconf import HOMEKIT, ZEROCONF
-from .helpers.json import JSON_DECODE_EXCEPTIONS, json_loads
+from .util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:

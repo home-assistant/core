@@ -1,4 +1,6 @@
 """Test the thread dataset store."""
+from typing import Any
+
 import pytest
 from python_otbr_api.tlv_parser import TLVError
 
@@ -79,6 +81,17 @@ async def test_delete_preferred_dataset(hass: HomeAssistant) -> None:
     with pytest.raises(HomeAssistantError, match="attempt to remove preferred dataset"):
         store.async_delete(dataset_id)
     assert len(store.datasets) == 1
+
+
+async def test_get_dataset(hass: HomeAssistant) -> None:
+    """Test get the preferred dataset."""
+    assert await dataset_store.async_get_dataset(hass, "blah") is None
+
+    await dataset_store.async_add_dataset(hass, "source", DATASET_1)
+    store = await dataset_store.async_get_store(hass)
+    dataset_id = list(store.datasets.values())[0].id
+
+    assert (await dataset_store.async_get_dataset(hass, dataset_id)) == DATASET_1
 
 
 async def test_get_preferred_dataset(hass: HomeAssistant) -> None:
@@ -186,7 +199,9 @@ async def test_load_datasets(hass: HomeAssistant) -> None:
     assert dataset_3_store_1 == dataset_3_store_2
 
 
-async def test_loading_datasets_from_storage(hass: HomeAssistant, hass_storage) -> None:
+async def test_loading_datasets_from_storage(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test loading stored datasets on start."""
     hass_storage[dataset_store.STORAGE_KEY] = {
         "version": dataset_store.STORAGE_VERSION_MAJOR,

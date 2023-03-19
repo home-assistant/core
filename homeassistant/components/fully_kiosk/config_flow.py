@@ -57,7 +57,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
             return None
 
-        await self.async_set_unique_id(device_info["deviceID"])
+        await self.async_set_unique_id(device_info["deviceID"], raise_on_progress=False)
         self._abort_if_unique_id_configured(updates=user_input)
         return self.async_create_entry(
             title=device_info["deviceName"],

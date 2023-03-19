@@ -9,6 +9,7 @@ import pytest
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.rfxtrx import DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
@@ -40,7 +41,7 @@ DEVICE_TEMPHUM_1 = DeviceTestData(
 
 
 @pytest.mark.parametrize("device", [DEVICE_LIGHTING_1, DEVICE_TEMPHUM_1])
-async def test_device_test_data(rfxtrx, device: DeviceTestData):
+async def test_device_test_data(rfxtrx, device: DeviceTestData) -> None:
     """Verify that our testing data remains correct."""
     pkt: RFXtrx.lowlevel.Packet = RFXtrx.lowlevel.parse(bytearray.fromhex(device.code))
     assert device.device_identifiers == {
@@ -79,7 +80,9 @@ def _get_expected_actions(data):
         [DEVICE_TEMPHUM_1, []],
     ],
 )
-async def test_get_actions(hass, device_registry: dr.DeviceRegistry, device, expected):
+async def test_get_actions(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, device, expected
+) -> None:
     """Test we get the expected actions from a rfxtrx."""
     await setup_entry(hass, {device.code: {}})
 
@@ -120,13 +123,13 @@ async def test_get_actions(hass, device_registry: dr.DeviceRegistry, device, exp
     ],
 )
 async def test_action(
-    hass,
+    hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     rfxtrx: RFXtrx.Connect,
     device,
     config,
     expected,
-):
+) -> None:
     """Test for actions."""
 
     await setup_entry(hass, {device.code: {}})
@@ -160,7 +163,11 @@ async def test_action(
     rfxtrx.transport.send.assert_called_once_with(bytearray.fromhex(expected))
 
 
-async def test_invalid_action(hass, device_registry: dr.DeviceRegistry, caplog):
+async def test_invalid_action(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test for invalid actions."""
     device = DEVICE_LIGHTING_1
 

@@ -750,7 +750,9 @@ test_worker_log_cases = (
 
 
 @pytest.mark.parametrize(("stream_url", "redacted_url"), test_worker_log_cases)
-async def test_worker_log(hass, caplog, stream_url, redacted_url):
+async def test_worker_log(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, stream_url, redacted_url
+) -> None:
     """Test that the worker logs the url without username and password."""
     stream = Stream(
         hass,
@@ -787,7 +789,7 @@ def worker_finished_stream():
     return worker_finished, MockStream
 
 
-async def test_durations(hass, worker_finished_stream):
+async def test_durations(hass: HomeAssistant, worker_finished_stream) -> None:
     """Test that the duration metadata matches the media."""
 
     # Use a target part duration which has a slight mismatch
@@ -869,7 +871,9 @@ async def test_durations(hass, worker_finished_stream):
     await stream.stop()
 
 
-async def test_has_keyframe(hass, h264_video, worker_finished_stream):
+async def test_has_keyframe(
+    hass: HomeAssistant, h264_video, worker_finished_stream
+) -> None:
     """Test that the has_keyframe metadata matches the media."""
     await async_setup_component(
         hass,
@@ -913,7 +917,7 @@ async def test_has_keyframe(hass, h264_video, worker_finished_stream):
     await stream.stop()
 
 
-async def test_h265_video_is_hvc1(hass, worker_finished_stream):
+async def test_h265_video_is_hvc1(hass: HomeAssistant, worker_finished_stream) -> None:
     """Test that a h265 video gets muxed as hvc1."""
     await async_setup_component(
         hass,
@@ -960,7 +964,7 @@ async def test_h265_video_is_hvc1(hass, worker_finished_stream):
     }
 
 
-async def test_get_image(hass, h264_video, filename):
+async def test_get_image(hass: HomeAssistant, h264_video, filename) -> None:
     """Test that the has_keyframe metadata matches the media."""
     await async_setup_component(hass, "stream", {"stream": {}})
 
@@ -1002,7 +1006,7 @@ async def test_worker_disable_ll_hls(hass: HomeAssistant) -> None:
     assert stream_settings.ll_hls is False
 
 
-async def test_get_image_rotated(hass, h264_video, filename):
+async def test_get_image_rotated(hass: HomeAssistant, h264_video, filename) -> None:
     """Test that the has_keyframe metadata matches the media."""
     await async_setup_component(hass, "stream", {"stream": {}})
 

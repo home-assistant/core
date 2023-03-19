@@ -33,7 +33,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util import get_random_string
-from homeassistant.util.json import load_json
+from homeassistant.util.json import JsonObjectType, load_json_object
 
 from . import api
 from .const import (
@@ -570,7 +570,7 @@ class NestFlowHandler(
             return await self.async_step_link()
 
         flow = self.hass.data[DATA_FLOW_IMPL][DOMAIN]
-        tokens = await self.hass.async_add_executor_job(load_json, config_path)
+        tokens = await self.hass.async_add_executor_job(load_json_object, config_path)
 
         return self._entry_from_tokens(
             "Nest (import from configuration.yaml)", flow, tokens
@@ -578,7 +578,7 @@ class NestFlowHandler(
 
     @callback
     def _entry_from_tokens(
-        self, title: str, flow: dict[str, Any], tokens: list[Any] | dict[Any, Any]
+        self, title: str, flow: dict[str, Any], tokens: JsonObjectType
     ) -> FlowResult:
         """Create an entry from tokens."""
         return self.async_create_entry(

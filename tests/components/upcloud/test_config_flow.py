@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 import requests.exceptions
+import requests_mock
 from requests_mock import ANY
 from upcloud_api import UpCloudAPIError
 
@@ -32,7 +33,9 @@ async def test_show_set_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
-async def test_connection_error(hass, requests_mock):
+async def test_connection_error(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> None:
     """Test we show user form on connection error."""
     requests_mock.request(ANY, ANY, exc=requests.exceptions.ConnectionError())
     result = await hass.config_entries.flow.async_init(
@@ -44,7 +47,9 @@ async def test_connection_error(hass, requests_mock):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_login_error(hass, requests_mock):
+async def test_login_error(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> None:
     """Test we show user form with appropriate error on response failure."""
     requests_mock.request(
         ANY,
@@ -63,7 +68,9 @@ async def test_login_error(hass, requests_mock):
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_success(hass, requests_mock):
+async def test_success(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> None:
     """Test successful flow provides entry creation data."""
     requests_mock.request(ANY, ANY, text='{"account":{"username":"user"}}')
     result = await hass.config_entries.flow.async_init(

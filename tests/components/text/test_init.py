@@ -1,4 +1,6 @@
 """The tests for the text component."""
+from typing import Any
+
 import pytest
 
 from homeassistant.components.text import (
@@ -118,10 +120,10 @@ RESTORE_DATA = {
 
 
 async def test_restore_number_save_state(
-    hass,
-    hass_storage,
-    enable_custom_integrations,
-):
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    enable_custom_integrations: None,
+) -> None:
     """Test RestoreNumber."""
     platform = getattr(hass.components, "test.text")
     platform.init(empty=True)
@@ -160,15 +162,15 @@ async def test_restore_number_save_state(
     ],
 )
 async def test_restore_number_restore_state(
-    hass,
-    enable_custom_integrations,
-    hass_storage,
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+    hass_storage: dict[str, Any],
     native_max,
     native_min,
     native_value,
     native_value_type,
     extra_data,
-):
+) -> None:
     """Test RestoreNumber."""
     mock_restore_cache_with_extra_data(hass, ((State("text.test", ""), extra_data),))
 

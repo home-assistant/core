@@ -174,7 +174,7 @@ def test_entity_id() -> None:
 
 
 @pytest.mark.parametrize("validator", [cv.entity_ids, cv.entity_ids_or_uuids])
-def test_entity_ids(validator):
+def test_entity_ids(validator) -> None:
     """Test entity ID validation."""
     schema = vol.Schema(validator)
 
@@ -561,11 +561,16 @@ def test_x10_address() -> None:
     schema("C11")
 
 
-def test_template() -> None:
+def test_template(hass: HomeAssistant) -> None:
     """Test template validator."""
     schema = vol.Schema(cv.template)
 
-    for value in (None, "{{ partial_print }", "{% if True %}Hello", ["test"]):
+    for value in (
+        None,
+        "{{ partial_print }",
+        "{% if True %}Hello",
+        ["test"],
+    ):
         with pytest.raises(vol.Invalid):
             schema(value)
 
@@ -574,12 +579,43 @@ def test_template() -> None:
         "Hello",
         "{{ beer }}",
         "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
+        # Function added as an extension by Home Assistant
+        "{{ expand('group.foo')|map(attribute='entity_id')|list }}",
+        # Filter added as an extension by Home Assistant
+        "{{ ['group.foo']|expand|map(attribute='entity_id')|list }}",
     )
     for value in options:
         schema(value)
 
 
-def test_dynamic_template() -> None:
+async def test_template_no_hass(hass: HomeAssistant) -> None:
+    """Test template validator."""
+    schema = vol.Schema(cv.template)
+
+    for value in (
+        None,
+        "{{ partial_print }",
+        "{% if True %}Hello",
+        ["test"],
+        # Filter added as an extension by Home Assistant
+        "{{ ['group.foo']|expand|map(attribute='entity_id')|list }}",
+    ):
+        with pytest.raises(vol.Invalid):
+            await hass.async_add_executor_job(schema, value)
+
+    options = (
+        1,
+        "Hello",
+        "{{ beer }}",
+        "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
+        # Function added as an extension by Home Assistant
+        "{{ expand('group.foo')|map(attribute='entity_id')|list }}",
+    )
+    for value in options:
+        await hass.async_add_executor_job(schema, value)
+
+
+def test_dynamic_template(hass: HomeAssistant) -> None:
     """Test dynamic template validator."""
     schema = vol.Schema(cv.dynamic_template)
 
@@ -597,9 +633,40 @@ def test_dynamic_template() -> None:
     options = (
         "{{ beer }}",
         "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
+        # Function added as an extension by Home Assistant
+        "{{ expand('group.foo')|map(attribute='entity_id')|list }}",
+        # Filter added as an extension by Home Assistant
+        "{{ ['group.foo']|expand|map(attribute='entity_id')|list }}",
     )
     for value in options:
         schema(value)
+
+
+async def test_dynamic_template_no_hass(hass: HomeAssistant) -> None:
+    """Test dynamic template validator."""
+    schema = vol.Schema(cv.dynamic_template)
+
+    for value in (
+        None,
+        1,
+        "{{ partial_print }",
+        "{% if True %}Hello",
+        ["test"],
+        "just a string",
+        # Filter added as an extension by Home Assistant
+        "{{ ['group.foo']|expand|map(attribute='entity_id')|list }}",
+    ):
+        with pytest.raises(vol.Invalid):
+            await hass.async_add_executor_job(schema, value)
+
+    options = (
+        "{{ beer }}",
+        "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
+        # Function added as an extension by Home Assistant
+        "{{ expand('group.foo')|map(attribute='entity_id')|list }}",
+    )
+    for value in options:
+        await hass.async_add_executor_job(schema, value)
 
 
 def test_template_complex() -> None:
@@ -751,7 +818,7 @@ def version(monkeypatch):
     monkeypatch.setattr(homeassistant.const, "__version__", "0.5.0")
 
 
-def test_deprecated_with_no_optionals(caplog, schema):
+def test_deprecated_with_no_optionals(caplog: pytest.LogCaptureFixture, schema) -> None:
     """Test deprecation behaves correctly when optional params are None.
 
     Expected behavior:
@@ -782,7 +849,9 @@ def test_deprecated_with_no_optionals(caplog, schema):
     assert test_data == output
 
 
-def test_deprecated_or_removed_param_and_raise(caplog, schema):
+def test_deprecated_or_removed_param_and_raise(
+    caplog: pytest.LogCaptureFixture, schema
+) -> None:
     """Test removed or deprecation options and fail the config validation by raising an exception.
 
     Expected behavior:
@@ -821,7 +890,9 @@ def test_deprecated_or_removed_param_and_raise(caplog, schema):
     assert test_data == output
 
 
-def test_deprecated_with_replacement_key(caplog, schema):
+def test_deprecated_with_replacement_key(
+    caplog: pytest.LogCaptureFixture, schema
+) -> None:
     """Test deprecation behaves correctly when only a replacement key is provided.
 
     Expected behavior:
@@ -858,7 +929,7 @@ def test_deprecated_with_replacement_key(caplog, schema):
     assert test_data == output
 
 
-def test_deprecated_with_default(caplog, schema):
+def test_deprecated_with_default(caplog: pytest.LogCaptureFixture, schema) -> None:
     """Test deprecation behaves correctly with a default value.
 
     This is likely a scenario that would never occur.
@@ -886,7 +957,9 @@ def test_deprecated_with_default(caplog, schema):
     assert test_data == output
 
 
-def test_deprecated_with_replacement_key_and_default(caplog, schema):
+def test_deprecated_with_replacement_key_and_default(
+    caplog: pytest.LogCaptureFixture, schema
+) -> None:
     """Test deprecation with a replacement key and default.
 
     Expected behavior:
@@ -960,7 +1033,9 @@ def test_deprecated_cant_find_module() -> None:
         )
 
 
-def test_deprecated_or_removed_logger_with_config_attributes(caplog):
+def test_deprecated_or_removed_logger_with_config_attributes(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test if the logger outputs the correct message if the line and file attribute is available in config."""
     file: str = "configuration.yaml"
     line: int = 54
@@ -997,7 +1072,9 @@ def test_deprecated_or_removed_logger_with_config_attributes(caplog):
     assert len(caplog.records) == 0
 
 
-def test_deprecated_logger_with_one_config_attribute(caplog):
+def test_deprecated_logger_with_one_config_attribute(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test if the logger outputs the correct message if only one of line and file attribute is available in config."""
     file: str = "configuration.yaml"
     line: int = 54
@@ -1031,7 +1108,9 @@ def test_deprecated_logger_with_one_config_attribute(caplog):
     assert len(caplog.records) == 0
 
 
-def test_deprecated_logger_without_config_attributes(caplog):
+def test_deprecated_logger_without_config_attributes(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test if the logger outputs the correct message if the line and file attribute is not available in config."""
     file: str = "configuration.yaml"
     line: int = 54
@@ -1166,7 +1245,7 @@ def test_comp_entity_ids() -> None:
             schema(invalid)
 
 
-def test_uuid4_hex(caplog):
+def test_uuid4_hex(caplog: pytest.LogCaptureFixture) -> None:
     """Test uuid validation."""
     schema = vol.Schema(cv.uuid4_hex)
 
@@ -1262,7 +1341,7 @@ def test_key_value_schemas_with_default() -> None:
     schema({"mode": "{{ 1 + 1}}"})
 
 
-def test_script(caplog):
+def test_script(caplog: pytest.LogCaptureFixture) -> None:
     """Test script validation is user friendly."""
     for data, msg in (
         ({"delay": "{{ invalid"}, "should be format 'HH:MM'"),
@@ -1364,3 +1443,28 @@ def test_language() -> None:
 
     for value in ("en", "sv"):
         assert schema(value)
+
+
+def test_positive_time_period_template() -> None:
+    """Test positive time period template validation."""
+    schema = vol.Schema(cv.positive_time_period_template)
+
+    with pytest.raises(vol.MultipleInvalid):
+        schema({})
+    with pytest.raises(vol.MultipleInvalid):
+        schema({5: 5})
+    with pytest.raises(vol.MultipleInvalid):
+        schema({"invalid": 5})
+    with pytest.raises(vol.MultipleInvalid):
+        schema("invalid")
+
+    # Time periods pass
+    schema("00:01")
+    schema("00:00:01")
+    schema("00:00:00.500")
+    schema({"minutes": 5})
+
+    # Templates are not evaluated and will pass
+    schema("{{ 'invalid' }}")
+    schema({"{{ 'invalid' }}": 5})
+    schema({"minutes": "{{ 'invalid' }}"})

@@ -355,7 +355,7 @@ def test_master_state(hass: HomeAssistant, mock_api_object) -> None:
     """Test master state attributes."""
     state = hass.states.get(TEST_MASTER_ENTITY_NAME)
     assert state.state == STATE_PAUSED
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "Owntone server"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "OwnTone server"
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORTED_FEATURES
     assert not state.attributes[ATTR_MEDIA_VOLUME_MUTED]
     assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.2
@@ -414,7 +414,7 @@ async def test_zone(hass: HomeAssistant, mock_api_object) -> None:
     """Test zone attributes and methods."""
     zone_entity_name = TEST_ZONE_ENTITY_NAMES[0]
     state = hass.states.get(zone_entity_name)
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "Owntone output (kitchen)"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "OwnTone output (kitchen)"
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORTED_FEATURES_ZONE
     assert state.state == STATE_ON
     assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.5

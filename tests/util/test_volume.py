@@ -130,7 +130,7 @@ def test_convert_from_cubic_feet() -> None:
         (VOLUME_MILLILITERS, VOLUME_LITERS, 0.5),
     ],
 )
-def test_convert(source_unit, target_unit, expected):
+def test_convert(source_unit, target_unit, expected) -> None:
     """Test conversion between units."""
     value = 500
     assert volume_util.convert(value, source_unit, target_unit) == pytest.approx(
