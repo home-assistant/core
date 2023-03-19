@@ -466,7 +466,7 @@ deluge-client==1.7.1
 demetriek==0.4.0
 
 # homeassistant.components.denonavr
-denonavr==0.11.1
+denonavr==0.11.2
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.18.2
