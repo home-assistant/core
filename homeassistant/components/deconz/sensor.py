@@ -128,9 +128,9 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
     ),
     DeconzSensorDescription[AirQuality](
         key="air_quality_formaldehyd",
-        supported_fn=lambda device: device.air_quality_formaldehyd is not None,
+        supported_fn=lambda device: device.air_quality_formaldehyde is not None,
         update_key="airqualityformaldehyd",
-        value_fn=lambda device: device.air_quality_formaldehyd,
+        value_fn=lambda device: device.air_quality_formaldehyde,
         instance_check=AirQuality,
         name_suffix="CH2O",
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
