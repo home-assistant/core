@@ -93,7 +93,17 @@ async def test_user_success(hass: HomeAssistant) -> None:
     """Test starting a flow by user with valid values."""
     with patch("pyvlx.PyVLX.__init__", return_value=None) as init_mock, patch(
         PYVLX_CONNECT_FUNCTION_PATH
-    ) as connect_mock, patch(PYVLX_DISCONNECT_FUNCTION_PATH) as disconnect_mock:
+    ) as connect_mock, patch(PYVLX_DISCONNECT_FUNCTION_PATH) as disconnect_mock, patch(
+        "pyvlx.PyVLX.reboot_gateway"
+    ), patch(
+        "pyvlx.PyVLX.send_frame"
+    ), patch(
+        "pyvlx.PyVLX.load_nodes"
+    ), patch(
+        "pyvlx.PyVLX.load_scenes"
+    ), patch(
+        "pyvlx.PyVLX.get_limitation"
+    ):
         result: dict[str, Any] = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=deepcopy(DUMMY_DATA)
         )
