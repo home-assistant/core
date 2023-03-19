@@ -150,23 +150,14 @@ class StatesMetaManager(BaseLRUTableManager[StatesMeta]):
         session: Session,
         entity_id: str,
         new_entity_id: str,
-    ) -> None:
+    ) -> bool:
         """Update states metadata for an entity_id."""
-        if (
-            session.query(StatesMeta)
-            .filter(StatesMeta.entity_id == entity_id)
-            .update({StatesMeta.entity_id: new_entity_id})
-            and (old_metadata_id := self._id_map.pop(entity_id, None))
-            and (pending := self._pending.get(entity_id))
-        ):
-            # Purge the cache but do not add the new entity_id
-            # to the cache since we do not know if the session
-            # will be committed in case of a rollback. The next
-            # time the entity_id is recorded, it will be added
-            # to the cache.
-            #
-            # If the new entity id managed to get a pending state
-            # change into the queue before the registry update was seen
-            # we set the metadata_id to the old metadata_id so that
-            # the state change is not lost.
-            pending.metadata_id = old_metadata_id
+        if self.get(new_entity_id, session, False) is not None:
+            # If the new entity id already exists we have
+            # a collision and should not update.
+            return False
+        session.query(StatesMeta).filter(StatesMeta.entity_id == entity_id).update(
+            {StatesMeta.entity_id: new_entity_id}
+        )
+        self._id_map.pop(entity_id, None)
+        return True

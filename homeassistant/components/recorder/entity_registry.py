@@ -61,4 +61,12 @@ def update_states_metadata(
         return
 
     with session_scope(session=instance.get_session()) as session:
-        instance.states_meta_manager.update_metadata(session, entity_id, new_entity_id)
+        if not instance.states_meta_manager.update_metadata(
+            session, entity_id, new_entity_id
+        ):
+            _LOGGER.warning(
+                "Cannot migrate history for entity_id `%s` to `%s` "
+                "because the new entity_id is already in use",
+                entity_id,
+                new_entity_id,
+            )

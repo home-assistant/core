@@ -4,21 +4,22 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 from typing import Any, Literal, cast
+from unittest.mock import patch, sentinel
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm.session import Session
 
 from homeassistant import core as ha
 from homeassistant.components import recorder
-from homeassistant.components.recorder import get_instance, statistics
-from homeassistant.components.recorder.core import Recorder
+from homeassistant.components.recorder import Recorder, get_instance, statistics
 from homeassistant.components.recorder.db_schema import RecorderRuns
 from homeassistant.components.recorder.tasks import RecorderTask, StatisticsTask
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import Event, HomeAssistant, State
-from homeassistant.util import dt as dt_util
+import homeassistant.util.dt as dt_util
 
 from . import db_schema_0
 
@@ -221,3 +222,77 @@ def assert_dict_of_states_equal_without_context_and_last_changed(
         assert_multiple_states_equal_without_context_and_last_changed(
             state, others[entity_id]
         )
+
+
+def record_states(hass):
+    """Record some test states.
+
+    We inject a bunch of state updates temperature sensors.
+    """
+    mp = "media_player.test"
+    sns1 = "sensor.test1"
+    sns2 = "sensor.test2"
+    sns3 = "sensor.test3"
+    sns4 = "sensor.test4"
+    sns1_attr = {
+        "device_class": "temperature",
+        "state_class": "measurement",
+        "unit_of_measurement": UnitOfTemperature.CELSIUS,
+    }
+    sns2_attr = {
+        "device_class": "humidity",
+        "state_class": "measurement",
+        "unit_of_measurement": "%",
+    }
+    sns3_attr = {"device_class": "temperature"}
+    sns4_attr = {}
+
+    def set_state(entity_id, state, **kwargs):
+        """Set the state."""
+        hass.states.set(entity_id, state, **kwargs)
+        wait_recording_done(hass)
+        return hass.states.get(entity_id)
+
+    zero = dt_util.utcnow()
+    one = zero + timedelta(seconds=1 * 5)
+    two = one + timedelta(seconds=15 * 5)
+    three = two + timedelta(seconds=30 * 5)
+    four = three + timedelta(seconds=15 * 5)
+
+    states = {mp: [], sns1: [], sns2: [], sns3: [], sns4: []}
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=one
+    ):
+        states[mp].append(
+            set_state(mp, "idle", attributes={"media_title": str(sentinel.mt1)})
+        )
+        states[sns1].append(set_state(sns1, "10", attributes=sns1_attr))
+        states[sns2].append(set_state(sns2, "10", attributes=sns2_attr))
+        states[sns3].append(set_state(sns3, "10", attributes=sns3_attr))
+        states[sns4].append(set_state(sns4, "10", attributes=sns4_attr))
+
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow",
+        return_value=one + timedelta(microseconds=1),
+    ):
+        states[mp].append(
+            set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt2)})
+        )
+
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two
+    ):
+        states[sns1].append(set_state(sns1, "15", attributes=sns1_attr))
+        states[sns2].append(set_state(sns2, "15", attributes=sns2_attr))
+        states[sns3].append(set_state(sns3, "15", attributes=sns3_attr))
+        states[sns4].append(set_state(sns4, "15", attributes=sns4_attr))
+
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=three
+    ):
+        states[sns1].append(set_state(sns1, "20", attributes=sns1_attr))
+        states[sns2].append(set_state(sns2, "20", attributes=sns2_attr))
+        states[sns3].append(set_state(sns3, "20", attributes=sns3_attr))
+        states[sns4].append(set_state(sns4, "20", attributes=sns4_attr))
+
+    return zero, four, states
