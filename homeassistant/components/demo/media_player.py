@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 from datetime import datetime
+from fnmatch import fnmatch
 from typing import Any
 
 from homeassistant.components.media_player import (
+    BrowseMedia,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -12,22 +14,20 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
+from homeassistant.components.media_player.const import (
+    MEDIA_CLASS_EPISODE,
+    MEDIA_CLASS_SEASON,
+    MEDIA_CLASS_TRACK,
+    MEDIA_TYPE_ALBUM,
+    MEDIA_TYPE_EPISODE,
+    MEDIA_TYPE_MUSIC,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_TRACK,
-    MEDIA_CLASS_SEASON,
-    MEDIA_CLASS_EPISODE,
-    MEDIA_TYPE_EPISODE,
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_ALBUM,
-)
-from homeassistant.components.media_player import BrowseMedia
-from fnmatch import fnmatch
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -368,9 +368,11 @@ class DemoMusicPlayer(AbstractDemoPlayer):
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         search_id = media_content_id
-        if not search_id: search_id = " "
-        is_filter = ("*" in search_id)
-        if is_filter: query = search_id.lower()
+        if not search_id:
+            search_id = " "
+        is_filter = "*" in search_id
+        if is_filter:
+            query = search_id.lower()
         children = []
         count = 0
         for item in self.tracks:
@@ -398,9 +400,10 @@ class DemoMusicPlayer(AbstractDemoPlayer):
             can_expand=False,
             children=children,
             thumbnail=self._attr_media_image_url,
-            not_shown = count - len(children),
+            not_shown=count - len(children),
             can_search=True,
         )
+
 
 class DemoTVShowPlayer(AbstractDemoPlayer):
     """A Demo media player that only supports Netflix."""
@@ -466,7 +469,7 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
         """Implement the websocket media browsing helper."""
         children = []
         count = 0
-        for episode in range(1,self._episode_count):
+        for episode in range(1, self._episode_count):
             children.append(
                 BrowseMedia(
                     title="Chapter " + str(episode),
@@ -490,4 +493,3 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
             children=children,
             thumbnail=self._attr_media_image_url,
         )
-
