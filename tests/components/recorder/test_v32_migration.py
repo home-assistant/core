@@ -213,8 +213,9 @@ async def test_migrate_times(
     )
     states_index_names = {index["name"] for index in states_indexes}
 
-    assert "ix_states_event_id" not in states_index_names
-    assert recorder.get_instance(hass).has_legacy_events_index is False
+    # sqlite does not support dropping foreign keys
+    assert "ix_states_event_id" in states_index_names
+    assert recorder.get_instance(hass).has_legacy_events_index is True
 
     await hass.async_stop()
     dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
