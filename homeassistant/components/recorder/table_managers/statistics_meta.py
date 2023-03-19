@@ -246,12 +246,12 @@ class StatisticsMetaManager:
         the database executor, or the recorder thread.
         """
         return {
-            statistic_id: meta
+            statistic_id: id_meta
             for statistic_id in statistic_ids
             # We must use a get call here and never iterate over the dict
             # because the dict can be modified by the recorder thread
             # while we are iterating over it.
-            if (meta := self._stat_id_to_id_meta.get(statistic_id))
+            if (id_meta := self._stat_id_to_id_meta.get(statistic_id))
         }
 
     def update_or_add(
