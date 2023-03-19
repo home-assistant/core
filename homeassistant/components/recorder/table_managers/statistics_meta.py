@@ -228,7 +228,7 @@ class StatisticsMetaManager:
                 "Providing statistic_type and statistic_source is mutually exclusive of statistic_ids"
             )
 
-        results = self.get_from_cache(statistic_ids)
+        results = self.get_from_cache_threadsafe(statistic_ids)
         if not (missing_statistic_id := statistic_ids.difference(results)):
             return results
 
@@ -237,14 +237,21 @@ class StatisticsMetaManager:
             session, statistic_ids=missing_statistic_id
         )
 
-    def get_from_cache(
+    def get_from_cache_threadsafe(
         self, statistic_ids: set[str]
     ) -> dict[str, tuple[int, StatisticMetaData]]:
-        """Get metadata from cache."""
+        """Get metadata from cache.
+
+        This call is thread safe and can be run in the event loop,
+        the database executor, or the recorder thread.
+        """
         return {
-            statistic_id: id_meta
-            for statistic_id, id_meta in self._stat_id_to_id_meta.items()
-            if statistic_id in statistic_ids
+            statistic_id: meta
+            for statistic_id in statistic_ids
+            # We must use a get call here and never iterate over the dict
+            # because the dict can be modified by the recorder thread
+            # while we are iterating over it.
+            if (meta := self._stat_id_to_id_meta.get(statistic_id))
         }
 
     def update_or_add(

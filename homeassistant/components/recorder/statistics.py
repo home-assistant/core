@@ -964,7 +964,7 @@ async def async_list_statistic_ids(
         # Try to get the results from the cache since there is nearly
         # always a cache hit.
         statistics_meta_manager = instance.statistics_meta_manager
-        metadata = statistics_meta_manager.get_from_cache(statistic_ids)
+        metadata = statistics_meta_manager.get_from_cache_threadsafe(statistic_ids)
         if not statistic_ids.difference(metadata):
             result = _statistic_by_id_from_metadata(hass, metadata)
             return _flatten_list_statistic_ids_metadata_result(result)
