@@ -321,7 +321,7 @@ class StatisticsMetaManager:
 
     def reset(self) -> None:
         """Reset the cache."""
-        self._stat_id_to_id_meta = {}
+        self._stat_id_to_id_meta.clear()
 
     def adjust_lru_size(self, new_size: int) -> None:
         """Adjust the LRU cache size.
