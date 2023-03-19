@@ -41,8 +41,7 @@ from .helpers import get_device_info, get_valueless_base_unique_id
 PARALLEL_UPDATES = 1
 
 UPDATE_DELAY_STRING = "delay"
-# In minutes
-UPDATE_DELAY_INTERVAL = 5
+UPDATE_DELAY_INTERVAL = 5  # In minutes
 
 
 @dataclass
