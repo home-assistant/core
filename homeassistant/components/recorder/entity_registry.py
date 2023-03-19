@@ -1,10 +1,14 @@
-"""Entity helper."""
+"""Recorder entity registry helper."""
+import logging
+
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.start import async_at_start
 
 from .core import Recorder
 from .util import get_instance, session_scope
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def async_setup(hass: HomeAssistant) -> None:
@@ -46,5 +50,15 @@ def update_states_metadata(
     new_entity_id: str,
 ) -> None:
     """Update the states metadata table when an entity is renamed."""
+    states_meta_manager = instance.states_meta_manager
+    if not states_meta_manager.active:
+        _LOGGER.warning(
+            "Cannot rename entity_id `%s` to `%s` "
+            "because the states meta manager is not yet active",
+            entity_id,
+            new_entity_id,
+        )
+        return
+
     with session_scope(session=instance.get_session()) as session:
         instance.states_meta_manager.update_metadata(session, entity_id, new_entity_id)
