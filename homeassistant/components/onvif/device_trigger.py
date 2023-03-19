@@ -50,7 +50,7 @@ async def async_get_triggers(
                     CONF_DOMAIN: DOMAIN,
                     CONF_UNIQUE_ID: event.uid,
                     CONF_TYPE: "event",
-                    CONF_SUBTYPE: event.name,
+                    CONF_SUBTYPE: event.get_event_id(),
                 }
             )
 
