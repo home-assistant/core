@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-import ssl
 import sys
 from typing import Any
 
@@ -12,6 +11,7 @@ from typing_extensions import Self
 from homeassistant.const import APPLICATION_NAME, EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.loader import bind_hass
+from homeassistant.util import ssl as ssl_util
 
 from .frame import warn_use
 
@@ -21,7 +21,6 @@ SERVER_SOFTWARE = "{0}/{1} httpx/{2} Python/{3[0]}.{3[1]}".format(
     APPLICATION_NAME, __version__, httpx.__version__, sys.version_info
 )
 USER_AGENT = "User-Agent"
-_DEFAULT_SSL_CONTEXT = ssl.create_default_context()
 
 
 @callback
@@ -67,7 +66,7 @@ def create_async_httpx_client(
     This method must be run in the event loop.
     """
     client = HassHttpXAsyncClient(
-        verify=_DEFAULT_SSL_CONTEXT if verify_ssl else False,
+        verify=ssl_util.get_default_context() if verify_ssl else False,
         headers={USER_AGENT: SERVER_SOFTWARE},
         **kwargs,
     )
