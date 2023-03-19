@@ -78,7 +78,7 @@ async def test_get_triggers(hass, device_reg):
             CONF_PLATFORM: "device",
             CONF_DOMAIN: DOMAIN,
             CONF_TYPE: "event",
-            CONF_SUBTYPE: "0 Line Crossed",
+            CONF_SUBTYPE: "0_line_crossed",
             CONF_DEVICE_ID: device_entry.id,
             CONF_UNIQUE_ID: f"{onvif_config_entry.unique_id}_tns1:RuleEngine/LineDetector/Crossed_0_0_0",
             "metadata": {},
@@ -105,7 +105,7 @@ async def test_if_fires_on_event(hass, calls):
                         "domain": DOMAIN,
                         "device_id": "",
                         "type": "event",
-                        "subtype": "0 Line Crossed",
+                        "subtype": "0_line_crossed",
                         "unique_id": event_uid,
                     },
                     "action": {
