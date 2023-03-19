@@ -727,8 +727,6 @@ async def test_update_google_entity(
             "type": "cloud/google_assistant/entities/update",
             "entity_id": "light.kitchen",
             "should_expose": False,
-            "override_name": "updated name",
-            "aliases": ["lefty", "righty"],
             "disable_2fa": False,
         }
     )
@@ -738,8 +736,6 @@ async def test_update_google_entity(
     prefs = hass.data[DOMAIN].client.prefs
     assert prefs.google_entity_configs["light.kitchen"] == {
         "should_expose": False,
-        "override_name": "updated name",
-        "aliases": ["lefty", "righty"],
         "disable_2fa": False,
     }
 
@@ -757,8 +753,6 @@ async def test_update_google_entity(
     prefs = hass.data[DOMAIN].client.prefs
     assert prefs.google_entity_configs["light.kitchen"] == {
         "should_expose": None,
-        "override_name": "updated name",
-        "aliases": ["lefty", "righty"],
         "disable_2fa": False,
     }
 

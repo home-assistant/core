@@ -24,18 +24,17 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
+from tests.common import async_fire_time_changed, load_fixture
+
+pytestmark = pytest.mark.usefixtures("init_integration")
 
 
 async def test_color_palette_state(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test the creation and values of the WLED selects."""
-    entity_registry = er.async_get(hass)
-
     # First segment of the strip
-    state = hass.states.get("select.wled_rgb_light_segment_1_color_palette")
-    assert state
+    assert (state := hass.states.get("select.wled_rgb_light_segment_1_color_palette"))
     assert state.attributes.get(ATTR_ICON) == "mdi:palette-outline"
     assert state.attributes.get(ATTR_OPTIONS) == [
         "Analogous",
@@ -91,15 +90,17 @@ async def test_color_palette_state(
     ]
     assert state.state == "Random Cycle"
 
-    entry = entity_registry.async_get("select.wled_rgb_light_segment_1_color_palette")
-    assert entry
+    assert (
+        entry := entity_registry.async_get(
+            "select.wled_rgb_light_segment_1_color_palette"
+        )
+    )
     assert entry.unique_id == "aabbccddeeff_palette_1"
     assert entry.entity_category is EntityCategory.CONFIG
 
 
 async def test_color_palette_segment_change_state(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_wled: MagicMock,
 ) -> None:
     """Test the option change of state of the WLED segments."""
@@ -112,7 +113,6 @@ async def test_color_palette_segment_change_state(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert mock_wled.segment.call_count == 1
     mock_wled.segment.assert_called_with(
         segment_id=1,
@@ -120,18 +120,15 @@ async def test_color_palette_segment_change_state(
     )
 
 
-@pytest.mark.parametrize("mock_wled", ["wled/rgb_single_segment.json"], indirect=True)
+@pytest.mark.parametrize("device_fixture", ["rgb_single_segment"])
 async def test_color_palette_dynamically_handle_segments(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_wled: MagicMock,
 ) -> None:
     """Test if a new/deleted segment is dynamically added/removed."""
-    segment0 = hass.states.get("select.wled_rgb_light_color_palette")
-    segment1 = hass.states.get("select.wled_rgb_light_segment_1_color_palette")
-    assert segment0
+    assert (segment0 := hass.states.get("select.wled_rgb_light_color_palette"))
     assert segment0.state == "Default"
-    assert not segment1
+    assert not hass.states.get("select.wled_rgb_light_segment_1_color_palette")
 
     return_value = mock_wled.update.return_value
     mock_wled.update.return_value = WLEDDevice(
@@ -141,11 +138,11 @@ async def test_color_palette_dynamically_handle_segments(
     async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
 
-    segment0 = hass.states.get("select.wled_rgb_light_color_palette")
-    segment1 = hass.states.get("select.wled_rgb_light_segment_1_color_palette")
-    assert segment0
+    assert (segment0 := hass.states.get("select.wled_rgb_light_color_palette"))
     assert segment0.state == "Default"
-    assert segment1
+    assert (
+        segment1 := hass.states.get("select.wled_rgb_light_segment_1_color_palette")
+    )
     assert segment1.state == "Random Cycle"
 
     # Test adding if segment shows up again, including the master entity
@@ -153,17 +150,16 @@ async def test_color_palette_dynamically_handle_segments(
     async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
 
-    segment0 = hass.states.get("select.wled_rgb_light_color_palette")
-    segment1 = hass.states.get("select.wled_rgb_light_segment_1_color_palette")
-    assert segment0
+    assert (segment0 := hass.states.get("select.wled_rgb_light_color_palette"))
     assert segment0.state == "Default"
-    assert segment1
+    assert (
+        segment1 := hass.states.get("select.wled_rgb_light_segment_1_color_palette")
+    )
     assert segment1.state == STATE_UNAVAILABLE
 
 
 async def test_color_palette_select_error(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_wled: MagicMock,
 ) -> None:
     """Test error handling of the WLED selects."""
@@ -179,10 +175,8 @@ async def test_color_palette_select_error(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
 
-    state = hass.states.get("select.wled_rgb_light_segment_1_color_palette")
-    assert state
+    assert (state := hass.states.get("select.wled_rgb_light_segment_1_color_palette"))
     assert state.state == "Random Cycle"
     assert mock_wled.segment.call_count == 1
     mock_wled.segment.assert_called_with(segment_id=1, palette="Icefire")
@@ -190,7 +184,6 @@ async def test_color_palette_select_error(
 
 async def test_color_palette_select_connection_error(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_wled: MagicMock,
 ) -> None:
     """Test error handling of the WLED selects."""
@@ -206,42 +199,32 @@ async def test_color_palette_select_connection_error(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
 
-    state = hass.states.get("select.wled_rgb_light_segment_1_color_palette")
-    assert state
+    assert (state := hass.states.get("select.wled_rgb_light_segment_1_color_palette"))
     assert state.state == STATE_UNAVAILABLE
     assert mock_wled.segment.call_count == 1
     mock_wled.segment.assert_called_with(segment_id=1, palette="Icefire")
 
 
-async def test_preset_unavailable_without_presets(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-) -> None:
+async def test_preset_unavailable_without_presets(hass: HomeAssistant) -> None:
     """Test WLED preset entity is unavailable when presets are not available."""
-    state = hass.states.get("select.wled_rgb_light_preset")
-    assert state
+    assert (state := hass.states.get("select.wled_rgb_light_preset"))
     assert state.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("mock_wled", ["wled/rgbw.json"], indirect=True)
+@pytest.mark.parametrize("device_fixture", ["rgbw"])
 async def test_preset_state(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_wled: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the creation and values of the WLED selects."""
-    entity_registry = er.async_get(hass)
-
-    state = hass.states.get("select.wled_rgbw_light_preset")
-    assert state
+    assert (state := hass.states.get("select.wled_rgbw_light_preset"))
     assert state.attributes.get(ATTR_ICON) == "mdi:playlist-play"
     assert state.attributes.get(ATTR_OPTIONS) == ["Preset 1", "Preset 2"]
     assert state.state == "Preset 1"
 
-    entry = entity_registry.async_get("select.wled_rgbw_light_preset")
-    assert entry
+    assert (entry := entity_registry.async_get("select.wled_rgbw_light_preset"))
     assert entry.unique_id == "aabbccddee11_preset"
 
     await hass.services.async_call(
@@ -253,17 +236,14 @@ async def test_preset_state(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert mock_wled.preset.call_count == 1
     mock_wled.preset.assert_called_with(preset="Preset 2")
 
 
-@pytest.mark.parametrize("mock_wled", ["wled/rgbw.json"], indirect=True)
+@pytest.mark.parametrize("device_fixture", ["rgbw"])
 async def test_old_style_preset_active(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_wled: MagicMock,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test unknown preset returned (when old style/unknown) preset is active."""
     # Set device preset state to a random number
@@ -272,15 +252,13 @@ async def test_old_style_preset_active(
     async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
 
-    state = hass.states.get("select.wled_rgbw_light_preset")
-    assert state
+    assert (state := hass.states.get("select.wled_rgbw_light_preset"))
     assert state.state == STATE_UNKNOWN
 
 
-@pytest.mark.parametrize("mock_wled", ["wled/rgbw.json"], indirect=True)
+@pytest.mark.parametrize("device_fixture", ["rgbw"])
 async def test_preset_select_error(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_wled: MagicMock,
 ) -> None:
     """Test error handling of the WLED selects."""
@@ -298,17 +276,15 @@ async def test_preset_select_error(
         )
         await hass.async_block_till_done()
 
-    state = hass.states.get("select.wled_rgbw_light_preset")
-    assert state
+    assert (state := hass.states.get("select.wled_rgbw_light_preset"))
     assert state.state == "Preset 1"
     assert mock_wled.preset.call_count == 1
     mock_wled.preset.assert_called_with(preset="Preset 2")
 
 
-@pytest.mark.parametrize("mock_wled", ["wled/rgbw.json"], indirect=True)
+@pytest.mark.parametrize("device_fixture", ["rgbw"])
 async def test_preset_select_connection_error(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_wled: MagicMock,
 ) -> None:
     """Test error handling of the WLED selects."""
@@ -324,42 +300,33 @@ async def test_preset_select_connection_error(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
 
-    state = hass.states.get("select.wled_rgbw_light_preset")
-    assert state
+    assert (state := hass.states.get("select.wled_rgbw_light_preset"))
     assert state.state == STATE_UNAVAILABLE
     assert mock_wled.preset.call_count == 1
     mock_wled.preset.assert_called_with(preset="Preset 2")
 
 
-async def test_playlist_unavailable_without_playlists(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-) -> None:
+async def test_playlist_unavailable_without_playlists(hass: HomeAssistant) -> None:
     """Test WLED playlist entity is unavailable when playlists are not available."""
-    state = hass.states.get("select.wled_rgb_light_playlist")
-    assert state
+    assert (state := hass.states.get("select.wled_rgb_light_playlist"))
     assert state.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("mock_wled", ["wled/rgbw.json"], indirect=True)
+@pytest.mark.parametrize("device_fixture", ["rgbw"])
 async def test_playlist_state(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_wled: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the creation and values of the WLED selects."""
-    entity_registry = er.async_get(hass)
 
-    state = hass.states.get("select.wled_rgbw_light_playlist")
-    assert state
+    assert (state := hass.states.get("select.wled_rgbw_light_playlist"))
     assert state.attributes.get(ATTR_ICON) == "mdi:play-speed"
     assert state.attributes.get(ATTR_OPTIONS) == ["Playlist 1", "Playlist 2"]
     assert state.state == "Playlist 1"
 
-    entry = entity_registry.async_get("select.wled_rgbw_light_playlist")
-    assert entry
+    assert (entry := entity_registry.async_get("select.wled_rgbw_light_playlist"))
     assert entry.unique_id == "aabbccddee11_playlist"
 
     await hass.services.async_call(
@@ -371,17 +338,14 @@ async def test_playlist_state(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert mock_wled.playlist.call_count == 1
     mock_wled.playlist.assert_called_with(playlist="Playlist 2")
 
 
-@pytest.mark.parametrize("mock_wled", ["wled/rgbw.json"], indirect=True)
+@pytest.mark.parametrize("device_fixture", ["rgbw"])
 async def test_old_style_playlist_active(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_wled: MagicMock,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test when old style playlist cycle is active."""
     # Set device playlist to 0, which meant "cycle" previously.
@@ -390,15 +354,13 @@ async def test_old_style_playlist_active(
     async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
 
-    state = hass.states.get("select.wled_rgbw_light_playlist")
-    assert state
+    assert (state := hass.states.get("select.wled_rgbw_light_playlist"))
     assert state.state == STATE_UNKNOWN
 
 
-@pytest.mark.parametrize("mock_wled", ["wled/rgbw.json"], indirect=True)
+@pytest.mark.parametrize("device_fixture", ["rgbw"])
 async def test_playlist_select_error(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_wled: MagicMock,
 ) -> None:
     """Test error handling of the WLED selects."""
@@ -414,19 +376,16 @@ async def test_playlist_select_error(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
 
-    state = hass.states.get("select.wled_rgbw_light_playlist")
-    assert state
+    assert (state := hass.states.get("select.wled_rgbw_light_playlist"))
     assert state.state == "Playlist 1"
     assert mock_wled.playlist.call_count == 1
     mock_wled.playlist.assert_called_with(playlist="Playlist 2")
 
 
-@pytest.mark.parametrize("mock_wled", ["wled/rgbw.json"], indirect=True)
+@pytest.mark.parametrize("device_fixture", ["rgbw"])
 async def test_playlist_select_connection_error(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_wled: MagicMock,
 ) -> None:
     """Test error handling of the WLED selects."""
@@ -442,10 +401,8 @@ async def test_playlist_select_connection_error(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
 
-    state = hass.states.get("select.wled_rgbw_light_playlist")
-    assert state
+    assert (state := hass.states.get("select.wled_rgbw_light_playlist"))
     assert state.state == STATE_UNAVAILABLE
     assert mock_wled.playlist.call_count == 1
     mock_wled.playlist.assert_called_with(playlist="Playlist 2")
@@ -453,20 +410,16 @@ async def test_playlist_select_connection_error(
 
 async def test_live_override(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_wled: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the creation and values of the WLED selects."""
-    entity_registry = er.async_get(hass)
-
-    state = hass.states.get("select.wled_rgb_light_live_override")
-    assert state
+    assert (state := hass.states.get("select.wled_rgb_light_live_override"))
     assert state.attributes.get(ATTR_ICON) == "mdi:theater"
     assert state.attributes.get(ATTR_OPTIONS) == ["0", "1", "2"]
     assert state.state == "0"
 
-    entry = entity_registry.async_get("select.wled_rgb_light_live_override")
-    assert entry
+    assert (entry := entity_registry.async_get("select.wled_rgb_light_live_override"))
     assert entry.unique_id == "aabbccddeeff_live_override"
 
     await hass.services.async_call(
@@ -478,14 +431,12 @@ async def test_live_override(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert mock_wled.live.call_count == 1
     mock_wled.live.assert_called_with(live=2)
 
 
 async def test_live_select_error(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_wled: MagicMock,
 ) -> None:
     """Test error handling of the WLED selects."""
@@ -501,10 +452,8 @@ async def test_live_select_error(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
 
-    state = hass.states.get("select.wled_rgb_light_live_override")
-    assert state
+    assert (state := hass.states.get("select.wled_rgb_light_live_override"))
     assert state.state == "0"
     assert mock_wled.live.call_count == 1
     mock_wled.live.assert_called_with(live=1)
@@ -512,7 +461,6 @@ async def test_live_select_error(
 
 async def test_live_select_connection_error(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_wled: MagicMock,
 ) -> None:
     """Test error handling of the WLED selects."""
@@ -528,10 +476,8 @@ async def test_live_select_connection_error(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
 
-    state = hass.states.get("select.wled_rgb_light_live_override")
-    assert state
+    assert (state := hass.states.get("select.wled_rgb_light_live_override"))
     assert state.state == STATE_UNAVAILABLE
     assert mock_wled.live.call_count == 1
     mock_wled.live.assert_called_with(live=2)

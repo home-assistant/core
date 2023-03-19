@@ -1,4 +1,5 @@
 """Tests for the Entity Registry."""
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -33,7 +34,9 @@ def update_events(hass):
     return events
 
 
-async def test_get_or_create_returns_same_entry(hass, entity_registry, update_events):
+async def test_get_or_create_returns_same_entry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, update_events
+) -> None:
     """Make sure we do not duplicate entries."""
     entry = entity_registry.async_get_or_create("light", "hue", "1234")
     entry2 = entity_registry.async_get_or_create("light", "hue", "1234")
@@ -48,7 +51,7 @@ async def test_get_or_create_returns_same_entry(hass, entity_registry, update_ev
     assert update_events[0]["entity_id"] == entry.entity_id
 
 
-def test_get_or_create_suggested_object_id(entity_registry):
+def test_get_or_create_suggested_object_id(entity_registry: er.EntityRegistry) -> None:
     """Test that suggested_object_id works."""
     entry = entity_registry.async_get_or_create(
         "light", "hue", "1234", suggested_object_id="beer"
@@ -57,7 +60,7 @@ def test_get_or_create_suggested_object_id(entity_registry):
     assert entry.entity_id == "light.beer"
 
 
-def test_get_or_create_updates_data(entity_registry):
+def test_get_or_create_updates_data(entity_registry: er.EntityRegistry) -> None:
     """Test that we update data in get_or_create."""
     orig_config_entry = MockConfigEntry(domain="light")
 
@@ -194,7 +197,9 @@ def test_get_or_create_updates_data(entity_registry):
     )
 
 
-def test_get_or_create_suggested_object_id_conflict_register(entity_registry):
+def test_get_or_create_suggested_object_id_conflict_register(
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test that we don't generate an entity id that is already registered."""
     entry = entity_registry.async_get_or_create(
         "light", "hue", "1234", suggested_object_id="beer"
@@ -207,14 +212,16 @@ def test_get_or_create_suggested_object_id_conflict_register(entity_registry):
     assert entry2.entity_id == "light.beer_2"
 
 
-def test_get_or_create_suggested_object_id_conflict_existing(hass, entity_registry):
+def test_get_or_create_suggested_object_id_conflict_existing(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test that we don't generate an entity id that currently exists."""
     hass.states.async_set("light.hue_1234", "on")
     entry = entity_registry.async_get_or_create("light", "hue", "1234")
     assert entry.entity_id == "light.hue_1234_2"
 
 
-def test_create_triggers_save(entity_registry):
+def test_create_triggers_save(entity_registry: er.EntityRegistry) -> None:
     """Test that registering entry triggers a save."""
     with patch.object(entity_registry, "async_schedule_save") as mock_schedule_save:
         entity_registry.async_get_or_create("light", "hue", "1234")
@@ -222,7 +229,9 @@ def test_create_triggers_save(entity_registry):
     assert len(mock_schedule_save.mock_calls) == 1
 
 
-async def test_loading_saving_data(hass, entity_registry):
+async def test_loading_saving_data(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test that we load/save data correctly."""
     mock_config = MockConfigEntry(domain="light")
 
@@ -293,7 +302,9 @@ async def test_loading_saving_data(hass, entity_registry):
     assert new_entry2.unit_of_measurement == "initial-unit_of_measurement"
 
 
-def test_generate_entity_considers_registered_entities(entity_registry):
+def test_generate_entity_considers_registered_entities(
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test that we don't create entity id that are already registered."""
     entry = entity_registry.async_get_or_create("light", "hue", "1234")
     assert entry.entity_id == "light.hue_1234"
@@ -303,7 +314,9 @@ def test_generate_entity_considers_registered_entities(entity_registry):
     )
 
 
-def test_generate_entity_considers_existing_entities(hass, entity_registry):
+def test_generate_entity_considers_existing_entities(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test that we don't create entity id that currently exists."""
     hass.states.async_set("light.kitchen", "on")
     assert (
@@ -312,7 +325,7 @@ def test_generate_entity_considers_existing_entities(hass, entity_registry):
     )
 
 
-def test_is_registered(entity_registry):
+def test_is_registered(entity_registry: er.EntityRegistry) -> None:
     """Test that is_registered works."""
     entry = entity_registry.async_get_or_create("light", "hue", "1234")
     assert entity_registry.async_is_registered(entry.entity_id)
@@ -320,7 +333,9 @@ def test_is_registered(entity_registry):
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_filter_on_load(hass, hass_storage):
+async def test_filter_on_load(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test we transform some data when loading from storage."""
     hass_storage[er.STORAGE_KEY] = {
         "version": er.STORAGE_VERSION_MAJOR,
@@ -401,7 +416,7 @@ async def test_filter_on_load(hass, hass_storage):
     assert entry_system_category.entity_category is None
 
 
-def test_async_get_entity_id(entity_registry):
+def test_async_get_entity_id(entity_registry: er.EntityRegistry) -> None:
     """Test that entity_id is returned."""
     entry = entity_registry.async_get_or_create("light", "hue", "1234")
     assert entry.entity_id == "light.hue_1234"
@@ -411,7 +426,9 @@ def test_async_get_entity_id(entity_registry):
     assert entity_registry.async_get_entity_id("light", "hue", "123") is None
 
 
-async def test_updating_config_entry_id(hass, entity_registry, update_events):
+async def test_updating_config_entry_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, update_events
+) -> None:
     """Test that we update config entry id in registry."""
     mock_config_1 = MockConfigEntry(domain="light", entry_id="mock-id-1")
     entry = entity_registry.async_get_or_create(
@@ -435,7 +452,9 @@ async def test_updating_config_entry_id(hass, entity_registry, update_events):
     assert update_events[1]["changes"] == {"config_entry_id": "mock-id-1"}
 
 
-async def test_removing_config_entry_id(hass, entity_registry, update_events):
+async def test_removing_config_entry_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, update_events
+) -> None:
     """Test that we update config entry id in registry."""
     mock_config = MockConfigEntry(domain="light", entry_id="mock-id-1")
 
@@ -456,7 +475,7 @@ async def test_removing_config_entry_id(hass, entity_registry, update_events):
     assert update_events[1]["entity_id"] == entry.entity_id
 
 
-async def test_removing_area_id(entity_registry):
+async def test_removing_area_id(entity_registry: er.EntityRegistry) -> None:
     """Make sure we can clear area id."""
     entry = entity_registry.async_get_or_create("light", "hue", "5678")
 
@@ -472,7 +491,7 @@ async def test_removing_area_id(entity_registry):
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_migration_1_1(hass, hass_storage):
+async def test_migration_1_1(hass: HomeAssistant, hass_storage: dict[str, Any]) -> None:
     """Test migration from version 1.1."""
     hass_storage[er.STORAGE_KEY] = {
         "version": 1,
@@ -499,7 +518,7 @@ async def test_migration_1_1(hass, hass_storage):
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_migration_1_7(hass, hass_storage):
+async def test_migration_1_7(hass: HomeAssistant, hass_storage: dict[str, Any]) -> None:
     """Test migration from version 1.7.
 
     This tests cleanup after frontend bug which incorrectly updated device_class
@@ -570,7 +589,7 @@ async def test_migration_1_7(hass, hass_storage):
     assert entry.original_device_class == "class_by_integration"
 
 
-async def test_update_entity_unique_id(entity_registry):
+async def test_update_entity_unique_id(entity_registry: er.EntityRegistry) -> None:
     """Test entity's unique_id is updated."""
     mock_config = MockConfigEntry(domain="light", entry_id="mock-id-1")
 
@@ -596,7 +615,9 @@ async def test_update_entity_unique_id(entity_registry):
     )
 
 
-async def test_update_entity_unique_id_conflict(entity_registry):
+async def test_update_entity_unique_id_conflict(
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test migration raises when unique_id already in use."""
     mock_config = MockConfigEntry(domain="light", entry_id="mock-id-1")
     entry = entity_registry.async_get_or_create(
@@ -620,7 +641,7 @@ async def test_update_entity_unique_id_conflict(entity_registry):
     )
 
 
-async def test_update_entity_entity_id(entity_registry):
+async def test_update_entity_entity_id(entity_registry: er.EntityRegistry) -> None:
     """Test entity's entity_id is updated."""
     entry = entity_registry.async_get_or_create("light", "hue", "5678")
     assert (
@@ -641,7 +662,9 @@ async def test_update_entity_entity_id(entity_registry):
     assert entity_registry.async_get(new_entity_id) is not None
 
 
-async def test_update_entity_entity_id_entity_id(hass: HomeAssistant, entity_registry):
+async def test_update_entity_entity_id_entity_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test update raises when entity_id already in use."""
     entry = entity_registry.async_get_or_create("light", "hue", "5678")
     entry2 = entity_registry.async_get_or_create("light", "hue", "1234")
@@ -682,7 +705,7 @@ async def test_update_entity_entity_id_entity_id(hass: HomeAssistant, entity_reg
     assert entity_registry.async_get(state_entity_id) is None
 
 
-async def test_update_entity(entity_registry):
+async def test_update_entity(entity_registry: er.EntityRegistry) -> None:
     """Test updating entity."""
     mock_config = MockConfigEntry(domain="light", entry_id="mock-id-1")
     entry = entity_registry.async_get_or_create(
@@ -709,7 +732,7 @@ async def test_update_entity(entity_registry):
         entry = updated_entry
 
 
-async def test_update_entity_options(entity_registry):
+async def test_update_entity_options(entity_registry: er.EntityRegistry) -> None:
     """Test updating entity."""
     mock_config = MockConfigEntry(domain="light", entry_id="mock-id-1")
     entry = entity_registry.async_get_or_create(
@@ -734,7 +757,7 @@ async def test_update_entity_options(entity_registry):
     assert new_entry_2.options == {"light": {"minimum_brightness": 30}}
 
 
-async def test_disabled_by(entity_registry):
+async def test_disabled_by(entity_registry: er.EntityRegistry) -> None:
     """Test that we can disable an entry when we create it."""
     entry = entity_registry.async_get_or_create(
         "light", "hue", "5678", disabled_by=er.RegistryEntryDisabler.HASS
@@ -750,7 +773,9 @@ async def test_disabled_by(entity_registry):
     assert entry2.disabled_by is None
 
 
-async def test_disabled_by_config_entry_pref(entity_registry):
+async def test_disabled_by_config_entry_pref(
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test config entry preference setting disabled_by."""
     mock_config = MockConfigEntry(
         domain="light",
@@ -917,7 +942,11 @@ async def test_async_get_device_class_lookup(hass: HomeAssistant) -> None:
     }
 
 
-async def test_remove_device_removes_entities(hass, entity_registry, device_registry):
+async def test_remove_device_removes_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test that we remove entities tied to a device."""
     config_entry = MockConfigEntry(domain="light")
 
@@ -943,8 +972,10 @@ async def test_remove_device_removes_entities(hass, entity_registry, device_regi
 
 
 async def test_remove_config_entry_from_device_removes_entities(
-    hass, device_registry, entity_registry
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test that we remove entities tied to a device when config entry is removed."""
     config_entry_1 = MockConfigEntry(domain="hue")
     config_entry_2 = MockConfigEntry(domain="device_tracker")
@@ -1007,8 +1038,10 @@ async def test_remove_config_entry_from_device_removes_entities(
 
 
 async def test_remove_config_entry_from_device_removes_entities_2(
-    hass, device_registry, entity_registry
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test that we don't remove entities with no config entry when device is modified."""
     config_entry_1 = MockConfigEntry(domain="hue")
     config_entry_2 = MockConfigEntry(domain="device_tracker")
@@ -1047,7 +1080,11 @@ async def test_remove_config_entry_from_device_removes_entities_2(
     assert entity_registry.async_is_registered(entry_1.entity_id)
 
 
-async def test_update_device_race(hass, device_registry, entity_registry):
+async def test_update_device_race(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test race when a device is created, updated and removed."""
     config_entry = MockConfigEntry(domain="light")
 
@@ -1079,7 +1116,11 @@ async def test_update_device_race(hass, device_registry, entity_registry):
     assert not entity_registry.async_is_registered(entry.entity_id)
 
 
-async def test_disable_device_disables_entities(hass, device_registry, entity_registry):
+async def test_disable_device_disables_entities(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test that we disable entities tied to a device."""
     config_entry = MockConfigEntry(domain="light")
     config_entry.add_to_hass(hass)
@@ -1146,8 +1187,10 @@ async def test_disable_device_disables_entities(hass, device_registry, entity_re
 
 
 async def test_disable_config_entry_disables_entities(
-    hass, device_registry, entity_registry
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test that we disable entities tied to a config entry."""
     config_entry = MockConfigEntry(domain="light")
     config_entry.add_to_hass(hass)
@@ -1214,8 +1257,10 @@ async def test_disable_config_entry_disables_entities(
 
 
 async def test_disabled_entities_excluded_from_entity_list(
-    hass, device_registry, entity_registry
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test that disabled entities are excluded from async_entries_for_device."""
     config_entry = MockConfigEntry(domain="light")
 
@@ -1250,7 +1295,7 @@ async def test_disabled_entities_excluded_from_entity_list(
     assert entries == [entry1, entry2]
 
 
-async def test_entity_max_length_exceeded(entity_registry):
+async def test_entity_max_length_exceeded(entity_registry: er.EntityRegistry) -> None:
     """Test that an exception is raised when the max character length is exceeded."""
 
     long_domain_name = (
@@ -1292,7 +1337,7 @@ async def test_entity_max_length_exceeded(entity_registry):
     assert new_id == "sensor." + long_entity_id_name[: 255 - 7 - 2] + "_3"
 
 
-async def test_resolve_entity_ids(entity_registry):
+async def test_resolve_entity_ids(entity_registry: er.EntityRegistry) -> None:
     """Test resolving entity IDs."""
 
     entry1 = entity_registry.async_get_or_create(
@@ -1401,7 +1446,9 @@ async def test_hidden_by_str_not_allowed(hass: HomeAssistant) -> None:
         reg.async_update_entity(entity_id, hidden_by=er.RegistryEntryHider.USER.value)
 
 
-def test_migrate_entity_to_new_platform(hass, entity_registry):
+def test_migrate_entity_to_new_platform(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test migrate_entity_to_new_platform."""
     orig_config_entry = MockConfigEntry(domain="light")
     orig_unique_id = "5678"

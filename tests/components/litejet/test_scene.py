@@ -11,9 +11,9 @@ from homeassistant.helpers import entity_registry as er
 
 from . import async_init_integration
 
-ENTITY_SCENE = "scene.mock_scene_1"
+ENTITY_SCENE = "scene.litejet_mock_scene_1"
 ENTITY_SCENE_NUMBER = 1
-ENTITY_OTHER_SCENE = "scene.mock_scene_2"
+ENTITY_OTHER_SCENE = "scene.litejet_mock_scene_2"
 ENTITY_OTHER_SCENE_NUMBER = 2
 
 
@@ -47,7 +47,7 @@ async def test_activate(hass: HomeAssistant, mock_litejet) -> None:
     mock_litejet.activate_scene.assert_called_once_with(ENTITY_SCENE_NUMBER)
 
 
-async def test_connected_event(hass, mock_litejet):
+async def test_connected_event(hass: HomeAssistant, mock_litejet) -> None:
     """Test handling an event from LiteJet."""
 
     await async_init_integration(hass, use_scene=True)

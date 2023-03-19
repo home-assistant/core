@@ -17,7 +17,7 @@ from tests.typing import WebSocketGenerator
 @pytest.fixture
 def mock_low_queue():
     """Mock a low queue."""
-    with patch("homeassistant.components.websocket_api.http.MAX_PENDING_MSG", 5):
+    with patch("homeassistant.components.websocket_api.http.MAX_PENDING_MSG", 1):
         yield
 
 

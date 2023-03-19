@@ -107,6 +107,17 @@ async def test_simple(hass: HomeAssistant, calls, mock_litejet) -> None:
     assert calls[0].data["id"] == 0
 
 
+async def test_only_release(hass: HomeAssistant, calls, mock_litejet) -> None:
+    """Test the simplest form of a LiteJet trigger."""
+    await setup_automation(
+        hass, {"platform": "litejet", "number": ENTITY_OTHER_SWITCH_NUMBER}
+    )
+
+    await simulate_release(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
+
+    assert len(calls) == 0
+
+
 async def test_held_more_than_short(hass: HomeAssistant, calls, mock_litejet) -> None:
     """Test a too short hold."""
     await setup_automation(

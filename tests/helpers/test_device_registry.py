@@ -1,5 +1,6 @@
 """Tests for the Device Registry."""
 import time
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -8,7 +9,11 @@ from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import RequiredParameterMissing
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 
 from tests.common import MockConfigEntry, flush_store
 
@@ -28,8 +33,11 @@ def update_events(hass):
 
 
 async def test_get_or_create_returns_same_entry(
-    hass, device_registry, area_registry, update_events
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
+    update_events,
+) -> None:
     """Make sure we do not duplicate entries."""
     entry = device_registry.async_get_or_create(
         config_entry_id="1234",
@@ -87,7 +95,9 @@ async def test_get_or_create_returns_same_entry(
     }
 
 
-async def test_requirement_for_identifier_or_connection(device_registry):
+async def test_requirement_for_identifier_or_connection(
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Make sure we do require some descriptor of device."""
     entry = device_registry.async_get_or_create(
         config_entry_id="1234",
@@ -120,7 +130,7 @@ async def test_requirement_for_identifier_or_connection(device_registry):
     assert exc_info.value.parameter_names == ["identifiers", "connections"]
 
 
-async def test_multiple_config_entries(device_registry):
+async def test_multiple_config_entries(device_registry: dr.DeviceRegistry) -> None:
     """Make sure we do not get duplicate entries."""
     entry = device_registry.async_get_or_create(
         config_entry_id="123",
@@ -151,7 +161,9 @@ async def test_multiple_config_entries(device_registry):
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_loading_from_storage(hass, hass_storage):
+async def test_loading_from_storage(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test loading stored devices on start."""
     hass_storage[dr.STORAGE_KEY] = {
         "version": dr.STORAGE_VERSION_MAJOR,
@@ -244,7 +256,9 @@ async def test_loading_from_storage(hass, hass_storage):
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_migration_1_1_to_1_3(hass, hass_storage):
+async def test_migration_1_1_to_1_3(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test migration from version 1.1 to 1.3."""
     hass_storage[dr.STORAGE_KEY] = {
         "version": 1,
@@ -368,7 +382,9 @@ async def test_migration_1_1_to_1_3(hass, hass_storage):
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_migration_1_2_to_1_3(hass, hass_storage):
+async def test_migration_1_2_to_1_3(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test migration from version 1.2 to 1.3."""
     hass_storage[dr.STORAGE_KEY] = {
         "version": 1,
@@ -482,7 +498,9 @@ async def test_migration_1_2_to_1_3(hass, hass_storage):
     }
 
 
-async def test_removing_config_entries(hass, device_registry, update_events):
+async def test_removing_config_entries(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, update_events
+) -> None:
     """Make sure we do not get duplicate entries."""
     entry = device_registry.async_get_or_create(
         config_entry_id="123",
@@ -539,8 +557,8 @@ async def test_removing_config_entries(hass, device_registry, update_events):
 
 
 async def test_deleted_device_removing_config_entries(
-    hass, device_registry, update_events
-):
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, update_events
+) -> None:
     """Make sure we do not get duplicate entries."""
     entry = device_registry.async_get_or_create(
         config_entry_id="123",
@@ -633,7 +651,7 @@ async def test_deleted_device_removing_config_entries(
     assert entry3.id != entry4.id
 
 
-async def test_removing_area_id(device_registry):
+async def test_removing_area_id(device_registry: dr.DeviceRegistry) -> None:
     """Make sure we can clear area id."""
     entry = device_registry.async_get_or_create(
         config_entry_id="123",
@@ -652,7 +670,7 @@ async def test_removing_area_id(device_registry):
     assert entry_w_area != entry_wo_area
 
 
-async def test_specifying_via_device_create(device_registry):
+async def test_specifying_via_device_create(device_registry: dr.DeviceRegistry) -> None:
     """Test specifying a via_device and removal of the hub device."""
     via = device_registry.async_get_or_create(
         config_entry_id="123",
@@ -678,7 +696,7 @@ async def test_specifying_via_device_create(device_registry):
     assert light.via_device_id is None
 
 
-async def test_specifying_via_device_update(device_registry):
+async def test_specifying_via_device_update(device_registry: dr.DeviceRegistry) -> None:
     """Test specifying a via_device and updating."""
     light = device_registry.async_get_or_create(
         config_entry_id="456",
@@ -711,7 +729,9 @@ async def test_specifying_via_device_update(device_registry):
     assert light.via_device_id == via.id
 
 
-async def test_loading_saving_data(hass, device_registry):
+async def test_loading_saving_data(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test that we load/save data correctly."""
     orig_via = device_registry.async_get_or_create(
         config_entry_id="123",
@@ -829,7 +849,7 @@ async def test_loading_saving_data(hass, device_registry):
     assert orig_kitchen_light_witout_suggested_area == new_kitchen_light
 
 
-async def test_no_unnecessary_changes(device_registry):
+async def test_no_unnecessary_changes(device_registry: dr.DeviceRegistry) -> None:
     """Make sure we do not consider devices changes."""
     entry = device_registry.async_get_or_create(
         config_entry_id="1234",
@@ -847,7 +867,7 @@ async def test_no_unnecessary_changes(device_registry):
     assert len(mock_save.mock_calls) == 0
 
 
-async def test_format_mac(device_registry):
+async def test_format_mac(device_registry: dr.DeviceRegistry) -> None:
     """Make sure we normalize mac addresses."""
     entry = device_registry.async_get_or_create(
         config_entry_id="1234",
@@ -879,7 +899,9 @@ async def test_format_mac(device_registry):
         assert list(invalid_mac_entry.connections)[0][1] == invalid
 
 
-async def test_update(hass, device_registry, update_events):
+async def test_update(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, update_events
+) -> None:
     """Verify that we can update some attributes of a device."""
     entry = device_registry.async_get_or_create(
         config_entry_id="1234",
@@ -969,7 +991,9 @@ async def test_update(hass, device_registry, update_events):
     }
 
 
-async def test_update_remove_config_entries(hass, device_registry, update_events):
+async def test_update_remove_config_entries(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, update_events
+) -> None:
     """Make sure we do not get duplicate entries."""
     entry = device_registry.async_get_or_create(
         config_entry_id="123",
@@ -1033,8 +1057,11 @@ async def test_update_remove_config_entries(hass, device_registry, update_events
 
 
 async def test_update_suggested_area(
-    hass, device_registry, area_registry, update_events
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
+    update_events,
+) -> None:
     """Verify that we can update the suggested area version of a device."""
     entry = device_registry.async_get_or_create(
         config_entry_id="1234",
@@ -1083,7 +1110,9 @@ async def test_update_suggested_area(
     assert updated_entry.suggested_area == "Other"
 
 
-async def test_cleanup_device_registry(hass, device_registry):
+async def test_cleanup_device_registry(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test cleanup works."""
     config_entry = MockConfigEntry(domain="hue")
     config_entry.add_to_hass(hass)
@@ -1115,8 +1144,8 @@ async def test_cleanup_device_registry(hass, device_registry):
 
 
 async def test_cleanup_device_registry_removes_expired_orphaned_devices(
-    hass, device_registry
-):
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test cleanup removes expired orphaned devices."""
     config_entry = MockConfigEntry(domain="hue")
     config_entry.add_to_hass(hass)
@@ -1197,7 +1226,9 @@ async def test_cleanup_entity_registry_change(hass: HomeAssistant) -> None:
         assert len(mock_call.mock_calls) == 2
 
 
-async def test_restore_device(hass, device_registry, update_events):
+async def test_restore_device(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, update_events
+) -> None:
     """Make sure device id is stable."""
     entry = device_registry.async_get_or_create(
         config_entry_id="123",
@@ -1256,7 +1287,9 @@ async def test_restore_device(hass, device_registry, update_events):
     assert "changes" not in update_events[3]
 
 
-async def test_restore_simple_device(hass, device_registry, update_events):
+async def test_restore_simple_device(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, update_events
+) -> None:
     """Make sure device id is stable."""
     entry = device_registry.async_get_or_create(
         config_entry_id="123",
@@ -1305,7 +1338,9 @@ async def test_restore_simple_device(hass, device_registry, update_events):
     assert "changes" not in update_events[3]
 
 
-async def test_restore_shared_device(hass, device_registry, update_events):
+async def test_restore_shared_device(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, update_events
+) -> None:
     """Make sure device id is stable for shared devices."""
     entry = device_registry.async_get_or_create(
         config_entry_id="123",
@@ -1416,7 +1451,9 @@ async def test_restore_shared_device(hass, device_registry, update_events):
     }
 
 
-async def test_get_or_create_empty_then_set_default_values(device_registry):
+async def test_get_or_create_empty_then_set_default_values(
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test creating an entry, then setting default name, model, manufacturer."""
     entry = device_registry.async_get_or_create(
         identifiers={("bridgeid", "0123")}, config_entry_id="1234"
@@ -1448,7 +1485,9 @@ async def test_get_or_create_empty_then_set_default_values(device_registry):
     assert entry.manufacturer == "default manufacturer 1"
 
 
-async def test_get_or_create_empty_then_update(device_registry):
+async def test_get_or_create_empty_then_update(
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test creating an entry, then setting name, model, manufacturer."""
     entry = device_registry.async_get_or_create(
         identifiers={("bridgeid", "0123")}, config_entry_id="1234"
@@ -1480,7 +1519,9 @@ async def test_get_or_create_empty_then_update(device_registry):
     assert entry.manufacturer == "manufacturer 1"
 
 
-async def test_get_or_create_sets_default_values(device_registry):
+async def test_get_or_create_sets_default_values(
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test creating an entry, then setting default name, model, manufacturer."""
     entry = device_registry.async_get_or_create(
         config_entry_id="1234",
@@ -1506,8 +1547,8 @@ async def test_get_or_create_sets_default_values(device_registry):
 
 
 async def test_verify_suggested_area_does_not_overwrite_area_id(
-    device_registry, area_registry
-):
+    device_registry: dr.DeviceRegistry, area_registry: ar.AreaRegistry
+) -> None:
     """Make sure suggested area does not override a set area id."""
     game_room_area = area_registry.async_create("Game Room")
 
@@ -1539,7 +1580,9 @@ async def test_verify_suggested_area_does_not_overwrite_area_id(
     assert entry2.area_id == game_room_area.id
 
 
-async def test_disable_config_entry_disables_devices(hass, device_registry):
+async def test_disable_config_entry_disables_devices(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test that we disable entities tied to a config entry."""
     config_entry = MockConfigEntry(domain="light")
     config_entry.add_to_hass(hass)
@@ -1580,8 +1623,8 @@ async def test_disable_config_entry_disables_devices(hass, device_registry):
 
 
 async def test_only_disable_device_if_all_config_entries_are_disabled(
-    hass, device_registry
-):
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test that we only disable device if all related config entries are disabled."""
     config_entry1 = MockConfigEntry(domain="light")
     config_entry1.add_to_hass(hass)

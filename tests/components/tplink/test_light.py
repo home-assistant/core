@@ -10,7 +10,7 @@ from homeassistant.components import tplink
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_EFFECT_LIST,
     ATTR_HS_COLOR,
@@ -113,7 +113,7 @@ async def test_color_light(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
-        {**BASE_PAYLOAD, ATTR_COLOR_TEMP: 150},
+        {**BASE_PAYLOAD, ATTR_COLOR_TEMP_KELVIN: 6666},
         blocking=True,
     )
     bulb.set_color_temp.assert_called_with(
@@ -124,7 +124,7 @@ async def test_color_light(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
-        {**BASE_PAYLOAD, ATTR_COLOR_TEMP: 150},
+        {**BASE_PAYLOAD, ATTR_COLOR_TEMP_KELVIN: 6666},
         blocking=True,
     )
     bulb.set_color_temp.assert_called_with(
@@ -233,7 +233,7 @@ async def test_color_temp_light(
         assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["brightness", "color_temp"]
     assert attributes[ATTR_MIN_MIREDS] == 111
     assert attributes[ATTR_MAX_MIREDS] == 250
-    assert attributes[ATTR_COLOR_TEMP] == 250
+    assert attributes[ATTR_COLOR_TEMP_KELVIN] == 4000
 
     await hass.services.async_call(
         LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -258,7 +258,7 @@ async def test_color_temp_light(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
-        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 150},
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 6666},
         blocking=True,
     )
     bulb.set_color_temp.assert_called_with(6666, brightness=None, transition=None)
@@ -417,7 +417,7 @@ async def test_smart_strip_effects(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
-        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 250},
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 4000},
         blocking=True,
     )
     strip.set_hsv.assert_called_once_with(0, 0, None)

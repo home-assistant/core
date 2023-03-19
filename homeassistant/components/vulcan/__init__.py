@@ -1,12 +1,7 @@
 """The Vulcan component."""
 
 from aiohttp import ClientConnectorError
-from vulcan import (  # pylint: disable=import-error
-    Account,
-    Keystore,
-    UnauthorizedCertificateException,
-    Vulcan,
-)
+from vulcan import Account, Keystore, UnauthorizedCertificateException, Vulcan
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform

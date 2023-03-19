@@ -20,6 +20,8 @@ TEST_USERNAME = "user"
 TEST_PASSWORD = "password"
 TEST_VERSION = "4.360"
 
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+
 
 @pytest.fixture(name="fibaro_client", autouse=True)
 def fibaro_client_fixture():
@@ -68,9 +70,6 @@ async def test_config_flow_user_initiated_success(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.fibaro.FibaroClient.connect",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.fibaro.async_setup_entry",
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -239,9 +238,6 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.fibaro.FibaroClient.connect", return_value=True
-    ), patch(
-        "homeassistant.components.fibaro.async_setup_entry",
-        return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

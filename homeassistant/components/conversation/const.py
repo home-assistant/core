@@ -3,6 +3,7 @@
 DOMAIN = "conversation"
 
 DEFAULT_EXPOSED_DOMAINS = {
+    "binary_sensor",
     "climate",
     "cover",
     "fan",
@@ -16,3 +17,5 @@ DEFAULT_EXPOSED_DOMAINS = {
     "vacuum",
     "water_heater",
 }
+
+DEFAULT_EXPOSED_ATTRIBUTES = {"device_class"}

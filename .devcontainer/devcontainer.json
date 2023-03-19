@@ -20,7 +20,6 @@
     "python.linting.enabled": true,
     "python.linting.pylintEnabled": true,
     "python.formatting.blackPath": "/usr/local/bin/black",
-    "python.linting.flake8Path": "/usr/local/bin/flake8",
     "python.linting.pycodestylePath": "/usr/local/bin/pycodestyle",
     "python.linting.pydocstylePath": "/usr/local/bin/pydocstyle",
     "python.linting.mypyPath": "/usr/local/bin/mypy",

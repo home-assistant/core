@@ -29,7 +29,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_MAC, CONF_TYPE, CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry, entity_registry
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -363,21 +363,21 @@ class DlnaDmrEntity(MediaPlayerEntity):
         # device's UDN. They may be the same, if the DMR is the root device.
         connections.add(
             (
-                device_registry.CONNECTION_UPNP,
+                dr.CONNECTION_UPNP,
                 self._device.profile_device.root_device.udn,
             )
         )
-        connections.add((device_registry.CONNECTION_UPNP, self._device.udn))
+        connections.add((dr.CONNECTION_UPNP, self._device.udn))
 
         if self.mac_address:
             # Connection based on MAC address, if known
             connections.add(
                 # Device MAC is obtained from the config entry, which uses getmac
-                (device_registry.CONNECTION_NETWORK_MAC, self.mac_address)
+                (dr.CONNECTION_NETWORK_MAC, self.mac_address)
             )
 
         # Create linked HA DeviceEntry now the information is known.
-        dev_reg = device_registry.async_get(self.hass)
+        dev_reg = dr.async_get(self.hass)
         device_entry = dev_reg.async_get_or_create(
             config_entry_id=self.registry_entry.config_entry_id,
             connections=connections,
@@ -388,7 +388,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         )
 
         # Update entity registry to link to the device
-        ent_reg = entity_registry.async_get(self.hass)
+        ent_reg = er.async_get(self.hass)
         ent_reg.async_get_or_create(
             self.registry_entry.domain,
             self.registry_entry.platform,

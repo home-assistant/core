@@ -26,7 +26,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -369,7 +369,7 @@ async def async_setup_entry(
 
     # Due to the change of the attribute name of two sensors, it is necessary to migrate
     # the unique_ids to the new names.
-    ent_reg = entity_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
     for old_sensor, new_sensor in MIGRATION_SENSORS:
         old_unique_id = f"{coordinator.unique_id}-{old_sensor}"
         new_unique_id = f"{coordinator.unique_id}-{new_sensor}"

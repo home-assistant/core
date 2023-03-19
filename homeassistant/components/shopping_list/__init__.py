@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.json import load_json
+from homeassistant.util.json import JsonArrayType, load_json_array
 
 from .const import (
     DOMAIN,
@@ -174,10 +174,10 @@ class NoMatchingShoppingListItem(Exception):
 class ShoppingData:
     """Class to hold shopping list data."""
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the shopping list."""
         self.hass = hass
-        self.items = []
+        self.items: JsonArrayType = []
 
     async def async_add(self, name, context=None):
         """Add a shopping list item."""
@@ -277,16 +277,16 @@ class ShoppingData:
             context=context,
         )
 
-    async def async_load(self):
+    async def async_load(self) -> None:
         """Load items."""
 
-        def load():
+        def load() -> JsonArrayType:
             """Load the items synchronously."""
-            return load_json(self.hass.config.path(PERSISTENCE), default=[])
+            return load_json_array(self.hass.config.path(PERSISTENCE))
 
         self.items = await self.hass.async_add_executor_job(load)
 
-    def save(self):
+    def save(self) -> None:
         """Save the items."""
         save_json(self.hass.config.path(PERSISTENCE), self.items)
 

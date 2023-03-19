@@ -13,6 +13,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    AVATAR,
     AVATAR_PORT,
     CLASSIC_PORT,
     CONF_HOST,
@@ -69,14 +70,14 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
                 livisi_connection_data=livisi_connection_data
             )
         controller_data = await self.aiolivisi.async_get_controller()
-        if controller_data["controllerType"] == "Avatar":
+        if (controller_type := controller_data["controllerType"]) == AVATAR:
             self.port = AVATAR_PORT
             self.is_avatar = True
         else:
             self.port = CLASSIC_PORT
             self.is_avatar = False
+        self.controller_type = controller_type
         self.serial_number = controller_data["serialNumber"]
-        self.controller_type = controller_data["controllerType"]
 
     async def async_get_devices(self) -> list[dict[str, Any]]:
         """Set the discovered devices list."""
@@ -84,13 +85,42 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
 
     async def async_get_pss_state(self, capability: str) -> bool | None:
         """Set the PSS state."""
-        response: dict[str, Any] = await self.aiolivisi.async_get_device_state(
+        response: dict[str, Any] | None = await self.aiolivisi.async_get_device_state(
             capability[1:]
         )
         if response is None:
             return None
         on_state = response["onState"]
         return on_state["value"]
+
+    async def async_get_vrcc_target_temperature(self, capability: str) -> float | None:
+        """Get the target temperature of the climate device."""
+        response: dict[str, Any] | None = await self.aiolivisi.async_get_device_state(
+            capability[1:]
+        )
+        if response is None:
+            return None
+        if self.is_avatar:
+            return response["setpointTemperature"]["value"]
+        return response["pointTemperature"]["value"]
+
+    async def async_get_vrcc_temperature(self, capability: str) -> float | None:
+        """Get the temperature of the climate device."""
+        response: dict[str, Any] | None = await self.aiolivisi.async_get_device_state(
+            capability[1:]
+        )
+        if response is None:
+            return None
+        return response["temperature"]["value"]
+
+    async def async_get_vrcc_humidity(self, capability: str) -> int | None:
+        """Get the humidity of the climate device."""
+        response: dict[str, Any] | None = await self.aiolivisi.async_get_device_state(
+            capability[1:]
+        )
+        if response is None:
+            return None
+        return response["humidity"]["value"]
 
     async def async_set_all_rooms(self) -> None:
         """Set the room list."""
@@ -107,6 +137,12 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
                 self.hass,
                 f"{LIVISI_STATE_CHANGE}_{event_data.source}",
                 event_data.onState,
+            )
+        if event_data.vrccData is not None:
+            async_dispatcher_send(
+                self.hass,
+                f"{LIVISI_STATE_CHANGE}_{event_data.source}",
+                event_data.vrccData,
             )
         if event_data.isReachable is not None:
             async_dispatcher_send(

@@ -10,6 +10,8 @@ import voluptuous as vol
 
 from homeassistant import exceptions
 from homeassistant.components import websocket_api
+from homeassistant.components.websocket_api.const import DOMAIN
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockUser
 
@@ -56,6 +58,7 @@ from tests.common import MockUser
     ],
 )
 async def test_exception_handling(
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     exc: Exception,
     code: str,
@@ -67,6 +70,7 @@ async def test_exception_handling(
     user = MockUser()
     refresh_token = Mock()
     current_request = AsyncMock()
+    hass.data[DOMAIN] = {}
 
     def get_extra_info(key: str) -> Any:
         if key == "sslcontext":
@@ -89,7 +93,7 @@ async def test_exception_handling(
     ) as current_request:
         current_request.get.return_value = mocked_request
         conn = websocket_api.ActiveConnection(
-            logging.getLogger(__name__), None, send_messages.append, user, refresh_token
+            logging.getLogger(__name__), hass, send_messages.append, user, refresh_token
         )
 
         conn.async_handle_exception({"id": 5}, exc)

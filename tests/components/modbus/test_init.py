@@ -378,7 +378,7 @@ async def test_duplicate_entity_validator(do_config) -> None:
             CONF_TYPE: SERIAL,
             CONF_BAUDRATE: 9600,
             CONF_BYTESIZE: 8,
-            CONF_METHOD: "rtu",
+            CONF_METHOD: "ascii",
             CONF_PORT: TEST_PORT_SERIAL,
             CONF_PARITY: "E",
             CONF_STOPBITS: 1,
@@ -704,7 +704,7 @@ async def test_pymodbus_connect_fail(
     caplog.set_level(logging.WARNING)
     ExceptionMessage = "test connect exception"
     mock_pymodbus.connect.side_effect = ModbusException(ExceptionMessage)
-    assert await async_setup_component(hass, DOMAIN, config) is False
+    assert await async_setup_component(hass, DOMAIN, config) is True
     assert ExceptionMessage in caplog.text
 
 
