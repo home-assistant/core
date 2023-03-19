@@ -59,7 +59,7 @@ class ZWaveNodeFirmwareUpdateExtraStoredData(ExtraStoredData):
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> ZWaveNodeFirmwareUpdateExtraStoredData:
+    def from_dict(cls, data: dict[str, Any]) -> ZWaveNodeFirmwareUpdateExtraStoredData:
         """Initialize the extra data from a dict."""
         if not (firmware_dict := data["latest_version_firmware"]):
             return cls(None)
