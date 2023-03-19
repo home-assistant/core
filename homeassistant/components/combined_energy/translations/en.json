@@ -5,17 +5,19 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
+            "installation_not_accessible": "Permission error accessing installation ID",
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
         "step": {
             "user": {
                 "data": {
-                    "installation_id": "Installation ID",
+                    "installation_id": "Combined Energy Installation-ID",
+                    "name": "The name of this installation",
                     "password": "Password",
                     "username": "Email or Mobile Number"
                 },
-                "description": "Email or Mobile phone number used to login the Combined Energy Dashboard"
+                "description": "Define the API parameters for this installation"
             }
         }
     }
