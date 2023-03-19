@@ -2,6 +2,7 @@
 from unittest.mock import AsyncMock, Mock
 
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.repairs import repairs_flow_manager
@@ -335,7 +336,9 @@ async def test_ignore_issue(
 
 
 async def test_delete_issue(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, freezer
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test we can delete an issue."""
     freezer.move_to("2022-07-19 07:53:05")

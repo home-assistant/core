@@ -14,7 +14,7 @@ import time
 from typing import Any, TypeVar
 
 import async_timeout
-from sqlalchemy import create_engine, event as sqlalchemy_event, exc, func, select
+from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -41,19 +41,26 @@ from homeassistant.util.enum import try_parse_enum
 
 from . import migration, statistics
 from .const import (
+    CONTEXT_ID_AS_BINARY_SCHEMA_VERSION,
     DB_WORKER_PREFIX,
     DOMAIN,
+    EVENT_TYPE_IDS_SCHEMA_VERSION,
     KEEPALIVE_TIME,
+    LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION,
     MARIADB_PYMYSQL_URL_PREFIX,
     MARIADB_URL_PREFIX,
     MAX_QUEUE_BACKLOG,
     MYSQLDB_PYMYSQL_URL_PREFIX,
     MYSQLDB_URL_PREFIX,
     SQLITE_URL_PREFIX,
+    STATES_META_SCHEMA_VERSION,
+    STATISTICS_ROWS_SCHEMA_VERSION,
     SupportedDialect,
 )
 from .db_schema import (
+    LEGACY_STATES_EVENT_ID_INDEX,
     SCHEMA_VERSION,
+    TABLE_STATES,
     Base,
     EventData,
     Events,
@@ -62,17 +69,10 @@ from .db_schema import (
     States,
     StatesMeta,
     Statistics,
-    StatisticsRuns,
     StatisticsShortTerm,
 )
 from .executor import DBInterruptibleThreadPoolExecutor
-from .models import (
-    DatabaseEngine,
-    StatisticData,
-    StatisticMetaData,
-    UnsupportedDialect,
-    process_timestamp,
-)
+from .models import DatabaseEngine, StatisticData, StatisticMetaData, UnsupportedDialect
 from .pool import POOL_SIZE, MutexPool, RecorderPool
 from .queries import (
     has_entity_ids_to_migrate,
@@ -86,14 +86,17 @@ from .table_managers.event_types import EventTypeManager
 from .table_managers.state_attributes import StateAttributesManager
 from .table_managers.states import StatesManager
 from .table_managers.states_meta import StatesMetaManager
+from .table_managers.statistics_meta import StatisticsMetaManager
 from .tasks import (
     AdjustLRUSizeTask,
     AdjustStatisticsTask,
     ChangeStatisticsUnitTask,
     ClearStatisticsTask,
     CommitTask,
+    CompileMissingStatisticsTask,
     DatabaseLockTask,
     EntityIDMigrationTask,
+    EventIdMigrationTask,
     EventsContextIDMigrationTask,
     EventTask,
     EventTypeIDMigrationTask,
@@ -113,6 +116,8 @@ from .util import (
     build_mysqldb_conv,
     dburl_to_path,
     end_incomplete_runs,
+    execute_stmt_lambda_element,
+    get_index_by_name,
     is_second_sunday,
     move_away_broken_database,
     session_scope,
@@ -172,6 +177,7 @@ class Recorder(threading.Thread):
         threading.Thread.__init__(self, name="Recorder")
 
         self.hass = hass
+        self.thread_id: int | None = None
         self.auto_purge = auto_purge
         self.auto_repack = auto_repack
         self.keep_days = keep_days
@@ -208,6 +214,7 @@ class Recorder(threading.Thread):
         self.state_attributes_manager = StateAttributesManager(
             self, exclude_attributes_by_domain
         )
+        self.statistics_meta_manager = StatisticsMetaManager(self)
         self.event_session: Session | None = None
         self._get_session: Callable[[], Session] | None = None
         self._completed_first_database_setup: bool | None = None
@@ -613,6 +620,7 @@ class Recorder(threading.Thread):
 
     def run(self) -> None:
         """Start processing events to save."""
+        self.thread_id = threading.get_ident()
         setup_result = self._setup_recorder()
 
         if not setup_result:
@@ -668,7 +676,7 @@ class Recorder(threading.Thread):
                     "Database Migration Failed",
                     "recorder_database_migration",
                 )
-                self._activate_and_set_db_ready()
+                self.hass.add_job(self.async_set_db_ready)
                 self._shutdown()
                 return
 
@@ -676,9 +684,7 @@ class Recorder(threading.Thread):
             self._activate_and_set_db_ready()
 
         # Catch up with missed statistics
-        with session_scope(session=self.get_session()) as session:
-            self._schedule_compile_missing_statistics(session)
-
+        self._schedule_compile_missing_statistics()
         _LOGGER.debug("Recorder processing the queue")
         self._adjust_lru_size()
         self.hass.add_job(self._async_set_recorder_ready_migration_done)
@@ -687,22 +693,33 @@ class Recorder(threading.Thread):
 
     def _activate_and_set_db_ready(self) -> None:
         """Activate the table managers or schedule migrations and mark the db as ready."""
-        with session_scope(session=self.get_session()) as session:
+        with session_scope(session=self.get_session(), read_only=True) as session:
+            # Prime the statistics meta manager as soon as possible
+            # since we want the frontend queries to avoid a thundering
+            # herd of queries to find the statistics meta data if
+            # there are a lot of statistics graphs on the frontend.
+            if self.schema_version >= STATISTICS_ROWS_SCHEMA_VERSION:
+                self.statistics_meta_manager.load(session)
+
             if (
-                self.schema_version < 36
-                or session.execute(has_events_context_ids_to_migrate()).scalar()
+                self.schema_version < CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
+                or execute_stmt_lambda_element(
+                    session, has_events_context_ids_to_migrate()
+                )
             ):
                 self.queue_task(StatesContextIDMigrationTask())
 
             if (
-                self.schema_version < 36
-                or session.execute(has_states_context_ids_to_migrate()).scalar()
+                self.schema_version < CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
+                or execute_stmt_lambda_element(
+                    session, has_states_context_ids_to_migrate()
+                )
             ):
                 self.queue_task(EventsContextIDMigrationTask())
 
             if (
-                self.schema_version < 37
-                or session.execute(has_event_type_to_migrate()).scalar()
+                self.schema_version < EVENT_TYPE_IDS_SCHEMA_VERSION
+                or execute_stmt_lambda_element(session, has_event_type_to_migrate())
             ):
                 self.queue_task(EventTypeIDMigrationTask())
             else:
@@ -710,13 +727,22 @@ class Recorder(threading.Thread):
                 self.event_type_manager.active = True
 
             if (
-                self.schema_version < 38
-                or session.execute(has_entity_ids_to_migrate()).scalar()
+                self.schema_version < STATES_META_SCHEMA_VERSION
+                or execute_stmt_lambda_element(session, has_entity_ids_to_migrate())
             ):
                 self.queue_task(EntityIDMigrationTask())
             else:
                 _LOGGER.debug("Activating states_meta manager as all data is migrated")
                 self.states_meta_manager.active = True
+
+            if self.schema_version > LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION:
+                with contextlib.suppress(SQLAlchemyError):
+                    # If the index of event_ids on the states table is still present
+                    # we need to queue a task to remove it.
+                    if get_index_by_name(
+                        session, TABLE_STATES, LEGACY_STATES_EVENT_ID_INDEX
+                    ):
+                        self.queue_task(EventIdMigrationTask())
 
         # We must only set the db ready after we have set the table managers
         # to active if there is no data to migrate.
@@ -758,10 +784,11 @@ class Recorder(threading.Thread):
                     non_state_change_events.append(event_)
 
         assert self.event_session is not None
-        self.event_data_manager.load(non_state_change_events, self.event_session)
-        self.event_type_manager.load(non_state_change_events, self.event_session)
-        self.states_meta_manager.load(state_change_events, self.event_session)
-        self.state_attributes_manager.load(state_change_events, self.event_session)
+        session = self.event_session
+        self.event_data_manager.load(non_state_change_events, session)
+        self.event_type_manager.load(non_state_change_events, session)
+        self.states_meta_manager.load(state_change_events, session)
+        self.state_attributes_manager.load(state_change_events, session)
 
     def _guarded_process_one_task_or_recover(self, task: RecorderTask) -> None:
         """Process a task, guarding against exceptions to ensure the loop does not collapse."""
@@ -998,7 +1025,7 @@ class Recorder(threading.Thread):
         if states_meta_manager.active:
             dbstate.entity_id = None
 
-        self.event_session.add(dbstate)
+        session.add(dbstate)
 
     def _handle_database_error(self, err: Exception) -> bool:
         """Handle a database error that may result in moving away the corrupt db."""
@@ -1011,9 +1038,9 @@ class Recorder(threading.Thread):
         return False
 
     def _event_session_has_pending_writes(self) -> bool:
-        return bool(
-            self.event_session and (self.event_session.new or self.event_session.dirty)
-        )
+        """Return True if there are pending writes in the event session."""
+        session = self.event_session
+        return bool(session and (session.new or session.dirty))
 
     def _commit_event_session_or_retry(self) -> None:
         """Commit the event session if there is work to do."""
@@ -1039,9 +1066,10 @@ class Recorder(threading.Thread):
 
     def _commit_event_session(self) -> None:
         assert self.event_session is not None
+        session = self.event_session
         self._commits_without_expire += 1
 
-        self.event_session.commit()
+        session.commit()
         # We just committed the state attributes to the database
         # and we now know the attributes_ids.  We can save
         # many selects for matching attributes by loading them
@@ -1057,7 +1085,7 @@ class Recorder(threading.Thread):
         # do it after EXPIRE_AFTER_COMMITS commits
         if self._commits_without_expire >= EXPIRE_AFTER_COMMITS:
             self._commits_without_expire = 0
-            self.event_session.expire_all()
+            session.expire_all()
 
     def _handle_sqlite_corruption(self) -> None:
         """Handle the sqlite3 database being corrupt."""
@@ -1077,6 +1105,7 @@ class Recorder(threading.Thread):
         self.event_data_manager.reset()
         self.event_type_manager.reset()
         self.states_meta_manager.reset()
+        self.statistics_meta_manager.reset()
 
         if not self.event_session:
             return
@@ -1122,6 +1151,10 @@ class Recorder(threading.Thread):
     def _post_migrate_entity_ids(self) -> bool:
         """Post migrate entity_ids if needed."""
         return migration.post_migrate_entity_ids(self)
+
+    def _cleanup_legacy_states_event_ids(self) -> bool:
+        """Cleanup legacy event_ids if needed."""
+        return migration.cleanup_legacy_states_event_ids(self)
 
     def _send_keep_alive(self) -> None:
         """Send a keep alive to keep the db connection open."""
@@ -1282,26 +1315,9 @@ class Recorder(threading.Thread):
 
         self._open_event_session()
 
-    def _schedule_compile_missing_statistics(self, session: Session) -> None:
+    def _schedule_compile_missing_statistics(self) -> None:
         """Add tasks for missing statistics runs."""
-        now = dt_util.utcnow()
-        last_period_minutes = now.minute - now.minute % 5
-        last_period = now.replace(minute=last_period_minutes, second=0, microsecond=0)
-        start = now - timedelta(days=self.keep_days)
-        start = start.replace(minute=0, second=0, microsecond=0)
-
-        # Find the newest statistics run, if any
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-        # pylint: disable-next=not-callable
-        if last_run := session.query(func.max(StatisticsRuns.start)).scalar():
-            start = max(start, process_timestamp(last_run) + timedelta(minutes=5))
-
-        # Add tasks
-        while start < last_period:
-            end = start + timedelta(minutes=5)
-            _LOGGER.debug("Compiling missing statistics for %s-%s", start, end)
-            self.queue_task(StatisticsTask(start, end >= last_period))
-            start = end
+        self.queue_task(CompileMissingStatisticsTask())
 
     def _end_session(self) -> None:
         """End the recorder session."""
