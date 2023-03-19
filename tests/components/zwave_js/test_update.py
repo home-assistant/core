@@ -35,6 +35,11 @@ from tests.common import (
 from tests.typing import WebSocketGenerator
 
 UPDATE_ENTITY = "update.z_wave_thermostat_firmware"
+LATEST_VERSION_FIRMWARE = {
+    "version": "11.2.4",
+    "changelog": "blah 2",
+    "files": [{"target": 0, "url": "https://example2.com", "integrity": "sha2"}],
+}
 FIRMWARE_UPDATES = {
     "updates": [
         {
@@ -44,31 +49,12 @@ FIRMWARE_UPDATES = {
                 {"target": 0, "url": "https://example1.com", "integrity": "sha1"}
             ],
         },
-        {
-            "version": "11.2.4",
-            "changelog": "blah 2",
-            "files": [
-                {"target": 0, "url": "https://example2.com", "integrity": "sha2"}
-            ],
-        },
+        LATEST_VERSION_FIRMWARE,
         {
             "version": "11.1.5",
             "changelog": "blah 3",
             "files": [
                 {"target": 0, "url": "https://example3.com", "integrity": "sha3"}
-            ],
-        },
-    ]
-}
-
-FIRMWARE_UPDATE_MULTIPLE_FILES = {
-    "updates": [
-        {
-            "version": "11.2.4",
-            "changelog": "blah 2",
-            "files": [
-                {"target": 0, "url": "https://example2.com", "integrity": "sha2"},
-                {"target": 1, "url": "https://example4.com", "integrity": "sha4"},
             ],
         },
     ]
@@ -675,19 +661,7 @@ async def test_update_entity_full_restore_data_skipped(
                         ATTR_SKIPPED_VERSION: "11.2.4",
                     },
                 ),
-                {
-                    "latest_version_firmware": {
-                        "version": "11.2.4",
-                        "changelog": "blah 2",
-                        "files": [
-                            {
-                                "target": 0,
-                                "url": "https://example2.com",
-                                "integrity": "sha2",
-                            }
-                        ],
-                    }
-                },
+                {"latest_version_firmware": LATEST_VERSION_FIRMWARE},
             )
         ],
     )
@@ -723,19 +697,7 @@ async def test_update_entity_full_restore_data_update(
                         ATTR_SKIPPED_VERSION: None,
                     },
                 ),
-                {
-                    "latest_version_firmware": {
-                        "version": "11.2.4",
-                        "changelog": "blah 2",
-                        "files": [
-                            {
-                                "target": 0,
-                                "url": "https://example2.com",
-                                "integrity": "sha2",
-                            }
-                        ],
-                    }
-                },
+                {"latest_version_firmware": LATEST_VERSION_FIRMWARE},
             )
         ],
     )
