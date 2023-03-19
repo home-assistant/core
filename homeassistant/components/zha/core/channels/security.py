@@ -336,7 +336,7 @@ class IasWd(ZigbeeChannel):
 class IASZoneChannel(ZigbeeChannel):
     """Channel for the IASZone Zigbee cluster."""
 
-    ZCL_INIT_ATTRS = {"zone_status": True, "zone_state": False, "zone_type": True}
+    ZCL_INIT_ATTRS = {"zone_status": False, "zone_state": True, "zone_type": True}
 
     @callback
     def cluster_command(self, tsn, command_id, args):
