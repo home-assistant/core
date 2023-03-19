@@ -6,7 +6,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
+from homeassistant.const import ATTR_LAST_TRIP_TIME, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -79,6 +79,13 @@ class VerisureDoorWindowSensor(
             and self.serial_number in self.coordinator.data["door_window"]
         )
 
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes of the sensor."""
+        return {
+            ATTR_LAST_TRIP_TIME: self.coordinator.data["door_window"][self.serial_number]["reportTime"]
+        }
+    
 
 class VerisureEthernetStatus(
     CoordinatorEntity[VerisureDataUpdateCoordinator], BinarySensorEntity
