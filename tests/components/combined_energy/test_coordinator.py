@@ -18,7 +18,7 @@ class TestCombinedEnergyReadingsDataService:
 
     async def test_update_data__where_api_raises_an_auth_error(
         self, hass: HomeAssistant
-    ):
+    ) -> None:
         """If the API raises a Auth error raise ConfigEntryAuthFailed."""
         mock_api = AsyncMock(
             CombinedEnergy, readings=AsyncMock(side_effect=CombinedEnergyAuthError)
@@ -28,7 +28,9 @@ class TestCombinedEnergyReadingsDataService:
         with pytest.raises(ConfigEntryAuthFailed):
             await target.async_update_data()
 
-    async def test_update_data__where_api_raises_an_error(self, hass: HomeAssistant):
+    async def test_update_data__where_api_raises_an_error(
+        self, hass: HomeAssistant
+    ) -> None:
         """If the API raises a generic error raise UpdateFailed."""
         mock_api = AsyncMock(
             CombinedEnergy, readings=AsyncMock(side_effect=CombinedEnergyError)

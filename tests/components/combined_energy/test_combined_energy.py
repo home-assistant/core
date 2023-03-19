@@ -13,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 
 @pytest.fixture
-def config_entry():
+def config_entry() -> ConfigEntry:
     """Generate a config entry for tests."""
     return ConfigEntry(
         1,
@@ -40,7 +40,7 @@ def mock_api_instance(monkeypatch):
 
 async def test_async_setup_entry__where_component_is_successfully_registered(
     hass: HomeAssistant, config_entry: ConfigEntry, monkeypatch, installation
-):
+) -> None:
     """Check that component is successfully configured and registered."""
     mock_api_instance = AsyncMock(
         combined_energy.CombinedEnergy,
@@ -82,7 +82,7 @@ async def test_async_setup_entry__where_authentication_fails(
 
 async def test_async_setup_entry__where_connection_fails(
     hass: HomeAssistant, config_entry: ConfigEntry, mock_api_instance
-):
+) -> None:
     """If an api error triggers a ConfigEntryNotReady exception to be raised."""
     mock_api_instance.installation = AsyncMock(side_effect=CombinedEnergyError)
 
@@ -92,7 +92,7 @@ async def test_async_setup_entry__where_connection_fails(
 
 async def test_async_unload_entry__where_component_is_successfully_unloaded(
     hass: HomeAssistant, config_entry: ConfigEntry
-):
+) -> None:
     """Check that component is successfully unloaded."""
     hass.data["combined_energy"] = {
         config_entry.entry_id: {combined_energy.DATA_API_CLIENT: "API_CLIENT"}

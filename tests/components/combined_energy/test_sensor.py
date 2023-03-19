@@ -27,13 +27,13 @@ class TestCombinedEnergyConnectedSensor:
             coordinator=AsyncMock(),
         )
 
-    def test_initialise(self, data_service):
+    def test_initialise(self, data_service) -> None:
         """Test initialisation generates expected names."""
         target = sensor.CombinedEnergyConnectedSensor("Test", data_service)
 
         assert target.unique_id == "install_999999-connected"
 
-    def test_is_on__where_no_data(self, data_service):
+    def test_is_on__where_no_data(self, data_service) -> None:
         """Test is_on where no data has been collected."""
         data_service.data = None
         target = sensor.CombinedEnergyConnectedSensor("Test", data_service)
@@ -43,7 +43,7 @@ class TestCombinedEnergyConnectedSensor:
         assert actual is None
 
     @pytest.mark.parametrize("connected", (True, False))
-    def test_is_on__where_connected_status_set(self, data_service, connected):
+    def test_is_on__where_connected_status_set(self, data_service, connected) -> None:
         """Test is_on where Connected status is set."""
         data_service.data = models.ConnectionStatus(
             status="OK",
@@ -91,7 +91,7 @@ class TestCombinedEnergyReadings:
         )
 
     @pytest.mark.parametrize(
-        "sensor_type, key, expected_value, expected_available",
+        ("sensor_type", "key", "expected_value", "expected_available"),
         (
             (sensor.GenericSensor, "generic_value", 67.9, True),
             (sensor.EnergySensor, "energy_value", 0.03, True),
@@ -114,7 +114,7 @@ class TestCombinedEnergyReadings:
         key,
         expected_value,
         expected_available,
-    ):
+    ) -> None:
         """Test that native values are correctly cast."""
         factory = sensor.CombinedEnergyReadingsSensorFactory(
             hass, installation, data_service
@@ -130,7 +130,7 @@ class TestCombinedEnergyReadings:
         assert target.available is expected_available
 
     @pytest.mark.parametrize(
-        "device_id, expected",
+        ("device_id", "expected"),
         (
             (13, datetime(2022, 11, 11, 11, 11, 11)),
             (42, None),
@@ -138,7 +138,7 @@ class TestCombinedEnergyReadings:
     )
     def test_energy_sensor_last_reset(
         self, hass, installation, data_service, device_id, expected
-    ):
+    ) -> None:
         """Test last reset value is correct for energy sensors."""
         factory = sensor.CombinedEnergyReadingsSensorFactory(
             hass, installation, data_service

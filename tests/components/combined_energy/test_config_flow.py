@@ -11,7 +11,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 
-async def test_form(hass: HomeAssistant):
+async def test_form(hass: HomeAssistant) -> None:
     """Test that a form is created."""
 
     result = await hass.config_entries.flow.async_init(
@@ -48,7 +48,7 @@ async def test_form(hass: HomeAssistant):
 
 
 @pytest.mark.parametrize(
-    "exception, expected_errors",
+    ("exception", "expected_errors"),
     (
         (combined_energy.exceptions.CombinedEnergyAuthError, {"base": "invalid_auth"}),
         (
@@ -63,7 +63,7 @@ async def test_form(hass: HomeAssistant):
 )
 async def test_form__where_api_returns_an_expected_error(
     hass: HomeAssistant, exception, expected_errors
-):
+) -> None:
     """Test behaviour of specific API errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -89,7 +89,9 @@ async def test_form__where_api_returns_an_expected_error(
     assert result2["errors"] == expected_errors
 
 
-async def test_form__where_api_returns_an_unexpected_error(hass: HomeAssistant, caplog):
+async def test_form__where_api_returns_an_unexpected_error(
+    hass: HomeAssistant, caplog
+) -> None:
     """Test behaviour of unexpected API errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -117,7 +119,9 @@ async def test_form__where_api_returns_an_unexpected_error(hass: HomeAssistant, 
     assert "Unexpected error verifying connection to API" in caplog.text
 
 
-async def test_form__where_installation_id_already_configured(hass: HomeAssistant):
+async def test_form__where_installation_id_already_configured(
+    hass: HomeAssistant,
+) -> None:
     """Test behaviour when an installation id has already been configured."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
