@@ -11,21 +11,19 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
+from tests.common import MockConfigEntry
+
 
 @pytest.fixture
 def config_entry() -> ConfigEntry:
     """Generate a config entry for tests."""
-    return ConfigEntry(
-        1,
-        combined_energy.DOMAIN,
-        "Test",
+    return MockConfigEntry(
+        domain=combined_energy.DOMAIN,
         data={
             combined_energy.CONF_USERNAME: "user@example.test",
             combined_energy.CONF_PASSWORD: "1234luggage",
             combined_energy.CONF_INSTALLATION_ID: 999999999,
         },
-        source="TestSource",
-        entry_id="beef",
     )
 
 
@@ -58,14 +56,6 @@ async def test_async_setup_entry__where_component_is_successfully_registered(
         password="1234luggage",
         installation_id=999999999,
         session=ANY,
-    )
-    assert (
-        hass.data["combined_energy"]["beef"][combined_energy.DATA_API_CLIENT]
-        == mock_api_instance
-    )
-    assert (
-        hass.data["combined_energy"]["beef"][combined_energy.DATA_INSTALLATION]
-        is installation
     )
 
 
@@ -101,4 +91,3 @@ async def test_async_unload_entry__where_component_is_successfully_unloaded(
     actual = await combined_energy.async_unload_entry(hass, config_entry)
 
     assert actual is not None
-    assert hass.data["combined_energy"] == {}

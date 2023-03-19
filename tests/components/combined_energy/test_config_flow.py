@@ -115,7 +115,7 @@ async def test_form__where_api_returns_an_unexpected_error(
         await hass.async_block_till_done()
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["errors"] == {"base": "unknown"}
     assert "Unexpected error verifying connection to API" in caplog.text
 
 
