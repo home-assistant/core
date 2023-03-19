@@ -49,7 +49,7 @@ class CombinedEnergyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._errors["base"] = "cannot_connect"
         except CombinedEnergyError:
             LOGGER.exception("Unexpected error verifying connection to API")
-            self._errors["base"] = "cannot_connect"
+            self._errors["base"] = "unknown"
         else:
             return True
         return False
