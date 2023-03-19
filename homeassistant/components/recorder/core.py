@@ -620,13 +620,6 @@ class Recorder(threading.Thread):
             return SHUTDOWN_TASK
 
     def run(self) -> None:
-        """Run the recorder thread."""
-        try:
-            self._run()
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected error in recorder thread")
-
-    def _run(self) -> None:
         """Start processing events to save."""
         self.thread_id = threading.get_ident()
         setup_result = self._setup_recorder()
