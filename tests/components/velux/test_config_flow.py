@@ -91,9 +91,9 @@ async def test_user_unknown_error(hass: HomeAssistant) -> None:
 
 async def test_user_success(hass: HomeAssistant) -> None:
     """Test starting a flow by user with valid values."""
-    with patch(PYVLX_CONNECT_FUNCTION_PATH) as connect_mock, patch(
-        PYVLX_DISCONNECT_FUNCTION_PATH
-    ) as disconnect_mock, patch("pyvlx.PyVLX.__init__", return_value=None) as init_mock:
+    with patch("pyvlx.PyVLX.__init__", return_value=None) as init_mock, patch(
+        PYVLX_CONNECT_FUNCTION_PATH
+    ) as connect_mock, patch(PYVLX_DISCONNECT_FUNCTION_PATH) as disconnect_mock:
         result: dict[str, Any] = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=deepcopy(DUMMY_DATA)
         )
