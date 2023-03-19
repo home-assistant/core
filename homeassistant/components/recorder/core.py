@@ -109,6 +109,7 @@ from .tasks import (
     StatisticsTask,
     StopTask,
     SynchronizeTask,
+    UpdateStatesMetadataTask,
     UpdateStatisticsMetadataTask,
     WaitTask,
 )
@@ -545,6 +546,15 @@ class Recorder(threading.Thread):
                 statistic_id, new_statistic_id, new_unit_of_measurement
             )
         )
+
+    @callback
+    def async_update_states_metadata(
+        self,
+        entity_id: str,
+        new_entity_id: str,
+    ) -> None:
+        """Update states metadata for an entity_id."""
+        self.queue_task(UpdateStatesMetadataTask(entity_id, new_entity_id))
 
     @callback
     def async_change_statistics_unit(
