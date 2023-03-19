@@ -1753,6 +1753,10 @@ def _statistics_during_period_with_session(
     If end_time is omitted, returns statistics newer than or equal to start_time.
     If statistic_ids is omitted, returns statistics for all statistics ids.
     """
+    if statistic_ids is not None and not isinstance(statistic_ids, set):
+        # This is for backwards compatibility to avoid a breaking change
+        # for custom integrations that call this method.
+        statistic_ids = set(statistic_ids)  # type: ignore[unreachable]
     metadata = None
     # Fetch metadata for the given (or all) statistic_ids
     metadata = get_instance(hass).statistics_meta_manager.get_many(

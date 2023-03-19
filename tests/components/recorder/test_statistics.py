@@ -84,7 +84,7 @@ def test_compile_hourly_statistics(hass_recorder: Callable[..., HomeAssistant]) 
 
     # Should not fail if there is nothing there yet
     stats = get_latest_short_term_statistics(
-        hass, ["sensor.test1"], {"last_reset", "max", "mean", "min", "state", "sum"}
+        hass, {"sensor.test1"}, {"last_reset", "max", "mean", "min", "state", "sum"}
     )
     assert stats == {}
 
@@ -169,7 +169,7 @@ def test_compile_hourly_statistics(hass_recorder: Callable[..., HomeAssistant]) 
     assert stats == {"sensor.test1": [expected_2]}
 
     stats = get_latest_short_term_statistics(
-        hass, ["sensor.test1"], {"last_reset", "max", "mean", "min", "state", "sum"}
+        hass, {"sensor.test1"}, {"last_reset", "max", "mean", "min", "state", "sum"}
     )
     assert stats == {"sensor.test1": [expected_2]}
 
@@ -177,7 +177,7 @@ def test_compile_hourly_statistics(hass_recorder: Callable[..., HomeAssistant]) 
 
     stats = get_latest_short_term_statistics(
         hass,
-        ["sensor.test1"],
+        {"sensor.test1"},
         {"last_reset", "max", "mean", "min", "state", "sum"},
         metadata=metadata,
     )
@@ -213,7 +213,7 @@ def test_compile_hourly_statistics(hass_recorder: Callable[..., HomeAssistant]) 
     instance.get_session().query(StatisticsShortTerm).delete()
     # Should not fail there is nothing in the table
     stats = get_latest_short_term_statistics(
-        hass, ["sensor.test1"], {"last_reset", "max", "mean", "min", "state", "sum"}
+        hass, {"sensor.test1"}, {"last_reset", "max", "mean", "min", "state", "sum"}
     )
     assert stats == {}
 
@@ -383,6 +383,19 @@ def test_rename_entity(hass_recorder: Callable[..., HomeAssistant]) -> None:
 
     stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {"sensor.test99": expected_stats99, "sensor.test2": expected_stats2}
+
+
+def test_statistics_during_period_set_back_compat(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
+    """Test statistics_during_period can handle a list instead of a set."""
+    hass = hass_recorder()
+    setup_component(hass, "sensor", {})
+    # This should not throw an exception when passed a list instead of a set
+    assert (
+        statistics_during_period(hass, dt_util.utcnow(), statistic_ids=["sensor.test1"])
+        == {}
+    )
 
 
 def test_rename_entity_collision(
@@ -847,7 +860,7 @@ def test_external_statistics_errors(
     wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
     assert list_statistic_ids(hass) == []
-    assert get_metadata(hass, statistic_ids=("test:total_energy_import",)) == {}
+    assert get_metadata(hass, statistic_ids={"test:total_energy_import"}) == {}
 
     # Attempt to insert statistics with a naive last_reset
     external_metadata = {**_external_metadata}
