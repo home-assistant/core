@@ -13,7 +13,7 @@ from .const import LOGGER
 from .device import Device
 
 
-class UpnpDataUpdateCoordinator(DataUpdateCoordinator):
+class UpnpDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Define an object to update data from UPNP device."""
 
     def __init__(
