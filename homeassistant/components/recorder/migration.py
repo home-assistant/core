@@ -1531,11 +1531,6 @@ def cleanup_legacy_states_event_ids(instance: Recorder) -> bool:
     If all old states have been purged and existing states are in the new
     format we can drop the index since it can take up ~10MB per 1M rows.
     """
-    if instance.dialect_name == SupportedDialect.SQLITE:
-        # SQLite does not support dropping foreign key constraints
-        # so we can't drop the index at this time
-        return True
-
     session_maker = instance.get_session
     _LOGGER.debug("Cleanup legacy entity_ids")
     with session_scope(session=session_maker()) as session:
@@ -1549,11 +1544,15 @@ def cleanup_legacy_states_event_ids(instance: Recorder) -> bool:
         # Only drop the index if there are no more event_ids in the states table
         # ex all NULL
         assert instance.engine is not None, "engine should never be None"
-        _drop_foreign_key_constraints(
-            session_maker, instance.engine, TABLE_STATES, ["event_id"]
-        )
-        _drop_index(session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX)
-        instance.has_legacy_events_index = False
+        if instance.dialect_name != SupportedDialect.SQLITE:
+            # SQLite does not support dropping foreign key constraints
+            # so we can't drop the index at this time but we can avoid
+            # looking for legacy rows during purge
+            _drop_foreign_key_constraints(
+                session_maker, instance.engine, TABLE_STATES, ["event_id"]
+            )
+            _drop_index(session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX)
+        instance.use_legacy_events_index = False
 
     return True
 

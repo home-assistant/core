@@ -142,7 +142,7 @@ async def test_migrate_times(
             _get_states_index_names
         )
         states_index_names = {index["name"] for index in states_indexes}
-        assert recorder.get_instance(hass).has_legacy_events_index is True
+        assert recorder.get_instance(hass).use_legacy_events_index is True
 
         await hass.async_stop()
         await hass.async_block_till_done()
@@ -213,9 +213,12 @@ async def test_migrate_times(
     )
     states_index_names = {index["name"] for index in states_indexes}
 
-    # sqlite does not support dropping foreign keys
+    # sqlite does not support dropping foreign keys so the
+    # ix_states_event_id index is not dropped in this case
+    # but use_legacy_events_index is still False
     assert "ix_states_event_id" in states_index_names
-    assert recorder.get_instance(hass).has_legacy_events_index is True
+
+    assert recorder.get_instance(hass).use_legacy_events_index is False
 
     await hass.async_stop()
     dt_util.DEFAULT_TIME_ZONE = ORIG_TZ

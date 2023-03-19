@@ -1728,15 +1728,15 @@ async def test_purge_can_mix_legacy_and_new_format(
     instance = await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
     # New databases are no longer created with the legacy events index
-    assert instance.has_legacy_events_index is False
+    assert instance.use_legacy_events_index is False
 
     def _recreate_legacy_events_index():
         """Recreate the legacy events index since its no longer created on new instances."""
         migration._create_index(instance.get_session, "states", "ix_states_event_id")
-        instance.has_legacy_events_index = True
+        instance.use_legacy_events_index = True
 
     await instance.async_add_executor_job(_recreate_legacy_events_index)
-    assert instance.has_legacy_events_index is True
+    assert instance.use_legacy_events_index is True
 
     utcnow = dt_util.utcnow()
     eleven_days_ago = utcnow - timedelta(days=11)
