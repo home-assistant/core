@@ -1,11 +1,11 @@
 {
   "domain": "combined_energy",
   "name": "Combined Energy",
-  "integration_type": "hub",
-  "documentation": "https://www.home-assistant.io/integrations/combined_energy",
-  "requirements": ["combined-energy-api==0.5"],
   "codeowners": ["@timsavage"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/combined_energy",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
   "quality_scale": "silver",
-  "config_flow": true
+  "requirements": ["combined-energy-api==0.5"]
 }
