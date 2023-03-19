@@ -882,7 +882,7 @@ def get_metadata_with_session(
     instance: Recorder,
     session: Session,
     *,
-    statistic_ids: list[str] | None = None,
+    statistic_ids: set[str] | None = None,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
     statistic_source: str | None = None,
 ) -> dict[str, tuple[int, StatisticMetaData]]:
@@ -903,7 +903,7 @@ def get_metadata_with_session(
 def get_metadata(
     hass: HomeAssistant,
     *,
-    statistic_ids: list[str] | None = None,
+    statistic_ids: set[str] | None = None,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
     statistic_source: str | None = None,
 ) -> dict[str, tuple[int, StatisticMetaData]]:
@@ -947,9 +947,79 @@ def update_statistics_metadata(
             )
 
 
+async def async_list_statistic_ids(
+    hass: HomeAssistant,
+    statistic_ids: set[str] | None = None,
+    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+) -> list[dict]:
+    """Return all statistic_ids (or filtered one) and unit of measurement.
+
+    Queries the database for existing statistic_ids, as well as integrations with
+    a recorder platform for statistic_ids which will be added in the next statistics
+    period.
+    """
+    instance = get_instance(hass)
+
+    if statistic_ids is not None:
+        # Try to get the results from the cache since there is nearly
+        # always a cache hit.
+        statistics_meta_manager = instance.statistics_meta_manager
+        metadata = statistics_meta_manager.get_from_cache(statistic_ids)
+        if not statistic_ids.difference(metadata):
+            result = _statistic_by_id_from_metadata(hass, metadata)
+            return _flatten_list_statistic_ids_metadata_result(result)
+
+    return await instance.async_add_executor_job(
+        list_statistic_ids,
+        hass,
+        statistic_ids,
+        statistic_type,
+    )
+
+
+def _statistic_by_id_from_metadata(
+    hass: HomeAssistant,
+    metadata: dict[str, tuple[int, StatisticMetaData]],
+) -> dict[str, dict[str, Any]]:
+    """Return a list of results for a given metadata dict."""
+    return {
+        meta["statistic_id"]: {
+            "display_unit_of_measurement": get_display_unit(
+                hass, meta["statistic_id"], meta["unit_of_measurement"]
+            ),
+            "has_mean": meta["has_mean"],
+            "has_sum": meta["has_sum"],
+            "name": meta["name"],
+            "source": meta["source"],
+            "unit_class": _get_unit_class(meta["unit_of_measurement"]),
+            "unit_of_measurement": meta["unit_of_measurement"],
+        }
+        for _, meta in metadata.values()
+    }
+
+
+def _flatten_list_statistic_ids_metadata_result(
+    result: dict[str, dict[str, Any]]
+) -> list[dict]:
+    """Return a flat dict of metadata."""
+    return [
+        {
+            "statistic_id": _id,
+            "display_unit_of_measurement": info["display_unit_of_measurement"],
+            "has_mean": info["has_mean"],
+            "has_sum": info["has_sum"],
+            "name": info.get("name"),
+            "source": info["source"],
+            "statistics_unit_of_measurement": info["unit_of_measurement"],
+            "unit_class": info["unit_class"],
+        }
+        for _id, info in result.items()
+    ]
+
+
 def list_statistic_ids(
     hass: HomeAssistant,
-    statistic_ids: list[str] | None = None,
+    statistic_ids: set[str] | None = None,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
 ) -> list[dict]:
     """Return all statistic_ids (or filtered one) and unit of measurement.
@@ -959,30 +1029,17 @@ def list_statistic_ids(
     period.
     """
     result = {}
-    statistic_ids_set = set(statistic_ids) if statistic_ids else None
+    instance = get_instance(hass)
+    statistics_meta_manager = instance.statistics_meta_manager
 
     # Query the database
     with session_scope(hass=hass, read_only=True) as session:
-        metadata = get_instance(hass).statistics_meta_manager.get_many(
+        metadata = statistics_meta_manager.get_many(
             session, statistic_type=statistic_type, statistic_ids=statistic_ids
         )
+        result = _statistic_by_id_from_metadata(hass, metadata)
 
-        result = {
-            meta["statistic_id"]: {
-                "display_unit_of_measurement": get_display_unit(
-                    hass, meta["statistic_id"], meta["unit_of_measurement"]
-                ),
-                "has_mean": meta["has_mean"],
-                "has_sum": meta["has_sum"],
-                "name": meta["name"],
-                "source": meta["source"],
-                "unit_class": _get_unit_class(meta["unit_of_measurement"]),
-                "unit_of_measurement": meta["unit_of_measurement"],
-            }
-            for _, meta in metadata.values()
-        }
-
-    if not statistic_ids_set or statistic_ids_set.difference(result):
+    if not statistic_ids or statistic_ids.difference(result):
         # If we want all statistic_ids, or some are missing, we need to query
         # the integrations for the missing ones.
         #
@@ -1009,19 +1066,7 @@ def list_statistic_ids(
                 }
 
     # Return a list of statistic_id + metadata
-    return [
-        {
-            "statistic_id": _id,
-            "display_unit_of_measurement": info["display_unit_of_measurement"],
-            "has_mean": info["has_mean"],
-            "has_sum": info["has_sum"],
-            "name": info.get("name"),
-            "source": info["source"],
-            "statistics_unit_of_measurement": info["unit_of_measurement"],
-            "unit_class": info["unit_class"],
-        }
-        for _id, info in result.items()
-    ]
+    return _flatten_list_statistic_ids_metadata_result(result)
 
 
 def _reduce_statistics(
@@ -1698,7 +1743,7 @@ def _statistics_during_period_with_session(
     session: Session,
     start_time: datetime,
     end_time: datetime | None,
-    statistic_ids: list[str] | None,
+    statistic_ids: set[str] | None,
     period: Literal["5minute", "day", "hour", "week", "month"],
     units: dict[str, str] | None,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
@@ -1784,7 +1829,7 @@ def statistics_during_period(
     hass: HomeAssistant,
     start_time: datetime,
     end_time: datetime | None,
-    statistic_ids: list[str] | None,
+    statistic_ids: set[str] | None,
     period: Literal["5minute", "day", "hour", "week", "month"],
     units: dict[str, str] | None,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
@@ -1845,7 +1890,7 @@ def _get_last_statistics(
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[StatisticsRow]]:
     """Return the last number_of_stats statistics for a given statistic_id."""
-    statistic_ids = [statistic_id]
+    statistic_ids = {statistic_id}
     with session_scope(hass=hass, read_only=True) as session:
         # Fetch metadata for the given statistic_id
         metadata = get_instance(hass).statistics_meta_manager.get_many(
@@ -1930,7 +1975,7 @@ def _latest_short_term_statistics_stmt(
 
 def get_latest_short_term_statistics(
     hass: HomeAssistant,
-    statistic_ids: list[str],
+    statistic_ids: set[str],
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
     metadata: dict[str, tuple[int, StatisticMetaData]] | None = None,
 ) -> dict[str, list[StatisticsRow]]:
@@ -2031,7 +2076,7 @@ def _sorted_statistics_to_dict(
     hass: HomeAssistant,
     session: Session,
     stats: Sequence[Row[Any]],
-    statistic_ids: list[str] | None,
+    statistic_ids: set[str] | None,
     _metadata: dict[str, tuple[int, StatisticMetaData]],
     convert_units: bool,
     table: type[StatisticsBase],
@@ -2294,7 +2339,7 @@ def _import_statistics_with_session(
     """Import statistics to the database."""
     statistics_meta_manager = instance.statistics_meta_manager
     old_metadata_dict = statistics_meta_manager.get_many(
-        session, statistic_ids=[metadata["statistic_id"]]
+        session, statistic_ids={metadata["statistic_id"]}
     )
     _, metadata_id = statistics_meta_manager.update_or_add(
         session, metadata, old_metadata_dict
@@ -2338,7 +2383,7 @@ def adjust_statistics(
 
     with session_scope(session=instance.get_session()) as session:
         metadata = instance.statistics_meta_manager.get_many(
-            session, statistic_ids=[statistic_id]
+            session, statistic_ids={statistic_id}
         )
         if statistic_id not in metadata:
             return True
@@ -2476,7 +2521,7 @@ def _validate_db_schema_utf8(
     try:
         with session_scope(session=session_maker()) as session:
             old_metadata_dict = statistics_meta_manager.get_many(
-                session, statistic_ids=[statistic_id]
+                session, statistic_ids={statistic_id}
             )
             try:
                 statistics_meta_manager.update_or_add(
@@ -2573,7 +2618,7 @@ def _validate_db_schema(
                     session,
                     start_time,
                     None,
-                    [statistic_id],
+                    {statistic_id},
                     "hour" if table == Statistics else "5minute",
                     None,
                     {"last_reset", "max", "mean", "min", "state", "sum"},

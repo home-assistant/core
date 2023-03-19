@@ -34,7 +34,7 @@ QUERY_STATISTIC_META = (
 
 
 def _generate_get_metadata_stmt(
-    statistic_ids: list[str] | None = None,
+    statistic_ids: set[str] | None = None,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
     statistic_source: str | None = None,
 ) -> StatementLambdaElement:
@@ -89,7 +89,7 @@ class StatisticsMetaManager:
     def _get_from_database(
         self,
         session: Session,
-        statistic_ids: list[str] | None = None,
+        statistic_ids: set[str] | None = None,
         statistic_type: Literal["mean"] | Literal["sum"] | None = None,
         statistic_source: str | None = None,
     ) -> dict[str, tuple[int, StatisticMetaData]]:
@@ -196,12 +196,12 @@ class StatisticsMetaManager:
         self, session: Session, statistic_id: str
     ) -> tuple[int, StatisticMetaData] | None:
         """Resolve statistic_id to the metadata_id."""
-        return self.get_many(session, [statistic_id]).get(statistic_id)
+        return self.get_many(session, {statistic_id}).get(statistic_id)
 
     def get_many(
         self,
         session: Session,
-        statistic_ids: list[str] | None = None,
+        statistic_ids: set[str] | None = None,
         statistic_type: Literal["mean"] | Literal["sum"] | None = None,
         statistic_source: str | None = None,
     ) -> dict[str, tuple[int, StatisticMetaData]]:
@@ -228,22 +228,24 @@ class StatisticsMetaManager:
                 "Providing statistic_type and statistic_source is mutually exclusive of statistic_ids"
             )
 
-        results: dict[str, tuple[int, StatisticMetaData]] = {}
-        missing_statistic_id: list[str] = []
-
-        for statistic_id in statistic_ids:
-            if id_meta := self._stat_id_to_id_meta.get(statistic_id):
-                results[statistic_id] = id_meta
-            else:
-                missing_statistic_id.append(statistic_id)
-
-        if not missing_statistic_id:
+        results = self.get_from_cache(statistic_ids)
+        if not (missing_statistic_id := statistic_ids.difference(results)):
             return results
 
         # Fetch metadata from the database
         return results | self._get_from_database(
             session, statistic_ids=missing_statistic_id
         )
+
+    def get_from_cache(
+        self, statistic_ids: set[str]
+    ) -> dict[str, tuple[int, StatisticMetaData]]:
+        """Get metadata from cache."""
+        return {
+            statistic_id: id_meta
+            for statistic_id, id_meta in self._stat_id_to_id_meta.items()
+            if statistic_id in statistic_ids
+        }
 
     def update_or_add(
         self,
@@ -320,3 +322,13 @@ class StatisticsMetaManager:
     def reset(self) -> None:
         """Reset the cache."""
         self._stat_id_to_id_meta = {}
+
+    def adjust_lru_size(self, new_size: int) -> None:
+        """Adjust the LRU cache size.
+
+        This call is not thread-safe and must be called from the
+        recorder thread.
+        """
+        lru: LRU = self._stat_id_to_id_meta
+        if new_size > lru.get_size():
+            lru.set_size(new_size)

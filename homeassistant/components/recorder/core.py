@@ -501,6 +501,7 @@ class Recorder(threading.Thread):
         new_size = self.hass.states.async_entity_ids_count() * 2
         self.state_attributes_manager.adjust_lru_size(new_size)
         self.states_meta_manager.adjust_lru_size(new_size)
+        self.statistics_meta_manager.adjust_lru_size(new_size)
 
     @callback
     def async_periodic_statistics(self) -> None:
