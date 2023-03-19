@@ -20,9 +20,12 @@ from samsungtvws.exceptions import ResponseError
 from samsungtvws.remote import ChannelEmitCommand
 
 from homeassistant.components.samsungtv.const import WEBSOCKET_SSL_PORT
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.util.dt as dt_util
 
 from .const import SAMPLE_DEVICE_INFO_UE48JU6400, SAMPLE_DEVICE_INFO_WIFI
+
+from tests.common import async_mock_service
 
 
 @pytest.fixture
@@ -307,3 +310,9 @@ def mac_address_fixture() -> Mock:
     """Patch getmac.get_mac_address."""
     with patch("getmac.get_mac_address", return_value=None) as mac:
         yield mac
+
+
+@pytest.fixture
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
+    """Track calls to a mock service."""
+    return async_mock_service(hass, "test", "automation")

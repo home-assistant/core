@@ -45,6 +45,7 @@ from .const import (
     CONF_MIN_TEMP,
     CONF_STEP,
     CONF_TARGET_TEMP,
+    CONF_WRITE_REGISTERS,
     DataType,
 )
 from .modbus import ModbusHub
@@ -106,6 +107,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             self._attr_hvac_modes = cast(list[HVACMode], [])
             self._attr_hvac_mode = None
             self._hvac_mode_mapping: list[tuple[int, HVACMode]] = []
+            self._hvac_mode_write_type = mode_config[CONF_WRITE_REGISTERS]
             mode_value_config = mode_config[CONF_HVAC_MODE_VALUES]
 
             for hvac_mode_kw, hvac_mode in (
@@ -131,6 +133,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
 
         if CONF_HVAC_ONOFF_REGISTER in config:
             self._hvac_onoff_register = config[CONF_HVAC_ONOFF_REGISTER]
+            self._hvac_onoff_write_type = config[CONF_WRITE_REGISTERS]
             if HVACMode.OFF not in self._attr_hvac_modes:
                 self._attr_hvac_modes.append(HVACMode.OFF)
         else:
@@ -147,23 +150,39 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         """Set new target hvac mode."""
         if self._hvac_onoff_register is not None:
             # Turn HVAC Off by writing 0 to the On/Off register, or 1 otherwise.
-            await self._hub.async_pymodbus_call(
-                self._slave,
-                self._hvac_onoff_register,
-                0 if hvac_mode == HVACMode.OFF else 1,
-                CALL_TYPE_WRITE_REGISTER,
-            )
+            if self._hvac_onoff_write_type:
+                await self._hub.async_pymodbus_call(
+                    self._slave,
+                    self._hvac_onoff_register,
+                    [0 if hvac_mode == HVACMode.OFF else 1],
+                    CALL_TYPE_WRITE_REGISTERS,
+                )
+            else:
+                await self._hub.async_pymodbus_call(
+                    self._slave,
+                    self._hvac_onoff_register,
+                    0 if hvac_mode == HVACMode.OFF else 1,
+                    CALL_TYPE_WRITE_REGISTER,
+                )
 
         if self._hvac_mode_register is not None:
             # Write a value to the mode register for the desired mode.
             for value, mode in self._hvac_mode_mapping:
                 if mode == hvac_mode:
-                    await self._hub.async_pymodbus_call(
-                        self._slave,
-                        self._hvac_mode_register,
-                        value,
-                        CALL_TYPE_WRITE_REGISTER,
-                    )
+                    if self._hvac_mode_write_type:
+                        await self._hub.async_pymodbus_call(
+                            self._slave,
+                            self._hvac_mode_register,
+                            [value],
+                            CALL_TYPE_WRITE_REGISTERS,
+                        )
+                    else:
+                        await self._hub.async_pymodbus_call(
+                            self._slave,
+                            self._hvac_mode_register,
+                            value,
+                            CALL_TYPE_WRITE_REGISTER,
+                        )
                     break
 
         await self.async_update()

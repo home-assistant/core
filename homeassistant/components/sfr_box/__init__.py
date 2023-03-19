@@ -1,11 +1,13 @@
 """SFR Box."""
 from __future__ import annotations
 
+import asyncio
+
 from sfrbox_api.bridge import SFRBox
 from sfrbox_api.exceptions import SFRBoxAuthenticationError, SFRBoxError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -37,15 +39,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         system=SFRDataUpdateCoordinator(
             hass, box, "system", lambda b: b.system_get_info()
         ),
+        wan=SFRDataUpdateCoordinator(hass, box, "wan", lambda b: b.wan_get_info()),
     )
+    # Preload system information
     await data.system.async_config_entry_first_refresh()
     system_info = data.system.data
 
+    # Preload other coordinators (based on net infrastructure)
+    tasks = [data.wan.async_config_entry_first_refresh()]
     if system_info.net_infra == "adsl":
-        await data.dsl.async_config_entry_first_refresh()
-    else:
-        platforms = list(platforms)
-        platforms.remove(Platform.BINARY_SENSOR)
+        tasks.append(data.dsl.async_config_entry_first_refresh())
+    await asyncio.gather(*tasks)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data
 
