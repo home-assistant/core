@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import ssl
 import sys
 from typing import Any
 
@@ -20,6 +21,7 @@ SERVER_SOFTWARE = "{0}/{1} httpx/{2} Python/{3[0]}.{3[1]}".format(
     APPLICATION_NAME, __version__, httpx.__version__, sys.version_info
 )
 USER_AGENT = "User-Agent"
+_DEFAULT_SSL_CONTEXT = ssl.create_default_context()
 
 
 @callback
@@ -65,7 +67,7 @@ def create_async_httpx_client(
     This method must be run in the event loop.
     """
     client = HassHttpXAsyncClient(
-        verify=verify_ssl,
+        verify=_DEFAULT_SSL_CONTEXT if verify_ssl else False,
         headers={USER_AGENT: SERVER_SOFTWARE},
         **kwargs,
     )
