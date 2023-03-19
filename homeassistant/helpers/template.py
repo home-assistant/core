@@ -1099,14 +1099,20 @@ def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
     return sorted(found.values(), key=lambda a: a.entity_id)
 
 
-def device_entities(hass: HomeAssistant, _device_id: str) -> Iterable[str]:
+def device_entities(
+    hass: HomeAssistant, _device_id: str, domain: str | None = None
+) -> Iterable[str]:
     """Get entity ids for entities tied to a device."""
     entity_reg = entity_registry.async_get(hass)
     entries = entity_registry.async_entries_for_device(entity_reg, _device_id)
-    return [entry.entity_id for entry in entries]
+    return [
+        entry.entity_id for entry in entries if domain is None or entry.domain == domain
+    ]
 
 
-def integration_entities(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
+def integration_entities(
+    hass: HomeAssistant, entry_name: str, domain: str | None = None
+) -> Iterable[str]:
     """Get entity ids for entities tied to an integration/domain.
 
     Provide entry_name as domain to get all entity id's for a integration/domain
@@ -1125,7 +1131,11 @@ def integration_entities(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
     if conf_entry is not None:
         ent_reg = entity_registry.async_get(hass)
         entries = entity_registry.async_entries_for_config_entry(ent_reg, conf_entry)
-        return [entry.entity_id for entry in entries]
+        return [
+            entry.entity_id
+            for entry in entries
+            if domain is None or entry.domain == domain
+        ]
 
     # fallback to just returning all entities for a domain
     # pylint: disable-next=import-outside-toplevel
@@ -1135,6 +1145,7 @@ def integration_entities(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
         entity_id
         for entity_id, info in entity_sources(hass).items()
         if info["domain"] == entry_name
+        and (domain is None or entity_id.split(".")[0] == domain)
     ]
 
 
@@ -1269,7 +1280,9 @@ def area_name(hass: HomeAssistant, lookup_value: str) -> str | None:
     return None
 
 
-def area_entities(hass: HomeAssistant, area_id_or_name: str) -> Iterable[str]:
+def area_entities(
+    hass: HomeAssistant, area_id_or_name: str, domain: str | None = None
+) -> Iterable[str]:
     """Return entities for a given area ID or name."""
     _area_id: str | None
     # if area_name returns a value, we know the input was an ID, otherwise we
@@ -1284,6 +1297,7 @@ def area_entities(hass: HomeAssistant, area_id_or_name: str) -> Iterable[str]:
     entity_ids = [
         entry.entity_id
         for entry in entity_registry.async_entries_for_area(ent_reg, _area_id)
+        if domain is None or entry.domain == domain
     ]
     dev_reg = device_registry.async_get(hass)
     # We also need to add entities tied to a device in the area that don't themselves
@@ -1293,7 +1307,7 @@ def area_entities(hass: HomeAssistant, area_id_or_name: str) -> Iterable[str]:
             entity.entity_id
             for device in device_registry.async_entries_for_area(dev_reg, _area_id)
             for entity in entity_registry.async_entries_for_device(ent_reg, device.id)
-            if entity.area_id is None
+            if entity.area_id is None and (domain is None or entity.domain == domain)
         ]
     )
     return entity_ids

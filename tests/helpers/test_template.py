@@ -2619,7 +2619,7 @@ async def test_device_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test device_entities function."""
-    config_entry = MockConfigEntry(domain="light")
+    config_entry = MockConfigEntry()
 
     # Test non existing device ids
     info = render_to_info(hass, "{{ device_entities('abc123') }}")
@@ -2674,15 +2674,15 @@ async def test_device_entities(
 
     # Test device with multiple entities, which have a state
     entity_registry.async_get_or_create(
-        "light",
+        "sensor",
         "hue",
         "ABCD",
         config_entry=config_entry,
         device_id=device_entry.id,
     )
-    hass.states.async_set("light.hue_abcd", "camper")
+    hass.states.async_set("sensor.hue_abcd", "camper")
     info = render_to_info(hass, f"{{{{ device_entities('{device_entry.id}') }}}}")
-    assert_result_info(info, ["light.hue_5678", "light.hue_abcd"], [])
+    assert_result_info(info, ["light.hue_5678", "sensor.hue_abcd"], [])
     assert info.rate_limit is None
     info = render_to_info(
         hass,
@@ -2692,8 +2692,15 @@ async def test_device_entities(
         ),
     )
     assert_result_info(
-        info, "light.hue_5678, light.hue_abcd", ["light.hue_5678", "light.hue_abcd"]
+        info, "light.hue_5678, sensor.hue_abcd", ["light.hue_5678", "sensor.hue_abcd"]
     )
+    assert info.rate_limit is None
+
+    # Test device with multiple entities, which have a state, using a domain filter
+    info = render_to_info(
+        hass, f"{{{{ device_entities('{device_entry.id}', 'light') }}}}"
+    )
+    assert_result_info(info, ["light.hue_5678"])
     assert info.rate_limit is None
 
 
@@ -2732,6 +2739,14 @@ async def test_integration_entities(
     # Test non existing integration/entry title
     info = render_to_info(hass, "{{ integration_entities('abc123') }}")
     assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    # Test integration entities with domain filter
+    entity_registry.async_get_or_create(
+        "light", "mock", "test", config_entry=config_entry
+    )
+    info = render_to_info(hass, "{{ integration_entities('Mock bridge 2', 'sensor') }}")
+    assert_result_info(info, [entity_entry.entity_id])
     assert info.rate_limit is None
 
 
@@ -3182,15 +3197,22 @@ async def test_area_entities(
         suggested_area="sensor.fake",
     )
     entity_registry.async_get_or_create(
-        "light",
-        "hue_light",
+        "sensor",
+        "hue",
         "5678",
         config_entry=config_entry,
         device_id=device_entry.id,
     )
 
     info = render_to_info(hass, f"{{{{ '{area_entry.name}' | area_entities }}}}")
-    assert_result_info(info, ["light.hue_5678", "light.hue_light_5678"])
+    assert_result_info(info, ["light.hue_5678", "sensor.hue_5678"])
+    assert info.rate_limit is None
+
+    # Test area entities with domain filter
+    info = render_to_info(
+        hass, f"{{{{ '{area_entry.name}' | area_entities('light') }}}}"
+    )
+    assert_result_info(info, ["light.hue_5678"])
     assert info.rate_limit is None
 
 
