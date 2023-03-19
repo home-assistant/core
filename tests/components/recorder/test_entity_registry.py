@@ -20,7 +20,9 @@ from .common import (
 from tests.common import mock_registry
 
 
-def test_rename_entity(hass_recorder: Callable[..., HomeAssistant]) -> None:
+def test_rename_entity(
+    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+) -> None:
     """Test states meta is migrated when entity_id is changed."""
     hass = hass_recorder()
     setup_component(hass, "sensor", {})
@@ -74,6 +76,7 @@ def test_rename_entity(hass_recorder: Callable[..., HomeAssistant]) -> None:
             )
             == 1
         )
+    assert "the new entity_id is already in use" not in caplog.text
 
 
 def test_rename_entity_collision(
