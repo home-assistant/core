@@ -59,26 +59,28 @@ class AndroidTVRemoteEntity(RemoteEntity):
         self._attr_is_on = api.is_on
         self._attr_current_activity = api.current_app
         device_info = api.device_info
+        assert config_entry.unique_id
+        assert device_info
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, config_entry.data[CONF_MAC])},
-            identifiers={(DOMAIN, str(config_entry.unique_id))},
+            identifiers={(DOMAIN, config_entry.unique_id)},
             name=self._name,
-            manufacturer=None if not device_info else device_info["manufacturer"],
-            model=None if not device_info else device_info["model"],
+            manufacturer=device_info["manufacturer"],
+            model=device_info["model"],
         )
 
         @callback
-        def is_on_updated(is_on: bool):
+        def is_on_updated(is_on: bool) -> None:
             self._attr_is_on = is_on
             self.async_write_ha_state()
 
         @callback
-        def current_app_updated(current_app: str):
+        def current_app_updated(current_app: str) -> None:
             self._attr_current_activity = current_app
             self.async_write_ha_state()
 
         @callback
-        def is_available_updated(is_available: bool):
+        def is_available_updated(is_available: bool) -> None:
             if is_available:
                 _LOGGER.info(
                     "Reconnected to %s at %s",
@@ -127,7 +129,7 @@ class AndroidTVRemoteEntity(RemoteEntity):
                     self._send_key_command(single_command, "SHORT")
                 await asyncio.sleep(delay_secs)
 
-    def _send_key_command(self, key_code: str, direction: str = "SHORT"):
+    def _send_key_command(self, key_code: str, direction: str = "SHORT") -> None:
         """Send a key press to Android TV.
 
         This does not block; it buffers the data and arranges for it to be sent out asynchronously.
@@ -139,7 +141,7 @@ class AndroidTVRemoteEntity(RemoteEntity):
                 "Connection to Android TV device is closed"
             ) from exc
 
-    def _send_launch_app_command(self, app_link: str):
+    def _send_launch_app_command(self, app_link: str) -> None:
         """Launch an app on Android TV.
 
         This does not block; it buffers the data and arranges for it to be sent out asynchronously.

@@ -63,6 +63,8 @@ class AndroidTVRemoteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured(updates={CONF_HOST: self.host})
                 return await self._async_start_pair()
             except (CannotConnect, ConnectionClosed):
+                # Typically invalid IP address. Stay in the user step allowing the user
+                # to enter a different host.
                 errors["base"] = "cannot_connect"
         return self.async_show_form(
             step_id="user",
@@ -103,11 +105,21 @@ class AndroidTVRemoteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     },
                 )
             except InvalidAuth:
+                # Typically invalid PIN. Stay in the pair step allowing the user
+                # to enter a different PIN.
                 errors["base"] = "invalid_auth"
             except ConnectionClosed:
+                # Either user canceled pairing on the Android TV itself (most common)
+                # or device doesn't respond to the specified host (device was unplugged,
+                # network was unplugged, or device got a new IP address).
+                # Attempt to pair again.
                 try:
                     return await self._async_start_pair()
                 except (CannotConnect, ConnectionClosed):
+                    # Device doesn't respond to the specified host. Abort.
+                    # If we are in the user flow we could go back to the user step to allow
+                    # them to enter a new IP address but we cannot do that for the zeroconf
+                    # flow. Simpler to abort for both flows.
                     return self.async_abort(reason="cannot_connect")
         return self.async_show_form(
             step_id="pair",
@@ -139,6 +151,8 @@ class AndroidTVRemoteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 return await self._async_start_pair()
             except (CannotConnect, ConnectionClosed):
+                # Device became network unreachable after discovery.
+                # Abort and let discovery find it again later.
                 return self.async_abort(reason="cannot_connect")
         return self.async_show_form(
             step_id="zeroconf_confirm",
@@ -164,6 +178,7 @@ class AndroidTVRemoteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 return await self._async_start_pair()
             except (CannotConnect, ConnectionClosed):
+                # Device isn't network reachable. Abort.
                 errors["base"] = "cannot_connect"
         return self.async_show_form(
             step_id="reauth_confirm",

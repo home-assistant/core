@@ -22,26 +22,32 @@ PLATFORMS: list[Platform] = [Platform.REMOTE]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Android TV Remote from a config entry."""
 
-    hass.data.setdefault(DOMAIN, {})
-
     api = create_api(hass, entry.data[CONF_HOST])
     try:
         await api.async_connect()
     except InvalidAuth as exc:
+        # Typically the Android TV is hard reset.
         raise ConfigEntryAuthFailed from exc
     except (CannotConnect, ConnectionClosed) as exc:
+        # Typically the Android TV isn't network reachable. Raise exception and let
+        # Home Assistant retry later. If device gets a new IP address the zeroconf flow
+        # will update the config.
         raise ConfigEntryNotReady from exc
 
-    def reauth_needed():
+    def reauth_needed() -> None:
+        """Start a reauth flow if Android TV is hard reset while reconnecting."""
         entry.async_start_reauth(hass)
 
+    # Start a task (canceled in disconnect) to keep reconnecting if device becomes
+    # network unreachable. If device gets a new IP address the zeroconf flow will
+    # update the config entry data and reload the config entry.
     api.keep_reconnecting(reauth_needed)
 
-    hass.data[DOMAIN][entry.entry_id] = api
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = api
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    async def on_hass_stop(event):
+    async def on_hass_stop(event) -> None:
         """Stop push updates when hass stops."""
         api.disconnect()
 
