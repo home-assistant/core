@@ -112,6 +112,7 @@ class StatisticsMetaManager:
             ):
                 statistics_meta = cast(StatisticsMeta, row)
                 id_meta = _statistics_meta_to_id_statistics_metadata(statistics_meta)
+
                 statistic_id = cast(str, statistics_meta.statistic_id)
                 results[statistic_id] = id_meta
                 if update_cache:
@@ -149,7 +150,7 @@ class StatisticsMetaManager:
         statistic_id: str,
         new_metadata: StatisticMetaData,
         old_metadata_dict: dict[str, tuple[int, StatisticMetaData]],
-    ) -> tuple[bool, int]:
+    ) -> tuple[str | None, int]:
         """Update metadata in the database.
 
         This call is not thread-safe and must be called from the
@@ -163,7 +164,7 @@ class StatisticsMetaManager:
             or old_metadata["unit_of_measurement"]
             != new_metadata["unit_of_measurement"]
         ):
-            return False, metadata_id
+            return None, metadata_id
 
         self._assert_in_recorder_thread()
         session.query(StatisticsMeta).filter_by(statistic_id=statistic_id).update(
@@ -182,7 +183,7 @@ class StatisticsMetaManager:
             old_metadata,
             new_metadata,
         )
-        return True, metadata_id
+        return statistic_id, metadata_id
 
     def load(self, session: Session) -> None:
         """Load the statistic_id to metadata_id mapping into memory.
@@ -259,7 +260,7 @@ class StatisticsMetaManager:
         session: Session,
         new_metadata: StatisticMetaData,
         old_metadata_dict: dict[str, tuple[int, StatisticMetaData]],
-    ) -> tuple[bool, int]:
+    ) -> tuple[str | None, int]:
         """Get metadata_id for a statistic_id.
 
         If the statistic_id is previously unknown, add it. If it's already known, update
@@ -267,16 +268,16 @@ class StatisticsMetaManager:
 
         Updating metadata source is not possible.
 
-        Returns a tuple of (updated, metadata_id).
+        Returns a tuple of (statistic_id | None, metadata_id).
 
-        updated is True if the metadata was updated, False if it was not updated.
+        statistic_id is None if the metadata was not updated
 
         This call is not thread-safe and must be called from the
         recorder thread.
         """
         statistic_id = new_metadata["statistic_id"]
         if statistic_id not in old_metadata_dict:
-            return True, self._add_metadata(session, statistic_id, new_metadata)
+            return statistic_id, self._add_metadata(session, statistic_id, new_metadata)
         return self._update_metadata(
             session, statistic_id, new_metadata, old_metadata_dict
         )

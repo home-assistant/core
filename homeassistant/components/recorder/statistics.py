@@ -713,10 +713,10 @@ def compile_missing_statistics(instance: Recorder) -> bool:
             periods_without_commit += 1
             end = start + timedelta(minutes=period_size)
             _LOGGER.debug("Compiling missing statistics for %s-%s", start, end)
-            metadata_modified = _compile_statistics(
+            modified_statistic_ids = _compile_statistics(
                 instance, session, start, end >= last_period
             )
-            if periods_without_commit == commit_interval or metadata_modified:
+            if periods_without_commit == commit_interval or modified_statistic_ids:
                 session.commit()
                 session.expunge_all()
                 periods_without_commit = 0
@@ -736,29 +736,40 @@ def compile_statistics(instance: Recorder, start: datetime, fire_events: bool) -
         session=instance.get_session(),
         exception_filter=_filter_unique_constraint_integrity_error(instance),
     ) as session:
-        _compile_statistics(instance, session, start, fire_events)
+        modified_statistic_ids = _compile_statistics(
+            instance, session, start, fire_events
+        )
+
+    if modified_statistic_ids:
+        # In the rare case that we have modified statistic_ids, we reload the modified
+        # statistics meta data into the cache in a fresh session to ensure that the
+        # cache is up to date and future calls to get statistics meta data will
+        # not have to hit the database again.
+        with session_scope(session=instance.get_session(), read_only=True) as session:
+            instance.statistics_meta_manager.get_many(session, modified_statistic_ids)
+
     return True
 
 
 def _compile_statistics(
     instance: Recorder, session: Session, start: datetime, fire_events: bool
-) -> bool:
+) -> set[str]:
     """Compile 5-minute statistics for all integrations with a recorder platform.
 
     This is a helper function for compile_statistics and compile_missing_statistics
     that does not retry on database errors since both callers already retry.
 
-    returns True if metadata was modified, False otherwise
+    returns a set of modified statistic_ids if any were modified.
     """
     assert start.tzinfo == dt_util.UTC, "start must be in UTC"
     end = start + timedelta(minutes=5)
     statistics_meta_manager = instance.statistics_meta_manager
-    metadata_modified = False
+    modified_statistic_ids: set[str] = set()
 
     # Return if we already have 5-minute statistics for the requested period
     if session.query(StatisticsRuns).filter_by(start=start).first():
         _LOGGER.debug("Statistics already compiled for %s-%s", start, end)
-        return metadata_modified
+        return modified_statistic_ids
 
     _LOGGER.debug("Compiling statistics for %s-%s", start, end)
     platform_stats: list[StatisticResult] = []
@@ -782,10 +793,11 @@ def _compile_statistics(
 
     # Insert collected statistics in the database
     for stats in platform_stats:
-        updated, metadata_id = statistics_meta_manager.update_or_add(
+        modified_statistic_id, metadata_id = statistics_meta_manager.update_or_add(
             session, stats["meta"], current_metadata
         )
-        metadata_modified |= updated
+        if modified_statistic_id is not None:
+            modified_statistic_ids.add(modified_statistic_id)
         _insert_statistics(
             session,
             StatisticsShortTerm,
@@ -804,7 +816,7 @@ def _compile_statistics(
         if start.minute == 55:
             instance.hass.bus.fire(EVENT_RECORDER_HOURLY_STATISTICS_GENERATED)
 
-    return metadata_modified
+    return modified_statistic_ids
 
 
 def _adjust_sum_statistics(

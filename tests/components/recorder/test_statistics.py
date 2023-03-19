@@ -393,7 +393,15 @@ def test_statistics_during_period_set_back_compat(
     setup_component(hass, "sensor", {})
     # This should not throw an exception when passed a list instead of a set
     assert (
-        statistics_during_period(hass, dt_util.utcnow(), statistic_ids=["sensor.test1"])
+        statistics.statistics_during_period(
+            hass,
+            dt_util.utcnow(),
+            None,
+            statistic_ids=["sensor.test1"],
+            period="5minute",
+            units=None,
+            types=set(),
+        )
         == {}
     )
 
