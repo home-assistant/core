@@ -12,16 +12,10 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
+    MediaClass,
     RepeatMode,
 )
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_EPISODE,
-    MEDIA_CLASS_SEASON,
-    MEDIA_CLASS_TRACK,
-    MEDIA_TYPE_ALBUM,
-    MEDIA_TYPE_EPISODE,
-    MEDIA_TYPE_MUSIC,
-)
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -381,9 +375,9 @@ class DemoMusicPlayer(AbstractDemoPlayer):
                 children.append(
                     BrowseMedia(
                         title=item_name,
-                        media_class=MEDIA_CLASS_TRACK,
+                        media_class=MediaClass.TRACK,
                         media_content_id=str(count),
-                        media_content_type=MEDIA_TYPE_MUSIC,
+                        media_content_type=MediaType.MUSIC,
                         can_play=True,
                         can_expand=False,
                     )
@@ -392,10 +386,10 @@ class DemoMusicPlayer(AbstractDemoPlayer):
 
         return BrowseMedia(
             title=self._attr_media_album_name,
-            media_class=MEDIA_TYPE_ALBUM,
-            children_media_class=MEDIA_CLASS_TRACK,
+            media_class=MediaType.ALBUM,
+            children_media_class=MediaClass.TRACK,
             media_content_id=search_id,
-            media_content_type=MEDIA_TYPE_ALBUM,
+            media_content_type=MediaType.ALBUM,
             can_play=True,
             can_expand=False,
             children=children,
@@ -473,9 +467,9 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
             children.append(
                 BrowseMedia(
                     title="Chapter " + str(episode),
-                    media_class=MEDIA_CLASS_EPISODE,
+                    media_class=MediaClass.EPISODE,
                     media_content_id=str(episode),
-                    media_content_type=MEDIA_TYPE_EPISODE,
+                    media_content_type=MediaType.EPISODE,
                     can_play=True,
                     can_expand=False,
                 )
@@ -484,10 +478,10 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
 
         return BrowseMedia(
             title=self._attr_media_series_title,
-            media_class=MEDIA_CLASS_SEASON,
-            children_media_class=MEDIA_CLASS_EPISODE,
+            media_class=MediaClass.SEASON,
+            children_media_class=MediaClass.EPISODE,
             media_content_id=str(1),
-            media_content_type=MEDIA_TYPE_EPISODE,
+            media_content_type=MediaType.EPISODE,
             can_play=True,
             can_expand=False,
             children=children,
