@@ -1908,24 +1908,24 @@ def _latest_short_term_statistics_stmt(
     metadata_ids: list[int],
 ) -> StatementLambdaElement:
     """Create the statement for finding the latest short term stat rows."""
-    stmt = lambda_stmt(lambda: select(*QUERY_STATISTICS_SHORT_TERM))
-    stmt += lambda s: s.join(
-        (
-            most_recent_statistic_row := (
-                select(
-                    StatisticsShortTerm.metadata_id,
-                    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-                    # pylint: disable-next=not-callable
-                    func.max(StatisticsShortTerm.start_ts).label("start_max"),
-                )
-                .where(StatisticsShortTerm.metadata_id.in_(metadata_ids))
-                .group_by(StatisticsShortTerm.metadata_id)
-            ).subquery()
-        ),
-        (StatisticsShortTerm.metadata_id == most_recent_statistic_row.c.metadata_id)
-        & (StatisticsShortTerm.start_ts == most_recent_statistic_row.c.start_max),
+    return lambda_stmt(
+        lambda: select(*QUERY_STATISTICS_SHORT_TERM).join(
+            (
+                most_recent_statistic_row := (
+                    select(
+                        StatisticsShortTerm.metadata_id,
+                        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+                        # pylint: disable-next=not-callable
+                        func.max(StatisticsShortTerm.start_ts).label("start_max"),
+                    )
+                    .where(StatisticsShortTerm.metadata_id.in_(metadata_ids))
+                    .group_by(StatisticsShortTerm.metadata_id)
+                ).subquery()
+            ),
+            (StatisticsShortTerm.metadata_id == most_recent_statistic_row.c.metadata_id)
+            & (StatisticsShortTerm.start_ts == most_recent_statistic_row.c.start_max),
+        )
     )
-    return stmt
 
 
 def get_latest_short_term_statistics(
