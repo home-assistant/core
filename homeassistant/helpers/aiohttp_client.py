@@ -271,7 +271,7 @@ def _async_get_connector(
         return cast(aiohttp.BaseConnector, hass.data[key])
 
     if verify_ssl:
-        ssl_context: bool | SSLContext = ssl_util.client_context()
+        ssl_context: bool | SSLContext = ssl_util.get_default_context()
     else:
         ssl_context = False
 

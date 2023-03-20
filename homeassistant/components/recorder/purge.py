@@ -8,7 +8,6 @@ import logging
 import time
 from typing import TYPE_CHECKING
 
-from sqlalchemy.engine.row import Row
 from sqlalchemy.orm.session import Session
 
 import homeassistant.util.dt as dt_util
@@ -74,7 +73,7 @@ def purge_old_data(
     with session_scope(session=instance.get_session()) as session:
         # Purge a max of SQLITE_MAX_BIND_VARS, based on the oldest states or events record
         has_more_to_purge = False
-        if _purging_legacy_format(session):
+        if instance.use_legacy_events_index and _purging_legacy_format(session):
             _LOGGER.debug(
                 "Purge running in legacy format as there are states with event_id"
                 " remaining"
@@ -671,14 +670,18 @@ def _purge_filtered_events(
     _LOGGER.debug(
         "Selected %s event_ids to remove that should be filtered", len(event_ids_set)
     )
-    states: list[Row[tuple[int]]] = (
-        session.query(States.state_id).filter(States.event_id.in_(event_ids_set)).all()
-    )
-    if states:
+    if (
+        instance.use_legacy_events_index
+        and (
+            states := session.query(States.state_id)
+            .filter(States.event_id.in_(event_ids_set))
+            .all()
+        )
+        and (state_ids := {state.state_id for state in states})
+    ):
         # These are legacy states that are linked to an event that are no longer
         # created but since we did not remove them when we stopped adding new ones
         # we will need to purge them here.
-        state_ids: set[int] = {state.state_id for state in states}
         _purge_state_ids(instance, session, state_ids)
     _purge_event_ids(session, event_ids_set)
     if unused_data_ids_set := _select_unused_event_data_ids(
