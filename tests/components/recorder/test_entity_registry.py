@@ -152,8 +152,8 @@ async def test_rename_entity_on_mocked_platform(
 
     assert "sensor.test1" not in hist
     # Make sure the states manager has not leaked the old entity_id
-    assert "sensor.test1" not in instance.states_manager._pending
-    assert "sensor.test1" not in instance.states_manager._last_committed_id
+    assert instance.states_manager.pop_committed("sensor.test1") is None
+    assert instance.states_manager.pop_pending("sensor.test1") is None
 
     hass.states.async_set("sensor.test99", "post_migrate")
     await async_wait_recording_done(hass)
