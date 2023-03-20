@@ -33,7 +33,7 @@ class FreeboxHomeEntity(Entity):
         node: dict[str, Any],
         sub_node: dict[str, Any] | None = None,
     ) -> None:
-        """Initialize a Freebox entity."""
+        """Initialize a Freebox Home entity."""
         self._hass = hass
         self._router = router
         self._node = node
