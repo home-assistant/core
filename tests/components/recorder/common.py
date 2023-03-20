@@ -39,6 +39,15 @@ class BlockRecorderTask(RecorderTask):
         time.sleep(self.seconds)
 
 
+@dataclass
+class ForceReturnConnectionToPool(RecorderTask):
+    """Force return connection to pool."""
+
+    def run(self, instance: Recorder) -> None:
+        """Handle the task."""
+        instance.event_session.commit()
+
+
 async def async_block_recorder(hass: HomeAssistant, seconds: float) -> None:
     """Block the recorders event loop for testing.
 

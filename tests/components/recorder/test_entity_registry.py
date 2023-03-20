@@ -14,6 +14,7 @@ from homeassistant.setup import setup_component
 from homeassistant.util import dt as dt_util
 
 from .common import (
+    ForceReturnConnectionToPool,
     assert_dict_of_states_equal_without_context_and_last_changed,
     async_wait_recording_done,
     record_states,
@@ -130,6 +131,14 @@ async def test_rename_entity_on_mocked_platform(
     )
 
     entity_reg.async_update_entity("sensor.test1", new_entity_id="sensor.test99")
+    await hass.async_block_till_done()
+    # We have to call the remove method ourselves since we are mocking the platform
+    hass.states.async_remove("sensor.test1")
+
+    # The remove will trigger a lookup of the non-existing entity_id in the database
+    # so we need to force the recorder to return the connection to the pool
+    # since our test setup only allows one connection at a time.
+    instance.queue_task(ForceReturnConnectionToPool())
 
     await async_wait_recording_done(hass)
 
