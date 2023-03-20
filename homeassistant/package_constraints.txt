@@ -48,7 +48,7 @@ ulid-transform==0.4.2
 voluptuous-serialize==2.6.0
 voluptuous==0.13.1
 yarl==1.8.1
-zeroconf==0.47.3
+zeroconf==0.47.4
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
