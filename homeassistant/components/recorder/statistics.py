@@ -2590,8 +2590,8 @@ def _validate_db_schema(
         for column in columns:
             if stored[column] != expected[column]:
                 schema_errors.add(f"{table_name}.{supports}")
-                _LOGGER.debug(
-                    "Column %s in database table %s does not support %s (%s != %s)",
+                _LOGGER.error(
+                    "Column %s in database table %s does not support %s (stored=%s != expected=%s)",
                     column,
                     table_name,
                     supports,
@@ -2727,18 +2727,14 @@ def correct_db_schema(
                 ],
             )
         if f"{table.__tablename__}.µs precision" in schema_errors:
-            # Attempt to convert datetime columns to µs precision
-            if instance.dialect_name == SupportedDialect.MYSQL:
-                datetime_type = "DATETIME(6)"
-            else:
-                datetime_type = "TIMESTAMP(6) WITH TIME ZONE"
+            # Attempt to convert timestamp columns to µs precision
             _modify_columns(
                 session_maker,
                 engine,
                 table.__tablename__,
                 [
-                    f"last_reset {datetime_type}",
-                    f"start {datetime_type}",
+                    "last_reset_ts DOUBLE PRECISION",
+                    "start_ts DOUBLE PRECISION",
                 ],
             )
 
