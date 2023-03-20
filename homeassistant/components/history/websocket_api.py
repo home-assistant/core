@@ -29,6 +29,7 @@ from homeassistant.core import (
     State,
     callback,
     is_callback,
+    valid_entity_id,
 )
 from homeassistant.helpers.entityfilter import EntityFilter
 from homeassistant.helpers.event import (
@@ -135,6 +136,13 @@ async def ws_get_history_during_period(
         return
 
     entity_ids = msg.get("entity_ids")
+    if entity_ids is not None:
+        for entity_id in entity_ids:
+            if not valid_entity_id(entity_id):
+                connection.send_error(
+                    msg["id"], "invalid_entity_ids", "Invalid entity_ids"
+                )
+                return
     include_start_time_state = msg["include_start_time_state"]
     no_attributes = msg["no_attributes"]
 
@@ -460,6 +468,13 @@ async def ws_stream(
             return
 
     entity_ids = msg.get("entity_ids")
+    if entity_ids is not None:
+        for entity_id in entity_ids:
+            if not valid_entity_id(entity_id):
+                connection.send_error(
+                    msg["id"], "invalid_entity_ids", "Invalid entity_ids"
+                )
+                return
     include_start_time_state = msg["include_start_time_state"]
     significant_changes_only = msg["significant_changes_only"]
     no_attributes = msg["no_attributes"]
