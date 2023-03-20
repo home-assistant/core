@@ -32,8 +32,9 @@ from .const import (
     ATTR_TIMESTAMP,
     ATTR_VOLUME,
     DOMAIN,
+    SERVICE_FLIP,
 )
-from .home_base import FreeboxHomeBaseClass
+from .home_base import FreeboxHomeEntity
 from .router import FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,7 +58,7 @@ async def async_setup_entry(
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
-        "flip",
+        SERVICE_FLIP,
         {},
         "async_flip",
     )
@@ -78,7 +79,7 @@ def add_entities(hass: HomeAssistant, router, async_add_entities, tracked):
         async_add_entities(new_tracked, True)
 
 
-class FreeboxCamera(FreeboxHomeBaseClass, FFmpegCamera):
+class FreeboxCamera(FreeboxHomeEntity, FFmpegCamera):
     """Representation of a Freebox camera."""
 
     def __init__(
