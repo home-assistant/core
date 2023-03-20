@@ -166,9 +166,7 @@ class FreeboxRouter:
             return
 
         for home_node in home_nodes:
-            if home_node["category"] in [
-                HOME_COMPATIBLE_PLATFORM,
-            ]:
+            if home_node["category"] in HOME_COMPATIBLE_PLATFORMS:
                 if self.home_devices.get(home_node["id"]) is None:
                     new_device = True
                 self.home_devices[home_node["id"]] = home_node
