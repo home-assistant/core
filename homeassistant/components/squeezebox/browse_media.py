@@ -71,6 +71,8 @@ async def build_item_response(entity, player, payload):
 
     media_class = CONTENT_TYPE_MEDIA_CLASS[search_type]
 
+    """For wildcard searches, search_id is the query as `*<query>*`.
+         search_type is the origional media_type"""
     if "*" in search_id:
         items = await player._lms.async_query_category(
             MEDIA_TYPE_TO_SQUEEZEBOX[search_type],
@@ -139,7 +141,9 @@ async def build_item_response(entity, player, payload):
         can_play=True,
         children=children,
         can_expand=True,
-        can_search=(search_type in SEARCHABLE_TYPES),
+        can_search=(
+            search_type in SEARCHABLE_TYPES
+        ),  #  can_search enables the search button on frontend
     )
 
 
