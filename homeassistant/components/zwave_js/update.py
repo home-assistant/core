@@ -338,7 +338,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         # so that the entity starts as off. If we have partial restore data due to an
         # upgrade to an HA version where this feature is released from one that is not
         # the entity will start in an unknown state until we can correct on next update
-        elif not state and not extra_data:
+        elif not state:
             self._attr_latest_version = self._attr_installed_version
 
         # Spread updates out in 5 minute increments to avoid flooding the network
