@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -180,7 +181,7 @@ class UpnpSensor(UpnpEntity, SensorEntity):
     entity_description: UpnpSensorEntityDescription
 
     @property
-    def native_value(self) -> str | None:
+    def native_value(self) -> str | datetime | int | float | None:
         """Return the state of the device."""
         if (key := self.entity_description.value_key) is None:
             return None
