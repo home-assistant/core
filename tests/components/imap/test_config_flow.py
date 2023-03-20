@@ -172,6 +172,12 @@ async def test_form_cannot_connect(hass: HomeAssistant, exc: Exception) -> None:
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    # make sure we do not lose the user input if somethings gets wrong
+    assert {
+        key: key.description.get("suggested_value")
+        for key in result2["data_schema"].schema
+    } == MOCK_CONFIG
+
 
 async def test_form_invalid_charset(hass: HomeAssistant) -> None:
     """Test we handle invalid charset."""

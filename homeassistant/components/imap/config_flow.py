@@ -92,9 +92,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             return self.async_create_entry(title=title, data=user_input)
 
-        return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
-        )
+        schema = self.add_suggested_values_to_schema(STEP_USER_DATA_SCHEMA, user_input)
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Import a config entry from configuration.yaml."""
