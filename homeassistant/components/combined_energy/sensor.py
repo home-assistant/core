@@ -1,4 +1,4 @@
-"""Support for getting collected information from Combined Energy."""
+"""Sensors and factory for enumerating devices from the Combined Energy API."""
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -9,7 +9,6 @@ from typing import Any
 from combined_energy import CombinedEnergy
 from combined_energy.models import Device, DeviceReadings, Installation
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -26,11 +25,9 @@ from .const import (
     DATA_INSTALLATION,
     DATA_LOG_SESSION,
     DOMAIN,
-    SENSOR_DESCRIPTION_CONNECTED,
     SENSOR_DESCRIPTIONS,
 )
 from .coordinator import (
-    CombinedEnergyConnectivityDataService,
     CombinedEnergyLogSessionService,
     CombinedEnergyReadingsDataService,
 )
@@ -47,50 +44,21 @@ async def async_setup_entry(
     installation: Installation = hass.data[DOMAIN][entry.entry_id][DATA_INSTALLATION]
 
     # Initialise services
-    connection = CombinedEnergyConnectivityDataService(hass, api)
     log_session = CombinedEnergyLogSessionService(hass, api)
+    log_session.async_setup()
+    await log_session.coordinator.async_refresh()
+
     readings = CombinedEnergyReadingsDataService(hass, api)
-    for service in (connection, log_session, readings):
-        service.async_setup()
-        await service.coordinator.async_refresh()
+    readings.async_setup()
+    await readings.coordinator.async_refresh()
 
     # Store log session into Data
     hass.data[DOMAIN][entry.entry_id][DATA_LOG_SESSION] = log_session
 
     # Build entity list
     sensor_factory = CombinedEnergyReadingsSensorFactory(hass, installation, readings)
-    entities: list[CombinedEnergyReadingsSensor | CombinedEnergyConnectedSensor] = list(
-        sensor_factory.entities()
-    )
-    # Insert connected as the first sensor
-    entities.insert(0, CombinedEnergyConnectedSensor(entry.title, connection))
-
+    entities: list[CombinedEnergyReadingsSensor] = list(sensor_factory.entities())
     async_add_entities(entities)
-
-
-class CombinedEnergyConnectedSensor(CoordinatorEntity, BinarySensorEntity):
-    """Representation of a Combined Energy connection status sensor."""
-
-    data_service: CombinedEnergyConnectivityDataService
-
-    def __init__(
-        self, entry_title: str, data_service: CombinedEnergyConnectivityDataService
-    ) -> None:
-        """Initialise Connected Sensor."""
-        super().__init__(data_service.coordinator)
-
-        self.data_service = data_service
-        self.entity_description = SENSOR_DESCRIPTION_CONNECTED
-
-        self._attr_name = f"{entry_title} {self.entity_description.name}"
-        self._attr_unique_id = f"install_{self.data_service.api.installation_id}-{self.entity_description.key}"
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return the state of the sensor."""
-        if self.data_service.data is not None:
-            return self.data_service.data.connected
-        return None
 
 
 class CombinedEnergyReadingsSensor(CoordinatorEntity, SensorEntity):
