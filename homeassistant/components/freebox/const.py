@@ -6,6 +6,7 @@ import socket
 from homeassistant.const import Platform
 
 DOMAIN = "freebox"
+SERVICE_FLIP = "flip"
 SERVICE_REBOOT = "reboot"
 VALUE_NOT_SET = ""
 
@@ -78,4 +79,4 @@ CATEGORY_TO_MODEL = {
     "iohome": "IOHome",
 }
 
-HOME_COMPATIBLE_PLATFORM = Platform.CAMERA
+HOME_COMPATIBLE_PLATFORMS = Platform.CAMERA

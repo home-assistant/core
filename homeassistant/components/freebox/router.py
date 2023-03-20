@@ -29,7 +29,7 @@ from .const import (
     APP_DESC,
     CONNECTION_SENSORS_KEYS,
     DOMAIN,
-    HOME_COMPATIBLE_PLATFORM,
+    HOME_COMPATIBLE_PLATFORMS,
     STORAGE_KEY,
     STORAGE_VERSION,
 )
@@ -167,9 +167,7 @@ class FreeboxRouter:
             return
 
         for home_node in home_nodes:
-            if home_node["category"] in [
-                HOME_COMPATIBLE_PLATFORM,
-            ]:
+            if home_node["category"] in HOME_COMPATIBLE_PLATFORMS:
                 if self.home_devices.get(home_node["id"]) is None:
                     new_device = True
                 self.home_devices[home_node["id"]] = home_node
@@ -242,5 +240,5 @@ class FreeboxRouter:
 
     @property
     def home(self) -> Home:
-        """Return the call."""
+        """Return the home."""
         return self._api.home

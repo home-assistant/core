@@ -14,7 +14,7 @@ from .router import FreeboxRouter
 _LOGGER = logging.getLogger(__name__)
 
 
-class FreeboxHomeBaseClass(Entity):
+class FreeboxHomeEntity(Entity):
     """Representation of a Freebox base entity."""
 
     def __init__(
@@ -24,7 +24,7 @@ class FreeboxHomeBaseClass(Entity):
         node: dict[str, Any],
         sub_node: dict[str, Any] | None = None,
     ) -> None:
-        """Initialize a Freebox entity."""
+        """Initialize a Freebox Home entity."""
         self._hass = hass
         self._router = router
         self._node = node
