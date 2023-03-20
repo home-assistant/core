@@ -911,3 +911,55 @@ async def test_entity_ids_limit_via_api_with_skip_initial_state(
     assert len(response_json) == 2
     assert response_json[0][0]["entity_id"] == "light.kitchen"
     assert response_json[1][0]["entity_id"] == "light.cow"
+
+
+async def test_history_with_invalid_entity_ids(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test sending valid and invalid entity_ids to the API."""
+    await async_setup_component(
+        hass,
+        "history",
+        {"history": {}},
+    )
+    hass.states.async_set("light.kitchen", "on")
+    hass.states.async_set("light.cow", "on")
+
+    await async_wait_recording_done(hass)
+    now = dt_util.utcnow().isoformat()
+    client = await hass_client()
+
+    response = await client.get(
+        f"/api/history/period/{now}?filter_entity_id=light.kitchen,light.cow",
+    )
+    assert response.status == HTTPStatus.OK
+
+    response = await client.get(
+        f"/api/history/period/{now}?filter_entity_id=light.kit!chen",
+    )
+    assert response.status == HTTPStatus.BAD_REQUEST
+
+    response = await client.get(
+        f"/api/history/period/{now}?filter_entity_id=light.kitchen,li-ght.cow",
+    )
+    assert response.status == HTTPStatus.BAD_REQUEST
+
+    response = await client.get(
+        f"/api/history/period/{now}?filter_entity_id=light.kitchen,light.cow&",
+    )
+    assert response.status == HTTPStatus.OK
+
+    response = await client.get(
+        f"/api/history/period/{now}?filter_entity_id=lig+ht.kitchen,light.cow",
+    )
+    assert response.status == HTTPStatus.BAD_REQUEST
+
+    response = await client.get(
+        f"/api/history/period/{now}?filter_entity_id=light.kitchenlight.cow",
+    )
+    assert response.status == HTTPStatus.BAD_REQUEST
+
+    response = await client.get(
+        f"/api/history/period/{now}?filter_entity_id=cow",
+    )
+    assert response.status == HTTPStatus.BAD_REQUEST
