@@ -45,6 +45,8 @@ OPTIONS_SCHEMA = vol.Schema(
     }
 )
 
+KEY_OPTIONS = {CONF_FOLDER, CONF_SEARCH}
+
 
 async def validate_input(user_input: dict[str, Any]) -> dict[str, str]:
     """Validate user input."""
@@ -154,13 +156,35 @@ class OptionsFlow(config_entries.OptionsFlow):
         """Initialize options flow."""
         self.config_entry = config_entry
 
+    def validate_key_options_input(
+        self, user_input: dict[str, Any] | None
+    ) -> dict[str, str]:
+        """Validate the user input against other config entries."""
+        if user_input is None:
+            return {}
+
+        errors: dict[str, str] = {}
+        for entry in [
+            entry
+            for entry in self.hass.config_entries.async_entries(DOMAIN)
+            if entry is not self.config_entry
+        ]:
+            if all(
+                item in entry.data.items()
+                for item in user_input.items()
+                if item[0] in KEY_OPTIONS
+            ):
+                errors["base"] = "entry_exists"
+                break
+        return errors
+
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the options."""
-        errors: dict[str, str] = {}
+        errors: dict[str, str] = self.validate_key_options_input(user_input)
         entry_data: dict[str, Any] = dict(self.config_entry.data)
-        if user_input is not None:
+        if not errors and user_input is not None:
             entry_data.update(user_input)
             errors = await validate_input(entry_data)
             if not errors:

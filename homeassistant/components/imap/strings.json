@@ -36,10 +36,6 @@
     "step": {
       "init": {
         "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "server": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]",
           "charset": "[%key:component::imap::config::step::user::data::charset%]",
           "folder": "[%key:component::imap::config::step::user::data::folder%]",
           "search": "[%key:component::imap::config::step::user::data::search%]"
@@ -47,6 +43,7 @@
       }
     },
     "error": {
+      "entry_exists": "An entry with these folder and search options already exists",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_charset": "[%key:component::imap::config::error::invalid_charset%]",

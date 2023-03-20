@@ -345,10 +345,7 @@ async def test_options_form(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.imap.config_flow.connect_to_server"
     ) as mock_client:
-        mock_client.return_value.search.return_value = (
-            "OK",
-            [b""],
-        )
+        mock_client.return_value.search.return_value = ("OK", [b""])
         result3 = await hass.config_entries.options.async_configure(
             result2["flow_id"],
             new_config,
@@ -357,5 +354,41 @@ async def test_options_form(hass: HomeAssistant) -> None:
     assert result3["data"] == {}
     for key, value in new_config.items():
         assert entry.data[key] == value
+
+    await hass.async_block_till_done()
+
+
+async def test_key_options_in_options_form(hass: HomeAssistant) -> None:
+    """Test we cannot change options if that would cause duplicates."""
+
+    entry1 = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    entry1.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry1.entry_id)
+
+    config2 = MOCK_CONFIG.copy()
+    config2["folder"] = "INBOX.Notifications"
+    entry2 = MockConfigEntry(domain=DOMAIN, data=config2)
+    entry2.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry2.entry_id)
+
+    # Now try to set back the folder option of entry2
+    # so that it conflicts with that of entry1
+    result = await hass.config_entries.options.async_init(entry2.entry_id)
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    new_config = MOCK_OPTIONS.copy()
+
+    with patch(
+        "homeassistant.components.imap.config_flow.connect_to_server"
+    ) as mock_client:
+        mock_client.return_value.search.return_value = ("OK", [b""])
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            new_config,
+        )
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["errors"] == {"base": "entry_exists"}
 
     await hass.async_block_till_done()
