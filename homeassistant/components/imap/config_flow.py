@@ -25,7 +25,7 @@ from .const import (
 from .coordinator import connect_to_server
 from .errors import InvalidAuth, InvalidFolder
 
-CONFIG_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
@@ -38,7 +38,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_validate_input(user_input: dict[str, Any]) -> dict[str, str]:
+async def validate_input(user_input: dict[str, Any]) -> dict[str, str]:
     """Validate user input."""
     errors = {}
     try:
@@ -50,26 +50,16 @@ async def async_validate_input(user_input: dict[str, Any]) -> dict[str, str]:
 
     except InvalidAuth:
         errors[CONF_USERNAME] = errors[CONF_PASSWORD] = "invalid_auth"
-        imap_client = None
     except InvalidFolder:
         errors[CONF_FOLDER] = "invalid_folder"
-        imap_client = None
     except (asyncio.TimeoutError, AioImapException, ConnectionRefusedError):
         errors["base"] = "cannot_connect"
-        imap_client = None
     else:
         if result != "OK":
             if "The specified charset is not supported" in lines[0].decode("utf-8"):
                 errors[CONF_CHARSET] = "invalid_charset"
             else:
                 errors[CONF_SEARCH] = "invalid_search"
-    if imap_client is not None:
-        try:
-            await imap_client.close()
-            await imap_client.logout()
-        finally:
-            pass
-
     return errors
 
 
@@ -84,7 +74,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
         if user_input is None:
-            return self.async_show_form(step_id="user", data_schema=CONFIG_SCHEMA)
+            return self.async_show_form(
+                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
+            )
 
         self._async_abort_entries_match(
             {
@@ -94,12 +86,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
-        if not (errors := await async_validate_input(user_input)):
+        if not (errors := await validate_input(user_input)):
             title = user_input[CONF_USERNAME]
 
             return self.async_create_entry(title=title, data=user_input)
 
-        schema = self.add_suggested_values_to_schema(CONFIG_SCHEMA, user_input)
+        schema = self.add_suggested_values_to_schema(STEP_USER_DATA_SCHEMA, user_input)
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
@@ -117,7 +109,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._reauth_entry
         if user_input is not None:
             user_input = {**self._reauth_entry.data, **user_input}
-            if not (errors := await async_validate_input(user_input)):
+            if not (errors := await validate_input(user_input)):
                 self.hass.config_entries.async_update_entry(
                     self._reauth_entry, data=user_input
                 )
@@ -160,16 +152,18 @@ class OptionsFlow(config_entries.OptionsFlow):
         errors: dict[str, str] = {}
         suggested_values: dict[str, Any]
         if user_input is not None:
-            errors = await async_validate_input(user_input)
+            errors = await validate_input(user_input)
             if not errors:
                 self.hass.config_entries.async_update_entry(
-                    self.config_entry, data=CONFIG_SCHEMA(user_input)
+                    self.config_entry, data=STEP_USER_DATA_SCHEMA(user_input)
                 )
                 return self.async_create_entry(title="", data={})
             suggested_values = user_input
         else:
             suggested_values = dict(self.config_entry.data)
 
-        schema = self.add_suggested_values_to_schema(CONFIG_SCHEMA, suggested_values)
+        schema = self.add_suggested_values_to_schema(
+            STEP_USER_DATA_SCHEMA, suggested_values
+        )
 
         return self.async_show_form(step_id="init", data_schema=schema, errors=errors)

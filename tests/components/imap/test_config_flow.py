@@ -292,7 +292,7 @@ async def test_reauth_failed_conn_error(hass: HomeAssistant) -> None:
         assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_options_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_options_form(hass: HomeAssistant) -> None:
     """Test we show the options form."""
 
     with patch(
