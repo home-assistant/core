@@ -1,4 +1,5 @@
 """Test the Flexit Nordic (BACnet) config flow."""
+import asyncio.exceptions
 from unittest.mock import patch
 
 from homeassistant import config_entries
@@ -42,7 +43,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+async def test_form_invalid_device(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -52,6 +53,28 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         "flexit_bacnet.device.FlexitBACnet.is_valid",
         return_value=False,
     ), patch("flexit_bacnet.device.FlexitBACnet.update"):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "address": "1.1.1.1",
+                "device_id": 2,
+            },
+        )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+    """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "flexit_bacnet.device.FlexitBACnet.update",
+        side_effect=asyncio.exceptions.TimeoutError,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

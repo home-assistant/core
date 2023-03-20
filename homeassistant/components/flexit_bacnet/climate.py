@@ -1,4 +1,5 @@
 """The Flexit Nordic (BACnet) integration."""
+import logging
 from typing import Any
 
 from flexit_bacnet import VENTILATION_MODE, VENTILATION_MODES, FlexitBACnet
@@ -12,24 +13,25 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
 
-async def async_setup_platform(
+
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_devices: AddEntitiesCallback,
 ) -> None:
     """Set up the Flexit Nordic unit."""
-    device: FlexitBACnet = hass.data[DOMAIN][config["entry_id"]]
+    device = hass.data[DOMAIN][config_entry.entry_id]
 
-    async_add_entities([FlexitClimateEntity(device)])
+    async_add_devices([FlexitClimateEntity(device)])
 
 
 class FlexitClimateEntity(ClimateEntity):
