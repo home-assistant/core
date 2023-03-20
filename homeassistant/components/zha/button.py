@@ -184,3 +184,13 @@ class AqaraPetFeederFeedButton(ZHAAttributeButton, id_suffix="feeding"):
     _attribute_name = "feeding"
     _attr_name = "Feed"
     _attribute_value = 1
+
+
+@MULTI_MATCH(quirk_classes={"zhaquirks.tuya.ts0601_garage.TuyaGarageSwitchTO"})
+class GarageButton(ZHAAttributeButton, id_suffix="button"):
+    """Defines a ZHA garage button."""
+
+    _attribute_name = "button"
+    _attr_name = "Button"
+    _attribute_value = 1
+    _attr_device_class = ButtonDeviceClass.RESTART

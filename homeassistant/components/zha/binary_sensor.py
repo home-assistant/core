@@ -214,3 +214,11 @@ class XiaomiPlugConsumerConnected(BinarySensor, id_suffix="consumer_connected"):
     SENSOR_ATTR = "consumer_connected"
     _attr_name: str = "Consumer connected"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PLUG
+
+
+@MULTI_MATCH(quirk_classes={"zhaquirks.tuya.ts0601_garage.TuyaGarageSwitchTO"})
+class Garage(BinarySensor):
+    """ZHA BinarySensor."""
+
+    SENSOR_ATTR = "contact_sensor"
+    _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.GARAGE_DOOR
