@@ -13,7 +13,7 @@ from verisure import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -59,9 +59,6 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
         return True
-
-    async def async_logout(self, _event: Event) -> None:
-        """Logout from Verisure."""
 
     async def _async_update_data(self) -> dict:
         """Fetch data from Verisure."""
