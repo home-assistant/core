@@ -45,7 +45,7 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input and user_input[CONF_USERNAME]:
             username = user_input[CONF_USERNAME]
-            await self.async_set_unique_id(username)
+            await self.async_set_unique_id(username.lower())
             self._abort_if_unique_id_configured()
             self._username = username
             client = await self._request_code(username)
