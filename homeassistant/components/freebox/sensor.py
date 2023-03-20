@@ -195,10 +195,7 @@ class FreeboxDiskSensor(FreeboxSensor):
         self._attr_name = f"{partition['label']} {description.name}"
         self._attr_unique_id = f"{self._router.mac} {description.key} {self._disk['id']} {self._partition['id']}"
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._disk["id"])},
             model=self._disk["model"],
             name=f"Disk {self._disk['id']}",

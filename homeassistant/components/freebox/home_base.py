@@ -6,7 +6,7 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import CATEGORY_TO_MODEL, DOMAIN, VALUE_NOT_SET
 from .router import FreeboxRouter
@@ -52,16 +52,13 @@ class FreeboxHomeEntity(Entity):
                 self._manufacturer = "Somfy"
                 self._model = CATEGORY_TO_MODEL.get("iohome")
 
-    @property
-    def device_info(self):
-        """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, self._id)},
-            "name": self._device_name,
-            "manufacturer": self._manufacturer,
-            "model": self._model,
-            "sw_version": self._firmware,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._id)},
+            name=self._device_name,
+            manufacturer=self._manufacturer,
+            model=self._model,
+            sw_version=self._firmware,
+        )
 
     async def async_update_signal(self):
         """Update signal."""
