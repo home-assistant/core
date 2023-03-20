@@ -24,7 +24,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import GeoJsonEventsFeedEntityManager
+from . import GeoJsonFeedEntityManager
 from .const import (
     ATTR_EXTERNAL_ID,
     DEFAULT_RADIUS_IN_KM,
@@ -52,11 +52,11 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the NSW Rural Fire Service Feeds platform."""
-    manager: GeoJsonEventsFeedEntityManager = hass.data[DOMAIN][FEED][entry.entry_id]
+    manager: GeoJsonFeedEntityManager = hass.data[DOMAIN][FEED][entry.entry_id]
 
     @callback
     def async_add_geolocation(
-        feed_manager: GeoJsonEventsFeedEntityManager,
+        feed_manager: GeoJsonFeedEntityManager,
         integration_id: str,
         external_id: str,
     ) -> None:
@@ -66,9 +66,7 @@ async def async_setup_entry(
         async_add_entities([new_entity], True)
 
     manager.listeners.append(
-        async_dispatcher_connect(
-            hass, manager.async_event_new_entity(), async_add_geolocation
-        )
+        async_dispatcher_connect(hass, manager.signal_new_entity, async_add_geolocation)
     )
     # Do not wait for update here so that the setup can be completed and because an
     # update will fetch data from the feed via HTTP and then process that data.
@@ -108,7 +106,7 @@ class GeoJsonLocationEvent(GeolocationEvent):
 
     def __init__(
         self,
-        feed_manager: GeoJsonEventsFeedEntityManager,
+        feed_manager: GeoJsonFeedEntityManager,
         integration_id: str,
         external_id: str,
     ) -> None:
