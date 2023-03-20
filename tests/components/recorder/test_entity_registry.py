@@ -6,6 +6,7 @@ from sqlalchemy import select
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import history
+from homeassistant.components.recorder.db_schema import StatesMeta
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import setup_component
@@ -68,13 +69,25 @@ def test_rename_entity(
             len(
                 list(
                     session.execute(
-                        select(recorder.db_schema.StatesMeta).filter(
-                            recorder.db_schema.StatesMeta.entity_id == "sensor.test99"
+                        select(StatesMeta).filter(
+                            StatesMeta.entity_id == "sensor.test99"
                         )
                     )
                 )
             )
             == 1
+        )
+        assert (
+            len(
+                list(
+                    session.execute(
+                        select(StatesMeta).filter(
+                            StatesMeta.entity_id == "sensor.test1"
+                        )
+                    )
+                )
+            )
+            == 0
         )
     assert "the new entity_id is already in use" not in caplog.text
 
@@ -104,6 +117,7 @@ def test_rename_entity_collision(
     zero, four, states = record_states(hass)
     hist = history.get_significant_states(hass, zero, four)
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
+    assert len(hist["sensor.test1"]) == 3
 
     hass.states.set("sensor.test99", "collision")
     hass.states.remove("sensor.test99")
@@ -120,14 +134,8 @@ def test_rename_entity_collision(
 
     # History is not migrated on collision
     hist = history.get_significant_states(hass, zero, four)
-    states["sensor.test99"] = states.pop("sensor.test1")
-
+    assert len(hist["sensor.test1"]) == 3
     assert len(hist["sensor.test99"]) == 2
-
-    hass.states.set("sensor.test99", "post_migrate")
-    wait_recording_done(hass)
-    new_hist = history.get_significant_states(hass, zero, dt_util.utcnow())
-    assert new_hist["sensor.test99"][-1].state == "post_migrate"
 
     with session_scope(hass=hass) as session:
         assert (
@@ -136,6 +144,38 @@ def test_rename_entity_collision(
                     session.execute(
                         select(recorder.db_schema.StatesMeta).filter(
                             recorder.db_schema.StatesMeta.entity_id == "sensor.test99"
+                        )
+                    )
+                )
+            )
+            == 1
+        )
+
+    hass.states.set("sensor.test99", "post_migrate")
+    wait_recording_done(hass)
+    new_hist = history.get_significant_states(hass, zero, dt_util.utcnow())
+    assert new_hist["sensor.test99"][-1].state == "post_migrate"
+    assert len(hist["sensor.test99"]) == 2
+
+    with session_scope(hass=hass) as session:
+        assert (
+            len(
+                list(
+                    session.execute(
+                        select(StatesMeta).filter(
+                            StatesMeta.entity_id == "sensor.test99"
+                        )
+                    )
+                )
+            )
+            == 1
+        )
+        assert (
+            len(
+                list(
+                    session.execute(
+                        select(StatesMeta).filter(
+                            StatesMeta.entity_id == "sensor.test1"
                         )
                     )
                 )
