@@ -453,10 +453,10 @@ def _compile_statistics(  # noqa: C901
     # that are not in the metadata table and we are not working
     # with them anyway.
     old_metadatas = statistics.get_metadata_with_session(
-        get_instance(hass), session, statistic_ids=list(entities_with_float_states)
+        get_instance(hass), session, statistic_ids=set(entities_with_float_states)
     )
     to_process: list[tuple[str, str | None, str, list[tuple[float, State]]]] = []
-    to_query: list[str] = []
+    to_query: set[str] = set()
     for _state in sensor_states:
         entity_id = _state.entity_id
         if not (maybe_float_states := entities_with_float_states.get(entity_id)):
@@ -472,7 +472,7 @@ def _compile_statistics(  # noqa: C901
         state_class: str = _state.attributes[ATTR_STATE_CLASS]
         to_process.append((entity_id, statistics_unit, state_class, valid_float_states))
         if "sum" in wanted_statistics[entity_id]:
-            to_query.append(entity_id)
+            to_query.add(entity_id)
 
     last_stats = statistics.get_latest_short_term_statistics(
         hass, to_query, {"last_reset", "state", "sum"}, metadata=old_metadatas

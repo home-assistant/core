@@ -3067,7 +3067,7 @@ def test_compile_hourly_statistics_changing_state_class(
             "unit_class": unit_class,
         },
     ]
-    metadata = get_metadata(hass, statistic_ids=("sensor.test1",))
+    metadata = get_metadata(hass, statistic_ids={"sensor.test1"})
     assert metadata == {
         "sensor.test1": (
             1,
@@ -3103,7 +3103,7 @@ def test_compile_hourly_statistics_changing_state_class(
             "unit_class": unit_class,
         },
     ]
-    metadata = get_metadata(hass, statistic_ids=("sensor.test1",))
+    metadata = get_metadata(hass, statistic_ids={"sensor.test1"})
     assert metadata == {
         "sensor.test1": (
             1,
