@@ -55,7 +55,9 @@ class VerisureAlarm(
         """Return the unique ID for this entity."""
         return self.coordinator.entry.data[CONF_GIID]
 
-    async def _async_set_arm_state(self, state: str, command_data: dict) -> None:
+    async def _async_set_arm_state(
+        self, state: str, command_data: dict[str, str | dict[str, str]]
+    ) -> None:
         """Send set arm state command."""
         arm_state = await self.hass.async_add_executor_job(
             self.coordinator.verisure.request, command_data
