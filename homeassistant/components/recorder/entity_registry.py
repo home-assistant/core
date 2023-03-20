@@ -11,6 +11,7 @@ from .util import get_instance, session_scope
 _LOGGER = logging.getLogger(__name__)
 
 
+@callback
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the entity hooks."""
 
