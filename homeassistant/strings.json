@@ -1,5 +1,8 @@
 {
   "common": {
+    "generic": {
+      "model": "Model"
+    },
     "state": {
       "off": "Off",
       "on": "On",

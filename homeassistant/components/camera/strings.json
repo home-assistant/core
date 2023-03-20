@@ -30,7 +30,7 @@
           }
         },
         "model_name": {
-          "name": "Model"
+          "name": "[%key:common::generic::model%]"
         }
       }
     }
