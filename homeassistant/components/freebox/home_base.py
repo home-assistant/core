@@ -8,16 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import (
-    DOMAIN,
-    MODEL_ALARM,
-    MODEL_CAMERA,
-    MODEL_DWS,
-    MODEL_IOHOME,
-    MODEL_KBF,
-    MODEL_PIR,
-    MODEL_RTS,
-)
+from .const import DOMAIN, CATEGORY_TO_MODEL
 from .router import FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,25 +41,16 @@ class FreeboxHomeEntity(Entity):
         self._available = True
         self._firmware = node["props"].get("FwVersion")
         self._manufacturer = "Freebox SAS"
-        self._model = ""
-        self._remove_signal_update: Any
+        self._model = CATEGORY_TO_MODEL.get(node["category"])
+        if self._model is None:
+            if node["type"].get("inherit") == "node::rts":
+                self._manufacturer = "Somfy"
+                self._model = "RTS"
+            elif node["type"].get("inherit") == "node::ios":
+                self._manufacturer = "Somfy"
+                self._model = "IOHome"
 
-        if node["category"] == "pir":
-            self._model = MODEL_PIR
-        elif node["category"] == "camera":
-            self._model = MODEL_CAMERA
-        elif node["category"] == "dws":
-            self._model = MODEL_DWS
-        elif node["category"] == "kfb":
-            self._model = MODEL_KBF
-        elif node["category"] == "alarm":
-            self._model = MODEL_ALARM
-        elif node["type"].get("inherit") == "node::rts":
-            self._manufacturer = "Somfy"
-            self._model = MODEL_RTS
-        elif node["type"].get("inherit") == "node::ios":
-            self._manufacturer = "Somfy"
-            self._model = MODEL_IOHOME
+        self._remove_signal_update: Any
 
     @property
     def device_info(self):
