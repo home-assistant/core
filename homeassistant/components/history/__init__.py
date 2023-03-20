@@ -121,7 +121,7 @@ class HistoryPeriodView(HomeAssistantView):
         if entity_ids_str:
             entity_ids = entity_ids_str.lower().split(",")
             for entity_id in entity_ids:
-                if not valid_entity_id(entity_id):
+                if not hass.states.get(entity_id) or not valid_entity_id(entity_id):
                     return self.json_message(
                         "Invalid filter_entity_id", HTTPStatus.BAD_REQUEST
                     )
