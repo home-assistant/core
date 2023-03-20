@@ -24,7 +24,7 @@ from homeassistant.components.recorder.filters import (
     sqlalchemy_filter_from_include_exclude_conf,
 )
 from homeassistant.components.recorder.util import session_scope
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, valid_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
@@ -120,6 +120,11 @@ class HistoryPeriodView(HomeAssistantView):
         entity_ids = None
         if entity_ids_str:
             entity_ids = entity_ids_str.lower().split(",")
+            for entity_id in entity_ids:
+                if not valid_entity_id(entity_id):
+                    return self.json_message(
+                        "Invalid filter_entity_id", HTTPStatus.BAD_REQUEST
+                    )
         include_start_time_state = "skip_initial_state" not in request.query
         significant_changes_only = (
             request.query.get("significant_changes_only", "1") != "0"
