@@ -152,7 +152,7 @@ class StatesMetaManager(BaseLRUTableManager[StatesMeta]):
         new_entity_id: str,
     ) -> bool:
         """Update states metadata for an entity_id."""
-        if self.get(new_entity_id, session, False) is not None:
+        if self.get(new_entity_id, session, True) is not None:
             # If the new entity id already exists we have
             # a collision and should not update.
             return False
