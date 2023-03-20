@@ -30,6 +30,7 @@ from homeassistant.util.ulid import ulid_to_bytes
 from .const import SupportedDialect
 from .db_schema import (
     CONTEXT_ID_BIN_MAX_LENGTH,
+    LEGACY_STATES_EVENT_ID_INDEX,
     SCHEMA_VERSION,
     STATISTICS_TABLES,
     TABLE_STATES,
@@ -51,6 +52,7 @@ from .queries import (
     find_event_type_to_migrate,
     find_events_context_ids_to_migrate,
     find_states_context_ids_to_migrate,
+    has_used_states_event_ids,
 )
 from .statistics import (
     correct_db_schema as statistics_correct_db_schema,
@@ -64,7 +66,12 @@ from .tasks import (
     PostSchemaMigrationTask,
     StatisticsTimestampMigrationCleanupTask,
 )
-from .util import database_job_retry_wrapper, retryable_database_job, session_scope
+from .util import (
+    database_job_retry_wrapper,
+    get_index_by_name,
+    retryable_database_job,
+    session_scope,
+)
 
 if TYPE_CHECKING:
     from . import Recorder
@@ -308,18 +315,7 @@ def _drop_index(
         with session_scope(session=session_maker()) as session, contextlib.suppress(
             SQLAlchemyError
         ):
-            connection = session.connection()
-            inspector = sqlalchemy.inspect(connection)
-            indexes = inspector.get_indexes(table_name)
-            if index_to_drop := next(
-                (
-                    possible_index["name"]
-                    for possible_index in indexes
-                    if possible_index["name"]
-                    and possible_index["name"].endswith(f"_{index_name}")
-                ),
-                None,
-            ):
+            if index_to_drop := get_index_by_name(session, table_name, index_name):
                 connection.execute(text(f"DROP INDEX {index_to_drop}"))
                 success = True
 
@@ -517,11 +513,7 @@ def _drop_foreign_key_constraints(
     inspector = sqlalchemy.inspect(engine)
     drops = []
     for foreign_key in inspector.get_foreign_keys(table):
-        if (
-            foreign_key["name"]
-            and foreign_key.get("options", {}).get("ondelete")
-            and foreign_key["constrained_columns"] == columns
-        ):
+        if foreign_key["name"] and foreign_key["constrained_columns"] == columns:
             drops.append(ForeignKeyConstraint((), (), name=foreign_key["name"]))
 
     # Bind the ForeignKeyConstraints to the table
@@ -593,7 +585,7 @@ def _apply_update(  # noqa: C901
         # but it was removed in version 32
     elif new_version == 5:
         # Create supporting index for States.event_id foreign key
-        _create_index(session_maker, "states", "ix_states_event_id")
+        _create_index(session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX)
     elif new_version == 6:
         _add_columns(
             session_maker,
@@ -873,7 +865,7 @@ def _apply_update(  # noqa: C901
             # There may be duplicated statistics_meta entries, delete duplicates
             # and try again
             with session_scope(session=session_maker()) as session:
-                delete_statistics_meta_duplicates(session)
+                delete_statistics_meta_duplicates(instance, session)
             _create_index(
                 session_maker, "statistics_meta", "ix_statistics_meta_statistic_id"
             )
@@ -1457,7 +1449,9 @@ def migrate_entity_ids(instance: Recorder) -> bool:
     with session_scope(session=instance.get_session()) as session:
         if states := session.execute(find_entity_ids_to_migrate()).all():
             entity_ids = {entity_id for _, entity_id in states}
-            entity_id_to_metadata_id = states_meta_manager.get_many(entity_ids, session)
+            entity_id_to_metadata_id = states_meta_manager.get_many(
+                entity_ids, session, True
+            )
             if missing_entity_ids := {
                 # We should never see _EMPTY_ENTITY_ID in the states table
                 # but we need to be defensive so we don't fail the migration
@@ -1525,6 +1519,42 @@ def post_migrate_entity_ids(instance: Recorder) -> bool:
 
     _LOGGER.debug("Cleanup legacy entity_ids done=%s", is_done)
     return is_done
+
+
+@retryable_database_job("cleanup_legacy_event_ids")
+def cleanup_legacy_states_event_ids(instance: Recorder) -> bool:
+    """Remove old event_id index from states.
+
+    We used to link states to events using the event_id column but we no
+    longer store state changed events in the events table.
+
+    If all old states have been purged and existing states are in the new
+    format we can drop the index since it can take up ~10MB per 1M rows.
+    """
+    session_maker = instance.get_session
+    _LOGGER.debug("Cleanup legacy entity_ids")
+    with session_scope(session=session_maker()) as session:
+        result = session.execute(has_used_states_event_ids()).scalar()
+        # In the future we may migrate existing states to the new format
+        # but in practice very few of these still exist in production and
+        # removing the index is the likely all that needs to happen.
+        all_gone = not result
+
+    if all_gone:
+        # Only drop the index if there are no more event_ids in the states table
+        # ex all NULL
+        assert instance.engine is not None, "engine should never be None"
+        if instance.dialect_name != SupportedDialect.SQLITE:
+            # SQLite does not support dropping foreign key constraints
+            # so we can't drop the index at this time but we can avoid
+            # looking for legacy rows during purge
+            _drop_foreign_key_constraints(
+                session_maker, instance.engine, TABLE_STATES, ["event_id"]
+            )
+            _drop_index(session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX)
+        instance.use_legacy_events_index = False
+
+    return True
 
 
 def _initialize_database(session: Session) -> bool:

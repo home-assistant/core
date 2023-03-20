@@ -4,12 +4,13 @@ import json
 import sqlite3
 from unittest.mock import patch
 
+from freezegun import freeze_time
 import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError
 from sqlalchemy.orm.session import Session
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import Recorder
+from homeassistant.components.recorder import Recorder, migration
 from homeassistant.components.recorder.const import (
     SQLITE_MAX_BIND_VARS,
     SupportedDialect,
@@ -25,6 +26,7 @@ from homeassistant.components.recorder.db_schema import (
     StatisticsRuns,
     StatisticsShortTerm,
 )
+from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.components.recorder.purge import purge_old_data
 from homeassistant.components.recorder.queries import select_event_type_ids
 from homeassistant.components.recorder.services import (
@@ -80,7 +82,7 @@ async def test_purge_old_states(
 
         events = session.query(Events).filter(Events.event_type == "state_changed")
         assert events.count() == 0
-        assert "test.recorder2" in instance._old_states
+        assert "test.recorder2" in instance.states_manager._last_committed_id
 
         purge_before = dt_util.utcnow() - timedelta(days=4)
 
@@ -96,7 +98,7 @@ async def test_purge_old_states(
         assert states.count() == 2
         assert state_attributes.count() == 1
 
-        assert "test.recorder2" in instance._old_states
+        assert "test.recorder2" in instance.states_manager._last_committed_id
 
         states_after_purge = list(session.query(States))
         # Since these states are deleted in batches, we can't guarantee the order
@@ -113,7 +115,7 @@ async def test_purge_old_states(
         assert states.count() == 2
         assert state_attributes.count() == 1
 
-        assert "test.recorder2" in instance._old_states
+        assert "test.recorder2" in instance.states_manager._last_committed_id
 
         # run purge_old_data again
         purge_before = dt_util.utcnow()
@@ -128,7 +130,7 @@ async def test_purge_old_states(
         assert states.count() == 0
         assert state_attributes.count() == 0
 
-        assert "test.recorder2" not in instance._old_states
+        assert "test.recorder2" not in instance.states_manager._last_committed_id
 
     # Add some more states
     await _add_test_states(hass)
@@ -142,7 +144,7 @@ async def test_purge_old_states(
 
         events = session.query(Events).filter(Events.event_type == "state_changed")
         assert events.count() == 0
-        assert "test.recorder2" in instance._old_states
+        assert "test.recorder2" in instance.states_manager._last_committed_id
 
         state_attributes = session.query(StateAttributes)
         assert state_attributes.count() == 3
@@ -684,7 +686,7 @@ def _convert_pending_states_to_meta(instance: Recorder, session: Session) -> Non
             states.add(object)
 
     entity_id_to_metadata_ids = instance.states_meta_manager.get_many(
-        entity_ids, session
+        entity_ids, session, True
     )
 
     for state in states:
@@ -1724,6 +1726,18 @@ async def test_purge_can_mix_legacy_and_new_format(
 ) -> None:
     """Test purging with legacy a new events."""
     instance = await async_setup_recorder_instance(hass)
+    await async_wait_recording_done(hass)
+    # New databases are no longer created with the legacy events index
+    assert instance.use_legacy_events_index is False
+
+    def _recreate_legacy_events_index():
+        """Recreate the legacy events index since its no longer created on new instances."""
+        migration._create_index(instance.get_session, "states", "ix_states_event_id")
+        instance.use_legacy_events_index = True
+
+    await instance.async_add_executor_job(_recreate_legacy_events_index)
+    assert instance.use_legacy_events_index is True
+
     utcnow = dt_util.utcnow()
     eleven_days_ago = utcnow - timedelta(days=11)
     with session_scope(hass=hass) as session:
@@ -1974,6 +1988,7 @@ async def test_purge_old_states_purges_the_state_metadata_ids(
             return instance.states_meta_manager.get_many(
                 ["sensor.one", "sensor.two", "sensor.three", "sensor.unused"],
                 session,
+                True,
             )
 
     entity_id_to_metadata_id = await instance.async_add_executor_job(_insert_states)
@@ -2020,3 +2035,70 @@ async def test_purge_old_states_purges_the_state_metadata_ids(
         assert finished
         assert states.count() == 0
         assert states_meta.count() == 0
+
+
+async def test_purge_entities_keep_days(
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
+) -> None:
+    """Test purging states with an entity filter and keep_days."""
+    instance = await async_setup_recorder_instance(hass, {})
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+    start = dt_util.utcnow()
+    two_days_ago = start - timedelta(days=2)
+    one_week_ago = start - timedelta(days=7)
+    one_month_ago = start - timedelta(days=30)
+    with freeze_time(one_week_ago):
+        hass.states.async_set("sensor.keep", "initial")
+        hass.states.async_set("sensor.purge", "initial")
+
+    await async_wait_recording_done(hass)
+
+    with freeze_time(two_days_ago):
+        hass.states.async_set("sensor.purge", "two_days_ago")
+
+    await async_wait_recording_done(hass)
+
+    hass.states.async_set("sensor.purge", "now")
+    hass.states.async_set("sensor.keep", "now")
+    await async_recorder_block_till_done(hass)
+
+    states = await instance.async_add_executor_job(
+        get_significant_states, hass, one_month_ago
+    )
+    assert len(states["sensor.keep"]) == 2
+    assert len(states["sensor.purge"]) == 3
+
+    await hass.services.async_call(
+        recorder.DOMAIN,
+        SERVICE_PURGE_ENTITIES,
+        {
+            "entity_id": "sensor.purge",
+            "keep_days": 1,
+        },
+    )
+    await async_recorder_block_till_done(hass)
+    await async_wait_purge_done(hass)
+
+    states = await instance.async_add_executor_job(
+        get_significant_states, hass, one_month_ago
+    )
+    assert len(states["sensor.keep"]) == 2
+    assert len(states["sensor.purge"]) == 1
+
+    await hass.services.async_call(
+        recorder.DOMAIN,
+        SERVICE_PURGE_ENTITIES,
+        {
+            "entity_id": "sensor.purge",
+        },
+    )
+    await async_recorder_block_till_done(hass)
+    await async_wait_purge_done(hass)
+
+    states = await instance.async_add_executor_job(
+        get_significant_states, hass, one_month_ago
+    )
+    assert len(states["sensor.keep"]) == 2
+    assert "sensor.purge" not in states

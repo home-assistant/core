@@ -59,7 +59,7 @@ ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
 def _get_native_states(hass, entity_id):
     with session_scope(hass=hass) as session:
         instance = recorder.get_instance(hass)
-        metadata_id = instance.states_meta_manager.get(entity_id, session)
+        metadata_id = instance.states_meta_manager.get(entity_id, session, True)
         states = []
         for dbstate in session.query(States).filter(States.metadata_id == metadata_id):
             dbstate.entity_id = entity_id

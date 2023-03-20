@@ -829,6 +829,26 @@ async def test_update_invalid_event_id(
     assert resp["error"].get("code") == "failed"
 
 
+async def test_delete_invalid_event_id(
+    ws_client: ClientFixture,
+    setup_integration: None,
+    hass: HomeAssistant,
+) -> None:
+    """Test deleting an event with an invalid event uid."""
+    client = await ws_client()
+    resp = await client.cmd(
+        "delete",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "uid-does-not-exist",
+        },
+    )
+    assert resp
+    assert not resp.get("success")
+    assert "error" in resp
+    assert resp["error"].get("code") == "failed"
+
+
 @pytest.mark.parametrize(
     ("start_date_time", "end_date_time"),
     [
