@@ -30,11 +30,5 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
-  },
-  "issues": {
-    "deprecated_yaml": {
-      "title": "The IMAP YAML configuration is being removed",
-      "description": "Configuring IMAP using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the IMAP YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
-    }
   }
 }

@@ -16,10 +16,37 @@
       "turn_off": "Turn off {entity_name}"
     }
   },
-  "state": {
+  "entity_component": {
     "_": {
-      "off": "[%key:common::state::off%]",
-      "on": "[%key:common::state::on%]"
+      "name": "[%key:component::fan::title%]",
+      "state": {
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]"
+      },
+      "state_attributes": {
+        "direction": {
+          "name": "Direction",
+          "state": {
+            "forward": "Forward",
+            "reverse": "Reverse"
+          }
+        },
+        "oscillating": {
+          "name": "Oscillating"
+        },
+        "percentage": {
+          "name": "Speed"
+        },
+        "percentage_step": {
+          "name": "Speed step"
+        },
+        "preset_modes": {
+          "name": "Available preset modes"
+        },
+        "preset_mode": {
+          "name": "Preset mode"
+        }
+      }
     }
   }
 }

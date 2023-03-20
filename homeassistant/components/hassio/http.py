@@ -53,7 +53,7 @@ PATHS_NOT_ONBOARDED = re.compile(
     r")$"
 )
 
-# Authenticated users manage backups + download logs
+# Authenticated users manage backups + download logs, changelog and documentation
 PATHS_ADMIN = re.compile(
     r"^(?:"
     r"|backups/[a-f0-9]{8}(/info|/download|/restore/full|/restore/partial)?"
@@ -66,7 +66,7 @@ PATHS_ADMIN = re.compile(
     r"|multicast/logs"
     r"|observer/logs"
     r"|supervisor/logs"
-    r"|addons/[^/]+/logs"
+    r"|addons/[^/]+/(changelog|documentation|logs)"
     r")$"
 )
 

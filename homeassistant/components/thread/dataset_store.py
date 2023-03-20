@@ -159,6 +159,14 @@ async def async_add_dataset(hass: HomeAssistant, source: str, tlv: str) -> None:
     store.async_add(source, tlv)
 
 
+async def async_get_dataset(hass: HomeAssistant, dataset_id: str) -> str | None:
+    """Get a dataset."""
+    store = await async_get_store(hass)
+    if (entry := store.async_get(dataset_id)) is None:
+        return None
+    return entry.tlv
+
+
 async def async_get_preferred_dataset(hass: HomeAssistant) -> str | None:
     """Get the preferred dataset."""
     store = await async_get_store(hass)

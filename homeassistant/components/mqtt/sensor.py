@@ -281,7 +281,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
                 else:
                     self._attr_native_value = new_value
                 return
-            if self.device_class is None:
+            if self.device_class in {None, SensorDeviceClass.ENUM}:
                 self._attr_native_value = new_value
                 return
             try:

@@ -18,6 +18,8 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity_component import EntityComponent, async_update_entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -90,7 +92,7 @@ async def test_setup_recovers_when_setup_raises(hass: HomeAssistant) -> None:
 )
 @patch("homeassistant.setup.async_setup_component", return_value=True)
 async def test_setup_does_discovery(
-    mock_setup_component, mock_setup, hass: HomeAssistant
+    mock_setup_component: AsyncMock, mock_setup: AsyncMock, hass: HomeAssistant
 ) -> None:
     """Test setup for discovery."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
@@ -108,10 +110,17 @@ async def test_setup_does_discovery(
 
 
 @patch("homeassistant.helpers.entity_platform.async_track_time_interval")
-async def test_set_scan_interval_via_config(mock_track, hass: HomeAssistant) -> None:
+async def test_set_scan_interval_via_config(
+    mock_track: Mock, hass: HomeAssistant
+) -> None:
     """Test the setting of the scan interval via configuration."""
 
-    def platform_setup(hass, config, add_entities, discovery_info=None):
+    def platform_setup(
+        hass: HomeAssistant,
+        config: ConfigType,
+        add_entities: AddEntitiesCallback,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> None:
         """Test the platform setup."""
         add_entities([MockEntity(should_poll=True)])
 
@@ -131,7 +140,12 @@ async def test_set_scan_interval_via_config(mock_track, hass: HomeAssistant) -> 
 async def test_set_entity_namespace_via_config(hass: HomeAssistant) -> None:
     """Test setting an entity namespace."""
 
-    def platform_setup(hass, config, add_entities, discovery_info=None):
+    def platform_setup(
+        hass: HomeAssistant,
+        config: ConfigType,
+        add_entities: AddEntitiesCallback,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> None:
         """Test the platform setup."""
         add_entities([MockEntity(name="beer"), MockEntity(name=None)])
 
@@ -154,6 +168,7 @@ async def test_set_entity_namespace_via_config(hass: HomeAssistant) -> None:
 async def test_extract_from_service_available_device(hass: HomeAssistant) -> None:
     """Test the extraction of entity from service and device is available."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
     await component.async_add_entities(
         [
             MockEntity(name="test_1"),
@@ -222,6 +237,7 @@ async def test_platform_not_ready(hass: HomeAssistant) -> None:
 async def test_extract_from_service_fails_if_no_entity_id(hass: HomeAssistant) -> None:
     """Test the extraction of everything from service."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
     await component.async_add_entities(
         [MockEntity(name="test_1"), MockEntity(name="test_2")]
     )
@@ -248,6 +264,7 @@ async def test_extract_from_service_filter_out_non_existing_entities(
 ) -> None:
     """Test the extraction of non existing entities from service."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
     await component.async_add_entities(
         [MockEntity(name="test_1"), MockEntity(name="test_2")]
     )
@@ -266,6 +283,7 @@ async def test_extract_from_service_filter_out_non_existing_entities(
 async def test_extract_from_service_no_group_expand(hass: HomeAssistant) -> None:
     """Test not expanding a group."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
     await component.async_add_entities([MockEntity(entity_id="group.test_group")])
 
     call = ServiceCall("test", "service", {"entity_id": ["group.test_group"]})
@@ -381,6 +399,7 @@ async def test_unload_entry_fails_if_never_loaded(hass: HomeAssistant) -> None:
 async def test_update_entity(hass: HomeAssistant) -> None:
     """Test that we can update an entity with the helper."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
     entity = MockEntity()
     entity.async_write_ha_state = Mock()
     entity.async_update_ha_state = AsyncMock(return_value=None)
@@ -408,6 +427,7 @@ async def test_set_service_race(hass: HomeAssistant) -> None:
 
     await async_setup_component(hass, "group", {})
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
 
     for _ in range(2):
         hass.async_create_task(component.async_add_entities([MockEntity()]))
@@ -421,6 +441,7 @@ async def test_extract_all_omit_entity_id(
 ) -> None:
     """Test extract all with None and *."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
     await component.async_add_entities(
         [MockEntity(name="test_1"), MockEntity(name="test_2")]
     )
@@ -437,6 +458,7 @@ async def test_extract_all_use_match_all(
 ) -> None:
     """Test extract all with None and *."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
     await component.async_add_entities(
         [MockEntity(name="test_1"), MockEntity(name="test_2")]
     )
@@ -463,6 +485,7 @@ async def test_register_entity_service(hass: HomeAssistant) -> None:
     entity.async_called_by_service = appender
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
     await component.async_add_entities([entity])
 
     component.async_register_entity_service(

@@ -18,7 +18,7 @@ from awesomeversion import (
     AwesomeVersionStrategy,
 )
 import ciso8601
-from sqlalchemy import text
+from sqlalchemy import inspect, text
 from sqlalchemy.engine import Result, Row
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm.query import Query
@@ -110,8 +110,14 @@ def session_scope(
     hass: HomeAssistant | None = None,
     session: Session | None = None,
     exception_filter: Callable[[Exception], bool] | None = None,
+    read_only: bool = False,
 ) -> Generator[Session, None, None]:
-    """Provide a transactional scope around a series of operations."""
+    """Provide a transactional scope around a series of operations.
+
+    read_only is used to indicate that the session is only used for reading
+    data and that no commit is required. It does not prevent the session
+    from writing and is not a security measure.
+    """
     if session is None and hass is not None:
         session = get_instance(hass).get_session()
 
@@ -121,7 +127,7 @@ def session_scope(
     need_rollback = False
     try:
         yield session
-        if session.get_transaction():
+        if session.get_transaction() and not read_only:
             need_rollback = True
             session.commit()
     except Exception as err:  # pylint: disable=broad-except
@@ -826,3 +832,22 @@ def chunked(iterable: Iterable, chunked_num: int) -> Iterable[Any]:
     From more-itertools
     """
     return iter(partial(take, chunked_num, iter(iterable)), [])
+
+
+def get_index_by_name(session: Session, table_name: str, index_name: str) -> str | None:
+    """Get an index by name."""
+    connection = session.connection()
+    inspector = inspect(connection)
+    indexes = inspector.get_indexes(table_name)
+    return next(
+        (
+            possible_index["name"]
+            for possible_index in indexes
+            if possible_index["name"]
+            and (
+                possible_index["name"] == index_name
+                or possible_index["name"].endswith(f"_{index_name}")
+            )
+        ),
+        None,
+    )
