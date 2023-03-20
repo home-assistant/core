@@ -794,8 +794,8 @@ async def test_update_alexa_entity(
     await client.send_json_auto_id(
         {
             "type": "homeassistant/expose_entity",
-            "assistant": "cloud.alexa",
-            "entity_id": entry.entity_id,
+            "assistants": ["cloud.alexa"],
+            "entity_ids": [entry.entity_id],
             "should_expose": False,
         }
     )

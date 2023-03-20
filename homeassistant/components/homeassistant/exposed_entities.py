@@ -231,27 +231,29 @@ class ExposedEntities:
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "homeassistant/expose_entity",
-        vol.Required("assistant"): str,
-        vol.Required("entity_id"): str,
+        vol.Required("assistants"): [str],
+        vol.Required("entity_ids"): [str],
         vol.Required("should_expose"): bool,
     }
 )
 def ws_expose_entity(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Expose an entity to an assistatant."""
-    entity_id: str = msg["entity_id"]
+    """Expose an entity to an assistant."""
+    entity_ids: str = msg["entity_ids"]
 
-    if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
+    if any(entity_id in CLOUD_NEVER_EXPOSED_ENTITIES for entity_id in entity_ids):
         connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_ALLOWED, f"can't expose {entity_id}"
+            msg["id"], websocket_api.const.ERR_NOT_ALLOWED, f"can't expose {entity_ids}"
         )
         return
 
     exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
-    exposed_entities.async_expose_entity(
-        msg["assistant"], entity_id, msg["should_expose"]
-    )
+    for entity_id in entity_ids:
+        for assistant in msg["assistants"]:
+            exposed_entities.async_expose_entity(
+                assistant, entity_id, msg["should_expose"]
+            )
     connection.send_result(msg["id"])
 
 
