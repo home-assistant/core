@@ -179,15 +179,15 @@ class OptionsFlow(config_entries.OptionsFlowWithConfigEntry):
     ) -> FlowResult:
         """Manage the options."""
         errors: dict[str, str] = self.validate_key_options_input(user_input)
-        entry_data: dict[str, Any] = dict(self.config_entry.data)
+        entry_data: dict[str, Any] = dict(self._config_entry.data)
         if not errors and user_input is not None:
             entry_data.update(user_input)
             errors = await validate_input(entry_data)
             if not errors:
                 self.hass.config_entries.async_update_entry(
-                    self.config_entry, data=STEP_USER_DATA_SCHEMA(entry_data)
+                    self.config_entry, data=entry_data
                 )
-                return self.async_create_entry(title="", data={})
+                return self.async_create_entry(data={})
 
         schema = self.add_suggested_values_to_schema(OPTIONS_SCHEMA, entry_data)
 
