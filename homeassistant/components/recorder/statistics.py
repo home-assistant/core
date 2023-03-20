@@ -2504,7 +2504,9 @@ def _validate_db_schema_utf8(
 
     # Try inserting some metadata which needs utfmb4 support
     try:
-        with session_scope(session=session_maker()) as session:
+        # Mark the session as read_only to ensure that the test data is not committed
+        # to the database and we always rollback when the scope is exited
+        with session_scope(session=session_maker(), read_only=True) as session:
             old_metadata_dict = statistics_meta_manager.get_many(
                 session, statistic_ids={statistic_id}
             )
@@ -2605,7 +2607,9 @@ def _validate_db_schema(
         StatisticsShortTerm,
     )
     try:
-        with session_scope(session=session_maker()) as session:
+        # Mark the session as read_only to ensure that the test data is not committed
+        # to the database and we always rollback when the scope is exited
+        with session_scope(session=session_maker(), read_only=True) as session:
             for table in tables:
                 _import_statistics_with_session(
                     instance, session, metadata, (statistics,), table
