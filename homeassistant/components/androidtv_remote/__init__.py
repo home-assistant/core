@@ -26,12 +26,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await api.async_connect()
     except InvalidAuth as exc:
-        # Typically the Android TV is hard reset or the certificate and key files were deleted.
+        # The Android TV is hard reset or the certificate and key files were deleted.
         raise ConfigEntryAuthFailed from exc
     except (CannotConnect, ConnectionClosed) as exc:
-        # Typically the Android TV is network unreachable. Raise exception and let
-        # Home Assistant retry later. If device gets a new IP address the zeroconf flow
-        # will update the config.
+        # The Android TV is network unreachable. Raise exception and let Home Assistant retry
+        # later. If device gets a new IP address the zeroconf flow will update the config.
         raise ConfigEntryNotReady from exc
 
     def reauth_needed() -> None:

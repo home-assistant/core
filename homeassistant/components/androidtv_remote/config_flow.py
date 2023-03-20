@@ -63,8 +63,8 @@ class AndroidTVRemoteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured(updates={CONF_HOST: self.host})
                 return await self._async_start_pair()
             except (CannotConnect, ConnectionClosed):
-                # Typically invalid IP address. Stay in the user step allowing the user
-                # to enter a different host.
+                # Likely invalid IP address or device is network unreachable. Stay
+                # in the user step allowing the user to enter a different host.
                 errors["base"] = "cannot_connect"
         return self.async_show_form(
             step_id="user",
@@ -105,8 +105,8 @@ class AndroidTVRemoteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     },
                 )
             except InvalidAuth:
-                # Typically invalid PIN. Stay in the pair step allowing the user
-                # to enter a different PIN.
+                # Invalid PIN. Stay in the pair step allowing the user to enter
+                # a different PIN.
                 errors["base"] = "invalid_auth"
             except ConnectionClosed:
                 # Either user canceled pairing on the Android TV itself (most common)
@@ -178,7 +178,7 @@ class AndroidTVRemoteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 return await self._async_start_pair()
             except (CannotConnect, ConnectionClosed):
-                # Device isn't network reachable. Abort.
+                # Device is network unreachable. Abort.
                 errors["base"] = "cannot_connect"
         return self.async_show_form(
             step_id="reauth_confirm",
