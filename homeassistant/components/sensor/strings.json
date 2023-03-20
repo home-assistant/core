@@ -100,6 +100,22 @@
       "state": {
         "off": "[%key:common::state::off%]",
         "on": "[%key:common::state::on%]"
+      },
+      "state_attributes": {
+        "last_reset": {
+          "name": "Last reset"
+        },
+        "options": {
+          "name": "Possible states"
+        },
+        "state_class": {
+          "name": "State class",
+          "state": {
+            "measurement": "Measurement",
+            "total": "Total",
+            "total_increasing": "Total increasing"
+          }
+        }
       }
     },
     "date": {
