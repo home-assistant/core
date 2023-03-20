@@ -23,7 +23,7 @@ from .router import FreeboxRouter
 _LOGGER = logging.getLogger(__name__)
 
 
-class FreeboxHomeBaseClass(Entity):
+class FreeboxHomeEntity(Entity):
     """Representation of a Freebox base entity."""
 
     def __init__(

@@ -33,7 +33,7 @@ from .const import (
     ATTR_VOLUME,
     DOMAIN,
 )
-from .home_base import FreeboxHomeBaseClass
+from .home_base import FreeboxHomeEntity
 from .router import FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)
@@ -78,7 +78,7 @@ def add_entities(hass: HomeAssistant, router, async_add_entities, tracked):
         async_add_entities(new_tracked, True)
 
 
-class FreeboxCamera(FreeboxHomeBaseClass, FFmpegCamera):
+class FreeboxCamera(FreeboxHomeEntity, FFmpegCamera):
     """Representation of a Freebox camera."""
 
     def __init__(
