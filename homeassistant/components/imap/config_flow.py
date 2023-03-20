@@ -149,12 +149,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return OptionsFlow(config_entry)
 
 
-class OptionsFlow(config_entries.OptionsFlow):
+class OptionsFlow(config_entries.OptionsFlowWithConfigEntry):
     """Option flow handler."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     def validate_key_options_input(
         self, user_input: dict[str, Any] | None
