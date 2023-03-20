@@ -22,7 +22,8 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "combined_energy.client.CombinedEnergy.installation", return_value=True
+        "homeassistant.components.combined_energy.config_flow.CombinedEnergy.installation",
+        return_value=True,
     ), patch(
         "homeassistant.components.combined_energy.async_setup_entry",
         return_value=True,
@@ -73,7 +74,8 @@ async def test_form__where_api_returns_an_expected_error(
     assert result["errors"] == {}
 
     with patch(
-        "combined_energy.client.CombinedEnergy.installation", side_effect=exception
+        "homeassistant.components.combined_energy.config_flow.CombinedEnergy.installation",
+        side_effect=exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -101,7 +103,7 @@ async def test_form__where_api_returns_an_unexpected_error(
     assert result["errors"] == {}
 
     with patch(
-        "combined_energy.client.CombinedEnergy.installation",
+        "homeassistant.components.combined_energy.config_flow.CombinedEnergy.installation",
         side_effect=combined_energy.exceptions.CombinedEnergyError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -147,7 +149,7 @@ async def test_form__where_installation_id_already_configured(
     )
 
     with patch(
-        "combined_energy.client.CombinedEnergy.installation",
+        "homeassistant.components.combined_energy.config_flow.CombinedEnergy.installation",
         side_effect=None,
     ):
         result2 = await hass.config_entries.flow.async_configure(
