@@ -138,7 +138,7 @@ async def ws_get_history_during_period(
     entity_ids = msg.get("entity_ids")
     if entity_ids is not None:
         for entity_id in entity_ids:
-            if not valid_entity_id(entity_id):
+            if not hass.states.get(entity_id) or not valid_entity_id(entity_id):
                 connection.send_error(
                     msg["id"], "invalid_entity_ids", "Invalid entity_ids"
                 )
@@ -470,7 +470,7 @@ async def ws_stream(
     entity_ids = msg.get("entity_ids")
     if entity_ids is not None:
         for entity_id in entity_ids:
-            if not valid_entity_id(entity_id):
+            if not hass.states.get(entity_id) or not valid_entity_id(entity_id):
                 connection.send_error(
                     msg["id"], "invalid_entity_ids", "Invalid entity_ids"
                 )
