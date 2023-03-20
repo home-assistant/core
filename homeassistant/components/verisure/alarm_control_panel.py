@@ -74,7 +74,7 @@ class VerisureAlarm(
                 transaction.get("data", {})
                 .get("installation", {})
                 .get("armStateChangePollResult", {})
-                .get("result", None)
+                .get("result")
             )
 
         await self.coordinator.async_refresh()
