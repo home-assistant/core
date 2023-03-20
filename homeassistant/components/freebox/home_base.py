@@ -82,7 +82,7 @@ class FreeboxHomeEntity(Entity):
         if command_id is None:
             _LOGGER.error("Unable to SET a value through the API. Command is None")
             return
-        await self._router.api.home.set_home_endpoint_value(
+        await self._router.home.set_home_endpoint_value(
             self._id, command_id, {"value": value}
         )
 
