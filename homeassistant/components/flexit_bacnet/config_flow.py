@@ -1,6 +1,7 @@
 """Config flow for Flexit Nordic (BACnet) integration."""
 from __future__ import annotations
 
+import asyncio.exceptions
 import logging
 from typing import Any
 
@@ -12,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN
+from .const import CONF_ADDRESS, CONF_DEVICE_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,8 +21,8 @@ DEFAULT_DEVICE_ID = 2
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("address"): str,
-        vol.Required("device_id", default=DEFAULT_DEVICE_ID): int,
+        vol.Required(CONF_ADDRESS): str,
+        vol.Required(CONF_DEVICE_ID, default=DEFAULT_DEVICE_ID): int,
     }
 )
 
@@ -33,7 +34,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     """
     device = FlexitBACnet(data["address"], data["device_id"])
 
-    await device.update()
+    try:
+        await device.update()
+    except asyncio.exceptions.TimeoutError as exc:
+        raise CannotConnect from exc
 
     if not device.is_valid():
         raise CannotConnect
