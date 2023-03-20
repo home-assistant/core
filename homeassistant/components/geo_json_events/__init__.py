@@ -3,53 +3,18 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_RADIUS,
-    CONF_SCAN_INTERVAL,
-    CONF_URL,
-    Platform,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import (
     async_entries_for_config_entry,
     async_get,
 )
-from homeassistant.helpers.typing import ConfigType
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, FEED, PLATFORMS
+from .const import DOMAIN, FEED, PLATFORMS
 from .manager import GeoJsonFeedEntityManager
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the GeoJSON events component."""
-    if DOMAIN not in config:
-        return True
-
-    conf = config[DOMAIN]
-    latitude = conf.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = conf.get(CONF_LONGITUDE, hass.config.longitude)
-    scan_interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                CONF_LATITUDE: latitude,
-                CONF_LONGITUDE: longitude,
-                CONF_RADIUS: conf[CONF_RADIUS],
-                CONF_URL: conf[CONF_URL],
-                CONF_SCAN_INTERVAL: scan_interval,
-            },
-        )
-    )
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:

@@ -1,6 +1,4 @@
 """Define tests for the GeoJSON Events config flow."""
-from unittest.mock import patch
-
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
@@ -12,20 +10,17 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_URL,
 )
+from homeassistant.core import HomeAssistant
 
+from tests.common import MockConfigEntry
 from tests.components.geo_json_events.conftest import URL
 
-
-@pytest.fixture(name="geo_json_events_setup", autouse=True)
-def geo_json_events_setup_fixture():
-    """Mock geo_json_events entry setup."""
-    with patch(
-        "homeassistant.components.geo_json_events.async_setup_entry", return_value=True
-    ):
-        yield
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-async def test_duplicate_error(hass, config_entry):
+async def test_duplicate_error(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test that errors are shown when duplicates are added."""
     conf = {CONF_URL: URL, CONF_LATITUDE: -41.2, CONF_LONGITUDE: 174.7, CONF_RADIUS: 25}
     config_entry.add_to_hass(hass)
@@ -37,16 +32,7 @@ async def test_duplicate_error(hass, config_entry):
     assert result["reason"] == "already_configured"
 
 
-async def test_show_form(hass):
-    """Test that the form is served with no input."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-
-
-async def test_step_import(hass):
+async def test_step_import(hass: HomeAssistant) -> None:
     """Test that the import step works."""
     conf = {
         CONF_URL: URL,
@@ -70,7 +56,7 @@ async def test_step_import(hass):
     }
 
 
-async def test_step_user(hass):
+async def test_step_user(hass: HomeAssistant) -> None:
     """Test that the user step works."""
     hass.config.latitude = -41.2
     hass.config.longitude = 174.7

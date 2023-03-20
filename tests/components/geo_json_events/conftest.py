@@ -1,4 +1,6 @@
 """Configuration for GeoJSON Events tests."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.geo_json_events import DOMAIN
@@ -30,3 +32,12 @@ def config_entry():
         title=f"{URL}, -41.2, 174.7",
         unique_id=f"{URL}, -41.2, 174.7",
     )
+
+
+@pytest.fixture
+def mock_setup_entry():
+    """Mock geo_json_events entry setup."""
+    with patch(
+        "homeassistant.components.geo_json_events.async_setup_entry", return_value=True
+    ):
+        yield

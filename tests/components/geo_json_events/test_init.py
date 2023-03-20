@@ -2,13 +2,17 @@
 from unittest.mock import patch
 
 from homeassistant.components.geo_json_events.const import DOMAIN, FEED
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 
+from tests.common import MockConfigEntry
 from tests.components.geo_json_events import _generate_mock_feed_entry
 
 
-async def test_component_unload_config_entry(hass, config_entry):
+async def test_component_unload_config_entry(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test that loading and unloading of a config entry works."""
     config_entry.add_to_hass(hass)
     with patch(
@@ -25,7 +29,9 @@ async def test_component_unload_config_entry(hass, config_entry):
         assert hass.data[DOMAIN][FEED].get(config_entry.entry_id) is None
 
 
-async def test_remove_orphaned_entities(hass, config_entry):
+async def test_remove_orphaned_entities(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test removing orphaned geolocation entities."""
     config_entry.add_to_hass(hass)
 
