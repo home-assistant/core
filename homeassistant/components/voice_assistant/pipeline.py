@@ -55,17 +55,103 @@ class Pipeline:
 
 
 @dataclass
+class PipelineRun:
+    """Running context for a pipeline."""
+
+    hass: HomeAssistant
+    context: Context
+    pipeline: Pipeline
+    event_callback: Callable[[PipelineEvent], None]
+    language: str = None  # type: ignore[assignment]
+
+    def __post_init__(self):
+        """Set language for pipeline."""
+        self.language = self.pipeline.language or self.hass.config.language
+
+    async def start(self):
+        """Emit run start event."""
+        self.event_callback(
+            PipelineEvent(
+                PipelineEventType.RUN_START,
+                {
+                    "pipeline": self.pipeline.name,
+                    "language": self.language,
+                },
+            )
+        )
+
+    async def finish(self):
+        """Emit run finish event."""
+        self.event_callback(
+            PipelineEvent(
+                PipelineEventType.RUN_FINISH,
+            )
+        )
+
+    async def recognize_intent(
+        self, intent_input: str, conversation_id: str | None
+    ) -> conversation.ConversationResult:
+        """Run intent recognition portion of pipeline."""
+        self.event_callback(
+            PipelineEvent(
+                PipelineEventType.INTENT_START,
+                {
+                    "engine": self.pipeline.conversation_engine or "default",
+                    "intent_input": intent_input,
+                },
+            )
+        )
+
+        conversation_result = await conversation.async_converse(
+            hass=self.hass,
+            text=intent_input,
+            conversation_id=conversation_id,
+            context=self.context,
+            language=self.language,
+            agent_id=self.pipeline.conversation_engine,
+        )
+
+        self.event_callback(
+            PipelineEvent(
+                PipelineEventType.INTENT_FINISH,
+                {"intent_output": conversation_result.as_dict()},
+            )
+        )
+
+        return conversation_result
+
+    async def text_to_speech(self, tts_input: str) -> str:
+        """Run text to speech portion of pipeline. Returns URL of TTS audio."""
+        self.event_callback(
+            PipelineEvent(
+                PipelineEventType.TTS_START,
+                {
+                    "engine": self.pipeline.tts_engine,
+                    "tts_input": tts_input,
+                },
+            )
+        )
+
+        manager: tts.SpeechManager = self.hass.data[tts.DOMAIN]
+        tts_url = await manager.async_get_url_path(self.pipeline.tts_engine, tts_input)
+
+        self.event_callback(
+            PipelineEvent(
+                PipelineEventType.TTS_FINISH,
+                {"tts_output": tts_url},
+            )
+        )
+
+        return tts_url
+
+
+@dataclass
 class PipelineRequest(ABC):
     """Request to for a pipeline run."""
 
     @abstractmethod
     async def execute(
-        self,
-        hass: HomeAssistant,
-        context: Context,
-        pipeline: Pipeline,
-        event_callback: Callable[[PipelineEvent], None],
-        timeout: int | float | None = DEFAULT_TIMEOUT,
+        self, run: PipelineRun, timeout: int | float | None = DEFAULT_TIMEOUT
     ):
         """Run pipeline with request info and context."""
 
@@ -78,70 +164,21 @@ class TextPipelineRequest(PipelineRequest):
     conversation_id: str | None = None
 
     async def execute(
-        self,
-        hass: HomeAssistant,
-        context: Context,
-        pipeline: Pipeline,
-        event_callback: Callable[[PipelineEvent], None],
-        timeout: int | float | None = DEFAULT_TIMEOUT,
+        self, run: PipelineRun, timeout: int | float | None = DEFAULT_TIMEOUT
     ):
         """Run text portion of pipeline."""
         await asyncio.wait_for(
-            self._execute(hass, context, pipeline, event_callback),
+            self._execute(run),
             timeout=timeout,
         )
 
     async def _execute(
         self,
-        hass: HomeAssistant,
-        context: Context,
-        pipeline: Pipeline,
-        event_callback: Callable[[PipelineEvent], None],
+        run: PipelineRun,
     ):
-        language = pipeline.language or hass.config.language
-        event_callback(
-            PipelineEvent(
-                PipelineEventType.RUN_START,
-                {
-                    "pipeline": pipeline.name,
-                    "language": language,
-                },
-            )
-        )
-
-        # Intent recognition
-        intent_input = self.intent_input
-        event_callback(
-            PipelineEvent(
-                PipelineEventType.INTENT_START,
-                {
-                    "engine": pipeline.conversation_engine or "default",
-                    "intent_input": intent_input,
-                },
-            )
-        )
-
-        conversation_result = await conversation.async_converse(
-            hass=hass,
-            text=intent_input,
-            conversation_id=self.conversation_id,
-            context=context,
-            language=language,
-            agent_id=pipeline.conversation_engine,
-        )
-
-        event_callback(
-            PipelineEvent(
-                PipelineEventType.INTENT_FINISH,
-                {"intent_output": conversation_result.as_dict()},
-            )
-        )
-
-        event_callback(
-            PipelineEvent(
-                PipelineEventType.RUN_FINISH,
-            )
-        )
+        await run.start()
+        await run.recognize_intent(self.intent_input, self.conversation_id)
+        await run.finish()
 
 
 @dataclass
@@ -149,94 +186,30 @@ class AudioPipelineRequest(PipelineRequest):
     """Request to full pipeline from audio input (stt) to audio output (tts)."""
 
     intent_input: str  # this will be changed to stt audio
-    tts_input: str
     conversation_id: str | None = None
 
     async def execute(
-        self,
-        hass: HomeAssistant,
-        context: Context,
-        pipeline: Pipeline,
-        event_callback: Callable[[PipelineEvent], None],
-        timeout: int | float | None = DEFAULT_TIMEOUT,
+        self, run: PipelineRun, timeout: int | float | None = DEFAULT_TIMEOUT
     ):
-        """Run full pipeline from audio input (stt) to audio output (tts)."""
+        """Run text portion of pipeline."""
         await asyncio.wait_for(
-            self._execute(hass, context, pipeline, event_callback),
+            self._execute(run),
             timeout=timeout,
         )
 
-    async def _execute(
-        self,
-        hass: HomeAssistant,
-        context: Context,
-        pipeline: Pipeline,
-        event_callback: Callable[[PipelineEvent], None],
-    ):
-        language = pipeline.language or hass.config.language
-        event_callback(
-            PipelineEvent(
-                PipelineEventType.RUN_START,
-                {
-                    "pipeline": pipeline.name,
-                    "language": language,
-                },
-            )
-        )
+    async def _execute(self, run: PipelineRun):
+        await run.start()
 
         # stt will go here
 
-        # Intent recognition
-        intent_input = self.intent_input
-        event_callback(
-            PipelineEvent(
-                PipelineEventType.INTENT_START,
-                {
-                    "engine": pipeline.conversation_engine or "default",
-                    "intent_input": intent_input,
-                },
-            )
+        conversation_result = await run.recognize_intent(
+            self.intent_input, self.conversation_id
         )
 
-        conversation_result = await conversation.async_converse(
-            hass=hass,
-            text=intent_input,
-            conversation_id=self.conversation_id,
-            context=context,
-            language=language,
-            agent_id=pipeline.conversation_engine,
+        tts_input = conversation_result.response.speech.get("plain", {}).get(
+            "speech", ""
         )
 
-        event_callback(
-            PipelineEvent(
-                PipelineEventType.INTENT_FINISH,
-                {"intent_output": conversation_result.as_dict()},
-            )
-        )
+        await run.text_to_speech(tts_input)
 
-        # Text to speech
-        event_callback(
-            PipelineEvent(
-                PipelineEventType.TTS_START,
-                {
-                    "engine": pipeline.tts_engine,
-                    "tts_input": self.tts_input,
-                },
-            )
-        )
-
-        manager: tts.SpeechManager = hass.data[tts.DOMAIN]
-        tts_url = await manager.async_get_url_path(pipeline.tts_engine, self.tts_input)
-
-        event_callback(
-            PipelineEvent(
-                PipelineEventType.TTS_FINISH,
-                {"tts_output": tts_url},
-            )
-        )
-
-        event_callback(
-            PipelineEvent(
-                PipelineEventType.RUN_FINISH,
-            )
-        )
+        await run.finish()

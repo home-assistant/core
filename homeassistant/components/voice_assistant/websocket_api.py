@@ -7,7 +7,7 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN
-from .pipeline import DEFAULT_TIMEOUT, TextPipelineRequest
+from .pipeline import DEFAULT_TIMEOUT, PipelineRun, TextPipelineRequest
 
 
 @callback
@@ -48,11 +48,13 @@ async def websocket_run(
             intent_input=msg["intent_input"],
             conversation_id=msg.get("conversation_id"),
         ).execute(
-            hass,
-            connection.context(msg),
-            pipeline,
-            event_callback=lambda event: connection.send_event(
-                msg["id"], event.as_dict()
+            PipelineRun(
+                hass,
+                connection.context(msg),
+                pipeline,
+                event_callback=lambda event: connection.send_event(
+                    msg["id"], event.as_dict()
+                ),
             ),
             timeout=timeout,
         )
