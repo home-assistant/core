@@ -6,13 +6,12 @@ import logging
 
 import async_timeout
 from renson_endura_delta.renson import RensonVentilation
-from requests import RequestException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
@@ -75,8 +74,5 @@ class RensonCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Fetch data from API endpoint."""
-        try:
-            async with async_timeout.timeout(30):
-                return await self.hass.async_add_executor_job(self.api.get_all_data)
-        except RequestException as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+        async with async_timeout.timeout(30):
+            return await self.hass.async_add_executor_job(self.api.get_all_data)

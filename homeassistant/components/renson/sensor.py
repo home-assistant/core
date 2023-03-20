@@ -37,12 +37,18 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
+    PERCENTAGE,
+    UnitOfTemperature,
+    UnitOfTime,
+    UnitOfVolumeFlowRate,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RensonCoordinator
-from .const import CONCENTRATION_PARTS_PER_CUBIC_METER, DOMAIN
+from .const import DOMAIN
 from .entity import RensonEntity
 
 
@@ -67,14 +73,12 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         name="CO2 quality category",
         field=CO2_QUALITY_FIELD,
         raw_format=False,
-        state_class=None,
     ),
     RensonSensorEntityDescription(
         key="AIR_QUALITY_FIELD",
         name="Air quality category",
         field=AIR_QUALITY_FIELD,
         raw_format=False,
-        state_class=None,
     ),
     RensonSensorEntityDescription(
         key="CO2_FIELD",
@@ -83,7 +87,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         raw_format=True,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CO2,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
     ),
     RensonSensorEntityDescription(
         key="AIR_FIELD",
@@ -91,12 +95,11 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         field=AIR_QUALITY_FIELD,
         state_class=SensorStateClass.MEASUREMENT,
         raw_format=True,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
     ),
     RensonSensorEntityDescription(
         key="CURRENT_LEVEL_FIELD",
         name="Ventilation level",
-        state_class=None,
         field=CURRENT_LEVEL_FIELD,
         raw_format=True,
     ),
@@ -106,7 +109,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         field=CURRENT_AIRFLOW_EXTRACT_FIELD,
         raw_format=False,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="m³/h",
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
     ),
     RensonSensorEntityDescription(
         key="CURRENT_AIRFLOW_INGOING_FIELD",
@@ -114,7 +117,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         field=CURRENT_AIRFLOW_INGOING_FIELD,
         raw_format=False,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="m³/h",
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
     ),
     RensonSensorEntityDescription(
         key="OUTDOOR_TEMP_FIELD",
@@ -140,7 +143,8 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         field=FILTER_REMAIN_FIELD,
         raw_format=False,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="days",
+        native_unit_of_measurement=UnitOfTime.DAYS,
+        device_class=SensorDeviceClass.DURATION,
     ),
     RensonSensorEntityDescription(
         key="HUMIDITY_FIELD",
@@ -149,14 +153,15 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         raw_format=False,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="%",
+        native_unit_of_measurement=PERCENTAGE,
     ),
     RensonSensorEntityDescription(
         key="MANUAL_LEVEL_FIELD",
         name="Manual level",
         field=MANUAL_LEVEL_FIELD,
         raw_format=False,
-        state_class=None,
+        device_class=SensorDeviceClass.ENUM,
+        options=["Off", "Level1", "Level2", "Level3", "Level4", "Breeze", "Holiday"],
     ),
     RensonSensorEntityDescription(
         key="BREEZE_TEMPERATURE_FIELD",
@@ -173,6 +178,8 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         field=BREEZE_LEVEL_FIELD,
         raw_format=False,
         entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
+        options=["Off", "Level1", "Level2", "Level3", "Level4", "Breeze"],
     ),
     RensonSensorEntityDescription(
         key="DAYTIME_FIELD",
@@ -194,6 +201,13 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         field=DAY_POLLUTION_FIELD,
         raw_format=False,
         entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "Level1",
+            "Level2",
+            "Level3",
+            "Level4",
+        ],
     ),
     RensonSensorEntityDescription(
         key="NIGHT_POLLUTION_FIELD",
@@ -201,13 +215,20 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         field=NIGHT_POLLUTION_FIELD,
         raw_format=False,
         entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "Level1",
+            "Level2",
+            "Level3",
+            "Level4",
+        ],
     ),
     RensonSensorEntityDescription(
         key="CO2_THRESHOLD_FIELD",
         name="CO2 threshold",
         field=CO2_THRESHOLD_FIELD,
         raw_format=False,
-        native_unit_of_measurement="ppm",
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         entity_registry_enabled_default=False,
     ),
     RensonSensorEntityDescription(
@@ -215,7 +236,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         name="CO2 hysteresis",
         field=CO2_HYSTERESIS_FIELD,
         raw_format=False,
-        native_unit_of_measurement="ppm",
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         entity_registry_enabled_default=False,
     ),
     RensonSensorEntityDescription(
@@ -234,7 +255,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         raw_format=False,
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="%",
+        native_unit_of_measurement=PERCENTAGE,
     ),
     RensonSensorEntityDescription(
         key="FILTER_PRESET_FIELD",
@@ -242,7 +263,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         field=FILTER_PRESET_FIELD,
         raw_format=False,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="days",
+        native_unit_of_measurement=PERCENTAGE,
     ),
 )
 
@@ -262,14 +283,8 @@ class RensonSensor(RensonEntity, SensorEntity):
         self.field = description.field
         self.entity_description = description
 
-        self._state = None
         self.data_type = description.field.field_type
         self.raw_format = description.raw_format
-
-    @property
-    def native_value(self):
-        """Return the value reported by the sensor."""
-        return self._state
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -279,9 +294,9 @@ class RensonSensor(RensonEntity, SensorEntity):
         value = self.api.get_field_value(all_data, self.field.name)
 
         if self.raw_format:
-            self._state = value
+            self._attr_native_value = value
         else:
-            self._state = self.api.parse_value(value, self.data_type)
+            self._attr_native_value = self.api.parse_value(value, self.data_type)
 
         self.async_write_ha_state()
 
@@ -290,21 +305,16 @@ async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info=None,
 ) -> None:
-    """Call the Renson integration to setup."""
+    """Set up the Renson sensor platform."""
 
     api: RensonVentilation = hass.data[DOMAIN][config_entry.entry_id]["api"]
     coordinator: RensonCoordinator = hass.data[DOMAIN][config_entry.entry_id][
         "coordinator"
     ]
 
-    await coordinator.async_config_entry_first_refresh()
-
     entities: list = []
     for description in SENSORS:
         entities.append(RensonSensor(description, api, coordinator))
 
     async_add_entities(entities)
-
-    await coordinator.async_config_entry_first_refresh()

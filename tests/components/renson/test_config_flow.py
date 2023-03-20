@@ -1,7 +1,7 @@
 """Test the Renson config flow."""
 from unittest.mock import patch
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.renson.config_flow import CannotConnect
 from homeassistant.components.renson.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -10,7 +10,6 @@ from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_
 
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -59,3 +58,24 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result2["type"] == RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_unknown(hass: HomeAssistant) -> None:
+    """Test we handle unknown error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.renson.config_flow.ConfigFlow.validate_input",
+        side_effect=ValueError,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+            },
+        )
+
+    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "unknown"}

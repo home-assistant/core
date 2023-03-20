@@ -1594,7 +1594,7 @@ regenmaschine==2022.11.0
 renault-api==0.1.12
 
 # homeassistant.components.renson
-renson-endura-delta==1.4.3
+renson-endura-delta==1.5.0
 
 # homeassistant.components.reolink
 reolink-aio==0.5.3
