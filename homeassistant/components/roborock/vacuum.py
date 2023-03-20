@@ -95,9 +95,7 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity, ABC):
     def supported_features(self) -> VacuumEntityFeature:
         """Flag vacuum cleaner features that are supported."""
         features = (
-            VacuumEntityFeature.TURN_ON
-            | VacuumEntityFeature.TURN_OFF
-            | VacuumEntityFeature.PAUSE
+            VacuumEntityFeature.PAUSE
             | VacuumEntityFeature.STOP
             | VacuumEntityFeature.RETURN_HOME
             | VacuumEntityFeature.FAN_SPEED
@@ -108,7 +106,6 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity, ABC):
             | VacuumEntityFeature.CLEAN_SPOT
             | VacuumEntityFeature.STATE
             | VacuumEntityFeature.START
-            | VacuumEntityFeature.MAP
         )
         return features
 
