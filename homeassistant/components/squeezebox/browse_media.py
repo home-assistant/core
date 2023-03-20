@@ -58,6 +58,7 @@ CONTENT_TYPE_TO_CHILD_TYPE = {
     "Genres": MediaType.GENRE,
 }
 
+SEARCHABLE_TYPES = {"Artists", "Albums", "Tracks", "Genres", "Playlists"}
 BROWSE_LIMIT = 1000
 
 
@@ -70,25 +71,37 @@ async def build_item_response(entity, player, payload):
 
     media_class = CONTENT_TYPE_MEDIA_CLASS[search_type]
 
-    if search_id and search_id != search_type:
-        browse_id = (SQUEEZEBOX_ID_BY_TYPE[search_type], search_id)
+    if "*" in search_id:
+        items = await player._lms.async_query_category(
+            MEDIA_TYPE_TO_SQUEEZEBOX[search_type],
+            limit=BROWSE_LIMIT,
+            search="search:" + search_id.replace("*", ""),
+        )
+        title = search_id
     else:
-        browse_id = None
+        if search_id and search_id != search_type:
+            browse_id = (SQUEEZEBOX_ID_BY_TYPE[search_type], search_id)
+        else:
+            browse_id = None
 
-    result = await player.async_browse(
-        MEDIA_TYPE_TO_SQUEEZEBOX[search_type],
-        limit=BROWSE_LIMIT,
-        browse_id=browse_id,
-    )
+        result = await player.async_browse(
+            MEDIA_TYPE_TO_SQUEEZEBOX[search_type],
+            limit=BROWSE_LIMIT,
+            browse_id=browse_id,
+        )
+
+        if result is not None:
+            items = result.get("items")
+            title = result.get("title")
 
     children = None
 
-    if result is not None and result.get("items"):
+    if items:
         item_type = CONTENT_TYPE_TO_CHILD_TYPE[search_type]
         child_media_class = CONTENT_TYPE_MEDIA_CLASS[item_type]
 
         children = []
-        for item in result["items"]:
+        for item in items:
             item_id = str(item["id"])
             item_thumbnail = None
 
@@ -118,7 +131,7 @@ async def build_item_response(entity, player, payload):
         raise BrowseError(f"Media not found: {search_type} / {search_id}")
 
     return BrowseMedia(
-        title=result.get("title"),
+        title=title,
         media_class=media_class["item"],
         children_media_class=media_class["children"],
         media_content_id=search_id,
@@ -126,6 +139,7 @@ async def build_item_response(entity, player, payload):
         can_play=True,
         children=children,
         can_expand=True,
+        can_search=(search_type in SEARCHABLE_TYPES),
     )
 
 
