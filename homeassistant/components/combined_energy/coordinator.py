@@ -93,7 +93,7 @@ class CombinedEnergyLogSessionService(CombinedEnergyDataService[None]):
         self.coordinator.async_add_listener(self.update_listener)
 
     @staticmethod
-    def update_listener():
+    def update_listener() -> None:
         """Log that the session has been restarted."""
         LOGGER.info("Log session has been restarted")
 

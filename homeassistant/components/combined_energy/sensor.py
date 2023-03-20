@@ -4,6 +4,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Generator, Sequence
 from datetime import datetime
+from typing import Any
 
 from combined_energy import CombinedEnergy
 from combined_energy.models import Device, DeviceReadings, Installation
@@ -130,7 +131,7 @@ class CombinedEnergyReadingsSensor(CoordinatorEntity, SensorEntity):
         return None
 
     @property
-    def _raw_value(self):
+    def _raw_value(self) -> Any:
         """Get raw reading value from device readings."""
         if device_readings := self.device_readings:
             return getattr(device_readings, self.entity_description.key)
@@ -142,7 +143,7 @@ class CombinedEnergyReadingsSensor(CoordinatorEntity, SensorEntity):
         return self._raw_value is not None
 
     @abstractmethod
-    def _to_native_value(self, raw_value):
+    def _to_native_value(self, raw_value: Any) -> int | float | None:
         """Convert non-none raw value into usable sensor value."""
 
     @property
@@ -156,7 +157,7 @@ class CombinedEnergyReadingsSensor(CoordinatorEntity, SensorEntity):
 class GenericSensor(CombinedEnergyReadingsSensor):
     """Sensor that returns the last value of a sequence of readings."""
 
-    def _to_native_value(self, raw_value):
+    def _to_native_value(self, raw_value: Any) -> float:
         """Convert non-none raw value into usable sensor value."""
         if isinstance(raw_value, Sequence):
             raw_value = raw_value[-1]
@@ -173,7 +174,7 @@ class EnergySensor(CombinedEnergyReadingsSensor):
             return device_readings.range_start
         return None
 
-    def _to_native_value(self, raw_value):
+    def _to_native_value(self, raw_value: Any) -> float:
         """Convert non-none raw value into usable sensor value."""
         value = sum(raw_value)
         return round(value, self.native_value_rounding)
@@ -182,7 +183,7 @@ class EnergySensor(CombinedEnergyReadingsSensor):
 class PowerSensor(CombinedEnergyReadingsSensor):
     """Sensor for power readings."""
 
-    def _to_native_value(self, raw_value):
+    def _to_native_value(self, raw_value: Any) -> float:
         """Convert non-none raw value into usable sensor value."""
         return round(raw_value, self.native_value_rounding)
 
@@ -192,7 +193,7 @@ class PowerFactorSensor(CombinedEnergyReadingsSensor):
 
     native_value_rounding = 1
 
-    def _to_native_value(self, raw_value):
+    def _to_native_value(self, raw_value: Any) -> float:
         """Convert non-none raw value into usable sensor value."""
         # The API expresses the power factor as a fraction convert to %
         return round(raw_value[-1] * 100, self.native_value_rounding)
@@ -201,7 +202,7 @@ class PowerFactorSensor(CombinedEnergyReadingsSensor):
 class WaterVolumeSensor(CombinedEnergyReadingsSensor):
     """Sensor for water volume readings."""
 
-    def _to_native_value(self, raw_value):
+    def _to_native_value(self, raw_value: Any) -> int:
         """Convert non-none raw value into usable sensor value."""
         return int(round(raw_value[-1], 0))
 
@@ -219,8 +220,7 @@ SENSOR_TYPE_MAP: dict[
 
 
 class CombinedEnergyReadingsSensorFactory:
-    """
-    Factory for generating devices/entities.
+    """Factory for generating devices/entities.
 
     Entities/Devices are described in the installation model.
     """
