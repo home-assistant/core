@@ -45,20 +45,22 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for Obihai."""
 
     VERSION = 1
-
-    def __init__(self) -> None:
-        """Initialize."""
-        self._host: str | None = None
+    _host: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
         errors: dict[str, str] = {}
+        ip: str | None = None
 
         if user_input is not None:
             try:
                 ip = gethostbyname(user_input[CONF_HOST])
+            except gaierror:
+                errors["base"] = "cannot_connect"
+
+            if ip:
                 await self.async_set_unique_id(get_mac_address(ip=ip))
                 self._abort_if_unique_id_configured()
 
@@ -68,8 +70,6 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
                         data=user_input,
                     )
                 errors["base"] = "invalid_auth"
-            except gaierror:
-                errors["base"] = "cannot_connect"
 
         user_input = {CONF_HOST: self._host if self._host else ""}
         data_schema = self.add_suggested_values_to_schema(DATA_SCHEMA, user_input)
@@ -112,19 +112,20 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by importing a config."""
         try:
             ip = gethostbyname(config[CONF_HOST])
-            await self.async_set_unique_id(get_mac_address(ip=ip))
-            self._abort_if_unique_id_configured()
-
-            if await async_validate_creds(self.hass, config):
-                return self.async_create_entry(
-                    title=config.get(CONF_NAME, config[CONF_HOST]),
-                    data={
-                        CONF_HOST: config[CONF_HOST],
-                        CONF_PASSWORD: config[CONF_PASSWORD],
-                        CONF_USERNAME: config[CONF_USERNAME],
-                    },
-                )
-
-            return self.async_abort(reason="invalid_auth")
         except gaierror:
             return self.async_abort(reason="cannot_connect")
+
+        await self.async_set_unique_id(get_mac_address(ip=ip))
+        self._abort_if_unique_id_configured()
+
+        if await async_validate_creds(self.hass, config):
+            return self.async_create_entry(
+                title=config.get(CONF_NAME, config[CONF_HOST]),
+                data={
+                    CONF_HOST: config[CONF_HOST],
+                    CONF_PASSWORD: config[CONF_PASSWORD],
+                    CONF_USERNAME: config[CONF_USERNAME],
+                },
+            )
+
+        return self.async_abort(reason="invalid_auth")
