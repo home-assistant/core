@@ -2,20 +2,16 @@
 from __future__ import annotations
 
 from datetime import datetime
-from fnmatch import fnmatch
 from typing import Any
 
 from homeassistant.components.media_player import (
-    BrowseMedia,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
-    MediaClass,
     RepeatMode,
 )
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -90,8 +86,6 @@ MUSIC_PLAYER_SUPPORT = (
     | MediaPlayerEntityFeature.NEXT_TRACK
     | MediaPlayerEntityFeature.SELECT_SOUND_MODE
     | MediaPlayerEntityFeature.STOP
-    | MediaPlayerEntityFeature.BROWSE_MEDIA
-    | MediaPlayerEntityFeature.PLAY_MEDIA
 )
 
 NETFLIX_PLAYER_SUPPORT = (
@@ -105,8 +99,6 @@ NETFLIX_PLAYER_SUPPORT = (
     | MediaPlayerEntityFeature.NEXT_TRACK
     | MediaPlayerEntityFeature.SELECT_SOUND_MODE
     | MediaPlayerEntityFeature.STOP
-    | MediaPlayerEntityFeature.BROWSE_MEDIA
-    | MediaPlayerEntityFeature.PLAY_MEDIA
 )
 
 
@@ -347,57 +339,6 @@ class DemoMusicPlayer(AbstractDemoPlayer):
         self._attr_group_members = []
         self.schedule_update_ha_state()
 
-    async def async_play_media(
-        self, media_type: MediaType | str, media_id: str, **kwargs: Any
-    ) -> None:
-        """Play a piece of media."""
-        try:
-            self._cur_track = int(media_id)
-        except ValueError:
-            self._cur_track = 0
-        self.schedule_update_ha_state()
-
-    async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
-    ) -> BrowseMedia:
-        """Implement the websocket media browsing helper."""
-        search_id = media_content_id
-        if not search_id:
-            search_id = " "
-        is_filter = "*" in search_id
-        if is_filter:
-            query = search_id.lower()
-        children = []
-        count = 0
-        for item in self.tracks:
-            item_name = item[0] + " - " + item[1]
-            if not is_filter or fnmatch(item_name.lower(), query):
-                children.append(
-                    BrowseMedia(
-                        title=item_name,
-                        media_class=MediaClass.TRACK,
-                        media_content_id=str(count),
-                        media_content_type=MediaType.MUSIC,
-                        can_play=True,
-                        can_expand=False,
-                    )
-                )
-            count += 1
-
-        return BrowseMedia(
-            title=self._attr_media_album_name,
-            media_class=MediaType.ALBUM,
-            children_media_class=MediaClass.TRACK,
-            media_content_id=search_id,
-            media_content_type=MediaType.ALBUM,
-            can_play=True,
-            can_expand=False,
-            children=children,
-            thumbnail=self._attr_media_image_url,
-            not_shown=count - len(children),
-            can_search=True,
-        )
-
 
 class DemoTVShowPlayer(AbstractDemoPlayer):
     """A Demo media player that only supports Netflix."""
@@ -449,41 +390,3 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
         """Set the input source."""
         self._attr_source = source
         self.schedule_update_ha_state()
-
-    async def async_play_media(
-        self, media_type: MediaType | str, media_id: str, **kwargs: Any
-    ) -> None:
-        """Play a piece of media."""
-        self._cur_episode = int(media_id)
-        self.schedule_update_ha_state()
-
-    async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
-    ) -> BrowseMedia:
-        """Implement the websocket media browsing helper."""
-        children = []
-        count = 0
-        for episode in range(1, self._episode_count):
-            children.append(
-                BrowseMedia(
-                    title="Chapter " + str(episode),
-                    media_class=MediaClass.EPISODE,
-                    media_content_id=str(episode),
-                    media_content_type=MediaType.EPISODE,
-                    can_play=True,
-                    can_expand=False,
-                )
-            )
-            count += 1
-
-        return BrowseMedia(
-            title=self._attr_media_series_title,
-            media_class=MediaClass.SEASON,
-            children_media_class=MediaClass.EPISODE,
-            media_content_id=str(1),
-            media_content_type=MediaType.EPISODE,
-            can_play=True,
-            can_expand=False,
-            children=children,
-            thumbnail=self._attr_media_image_url,
-        )
