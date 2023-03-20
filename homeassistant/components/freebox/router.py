@@ -11,6 +11,7 @@ from typing import Any
 
 from freebox_api import Freepybox
 from freebox_api.api.call import Call
+from freebox_api.api.home import Home
 from freebox_api.api.wifi import Wifi
 from freebox_api.exceptions import InsufficientPermissionsError, NotOpenError
 
@@ -159,7 +160,7 @@ class FreeboxRouter:
         new_device = False
         # Home sensors (alarm, pir, switch, remote ...)
         try:
-            home_nodes: list[Any] = await self._api.home.get_home_nodes() or []
+            home_nodes: list[Any] = await self.home.get_home_nodes() or []
         except InsufficientPermissionsError:
             self.home_granted = False
             _LOGGER.warning("Home access is not granted")
@@ -240,6 +241,6 @@ class FreeboxRouter:
         return self._api.wifi
 
     @property
-    def api(self) -> Freepybox:
+    def home(self) -> Home:
         """Return the call."""
-        return self._api
+        return self._api.home

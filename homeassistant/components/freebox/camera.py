@@ -165,31 +165,17 @@ class FreeboxCamera(FreeboxHomeBaseClass, FFmpegCamera):
             self._attr_is_streaming = True
         else:
             self._attr_is_streaming = False
+
         # Parse all endpoints values & needed commands
-        for endpoint in filter(
-            lambda x: (x["ep_type"] == "signal"), node["show_endpoints"]
-        ):
-            if endpoint["name"] == ATTR_DETECTION:
-                self._attr_motion_detection_enabled = endpoint["value"]
-            elif endpoint["name"] == ATTR_ACTIVATION:
-                self._activation_with_alarm = endpoint["value"]
-            elif endpoint["name"] == ATTR_QUALITY:
-                self._high_quality_video = endpoint["value"]
-            elif endpoint["name"] == ATTR_SENSITIVITY:
-                self._motion_sensitivity = endpoint["value"]
-            elif endpoint["name"] == ATTR_THRESHOLD:
-                self._motion_threshold = endpoint["value"]
-            elif endpoint["name"] == ATTR_FLIP:
-                self._flip = endpoint["value"]
-            elif endpoint["name"] == ATTR_TIMESTAMP:
-                self._timestamp = endpoint["value"]
-            elif endpoint["name"] == ATTR_VOLUME:
-                self._mic_volume = endpoint["value"]
-            elif endpoint["name"] == ATTR_SOUND_DETECTION:
-                self._sound_detection = endpoint["value"]
-            elif endpoint["name"] == ATTR_SOUND_TRIGGER:
-                self._sound_trigger = endpoint["value"]
-            elif endpoint["name"] == ATTR_RTSP:
-                self._rtsp = endpoint["value"]
-            elif endpoint["name"] == ATTR_DISK:
-                self._disk = endpoint["value"]
+        self._attr_motion_detection_enabled = self.get_value("signal", ATTR_DETECTION)
+        self._activation_with_alarm = self.get_value("signal", ATTR_ACTIVATION)
+        self._high_quality_video = self.get_value("signal", ATTR_QUALITY)
+        self._motion_sensitivity = self.get_value("signal", ATTR_SENSITIVITY)
+        self._motion_threshold = self.get_value("signal", ATTR_THRESHOLD)
+        self._flip = self.get_value("signal", ATTR_FLIP)
+        self._timestamp = self.get_value("signal", ATTR_TIMESTAMP)
+        self._mic_volume = self.get_value("signal", ATTR_VOLUME)
+        self._sound_detection = self.get_value("signal", ATTR_SOUND_DETECTION)
+        self._sound_trigger = self.get_value("signal", ATTR_SOUND_TRIGGER)
+        self._rtsp = self.get_value("signal", ATTR_RTSP)
+        self._disk = self.get_value("signal", ATTR_DISK)

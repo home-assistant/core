@@ -68,12 +68,14 @@ ATTR_SOUND_TRIGGER = "sound_trigger"
 ATTR_RTSP = "rtsp"
 ATTR_DISK = "disk"
 
-MODEL_PIR = "F-HAPIR01A"
-MODEL_CAMERA = "F-HACAM01A"
-MODEL_DWS = "F-HADWS01A"
-MODEL_KBF = "HAKFB01A"
-MODEL_ALARM = "F-MSEC07A"
-MODEL_RTS = "RTS"
-MODEL_IOHOME = "IOHome"
+CATEGORY_TO_MODEL = {
+    "pir": "F-HAPIR01A",
+    "camera": "F-HACAM01A",
+    "dws": "F-HADWS01A",
+    "kfb": "F-HAKFB01A",
+    "alarm": "F-MSEC07A",
+    "rts": "RTS",
+    "iohome": "IOHome",
+}
 
-HOME_COMPATIBLE_PLATFORM = "camera"
+HOME_COMPATIBLE_PLATFORM = Platform.CAMERA
