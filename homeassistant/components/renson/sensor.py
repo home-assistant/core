@@ -144,7 +144,6 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         raw_format=False,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.DAYS,
-        device_class=SensorDeviceClass.DURATION,
     ),
     RensonSensorEntityDescription(
         key="HUMIDITY_FIELD",
@@ -263,7 +262,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         field=FILTER_PRESET_FIELD,
         raw_format=False,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfTime.DAYS,
     ),
 )
 
