@@ -513,11 +513,7 @@ def _drop_foreign_key_constraints(
     inspector = sqlalchemy.inspect(engine)
     drops = []
     for foreign_key in inspector.get_foreign_keys(table):
-        if (
-            foreign_key["name"]
-            and foreign_key.get("options", {}).get("ondelete")
-            and foreign_key["constrained_columns"] == columns
-        ):
+        if foreign_key["name"] and foreign_key["constrained_columns"] == columns:
             drops.append(ForeignKeyConstraint((), (), name=foreign_key["name"]))
 
     # Bind the ForeignKeyConstraints to the table
@@ -1547,7 +1543,16 @@ def cleanup_legacy_states_event_ids(instance: Recorder) -> bool:
     if all_gone:
         # Only drop the index if there are no more event_ids in the states table
         # ex all NULL
-        _drop_index(session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX)
+        assert instance.engine is not None, "engine should never be None"
+        if instance.dialect_name != SupportedDialect.SQLITE:
+            # SQLite does not support dropping foreign key constraints
+            # so we can't drop the index at this time but we can avoid
+            # looking for legacy rows during purge
+            _drop_foreign_key_constraints(
+                session_maker, instance.engine, TABLE_STATES, ["event_id"]
+            )
+            _drop_index(session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX)
+        instance.use_legacy_events_index = False
 
     return True
 
