@@ -4,7 +4,6 @@ from collections.abc import Callable
 import pytest
 from sqlalchemy import select
 
-from homeassistant.components import recorder
 from homeassistant.components.recorder import history
 from homeassistant.components.recorder.db_schema import StatesMeta
 from homeassistant.components.recorder.util import session_scope
@@ -62,6 +61,7 @@ def test_rename_entity(
     hass.states.set("sensor.test99", "post_migrate")
     wait_recording_done(hass)
     new_hist = history.get_significant_states(hass, zero, dt_util.utcnow())
+    assert not new_hist.get("sensor.test1")
     assert new_hist["sensor.test99"][-1].state == "post_migrate"
 
     with session_scope(hass=hass) as session:
@@ -142,8 +142,8 @@ def test_rename_entity_collision(
             len(
                 list(
                     session.execute(
-                        select(recorder.db_schema.StatesMeta).filter(
-                            recorder.db_schema.StatesMeta.entity_id == "sensor.test99"
+                        select(StatesMeta).filter(
+                            StatesMeta.entity_id == "sensor.test99"
                         )
                     )
                 )
