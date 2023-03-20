@@ -221,6 +221,7 @@ class Recorder(threading.Thread):
         self.async_migration_event = asyncio.Event()
         self.migration_in_progress = False
         self.migration_is_live = False
+        self.use_legacy_events_index = False
         self._database_lock_task: DatabaseLockTask | None = None
         self._db_executor: DBInterruptibleThreadPoolExecutor | None = None
 
@@ -501,6 +502,7 @@ class Recorder(threading.Thread):
         new_size = self.hass.states.async_entity_ids_count() * 2
         self.state_attributes_manager.adjust_lru_size(new_size)
         self.states_meta_manager.adjust_lru_size(new_size)
+        self.statistics_meta_manager.adjust_lru_size(new_size)
 
     @callback
     def async_periodic_statistics(self) -> None:
@@ -743,6 +745,7 @@ class Recorder(threading.Thread):
                         session, TABLE_STATES, LEGACY_STATES_EVENT_ID_INDEX
                     ):
                         self.queue_task(EventIdMigrationTask())
+                        self.use_legacy_events_index = True
 
         # We must only set the db ready after we have set the table managers
         # to active if there is no data to migrate.
