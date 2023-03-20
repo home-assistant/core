@@ -269,23 +269,32 @@ class WebSocketHandler:
             async_dispatcher_send(self.hass, SIGNAL_WEBSOCKET_CONNECTED)
 
             #
+            # Our websocket implementation is backed by an asyncio.Queue
+            #
+            # As back-pressure builds the queue will back up and use more memory
+            # until we disconnect the client when the queue size reaches
+            # MAX_PENDING_MSG. When we are generating a high volume of websocket
+            # messages, we hit a bottleneck in aiohttp where it will wait for
+            # the buffer to drain before sending the next message and messages
+            # start backing up in the queue.
+            #
             # https://github.com/aio-libs/aiohttp/issues/1367 added drains
             # to the websocket writer to handle malicious clients and
-            # network issues. However, this causes a problem for us since
-            # we don't want to wait for the buffer to drain before we send
-            # the next one since it backs up into the queue which uses more memory.
+            # network issues. This causes a problem for us since the buffer
+            # cannot be drained fast enough and we end up disconnecting the
+            # client. The client will than reconnect and the cycle repeats
+            # itself which results in a significant amount of CPU usage.
             #
-            # Set the limit to 512KiB since the default limit of 16KiB is way too
-            # low for our use case since the registries can be quite large.
+            # After the auth phase is completed, and we are not concerned about
+            # the user being a malicious client, we set the limit to 1MiB since
+            # the default limit of 16KiB results in the a bottleneck where
+            # everything that wants to write it blocking on the buffer draining.
             #
             # https://github.com/aio-libs/aiohttp/commit/b3c80ee3f7d5d8f0b8bc27afe52e4d46621eaf99
             # added a way to set the limit but there is no way to actually
             # reach the code to set the limit so we have to set it directly.
             #
-            # We already authenticated so we are less concerned about malicious
-            # clients at this point.
-            #
-            wsock._writer._limit = 2**19  # type: ignore[union-attr] # pylint: disable=protected-access
+            wsock._writer._limit = 2**20  # type: ignore[union-attr] # pylint: disable=protected-access
 
             # Command phase
             while not wsock.closed:
