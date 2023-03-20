@@ -5,7 +5,7 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "server": "[%key:common::config_flow::data::host%]",
+          "server": "Server",
           "port": "[%key:common::config_flow::data::port%]",
           "charset": "Character set",
           "folder": "Folder",
