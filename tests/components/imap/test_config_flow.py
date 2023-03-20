@@ -29,6 +29,8 @@ MOCK_CONFIG = {
     "search": "UnSeen UnDeleted",
 }
 
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
