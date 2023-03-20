@@ -68,6 +68,13 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         icon="mdi:arrow-down",
     ),
+    SensorEntityDescription(
+        key="last",
+        name="Last",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        icon="mdi:lightning-bolt",
+    ),
 )
 
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
