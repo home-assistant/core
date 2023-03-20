@@ -11,15 +11,8 @@ from roborock.typing import RoborockDeviceInfo
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import (
-    CONF_BASE_URL,
-    CONF_USER_DATA,
-    DOMAIN,
-    PLATFORMS,
-    VACUUM,
-)
+from .const import CONF_BASE_URL, CONF_USER_DATA, DOMAIN, PLATFORMS
 from .coordinator import RoborockDataUpdateCoordinator
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -40,9 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Got home data %s", home_data)
 
     device_map: dict[str, RoborockDeviceInfo] = {}
-    devices = (
-        home_data.devices + home_data.received_devices
-    )
+    devices = home_data.devices + home_data.received_devices
     for device in devices:
         product: HomeDataProduct = next(
             (
