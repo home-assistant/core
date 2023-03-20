@@ -142,7 +142,7 @@ async def test_form__where_installation_id_already_configured(
                 CONF_INSTALLATION_ID: 99999999,
             },
             source=config_entries.SOURCE_USER,
-            unique_id="combined_energy-99999999",
+            unique_id="99999999",
         )
     )
 
