@@ -334,14 +334,11 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
                     extra_data.as_dict()
                 ).latest_version_firmware
             )
-        # Since we don't have the complete previous state, we must set the latest
-        # version to the installed version. This has the unfortunate side effect of
-        # clearing out the skipped version attribute, but this will self correct
-        # after the next update. We have to do this because if we restore a newer
-        # latest version and the user chooses to install it before the next update
-        # occurs, the installation will fail because we don't have the firmware data
-        # cached.
-        else:
+        # If we have no state to restore, we can set the latest version to installed
+        # so that the entity starts as off. If we have partial restore data due to an
+        # upgrade to an HA version where this feature is released from one that is not
+        # the entity will start in an unknown state until we can correct on next update
+        elif not state and not extra_data:
             self._attr_latest_version = self._attr_installed_version
 
         # Spread updates out in 5 minute increments to avoid flooding the network
