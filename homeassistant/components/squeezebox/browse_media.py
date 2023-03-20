@@ -73,7 +73,7 @@ async def build_item_response(entity, player, payload):
 
     """For wildcard searches, search_id is the query as `*<query>*`.
          search_type is the origional media_type"""
-    if "*" in search_id:
+    if search_id.startswith("*") and search_id.endswith("*"):
         items = await player._lms.async_query_category(
             MEDIA_TYPE_TO_SQUEEZEBOX[search_type],
             limit=BROWSE_LIMIT,
