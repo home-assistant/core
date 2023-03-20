@@ -208,7 +208,10 @@ async def test_reauth_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH, "entry_id": entry.entry_id},
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+        },
         data=MOCK_CONFIG,
     )
 
@@ -225,7 +228,9 @@ async def test_reauth_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
         )
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_PASSWORD: "test-password"},
+            {
+                CONF_PASSWORD: "test-password",
+            },
         )
 
     assert result2["type"] == FlowResultType.ABORT
@@ -278,7 +283,10 @@ async def test_reauth_failed_conn_error(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH, "entry_id": entry.entry_id},
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+        },
         data=MOCK_CONFIG,
     )
 
@@ -291,7 +299,9 @@ async def test_reauth_failed_conn_error(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_PASSWORD: "test-wrong-password"},
+            {
+                CONF_PASSWORD: "test-wrong-password",
+            },
         )
 
         assert result2["type"] == FlowResultType.FORM
