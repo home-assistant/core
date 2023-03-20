@@ -92,7 +92,12 @@ async def test_rename_entity_on_mocked_platform(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test states meta is migrated when entity_id is changed."""
+    """Test states meta is migrated when entity_id is changed when using a mocked platform.
+
+    This test will call async_remove on the entity so we can make
+    sure that we do not record the entity as removed in the database
+    when we rename it.
+    """
     instance = await async_setup_recorder_instance(hass)
     entity_reg = er.async_get(hass)
     start = dt_util.utcnow()
