@@ -1,10 +1,17 @@
 """The Matrix bot component."""
-from functools import partial
 import logging
 import mimetypes
 import os
+from typing import Any
 
-from matrix_client.client import MatrixClient, MatrixRequestError
+from matrix_client.client import MatrixRequestError
+from nio import (
+    AsyncClient,
+    LocalProtocolError,
+    LoginResponse,
+    MatrixRoom,
+    RoomMessageText,
+)
 import voluptuous as vol
 
 from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
@@ -90,7 +97,7 @@ SERVICE_SCHEMA_SEND_MESSAGE = vol.Schema(
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Matrix bot component."""
     config = config[DOMAIN]
 
@@ -105,18 +112,20 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             config[CONF_ROOMS],
             config[CONF_COMMANDS],
         )
+        await bot.init()
         hass.data[DOMAIN] = bot
     except MatrixRequestError as exception:
         _LOGGER.error("Matrix failed to log in: %s", str(exception))
         return False
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN,
         SERVICE_SEND_MESSAGE,
         bot.handle_send_message,
         schema=SERVICE_SCHEMA_SEND_MESSAGE,
     )
 
+    hass.states.async_set("matrix.world", "Paulus")
     return True
 
 
@@ -125,20 +134,22 @@ class MatrixBot:
 
     def __init__(
         self,
-        hass,
+        hass: HomeAssistant,
         config_file,
         homeserver,
         verify_ssl,
         username,
         password,
-        listening_rooms,
+        listening_rooms: list[str],
         commands,
-    ):
+    ) -> None:
         """Set up the client."""
         self.hass = hass
 
+        self._client: AsyncClient = None
+
         self._session_filepath = config_file
-        self._auth_tokens = self._get_auth_tokens()
+        self._auth_info = self._get_stored_auth_info()
 
         self._homeserver = homeserver
         self._verify_tls = verify_ssl
@@ -150,15 +161,15 @@ class MatrixBot:
         # We have to fetch the aliases for every room to make sure we don't
         # join it twice by accident. However, fetching aliases is costly,
         # so we only do it once per room.
-        self._aliases_fetched_for = set()
+        self._aliases_fetched_for: set[str] = set()
 
         # Word commands are stored dict-of-dict: First dict indexes by room ID
         #  / alias, second dict indexes by the word
-        self._word_commands = {}
+        self._word_commands: dict[str, dict[str, dict[str, str]]] = {}
 
         # Regular expression commands are stored as a list of commands per
         # room, i.e., a dict-of-list
-        self._expression_commands = {}
+        self._expression_commands: dict[str, list[Any]] = {}
 
         for command in commands:
             if not command.get(CONF_ROOMS):
@@ -175,73 +186,70 @@ class MatrixBot:
                         self._expression_commands[room_id] = []
                     self._expression_commands[room_id].append(command)
 
+    async def init(self):
+        """Initialie async Matrix Bot."""
+
         # Log in. This raises a MatrixRequestError if login is unsuccessful
-        self._client = self._login()
+        self._client = await self._login()
 
-        def handle_matrix_exception(exception):
-            """Handle exceptions raised inside the Matrix SDK."""
-            _LOGGER.error("Matrix exception:\n %s", str(exception))
-
-        self._client.start_listener_thread(exception_handler=handle_matrix_exception)
-
-        def stop_client(_):
+        async def stop_client(_):
             """Run once when Home Assistant stops."""
-            self._client.stop_listener_thread()
+            # asyncio.get_event_loop().stop()
+            await self._client.close()
 
-        self.hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_client)
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_client)
 
         # Joining rooms potentially does a lot of I/O, so we defer it
-        def handle_startup(_):
+        async def handle_startup(_):
             """Run once when Home Assistant finished startup."""
-            self._join_rooms()
+            await self._start_event_loop()
 
-        self.hass.bus.listen_once(EVENT_HOMEASSISTANT_START, handle_startup)
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, handle_startup)
 
-    def _handle_room_message(self, room_id, room, event):
+    def _handle_room_message(self, room: MatrixRoom, event: RoomMessageText) -> None:
         """Handle a message sent to a Matrix room."""
-        if event["content"]["msgtype"] != "m.text":
+
+        if event.sender == self._mx_id:
             return
 
-        if event["sender"] == self._mx_id:
-            return
+        _LOGGER.debug("Handling message '%s' in room '%s'", event.body, room.room_id)
 
-        _LOGGER.debug("Handling message: %s", event["content"]["body"])
-
-        if event["content"]["body"][0] == "!":
+        room_id = room.room_id
+        if event.body[0] == "!":
             # Could trigger a single-word command
-            pieces = event["content"]["body"].split(" ")
+            pieces = event.body.split(" ")
             cmd = pieces[0][1:]
 
-            command = self._word_commands.get(room_id, {}).get(cmd)
+            command = self._word_commands.get(room.room_id, {}).get(cmd)
             if command:
                 event_data = {
                     "command": command[CONF_NAME],
-                    "sender": event["sender"],
+                    "sender": event.sender,
                     "room": room_id,
                     "args": pieces[1:],
                 }
                 self.hass.bus.fire(EVENT_MATRIX_COMMAND, event_data)
 
         # After single-word commands, check all regex commands in the room
-        for command in self._expression_commands.get(room_id, []):
-            match = command[CONF_EXPRESSION].match(event["content"]["body"])
+        for rcommand in self._expression_commands.get(room_id, []):
+            match = rcommand[CONF_EXPRESSION].match(event.body)
             if not match:
                 continue
             event_data = {
-                "command": command[CONF_NAME],
-                "sender": event["sender"],
+                "command": rcommand[CONF_NAME],
+                "sender": event.sender,
                 "room": room_id,
                 "args": match.groupdict(),
             }
             self.hass.bus.fire(EVENT_MATRIX_COMMAND, event_data)
 
-    def _join_or_get_room(self, room_id_or_alias):
+    async def _join_or_get_room(self, room_id_or_alias):
         """Join a room or get it, if we are already in the room.
 
         We can't just always call join_room(), since that seems to crash
         the client if we're already in the room.
         """
-        rooms = self._client.get_rooms()
+        rooms = self._client.rooms
         if room_id_or_alias in rooms:
             _LOGGER.debug("Already in room %s", room_id_or_alias)
             return rooms[room_id_or_alias]
@@ -260,23 +268,18 @@ class MatrixBot:
                 )
                 return room
 
-        room = self._client.join_room(room_id_or_alias)
+        room = await self._client.join(room_id_or_alias)
         _LOGGER.info("Joined room %s (known as %s)", room.room_id, room_id_or_alias)
         return room
 
-    def _join_rooms(self):
+    async def _start_event_loop(self):
         """Join the Matrix rooms that we listen for commands in."""
-        for room_id in self._listening_rooms:
-            try:
-                room = self._join_or_get_room(room_id)
-                room.add_listener(
-                    partial(self._handle_room_message, room_id), "m.room.message"
-                )
+        self._client.add_event_callback(self._handle_room_message, RoomMessageText)
+        for room in self._listening_rooms:
+            await self._client.join(room)
+        await self._client.sync_forever(timeout=30000, full_state=False)
 
-            except MatrixRequestError as ex:
-                _LOGGER.error("Could not join room %s: %s", room_id, ex)
-
-    def _get_auth_tokens(self) -> JsonObjectType:
+    def _get_stored_auth_info(self) -> JsonObjectType:
         """Read sorted authentication tokens from disk.
 
         Returns the auth_tokens dictionary.
@@ -291,70 +294,66 @@ class MatrixBot:
             )
             return {}
 
-    def _store_auth_token(self, token):
+    def _store_auth_info(self, token: str, device_id: str):
         """Store authentication token to session and persistent storage."""
-        self._auth_tokens[self._mx_id] = token
+        self._auth_info[self._mx_id] = {"token": token, "device_id": device_id}
 
-        save_json(self._session_filepath, self._auth_tokens)
+        save_json(self._session_filepath, self._auth_info)
 
-    def _login(self):
+    async def _login(self):
         """Login to the Matrix homeserver and return the client instance."""
         # Attempt to generate a valid client using either of the two possible
         # login methods:
         client = None
 
         # If we have an authentication token
-        if self._mx_id in self._auth_tokens:
-            try:
-                client = self._login_by_token()
-                _LOGGER.debug("Logged in using stored token")
-
-            except MatrixRequestError as ex:
-                _LOGGER.warning(
-                    "Login by token failed, falling back to password: %d, %s",
-                    ex.code,
-                    ex.content,
-                )
+        try:
+            client = await self._login_by_token()
+        except KeyError as ex:
+            _LOGGER.debug(
+                "No saved login data, ex: %s",
+                str(ex),
+            )
 
         # If we still don't have a client try password
         if not client:
-            try:
-                client = self._login_by_password()
-                _LOGGER.debug("Logged in using password")
-
-            except MatrixRequestError as ex:
-                _LOGGER.error(
-                    "Login failed, both token and username/password invalid: %d, %s",
-                    ex.code,
-                    ex.content,
-                )
-                # Re-raise the error so _setup can catch it
-                raise
+            client = await self._login_by_password()
+            _LOGGER.debug("Logged in using password")
 
         return client
 
-    def _login_by_token(self):
+    async def _login_by_token(self):
         """Login using authentication token and return the client."""
-        return MatrixClient(
-            base_url=self._homeserver,
-            token=self._auth_tokens[self._mx_id],
+        client = AsyncClient(self._homeserver)
+
+        client.restore_login(
             user_id=self._mx_id,
-            valid_cert_check=self._verify_tls,
+            device_id=self._auth_info[self._mx_id]["device_id"],
+            access_token=self._auth_info[self._mx_id]["token"],
         )
 
-    def _login_by_password(self):
+        return client
+
+    async def _login_by_password(self):
         """Login using password authentication and return the client."""
-        _client = MatrixClient(
-            base_url=self._homeserver, valid_cert_check=self._verify_tls
+        _client = AsyncClient(
+            homeserver=self._homeserver, user=self._mx_id, ssl=self._verify_tls
         )
 
-        _client.login_with_password(self._mx_id, self._password)
-
-        self._store_auth_token(_client.token)
+        resp = await _client.login(self._password)
+        # check that we logged in successfully
+        if isinstance(resp, LoginResponse):
+            self._store_auth_info(resp.access_token, resp.device_id)
+        else:
+            _LOGGER.error(
+                "Login failed, both token and username/password invalid: %d, %s",
+                resp.status_code,
+                resp.message,
+            )
 
         return _client
 
-    def _send_image(self, img, target_rooms):
+    async def _send_image(self, img, target_rooms):
         _LOGGER.debug("Uploading file from path, %s", img)
 
         if not self.hass.config.is_allowed_path(img):
@@ -363,11 +362,20 @@ class MatrixBot:
         with open(img, "rb") as upfile:
             imgfile = upfile.read()
         content_type = mimetypes.guess_type(img)[0]
-        mxc = self._client.upload(imgfile, content_type)
+        mxc = await self._client.upload(imgfile, content_type)
         for target_room in target_rooms:
             try:
-                room = self._join_or_get_room(target_room)
-                room.send_image(mxc, img, mimetype=content_type)
+                # mxc, img, mimetype=content_type
+                await self._client.room_send(
+                    room_id=target_room,
+                    message_type="m.room.message",
+                    content={
+                        "msgtype": "m.image",
+                        "body": img,
+                        "info": {"mimetype": content_type},
+                        "url": mxc.content_uri,
+                    },
+                )
             except MatrixRequestError as ex:
                 _LOGGER.error(
                     "Unable to deliver message to room '%s': %d, %s",
@@ -376,30 +384,32 @@ class MatrixBot:
                     ex.content,
                 )
 
-    def _send_message(self, message, data, target_rooms):
+    async def _send_message(self, message, data, target_rooms):
         """Send the message to the Matrix server."""
         for target_room in target_rooms:
             try:
-                room = self._join_or_get_room(target_room)
                 if message is not None:
-                    if data.get(ATTR_FORMAT) == FORMAT_HTML:
-                        _LOGGER.debug(room.send_html(message))
-                    else:
-                        _LOGGER.debug(room.send_text(message))
-            except MatrixRequestError as ex:
+                    _LOGGER.debug(
+                        await self._client.room_send(
+                            room_id=target_room,
+                            message_type="m.room.message",
+                            content={"msgtype": "m.text", "body": message},
+                        )
+                    )
+            except LocalProtocolError as ex:
                 _LOGGER.error(
-                    "Unable to deliver message to room '%s': %d, %s",
+                    "Unable to deliver message to room %s: %s",
                     target_room,
-                    ex.code,
-                    ex.content,
+                    ex,
                 )
+
         if ATTR_IMAGES in data:
             for img in data.get(ATTR_IMAGES, []):
-                self._send_image(img, target_rooms)
+                await self._send_image(img, target_rooms)
 
-    def handle_send_message(self, service: ServiceCall) -> None:
+    async def handle_send_message(self, service: ServiceCall) -> None:
         """Handle the send_message service."""
-        self._send_message(
+        await self._send_message(
             service.data.get(ATTR_MESSAGE),
             service.data.get(ATTR_DATA),
             service.data[ATTR_TARGET],

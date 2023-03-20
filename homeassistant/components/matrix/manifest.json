@@ -3,7 +3,8 @@
   "name": "Matrix",
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/matrix",
+  "integration_type": "service",
   "iot_class": "cloud_push",
   "loggers": ["matrix_client"],
-  "requirements": ["matrix-client==0.4.0"]
+  "requirements": ["matrix-client==0.4.0", "matrix-nio==0.20.1"]
 }
