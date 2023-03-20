@@ -37,6 +37,14 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_CHARSET, default="utf-8"): str,
+        vol.Optional(CONF_FOLDER, default="INBOX"): str,
+        vol.Optional(CONF_SEARCH, default="UnSeen UnDeleted"): str,
+    }
+)
+
 
 async def validate_input(user_input: dict[str, Any]) -> dict[str, str]:
     """Validate user input."""
@@ -151,20 +159,16 @@ class OptionsFlow(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Manage the options."""
         errors: dict[str, str] = {}
-        suggested_values: dict[str, Any]
+        entry_data: dict[str, Any] = dict(self.config_entry.data)
         if user_input is not None:
-            errors = await validate_input(user_input)
+            entry_data.update(user_input)
+            errors = await validate_input(entry_data)
             if not errors:
                 self.hass.config_entries.async_update_entry(
-                    self.config_entry, data=STEP_USER_DATA_SCHEMA(user_input)
+                    self.config_entry, data=STEP_USER_DATA_SCHEMA(entry_data)
                 )
                 return self.async_create_entry(title="", data={})
-            suggested_values = user_input
-        else:
-            suggested_values = dict(self.config_entry.data)
 
-        schema = self.add_suggested_values_to_schema(
-            STEP_USER_DATA_SCHEMA, suggested_values
-        )
+        schema = self.add_suggested_values_to_schema(OPTIONS_SCHEMA, entry_data)
 
         return self.async_show_form(step_id="init", data_schema=schema, errors=errors)

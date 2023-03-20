@@ -29,6 +29,12 @@ MOCK_CONFIG = {
     "search": "UnSeen UnDeleted",
 }
 
+MOCK_OPTIONS = {
+    "charset": "utf-8",
+    "folder": "INBOX",
+    "search": "UnSeen UnDeleted",
+}
+
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
@@ -295,31 +301,27 @@ async def test_reauth_failed_conn_error(hass: HomeAssistant) -> None:
 async def test_options_form(hass: HomeAssistant) -> None:
     """Test we show the options form."""
 
-    with patch(
-        "homeassistant.components.imap.coordinator.connect_to_server"
-    ) as mock_client_coordinator:
-        mock_client_coordinator.return_value.search.return_value = ("OK", [b""])
-        entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
-        entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(entry.entry_id)
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
 
-        result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_init(entry.entry_id)
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    new_config = MOCK_CONFIG.copy()
-    new_config["server"] = "imap2.server.com"
+    new_config = MOCK_OPTIONS.copy()
     new_config["folder"] = "INBOX.Notifications"
     new_config["charset"] = "utf-16"
     new_config["search"] = "UnSeen UnDeleted!!INVALID"
 
+    # simulate initial search setup error
     with patch(
         "homeassistant.components.imap.config_flow.connect_to_server"
     ) as mock_client:
         mock_client.return_value.search.return_value = ("BAD", [b"Invalid search"])
         result2 = await hass.config_entries.options.async_configure(
-            result["flow_id"], MOCK_CONFIG
+            result["flow_id"], new_config
         )
 
     assert result2["type"] == FlowResultType.FORM
@@ -340,6 +342,7 @@ async def test_options_form(hass: HomeAssistant) -> None:
         )
     assert result3["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result3["data"] == {}
-    assert entry.data == new_config
+    for key, value in new_config.items():
+        assert entry.data[key] == value
 
     await hass.async_block_till_done()
