@@ -168,17 +168,15 @@ async def test_setup_with_custom_location(hass: HomeAssistant) -> None:
         mock_feed_update.return_value = "OK", [mock_entry_1]
 
         assert await async_setup_component(
-            hass, geo_location.DOMAIN, CONFIG_WITH_CUSTOM_LOCATION
+            hass, geo_json_events.DOMAIN, CONFIG_WITH_CUSTOM_LOCATION
         )
         await hass.async_block_till_done()
 
-        # Artificially trigger update.
+        # Artificially trigger update and collect events.
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-        # Collect events.
         await hass.async_block_till_done()
 
-        all_states = hass.states.async_all()
-        assert len(all_states) == 1
+        assert len(hass.states.async_entity_ids("geo_location")) == 1
 
         assert mock_feed.call_args == call(ANY, (15.1, 25.2), URL, filter_radius=200.0)
 
