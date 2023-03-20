@@ -3,24 +3,40 @@ from collections.abc import Callable
 
 import pytest
 from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from homeassistant.components.recorder import history
 from homeassistant.components.recorder.db_schema import StatesMeta
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import setup_component
 from homeassistant.util import dt as dt_util
 
 from .common import (
     assert_dict_of_states_equal_without_context_and_last_changed,
+    async_wait_recording_done,
     record_states,
     wait_recording_done,
 )
 
-from tests.common import mock_registry
+from tests.common import MockEntity, MockEntityPlatform, mock_registry
+from tests.typing import RecorderInstanceGenerator
 
 
-def test_rename_entity(
+def _count_entity_id_in_states_meta(
+    hass: HomeAssistant, session: Session, entity_id: str
+) -> int:
+    return len(
+        list(
+            session.execute(
+                select(StatesMeta).filter(StatesMeta.entity_id == "sensor.test99")
+            )
+        )
+    )
+
+
+def test_rename_entity_without_collision(
     hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test states meta is migrated when entity_id is changed."""
@@ -65,30 +81,89 @@ def test_rename_entity(
     assert new_hist["sensor.test99"][-1].state == "post_migrate"
 
     with session_scope(hass=hass) as session:
-        assert (
-            len(
-                list(
-                    session.execute(
-                        select(StatesMeta).filter(
-                            StatesMeta.entity_id == "sensor.test99"
-                        )
-                    )
-                )
-            )
-            == 1
-        )
-        assert (
-            len(
-                list(
-                    session.execute(
-                        select(StatesMeta).filter(
-                            StatesMeta.entity_id == "sensor.test1"
-                        )
-                    )
-                )
-            )
-            == 0
-        )
+        assert _count_entity_id_in_states_meta(hass, session, "sensor.test99") == 1
+        assert _count_entity_id_in_states_meta(hass, session, "sensor.test1") == 1
+
+    assert "the new entity_id is already in use" not in caplog.text
+
+
+async def test_rename_entity_on_mocked_platform(
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test states meta is migrated when entity_id is changed."""
+    instance = await async_setup_recorder_instance(hass)
+    entity_reg = er.async_get(hass)
+    start = dt_util.utcnow()
+
+    reg_entry = entity_reg.async_get_or_create(
+        "sensor",
+        "test",
+        "unique_0000",
+        suggested_object_id="test1",
+    )
+    assert reg_entry.entity_id == "sensor.test1"
+
+    entity_platform1 = MockEntityPlatform(
+        hass, domain="mock_integration", platform_name="mock_platform", platform=None
+    )
+    entity1 = MockEntity(entity_id=reg_entry.entity_id)
+    await entity_platform1.async_add_entities([entity1])
+
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test1", "pre_migrate")
+    await async_wait_recording_done(hass)
+
+    hist = await instance.async_add_executor_job(
+        history.get_significant_states,
+        hass,
+        start,
+        None,
+        ["sensor.test1", "sensor.test99"],
+    )
+
+    entity_reg.async_update_entity("sensor.test1", new_entity_id="sensor.test99")
+
+    await async_wait_recording_done(hass)
+
+    hist = await instance.async_add_executor_job(
+        history.get_significant_states,
+        hass,
+        start,
+        None,
+        ["sensor.test1", "sensor.test99"],
+    )
+
+    assert "sensor.test1" not in hist
+
+    hass.states.async_set("sensor.test99", "post_migrate")
+    await async_wait_recording_done(hass)
+
+    new_hist = await instance.async_add_executor_job(
+        history.get_significant_states,
+        hass,
+        start,
+        None,
+        ["sensor.test1", "sensor.test99"],
+    )
+
+    assert "sensor.test1" not in new_hist
+    assert new_hist["sensor.test99"][-1].state == "post_migrate"
+
+    def _get_states_meta_counts():
+        with session_scope(hass=hass) as session:
+            return _count_entity_id_in_states_meta(
+                hass, session, "sensor.test99"
+            ), _count_entity_id_in_states_meta(hass, session, "sensor.test1")
+
+    test99_count, test1_count = await instance.async_add_executor_job(
+        _get_states_meta_counts
+    )
+    assert test99_count == 1
+    assert test1_count == 1
+
     assert "the new entity_id is already in use" not in caplog.text
 
 
