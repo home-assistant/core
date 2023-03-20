@@ -2,7 +2,6 @@
 from datetime import timedelta
 import time
 
-from bleak.backends.scanner import BLEDevice
 import pytest
 
 from homeassistant.components.ibeacon.const import ATTR_SOURCE, DOMAIN, UPDATE_INTERVAL
@@ -23,6 +22,7 @@ from . import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.bluetooth import (
     generate_advertisement_data,
+    generate_ble_device,
     inject_advertisement_with_time_and_source_connectable,
     inject_bluetooth_service_info,
     patch_all_discovered_devices,
@@ -276,7 +276,7 @@ async def test_changing_source_attribute(hass: HomeAssistant) -> None:
 
     now = time.monotonic()
     info = BLUECHARM_BEACON_SERVICE_INFO_2
-    device = BLEDevice(
+    device = generate_ble_device(
         address=info.address,
         name=info.name,
         details={},
