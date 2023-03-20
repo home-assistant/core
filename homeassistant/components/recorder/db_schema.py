@@ -350,7 +350,7 @@ class EventTypes(Base):
     __tablename__ = TABLE_EVENT_TYPES
     event_type_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
     event_type: Mapped[str | None] = mapped_column(
-        String(MAX_LENGTH_EVENT_EVENT_TYPE), index=True
+        String(MAX_LENGTH_EVENT_EVENT_TYPE), index=True, unique=True
     )
 
     def __repr__(self) -> str:
@@ -600,7 +600,7 @@ class StatesMeta(Base):
     __tablename__ = TABLE_STATES_META
     metadata_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
     entity_id: Mapped[str | None] = mapped_column(
-        String(MAX_LENGTH_STATE_ENTITY_ID), index=True
+        String(MAX_LENGTH_STATE_ENTITY_ID), index=True, unique=True
     )
 
     def __repr__(self) -> str:
