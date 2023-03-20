@@ -62,13 +62,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Nibe Heat Pump from a config entry."""
 
     heatpump = HeatPump(Model[entry.data[CONF_MODEL]])
+    heatpump.word_swap = entry.data.get(CONF_WORD_SWAP, True)
     await heatpump.initialize()
 
     connection: Connection
     connection_type = entry.data[CONF_CONNECTION_TYPE]
 
     if connection_type == CONF_CONNECTION_TYPE_NIBEGW:
-        heatpump.word_swap = entry.data[CONF_WORD_SWAP]
         connection = NibeGW(
             heatpump,
             entry.data[CONF_IP_ADDRESS],
