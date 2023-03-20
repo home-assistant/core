@@ -227,18 +227,7 @@ def test_rename_entity_collision(
     assert len(hist["sensor.test99"]) == 2
 
     with session_scope(hass=hass) as session:
-        assert (
-            len(
-                list(
-                    session.execute(
-                        select(StatesMeta).filter(
-                            StatesMeta.entity_id == "sensor.test99"
-                        )
-                    )
-                )
-            )
-            == 1
-        )
+        assert _count_entity_id_in_states_meta(hass, session, "sensor.test99") == 1
 
     hass.states.set("sensor.test99", "post_migrate")
     wait_recording_done(hass)
@@ -247,29 +236,7 @@ def test_rename_entity_collision(
     assert len(hist["sensor.test99"]) == 2
 
     with session_scope(hass=hass) as session:
-        assert (
-            len(
-                list(
-                    session.execute(
-                        select(StatesMeta).filter(
-                            StatesMeta.entity_id == "sensor.test99"
-                        )
-                    )
-                )
-            )
-            == 1
-        )
-        assert (
-            len(
-                list(
-                    session.execute(
-                        select(StatesMeta).filter(
-                            StatesMeta.entity_id == "sensor.test1"
-                        )
-                    )
-                )
-            )
-            == 1
-        )
+        assert _count_entity_id_in_states_meta(hass, session, "sensor.test99") == 1
+        assert _count_entity_id_in_states_meta(hass, session, "sensor.test1") == 1
 
     assert "the new entity_id is already in use" in caplog.text
