@@ -17,19 +17,23 @@ from homeassistant.const import (
     CONF_URL,
     UnitOfLength,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import GeoJsonEventsFeedEntityManager
 from .const import (
+    ATTR_EXTERNAL_ID,
+    DEFAULT_RADIUS_IN_KM,
+    DOMAIN,
+    FEED,
     SIGNAL_DELETE_ENTITY,
     SIGNAL_UPDATE_ENTITY,
+    SOURCE,
 )
-from . import GeoJsonEventsFeedEntityManager
-from .const import ATTR_EXTERNAL_ID, DEFAULT_RADIUS_IN_KM, DOMAIN, FEED, SOURCE
-from ...helpers.issue_registry import async_create_issue
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -180,9 +180,7 @@ async def test_setup_with_custom_location(hass: HomeAssistant) -> None:
         all_states = hass.states.async_all()
         assert len(all_states) == 1
 
-        assert mock_feed.call_args == call(
-            ANY, (15.1, 25.2), URL, filter_radius=200.0
-        )
+        assert mock_feed.call_args == call(ANY, (15.1, 25.2), URL, filter_radius=200.0)
 
 
 async def test_setup_as_legacy_platform(hass):
