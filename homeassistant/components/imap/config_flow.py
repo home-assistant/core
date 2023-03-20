@@ -41,6 +41,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 async def validate_input(user_input: dict[str, Any]) -> dict[str, str]:
     """Validate user input."""
     errors = {}
+
     try:
         imap_client = await connect_to_server(user_input)
         result, lines = await imap_client.search(
