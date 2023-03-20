@@ -18,6 +18,8 @@ from homeassistant.helpers.storage import Store
 
 from .const import DATA_EXPOSED_ENTITIES, DOMAIN
 
+KNOWN_ASSISTANTS = ("cloud.alexa",)
+
 STORAGE_KEY = f"{DOMAIN}.exposed_entities"
 STORAGE_VERSION = 1
 
@@ -231,7 +233,7 @@ class ExposedEntities:
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "homeassistant/expose_entity",
-        vol.Required("assistants"): [str],
+        vol.Required("assistants"): [vol.In(KNOWN_ASSISTANTS)],
         vol.Required("entity_ids"): [str],
         vol.Required("should_expose"): bool,
     }
@@ -262,7 +264,7 @@ def ws_expose_entity(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "homeassistant/expose_new_entities",
-        vol.Required("assistant"): str,
+        vol.Required("assistant"): vol.In(KNOWN_ASSISTANTS),
         vol.Required("expose_new"): bool,
     }
 )
