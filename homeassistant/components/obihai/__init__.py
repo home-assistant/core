@@ -17,6 +17,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         password=entry.data[CONF_PASSWORD],
     )
 
+    await hass.async_add_executor_job(requester.update)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = requester
 
     def update_unique_id(entity_entry):

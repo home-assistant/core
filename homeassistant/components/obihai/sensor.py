@@ -67,7 +67,6 @@ async def async_setup_entry(
 
     requester = hass.data[DOMAIN][entry.entry_id]
 
-    await hass.async_add_executor_job(requester.update)
     sensors = []
     for key in requester.services:
         sensors.append(ObihaiServiceSensors(requester, key))

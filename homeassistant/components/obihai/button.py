@@ -22,7 +22,6 @@ async def async_setup_entry(
     """Set up the Obihai sensor entries."""
     requester: ObihaiConnection = hass.data[DOMAIN][entry.entry_id]
 
-    await hass.async_add_executor_job(requester.update)
     buttons = [ObihaiButton(requester, "reboot")]
     async_add_entities(buttons, update_before_add=True)
 
