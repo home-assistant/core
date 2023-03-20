@@ -9,6 +9,7 @@ import functools
 import gc
 import itertools
 import logging
+import os
 import sqlite3
 import ssl
 import threading
@@ -262,6 +263,22 @@ def expected_lingering_tasks() -> bool:
     return False
 
 
+@pytest.fixture(autouse=True)
+def expected_lingering_timers() -> bool:
+    """Temporary ability to bypass test failures.
+
+    Parametrize to True to bypass the pytest failure.
+    @pytest.mark.parametrize("expected_lingering_timers", [True])
+
+    This should be removed when all lingering timers have been cleaned up.
+    """
+    current_test = os.getenv("PYTEST_CURRENT_TEST")
+    if current_test and current_test.startswith("tests/components"):
+        # As a starting point, we ignore components
+        return True
+    return False
+
+
 @pytest.fixture
 def wait_for_stop_scripts_after_shutdown() -> bool:
     """Add ability to bypass _schedule_stop_scripts_after_shutdown.
@@ -291,7 +308,9 @@ def skip_stop_scripts(
 
 @pytest.fixture(autouse=True)
 def verify_cleanup(
-    event_loop: asyncio.AbstractEventLoop, expected_lingering_tasks: bool
+    event_loop: asyncio.AbstractEventLoop,
+    expected_lingering_tasks: bool,
+    expected_lingering_timers: bool,
 ) -> Generator[None, None, None]:
     """Verify that the test has cleaned up resources correctly."""
     threads_before = frozenset(threading.enumerate())
@@ -311,16 +330,19 @@ def verify_cleanup(
     tasks = asyncio.all_tasks(event_loop) - tasks_before
     for task in tasks:
         if expected_lingering_tasks:
-            _LOGGER.warning("Linger task after test %r", task)
+            _LOGGER.warning("Lingering task after test %r", task)
         else:
-            pytest.fail(f"Linger task after test {repr(task)}")
+            pytest.fail(f"Lingering task after test {repr(task)}")
         task.cancel()
     if tasks:
         event_loop.run_until_complete(asyncio.wait(tasks))
 
     for handle in event_loop._scheduled:  # type: ignore[attr-defined]
         if not handle.cancelled():
-            _LOGGER.warning("Lingering timer after test %r", handle)
+            if expected_lingering_timers:
+                _LOGGER.warning("Lingering timer after test %r", handle)
+            else:
+                pytest.fail(f"Lingering timer after test {repr(handle)}")
             handle.cancel()
 
     # Verify no threads where left behind.
