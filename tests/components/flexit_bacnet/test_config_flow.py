@@ -15,7 +15,9 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with patch("flexit_bacnet.device.FlexitBACnet.is_valid", return_value=True,), patch(
+    with patch("flexit_bacnet.device.FlexitBACnet.is_valid", return_value=True), patch(
+        "flexit_bacnet.device.FlexitBACnet.update"
+    ), patch(
         "flexit_bacnet.device.FlexitBACnet.serial_number",
         property(lambda _: "0000-0001"),
     ), patch(
@@ -49,7 +51,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     with patch(
         "flexit_bacnet.device.FlexitBACnet.is_valid",
         return_value=False,
-    ):
+    ), patch("flexit_bacnet.device.FlexitBACnet.update"):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

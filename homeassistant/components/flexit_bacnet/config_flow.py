@@ -33,9 +33,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     """
     device = FlexitBACnet(data["address"], data["device_id"])
 
-    is_valid = await hass.async_add_executor_job(device.is_valid)
+    await device.update()
 
-    if not is_valid:
+    if not device.is_valid():
         raise CannotConnect
 
     # Return info that you want to store in the config entry.
