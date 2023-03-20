@@ -109,6 +109,7 @@ from .tasks import (
     StatisticsTask,
     StopTask,
     SynchronizeTask,
+    UpdateStatesMetadataTask,
     UpdateStatisticsMetadataTask,
     WaitTask,
 )
@@ -549,6 +550,15 @@ class Recorder(threading.Thread):
         )
 
     @callback
+    def async_update_states_metadata(
+        self,
+        entity_id: str,
+        new_entity_id: str,
+    ) -> None:
+        """Update states metadata for an entity_id."""
+        self.queue_task(UpdateStatesMetadataTask(entity_id, new_entity_id))
+
+    @callback
     def async_change_statistics_unit(
         self,
         statistic_id: str,
@@ -970,8 +980,26 @@ class Recorder(threading.Thread):
     def _process_state_changed_event_into_session(self, event: Event) -> None:
         """Process a state_changed event into the session."""
         state_attributes_manager = self.state_attributes_manager
+        states_meta_manager = self.states_meta_manager
+        entity_removed = not event.data.get("new_state")
+        entity_id = event.data["entity_id"]
+
         dbstate = States.from_event(event)
-        if (entity_id := dbstate.entity_id) is None or not (
+
+        states_manager = self.states_manager
+        if old_state := states_manager.pop_pending(entity_id):
+            dbstate.old_state = old_state
+        elif old_state_id := states_manager.pop_committed(entity_id):
+            dbstate.old_state_id = old_state_id
+        if entity_removed:
+            dbstate.state = None
+        else:
+            states_manager.add_pending(entity_id, dbstate)
+
+        if states_meta_manager.active:
+            dbstate.entity_id = None
+
+        if entity_id is None or not (
             shared_attrs_bytes := state_attributes_manager.serialize_from_event(event)
         ):
             return
@@ -979,11 +1007,16 @@ class Recorder(threading.Thread):
         assert self.event_session is not None
         session = self.event_session
         # Map the entity_id to the StatesMeta table
-        states_meta_manager = self.states_meta_manager
         if pending_states_meta := states_meta_manager.get_pending(entity_id):
             dbstate.states_meta_rel = pending_states_meta
         elif metadata_id := states_meta_manager.get(entity_id, session, True):
             dbstate.metadata_id = metadata_id
+        elif states_meta_manager.active and entity_removed:
+            # If the entity was removed, we don't need to add it to the
+            # StatesMeta table or record it in the pending commit
+            # if it does not have a metadata_id allocated to it as
+            # it either never existed or was just renamed.
+            return
         else:
             states_meta = StatesMeta(entity_id=entity_id)
             states_meta_manager.add_pending(states_meta)
@@ -1014,19 +1047,6 @@ class Recorder(threading.Thread):
             state_attributes_manager.add_pending(dbstate_attributes)
             session.add(dbstate_attributes)
             dbstate.state_attributes = dbstate_attributes
-
-        states_manager = self.states_manager
-        if old_state := states_manager.pop_pending(entity_id):
-            dbstate.old_state = old_state
-        elif old_state_id := states_manager.pop_committed(entity_id):
-            dbstate.old_state_id = old_state_id
-        if event.data.get("new_state"):
-            states_manager.add_pending(entity_id, dbstate)
-        else:
-            dbstate.state = None
-
-        if states_meta_manager.active:
-            dbstate.entity_id = None
 
         session.add(dbstate)
 

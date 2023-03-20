@@ -26,11 +26,9 @@ from sqlalchemy.sql.lambdas import StatementLambdaElement
 import voluptuous as vol
 
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
-from homeassistant.core import Event, HomeAssistant, callback, valid_entity_id
+from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.json import JSONEncoder
-from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
@@ -324,35 +322,6 @@ class ValidationIssue:
     def as_dict(self) -> dict:
         """Return dictionary version."""
         return dataclasses.asdict(self)
-
-
-def async_setup(hass: HomeAssistant) -> None:
-    """Set up the history hooks."""
-
-    @callback
-    def _async_entity_id_changed(event: Event) -> None:
-        get_instance(hass).async_update_statistics_metadata(
-            event.data["old_entity_id"], new_statistic_id=event.data["entity_id"]
-        )
-
-    @callback
-    def entity_registry_changed_filter(event: Event) -> bool:
-        """Handle entity_id changed filter."""
-        if event.data["action"] != "update" or "old_entity_id" not in event.data:
-            return False
-
-        return True
-
-    @callback
-    def setup_entity_registry_event_handler(hass: HomeAssistant) -> None:
-        """Subscribe to event registry events."""
-        hass.bus.async_listen(
-            er.EVENT_ENTITY_REGISTRY_UPDATED,
-            _async_entity_id_changed,
-            event_filter=entity_registry_changed_filter,
-        )
-
-    async_at_start(hass, setup_entity_registry_event_handler)
 
 
 def get_start_time() -> datetime:
