@@ -978,7 +978,6 @@ class Recorder(threading.Thread):
         """Process a state_changed event into the session."""
         state_attributes_manager = self.state_attributes_manager
         states_meta_manager = self.states_meta_manager
-        states_meta_manager_active = states_meta_manager.active
         entity_removed = not event.data.get("new_state")
         entity_id = event.data["entity_id"]
 
@@ -994,7 +993,7 @@ class Recorder(threading.Thread):
         else:
             states_manager.add_pending(entity_id, dbstate)
 
-        if states_meta_manager_active:
+        if states_meta_manager.active:
             dbstate.entity_id = None
 
         if entity_id is None or not (
@@ -1009,7 +1008,7 @@ class Recorder(threading.Thread):
             dbstate.states_meta_rel = pending_states_meta
         elif metadata_id := states_meta_manager.get(entity_id, session, True):
             dbstate.metadata_id = metadata_id
-        elif states_meta_manager_active and entity_removed:
+        elif states_meta_manager.active and entity_removed:
             # If the entity was removed, we don't need to add it to the
             # StatesMeta table or record it in the pending commit
             # if it does not have a metadata_id allocated to it as
