@@ -85,9 +85,6 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
                 await self.hass.async_add_executor_job(self.verisure.update_cookie)
             except VerisureResponseError as ex:
                 raise ConfigEntryAuthFailed("Credentials for Verisure expired.") from ex
-            except Exception as ex:
-                LOGGER.error("Could not read overview, %s", ex)
-                raise UpdateFailed("Could not read overview") from ex
         except VerisureError as err:
             LOGGER.error("Could not read overview, %s", err)
             raise UpdateFailed("Could not read overview") from err
