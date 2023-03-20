@@ -289,7 +289,7 @@ class WebSocketHandler:
             # CPU usage.
             #
             # - Messages latency increases because messages cannot be moved into
-            # the buffer because it is blocked waiting for the drain to happen because
+            # the TCP buffer because it is blocked waiting for the drain to happen because
             # of the low default limit of 16KiB. By increasing the limit, we instead
             # rely on the underlying TCP buffer and stack to deliver the messages which
             # can typically happen much faster.
