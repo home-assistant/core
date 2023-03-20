@@ -33,6 +33,7 @@ from .const import (
     ATTR_VOLUME,
     DOMAIN,
 )
+from .const import SERVICE_FLIP
 from .home_base import FreeboxHomeEntity
 from .router import FreeboxRouter
 
@@ -57,7 +58,7 @@ async def async_setup_entry(
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
-        "flip",
+        SERVICE_FLIP,
         {},
         "async_flip",
     )
