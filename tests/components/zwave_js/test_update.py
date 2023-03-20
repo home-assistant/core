@@ -20,7 +20,7 @@ from homeassistant.components.update import (
 )
 from homeassistant.components.zwave_js.const import DOMAIN, SERVICE_REFRESH_VALUE
 from homeassistant.components.zwave_js.helpers import get_valueless_base_unique_id
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_registry import async_get
@@ -636,9 +636,7 @@ async def test_update_entity_partial_restore_data(
 
     state = hass.states.get(UPDATE_ENTITY)
     assert state
-    assert state.state == STATE_OFF
-    assert state.attributes[ATTR_SKIPPED_VERSION] is None
-    assert state.attributes[ATTR_LATEST_VERSION] == "10.7"
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_update_entity_full_restore_data_skipped(
