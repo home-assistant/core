@@ -132,9 +132,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         self._attr_device_info = get_device_info(driver, node)
 
     @property
-    def extra_restore_state_data(  # pylint: disable=[hass-return-type]
-        self,
-    ) -> ZWaveNodeFirmwareUpdateExtraStoredData:
+    def extra_restore_state_data(self) -> ExtraStoredData:
         """Return ZWave Node Firmware Update specific state data to be restored."""
         return ZWaveNodeFirmwareUpdateExtraStoredData(self._latest_version_firmware)
 
