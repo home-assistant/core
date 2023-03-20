@@ -248,7 +248,10 @@ async def test_reauth_failed(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH, "entry_id": entry.entry_id},
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+        },
         data=MOCK_CONFIG,
     )
 
