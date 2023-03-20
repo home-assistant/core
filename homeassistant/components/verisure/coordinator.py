@@ -54,7 +54,9 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
             LOGGER.error("Could not log in to verisure, %s", ex)
             return False
 
-        self.verisure.set_giid(self.entry.data[CONF_GIID])
+        await self.hass.async_add_executor_job(
+            self.verisure.set_giid, self.entry.data[CONF_GIID]
+        )
 
         return True
 
