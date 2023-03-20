@@ -639,13 +639,13 @@ async def test_update_entity_partial_restore_data(
     assert state.state == STATE_UNKNOWN
 
 
-async def test_update_entity_full_restore_data_skipped(
+async def test_update_entity_full_restore_data_skipped_version(
     hass: HomeAssistant,
     client,
     climate_radio_thermostat_ct100_plus_different_endpoints,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test update entity with full restore data including skipped restores state."""
+    """Test update entity with full restore data (skipped version) restores state."""
     mock_restore_cache_with_extra_data(
         hass,
         [
@@ -675,13 +675,13 @@ async def test_update_entity_full_restore_data_skipped(
     assert state.attributes[ATTR_LATEST_VERSION] == "11.2.4"
 
 
-async def test_update_entity_full_restore_data_update(
+async def test_update_entity_full_restore_data_update_available(
     hass: HomeAssistant,
     client,
     climate_radio_thermostat_ct100_plus_different_endpoints,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test update entity with full restore data including update restores state."""
+    """Test update entity with full restore data (update available) restores state."""
     mock_restore_cache_with_extra_data(
         hass,
         [
@@ -742,13 +742,13 @@ async def test_update_entity_full_restore_data_update(
     install_task.cancel()
 
 
-async def test_update_entity_full_restore_data_no_update(
+async def test_update_entity_full_restore_data_no_update_available(
     hass: HomeAssistant,
     client,
     climate_radio_thermostat_ct100_plus_different_endpoints,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test update entity with full restore data without update restores state."""
+    """Test entity with full restore data (no update available) restores state."""
     mock_restore_cache_with_extra_data(
         hass,
         [
