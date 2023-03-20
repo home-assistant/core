@@ -37,7 +37,6 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_component,
-    issue_registry as ir,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
@@ -472,20 +471,6 @@ class SamsungTVDevice(MediaPlayerEntity):
             # YAML on_script is deprecated - replaced by turn_on trigger
             await self._on_script.async_run(context=self._context)
         elif self._mac:
-            # WOL is deprecated - replaced by turn_on trigger
-            ir.async_create_issue(
-                self.hass,
-                DOMAIN,
-                "deprecated_wol",
-                breaks_in_ha_version="2023.6.0",
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="deprecated_wol",
-                translation_placeholders={
-                    "mac": self._mac,
-                    "on_action_url": "https://www.home-assistant.io/integrations/samsungtv/#turn-on-action",
-                },
-            )
             await self.hass.async_add_executor_job(self._wake_on_lan)
 
     async def async_select_source(self, source: str) -> None:
