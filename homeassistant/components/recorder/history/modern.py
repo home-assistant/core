@@ -23,7 +23,12 @@ import homeassistant.util.dt as dt_util
 from ... import recorder
 from ..db_schema import RecorderRuns, StateAttributes, States, StatesMeta
 from ..filters import Filters
-from ..models import LazyState, process_timestamp, row_to_compressed_state
+from ..models import (
+    LazyState,
+    extract_metadata_ids,
+    process_timestamp,
+    row_to_compressed_state,
+)
 from ..util import execute_stmt_lambda_element, session_scope
 from .const import (
     IGNORE_DOMAINS_ENTITY_ID_LIKE,
@@ -232,14 +237,12 @@ def get_significant_states_with_session(
     entity_id_to_metadata_id: dict[str, int | None] | None = None
     if entity_ids:
         instance = recorder.get_instance(hass)
-        entity_id_to_metadata_id = instance.states_meta_manager.get_many(
-            entity_ids, session, False
-        )
-        metadata_ids = [
-            metadata_id
-            for metadata_id in entity_id_to_metadata_id.values()
-            if metadata_id is not None
-        ]
+        if not (
+            entity_id_to_metadata_id := instance.states_meta_manager.get_many(
+                entity_ids, session, False
+            )
+        ) or not (metadata_ids := extract_metadata_ids(entity_id_to_metadata_id)):
+            return {}
     stmt = _significant_states_stmt(
         start_time,
         end_time,
@@ -569,14 +572,9 @@ def _get_rows_with_session(
     # We have more than one entity to look at so we need to do a query on states
     # since the last recorder run started.
     if entity_ids:
-        if not entity_id_to_metadata_id:
-            return []
-        metadata_ids = [
-            metadata_id
-            for metadata_id in entity_id_to_metadata_id.values()
-            if metadata_id is not None
-        ]
-        if not metadata_ids:
+        if not entity_id_to_metadata_id or not (
+            metadata_ids := extract_metadata_ids(entity_id_to_metadata_id)
+        ):
             return []
         stmt = _get_states_for_entities_stmt(
             run.start, utc_point_in_time, metadata_ids, no_attributes
