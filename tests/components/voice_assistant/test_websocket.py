@@ -39,7 +39,7 @@ async def test_text_only_pipeline(
     msg = await client.receive_json()
     assert msg["event"]["type"] == "run-start"
     assert msg["event"]["data"] == {
-        "pipeline": "default",
+        "pipeline": hass.config.language,
         "language": hass.config.language,
     }
 
@@ -87,7 +87,8 @@ async def test_conversation_timeout(
         await asyncio.sleep(3600)
 
     with patch(
-        "homeassistant.components.conversation.async_converse", new=sleepy_converse
+        "homeassistant.components.conversation.async_converse",
+        new=sleepy_converse,
     ):
         await client.send_json(
             {
@@ -106,7 +107,7 @@ async def test_conversation_timeout(
         msg = await client.receive_json()
         assert msg["event"]["type"] == "run-start"
         assert msg["event"]["data"] == {
-            "pipeline": "default",
+            "pipeline": hass.config.language,
             "language": hass.config.language,
         }
 
