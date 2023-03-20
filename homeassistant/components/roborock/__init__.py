@@ -15,7 +15,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
     CONF_BASE_URL,
-    CONF_INCLUDE_SHARED,
     CONF_USER_DATA,
     DOMAIN,
     PLATFORMS,
@@ -35,10 +34,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     user_data = UserData(entry.data.get(CONF_USER_DATA))
     base_url = entry.data.get(CONF_BASE_URL)
     username = entry.data.get(CONF_USERNAME)
-    vacuum_options = entry.options.get(VACUUM)
-    include_shared = (
-        vacuum_options.get(CONF_INCLUDE_SHARED) if vacuum_options else False
-    )
     api_client = RoborockClient(username, base_url)
     _LOGGER.debug("Getting home data")
     home_data = await api_client.get_home_data(user_data)
@@ -47,8 +42,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_map: dict[str, RoborockDeviceInfo] = {}
     devices = (
         home_data.devices + home_data.received_devices
-        if include_shared
-        else home_data.devices
     )
     for device in devices:
         product: HomeDataProduct = next(
@@ -64,19 +57,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client = RoborockMqttClient(user_data, device_map)
     coordinator = RoborockDataUpdateCoordinator(hass, client)
 
-    await coordinator.async_refresh()
-
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady()
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     for platform in PLATFORMS:
-        if entry.options.get(platform, True):
-            coordinator.platforms.append(platform)
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, platform)
-            )
+        coordinator.platforms.append(platform)
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, platform)
+        )
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
     return True
