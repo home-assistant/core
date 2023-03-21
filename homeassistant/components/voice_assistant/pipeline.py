@@ -8,7 +8,11 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from homeassistant.backports.enum import StrEnum
-from homeassistant.components import conversation, tts
+from homeassistant.components import conversation
+from homeassistant.components.media_source import async_resolve_media
+from homeassistant.components.tts.media_source import (
+    generate_media_source_id as tts_generate_media_source_id,
+)
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.util.dt import utcnow
 
@@ -68,7 +72,7 @@ class PipelineRun:
         """Set language for pipeline."""
         self.language = self.pipeline.language or self.hass.config.language
 
-    async def start(self):
+    def start(self):
         """Emit run start event."""
         self.event_callback(
             PipelineEvent(
@@ -80,7 +84,7 @@ class PipelineRun:
             )
         )
 
-    async def finish(self):
+    def finish(self):
         """Emit run finish event."""
         self.event_callback(
             PipelineEvent(
@@ -132,8 +136,15 @@ class PipelineRun:
             )
         )
 
-        manager: tts.SpeechManager = self.hass.data[tts.DOMAIN]
-        tts_url = await manager.async_get_url_path(self.pipeline.tts_engine, tts_input)
+        tts_media = await async_resolve_media(
+            self.hass,
+            tts_generate_media_source_id(
+                self.hass,
+                tts_input,
+                engine=self.pipeline.tts_engine,
+            ),
+        )
+        tts_url = tts_media.url
 
         self.event_callback(
             PipelineEvent(
@@ -176,9 +187,9 @@ class TextPipelineRequest(PipelineRequest):
         self,
         run: PipelineRun,
     ):
-        await run.start()
+        run.start()
         await run.recognize_intent(self.intent_input, self.conversation_id)
-        await run.finish()
+        run.finish()
 
 
 @dataclass
@@ -191,14 +202,14 @@ class AudioPipelineRequest(PipelineRequest):
     async def execute(
         self, run: PipelineRun, timeout: int | float | None = DEFAULT_TIMEOUT
     ):
-        """Run text portion of pipeline."""
+        """Run full pipeline from audio input (stt) to audio output (tts)."""
         await asyncio.wait_for(
             self._execute(run),
             timeout=timeout,
         )
 
     async def _execute(self, run: PipelineRun):
-        await run.start()
+        run.start()
 
         # stt will go here
 
@@ -212,4 +223,4 @@ class AudioPipelineRequest(PipelineRequest):
 
         await run.text_to_speech(tts_input)
 
-        await run.finish()
+        run.finish()
