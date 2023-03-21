@@ -12,6 +12,10 @@ from homeassistant.components.voice_assistant.pipeline import (
 from homeassistant.core import Context
 from homeassistant.setup import async_setup_component
 
+from tests.components.tts.conftest import (  # noqa: F401, pylint: disable=unused-import
+    mock_init_cache_dir,
+)
+
 
 @pytest.fixture(autouse=True)
 async def init_components(hass):
@@ -40,7 +44,7 @@ async def mock_get_tts_audio(hass):
         yield mock_get_tts
 
 
-async def test_audio_pipeline(hass, mock_get_tts_audio, mock_init_cache_dir):
+async def test_audio_pipeline(hass, mock_get_tts_audio):
     """Run audio pipeline with mock TTS."""
     pipeline = Pipeline(
         name="test",
