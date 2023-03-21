@@ -84,6 +84,7 @@ SELECT_ENTITIES = (
         name="Auto track method",
         icon="mdi:target-account",
         translation_key="auto_track_method",
+        entity_category=EntityCategory.CONFIG,
         get_options=[method.name for method in TrackMethodEnum],
         supported=lambda api, ch: api.supported(ch, "auto_track_method"),
         value=lambda api, ch: TrackMethodEnum(api.auto_track_method(ch)).name,
