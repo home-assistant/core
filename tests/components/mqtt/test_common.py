@@ -119,6 +119,30 @@ async def help_setup_component(
     return mqtt_mock
 
 
+def help_custom_config(
+    domain: str,
+    default_config: ConfigType,
+    option_update: ConfigType | tuple[ConfigType,],
+) -> ConfigType:
+    """Tweak a default config for parametrization.
+
+    Returns a custom config to be used as parametrization for for hass_config,
+    based on a supplied default_config and updated with option_update(s).
+    For each option_update an instance is added to the config.
+    """
+    config: ConfigType = copy.deepcopy(default_config)
+    if isinstance(option_update, tuple):
+        instances: list[ConfigType] = []
+        for instance in option_update:
+            base: ConfigType = copy.deepcopy(default_config[mqtt.DOMAIN][domain])
+            base.update(instance)
+            instances.append(base)
+        config[mqtt.DOMAIN][domain] = instances
+    else:
+        config[mqtt.DOMAIN][domain].update(option_update)
+    return config
+
+
 async def help_test_availability_when_connection_lost(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
