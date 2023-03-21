@@ -213,7 +213,9 @@ async def test_binary_message(
     # Send message to binary
     await websocket_client.send_bytes((4).to_bytes(1, "big") + b"test4")
     await websocket_client.send_bytes((5).to_bytes(1, "big") + b"test5")
+    await websocket_client.send_bytes((10).to_bytes(1, "big") + b"test5")
 
     # Verify received
     assert await binary_payloads[104] == b"test4"
     assert await binary_payloads[105] == b"test5"
+    assert "Received binary message for non-existing handler 10" in caplog.text
