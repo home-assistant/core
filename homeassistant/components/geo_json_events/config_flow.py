@@ -1,6 +1,7 @@
 """Config flow to configure the GeoJSON events integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import timedelta
 import logging
 from typing import Any
@@ -56,7 +57,13 @@ class GeoJsonEventsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the start of the config flow."""
         _LOGGER.debug("User input: %s", user_input)
         if not user_input:
-            data_schema = self.add_suggested_values_to_schema(DATA_SCHEMA, user_input)
+            suggested_values: Mapping[str, Any] = {
+                CONF_LATITUDE: self.hass.config.latitude,
+                CONF_LONGITUDE: self.hass.config.longitude,
+            }
+            data_schema = self.add_suggested_values_to_schema(
+                DATA_SCHEMA, suggested_values
+            )
             return self.async_show_form(
                 step_id="user",
                 data_schema=data_schema,
