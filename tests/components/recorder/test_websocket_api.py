@@ -2588,7 +2588,7 @@ async def test_import_statistics(
             "unit_class": "energy",
         }
     ]
-    metadata = get_metadata(hass, statistic_ids=(statistic_id,))
+    metadata = get_metadata(hass, statistic_ids={statistic_id})
     assert metadata == {
         statistic_id: (
             1,
@@ -2820,7 +2820,7 @@ async def test_adjust_sum_statistics_energy(
             "unit_class": "energy",
         }
     ]
-    metadata = get_metadata(hass, statistic_ids=(statistic_id,))
+    metadata = get_metadata(hass, statistic_ids={statistic_id})
     assert metadata == {
         statistic_id: (
             1,
@@ -3016,7 +3016,7 @@ async def test_adjust_sum_statistics_gas(
             "unit_class": "volume",
         }
     ]
-    metadata = get_metadata(hass, statistic_ids=(statistic_id,))
+    metadata = get_metadata(hass, statistic_ids={statistic_id})
     assert metadata == {
         statistic_id: (
             1,
@@ -3230,7 +3230,7 @@ async def test_adjust_sum_statistics_errors(
             "unit_class": unit_class,
         }
     ]
-    metadata = get_metadata(hass, statistic_ids=(statistic_id,))
+    metadata = get_metadata(hass, statistic_ids={statistic_id})
     assert metadata == {
         statistic_id: (
             1,

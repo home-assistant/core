@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 import logging
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant import setup
@@ -1257,7 +1258,12 @@ async def test_trigger_entity_restore_state(
 )
 @pytest.mark.parametrize("restored_state", [ON, OFF])
 async def test_trigger_entity_restore_state_auto_off(
-    hass: HomeAssistant, count, domain, config, restored_state, freezer
+    hass: HomeAssistant,
+    count,
+    domain,
+    config,
+    restored_state,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test restoring trigger template binary sensor."""
 
@@ -1317,7 +1323,7 @@ async def test_trigger_entity_restore_state_auto_off(
     ],
 )
 async def test_trigger_entity_restore_state_auto_off_expired(
-    hass: HomeAssistant, count, domain, config, freezer
+    hass: HomeAssistant, count, domain, config, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test restoring trigger template binary sensor."""
 

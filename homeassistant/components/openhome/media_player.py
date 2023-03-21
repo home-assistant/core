@@ -211,7 +211,7 @@ class OpenhomeDevice(MediaPlayerEntity):
 
     @catch_request_errors()
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Send the play_media command to the media player."""
         if media_source.is_media_source_id(media_id):

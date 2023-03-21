@@ -223,7 +223,7 @@ class ESPHomeClient(BaseBleakClient):
     def _async_call_bleak_disconnected_callback(self) -> None:
         """Call the disconnected callback to inform the bleak consumer."""
         if self._disconnected_callback:
-            self._disconnected_callback(self)
+            self._disconnected_callback()
             self._disconnected_callback = None
 
     @api_error_as_bleak_error
@@ -499,8 +499,10 @@ class ESPHomeClient(BaseBleakClient):
         self, char_specifier: BleakGATTCharacteristic | int | str | uuid.UUID
     ) -> BleakGATTCharacteristic:
         """Resolve a characteristic specifier to a BleakGATTCharacteristic object."""
+        if (services := self.services) is None:
+            raise BleakError("Services have not been resolved")
         if not isinstance(char_specifier, BleakGATTCharacteristic):
-            characteristic = self.services.get_characteristic(char_specifier)
+            characteristic = services.get_characteristic(char_specifier)
         else:
             characteristic = char_specifier
         if not characteristic:

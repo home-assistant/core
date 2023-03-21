@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.engine.row import Row
 
 from homeassistant.components.recorder import Recorder, get_instance
-from homeassistant.components.recorder.db_schema import EventData, Events, States
+from homeassistant.components.recorder.db_schema import EventData, Events, StatesMeta
 from homeassistant.components.recorder.filters import (
     Filters,
     extract_include_exclude_filter_conf,
@@ -39,8 +39,8 @@ async def _async_get_states_and_events_with_filter(
     def _get_states_with_session():
         with session_scope(hass=hass) as session:
             return session.execute(
-                select(States.entity_id).filter(
-                    sqlalchemy_filter.states_entity_filter()
+                select(StatesMeta.entity_id).filter(
+                    sqlalchemy_filter.states_metadata_entity_filter()
                 )
             ).all()
 

@@ -17,11 +17,13 @@ def decode_attributes_from_row(
     row: Row, attr_cache: dict[str, dict[str, Any]]
 ) -> dict[str, Any]:
     """Decode attributes from a database row."""
-    source: str = row.shared_attrs or row.attributes
-    if (attributes := attr_cache.get(source)) is not None:
-        return attributes
+    source: str | None = getattr(row, "shared_attrs", None) or getattr(
+        row, "attributes", None
+    )
     if not source or source == EMPTY_JSON_OBJECT:
         return {}
+    if (attributes := attr_cache.get(source)) is not None:
+        return attributes
     try:
         attr_cache[source] = attributes = json_loads_object(source)
     except ValueError:

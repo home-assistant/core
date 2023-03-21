@@ -20,6 +20,7 @@ from homeassistant.components.recorder.db_schema import (
     EventTypes,
     StateAttributes,
     States,
+    StatesMeta,
 )
 from homeassistant.components.recorder.filters import like_domain_matchers
 from homeassistant.components.recorder.queries import select_event_type_ids
@@ -57,7 +58,7 @@ EVENT_COLUMNS = (
 STATE_COLUMNS = (
     States.state_id.label("state_id"),
     States.state.label("state"),
-    States.entity_id.label("entity_id"),
+    StatesMeta.entity_id.label("entity_id"),
     SHARED_ATTRS_JSON["icon"].as_string().label("icon"),
     OLD_FORMAT_ATTRS_JSON["icon"].as_string().label("old_format_icon"),
 )
@@ -65,7 +66,7 @@ STATE_COLUMNS = (
 STATE_CONTEXT_ONLY_COLUMNS = (
     States.state_id.label("state_id"),
     States.state.label("state"),
-    States.entity_id.label("entity_id"),
+    StatesMeta.entity_id.label("entity_id"),
     literal(value=None, type_=sqlalchemy.String).label("icon"),
     literal(value=None, type_=sqlalchemy.String).label("old_format_icon"),
 )
@@ -165,33 +166,6 @@ def select_states() -> Select:
     )
 
 
-def legacy_select_events_context_id(
-    start_day: float, end_day: float, context_id_bin: bytes
-) -> Select:
-    """Generate a legacy events context id select that also joins states."""
-    # This can be removed once we no longer have event_ids in the states table
-    return (
-        select(
-            *EVENT_COLUMNS,
-            literal(value=None, type_=sqlalchemy.String).label("shared_data"),
-            *STATE_COLUMNS,
-            NOT_CONTEXT_ONLY,
-        )
-        .outerjoin(States, (Events.event_id == States.event_id))
-        .where(
-            (States.last_updated_ts == States.last_changed_ts)
-            | States.last_changed_ts.is_(None)
-        )
-        .where(_not_continuous_entity_matcher())
-        .outerjoin(
-            StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
-        )
-        .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
-        .where((Events.time_fired_ts > start_day) & (Events.time_fired_ts < end_day))
-        .where(Events.context_id_bin == context_id_bin)
-    )
-
-
 def apply_states_filters(sel: Select, start_day: float, end_day: float) -> Select:
     """Filter states by time range.
 
@@ -213,6 +187,7 @@ def apply_states_filters(sel: Select, start_day: float, end_day: float) -> Selec
         .outerjoin(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
         )
+        .outerjoin(StatesMeta, (States.metadata_id == StatesMeta.metadata_id))
     )
 
 
@@ -249,7 +224,7 @@ def _not_possible_continuous_domain_matcher() -> ColumnElement[bool]:
     """
     return sqlalchemy.and_(
         *[
-            ~States.entity_id.like(entity_domain)
+            ~StatesMeta.entity_id.like(entity_domain)
             for entity_domain in (
                 *ALWAYS_CONTINUOUS_ENTITY_ID_LIKE,
                 *CONDITIONALLY_CONTINUOUS_ENTITY_ID_LIKE,
@@ -266,7 +241,7 @@ def _conditionally_continuous_domain_matcher() -> ColumnElement[bool]:
     """
     return sqlalchemy.or_(
         *[
-            States.entity_id.like(entity_domain)
+            StatesMeta.entity_id.like(entity_domain)
             for entity_domain in CONDITIONALLY_CONTINUOUS_ENTITY_ID_LIKE
         ],
     ).self_group()

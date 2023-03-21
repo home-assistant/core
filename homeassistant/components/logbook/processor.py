@@ -10,9 +10,11 @@ from typing import Any
 from sqlalchemy.engine import Result
 from sqlalchemy.engine.row import Row
 
+from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.models import (
     bytes_to_uuid_hex_or_none,
+    extract_metadata_ids,
     process_datetime_to_timestamp,
     process_timestamp_to_utc_isoformat,
 )
@@ -149,16 +151,25 @@ class EventProcessor:
             #
             return result.yield_per(1024)
 
-        stmt = statement_for_request(
-            start_day,
-            end_day,
-            self.event_types,
-            self.entity_ids,
-            self.device_ids,
-            self.filters,
-            self.context_id,
-        )
-        with session_scope(hass=self.hass) as session:
+        with session_scope(hass=self.hass, read_only=True) as session:
+            metadata_ids: list[int] | None = None
+            if self.entity_ids:
+                instance = get_instance(self.hass)
+                metadata_ids = extract_metadata_ids(
+                    instance.states_meta_manager.get_many(
+                        self.entity_ids, session, False
+                    )
+                )
+            stmt = statement_for_request(
+                start_day,
+                end_day,
+                self.event_types,
+                self.entity_ids,
+                metadata_ids,
+                self.device_ids,
+                self.filters,
+                self.context_id,
+            )
             return self.humanify(yield_rows(session.execute(stmt)))
 
     def humanify(

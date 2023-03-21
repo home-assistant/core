@@ -213,7 +213,7 @@ def get_significant_states(
     compressed_state_format: bool = False,
 ) -> MutableMapping[str, list[State | dict[str, Any]]]:
     """Wrap get_significant_states_with_session with an sql session."""
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         return get_significant_states_with_session(
             hass,
             session,
@@ -488,7 +488,7 @@ def state_changes_during_period(
     entity_id = entity_id.lower() if entity_id is not None else None
     entity_ids = [entity_id] if entity_id is not None else None
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         stmt = _state_changed_during_period_stmt(
             _schema_version(hass),
             start_time,
@@ -558,7 +558,7 @@ def get_last_state_changes(
     entity_id_lower = entity_id.lower()
     entity_ids = [entity_id_lower]
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         stmt = _get_last_state_changes_stmt(
             _schema_version(hass), number_of_states, entity_id_lower
         )
