@@ -381,12 +381,12 @@ class SpeechManager:
             raise HomeAssistantError(f"Not supported language {language}")
 
         # Options
-        if provider.default_options and options:
-            merged_options = dict(provider.default_options)
+        if (default_options := provider.default_options) and options:
+            merged_options = dict(default_options)
             merged_options.update(options)
             options = merged_options
-        elif provider.default_options:
-            options = dict(provider.default_options)
+        if not options:
+            options = None if default_options is None else dict(default_options)
 
         if options is not None:
             supported_options = provider.supported_options or []
