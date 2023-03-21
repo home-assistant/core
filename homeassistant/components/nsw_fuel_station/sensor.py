@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 import voluptuous as vol
 
@@ -118,7 +117,7 @@ class StationPriceSensor(
         return prices.get((self._station_id, self._fuel_type))
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, int | str]:
         """Return the state attributes of the device."""
         return {
             ATTR_STATION_ID: self._station_id,

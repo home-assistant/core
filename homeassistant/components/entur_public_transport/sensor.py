@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from random import randint
-from typing import Any
 
 from enturclient import EnturPublicTransportData
 import voluptuous as vol
@@ -184,7 +183,7 @@ class EnturPublicTransportSensor(SensorEntity):
         return self._state
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
         self._attributes[ATTR_STOP_ID] = self._stop
         return self._attributes
