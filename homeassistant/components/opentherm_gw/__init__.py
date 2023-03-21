@@ -53,6 +53,7 @@ from .const import (
     SERVICE_SET_HOT_WATER_OVRD,
     SERVICE_SET_HOT_WATER_SETPOINT,
     SERVICE_SET_LED_MODE,
+    SERVICE_SET_MAX_CH_SETPOINT,
     SERVICE_SET_MAX_MOD,
     SERVICE_SET_OAT,
     SERVICE_SET_SB_TEMP,
@@ -225,6 +226,16 @@ def register_services(hass):
             vol.Required(ATTR_MODE): vol.In("RXTBOFHWCEMP"),
         }
     )
+    service_set_max_ch_setpoint_schema = vol.Schema(
+        {
+            vol.Required(ATTR_GW_ID): vol.All(
+                cv.string, vol.In(hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS])
+            ),
+            vol.Required(ATTR_TEMPERATURE): vol.All(
+                vol.Coerce(float), vol.Range(min=0, max=90)
+            ),
+        }
+    )
     service_set_max_mod_schema = vol.Schema(
         {
             vol.Required(ATTR_GW_ID): vol.All(
@@ -362,6 +373,21 @@ def register_services(hass):
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_LED_MODE, set_led_mode, service_set_led_mode_schema
+    )
+
+    async def set_max_ch_setpoint(call: ServiceCall) -> None:
+        """Set the maximum central heating setpoint on the OpenTherm Gateway."""
+        gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][call.data[ATTR_GW_ID]]
+        gw_var = gw_vars.DATA_MAX_CH_SETPOINT
+        value = await gw_dev.gateway.set_max_ch_setpoint(call.data[ATTR_TEMPERATURE])
+        gw_dev.status.update({gw_var: value})
+        async_dispatcher_send(hass, gw_dev.update_signal, gw_dev.status)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_MAX_CH_SETPOINT,
+        set_max_ch_setpoint,
+        service_set_max_ch_setpoint_schema,
     )
 
     async def set_max_mod(call: ServiceCall) -> None:

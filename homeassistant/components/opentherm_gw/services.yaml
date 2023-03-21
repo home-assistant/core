@@ -215,6 +215,33 @@ set_led_mode:
             - "W"
             - "X"
 
+set_max_ch_setpoint:
+  name: Set maximum central heating setpoint
+  description: >
+    Set the maximum central heating setpoint override on the gateway.
+    This command is only available with boilers that support this function.
+  fields:
+    gateway_id:
+      name: Gateway ID
+      description: The gateway_id of the OpenTherm Gateway.
+      required: true
+      example: "opentherm_gateway"
+      selector:
+        text:
+    temperature:
+      name: Temperature
+      description: >
+        The maximum central heating setpoint to set on the gateway.
+        Values between 0 and 90 are accepted, but not all boilers support this range.
+        A value of 0 disables the maximum central heating setpoint override.
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 90
+          step: 0.1
+          unit_of_measurement: "°"
+
 set_max_modulation:
   name: Set max modulation
   description: >
