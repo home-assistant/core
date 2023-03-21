@@ -506,7 +506,7 @@ class RachioSchedule(RachioSwitch):
         return "mdi:water" if self.schedule_is_enabled else "mdi:water-off"
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         return {
             ATTR_SCHEDULE_SUMMARY: self._summary,
