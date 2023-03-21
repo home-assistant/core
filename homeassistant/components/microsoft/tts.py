@@ -172,7 +172,7 @@ class MicrosoftProvider(Provider):
         return [CONF_GENDER, CONF_TYPE]
 
     @property
-    def default_options(self):
+    def default_options(self) -> dict[str, str]:
         """Return a dict include default options."""
         return {CONF_GENDER: self._gender, CONF_TYPE: self._type}
 

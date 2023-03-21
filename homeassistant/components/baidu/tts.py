@@ -1,5 +1,6 @@
 """Support for Baidu speech service."""
 import logging
+from typing import Any
 
 from aip import AipSpeech
 import voluptuous as vol
@@ -90,7 +91,7 @@ class BaiduTTSProvider(Provider):
         return SUPPORTED_LANGUAGES
 
     @property
-    def default_options(self):
+    def default_options(self) -> dict[str, Any]:
         """Return a dict including default options."""
         return {
             CONF_PERSON: self._speech_conf_data[_OPTIONS[CONF_PERSON]],

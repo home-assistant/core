@@ -71,7 +71,7 @@ class MaryTTSProvider(Provider):
         return SUPPORT_LANGUAGES
 
     @property
-    def default_options(self):
+    def default_options(self) -> dict[str, dict[str, str]]:
         """Return dict include default options."""
         return {CONF_EFFECT: self._effects}
 

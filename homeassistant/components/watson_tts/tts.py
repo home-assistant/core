@@ -205,7 +205,7 @@ class WatsonTTSProvider(Provider):
         return self.default_lang
 
     @property
-    def default_options(self):
+    def default_options(self) -> dict[str, str]:
         """Return dict include default options."""
         return {CONF_VOICE: self.default_voice}
 

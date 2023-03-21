@@ -90,7 +90,7 @@ class CloudProvider(Provider):
         return [CONF_GENDER]
 
     @property
-    def default_options(self):
+    def default_options(self) -> dict[str, str]:
         """Return a dict include default options."""
         return {CONF_GENDER: self._gender}
 
