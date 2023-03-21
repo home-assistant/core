@@ -225,7 +225,9 @@ NUMBER_ENTITIES = (
         native_max_value=60,
         supported=lambda api, ch: api.supported(ch, "auto_track_disappear_time"),
         value=lambda api, ch: api.auto_track_disappear_time(ch),
-        method=lambda api, ch, value: api.set_auto_tracking(ch, disappear_time=int(value)),
+        method=lambda api, ch, value: api.set_auto_tracking(
+            ch, disappear_time=int(value)
+        ),
     ),
     ReolinkNumberEntityDescription(
         key="auto_track_stop_time",
