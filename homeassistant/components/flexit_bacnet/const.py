@@ -10,10 +10,6 @@ from homeassistant.components.climate import (
 
 DOMAIN = "flexit_bacnet"
 
-CONF_ADDRESS = "address"
-
-CONF_DEVICE_ID = "device_id"
-
 VENTILATION_TO_PRESET_MODE_MAP = {
     VENTILATION_MODES[VENTILATION_MODE.STOP]: PRESET_NONE,
     VENTILATION_MODES[VENTILATION_MODE.AWAY]: PRESET_AWAY,
