@@ -1,13 +1,37 @@
 """Voice Assistant Websocket API."""
+import asyncio
 from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components import websocket_api
+from homeassistant.components import stt, websocket_api
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN
-from .pipeline import DEFAULT_TIMEOUT, Pipeline, PipelineRun, TextPipelineRequest
+from .pipeline import (
+    DEFAULT_TIMEOUT,
+    AudioPipelineRequest,
+    Pipeline,
+    PipelineRun,
+    TextPipelineRequest,
+)
+
+
+class FakeStreamReader:
+    def __init__(self):
+        self._chunks = asyncio.Queue()
+        self._bytes_ready = asyncio.Event()
+
+    def put_chunk(self, chunk: bytes):
+        self._chunks.put_nowait(chunk)
+
+    async def readchunk(self) -> tuple[bytes, bool]:
+        chunk = await self._chunks.get()
+        return (chunk, False)
+
+    def clear(self):
+        while not self._chunks.empty:
+            self._chunks.get_nowait()
 
 
 @callback
@@ -21,7 +45,7 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
         vol.Required("type"): "voice_assistant/run",
         vol.Optional("language"): str,
         vol.Optional("pipeline"): str,
-        vol.Required("intent_input"): str,
+        vol.Optional("intent_input"): str,
         vol.Optional("conversation_id"): vol.Any(str, None),
         vol.Optional("timeout"): vol.Any(float, int),
     }
@@ -33,6 +57,7 @@ async def websocket_run(
     msg: dict[str, Any],
 ) -> None:
     """Run a pipeline."""
+    language = msg.get("language", hass.config.language)
     pipeline_id = msg.get("pipeline")
     if pipeline_id is not None:
         pipeline = hass.data[DOMAIN].get(pipeline_id)
@@ -46,33 +71,68 @@ async def websocket_run(
 
     else:
         # Construct a pipeline for the required/configured language
-        language = msg.get("language", hass.config.language)
         pipeline = Pipeline(
             name=language,
             language=language,
-            conversation_engine=None,
-            tts_engine=None,
+            stt_engine=None,  # cloud
+            conversation_engine=None,  # default agent
+            tts_engine=None,  # cloud
         )
 
-    # Run pipeline with a timeout.
-    # Events are sent over the websocket connection.
     timeout = msg.get("timeout", DEFAULT_TIMEOUT)
-    run_task = hass.async_create_task(
-        TextPipelineRequest(
-            intent_input=msg["intent_input"],
-            conversation_id=msg.get("conversation_id"),
-        ).execute(
-            PipelineRun(
-                hass,
-                connection.context(msg),
-                pipeline,
-                event_callback=lambda event: connection.send_event(
-                    msg["id"], event.as_dict()
+
+    intent_input = msg.get("intent_input")
+    if intent_input is None:
+        # Audio pipeline
+        stt_reader = FakeStreamReader()
+
+        def handle_binary(_hass, _connection, data: bytes):
+            stt_reader.put_chunk(data)
+
+        handler_id, unregister = connection.async_register_binary_handler(handle_binary)
+
+        run_task = hass.async_create_task(
+            AudioPipelineRequest(
+                stt_metadata=stt.SpeechMetadata(
+                    language=language,
+                    format=stt.AudioFormats.WAV,
+                    codec=stt.AudioCodecs.PCM,
+                    bit_rate=stt.AudioBitRates.BITRATE_16,
+                    sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                    channel=stt.AudioChannels.CHANNEL_MONO,
                 ),
-            ),
-            timeout=timeout,
+                stt_stream=stt_reader,
+                conversation_id=msg.get("conversation_id"),
+            ).execute(
+                PipelineRun(
+                    hass,
+                    connection.context(msg),
+                    pipeline,
+                    event_callback=lambda event: connection.send_event(
+                        msg["id"], event.as_dict()
+                    ),
+                ),
+                timeout=timeout,
+            )
         )
-    )
+    else:
+        # Text pipeline
+        run_task = hass.async_create_task(
+            TextPipelineRequest(
+                intent_input=msg["intent_input"],
+                conversation_id=msg.get("conversation_id"),
+            ).execute(
+                PipelineRun(
+                    hass,
+                    connection.context(msg),
+                    pipeline,
+                    event_callback=lambda event: connection.send_event(
+                        msg["id"], event.as_dict()
+                    ),
+                ),
+                timeout=timeout,
+            )
+        )
 
     # Cancel pipeline if user unsubscribes
     connection.subscriptions[msg["id"]] = run_task.cancel

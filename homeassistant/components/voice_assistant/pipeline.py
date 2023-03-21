@@ -7,8 +7,10 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
+from aiohttp import StreamReader
+
 from homeassistant.backports.enum import StrEnum
-from homeassistant.components import conversation
+from homeassistant.components import conversation, stt
 from homeassistant.components.media_source import async_resolve_media
 from homeassistant.components.tts.media_source import (
     generate_media_source_id as tts_generate_media_source_id,
@@ -24,6 +26,8 @@ class PipelineEventType(StrEnum):
 
     RUN_START = "run-start"
     RUN_FINISH = "run-finish"
+    STT_START = "stt-start"
+    STT_FINISH = "stt-finish"
     INTENT_START = "intent-start"
     INTENT_FINISH = "intent-finish"
     TTS_START = "tts-start"
@@ -54,6 +58,7 @@ class Pipeline:
 
     name: str
     language: str | None
+    stt_engine: str | None
     conversation_engine: str | None
     tts_engine: str | None
 
@@ -91,6 +96,36 @@ class PipelineRun:
                 PipelineEventType.RUN_FINISH,
             )
         )
+
+    async def speech_to_text(
+        self, metadata: stt.SpeechMetadata, stream: StreamReader
+    ) -> stt.SpeechResult:
+        """Run text to speech portion of pipeline. Returns URL of TTS audio."""
+        self.event_callback(
+            PipelineEvent(
+                PipelineEventType.STT_START,
+                {
+                    "engine": self.pipeline.stt_engine,
+                },
+            )
+        )
+
+        stt_provider = stt.async_get_provider(self.hass, self.pipeline.stt_engine)
+        result = await stt_provider.async_process_audio_stream(metadata, stream)
+
+        self.event_callback(
+            PipelineEvent(
+                PipelineEventType.STT_FINISH,
+                {
+                    "stt_output": {
+                        "text": result.text,
+                        "result": result.result.value,
+                    }
+                },
+            )
+        )
+
+        return result
 
     async def recognize_intent(
         self, intent_input: str, conversation_id: str | None
@@ -194,22 +229,25 @@ class TextPipelineRequest(PipelineRequest):
 class AudioPipelineRequest(PipelineRequest):
     """Request to full pipeline from audio input (stt) to audio output (tts)."""
 
-    intent_input: str  # this will be changed to stt audio
+    stt_metadata: stt.SpeechMetadata
+    stt_stream: StreamReader
     conversation_id: str | None = None
 
     async def _execute(self, run: PipelineRun):
         run.start()
 
-        # stt will go here
+        stt_result = await run.speech_to_text(self.stt_metadata, self.stt_stream)
+        if stt_result.result == stt.SpeechResultState.SUCCESS:
+            assert stt_result.text is not None
 
-        conversation_result = await run.recognize_intent(
-            self.intent_input, self.conversation_id
-        )
+            conversation_result = await run.recognize_intent(
+                stt_result.text, self.conversation_id
+            )
 
-        tts_input = conversation_result.response.speech.get("plain", {}).get(
-            "speech", ""
-        )
+            tts_input = conversation_result.response.speech.get("plain", {}).get(
+                "speech", ""
+            )
 
-        await run.text_to_speech(tts_input)
+            await run.text_to_speech(tts_input)
 
         run.finish()
