@@ -574,7 +574,7 @@ def test_ignore_invalid_entity_properties(
         async def async_lock(
             self,
             **kwargs
-        ) -> bool:
+        ):
             pass
     """,
         "homeassistant.components.pylint_test.lock",
