@@ -127,7 +127,11 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 placeholders["error"] = str(err)
                 errors[CONF_HOST] = "api_error"
             except (ReolinkError, ReolinkException) as err:
-                placeholders["error"] = f"{str(err)}\nCheck the IP adress of the camera and see the [troubleshooting steps](https://www.home-assistant.io/integrations/reolink/#troubleshooting) to resolve this issue" 
+                placeholders["error"] = (
+                    f"{str(err)}\nCheck the IP address of the camera and see the"
+                    " [troubleshooting steps](https://www.home-assistant.io/integrations/reolink/#troubleshooting)"
+                    " to resolve this issue"
+                )
                 errors[CONF_HOST] = "cannot_connect"
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
