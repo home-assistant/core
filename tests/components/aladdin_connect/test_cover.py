@@ -174,7 +174,6 @@ async def test_cover_operation(
         {ATTR_ENTITY_ID: "cover.home"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     async_fire_time_changed(
         hass,
         utcnow() + SCAN_INTERVAL,
