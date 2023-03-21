@@ -71,13 +71,12 @@ def _register_webhook(bridge: NukiBridge, entry_id: str, url: str) -> bool:
     return False
 
 
-def _remove_webhook(bridge: NukiBridge, entry_id: str) -> bool:
+def _remove_webhook(bridge: NukiBridge, entry_id: str) -> None:
     # Remove webhook if set
     callbacks = bridge.callback_list()
     for item in callbacks["callbacks"]:
         if entry_id in item["url"]:
             bridge.callback_remove(item["id"])
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
