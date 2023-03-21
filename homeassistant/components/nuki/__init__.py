@@ -25,11 +25,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import (
-    device_registry as dr,
-    entity_registry as er,
-    issue_registry as ir,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -171,29 +167,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass_url = get_url(
         hass, allow_cloud=False, allow_external=False, allow_ip=True, require_ssl=False
     )
-    # Check if hass_url is http
-    if hass_url.lower().startswith("http://"):
-        url = f"{hass_url}{webhook_url}"
-        try:
-            async with async_timeout.timeout(10):
-                await hass.async_add_executor_job(
-                    _register_webhook, bridge, entry.entry_id, url
-                )
-        except InvalidCredentialsException as err:
-            raise UpdateFailed(f"Invalid credentials for Bridge: {err}") from err
-        except RequestException as err:
-            raise UpdateFailed(f"Error communicating with Bridge: {err}") from err
-    else:
-        # Raise an issue in the repair center
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            "internal_https_url",
-            is_fixable=False,
-            learn_more_url="https://www.home-assistant.io/integrations/nuki/",
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="internal_https_url",
-        )
+    url = f"{hass_url}{webhook_url}"
+    try:
+        async with async_timeout.timeout(10):
+            await hass.async_add_executor_job(
+                _register_webhook, bridge, entry.entry_id, url
+            )
+    except InvalidCredentialsException as err:
+        raise UpdateFailed(f"Invalid credentials for Bridge: {err}") from err
+    except RequestException as err:
+        raise UpdateFailed(f"Error communicating with Bridge: {err}") from err
 
     coordinator = NukiCoordinator(hass, bridge, locks, openers)
 
