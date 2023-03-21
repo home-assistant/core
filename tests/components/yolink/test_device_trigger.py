@@ -99,6 +99,25 @@ async def test_get_triggers(
     assert_lists_same(triggers, expected_triggers)
 
 
+async def test_get_triggers_exception(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test get triggers when device type not flexfob."""
+    config_entry = MockConfigEntry(domain="yolink", data={})
+    config_entry.add_to_hass(hass)
+    device_entity = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        model=ATTR_DEVICE_DIMMER,
+    )
+
+    expected_triggers = []
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entity.id
+    )
+    assert_lists_same(triggers, expected_triggers)
+
+
 async def test_if_fires_on_event(
     hass: HomeAssistant, calls, device_registry: dr.DeviceRegistry
 ) -> None:
