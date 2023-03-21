@@ -757,6 +757,7 @@ VOLUME_FLUID_OUNCE: Final = "fl. oz."
 class UnitOfVolumeFlowRate(StrEnum):
     """Volume flow rate units."""
 
+    LITER_PER_MINUTE = "l/min"
     CUBIC_METERS_PER_HOUR = "m³/h"
     CUBIC_FEET_PER_MINUTE = "ft³/m"
 

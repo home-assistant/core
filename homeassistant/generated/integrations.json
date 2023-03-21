@@ -5111,6 +5111,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "solvis_heating": {
+      "name": "Solvis Heating",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "soma": {
       "name": "Soma Connect",
       "integration_type": "hub",
