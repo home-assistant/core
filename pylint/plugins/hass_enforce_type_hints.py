@@ -42,7 +42,6 @@ class TypeHintMatch:
     """named_arg_types is for named or keyword arguments"""
     kwargs_type: str | None = None
     """kwargs_type is for the special case `**kwargs`"""
-    check_return_type_inheritance: bool = False
     has_async_counterpart: bool = False
 
     def need_to_check_function(self, node: nodes.FunctionDef) -> bool:
@@ -397,7 +396,6 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "ConfigType",
             },
             return_type=["DeviceScanner", None],
-            check_return_type_inheritance=True,
             has_async_counterpart=True,
         ),
     ],
@@ -465,7 +463,6 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 2: "DiscoveryInfoType | None",
             },
             return_type=["BaseNotificationService", None],
-            check_return_type_inheritance=True,
             has_async_counterpart=True,
         ),
     ],
@@ -492,7 +489,6 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                         0: "ConfigEntry",
                     },
                     return_type="OptionsFlow",
-                    check_return_type_inheritance=True,
                 ),
                 TypeHintMatch(
                     function_name="async_step_dhcp",
@@ -680,7 +676,6 @@ _RESTORE_ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="extra_restore_state_data",
         return_type=["ExtraStoredData", None],
-        check_return_type_inheritance=True,
     ),
 ]
 _TOGGLE_ENTITY_MATCH: list[TypeHintMatch] = [
@@ -2841,15 +2836,13 @@ def _is_valid_return_type(match: TypeHintMatch, node: nodes.NodeNG) -> bool:
             match, node.right
         )
 
-    if (
-        match.check_return_type_inheritance
-        and isinstance(match.return_type, (str, list))
-        and isinstance(node, nodes.Name)
-    ):
+    if isinstance(match.return_type, (str, list)) and isinstance(node, nodes.Name):
         if isinstance(match.return_type, str):
             valid_types = {match.return_type}
         else:
             valid_types = {el for el in match.return_type if isinstance(el, str)}
+        if "Mapping[str, Any]" in valid_types:
+            valid_types.add("TypedDict")
 
         try:
             for infer_node in node.infer():
