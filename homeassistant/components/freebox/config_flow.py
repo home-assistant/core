@@ -1,11 +1,7 @@
 """Config flow to configure the Freebox integration."""
 import logging
 
-from freebox_api.exceptions import (
-    AuthorizationError,
-    HttpRequestError,
-    InvalidTokenError,
-)
+from freebox_api.exceptions import AuthorizationError, HttpRequestError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -105,62 +101,6 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
 
         return self.async_show_form(step_id="link", errors=errors)
-
-    async def async_step_permissions(self, user_input=None) -> FlowResult:
-        """Attempt to get Home permissions with the Freebox router."""
-        errors = {}
-
-        try:
-            # Get our handle to deal
-            fbx = await get_api(self.hass, self._host)
-
-            # Open connection and check authentication
-            await fbx.open(self._host, self._port)
-
-            # Check permissions
-            freebox_permissions = await fbx.get_permissions()
-            if freebox_permissions["home"] is False:
-                await fbx.close()
-                errors["base"] = "home_permission"
-                return self.async_show_form(step_id="permissions", errors=errors)
-
-            if freebox_permissions["camera"] is False:
-                await fbx.close()
-                errors["base"] = "camera_permission"
-                return self.async_show_form(step_id="permissions", errors=errors)
-
-            if freebox_permissions["settings"] is False:
-                await fbx.close()
-                errors["base"] = "settings_permission"
-                return self.async_show_form(step_id="permissions", errors=errors)
-
-            # Close connection
-            await fbx.close()
-
-            return self.async_create_entry(
-                title=self._host,
-                data={CONF_HOST: self._host, CONF_PORT: self._port},
-            )
-
-        except InvalidTokenError as error:
-            _LOGGER.error(error)
-            errors["base"] = "invalid_token"
-
-        except AuthorizationError as error:
-            _LOGGER.error(error)
-            errors["base"] = "register_failed"
-
-        except HttpRequestError:
-            _LOGGER.error("Error connecting to the Freebox router at %s", self._host)
-            errors["base"] = "cannot_connect"
-
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception(
-                "Unknown error connecting with Freebox router at %s", self._host
-            )
-            errors["base"] = "unknown"
-
-        return self.async_show_form(step_id="permissions", errors=errors)
 
     async def async_step_import(self, user_input=None) -> FlowResult:
         """Import a config entry."""

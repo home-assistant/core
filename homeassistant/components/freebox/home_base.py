@@ -108,7 +108,7 @@ class FreeboxHomeEntity(Entity):
         """When entity will be removed from hass."""
         self._remove_signal_update()
 
-    def remove_signal_update(self, dispacher: None):
+    def remove_signal_update(self, dispacher: Any):
         """Register state update callback."""
         self._remove_signal_update = dispacher
 
