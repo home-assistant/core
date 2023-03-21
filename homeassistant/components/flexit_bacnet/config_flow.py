@@ -6,14 +6,16 @@ import logging
 from typing import Any
 
 from flexit_bacnet import FlexitBACnet
+from flexit_bacnet.bacnet import DecodingError
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_DEVICE_ID, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import CONF_ADDRESS, CONF_DEVICE_ID, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +23,7 @@ DEFAULT_DEVICE_ID = 2
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ADDRESS): str,
+        vol.Required(CONF_HOST): str,
         vol.Required(CONF_DEVICE_ID, default=DEFAULT_DEVICE_ID): int,
     }
 )
@@ -32,11 +34,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> str:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    device = FlexitBACnet(data["address"], data["device_id"])
+    device = FlexitBACnet(data[CONF_HOST], data[CONF_DEVICE_ID])
 
     try:
         await device.update()
-    except asyncio.exceptions.TimeoutError as exc:
+    except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
         raise CannotConnect from exc
 
     # Return info that you want to store in the config entry.
