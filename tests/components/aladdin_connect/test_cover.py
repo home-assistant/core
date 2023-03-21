@@ -201,5 +201,4 @@ async def test_cover_operation(
         utcnow() + SCAN_INTERVAL,
     )
     await hass.async_block_till_done()
-    hass.states.get("cover.home")
     assert hass.states.get("cover.home").state == STATE_UNAVAILABLE
