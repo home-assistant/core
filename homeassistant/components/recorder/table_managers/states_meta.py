@@ -1,7 +1,7 @@
 """Support managing StatesMeta."""
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from typing import TYPE_CHECKING, cast
 
 from sqlalchemy.orm.session import Session
@@ -12,7 +12,7 @@ from . import BaseLRUTableManager
 from ..const import SQLITE_MAX_BIND_VARS
 from ..db_schema import StatesMeta
 from ..queries import find_all_states_metadata_ids, find_states_metadata_ids
-from ..util import chunked
+from ..util import chunked, execute_stmt_lambda_element
 
 if TYPE_CHECKING:
     from ..core import Recorder
@@ -63,7 +63,14 @@ class StatesMetaManager(BaseLRUTableManager[StatesMeta]):
         This call is always thread-safe.
         """
         with session.no_autoflush:
-            return dict(tuple(session.execute(find_all_states_metadata_ids())))  # type: ignore[arg-type]
+            return dict(
+                cast(
+                    Sequence[tuple[int, str]],
+                    execute_stmt_lambda_element(
+                        session, find_all_states_metadata_ids()
+                    ),
+                )
+            )
 
     def get_many(
         self, entity_ids: Iterable[str], session: Session, from_recorder: bool
@@ -98,8 +105,8 @@ class StatesMetaManager(BaseLRUTableManager[StatesMeta]):
 
         with session.no_autoflush:
             for missing_chunk in chunked(missing, SQLITE_MAX_BIND_VARS):
-                for metadata_id, entity_id in session.execute(
-                    find_states_metadata_ids(missing_chunk)
+                for metadata_id, entity_id in execute_stmt_lambda_element(
+                    session, find_states_metadata_ids(missing_chunk)
                 ):
                     metadata_id = cast(int, metadata_id)
                     results[entity_id] = metadata_id
@@ -137,3 +144,20 @@ class StatesMetaManager(BaseLRUTableManager[StatesMeta]):
         """
         for entity_id in entity_ids:
             self._id_map.pop(entity_id, None)
+
+    def update_metadata(
+        self,
+        session: Session,
+        entity_id: str,
+        new_entity_id: str,
+    ) -> bool:
+        """Update states metadata for an entity_id."""
+        if self.get(new_entity_id, session, True) is not None:
+            # If the new entity id already exists we have
+            # a collision and should not update.
+            return False
+        session.query(StatesMeta).filter(StatesMeta.entity_id == entity_id).update(
+            {StatesMeta.entity_id: new_entity_id}
+        )
+        self._id_map.pop(entity_id, None)
+        return True

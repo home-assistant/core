@@ -262,8 +262,8 @@ async def ws_get_fossil_energy_consumption(
         connection.send_error(msg["id"], "invalid_end_time", "Invalid end_time")
         return
 
-    statistic_ids = list(msg["energy_statistic_ids"])
-    statistic_ids.append(msg["co2_statistic_id"])
+    statistic_ids = set(msg["energy_statistic_ids"])
+    statistic_ids.add(msg["co2_statistic_id"])
 
     # Fetch energy + CO2 statistics
     statistics = await recorder.get_instance(hass).async_add_executor_job(

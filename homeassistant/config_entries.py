@@ -752,7 +752,7 @@ class ConfigEntry:
         target: Coroutine[Any, Any, _R],
         name: str | None = None,
     ) -> asyncio.Task[_R]:
-        """Create a task from within the eventloop.
+        """Create a task from within the event loop.
 
         This method must be run in the event loop.
 

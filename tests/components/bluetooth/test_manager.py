@@ -37,6 +37,7 @@ from . import (
     MockBleakClient,
     _get_manager,
     generate_advertisement_data,
+    generate_ble_device,
     inject_advertisement_with_source,
     inject_advertisement_with_time_and_source,
     inject_advertisement_with_time_and_source_connectable,
@@ -73,7 +74,9 @@ async def test_advertisements_do_not_switch_adapters_for_no_reason(
 
     address = "44:44:33:11:23:12"
 
-    switchbot_device_signal_100 = BLEDevice(address, "wohand_signal_100", rssi=-100)
+    switchbot_device_signal_100 = generate_ble_device(
+        address, "wohand_signal_100", rssi=-100
+    )
     switchbot_adv_signal_100 = generate_advertisement_data(
         local_name="wohand_signal_100", service_uuids=[]
     )
@@ -86,7 +89,9 @@ async def test_advertisements_do_not_switch_adapters_for_no_reason(
         is switchbot_device_signal_100
     )
 
-    switchbot_device_signal_99 = BLEDevice(address, "wohand_signal_99", rssi=-99)
+    switchbot_device_signal_99 = generate_ble_device(
+        address, "wohand_signal_99", rssi=-99
+    )
     switchbot_adv_signal_99 = generate_advertisement_data(
         local_name="wohand_signal_99", service_uuids=[]
     )
@@ -99,7 +104,9 @@ async def test_advertisements_do_not_switch_adapters_for_no_reason(
         is switchbot_device_signal_99
     )
 
-    switchbot_device_signal_98 = BLEDevice(address, "wohand_good_signal", rssi=-98)
+    switchbot_device_signal_98 = generate_ble_device(
+        address, "wohand_good_signal", rssi=-98
+    )
     switchbot_adv_signal_98 = generate_advertisement_data(
         local_name="wohand_good_signal", service_uuids=[]
     )
@@ -124,7 +131,7 @@ async def test_switching_adapters_based_on_rssi(
 
     address = "44:44:33:11:23:45"
 
-    switchbot_device_poor_signal = BLEDevice(address, "wohand_poor_signal")
+    switchbot_device_poor_signal = generate_ble_device(address, "wohand_poor_signal")
     switchbot_adv_poor_signal = generate_advertisement_data(
         local_name="wohand_poor_signal", service_uuids=[], rssi=-100
     )
@@ -137,7 +144,7 @@ async def test_switching_adapters_based_on_rssi(
         is switchbot_device_poor_signal
     )
 
-    switchbot_device_good_signal = BLEDevice(address, "wohand_good_signal")
+    switchbot_device_good_signal = generate_ble_device(address, "wohand_good_signal")
     switchbot_adv_good_signal = generate_advertisement_data(
         local_name="wohand_good_signal", service_uuids=[], rssi=-60
     )
@@ -159,7 +166,9 @@ async def test_switching_adapters_based_on_rssi(
     )
 
     # We should not switch adapters unless the signal hits the threshold
-    switchbot_device_similar_signal = BLEDevice(address, "wohand_similar_signal")
+    switchbot_device_similar_signal = generate_ble_device(
+        address, "wohand_similar_signal"
+    )
     switchbot_adv_similar_signal = generate_advertisement_data(
         local_name="wohand_similar_signal", service_uuids=[], rssi=-62
     )
@@ -183,7 +192,7 @@ async def test_switching_adapters_based_on_zero_rssi(
 
     address = "44:44:33:11:23:45"
 
-    switchbot_device_no_rssi = BLEDevice(address, "wohand_poor_signal")
+    switchbot_device_no_rssi = generate_ble_device(address, "wohand_poor_signal")
     switchbot_adv_no_rssi = generate_advertisement_data(
         local_name="wohand_no_rssi", service_uuids=[], rssi=0
     )
@@ -196,7 +205,7 @@ async def test_switching_adapters_based_on_zero_rssi(
         is switchbot_device_no_rssi
     )
 
-    switchbot_device_good_signal = BLEDevice(address, "wohand_good_signal")
+    switchbot_device_good_signal = generate_ble_device(address, "wohand_good_signal")
     switchbot_adv_good_signal = generate_advertisement_data(
         local_name="wohand_good_signal", service_uuids=[], rssi=-60
     )
@@ -218,7 +227,9 @@ async def test_switching_adapters_based_on_zero_rssi(
     )
 
     # We should not switch adapters unless the signal hits the threshold
-    switchbot_device_similar_signal = BLEDevice(address, "wohand_similar_signal")
+    switchbot_device_similar_signal = generate_ble_device(
+        address, "wohand_similar_signal"
+    )
     switchbot_adv_similar_signal = generate_advertisement_data(
         local_name="wohand_similar_signal", service_uuids=[], rssi=-62
     )
@@ -243,7 +254,9 @@ async def test_switching_adapters_based_on_stale(
     address = "44:44:33:11:23:41"
     start_time_monotonic = 50.0
 
-    switchbot_device_poor_signal_hci0 = BLEDevice(address, "wohand_poor_signal_hci0")
+    switchbot_device_poor_signal_hci0 = generate_ble_device(
+        address, "wohand_poor_signal_hci0"
+    )
     switchbot_adv_poor_signal_hci0 = generate_advertisement_data(
         local_name="wohand_poor_signal_hci0", service_uuids=[], rssi=-100
     )
@@ -260,7 +273,9 @@ async def test_switching_adapters_based_on_stale(
         is switchbot_device_poor_signal_hci0
     )
 
-    switchbot_device_poor_signal_hci1 = BLEDevice(address, "wohand_poor_signal_hci1")
+    switchbot_device_poor_signal_hci1 = generate_ble_device(
+        address, "wohand_poor_signal_hci1"
+    )
     switchbot_adv_poor_signal_hci1 = generate_advertisement_data(
         local_name="wohand_poor_signal_hci1", service_uuids=[], rssi=-99
     )
@@ -301,7 +316,7 @@ async def test_restore_history_from_dbus(
     """Test we can restore history from dbus."""
     address = "AA:BB:CC:CC:CC:FF"
 
-    ble_device = BLEDevice(address, "name")
+    ble_device = generate_ble_device(address, "name")
     history = {
         address: AdvertisementHistory(
             ble_device, generate_advertisement_data(local_name="name"), "hci0"
@@ -337,7 +352,7 @@ async def test_restore_history_from_dbus_and_remote_adapters(
     for address in timestamps:
         timestamps[address] = now
 
-    ble_device = BLEDevice(address, "name")
+    ble_device = generate_ble_device(address, "name")
     history = {
         address: AdvertisementHistory(
             ble_device, generate_advertisement_data(local_name="name"), "hci0"
@@ -377,7 +392,7 @@ async def test_restore_history_from_dbus_and_corrupted_remote_adapters(
     for address in timestamps:
         timestamps[address] = now
 
-    ble_device = BLEDevice(address, "name")
+    ble_device = generate_ble_device(address, "name")
     history = {
         address: AdvertisementHistory(
             ble_device, generate_advertisement_data(local_name="name"), "hci0"
@@ -406,7 +421,7 @@ async def test_switching_adapters_based_on_rssi_connectable_to_non_connectable(
 
     address = "44:44:33:11:23:45"
     now = time.monotonic()
-    switchbot_device_poor_signal = BLEDevice(address, "wohand_poor_signal")
+    switchbot_device_poor_signal = generate_ble_device(address, "wohand_poor_signal")
     switchbot_adv_poor_signal = generate_advertisement_data(
         local_name="wohand_poor_signal", service_uuids=[], rssi=-100
     )
@@ -422,7 +437,7 @@ async def test_switching_adapters_based_on_rssi_connectable_to_non_connectable(
         bluetooth.async_ble_device_from_address(hass, address, True)
         is switchbot_device_poor_signal
     )
-    switchbot_device_good_signal = BLEDevice(address, "wohand_good_signal")
+    switchbot_device_good_signal = generate_ble_device(address, "wohand_good_signal")
     switchbot_adv_good_signal = generate_advertisement_data(
         local_name="wohand_good_signal", service_uuids=[], rssi=-60
     )
@@ -459,7 +474,9 @@ async def test_switching_adapters_based_on_rssi_connectable_to_non_connectable(
         bluetooth.async_ble_device_from_address(hass, address, True)
         is switchbot_device_poor_signal
     )
-    switchbot_device_excellent_signal = BLEDevice(address, "wohand_excellent_signal")
+    switchbot_device_excellent_signal = generate_ble_device(
+        address, "wohand_excellent_signal"
+    )
     switchbot_adv_excellent_signal = generate_advertisement_data(
         local_name="wohand_excellent_signal", service_uuids=[], rssi=-25
     )
@@ -496,7 +513,7 @@ async def test_connectable_advertisement_can_be_retrieved_with_best_path_is_non_
 
     address = "44:44:33:11:23:45"
     now = time.monotonic()
-    switchbot_device_good_signal = BLEDevice(address, "wohand_good_signal")
+    switchbot_device_good_signal = generate_ble_device(address, "wohand_good_signal")
     switchbot_adv_good_signal = generate_advertisement_data(
         local_name="wohand_good_signal", service_uuids=[], rssi=-60
     )
@@ -515,7 +532,7 @@ async def test_connectable_advertisement_can_be_retrieved_with_best_path_is_non_
     )
     assert bluetooth.async_ble_device_from_address(hass, address, True) is None
 
-    switchbot_device_poor_signal = BLEDevice(address, "wohand_poor_signal")
+    switchbot_device_poor_signal = generate_ble_device(address, "wohand_poor_signal")
     switchbot_adv_poor_signal = generate_advertisement_data(
         local_name="wohand_poor_signal", service_uuids=[], rssi=-100
     )
@@ -543,7 +560,7 @@ async def test_switching_adapters_when_one_goes_away(
 
     address = "44:44:33:11:23:45"
 
-    switchbot_device_good_signal = BLEDevice(address, "wohand_good_signal")
+    switchbot_device_good_signal = generate_ble_device(address, "wohand_good_signal")
     switchbot_adv_good_signal = generate_advertisement_data(
         local_name="wohand_good_signal", service_uuids=[], rssi=-60
     )
@@ -556,7 +573,7 @@ async def test_switching_adapters_when_one_goes_away(
         is switchbot_device_good_signal
     )
 
-    switchbot_device_poor_signal = BLEDevice(address, "wohand_poor_signal")
+    switchbot_device_poor_signal = generate_ble_device(address, "wohand_poor_signal")
     switchbot_adv_poor_signal = generate_advertisement_data(
         local_name="wohand_poor_signal", service_uuids=[], rssi=-100
     )
@@ -593,7 +610,7 @@ async def test_switching_adapters_when_one_stop_scanning(
 
     address = "44:44:33:11:23:45"
 
-    switchbot_device_good_signal = BLEDevice(address, "wohand_good_signal")
+    switchbot_device_good_signal = generate_ble_device(address, "wohand_good_signal")
     switchbot_adv_good_signal = generate_advertisement_data(
         local_name="wohand_good_signal", service_uuids=[], rssi=-60
     )
@@ -606,7 +623,7 @@ async def test_switching_adapters_when_one_stop_scanning(
         is switchbot_device_good_signal
     )
 
-    switchbot_device_poor_signal = BLEDevice(address, "wohand_poor_signal")
+    switchbot_device_poor_signal = generate_ble_device(address, "wohand_poor_signal")
     switchbot_adv_poor_signal = generate_advertisement_data(
         local_name="wohand_poor_signal", service_uuids=[], rssi=-100
     )
@@ -645,13 +662,13 @@ async def test_goes_unavailable_connectable_only_and_recovers(
 
     assert async_scanner_count(hass, connectable=True) == 0
     assert async_scanner_count(hass, connectable=False) == 0
-    switchbot_device_connectable = BLEDevice(
+    switchbot_device_connectable = generate_ble_device(
         "44:44:33:11:23:45",
         "wohand",
         {},
         rssi=-100,
     )
-    switchbot_device_non_connectable = BLEDevice(
+    switchbot_device_non_connectable = generate_ble_device(
         "44:44:33:11:23:45",
         "wohand",
         {},
@@ -813,7 +830,7 @@ async def test_goes_unavailable_dismisses_discovery(
     await hass.async_block_till_done()
 
     assert async_scanner_count(hass, connectable=False) == 0
-    switchbot_device_non_connectable = BLEDevice(
+    switchbot_device_non_connectable = generate_ble_device(
         "44:44:33:11:23:45",
         "wohand",
         {},

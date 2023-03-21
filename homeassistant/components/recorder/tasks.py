@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.core import Event
 from homeassistant.helpers.typing import UndefinedType
 
-from . import purge, statistics
+from . import entity_registry, purge, statistics
 from .const import DOMAIN, EXCLUDE_ATTRIBUTES
 from .db_schema import Statistics, StatisticsShortTerm
 from .models import StatisticData, StatisticMetaData
@@ -84,6 +84,22 @@ class UpdateStatisticsMetadataTask(RecorderTask):
 
 
 @dataclass
+class UpdateStatesMetadataTask(RecorderTask):
+    """Task to update states metadata."""
+
+    entity_id: str
+    new_entity_id: str
+
+    def run(self, instance: Recorder) -> None:
+        """Handle the task."""
+        entity_registry.update_states_metadata(
+            instance,
+            self.entity_id,
+            self.new_entity_id,
+        )
+
+
+@dataclass
 class PurgeTask(RecorderTask):
     """Object to store information about purge task."""
 
@@ -149,6 +165,18 @@ class StatisticsTask(RecorderTask):
             return
         # Schedule a new statistics task if this one didn't finish
         instance.queue_task(StatisticsTask(self.start, self.fire_events))
+
+
+@dataclass
+class CompileMissingStatisticsTask(RecorderTask):
+    """An object to insert into the recorder queue to run a compile missing statistics."""
+
+    def run(self, instance: Recorder) -> None:
+        """Run statistics task to compile missing statistics."""
+        if statistics.compile_missing_statistics(instance):
+            return
+        # Schedule a new statistics task if this one didn't finish
+        instance.queue_task(CompileMissingStatisticsTask())
 
 
 @dataclass
@@ -426,3 +454,17 @@ class EntityIDPostMigrationTask(RecorderTask):
         ):
             # Schedule a new migration task if this one didn't finish
             instance.queue_task(EntityIDPostMigrationTask())
+
+
+@dataclass
+class EventIdMigrationTask(RecorderTask):
+    """An object to insert into the recorder queue to cleanup legacy event_ids in the states table.
+
+    This task should only be queued if the ix_states_event_id index exists
+    since it is used to scan the states table and it will be removed after this
+    task is run if its no longer needed.
+    """
+
+    def run(self, instance: Recorder) -> None:
+        """Clean up the legacy event_id index on states."""
+        instance._cleanup_legacy_states_event_ids()  # pylint: disable=[protected-access]
