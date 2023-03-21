@@ -1,5 +1,6 @@
 """The tests for the MQTT button platform."""
 import copy
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -35,7 +36,6 @@ from .test_common import (
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
-    help_test_setup_manual_entity_from_yaml,
     help_test_unique_id,
     help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_json,
@@ -277,29 +277,32 @@ async def test_discovery_update_attr(
     )
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                button.DOMAIN: [
+                    {
+                        "name": "Test 1",
+                        "command_topic": "command-topic",
+                        "unique_id": "TOTALLY_UNIQUE",
+                    },
+                    {
+                        "name": "Test 2",
+                        "command_topic": "command-topic",
+                        "unique_id": "TOTALLY_UNIQUE",
+                    },
+                ]
+            }
+        }
+    ],
+)
 async def test_unique_id(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test unique id option only creates one button per unique_id."""
-    config = {
-        mqtt.DOMAIN: {
-            button.DOMAIN: [
-                {
-                    "name": "Test 1",
-                    "command_topic": "command-topic",
-                    "unique_id": "TOTALLY_UNIQUE",
-                },
-                {
-                    "name": "Test 2",
-                    "command_topic": "command-topic",
-                    "unique_id": "TOTALLY_UNIQUE",
-                },
-            ]
-        }
-    }
-    await help_test_unique_id(
-        hass, mqtt_mock_entry_with_yaml_config, button.DOMAIN, config
-    )
+    await help_test_unique_id(hass, mqtt_mock_entry_no_yaml_config, button.DOMAIN)
 
 
 async def test_discovery_removal_button(
@@ -497,13 +500,13 @@ async def test_valid_device_class(
 )
 async def test_publishing_with_custom_encoding(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
-    service,
-    topic,
-    parameters,
-    payload,
-    template,
+    service: str,
+    topic: str,
+    parameters: dict[str, Any],
+    payload: str,
+    template: str | None,
 ) -> None:
     """Test publishing MQTT payload with different encoding."""
     domain = button.DOMAIN
@@ -511,7 +514,7 @@ async def test_publishing_with_custom_encoding(
 
     await help_test_publishing_with_custom_encoding(
         hass,
-        mqtt_mock_entry_with_yaml_config,
+        mqtt_mock_entry_no_yaml_config,
         caplog,
         domain,
         config,
@@ -533,10 +536,13 @@ async def test_reloadable(
     await help_test_reloadable(hass, mqtt_client_mock, domain, config)
 
 
-async def test_setup_manual_entity_from_yaml(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+async def test_setup_manual_entity_from_yaml(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test setup manual configured MQTT entity."""
+    await mqtt_mock_entry_no_yaml_config()
     platform = button.DOMAIN
-    await help_test_setup_manual_entity_from_yaml(hass, DEFAULT_CONFIG)
     assert hass.states.get(f"{platform}.test")
 
 
