@@ -55,7 +55,7 @@ class EzvizSwitch(EzvizEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the switch."""
-        return self.data["switches"].get(self._name,False)
+        return self.data["switches"].get(self._name, False)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Change a device switch on the camera."""
