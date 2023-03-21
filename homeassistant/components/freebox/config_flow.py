@@ -113,7 +113,6 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             # Get our handle to deal
             fbx = await get_api(self.hass, self._host)
-            _LOGGER.info(fbx)
 
             # Open connection and check authentication
             await fbx.open(self._host, self._port)
