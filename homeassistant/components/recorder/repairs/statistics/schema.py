@@ -1,4 +1,4 @@
-"""Statistics repairs."""
+"""Statistics schema repairs."""
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -15,17 +15,17 @@ from sqlalchemy.orm.session import Session
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from ..const import DOMAIN, SupportedDialect
-from ..db_schema import Statistics, StatisticsShortTerm
-from ..models import StatisticData, StatisticMetaData, datetime_to_timestamp_or_none
-from ..statistics import (
+from ...const import DOMAIN, SupportedDialect
+from ...db_schema import Statistics, StatisticsShortTerm
+from ...models import StatisticData, StatisticMetaData, datetime_to_timestamp_or_none
+from ...statistics import (
     _import_statistics_with_session,
     _statistics_during_period_with_session,
 )
-from ..util import session_scope
+from ...util import session_scope
 
 if TYPE_CHECKING:
-    from .. import Recorder
+    from ... import Recorder
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +54,7 @@ def _validate_db_schema_utf8(
     }
     statistics_meta_manager = instance.statistics_meta_manager
 
-    # Try inserting some metadata which needs utfmb4 support
+    # Try inserting some metadata which needs utf8mb4 support
     try:
         # Mark the session as read_only to ensure that the test data is not committed
         # to the database and we always rollback when the scope is exited
@@ -238,7 +238,7 @@ def correct_db_schema(
     schema_errors: set[str],
 ) -> None:
     """Correct issues detected by validate_db_schema."""
-    from ..migration import _modify_columns  # pylint: disable=import-outside-toplevel
+    from ...migration import _modify_columns  # pylint: disable=import-outside-toplevel
 
     if "statistics_meta.4-byte UTF-8" in schema_errors:
         # Attempt to convert the table to utf8mb4
