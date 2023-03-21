@@ -7,7 +7,6 @@ from homeassistant.components.climate import (
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_HOME,
-    PRESET_NONE,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
@@ -17,7 +16,11 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    PRESET_TO_VENTILATION_MODE_MAP,
+    VENTILATION_TO_PRESET_MODE_MAP,
+)
 
 
 async def async_setup_entry(
@@ -100,21 +103,11 @@ class FlexitClimateEntity(ClimateEntity):
 
         Requires ClimateEntityFeature.PRESET_MODE.
         """
-        return {
-            VENTILATION_MODES[VENTILATION_MODE.STOP]: PRESET_NONE,
-            VENTILATION_MODES[VENTILATION_MODE.AWAY]: PRESET_AWAY,
-            VENTILATION_MODES[VENTILATION_MODE.HOME]: PRESET_HOME,
-            VENTILATION_MODES[VENTILATION_MODE.HIGH]: PRESET_BOOST,
-        }[self._device.ventilation_mode]
+        return VENTILATION_TO_PRESET_MODE_MAP[self._device.ventilation_mode]
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        ventilation_mode = {
-            PRESET_NONE: VENTILATION_MODE.STOP,
-            PRESET_AWAY: VENTILATION_MODE.AWAY,
-            PRESET_HOME: VENTILATION_MODE.HOME,
-            PRESET_BOOST: VENTILATION_MODE.HIGH,
-        }[preset_mode]
+        ventilation_mode = PRESET_TO_VENTILATION_MODE_MAP[preset_mode]
 
         await self._device.set_ventilation_mode(ventilation_mode)
 
