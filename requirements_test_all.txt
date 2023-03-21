@@ -55,7 +55,7 @@ PyXiaomiGateway==0.14.3
 RtmAPI==0.7.2
 
 # homeassistant.components.tami4
-Tami4EdgeAPI==1.1
+Tami4EdgeAPI==2.0
 
 # homeassistant.components.onvif
 WSDiscovery==2.0.0
