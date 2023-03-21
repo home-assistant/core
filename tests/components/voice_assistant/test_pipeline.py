@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from homeassistant.components import tts
 from homeassistant.components.voice_assistant.pipeline import (
     AudioPipelineRequest,
     Pipeline,
@@ -58,6 +59,11 @@ async def test_audio_pipeline(hass, mock_get_tts_audio):
             event_callback=event_callback,
             language=hass.config.language,
         )
+    )
+
+    # Clean up demo mp3
+    await hass.services.async_call(
+        tts.DOMAIN, tts.SERVICE_CLEAR_CACHE, {}, blocking=True
     )
 
     calls = event_callback.mock_calls
