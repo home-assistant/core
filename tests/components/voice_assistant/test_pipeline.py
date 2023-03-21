@@ -3,7 +3,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components import tts
 from homeassistant.components.voice_assistant.pipeline import (
     AudioPipelineRequest,
     Pipeline,
@@ -41,7 +40,7 @@ async def mock_get_tts_audio(hass):
         yield mock_get_tts
 
 
-async def test_audio_pipeline(hass, mock_get_tts_audio):
+async def test_audio_pipeline(hass, mock_get_tts_audio, mock_init_cache_dir):
     """Run audio pipeline with mock TTS."""
     pipeline = Pipeline(
         name="test",
@@ -59,11 +58,6 @@ async def test_audio_pipeline(hass, mock_get_tts_audio):
             event_callback=event_callback,
             language=hass.config.language,
         )
-    )
-
-    # Clean up demo mp3
-    await hass.services.async_call(
-        tts.DOMAIN, tts.SERVICE_CLEAR_CACHE, {}, blocking=True
     )
 
     calls = event_callback.mock_calls
@@ -103,6 +97,9 @@ async def test_audio_pipeline(hass, mock_get_tts_audio):
         "tts_input": "Sorry, I couldn't understand that",
     }
     assert calls[4].args[0].type == PipelineEventType.TTS_FINISH
-    assert calls[4].args[0].data["tts_output"].startswith("/api/tts_proxy/")
+    assert (
+        calls[4].args[0].data["tts_output"]
+        == f"/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_{hass.config.language}_-_demo.mp3"
+    )
 
     assert calls[5].args[0].type == PipelineEventType.RUN_FINISH
