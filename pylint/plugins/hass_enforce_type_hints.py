@@ -2370,7 +2370,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="default_options",
-                    return_type=["dict[str, Any]", None],
+                    return_type=["Mapping[str, Any]", None],
                 ),
                 TypeHintMatch(
                     function_name="get_tts_audio",

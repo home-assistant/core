@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 import functools as ft
 import hashlib
 from http import HTTPStatus
@@ -381,10 +382,11 @@ class SpeechManager:
 
         # Options
         if provider.default_options and options:
-            merged_options = provider.default_options.copy()
+            merged_options = dict(provider.default_options)
             merged_options.update(options)
             options = merged_options
-        options = options or provider.default_options
+        elif provider.default_options:
+            options = dict(provider.default_options)
 
         if options is not None:
             supported_options = provider.supported_options or []
@@ -664,8 +666,8 @@ class Provider:
         return None
 
     @property
-    def default_options(self) -> dict[str, Any] | None:
-        """Return a dict include default options."""
+    def default_options(self) -> Mapping[str, Any] | None:
+        """Return a mapping with the default options."""
         return None
 
     def get_tts_audio(
