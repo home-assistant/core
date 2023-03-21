@@ -10,7 +10,7 @@ from flexit_bacnet.bacnet import DecodingError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_DEVICE_ID, CONF_HOST
+from homeassistant.const import CONF_DEVICE_ID, CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -23,7 +23,7 @@ DEFAULT_DEVICE_ID = 2
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_IP_ADDRESS): str,
         vol.Required(CONF_DEVICE_ID, default=DEFAULT_DEVICE_ID): int,
     }
 )
@@ -34,7 +34,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> str:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    device = FlexitBACnet(data[CONF_HOST], data[CONF_DEVICE_ID])
+    device = FlexitBACnet(data[CONF_IP_ADDRESS], data[CONF_DEVICE_ID])
 
     try:
         await device.update()
