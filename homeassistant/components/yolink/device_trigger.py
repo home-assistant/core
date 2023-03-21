@@ -10,7 +10,6 @@ from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEM
 from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
@@ -73,15 +72,6 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-
-    device_id = config[CONF_DEVICE_ID]
-    device_registry = dr.async_get(hass)
-    registry_device = device_registry.async_get(device_id)
-    if not registry_device:
-        raise HomeAssistantError(f"Unable to get yolink device {device_id}")
-    if registry_device.model != ATTR_DEVICE_SMART_REMOTER:
-        raise HomeAssistantError(f"No trigger for device {device_id}")
-
     event_config = {
         event_trigger.CONF_PLATFORM: "event",
         event_trigger.CONF_EVENT_TYPE: YOLINK_EVENT,
