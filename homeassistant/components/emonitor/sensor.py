@@ -1,6 +1,8 @@
 """Support for a Emonitor channel sensor."""
 from __future__ import annotations
 
+from typing import Any
+
 from aioemonitor.monitor import EmonitorChannel, EmonitorStatus
 
 from homeassistant.components.sensor import (
@@ -123,6 +125,6 @@ class EmonitorPowerSensor(CoordinatorEntity, SensorEntity):
         return self._paired_attr(self.entity_description.key)
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device specific state attributes."""
         return {"channel": self.channel_number}
