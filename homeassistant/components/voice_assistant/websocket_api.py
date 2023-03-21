@@ -17,23 +17,6 @@ from .pipeline import (
 )
 
 
-class FakeStreamReader:
-    def __init__(self):
-        self._chunks = asyncio.Queue()
-        self._bytes_ready = asyncio.Event()
-
-    def put_chunk(self, chunk: bytes):
-        self._chunks.put_nowait(chunk)
-
-    async def readchunk(self) -> tuple[bytes, bool]:
-        chunk = await self._chunks.get()
-        return (chunk, False)
-
-    def clear(self):
-        while not self._chunks.empty:
-            self._chunks.get_nowait()
-
-
 @callback
 def async_register_websocket_api(hass: HomeAssistant) -> None:
     """Register the websocket API."""
@@ -84,12 +67,16 @@ async def websocket_run(
     intent_input = msg.get("intent_input")
     if intent_input is None:
         # Audio pipeline
-        stt_reader = FakeStreamReader()
+        audio_queue: "asyncio.Queue[bytes]" = asyncio.Queue()
+
+        async def stt_stream():
+            while chunk := await audio_queue.get():
+                yield chunk
 
         def handle_binary(_hass, _connection, data: bytes):
-            stt_reader.put_chunk(data)
+            audio_queue.put_nowait(data)
 
-        handler_id, unregister = connection.async_register_binary_handler(handle_binary)
+        connection.async_register_binary_handler(handle_binary)
 
         run_task = hass.async_create_task(
             AudioPipelineRequest(
@@ -101,7 +88,7 @@ async def websocket_run(
                     sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
                     channel=stt.AudioChannels.CHANNEL_MONO,
                 ),
-                stt_stream=stt_reader,
+                stt_stream=stt_stream(),
                 conversation_id=msg.get("conversation_id"),
             ).execute(
                 PipelineRun(

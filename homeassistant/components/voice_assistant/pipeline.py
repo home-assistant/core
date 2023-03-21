@@ -3,11 +3,10 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
-from collections.abc import Callable
+from collections.abc import AsyncIterable, Callable
 from dataclasses import dataclass, field
 from typing import Any
 
-from aiohttp import StreamReader
 
 from homeassistant.backports.enum import StrEnum
 from homeassistant.components import conversation, stt
@@ -230,7 +229,7 @@ class AudioPipelineRequest(PipelineRequest):
     """Request to full pipeline from audio input (stt) to audio output (tts)."""
 
     stt_metadata: stt.SpeechMetadata
-    stt_stream: StreamReader
+    stt_stream: AsyncIterable[bytes]
     conversation_id: str | None = None
 
     async def _execute(self, run: PipelineRun):
