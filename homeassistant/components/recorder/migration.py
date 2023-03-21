@@ -54,12 +54,14 @@ from .queries import (
     find_states_context_ids_to_migrate,
     has_used_states_event_ids,
 )
-from .statistics import (
+from .repairs.statistics import (
     correct_db_schema as statistics_correct_db_schema,
+    validate_db_schema as statistics_validate_db_schema,
+)
+from .statistics import (
     delete_statistics_duplicates,
     delete_statistics_meta_duplicates,
     get_start_time,
-    validate_db_schema as statistics_validate_db_schema,
 )
 from .tasks import (
     CommitTask,
