@@ -282,6 +282,7 @@ class WebSocketHandler:
                     handler = msg.data[0]
                     payload = msg.data[1:]
                     connection.async_handle_binary(handler, payload)
+                    continue
 
                 if msg.type != WSMsgType.TEXT:
                     disconnect_warn = "Received non-Text message."

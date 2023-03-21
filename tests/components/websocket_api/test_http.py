@@ -168,7 +168,10 @@ async def test_binary_message(
     hass: HomeAssistant, websocket_client, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test binary messages."""
-    binary_payload = asyncio.Future()
+    binary_payloads = {
+        104: asyncio.Future(),
+        105: asyncio.Future(),
+    }
 
     # Register a handler
     @callback
@@ -187,7 +190,7 @@ async def test_binary_message(
             hass: HomeAssistant, connection: ActiveConnection, payload: bytes
         ):
             nonlocal unsub
-            binary_payload.set_result(payload)
+            binary_payloads[msg["id"]].set_result(payload)
             unsub()
 
         prefix, unsub = connection.async_register_binary_handler(binary_message_handler)
@@ -196,18 +199,21 @@ async def test_binary_message(
 
     async_register_command(hass, get_binary_message_handler)
 
-    # Open connection to handler and get binary ID back
-    await websocket_client.send_json({"id": 5, "type": "get_binary_message_handler"})
-    result = await websocket_client.receive_json()
-    assert result["id"] == 5
-    assert result["type"] == const.TYPE_RESULT
-    assert result["success"]
-    assert result["result"]["prefix"] == 1
+    # Register multiple binary handlers
+    for i in range(101, 106):
+        await websocket_client.send_json(
+            {"id": i, "type": "get_binary_message_handler"}
+        )
+        result = await websocket_client.receive_json()
+        assert result["id"] == i
+        assert result["type"] == const.TYPE_RESULT
+        assert result["success"]
+        assert result["result"]["prefix"] == i - 100
 
     # Send message to binary
-    await websocket_client.send_bytes(
-        result["result"]["prefix"].to_bytes(1, "big") + b"test"
-    )
+    await websocket_client.send_bytes((4).to_bytes(1, "big") + b"test4")
+    await websocket_client.send_bytes((5).to_bytes(1, "big") + b"test5")
 
     # Verify received
-    assert await binary_payload == b"test"
+    assert await binary_payloads[104] == b"test4"
+    assert await binary_payloads[105] == b"test5"

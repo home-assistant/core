@@ -106,12 +106,16 @@ class ActiveConnection:
     @callback
     def async_handle_binary(self, handler_id: int, payload: bytes) -> None:
         """Handle a single incoming binary message."""
-        if handler := self.binary_handlers.get(handler_id):
-            handler(self.hass, self, payload)
-        else:
+        if (handler := self.binary_handlers.get(handler_id)) is None:
             self.logger.error(
-                "Received binary message for non-existing handler", handler_id
+                "Received binary message for non-existing handler %s", handler_id
             )
+            return
+
+        try:
+            handler(self.hass, self, payload)
+        except Exception:  # pylint: disable=broad-except
+            self.logger.exception("Error handling binary message")
 
     @callback
     def async_handle(self, msg: dict[str, Any]) -> None:
