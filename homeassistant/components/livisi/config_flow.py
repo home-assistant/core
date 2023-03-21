@@ -37,7 +37,6 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
-
         errors = {}
         try:
             aio_livisi = await self._login(user_input)
@@ -52,7 +51,8 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             with suppress(ClientConnectorError):
                 controller_info = await aio_livisi.async_get_controller()
             if controller_info:
-                return await self.create_entity(user_input, controller_info)
+                return await self.create_or_update_entry(user_input, controller_info)
+            errors["base"] = "cannot_connect"
 
         data_schema = self.add_suggested_values_to_schema(DATA_SCHEMA, user_input)
         return self.async_show_form(
@@ -72,14 +72,11 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Dialog that informs the user that reauth is required."""
         if user_input:
             return await self.async_step_user(user_input)
-        if self.reauth_entry:
-            data_schema = self.add_suggested_values_to_schema(
-                DATA_SCHEMA, self.reauth_entry.data
-            )
-            return self.async_show_form(
-                step_id="reauth_confirm", data_schema=data_schema
-            )
-        return self.async_show_form(step_id="reauth_confirm", data_schema=DATA_SCHEMA)
+        assert self.reauth_entry
+        data_schema = self.add_suggested_values_to_schema(
+            DATA_SCHEMA, self.reauth_entry.data
+        )
+        return self.async_show_form(step_id="reauth_confirm", data_schema=data_schema)
 
     async def _login(self, user_input: dict[str, str]) -> AioLivisi:
         """Login into Livisi Smart Home."""
@@ -93,7 +90,7 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await aio_livisi.async_set_token(livisi_connection_data)
         return aio_livisi
 
-    async def create_entity(
+    async def create_or_update_entry(
         self, user_input: dict[str, str], controller_info: dict[str, Any]
     ) -> FlowResult:
         """Create LIVISI entity."""

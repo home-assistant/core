@@ -11,6 +11,11 @@ VALID_CONFIG = {
     CONF_PASSWORD: "test",
 }
 
+INVALID_CONFIG = {
+    CONF_HOST: "2.2.2.2",
+    CONF_PASSWORD: "test",
+}
+
 DEVICE_CONFIG = {
     "serialNumber": "1234",
     "controllerType": "Classic",
@@ -29,6 +34,14 @@ def mocked_livisi_controller():
     return patch(
         "homeassistant.components.livisi.config_flow.AioLivisi.async_get_controller",
         return_value=DEVICE_CONFIG,
+    )
+
+
+def empty_livisi_controller():
+    """Create mock data for LIVISI controller."""
+    return patch(
+        "homeassistant.components.livisi.config_flow.AioLivisi.async_get_controller",
+        return_value=None,
     )
 
 

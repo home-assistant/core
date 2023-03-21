@@ -10,8 +10,10 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 
 from . import (
+    INVALID_CONFIG,
     VALID_CONFIG,
     create_entry,
+    empty_livisi_controller,
     mocked_livisi_controller,
     mocked_livisi_login,
     mocked_livisi_setup_entry,
@@ -36,6 +38,21 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         assert result["title"] == "SHC Classic"
         assert result["data"]["host"] == "1.1.1.1"
         assert result["data"]["password"] == "test"
+
+
+async def test_cannot_connect_error(hass: HomeAssistant) -> None:
+    """Test cannot connect to LIVISI API."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    with mocked_livisi_login(), empty_livisi_controller(), mocked_livisi_setup_entry():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            VALID_CONFIG,
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["errors"]["base"] == "cannot_connect"
 
 
 @pytest.mark.parametrize(
@@ -85,6 +102,12 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], INVALID_CONFIG
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
 
     with mocked_livisi_login(), mocked_livisi_controller(), mocked_livisi_setup_entry():
         result = await hass.config_entries.flow.async_configure(
