@@ -636,7 +636,7 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
                         self.hass,
                         start,
                         None,
-                        [statistic_id],
+                        {statistic_id},
                         "hour",
                         None,
                         {"sum"},
