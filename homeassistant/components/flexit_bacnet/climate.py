@@ -1,7 +1,9 @@
 """The Flexit Nordic (BACnet) integration."""
+import asyncio.exceptions
 from typing import Any
 
 from flexit_bacnet import VENTILATION_MODE, VENTILATION_MODES, FlexitBACnet
+from flexit_bacnet.bacnet import DecodingError
 
 from homeassistant.components.climate import (
     PRESET_AWAY,
@@ -14,6 +16,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -91,10 +94,16 @@ class FlexitClimateEntity(ClimateEntity):
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
 
-        if self._device.ventilation_mode == VENTILATION_MODES[VENTILATION_MODE.AWAY]:
-            await self._device.set_air_temp_setpoint_away(temperature)
-        else:
-            await self._device.set_air_temp_setpoint_home(temperature)
+        try:
+            if (
+                self._device.ventilation_mode
+                == VENTILATION_MODES[VENTILATION_MODE.AWAY]
+            ):
+                await self._device.set_air_temp_setpoint_away(temperature)
+            else:
+                await self._device.set_air_temp_setpoint_home(temperature)
+        except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
+            raise HomeAssistantError from exc
 
     @property
     def preset_mode(self) -> str:
@@ -108,7 +117,10 @@ class FlexitClimateEntity(ClimateEntity):
         """Set new preset mode."""
         ventilation_mode = PRESET_TO_VENTILATION_MODE_MAP[preset_mode]
 
-        await self._device.set_ventilation_mode(ventilation_mode)
+        try:
+            await self._device.set_ventilation_mode(ventilation_mode)
+        except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
+            raise HomeAssistantError from exc
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -120,10 +132,13 @@ class FlexitClimateEntity(ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        if hvac_mode == HVACMode.OFF:
-            await self._device.set_ventilation_mode(VENTILATION_MODE.STOP)
-        else:
-            await self._device.set_ventilation_mode(VENTILATION_MODE.HOME)
+        try:
+            if hvac_mode == HVACMode.OFF:
+                await self._device.set_ventilation_mode(VENTILATION_MODE.STOP)
+            else:
+                await self._device.set_ventilation_mode(VENTILATION_MODE.HOME)
+        except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
+            raise HomeAssistantError from exc
 
     @property
     def is_aux_heat(self) -> bool:
@@ -135,8 +150,14 @@ class FlexitClimateEntity(ClimateEntity):
 
     async def async_turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
-        await self._device.enable_electric_heater()
+        try:
+            await self._device.enable_electric_heater()
+        except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
+            raise HomeAssistantError from exc
 
     async def async_turn_aux_heat_off(self) -> None:
         """Turn auxiliary heater off."""
-        await self._device.disable_electric_heater()
+        try:
+            await self._device.disable_electric_heater()
+        except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
+            raise HomeAssistantError from exc
