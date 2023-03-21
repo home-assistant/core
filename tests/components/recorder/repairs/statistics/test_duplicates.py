@@ -14,18 +14,18 @@ from sqlalchemy.orm import Session
 from homeassistant.components import recorder
 from homeassistant.components.recorder import statistics
 from homeassistant.components.recorder.const import SQLITE_URL_PREFIX
-from homeassistant.components.recorder.statistics import (
-    async_add_external_statistics,
+from homeassistant.components.recorder.repairs.statistics.duplicates import (
     delete_statistics_duplicates,
     delete_statistics_meta_duplicates,
 )
+from homeassistant.components.recorder.statistics import async_add_external_statistics
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
-from .common import wait_recording_done
+from ...common import wait_recording_done
 
 from tests.common import get_test_home_assistant
 
