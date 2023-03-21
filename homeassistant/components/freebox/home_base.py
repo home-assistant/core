@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from .const import CATEGORY_TO_MODEL, DOMAIN, VALUE_NOT_SET
+from .const import CATEGORY_TO_MODEL, DOMAIN
 from .router import FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)
