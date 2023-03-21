@@ -4,6 +4,7 @@ import os
 import sys
 from unittest.mock import patch
 
+import py
 import pytest
 
 from homeassistant.components.profiler import (
@@ -25,7 +26,7 @@ import homeassistant.util.dt as dt_util
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_basic_usage(hass: HomeAssistant, tmpdir) -> None:
+async def test_basic_usage(hass: HomeAssistant, tmpdir: py.path.local) -> None:
     """Test we can setup and the service is registered."""
     test_dir = tmpdir.mkdir("profiles")
 
@@ -58,7 +59,7 @@ async def test_basic_usage(hass: HomeAssistant, tmpdir) -> None:
 @pytest.mark.skipif(
     sys.version_info >= (3, 11), reason="not yet available on python 3.11"
 )
-async def test_memory_usage(hass: HomeAssistant, tmpdir) -> None:
+async def test_memory_usage(hass: HomeAssistant, tmpdir: py.path.local) -> None:
     """Test we can setup and the service is registered."""
     test_dir = tmpdir.mkdir("profiles")
 
@@ -89,7 +90,7 @@ async def test_memory_usage(hass: HomeAssistant, tmpdir) -> None:
 
 
 @pytest.mark.skipif(sys.version_info < (3, 11), reason="still works on python 3.10")
-async def test_memory_usage_py311(hass: HomeAssistant, tmpdir) -> None:
+async def test_memory_usage_py311(hass: HomeAssistant, tmpdir: py.path.local) -> None:
     """Test raise an error on python3.11."""
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)

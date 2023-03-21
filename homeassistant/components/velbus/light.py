@@ -109,7 +109,7 @@ class VelbusButtonLight(VelbusEntity, LightEntity):
         self._attr_name = f"LED {self._channel.get_name()}"
 
     @property
-    def is_on(self) -> Any:
+    def is_on(self) -> bool:
         """Return true if the light is on."""
         return self._channel.is_on()
 

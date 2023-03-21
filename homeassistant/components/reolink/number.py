@@ -63,7 +63,7 @@ NUMBER_ENTITIES = (
         native_step=1,
         get_min_value=lambda api, ch: api.zoom_range(ch)["focus"]["pos"]["min"],
         get_max_value=lambda api, ch: api.zoom_range(ch)["focus"]["pos"]["max"],
-        supported=lambda api, ch: api.supported(ch, "zoom"),
+        supported=lambda api, ch: api.supported(ch, "focus"),
         value=lambda api, ch: api.get_focus(ch),
         method=lambda api, ch, value: api.set_focus(ch, int(value)),
     ),
@@ -174,6 +174,19 @@ NUMBER_ENTITIES = (
         ),
         value=lambda api, ch: api.ai_sensitivity(ch, "dog_cat"),
         method=lambda api, ch, value: api.set_ai_sensitivity(ch, int(value), "dog_cat"),
+    ),
+    ReolinkNumberEntityDescription(
+        key="auto_quick_reply_time",
+        name="Auto quick reply time",
+        icon="mdi:message-reply-text-outline",
+        entity_category=EntityCategory.CONFIG,
+        native_step=1,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        native_min_value=1,
+        native_max_value=60,
+        supported=lambda api, ch: api.supported(ch, "quick_reply"),
+        value=lambda api, ch: api.quick_reply_time(ch),
+        method=lambda api, ch, value: api.set_quick_reply(ch, time=int(value)),
     ),
 )
 
