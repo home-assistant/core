@@ -7,14 +7,6 @@ from tests.common import MockConfigEntry
 
 
 async def init_integration(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> MockConfigEntry:
-    """Set up the Honeywell integration in Home Assistant."""
-
-    return await init_integration_with_entry(hass, config_entry)
-
-
-async def init_integration_with_entry(
     hass: HomeAssistant, entry: MockConfigEntry
 ) -> MockConfigEntry:
     """Set up the Honeywell integration in Home Assistant."""
