@@ -130,7 +130,7 @@ class PipelineRun:
             PipelineEvent(
                 PipelineEventType.TTS_START,
                 {
-                    "engine": self.pipeline.tts_engine,
+                    "engine": self.pipeline.tts_engine or "default",
                     "tts_input": tts_input,
                 },
             )
