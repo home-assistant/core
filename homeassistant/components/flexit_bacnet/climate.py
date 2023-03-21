@@ -34,11 +34,7 @@ async def async_setup_entry(
 class FlexitClimateEntity(ClimateEntity):
     """Flexit air handling unit."""
 
-    _attr_supported_features = (
-        ClimateEntityFeature.PRESET_MODE
-        | ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.AUX_HEAT
-    )
+    _attr_has_entity_name = True
 
     _attr_hvac_modes = [
         HVACMode.OFF,
@@ -52,10 +48,14 @@ class FlexitClimateEntity(ClimateEntity):
         PRESET_BOOST,
     ]
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_supported_features = (
+        ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.AUX_HEAT
+    )
+
     _attr_target_temperature_step = 1.0
-    _attr_has_entity_name = True
-    _attr_icon = "mdi:hvac"
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, device: FlexitBACnet) -> None:
         """Initialize the unit."""
