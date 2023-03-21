@@ -89,7 +89,7 @@ class FreeboxHomeEntity(Entity):
             filter(lambda x: (x["name"] == name), nodes),
             None,
         )
-        if node is None:
+        if not node:
             _LOGGER.warning("The Freebox Home device has no value for: %s", name)
             return None
         return node["id"]
