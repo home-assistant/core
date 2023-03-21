@@ -1,5 +1,6 @@
 """Voice Assistant Websocket API."""
 import asyncio
+import logging
 from typing import Any
 
 import voluptuous as vol
@@ -15,6 +16,8 @@ from .pipeline import (
     PipelineRun,
     TextPipelineRequest,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -66,11 +69,14 @@ async def websocket_run(
 
     intent_input = msg.get("intent_input")
     if intent_input is None:
+        _LOGGER.debug("Running audio pipeline")
+
         # Audio pipeline
         audio_queue: "asyncio.Queue[bytes]" = asyncio.Queue()
 
         async def stt_stream():
             while chunk := await audio_queue.get():
+                _LOGGER.debug("Received %s byte(s) of audio", len(chunk))
                 yield chunk
 
         def handle_binary(_hass, _connection, data: bytes):

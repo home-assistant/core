@@ -75,6 +75,11 @@ class ActiveConnection:
         self.binary_handler = handler
 
     @callback
+    def async_unregister_binary_handler(self) -> None:
+        """Unregisters a binary handler for this connection."""
+        self.binary_handler = None
+
+    @callback
     def send_result(self, msg_id: int, result: Any | None = None) -> None:
         """Send a result message."""
         self.send_message(messages.result_message(msg_id, result))

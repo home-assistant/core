@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
+import logging
 from collections.abc import AsyncIterable, Callable
 from dataclasses import dataclass, field
 from typing import Any
@@ -18,6 +19,8 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.util.dt import utcnow
 
 DEFAULT_TIMEOUT = 30  # seconds
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class PipelineEventType(StrEnum):
@@ -97,7 +100,7 @@ class PipelineRun:
         )
 
     async def speech_to_text(
-        self, metadata: stt.SpeechMetadata, stream: StreamReader
+        self, metadata: stt.SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> stt.SpeechResult:
         """Run text to speech portion of pipeline. Returns URL of TTS audio."""
         self.event_callback(
@@ -111,6 +114,7 @@ class PipelineRun:
 
         stt_provider = stt.async_get_provider(self.hass, self.pipeline.stt_engine)
         result = await stt_provider.async_process_audio_stream(metadata, stream)
+        _LOGGER.debug("stt result: %s", result)
 
         self.event_callback(
             PipelineEvent(
@@ -148,6 +152,7 @@ class PipelineRun:
             language=self.language,
             agent_id=self.pipeline.conversation_engine,
         )
+        _LOGGER.debug("intent result: %s", conversation_result)
 
         self.event_callback(
             PipelineEvent(
@@ -178,16 +183,16 @@ class PipelineRun:
                 engine=self.pipeline.tts_engine,
             ),
         )
-        tts_url = tts_media.url
+        _LOGGER.debug("tts result: %s", tts_media)
 
         self.event_callback(
             PipelineEvent(
                 PipelineEventType.TTS_FINISH,
-                {"tts_output": tts_url},
+                {"tts_output": tts_media.url},
             )
         )
 
-        return tts_url
+        return tts_media.url
 
 
 @dataclass
