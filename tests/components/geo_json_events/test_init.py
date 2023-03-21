@@ -68,8 +68,6 @@ async def test_entity_lifecycle(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        # assert await async_setup_component(hass, DOMAIN, CONFIG)
-        # await hass.async_block_till_done()
         # Artificially trigger update and collect events.
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
