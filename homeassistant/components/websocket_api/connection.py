@@ -52,7 +52,7 @@ class ActiveConnection:
         self.handlers: dict[str, tuple[MessageHandler, vol.Schema]] = self.hass.data[
             const.DOMAIN
         ]
-        self.binary_handler: BinaryHandler | None = None
+        self.binary_handlers: dict[int, BinaryHandler] = {}
         current_connection.set(self)
 
     def get_description(self, request: web.Request | None) -> str:
@@ -67,17 +67,26 @@ class ActiveConnection:
         return Context(user_id=self.user.id)
 
     @callback
-    def async_register_binary_handler(self, handler: BinaryHandler) -> None:
-        """Register a binary handler for this connection.
+    def async_register_binary_handler(
+        self, handler: BinaryHandler
+    ) -> tuple[int, Callable[[], None]]:
+        """Register a temporary binary handler for this connection.
 
-        Overwrites any existing handler.
+        Returns a binary prefix (1 byte) and a callback to unregister the handler.
         """
-        self.binary_handler = handler
+        prefix = 1
+        while prefix in self.binary_handlers and prefix < 256:
+            prefix += 1
+        if prefix == 256:
+            raise RuntimeError("Too many binary handlers registered")
+        self.binary_handlers[prefix] = handler
 
-    @callback
-    def async_unregister_binary_handler(self) -> None:
-        """Unregisters a binary handler for this connection."""
-        self.binary_handler = None
+        @callback
+        def unsub() -> None:
+            """Unregister the handler."""
+            self.binary_handlers.pop(prefix)
+
+        return prefix, unsub
 
     @callback
     def send_result(self, msg_id: int, result: Any | None = None) -> None:
@@ -95,7 +104,7 @@ class ActiveConnection:
         self.send_message(messages.error_message(msg_id, code, message))
 
     @callback
-    def async_handle_binary(self, payload: bytes) -> None:
+    def async_handle_binary(self, handler_id: int, payload: bytes) -> None:
         """Handle a single incoming binary message."""
         if (handler := self.binary_handlers.get(handler_id)) is None:
             self.logger.error(

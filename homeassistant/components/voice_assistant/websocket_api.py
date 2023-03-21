@@ -66,6 +66,7 @@ async def websocket_run(
         )
 
     timeout = msg.get("timeout", DEFAULT_TIMEOUT)
+    ws_result: Any | None = None
 
     intent_input = msg.get("intent_input")
     if intent_input is None:
@@ -82,7 +83,10 @@ async def websocket_run(
         def handle_binary(_hass, _connection, data: bytes):
             audio_queue.put_nowait(data)
 
-        connection.async_register_binary_handler(handle_binary)
+        handler_id, _unregister_handler = connection.async_register_binary_handler(
+            handle_binary
+        )
+        ws_result = {"handler_id": handler_id}
 
         run_task = hass.async_create_task(
             AudioPipelineRequest(
@@ -130,7 +134,7 @@ async def websocket_run(
     # Cancel pipeline if user unsubscribes
     connection.subscriptions[msg["id"]] = run_task.cancel
 
-    connection.send_result(msg["id"])
+    connection.send_result(msg["id"], ws_result)
 
     # Task contains a timeout
     await run_task

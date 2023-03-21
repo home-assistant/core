@@ -276,7 +276,7 @@ class WebSocketHandler:
                     break
 
                 if msg.type == WSMsgType.BINARY:
-                    if len(msg.data) < 2:
+                    if len(msg.data) < 1:
                         disconnect_warn = "Received invalid binary message."
                         break
                     handler = msg.data[0]
