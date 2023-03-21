@@ -1,6 +1,7 @@
 """The tests for the Legacy Mqtt vacuum platform."""
 from copy import deepcopy
 import json
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -56,7 +57,6 @@ from .test_common import (
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
-    help_test_setup_manual_entity_from_yaml,
     help_test_unique_id,
     help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
@@ -745,29 +745,32 @@ async def test_discovery_update_attr(
     )
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                vacuum.DOMAIN: [
+                    {
+                        "name": "Test 1",
+                        "command_topic": "test_topic",
+                        "unique_id": "TOTALLY_UNIQUE",
+                    },
+                    {
+                        "name": "Test 2",
+                        "command_topic": "test_topic",
+                        "unique_id": "TOTALLY_UNIQUE",
+                    },
+                ]
+            }
+        }
+    ],
+)
 async def test_unique_id(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test unique id option only creates one vacuum per unique_id."""
-    config = {
-        mqtt.DOMAIN: {
-            vacuum.DOMAIN: [
-                {
-                    "name": "Test 1",
-                    "command_topic": "test_topic",
-                    "unique_id": "TOTALLY_UNIQUE",
-                },
-                {
-                    "name": "Test 2",
-                    "command_topic": "test_topic",
-                    "unique_id": "TOTALLY_UNIQUE",
-                },
-            ]
-        }
-    }
-    await help_test_unique_id(
-        hass, mqtt_mock_entry_with_yaml_config, vacuum.DOMAIN, config
-    )
+    await help_test_unique_id(hass, mqtt_mock_entry_no_yaml_config, vacuum.DOMAIN)
 
 
 async def test_discovery_removal_vacuum(
@@ -866,7 +869,7 @@ async def test_entity_device_info_remove(
 
 
 async def test_entity_id_update_subscriptions(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test MQTT subscriptions are managed when entity_id is updated."""
     config = {
@@ -882,7 +885,7 @@ async def test_entity_id_update_subscriptions(
     }
     await help_test_entity_id_update_subscriptions(
         hass,
-        mqtt_mock_entry_with_yaml_config,
+        mqtt_mock_entry_no_yaml_config,
         vacuum.DOMAIN,
         config,
         ["test-topic", "avty-topic"],
@@ -964,13 +967,13 @@ async def test_entity_debug_info_message(
 )
 async def test_publishing_with_custom_encoding(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
-    service,
-    topic,
-    parameters,
-    payload,
-    template,
+    service: str,
+    topic: str,
+    parameters: dict[str, Any],
+    payload: str,
+    template: str | None,
 ) -> None:
     """Test publishing MQTT payload with different encoding."""
     domain = vacuum.DOMAIN
@@ -985,7 +988,7 @@ async def test_publishing_with_custom_encoding(
 
     await help_test_publishing_with_custom_encoding(
         hass,
-        mqtt_mock_entry_with_yaml_config,
+        mqtt_mock_entry_no_yaml_config,
         caplog,
         domain,
         config,
@@ -1030,12 +1033,11 @@ async def test_reloadable(
 )
 async def test_encoding_subscribable_topics(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-    topic,
-    value,
-    attribute,
-    attribute_value,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    topic: str,
+    value: str,
+    attribute: str | None,
+    attribute_value: Any,
 ) -> None:
     """Test handling of incoming encoded payload."""
     domain = vacuum.DOMAIN
@@ -1056,8 +1058,7 @@ async def test_encoding_subscribable_topics(
 
     await help_test_encoding_subscribable_topics(
         hass,
-        mqtt_mock_entry_with_yaml_config,
-        caplog,
+        mqtt_mock_entry_no_yaml_config,
         vacuum.DOMAIN,
         config,
         topic,
@@ -1068,8 +1069,11 @@ async def test_encoding_subscribable_topics(
     )
 
 
-async def test_setup_manual_entity_from_yaml(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+async def test_setup_manual_entity_from_yaml(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test setup manual configured MQTT entity."""
+    await mqtt_mock_entry_no_yaml_config()
     platform = vacuum.DOMAIN
-    await help_test_setup_manual_entity_from_yaml(hass, DEFAULT_CONFIG)
     assert hass.states.get(f"{platform}.mqtttest")

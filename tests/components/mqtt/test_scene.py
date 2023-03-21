@@ -19,7 +19,6 @@ from .test_common import (
     help_test_discovery_update,
     help_test_discovery_update_unchanged,
     help_test_reloadable,
-    help_test_setup_manual_entity_from_yaml,
     help_test_unique_id,
     help_test_unload_config_entry_with_platform,
 )
@@ -148,29 +147,32 @@ async def test_custom_availability_payload(
     )
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                scene.DOMAIN: [
+                    {
+                        "name": "Test 1",
+                        "command_topic": "command-topic",
+                        "unique_id": "TOTALLY_UNIQUE",
+                    },
+                    {
+                        "name": "Test 2",
+                        "command_topic": "command-topic",
+                        "unique_id": "TOTALLY_UNIQUE",
+                    },
+                ]
+            }
+        }
+    ],
+)
 async def test_unique_id(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test unique id option only creates one scene per unique_id."""
-    config = {
-        mqtt.DOMAIN: {
-            scene.DOMAIN: [
-                {
-                    "name": "Test 1",
-                    "command_topic": "command-topic",
-                    "unique_id": "TOTALLY_UNIQUE",
-                },
-                {
-                    "name": "Test 2",
-                    "command_topic": "command-topic",
-                    "unique_id": "TOTALLY_UNIQUE",
-                },
-            ]
-        }
-    }
-    await help_test_unique_id(
-        hass, mqtt_mock_entry_with_yaml_config, scene.DOMAIN, config
-    )
+    await help_test_unique_id(hass, mqtt_mock_entry_no_yaml_config, scene.DOMAIN)
 
 
 async def test_discovery_removal_scene(
@@ -252,10 +254,13 @@ async def test_reloadable(
     await help_test_reloadable(hass, mqtt_client_mock, domain, config)
 
 
-async def test_setup_manual_entity_from_yaml(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+async def test_setup_manual_entity_from_yaml(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test setup manual configured MQTT entity."""
+    await mqtt_mock_entry_no_yaml_config()
     platform = scene.DOMAIN
-    await help_test_setup_manual_entity_from_yaml(hass, DEFAULT_CONFIG)
     assert hass.states.get(f"{platform}.test")
 
 
