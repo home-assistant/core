@@ -60,7 +60,7 @@ class FlexitClimateEntity(ClimateEntity):
     def __init__(self, device: FlexitBACnet) -> None:
         """Initialize the unit."""
         self._device = device
-        self._attr_unique_id = f"{DOMAIN}.{device.serial_number}"
+        self._attr_unique_id = device.serial_number
 
     async def async_update(self) -> None:
         """Refresh unit state."""
@@ -69,7 +69,7 @@ class FlexitClimateEntity(ClimateEntity):
     @property
     def name(self) -> str:
         """Name of the entity."""
-        return f"Flexit Nordic: {self._device.serial_number}"
+        return "Ventilation"
 
     @property
     def current_temperature(self) -> float:
@@ -156,20 +156,3 @@ class FlexitClimateEntity(ClimateEntity):
     async def async_turn_aux_heat_off(self) -> None:
         """Turn auxiliary heater off."""
         await self._device.disable_electric_heater()
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return device specific state attributes."""
-        return {
-            "air_filter_operating_time": self._device.air_filter_operating_time,
-            "air_filter_polluted": self._device.air_filter_polluted,
-            "heat_exchanger_speed": self._device.heat_exchanger_speed,
-            "outside_air_temperature": self._device.outside_air_temperature,
-            "supply_air_temperature": self._device.supply_air_temperature,
-            "extract_air_temperature": self._device.extract_air_temperature,
-            "exhaust_air_temperature": self._device.exhaust_air_temperature,
-            "electric_heater_power": self._device.electric_heater_power,
-            "room_1_humidity": self._device.room_1_humidity,
-            "room_2_humidity": self._device.room_2_humidity,
-            "room_3_humidity": self._device.room_3_humidity,
-        }
