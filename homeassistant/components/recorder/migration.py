@@ -549,7 +549,7 @@ def _apply_update(  # noqa: C901
     if dialect == SupportedDialect.MYSQL:
         timestamp_type = "DOUBLE PRECISION"
         context_bin_type = f"BLOB({CONTEXT_ID_BIN_MAX_LENGTH})"
-    if dialect == SupportedDialect.POSTGRESQL:
+    elif dialect == SupportedDialect.POSTGRESQL:
         timestamp_type = "DOUBLE PRECISION"
         context_bin_type = "BYTEA"
     else:
