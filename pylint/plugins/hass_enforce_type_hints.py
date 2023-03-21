@@ -2039,7 +2039,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=[
                 TypeHintMatch(
                     function_name="targets",
-                    return_type=["dict[str, Any]", None],
+                    return_type=["Mapping[str, Any]", None],
                 ),
                 TypeHintMatch(
                     function_name="send_message",
