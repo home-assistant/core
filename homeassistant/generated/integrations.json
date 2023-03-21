@@ -2305,6 +2305,12 @@
         }
       }
     },
+    "homeseer": {
+      "name": "HomeSeer",
+      "iot_standards": [
+        "zwave"
+      ]
+    },
     "homewizard": {
       "name": "HomeWizard Energy",
       "integration_type": "hub",
