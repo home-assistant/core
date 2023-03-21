@@ -770,7 +770,7 @@ def test_valid_long_tuple(
     # Set ignore option
     type_hint_checker.config.ignore_missing_annotations = False
 
-    class_node, _, _ = astroid.extract_node(
+    class_node, _, _, _ = astroid.extract_node(
         """
     class Entity():
         pass
@@ -784,6 +784,12 @@ def test_valid_long_tuple(
     class TestLight( #@
         LightEntity
     ):
+        @property
+        def hs_color( #@
+            self
+        ) -> tuple[int, int]:
+            pass
+
         @property
         def rgbw_color( #@
             self
