@@ -160,10 +160,17 @@ class PipelineRun:
 class PipelineRequest(ABC):
     """Request to for a pipeline run."""
 
-    @abstractmethod
     async def execute(
         self, run: PipelineRun, timeout: int | float | None = DEFAULT_TIMEOUT
     ):
+        """Run pipeline with optional timeout."""
+        await asyncio.wait_for(
+            self._execute(run),
+            timeout=timeout,
+        )
+
+    @abstractmethod
+    async def _execute(self, run: PipelineRun):
         """Run pipeline with request info and context."""
 
 
@@ -173,15 +180,6 @@ class TextPipelineRequest(PipelineRequest):
 
     intent_input: str
     conversation_id: str | None = None
-
-    async def execute(
-        self, run: PipelineRun, timeout: int | float | None = DEFAULT_TIMEOUT
-    ):
-        """Run text portion of pipeline."""
-        await asyncio.wait_for(
-            self._execute(run),
-            timeout=timeout,
-        )
 
     async def _execute(
         self,
@@ -198,15 +196,6 @@ class AudioPipelineRequest(PipelineRequest):
 
     intent_input: str  # this will be changed to stt audio
     conversation_id: str | None = None
-
-    async def execute(
-        self, run: PipelineRun, timeout: int | float | None = DEFAULT_TIMEOUT
-    ):
-        """Run full pipeline from audio input (stt) to audio output (tts)."""
-        await asyncio.wait_for(
-            self._execute(run),
-            timeout=timeout,
-        )
 
     async def _execute(self, run: PipelineRun):
         run.start()
