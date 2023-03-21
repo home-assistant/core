@@ -13,6 +13,7 @@ from homeassistant.core import Context
 from homeassistant.setup import async_setup_component
 
 from tests.components.tts.conftest import (  # noqa: F401, pylint: disable=unused-import
+    mock_get_cache_files,
     mock_init_cache_dir,
 )
 
