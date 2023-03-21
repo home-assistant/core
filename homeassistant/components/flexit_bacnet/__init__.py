@@ -18,8 +18,6 @@ PLATFORMS: list[Platform] = [Platform.CLIMATE]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Flexit Nordic (BACnet) from a config entry."""
 
-    hass.data.setdefault(DOMAIN, {})
-
     device = FlexitBACnet(entry.data["address"], entry.data["device_id"])
 
     try:
@@ -29,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Timeout while connecting to {entry.data['address']}"
         ) from exc
 
-    hass.data[DOMAIN][entry.entry_id] = device
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = device
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
