@@ -1546,7 +1546,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="hs_color",
-                    return_type=["tuple[int, int]", "tuple[float, float]", None],
+                    return_type=["tuple[float, float]", None],
                 ),
                 TypeHintMatch(
                     function_name="xy_color",
