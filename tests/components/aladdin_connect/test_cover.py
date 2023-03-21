@@ -121,7 +121,6 @@ async def test_cover_operation(
         {ATTR_ENTITY_ID: "cover.home"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert hass.states.get("cover.home").state == STATE_OPEN
 
     mock_aladdinconnect_api.async_get_door_status = AsyncMock(return_value=STATE_CLOSED)
