@@ -16,8 +16,6 @@ from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONF_RADIUS,
-    CONF_URL,
     EVENT_HOMEASSISTANT_START,
     LENGTH_KILOMETERS,
 )
@@ -28,10 +26,6 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.geo_json_events import _generate_mock_feed_entry
-
-CONFIG = {
-    DOMAIN: {CONF_URL: "http://geo.json.local/geo_json_events.json", CONF_RADIUS: 200}
-}
 
 
 async def test_component_unload_config_entry(
