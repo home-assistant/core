@@ -615,21 +615,23 @@ async def test_sun_offset(
     assert state.state == STATE_ON
 
 
-async def test_dst(
+async def test_dst1(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_tz_info
 ) -> None:
-    """Test sun event with offset."""
+    """Test DST when time falls in non-existent hour."""
     hass.config.time_zone = "CET"
     dt_util.set_default_time_zone(dt_util.get_time_zone("CET"))
-    test_time = datetime(2019, 3, 30, 3, 0, 0, tzinfo=hass_tz_info)
+    test_time = datetime(2019, 3, 30, 3, 0, 0, tzinfo=dt_util.get_time_zone("CET"))
     config = {
         "binary_sensor": [
             {"platform": "tod", "name": "Day", "after": "2:30", "before": "2:40"}
         ]
     }
-    # Test DST:
+    # Test DST #1:
     # after 2019-03-30 03:00 CET the next update should ge scheduled
-    # at 3:30 not 2:30 local time
+    # at 3:30 not 2:30 local time (EXISTING, BROKEN BEHAVIOR)
+    # CAVEAT: ACTUALLY, THE NEXT UPDATE SHOULD HAPPEN AT 3AM (2:30AM DOES NOT EXIST)
+    # but the current implementation of TOD doesn't handle this case yet.
     entity_id = "binary_sensor.day"
     freezer.move_to(test_time)
     await async_setup_component(hass, "binary_sensor", config)
@@ -640,6 +642,88 @@ async def test_dst(
     assert state.attributes["after"] == "2019-03-31T03:30:00+02:00"
     assert state.attributes["before"] == "2019-03-31T03:40:00+02:00"
     assert state.attributes["next_update"] == "2019-03-31T03:30:00+02:00"
+    assert state.state == STATE_OFF
+
+
+async def test_dst2(hass, freezer, hass_tz_info):
+    """Test DST when there's a time switch in the East."""
+    hass.config.time_zone = "CET"
+    dt_util.set_default_time_zone(dt_util.get_time_zone("CET"))
+    test_time = datetime(2019, 3, 30, 5, 0, 0, tzinfo=dt_util.get_time_zone("CET"))
+    config = {
+        "binary_sensor": [
+            {"platform": "tod", "name": "Day", "after": "4:30", "before": "4:40"}
+        ]
+    }
+    # Test DST #2:
+    # after 2019-03-30 05:00 CET the next update should ge scheduled
+    # at 4:30+02 not 4:30+01
+    entity_id = "binary_sensor.day"
+    freezer.move_to(test_time)
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.attributes["after"] == "2019-03-31T04:30:00+02:00"
+    assert state.attributes["before"] == "2019-03-31T04:40:00+02:00"
+    assert state.attributes["next_update"] == "2019-03-31T04:30:00+02:00"
+    assert state.state == STATE_OFF
+
+
+async def test_dst3(hass, freezer, hass_tz_info):
+    """Test DST when there's a time switch forward in the West."""
+    hass.config.time_zone = "US/Pacific"
+    dt_util.set_default_time_zone(dt_util.get_time_zone("US/Pacific"))
+    test_time = datetime(
+        2023, 3, 11, 5, 0, 0, tzinfo=dt_util.get_time_zone("US/Pacific")
+    )
+    config = {
+        "binary_sensor": [
+            {"platform": "tod", "name": "Day", "after": "4:30", "before": "4:40"}
+        ]
+    }
+    # Test DST #3:
+    # after 2023-03-11 05:00 Pacific the next update should ge scheduled
+    # at 4:30-07 not 4:30-08
+    entity_id = "binary_sensor.day"
+    freezer.move_to(test_time)
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.attributes["after"] == "2023-03-12T04:30:00-07:00"
+    assert state.attributes["before"] == "2023-03-12T04:40:00-07:00"
+    assert state.attributes["next_update"] == "2023-03-12T04:30:00-07:00"
+    assert state.state == STATE_OFF
+
+
+async def test_dst4(hass, freezer, hass_tz_info):
+    """Test DST when there's a time switch backward in the West."""
+    hass.config.time_zone = "US/Pacific"
+    dt_util.set_default_time_zone(dt_util.get_time_zone("US/Pacific"))
+    test_time = datetime(
+        2023, 11, 4, 5, 0, 0, tzinfo=dt_util.get_time_zone("US/Pacific")
+    )
+    config = {
+        "binary_sensor": [
+            {"platform": "tod", "name": "Day", "after": "4:30", "before": "4:40"}
+        ]
+    }
+    # Test DST #4:
+    # after 2023-11-04 05:00 Pacific the next update should ge scheduled
+    # at 4:30-08 not 4:30-07
+    entity_id = "binary_sensor.day"
+    freezer.move_to(test_time)
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.attributes["after"] == "2023-11-05T04:30:00-08:00"
+    assert state.attributes["before"] == "2023-11-05T04:40:00-08:00"
+    assert state.attributes["next_update"] == "2023-11-05T04:30:00-08:00"
     assert state.state == STATE_OFF
 
 
