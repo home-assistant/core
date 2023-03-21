@@ -7,7 +7,9 @@ from unittest.mock import ANY, DEFAULT, MagicMock, patch
 import pytest
 from sqlalchemy.exc import OperationalError
 
-from homeassistant.components.recorder.repairs.statistics.schema import _get_future_year
+from homeassistant.components.recorder.auto_repairs.statistics.schema import (
+    _get_future_year,
+)
 from homeassistant.components.recorder.statistics import (
     _statistics_during_period_with_session,
 )
@@ -126,10 +128,10 @@ async def test_validate_db_schema_fix_float_issue(
     with patch(
         "homeassistant.components.recorder.core.Recorder.dialect_name", db_engine
     ), patch(
-        "homeassistant.components.recorder.repairs.statistics.schema._get_future_year",
+        "homeassistant.components.recorder.auto_repairs.statistics.schema._get_future_year",
         return_value=fixed_future_year,
     ), patch(
-        "homeassistant.components.recorder.repairs.statistics.schema._statistics_during_period_with_session",
+        "homeassistant.components.recorder.auto_repairs.statistics.schema._statistics_during_period_with_session",
         side_effect=fake_statistics,
         wraps=_statistics_during_period_with_session,
     ), patch(
@@ -216,7 +218,7 @@ async def test_validate_db_schema_fix_statistics_datetime_issue(
     with patch(
         "homeassistant.components.recorder.core.Recorder.dialect_name", db_engine
     ), patch(
-        "homeassistant.components.recorder.repairs.statistics.schema._statistics_during_period_with_session",
+        "homeassistant.components.recorder.auto_repairs.statistics.schema._statistics_during_period_with_session",
         side_effect=fake_statistics,
         wraps=_statistics_during_period_with_session,
     ), patch(

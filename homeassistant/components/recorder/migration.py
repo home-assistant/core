@@ -27,6 +27,14 @@ from sqlalchemy.sql.expression import true
 from homeassistant.core import HomeAssistant
 from homeassistant.util.ulid import ulid_to_bytes
 
+from .auto_repairs.statistics.duplicates import (
+    delete_statistics_duplicates,
+    delete_statistics_meta_duplicates,
+)
+from .auto_repairs.statistics.schema import (
+    correct_db_schema as statistics_correct_db_schema,
+    validate_db_schema as statistics_validate_db_schema,
+)
 from .const import SupportedDialect
 from .db_schema import (
     CONTEXT_ID_BIN_MAX_LENGTH,
@@ -53,14 +61,6 @@ from .queries import (
     find_events_context_ids_to_migrate,
     find_states_context_ids_to_migrate,
     has_used_states_event_ids,
-)
-from .repairs.statistics.duplicates import (
-    delete_statistics_duplicates,
-    delete_statistics_meta_duplicates,
-)
-from .repairs.statistics.schema import (
-    correct_db_schema as statistics_correct_db_schema,
-    validate_db_schema as statistics_validate_db_schema,
 )
 from .statistics import get_start_time
 from .tasks import (

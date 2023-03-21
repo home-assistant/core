@@ -1283,7 +1283,7 @@ def hass_recorder(
     from homeassistant.components import recorder
 
     # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.recorder.repairs.statistics import schema
+    from homeassistant.components.recorder.auto_repairs.statistics import schema
 
     original_tz = dt_util.DEFAULT_TIME_ZONE
 
@@ -1401,7 +1401,7 @@ async def async_setup_recorder_instance(
     from homeassistant.components import recorder
 
     # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.recorder.repairs.statistics import schema
+    from homeassistant.components.recorder.auto_repairs.statistics import schema
 
     # pylint: disable-next=import-outside-toplevel
     from .components.recorder.common import async_recorder_block_till_done
