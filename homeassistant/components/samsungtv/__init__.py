@@ -107,6 +107,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         translation_placeholders={
             "on_action_url": "https://www.home-assistant.io/integrations/samsungtv/#turn-on-action"
         },
+        learn_more_url="https://www.home-assistant.io/integrations/samsungtv/#turn-on-action",
     )
     for entry_config in config[DOMAIN]:
         ip_address = await hass.async_add_executor_job(
