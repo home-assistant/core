@@ -1282,18 +1282,19 @@ def hass_recorder(
     # pylint: disable-next=import-outside-toplevel
     from homeassistant.components import recorder
 
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant.components.recorder.repairs.statistics import schema
+
     original_tz = dt_util.DEFAULT_TIME_ZONE
 
     hass = get_test_home_assistant()
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
-    stats_validate = itertools.repeat(set())
-    if enable_statistics_table_validation:
-        from homeassistant.components.recorder.repairs.statistics.schema import (
-            validate_db_schema,
-        )
-
-        stats_validate = validate_db_schema
+    stats_validate = (
+        schema.validate_db_schema
+        if enable_statistics_table_validation
+        else itertools.repeat(set())
+    )
     migrate_states_context_ids = (
         recorder.Recorder._migrate_states_context_ids
         if enable_migrate_context_ids
@@ -1400,17 +1401,18 @@ async def async_setup_recorder_instance(
     from homeassistant.components import recorder
 
     # pylint: disable-next=import-outside-toplevel
+    from homeassistant.components.recorder.repairs.statistics import schema
+
+    # pylint: disable-next=import-outside-toplevel
     from .components.recorder.common import async_recorder_block_till_done
 
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
-    stats_validate = itertools.repeat(set())
-    if enable_statistics_table_validation:
-        from homeassistant.components.recorder.repairs.statistics.schema import (
-            validate_db_schema,
-        )
-
-        stats_validate = validate_db_schema
+    stats_validate = (
+        schema.validate_db_schema
+        if enable_statistics_table_validation
+        else itertools.repeat(set())
+    )
     migrate_states_context_ids = (
         recorder.Recorder._migrate_states_context_ids
         if enable_migrate_context_ids

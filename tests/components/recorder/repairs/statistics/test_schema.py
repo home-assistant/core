@@ -129,7 +129,7 @@ async def test_validate_db_schema_fix_float_issue(
         "homeassistant.components.recorder.repairs.statistics.schema._get_future_year",
         return_value=fixed_future_year,
     ), patch(
-        "homeassistant.components.recorder.statistics._statistics_during_period_with_session",
+        "homeassistant.components.recorder.repairs.statistics.schema._statistics_during_period_with_session",
         side_effect=fake_statistics,
         wraps=_statistics_during_period_with_session,
     ), patch(
@@ -216,7 +216,7 @@ async def test_validate_db_schema_fix_statistics_datetime_issue(
     with patch(
         "homeassistant.components.recorder.core.Recorder.dialect_name", db_engine
     ), patch(
-        "homeassistant.components.recorder.statistics._statistics_during_period_with_session",
+        "homeassistant.components.recorder.repairs.statistics.schema._statistics_during_period_with_session",
         side_effect=fake_statistics,
         wraps=_statistics_during_period_with_session,
     ), patch(
