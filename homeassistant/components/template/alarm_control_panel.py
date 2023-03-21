@@ -189,9 +189,9 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
         return self._state
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> AlarmControlPanelEntityFeature:
         """Return the list of supported features."""
-        supported_features = 0
+        supported_features = AlarmControlPanelEntityFeature(0)
         if self._arm_night_script is not None:
             supported_features = (
                 supported_features | AlarmControlPanelEntityFeature.ARM_NIGHT

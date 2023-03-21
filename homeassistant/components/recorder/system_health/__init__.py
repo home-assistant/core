@@ -33,7 +33,7 @@ def async_register(
 def _get_db_stats(instance: Recorder, database_name: str) -> dict[str, Any]:
     """Get the stats about the database."""
     db_stats: dict[str, Any] = {}
-    with session_scope(session=instance.get_session()) as session:
+    with session_scope(session=instance.get_session(), read_only=True) as session:
         if (
             (dialect_name := instance.dialect_name)
             and (get_size := DIALECT_TO_GET_SIZE.get(dialect_name))
@@ -49,8 +49,8 @@ def _async_get_db_engine_info(instance: Recorder) -> dict[str, Any]:
     db_engine_info: dict[str, Any] = {}
     if dialect_name := instance.dialect_name:
         db_engine_info["database_engine"] = dialect_name.value
-    if engine_version := instance.engine_version:
-        db_engine_info["database_version"] = str(engine_version)
+    if database_engine := instance.database_engine:
+        db_engine_info["database_version"] = str(database_engine.version)
     return db_engine_info
 
 

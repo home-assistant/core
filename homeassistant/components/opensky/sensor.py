@@ -14,8 +14,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
     CONF_RADIUS,
-    LENGTH_KILOMETERS,
-    LENGTH_METERS,
+    UnitOfLength,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -107,7 +106,7 @@ class OpenSkySensor(SensorEntity):
         self._latitude = latitude
         self._longitude = longitude
         self._radius = DistanceConverter.convert(
-            radius, LENGTH_KILOMETERS, LENGTH_METERS
+            radius, UnitOfLength.KILOMETERS, UnitOfLength.METERS
         )
         self._altitude = altitude
         self._state = 0

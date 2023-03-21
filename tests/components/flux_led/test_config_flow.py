@@ -47,7 +47,7 @@ from tests.common import MockConfigEntry
 MAC_ADDRESS_DIFFERENT = "ff:bb:ff:dd:ee:ff"
 
 
-async def test_discovery(hass: HomeAssistant):
+async def test_discovery(hass: HomeAssistant) -> None:
     """Test setting up discovery."""
     with _patch_discovery(), _patch_wifibulb():
         result = await hass.config_entries.flow.async_init(
@@ -101,7 +101,6 @@ async def test_discovery(hass: HomeAssistant):
         CONF_REMOTE_ACCESS_ENABLED: True,
         CONF_REMOTE_ACCESS_HOST: "the.cloud",
         CONF_REMOTE_ACCESS_PORT: 8816,
-        CONF_MINOR_VERSION: 0x04,
     }
     mock_setup.assert_called_once()
     mock_setup_entry.assert_called_once()
@@ -122,7 +121,7 @@ async def test_discovery(hass: HomeAssistant):
     assert result2["reason"] == "no_devices_found"
 
 
-async def test_discovery_legacy(hass: HomeAssistant):
+async def test_discovery_legacy(hass: HomeAssistant) -> None:
     """Test setting up discovery with a legacy device."""
     with _patch_discovery(device=FLUX_DISCOVERY_PARTIAL), _patch_wifibulb():
         result = await hass.config_entries.flow.async_init(
@@ -176,7 +175,6 @@ async def test_discovery_legacy(hass: HomeAssistant):
         CONF_REMOTE_ACCESS_ENABLED: True,
         CONF_REMOTE_ACCESS_HOST: "the.cloud",
         CONF_REMOTE_ACCESS_PORT: 8816,
-        CONF_MINOR_VERSION: 0x04,
     }
     mock_setup.assert_called_once()
     mock_setup_entry.assert_called_once()
@@ -197,7 +195,7 @@ async def test_discovery_legacy(hass: HomeAssistant):
     assert result2["reason"] == "no_devices_found"
 
 
-async def test_discovery_with_existing_device_present(hass: HomeAssistant):
+async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> None:
     """Test setting up discovery."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.2"}, unique_id="dd:dd:dd:dd:dd:dd"
@@ -258,7 +256,6 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant):
             CONF_REMOTE_ACCESS_ENABLED: True,
             CONF_REMOTE_ACCESS_HOST: "the.cloud",
             CONF_REMOTE_ACCESS_PORT: 8816,
-            CONF_MINOR_VERSION: 0x04,
         }
         await hass.async_block_till_done()
 
@@ -280,7 +277,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant):
     assert result2["reason"] == "no_devices_found"
 
 
-async def test_discovery_no_device(hass: HomeAssistant):
+async def test_discovery_no_device(hass: HomeAssistant) -> None:
     """Test discovery without device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -294,7 +291,7 @@ async def test_discovery_no_device(hass: HomeAssistant):
     assert result2["reason"] == "no_devices_found"
 
 
-async def test_manual_working_discovery(hass: HomeAssistant):
+async def test_manual_working_discovery(hass: HomeAssistant) -> None:
     """Test manually setup."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -334,7 +331,6 @@ async def test_manual_working_discovery(hass: HomeAssistant):
         CONF_REMOTE_ACCESS_ENABLED: True,
         CONF_REMOTE_ACCESS_HOST: "the.cloud",
         CONF_REMOTE_ACCESS_PORT: 8816,
-        CONF_MINOR_VERSION: 0x04,
     }
 
     # Duplicate
@@ -351,7 +347,7 @@ async def test_manual_working_discovery(hass: HomeAssistant):
     assert result2["reason"] == "already_configured"
 
 
-async def test_manual_no_discovery_data(hass: HomeAssistant):
+async def test_manual_no_discovery_data(hass: HomeAssistant) -> None:
     """Test manually setup without discovery data."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -376,7 +372,7 @@ async def test_manual_no_discovery_data(hass: HomeAssistant):
     }
 
 
-async def test_discovered_by_discovery_and_dhcp(hass):
+async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
     """Test we get the form with discovery and abort for dhcp source when we get both."""
 
     with _patch_discovery(), _patch_wifibulb():
@@ -414,7 +410,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
     assert result3["reason"] == "already_in_progress"
 
 
-async def test_discovered_by_discovery(hass):
+async def test_discovered_by_discovery(hass: HomeAssistant) -> None:
     """Test we can setup when discovered from discovery."""
 
     with _patch_discovery(), _patch_wifibulb():
@@ -447,13 +443,12 @@ async def test_discovered_by_discovery(hass):
         CONF_REMOTE_ACCESS_ENABLED: True,
         CONF_REMOTE_ACCESS_HOST: "the.cloud",
         CONF_REMOTE_ACCESS_PORT: 8816,
-        CONF_MINOR_VERSION: 0x04,
     }
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
 
 
-async def test_discovered_by_dhcp_udp_responds(hass):
+async def test_discovered_by_dhcp_udp_responds(hass: HomeAssistant) -> None:
     """Test we can setup when discovered from dhcp but with udp response."""
 
     with _patch_discovery(), _patch_wifibulb():
@@ -484,13 +479,12 @@ async def test_discovered_by_dhcp_udp_responds(hass):
         CONF_REMOTE_ACCESS_ENABLED: True,
         CONF_REMOTE_ACCESS_HOST: "the.cloud",
         CONF_REMOTE_ACCESS_PORT: 8816,
-        CONF_MINOR_VERSION: 0x04,
     }
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
 
 
-async def test_discovered_by_dhcp_no_udp_response(hass):
+async def test_discovered_by_dhcp_no_udp_response(hass: HomeAssistant) -> None:
     """Test we can setup when discovered from dhcp but no udp response."""
 
     with _patch_discovery(no_device=True), _patch_wifibulb():
@@ -520,7 +514,9 @@ async def test_discovered_by_dhcp_no_udp_response(hass):
     assert mock_async_setup_entry.called
 
 
-async def test_discovered_by_dhcp_partial_udp_response_fallback_tcp(hass):
+async def test_discovered_by_dhcp_partial_udp_response_fallback_tcp(
+    hass: HomeAssistant,
+) -> None:
     """Test we can setup when discovered from dhcp but part of the udp response is missing."""
 
     with _patch_discovery(no_device=True), _patch_wifibulb():
@@ -551,7 +547,9 @@ async def test_discovered_by_dhcp_partial_udp_response_fallback_tcp(hass):
     assert mock_async_setup_entry.called
 
 
-async def test_discovered_by_dhcp_no_udp_response_or_tcp_response(hass):
+async def test_discovered_by_dhcp_no_udp_response_or_tcp_response(
+    hass: HomeAssistant,
+) -> None:
     """Test we can setup when discovered from dhcp but no udp response or tcp response."""
 
     with _patch_discovery(no_device=True), _patch_wifibulb(no_device=True):
@@ -565,15 +563,15 @@ async def test_discovered_by_dhcp_no_udp_response_or_tcp_response(hass):
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
         (config_entries.SOURCE_INTEGRATION_DISCOVERY, FLUX_DISCOVERY),
     ],
 )
 async def test_discovered_by_dhcp_or_discovery_adds_missing_unique_id(
-    hass, source, data
-):
+    hass: HomeAssistant, source, data
+) -> None:
     """Test we can setup when discovered from dhcp or discovery."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: IP_ADDRESS})
     config_entry.add_to_hass(hass)
@@ -590,7 +588,9 @@ async def test_discovered_by_dhcp_or_discovery_adds_missing_unique_id(
     assert config_entry.unique_id == MAC_ADDRESS
 
 
-async def test_mac_address_off_by_one_updated_via_discovery(hass):
+async def test_mac_address_off_by_one_updated_via_discovery(
+    hass: HomeAssistant,
+) -> None:
     """Test the mac address is updated when its off by one from integration discovery."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS_ONE_OFF
@@ -611,7 +611,9 @@ async def test_mac_address_off_by_one_updated_via_discovery(hass):
     assert config_entry.unique_id == MAC_ADDRESS
 
 
-async def test_mac_address_off_by_one_not_updated_from_dhcp(hass):
+async def test_mac_address_off_by_one_not_updated_from_dhcp(
+    hass: HomeAssistant,
+) -> None:
     """Test the mac address is NOT updated when its off by one from dhcp discovery."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS_ONE_OFF
@@ -631,15 +633,15 @@ async def test_mac_address_off_by_one_not_updated_from_dhcp(hass):
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
         (config_entries.SOURCE_INTEGRATION_DISCOVERY, FLUX_DISCOVERY),
     ],
 )
 async def test_discovered_by_dhcp_or_discovery_mac_address_mismatch_host_already_configured(
-    hass, source, data
-):
+    hass: HomeAssistant, source, data
+) -> None:
     """Test we abort if the host is already configured but the mac does not match."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS_DIFFERENT
@@ -658,7 +660,7 @@ async def test_discovered_by_dhcp_or_discovery_mac_address_mismatch_host_already
     assert config_entry.unique_id == MAC_ADDRESS_DIFFERENT
 
 
-async def test_options(hass: HomeAssistant):
+async def test_options(hass: HomeAssistant) -> None:
     """Test options flow."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -698,13 +700,13 @@ async def test_options(hass: HomeAssistant):
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
         (config_entries.SOURCE_INTEGRATION_DISCOVERY, FLUX_DISCOVERY),
     ],
 )
-async def test_discovered_can_be_ignored(hass, source, data):
+async def test_discovered_can_be_ignored(hass: HomeAssistant, source, data) -> None:
     """Test we abort if the mac was already ignored."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

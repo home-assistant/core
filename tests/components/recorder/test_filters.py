@@ -43,7 +43,7 @@ SIMPLE_EXCLUDE_FILTER = {
 SIMPLE_INCLUDE_EXCLUDE_FILTER = {**SIMPLE_INCLUDE_FILTER, **SIMPLE_EXCLUDE_FILTER}
 
 
-def test_extract_include_exclude_filter_conf():
+def test_extract_include_exclude_filter_conf() -> None:
     """Test we can extract a filter from configuration without altering it."""
     include_filter = extract_include_exclude_filter_conf(SIMPLE_INCLUDE_FILTER)
     assert include_filter == {
@@ -109,7 +109,7 @@ def test_extract_include_exclude_filter_conf():
     }
 
 
-def test_merge_include_exclude_filters():
+def test_merge_include_exclude_filters() -> None:
     """Test we can merge two filters together."""
     include_exclude_filter_base = extract_include_exclude_filter_conf(
         SIMPLE_INCLUDE_EXCLUDE_FILTER

@@ -63,7 +63,7 @@ class TraceElement:
         """Return dictionary version of this TraceElement."""
         result: dict[str, Any] = {"path": self.path, "timestamp": self._timestamp}
         if self._child_key is not None:
-            domain, item_id = self._child_key.split(".", 1)
+            domain, _, item_id = self._child_key.partition(".")
             result["child_id"] = {
                 "domain": domain,
                 "item_id": item_id,

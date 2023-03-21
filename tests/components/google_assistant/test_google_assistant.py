@@ -1,7 +1,5 @@
 """The tests for the Google Assistant component."""
 from http import HTTPStatus
-
-# pylint: disable=protected-access
 import json
 
 from aiohttp.hdrs import AUTHORIZATION
@@ -20,13 +18,14 @@ from homeassistant.components import (
     media_player,
     switch,
 )
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
+from homeassistant.const import (
+    CLOUD_NEVER_EXPOSED_ENTITIES,
+    EntityCategory,
+    UnitOfTemperature,
+)
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 
 from . import DEMO_DEVICES
-
-from tests.common import mock_registry
 
 API_PASSWORD = "test1234"
 
@@ -42,8 +41,9 @@ def auth_header(hass_access_token):
 
 
 @pytest.fixture
-def assistant_client(loop, hass, hass_client_no_auth):
+def assistant_client(event_loop, hass, hass_client_no_auth):
     """Create web client for the Google Assistant API."""
+    loop = event_loop
     loop.run_until_complete(
         setup.async_setup_component(
             hass,
@@ -66,8 +66,10 @@ def assistant_client(loop, hass, hass_client_no_auth):
 
 
 @pytest.fixture
-def hass_fixture(loop, hass):
+def hass_fixture(event_loop, hass):
     """Set up a Home Assistant instance for these tests."""
+    loop = event_loop
+
     # We need to do this to get access to homeassistant/turn_(on,off)
     loop.run_until_complete(setup.async_setup_component(hass, core.DOMAIN, {}))
 
@@ -124,14 +126,10 @@ def hass_fixture(loop, hass):
     return hass
 
 
-# pylint: disable=redefined-outer-name
-
-
-async def test_sync_request(hass_fixture, assistant_client, auth_header):
+async def test_sync_request(
+    hass_fixture, assistant_client, auth_header, entity_registry: er.EntityRegistry
+) -> None:
     """Test a sync request."""
-
-    entity_registry = mock_registry(hass_fixture)
-
     entity_entry1 = entity_registry.async_get_or_create(
         "switch",
         "test",
@@ -194,7 +192,7 @@ async def test_sync_request(hass_fixture, assistant_client, auth_header):
         assert dev["type"] == demo["type"]
 
 
-async def test_query_request(hass_fixture, assistant_client, auth_header):
+async def test_query_request(hass_fixture, assistant_client, auth_header) -> None:
     """Test a query request."""
     reqid = "5711642932632160984"
     data = {
@@ -235,7 +233,9 @@ async def test_query_request(hass_fixture, assistant_client, auth_header):
     assert devices["media_player.lounge_room"]["on"] is True
 
 
-async def test_query_climate_request(hass_fixture, assistant_client, auth_header):
+async def test_query_climate_request(
+    hass_fixture, assistant_client, auth_header
+) -> None:
     """Test a query request."""
     reqid = "5711642932632160984"
     data = {
@@ -287,10 +287,12 @@ async def test_query_climate_request(hass_fixture, assistant_client, auth_header
     }
 
 
-async def test_query_climate_request_f(hass_fixture, assistant_client, auth_header):
+async def test_query_climate_request_f(
+    hass_fixture, assistant_client, auth_header
+) -> None:
     """Test a query request."""
     # Mock demo devices as fahrenheit to see if we convert to celsius
-    hass_fixture.config.units.temperature_unit = const.TEMP_FAHRENHEIT
+    hass_fixture.config.units.temperature_unit = UnitOfTemperature.FAHRENHEIT
     for entity_id in ("climate.hvac", "climate.heatpump", "climate.ecobee"):
         state = hass_fixture.states.get(entity_id)
         attr = dict(state.attributes)
@@ -344,10 +346,12 @@ async def test_query_climate_request_f(hass_fixture, assistant_client, auth_head
         "thermostatHumidityAmbient": 54,
         "currentFanSpeedSetting": "On High",
     }
-    hass_fixture.config.units.temperature_unit = const.TEMP_CELSIUS
+    hass_fixture.config.units.temperature_unit = UnitOfTemperature.CELSIUS
 
 
-async def test_query_humidifier_request(hass_fixture, assistant_client, auth_header):
+async def test_query_humidifier_request(
+    hass_fixture, assistant_client, auth_header
+) -> None:
     """Test a query request."""
     reqid = "5711642932632160984"
     data = {
@@ -393,7 +397,7 @@ async def test_query_humidifier_request(hass_fixture, assistant_client, auth_hea
     }
 
 
-async def test_execute_request(hass_fixture, assistant_client, auth_header):
+async def test_execute_request(hass_fixture, assistant_client, auth_header) -> None:
     """Test an execute request."""
     reqid = "5711642932632160985"
     data = {

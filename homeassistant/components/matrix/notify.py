@@ -1,4 +1,6 @@
 """Support for Matrix notifications."""
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -8,7 +10,9 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN, SERVICE_SEND_MESSAGE
 
@@ -17,7 +21,11 @@ CONF_DEFAULT_ROOM = "default_room"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_DEFAULT_ROOM): cv.string})
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> MatrixNotificationService:
     """Get the Matrix notification service."""
     return MatrixNotificationService(config[CONF_DEFAULT_ROOM])
 

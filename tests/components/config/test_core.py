@@ -7,8 +7,17 @@ import pytest
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
 from homeassistant.components.websocket_api.const import TYPE_RESULT
-from homeassistant.const import CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_IMPERIAL
+from homeassistant.const import (
+    CONF_UNIT_SYSTEM,
+    CONF_UNIT_SYSTEM_IMPERIAL,
+    CONF_UNIT_SYSTEM_METRIC,
+)
+from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util, location
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
+
+from tests.common import MockUser
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture
@@ -19,7 +28,9 @@ async def client(hass, hass_ws_client):
     return await hass_ws_client(hass)
 
 
-async def test_validate_config_ok(hass, hass_client):
+async def test_validate_config_ok(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test checking config."""
     with patch.object(config, "SECTIONS", ["core"]):
         await async_setup_component(hass, "config", {})
@@ -49,19 +60,23 @@ async def test_validate_config_ok(hass, hass_client):
     assert result["errors"] == "beer"
 
 
-async def test_websocket_core_update(hass, client):
+async def test_websocket_core_update(hass: HomeAssistant, client) -> None:
     """Test core config update websocket command."""
     assert hass.config.latitude != 60
     assert hass.config.longitude != 50
     assert hass.config.elevation != 25
     assert hass.config.location_name != "Huis"
-    assert hass.config.units.name != CONF_UNIT_SYSTEM_IMPERIAL
+    assert hass.config.units is not US_CUSTOMARY_SYSTEM
     assert hass.config.time_zone != "America/New_York"
     assert hass.config.external_url != "https://www.example.com"
     assert hass.config.internal_url != "http://example.com"
     assert hass.config.currency == "EUR"
+    assert hass.config.country != "SE"
+    assert hass.config.language != "sv"
 
-    with patch("homeassistant.util.dt.set_default_time_zone") as mock_set_tz:
+    with patch("homeassistant.util.dt.set_default_time_zone") as mock_set_tz, patch(
+        "homeassistant.components.config.core.async_update_suggested_units"
+    ) as mock_update_sensor_units:
         await client.send_json(
             {
                 "id": 5,
@@ -75,10 +90,14 @@ async def test_websocket_core_update(hass, client):
                 "external_url": "https://www.example.com",
                 "internal_url": "http://example.local",
                 "currency": "USD",
+                "country": "SE",
+                "language": "sv",
             }
         )
 
         msg = await client.receive_json()
+
+        mock_update_sensor_units.assert_not_called()
 
     assert msg["id"] == 5
     assert msg["type"] == TYPE_RESULT
@@ -87,7 +106,7 @@ async def test_websocket_core_update(hass, client):
     assert hass.config.longitude == 50
     assert hass.config.elevation == 25
     assert hass.config.location_name == "Huis"
-    assert hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL
+    assert hass.config.units is US_CUSTOMARY_SYSTEM
     assert hass.config.external_url == "https://www.example.com"
     assert hass.config.internal_url == "http://example.local"
     assert hass.config.currency == "USD"
@@ -95,8 +114,26 @@ async def test_websocket_core_update(hass, client):
     assert len(mock_set_tz.mock_calls) == 1
     assert mock_set_tz.mock_calls[0][1][0] == dt_util.get_time_zone("America/New_York")
 
+    with patch("homeassistant.util.dt.set_default_time_zone") as mock_set_tz, patch(
+        "homeassistant.components.config.core.async_update_suggested_units"
+    ) as mock_update_sensor_units:
+        await client.send_json(
+            {
+                "id": 6,
+                "type": "config/core/update",
+                CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
+                "update_units": True,
+            }
+        )
 
-async def test_websocket_core_update_not_admin(hass, hass_ws_client, hass_admin_user):
+        msg = await client.receive_json()
+
+        mock_update_sensor_units.assert_called_once()
+
+
+async def test_websocket_core_update_not_admin(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_admin_user: MockUser
+) -> None:
     """Test core config fails for non admin."""
     hass_admin_user.groups = []
     with patch.object(config, "SECTIONS", ["core"]):
@@ -113,7 +150,7 @@ async def test_websocket_core_update_not_admin(hass, hass_ws_client, hass_admin_
     assert msg["error"]["code"] == "unauthorized"
 
 
-async def test_websocket_bad_core_update(hass, client):
+async def test_websocket_bad_core_update(hass: HomeAssistant, client) -> None:
     """Test core config update fails with bad parameters."""
     await client.send_json({"id": 7, "type": "config/core/update", "latituude": 23})
 
@@ -125,7 +162,7 @@ async def test_websocket_bad_core_update(hass, client):
     assert msg["error"]["code"] == "invalid_format"
 
 
-async def test_detect_config(hass, client):
+async def test_detect_config(hass: HomeAssistant, client) -> None:
     """Test detect config."""
     with patch(
         "homeassistant.util.location.async_detect_location_info",
@@ -139,7 +176,7 @@ async def test_detect_config(hass, client):
     assert msg["result"] == {}
 
 
-async def test_detect_config_fail(hass, client):
+async def test_detect_config_fail(hass: HomeAssistant, client) -> None:
     """Test detect config."""
     with patch(
         "homeassistant.util.location.async_detect_location_info",

@@ -57,6 +57,7 @@ def zigpy_app_controller():
     type(app).nwk = PropertyMock(return_value=zigpy.types.NWK(0x0000))
     type(app).devices = PropertyMock(return_value={})
     type(app).backups = zigpy.backups.BackupManager(app)
+    type(app).topology = zigpy.topology.Topology(app)
 
     state = State()
     state.node_info.ieee = app.ieee.return_value
@@ -83,6 +84,7 @@ async def config_entry_fixture(hass):
             zha_const.CUSTOM_CONFIGURATION: {
                 zha_const.ZHA_OPTIONS: {
                     zha_const.CONF_ENABLE_ENHANCED_LIGHT_TRANSITION: True,
+                    zha_const.CONF_GROUP_MEMBERS_ASSUME_STATE: False,
                 },
                 zha_const.ZHA_ALARM_OPTIONS: {
                     zha_const.CONF_ALARM_ARM_REQUIRES_CODE: False,
@@ -227,7 +229,7 @@ def zha_device_joined_restored(request):
 
 @pytest.fixture
 def zha_device_mock(hass, zigpy_device_mock):
-    """Return a zha Device factory."""
+    """Return a ZHA Device factory."""
 
     def _zha_device(
         endpoints=None,

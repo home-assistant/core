@@ -44,7 +44,7 @@ INTELLIFIRE_SWITCHES: tuple[IntellifireSwitchEntityDescription, ...] = (
     ),
     IntellifireSwitchEntityDescription(
         key="pilot",
-        name="Pilot Light",
+        name="Pilot light",
         icon="mdi:fire-alert",
         on_fn=lambda control_api: control_api.pilot_on(),
         off_fn=lambda control_api: control_api.pilot_off(),

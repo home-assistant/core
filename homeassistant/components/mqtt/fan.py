@@ -53,7 +53,6 @@ from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
     async_setup_entry_helper,
-    async_setup_platform_helper,
     warn_for_legacy_schema,
 )
 from .models import (
@@ -78,26 +77,17 @@ CONF_PRESET_MODE_VALUE_TEMPLATE = "preset_mode_value_template"
 CONF_PRESET_MODE_COMMAND_TEMPLATE = "preset_mode_command_template"
 CONF_PRESET_MODES_LIST = "preset_modes"
 CONF_PAYLOAD_RESET_PRESET_MODE = "payload_reset_preset_mode"
-CONF_SPEED_STATE_TOPIC = "speed_state_topic"
-CONF_SPEED_COMMAND_TOPIC = "speed_command_topic"
-CONF_SPEED_VALUE_TEMPLATE = "speed_value_template"
 CONF_OSCILLATION_STATE_TOPIC = "oscillation_state_topic"
 CONF_OSCILLATION_COMMAND_TOPIC = "oscillation_command_topic"
 CONF_OSCILLATION_VALUE_TEMPLATE = "oscillation_value_template"
 CONF_OSCILLATION_COMMAND_TEMPLATE = "oscillation_command_template"
 CONF_PAYLOAD_OSCILLATION_ON = "payload_oscillation_on"
 CONF_PAYLOAD_OSCILLATION_OFF = "payload_oscillation_off"
-CONF_PAYLOAD_OFF_SPEED = "payload_off_speed"
-CONF_PAYLOAD_LOW_SPEED = "payload_low_speed"
-CONF_PAYLOAD_MEDIUM_SPEED = "payload_medium_speed"
-CONF_PAYLOAD_HIGH_SPEED = "payload_high_speed"
-CONF_SPEED_LIST = "speeds"
 
 DEFAULT_NAME = "MQTT Fan"
 DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_PAYLOAD_OFF = "OFF"
 DEFAULT_PAYLOAD_RESET = "None"
-DEFAULT_OPTIMISTIC = False
 DEFAULT_SPEED_RANGE_MIN = 1
 DEFAULT_SPEED_RANGE_MAX = 100
 
@@ -137,7 +127,6 @@ def valid_preset_mode_configuration(config: ConfigType) -> ConfigType:
 _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_OSCILLATION_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_OSCILLATION_COMMAND_TEMPLATE): cv.template,
@@ -147,7 +136,8 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
         vol.Optional(CONF_PERCENTAGE_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_PERCENTAGE_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_PERCENTAGE_VALUE_TEMPLATE): cv.template,
-        # CONF_PRESET_MODE_COMMAND_TOPIC and CONF_PRESET_MODES_LIST must be used together
+        # CONF_PRESET_MODE_COMMAND_TOPIC and CONF_PRESET_MODES_LIST
+        # must be used together
         vol.Inclusive(
             CONF_PRESET_MODE_COMMAND_TOPIC, "preset_modes"
         ): valid_publish_topic,
@@ -177,69 +167,27 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
         vol.Optional(
             CONF_PAYLOAD_OSCILLATION_ON, default=OSCILLATE_ON_PAYLOAD
         ): cv.string,
-        vol.Optional(CONF_SPEED_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_SPEED_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_SPEED_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-# Configuring MQTT Fans under the fan platform key is deprecated in HA Core 2022.6
+# Configuring MQTT Fans under the fan platform key was deprecated in HA Core 2022.6
+# Setup for the legacy YAML format was removed in HA Core 2022.12
 PLATFORM_SCHEMA = vol.All(
-    cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
-    valid_speed_range_configuration,
-    valid_preset_mode_configuration,
     warn_for_legacy_schema(fan.DOMAIN),
 )
 
 PLATFORM_SCHEMA_MODERN = vol.All(
-    # CONF_SPEED_COMMAND_TOPIC, CONF_SPEED_LIST, CONF_SPEED_STATE_TOPIC, CONF_SPEED_VALUE_TEMPLATE and
-    # Speeds SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH SPEED_OFF,
-    # are no longer supported, support was removed in release 2021.12
-    cv.removed(CONF_PAYLOAD_HIGH_SPEED),
-    cv.removed(CONF_PAYLOAD_LOW_SPEED),
-    cv.removed(CONF_PAYLOAD_MEDIUM_SPEED),
-    cv.removed(CONF_SPEED_COMMAND_TOPIC),
-    cv.removed(CONF_SPEED_LIST),
-    cv.removed(CONF_SPEED_STATE_TOPIC),
-    cv.removed(CONF_SPEED_VALUE_TEMPLATE),
     _PLATFORM_SCHEMA_BASE,
     valid_speed_range_configuration,
     valid_preset_mode_configuration,
 )
 
 DISCOVERY_SCHEMA = vol.All(
-    # CONF_SPEED_COMMAND_TOPIC, CONF_SPEED_LIST, CONF_SPEED_STATE_TOPIC, CONF_SPEED_VALUE_TEMPLATE and
-    # Speeds SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH SPEED_OFF,
-    # are no longer supported, support was removed in release 2021.12
-    cv.removed(CONF_PAYLOAD_HIGH_SPEED),
-    cv.removed(CONF_PAYLOAD_LOW_SPEED),
-    cv.removed(CONF_PAYLOAD_MEDIUM_SPEED),
-    cv.removed(CONF_SPEED_COMMAND_TOPIC),
-    cv.removed(CONF_SPEED_LIST),
-    cv.removed(CONF_SPEED_STATE_TOPIC),
-    cv.removed(CONF_SPEED_VALUE_TEMPLATE),
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
     valid_speed_range_configuration,
     valid_preset_mode_configuration,
 )
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up MQTT fans configured under the fan platform key (deprecated)."""
-    # Deprecated in HA Core 2022.6
-    await async_setup_platform_helper(
-        hass,
-        fan.DOMAIN,
-        discovery_info or config,
-        async_add_entities,
-        _async_setup_entity,
-    )
 
 
 async def async_setup_entry(
@@ -247,7 +195,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT fan through configuration.yaml and dynamically through MQTT discovery."""
+    """Set up MQTT fan through YAML and through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -354,7 +302,7 @@ class MqttFan(MqttEntity, FanEntity):
             optimistic or self._topic[CONF_PRESET_MODE_STATE_TOPIC] is None
         )
 
-        self._attr_supported_features = 0
+        self._attr_supported_features = FanEntityFeature(0)
         self._attr_supported_features |= (
             self._topic[CONF_OSCILLATION_COMMAND_TOPIC] is not None
             and FanEntityFeature.OSCILLATE
@@ -437,7 +385,10 @@ class MqttFan(MqttEntity, FanEntity):
                 )
             except ValueError:
                 _LOGGER.warning(
-                    "'%s' received on topic %s. '%s' is not a valid speed within the speed range",
+                    (
+                        "'%s' received on topic %s. '%s' is not a valid speed within"
+                        " the speed range"
+                    ),
                     msg.payload,
                     msg.topic,
                     rendered_percentage_payload,
@@ -445,7 +396,10 @@ class MqttFan(MqttEntity, FanEntity):
                 return
             if percentage < 0 or percentage > 100:
                 _LOGGER.warning(
-                    "'%s' received on topic %s. '%s' is not a valid speed within the speed range",
+                    (
+                        "'%s' received on topic %s. '%s' is not a valid speed within"
+                        " the speed range"
+                    ),
                     msg.payload,
                     msg.topic,
                     rendered_percentage_payload,
@@ -538,7 +492,6 @@ class MqttFan(MqttEntity, FanEntity):
         # The default for FanEntity is to compute it based on percentage
         return self._attr_is_on
 
-    # The speed attribute deprecated in the schema, support will be removed after a quarter (2021.7)
     async def async_turn_on(
         self,
         percentage: int | None = None,

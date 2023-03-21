@@ -1,7 +1,7 @@
 """Support for deCONZ lights."""
 from __future__ import annotations
 
-from typing import Any, TypedDict, TypeVar, Union
+from typing import Any, TypedDict, TypeVar
 
 from pydeconz.interfaces.groups import GroupHandler
 from pydeconz.interfaces.lights import LightHandler
@@ -47,7 +47,7 @@ DECONZ_TO_COLOR_MODE = {
     LightColorMode.XY: ColorMode.XY,
 }
 
-_LightDeviceT = TypeVar("_LightDeviceT", bound=Union[Group, Light])
+_LightDeviceT = TypeVar("_LightDeviceT", bound=Group | Light)
 
 
 class SetStateAttributes(TypedDict, total=False):

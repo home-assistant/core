@@ -1,7 +1,6 @@
 """Support for interfacing to the Logitech SqueezeBox API."""
 from __future__ import annotations
 
-import asyncio
 import json
 import logging
 from typing import Any
@@ -170,7 +169,9 @@ async def async_setup_entry(
         ] = async_call_later(hass, DISCOVERY_INTERVAL, _discovery)
 
     _LOGGER.debug("Adding player discovery job for LMS server: %s", host)
-    asyncio.create_task(_discovery())
+    config_entry.async_create_background_task(
+        hass, _discovery(), "squeezebox.media_player.discovery"
+    )
 
     # Register entity services
     platform = entity_platform.async_get_current_platform()
@@ -203,7 +204,7 @@ async def async_setup_entry(
 
     # Start server discovery task if not already running
     if hass.is_running:
-        asyncio.create_task(start_server_discovery(hass))
+        hass.async_create_task(start_server_discovery(hass))
     else:
         hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_START, start_server_discovery(hass)
@@ -211,8 +212,7 @@ async def async_setup_entry(
 
 
 class SqueezeBoxEntity(MediaPlayerEntity):
-    """
-    Representation of a SqueezeBox device.
+    """Representation of a SqueezeBox device.
 
     Wraps a pysqueezebox.Player() object.
     """
@@ -362,6 +362,11 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     def media_title(self):
         """Title of current playing media."""
         return self._player.title
+
+    @property
+    def media_channel(self):
+        """Channel (e.g. webradio name) of current playing media."""
+        return self._player.remote_title
 
     @property
     def media_artist(self):
@@ -542,8 +547,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         await self._player.async_clear_playlist()
 
     async def async_call_method(self, command, parameters=None):
-        """
-        Call Squeezebox JSON/RPC method.
+        """Call Squeezebox JSON/RPC method.
 
         Additional parameters are added to the command to form the list of
         positional parameters (p0, p1...,  pN) passed to JSON/RPC server.
@@ -555,8 +559,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         await self._player.async_query(*all_params)
 
     async def async_call_query(self, command, parameters=None):
-        """
-        Call Squeezebox JSON/RPC method where we care about the result.
+        """Call Squeezebox JSON/RPC method where we care about the result.
 
         Additional parameters are added to the command to form the list of
         positional parameters (p0, p1...,  pN) passed to JSON/RPC server.
@@ -569,8 +572,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         _LOGGER.debug("call_query got result %s", self._query_result)
 
     async def async_join_players(self, group_members: list[str]) -> None:
-        """
-        Add other Squeezebox players to this player's sync group.
+        """Add other Squeezebox players to this player's sync group.
 
         If the other player is a member of a sync group, it will leave the current sync group
         without asking.
@@ -590,7 +592,8 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     async def async_sync(self, other_player):
         """Sync this Squeezebox player to another. Deprecated."""
         _LOGGER.warning(
-            "Service squeezebox.sync is deprecated; use media_player.join_players instead"
+            "Service squeezebox.sync is deprecated; use media_player.join_players"
+            " instead"
         )
         await self.async_join_players([other_player])
 
@@ -601,7 +604,8 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     async def async_unsync(self):
         """Unsync this Squeezebox player. Deprecated."""
         _LOGGER.warning(
-            "Service squeezebox.unsync is deprecated; use media_player.unjoin_player instead"
+            "Service squeezebox.unsync is deprecated; use media_player.unjoin_player"
+            " instead"
         )
         await self.async_unjoin_player()
 

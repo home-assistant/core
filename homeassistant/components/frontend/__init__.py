@@ -146,7 +146,9 @@ class Manifest:
 MANIFEST_JSON = Manifest(
     {
         "background_color": "#FFFFFF",
-        "description": "Home automation platform that puts local control and privacy first.",
+        "description": (
+            "Home automation platform that puts local control and privacy first."
+        ),
         "dir": "ltr",
         "display": "standalone",
         "icons": [
@@ -311,7 +313,7 @@ def _frontend_root(dev_repo_path: str | None) -> pathlib.Path:
     if dev_repo_path is not None:
         return pathlib.Path(dev_repo_path) / "hass_frontend"
     # Keep import here so that we can import frontend without installing reqs
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     import hass_frontend
 
     return hass_frontend.where()
@@ -700,7 +702,7 @@ async def websocket_get_version(
 
     for req in integration.requirements:
         if req.startswith("home-assistant-frontend=="):
-            frontend = req.split("==", 1)[1]
+            frontend = req.removeprefix("home-assistant-frontend==")
 
     if frontend is None:
         connection.send_error(msg["id"], "unknown_version", "Version not found")

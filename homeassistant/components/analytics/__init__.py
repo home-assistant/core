@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
@@ -20,7 +20,8 @@ async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
     # Load stored data
     await analytics.load()
 
-    async def start_schedule(_event):
+    @callback
+    def start_schedule(_event: Event) -> None:
         """Start the send schedule after the started event."""
         # Wait 15 min after started
         async_call_later(hass, 900, analytics.send_analytics)
@@ -37,10 +38,10 @@ async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
     return True
 
 
+@callback
 @websocket_api.require_admin
 @websocket_api.websocket_command({vol.Required("type"): "analytics"})
-@websocket_api.async_response
-async def websocket_analytics(
+def websocket_analytics(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
     msg: dict[str, Any],

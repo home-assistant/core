@@ -1,11 +1,14 @@
 """Tests for the Cast integration."""
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components import cast
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
-async def test_import(hass, caplog):
+async def test_import(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     """Test that specifying config will create an entry."""
     with patch(
         "homeassistant.components.cast.async_setup_entry", return_value=True
@@ -36,7 +39,7 @@ async def test_import(hass, caplog):
     assert "Invalid config '{'incorrect': 'config'}'" in caplog.text
 
 
-async def test_not_configuring_cast_not_creates_entry(hass):
+async def test_not_configuring_cast_not_creates_entry(hass: HomeAssistant) -> None:
     """Test that an empty config does not create an entry."""
     with patch(
         "homeassistant.components.cast.async_setup_entry", return_value=True

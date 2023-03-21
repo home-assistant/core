@@ -8,7 +8,8 @@
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_data": "Device did not return any data required to an entry."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"

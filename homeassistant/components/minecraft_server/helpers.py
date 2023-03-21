@@ -22,7 +22,7 @@ async def async_check_srv_record(
         srv_records = await aiodns.DNSResolver().query(
             host=f"{SRV_RECORD_PREFIX}.{host}", qtype="SRV"
         )
-    except (aiodns.error.DNSError):
+    except aiodns.error.DNSError:
         # 'host' is not a SRV record.
         pass
     else:

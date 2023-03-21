@@ -87,7 +87,7 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
             raise vol.Invalid(error)
         if not structure:
             error = (
-                f"Error in sensor {name}. The `{CONF_STRUCTURE}` field can not be empty"
+                f"Error in sensor {name}. The `{CONF_STRUCTURE}` field cannot be empty"
             )
             raise vol.Invalid(error)
         try:
@@ -111,7 +111,7 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
             if count < regs_needed or (count % regs_needed) != 0:
                 raise vol.Invalid(
                     f"Error in sensor {name} swap({swap_type}) "
-                    f"not possible due to the registers "
+                    "not possible due to the registers "
                     f"count: {count}, needed: {regs_needed}"
                 )
 
@@ -153,8 +153,10 @@ def scan_interval_validator(config: dict) -> dict:
                     continue
                 if scan_interval < 5:
                     _LOGGER.warning(
-                        "%s %s scan_interval(%d) is lower than 5 seconds, "
-                        "which may cause Home Assistant stability issues",
+                        (
+                            "%s %s scan_interval(%d) is lower than 5 seconds, "
+                            "which may cause Home Assistant stability issues"
+                        ),
                         component,
                         entry.get(CONF_NAME),
                         scan_interval,
@@ -198,11 +200,17 @@ def duplicate_entity_validator(config: dict) -> dict:
                     addr += "_" + str(entry[CONF_COMMAND_OFF])
                 addr += "_" + str(entry.get(CONF_SLAVE, 0))
                 if addr in addresses:
-                    err = f"Modbus {component}/{name} address {addr} is duplicate, second entry not loaded!"
+                    err = (
+                        f"Modbus {component}/{name} address {addr} is duplicate, second"
+                        " entry not loaded!"
+                    )
                     _LOGGER.warning(err)
                     errors.append(index)
                 elif name in names:
-                    err = f"Modbus {component}/{name}  is duplicate, second entry not loaded!"
+                    err = (
+                        f"Modbus {component}/{name}  is duplicate, second entry not"
+                        " loaded!"
+                    )
                     _LOGGER.warning(err)
                     errors.append(index)
                 else:

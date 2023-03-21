@@ -98,8 +98,20 @@ class MockRestData:
         self.count += 1
         if self.payload == "test_scrape_sensor":
             self.data = (
+                # Default
                 "<div class='current-version material-card text'>"
                 "<h1>Current Version: 2021.12.10</h1>Released: <span class='release-date'>January 17, 2022</span>"
+                "<div class='links' style='links'><a href='/latest-release-notes/'>Release notes</a></div></div>"
+                "<template>Trying to get</template>"
+                "<div class='current-time'>"
+                "<h1>Current Time:</h1><span class='utc-time'>2022-12-22T13:15:30Z</span>"
+                "</div>"
+            )
+        if self.payload == "test_scrape_sensor2":
+            self.data = (
+                # Hidden version
+                "<div class='current-version material-card text'>"
+                "<h1>Hidden Version: 2021.12.10</h1>Released: <span class='release-date'>January 17, 2022</span>"
                 "<div class='links' style='links'><a href='/latest-release-notes/'>Release notes</a></div></div>"
                 "<template>Trying to get</template>"
             )

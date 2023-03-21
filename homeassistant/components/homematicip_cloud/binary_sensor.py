@@ -195,7 +195,7 @@ class HomematicipBaseActionSensor(HomematicipGenericEntity, BinarySensorEntity):
     """Representation of the HomematicIP base action sensor."""
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this sensor."""
         return BinarySensorDeviceClass.MOVING
 
@@ -240,7 +240,7 @@ class HomematicipMultiContactInterface(HomematicipGenericEntity, BinarySensorEnt
         )
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this sensor."""
         return BinarySensorDeviceClass.OPENING
 
@@ -274,7 +274,7 @@ class HomematicipShutterContact(HomematicipMultiContactInterface, BinarySensorEn
         self.has_additional_state = has_additional_state
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this sensor."""
         return BinarySensorDeviceClass.DOOR
 
@@ -295,7 +295,7 @@ class HomematicipMotionDetector(HomematicipGenericEntity, BinarySensorEntity):
     """Representation of the HomematicIP motion detector."""
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this sensor."""
         return BinarySensorDeviceClass.MOTION
 
@@ -309,7 +309,7 @@ class HomematicipPresenceDetector(HomematicipGenericEntity, BinarySensorEntity):
     """Representation of the HomematicIP presence detector."""
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this sensor."""
         return BinarySensorDeviceClass.PRESENCE
 
@@ -323,7 +323,7 @@ class HomematicipSmokeDetector(HomematicipGenericEntity, BinarySensorEntity):
     """Representation of the HomematicIP smoke detector."""
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this sensor."""
         return BinarySensorDeviceClass.SMOKE
 
@@ -342,7 +342,7 @@ class HomematicipWaterDetector(HomematicipGenericEntity, BinarySensorEntity):
     """Representation of the HomematicIP water detector."""
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this sensor."""
         return BinarySensorDeviceClass.MOISTURE
 
@@ -378,7 +378,7 @@ class HomematicipRainSensor(HomematicipGenericEntity, BinarySensorEntity):
         super().__init__(hap, device, "Raining")
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this sensor."""
         return BinarySensorDeviceClass.MOISTURE
 
@@ -396,7 +396,7 @@ class HomematicipSunshineSensor(HomematicipGenericEntity, BinarySensorEntity):
         super().__init__(hap, device, post="Sunshine")
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this sensor."""
         return BinarySensorDeviceClass.LIGHT
 
@@ -425,7 +425,7 @@ class HomematicipBatterySensor(HomematicipGenericEntity, BinarySensorEntity):
         super().__init__(hap, device, post="Battery")
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this sensor."""
         return BinarySensorDeviceClass.BATTERY
 
@@ -445,7 +445,7 @@ class HomematicipPluggableMainsFailureSurveillanceSensor(
         super().__init__(hap, device)
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this sensor."""
         return BinarySensorDeviceClass.POWER
 
@@ -464,7 +464,7 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericEntity, BinarySensorE
         super().__init__(hap, device, post=post)
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this sensor."""
         return BinarySensorDeviceClass.SAFETY
 

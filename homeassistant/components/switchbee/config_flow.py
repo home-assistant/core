@@ -4,7 +4,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from switchbee.api import CentralUnitAPI, SwitchBeeError
+from switchbee.api.central_unit import SwitchBeeError
+from switchbee.api.polling import CentralUnitPolling
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -33,7 +34,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> str:
     """Validate the user input allows us to connect."""
 
     websession = async_get_clientsession(hass, verify_ssl=False)
-    api = CentralUnitAPI(
+    api = CentralUnitPolling(
         data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD], websession
     )
     try:

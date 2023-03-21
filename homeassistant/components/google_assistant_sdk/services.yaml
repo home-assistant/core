@@ -1,0 +1,17 @@
+send_text_command:
+  name: Send text command
+  description: Send a command as a text query to Google Assistant.
+  fields:
+    command:
+      name: Command
+      description: Command(s) to send to Google Assistant.
+      example: turn off kitchen TV
+      selector:
+        text:
+    media_player:
+      name: Media Player Entity
+      description: Name(s) of media player entities to play response on
+      example: media_player.living_room_speaker
+      selector:
+        entity:
+          domain: media_player

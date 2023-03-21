@@ -5,7 +5,7 @@ from collections.abc import Callable, Coroutine
 import datetime
 from typing import Any
 
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.util import dt as dt_util
 from homeassistant.util.decorator import Registry
 

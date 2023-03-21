@@ -62,7 +62,7 @@ def async_name(
     """Return a name for the device."""
     if service_info.address in (
         service_info.name,
-        service_info.name.replace("_", ":"),
+        service_info.name.replace("-", ":"),
     ):
         base_name = f"{ibeacon_advertisement.uuid}_{ibeacon_advertisement.major}_{ibeacon_advertisement.minor}"
     else:
@@ -354,7 +354,25 @@ class IBeaconCoordinator:
             for group_id in self._group_ids_random_macs
             if group_id not in self._unavailable_group_ids
             and (service_info := self._last_seen_by_group_id.get(group_id))
-            and now - service_info.time > UNAVAILABLE_TIMEOUT
+            and (
+                # We will not get callbacks for iBeacons with random macs
+                # that rotate infrequently since their advertisement data
+                # does not change as the bluetooth.async_register_callback API
+                # suppresses callbacks for duplicate advertisements to avoid
+                # exposing integrations to the firehose of bluetooth advertisements.
+                #
+                # To solve this we need to ask for the latest service info for
+                # the address we last saw to get the latest timestamp.
+                #
+                # If there is no last service info for the address we know that
+                # the device is no longer advertising.
+                not (
+                    latest_service_info := bluetooth.async_last_service_info(
+                        self.hass, service_info.address, connectable=False
+                    )
+                )
+                or now - latest_service_info.time > UNAVAILABLE_TIMEOUT
+            )
         ]
         for group_id in gone_unavailable:
             self._unavailable_group_ids.add(group_id)
@@ -396,7 +414,11 @@ class IBeaconCoordinator:
                     )
                     continue
 
-            if service_info.rssi != ibeacon_advertisement.rssi:
+            if (
+                service_info.rssi != ibeacon_advertisement.rssi
+                or service_info.source != ibeacon_advertisement.source
+            ):
+                ibeacon_advertisement.source = service_info.source
                 ibeacon_advertisement.update_rssi(service_info.rssi)
                 async_dispatcher_send(
                     self.hass,

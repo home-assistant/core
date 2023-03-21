@@ -5,20 +5,20 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyinsteon.address import Address
 from pyinsteon.constants import ALDBStatus, ResponseStatus
-from pyinsteon.device_types import (
+from pyinsteon.device_types.ipdb import (
     AccessControl_Morningstar,
     DimmableLightingControl_KeypadLinc_8,
     GeneralController_RemoteLinc,
     Hub,
     SensorsActuators_IOLink,
-    SwitchedLightingControl_SwitchLinc,
+    SwitchedLightingControl_SwitchLinc02,
 )
 from pyinsteon.managers.saved_devices_manager import dict_to_aldb_record
 from pyinsteon.topics import DEVICE_LIST_CHANGED
 from pyinsteon.utils import subscribe_topic
 
 
-class MockSwitchLinc(SwitchedLightingControl_SwitchLinc):
+class MockSwitchLinc(SwitchedLightingControl_SwitchLinc02):
     """Mock SwitchLinc device."""
 
     @property

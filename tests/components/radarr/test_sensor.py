@@ -14,7 +14,7 @@ async def test_sensors(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     entity_registry_enabled_by_default: AsyncMock,
-):
+) -> None:
     """Test for successfully setting up the Radarr platform."""
     await setup_integration(hass, aioclient_mock)
 
@@ -29,7 +29,9 @@ async def test_sensors(
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
 
 
-async def test_windows(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
+async def test_windows(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test for successfully setting up the Radarr platform on Windows."""
     await setup_integration(hass, aioclient_mock, windows=True)
 

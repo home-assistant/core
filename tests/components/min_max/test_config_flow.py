@@ -12,7 +12,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize("platform", ("sensor",))
-async def test_config_flow(hass: HomeAssistant, platform) -> None:
+async def test_config_flow(hass: HomeAssistant, platform: str) -> None:
     """Test the config flow."""
     input_sensors = ["sensor.input_one", "sensor.input_two"]
 
@@ -56,7 +56,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
 
 def get_suggested(schema, key):
     """Get suggested value for key in voluptuous schema."""
-    for k in schema.keys():
+    for k in schema:
         if k == key:
             if k.description is None or "suggested_value" not in k.description:
                 return None
@@ -66,7 +66,7 @@ def get_suggested(schema, key):
 
 
 @pytest.mark.parametrize("platform", ("sensor",))
-async def test_options(hass: HomeAssistant, platform) -> None:
+async def test_options(hass: HomeAssistant, platform: str) -> None:
     """Test reconfiguring."""
     hass.states.async_set("sensor.input_one", "10")
     hass.states.async_set("sensor.input_two", "20")

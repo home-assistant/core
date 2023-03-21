@@ -82,9 +82,9 @@ class HMLight(HMDevice, LightEntity):
         return color_modes
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> LightEntityFeature:
         """Flag supported features."""
-        features: int = LightEntityFeature.TRANSITION
+        features = LightEntityFeature.TRANSITION
         if "PROGRAM" in self._hmdevice.WRITENODE:
             features |= LightEntityFeature.EFFECT
         return features

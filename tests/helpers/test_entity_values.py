@@ -6,7 +6,7 @@ from homeassistant.helpers.entity_values import EntityValues as EV
 ent = "test.test"
 
 
-def test_override_single_value():
+def test_override_single_value() -> None:
     """Test values with exact match."""
     store = EV({ent: {"key": "value"}})
     assert store.get(ent) == {"key": "value"}
@@ -15,25 +15,25 @@ def test_override_single_value():
     assert len(store._cache) == 1
 
 
-def test_override_by_domain():
+def test_override_by_domain() -> None:
     """Test values with domain match."""
     store = EV(domain={"test": {"key": "value"}})
     assert store.get(ent) == {"key": "value"}
 
 
-def test_override_by_glob():
+def test_override_by_glob() -> None:
     """Test values with glob match."""
     store = EV(glob={"test.?e*": {"key": "value"}})
     assert store.get(ent) == {"key": "value"}
 
 
-def test_glob_overrules_domain():
+def test_glob_overrules_domain() -> None:
     """Test domain overrules glob match."""
     store = EV(domain={"test": {"key": "domain"}}, glob={"test.?e*": {"key": "glob"}})
     assert store.get(ent) == {"key": "glob"}
 
 
-def test_exact_overrules_domain():
+def test_exact_overrules_domain() -> None:
     """Test exact overrules domain match."""
     store = EV(
         exact={"test.test": {"key": "exact"}},
@@ -43,7 +43,7 @@ def test_exact_overrules_domain():
     assert store.get(ent) == {"key": "exact"}
 
 
-def test_merging_values():
+def test_merging_values() -> None:
     """Test merging glob, domain and exact configs."""
     store = EV(
         exact={"test.test": {"exact_key": "exact"}},
@@ -57,7 +57,7 @@ def test_merging_values():
     }
 
 
-def test_glob_order():
+def test_glob_order() -> None:
     """Test merging glob, domain and exact configs."""
     glob = OrderedDict()
     glob["test.*est"] = {"value": "first"}

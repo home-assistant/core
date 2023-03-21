@@ -45,7 +45,7 @@ async def async_setup_entry(
     )
 
 
-class Device(CoordinatorEntity, CoverEntity):
+class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], CoverEntity):
     """Representation of an Freedompro cover."""
 
     def __init__(

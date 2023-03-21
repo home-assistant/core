@@ -16,15 +16,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.components.sensor.recorder import reset_detected
-from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
-    VOLUME_GALLONS,
-    VOLUME_LITERS,
-    UnitOfEnergy,
-    UnitOfVolume,
-)
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfEnergy, UnitOfVolume
 from homeassistant.core import (
     HomeAssistant,
     State,
@@ -49,21 +41,24 @@ SUPPORTED_STATE_CLASSES = {
     SensorStateClass.TOTAL_INCREASING,
 }
 VALID_ENERGY_UNITS: set[str] = {
-    UnitOfEnergy.WATT_HOUR,
-    UnitOfEnergy.KILO_WATT_HOUR,
-    UnitOfEnergy.MEGA_WATT_HOUR,
     UnitOfEnergy.GIGA_JOULE,
+    UnitOfEnergy.KILO_WATT_HOUR,
+    UnitOfEnergy.MEGA_JOULE,
+    UnitOfEnergy.MEGA_WATT_HOUR,
+    UnitOfEnergy.WATT_HOUR,
 }
 VALID_ENERGY_UNITS_GAS = {
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
+    UnitOfVolume.CENTUM_CUBIC_FEET,
+    UnitOfVolume.CUBIC_FEET,
+    UnitOfVolume.CUBIC_METERS,
     *VALID_ENERGY_UNITS,
 }
-VALID_VOLUME_UNITS_WATER = {
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
-    VOLUME_GALLONS,
-    VOLUME_LITERS,
+VALID_VOLUME_UNITS_WATER: set[str] = {
+    UnitOfVolume.CENTUM_CUBIC_FEET,
+    UnitOfVolume.CUBIC_FEET,
+    UnitOfVolume.CUBIC_METERS,
+    UnitOfVolume.GALLONS,
+    UnitOfVolume.LITERS,
 }
 _LOGGER = logging.getLogger(__name__)
 

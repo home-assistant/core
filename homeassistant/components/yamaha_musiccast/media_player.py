@@ -145,7 +145,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         return None
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState:
         """Return the state of the player."""
         if self.coordinator.data.zones[self._zone_id].power == "on":
             if self._is_netusb and self.coordinator.data.netusb_playback == "pause":
@@ -424,7 +424,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         )
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         supported_features = MUSIC_PLAYER_BASE_SUPPORT
         zone = self.coordinator.data.zones[self._zone_id]
@@ -463,7 +463,8 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             await self.coordinator.musiccast.tuner_previous_station()
         else:
             raise HomeAssistantError(
-                "Service previous track is not supported for non NetUSB or Tuner sources."
+                "Service previous track is not supported for non NetUSB or Tuner"
+                " sources."
             )
 
     async def async_media_next_track(self) -> None:
@@ -653,7 +654,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
     @property
     def musiccast_zone_entity(self) -> MusicCastMediaPlayer:
-        """Return the the entity of the zone, which is using MusicCast at the moment, if there is one, self else.
+        """Return the entity of the zone, which is using MusicCast at the moment, if there is one, self else.
 
         It is possible that multiple zones use MusicCast as client at the same time. In this case the first one is
         returned.
@@ -720,7 +721,10 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
                     network_join = await client.async_client_join(group, self)
                 except MusicCastGroupException:
                     _LOGGER.warning(
-                        "%s is struggling to update its group data. Will retry perform the update",
+                        (
+                            "%s is struggling to update its group data. Will retry"
+                            " perform the update"
+                        ),
                         client.entity_id,
                     )
                     network_join = await client.async_client_join(group, self)
@@ -765,10 +769,13 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     async def async_client_join(self, group_id, server) -> bool:
         """Let the client join a group.
 
-        If this client is a server, the server will stop distributing. If the client is part of a different group,
-        it will leave that group first. Returns True, if the server has to add the client on his side.
+        If this client is a server, the server will stop distributing.
+        If the client is part of a different group,
+        it will leave that group first. Returns True, if the server has to
+        add the client on his side.
         """
-        # If we should join the group, which is served by the main zone, we can simply select main_sync as input.
+        # If we should join the group, which is served by the main zone,
+        # we can simply select main_sync as input.
         _LOGGER.debug("%s called service client join", self.entity_id)
         if self.state == MediaPlayerState.OFF:
             await self.async_turn_on()
@@ -786,8 +793,10 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         if self.musiccast_zone_entity.is_server:
             # If one of the zones of the device is a server, we need to unjoin first.
             _LOGGER.debug(
-                "%s is a server of a group and has to stop distribution "
-                "to use MusicCast for %s",
+                (
+                    "%s is a server of a group and has to stop distribution "
+                    "to use MusicCast for %s"
+                ),
                 self.musiccast_zone_entity.entity_id,
                 self.entity_id,
             )

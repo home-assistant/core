@@ -27,14 +27,14 @@ class ConfirmRepairFlow(RepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle the first step of a fix flow."""
-        return await (self.async_step_confirm())
+        return await self.async_step_confirm()
 
     async def async_step_confirm(
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle the confirm step of a fix flow."""
         if user_input is not None:
-            return self.async_create_entry(title="", data={})
+            return self.async_create_entry(data={})
 
         issue_registry = async_get_issue_registry(self.hass)
         description_placeholders = None
@@ -53,7 +53,7 @@ class RepairsFlowManager(data_entry_flow.FlowManager):
 
     async def async_create_flow(
         self,
-        handler_key: Any,
+        handler_key: str,
         *,
         context: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
@@ -85,7 +85,8 @@ class RepairsFlowManager(data_entry_flow.FlowManager):
         self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
     ) -> data_entry_flow.FlowResult:
         """Complete a fix flow."""
-        async_delete_issue(self.hass, flow.handler, flow.init_data["issue_id"])
+        if result.get("type") != data_entry_flow.FlowResultType.ABORT:
+            async_delete_issue(self.hass, flow.handler, flow.init_data["issue_id"])
         if "result" not in result:
             result["result"] = None
         return result

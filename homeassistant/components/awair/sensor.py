@@ -215,8 +215,7 @@ class AwairSensor(CoordinatorEntity[AwairDataUpdateCoordinator], SensorEntity):
     @property
     def _air_data(self) -> AirData | None:
         """Return the latest data for our device, or None."""
-        result: AwairResult | None = self.coordinator.data.get(self._device.uuid)
-        if result:
+        if result := self.coordinator.data.get(self._device.uuid):
             return result.air_data
 
         return None

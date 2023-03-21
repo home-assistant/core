@@ -1,7 +1,7 @@
 """Test the Vallox integration config flow."""
 from unittest.mock import patch
 
-from vallox_websocket_api.exceptions import ValloxApiException
+from vallox_websocket_api import ValloxApiException, ValloxWebsocketException
 
 from homeassistant.components.vallox.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
@@ -95,7 +95,7 @@ async def test_form_os_error_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.vallox.config_flow.Vallox.get_info",
-        side_effect=OSError,
+        side_effect=ValloxWebsocketException,
     ):
         result = await hass.config_entries.flow.async_configure(
             init["flow_id"],
@@ -243,7 +243,7 @@ async def test_import_cannot_connect_os_error(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.vallox.config_flow.Vallox.get_info",
-        side_effect=OSError,
+        side_effect=ValloxWebsocketException,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

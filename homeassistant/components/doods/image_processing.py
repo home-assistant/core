@@ -255,7 +255,6 @@ class Doods(ImageProcessingEntity):
             )
 
         for label, values in matches.items():
-
             # Draw custom label regions/areas
             if label in self._label_areas and self._label_areas[label] != [0, 0, 1, 1]:
                 box_label = f"{label.capitalize()} Detection Area"
@@ -297,7 +296,10 @@ class Doods(ImageProcessingEntity):
 
         if self._aspect and abs((img_width / img_height) - self._aspect) > 0.1:
             _LOGGER.debug(
-                "The image aspect: %s and the detector aspect: %s differ by more than 0.1",
+                (
+                    "The image aspect: %s and the detector aspect: %s differ by more"
+                    " than 0.1"
+                ),
                 (img_width / img_height),
                 self._aspect,
             )
