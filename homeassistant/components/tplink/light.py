@@ -267,7 +267,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         return hue, saturation
 
     @property
-    def supported_color_modes(self) -> set[ColorMode] | None:
+    def supported_color_modes(self) -> set[ColorMode]:
         """Return list of available color modes."""
         modes: set[ColorMode] = set()
         if self.device.is_variable_color_temp:
