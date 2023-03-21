@@ -2239,6 +2239,9 @@ renault-api==0.1.12
 # homeassistant.components.reolink
 reolink-aio==0.5.6
 
+# homeassistant.components.solvis_heating
+requests==2.28.2
+
 # homeassistant.components.python_script
 restrictedpython==6.0
 

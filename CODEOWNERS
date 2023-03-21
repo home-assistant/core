@@ -1112,6 +1112,8 @@ build.json @home-assistant/supervisor
 /tests/components/solarlog/ @Ernst79
 /homeassistant/components/solax/ @squishykid
 /tests/components/solax/ @squishykid
+/homeassistant/components/solvis_heating/ @lurchi70
+/tests/components/solvis_heating/ @lurchi70
 /homeassistant/components/soma/ @ratsept @sebfortier2288
 /tests/components/soma/ @ratsept @sebfortier2288
 /homeassistant/components/sonarr/ @ctalkington
