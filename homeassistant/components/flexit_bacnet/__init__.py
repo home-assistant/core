@@ -24,7 +24,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     device = FlexitBACnet(entry.data["address"], entry.data["device_id"])
 
-    await device.update()
     try:
         await device.update()
     except asyncio.exceptions.TimeoutError:
