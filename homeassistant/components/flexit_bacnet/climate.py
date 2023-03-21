@@ -41,7 +41,6 @@ class FlexitClimateEntity(ClimateEntity):
 
     _attr_hvac_modes = [
         HVACMode.OFF,
-        HVACMode.HEAT,
         HVACMode.FAN_ONLY,
     ]
 
@@ -117,9 +116,6 @@ class FlexitClimateEntity(ClimateEntity):
         if self._device.ventilation_mode == VENTILATION_MODES[VENTILATION_MODE.STOP]:
             return HVACMode.OFF
 
-        if self.is_aux_heat:
-            return HVACMode.HEAT
-
         return HVACMode.FAN_ONLY
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -128,11 +124,6 @@ class FlexitClimateEntity(ClimateEntity):
             await self._device.set_ventilation_mode(VENTILATION_MODE.STOP)
         else:
             await self._device.set_ventilation_mode(VENTILATION_MODE.HOME)
-
-        if hvac_mode == HVACMode.HEAT:
-            await self.async_turn_aux_heat_on()
-        else:
-            await self.async_turn_aux_heat_off()
 
     @property
     def is_aux_heat(self) -> bool:
