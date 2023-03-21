@@ -2,7 +2,6 @@
 import asyncio
 import logging
 import os
-from typing import Any
 
 import async_timeout
 from google.cloud import texttospeech
@@ -224,7 +223,7 @@ class GoogleCloudTTSProvider(Provider):
         return SUPPORTED_OPTIONS
 
     @property
-    def default_options(self) -> dict[str, Any]:
+    def default_options(self):
         """Return a dict including default options."""
         return {
             CONF_GENDER: self._gender,
