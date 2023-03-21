@@ -29,9 +29,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Timeout while connecting to {entry.data['address']}"
         ) from exc
 
-    if not device.is_valid():
-        return False
-
     hass.data[DOMAIN][entry.entry_id] = device
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
