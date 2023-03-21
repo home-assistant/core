@@ -262,7 +262,7 @@ class JellyfinMediaPlayer(JellyfinEntity, MediaPlayerEntity):
         self._attr_state = MediaPlayerState.IDLE
 
     def play_media(
-        self, media_type: str, media_id: str, **kwargs: dict[str, Any]
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
         self.coordinator.api_client.jellyfin.remote_play_media(

@@ -100,7 +100,7 @@ class GstreamerDevice(MediaPlayerEntity):
         self._player.volume = volume
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play media."""
         # Handle media_source

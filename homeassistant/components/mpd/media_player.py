@@ -435,7 +435,7 @@ class MpdDevice(MediaPlayerEntity):
             self._muted = mute
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Send the media player the command for playing a playlist."""
         if media_source.is_media_source_id(media_id):
