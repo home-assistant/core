@@ -244,8 +244,6 @@ async def test_controller_setup(
     assert controller.mac is None
 
     assert controller.signal_reachable == "unifi-reachable-1"
-    assert controller.signal_update == "unifi-update-1"
-    assert controller.signal_remove == "unifi-remove-1"
     assert controller.signal_options_update == "unifi-options-1"
     assert controller.signal_heartbeat_missed == "unifi-heartbeat-missed"
 

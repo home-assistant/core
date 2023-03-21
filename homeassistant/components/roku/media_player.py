@@ -252,7 +252,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         return None
 
     @property
-    def source_list(self) -> list:
+    def source_list(self) -> list[str]:
         """List of available input sources."""
         return ["Home"] + sorted(
             app.name for app in self.coordinator.data.apps if app.name is not None
@@ -353,7 +353,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
 
     @roku_exception_handler()
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play media from a URL or file, launch an application, or tune to a channel."""
         extra: dict[str, Any] = kwargs.get(ATTR_MEDIA_EXTRA) or {}

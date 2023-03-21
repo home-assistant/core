@@ -9,6 +9,7 @@ from homeassistant.components.homekit.const import (
 )
 from homeassistant.const import CONF_NAME, CONF_PORT, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .util import async_init_integration
@@ -314,8 +315,8 @@ async def test_config_entry_with_trigger_accessory(
     mock_async_zeroconf: None,
     events,
     demo_cleanup,
-    device_reg,
-    entity_reg,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test generating diagnostics for a bridge config entry with a trigger accessory."""
     assert await async_setup_component(hass, "demo", {"demo": {}})
@@ -326,7 +327,7 @@ async def test_config_entry_with_trigger_accessory(
     assert await async_setup_component(hass, "demo", {"demo": {}})
     await hass.async_block_till_done()
 
-    entry = entity_reg.async_get("light.ceiling_lights")
+    entry = entity_registry.async_get("light.ceiling_lights")
     assert entry is not None
     device_id = entry.device_id
 

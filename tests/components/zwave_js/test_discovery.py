@@ -103,7 +103,9 @@ async def test_dynamic_climate_data_discovery_template_failure(
         )
 
 
-async def test_merten_507801(hass, client, merten_507801, integration):
+async def test_merten_507801(
+    hass: HomeAssistant, client, merten_507801, integration
+) -> None:
     """Test that Merten 507801 multilevel switch value is discovered as a cover."""
     node = merten_507801
     assert node.device_class.specific.label == "Unused"
@@ -116,8 +118,8 @@ async def test_merten_507801(hass, client, merten_507801, integration):
 
 
 async def test_merten_507801_disabled_enitites(
-    hass, client, merten_507801, integration
-):
+    hass: HomeAssistant, client, merten_507801, integration
+) -> None:
     """Test that Merten 507801 entities created by endpoint 2 are disabled."""
     registry = er.async_get(hass)
     entity_ids = [

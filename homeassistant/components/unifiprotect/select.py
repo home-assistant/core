@@ -1,4 +1,4 @@
-"""This component provides select entities for UniFi Protect."""
+"""Component providing select entities for UniFi Protect."""
 from __future__ import annotations
 
 from collections.abc import Callable

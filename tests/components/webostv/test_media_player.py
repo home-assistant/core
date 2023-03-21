@@ -61,7 +61,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
@@ -275,7 +275,7 @@ async def test_select_sound_output(hass: HomeAssistant, client) -> None:
 
 
 async def test_device_info_startup_off(
-    hass: HomeAssistant, client, monkeypatch
+    hass: HomeAssistant, client, monkeypatch, device_registry: dr.DeviceRegistry
 ) -> None:
     """Test device info when device is off at startup."""
     monkeypatch.setattr(client, "system_info", None)
@@ -285,8 +285,7 @@ async def test_device_info_startup_off(
 
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
-    device_reg = device_registry.async_get(hass)
-    device = device_reg.async_get_device({(DOMAIN, entry.unique_id)})
+    device = device_registry.async_get_device({(DOMAIN, entry.unique_id)})
 
     assert device
     assert device.identifiers == {(DOMAIN, entry.unique_id)}
@@ -296,7 +295,9 @@ async def test_device_info_startup_off(
     assert device.model is None
 
 
-async def test_entity_attributes(hass: HomeAssistant, client, monkeypatch) -> None:
+async def test_entity_attributes(
+    hass: HomeAssistant, client, monkeypatch, device_registry: dr.DeviceRegistry
+) -> None:
     """Test entity attributes."""
     entry = await setup_webostv(hass)
     await client.mock_state_update()
@@ -331,8 +332,7 @@ async def test_entity_attributes(hass: HomeAssistant, client, monkeypatch) -> No
     assert attrs[ATTR_MEDIA_TITLE] == "Channel Name 2"
 
     # Device Info
-    device_reg = device_registry.async_get(hass)
-    device = device_reg.async_get_device({(DOMAIN, entry.unique_id)})
+    device = device_registry.async_get_device({(DOMAIN, entry.unique_id)})
 
     assert device
     assert device.identifiers == {(DOMAIN, entry.unique_id)}

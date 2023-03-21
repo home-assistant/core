@@ -1,5 +1,5 @@
 """Test the Nibe Heat Pump config flow."""
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from nibe.coil import Coil
 from nibe.exceptions import (
@@ -32,13 +32,7 @@ MOCK_FLOW_MODBUS_USERDATA = {
 }
 
 
-@pytest.fixture(autouse=True, name="mock_setup_entry")
-async def fixture_mock_setup():
-    """Make sure we never actually run setup."""
-    with patch(
-        "homeassistant.components.nibe_heatpump.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        yield mock_setup_entry
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def _get_connection_form(

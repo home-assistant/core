@@ -56,6 +56,7 @@ def test_matches_device_classes(device_class: SensorDeviceClass) -> None:
         SensorDeviceClass.CO: "CONF_CO",
         SensorDeviceClass.CO2: "CONF_CO2",
         SensorDeviceClass.ENERGY_STORAGE: "CONF_ENERGY",
+        SensorDeviceClass.VOLUME_STORAGE: "CONF_VOLUME",
     }.get(device_class, f"CONF_{device_class.value.upper()}")
     assert hasattr(device_trigger, constant_name), f"Missing constant {constant_name}"
 
@@ -63,6 +64,7 @@ def test_matches_device_classes(device_class: SensorDeviceClass) -> None:
     constant_value = {
         SensorDeviceClass.BATTERY: "battery_level",
         SensorDeviceClass.ENERGY_STORAGE: "energy",
+        SensorDeviceClass.VOLUME_STORAGE: "volume",
     }.get(device_class, device_class.value)
     assert getattr(device_trigger, constant_name) == constant_value
 

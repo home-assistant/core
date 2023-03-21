@@ -1,5 +1,6 @@
 """Support for Zigbee Home Automation devices."""
 import asyncio
+import copy
 import logging
 import os
 
@@ -90,6 +91,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     Will automatically load components to support devices found on the network.
     """
 
+    # Strip whitespace around `socket://` URIs, this is no longer accepted by zigpy
+    # This will be removed in 2023.7.0
+    path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+    data = copy.deepcopy(dict(config_entry.data))
+
+    if path.startswith("socket://") and path != path.strip():
+        data[CONF_DEVICE][CONF_DEVICE_PATH] = path.strip()
+        hass.config_entries.async_update_entry(config_entry, data=data)
+
     zha_data = hass.data.setdefault(DATA_ZHA, {})
     config = zha_data.get(DATA_ZHA_CONFIG, {})
 
@@ -97,7 +107,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         zha_data.setdefault(platform, [])
 
     if config.get(CONF_ENABLE_QUIRKS, True):
-        setup_quirks(config)
+        setup_quirks(custom_quirks_path=config.get(CONF_CUSTOM_QUIRKS_PATH))
 
     # temporary code to remove the ZHA storage file from disk.
     # this will be removed in 2022.10.0

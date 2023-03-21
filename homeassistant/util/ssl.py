@@ -16,6 +16,15 @@ def client_context() -> ssl.SSLContext:
     return ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH, cafile=cafile)
 
 
+# Create this only once and reuse it
+_DEFAULT_SSL_CONTEXT = client_context()
+
+
+def get_default_context() -> ssl.SSLContext:
+    """Return the default SSL context."""
+    return _DEFAULT_SSL_CONTEXT
+
+
 def server_context_modern() -> ssl.SSLContext:
     """Return an SSL context following the Mozilla recommendations.
 
