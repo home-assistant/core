@@ -1,5 +1,4 @@
 """The Flexit Nordic (BACnet) integration."""
-import logging
 from typing import Any
 
 from flexit_bacnet import VENTILATION_MODE, VENTILATION_MODES, FlexitBACnet
@@ -19,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
