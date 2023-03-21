@@ -125,5 +125,5 @@ class FreeboxHomeEntity(Entity):
             _LOGGER.warning(
                 "The Freebox Home device has no node for: " + ep_type + "/" + name
             )
-            return VALUE_NOT_SET
-        return node.get("value", VALUE_NOT_SET)
+            return None
+        return node.get("value")
