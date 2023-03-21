@@ -444,7 +444,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         await self._async_send_keys(["KEY_CHDOWN"])
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Support changing a channel."""
         if media_type == MediaType.APP:
