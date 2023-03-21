@@ -1287,11 +1287,13 @@ def hass_recorder(
     hass = get_test_home_assistant()
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
-    stats_validate = (
-        recorder.statistics.validate_db_schema
-        if enable_statistics_table_validation
-        else itertools.repeat(set())
-    )
+    stats_validate = itertools.repeat(set())
+    if enable_statistics_table_validation:
+        from homeassistant.components.recorder.repairs.statistics.schema import (
+            validate_db_schema,
+        )
+
+        stats_validate = validate_db_schema
     migrate_states_context_ids = (
         recorder.Recorder._migrate_states_context_ids
         if enable_migrate_context_ids
@@ -1402,11 +1404,13 @@ async def async_setup_recorder_instance(
 
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
-    stats_validate = (
-        recorder.statistics.validate_db_schema
-        if enable_statistics_table_validation
-        else itertools.repeat(set())
-    )
+    stats_validate = itertools.repeat(set())
+    if enable_statistics_table_validation:
+        from homeassistant.components.recorder.repairs.statistics.schema import (
+            validate_db_schema,
+        )
+
+        stats_validate = validate_db_schema
     migrate_states_context_ids = (
         recorder.Recorder._migrate_states_context_ids
         if enable_migrate_context_ids
