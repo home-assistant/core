@@ -15,6 +15,7 @@ from jwt import DecodeError, PyJWS, PyJWT
 from homeassistant.util.json import json_loads
 
 JWT_TOKEN_CACHE_SIZE = 16
+MAX_TOKEN_SIZE = 8192
 
 _VERIFY_KEYS = ("signature", "exp", "nbf", "iat", "aud", "iss")
 
@@ -58,6 +59,9 @@ class _PyJWTWithVerify(PyJWT):
         self, jwt: str, key: str, options: dict[str, Any], algorithms: list[str]
     ) -> dict[str, Any]:
         """Decode a JWT's payload."""
+        if len(jwt) > MAX_TOKEN_SIZE:
+            # Avoid caching impossible tokens
+            raise DecodeError("Token too large")
         return _decode_payload(
             _jws.decode_complete(
                 jwt=jwt,
