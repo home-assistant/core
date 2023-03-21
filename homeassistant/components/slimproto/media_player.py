@@ -15,6 +15,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
+    MediaType,
     async_process_play_media_url,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -175,7 +176,7 @@ class SlimProtoPlayer(MediaPlayerEntity):
         await self.player.power(False)
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Send the play_media command to the media player."""
         to_send_media_type: str | None = media_type

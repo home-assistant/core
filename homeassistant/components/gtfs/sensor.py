@@ -568,7 +568,7 @@ class GTFSDepartureSensor(SensorEntity):
         return self._available
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self._attributes
 

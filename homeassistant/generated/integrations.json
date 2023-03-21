@@ -6490,7 +6490,6 @@
   },
   "helper": {
     "counter": {
-      "name": "Counter",
       "integration_type": "helper",
       "config_flow": false
     },
@@ -6573,6 +6572,7 @@
     "alert",
     "aurora",
     "cert_expiry",
+    "counter",
     "cpuspeed",
     "demo",
     "derivative",
