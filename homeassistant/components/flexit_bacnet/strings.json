@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "data": {
-          "address": "[%key:common::config_flow::data::host%]",
+          "ip_address": "[%key:common::config_flow::data::ip%]",
           "device_id": "[%key:common::config_flow::data::device%]"
         }
       }

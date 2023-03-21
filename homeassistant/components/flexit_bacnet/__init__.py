@@ -7,7 +7,7 @@ from flexit_bacnet import FlexitBACnet
 from flexit_bacnet.bacnet import DecodingError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, Platform
+from homeassistant.const import CONF_DEVICE_ID, CONF_IP_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -19,7 +19,7 @@ PLATFORMS: list[Platform] = [Platform.CLIMATE]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Flexit Nordic (BACnet) from a config entry."""
 
-    device = FlexitBACnet(entry.data[CONF_HOST], entry.data[CONF_DEVICE_ID])
+    device = FlexitBACnet(entry.data[CONF_IP_ADDRESS], entry.data[CONF_DEVICE_ID])
 
     try:
         await device.update()
