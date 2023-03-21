@@ -2,17 +2,15 @@
 from __future__ import annotations
 
 import asyncio.exceptions
-import logging
 
 from flexit_bacnet import FlexitBACnet
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
@@ -26,9 +24,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await device.update()
-    except asyncio.exceptions.TimeoutError:
-        _LOGGER.error("Cannot connect to Flexit Nordic unit")
-        return False
+    except asyncio.exceptions.TimeoutError as exc:
+        raise ConfigEntryNotReady(
+            f"Timeout while connecting to {entry.data['address']}"
+        ) from exc
 
     if not device.is_valid():
         return False
