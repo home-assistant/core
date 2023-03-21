@@ -711,6 +711,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
             base_class="AlarmControlPanelEntity",
             matches=[
                 TypeHintMatch(
@@ -794,6 +798,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
             base_class="BinarySensorEntity",
             matches=[
                 TypeHintMatch(
@@ -837,6 +845,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
             base_class="CalendarEntity",
             matches=[
                 TypeHintMatch(
@@ -859,6 +871,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
         ClassTypeHintMatch(
             base_class="Entity",
             matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
             base_class="Camera",
@@ -973,6 +989,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
         ClassTypeHintMatch(
             base_class="Entity",
             matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
             base_class="ClimateEntity",
@@ -1148,6 +1168,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
             base_class="CoverEntity",
             matches=[
                 TypeHintMatch(
@@ -1247,6 +1271,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
             base_class="BaseTrackerEntity",
             matches=[
                 TypeHintMatch(
@@ -1318,6 +1346,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
         ClassTypeHintMatch(
             base_class="Entity",
             matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
             base_class="ToggleEntity",
@@ -1401,6 +1433,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
             base_class="GeolocationEvent",
             matches=[
                 TypeHintMatch(
@@ -1426,6 +1462,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
         ClassTypeHintMatch(
             base_class="Entity",
             matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
             base_class="ImageProcessingEntity",
@@ -1469,6 +1509,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
         ClassTypeHintMatch(
             base_class="Entity",
             matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
             base_class="ToggleEntity",
@@ -1524,6 +1568,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
         ClassTypeHintMatch(
             base_class="Entity",
             matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
             base_class="ToggleEntity",
@@ -1625,6 +1673,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
             base_class="LockEntity",
             matches=[
                 TypeHintMatch(
@@ -1713,6 +1765,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
         ClassTypeHintMatch(
             base_class="Entity",
             matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
             base_class="MediaPlayerEntity",
@@ -2119,6 +2175,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
             base_class="ToggleEntity",
             matches=_TOGGLE_ENTITY_MATCH,
         ),
@@ -2184,6 +2244,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
         ClassTypeHintMatch(
             base_class="Entity",
             matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
             base_class="SelectEntity",
@@ -2276,6 +2340,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
             base_class="ToggleEntity",
             matches=_TOGGLE_ENTITY_MATCH,
         ),
@@ -2333,6 +2401,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
         ClassTypeHintMatch(
             base_class="Entity",
             matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
             base_class="ToggleEntity",
@@ -2444,6 +2516,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
         ClassTypeHintMatch(
             base_class="Entity",
             matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
             base_class="ToggleEntity",
@@ -2581,6 +2657,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
             base_class="WaterHeaterEntity",
             matches=[
                 TypeHintMatch(
@@ -2660,6 +2740,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
         ClassTypeHintMatch(
             base_class="Entity",
             matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
             base_class="WeatherEntity",
