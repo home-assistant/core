@@ -399,7 +399,7 @@ class RachioZone(RachioSwitch):
         return self._entity_picture
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         props = {ATTR_ZONE_NUMBER: self._zone_number, ATTR_ZONE_SUMMARY: self._summary}
         if self._shade_type:
