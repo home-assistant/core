@@ -131,10 +131,15 @@ class RuntimeEntryData:
         )
         self.ble_connections_free = free
         self.ble_connections_limit = limit
-        if free:
-            for fut in self._ble_connection_free_futures:
+        if not free:
+            return
+        for fut in self._ble_connection_free_futures:
+            # If wait_for_ble_connections_free gets cancelled, it will
+            # leave a future in the list. We need to check if it's done
+            # before setting the result.
+            if not fut.done():
                 fut.set_result(free)
-            self._ble_connection_free_futures.clear()
+        self._ble_connection_free_futures.clear()
 
     async def wait_for_ble_connections_free(self) -> int:
         """Wait until there are free BLE connections."""
