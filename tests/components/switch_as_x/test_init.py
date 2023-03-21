@@ -71,7 +71,9 @@ async def test_entity_registry_events(
 ) -> None:
     """Test entity registry events are tracked."""
     registry = er.async_get(hass)
-    registry_entry = registry.async_get_or_create("switch", "test", "unique")
+    registry_entry = registry.async_get_or_create(
+        "switch", "test", "unique", original_name="ABC"
+    )
     switch_entity_id = registry_entry.entity_id
     hass.states.async_set(switch_entity_id, STATE_ON)
 
@@ -144,6 +146,7 @@ async def test_device_registry_config_entry_1(
         "unique",
         config_entry=switch_config_entry,
         device_id=device_entry.id,
+        original_name="ABC",
     )
     # Add another config entry to the same device
     device_registry.async_update_device(
@@ -202,6 +205,7 @@ async def test_device_registry_config_entry_2(
         "unique",
         config_entry=switch_config_entry,
         device_id=device_entry.id,
+        original_name="ABC",
     )
 
     switch_as_x_config_entry = MockConfigEntry(
@@ -272,7 +276,9 @@ async def test_config_entry_entity_id(
 async def test_config_entry_uuid(hass: HomeAssistant, target_domain: Platform) -> None:
     """Test light switch setup from config entry with entity registry id."""
     registry = er.async_get(hass)
-    registry_entry = registry.async_get_or_create("switch", "test", "unique")
+    registry_entry = registry.async_get_or_create(
+        "switch", "test", "unique", original_name="ABC"
+    )
 
     config_entry = MockConfigEntry(
         data={},
@@ -305,7 +311,7 @@ async def test_device(hass: HomeAssistant, target_domain: Platform) -> None:
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     switch_entity_entry = entity_registry.async_get_or_create(
-        "switch", "test", "unique", device_id=device_entry.id
+        "switch", "test", "unique", device_id=device_entry.id, original_name="ABC"
     )
 
     switch_as_x_config_entry = MockConfigEntry(
@@ -414,7 +420,9 @@ async def test_entity_category_inheritance(
     """Test the entity category is inherited from source device."""
     registry = er.async_get(hass)
 
-    switch_entity_entry = registry.async_get_or_create("switch", "test", "unique")
+    switch_entity_entry = registry.async_get_or_create(
+        "switch", "test", "unique", original_name="ABC"
+    )
     registry.async_update_entity(
         switch_entity_entry.entity_id, entity_category=EntityCategory.CONFIG
     )
@@ -448,7 +456,9 @@ async def test_entity_options(
     """Test the source entity is stored as an entity option."""
     registry = er.async_get(hass)
 
-    switch_entity_entry = registry.async_get_or_create("switch", "test", "unique")
+    switch_entity_entry = registry.async_get_or_create(
+        "switch", "test", "unique", original_name="ABC"
+    )
     registry.async_update_entity(
         switch_entity_entry.entity_id, entity_category=EntityCategory.CONFIG
     )

@@ -40,13 +40,8 @@ class BaseEntity(Entity):
         has_entity_name = wrapped_switch.has_entity_name if wrapped_switch else False
 
         name: str | None = config_entry_title
-        if (
-            has_entity_name
-            and wrapped_switch
-            and wrapped_switch.name is None
-            and wrapped_switch.original_name is None
-        ):
-            name = None
+        if wrapped_switch:
+            name = wrapped_switch.name or wrapped_switch.original_name
 
         self._device_id = device_id
         if device_id and (device := device_registry.async_get(device_id)):
