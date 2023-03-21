@@ -41,6 +41,7 @@ from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_reg
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -426,9 +427,9 @@ class TibberDataSensor(TibberSensor, CoordinatorEntity["TibberDataCoordinator"])
         self._device_name = self._home_name
 
     @property
-    def native_value(self) -> Any:
+    def native_value(self) -> StateType:
         """Return the value of the sensor."""
-        return getattr(self._tibber_home, self.entity_description.key)
+        return getattr(self._tibber_home, self.entity_description.key)  # type: ignore[no-any-return]
 
 
 class TibberSensorRT(TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"]):
