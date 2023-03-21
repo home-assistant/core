@@ -79,4 +79,6 @@ CATEGORY_TO_MODEL = {
     "iohome": "IOHome",
 }
 
-HOME_COMPATIBLE_PLATFORMS = Platform.CAMERA
+HOME_COMPATIBLE_PLATFORMS = [
+    Platform.CAMERA,
+]
