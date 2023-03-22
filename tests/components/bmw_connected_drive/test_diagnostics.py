@@ -1,10 +1,10 @@
 """Test BMW diagnostics."""
 import datetime
-import json
 import os
 import time
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bmw_connected_drive.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -12,7 +12,6 @@ from homeassistant.helpers import device_registry as dr
 
 from . import setup_mocked_integration
 
-from tests.common import load_fixture
 from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
@@ -22,9 +21,16 @@ from tests.typing import ClientSessionGenerator
 
 @pytest.mark.freeze_time(datetime.datetime(2022, 7, 10, 11))
 async def test_config_entry_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, bmw_fixture
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    bmw_fixture,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test config entry diagnostics."""
+    """Test config entry diagnostics.
+
+    Could fail after every change (either to HA or the library). If so, regenerate using
+    pytest --snapshot-update tests/components/bmw_connected_drive/ and check the output.
+    """
 
     # Make sure that local timezone for test is UTC
     os.environ["TZ"] = "UTC"
@@ -36,18 +42,21 @@ async def test_config_entry_diagnostics(
         hass, hass_client, mock_config_entry
     )
 
-    diagnostics_fixture = json.loads(
-        load_fixture("diagnostics/diagnostics_config_entry.json", DOMAIN)
-    )
-
-    assert diagnostics == diagnostics_fixture
+    assert diagnostics == snapshot
 
 
 @pytest.mark.freeze_time(datetime.datetime(2022, 7, 10, 11))
 async def test_device_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, bmw_fixture
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    bmw_fixture,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test device diagnostics."""
+    """Test device diagnostics.
+
+    Could fail after every change (either to HA or the library). If so, regenerate using
+    pytest --snapshot-update tests/components/bmw_connected_drive/ and check the output.
+    """
 
     # Make sure that local timezone for test is UTC
     os.environ["TZ"] = "UTC"
@@ -65,18 +74,21 @@ async def test_device_diagnostics(
         hass, hass_client, mock_config_entry, reg_device
     )
 
-    diagnostics_fixture = json.loads(
-        load_fixture("diagnostics/diagnostics_device.json", DOMAIN)
-    )
-
-    assert diagnostics == diagnostics_fixture
+    assert diagnostics == snapshot
 
 
 @pytest.mark.freeze_time(datetime.datetime(2022, 7, 10, 11))
 async def test_device_diagnostics_vehicle_not_found(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, bmw_fixture
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    bmw_fixture,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test device diagnostics when the vehicle cannot be found."""
+    """Test device diagnostics when the vehicle cannot be found.
+
+    Could fail after every change (either to HA or the library). If so, regenerate using
+    pytest --snapshot-update tests/components/bmw_connected_drive/ and check the output.
+    """
 
     # Make sure that local timezone for test is UTC
     os.environ["TZ"] = "UTC"
@@ -99,10 +111,4 @@ async def test_device_diagnostics_vehicle_not_found(
         hass, hass_client, mock_config_entry, reg_device
     )
 
-    diagnostics_fixture = json.loads(
-        load_fixture("diagnostics/diagnostics_device.json", DOMAIN)
-    )
-    # Mock empty data if car is not found in account anymore
-    diagnostics_fixture["data"] = None
-
-    assert diagnostics == diagnostics_fixture
+    assert diagnostics == snapshot
