@@ -1,4 +1,4 @@
-"""The test repairing states schema."""
+"""The test validating and repairing schema."""
 
 # pylint: disable=invalid-name
 from unittest.mock import patch

@@ -20,6 +20,7 @@ from ...statistics import (
 )
 from ...util import session_scope
 from ..schema import (
+    MYSQL_ERR_INCORRECT_STRING_VALUE,
     PRECISE_NUMBER,
     UTF8_NAME,
     check_columns,
@@ -69,7 +70,7 @@ def _validate_db_schema_utf8(
                 )
                 statistics_meta_manager.delete(session, statistic_ids=[STATISTIC_ID])
             except OperationalError as err:
-                if err.orig and err.orig.args[0] == 1366:
+                if err.orig and err.orig.args[0] == MYSQL_ERR_INCORRECT_STRING_VALUE:
                     _LOGGER.debug(
                         "Database table statistics_meta does not support 4-byte UTF-8"
                     )

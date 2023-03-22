@@ -22,6 +22,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+MYSQL_ERR_INCORRECT_STRING_VALUE = 1366
 
 # This name can't be represented unless 4-byte UTF-8 unicode is supported
 UTF8_NAME = "𓆚𓃗"
@@ -68,7 +69,7 @@ def validate_table_schema_supports_utf8(
             try:
                 session.flush()
             except OperationalError as err:
-                if err.orig and err.orig.args[0] == 1366:
+                if err.orig and err.orig.args[0] == MYSQL_ERR_INCORRECT_STRING_VALUE:
                     _LOGGER.debug(
                         "Database %s statistics_meta does not support 4-byte UTF-8",
                         table,
