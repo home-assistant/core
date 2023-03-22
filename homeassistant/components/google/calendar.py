@@ -23,7 +23,7 @@ from homeassistant.components.calendar import (
     CREATE_EVENT_SCHEMA,
     ENTITY_ID_FORMAT,
     EVENT_DESCRIPTION,
-    EVENT_LOCATION
+    EVENT_LOCATION,
     EVENT_END,
     EVENT_RRULE,
     EVENT_START,
