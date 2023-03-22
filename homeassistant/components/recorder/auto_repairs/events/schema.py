@@ -17,12 +17,9 @@ if TYPE_CHECKING:
 
 def validate_db_schema(instance: Recorder) -> set[str]:
     """Do some basic checks for common schema errors caused by manual migration."""
-    schema_errors: set[str] = set()
-    schema_errors |= validate_table_schema_supports_utf8(
+    return validate_table_schema_supports_utf8(
         instance, EventData, (EventData.shared_data,)
-    )
-    schema_errors |= validate_db_schema_precision(instance, Events)
-    return schema_errors
+    ) | validate_db_schema_precision(instance, Events)
 
 
 def correct_db_schema(
