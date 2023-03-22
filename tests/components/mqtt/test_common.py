@@ -1,4 +1,5 @@
 """Common test objects."""
+from collections.abc import Iterable
 from contextlib import suppress
 import copy
 from datetime import datetime
@@ -117,6 +118,29 @@ async def help_setup_component(
         mqtt_mock = None
     await hass.async_block_till_done()
     return mqtt_mock
+
+
+def help_custom_config(
+    mqtt_entity_domain: str,
+    mqtt_base_config: ConfigType,
+    mqtt_entity_configs: Iterable[ConfigType,],
+) -> ConfigType:
+    """Tweak a default config for parametrization.
+
+    Returns a custom config to be used as parametrization for with hass_config,
+    based on the supplied mqtt_base_config and updated with mqtt_entity_configs.
+    For each item in mqtt_entity_configs an entity instance is added to the config.
+    """
+    config: ConfigType = copy.deepcopy(mqtt_base_config)
+    entity_instances: list[ConfigType] = []
+    for instance in mqtt_entity_configs:
+        base: ConfigType = copy.deepcopy(
+            mqtt_base_config[mqtt.DOMAIN][mqtt_entity_domain]
+        )
+        base.update(instance)
+        entity_instances.append(base)
+    config[mqtt.DOMAIN][mqtt_entity_domain]: list[ConfigType] = entity_instances
+    return config
 
 
 async def help_test_availability_when_connection_lost(
