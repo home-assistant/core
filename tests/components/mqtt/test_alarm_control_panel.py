@@ -397,7 +397,7 @@ async def test_publish_mqtt_with_remote_code_text(
             help_custom_config(
                 alarm_control_panel.DOMAIN,
                 DEFAULT_CONFIG_CODE,
-                {"code_arm_required": False},
+                ({"code_arm_required": False},),
             ),
             SERVICE_ALARM_ARM_HOME,
             "ARM_HOME",
@@ -406,7 +406,7 @@ async def test_publish_mqtt_with_remote_code_text(
             help_custom_config(
                 alarm_control_panel.DOMAIN,
                 DEFAULT_CONFIG_CODE,
-                {"code_arm_required": False},
+                ({"code_arm_required": False},),
             ),
             SERVICE_ALARM_ARM_AWAY,
             "ARM_AWAY",
@@ -415,7 +415,7 @@ async def test_publish_mqtt_with_remote_code_text(
             help_custom_config(
                 alarm_control_panel.DOMAIN,
                 DEFAULT_CONFIG_CODE,
-                {"code_arm_required": False},
+                ({"code_arm_required": False},),
             ),
             SERVICE_ALARM_ARM_NIGHT,
             "ARM_NIGHT",
@@ -424,7 +424,7 @@ async def test_publish_mqtt_with_remote_code_text(
             help_custom_config(
                 alarm_control_panel.DOMAIN,
                 DEFAULT_CONFIG_CODE,
-                {"code_arm_required": False},
+                ({"code_arm_required": False},),
             ),
             SERVICE_ALARM_ARM_VACATION,
             "ARM_VACATION",
@@ -433,7 +433,7 @@ async def test_publish_mqtt_with_remote_code_text(
             help_custom_config(
                 alarm_control_panel.DOMAIN,
                 DEFAULT_CONFIG_CODE,
-                {"code_arm_required": False},
+                ({"code_arm_required": False},),
             ),
             SERVICE_ALARM_ARM_CUSTOM_BYPASS,
             "ARM_CUSTOM_BYPASS",
@@ -442,7 +442,7 @@ async def test_publish_mqtt_with_remote_code_text(
             help_custom_config(
                 alarm_control_panel.DOMAIN,
                 DEFAULT_CONFIG_CODE,
-                {"code_disarm_required": False},
+                ({"code_disarm_required": False},),
             ),
             SERVICE_ALARM_DISARM,
             "DISARM",
@@ -451,7 +451,7 @@ async def test_publish_mqtt_with_remote_code_text(
             help_custom_config(
                 alarm_control_panel.DOMAIN,
                 DEFAULT_CONFIG_CODE,
-                {"code_trigger_required": False},
+                ({"code_trigger_required": False},),
             ),
             SERVICE_ALARM_TRIGGER,
             "TRIGGER",
@@ -508,10 +508,12 @@ async def test_publish_mqtt_with_code_required_false(
         help_custom_config(
             alarm_control_panel.DOMAIN,
             DEFAULT_CONFIG_CODE,
-            {
-                "code": "0123",
-                "command_template": '{"action":"{{ action }}","code":"{{ code }}"}',
-            },
+            (
+                {
+                    "code": "0123",
+                    "command_template": '{"action":"{{ action }}","code":"{{ code }}"}',
+                },
+            ),
         )
     ],
 )
@@ -569,7 +571,7 @@ async def test_update_state_via_state_topic_template(
     "hass_config",
     [
         help_custom_config(
-            alarm_control_panel.DOMAIN, DEFAULT_CONFIG, {"code": CODE_NUMBER}
+            alarm_control_panel.DOMAIN, DEFAULT_CONFIG, ({"code": CODE_NUMBER},)
         )
     ],
 )
@@ -592,7 +594,7 @@ async def test_attributes_code_number(
         help_custom_config(
             alarm_control_panel.DOMAIN,
             DEFAULT_CONFIG_REMOTE_CODE,
-            {"code": "REMOTE_CODE"},
+            ({"code": "REMOTE_CODE"},),
         )
     ],
 )
@@ -613,7 +615,7 @@ async def test_attributes_remote_code_number(
     "hass_config",
     [
         help_custom_config(
-            alarm_control_panel.DOMAIN, DEFAULT_CONFIG, {"code": CODE_TEXT}
+            alarm_control_panel.DOMAIN, DEFAULT_CONFIG, ({"code": CODE_TEXT},)
         )
     ],
 )

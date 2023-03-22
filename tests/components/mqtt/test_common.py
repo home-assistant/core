@@ -1,4 +1,5 @@
 """Common test objects."""
+from collections.abc import Iterable
 from contextlib import suppress
 import copy
 from datetime import datetime
@@ -120,26 +121,25 @@ async def help_setup_component(
 
 
 def help_custom_config(
-    domain: str,
-    default_config: ConfigType,
-    option_update: ConfigType | tuple[ConfigType,],
+    mqtt_entity_domain: str,
+    mqtt_base_config: ConfigType,
+    mqtt_entity_configs: Iterable[ConfigType,],
 ) -> ConfigType:
     """Tweak a default config for parametrization.
 
-    Returns a custom config to be used as parametrization for for hass_config,
-    based on a supplied default_config and updated with option_update(s).
-    For each option_update an instance is added to the config.
+    Returns a custom config to be used as parametrization for with hass_config,
+    based on the supplied mqtt_base_config and updated with mqtt_entity_configs.
+    For each item in mqtt_entity_configs an entity instance is added to the config.
     """
-    config: ConfigType = copy.deepcopy(default_config)
-    if isinstance(option_update, tuple):
-        instances: list[ConfigType] = []
-        for instance in option_update:
-            base: ConfigType = copy.deepcopy(default_config[mqtt.DOMAIN][domain])
-            base.update(instance)
-            instances.append(base)
-        config[mqtt.DOMAIN][domain] = instances
-    else:
-        config[mqtt.DOMAIN][domain].update(option_update)
+    config: ConfigType = copy.deepcopy(mqtt_base_config)
+    entity_instances: list[ConfigType] = []
+    for instance in mqtt_entity_configs:
+        base: ConfigType = copy.deepcopy(
+            mqtt_base_config[mqtt.DOMAIN][mqtt_entity_domain]
+        )
+        base.update(instance)
+        entity_instances.append(base)
+    config[mqtt.DOMAIN][mqtt_entity_domain]: list[ConfigType] = entity_instances
     return config
 
 

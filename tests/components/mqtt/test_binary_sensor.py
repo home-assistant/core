@@ -1158,7 +1158,7 @@ async def test_cleanup_triggers_and_restoring_state(
         help_custom_config(
             binary_sensor.DOMAIN,
             DEFAULT_CONFIG,
-            {"name": "test3", "expire_after": 10, "state_topic": "test-topic3"},
+            ({"name": "test3", "expire_after": 10, "state_topic": "test-topic3"},),
         )
     ],
 )
