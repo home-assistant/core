@@ -88,6 +88,11 @@ class _PyJWTWithVerify(PyJWT):
             options=merged_options,
             algorithms=algorithms,
         )
+        # These should never be missing since we verify them
+        # but this is an additional safeguard to make sure
+        # nothing slips through.
+        assert "exp" in payload, "exp claim is required"
+        assert "iat" in payload, "iat claim is required"
         self._validate_claims(  # type: ignore[no-untyped-call]
             payload=payload,
             options=merged_options,
