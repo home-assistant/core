@@ -112,7 +112,6 @@ async def test_validate_db_schema_precision_good_schema(
         validate_db_schema_precision,
         instance,
         States,
-        ("last_updated_ts", "last_changed_ts"),
         session_maker,
     )
     assert schema_errors == set()
@@ -149,7 +148,6 @@ async def test_validate_db_schema_precision_with_broken_schema(
         validate_db_schema_precision,
         instance,
         States,
-        ("last_updated_ts", "last_changed_ts"),
         session_maker,
     )
     assert schema_errors == {"states.double precision"}
