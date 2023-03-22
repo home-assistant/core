@@ -97,4 +97,4 @@ class VerisureSmartplug(CoordinatorEntity[VerisureDataUpdateCoordinator], Switch
             self.coordinator.verisure.request,
             command,
         )
-        await self.coordinator.async_refresh()
+        await self.coordinator.async_request_refresh()
