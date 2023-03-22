@@ -1,6 +1,7 @@
 """Platform for the iZone AC."""
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EXCLUDE, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
@@ -32,6 +33,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Check for manually added config, this may exclude some devices
     if conf := config.get(IZONE):
         hass.data[DATA_CONFIG] = conf
+
+        # Explicitly added in the config file, create a config entry.
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                IZONE, context={"source": config_entries.SOURCE_IMPORT}
+            )
+        )
 
     # Start the discovery service
     await async_start_discovery_service(hass)
