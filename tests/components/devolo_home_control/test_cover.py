@@ -18,7 +18,7 @@ from . import configure_integration
 from .mocks import HomeControlMock, HomeControlMockCover
 
 
-async def test_cover(hass: HomeAssistant):
+async def test_cover(hass: HomeAssistant) -> None:
     """Test setup and state change of a cover device."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockCover()
@@ -85,7 +85,7 @@ async def test_cover(hass: HomeAssistant):
     assert hass.states.get(f"{DOMAIN}.test").state == STATE_UNAVAILABLE
 
 
-async def test_remove_from_hass(hass: HomeAssistant):
+async def test_remove_from_hass(hass: HomeAssistant) -> None:
     """Test removing entity."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockCover()

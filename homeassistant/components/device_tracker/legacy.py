@@ -379,8 +379,10 @@ def async_setup_scanner_platform(
         """Handle interval matches."""
         if update_lock.locked():
             LOGGER.warning(
-                "Updating device list from %s took longer than the scheduled "
-                "scan interval %s",
+                (
+                    "Updating device list from %s took longer than the scheduled "
+                    "scan interval %s"
+                ),
                 platform,
                 interval,
             )
@@ -954,6 +956,6 @@ def get_gravatar_for_email(email: str) -> str:
     """
 
     return (
-        f"https://www.gravatar.com/avatar/"
+        "https://www.gravatar.com/avatar/"
         f"{hashlib.md5(email.encode('utf-8').lower()).hexdigest()}.jpg?s=80&d=wavatar"
     )

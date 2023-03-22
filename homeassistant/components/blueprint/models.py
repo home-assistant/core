@@ -69,7 +69,10 @@ class Blueprint:
                 expected_domain,
                 path or self.name,
                 data,
-                f"Found incorrect blueprint type {data_domain}, expected {expected_domain}",
+                (
+                    f"Found incorrect blueprint type {data_domain}, expected"
+                    f" {expected_domain}"
+                ),
             )
 
         self.domain = data_domain

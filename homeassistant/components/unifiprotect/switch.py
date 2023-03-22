@@ -1,4 +1,4 @@
-"""This component provides Switches for UniFi Protect."""
+"""Component providing Switches for UniFi Protect."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -15,9 +15,9 @@ from pyunifiprotect.data import (
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -139,6 +139,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         icon="mdi:run-fast",
         entity_category=EntityCategory.CONFIG,
         ufp_value="recording_settings.enable_motion_detection",
+        ufp_enabled="is_recording_enabled",
         ufp_set_method="set_motion_detection",
         ufp_perm=PermRequired.WRITE,
     ),
@@ -149,6 +150,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="can_detect_person",
         ufp_value="is_person_detection_on",
+        ufp_enabled="is_recording_enabled",
         ufp_set_method="set_person_detection",
         ufp_perm=PermRequired.WRITE,
     ),
@@ -159,6 +161,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="can_detect_vehicle",
         ufp_value="is_vehicle_detection_on",
+        ufp_enabled="is_recording_enabled",
         ufp_set_method="set_vehicle_detection",
         ufp_perm=PermRequired.WRITE,
     ),
@@ -169,6 +172,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="can_detect_face",
         ufp_value="is_face_detection_on",
+        ufp_enabled="is_recording_enabled",
         ufp_set_method="set_face_detection",
         ufp_perm=PermRequired.WRITE,
     ),
@@ -179,6 +183,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="can_detect_package",
         ufp_value="is_package_detection_on",
+        ufp_enabled="is_recording_enabled",
         ufp_set_method="set_package_detection",
         ufp_perm=PermRequired.WRITE,
     ),
@@ -189,6 +194,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="can_detect_license_plate",
         ufp_value="is_license_plate_detection_on",
+        ufp_enabled="is_recording_enabled",
         ufp_set_method="set_license_plate_detection",
         ufp_perm=PermRequired.WRITE,
     ),
@@ -199,6 +205,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="can_detect_smoke",
         ufp_value="is_smoke_detection_on",
+        ufp_enabled="is_recording_enabled",
         ufp_set_method="set_smoke_detection",
         ufp_perm=PermRequired.WRITE,
     ),

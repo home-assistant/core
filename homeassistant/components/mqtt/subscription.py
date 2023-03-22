@@ -64,7 +64,11 @@ class EntitySubscription:
         if other is None:
             return True
 
-        return (self.topic, self.qos, self.encoding,) != (
+        return (
+            self.topic,
+            self.qos,
+            self.encoding,
+        ) != (
             other.topic,
             other.qos,
             other.encoding,

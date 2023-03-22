@@ -1,5 +1,4 @@
 """Test nest diagnostics."""
-
 from unittest.mock import patch
 
 from google_nest_sdm.exceptions import SubscriberException
@@ -7,6 +6,7 @@ import pytest
 
 from homeassistant.components.nest.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .common import TEST_CONFIG_LEGACY
@@ -15,6 +15,7 @@ from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
 )
+from tests.typing import ClientSessionGenerator
 
 NEST_DEVICE_ID = "enterprises/project-id/devices/device-id"
 
@@ -88,8 +89,12 @@ def platforms() -> list[str]:
 
 
 async def test_entry_diagnostics(
-    hass, hass_client, create_device, setup_platform, config_entry
-):
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    create_device,
+    setup_platform,
+    config_entry,
+) -> None:
     """Test config entry diagnostics."""
     create_device.create(raw_data=DEVICE_API_DATA)
     await setup_platform()
@@ -102,8 +107,12 @@ async def test_entry_diagnostics(
 
 
 async def test_device_diagnostics(
-    hass, hass_client, create_device, setup_platform, config_entry
-):
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    create_device,
+    setup_platform,
+    config_entry,
+) -> None:
     """Test config entry diagnostics."""
     create_device.create(raw_data=DEVICE_API_DATA)
     await setup_platform()
@@ -120,11 +129,11 @@ async def test_device_diagnostics(
 
 
 async def test_setup_susbcriber_failure(
-    hass,
-    hass_client,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
     config_entry,
     setup_base_platform,
-):
+) -> None:
     """Test configuration error."""
     with patch(
         "homeassistant.components.nest.api.GoogleNestSubscriber.start_async",
@@ -139,8 +148,11 @@ async def test_setup_susbcriber_failure(
 
 @pytest.mark.parametrize("nest_test_config", [TEST_CONFIG_LEGACY])
 async def test_legacy_config_entry_diagnostics(
-    hass, hass_client, config_entry, setup_base_platform
-):
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry,
+    setup_base_platform,
+) -> None:
     """Test config entry diagnostics for legacy integration doesn't fail."""
 
     with patch("homeassistant.components.nest.legacy.Nest"):
@@ -150,8 +162,12 @@ async def test_legacy_config_entry_diagnostics(
 
 
 async def test_camera_diagnostics(
-    hass, hass_client, create_device, setup_platform, config_entry
-):
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    create_device,
+    setup_platform,
+    config_entry,
+) -> None:
     """Test config entry diagnostics."""
     create_device.create(raw_data=CAMERA_API_DATA)
     await setup_platform()

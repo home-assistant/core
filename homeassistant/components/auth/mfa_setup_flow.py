@@ -40,7 +40,7 @@ class MfaFlowManager(data_entry_flow.FlowManager):
 
     async def async_create_flow(  # type: ignore[override]
         self,
-        handler_key: Any,
+        handler_key: str,
         *,
         context: dict[str, Any],
         data: dict[str, Any],

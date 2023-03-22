@@ -35,7 +35,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CONF_TYPE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback, split_entity_id
 import homeassistant.helpers.config_validation as cv
@@ -349,7 +349,7 @@ def async_show_setup_message(
 
     message = (
         f"To set up {bridge_name} in the Home App, "
-        f"scan the QR code or enter the following code:\n"
+        "scan the QR code or enter the following code:\n"
         f"### {pin}\n"
         f"![image](/api/homekit/pairingqr?{entry_id}-{pairing_secret})"
     )
@@ -391,12 +391,20 @@ def cleanup_name_for_homekit(name: str | None) -> str:
 
 def temperature_to_homekit(temperature: float | int, unit: str) -> float:
     """Convert temperature to Celsius for HomeKit."""
-    return round(TemperatureConverter.convert(temperature, unit, TEMP_CELSIUS), 1)
+    return round(
+        TemperatureConverter.convert(temperature, unit, UnitOfTemperature.CELSIUS), 1
+    )
 
 
 def temperature_to_states(temperature: float | int, unit: str) -> float:
     """Convert temperature back from Celsius to Home Assistant unit."""
-    return round(TemperatureConverter.convert(temperature, TEMP_CELSIUS, unit) * 2) / 2
+    return (
+        round(
+            TemperatureConverter.convert(temperature, UnitOfTemperature.CELSIUS, unit)
+            * 2
+        )
+        / 2
+    )
 
 
 def density_to_air_quality(density: float) -> int:
@@ -439,16 +447,21 @@ def density_to_air_quality_nitrogen_dioxide(density: float) -> int:
 
 
 def density_to_air_quality_voc(density: float) -> int:
-    """Map VOCs µg/m3 to HomeKit AirQuality level."""
-    if density <= 24:
+    """Map VOCs µg/m3 to HomeKit AirQuality level.
+
+    The VOC mappings use the IAQ guidelines for Europe released by the WHO (World Health Organization).
+    Referenced from Sensirion_Gas_Sensors_SGP3x_TVOC_Concept.pdf
+    https://github.com/paulvha/svm30/blob/master/extras/Sensirion_Gas_Sensors_SGP3x_TVOC_Concept.pdf
+    """
+    if density <= 250:  # WHO IAQ 1 (HomeKit: Excellent)
         return 1
-    if density <= 48:
+    if density <= 500:  # WHO IAQ 2 (HomeKit: Good)
         return 2
-    if density <= 64:
+    if density <= 1000:  # WHO IAQ 3 (HomeKit: Fair)
         return 3
-    if density <= 96:
+    if density <= 3000:  # WHO IAQ 4 (HomeKit: Inferior)
         return 4
-    return 5
+    return 5  # WHOA IAQ 5 (HomeKit: Poor)
 
 
 def get_persist_filename_for_entry_id(entry_id: str) -> str:

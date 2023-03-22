@@ -1,4 +1,4 @@
-"""The Home Assistant Sky Connect integration."""
+"""The Home Assistant SkyConnect integration."""
 from __future__ import annotations
 
 import logging
@@ -16,7 +16,7 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
     get_zigbee_socket,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
@@ -25,12 +25,10 @@ from .util import get_usb_service_info
 _LOGGER = logging.getLogger(__name__)
 
 
-async def _multi_pan_addon_info(
-    hass: HomeAssistant, entry: ConfigEntry
-) -> AddonInfo | None:
-    """Return AddonInfo if the multi-PAN addon is enabled for our SkyConnect."""
+async def _wait_multi_pan_addon(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Wait for multi-PAN info to be available."""
     if not is_hassio(hass):
-        return None
+        return
 
     addon_manager: AddonManager = get_addon_manager(hass)
     try:
@@ -50,7 +48,18 @@ async def _multi_pan_addon_info(
         )
         raise ConfigEntryNotReady
 
-    if addon_info.state == AddonState.NOT_INSTALLED:
+
+async def _multi_pan_addon_info(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> AddonInfo | None:
+    """Return AddonInfo if the multi-PAN addon is enabled for our SkyConnect."""
+    if not is_hassio(hass):
+        return None
+
+    addon_manager: AddonManager = get_addon_manager(hass)
+    addon_info: AddonInfo = await addon_manager.async_get_addon_info()
+
+    if addon_info.state != AddonState.RUNNING:
         return None
 
     usb_dev = entry.data["device"]
@@ -62,8 +71,8 @@ async def _multi_pan_addon_info(
     return addon_info
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up a Home Assistant Sky Connect config entry."""
+async def _async_usb_scan_done(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Finish Home Assistant SkyConnect config entry setup."""
     matcher = usb.USBCallbackMatcher(
         domain=DOMAIN,
         vid=entry.data["vid"].upper(),
@@ -74,8 +83,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     if not usb.async_is_plugged_in(hass, matcher):
-        # The USB dongle is not plugged in
-        raise ConfigEntryNotReady
+        # The USB dongle is not plugged in, remove the config entry
+        hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
+        return
 
     addon_info = await _multi_pan_addon_info(hass, entry)
 
@@ -86,10 +96,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             context={"source": "usb"},
             data=usb_info,
         )
-        return True
+        return
 
     hw_discovery_data = {
-        "name": "Sky Connect Multi-PAN",
+        "name": "SkyConnect Multi-PAN",
         "port": {
             "path": get_zigbee_socket(hass, addon_info),
         },
@@ -100,6 +110,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         context={"source": "hardware"},
         data=hw_discovery_data,
     )
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up a Home Assistant SkyConnect config entry."""
+
+    await _wait_multi_pan_addon(hass, entry)
+
+    @callback
+    def async_usb_scan_done() -> None:
+        """Handle usb discovery started."""
+        hass.async_create_task(_async_usb_scan_done(hass, entry))
+
+    unsub_usb = usb.async_register_initial_scan_callback(hass, async_usb_scan_done)
+    entry.async_on_unload(unsub_usb)
 
     return True
 

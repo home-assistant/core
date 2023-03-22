@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 
+import async_timeout
 from async_upnp_client.exceptions import UpnpConnectionError
 
 from homeassistant.components import ssdp
@@ -11,7 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation, device_registry
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import (
     CONFIG_ENTRY_HOST,
@@ -33,7 +34,7 @@ NOTIFICATION_TITLE = "UPnP/IGD Setup"
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
-CONFIG_SCHEMA = config_validation.removed(DOMAIN, raise_if_present=False)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -70,7 +71,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     try:
-        await asyncio.wait_for(device_discovered_event.wait(), timeout=10)
+        async with async_timeout.timeout(10):
+            await device_discovered_event.wait()
     except asyncio.TimeoutError as err:
         raise ConfigEntryNotReady(f"Device not discovered: {usn}") from err
     finally:
@@ -116,11 +118,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if device.serial_number:
         identifiers.add((IDENTIFIER_SERIAL_NUMBER, device.serial_number))
 
-    connections = {(device_registry.CONNECTION_UPNP, device.udn)}
+    connections = {(dr.CONNECTION_UPNP, device.udn)}
     if device_mac_address:
-        connections.add((device_registry.CONNECTION_NETWORK_MAC, device_mac_address))
+        connections.add((dr.CONNECTION_NETWORK_MAC, device_mac_address))
 
-    dev_registry = device_registry.async_get(hass)
+    dev_registry = dr.async_get(hass)
     device_entry = dev_registry.async_get_device(
         identifiers=identifiers, connections=connections
     )

@@ -19,7 +19,7 @@ from .const import LOGGER
 from .models import Event
 from .parsers import PARSERS
 
-UNHANDLED_TOPICS = set()
+UNHANDLED_TOPICS: set[str] = set()
 SUBSCRIPTION_ERRORS = (
     Fault,
     asyncio.TimeoutError,
@@ -126,8 +126,10 @@ class EventManager:
                 await self._subscription.Unsubscribe()
             except (XMLParseError, *SUBSCRIPTION_ERRORS) as err:
                 LOGGER.debug(
-                    "Failed to unsubscribe ONVIF PullPoint subscription for '%s';"
-                    " This is normal if the device restarted: %s",
+                    (
+                        "Failed to unsubscribe ONVIF PullPoint subscription for '%s';"
+                        " This is normal if the device restarted: %s"
+                    ),
                     self.unique_id,
                     err,
                 )
@@ -141,8 +143,10 @@ class EventManager:
             # when we get an XMLParseError
             LOGGER.log(
                 DEBUG if isinstance(err, XMLParseError) else WARNING,
-                "Failed to restart ONVIF PullPoint subscription for '%s'; "
-                "Retrying later: %s",
+                (
+                    "Failed to restart ONVIF PullPoint subscription for '%s'; "
+                    "Retrying later: %s"
+                ),
                 self.unique_id,
                 err,
             )
@@ -194,7 +198,10 @@ class EventManager:
                 # when we get an XMLParseError
                 LOGGER.log(
                     DEBUG if isinstance(err, XMLParseError) else WARNING,
-                    "Failed to fetch ONVIF PullPoint subscription messages for '%s': %s",
+                    (
+                        "Failed to fetch ONVIF PullPoint subscription messages for"
+                        " '%s': %s"
+                    ),
                     self.unique_id,
                     err,
                 )

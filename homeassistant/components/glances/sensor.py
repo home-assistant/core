@@ -16,12 +16,12 @@ from homeassistant.const import (
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
     STATE_UNAVAILABLE,
-    TEMP_CELSIUS,
     Platform,
     UnitOfInformation,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -171,7 +171,7 @@ SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
         key="temperature_core",
         type="sensors",
         name_suffix="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -179,7 +179,7 @@ SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
         key="temperature_hdd",
         type="sensors",
         name_suffix="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -196,6 +196,7 @@ SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
         type="sensors",
         name_suffix="Charge",
         native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
         icon="mdi:battery",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -256,12 +257,11 @@ async def async_setup_entry(
         hass: HomeAssistant, old_unique_id: str, new_key: str
     ) -> None:
         """Migrate unique IDs to the new format."""
-        ent_reg = entity_registry.async_get(hass)
+        ent_reg = er.async_get(hass)
 
         if entity_id := ent_reg.async_get_entity_id(
             Platform.SENSOR, DOMAIN, old_unique_id
         ):
-
             ent_reg.async_update_entity(
                 entity_id, new_unique_id=f"{config_entry.entry_id}-{new_key}"
             )

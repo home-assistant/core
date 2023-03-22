@@ -36,8 +36,7 @@ from . import MetDataUpdateCoordinator
 from .const import ATTR_MAP, CONDITIONS_MAP, CONF_TRACK_HOME, DOMAIN, FORECAST_MAP
 
 ATTRIBUTION = (
-    "Weather forecast from met.no, delivered by the Norwegian "
-    "Meteorological Institute."
+    "Weather forecast from met.no, delivered by the Norwegian Meteorological Institute."
 )
 DEFAULT_NAME = "Met.no"
 
@@ -95,7 +94,7 @@ class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
         self._hourly = hourly
 
     @property
-    def track_home(self) -> (Any | bool):
+    def track_home(self) -> Any | bool:
         """Return if we are tracking home."""
         return self._config.get(CONF_TRACK_HOME, False)
 

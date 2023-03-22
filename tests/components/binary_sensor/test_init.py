@@ -5,7 +5,7 @@ from homeassistant.components import binary_sensor
 from homeassistant.const import STATE_OFF, STATE_ON
 
 
-def test_state():
+def test_state() -> None:
     """Test binary sensor state."""
     sensor = binary_sensor.BinarySensorEntity()
     assert sensor.state is None

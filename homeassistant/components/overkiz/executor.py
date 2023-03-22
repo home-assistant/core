@@ -152,8 +152,7 @@ class OverkizExecutor:
         await self.coordinator.client.cancel_command(exec_id)
 
     def get_gateway_id(self) -> str:
-        """
-        Retrieve gateway id from device url.
+        """Retrieve gateway id from device url.
 
         device URL (<protocol>://<gatewayId>/<deviceAddress>[#<subsystemId>])
         """

@@ -89,7 +89,7 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize flow."""
         self._host: str | None = None
         self._port: int | None = DEFAULT_PORT
@@ -106,7 +106,7 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
         self._host = discovery_info.host
         self._port = discovery_info.port or DEFAULT_PORT
-        self._name = discovery_info.hostname[: -len(".local.")]
+        self._name = discovery_info.hostname.removesuffix(".local.")
         if not (uuid := discovery_info.properties.get("uuid")):
             return self.async_abort(reason="no_uuid")
 

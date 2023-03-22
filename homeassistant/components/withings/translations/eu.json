@@ -1,9 +1,0 @@
-{
-    "config": {
-        "step": {
-            "reauth_confirm": {
-                "title": "Berriro autentifikatu Integrazioa"
-            }
-        }
-    }
-}

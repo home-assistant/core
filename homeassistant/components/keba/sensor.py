@@ -7,11 +7,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
-    UnitOfElectricCurrent,
-    UnitOfPower,
-)
+from homeassistant.const import UnitOfElectricCurrent, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -48,7 +44,7 @@ async def async_setup_platform(
             SensorEntityDescription(
                 key="Setenergy",
                 name="Energy Target",
-                native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+                native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 device_class=SensorDeviceClass.ENERGY,
             ),
         ),
@@ -69,7 +65,7 @@ async def async_setup_platform(
             SensorEntityDescription(
                 key="E pres",
                 name="Session Energy",
-                native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+                native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 device_class=SensorDeviceClass.ENERGY,
             ),
         ),
@@ -79,7 +75,7 @@ async def async_setup_platform(
             SensorEntityDescription(
                 key="E total",
                 name="Total Energy",
-                native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+                native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 device_class=SensorDeviceClass.ENERGY,
                 state_class=SensorStateClass.TOTAL_INCREASING,
             ),

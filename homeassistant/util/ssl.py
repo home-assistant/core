@@ -8,12 +8,21 @@ import certifi
 def client_context() -> ssl.SSLContext:
     """Return an SSL context for making requests."""
 
-    # Reuse environment variable definition from requests, since it's already a requirement
-    # If the environment variable has no value, fall back to using certs from certifi package
+    # Reuse environment variable definition from requests, since it's already a
+    # requirement. If the environment variable has no value, fall back to using
+    # certs from certifi package.
     cafile = environ.get("REQUESTS_CA_BUNDLE", certifi.where())
 
-    context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH, cafile=cafile)
-    return context
+    return ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH, cafile=cafile)
+
+
+# Create this only once and reuse it
+_DEFAULT_SSL_CONTEXT = client_context()
+
+
+def get_default_context() -> ssl.SSLContext:
+    """Return the default SSL context."""
+    return _DEFAULT_SSL_CONTEXT
 
 
 def server_context_modern() -> ssl.SSLContext:
@@ -23,7 +32,7 @@ def server_context_modern() -> ssl.SSLContext:
     https://wiki.mozilla.org/Security/Server_Side_TLS
     Modern guidelines are followed.
     """
-    context = ssl.SSLContext(ssl.PROTOCOL_TLS)
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 
     context.options |= (
         ssl.OP_NO_SSLv2
@@ -53,7 +62,7 @@ def server_context_intermediate() -> ssl.SSLContext:
     https://wiki.mozilla.org/Security/Server_Side_TLS
     Intermediate guidelines are followed.
     """
-    context = ssl.SSLContext(ssl.PROTOCOL_TLS)
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 
     context.options |= (
         ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 | ssl.OP_CIPHER_SERVER_PREFERENCE
