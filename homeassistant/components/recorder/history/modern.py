@@ -577,7 +577,7 @@ def _get_rows_with_session(
         )
 
     if run is None:
-        run = recorder.get_instance(hass).run_history.get(utc_point_in_time)
+        run = recorder.get_instance(hass).recorder_runs_manager.get(utc_point_in_time)
 
     if run is None or process_timestamp(run.start) > utc_point_in_time:
         # History did not run before utc_point_in_time
