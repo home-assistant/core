@@ -80,9 +80,9 @@ from .queries import (
     has_events_context_ids_to_migrate,
     has_states_context_ids_to_migrate,
 )
-from .run_history import RunHistory
 from .table_managers.event_data import EventDataManager
 from .table_managers.event_types import EventTypeManager
+from .table_managers.recorder_runs import RecorderRunsManager
 from .table_managers.state_attributes import StateAttributesManager
 from .table_managers.states import StatesManager
 from .table_managers.states_meta import StatesMetaManager
@@ -198,7 +198,6 @@ class Recorder(threading.Thread):
         self.async_recorder_ready = asyncio.Event()
         self._queue_watch = threading.Event()
         self.engine: Engine | None = None
-        self.run_history = RunHistory()
 
         # The entity_filter is exposed on the recorder instance so that
         # it can be used to see if an entity is being recorded and is called
@@ -208,6 +207,8 @@ class Recorder(threading.Thread):
 
         self.schema_version = 0
         self._commits_without_expire = 0
+
+        self.recorder_runs_manager = RecorderRunsManager()
         self.states_manager = StatesManager()
         self.event_data_manager = EventDataManager(self)
         self.event_type_manager = EventTypeManager(self)
@@ -216,6 +217,7 @@ class Recorder(threading.Thread):
             self, exclude_attributes_by_domain
         )
         self.statistics_meta_manager = StatisticsMetaManager(self)
+
         self.event_session: Session | None = None
         self._get_session: Callable[[], Session] | None = None
         self._completed_first_database_setup: bool | None = None
@@ -1117,7 +1119,7 @@ class Recorder(threading.Thread):
         finally:
             self._close_connection()
         move_away_broken_database(dburl_to_path(self.db_url))
-        self.run_history.reset()
+        self.recorder_runs_manager.reset()
         self._setup_recorder()
         self._setup_run()
 
@@ -1333,8 +1335,8 @@ class Recorder(threading.Thread):
     def _setup_run(self) -> None:
         """Log the start of the current run and schedule any needed jobs."""
         with session_scope(session=self.get_session()) as session:
-            end_incomplete_runs(session, self.run_history.recording_start)
-            self.run_history.start(session)
+            end_incomplete_runs(session, self.recorder_runs_manager.recording_start)
+            self.recorder_runs_manager.start(session)
 
         self._open_event_session()
 
@@ -1346,15 +1348,15 @@ class Recorder(threading.Thread):
         """End the recorder session."""
         if self.event_session is None:
             return
-        if self.run_history.active:
-            self.run_history.end(self.event_session)
+        if self.recorder_runs_manager.active:
+            self.recorder_runs_manager.end(self.event_session)
         try:
             self._commit_event_session_or_retry()
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.exception("Error saving the event session during shutdown: %s", err)
 
         self.event_session.close()
-        self.run_history.clear()
+        self.recorder_runs_manager.clear()
 
     def _shutdown(self) -> None:
         """Save end time for current run."""

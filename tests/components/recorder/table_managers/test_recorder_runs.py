@@ -1,4 +1,4 @@
-"""Test run history."""
+"""Test recorder runs table manager."""
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -25,29 +25,35 @@ async def test_run_history(recorder_mock: Recorder, hass: HomeAssistant) -> None
         session.add(RecorderRuns(start=two_days_ago, created=two_days_ago))
         session.add(RecorderRuns(start=one_day_ago, created=one_day_ago))
         session.commit()
-        instance.run_history.load_from_db(session)
+        instance.recorder_runs_manager.load_from_db(session)
 
     assert (
         process_timestamp(
-            instance.run_history.get(three_days_ago + timedelta(microseconds=1)).start
+            instance.recorder_runs_manager.get(
+                three_days_ago + timedelta(microseconds=1)
+            ).start
         )
         == three_days_ago
     )
     assert (
         process_timestamp(
-            instance.run_history.get(two_days_ago + timedelta(microseconds=1)).start
+            instance.recorder_runs_manager.get(
+                two_days_ago + timedelta(microseconds=1)
+            ).start
         )
         == two_days_ago
     )
     assert (
         process_timestamp(
-            instance.run_history.get(one_day_ago + timedelta(microseconds=1)).start
+            instance.recorder_runs_manager.get(
+                one_day_ago + timedelta(microseconds=1)
+            ).start
         )
         == one_day_ago
     )
     assert (
-        process_timestamp(instance.run_history.get(now).start)
-        == instance.run_history.recording_start
+        process_timestamp(instance.recorder_runs_manager.get(now).start)
+        == instance.recorder_runs_manager.recording_start
     )
 
 
@@ -64,10 +70,10 @@ async def test_run_history_while_recorder_is_not_yet_started(
     # Prevent the run history from starting to ensure
     # we can test run_history.current.start returns the expected value
     with patch(
-        "homeassistant.components.recorder.run_history.RunHistory.start",
+        "homeassistant.components.recorder.table_managers.recorder_runs.RecorderRunsManager.start",
     ):
         instance = await async_setup_recorder_instance(hass)
-    run_history = instance.run_history
+    run_history = instance.recorder_runs_manager
     assert run_history.current.start == run_history.recording_start
 
     def _start_run_history():

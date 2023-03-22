@@ -517,7 +517,9 @@ def _purge_old_recorder_runs(
     """Purge all old recorder runs."""
     # Recorder runs is small, no need to batch run it
     deleted_rows = session.execute(
-        delete_recorder_runs_rows(purge_before, instance.run_history.current.run_id)
+        delete_recorder_runs_rows(
+            purge_before, instance.recorder_runs_manager.current.run_id
+        )
     )
     _LOGGER.debug("Deleted %s recorder_runs", deleted_rows)
 
