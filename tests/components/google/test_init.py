@@ -484,6 +484,7 @@ async def test_add_event_date_in_x(
     assert aioclient_mock.mock_calls[0][2] == {
         "summary": TEST_EVENT_SUMMARY,
         "description": TEST_EVENT_DESCRIPTION,
+        "location": ""
         "start": {"date": start_date.date().isoformat()},
         "end": {"date": end_date.date().isoformat()},
     }
@@ -524,6 +525,7 @@ async def test_add_event_date(
     assert aioclient_mock.mock_calls[0][2] == {
         "summary": TEST_EVENT_SUMMARY,
         "description": TEST_EVENT_DESCRIPTION,
+        "location": ""
         "start": {"date": today.isoformat()},
         "end": {"date": end_date.isoformat()},
     }
@@ -564,6 +566,7 @@ async def test_add_event_date_time(
     assert aioclient_mock.mock_calls[0][2] == {
         "summary": TEST_EVENT_SUMMARY,
         "description": TEST_EVENT_DESCRIPTION,
+        "location": ""
         "start": {
             "dateTime": start_datetime.isoformat(timespec="seconds"),
             "timeZone": "America/Regina",
