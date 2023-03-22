@@ -113,8 +113,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def update_observation():
         """Retrieve recent observations."""
-        current_time = datetime.datetime.utcnow()
-        await nws_data.update_observation(start_time=current_time - UPDATE_TIME_PERIOD)
+        await nws_data.update_observation(start_time=utcnow() - UPDATE_TIME_PERIOD)
 
     coordinator_observation = NwsDataUpdateCoordinator(
         hass,
