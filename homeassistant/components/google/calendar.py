@@ -23,6 +23,7 @@ from homeassistant.components.calendar import (
     CREATE_EVENT_SCHEMA,
     ENTITY_ID_FORMAT,
     EVENT_DESCRIPTION,
+    EVENT_LOCATION
     EVENT_END,
     EVENT_RRULE,
     EVENT_START,
@@ -507,6 +508,7 @@ class GoogleCalendarEntity(
                 "start": start,
                 "end": end,
                 EVENT_DESCRIPTION: kwargs.get(EVENT_DESCRIPTION),
+                EVENT_LOCATION: kwargs.get(EVENT_LOCATION),
             }
         )
         if rrule := kwargs.get(EVENT_RRULE):
@@ -603,6 +605,7 @@ async def async_create_event(entity: GoogleCalendarEntity, call: ServiceCall) ->
             Event(
                 summary=call.data[EVENT_SUMMARY],
                 description=call.data[EVENT_DESCRIPTION],
+                location=call.data[EVENT_LOCATION]
                 start=start,
                 end=end,
             ),
