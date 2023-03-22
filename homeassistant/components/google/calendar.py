@@ -605,7 +605,7 @@ async def async_create_event(entity: GoogleCalendarEntity, call: ServiceCall) ->
             Event(
                 summary=call.data[EVENT_SUMMARY],
                 description=call.data[EVENT_DESCRIPTION],
-                location=call.data[EVENT_LOCATION]
+                location=call.data[EVENT_LOCATION],
                 start=start,
                 end=end,
             ),
