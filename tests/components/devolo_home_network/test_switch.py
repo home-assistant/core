@@ -40,8 +40,8 @@ async def test_switch_setup(hass: HomeAssistant) -> None:
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get(f"{PLATFORM}.{device_name}_enable_guest_wifi")
-    assert hass.states.get(f"{PLATFORM}.{device_name}_enable_leds")
+    assert hass.states.get(f"{PLATFORM}.{device_name}_enable_guest_wifi") is not None
+    assert hass.states.get(f"{PLATFORM}.{device_name}_enable_leds") is not None
 
     await hass.config_entries.async_unload(entry.entry_id)
 
@@ -85,9 +85,10 @@ async def test_update_enable_guest_wifi(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get(state_key))
+    state = hass.states.get(state_key)
+    assert state is not None
     assert state == snapshot
-    assert (entity_entry := entity_registry.async_get(state.entity_id))
+    entity_entry = entity_registry.async_get(state.entity_id)
     assert entity_entry == snapshot
 
     # Emulate state change
@@ -97,7 +98,8 @@ async def test_update_enable_guest_wifi(
     async_fire_time_changed(hass, dt_util.utcnow() + SHORT_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get(state_key))
+    state = hass.states.get(state_key)
+    assert state is not None
     assert state.state == STATE_ON
 
     # Switch off
@@ -112,7 +114,8 @@ async def test_update_enable_guest_wifi(
             PLATFORM, SERVICE_TURN_OFF, {"entity_id": state_key}, blocking=True
         )
 
-        assert (state := hass.states.get(state_key))
+        state = hass.states.get(state_key)
+        assert state is not None
         assert state.state == STATE_OFF
         turn_off.assert_called_once_with(False)
 
@@ -133,7 +136,8 @@ async def test_update_enable_guest_wifi(
             PLATFORM, SERVICE_TURN_ON, {"entity_id": state_key}, blocking=True
         )
 
-        assert (state := hass.states.get(state_key))
+        state = hass.states.get(state_key)
+        assert state is not None
         assert state.state == STATE_ON
         turn_on.assert_called_once_with(True)
 
@@ -152,7 +156,8 @@ async def test_update_enable_guest_wifi(
             PLATFORM, SERVICE_TURN_ON, {"entity_id": state_key}, blocking=True
         )
 
-        assert (state := hass.states.get(state_key))
+        state = hass.states.get(state_key)
+        assert state is not None
         assert state.state == STATE_UNAVAILABLE
 
     await hass.config_entries.async_unload(entry.entry_id)
@@ -172,9 +177,10 @@ async def test_update_enable_leds(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get(state_key))
+    state = hass.states.get(state_key)
+    assert state is not None
     assert state == snapshot
-    assert (entity_entry := entity_registry.async_get(state.entity_id))
+    entity_entry = entity_registry.async_get(state.entity_id)
     assert entity_entry == snapshot
 
     # Emulate state change
@@ -182,7 +188,8 @@ async def test_update_enable_leds(
     async_fire_time_changed(hass, dt_util.utcnow() + SHORT_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get(state_key))
+    state = hass.states.get(state_key)
+    assert state is not None
     assert state.state == STATE_ON
 
     # Switch off
@@ -195,7 +202,8 @@ async def test_update_enable_leds(
             PLATFORM, SERVICE_TURN_OFF, {"entity_id": state_key}, blocking=True
         )
 
-        assert (state := hass.states.get(state_key))
+        state = hass.states.get(state_key)
+        assert state is not None
         assert state.state == STATE_OFF
         turn_off.assert_called_once_with(False)
 
@@ -214,7 +222,8 @@ async def test_update_enable_leds(
             PLATFORM, SERVICE_TURN_ON, {"entity_id": state_key}, blocking=True
         )
 
-        assert (state := hass.states.get(state_key))
+        state = hass.states.get(state_key)
+        assert state is not None
         assert state.state == STATE_ON
         turn_on.assert_called_once_with(True)
 
@@ -233,7 +242,8 @@ async def test_update_enable_leds(
             PLATFORM, SERVICE_TURN_OFF, {"entity_id": state_key}, blocking=True
         )
 
-        assert (state := hass.states.get(state_key))
+        state = hass.states.get(state_key)
+        assert state is not None
         assert state.state == STATE_UNAVAILABLE
 
     await hass.config_entries.async_unload(entry.entry_id)
@@ -261,12 +271,16 @@ async def test_device_failure(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
+    state = hass.states.get(state_key)
+    assert state is not None
+
     api = getattr(mock_device.device, get_method)
     api.side_effect = DeviceUnavailable
     async_fire_time_changed(hass, dt_util.utcnow() + update_interval)
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get(state_key))
+    state = hass.states.get(state_key)
+    assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
 
@@ -287,6 +301,9 @@ async def test_auth_failed(
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+
+    state = hass.states.get(state_key)
+    assert state is not None
 
     setattr(mock_device.device, set_method, AsyncMock())
     api = getattr(mock_device.device, set_method)

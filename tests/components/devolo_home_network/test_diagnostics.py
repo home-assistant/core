@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.devolo_home_network.diagnostics import TO_REDACT
 from homeassistant.components.diagnostics import REDACTED
@@ -10,6 +9,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import configure_integration
+from .const import DISCOVERY_INFO
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
@@ -19,7 +19,6 @@ from tests.typing import ClientSessionGenerator
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""
     entry = configure_integration(hass)
@@ -33,4 +32,14 @@ async def test_entry_diagnostics(
         entry_dict["data"][key] = REDACTED
 
     result = await get_diagnostics_for_config_entry(hass, hass_client, entry)
-    assert result == {"entry": entry_dict, "device_info": snapshot}
+    assert result == {
+        "entry": entry_dict,
+        "device_info": {
+            "mt_number": DISCOVERY_INFO.properties["MT"],
+            "product": DISCOVERY_INFO.properties["Product"],
+            "firmware": DISCOVERY_INFO.properties["FirmwareVersion"],
+            "device_api": True,
+            "plcnet_api": True,
+            "features": DISCOVERY_INFO.properties["Features"].split(","),
+        },
+    }

@@ -30,7 +30,7 @@ async def test_binary_sensor_setup(hass: HomeAssistant) -> None:
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert not hass.states.get(f"{DOMAIN}.{device_name}_{CONNECTED_TO_ROUTER}")
+    assert hass.states.get(f"{DOMAIN}.{device_name}_{CONNECTED_TO_ROUTER}") is None
 
     await hass.config_entries.async_unload(entry.entry_id)
 
@@ -50,9 +50,10 @@ async def test_update_attached_to_router(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get(state_key))
+    state = hass.states.get(state_key)
+    assert state is not None
     assert state == snapshot
-    assert (entity_entry := entity_registry.async_get(state.entity_id))
+    entity_entry = entity_registry.async_get(state.entity_id)
     assert entity_entry == snapshot
 
     # Emulate device failure
@@ -62,7 +63,8 @@ async def test_update_attached_to_router(
     async_fire_time_changed(hass, dt_util.utcnow() + LONG_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get(state_key))
+    state = hass.states.get(state_key)
+    assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
     # Emulate state change
@@ -72,7 +74,8 @@ async def test_update_attached_to_router(
     async_fire_time_changed(hass, dt_util.utcnow() + LONG_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get(state_key))
+    state = hass.states.get(state_key)
+    assert state is not None
     assert state.state == STATE_ON
 
     await hass.config_entries.async_unload(entry.entry_id)

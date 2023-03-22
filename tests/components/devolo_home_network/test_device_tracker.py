@@ -46,7 +46,8 @@ async def test_device_tracker(
     async_fire_time_changed(hass, dt_util.utcnow() + LONG_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get(state_key))
+    state = hass.states.get(state_key)
+    assert state is not None
     assert state == snapshot
 
     # Emulate state change
@@ -56,7 +57,8 @@ async def test_device_tracker(
     async_fire_time_changed(hass, dt_util.utcnow() + LONG_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get(state_key))
+    state = hass.states.get(state_key)
+    assert state is not None
     assert state.state == STATE_NOT_HOME
 
     # Emulate device failure
@@ -66,7 +68,8 @@ async def test_device_tracker(
     async_fire_time_changed(hass, dt_util.utcnow() + LONG_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get(state_key))
+    state = hass.states.get(state_key)
+    assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
     await hass.config_entries.async_unload(entry.entry_id)
@@ -96,5 +99,6 @@ async def test_restoring_clients(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get(state_key))
+    state = hass.states.get(state_key)
+    assert state is not None
     assert state.state == STATE_NOT_HOME
