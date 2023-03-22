@@ -1,7 +1,7 @@
 {
   "domain": "nextcloud",
   "name": "Nextcloud",
-  "codeowners": ["@meichthys", "@mib1185"],
+  "codeowners": ["@meichthys"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nextcloud",
   "iot_class": "cloud_polling",
