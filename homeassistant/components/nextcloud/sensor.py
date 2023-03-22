@@ -7,6 +7,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from .const import DOMAIN
+from .coordinator import NextcloudDataUpdateCoordinator
 from .entity import NextcloudEntity
 
 SENSORS = (
@@ -65,11 +66,16 @@ def setup_platform(
     """Set up the Nextcloud sensors."""
     if discovery_info is None:
         return
-    sensors = []
-    for name in hass.data[DOMAIN]:
-        if name in SENSORS:
-            sensors.append(NextcloudSensor(name))
-    add_entities(sensors, True)
+    coordinator: NextcloudDataUpdateCoordinator = hass.data[DOMAIN]
+
+    add_entities(
+        [
+            NextcloudSensor(coordinator, name)
+            for name in coordinator.data
+            if name in SENSORS
+        ],
+        True,
+    )
 
 
 class NextcloudSensor(NextcloudEntity, SensorEntity):
@@ -78,4 +84,4 @@ class NextcloudSensor(NextcloudEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state for this sensor."""
-        return self._state
+        return self.coordinator.data.get(self.item)
