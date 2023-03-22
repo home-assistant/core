@@ -15,6 +15,7 @@ from .pipeline import (
     Pipeline,
     PipelineRun,
     TextPipelineRequest,
+    PipelineError,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -90,6 +91,7 @@ async def websocket_run(
 
         run_task = hass.async_create_task(
             AudioPipelineRequest(
+                binary_handler_id=handler_id,
                 stt_metadata=stt.SpeechMetadata(
                     language=language,
                     format=stt.AudioFormats.WAV,
@@ -136,5 +138,8 @@ async def websocket_run(
 
     connection.send_result(msg["id"], ws_result)
 
-    # Task contains a timeout
-    await run_task
+    try:
+        # Task contains a timeout
+        await run_task
+    except PipelineError as err:
+        connection.send_error(msg["id"], err.code, err.message)

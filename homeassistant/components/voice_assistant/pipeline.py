@@ -4,7 +4,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import AsyncIterable, Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 import logging
 from typing import Any
 
@@ -20,6 +20,20 @@ from homeassistant.util.dt import utcnow
 DEFAULT_TIMEOUT = 30  # seconds
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class PipelineError(Exception):
+    """Base class for pipeline errors."""
+
+    def __init__(self, code: str, message: str) -> None:
+        self.code = code
+        self.message = message
+
+        super().__init__(f"Pipeline error code={code}, message={message}")
+
+
+class SpeechToTextError(PipelineError):
+    """Error in speech to text portion of pipeline."""
 
 
 class PipelineEventType(StrEnum):
@@ -99,21 +113,41 @@ class PipelineRun:
         )
 
     async def speech_to_text(
-        self, metadata: stt.SpeechMetadata, stream: AsyncIterable[bytes]
+        self,
+        metadata: stt.SpeechMetadata,
+        stream: AsyncIterable[bytes],
+        binary_handler_id: int,
     ) -> stt.SpeechResult:
-        """Run text to speech portion of pipeline. Returns URL of TTS audio."""
+        """Run speech to text portion of pipeline."""
+        engine = self.pipeline.stt_engine or "default"
         self.event_callback(
             PipelineEvent(
                 PipelineEventType.STT_START,
                 {
-                    "engine": self.pipeline.stt_engine or "default",
+                    "engine": engine,
+                    "metadata": asdict(metadata),
+                    "handler_id": binary_handler_id,
                 },
             )
         )
 
-        stt_provider = stt.async_get_provider(self.hass, self.pipeline.stt_engine)
-        result = await stt_provider.async_process_audio_stream(metadata, stream)
-        _LOGGER.debug("stt result: %s", result)
+        try:
+            stt_provider = stt.async_get_provider(self.hass, self.pipeline.stt_engine)
+            assert stt_provider is not None
+        except Exception as stt_error:
+            raise SpeechToTextError(
+                "stt-provider-missing",
+                f"No speech to text provider for: {engine}",
+            ) from stt_error
+
+        try:
+            result = await stt_provider.async_process_audio_stream(metadata, stream)
+            assert result.result == stt.SpeechResultState.SUCCESS
+        except Exception as stt_error:
+            raise SpeechToTextError(
+                "stt-stream-failed",
+                "Speech to text failed while processing audio stream",
+            ) from stt_error
 
         self.event_callback(
             PipelineEvent(
@@ -121,7 +155,6 @@ class PipelineRun:
                 {
                     "stt_output": {
                         "text": result.text,
-                        "result": result.result.value,
                     }
                 },
             )
@@ -187,7 +220,7 @@ class PipelineRun:
         self.event_callback(
             PipelineEvent(
                 PipelineEventType.TTS_FINISH,
-                {"tts_output": tts_media.url},
+                {"tts_output": asdict(tts_media)},
             )
         )
 
@@ -232,6 +265,7 @@ class TextPipelineRequest(PipelineRequest):
 class AudioPipelineRequest(PipelineRequest):
     """Request to full pipeline from audio input (stt) to audio output (tts)."""
 
+    binary_handler_id: int
     stt_metadata: stt.SpeechMetadata
     stt_stream: AsyncIterable[bytes]
     conversation_id: str | None = None
@@ -239,7 +273,9 @@ class AudioPipelineRequest(PipelineRequest):
     async def _execute(self, run: PipelineRun):
         run.start()
 
-        stt_result = await run.speech_to_text(self.stt_metadata, self.stt_stream)
+        stt_result = await run.speech_to_text(
+            self.stt_metadata, self.stt_stream, self.binary_handler_id
+        )
         if stt_result.result == stt.SpeechResultState.SUCCESS:
             assert stt_result.text is not None
 
