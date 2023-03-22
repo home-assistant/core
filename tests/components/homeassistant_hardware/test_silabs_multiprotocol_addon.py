@@ -7,7 +7,6 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
 from homeassistant.components.zha.core.const import DOMAIN as ZHA_DOMAIN
@@ -15,12 +14,18 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
 
-from tests.common import MockConfigEntry, MockModule, mock_integration, mock_platform
+from tests.common import (
+    MockConfigEntry,
+    MockModule,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
 
 TEST_DOMAIN = "test"
 
 
-class TestConfigFlow(ConfigFlow, domain=TEST_DOMAIN):
+class TestConfigFlow(ConfigFlow):
     """Handle a config flow for the silabs multiprotocol add-on."""
 
     VERSION = 1
@@ -87,8 +92,8 @@ def config_flow_handler(
 ) -> Generator[TestConfigFlow, None, None]:
     """Fixture for a test config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
-    with patch.dict(config_entries.HANDLERS, {TEST_DOMAIN: TestConfigFlow}):
-        yield TestConfigFlow
+    with mock_config_flow(TEST_DOMAIN, TestConfigFlow):
+        yield
 
 
 async def test_option_flow_install_multi_pan_addon(
