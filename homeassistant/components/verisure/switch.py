@@ -98,4 +98,3 @@ class VerisureSmartplug(CoordinatorEntity[VerisureDataUpdateCoordinator], Switch
             command,
         )
         await self.coordinator.async_refresh()
-        LOGGER.debug("Verisure smartplug %s", state)
