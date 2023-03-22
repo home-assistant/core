@@ -82,7 +82,7 @@ async def test_validate_db_schema_fix_utf8_issue_with_broken_schema(
             session.execute(
                 text(
                     "ALTER TABLE states MODIFY state VARCHAR(255) "
-                    "CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL, "
+                    "CHARACTER SET ascii COLLATE ascii_general_ci, "
                     "LOCK=EXCLUSIVE;"
                 )
             )
