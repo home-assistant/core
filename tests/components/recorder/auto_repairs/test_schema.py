@@ -11,6 +11,7 @@ from homeassistant.components.recorder.auto_repairs.schema import (
     validate_table_schema_supports_utf8,
 )
 from homeassistant.components.recorder.db_schema import States
+from homeassistant.components.recorder.migration import _modify_columns
 from homeassistant.components.recorder.util import get_instance, session_scope
 from homeassistant.core import HomeAssistant
 
@@ -133,17 +134,15 @@ async def test_validate_db_schema_precision_with_broken_schema(
     session_maker = instance.get_session
 
     def _break_states_schema():
-        with session_scope(session=session_maker()) as session:
-            session.execute(
-                text(
-                    "ALTER TABLE states change last_updated_ts last_updated_ts float, LOCK=EXCLUSIVE;"
-                )
-            )
-            session.execute(
-                text(
-                    "ALTER TABLE states change last_changed_ts last_changed_ts float, LOCK=EXCLUSIVE;"
-                )
-            )
+        _modify_columns(
+            session_maker,
+            instance.engine,
+            "states",
+            [
+                "last_updated_ts FLOAT(4)",
+                "last_changed_ts FLOAT(4)",
+            ],
+        )
 
     await instance.async_add_executor_job(_break_states_schema)
     schema_errors = await instance.async_add_executor_job(
