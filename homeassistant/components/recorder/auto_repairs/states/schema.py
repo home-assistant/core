@@ -15,8 +15,8 @@ if TYPE_CHECKING:
     from ... import Recorder
 
 TABLE_UTF8_COLUMNS = {
-    States: ("state",),
-    StateAttributes: ("shared_attrs",),
+    States: (States.state,),
+    StateAttributes: (StateAttributes.shared_attrs,),
 }
 
 

@@ -22,7 +22,7 @@ def validate_db_schema(instance: Recorder) -> set[str]:
     """Do some basic checks for common schema errors caused by manual migration."""
     schema_errors: set[str] = set()
     schema_errors |= validate_table_schema_supports_utf8(
-        instance, StatisticsMeta, ("statistic_id",)
+        instance, StatisticsMeta, (StatisticsMeta.statistic_id,)
     )
     for table in (Statistics, StatisticsShortTerm):
         schema_errors |= validate_db_schema_precision(instance, table)

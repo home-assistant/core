@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm.attributes import InstrumentedAttribute
 
 from ..const import SupportedDialect
 from ..db_schema import DOUBLE_PRECISION_TYPE_SQL, DOUBLE_TYPE
@@ -40,7 +41,7 @@ def _get_precision_column_types(
 def validate_table_schema_supports_utf8(
     instance: Recorder,
     table_object: type[DeclarativeBase],
-    columns: tuple[str, ...],
+    columns: tuple[InstrumentedAttribute, ...],
 ) -> set[str]:
     """Do some basic checks for common schema errors caused by manual migration."""
     schema_errors: set[str] = set()
@@ -62,14 +63,14 @@ def validate_table_schema_supports_utf8(
 def _validate_table_schema_supports_utf8(
     instance: Recorder,
     table_object: type[DeclarativeBase],
-    columns: tuple[str, ...],
+    columns: tuple[InstrumentedAttribute, ...],
 ) -> set[str]:
     """Do some basic checks for common schema errors caused by manual migration."""
     schema_errors: set[str] = set()
     # Mark the session as read_only to ensure that the test data is not committed
     # to the database and we always rollback when the scope is exited
     with session_scope(session=instance.get_session(), read_only=True) as session:
-        db_object = table_object(**{column: UTF8_NAME for column in columns})
+        db_object = table_object(**{column.key: UTF8_NAME for column in columns})
         table = table_object.__tablename__
         # Try inserting some data which needs utf8mb4 support
         session.add(db_object)
