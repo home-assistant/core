@@ -165,16 +165,17 @@ def _check_columns(
     Errors are logged and added to the schema_errors set.
     """
     for column in columns:
-        if stored[column] != expected[column]:
-            schema_errors.add(f"{table_name}.{supports}")
-            _LOGGER.error(
-                "Column %s in database table %s does not support %s (stored=%s != expected=%s)",
-                column,
-                table_name,
-                supports,
-                stored[column],
-                expected[column],
-            )
+        if stored[column] == expected[column]:
+            continue
+        schema_errors.add(f"{table_name}.{supports}")
+        _LOGGER.error(
+            "Column %s in database table %s does not support %s (stored=%s != expected=%s)",
+            column,
+            table_name,
+            supports,
+            stored[column],
+            expected[column],
+        )
 
 
 def correct_db_schema_utf8(
