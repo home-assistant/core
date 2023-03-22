@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 
-from . import DOMAIN
+from .const import DOMAIN
 
 DATA_SCHEMA_USER = vol.Schema(
     {
