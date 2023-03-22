@@ -1184,6 +1184,32 @@ async def test_access_token_with_null_signature(mock_hass) -> None:
     assert result is None
 
 
+async def test_access_token_with_empty_signature(mock_hass) -> None:
+    """Test rejecting access tokens with an empty signature."""
+    manager = await auth.auth_manager_from_config(mock_hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    refresh_token = await manager.async_create_refresh_token(
+        user,
+        client_name="Good Client",
+        token_type=auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+        access_token_expiration=timedelta(days=3000),
+    )
+    assert refresh_token.token_type == auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
+    access_token = manager.async_create_access_token(refresh_token)
+
+    rt = await manager.async_validate_access_token(access_token)
+    assert rt.id == refresh_token.id
+
+    # Now we make the signature all nulls
+    header, payload, _ = access_token.split(".")
+    invalid_token = f"{header}.{payload}."
+
+    assert access_token != invalid_token
+
+    result = await manager.async_validate_access_token(invalid_token)
+    assert result is None
+
+
 async def test_access_token_with_empty_key(mock_hass) -> None:
     """Test rejecting access tokens with an empty key."""
     manager = await auth.auth_manager_from_config(mock_hass, [], [])
