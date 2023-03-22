@@ -379,9 +379,7 @@ def register_services(hass):
         """Set the maximum central heating setpoint on the OpenTherm Gateway."""
         gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][call.data[ATTR_GW_ID]]
         gw_var = gw_vars.DATA_MAX_CH_SETPOINT
-        value = await gw_dev.gateway.set_max_ch_setpoint(call.data[ATTR_TEMPERATURE])
-        gw_dev.status.update({gw_var: value})
-        async_dispatcher_send(hass, gw_dev.update_signal, gw_dev.status)
+        await gw_dev.gateway.set_max_ch_setpoint(call.data[ATTR_TEMPERATURE])
 
     hass.services.async_register(
         DOMAIN,
