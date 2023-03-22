@@ -7,6 +7,8 @@ import pytest
 from sqlalchemy import text
 
 from homeassistant.components.recorder.auto_repairs.schema import (
+    correct_db_schema_precision,
+    correct_db_schema_utf8,
     validate_db_schema_precision,
     validate_table_schema_supports_utf8,
 )
@@ -67,7 +69,7 @@ async def test_validate_db_schema_fix_utf8_issue_with_broken_schema(
     recorder_db_url: str,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test validating DB schema with MySQL when the schema is broken."""
+    """Test validating DB schema with MySQL when the schema is broken and repairing it."""
     if not recorder_db_url.startswith("mysql://"):
         # This problem only happens on MySQL
         return
@@ -91,6 +93,58 @@ async def test_validate_db_schema_fix_utf8_issue_with_broken_schema(
         validate_table_schema_supports_utf8, instance, States, ("state",)
     )
     assert schema_errors == {"states.4-byte UTF-8"}
+
+    # Now repair the schema
+    await instance.async_add_executor_job(
+        correct_db_schema_utf8, instance, States, schema_errors
+    )
+
+    # Now validate the schema again
+    schema_errors = await instance.async_add_executor_job(
+        validate_table_schema_supports_utf8, instance, States, ("state",)
+    )
+    assert schema_errors == set()
+
+
+async def test_validate_db_schema_fix_utf8_issue_with_broken_schema_unrepairable(
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
+    recorder_db_url: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test validating DB schema with MySQL when the schema is broken and cannot be repaired."""
+    if not recorder_db_url.startswith("mysql://"):
+        # This problem only happens on MySQL
+        return
+    await async_setup_recorder_instance(hass)
+    await async_wait_recording_done(hass)
+    instance = get_instance(hass)
+    session_maker = instance.get_session
+
+    def _break_states_schema():
+        with session_scope(session=session_maker()) as session:
+            session.execute(
+                text(
+                    "ALTER TABLE states MODIFY state VARCHAR(255) "
+                    "CHARACTER SET ascii COLLATE ascii_general_ci, "
+                    "LOCK=EXCLUSIVE;"
+                )
+            )
+            _modify_columns(
+                session_maker,
+                instance.engine,
+                "states",
+                [
+                    "entity_id VARCHAR(255) NOT NULL",
+                ],
+            )
+
+    await instance.async_add_executor_job(_break_states_schema)
+    schema_errors = await instance.async_add_executor_job(
+        validate_table_schema_supports_utf8, instance, States, ("state",)
+    )
+    assert schema_errors == set()
+    assert "Error when validating DB schema" in caplog.text
 
 
 async def test_validate_db_schema_precision_good_schema(
@@ -120,7 +174,7 @@ async def test_validate_db_schema_precision_with_broken_schema(
     recorder_db_url: str,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test validating DB schema when the schema is broken."""
+    """Test validating DB schema when the schema is broken and than repair it."""
     if not recorder_db_url.startswith(("mysql://", "postgresql://")):
         # This problem only happens on MySQL and PostgreSQL
         return
@@ -147,3 +201,53 @@ async def test_validate_db_schema_precision_with_broken_schema(
         States,
     )
     assert schema_errors == {"states.double precision"}
+
+    # Now repair the schema
+    await instance.async_add_executor_job(
+        correct_db_schema_precision, instance, States, schema_errors
+    )
+
+    # Now validate the schema again
+    schema_errors = await instance.async_add_executor_job(
+        validate_db_schema_precision,
+        instance,
+        States,
+    )
+    assert schema_errors == set()
+
+
+async def test_validate_db_schema_precision_with_unrepairable_broken_schema(
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
+    recorder_db_url: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test validating DB schema when the schema is broken and cannot be repaired."""
+    if not recorder_db_url.startswith(("mysql://", "postgresql://")):
+        # This problem only happens on MySQL and PostgreSQL
+        return
+    await async_setup_recorder_instance(hass)
+    await async_wait_recording_done(hass)
+    instance = get_instance(hass)
+    session_maker = instance.get_session
+
+    def _break_states_schema():
+        _modify_columns(
+            session_maker,
+            instance.engine,
+            "states",
+            [
+                "state VARCHAR(255) NOT NULL",
+                "last_updated_ts FLOAT(4)",
+                "last_changed_ts FLOAT(4)",
+            ],
+        )
+
+    await instance.async_add_executor_job(_break_states_schema)
+    schema_errors = await instance.async_add_executor_job(
+        validate_db_schema_precision,
+        instance,
+        States,
+    )
+    assert "Error when validating DB schema" in caplog.text
+    assert schema_errors == set()
