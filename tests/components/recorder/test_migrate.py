@@ -348,7 +348,7 @@ async def test_schema_migrate(
 
     def _mock_setup_run(self):
         self.run_info = RecorderRuns(
-            start=self.run_history.recording_start, created=dt_util.utcnow()
+            start=self.recorder_runs_manager.recording_start, created=dt_util.utcnow()
         )
 
     def _instrument_migrate_schema(*args):
