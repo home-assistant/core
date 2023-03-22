@@ -1,7 +1,10 @@
 """Flame height number sensors."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+
+from intellifire4py.intellifire import IntellifireAPILocal
 
 from homeassistant.components.number import (
     NumberEntity,
@@ -12,9 +15,56 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 from .coordinator import IntellifireDataUpdateCoordinator
 from .entity import IntellifireEntity
+
+
+@dataclass
+class IntelliFireNumberRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    get_value_fn: Callable[[IntellifireAPILocal], int]
+    set_value_fn: Callable[[IntellifireAPILocal, int], Awaitable]
+
+
+@dataclass
+class IntelliFireNumberEntityDescription(
+    NumberEntityDescription,
+    IntelliFireNumberRequiredKeysMixin,
+):
+    """Describes a sensor entity."""
+
+    mode: NumberMode = NumberMode.AUTO
+
+
+INTELLIFIRE_NUMBERS: tuple[IntelliFireNumberEntityDescription, ...] = (
+    IntelliFireNumberEntityDescription(
+        key="flame_control",
+        name="Flame control",
+        icon="mdi:arrow-expand-vertical",
+        mode=NumberMode.SLIDER,
+        native_max_value=5,
+        native_min_value=1,
+        native_step=1,
+        get_value_fn=lambda data: int(data.flameheight + 1),
+        set_value_fn=lambda control, value: control.set_flame_height(height=value),
+    ),
+    IntelliFireNumberEntityDescription(
+        key="sleep_control",
+        name="Sleep timer",
+        icon="mdi:bed-clock",
+        mode=NumberMode.AUTO,
+        native_max_value=180,
+        native_min_value=0,
+        native_step=1,
+        native_unit_of_measurement="minutes",
+        get_value_fn=lambda data: int(data.timeremaining_s / 60),
+        set_value_fn=lambda control, value: control.stop_sleep_timer()
+        if value == 0
+        else control.set_sleep_timer(minutes=value),
+    ),
+)
 
 
 async def async_setup_entry(
@@ -22,92 +72,30 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the fans."""
+    """Set up Numbers."""
+
     coordinator: IntellifireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        [
-            IntellifireFlameControlEntity(
-                coordinator=coordinator,
-                description=NumberEntityDescription(
-                    key="flame_control",
-                    name="Flame control",
-                    icon="mdi:arrow-expand-vertical",
-                ),
-            ),
-            IntellifireTimerControlEntity(
-                coordinator=coordinator,
-                description=NumberEntityDescription(
-                    key="sleep_control",
-                    name="Sleep timer",
-                    icon="mdi:bed-clock",
-                ),
-            ),
-        ]
+        IntelliFireNumber(coordinator=coordinator, description=description)
+        for description in INTELLIFIRE_NUMBERS
     )
 
 
-@dataclass
-class IntellifireTimerControlEntity(IntellifireEntity, NumberEntity):
-    """Countdown timer control entity."""
+class IntelliFireNumber(IntellifireEntity, NumberEntity):
+    """Define a generic IntelliFire Number Entity."""
 
-    _attr_native_max_value: float = 180
-    _attr_native_min_value: float = 0
-    _attr_native_step: float = 1
-    _attr_mode: NumberMode = NumberMode.AUTO
-    _attr_native_unit_of_measurement = "minutes"
+    entity_description: IntelliFireNumberEntityDescription
 
     @property
     def native_value(self) -> int:
         """Return the current Timer value in minutes."""
-        return = int(self.coordinator.read_api.data.timeremaining_s / 60)
+        return self.entity_description.get_value_fn(self.coordinator.read_api.data)
 
     async def async_set_native_value(self, value: float) -> None:
-        """Slider change."""
-        if (minutes := int(value)) == 0:
-            await self.coordinator.control_api.stop_sleep_timer()
-        else:
-            await self.coordinator.control_api.set_sleep_timer(minutes=minutes)
-        LOGGER.debug(
-            "%s set sleep timer to %d ",
-            self._attr_name,
-            value,
+        """Set native value."""
+        value_to_send = int(value)
+        await self.entity_description.set_value_fn(
+            self.coordinator.control_api, value_to_send
         )
-        await self.coordinator.async_refresh()
-
-
-@dataclass
-class IntellifireFlameControlEntity(IntellifireEntity, NumberEntity):
-    """Flame height control entity."""
-
-    _attr_native_max_value: float = 5
-    _attr_native_min_value: float = 1
-    _attr_native_step: float = 1
-    _attr_mode: NumberMode = NumberMode.SLIDER
-
-    def __init__(
-        self,
-        coordinator: IntellifireDataUpdateCoordinator,
-        description: NumberEntityDescription,
-    ) -> None:
-        """Initilaize Flame height Sensor."""
-        super().__init__(coordinator, description)
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the current Flame Height segment number value."""
-        # UI uses 1-5 for flame height, backing lib uses 0-4
-        value = self.coordinator.read_api.data.flameheight + 1
-        return value
-
-    async def async_set_native_value(self, value: float) -> None:
-        """Slider change."""
-        value_to_send: int = int(value) - 1
-        LOGGER.debug(
-            "%s set flame height to %d with raw value %s",
-            self._attr_name,
-            value,
-            value_to_send,
-        )
-        await self.coordinator.control_api.set_flame_height(height=value_to_send)
         await self.coordinator.async_refresh()
