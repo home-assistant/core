@@ -1551,7 +1551,7 @@ async def test_database_corruption_while_running(
     await hass.async_block_till_done()
     caplog.clear()
 
-    original_start_time = get_instance(hass).run_history.recording_start
+    original_start_time = get_instance(hass).recorder_runs_manager.recording_start
 
     hass.states.async_set("test.lost", "on", {})
 
@@ -1599,7 +1599,7 @@ async def test_database_corruption_while_running(
     assert state.entity_id == "test.two"
     assert state.state == "on"
 
-    new_start_time = get_instance(hass).run_history.recording_start
+    new_start_time = get_instance(hass).recorder_runs_manager.recording_start
     assert original_start_time < new_start_time
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
