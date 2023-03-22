@@ -92,8 +92,6 @@ class VerisureSmartplug(CoordinatorEntity[VerisureDataUpdateCoordinator], Switch
         """Set smartplug state."""
         command: dict[str, str | dict[str, str]] = (
             self.coordinator.verisure.set_smartplug(self.serial_number, state)
-            if state == STATE_ON
-            else self.coordinator.verisure.set_smartplug(self.serial_number, False)
         )
         await self.hass.async_add_executor_job(
             self.coordinator.verisure.request,
