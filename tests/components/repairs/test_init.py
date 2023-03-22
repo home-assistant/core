@@ -334,6 +334,7 @@ async def test_ignore_issue(
     }
 
 
+@pytest.mark.freeze_time("2022-07-19 07:53:05")
 async def test_delete_issue(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
