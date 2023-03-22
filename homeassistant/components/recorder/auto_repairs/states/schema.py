@@ -10,13 +10,10 @@ from sqlalchemy.orm.session import Session
 
 from homeassistant.core import HomeAssistant
 
-from ...const import SupportedDialect
 from ...db_schema import States
-from ...util import session_scope
 from ..schema import (
-    check_columns,
     correct_table_character_set_and_collation,
-    get_precise_datetime,
+    validate_db_schema_precision,
     validate_table_schema_supports_utf8,
 )
 
@@ -24,50 +21,6 @@ if TYPE_CHECKING:
     from ... import Recorder
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def _validate_db_schema_precision(
-    instance: Recorder, session_maker: Callable[[], Session]
-) -> set[str]:
-    """Do some basic checks for common schema errors caused by manual migration."""
-    schema_errors: set[str] = set()
-    # Wrong precision is only an issue for MySQL / MariaDB / PostgreSQL
-    if instance.dialect_name not in (
-        SupportedDialect.MYSQL,
-        SupportedDialect.POSTGRESQL,
-    ):
-        return schema_errors
-
-    precise_time_ts = get_precise_datetime().timestamp()
-
-    try:
-        # Mark the session as read_only to ensure that the test data is not committed
-        # to the database and we always rollback when the scope is exited
-        with session_scope(session=session_maker(), read_only=True) as session:
-            state = States(
-                last_changed_ts=precise_time_ts,
-                last_updated_ts=precise_time_ts,
-            )
-            session.flush()
-            session.refresh(state)
-            check_columns(
-                schema_errors=schema_errors,
-                stored={
-                    "last_changed_ts": state.last_changed_ts,
-                    "last_updated_ts": state.last_updated_ts,
-                },
-                expected={
-                    "last_changed_ts": precise_time_ts,
-                    "last_updated_ts": precise_time_ts,
-                },
-                columns=("last_changed_ts", "last_updated_ts"),
-                table_name="states",
-                supports="µs precision",
-            )
-    except Exception as exc:  # pylint: disable=broad-except
-        _LOGGER.exception("Error when validating DB schema: %s", exc)
-
-    return schema_errors
 
 
 def validate_db_schema(
@@ -78,7 +31,9 @@ def validate_db_schema(
     schema_errors |= validate_table_schema_supports_utf8(
         instance, States, ("state",), session_maker
     )
-    schema_errors |= _validate_db_schema_precision(instance, session_maker)
+    schema_errors |= validate_db_schema_precision(
+        instance, States, ("last_updated_ts", "last_changed_ts"), session_maker
+    )
     if schema_errors:
         _LOGGER.debug(
             "Detected states schema errors: %s", ", ".join(sorted(schema_errors))

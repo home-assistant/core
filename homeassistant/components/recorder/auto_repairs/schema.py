@@ -82,6 +82,46 @@ def validate_table_schema_supports_utf8(
     return schema_errors
 
 
+def validate_db_schema_precision(
+    instance: Recorder,
+    table_object: type[DeclarativeBase],
+    columns: tuple[str, ...],
+    session_maker: Callable[[], Session],
+) -> set[str]:
+    """Do some basic checks for common schema errors caused by manual migration."""
+    schema_errors: set[str] = set()
+    # Wrong precision is only an issue for MySQL / MariaDB / PostgreSQL
+    if instance.dialect_name not in (
+        SupportedDialect.MYSQL,
+        SupportedDialect.POSTGRESQL,
+    ):
+        return schema_errors
+
+    precise_time_ts = get_precise_datetime().timestamp()
+
+    try:
+        # Mark the session as read_only to ensure that the test data is not committed
+        # to the database and we always rollback when the scope is exited
+        with session_scope(session=session_maker(), read_only=True) as session:
+            db_object = table_object(**{column: precise_time_ts for column in columns})
+            table = table_object.__tablename__
+            session.add(db_object)
+            session.flush()
+            session.refresh(db_object)
+            check_columns(
+                schema_errors=schema_errors,
+                stored={column: getattr(db_object, column) for column in columns},
+                expected={column: precise_time_ts for column in columns},
+                columns=columns,
+                table_name=table,
+                supports="µs precision",
+            )
+    except Exception as exc:  # pylint: disable=broad-except
+        _LOGGER.exception("Error when validating DB schema: %s", exc)
+
+    return schema_errors
+
+
 def check_columns(
     schema_errors: set[str],
     stored: Mapping,
