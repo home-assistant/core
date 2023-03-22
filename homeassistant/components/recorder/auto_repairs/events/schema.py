@@ -14,10 +14,6 @@ from ..schema import (
 if TYPE_CHECKING:
     from ... import Recorder
 
-TABLE_UTF8_COLUMNS = {
-    EventData: (EventData.shared_data,),
-}
-
 
 def validate_db_schema(instance: Recorder) -> set[str]:
     """Do some basic checks for common schema errors caused by manual migration."""
@@ -34,6 +30,5 @@ def correct_db_schema(
     schema_errors: set[str],
 ) -> None:
     """Correct issues detected by validate_db_schema."""
-    for table in (Events, EventData):
-        correct_db_schema_utf8(instance, table, schema_errors)
+    correct_db_schema_utf8(instance, Events, schema_errors)
     correct_db_schema_precision(instance, Events, schema_errors)
