@@ -86,7 +86,7 @@ class VerisureSmartplug(CoordinatorEntity[VerisureDataUpdateCoordinator], Switch
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the smartplug off."""
-        await self.async_set_plug_state(STATE_OFF)
+        await self.async_set_plug_state(False)
 
     async def async_set_plug_state(self, state: bool) -> None:
         """Set smartplug state."""
