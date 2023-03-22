@@ -55,9 +55,8 @@ async def test_validate_db_schema_fix_utf8_issue_good_schema(
     await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
     instance = get_instance(hass)
-    session_maker = instance.get_session
     schema_errors = await instance.async_add_executor_job(
-        validate_table_schema_supports_utf8, instance, States, ("state",), session_maker
+        validate_table_schema_supports_utf8, instance, States, ("state",)
     )
     assert schema_errors == set()
 
@@ -89,7 +88,7 @@ async def test_validate_db_schema_fix_utf8_issue_with_broken_schema(
 
     await instance.async_add_executor_job(_break_states_schema)
     schema_errors = await instance.async_add_executor_job(
-        validate_table_schema_supports_utf8, instance, States, ("state",), session_maker
+        validate_table_schema_supports_utf8, instance, States, ("state",)
     )
     assert schema_errors == {"states.4-byte UTF-8"}
 
@@ -107,12 +106,10 @@ async def test_validate_db_schema_precision_good_schema(
     await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
     instance = get_instance(hass)
-    session_maker = instance.get_session
     schema_errors = await instance.async_add_executor_job(
         validate_db_schema_precision,
         instance,
         States,
-        session_maker,
     )
     assert schema_errors == set()
 
@@ -148,6 +145,5 @@ async def test_validate_db_schema_precision_with_broken_schema(
         validate_db_schema_precision,
         instance,
         States,
-        session_maker,
     )
     assert schema_errors == {"states.double precision"}
