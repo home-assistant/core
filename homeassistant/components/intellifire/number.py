@@ -58,10 +58,9 @@ class IntellifireTimerControlEntity(IntellifireEntity, NumberEntity):
     _attr_native_unit_of_measurement = "minutes"
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> int:
         """Return the current Timer value in minutes."""
-        value = int(self.coordinator.read_api.data.timeremaining_s / 60)
-        return value
+        return = int(self.coordinator.read_api.data.timeremaining_s / 60)
 
     async def async_set_native_value(self, value: float) -> None:
         """Slider change."""
