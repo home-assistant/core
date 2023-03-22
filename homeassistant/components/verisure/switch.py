@@ -6,12 +6,13 @@ from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_GIID, DOMAIN
+from .const import CONF_GIID, DOMAIN, LOGGER
 from .coordinator import VerisureDataUpdateCoordinator
 
 
@@ -79,16 +80,24 @@ class VerisureSmartplug(CoordinatorEntity[VerisureDataUpdateCoordinator], Switch
             and self.serial_number in self.coordinator.data["smart_plugs"]
         )
 
-    def turn_on(self, **kwargs: Any) -> None:
-        """Set smartplug status on."""
-        self.coordinator.verisure.set_smartplug(self.serial_number, True)
-        self._state = True
-        self._change_timestamp = monotonic()
-        self.schedule_update_ha_state()
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the smartplug on."""
+        await self.async_set_plug_state(STATE_ON)
 
-    def turn_off(self, **kwargs: Any) -> None:
-        """Set smartplug status off."""
-        self.coordinator.verisure.set_smartplug(self.serial_number, False)
-        self._state = False
-        self._change_timestamp = monotonic()
-        self.schedule_update_ha_state()
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the smartplug off."""
+        await self.async_set_plug_state(STATE_OFF)
+
+    async def async_set_plug_state(self, state: str) -> None:
+        """Set smartplug state."""
+        command: dict[str, str | dict[str, str]] = (
+            self.coordinator.verisure.set_smartplug(self.serial_number, True)
+            if state == STATE_ON
+            else self.coordinator.verisure.set_smartplug(self.serial_number, False)
+        )
+        await self.hass.async_add_executor_job(
+            self.coordinator.verisure.request,
+            command,
+        )
+        await self.coordinator.async_refresh()
+        LOGGER.debug("Verisure smartplug %s", state)
