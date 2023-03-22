@@ -123,7 +123,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except FSConnectionError:
             return self.async_abort(reason="cannot_connect")
         except Exception as exception:  # pylint: disable=broad-except
-            _LOGGER.exception(exception)
+            _LOGGER.debug(exception)
             return self.async_abort(reason="unknown")
 
         # For manually added devices the unique_id is the radio_id,
