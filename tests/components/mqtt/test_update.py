@@ -14,7 +14,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .test_common import (
     help_test_availability_when_connection_lost,
@@ -63,20 +62,14 @@ def update_platform_only():
         yield
 
 
-async def test_run_update_setup(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
-) -> None:
-    """Test that it fetches the given payload."""
-    installed_version_topic = "test/installed-version"
-    latest_version_topic = "test/latest-version"
-    await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 update.DOMAIN: {
-                    "state_topic": installed_version_topic,
-                    "latest_version_topic": latest_version_topic,
+                    "state_topic": "test/installed-version",
+                    "latest_version_topic": "test/latest-version",
                     "name": "Test Update",
                     "release_summary": "Test release summary",
                     "release_url": "https://example.com/release",
@@ -84,10 +77,16 @@ async def test_run_update_setup(
                     "entity_picture": "https://example.com/icon.png",
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_run_update_setup(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
+    """Test that it fetches the given payload."""
+    installed_version_topic = "test/installed-version"
+    latest_version_topic = "test/latest-version"
+    await mqtt_mock_entry_no_yaml_config()
 
     async_fire_mqtt_message(hass, installed_version_topic, "1.9.0")
     async_fire_mqtt_message(hass, latest_version_topic, "1.9.0")
@@ -113,20 +112,14 @@ async def test_run_update_setup(
     assert state.attributes.get("latest_version") == "2.0.0"
 
 
-async def test_run_update_setup_float(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
-) -> None:
-    """Test that it fetches the given payload when the version is parsable as a number."""
-    installed_version_topic = "test/installed-version"
-    latest_version_topic = "test/latest-version"
-    await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 update.DOMAIN: {
-                    "state_topic": installed_version_topic,
-                    "latest_version_topic": latest_version_topic,
+                    "state_topic": "test/installed-version",
+                    "latest_version_topic": "test/latest-version",
                     "name": "Test Update",
                     "release_summary": "Test release summary",
                     "release_url": "https://example.com/release",
@@ -134,10 +127,16 @@ async def test_run_update_setup_float(
                     "entity_picture": "https://example.com/icon.png",
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_run_update_setup_float(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
+    """Test that it fetches the given payload when the version is parsable as a number."""
+    installed_version_topic = "test/installed-version"
+    latest_version_topic = "test/latest-version"
+    await mqtt_mock_entry_no_yaml_config()
 
     async_fire_mqtt_message(hass, installed_version_topic, "1.9")
     async_fire_mqtt_message(hass, latest_version_topic, "1.9")
@@ -163,29 +162,29 @@ async def test_run_update_setup_float(
     assert state.attributes.get("latest_version") == "2.0"
 
 
-async def test_value_template(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
-) -> None:
-    """Test that it fetches the given payload with a template."""
-    installed_version_topic = "test/installed-version"
-    latest_version_topic = "test/latest-version"
-    await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 update.DOMAIN: {
-                    "state_topic": installed_version_topic,
+                    "state_topic": "test/installed-version",
                     "value_template": "{{ value_json.installed }}",
-                    "latest_version_topic": latest_version_topic,
+                    "latest_version_topic": "test/latest-version",
                     "latest_version_template": "{{ value_json.latest }}",
                     "name": "Test Update",
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_value_template(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
+    """Test that it fetches the given payload with a template."""
+    installed_version_topic = "test/installed-version"
+    latest_version_topic = "test/latest-version"
+    await mqtt_mock_entry_no_yaml_config()
 
     async_fire_mqtt_message(hass, installed_version_topic, '{"installed":"1.9.0"}')
     async_fire_mqtt_message(hass, latest_version_topic, '{"latest":"1.9.0"}')
@@ -211,29 +210,29 @@ async def test_value_template(
     assert state.attributes.get("latest_version") == "2.0.0"
 
 
-async def test_value_template_float(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
-) -> None:
-    """Test that it fetches the given payload with a template when the version is parsable as a number."""
-    installed_version_topic = "test/installed-version"
-    latest_version_topic = "test/latest-version"
-    await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 update.DOMAIN: {
-                    "state_topic": installed_version_topic,
+                    "state_topic": "test/installed-version",
                     "value_template": "{{ value_json.installed }}",
-                    "latest_version_topic": latest_version_topic,
+                    "latest_version_topic": "test/latest-version",
                     "latest_version_template": "{{ value_json.latest }}",
                     "name": "Test Update",
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_value_template_float(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
+    """Test that it fetches the given payload with a template when the version is parsable as a number."""
+    installed_version_topic = "test/installed-version"
+    latest_version_topic = "test/latest-version"
+    await mqtt_mock_entry_no_yaml_config()
 
     async_fire_mqtt_message(hass, installed_version_topic, '{"installed":"1.9"}')
     async_fire_mqtt_message(hass, latest_version_topic, '{"latest":"1.9"}')
@@ -259,25 +258,25 @@ async def test_value_template_float(
     assert state.attributes.get("latest_version") == "2.0"
 
 
-async def test_empty_json_state_message(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
-) -> None:
-    """Test an empty JSON payload."""
-    state_topic = "test/state-topic"
-    await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 update.DOMAIN: {
-                    "state_topic": state_topic,
+                    "state_topic": "test/state-topic",
                     "name": "Test Update",
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_empty_json_state_message(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
+    """Test an empty JSON payload."""
+    state_topic = "test/state-topic"
+    await mqtt_mock_entry_no_yaml_config()
 
     async_fire_mqtt_message(hass, state_topic, "{}")
 
@@ -287,25 +286,25 @@ async def test_empty_json_state_message(
     assert state.state == STATE_UNKNOWN
 
 
-async def test_json_state_message(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
-) -> None:
-    """Test whether it fetches data from a JSON payload."""
-    state_topic = "test/state-topic"
-    await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 update.DOMAIN: {
-                    "state_topic": state_topic,
+                    "state_topic": "test/state-topic",
                     "name": "Test Update",
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_json_state_message(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
+    """Test whether it fetches data from a JSON payload."""
+    state_topic = "test/state-topic"
+    await mqtt_mock_entry_no_yaml_config()
 
     async_fire_mqtt_message(
         hass,
@@ -343,26 +342,27 @@ async def test_json_state_message(
     assert state.attributes.get("entity_picture") == "https://example.com/icon2.png"
 
 
-async def test_json_state_message_with_template(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
-) -> None:
-    """Test whether it fetches data from a JSON payload with template."""
-    state_topic = "test/state-topic"
-    await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 update.DOMAIN: {
-                    "state_topic": state_topic,
-                    "value_template": '{{ {"installed_version": value_json.installed, "latest_version": value_json.latest} | to_json }}',
+                    "state_topic": "test/state-topic",
+                    "value_template": '{{ {"installed_version": value_json.installed, '
+                    '"latest_version": value_json.latest} | to_json }}',
                     "name": "Test Update",
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_json_state_message_with_template(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
+    """Test whether it fetches data from a JSON payload with template."""
+    state_topic = "test/state-topic"
+    await mqtt_mock_entry_no_yaml_config()
 
     async_fire_mqtt_message(hass, state_topic, '{"installed":"1.9.0","latest":"1.9.0"}')
 
@@ -383,31 +383,31 @@ async def test_json_state_message_with_template(
     assert state.attributes.get("latest_version") == "2.0.0"
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                update.DOMAIN: {
+                    "state_topic": "test/installed-version",
+                    "latest_version_topic": "test/latest-version",
+                    "command_topic": "test/install-command",
+                    "payload_install": "install",
+                    "name": "Test Update",
+                }
+            }
+        }
+    ],
+)
 async def test_run_install_service(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test that install service works."""
     installed_version_topic = "test/installed-version"
     latest_version_topic = "test/latest-version"
     command_topic = "test/install-command"
 
-    await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
-        {
-            mqtt.DOMAIN: {
-                update.DOMAIN: {
-                    "state_topic": installed_version_topic,
-                    "latest_version_topic": latest_version_topic,
-                    "command_topic": command_topic,
-                    "payload_install": "install",
-                    "name": "Test Update",
-                }
-            }
-        },
-    )
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
 
     async_fire_mqtt_message(hass, installed_version_topic, "1.9.0")
     async_fire_mqtt_message(hass, latest_version_topic, "2.0.0")
