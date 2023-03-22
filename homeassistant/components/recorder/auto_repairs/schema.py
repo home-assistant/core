@@ -49,8 +49,8 @@ def validate_table_schema_supports_utf8(
         return schema_errors
 
     try:
-        _validate_table_schema_supports_utf8(
-            instance, schema_errors, table_object, columns
+        schema_errors = _validate_table_schema_supports_utf8(
+            instance, table_object, columns
         )
     except Exception as exc:  # pylint: disable=broad-except
         _LOGGER.exception("Error when validating DB schema: %s", exc)
@@ -61,11 +61,11 @@ def validate_table_schema_supports_utf8(
 
 def _validate_table_schema_supports_utf8(
     instance: Recorder,
-    schema_errors: set[str],
     table_object: type[DeclarativeBase],
     columns: tuple[str, ...],
-) -> None:
+) -> set[str]:
     """Do some basic checks for common schema errors caused by manual migration."""
+    schema_errors: set[str] = set()
     session_maker = instance.get_session
     # Mark the session as read_only to ensure that the test data is not committed
     # to the database and we always rollback when the scope is exited
@@ -77,16 +77,16 @@ def _validate_table_schema_supports_utf8(
         try:
             session.flush()
         except OperationalError as err:
+            session.rollback()
             if err.orig and err.orig.args[0] == MYSQL_ERR_INCORRECT_STRING_VALUE:
                 _LOGGER.debug(
                     "Database %s statistics_meta does not support 4-byte UTF-8",
                     table,
                 )
                 schema_errors.add(f"{table}.4-byte UTF-8")
-                session.rollback()
-            else:
-                session.rollback()
-                raise
+                return schema_errors
+            raise
+    return schema_errors
 
 
 def validate_db_schema_precision(
@@ -102,7 +102,7 @@ def validate_db_schema_precision(
     ):
         return schema_errors
     try:
-        _validate_db_schema_precision(instance, schema_errors, table_object)
+        schema_errors = _validate_db_schema_precision(instance, table_object)
     except Exception as exc:  # pylint: disable=broad-except
         _LOGGER.exception("Error when validating DB schema: %s", exc)
 
@@ -112,10 +112,10 @@ def validate_db_schema_precision(
 
 def _validate_db_schema_precision(
     instance: Recorder,
-    schema_errors: set[str],
     table_object: type[DeclarativeBase],
-) -> None:
+) -> set[str]:
     """Do some basic checks for common schema errors caused by manual migration."""
+    schema_errors: set[str] = set()
     columns = _get_precision_column_types(table_object)
     session_maker = instance.get_session
     # Mark the session as read_only to ensure that the test data is not committed
@@ -134,6 +134,7 @@ def _validate_db_schema_precision(
             table_name=table,
             supports="double precision",
         )
+    return schema_errors
 
 
 def _log_schema_errors(
