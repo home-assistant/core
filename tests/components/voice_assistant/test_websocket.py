@@ -9,7 +9,6 @@ from homeassistant.core import HomeAssistant, Context
 from homeassistant.setup import async_setup_component
 from homeassistant.components import stt
 from homeassistant.components.voice_assistant.pipeline import (
-    AudioPipelineRequest,
     Pipeline,
     PipelineEventType,
     PipelineRun,
@@ -108,7 +107,9 @@ async def test_text_only_pipeline(
         {
             "id": 5,
             "type": "voice_assistant/run",
-            "intent_input": "Are the lights on?",
+            "start_stage": "intent",
+            "end_stage": "intent",
+            "input": {"text": "Are the lights on?"},
         }
     )
 

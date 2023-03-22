@@ -14,12 +14,32 @@ from homeassistant.components.media_source import async_resolve_media
 from homeassistant.components.tts.media_source import (
     generate_media_source_id as tts_generate_media_source_id,
 )
-from homeassistant.core import Context, HomeAssistant
+from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.util.dt import utcnow
+
+from .const import DOMAIN
 
 DEFAULT_TIMEOUT = 30  # seconds
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@callback
+def async_get_pipeline(
+    hass: HomeAssistant, pipeline_id: str | None = None, language: str | None = None
+) -> Pipeline | None:
+    if pipeline_id is not None:
+        return hass.data[DOMAIN].get(pipeline_id)
+
+    # Construct a pipeline for the required/configured language
+    language = language or hass.config.language
+    return Pipeline(
+        name=language,
+        language=language,
+        stt_engine=None,  # first engine
+        conversation_engine=None,  # first agent
+        tts_engine=None,  # first engine
+    )
 
 
 class PipelineError(Exception):
@@ -78,6 +98,27 @@ class Pipeline:
     tts_engine: str | None
 
 
+class PipelineStage(StrEnum):
+    """Stages of a pipeline."""
+
+    STT = "stt"
+    INTENT = "intent"
+    TTS = "tts"
+
+
+class PipelineRunValidationError(Exception):
+    """Error when a pipeline run is not valid."""
+
+
+class InvalidPipelineStagesError(PipelineRunValidationError):
+    """Error when given an invalid combination of start/end stages."""
+
+    def __init__(self, start_stage: PipelineStage, end_stage: PipelineStage) -> None:
+        super().__init__(
+            f"Invalid stage combination: start={start_stage}, end={end_stage}"
+        )
+
+
 @dataclass
 class PipelineRun:
     """Running context for a pipeline."""
@@ -85,12 +126,22 @@ class PipelineRun:
     hass: HomeAssistant
     context: Context
     pipeline: Pipeline
+    start_stage: PipelineStage
+    end_stage: PipelineStage
     event_callback: Callable[[PipelineEvent], None]
     language: str = None  # type: ignore[assignment]
 
     def __post_init__(self):
         """Set language for pipeline."""
         self.language = self.pipeline.language or self.hass.config.language
+
+        # stt -> intent -> tts
+        if (self.start_stage, self.end_stage) in (
+            (PipelineStage.INTENT, PipelineStage.STT),
+            (PipelineStage.TTS, PipelineStage.STT),
+            (PipelineStage.TTS, PipelineStage.INTENT),
+        ):
+            raise InvalidPipelineStagesError(self.start_stage, self.end_stage)
 
     def start(self):
         """Emit run start event."""
@@ -117,8 +168,8 @@ class PipelineRun:
         metadata: stt.SpeechMetadata,
         stream: AsyncIterable[bytes],
         binary_handler_id: int,
-    ) -> stt.SpeechResult:
-        """Run speech to text portion of pipeline."""
+    ) -> str:
+        """Run speech to text portion of pipeline. Returns the spoken text."""
         engine = self.pipeline.stt_engine or "default"
         self.event_callback(
             PipelineEvent(
@@ -142,7 +193,9 @@ class PipelineRun:
 
         try:
             result = await stt_provider.async_process_audio_stream(metadata, stream)
-            assert result.result == stt.SpeechResultState.SUCCESS
+            assert (result.text is not None) and (
+                result.result == stt.SpeechResultState.SUCCESS
+            )
         except Exception as stt_error:
             raise SpeechToTextError(
                 "stt-stream-failed",
@@ -160,12 +213,12 @@ class PipelineRun:
             )
         )
 
-        return result
+        return result.text
 
     async def recognize_intent(
         self, intent_input: str, conversation_id: str | None
-    ) -> conversation.ConversationResult:
-        """Run intent recognition portion of pipeline."""
+    ) -> str:
+        """Run intent recognition portion of pipeline. Returns text to speak."""
         self.event_callback(
             PipelineEvent(
                 PipelineEventType.INTENT_START,
@@ -193,7 +246,9 @@ class PipelineRun:
             )
         )
 
-        return conversation_result
+        speech = conversation_result.response.speech.get("plain", {}).get("speech", "")
+
+        return speech
 
     async def text_to_speech(self, tts_input: str) -> str:
         """Run text to speech portion of pipeline. Returns URL of TTS audio."""
@@ -228,8 +283,15 @@ class PipelineRun:
 
 
 @dataclass
-class PipelineRequest(ABC):
-    """Request to for a pipeline run."""
+class PipelineInput:
+    """Input to a pipeline run."""
+
+    binary_handler_id: int | None = None
+    stt_metadata: stt.SpeechMetadata | None = None
+    stt_stream: AsyncIterable[bytes] | None = None
+    intent_input: str | None = None
+    tts_input: str | None = None
+    conversation_id: str | None = None
 
     async def execute(
         self, run: PipelineRun, timeout: int | float | None = DEFAULT_TIMEOUT
@@ -240,53 +302,64 @@ class PipelineRequest(ABC):
             timeout=timeout,
         )
 
-    @abstractmethod
     async def _execute(self, run: PipelineRun):
-        """Run pipeline with request info and context."""
+        self._validate(run.start_stage)
 
-
-@dataclass
-class TextPipelineRequest(PipelineRequest):
-    """Request to run the text portion only of a pipeline."""
-
-    intent_input: str
-    conversation_id: str | None = None
-
-    async def _execute(
-        self,
-        run: PipelineRun,
-    ):
         run.start()
-        await run.recognize_intent(self.intent_input, self.conversation_id)
+        stage = run.start_stage
+
+        # Speech to text
+        intent_input = self.intent_input
+        if stage == PipelineStage.STT:
+            assert self.binary_handler_id is not None
+            assert self.stt_metadata is not None
+            assert self.stt_stream is not None
+            intent_input = await run.speech_to_text(
+                self.stt_metadata, self.stt_stream, self.binary_handler_id
+            )
+            stage = PipelineStage.INTENT
+
+        if run.end_stage != PipelineStage.STT:
+            tts_input = self.tts_input
+
+            if stage == PipelineStage.INTENT:
+                assert intent_input is not None
+                tts_input = await run.recognize_intent(
+                    intent_input, self.conversation_id
+                )
+                stage = PipelineStage.TTS
+
+            if run.end_stage != PipelineStage.INTENT:
+                if stage == PipelineStage.TTS:
+                    assert tts_input is not None
+                    await run.text_to_speech(tts_input)
+
         run.finish()
 
+    def _validate(self, stage: PipelineStage):
+        """Validate pipeline input against start stage."""
+        if stage == PipelineStage.STT:
+            if self.binary_handler_id is None:
+                raise PipelineRunValidationError(
+                    "binary_handler_id is required for speech to text"
+                )
 
-@dataclass
-class AudioPipelineRequest(PipelineRequest):
-    """Request to full pipeline from audio input (stt) to audio output (tts)."""
+            if self.stt_metadata is None:
+                raise PipelineRunValidationError(
+                    "stt_metadata is required for speech to text"
+                )
 
-    binary_handler_id: int
-    stt_metadata: stt.SpeechMetadata
-    stt_stream: AsyncIterable[bytes]
-    conversation_id: str | None = None
-
-    async def _execute(self, run: PipelineRun):
-        run.start()
-
-        stt_result = await run.speech_to_text(
-            self.stt_metadata, self.stt_stream, self.binary_handler_id
-        )
-        if stt_result.result == stt.SpeechResultState.SUCCESS:
-            assert stt_result.text is not None
-
-            conversation_result = await run.recognize_intent(
-                stt_result.text, self.conversation_id
-            )
-
-            tts_input = conversation_result.response.speech.get("plain", {}).get(
-                "speech", ""
-            )
-
-            await run.text_to_speech(tts_input)
-
-        run.finish()
+            if self.stt_stream is None:
+                raise PipelineRunValidationError(
+                    "stt_stream is required for speech to text"
+                )
+        elif stage == PipelineStage.INTENT:
+            if self.intent_input is None:
+                raise PipelineRunValidationError(
+                    "intent_input is required for intent recognition"
+                )
+        elif stage == PipelineStage.TTS:
+            if self.tts_input is None:
+                raise PipelineRunValidationError(
+                    "tts_input is required for text to speech"
+                )
