@@ -1,4 +1,4 @@
-"""The test repairing statistics schema."""
+"""The test repairing states schema."""
 
 # pylint: disable=invalid-name
 from datetime import datetime
