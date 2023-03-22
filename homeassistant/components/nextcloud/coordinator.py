@@ -6,7 +6,7 @@ from typing import Any
 from nextcloudmonitor import NextcloudMonitor, NextcloudMonitorError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_SCAN_INTERVAL, CONF_URL
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -29,7 +29,7 @@ class NextcloudDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             hass,
             _LOGGER,
             name=self.url,
-            update_interval=entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+            update_interval=DEFAULT_SCAN_INTERVAL,
         )
 
     # Use recursion to create list of sensors & values based on nextcloud api data
