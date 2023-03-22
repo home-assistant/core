@@ -77,7 +77,6 @@ def _validate_table_schema_supports_utf8(
         try:
             session.flush()
         except OperationalError as err:
-            session.rollback()
             if err.orig and err.orig.args[0] == MYSQL_ERR_INCORRECT_STRING_VALUE:
                 _LOGGER.debug(
                     "Database %s statistics_meta does not support 4-byte UTF-8",
@@ -86,6 +85,8 @@ def _validate_table_schema_supports_utf8(
                 schema_errors.add(f"{table}.4-byte UTF-8")
                 return schema_errors
             raise
+        finally:
+            session.rollback()
     return schema_errors
 
 
@@ -123,17 +124,20 @@ def _validate_db_schema_precision(
     with session_scope(session=session_maker(), read_only=True) as session:
         db_object = table_object(**{column: PRECISE_NUMBER for column in columns})
         table = table_object.__tablename__
-        session.add(db_object)
-        session.flush()
-        session.refresh(db_object)
-        check_columns(
-            schema_errors=schema_errors,
-            stored={column: getattr(db_object, column) for column in columns},
-            expected={column: PRECISE_NUMBER for column in columns},
-            columns=columns,
-            table_name=table,
-            supports="double precision",
-        )
+        try:
+            session.add(db_object)
+            session.flush()
+            session.refresh(db_object)
+            check_columns(
+                schema_errors=schema_errors,
+                stored={column: getattr(db_object, column) for column in columns},
+                expected={column: PRECISE_NUMBER for column in columns},
+                columns=columns,
+                table_name=table,
+                supports="double precision",
+            )
+        finally:
+            session.rollback()
     return schema_errors
 
 
