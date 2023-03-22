@@ -359,11 +359,11 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
         return self.async_create_entry(title="", data={})
 
 
-async def start_multi_pan_addon(hass: HomeAssistant) -> None:
-    """Start the multi-PAN addon.
+async def check_multi_pan_addon(hass: HomeAssistant) -> None:
+    """Check the multi-PAN addon state, and start it if installed but not started.
 
     Does nothing if Hass.io is not loaded.
-    Raises on error or if the add-on is being installed or upgraded.
+    Raises on error or if the add-on is installed but not started.
     """
     if not is_hassio(hass):
         return
@@ -375,15 +375,14 @@ async def start_multi_pan_addon(hass: HomeAssistant) -> None:
         _LOGGER.error(err)
         raise HomeAssistantError from err
 
-    # Start the addon if it's not started
+    # Request the addon to start if it's not started
+    # addon_manager.async_start_addon returns as soon as the start request has been sent
+    # and does not wait for the addon to be started, so we raise below
     if addon_info.state == AddonState.NOT_RUNNING:
         await addon_manager.async_start_addon()
 
     if addon_info.state not in (AddonState.NOT_INSTALLED, AddonState.RUNNING):
-        _LOGGER.debug(
-            "Multi pan addon in state %s, delaying yellow config entry setup",
-            addon_info.state,
-        )
+        _LOGGER.debug("Multi pan addon installed and in state %s", addon_info.state)
         raise HomeAssistantError
 
 

@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from homeassistant.components.hassio import get_os_info
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
+    check_multi_pan_addon,
     get_multi_pan_addon_info,
     get_zigbee_socket,
-    start_multi_pan_addon,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -27,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
 
     try:
-        await start_multi_pan_addon(hass)
+        await check_multi_pan_addon(hass)
     except HomeAssistantError as err:
         raise ConfigEntryNotReady from err
 
