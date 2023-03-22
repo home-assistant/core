@@ -62,7 +62,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Nextcloud sensors."""
-    coordinator: NextcloudDataUpdateCoordinator = hass.data[DOMAIN]
+    coordinator: NextcloudDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         [
             NextcloudSensor(coordinator, name)
