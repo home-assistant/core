@@ -37,8 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STATISTIC_ID = f"{DOMAIN}.db_test"
 
-DOUBLE_PRECISION_COLUMNS = ("max", "mean", "min", "state", "sum")
-MICRO_SECOND_PRECISION_COLUMNS = ("last_reset", "start")
+DOUBLE_PRECISION_COLUMNS = ("mean", "min", "max", "state", "sum")
 
 
 def _validate_db_schema(
@@ -137,7 +136,7 @@ def _validate_db_schema(
                         ),
                         "start": datetime_to_timestamp_or_none(statistics["start"]),
                     },
-                    columns=MICRO_SECOND_PRECISION_COLUMNS,
+                    columns=("last_reset", "start"),
                     table_name=table.__tablename__,
                     supports="µs precision",
                 )
@@ -201,6 +200,6 @@ def correct_db_schema(
                 table.__tablename__,
                 [
                     f"{column} {DOUBLE_PRECISION_TYPE_SQL}"
-                    for column in MICRO_SECOND_PRECISION_COLUMNS
+                    for column in ("last_reset_ts", "start_ts")
                 ],
             )
