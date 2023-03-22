@@ -29,6 +29,8 @@ test_response_stations = json.loads(
 )
 
 test_response_station_data = json.loads(json.dumps([{"total": 1000.00}]))
+test_response_station_data2 = json.loads(json.dumps([{"total": 2000.00}]))
+
 
 authorisation_response = json.loads(json.dumps({"Authorization": JWT_TOKEN}))
 
@@ -81,7 +83,7 @@ async def setup_integration(hass: HomeAssistant) -> None:
         )
         mock_request.get(
             "https://businessspecificapimanglobal.azure-api.net/energy-consumptions/pub/consumption/station2?since=2000-01-01T00%3A00%3A00.00Z",
-            json=test_response_station_data,
+            json=test_response_station_data2,
             status_code=HTTPStatus.OK,
         )
 

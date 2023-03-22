@@ -9,7 +9,13 @@ from homeassistant.components.incharge.config_flow import InChargeConfigFlow
 from homeassistant.components.incharge.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from . import authorisation_response_auth_endpoint_unauthorised, test_response_stations
+from . import (
+    authorisation_response_auth_endpoint_unauthorised,
+    entry,
+    test_response_station_data,
+    test_response_station_data2,
+    test_response_stations,
+)
 
 
 async def test_show_set_form(hass: HomeAssistant) -> None:
@@ -96,7 +102,11 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 async def test_form_valid_input(hass: HomeAssistant) -> None:
     """Test we can validate input."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_USER,
+            "entry_id": entry.entry_id,
+        },
     )
 
     with requests_mock.Mocker() as mock_request:
@@ -111,6 +121,17 @@ async def test_form_valid_input(hass: HomeAssistant) -> None:
             status_code=HTTPStatus.OK,
         )
 
+        mock_request.get(
+            "https://businessspecificapimanglobal.azure-api.net/energy-consumptions/pub/consumption/station1?since=2000-01-01T00%3A00%3A00.00Z",
+            json=test_response_station_data,
+            status_code=HTTPStatus.OK,
+        )
+        mock_request.get(
+            "https://businessspecificapimanglobal.azure-api.net/energy-consumptions/pub/consumption/station2?since=2000-01-01T00%3A00%3A00.00Z",
+            json=test_response_station_data2,
+            status_code=HTTPStatus.OK,
+        )
+
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -120,3 +141,4 @@ async def test_form_valid_input(hass: HomeAssistant) -> None:
         )
 
     assert result2["result"].state == config_entries.ConfigEntryState.LOADED
+    await hass.config_entries.async_unload(result2["result"].entry_id)

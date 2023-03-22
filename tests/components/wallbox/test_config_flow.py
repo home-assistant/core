@@ -47,6 +47,7 @@ async def test_show_set_form(hass: HomeAssistant) -> None:
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
+    await hass.config_entries.async_unload(entry.entry_id)
 
 
 async def test_form_cannot_authenticate(hass: HomeAssistant) -> None:
