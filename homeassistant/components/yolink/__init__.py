@@ -24,8 +24,9 @@ from homeassistant.helpers import (
 )
 
 from . import api
-from .const import DOMAIN
+from .const import DOMAIN, YOLINK_EVENT
 from .coordinator import YoLinkCoordinator
+from .device_trigger import CONF_LONG_PRESS, CONF_SHORT_PRESS
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -73,15 +74,17 @@ class YoLinkHomeMessageListener(MessageListener):
             )
             if device_entry is None:
                 return
-            key_press_type = (
-                "short_press" if msg_data["event"]["type"] == "Press" else "long_press"
-            )
+            key_press_type = None
+            if msg_data["event"]["type"] == "Press":
+                key_press_type = CONF_SHORT_PRESS
+            else:
+                key_press_type = CONF_LONG_PRESS
             button_idx = msg_data["event"]["keyMask"]
             event_data = {
                 "type": f"button_{button_idx}_{key_press_type}",
                 "device_id": device_entry.id,
             }
-            self._hass.bus.async_fire(DOMAIN + "_event", event_data)
+            self._hass.bus.async_fire(YOLINK_EVENT, event_data)
 
 
 @dataclass

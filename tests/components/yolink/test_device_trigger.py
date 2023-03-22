@@ -4,7 +4,7 @@ from yolink.const import ATTR_DEVICE_DIMMER, ATTR_DEVICE_SMART_REMOTER
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.yolink import DOMAIN
+from homeassistant.components.yolink import DOMAIN, YOLINK_EVENT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -158,7 +158,7 @@ async def test_if_fires_on_event(
     assert device is not None
     # Fake remote button long press.
     hass.bus.async_fire(
-        event_type=DOMAIN + "_event",
+        event_type=YOLINK_EVENT,
         event_data={
             "type": "button_1_long_press",
             "device_id": device.id,
