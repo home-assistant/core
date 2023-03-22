@@ -27,7 +27,7 @@ async def test_validate_db_schema_fix_float_issue(
     with patch(
         "homeassistant.components.recorder.core.Recorder.dialect_name", db_engine
     ), patch(
-        "homeassistant.components.recorder.auto_repairs.states.schema.validate_db_schema_precision",
+        "homeassistant.components.recorder.auto_repairs.schema.validate_db_schema_precision",
         return_value={"states.µs precision"},
     ), patch(
         "homeassistant.components.recorder.migration._modify_columns"
@@ -60,7 +60,7 @@ async def test_validate_db_schema_fix_utf8_issue(
     with patch(
         "homeassistant.components.recorder.core.Recorder.dialect_name", "mysql"
     ), patch(
-        "homeassistant.components.recorder.auto_repairs.states.schema.validate_db_schema_precision",
+        "homeassistant.components.recorder.auto_repairs.schema.validate_table_schema_supports_utf8",
         return_value={"states.4-byte UTF-8"},
     ):
         await async_setup_recorder_instance(hass)

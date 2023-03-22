@@ -5,7 +5,6 @@ from collections.abc import Callable
 import logging
 from typing import TYPE_CHECKING
 
-from sqlalchemy.engine import Engine
 from sqlalchemy.orm.session import Session
 
 from homeassistant.core import HomeAssistant
@@ -141,15 +140,14 @@ def _validate_db_schema(
     return schema_errors
 
 
-def validate_db_schema(
-    hass: HomeAssistant, instance: Recorder, session_maker: Callable[[], Session]
-) -> set[str]:
+def validate_db_schema(instance: Recorder) -> set[str]:
     """Do some basic checks for common schema errors caused by manual migration."""
     schema_errors: set[str] = set()
+    session_maker = instance.get_session
     schema_errors |= validate_table_schema_supports_utf8(
         instance, StatisticsMeta, ("statistic_id",), session_maker
     )
-    schema_errors |= _validate_db_schema(hass, instance, session_maker)
+    schema_errors |= _validate_db_schema(instance.hass, instance, session_maker)
     if schema_errors:
         _LOGGER.debug(
             "Detected statistics schema errors: %s", ", ".join(sorted(schema_errors))
@@ -159,12 +157,14 @@ def validate_db_schema(
 
 def correct_db_schema(
     instance: Recorder,
-    engine: Engine,
-    session_maker: Callable[[], Session],
     schema_errors: set[str],
 ) -> None:
     """Correct issues detected by validate_db_schema."""
     from ...migration import _modify_columns  # pylint: disable=import-outside-toplevel
+
+    engine = instance.engine
+    session_maker = instance.get_session
+    assert engine is not None
 
     if "statistics_meta.4-byte UTF-8" in schema_errors:
         correct_table_character_set_and_collation("statistics_meta", session_maker)

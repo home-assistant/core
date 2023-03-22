@@ -172,3 +172,54 @@ def correct_table_character_set_and_collation(
                 " COLLATE utf8mb4_unicode_ci, LOCK=EXCLUSIVE"
             )
         )
+
+
+def validate_db_schema_utf8_and_precision(
+    instance: Recorder,
+    table_object: type[DeclarativeBase],
+    utf8_columns: tuple[str, ...],
+    precision_columns: dict[str, str],
+) -> set[str]:
+    """Do some basic checks for common schema errors caused by manual migration."""
+    schema_errors: set[str] = set()
+    session_maker = instance.get_session
+    schema_errors |= validate_table_schema_supports_utf8(
+        instance, table_object, utf8_columns, session_maker
+    )
+    schema_errors |= validate_db_schema_precision(
+        instance, table_object, tuple(precision_columns), session_maker
+    )
+    if schema_errors:
+        _LOGGER.debug(
+            "Detected %s schema errors: %s",
+            table_object.__tablename__,
+            ", ".join(sorted(schema_errors)),
+        )
+    return schema_errors
+
+
+def correct_db_schema_utf8_and_precision(
+    instance: Recorder,
+    table_object: type[DeclarativeBase],
+    precision_columns: dict[str, str],
+    schema_errors: set[str],
+) -> None:
+    """Correct issues detected by validate_db_schema."""
+    from ..migration import _modify_columns  # pylint: disable=import-outside-toplevel
+
+    table_name = table_object.__tablename__
+    session_maker = instance.get_session
+    engine = instance.engine
+    assert engine is not None, "Engine should be set"
+
+    if f"{table_name}.4-byte UTF-8" in schema_errors:
+        correct_table_character_set_and_collation(table_name, session_maker)
+
+    if f"{table_name}.µs precision" in schema_errors:
+        # Attempt to convert timestamp columns to µs precision
+        _modify_columns(
+            session_maker,
+            engine,
+            table_name,
+            [f"{column} {sql_type}" for column, sql_type in precision_columns.items()],
+        )

@@ -194,8 +194,8 @@ def _find_schema_errors(
 ) -> set[str]:
     """Find schema errors."""
     schema_errors: set[str] = set()
-    schema_errors |= statistics_validate_db_schema(hass, instance, session_maker)
-    schema_errors |= states_validate_db_schema(hass, instance, session_maker)
+    schema_errors |= statistics_validate_db_schema(instance)
+    schema_errors |= states_validate_db_schema(instance)
     return schema_errors
 
 
@@ -245,8 +245,8 @@ def migrate_schema(
             "Database is about to correct DB schema errors: %s",
             ", ".join(sorted(schema_errors)),
         )
-        statistics_correct_db_schema(instance, engine, session_maker, schema_errors)
-        states_correct_db_schema(instance, engine, session_maker, schema_errors)
+        statistics_correct_db_schema(instance, schema_errors)
+        states_correct_db_schema(instance, schema_errors)
 
     if current_version != SCHEMA_VERSION:
         instance.queue_task(PostSchemaMigrationTask(current_version, SCHEMA_VERSION))
