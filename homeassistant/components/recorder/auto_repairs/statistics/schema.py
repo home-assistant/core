@@ -10,7 +10,12 @@ from sqlalchemy.orm.session import Session
 from homeassistant.core import HomeAssistant
 
 from ...const import DOMAIN, SupportedDialect
-from ...db_schema import Statistics, StatisticsMeta, StatisticsShortTerm
+from ...db_schema import (
+    DOUBLE_PRECISION_TYPE_SQL,
+    Statistics,
+    StatisticsMeta,
+    StatisticsShortTerm,
+)
 from ...models import StatisticData, StatisticMetaData, datetime_to_timestamp_or_none
 from ...statistics import (
     _import_statistics_with_session,
@@ -181,11 +186,8 @@ def correct_db_schema(
                 engine,
                 table.__tablename__,
                 [
-                    "mean DOUBLE PRECISION",
-                    "min DOUBLE PRECISION",
-                    "max DOUBLE PRECISION",
-                    "state DOUBLE PRECISION",
-                    "sum DOUBLE PRECISION",
+                    f"{column} {DOUBLE_PRECISION_TYPE_SQL}"
+                    for column in ("max", "mean", "min", "state", "sum")
                 ],
             )
         if f"{table.__tablename__}.µs precision" in schema_errors:
@@ -195,7 +197,7 @@ def correct_db_schema(
                 engine,
                 table.__tablename__,
                 [
-                    "last_reset_ts DOUBLE PRECISION",
-                    "start_ts DOUBLE PRECISION",
+                    f"{column} {DOUBLE_PRECISION_TYPE_SQL}"
+                    for column in ("last_reset_ts", "start_ts")
                 ],
             )

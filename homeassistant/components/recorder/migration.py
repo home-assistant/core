@@ -43,6 +43,7 @@ from .auto_repairs.statistics.schema import (
 from .const import SupportedDialect
 from .db_schema import (
     CONTEXT_ID_BIN_MAX_LENGTH,
+    DOUBLE_PRECISION_TYPE_SQL,
     LEGACY_STATES_EVENT_ID_INDEX,
     SCHEMA_VERSION,
     STATISTICS_TABLES,
@@ -100,13 +101,13 @@ class _ColumnTypesForDialect:
 
 _MYSQL_COLUMN_TYPES = _ColumnTypesForDialect(
     big_int_type="INTEGER(20)",
-    timestamp_type="DOUBLE PRECISION",
+    timestamp_type=DOUBLE_PRECISION_TYPE_SQL,
     context_bin_type=f"BLOB({CONTEXT_ID_BIN_MAX_LENGTH})",
 )
 
 _POSTGRESQL_COLUMN_TYPES = _ColumnTypesForDialect(
     big_int_type="INTEGER",
-    timestamp_type="DOUBLE PRECISION",
+    timestamp_type=DOUBLE_PRECISION_TYPE_SQL,
     context_bin_type="BYTEA",
 )
 
@@ -747,11 +748,8 @@ def _apply_update(  # noqa: C901
                 engine,
                 "statistics",
                 [
-                    "mean DOUBLE PRECISION",
-                    "min DOUBLE PRECISION",
-                    "max DOUBLE PRECISION",
-                    "state DOUBLE PRECISION",
-                    "sum DOUBLE PRECISION",
+                    f"{column} {DOUBLE_PRECISION_TYPE_SQL}"
+                    for column in ("max", "mean", "min", "state", "sum")
                 ],
             )
     elif new_version == 21:

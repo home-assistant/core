@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ...db_schema import States
+from ...db_schema import DOUBLE_PRECISION_TYPE_SQL, States
 from ..schema import (
     correct_db_schema_utf8_and_precision,
     validate_db_schema_utf8_and_precision,
@@ -13,8 +13,8 @@ if TYPE_CHECKING:
     from ... import Recorder
 
 PRECISION_COLUMN_TYPES = {
-    "last_updated_ts": "DOUBLE PRECISION",
-    "last_changed_ts": "DOUBLE PRECISION",
+    "last_updated_ts": DOUBLE_PRECISION_TYPE_SQL,
+    "last_changed_ts": DOUBLE_PRECISION_TYPE_SQL,
 }
 UTF8_COLUMN_TYPES = ("state",)
 
