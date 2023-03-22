@@ -3,11 +3,10 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
-import logging
 from collections.abc import AsyncIterable, Callable
 from dataclasses import dataclass, field
+import logging
 from typing import Any
-
 
 from homeassistant.backports.enum import StrEnum
 from homeassistant.components import conversation, stt
@@ -21,6 +20,7 @@ from homeassistant.util.dt import utcnow
 DEFAULT_TIMEOUT = 30  # seconds
 
 _LOGGER = logging.getLogger(__name__)
+
 
 class PipelineEventType(StrEnum):
     """Event types emitted during a pipeline run."""
@@ -106,7 +106,7 @@ class PipelineRun:
             PipelineEvent(
                 PipelineEventType.STT_START,
                 {
-                    "engine": self.pipeline.stt_engine,
+                    "engine": self.pipeline.stt_engine or "default",
                 },
             )
         )
