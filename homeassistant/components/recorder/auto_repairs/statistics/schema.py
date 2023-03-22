@@ -37,6 +37,9 @@ _LOGGER = logging.getLogger(__name__)
 
 STATISTIC_ID = f"{DOMAIN}.db_test"
 
+DOUBLE_PRECISION_COLUMNS = ("max", "mean", "min", "state", "sum")
+MICRO_SECOND_PRECISION_COLUMNS = ("last_reset", "start")
+
 
 def _validate_db_schema(
     hass: HomeAssistant, instance: Recorder, session_maker: Callable[[], Session]
@@ -120,7 +123,7 @@ def _validate_db_schema(
                     schema_errors=schema_errors,
                     stored=last_stored_statistic,
                     expected=statistics,
-                    columns=("max", "mean", "min", "state", "sum"),
+                    columns=DOUBLE_PRECISION_COLUMNS,
                     table_name=table.__tablename__,
                     supports="double precision",
                 )
@@ -134,7 +137,7 @@ def _validate_db_schema(
                         ),
                         "start": datetime_to_timestamp_or_none(statistics["start"]),
                     },
-                    columns=("start", "last_reset"),
+                    columns=MICRO_SECOND_PRECISION_COLUMNS,
                     table_name=table.__tablename__,
                     supports="µs precision",
                 )
@@ -187,7 +190,7 @@ def correct_db_schema(
                 table.__tablename__,
                 [
                     f"{column} {DOUBLE_PRECISION_TYPE_SQL}"
-                    for column in ("max", "mean", "min", "state", "sum")
+                    for column in DOUBLE_PRECISION_COLUMNS
                 ],
             )
         if f"{table.__tablename__}.µs precision" in schema_errors:
@@ -198,6 +201,6 @@ def correct_db_schema(
                 table.__tablename__,
                 [
                     f"{column} {DOUBLE_PRECISION_TYPE_SQL}"
-                    for column in ("last_reset_ts", "start_ts")
+                    for column in MICRO_SECOND_PRECISION_COLUMNS
                 ],
             )
