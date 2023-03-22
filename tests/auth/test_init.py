@@ -3,6 +3,7 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import Mock, patch
 
+from freezegun import freeze_time
 import jwt
 import pytest
 import voluptuous as vol
@@ -1180,3 +1181,24 @@ async def test_reject_token_with_not_dict_json_payload(mock_hass) -> None:
     )
     manager = await auth.auth_manager_from_config(mock_hass, [], [])
     assert await manager.async_validate_access_token(token_not_a_dict_json) is None
+
+
+async def test_access_token_that_expires_soon(mock_hass) -> None:
+    """Test access token from refresh token that expires very soon."""
+    now = dt_util.utcnow()
+    manager = await auth.auth_manager_from_config(mock_hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    refresh_token = await manager.async_create_refresh_token(
+        user,
+        client_name="Token that expires very soon",
+        token_type=auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+        access_token_expiration=timedelta(seconds=1),
+    )
+    assert refresh_token.token_type == auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
+    access_token = manager.async_create_access_token(refresh_token)
+
+    rt = await manager.async_validate_access_token(access_token)
+    assert rt.id == refresh_token.id
+
+    with freeze_time(now + timedelta(minutes=1)):
+        assert await manager.async_validate_access_token(access_token) is None
