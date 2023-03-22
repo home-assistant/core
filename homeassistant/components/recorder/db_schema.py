@@ -119,13 +119,17 @@ STATES_CONTEXT_ID_BIN_INDEX = "ix_states_context_id_bin"
 LEGACY_STATES_EVENT_ID_INDEX = "ix_states_event_id"
 CONTEXT_ID_BIN_MAX_LENGTH = 16
 
+MYSQL_COLLATE = "utf8mb4_unicode_ci"
+MYSQL_DEFAULT_CHARSET = "utf8mb4"
+MYSQL_ENGINE = "InnoDB"
+
 _DEFAULT_TABLE_ARGS = {
-    "mysql_default_charset": "utf8mb4",
-    "mysql_collate": "utf8mb4_unicode_ci",
-    "mysql_engine": "InnoDB",
-    "mariadb_default_charset": "utf8mb4",
-    "mariadb_collate": "utf8mb4_unicode_ci",
-    "mariadb_engine": "InnoDB",
+    "mysql_default_charset": MYSQL_DEFAULT_CHARSET,
+    "mysql_collate": MYSQL_COLLATE,
+    "mysql_engine": MYSQL_ENGINE,
+    "mariadb_default_charset": MYSQL_DEFAULT_CHARSET,
+    "mariadb_collate": MYSQL_COLLATE,
+    "mariadb_engine": MYSQL_ENGINE,
 }
 
 

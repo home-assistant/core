@@ -41,12 +41,10 @@ def validate_db_schema(instance: Recorder) -> set[str]:
     schema_errors |= validate_table_schema_supports_utf8(
         instance, StatisticsMeta, ("statistic_id",), session_maker
     )
-    schema_errors |= validate_db_schema_precision(
-        instance, Statistics, tuple(PRECISION_COLUMN_TYPES), session_maker
-    )
-    schema_errors |= validate_db_schema_precision(
-        instance, StatisticsShortTerm, tuple(PRECISION_COLUMN_TYPES), session_maker
-    )
+    for table in (Statistics, StatisticsShortTerm):
+        schema_errors |= validate_db_schema_precision(
+            instance, table, tuple(PRECISION_COLUMN_TYPES), session_maker
+        )
     if schema_errors:
         _LOGGER.debug(
             "Detected statistics schema errors: %s", ", ".join(sorted(schema_errors))
@@ -60,9 +58,7 @@ def correct_db_schema(
 ) -> None:
     """Correct issues detected by validate_db_schema."""
     correct_db_schema_utf8(instance, StatisticsMeta, schema_errors)
-    correct_db_schema_precision(
-        instance, Statistics, PRECISION_COLUMN_TYPES, schema_errors
-    )
-    correct_db_schema_precision(
-        instance, StatisticsShortTerm, PRECISION_COLUMN_TYPES, schema_errors
-    )
+    for table in (Statistics, StatisticsShortTerm):
+        correct_db_schema_precision(
+            instance, table, PRECISION_COLUMN_TYPES, schema_errors
+        )

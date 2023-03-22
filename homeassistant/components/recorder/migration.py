@@ -45,6 +45,8 @@ from .db_schema import (
     CONTEXT_ID_BIN_MAX_LENGTH,
     DOUBLE_PRECISION_TYPE_SQL,
     LEGACY_STATES_EVENT_ID_INDEX,
+    MYSQL_COLLATE,
+    MYSQL_DEFAULT_CHARSET,
     SCHEMA_VERSION,
     STATISTICS_TABLES,
     TABLE_STATES,
@@ -756,27 +758,7 @@ def _apply_update(  # noqa: C901
         # Try to change the character set of the statistic_meta table
         if engine.dialect.name == SupportedDialect.MYSQL:
             for table in ("events", "states", "statistics_meta"):
-                _LOGGER.warning(
-                    (
-                        "Updating character set and collation of table %s to utf8mb4."
-                        " Note: this can take several minutes on large databases and"
-                        " slow computers. Please be patient!"
-                    ),
-                    table,
-                )
-                with contextlib.suppress(SQLAlchemyError), session_scope(
-                    session=session_maker()
-                ) as session:
-                    connection = session.connection()
-                    connection.execute(
-                        # Using LOCK=EXCLUSIVE to prevent
-                        # the database from corrupting
-                        # https://github.com/home-assistant/core/issues/56104
-                        text(
-                            f"ALTER TABLE {table} CONVERT TO CHARACTER SET utf8mb4"
-                            " COLLATE utf8mb4_unicode_ci, LOCK=EXCLUSIVE"
-                        )
-                    )
+                _correct_table_character_set_and_collation(table, session_maker)
     elif new_version == 22:
         # Recreate the all statistics tables for Oracle DB with Identity columns
         #
@@ -1101,6 +1083,33 @@ def _apply_update(  # noqa: C901
         _create_index(session_maker, "states_meta", "ix_states_meta_entity_id")
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
+
+
+def _correct_table_character_set_and_collation(
+    table: str,
+    session_maker: Callable[[], Session],
+) -> None:
+    """Correct issues detected by validate_db_schema."""
+    # Attempt to convert the table to utf8mb4
+    _LOGGER.warning(
+        "Updating character set and collation of table %s to utf8mb4. "
+        "Note: this can take several minutes on large databases and slow "
+        "computers. Please be patient!",
+        table,
+    )
+    with contextlib.suppress(SQLAlchemyError), session_scope(
+        session=session_maker()
+    ) as session:
+        connection = session.connection()
+        connection.execute(
+            # Using LOCK=EXCLUSIVE to prevent the database from corrupting
+            # https://github.com/home-assistant/core/issues/56104
+            text(
+                f"ALTER TABLE {table} CONVERT TO CHARACTER SET "
+                f"{MYSQL_DEFAULT_CHARSET} "
+                f"COLLATE {MYSQL_COLLATE}, LOCK=EXCLUSIVE"
+            )
+        )
 
 
 def post_schema_migration(

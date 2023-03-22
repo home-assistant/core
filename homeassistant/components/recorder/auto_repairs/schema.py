@@ -2,12 +2,10 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-import contextlib
 import logging
 from typing import TYPE_CHECKING
 
-from sqlalchemy import text
-from sqlalchemy.exc import OperationalError, SQLAlchemyError
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm.session import Session
 
@@ -60,6 +58,7 @@ def validate_table_schema_supports_utf8(
                     schema_errors.add(f"{table}.4-byte UTF-8")
                     session.rollback()
                 else:
+                    session.rollback()
                     raise
     except Exception as exc:  # pylint: disable=broad-except
         _LOGGER.exception("Error when validating DB schema: %s", exc)
@@ -129,32 +128,6 @@ def check_columns(
             )
 
 
-def correct_table_character_set_and_collation(
-    table: str,
-    session_maker: Callable[[], Session],
-) -> None:
-    """Correct issues detected by validate_db_schema."""
-    # Attempt to convert the table to utf8mb4
-    _LOGGER.warning(
-        "Updating character set and collation of table %s to utf8mb4. "
-        "Note: this can take several minutes on large databases and slow "
-        "computers. Please be patient!",
-        table,
-    )
-    with contextlib.suppress(SQLAlchemyError), session_scope(
-        session=session_maker()
-    ) as session:
-        connection = session.connection()
-        connection.execute(
-            # Using LOCK=EXCLUSIVE to prevent the database from corrupting
-            # https://github.com/home-assistant/core/issues/56104
-            text(
-                f"ALTER TABLE {table} CONVERT TO CHARACTER SET utf8mb4"
-                " COLLATE utf8mb4_unicode_ci, LOCK=EXCLUSIVE"
-            )
-        )
-
-
 def validate_db_schema_utf8_and_precision(
     instance: Recorder,
     table_object: type[DeclarativeBase],
@@ -198,7 +171,11 @@ def correct_db_schema_utf8(
     """Correct utf8 issues detected by validate_db_schema."""
     table_name = table_object.__tablename__
     if f"{table_name}.4-byte UTF-8" in schema_errors:
-        correct_table_character_set_and_collation(table_name, instance.get_session)
+        from ..migration import (  # pylint: disable=import-outside-toplevel
+            _correct_table_character_set_and_collation,
+        )
+
+        _correct_table_character_set_and_collation(table_name, instance.get_session)
 
 
 def correct_db_schema_precision(
