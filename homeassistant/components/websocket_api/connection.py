@@ -52,7 +52,7 @@ class ActiveConnection:
         self.handlers: dict[str, tuple[MessageHandler, vol.Schema]] = self.hass.data[
             const.DOMAIN
         ]
-        self.binary_handlers: dict[int, BinaryHandler] = {}
+        self.binary_handlers: list[BinaryHandler | None] = []
         current_connection.set(self)
 
     def get_description(self, request: web.Request | None) -> str:
@@ -72,21 +72,31 @@ class ActiveConnection:
     ) -> tuple[int, Callable[[], None]]:
         """Register a temporary binary handler for this connection.
 
-        Returns a binary prefix (1 byte) and a callback to unregister the handler.
+        Returns a binary handler_id (1 byte) and a callback to unregister the handler.
         """
-        prefix = 1
-        while prefix in self.binary_handlers and prefix < 256:
-            prefix += 1
-        if prefix == 256:
+        if len(self.binary_handlers) < 255:
+            index = len(self.binary_handlers)
+            self.binary_handlers.append(None)
+        else:
+            # Once the list is full, we search for a None entry to reuse.
+            index = None
+            for idx, existing in enumerate(self.binary_handlers):
+                if existing is None:
+                    index = idx
+                    break
+
+        if index is None:
             raise RuntimeError("Too many binary handlers registered")
-        self.binary_handlers[prefix] = handler
+
+        self.binary_handlers[index] = handler
 
         @callback
         def unsub() -> None:
             """Unregister the handler."""
-            self.binary_handlers.pop(prefix)
+            assert index is not None
+            self.binary_handlers[index] = None
 
-        return prefix, unsub
+        return index + 1, unsub
 
     @callback
     def send_result(self, msg_id: int, result: Any | None = None) -> None:
@@ -106,7 +116,12 @@ class ActiveConnection:
     @callback
     def async_handle_binary(self, handler_id: int, payload: bytes) -> None:
         """Handle a single incoming binary message."""
-        if (handler := self.binary_handlers.get(handler_id)) is None:
+        index = handler_id - 1
+        if (
+            index < 0
+            or index >= len(self.binary_handlers)
+            or (handler := self.binary_handlers[index]) is None
+        ):
             self.logger.error(
                 "Received binary message for non-existing handler %s", handler_id
             )
