@@ -66,10 +66,9 @@ def _validate_table_schema_supports_utf8(
 ) -> set[str]:
     """Do some basic checks for common schema errors caused by manual migration."""
     schema_errors: set[str] = set()
-    session_maker = instance.get_session
     # Mark the session as read_only to ensure that the test data is not committed
     # to the database and we always rollback when the scope is exited
-    with session_scope(session=session_maker(), read_only=True) as session:
+    with session_scope(session=instance.get_session(), read_only=True) as session:
         db_object = table_object(**{column: UTF8_NAME for column in columns})
         table = table_object.__tablename__
         # Try inserting some data which needs utf8mb4 support
@@ -118,10 +117,9 @@ def _validate_db_schema_precision(
     """Do some basic checks for common schema errors caused by manual migration."""
     schema_errors: set[str] = set()
     columns = _get_precision_column_types(table_object)
-    session_maker = instance.get_session
     # Mark the session as read_only to ensure that the test data is not committed
     # to the database and we always rollback when the scope is exited
-    with session_scope(session=session_maker(), read_only=True) as session:
+    with session_scope(session=instance.get_session(), read_only=True) as session:
         db_object = table_object(**{column: PRECISE_NUMBER for column in columns})
         table = table_object.__tablename__
         try:
