@@ -441,6 +441,7 @@ def test_quirk_classes() -> None:
 
     def find_quirk_class(base_obj, quirk_mod, quirk_cls):
         """Find a specific quirk class."""
+
         module = importlib.import_module(quirk_mod)
         clss = dict(inspect.getmembers(module, inspect.isclass))
         if quirk_cls in clss:
