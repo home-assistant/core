@@ -1029,17 +1029,22 @@ class FritzBoxBaseCoordinatorEntity(update_coordinator.CoordinatorEntity):
     coordinator: AvmWrapper
     entity_description: FritzEntityDescription
 
-    def __init__(self, avm_wrapper: AvmWrapper, device_name: str) -> None:
+    def __init__(
+        self,
+        avm_wrapper: AvmWrapper,
+        device_name: str,
+        description: FritzEntityDescription,
+    ) -> None:
         """Init device info class."""
         super().__init__(avm_wrapper)
         self.async_on_remove(
-            avm_wrapper.register_entity_updates(
-                self.entity_description.key, self.entity_description.value_fn
-            )
+            avm_wrapper.register_entity_updates(description.key, description.value_fn)
         )
+        self.entity_description = description
         self._device_name = device_name
-        self._attr_name = f"{device_name} {self.entity_description.name}"
-        self._attr_unique_id = f"{avm_wrapper.unique_id}-{self.entity_description.key}"
+        self._attr_has_entity_name = True
+        self._attr_name = description.name
+        self._attr_unique_id = f"{avm_wrapper.unique_id}-{description.key}"
 
     @property
     def device_info(self) -> DeviceInfo:

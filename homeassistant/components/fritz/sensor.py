@@ -306,16 +306,6 @@ class FritzBoxSensor(FritzBoxBaseCoordinatorEntity, SensorEntity):
 
     entity_description: FritzSensorEntityDescription
 
-    def __init__(
-        self,
-        avm_wrapper: AvmWrapper,
-        device_friendly_name: str,
-        description: FritzSensorEntityDescription,
-    ) -> None:
-        """Init FRITZ!Box connectivity class."""
-        self.entity_description = description
-        super().__init__(avm_wrapper, device_friendly_name)
-
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
