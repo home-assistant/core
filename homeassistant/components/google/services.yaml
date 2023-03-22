@@ -22,6 +22,12 @@ add_event:
       example: "Birthday bowling"
       selector:
         text:
+     location:
+      name: Location
+      description: The location of the event. Optional.
+      example: "Union Square, New York City"
+      selector:
+        text: 
     start_date_time:
       name: Start time
       description: The date and time the event should start.
