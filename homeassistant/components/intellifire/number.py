@@ -57,14 +57,6 @@ class IntellifireTimerControlEntity(IntellifireEntity, NumberEntity):
     _attr_mode: NumberMode = NumberMode.AUTO
     _attr_native_unit_of_measurement = "minutes"
 
-    def __init__(
-        self,
-        coordinator: IntellifireDataUpdateCoordinator,
-        description: NumberEntityDescription,
-    ) -> None:
-        """Initialize fireplace timer."""
-        super().__init__(coordinator, description)
-
     @property
     def native_value(self) -> float | None:
         """Return the current Timer value in minutes."""
