@@ -126,7 +126,7 @@ def _validate_db_schema_precision(
             session.add(db_object)
             session.flush()
             session.refresh(db_object)
-            check_columns(
+            _check_columns(
                 schema_errors=schema_errors,
                 stored={column: getattr(db_object, column) for column in columns},
                 expected={column: PRECISE_NUMBER for column in columns},
@@ -152,7 +152,7 @@ def _log_schema_errors(
     )
 
 
-def check_columns(
+def _check_columns(
     schema_errors: set[str],
     stored: Mapping,
     expected: Mapping,
