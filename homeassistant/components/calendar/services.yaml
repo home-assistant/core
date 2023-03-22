@@ -18,6 +18,12 @@ create_event:
       example: "Meeting to provide technical review for 'Phoenix' design."
       selector:
         text:
+    location:
+      name: Location
+      description: The location of the event.
+      example: "Union Square, New York City"
+      selector:
+        text: 
     start_date_time:
       name: Start time
       description: The date and time the event should start.
