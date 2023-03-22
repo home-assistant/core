@@ -51,7 +51,6 @@ def mock__get_devices():
                 id=1,
                 name="Drink Water!",
                 connected=True,
-                last_heart_beat=1,
                 psn="psn",
                 type="type",
                 device_firmware="firmware",
