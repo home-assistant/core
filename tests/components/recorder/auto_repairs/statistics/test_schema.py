@@ -73,12 +73,13 @@ async def test_validate_db_schema_fix_float_issue(
         in caplog.text
     )
     modification = [
+        "created_ts DOUBLE PRECISION",
+        "start_ts DOUBLE PRECISION",
         "mean DOUBLE PRECISION",
         "min DOUBLE PRECISION",
         "max DOUBLE PRECISION",
+        "last_reset_ts DOUBLE PRECISION",
         "state DOUBLE PRECISION",
         "sum DOUBLE PRECISION",
-        "last_reset_ts DOUBLE PRECISION",
-        "start_ts DOUBLE PRECISION",
     ]
     modify_columns_mock.assert_called_once_with(ANY, ANY, table, modification)

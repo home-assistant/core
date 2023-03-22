@@ -1,7 +1,7 @@
 """Schema repairs."""
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 import logging
 from typing import TYPE_CHECKING
 
@@ -10,6 +10,7 @@ from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm.session import Session
 
 from ..const import SupportedDialect
+from ..db_schema import DOUBLE_PRECISION_TYPE_SQL, DOUBLE_TYPE
 from ..util import session_scope
 
 if TYPE_CHECKING:
@@ -24,6 +25,17 @@ UTF8_NAME = "𓆚𓃗"
 
 # This number can't be accurately represented as a 32-bit float
 PRECISE_NUMBER = 1.000000000000001
+
+
+def get_precision_column_types(
+    table_object: type[DeclarativeBase],
+) -> list[str]:
+    """Get the column names for the columns that need to be checked for precision."""
+    return [
+        column.key
+        for column in table_object.__table__.columns
+        if column.type is DOUBLE_TYPE
+    ]
 
 
 def validate_table_schema_supports_utf8(
@@ -68,7 +80,6 @@ def validate_table_schema_supports_utf8(
 def validate_db_schema_precision(
     instance: Recorder,
     table_object: type[DeclarativeBase],
-    columns: tuple[str, ...],
     session_maker: Callable[[], Session],
 ) -> set[str]:
     """Do some basic checks for common schema errors caused by manual migration."""
@@ -79,6 +90,8 @@ def validate_db_schema_precision(
         SupportedDialect.POSTGRESQL,
     ):
         return schema_errors
+
+    columns = get_precision_column_types(table_object)
 
     try:
         # Mark the session as read_only to ensure that the test data is not committed
@@ -107,7 +120,7 @@ def check_columns(
     schema_errors: set[str],
     stored: Mapping,
     expected: Mapping,
-    columns: tuple[str, ...],
+    columns: Iterable[str],
     table_name: str,
     supports: str,
 ) -> None:
@@ -132,7 +145,6 @@ def validate_db_schema_utf8_and_precision(
     instance: Recorder,
     table_object: type[DeclarativeBase],
     utf8_columns: tuple[str, ...],
-    precision_columns: dict[str, str],
 ) -> set[str]:
     """Do some basic checks for common schema errors caused by manual migration."""
     schema_errors: set[str] = set()
@@ -140,9 +152,7 @@ def validate_db_schema_utf8_and_precision(
     schema_errors |= validate_table_schema_supports_utf8(
         instance, table_object, utf8_columns, session_maker
     )
-    schema_errors |= validate_db_schema_precision(
-        instance, table_object, tuple(precision_columns), session_maker
-    )
+    schema_errors |= validate_db_schema_precision(instance, table_object, session_maker)
     if schema_errors:
         _LOGGER.debug(
             "Detected %s schema errors: %s",
@@ -155,14 +165,11 @@ def validate_db_schema_utf8_and_precision(
 def correct_db_schema_utf8_and_precision(
     instance: Recorder,
     table_object: type[DeclarativeBase],
-    precision_columns: dict[str, str],
     schema_errors: set[str],
 ) -> None:
     """Correct issues detected by validate_db_schema."""
     correct_db_schema_utf8(instance, table_object, schema_errors)
-    correct_db_schema_precision(
-        instance, table_object, precision_columns, schema_errors
-    )
+    correct_db_schema_precision(instance, table_object, schema_errors)
 
 
 def correct_db_schema_utf8(
@@ -181,7 +188,6 @@ def correct_db_schema_utf8(
 def correct_db_schema_precision(
     instance: Recorder,
     table_object: type[DeclarativeBase],
-    precision_columns: dict[str, str],
     schema_errors: set[str],
 ) -> None:
     """Correct precision issues detected by validate_db_schema."""
@@ -192,6 +198,7 @@ def correct_db_schema_precision(
             _modify_columns,
         )
 
+        precision_columns = get_precision_column_types(table_object)
         # Attempt to convert timestamp columns to µs precision
         session_maker = instance.get_session
         engine = instance.engine
@@ -200,5 +207,5 @@ def correct_db_schema_precision(
             session_maker,
             engine,
             table_name,
-            [f"{column} {sql_type}" for column, sql_type in precision_columns.items()],
+            [f"{column} {DOUBLE_PRECISION_TYPE_SQL}" for column in precision_columns],
         )

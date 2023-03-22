@@ -41,8 +41,8 @@ async def test_validate_db_schema_fix_float_issue(
         in caplog.text
     )
     modification = [
-        "last_updated_ts DOUBLE PRECISION",
         "last_changed_ts DOUBLE PRECISION",
+        "last_updated_ts DOUBLE PRECISION",
     ]
     modify_columns_mock.assert_called_once_with(ANY, ANY, "states", modification)
 
