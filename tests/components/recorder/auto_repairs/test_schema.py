@@ -152,4 +152,4 @@ async def test_validate_db_schema_precision_with_broken_schema(
         ("last_updated_ts", "last_changed_ts"),
         session_maker,
     )
-    assert schema_errors == {"states.µs precision"}
+    assert schema_errors == {"states.double precision"}
