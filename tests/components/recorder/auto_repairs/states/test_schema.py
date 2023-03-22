@@ -11,9 +11,6 @@ from homeassistant.components.recorder.auto_repairs.schema import _get_future_ye
 from homeassistant.components.recorder.statistics import (
     _statistics_during_period_with_session,
 )
-from homeassistant.components.recorder.table_managers.statistics_meta import (
-    StatisticsMetaManager,
-)
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
@@ -32,14 +29,15 @@ async def test_validate_db_schema_fix_utf8_issue(
 
     Note: The test uses SQLite, the purpose is only to exercise the code.
     """
+    await async_wait_recording_done(hass)
+
     orig_error = MagicMock()
     orig_error.args = [1366]
     utf8_error = OperationalError("", "", orig=orig_error)
     with patch(
         "homeassistant.components.recorder.core.Recorder.dialect_name", "mysql"
     ), patch(
-        "homeassistant.components.recorder.table_managers.statistics_meta.StatisticsMetaManager.update_or_add",
-        wraps=StatisticsMetaManager.update_or_add,
+        "homeassistant.components.recorder.auto_repairs.schema._flush_session",
         side_effect=[utf8_error, DEFAULT, DEFAULT],
     ):
         await async_setup_recorder_instance(hass)

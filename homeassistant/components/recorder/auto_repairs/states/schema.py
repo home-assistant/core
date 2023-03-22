@@ -14,7 +14,6 @@ from ...const import SupportedDialect
 from ...db_schema import States
 from ...util import session_scope
 from ..schema import (
-    UTF8_NAME,
     check_columns,
     correct_table_character_set_and_collation,
     get_precise_datetime,
@@ -25,18 +24,6 @@ if TYPE_CHECKING:
     from ... import Recorder
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def _validate_db_schema_utf8(
-    instance: Recorder, session_maker: Callable[[], Session]
-) -> set[str]:
-    """Do some basic checks for common schema errors caused by manual migration."""
-    state = States(state=UTF8_NAME)
-    return validate_table_schema_supports_utf8(
-        instance=instance,
-        table_object=state,
-        session_maker=session_maker,
-    )
 
 
 def _validate_db_schema_precision(
@@ -88,7 +75,9 @@ def validate_db_schema(
 ) -> set[str]:
     """Do some basic checks for common schema errors caused by manual migration."""
     schema_errors: set[str] = set()
-    schema_errors |= _validate_db_schema_utf8(instance, session_maker)
+    schema_errors |= validate_table_schema_supports_utf8(
+        instance, States, ("state",), session_maker
+    )
     schema_errors |= _validate_db_schema_precision(instance, session_maker)
     if schema_errors:
         _LOGGER.debug(

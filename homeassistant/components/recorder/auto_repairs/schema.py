@@ -46,7 +46,8 @@ def get_precise_datetime() -> datetime:
 
 def validate_table_schema_supports_utf8(
     instance: Recorder,
-    table_object: DeclarativeBase,
+    table_object: type[DeclarativeBase],
+    columns: tuple[str, ...],
     session_maker: Callable[[], Session],
 ) -> set[str]:
     """Do some basic checks for common schema errors caused by manual migration."""
@@ -61,15 +62,18 @@ def validate_table_schema_supports_utf8(
         # Mark the session as read_only to ensure that the test data is not committed
         # to the database and we always rollback when the scope is exited
         with session_scope(session=session_maker(), read_only=True) as session:
-            session.add(table_object)
+            db_object = table_object(**{column: UTF8_NAME for column in columns})
+            table = table_object.__tablename__
+            session.add(db_object)
             try:
                 session.flush()
             except OperationalError as err:
                 if err.orig and err.orig.args[0] == 1366:
                     _LOGGER.debug(
-                        "Database table statistics_meta does not support 4-byte UTF-8"
+                        "Database %s statistics_meta does not support 4-byte UTF-8",
+                        table,
                     )
-                    schema_errors.add(f"{table_object.__tablename__}.4-byte UTF-8")
+                    schema_errors.add(f"{table}.4-byte UTF-8")
                     session.rollback()
                 else:
                     raise
