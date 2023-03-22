@@ -215,6 +215,7 @@ WEBSOCKET_EVENT_SCHEMA = vol.Schema(
             vol.Required(EVENT_END): vol.Any(cv.date, cv.datetime),
             vol.Required(EVENT_SUMMARY): cv.string,
             vol.Optional(EVENT_DESCRIPTION): cv.string,
+            vol.Optional(EVENT_LOCATION): cv.string,
             vol.Optional(EVENT_RRULE): _validate_rrule,
         },
         _has_same_type(EVENT_START, EVENT_END),
