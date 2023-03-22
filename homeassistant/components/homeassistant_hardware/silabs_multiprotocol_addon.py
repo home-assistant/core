@@ -26,6 +26,7 @@ from homeassistant.data_entry_flow import (
     FlowManager,
     FlowResult,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.singleton import singleton
 
 from .const import LOGGER, SILABS_MULTIPROTOCOL_ADDON_SLUG
@@ -356,3 +357,53 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
         if user_input is None:
             return self.async_show_form(step_id="addon_installed_other_device")
         return self.async_create_entry(title="", data={})
+
+
+async def check_multi_pan_addon(hass: HomeAssistant) -> None:
+    """Check the multi-PAN addon state, and start it if installed but not started.
+
+    Does nothing if Hass.io is not loaded.
+    Raises on error or if the add-on is installed but not started.
+    """
+    if not is_hassio(hass):
+        return
+
+    addon_manager: AddonManager = get_addon_manager(hass)
+    try:
+        addon_info: AddonInfo = await addon_manager.async_get_addon_info()
+    except AddonError as err:
+        _LOGGER.error(err)
+        raise HomeAssistantError from err
+
+    # Request the addon to start if it's not started
+    # addon_manager.async_start_addon returns as soon as the start request has been sent
+    # and does not wait for the addon to be started, so we raise below
+    if addon_info.state == AddonState.NOT_RUNNING:
+        await addon_manager.async_start_addon()
+
+    if addon_info.state not in (AddonState.NOT_INSTALLED, AddonState.RUNNING):
+        _LOGGER.debug("Multi pan addon installed and in state %s", addon_info.state)
+        raise HomeAssistantError
+
+
+async def get_multi_pan_addon_info(
+    hass: HomeAssistant, device_path: str
+) -> AddonInfo | None:
+    """Return AddonInfo if the multi-PAN addon is using the given device.
+
+    Returns None if Hass.io is not loaded, the addon is not running or the addon is
+    connected to another device.
+    """
+    if not is_hassio(hass):
+        return None
+
+    addon_manager: AddonManager = get_addon_manager(hass)
+    addon_info: AddonInfo = await addon_manager.async_get_addon_info()
+
+    if addon_info.state != AddonState.RUNNING:
+        return None
+
+    if addon_info.options["device"] != device_path:
+        return None
+
+    return addon_info
