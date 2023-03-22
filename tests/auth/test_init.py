@@ -1202,3 +1202,27 @@ async def test_access_token_that_expires_soon(mock_hass) -> None:
 
     with freeze_time(now + timedelta(minutes=1)):
         assert await manager.async_validate_access_token(access_token) is None
+
+
+async def test_access_token_from_the_future(mock_hass) -> None:
+    """Test we reject an access token from the future."""
+    now = dt_util.utcnow()
+    manager = await auth.auth_manager_from_config(mock_hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    with freeze_time(now + timedelta(days=365)):
+        refresh_token = await manager.async_create_refresh_token(
+            user,
+            client_name="Token that expires very soon",
+            token_type=auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+            access_token_expiration=timedelta(days=10),
+        )
+        assert (
+            refresh_token.token_type == auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
+        )
+        access_token = manager.async_create_access_token(refresh_token)
+
+    assert await manager.async_validate_access_token(access_token) is None
+
+    with freeze_time(now + timedelta(days=365)):
+        rt = await manager.async_validate_access_token(access_token)
+        assert rt.id == refresh_token.id

@@ -510,6 +510,7 @@ class AuthManager:
             {
                 "iss": refresh_token.id,
                 "iat": now,
+                "nbf": now,
                 "exp": now + refresh_token.access_token_expiration,
             },
             refresh_token.jwt_key,
