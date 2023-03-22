@@ -6,13 +6,12 @@ import logging
 from typing import TYPE_CHECKING
 
 from sqlalchemy.engine import Engine
-from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm.session import Session
 
 from homeassistant.core import HomeAssistant
 
 from ...const import DOMAIN, SupportedDialect
-from ...db_schema import Statistics, StatisticsShortTerm
+from ...db_schema import Statistics, StatisticsMeta, StatisticsShortTerm
 from ...models import StatisticData, StatisticMetaData, datetime_to_timestamp_or_none
 from ...statistics import (
     _import_statistics_with_session,
@@ -20,12 +19,11 @@ from ...statistics import (
 )
 from ...util import session_scope
 from ..schema import (
-    MYSQL_ERR_INCORRECT_STRING_VALUE,
     PRECISE_NUMBER,
-    UTF8_NAME,
     check_columns,
     correct_table_character_set_and_collation,
     get_precise_datetime,
+    validate_table_schema_supports_utf8,
 )
 
 if TYPE_CHECKING:
@@ -34,53 +32,6 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 STATISTIC_ID = f"{DOMAIN}.db_test"
-
-
-def _validate_db_schema_utf8(
-    instance: Recorder, session_maker: Callable[[], Session]
-) -> set[str]:
-    """Do some basic checks for common schema errors caused by manual migration."""
-    schema_errors: set[str] = set()
-
-    # Lack of full utf8 support is only an issue for MySQL / MariaDB
-    if instance.dialect_name != SupportedDialect.MYSQL:
-        return schema_errors
-
-    metadata: StatisticMetaData = {
-        "has_mean": True,
-        "has_sum": True,
-        "name": UTF8_NAME,
-        "source": DOMAIN,
-        "statistic_id": STATISTIC_ID,
-        "unit_of_measurement": None,
-    }
-    statistics_meta_manager = instance.statistics_meta_manager
-
-    # Try inserting some metadata which needs utf8mb4 support
-    try:
-        # Mark the session as read_only to ensure that the test data is not committed
-        # to the database and we always rollback when the scope is exited
-        with session_scope(session=session_maker(), read_only=True) as session:
-            old_metadata_dict = statistics_meta_manager.get_many(
-                session, statistic_ids={STATISTIC_ID}
-            )
-            try:
-                statistics_meta_manager.update_or_add(
-                    session, metadata, old_metadata_dict
-                )
-                statistics_meta_manager.delete(session, statistic_ids=[STATISTIC_ID])
-            except OperationalError as err:
-                if err.orig and err.orig.args[0] == MYSQL_ERR_INCORRECT_STRING_VALUE:
-                    _LOGGER.debug(
-                        "Database table statistics_meta does not support 4-byte UTF-8"
-                    )
-                    schema_errors.add("statistics_meta.4-byte UTF-8")
-                    session.rollback()
-                else:
-                    raise
-    except Exception as exc:  # pylint: disable=broad-except
-        _LOGGER.exception("Error when validating DB schema: %s", exc)
-    return schema_errors
 
 
 def _validate_db_schema(
@@ -195,7 +146,9 @@ def validate_db_schema(
 ) -> set[str]:
     """Do some basic checks for common schema errors caused by manual migration."""
     schema_errors: set[str] = set()
-    schema_errors |= _validate_db_schema_utf8(instance, session_maker)
+    schema_errors |= validate_table_schema_supports_utf8(
+        instance, StatisticsMeta, ("statistic_id",), session_maker
+    )
     schema_errors |= _validate_db_schema(hass, instance, session_maker)
     if schema_errors:
         _LOGGER.debug(
