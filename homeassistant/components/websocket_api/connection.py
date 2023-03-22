@@ -131,6 +131,7 @@ class ActiveConnection:
             handler(self.hass, self, payload)
         except Exception:  # pylint: disable=broad-except
             self.logger.exception("Error handling binary message")
+            self.binary_handlers[index] = None
 
     @callback
     def async_handle(self, msg: dict[str, Any]) -> None:

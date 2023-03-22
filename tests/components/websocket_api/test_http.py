@@ -190,6 +190,9 @@ async def test_binary_message(
             hass: HomeAssistant, connection: ActiveConnection, payload: bytes
         ):
             nonlocal unsub
+            if msg["id"] == 103:
+                raise ValueError("Boom")
+
             if payload:
                 binary_payloads[msg["id"]][0].append(payload)
             else:
@@ -217,6 +220,8 @@ async def test_binary_message(
 
     # Send message to binary
     await websocket_client.send_bytes((0).to_bytes(1, "big") + b"test0")
+    await websocket_client.send_bytes((3).to_bytes(1, "big") + b"test3")
+    await websocket_client.send_bytes((3).to_bytes(1, "big") + b"test3")
     await websocket_client.send_bytes((10).to_bytes(1, "big") + b"test10")
     await websocket_client.send_bytes((4).to_bytes(1, "big") + b"test4")
     await websocket_client.send_bytes((4).to_bytes(1, "big") + b"")
@@ -227,5 +232,7 @@ async def test_binary_message(
     # Verify received
     assert await binary_payloads[104][1] == b"test4"
     assert await binary_payloads[105][1] == b"test5test5-2"
+    assert "Error handling binary message" in caplog.text
     assert "Received binary message for non-existing handler 0" in caplog.text
+    assert "Received binary message for non-existing handler 3" in caplog.text
     assert "Received binary message for non-existing handler 10" in caplog.text
