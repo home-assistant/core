@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 import contextlib
-from datetime import datetime
 import logging
 from typing import TYPE_CHECKING
 
@@ -11,8 +10,6 @@ from sqlalchemy import text
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm.session import Session
-
-from homeassistant.util import dt as dt_util
 
 from ..const import SupportedDialect
 from ..util import session_scope
@@ -29,20 +26,6 @@ UTF8_NAME = "𓆚𓃗"
 
 # This number can't be accurately represented as a 32-bit float
 PRECISE_NUMBER = 1.000000000000001
-
-
-def _get_future_year() -> int:
-    """Get a year in the future."""
-    return datetime.now().year + 1
-
-
-def get_precise_datetime() -> datetime:
-    """Get a datetime with a precise microsecond.
-
-    This time can't be accurately represented unless datetimes have µs precision
-    """
-    future_year = _get_future_year()
-    return datetime(future_year, 10, 6, microsecond=1, tzinfo=dt_util.UTC)
 
 
 def validate_table_schema_supports_utf8(
@@ -98,13 +81,11 @@ def validate_db_schema_precision(
     ):
         return schema_errors
 
-    precise_time_ts = get_precise_datetime().timestamp()
-
     try:
         # Mark the session as read_only to ensure that the test data is not committed
         # to the database and we always rollback when the scope is exited
         with session_scope(session=session_maker(), read_only=True) as session:
-            db_object = table_object(**{column: precise_time_ts for column in columns})
+            db_object = table_object(**{column: PRECISE_NUMBER for column in columns})
             table = table_object.__tablename__
             session.add(db_object)
             session.flush()
@@ -112,10 +93,10 @@ def validate_db_schema_precision(
             check_columns(
                 schema_errors=schema_errors,
                 stored={column: getattr(db_object, column) for column in columns},
-                expected={column: precise_time_ts for column in columns},
+                expected={column: PRECISE_NUMBER for column in columns},
                 columns=columns,
                 table_name=table,
-                supports="µs precision",
+                supports="double precision",
             )
     except Exception as exc:  # pylint: disable=broad-except
         _LOGGER.exception("Error when validating DB schema: %s", exc)
@@ -205,18 +186,39 @@ def correct_db_schema_utf8_and_precision(
     schema_errors: set[str],
 ) -> None:
     """Correct issues detected by validate_db_schema."""
-    from ..migration import _modify_columns  # pylint: disable=import-outside-toplevel
+    correct_db_schema_utf8(instance, table_object, schema_errors)
+    correct_db_schema_precision(
+        instance, table_object, precision_columns, schema_errors
+    )
 
+
+def correct_db_schema_utf8(
+    instance: Recorder, table_object: type[DeclarativeBase], schema_errors: set[str]
+) -> None:
+    """Correct utf8 issues detected by validate_db_schema."""
     table_name = table_object.__tablename__
-    session_maker = instance.get_session
-    engine = instance.engine
-    assert engine is not None, "Engine should be set"
-
     if f"{table_name}.4-byte UTF-8" in schema_errors:
-        correct_table_character_set_and_collation(table_name, session_maker)
+        correct_table_character_set_and_collation(table_name, instance.get_session)
 
-    if f"{table_name}.µs precision" in schema_errors:
+
+def correct_db_schema_precision(
+    instance: Recorder,
+    table_object: type[DeclarativeBase],
+    precision_columns: dict[str, str],
+    schema_errors: set[str],
+) -> None:
+    """Correct precision issues detected by validate_db_schema."""
+    table_name = table_object.__tablename__
+
+    if f"{table_name}.double precision" in schema_errors:
+        from ..migration import (  # pylint: disable=import-outside-toplevel
+            _modify_columns,
+        )
+
         # Attempt to convert timestamp columns to µs precision
+        session_maker = instance.get_session
+        engine = instance.engine
+        assert engine is not None, "Engine should be set"
         _modify_columns(
             session_maker,
             engine,

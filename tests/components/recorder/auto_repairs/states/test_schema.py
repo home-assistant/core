@@ -28,7 +28,7 @@ async def test_validate_db_schema_fix_float_issue(
         "homeassistant.components.recorder.core.Recorder.dialect_name", db_engine
     ), patch(
         "homeassistant.components.recorder.auto_repairs.schema.validate_db_schema_precision",
-        return_value={"states.µs precision"},
+        return_value={"states.double precision"},
     ), patch(
         "homeassistant.components.recorder.migration._modify_columns"
     ) as modify_columns_mock:
@@ -37,7 +37,7 @@ async def test_validate_db_schema_fix_float_issue(
 
     assert "Schema validation failed" not in caplog.text
     assert (
-        "Database is about to correct DB schema errors: states.µs precision"
+        "Database is about to correct DB schema errors: states.double precision"
         in caplog.text
     )
     modification = [

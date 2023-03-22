@@ -5,7 +5,8 @@ from typing import TYPE_CHECKING
 
 from ...db_schema import DOUBLE_PRECISION_TYPE_SQL, States
 from ..schema import (
-    correct_db_schema_utf8_and_precision,
+    correct_db_schema_precision,
+    correct_db_schema_utf8,
     validate_db_schema_utf8_and_precision,
 )
 
@@ -31,6 +32,5 @@ def correct_db_schema(
     schema_errors: set[str],
 ) -> None:
     """Correct issues detected by validate_db_schema."""
-    return correct_db_schema_utf8_and_precision(
-        instance, States, PRECISION_COLUMN_TYPES, schema_errors
-    )
+    correct_db_schema_precision(instance, States, PRECISION_COLUMN_TYPES, schema_errors)
+    correct_db_schema_utf8(instance, States, schema_errors)
