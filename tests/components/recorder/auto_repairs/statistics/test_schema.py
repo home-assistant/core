@@ -7,9 +7,7 @@ from unittest.mock import ANY, DEFAULT, MagicMock, patch
 import pytest
 from sqlalchemy.exc import OperationalError
 
-from homeassistant.components.recorder.auto_repairs.statistics.schema import (
-    _get_future_year,
-)
+from homeassistant.components.recorder.auto_repairs.schema import _get_future_year
 from homeassistant.components.recorder.statistics import (
     _statistics_during_period_with_session,
 )
@@ -128,7 +126,7 @@ async def test_validate_db_schema_fix_float_issue(
     with patch(
         "homeassistant.components.recorder.core.Recorder.dialect_name", db_engine
     ), patch(
-        "homeassistant.components.recorder.auto_repairs.statistics.schema._get_future_year",
+        "homeassistant.components.recorder.auto_repairs.schema._get_future_year",
         return_value=fixed_future_year,
     ), patch(
         "homeassistant.components.recorder.auto_repairs.statistics.schema._statistics_during_period_with_session",

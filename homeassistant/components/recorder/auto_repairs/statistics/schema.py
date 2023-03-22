@@ -1,19 +1,15 @@
 """Statistics schema repairs."""
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
-import contextlib
-from datetime import datetime
+from collections.abc import Callable
 import logging
 from typing import TYPE_CHECKING
 
-from sqlalchemy import text
 from sqlalchemy.engine import Engine
-from sqlalchemy.exc import OperationalError, SQLAlchemyError
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm.session import Session
 
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt as dt_util
 
 from ...const import DOMAIN, SupportedDialect
 from ...db_schema import Statistics, StatisticsShortTerm
@@ -23,11 +19,20 @@ from ...statistics import (
     _statistics_during_period_with_session,
 )
 from ...util import session_scope
+from ..schema import (
+    PRECISE_NUMBER,
+    UTF8_NAME,
+    check_columns,
+    correct_table_character_set_and_collation,
+    get_precise_datetime,
+)
 
 if TYPE_CHECKING:
     from ... import Recorder
 
 _LOGGER = logging.getLogger(__name__)
+
+STATISTIC_ID = f"{DOMAIN}.db_test"
 
 
 def _validate_db_schema_utf8(
@@ -40,16 +45,12 @@ def _validate_db_schema_utf8(
     if instance.dialect_name != SupportedDialect.MYSQL:
         return schema_errors
 
-    # This name can't be represented unless 4-byte UTF-8 unicode is supported
-    utf8_name = "𓆚𓃗"
-    statistic_id = f"{DOMAIN}.db_test"
-
     metadata: StatisticMetaData = {
         "has_mean": True,
         "has_sum": True,
-        "name": utf8_name,
+        "name": UTF8_NAME,
         "source": DOMAIN,
-        "statistic_id": statistic_id,
+        "statistic_id": STATISTIC_ID,
         "unit_of_measurement": None,
     }
     statistics_meta_manager = instance.statistics_meta_manager
@@ -60,13 +61,13 @@ def _validate_db_schema_utf8(
         # to the database and we always rollback when the scope is exited
         with session_scope(session=session_maker(), read_only=True) as session:
             old_metadata_dict = statistics_meta_manager.get_many(
-                session, statistic_ids={statistic_id}
+                session, statistic_ids={STATISTIC_ID}
             )
             try:
                 statistics_meta_manager.update_or_add(
                     session, metadata, old_metadata_dict
                 )
-                statistics_meta_manager.delete(session, statistic_ids=[statistic_id])
+                statistics_meta_manager.delete(session, statistic_ids=[STATISTIC_ID])
             except OperationalError as err:
                 if err.orig and err.orig.args[0] == 1366:
                     _LOGGER.debug(
@@ -79,11 +80,6 @@ def _validate_db_schema_utf8(
     except Exception as exc:  # pylint: disable=broad-except
         _LOGGER.exception("Error when validating DB schema: %s", exc)
     return schema_errors
-
-
-def _get_future_year() -> int:
-    """Get a year in the future."""
-    return datetime.now().year + 1
 
 
 def _validate_db_schema(
@@ -100,8 +96,6 @@ def _validate_db_schema(
     ):
         return schema_errors
 
-    # This number can't be accurately represented as a 32-bit float
-    precise_number = 1.000000000000001
     # This time can't be accurately represented unless datetimes have µs precision
     #
     # We want to insert statistics for a time in the future, in case they
@@ -110,48 +104,26 @@ def _validate_db_schema(
     # that by selecting the last inserted row, we will get the one we
     # just inserted.
     #
-    future_year = _get_future_year()
-    precise_time = datetime(future_year, 10, 6, microsecond=1, tzinfo=dt_util.UTC)
-    start_time = datetime(future_year, 10, 6, tzinfo=dt_util.UTC)
-    statistic_id = f"{DOMAIN}.db_test"
+    precise_time = get_precise_datetime()
+    start_time = precise_time.replace(microsecond=0)
 
     metadata: StatisticMetaData = {
         "has_mean": True,
         "has_sum": True,
         "name": None,
         "source": DOMAIN,
-        "statistic_id": statistic_id,
+        "statistic_id": STATISTIC_ID,
         "unit_of_measurement": None,
     }
     statistics: StatisticData = {
         "last_reset": precise_time,
-        "max": precise_number,
-        "mean": precise_number,
-        "min": precise_number,
+        "max": PRECISE_NUMBER,
+        "mean": PRECISE_NUMBER,
+        "min": PRECISE_NUMBER,
         "start": precise_time,
-        "state": precise_number,
-        "sum": precise_number,
+        "state": PRECISE_NUMBER,
+        "sum": PRECISE_NUMBER,
     }
-
-    def check_columns(
-        schema_errors: set[str],
-        stored: Mapping,
-        expected: Mapping,
-        columns: tuple[str, ...],
-        table_name: str,
-        supports: str,
-    ) -> None:
-        for column in columns:
-            if stored[column] != expected[column]:
-                schema_errors.add(f"{table_name}.{supports}")
-                _LOGGER.error(
-                    "Column %s in database table %s does not support %s (stored=%s != expected=%s)",
-                    column,
-                    table_name,
-                    supports,
-                    stored[column],
-                    expected[column],
-                )
 
     # Insert / adjust a test statistics row in each of the tables
     tables: tuple[type[Statistics | StatisticsShortTerm], ...] = (
@@ -171,12 +143,12 @@ def _validate_db_schema(
                     session,
                     start_time,
                     None,
-                    {statistic_id},
+                    {STATISTIC_ID},
                     "hour" if table == Statistics else "5minute",
                     None,
                     {"last_reset", "max", "mean", "min", "state", "sum"},
                 )
-                if not (stored_statistic := stored_statistics.get(statistic_id)):
+                if not (stored_statistic := stored_statistics.get(STATISTIC_ID)):
                     _LOGGER.warning(
                         "Schema validation failed for table: %s", table.__tablename__
                     )
@@ -189,28 +161,28 @@ def _validate_db_schema(
                 # inserted row back.
                 last_stored_statistic = stored_statistic[-1]
                 check_columns(
-                    schema_errors,
-                    last_stored_statistic,
-                    statistics,
-                    ("max", "mean", "min", "state", "sum"),
-                    table.__tablename__,
-                    "double precision",
+                    schema_errors=schema_errors,
+                    stored=last_stored_statistic,
+                    expected=statistics,
+                    columns=("max", "mean", "min", "state", "sum"),
+                    table_name=table.__tablename__,
+                    supports="double precision",
                 )
                 assert statistics["last_reset"]
                 check_columns(
-                    schema_errors,
-                    last_stored_statistic,
-                    {
+                    schema_errors=schema_errors,
+                    stored=last_stored_statistic,
+                    expected={
                         "last_reset": datetime_to_timestamp_or_none(
                             statistics["last_reset"]
                         ),
                         "start": datetime_to_timestamp_or_none(statistics["start"]),
                     },
-                    ("start", "last_reset"),
-                    table.__tablename__,
-                    "µs precision",
+                    columns=("start", "last_reset"),
+                    table_name=table.__tablename__,
+                    supports="µs precision",
                 )
-            statistics_meta_manager.delete(session, statistic_ids=[statistic_id])
+            statistics_meta_manager.delete(session, statistic_ids=[STATISTIC_ID])
     except Exception as exc:  # pylint: disable=broad-except
         _LOGGER.exception("Error when validating DB schema: %s", exc)
 
@@ -241,27 +213,7 @@ def correct_db_schema(
     from ...migration import _modify_columns  # pylint: disable=import-outside-toplevel
 
     if "statistics_meta.4-byte UTF-8" in schema_errors:
-        # Attempt to convert the table to utf8mb4
-        _LOGGER.warning(
-            (
-                "Updating character set and collation of table %s to utf8mb4. "
-                "Note: this can take several minutes on large databases and slow "
-                "computers. Please be patient!"
-            ),
-            "statistics_meta",
-        )
-        with contextlib.suppress(SQLAlchemyError), session_scope(
-            session=session_maker()
-        ) as session:
-            connection = session.connection()
-            connection.execute(
-                # Using LOCK=EXCLUSIVE to prevent the database from corrupting
-                # https://github.com/home-assistant/core/issues/56104
-                text(
-                    "ALTER TABLE statistics_meta CONVERT TO CHARACTER SET utf8mb4"
-                    " COLLATE utf8mb4_unicode_ci, LOCK=EXCLUSIVE"
-                )
-            )
+        correct_table_character_set_and_collation("statistics_meta", session_maker)
 
     tables: tuple[type[Statistics | StatisticsShortTerm], ...] = (
         Statistics,
