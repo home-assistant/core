@@ -29,6 +29,7 @@ HOME_SENSORS = {
     "outdoor temperature",
     "solar percentage",
     "weather condition",
+    "presence",
 }
 
 ZONE_SENSORS = {
@@ -100,6 +101,7 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
         self._state = None
         self._state_attributes = None
         self._tado_weather_data = self._tado.data["weather"]
+        self._tado_presence_data = self._tado.data["presence"]
 
     async def async_added_to_hass(self) -> None:
         """Register for sensor updates."""
@@ -144,6 +146,8 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
             return PERCENTAGE
         if self.home_variable == "weather condition":
             return None
+        if self.home_variable == "presence":
+            return None
 
     @property
     def device_class(self):
@@ -170,6 +174,7 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
         """Handle update callbacks."""
         try:
             self._tado_weather_data = self._tado.data["weather"]
+            self._tado_presence_data = self._tado.data["presence"]
         except KeyError:
             return
 
@@ -192,6 +197,8 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
             self._state_attributes = {
                 "time": self._tado_weather_data["weatherState"]["timestamp"]
             }
+        elif self.home_variable == "presence":
+            self._state = self._tado_presence_data
 
 
 class TadoZoneSensor(TadoZoneEntity, SensorEntity):

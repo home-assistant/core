@@ -79,3 +79,21 @@ set_climate_temperature_offset:
           max: 10
           step: 0.01
           unit_of_measurement: "°"
+set_presence:
+  name: Set Home presence state
+  description: Set the presence state of the home
+  target:
+    entity:
+      integration: tado
+      domain: climate
+  fields:
+    preset_mode:
+      name: Presence
+      description: Presence state you would like for your home
+      default: home
+      required: true
+      selector:
+        select:
+          options:
+            - "home"
+            - "away"

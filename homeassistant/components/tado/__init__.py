@@ -152,6 +152,7 @@ class TadoConnector:
             "device": {},
             "weather": {},
             "zone": {},
+            "presence": {},
         }
 
     @property
@@ -176,6 +177,8 @@ class TadoConnector:
         self.update_devices()
         self.update_zones()
         self.data["weather"] = self.tado.getWeather()
+        home_state = self.tado.getHomeState()
+        self.data["presence"] = home_state["presence"]
         dispatcher_send(
             self.hass,
             SIGNAL_TADO_UPDATE_RECEIVED.format(self.home_id, "weather", "data"),
