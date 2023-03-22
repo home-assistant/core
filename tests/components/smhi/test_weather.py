@@ -16,18 +16,24 @@ from homeassistant.components.weather import (
     ATTR_FORECAST,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_PRESSURE,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
+    ATTR_FORECAST_WIND_BEARING,
+    ATTR_FORECAST_WIND_SPEED,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_PRESSURE,
     ATTR_WEATHER_TEMPERATURE,
     ATTR_WEATHER_VISIBILITY,
     ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_SPEED,
+    ATTR_WEATHER_WIND_SPEED_UNIT,
+    DOMAIN as WEATHER_DOMAIN,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNKNOWN
+from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNKNOWN, UnitOfSpeed
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
 from . import ENTITY_ID, TEST_CONFIG
@@ -40,10 +46,12 @@ async def test_setup_hass(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, api_response: str
 ) -> None:
     """Test for successfully setting up the smhi integration."""
-    uri = APIURL_TEMPLATE.format(TEST_CONFIG["longitude"], TEST_CONFIG["latitude"])
+    uri = APIURL_TEMPLATE.format(
+        TEST_CONFIG["location"]["longitude"], TEST_CONFIG["location"]["latitude"]
+    )
     aioclient_mock.get(uri, text=api_response)
 
-    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG)
+    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG, version=2)
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -58,13 +66,13 @@ async def test_setup_hass(
     assert state.state == "sunny"
     assert state.attributes[ATTR_SMHI_CLOUDINESS] == 50
     assert state.attributes[ATTR_SMHI_THUNDER_PROBABILITY] == 33
-    assert state.attributes[ATTR_SMHI_WIND_GUST_SPEED] == 17
+    assert state.attributes[ATTR_SMHI_WIND_GUST_SPEED] == 16.92
     assert state.attributes[ATTR_ATTRIBUTION].find("SMHI") >= 0
     assert state.attributes[ATTR_WEATHER_HUMIDITY] == 55
     assert state.attributes[ATTR_WEATHER_PRESSURE] == 1024
     assert state.attributes[ATTR_WEATHER_TEMPERATURE] == 17
     assert state.attributes[ATTR_WEATHER_VISIBILITY] == 50
-    assert state.attributes[ATTR_WEATHER_WIND_SPEED] == 7
+    assert state.attributes[ATTR_WEATHER_WIND_SPEED] == 6.84
     assert state.attributes[ATTR_WEATHER_WIND_BEARING] == 134
     assert len(state.attributes["forecast"]) == 4
 
@@ -74,11 +82,14 @@ async def test_setup_hass(
     assert forecast[ATTR_FORECAST_TEMP_LOW] == 6
     assert forecast[ATTR_FORECAST_PRECIPITATION] == 0
     assert forecast[ATTR_FORECAST_CONDITION] == "partlycloudy"
+    assert forecast[ATTR_FORECAST_PRESSURE] == 1026
+    assert forecast[ATTR_FORECAST_WIND_BEARING] == 203
+    assert forecast[ATTR_FORECAST_WIND_SPEED] == 6.12
 
 
 async def test_properties_no_data(hass: HomeAssistant) -> None:
     """Test properties when no API data available."""
-    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG)
+    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG, version=2)
     entry.add_to_hass(hass)
 
     with patch(
@@ -167,7 +178,7 @@ async def test_properties_unknown_symbol(hass: HomeAssistant) -> None:
 
     testdata = [data, data2, data3]
 
-    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG)
+    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG, version=2)
     entry.add_to_hass(hass)
 
     with patch(
@@ -194,7 +205,7 @@ async def test_refresh_weather_forecast_retry(
     hass: HomeAssistant, error: Exception
 ) -> None:
     """Test the refresh weather forecast function."""
-    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG)
+    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG, version=2)
     entry.add_to_hass(hass)
     now = utcnow()
 
@@ -241,7 +252,7 @@ async def test_refresh_weather_forecast_retry(
         assert mock_get_forecast.call_count == 3
 
 
-def test_condition_class():
+def test_condition_class() -> None:
     """Test condition class."""
 
     def get_condition(index: int) -> str:
@@ -305,3 +316,37 @@ def test_condition_class():
     assert get_condition(23) == "snowy-rainy"
     # 24. Heavy sleet
     assert get_condition(24) == "snowy-rainy"
+
+
+async def test_custom_speed_unit(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, api_response: str
+) -> None:
+    """Test Wind Gust speed with custom unit."""
+    uri = APIURL_TEMPLATE.format(
+        TEST_CONFIG["location"]["longitude"], TEST_CONFIG["location"]["latitude"]
+    )
+    aioclient_mock.get(uri, text=api_response)
+
+    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG, version=2)
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+
+    assert state
+    assert state.name == "test"
+    assert state.attributes[ATTR_SMHI_WIND_GUST_SPEED] == 16.92
+
+    entity_reg = er.async_get(hass)
+    entity_reg.async_update_entity_options(
+        state.entity_id,
+        WEATHER_DOMAIN,
+        {ATTR_WEATHER_WIND_SPEED_UNIT: UnitOfSpeed.METERS_PER_SECOND},
+    )
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_SMHI_WIND_GUST_SPEED] == 4.7

@@ -11,9 +11,10 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -89,7 +90,7 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
     ),
     GitHubSensorEntityDescription(
         key="pulls_count",
-        name="Pull Requests",
+        name="Pull requests",
         native_unit_of_measurement="Pull Requests",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
@@ -97,7 +98,7 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
     ),
     GitHubSensorEntityDescription(
         key="latest_commit",
-        name="Latest Commit",
+        name="Latest commit",
         value_fn=lambda data: data["default_branch_ref"]["commit"]["message"][:255],
         attr_fn=lambda data: {
             "sha": data["default_branch_ref"]["commit"]["sha"],
@@ -106,7 +107,7 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
     ),
     GitHubSensorEntityDescription(
         key="latest_discussion",
-        name="Latest Discussion",
+        name="Latest discussion",
         avabl_fn=lambda data: data["discussion"]["discussions"],
         value_fn=lambda data: data["discussion"]["discussions"][0]["title"][:255],
         attr_fn=lambda data: {
@@ -116,7 +117,7 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
     ),
     GitHubSensorEntityDescription(
         key="latest_release",
-        name="Latest Release",
+        name="Latest release",
         avabl_fn=lambda data: data["release"] is not None,
         value_fn=lambda data: data["release"]["name"][:255],
         attr_fn=lambda data: {
@@ -126,7 +127,7 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
     ),
     GitHubSensorEntityDescription(
         key="latest_issue",
-        name="Latest Issue",
+        name="Latest issue",
         avabl_fn=lambda data: data["issue"]["issues"],
         value_fn=lambda data: data["issue"]["issues"][0]["title"][:255],
         attr_fn=lambda data: {
@@ -136,7 +137,7 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
     ),
     GitHubSensorEntityDescription(
         key="latest_pull_request",
-        name="Latest Pull Request",
+        name="Latest pull request",
         avabl_fn=lambda data: data["pull_request"]["pull_requests"],
         value_fn=lambda data: data["pull_request"]["pull_requests"][0]["title"][:255],
         attr_fn=lambda data: {
@@ -146,7 +147,7 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
     ),
     GitHubSensorEntityDescription(
         key="latest_tag",
-        name="Latest Tag",
+        name="Latest tag",
         avabl_fn=lambda data: data["refs"]["tags"],
         value_fn=lambda data: data["refs"]["tags"][0]["name"][:255],
         attr_fn=lambda data: {
@@ -176,6 +177,7 @@ class GitHubSensorEntity(CoordinatorEntity[GitHubDataUpdateCoordinator], SensorE
     """Defines a GitHub sensor entity."""
 
     _attr_attribution = "Data provided by the GitHub API"
+    _attr_has_entity_name = True
 
     entity_description: GitHubSensorEntityDescription
 
@@ -188,9 +190,6 @@ class GitHubSensorEntity(CoordinatorEntity[GitHubDataUpdateCoordinator], SensorE
         super().__init__(coordinator=coordinator)
 
         self.entity_description = entity_description
-        self._attr_name = (
-            f"{coordinator.data.get('full_name')} {entity_description.name}"
-        )
         self._attr_unique_id = f"{coordinator.data.get('id')}_{entity_description.key}"
 
         self._attr_device_info = DeviceInfo(

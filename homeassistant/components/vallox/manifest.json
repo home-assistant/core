@@ -1,10 +1,10 @@
 {
   "domain": "vallox",
   "name": "Vallox",
-  "documentation": "https://www.home-assistant.io/integrations/vallox",
-  "requirements": ["vallox-websocket-api==2.11.0"],
   "codeowners": ["@andre-richter", "@slovdahl", "@viiru-"],
   "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/vallox",
   "iot_class": "local_polling",
-  "loggers": ["vallox_websocket_api"]
+  "loggers": ["vallox_websocket_api"],
+  "requirements": ["vallox-websocket-api==3.0.0"]
 }

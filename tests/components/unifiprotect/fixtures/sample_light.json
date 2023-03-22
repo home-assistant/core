@@ -3,7 +3,7 @@
   "host": "192.168.10.86",
   "connectionHost": "192.168.178.217",
   "type": "UP FloodLight",
-  "name": "Byyfbpe Ufoka",
+  "name": "Test Light",
   "upSince": 1638128991022,
   "uptime": 1894890,
   "lastSeen": 1640023881022,
@@ -19,7 +19,7 @@
   "isAdoptedByOther": false,
   "isProvisioned": false,
   "isRebooting": false,
-  "isSshEnabled": true,
+  "isSshEnabled": false,
   "canAdopt": false,
   "isAttemptingToConnect": false,
   "isPirMotionDetected": false,
@@ -31,20 +31,20 @@
     "phyRate": 100
   },
   "lightDeviceSettings": {
-    "isIndicatorEnabled": true,
+    "isIndicatorEnabled": false,
     "ledLevel": 6,
     "luxSensitivity": "medium",
-    "pirDuration": 120000,
-    "pirSensitivity": 46
+    "pirDuration": 45000,
+    "pirSensitivity": 45
   },
   "lightOnSettings": {
     "isLedForceOn": false
   },
   "lightModeSettings": {
-    "mode": "off",
+    "mode": "motion",
     "enableAt": "fulltime"
   },
-  "camera": "193be66559c03ec5629f54cd",
+  "camera": null,
   "id": "37dd610720816cfb5c547967",
   "isConnected": true,
   "isCameraPaired": true,

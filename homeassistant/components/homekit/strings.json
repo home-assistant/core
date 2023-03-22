@@ -44,8 +44,7 @@
       },
       "advanced": {
         "data": {
-          "devices": "Devices (Triggers)",
-          "auto_start": "Autostart (disable if you are calling the homekit.start service manually)"
+          "devices": "Devices (Triggers)"
         },
         "description": "Programmable switches are created for each selected device. When a device trigger fires, HomeKit can be configured to run an automation or scene.",
         "title": "Advanced Configuration"
@@ -63,7 +62,7 @@
       },
       "pairing": {
         "title": "Pair HomeKit",
-        "description": "To complete pairing following the instructions in \u201cNotifications\u201d under \u201cHomeKit Pairing\u201d."
+        "description": "To complete pairing follow the instructions in \u201cNotifications\u201d under \u201cHomeKit Pairing\u201d."
       }
     },
     "abort": {

@@ -8,7 +8,7 @@ from homeassistant.components import dhcp
 from homeassistant.components.tplink import DOMAIN
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     ALIAS,
@@ -23,7 +23,7 @@ from . import (
 from tests.common import MockConfigEntry
 
 
-async def test_discovery(hass: HomeAssistant):
+async def test_discovery(hass: HomeAssistant) -> None:
     """Test setting up discovery."""
     with _patch_discovery(), _patch_single_discovery():
         result = await hass.config_entries.flow.async_init(
@@ -87,7 +87,7 @@ async def test_discovery(hass: HomeAssistant):
     assert result2["reason"] == "no_devices_found"
 
 
-async def test_discovery_with_existing_device_present(hass: HomeAssistant):
+async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> None:
     """Test setting up discovery."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.2"}, unique_id="dd:dd:dd:dd:dd:dd"
@@ -161,7 +161,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant):
     assert result2["reason"] == "no_devices_found"
 
 
-async def test_discovery_no_device(hass: HomeAssistant):
+async def test_discovery_no_device(hass: HomeAssistant) -> None:
     """Test discovery without device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -175,7 +175,7 @@ async def test_discovery_no_device(hass: HomeAssistant):
     assert result2["reason"] == "no_devices_found"
 
 
-async def test_manual(hass: HomeAssistant):
+async def test_manual(hass: HomeAssistant) -> None:
     """Test manually setup."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -223,7 +223,7 @@ async def test_manual(hass: HomeAssistant):
     assert result2["reason"] == "already_configured"
 
 
-async def test_manual_no_capabilities(hass: HomeAssistant):
+async def test_manual_no_capabilities(hass: HomeAssistant) -> None:
     """Test manually setup without successful get_capabilities."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -246,7 +246,7 @@ async def test_manual_no_capabilities(hass: HomeAssistant):
     }
 
 
-async def test_discovered_by_discovery_and_dhcp(hass):
+async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
     """Test we get the form with discovery and abort for dhcp source when we get both."""
 
     with _patch_discovery(), _patch_single_discovery():
@@ -256,7 +256,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
             data={CONF_HOST: IP_ADDRESS, CONF_MAC: MAC_ADDRESS, CONF_NAME: ALIAS},
         )
         await hass.async_block_till_done()
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with _patch_discovery(), _patch_single_discovery():
@@ -268,7 +268,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
             ),
         )
         await hass.async_block_till_done()
-    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "already_in_progress"
 
     with _patch_discovery(), _patch_single_discovery():
@@ -280,7 +280,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
             ),
         )
         await hass.async_block_till_done()
-    assert result3["type"] == RESULT_TYPE_ABORT
+    assert result3["type"] == FlowResultType.ABORT
     assert result3["reason"] == "already_in_progress"
 
     with _patch_discovery(no_device=True), _patch_single_discovery(no_device=True):
@@ -292,12 +292,12 @@ async def test_discovered_by_discovery_and_dhcp(hass):
             ),
         )
         await hass.async_block_till_done()
-    assert result3["type"] == RESULT_TYPE_ABORT
+    assert result3["type"] == FlowResultType.ABORT
     assert result3["reason"] == "cannot_connect"
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (
             config_entries.SOURCE_DHCP,
@@ -309,7 +309,9 @@ async def test_discovered_by_discovery_and_dhcp(hass):
         ),
     ],
 )
-async def test_discovered_by_dhcp_or_discovery(hass, source, data):
+async def test_discovered_by_dhcp_or_discovery(
+    hass: HomeAssistant, source, data
+) -> None:
     """Test we can setup when discovered from dhcp or discovery."""
 
     with _patch_discovery(), _patch_single_discovery():
@@ -318,7 +320,7 @@ async def test_discovered_by_dhcp_or_discovery(hass, source, data):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with _patch_discovery(), _patch_single_discovery(), patch(
@@ -338,7 +340,7 @@ async def test_discovered_by_dhcp_or_discovery(hass, source, data):
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (
             config_entries.SOURCE_DHCP,
@@ -350,7 +352,9 @@ async def test_discovered_by_dhcp_or_discovery(hass, source, data):
         ),
     ],
 )
-async def test_discovered_by_dhcp_or_discovery_failed_to_get_device(hass, source, data):
+async def test_discovered_by_dhcp_or_discovery_failed_to_get_device(
+    hass: HomeAssistant, source, data
+) -> None:
     """Test we abort if we cannot get the unique id when discovered from dhcp."""
 
     with _patch_discovery(no_device=True), _patch_single_discovery(no_device=True):
@@ -358,5 +362,5 @@ async def test_discovered_by_dhcp_or_discovery_failed_to_get_device(hass, source
             DOMAIN, context={"source": source}, data=data
         )
         await hass.async_block_till_done()
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"

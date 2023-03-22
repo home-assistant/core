@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 from typing import Any, cast
 
 from pytradfri.command import Command
@@ -19,25 +18,23 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     PERCENTAGE,
-    TIME_HOURS,
     Platform,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .base_class import TradfriBaseEntity
 from .const import (
-    ATTR_FILTER_LIFE_REMAINING,
     CONF_GATEWAY_ID,
     COORDINATOR,
     COORDINATOR_LIST,
     DOMAIN,
     KEY_API,
+    LOGGER,
 )
 from .coordinator import TradfriDeviceDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -57,6 +54,7 @@ class TradfriSensorEntityDescription(
 
 def _get_air_quality(device: Device) -> int | None:
     """Fetch the air quality value."""
+    assert device.air_purifier_control is not None
     if (
         device.air_purifier_control.air_purifiers[0].air_quality == 65535
     ):  # The sensor returns 65535 if the fan is turned off
@@ -67,8 +65,12 @@ def _get_air_quality(device: Device) -> int | None:
 
 def _get_filter_time_left(device: Device) -> int:
     """Fetch the filter's remaining life (in hours)."""
+    assert device.air_purifier_control is not None
     return round(
-        device.air_purifier_control.air_purifiers[0].filter_lifetime_remaining / 60
+        cast(
+            int, device.air_purifier_control.air_purifiers[0].filter_lifetime_remaining
+        )
+        / 60
     )
 
 
@@ -76,6 +78,7 @@ SENSOR_DESCRIPTIONS_BATTERY: tuple[TradfriSensorEntityDescription, ...] = (
     TradfriSensorEntityDescription(
         key="battery_level",
         device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value=lambda device: cast(int, device.device_info.battery_level),
     ),
@@ -86,15 +89,16 @@ SENSOR_DESCRIPTIONS_FAN: tuple[TradfriSensorEntityDescription, ...] = (
     TradfriSensorEntityDescription(
         key="aqi",
         name="air quality",
-        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        icon="mdi:air-filter",
         value=_get_air_quality,
     ),
     TradfriSensorEntityDescription(
-        key=ATTR_FILTER_LIFE_REMAINING,
+        key="filter_life_remaining",
         name="filter time left",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TIME_HOURS,
+        native_unit_of_measurement=UnitOfTime.HOURS,
         icon="mdi:clock-outline",
         value=_get_filter_time_left,
     ),
@@ -104,7 +108,7 @@ SENSOR_DESCRIPTIONS_FAN: tuple[TradfriSensorEntityDescription, ...] = (
 @callback
 def _migrate_old_unique_ids(hass: HomeAssistant, old_unique_id: str, key: str) -> None:
     """Migrate unique IDs to the new format."""
-    ent_reg = entity_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
 
     entity_id = ent_reg.async_get_entity_id(Platform.SENSOR, DOMAIN, old_unique_id)
 
@@ -116,14 +120,14 @@ def _migrate_old_unique_ids(hass: HomeAssistant, old_unique_id: str, key: str) -
     try:
         ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
     except ValueError:
-        _LOGGER.warning(
+        LOGGER.warning(
             "Skip migration of id [%s] to [%s] because it already exists",
             old_unique_id,
             new_unique_id,
         )
         return
 
-    _LOGGER.debug(
+    LOGGER.debug(
         "Migrating unique_id from [%s] to [%s]",
         old_unique_id,
         new_unique_id,

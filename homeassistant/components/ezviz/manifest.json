@@ -1,11 +1,11 @@
 {
   "domain": "ezviz",
-  "name": "Ezviz",
-  "documentation": "https://www.home-assistant.io/integrations/ezviz",
-  "dependencies": ["ffmpeg"],
+  "name": "EZVIZ",
   "codeowners": ["@RenierM26", "@baqs"],
-  "requirements": ["pyezviz==0.2.0.6"],
   "config_flow": true,
+  "dependencies": ["ffmpeg"],
+  "documentation": "https://www.home-assistant.io/integrations/ezviz",
   "iot_class": "cloud_polling",
-  "loggers": ["paho_mqtt", "pyezviz"]
+  "loggers": ["paho_mqtt", "pyezviz"],
+  "requirements": ["pyezviz==0.2.0.9"]
 }

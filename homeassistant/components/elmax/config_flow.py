@@ -1,6 +1,7 @@
 """Config flow for elmax-cloud integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -167,10 +168,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="panels", data_schema=self._panels_schema, errors=errors
         )
 
-    async def async_step_reauth(self, user_input=None):
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
-        self._reauth_username = user_input.get(CONF_ELMAX_USERNAME)
-        self._reauth_panelid = user_input.get(CONF_ELMAX_PANEL_ID)
+        self._reauth_username = entry_data.get(CONF_ELMAX_USERNAME)
+        self._reauth_panelid = entry_data.get(CONF_ELMAX_PANEL_ID)
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(self, user_input=None):

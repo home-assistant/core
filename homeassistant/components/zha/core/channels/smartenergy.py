@@ -3,12 +3,22 @@ from __future__ import annotations
 
 import enum
 from functools import partialmethod
+from typing import TYPE_CHECKING
 
+import zigpy.zcl
 from zigpy.zcl.clusters import smartenergy
 
-from .. import registries, typing as zha_typing
-from ..const import REPORT_CONFIG_ASAP, REPORT_CONFIG_DEFAULT, REPORT_CONFIG_OP
-from .base import ZigbeeChannel
+from .. import registries
+from ..const import (
+    REPORT_CONFIG_ASAP,
+    REPORT_CONFIG_DEFAULT,
+    REPORT_CONFIG_OP,
+    SIGNAL_ATTR_UPDATED,
+)
+from .base import AttrReportConfig, ZigbeeChannel
+
+if TYPE_CHECKING:
+    from . import ChannelPool
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Calendar.cluster_id)
@@ -56,9 +66,27 @@ class Metering(ZigbeeChannel):
     """Metering channel."""
 
     REPORT_CONFIG = (
-        {"attr": "instantaneous_demand", "config": REPORT_CONFIG_OP},
-        {"attr": "current_summ_delivered", "config": REPORT_CONFIG_DEFAULT},
-        {"attr": "status", "config": REPORT_CONFIG_ASAP},
+        AttrReportConfig(attr="instantaneous_demand", config=REPORT_CONFIG_OP),
+        AttrReportConfig(attr="current_summ_delivered", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(
+            attr="current_tier1_summ_delivered", config=REPORT_CONFIG_DEFAULT
+        ),
+        AttrReportConfig(
+            attr="current_tier2_summ_delivered", config=REPORT_CONFIG_DEFAULT
+        ),
+        AttrReportConfig(
+            attr="current_tier3_summ_delivered", config=REPORT_CONFIG_DEFAULT
+        ),
+        AttrReportConfig(
+            attr="current_tier4_summ_delivered", config=REPORT_CONFIG_DEFAULT
+        ),
+        AttrReportConfig(
+            attr="current_tier5_summ_delivered", config=REPORT_CONFIG_DEFAULT
+        ),
+        AttrReportConfig(
+            attr="current_tier6_summ_delivered", config=REPORT_CONFIG_DEFAULT
+        ),
+        AttrReportConfig(attr="status", config=REPORT_CONFIG_ASAP),
     )
     ZCL_INIT_ATTRS = {
         "demand_formatting": True,
@@ -109,13 +137,11 @@ class Metering(ZigbeeChannel):
         DEMAND = 0
         SUMMATION = 1
 
-    def __init__(
-        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
-    ) -> None:
+    def __init__(self, cluster: zigpy.zcl.Cluster, ch_pool: ChannelPool) -> None:
         """Initialize Metering."""
         super().__init__(cluster, ch_pool)
-        self._format_spec = None
-        self._summa_format = None
+        self._format_spec: str | None = None
+        self._summa_format: str | None = None
 
     @property
     def divisor(self) -> int:
@@ -123,7 +149,7 @@ class Metering(ZigbeeChannel):
         return self.cluster.get("divisor") or 1
 
     @property
-    def device_type(self) -> int | None:
+    def device_type(self) -> str | int | None:
         """Return metering device type."""
         dev_type = self.cluster.get("metering_device_type")
         if dev_type is None:
@@ -146,7 +172,7 @@ class Metering(ZigbeeChannel):
         return self.DeviceStatusDefault(status)
 
     @property
-    def unit_of_measurement(self) -> str:
+    def unit_of_measurement(self) -> int:
         """Return unit of measurement."""
         return self.cluster.get("unit_of_measure")
 
@@ -162,6 +188,25 @@ class Metering(ZigbeeChannel):
             "summation_formatting", 0xF9
         )  # 1 digit to the right, 15 digits to the left
         self._summa_format = self.get_formatting(fmting)
+
+    async def async_force_update(self) -> None:
+        """Retrieve latest state."""
+        self.debug("async_force_update")
+
+        attrs = [
+            a["attr"]
+            for a in self.REPORT_CONFIG
+            if a["attr"] not in self.cluster.unsupported_attributes
+        ]
+        result = await self.get_attributes(attrs, from_cache=False, only_cache=False)
+        if result:
+            for attr, value in result.items():
+                self.async_send_signal(
+                    f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
+                    self.cluster.find_attribute(attr).id,
+                    attr,
+                    value,
+                )
 
     @staticmethod
     def get_formatting(formatting: int) -> str:
@@ -183,18 +228,22 @@ class Metering(ZigbeeChannel):
 
         return f"{{:0{width}.{r_digits}f}}"
 
-    def _formatter_function(self, selector: FormatSelector, value: int) -> int | float:
+    def _formatter_function(
+        self, selector: FormatSelector, value: int
+    ) -> int | float | str:
         """Return formatted value for display."""
-        value = value * self.multiplier / self.divisor
+        value_float = value * self.multiplier / self.divisor
         if self.unit_of_measurement == 0:
             # Zigbee spec power unit is kW, but we show the value in W
-            value_watt = value * 1000
+            value_watt = value_float * 1000
             if value_watt < 100:
                 return round(value_watt, 1)
             return round(value_watt)
         if selector == self.FormatSelector.SUMMATION:
-            return self._summa_format.format(value).lstrip()
-        return self._format_spec.format(value).lstrip()
+            assert self._summa_format
+            return self._summa_format.format(value_float).lstrip()
+        assert self._format_spec
+        return self._format_spec.format(value_float).lstrip()
 
     demand_formatter = partialmethod(_formatter_function, FormatSelector.DEMAND)
     summa_formatter = partialmethod(_formatter_function, FormatSelector.SUMMATION)

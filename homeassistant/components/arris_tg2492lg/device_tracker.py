@@ -24,7 +24,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner:
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> ArrisDeviceScanner:
     """Return the Arris device scanner."""
     conf = config[DOMAIN]
     url = f"http://{conf[CONF_HOST]}"
@@ -33,7 +33,7 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner:
 
 
 class ArrisDeviceScanner(DeviceScanner):
-    """This class queries a Arris TG2492LG router for connected devices."""
+    """Class which queries a Arris TG2492LG router for connected devices."""
 
     def __init__(self, connect_box: ConnectBox) -> None:
         """Initialize the scanner."""

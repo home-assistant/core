@@ -1,18 +1,62 @@
 """Support for Litter-Robot selects."""
 from __future__ import annotations
 
-from pylitterbot.robot import VALID_WAIT_TIMES
+from collections.abc import Callable, Coroutine
+from dataclasses import dataclass
+import itertools
+from typing import Any, Generic, TypeVar
 
-from homeassistant.components.select import SelectEntity
+from pylitterbot import FeederRobot, LitterRobot
+
+from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import LitterRobotConfigEntity
+from .entity import LitterRobotEntity, _RobotT
 from .hub import LitterRobotHub
 
-TYPE_CLEAN_CYCLE_WAIT_TIME_MINUTES = "Clean Cycle Wait Time Minutes"
+_CastTypeT = TypeVar("_CastTypeT", int, float)
+
+
+@dataclass
+class RequiredKeysMixin(Generic[_RobotT, _CastTypeT]):
+    """A class that describes robot select entity required keys."""
+
+    current_fn: Callable[[_RobotT], _CastTypeT]
+    options_fn: Callable[[_RobotT], list[_CastTypeT]]
+    select_fn: Callable[[_RobotT, str], Coroutine[Any, Any, bool]]
+
+
+@dataclass
+class RobotSelectEntityDescription(
+    SelectEntityDescription, RequiredKeysMixin[_RobotT, _CastTypeT]
+):
+    """A class that describes robot select entities."""
+
+    entity_category: EntityCategory = EntityCategory.CONFIG
+
+
+LITTER_ROBOT_SELECT = RobotSelectEntityDescription[LitterRobot, int](
+    key="cycle_delay",
+    name="Clean cycle wait time minutes",
+    icon="mdi:timer-outline",
+    unit_of_measurement=UnitOfTime.MINUTES,
+    current_fn=lambda robot: robot.clean_cycle_wait_time_minutes,
+    options_fn=lambda robot: robot.VALID_WAIT_TIMES,
+    select_fn=lambda robot, option: robot.set_wait_time(int(option)),
+)
+FEEDER_ROBOT_SELECT = RobotSelectEntityDescription[FeederRobot, float](
+    key="meal_insert_size",
+    name="Meal insert size",
+    icon="mdi:scale",
+    unit_of_measurement="cups",
+    current_fn=lambda robot: robot.meal_insert_size,
+    options_fn=lambda robot: robot.VALID_MEAL_INSERT_SIZES,
+    select_fn=lambda robot, option: robot.set_meal_insert_size(float(option)),
+)
 
 
 async def async_setup_entry(
@@ -22,32 +66,44 @@ async def async_setup_entry(
 ) -> None:
     """Set up Litter-Robot selects using config entry."""
     hub: LitterRobotHub = hass.data[DOMAIN][config_entry.entry_id]
-
-    async_add_entities(
-        [
-            LitterRobotSelect(
-                robot=robot, entity_type=TYPE_CLEAN_CYCLE_WAIT_TIME_MINUTES, hub=hub
-            )
-            for robot in hub.account.robots
-        ]
+    entities: list[LitterRobotSelect] = list(
+        itertools.chain(
+            (
+                LitterRobotSelect(robot=robot, hub=hub, description=LITTER_ROBOT_SELECT)
+                for robot in hub.litter_robots()
+            ),
+            (
+                LitterRobotSelect(robot=robot, hub=hub, description=FEEDER_ROBOT_SELECT)
+                for robot in hub.feeder_robots()
+            ),
+        )
     )
+    async_add_entities(entities)
 
 
-class LitterRobotSelect(LitterRobotConfigEntity, SelectEntity):
+class LitterRobotSelect(
+    LitterRobotEntity[_RobotT], SelectEntity, Generic[_RobotT, _CastTypeT]
+):
     """Litter-Robot Select."""
 
-    _attr_icon = "mdi:timer-outline"
+    entity_description: RobotSelectEntityDescription[_RobotT, _CastTypeT]
+
+    def __init__(
+        self,
+        robot: _RobotT,
+        hub: LitterRobotHub,
+        description: RobotSelectEntityDescription[_RobotT, _CastTypeT],
+    ) -> None:
+        """Initialize a Litter-Robot select entity."""
+        super().__init__(robot, hub, description)
+        options = self.entity_description.options_fn(self.robot)
+        self._attr_options = list(map(str, options))
 
     @property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        return str(self.robot.clean_cycle_wait_time_minutes)
-
-    @property
-    def options(self) -> list[str]:
-        """Return a set of selectable options."""
-        return [str(minute) for minute in VALID_WAIT_TIMES]
+        return str(self.entity_description.current_fn(self.robot))
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await self.perform_action_and_refresh(self.robot.set_wait_time, int(option))
+        await self.entity_description.select_fn(self.robot, option)

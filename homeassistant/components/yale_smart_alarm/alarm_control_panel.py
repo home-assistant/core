@@ -9,10 +9,9 @@ from yalesmartalarmclient.const import (
     YALE_STATE_DISARM,
 )
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
@@ -40,12 +39,14 @@ class YaleAlarmDevice(YaleAlarmEntity, AlarmControlPanelEntity):
     """Represent a Yale Smart Alarm."""
 
     _attr_code_arm_required = False
-    _attr_supported_features = SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+    )
 
     def __init__(self, coordinator: YaleDataUpdateCoordinator) -> None:
         """Initialize the Yale Alarm Device."""
         super().__init__(coordinator)
-        self._attr_name = coordinator.entry.data[CONF_NAME]
         self._attr_unique_id = coordinator.entry.entry_id
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
@@ -80,7 +81,8 @@ class YaleAlarmDevice(YaleAlarmEntity, AlarmControlPanelEntity):
                 )
         except YALE_ALL_ERRORS as error:
             raise HomeAssistantError(
-                f"Could not set alarm for {self._attr_name}: {error}"
+                f"Could not set alarm for {self.coordinator.entry.data[CONF_NAME]}:"
+                f" {error}"
             ) from error
 
         if alarm_state:

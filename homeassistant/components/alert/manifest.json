@@ -1,9 +1,9 @@
 {
   "domain": "alert",
   "name": "Alert",
-  "documentation": "https://www.home-assistant.io/integrations/alert",
   "after_dependencies": ["notify"],
-  "codeowners": ["@home-assistant/core"],
-  "quality_scale": "internal",
-  "iot_class": "local_push"
+  "codeowners": ["@home-assistant/core", "@frenck"],
+  "documentation": "https://www.home-assistant.io/integrations/alert",
+  "iot_class": "local_push",
+  "quality_scale": "internal"
 }

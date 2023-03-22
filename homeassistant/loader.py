@@ -1,5 +1,4 @@
-"""
-The methods for loading Home Assistant integrations.
+"""The methods for loading Home Assistant integrations.
 
 This module has quite some complex parts. I have tried to add as much
 documentation as possible to keep it understandable.
@@ -7,11 +6,11 @@ documentation as possible to keep it understandable.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from contextlib import suppress
+from dataclasses import dataclass
 import functools as ft
 import importlib
-import json
 import logging
 import pathlib
 import sys
@@ -24,12 +23,15 @@ from awesomeversion import (
     AwesomeVersionStrategy,
 )
 
+from . import generated
+from .generated.application_credentials import APPLICATION_CREDENTIALS
+from .generated.bluetooth import BLUETOOTH
 from .generated.dhcp import DHCP
 from .generated.mqtt import MQTT
 from .generated.ssdp import SSDP
 from .generated.usb import USB
 from .generated.zeroconf import HOMEKIT, ZEROCONF
-from .util.async_ import gather_with_concurrency
+from .util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
@@ -76,18 +78,69 @@ class DHCPMatcher(DHCPMatcherRequired, DHCPMatcherOptional):
     """Matcher for the dhcp integration."""
 
 
-class Manifest(TypedDict, total=False):
-    """
-    Integration manifest.
+class BluetoothMatcherRequired(TypedDict, total=True):
+    """Matcher for the bluetooth integration for required fields."""
 
-    Note that none of the attributes are marked Optional here. However, some of them may be optional in manifest.json
-    in the sense that they can be omitted altogether. But when present, they should not have null values in it.
+    domain: str
+
+
+class BluetoothMatcherOptional(TypedDict, total=False):
+    """Matcher for the bluetooth integration for optional fields."""
+
+    local_name: str
+    service_uuid: str
+    service_data_uuid: str
+    manufacturer_id: int
+    manufacturer_data_start: list[int]
+    connectable: bool
+
+
+class BluetoothMatcher(BluetoothMatcherRequired, BluetoothMatcherOptional):
+    """Matcher for the bluetooth integration."""
+
+
+class USBMatcherRequired(TypedDict, total=True):
+    """Matcher for the usb integration for required fields."""
+
+    domain: str
+
+
+class USBMatcherOptional(TypedDict, total=False):
+    """Matcher for the usb integration for optional fields."""
+
+    vid: str
+    pid: str
+    serial_number: str
+    manufacturer: str
+    description: str
+
+
+class USBMatcher(USBMatcherRequired, USBMatcherOptional):
+    """Matcher for the bluetooth integration."""
+
+
+@dataclass
+class HomeKitDiscoveredIntegration:
+    """HomeKit model."""
+
+    domain: str
+    always_discover: bool
+
+
+class Manifest(TypedDict, total=False):
+    """Integration manifest.
+
+    Note that none of the attributes are marked Optional here. However, some of
+    them may be optional in manifest.json in the sense that they can be omitted
+    altogether. But when present, they should not have null values in it.
     """
 
     name: str
     disabled: str
     domain: str
-    integration_type: Literal["integration", "helper"]
+    integration_type: Literal[
+        "entity", "device", "hardware", "helper", "hub", "service", "system"
+    ]
     dependencies: list[str]
     after_dependencies: list[str]
     requirements: list[str]
@@ -96,6 +149,7 @@ class Manifest(TypedDict, total=False):
     issue_tracker: str
     quality_scale: str
     iot_class: str
+    bluetooth: list[dict[str, int | str]]
     mqtt: list[str]
     ssdp: list[dict[str, str]]
     zeroconf: list[str | dict[str, str]]
@@ -144,19 +198,15 @@ async def _async_get_custom_components(
         get_sub_directories, custom_components.__path__
     )
 
-    integrations = await gather_with_concurrency(
-        MAX_LOAD_CONCURRENTLY,
-        *(
-            hass.async_add_executor_job(
-                Integration.resolve_from_root, hass, custom_components, comp.name
-            )
-            for comp in dirs
-        ),
+    integrations = await hass.async_add_executor_job(
+        _resolve_integrations_from_root,
+        hass,
+        custom_components,
+        [comp.name for comp in dirs],
     )
-
     return {
         integration.domain: integration
-        for integration in integrations
+        for integration in integrations.values()
         if integration is not None
     }
 
@@ -183,10 +233,10 @@ async def async_get_custom_components(
 
 async def async_get_config_flows(
     hass: HomeAssistant,
-    type_filter: Literal["helper", "integration"] | None = None,
+    type_filter: Literal["device", "helper", "hub", "service"] | None = None,
 ) -> set[str]:
     """Return cached list of config flows."""
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from .generated.config_flows import FLOWS
 
     integrations = await async_get_custom_components(hass)
@@ -210,6 +260,63 @@ async def async_get_config_flows(
     return flows
 
 
+async def async_get_integration_descriptions(
+    hass: HomeAssistant,
+) -> dict[str, Any]:
+    """Return cached list of integrations."""
+    base = generated.__path__[0]
+    config_flow_path = pathlib.Path(base) / "integrations.json"
+
+    flow = await hass.async_add_executor_job(config_flow_path.read_text)
+    core_flows = cast(dict[str, Any], json_loads(flow))
+    custom_integrations = await async_get_custom_components(hass)
+    custom_flows: dict[str, Any] = {
+        "integration": {},
+        "helper": {},
+    }
+
+    for integration in custom_integrations.values():
+        # Remove core integration with same domain as the custom integration
+        if integration.integration_type in ("entity", "system"):
+            continue
+
+        for integration_type in ("integration", "helper"):
+            if integration.domain not in core_flows[integration_type]:
+                continue
+            del core_flows[integration_type][integration.domain]
+        if integration.domain in core_flows["translated_name"]:
+            core_flows["translated_name"].remove(integration.domain)
+
+        if integration.integration_type == "helper":
+            integration_key: str = integration.integration_type
+        else:
+            integration_key = "integration"
+
+        metadata = {
+            "config_flow": integration.config_flow,
+            "integration_type": integration.integration_type,
+            "iot_class": integration.iot_class,
+            "name": integration.name,
+        }
+        custom_flows[integration_key][integration.domain] = metadata
+
+    return {"core": core_flows, "custom": custom_flows}
+
+
+async def async_get_application_credentials(hass: HomeAssistant) -> list[str]:
+    """Return cached list of application credentials."""
+    integrations = await async_get_custom_components(hass)
+
+    return [
+        *APPLICATION_CREDENTIALS,
+        *[
+            integration.domain
+            for integration in integrations.values()
+            if "application_credentials" in integration.dependencies
+        ],
+    ]
+
+
 def async_process_zeroconf_match_dict(entry: dict[str, Any]) -> dict[str, Any]:
     """Handle backwards compat with zeroconf matchers."""
     entry_without_type: dict[str, Any] = entry.copy()
@@ -219,7 +326,11 @@ def async_process_zeroconf_match_dict(entry: dict[str, Any]) -> dict[str, Any]:
     for moved_prop in MOVED_ZEROCONF_PROPS:
         if value := entry_without_type.pop(moved_prop, None):
             _LOGGER.warning(
-                'Matching the zeroconf property "%s" at top-level is deprecated and should be moved into a properties dict; Check the developer documentation',
+                (
+                    'Matching the zeroconf property "%s" at top-level is deprecated and'
+                    " should be moved into a properties dict; Check the developer"
+                    " documentation"
+                ),
                 moved_prop,
             )
             if "properties" not in entry_without_type:
@@ -235,7 +346,9 @@ async def async_get_zeroconf(
     hass: HomeAssistant,
 ) -> dict[str, list[dict[str, str | dict[str, str]]]]:
     """Return cached list of zeroconf types."""
-    zeroconf: dict[str, list[dict[str, str | dict[str, str]]]] = ZEROCONF.copy()  # type: ignore[assignment]
+    zeroconf: dict[
+        str, list[dict[str, str | dict[str, str]]]
+    ] = ZEROCONF.copy()  # type: ignore[assignment]
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
@@ -254,6 +367,22 @@ async def async_get_zeroconf(
     return zeroconf
 
 
+async def async_get_bluetooth(hass: HomeAssistant) -> list[BluetoothMatcher]:
+    """Return cached list of bluetooth types."""
+    bluetooth = cast(list[BluetoothMatcher], BLUETOOTH.copy())
+
+    integrations = await async_get_custom_components(hass)
+    for integration in integrations.values():
+        if not integration.bluetooth:
+            continue
+        for entry in integration.bluetooth:
+            bluetooth.append(
+                cast(BluetoothMatcher, {"domain": integration.domain, **entry})
+            )
+
+    return bluetooth
+
+
 async def async_get_dhcp(hass: HomeAssistant) -> list[DHCPMatcher]:
     """Return cached list of dhcp types."""
     dhcp = cast(list[DHCPMatcher], DHCP.copy())
@@ -268,9 +397,9 @@ async def async_get_dhcp(hass: HomeAssistant) -> list[DHCPMatcher]:
     return dhcp
 
 
-async def async_get_usb(hass: HomeAssistant) -> list[dict[str, str]]:
+async def async_get_usb(hass: HomeAssistant) -> list[USBMatcher]:
     """Return cached list of usb types."""
-    usb: list[dict[str, str]] = USB.copy()
+    usb = cast(list[USBMatcher], USB.copy())
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
@@ -278,19 +407,42 @@ async def async_get_usb(hass: HomeAssistant) -> list[dict[str, str]]:
             continue
         for entry in integration.usb:
             usb.append(
-                {
-                    "domain": integration.domain,
-                    **{k: v for k, v in entry.items() if k != "known_devices"},
-                }
+                cast(
+                    USBMatcher,
+                    {
+                        "domain": integration.domain,
+                        **{k: v for k, v in entry.items() if k != "known_devices"},
+                    },
+                )
             )
 
     return usb
 
 
-async def async_get_homekit(hass: HomeAssistant) -> dict[str, str]:
-    """Return cached list of homekit models."""
+def homekit_always_discover(iot_class: str | None) -> bool:
+    """Return if we should always offer HomeKit control for a device."""
+    #
+    # Since we prefer local control, if the integration that is being
+    # discovered is cloud AND the HomeKit device is UNPAIRED we still
+    # want to discovery it.
+    #
+    # Additionally if the integration is polling, HKC offers a local
+    # push experience for the user to control the device so we want
+    # to offer that as well.
+    #
+    return not iot_class or (iot_class.startswith("cloud") or "polling" in iot_class)
 
-    homekit: dict[str, str] = HOMEKIT.copy()
+
+async def async_get_homekit(
+    hass: HomeAssistant,
+) -> dict[str, HomeKitDiscoveredIntegration]:
+    """Return cached list of homekit models."""
+    homekit: dict[str, HomeKitDiscoveredIntegration] = {
+        model: HomeKitDiscoveredIntegration(
+            cast(str, details["domain"]), cast(bool, details["always_discover"])
+        )
+        for model, details in HOMEKIT.items()
+    }
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
@@ -301,7 +453,10 @@ async def async_get_homekit(hass: HomeAssistant) -> dict[str, str]:
         ):
             continue
         for model in integration.homekit["models"]:
-            homekit[model] = integration.domain
+            homekit[model] = HomeKitDiscoveredIntegration(
+                integration.domain,
+                homekit_always_discover(integration.iot_class),
+            )
 
     return homekit
 
@@ -351,8 +506,8 @@ class Integration:
                 continue
 
             try:
-                manifest = json.loads(manifest_path.read_text())
-            except ValueError as err:
+                manifest = cast(Manifest, json_loads(manifest_path.read_text()))
+            except JSON_DECODE_EXCEPTIONS as err:
                 _LOGGER.error(
                     "Error parsing manifest.json file at %s: %s", manifest_path, err
                 )
@@ -371,16 +526,20 @@ class Integration:
             _LOGGER.warning(CUSTOM_WARNING, integration.domain)
             if integration.version is None:
                 _LOGGER.error(
-                    "The custom integration '%s' does not have a "
-                    "version key in the manifest file and was blocked from loading. "
-                    "See https://developers.home-assistant.io/blog/2021/01/29/custom-integration-changes#versions for more details",
+                    (
+                        "The custom integration '%s' does not have a version key in the"
+                        " manifest file and was blocked from loading. See"
+                        " https://developers.home-assistant.io"
+                        "/blog/2021/01/29/custom-integration-changes#versions"
+                        " for more details"
+                    ),
                     integration.domain,
                 )
                 return None
             try:
                 AwesomeVersion(
                     integration.version,
-                    [
+                    ensure_strategy=[
                         AwesomeVersionStrategy.CALVER,
                         AwesomeVersionStrategy.SEMVER,
                         AwesomeVersionStrategy.SIMPLEVER,
@@ -390,9 +549,13 @@ class Integration:
                 )
             except AwesomeVersionException:
                 _LOGGER.error(
-                    "The custom integration '%s' does not have a "
-                    "valid version key (%s) in the manifest file and was blocked from loading. "
-                    "See https://developers.home-assistant.io/blog/2021/01/29/custom-integration-changes#versions for more details",
+                    (
+                        "The custom integration '%s' does not have a valid version key"
+                        " (%s) in the manifest file and was blocked from loading. See"
+                        " https://developers.home-assistant.io"
+                        "/blog/2021/01/29/custom-integration-changes#versions"
+                        " for more details"
+                    ),
                     integration.domain,
                     integration.version,
                 )
@@ -485,9 +648,11 @@ class Integration:
         return self.manifest.get("iot_class")
 
     @property
-    def integration_type(self) -> Literal["integration", "helper"]:
+    def integration_type(
+        self,
+    ) -> Literal["entity", "device", "hardware", "helper", "hub", "service", "system"]:
         """Return the integration type."""
-        return self.manifest.get("integration_type", "integration")
+        return self.manifest.get("integration_type", "hub")
 
     @property
     def mqtt(self) -> list[str] | None:
@@ -503,6 +668,11 @@ class Integration:
     def zeroconf(self) -> list[str | dict[str, str]] | None:
         """Return Integration zeroconf entries."""
         return self.manifest.get("zeroconf")
+
+    @property
+    def bluetooth(self) -> list[dict[str, str | int]] | None:
+        """Return Integration bluetooth entries."""
+        return self.manifest.get("bluetooth")
 
     @property
     def dhcp(self) -> list[dict[str, str | bool]] | None:
@@ -558,14 +728,20 @@ class Integration:
             self._all_dependencies_resolved = True
         except IntegrationNotFound as err:
             _LOGGER.error(
-                "Unable to resolve dependencies for %s:  we are unable to resolve (sub)dependency %s",
+                (
+                    "Unable to resolve dependencies for %s:  we are unable to resolve"
+                    " (sub)dependency %s"
+                ),
                 self.domain,
                 err.domain,
             )
             self._all_dependencies_resolved = False
         except CircularDependency as err:
             _LOGGER.error(
-                "Unable to resolve dependencies for %s:  it contains a circular dependency: %s -> %s",
+                (
+                    "Unable to resolve dependencies for %s:  it contains a circular"
+                    " dependency: %s -> %s"
+                ),
                 self.domain,
                 err.from_domain,
                 err.to_domain,
@@ -624,59 +800,101 @@ class Integration:
         return f"<Integration {self.domain}: {self.pkg_path}>"
 
 
+def _resolve_integrations_from_root(
+    hass: HomeAssistant, root_module: ModuleType, domains: list[str]
+) -> dict[str, Integration]:
+    """Resolve multiple integrations from root."""
+    integrations: dict[str, Integration] = {}
+    for domain in domains:
+        try:
+            integration = Integration.resolve_from_root(hass, root_module, domain)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Error loading integration: %s", domain)
+        else:
+            if integration:
+                integrations[domain] = integration
+    return integrations
+
+
 async def async_get_integration(hass: HomeAssistant, domain: str) -> Integration:
-    """Get an integration."""
+    """Get integration."""
+    integrations_or_excs = await async_get_integrations(hass, [domain])
+    int_or_exc = integrations_or_excs[domain]
+    if isinstance(int_or_exc, Integration):
+        return int_or_exc
+    raise int_or_exc
+
+
+async def async_get_integrations(
+    hass: HomeAssistant, domains: Iterable[str]
+) -> dict[str, Integration | Exception]:
+    """Get integrations."""
     if (cache := hass.data.get(DATA_INTEGRATIONS)) is None:
         if not _async_mount_config_dir(hass):
-            raise IntegrationNotFound(domain)
+            return {domain: IntegrationNotFound(domain) for domain in domains}
         cache = hass.data[DATA_INTEGRATIONS] = {}
 
-    int_or_evt: Integration | asyncio.Event | None = cache.get(domain, _UNDEF)
+    results: dict[str, Integration | Exception] = {}
+    needed: dict[str, asyncio.Event] = {}
+    in_progress: dict[str, asyncio.Event] = {}
+    for domain in domains:
+        int_or_evt: Integration | asyncio.Event | None = cache.get(domain, _UNDEF)
+        if isinstance(int_or_evt, asyncio.Event):
+            in_progress[domain] = int_or_evt
+        elif int_or_evt is not _UNDEF:
+            results[domain] = cast(Integration, int_or_evt)
+        elif "." in domain:
+            results[domain] = ValueError(f"Invalid domain {domain}")
+        else:
+            needed[domain] = cache[domain] = asyncio.Event()
 
-    if isinstance(int_or_evt, asyncio.Event):
-        await int_or_evt.wait()
+    if in_progress:
+        await asyncio.gather(*[event.wait() for event in in_progress.values()])
+        for domain in in_progress:
+            # When we have waited and it's _UNDEF, it doesn't exist
+            # We don't cache that it doesn't exist, or else people can't fix it
+            # and then restart, because their config will never be valid.
+            if (int_or_evt := cache.get(domain, _UNDEF)) is _UNDEF:
+                results[domain] = IntegrationNotFound(domain)
+            else:
+                results[domain] = cast(Integration, int_or_evt)
 
-        # When we have waited and it's _UNDEF, it doesn't exist
-        # We don't cache that it doesn't exist, or else people can't fix it
-        # and then restart, because their config will never be valid.
-        if (int_or_evt := cache.get(domain, _UNDEF)) is _UNDEF:
-            raise IntegrationNotFound(domain)
+    # First we look for custom components
+    if needed:
+        # Instead of using resolve_from_root we use the cache of custom
+        # components to find the integration.
+        custom = await async_get_custom_components(hass)
+        for domain, event in needed.items():
+            if integration := custom.get(domain):
+                results[domain] = cache[domain] = integration
+                event.set()
 
-    if int_or_evt is not _UNDEF:
-        return cast(Integration, int_or_evt)
+        for domain in results:
+            if domain in needed:
+                del needed[domain]
 
-    event = cache[domain] = asyncio.Event()
+    # Now the rest use resolve_from_root
+    if needed:
+        from . import components  # pylint: disable=import-outside-toplevel
 
-    try:
-        integration = await _async_get_integration(hass, domain)
-    except Exception:
-        # Remove event from cache.
-        cache.pop(domain)
-        event.set()
-        raise
+        integrations = await hass.async_add_executor_job(
+            _resolve_integrations_from_root, hass, components, list(needed)
+        )
+        for domain, event in needed.items():
+            int_or_exc = integrations.get(domain)
+            if not int_or_exc:
+                cache.pop(domain)
+                results[domain] = IntegrationNotFound(domain)
+            elif isinstance(int_or_exc, Exception):
+                cache.pop(domain)
+                exc = IntegrationNotFound(domain)
+                exc.__cause__ = int_or_exc
+                results[domain] = exc
+            else:
+                results[domain] = cache[domain] = int_or_exc
+            event.set()
 
-    cache[domain] = integration
-    event.set()
-    return integration
-
-
-async def _async_get_integration(hass: HomeAssistant, domain: str) -> Integration:
-    if "." in domain:
-        raise ValueError(f"Invalid domain {domain}")
-
-    # Instead of using resolve_from_root we use the cache of custom
-    # components to find the integration.
-    if integration := (await async_get_custom_components(hass)).get(domain):
-        return integration
-
-    from . import components  # pylint: disable=import-outside-toplevel
-
-    if integration := await hass.async_add_executor_job(
-        Integration.resolve_from_root, hass, components, domain
-    ):
-        return integration
-
-    raise IntegrationNotFound(domain)
+    return results
 
 
 class LoaderError(Exception):
@@ -712,7 +930,9 @@ def _load_file(
     Async friendly.
     """
     with suppress(KeyError):
-        return hass.data[DATA_COMPONENTS][comp_or_platform]  # type: ignore[no-any-return]
+        return hass.data[DATA_COMPONENTS][  # type: ignore[no-any-return]
+            comp_or_platform
+        ]
 
     if (cache := hass.data.get(DATA_COMPONENTS)) is None:
         if not _async_mount_config_dir(hass):
@@ -752,7 +972,7 @@ def _load_file(
 
             if str(err) not in white_listed_errors:
                 _LOGGER.exception(
-                    ("Error loading %s. Make sure all dependencies are installed"), path
+                    "Error loading %s. Make sure all dependencies are installed", path
                 )
 
     return None

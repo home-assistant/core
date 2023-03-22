@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
+import pytest
 from songpal import (
     ConnectChange,
     ContentChange,
@@ -12,9 +13,10 @@ from songpal import (
 )
 
 from homeassistant.components import media_player, songpal
+from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.components.songpal.const import SET_SOUND_SETTING
-from homeassistant.components.songpal.media_player import SUPPORT_SONGPAL
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -36,13 +38,22 @@ from . import (
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
+SUPPORT_SONGPAL = (
+    MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.VOLUME_STEP
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.SELECT_SOURCE
+    | MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.TURN_OFF
+)
+
 
 def _get_attributes(hass):
     state = hass.states.get(ENTITY_ID)
     return state.as_dict()["attributes"]
 
 
-async def test_setup_platform(hass):
+async def test_setup_platform(hass: HomeAssistant) -> None:
     """Test the legacy setup platform."""
     mocked_device = _create_mocked_device(throw_exception=True)
     with _patch_media_player_device(mocked_device):
@@ -67,7 +78,9 @@ async def test_setup_platform(hass):
     assert len(all_states) == 0
 
 
-async def test_setup_failed(hass, caplog):
+async def test_setup_failed(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test failed to set up the entity."""
     mocked_device = _create_mocked_device(throw_exception=True)
     entry = MockConfigEntry(domain=songpal.DOMAIN, data=CONF_DATA)
@@ -94,7 +107,7 @@ async def test_setup_failed(hass, caplog):
     assert not any(x.levelno == logging.ERROR for x in caplog.records)
 
 
-async def test_state(hass):
+async def test_state(hass: HomeAssistant) -> None:
     """Test state of the entity."""
     mocked_device = _create_mocked_device()
     entry = MockConfigEntry(domain=songpal.DOMAIN, data=CONF_DATA)
@@ -127,7 +140,7 @@ async def test_state(hass):
     assert entity.unique_id == MAC
 
 
-async def test_state_wireless(hass):
+async def test_state_wireless(hass: HomeAssistant) -> None:
     """Test state of the entity with only Wireless MAC."""
     mocked_device = _create_mocked_device(wired_mac=None, wireless_mac=WIRELESS_MAC)
     entry = MockConfigEntry(domain=songpal.DOMAIN, data=CONF_DATA)
@@ -162,7 +175,7 @@ async def test_state_wireless(hass):
     assert entity.unique_id == WIRELESS_MAC
 
 
-async def test_state_both(hass):
+async def test_state_both(hass: HomeAssistant) -> None:
     """Test state of the entity with both Wired and Wireless MAC."""
     mocked_device = _create_mocked_device(wired_mac=MAC, wireless_mac=WIRELESS_MAC)
     entry = MockConfigEntry(domain=songpal.DOMAIN, data=CONF_DATA)
@@ -199,7 +212,7 @@ async def test_state_both(hass):
     assert entity.unique_id == MAC
 
 
-async def test_services(hass):
+async def test_services(hass: HomeAssistant) -> None:
     """Test services."""
     mocked_device = _create_mocked_device()
     entry = MockConfigEntry(domain=songpal.DOMAIN, data=CONF_DATA)
@@ -286,7 +299,7 @@ async def test_services(hass):
     mocked_device3.set_sound_settings.assert_called_once_with("name", "value")
 
 
-async def test_websocket_events(hass):
+async def test_websocket_events(hass: HomeAssistant) -> None:
     """Test websocket events."""
     mocked_device = _create_mocked_device()
     entry = MockConfigEntry(domain=songpal.DOMAIN, data=CONF_DATA)
@@ -324,7 +337,9 @@ async def test_websocket_events(hass):
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
 
-async def test_disconnected(hass, caplog):
+async def test_disconnected(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test disconnected behavior."""
     mocked_device = _create_mocked_device()
     entry = MockConfigEntry(domain=songpal.DOMAIN, data=CONF_DATA)

@@ -10,7 +10,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
@@ -19,8 +19,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTRIBUTION = "Data provided by NS"
 
 CONF_ROUTES = "routes"
 CONF_FROM = "from"
@@ -88,8 +86,7 @@ def setup_platform(
                 departure.get(CONF_TIME),
             )
         )
-    if sensors:
-        add_entities(sensors, True)
+    add_entities(sensors, True)
 
 
 def valid_stations(stations, given_stations):
@@ -105,6 +102,8 @@ def valid_stations(stations, given_stations):
 
 class NSDepartureSensor(SensorEntity):
     """Implementation of a NS Departure Sensor."""
+
+    _attr_attribution = "Data provided by NS"
 
     def __init__(self, nsapi, name, departure, heading, via, time):
         """Initialize the sensor."""
@@ -161,7 +160,6 @@ class NSDepartureSensor(SensorEntity):
             "transfers": self._trips[0].nr_transfers,
             "route": route,
             "remarks": None,
-            ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
         # Planned departure attributes
@@ -219,7 +217,7 @@ class NSDepartureSensor(SensorEntity):
         return attributes
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def update(self) -> None:
         """Get the trip information."""
 
         # If looking for a specific trip time, update around that trip time only.
@@ -231,7 +229,8 @@ class NSDepartureSensor(SensorEntity):
             self._trips = None
             return
 
-        # Set the search parameter to search from a specific trip time or to just search for next trip.
+        # Set the search parameter to search from a specific trip time
+        # or to just search for next trip.
         if self._time:
             trip_time = (
                 datetime.today()

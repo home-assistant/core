@@ -1,7 +1,9 @@
 """Support for MyQ-Enabled lights."""
+from typing import Any
+
 from pymyq.errors import MyQError
 
-from homeassistant.components.light import LightEntity
+from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -30,7 +32,8 @@ async def async_setup_entry(
 class MyQLight(MyQEntity, LightEntity):
     """Representation of a MyQ light."""
 
-    _attr_supported_features = 0
+    _attr_color_mode = ColorMode.ONOFF
+    _attr_supported_color_modes = {ColorMode.ONOFF}
 
     @property
     def is_on(self):
@@ -42,7 +45,7 @@ class MyQLight(MyQEntity, LightEntity):
         """Return true if the light is off, else False."""
         return MYQ_TO_HASS.get(self._device.state) == STATE_OFF
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Issue on command to light."""
         if self.is_on:
             return
@@ -57,7 +60,7 @@ class MyQLight(MyQEntity, LightEntity):
         # Write new state to HASS
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Issue off command to light."""
         if self.is_off:
             return

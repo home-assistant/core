@@ -4,7 +4,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import cast
 
-from homeassistant.const import ATTR_NAME
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -28,6 +27,7 @@ class RenaultDataEntityDescription(EntityDescription, RenaultDataRequiredKeysMix
 class RenaultEntity(Entity):
     """Implementation of a Renault entity with a data coordinator."""
 
+    _attr_has_entity_name = True
     entity_description: EntityDescription
 
     def __init__(
@@ -40,14 +40,6 @@ class RenaultEntity(Entity):
         self.entity_description = description
         self._attr_device_info = self.vehicle.device_info
         self._attr_unique_id = f"{self.vehicle.details.vin}_{description.key}".lower()
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity.
-
-        Overridden to include the device name.
-        """
-        return f"{self.vehicle.device_info[ATTR_NAME]} {self.entity_description.name}"
 
 
 class RenaultDataEntity(

@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
+import logging
+import traceback
 from typing import Any
 
 from aionotion import async_get_client
@@ -31,7 +33,6 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 ATTR_SYSTEM_MODE = "system_mode"
 ATTR_SYSTEM_NAME = "system_name"
 
-DEFAULT_ATTRIBUTION = "Data provided by Notion"
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
@@ -75,6 +76,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     f"There was a Notion error while updating {attr}: {result}"
                 ) from result
             if isinstance(result, Exception):
+                if LOGGER.isEnabledFor(logging.DEBUG):
+                    LOGGER.debug("".join(traceback.format_tb(result.__traceback__)))
                 raise UpdateFailed(
                     f"There was an unknown error while updating {attr}: {result}"
                 ) from result
@@ -99,7 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -118,19 +121,26 @@ def _async_register_new_bridge(
     hass: HomeAssistant, bridge: dict, entry: ConfigEntry
 ) -> None:
     """Register a new bridge."""
+    if name := bridge["name"]:
+        bridge_name = name.capitalize()
+    else:
+        bridge_name = bridge["id"]
+
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, bridge["hardware_id"])},
         manufacturer="Silicon Labs",
         model=bridge["hardware_revision"],
-        name=bridge["name"] or bridge["id"],
+        name=bridge_name,
         sw_version=bridge["firmware_version"]["wifi"],
     )
 
 
 class NotionEntity(CoordinatorEntity):
     """Define a base Notion entity."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -150,13 +160,12 @@ class NotionEntity(CoordinatorEntity):
             identifiers={(DOMAIN, sensor["hardware_id"])},
             manufacturer="Silicon Labs",
             model=sensor["hardware_revision"],
-            name=str(sensor["name"]),
+            name=str(sensor["name"]).capitalize(),
             sw_version=sensor["firmware_version"],
             via_device=(DOMAIN, bridge.get("hardware_id")),
         )
 
         self._attr_extra_state_attributes = {}
-        self._attr_name = f'{sensor["name"]}: {description.name}'
         self._attr_unique_id = (
             f'{sensor_id}_{coordinator.data["tasks"][task_id]["task_type"]}'
         )

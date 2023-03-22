@@ -3,8 +3,7 @@ from __future__ import annotations
 
 from renault_api.kamereon.models import KamereonVehicleLocationData
 
-from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -46,9 +45,9 @@ class RenaultDeviceTracker(
         return self.coordinator.data.gpsLongitude if self.coordinator.data else None
 
     @property
-    def source_type(self) -> str:
+    def source_type(self) -> SourceType:
         """Return the source type of the device."""
-        return SOURCE_TYPE_GPS
+        return SourceType.GPS
 
 
 DEVICE_TRACKER_TYPES: tuple[RenaultDataEntityDescription, ...] = (

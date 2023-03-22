@@ -3,14 +3,28 @@
     "kennung": "urn:de:bund:destatis:bevoelkerungsstatistik:schluessel:rs_2021-07-31",
     "kennungInhalt": "urn:de:bund:destatis:bevoelkerungsstatistik:schluessel:rs",
     "version": "2021-07-31",
-    "nameKurz": "Regionalschlüssel",
-    "nameLang": "Gemeinden, dargestellt durch den Amtlichen Regionalschlüssel (ARS) des Statistischen Bundesamtes",
+    "nameKurz": [{ "value": "Regionalschlüssel", "lang": null }],
+    "nameLang": [
+      {
+        "value": "Gemeinden, dargestellt durch den Amtlichen Regionalschlüssel (ARS) des Statistischen Bundesamtes",
+        "lang": null
+      }
+    ],
     "nameTechnisch": "Regionalschluessel",
-    "herausgebernameLang": "Statistisches Bundesamt, Wiesbaden",
-    "herausgebernameKurz": "Destatis",
-    "beschreibung": "Diese Codeliste stellt alle Gemeinden Deutschlands durch den Amtlichen Regionalschlüssel (ARS) dar, wie im Gemeindeverzeichnis des Statistischen Bundesamtes enthalten. Darüber hinaus enthält die Codeliste für die Stadtstaaten Hamburg, Bremen und Berlin Einträge für Stadt-/Ortsteile bzw. Stadtbezirke. Diese Einträge sind mit einem entsprechenden Hinweis versehen.",
-    "versionBeschreibung": null,
-    "aenderungZurVorversion": "Mehrere Aenderungen",
+    "herausgebernameLang": [
+      { "value": "Statistisches Bundesamt, Wiesbaden", "lang": null }
+    ],
+    "herausgebernameKurz": [{ "value": "Destatis", "lang": null }],
+    "beschreibung": [
+      {
+        "value": "Diese Codeliste stellt alle Gemeinden Deutschlands durch den Amtlichen Regionalschlüssel (ARS) dar, wie im Gemeindeverzeichnis des Statistischen Bundesamtes enthalten. Darüber hinaus enthält die Codeliste für die Stadtstaaten Hamburg, Bremen und Berlin Einträge für Stadt-/Ortsteile bzw. Stadtbezirke. Diese Einträge sind mit einem entsprechenden Hinweis versehen.",
+        "lang": null
+      }
+    ],
+    "versionBeschreibung": [],
+    "aenderungZurVorversion": [
+      { "value": "Mehrere Aenderungen", "lang": null }
+    ],
     "handbuchVersion": "1.0",
     "xoevHandbuch": false,
     "gueltigAb": 1627682400000,
@@ -23,7 +37,8 @@
       "datentyp": "string",
       "codeSpalte": true,
       "verwendung": { "code": "REQUIRED" },
-      "empfohleneCodeSpalte": true
+      "empfohleneCodeSpalte": true,
+      "sprache": null
     },
     {
       "spaltennameLang": "Bezeichnung",
@@ -31,7 +46,8 @@
       "datentyp": "string",
       "codeSpalte": false,
       "verwendung": { "code": "REQUIRED" },
-      "empfohleneCodeSpalte": false
+      "empfohleneCodeSpalte": false,
+      "sprache": null
     },
     {
       "spaltennameLang": "Hinweis",
@@ -39,7 +55,8 @@
       "datentyp": "string",
       "codeSpalte": false,
       "verwendung": { "code": "OPTIONAL" },
-      "empfohleneCodeSpalte": false
+      "empfohleneCodeSpalte": false,
+      "sprache": null
     }
   ],
   "daten": [

@@ -68,7 +68,7 @@ class PocketCastsSensor(SensorEntity):
         """Return the icon for the sensor."""
         return ICON
 
-    def update(self):
+    def update(self) -> None:
         """Update sensor values."""
         try:
             self._state = len(self._api.new_releases)

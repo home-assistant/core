@@ -6,11 +6,10 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import async_get_registry
 
 from .const import (
     ATTRIBUTION,
@@ -50,7 +49,7 @@ async def async_setup_entry(
 
 
 async def _migrate_old_unique_ids(hass, devices):
-    registry = await async_get_registry(hass)
+    registry = er.async_get(hass)
     for device in devices:
         # Migration of old not so unique ids
         old_entity_id = registry.async_get_entity_id(
@@ -72,6 +71,9 @@ def sense_to_mdi(sense_icon):
 
 class SenseDevice(BinarySensorEntity):
     """Implementation of a Sense energy device binary sensor."""
+
+    _attr_attribution = ATTRIBUTION
+    _attr_should_poll = False
 
     def __init__(self, sense_devices_data, device, sense_monitor_id):
         """Initialize the Sense binary sensor."""
@@ -110,11 +112,6 @@ class SenseDevice(BinarySensorEntity):
         return self._id
 
     @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    @property
     def icon(self):
         """Return the icon of the binary sensor."""
         return self._icon
@@ -124,12 +121,7 @@ class SenseDevice(BinarySensorEntity):
         """Return the device class of the binary sensor."""
         return BinarySensorDeviceClass.POWER
 
-    @property
-    def should_poll(self):
-        """Return the deviceshould not poll for updates."""
-        return False
-
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(

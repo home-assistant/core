@@ -21,11 +21,14 @@
     },
     "abort": {
       "already_configured": "UniFi Network site is already configured",
-      "configuration_updated": "Configuration updated.",
+      "configuration_updated": "Configuration updated",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "options": {
+    "abort": {
+      "integration_not_setup": "UniFi integration is not set up"
+    },
     "step": {
       "device_tracker": {
         "data": {

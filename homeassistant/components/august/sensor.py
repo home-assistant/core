@@ -18,11 +18,15 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_PICTURE, PERCENTAGE, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_ENTITY_PICTURE,
+    PERCENTAGE,
+    STATE_UNAVAILABLE,
+    EntityCategory,
+)
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import AugustData
@@ -154,7 +158,7 @@ async def async_setup_entry(
 
 async def _async_migrate_old_unique_ids(hass, devices):
     """Keypads now have their own serial number."""
-    registry = await async_get_registry(hass)
+    registry = er.async_get(hass)
     for device in devices:
         old_entity_id = registry.async_get_entity_id(
             "sensor", DOMAIN, device.old_unique_id
@@ -226,7 +230,7 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
 
         return attributes
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Restore ATTR_CHANGED_BY on startup since it is likely no longer in the activity log."""
         await super().async_added_to_hass()
 
@@ -234,7 +238,7 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
         if not last_state or last_state.state == STATE_UNAVAILABLE:
             return
 
-        self._attr_state = last_state.state
+        self._attr_native_value = last_state.state
         if ATTR_ENTITY_PICTURE in last_state.attributes:
             self._entity_picture = last_state.attributes[ATTR_ENTITY_PICTURE]
         if ATTR_OPERATION_REMOTE in last_state.attributes:
@@ -268,7 +272,7 @@ class AugustBatterySensor(AugustEntityMixin, SensorEntity, Generic[_T]):
         device,
         old_device,
         description: AugustSensorEntityDescription[_T],
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(data, device)
         self.entity_description = description

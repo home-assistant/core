@@ -3,11 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.device_tracker import (
-    SOURCE_TYPE_BLUETOOTH,
-    SOURCE_TYPE_GPS,
-)
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -40,7 +36,9 @@ async def async_setup_entry(
 class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
     """Tractive device tracker."""
 
+    _attr_has_entity_name = True
     _attr_icon = "mdi:paw"
+    _attr_name = "Tracker"
 
     def __init__(self, user_id: str, item: Trackables) -> None:
         """Initialize tracker entity."""
@@ -51,16 +49,16 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
         self._longitude: float = item.pos_report["latlong"][1]
         self._accuracy: int = item.pos_report["pos_uncertainty"]
         self._source_type: str = item.pos_report["sensor_used"]
-
-        self._attr_name = f"{self._tracker_id} {item.trackable['details']['name']}"
         self._attr_unique_id = item.trackable["_id"]
 
     @property
-    def source_type(self) -> str:
+    def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
         if self._source_type == "PHONE":
-            return SOURCE_TYPE_BLUETOOTH
-        return SOURCE_TYPE_GPS
+            return SourceType.BLUETOOTH
+        if self._source_type == "KNOWN_WIFI":
+            return SourceType.ROUTER
+        return SourceType.GPS
 
     @property
     def latitude(self) -> float:

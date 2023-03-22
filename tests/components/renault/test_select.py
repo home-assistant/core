@@ -1,10 +1,11 @@
 """Tests for Renault selects."""
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
 from renault_api.kamereon import schemas
 
-from homeassistant.components.select.const import (
+from homeassistant.components.select import (
     ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
@@ -12,6 +13,7 @@ from homeassistant.components.select.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import (
     check_device_registry,
@@ -21,13 +23,13 @@ from . import (
 )
 from .const import MOCK_VEHICLES
 
-from tests.common import load_fixture, mock_device_registry, mock_registry
+from tests.common import load_fixture
 
 pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
 
 
 @pytest.fixture(autouse=True)
-def override_platforms():
+def override_platforms() -> Generator[None, None, None]:
     """Override PLATFORMS."""
     with patch("homeassistant.components.renault.PLATFORMS", [Platform.SELECT]):
         yield
@@ -35,12 +37,13 @@ def override_platforms():
 
 @pytest.mark.usefixtures("fixtures_with_data")
 async def test_selects(
-    hass: HomeAssistant, config_entry: ConfigEntry, vehicle_type: str
-):
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    vehicle_type: str,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test for Renault selects."""
-    entity_registry = mock_registry(hass)
-    device_registry = mock_device_registry(hass)
-
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -55,12 +58,13 @@ async def test_selects(
 
 @pytest.mark.usefixtures("fixtures_with_no_data")
 async def test_select_empty(
-    hass: HomeAssistant, config_entry: ConfigEntry, vehicle_type: str
-):
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    vehicle_type: str,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test for Renault selects with empty data from Renault."""
-    entity_registry = mock_registry(hass)
-    device_registry = mock_device_registry(hass)
-
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -74,12 +78,13 @@ async def test_select_empty(
 
 @pytest.mark.usefixtures("fixtures_with_invalid_upstream_exception")
 async def test_select_errors(
-    hass: HomeAssistant, config_entry: ConfigEntry, vehicle_type: str
-):
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    vehicle_type: str,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test for Renault selects with temporary failure."""
-    entity_registry = mock_registry(hass)
-    device_registry = mock_device_registry(hass)
-
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -95,12 +100,13 @@ async def test_select_errors(
 @pytest.mark.usefixtures("fixtures_with_access_denied_exception")
 @pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
 async def test_select_access_denied(
-    hass: HomeAssistant, config_entry: ConfigEntry, vehicle_type: str
-):
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    vehicle_type: str,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test for Renault selects with access denied failure."""
-    entity_registry = mock_registry(hass)
-    device_registry = mock_device_registry(hass)
-
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -113,12 +119,13 @@ async def test_select_access_denied(
 @pytest.mark.usefixtures("fixtures_with_not_supported_exception")
 @pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
 async def test_select_not_supported(
-    hass: HomeAssistant, config_entry: ConfigEntry, vehicle_type: str
-):
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    vehicle_type: str,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test for Renault selects with access denied failure."""
-    entity_registry = mock_registry(hass)
-    device_registry = mock_device_registry(hass)
-
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -130,7 +137,9 @@ async def test_select_not_supported(
 
 @pytest.mark.usefixtures("fixtures_with_data")
 @pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
-async def test_select_charge_mode(hass: HomeAssistant, config_entry: ConfigEntry):
+async def test_select_charge_mode(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
     """Test that service invokes renault_api with correct data."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

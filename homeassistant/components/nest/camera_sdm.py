@@ -15,19 +15,20 @@ from google_nest_sdm.camera_traits import (
     StreamingProtocol,
 )
 from google_nest_sdm.device import Device
+from google_nest_sdm.device_manager import DeviceManager
 from google_nest_sdm.exceptions import ApiException
 
-from homeassistant.components.camera import SUPPORT_STREAM, Camera
-from homeassistant.components.camera.const import STREAM_TYPE_WEB_RTC
+from homeassistant.components.camera import Camera, CameraEntityFeature, StreamType
+from homeassistant.components.stream import CONF_EXTRA_PART_WAIT_TIME
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
-from .const import DATA_SUBSCRIBER, DOMAIN
+from .const import DATA_DEVICE_MANAGER, DOMAIN
 from .device_info import NestDeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,14 +44,9 @@ async def async_setup_sdm_entry(
 ) -> None:
     """Set up the cameras."""
 
-    subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
-    try:
-        device_manager = await subscriber.async_get_device_manager()
-    except ApiException as err:
-        raise PlatformNotReady from err
-
-    # Fetch initial data so we have data when entities subscribe.
-
+    device_manager: DeviceManager = hass.data[DOMAIN][entry.entry_id][
+        DATA_DEVICE_MANAGER
+    ]
     entities = []
     for device in device_manager.devices.values():
         if (
@@ -64,6 +60,8 @@ async def async_setup_sdm_entry(
 class NestCamera(Camera):
     """Devices that support cameras."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, device: Device) -> None:
         """Initialize the camera."""
         super().__init__()
@@ -73,22 +71,13 @@ class NestCamera(Camera):
         self._create_stream_url_lock = asyncio.Lock()
         self._stream_refresh_unsub: Callable[[], None] | None = None
         self._attr_is_streaming = CameraLiveStreamTrait.NAME in self._device.traits
-
-    @property
-    def should_poll(self) -> bool:
-        """Disable polling since entities have state pushed via pubsub."""
-        return False
+        self.stream_options[CONF_EXTRA_PART_WAIT_TIME] = 3
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
         # The API "name" field is a unique device identifier.
         return f"{self._device.name}-camera"
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the camera."""
-        return self._device_info.device_name
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -106,35 +95,36 @@ class NestCamera(Camera):
         return self._device_info.device_model
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> CameraEntityFeature:
         """Flag supported features."""
-        supported_features = 0
+        supported_features = CameraEntityFeature(0)
         if CameraLiveStreamTrait.NAME in self._device.traits:
-            supported_features |= SUPPORT_STREAM
+            supported_features |= CameraEntityFeature.STREAM
         return supported_features
 
     @property
-    def frontend_stream_type(self) -> str | None:
+    def frontend_stream_type(self) -> StreamType | None:
         """Return the type of stream supported by this camera."""
         if CameraLiveStreamTrait.NAME not in self._device.traits:
             return None
         trait = self._device.traits[CameraLiveStreamTrait.NAME]
         if StreamingProtocol.WEB_RTC in trait.supported_protocols:
-            return STREAM_TYPE_WEB_RTC
+            return StreamType.WEB_RTC
         return super().frontend_stream_type
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        # Cameras are marked unavailable on stream errors in #54659 however nest streams have
-        # a high error rate (#60353). Given nest streams are so flaky, marking the stream
-        # unavailable has other side effects like not showing the camera image which sometimes
-        # are still able to work. Until the streams are fixed, just leave the streams as available.
+        # Cameras are marked unavailable on stream errors in #54659 however nest
+        # streams have a high error rate (#60353). Given nest streams are so flaky,
+        # marking the stream unavailable has other side effects like not showing
+        # the camera image which sometimes are still able to work. Until the
+        # streams are fixed, just leave the streams as available.
         return True
 
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
-        if not self.supported_features & SUPPORT_STREAM:
+        if not self.supported_features & CameraEntityFeature.STREAM:
             return None
         if CameraLiveStreamTrait.NAME not in self._device.traits:
             return None
@@ -181,7 +171,7 @@ class NestCamera(Camera):
             # Next attempt to catch a url will get a new one
             self._stream = None
             if self.stream:
-                self.stream.stop()
+                await self.stream.stop()
                 self.stream = None
             return
         # Update the stream worker with the latest valid url

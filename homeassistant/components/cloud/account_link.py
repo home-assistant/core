@@ -18,6 +18,9 @@ CACHE_TIMEOUT = 3600
 _LOGGER = logging.getLogger(__name__)
 
 CURRENT_VERSION = AwesomeVersion(HA_VERSION)
+CURRENT_PLAIN_VERSION = AwesomeVersion(
+    CURRENT_VERSION.string.removesuffix(f"{CURRENT_VERSION.modifier}")
+)
 
 
 @callback
@@ -33,10 +36,23 @@ async def async_provide_implementation(hass: HomeAssistant, domain: str):
     services = await _get_services(hass)
 
     for service in services:
-        if service["service"] == domain and CURRENT_VERSION >= service["min_version"]:
-            return CloudOAuth2Implementation(hass, domain)
+        if (
+            service["service"] == domain
+            and service["min_version"] <= CURRENT_PLAIN_VERSION
+            and (
+                service.get("accepts_new_authorizations", True)
+                or (
+                    (entries := hass.config_entries.async_entries(domain))
+                    and any(
+                        entry.data.get("auth_implementation") == DOMAIN
+                        for entry in entries
+                    )
+                )
+            )
+        ):
+            return [CloudOAuth2Implementation(hass, domain)]
 
-    return
+    return []
 
 
 async def _get_services(hass):

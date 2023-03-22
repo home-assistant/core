@@ -60,7 +60,7 @@ class BroadlinkDevice:
     @property
     def available(self):
         """Return True if the device is available."""
-        if self.update_manager is None:  # pragma: no cover
+        if self.update_manager is None:
             return False
         return self.update_manager.available
 
@@ -126,7 +126,7 @@ class BroadlinkDevice:
         self.reset_jobs.append(config.add_update_listener(self.async_update))
 
         # Forward entry setup to related domains.
-        self.hass.config_entries.async_setup_platforms(
+        await self.hass.config_entries.async_forward_entry_setups(
             config, get_domains(self.api.type)
         )
 
@@ -175,9 +175,11 @@ class BroadlinkDevice:
         self.authorized = False
 
         _LOGGER.error(
-            "%s (%s at %s) is locked. Click Configuration in the sidebar, "
-            "click Integrations, click Configure on the device and follow "
-            "the instructions to unlock it",
+            (
+                "%s (%s at %s) is locked. Click Configuration in the sidebar, "
+                "click Integrations, click Configure on the device and follow "
+                "the instructions to unlock it"
+            ),
             self.name,
             self.api.model,
             self.api.host[0],

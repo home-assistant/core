@@ -1,6 +1,7 @@
 {
   "system_health": {
     "info": {
+      "agent_version": "Agent Version",
       "board": "Board",
       "disk_total": "Disk Total",
       "disk_used": "Disk Used",
@@ -13,6 +14,116 @@
       "supported": "Supported",
       "update_channel": "Update Channel",
       "version_api": "Version API"
+    }
+  },
+  "issues": {
+    "unhealthy": {
+      "title": "Unhealthy system - {reason}",
+      "description": "System is currently unhealthy due to {reason}. Use the link to learn more and how to fix this."
+    },
+    "unhealthy_docker": {
+      "title": "Unhealthy system - Docker misconfigured",
+      "description": "System is currently unhealthy because Docker is configured incorrectly. Use the link to learn more and how to fix this."
+    },
+    "unhealthy_supervisor": {
+      "title": "Unhealthy system - Supervisor update failed",
+      "description": "System is currently unhealthy because an attempt to update Supervisor to the latest version has failed. Use the link to learn more and how to fix this."
+    },
+    "unhealthy_setup": {
+      "title": "Unhealthy system - Setup failed",
+      "description": "System is currently unhealthy because setup failed to complete. There are a number of reasons this can occur, use the link to learn more and how to fix this."
+    },
+    "unhealthy_privileged": {
+      "title": "Unhealthy system - Not privileged",
+      "description": "System is currently unhealthy because it does not have privileged access to the docker runtime. Use the link to learn more and how to fix this."
+    },
+    "unhealthy_untrusted": {
+      "title": "Unhealthy system - Untrusted code",
+      "description": "System is currently unhealthy because it has detected untrusted code or images in use. Use the link to learn more and how to fix this."
+    },
+    "unsupported": {
+      "title": "Unsupported system - {reason}",
+      "description": "System is unsupported due to {reason}. Use the link to learn more and how to fix this."
+    },
+    "unsupported_apparmor": {
+      "title": "Unsupported system - AppArmor issues",
+      "description": "System is unsupported because AppArmor is working incorrectly and add-ons are running in an unprotected and insecure way. Use the link to learn more and how to fix this."
+    },
+    "unsupported_cgroup_version": {
+      "title": "Unsupported system - CGroup version",
+      "description": "System is unsupported because the wrong version of Docker CGroup is in use. Use the link to learn the correct version and how to fix this."
+    },
+    "unsupported_connectivity_check": {
+      "title": "Unsupported system - Connectivity check disabled",
+      "description": "System is unsupported because Home Assistant cannot determine when an internet connection is available. Use the link to learn more and how to fix this."
+    },
+    "unsupported_content_trust": {
+      "title": "Unsupported system - Content-trust check disabled",
+      "description": "System is unsupported because Home Assistant cannot verify content being run is trusted and not modified by attackers. Use the link to learn more and how to fix this."
+    },
+    "unsupported_dbus": {
+      "title": "Unsupported system - D-Bus issues",
+      "description": "System is unsupported because D-Bus is working incorrectly. Many things fail without this as Supervisor cannot communicate with the host. Use the link to learn more and how to fix this."
+    },
+    "unsupported_dns_server": {
+      "title": "Unsupported system - DNS server issues",
+      "description": "System is unsupported because the provided DNS server does not work correctly and the fallback DNS option has been disabled. Use the link to learn more and how to fix this."
+    },
+    "unsupported_docker_configuration": {
+      "title": "Unsupported system - Docker misconfigured",
+      "description": "System is unsupported because the Docker daemon is running in an unexpected way. Use the link to learn more and how to fix this."
+    },
+    "unsupported_docker_version": {
+      "title": "Unsupported system - Docker version",
+      "description": "System is unsupported because the wrong version of Docker is in use. Use the link to learn the correct version and how to fix this."
+    },
+    "unsupported_job_conditions": {
+      "title": "Unsupported system - Protections disabled",
+      "description": "System is unsupported because one or more job conditions have been disabled which protect from unexpected failures and breakages. Use the link to learn more and how to fix this."
+    },
+    "unsupported_lxc": {
+      "title": "Unsupported system - LXC detected",
+      "description": "System is unsupported because it is being run in an LXC virtual machine. Use the link to learn more and how to fix this."
+    },
+    "unsupported_network_manager": {
+      "title": "Unsupported system - Network Manager issues",
+      "description": "System is unsupported because Network Manager is missing, inactive or misconfigured. Use the link to learn more and how to fix this."
+    },
+    "unsupported_os": {
+      "title": "Unsupported system - Operating System",
+      "description": "System is unsupported because the operating system in use is not tested or maintained for use with Supervisor. Use the link to which operating systems are supported and how to fix this."
+    },
+    "unsupported_os_agent": {
+      "title": "Unsupported system - OS-Agent issues",
+      "description": "System is unsupported because OS-Agent is missing, inactive or misconfigured. Use the link to learn more and how to fix this."
+    },
+    "unsupported_restart_policy": {
+      "title": "Unsupported system - Container restart policy",
+      "description": "System is unsupported because a Docker container has a restart policy set which could cause issues on startup. Use the link to learn more and how to fix this."
+    },
+    "unsupported_software": {
+      "title": "Unsupported system - Unsupported software",
+      "description": "System is unsupported because additional software outside the Home Assistant ecosystem has been detected. Use the link to learn more and how to fix this."
+    },
+    "unsupported_source_mods": {
+      "title": "Unsupported system - Supervisor source modifications",
+      "description": "System is unsupported because Supervisor source code has been modified. Use the link to learn more and how to fix this."
+    },
+    "unsupported_supervisor_version": {
+      "title": "Unsupported system - Supervisor version",
+      "description": "System is unsupported because an out-of-date version of Supervisor is in use and auto-update has been disabled. Use the link to learn more and how to fix this."
+    },
+    "unsupported_systemd": {
+      "title": "Unsupported system - Systemd issues",
+      "description": "System is unsupported because Systemd is missing, inactive or misconfigured. Use the link to learn more and how to fix this."
+    },
+    "unsupported_systemd_journal": {
+      "title": "Unsupported system - Systemd Journal issues",
+      "description": "System is unsupported because Systemd Journal and/or the gateway service is missing, inactive or misconfigured . Use the link to learn more and how to fix this."
+    },
+    "unsupported_systemd_resolved": {
+      "title": "Unsupported system - Systemd-Resolved issues",
+      "description": "System is unsupported because Systemd Resolved is missing, inactive or misconfigured. Use the link to learn more and how to fix this."
     }
   }
 }

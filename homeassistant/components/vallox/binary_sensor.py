@@ -8,20 +8,20 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ValloxDataUpdateCoordinator
+from . import ValloxDataUpdateCoordinator, ValloxEntity
 from .const import DOMAIN
 
 
-class ValloxBinarySensor(
-    CoordinatorEntity[ValloxDataUpdateCoordinator], BinarySensorEntity
-):
+class ValloxBinarySensorEntity(ValloxEntity, BinarySensorEntity):
     """Representation of a Vallox binary sensor."""
 
     entity_description: ValloxBinarySensorEntityDescription
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -30,14 +30,11 @@ class ValloxBinarySensor(
         description: ValloxBinarySensorEntityDescription,
     ) -> None:
         """Initialize the Vallox binary sensor."""
-        super().__init__(coordinator)
+        super().__init__(name, coordinator)
 
         self.entity_description = description
 
-        self._attr_name = f"{name} {description.name}"
-
-        uuid = self.coordinator.data.get_uuid()
-        self._attr_unique_id = f"{uuid}-{description.key}"
+        self._attr_unique_id = f"{self._device_uuid}-{description.key}"
 
     @property
     def is_on(self) -> bool | None:
@@ -59,10 +56,10 @@ class ValloxBinarySensorEntityDescription(
     """Describes Vallox binary sensor entity."""
 
 
-SENSORS: tuple[ValloxBinarySensorEntityDescription, ...] = (
+BINARY_SENSOR_ENTITIES: tuple[ValloxBinarySensorEntityDescription, ...] = (
     ValloxBinarySensorEntityDescription(
         key="post_heater",
-        name="Post Heater",
+        name="Post heater",
         icon="mdi:radiator",
         metric_key="A_CYC_IO_HEATER",
     ),
@@ -80,7 +77,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            ValloxBinarySensor(data["name"], data["coordinator"], description)
-            for description in SENSORS
+            ValloxBinarySensorEntity(data["name"], data["coordinator"], description)
+            for description in BINARY_SENSOR_ENTITIES
         ]
     )

@@ -6,16 +6,19 @@ import shutil
 
 import pytest
 
-from homeassistant.components.media_player.const import (
+from homeassistant.components import media_source, tts
+from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     DOMAIN as DOMAIN_MP,
     SERVICE_PLAY_MEDIA,
 )
-import homeassistant.components.tts as tts
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, async_mock_service
 from tests.components.tts.conftest import mutagen_mock  # noqa: F401
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 URL = "https://api.voicerss.org/"
 FORM_DATA = {
@@ -27,6 +30,15 @@ FORM_DATA = {
 }
 
 
+async def get_media_source_url(hass, media_content_id):
+    """Get the media source url."""
+    if media_source.DOMAIN not in hass.config.components:
+        assert await async_setup_component(hass, media_source.DOMAIN, {})
+
+    resolved = await media_source.async_resolve_media(hass, media_content_id, None)
+    return resolved.url
+
+
 @pytest.fixture(autouse=True)
 def cleanup_cache(hass):
     """Prevent TTS writing."""
@@ -36,7 +48,7 @@ def cleanup_cache(hass):
         shutil.rmtree(default_tts)
 
 
-async def test_setup_component(hass):
+async def test_setup_component(hass: HomeAssistant) -> None:
     """Test setup component."""
     config = {tts.DOMAIN: {"platform": "voicerss", "api_key": "1234567xx"}}
 
@@ -45,7 +57,7 @@ async def test_setup_component(hass):
         await hass.async_block_till_done()
 
 
-async def test_setup_component_without_api_key(hass):
+async def test_setup_component_without_api_key(hass: HomeAssistant) -> None:
     """Test setup component without api key."""
     config = {tts.DOMAIN: {"platform": "voicerss"}}
 
@@ -54,7 +66,9 @@ async def test_setup_component_without_api_key(hass):
         await hass.async_block_till_done()
 
 
-async def test_service_say(hass, aioclient_mock):
+async def test_service_say(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test service call say."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
@@ -77,12 +91,15 @@ async def test_service_say(hass, aioclient_mock):
     await hass.async_block_till_done()
 
     assert len(calls) == 1
+    url = await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+    assert url.endswith(".mp3")
     assert len(aioclient_mock.mock_calls) == 1
     assert aioclient_mock.mock_calls[0][2] == FORM_DATA
-    assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(".mp3") != -1
 
 
-async def test_service_say_german_config(hass, aioclient_mock):
+async def test_service_say_german_config(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test service call say with german code in the config."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
@@ -112,11 +129,14 @@ async def test_service_say_german_config(hass, aioclient_mock):
     await hass.async_block_till_done()
 
     assert len(calls) == 1
+    await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
     assert len(aioclient_mock.mock_calls) == 1
     assert aioclient_mock.mock_calls[0][2] == form_data
 
 
-async def test_service_say_german_service(hass, aioclient_mock):
+async def test_service_say_german_service(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test service call say with german code in the service."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
@@ -141,11 +161,14 @@ async def test_service_say_german_service(hass, aioclient_mock):
     await hass.async_block_till_done()
 
     assert len(calls) == 1
+    await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
     assert len(aioclient_mock.mock_calls) == 1
     assert aioclient_mock.mock_calls[0][2] == form_data
 
 
-async def test_service_say_error(hass, aioclient_mock):
+async def test_service_say_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test service call say with http response 400."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
@@ -167,12 +190,15 @@ async def test_service_say_error(hass, aioclient_mock):
     )
     await hass.async_block_till_done()
 
-    assert len(calls) == 0
+    with pytest.raises(HomeAssistantError):
+        await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
     assert len(aioclient_mock.mock_calls) == 1
     assert aioclient_mock.mock_calls[0][2] == FORM_DATA
 
 
-async def test_service_say_timeout(hass, aioclient_mock):
+async def test_service_say_timeout(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test service call say with http timeout."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
@@ -194,12 +220,15 @@ async def test_service_say_timeout(hass, aioclient_mock):
     )
     await hass.async_block_till_done()
 
-    assert len(calls) == 0
+    with pytest.raises(HomeAssistantError):
+        await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
     assert len(aioclient_mock.mock_calls) == 1
     assert aioclient_mock.mock_calls[0][2] == FORM_DATA
 
 
-async def test_service_say_error_msg(hass, aioclient_mock):
+async def test_service_say_error_msg(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test service call say with http error api message."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
@@ -226,6 +255,7 @@ async def test_service_say_error_msg(hass, aioclient_mock):
     )
     await hass.async_block_till_done()
 
-    assert len(calls) == 0
+    with pytest.raises(media_source.Unresolvable):
+        await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
     assert len(aioclient_mock.mock_calls) == 1
     assert aioclient_mock.mock_calls[0][2] == FORM_DATA

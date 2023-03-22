@@ -1,5 +1,4 @@
-"""
-Support for getting statistical data from a DWD Weather Warnings.
+"""Support for getting statistical data from a DWD Weather Warnings.
 
 Data is fetched from DWD:
 https://rcccm.dwd.de/DE/wetter/warnungen_aktuell/objekt_einbindung/objekteinbindung.html
@@ -22,7 +21,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS, CONF_NAME
+from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -31,7 +30,6 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = "Data provided by DWD"
 ATTR_REGION_NAME = "region_name"
 ATTR_REGION_ID = "region_id"
 ATTR_LAST_UPDATE = "last_update"
@@ -108,12 +106,14 @@ def setup_platform(
 class DwdWeatherWarningsSensor(SensorEntity):
     """Representation of a DWD-Weather-Warnings sensor."""
 
+    _attr_attribution = "Data provided by DWD"
+
     def __init__(
         self,
         api,
         name,
         description: SensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize a DWD-Weather-Warnings sensor."""
         self._api = api
         self.entity_description = description
@@ -130,7 +130,6 @@ class DwdWeatherWarningsSensor(SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes of the DWD-Weather-Warnings."""
         data = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_REGION_NAME: self._api.api.warncell_name,
             ATTR_REGION_ID: self._api.api.warncell_id,
             ATTR_LAST_UPDATE: self._api.api.last_update,
@@ -164,11 +163,11 @@ class DwdWeatherWarningsSensor(SensorEntity):
         return data
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Could the device be accessed during the last update call."""
         return self._api.api.data_valid
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from the DWD-Weather-Warnings API."""
         _LOGGER.debug(
             "Update requested for %s (%s) by %s",

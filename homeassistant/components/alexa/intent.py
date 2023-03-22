@@ -41,8 +41,7 @@ def async_setup(hass):
 
 
 async def async_setup_intents(hass):
-    """
-    Do intents setup.
+    """Do intents setup.
 
     Right now this module does not expose any, but the intent component breaks
     without it.
@@ -127,11 +126,6 @@ async def async_handle_message(hass, message):
 
 
 @HANDLERS.register("SessionEndedRequest")
-async def async_handle_session_end(hass, message):
-    """Handle a session end request."""
-    return None
-
-
 @HANDLERS.register("IntentRequest")
 @HANDLERS.register("LaunchRequest")
 async def async_handle_intent(hass, message):
@@ -151,6 +145,11 @@ async def async_handle_intent(hass, message):
         intent_name = (
             message.get("session", {}).get("application", {}).get("applicationId")
         )
+    elif req["type"] == "SessionEndedRequest":
+        app_id = message.get("session", {}).get("application", {}).get("applicationId")
+        intent_name = f"{app_id}.{req['type']}"
+        alexa_response.variables["reason"] = req["reason"]
+        alexa_response.variables["error"] = req.get("error")
     else:
         intent_name = alexa_intent_info["name"]
 
@@ -193,7 +192,6 @@ def resolve_slot_synonyms(key, request):
         and "resolutionsPerAuthority" in request["resolutions"]
         and len(request["resolutions"]["resolutionsPerAuthority"]) >= 1
     ):
-
         # Extract all of the possible values from each authority with a
         # successful match
         possible_values = []

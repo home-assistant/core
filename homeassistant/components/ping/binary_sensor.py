@@ -8,6 +8,7 @@ import logging
 import re
 from typing import Any
 
+import async_timeout
 from icmplib import NameLookupError, async_ping
 import voluptuous as vol
 
@@ -70,10 +71,10 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Ping Binary sensor."""
-    host = config[CONF_HOST]
-    count = config[CONF_PING_COUNT]
-    name = config.get(CONF_NAME, f"{DEFAULT_NAME} {host}")
-    privileged = hass.data[DOMAIN][PING_PRIVS]
+    host: str = config[CONF_HOST]
+    count: int = config[CONF_PING_COUNT]
+    name: str = config.get(CONF_NAME, f"{DEFAULT_NAME} {host}")
+    privileged: bool | None = hass.data[DOMAIN][PING_PRIVS]
     ping_cls: type[PingDataSubProcess | PingDataICMPLib]
     if privileged is None:
         ping_cls = PingDataSubProcess
@@ -131,7 +132,7 @@ class PingBinarySensor(RestoreEntity, BinarySensorEntity):
         await self._ping.async_update()
         self._available = True
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Restore previous state on restart to avoid blocking startup."""
         await super().async_added_to_hass()
 
@@ -156,7 +157,7 @@ class PingBinarySensor(RestoreEntity, BinarySensorEntity):
 class PingData:
     """The base class for handling the data retrieval."""
 
-    def __init__(self, hass, host, count) -> None:
+    def __init__(self, hass: HomeAssistant, host: str, count: int) -> None:
         """Initialize the data object."""
         self.hass = hass
         self._ip_address = host
@@ -168,7 +169,9 @@ class PingData:
 class PingDataICMPLib(PingData):
     """The Class for handling the data retrieval using icmplib."""
 
-    def __init__(self, hass, host, count, privileged) -> None:
+    def __init__(
+        self, hass: HomeAssistant, host: str, count: int, privileged: bool | None
+    ) -> None:
         """Initialize the data object."""
         super().__init__(hass, host, count)
         self._privileged = privileged
@@ -203,7 +206,9 @@ class PingDataICMPLib(PingData):
 class PingDataSubProcess(PingData):
     """The Class for handling the data retrieval using the ping binary."""
 
-    def __init__(self, hass, host, count, privileged) -> None:
+    def __init__(
+        self, hass: HomeAssistant, host: str, count: int, privileged: bool | None
+    ) -> None:
         """Initialize the data object."""
         super().__init__(hass, host, count)
         self._ping_cmd = [
@@ -223,11 +228,11 @@ class PingDataSubProcess(PingData):
             stdin=None,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
+            close_fds=False,  # required for posix_spawn
         )
         try:
-            out_data, out_error = await asyncio.wait_for(
-                pinger.communicate(), self._count + PING_TIMEOUT
-            )
+            async with async_timeout.timeout(self._count + PING_TIMEOUT):
+                out_data, out_error = await pinger.communicate()
 
             if out_data:
                 _LOGGER.debug(

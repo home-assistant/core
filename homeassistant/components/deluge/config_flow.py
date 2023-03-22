@@ -1,7 +1,7 @@
 """Config flow for the Deluge integration."""
 from __future__ import annotations
 
-import logging
+from collections.abc import Mapping
 import socket
 from ssl import SSLError
 from typing import Any
@@ -12,8 +12,6 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow
 from homeassistant.const import (
     CONF_HOST,
-    CONF_MONITORED_VARIABLES,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SOURCE,
@@ -30,8 +28,6 @@ from .const import (
     DOMAIN,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 class DelugeFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Deluge."""
@@ -41,11 +37,8 @@ class DelugeFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
-        title = None
 
         if user_input is not None:
-            if CONF_NAME in user_input:
-                title = user_input.pop(CONF_NAME)
             if (error := await self.validate_input(user_input)) is None:
                 for entry in self._async_current_entries():
                     if (
@@ -60,7 +53,7 @@ class DelugeFlowHandler(ConfigFlow, domain=DOMAIN):
                             return self.async_abort(reason="reauth_successful")
                         return self.async_abort(reason="already_configured")
                 return self.async_create_entry(
-                    title=title or DEFAULT_NAME,
+                    title=DEFAULT_NAME,
                     data=user_input,
                 )
             errors["base"] = error
@@ -83,23 +76,9 @@ class DelugeFlowHandler(ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
-    async def async_step_reauth(self, config: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle a reauthorization flow request."""
         return await self.async_step_user()
-
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
-        """Import a config entry from configuration.yaml."""
-        if CONF_MONITORED_VARIABLES in config:
-            config.pop(CONF_MONITORED_VARIABLES)
-        config[CONF_WEB_PORT] = DEFAULT_WEB_PORT
-
-        for entry in self._async_current_entries():
-            if entry.data[CONF_HOST] == config[CONF_HOST]:
-                _LOGGER.warning(
-                    "Deluge yaml config has been imported. Please remove it"
-                )
-                return self.async_abort(reason="already_configured")
-        return await self.async_step_user(config)
 
     async def validate_input(self, user_input: dict[str, Any]) -> str | None:
         """Handle common flow input validation."""
@@ -120,6 +99,6 @@ class DelugeFlowHandler(ConfigFlow, domain=DOMAIN):
             return "cannot_connect"
         except Exception as ex:  # pylint:disable=broad-except
             if type(ex).__name__ == "BadLoginError":
-                return "invalid_auth"  # pragma: no cover
+                return "invalid_auth"
             return "unknown"
         return None

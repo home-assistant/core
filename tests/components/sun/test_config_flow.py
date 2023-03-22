@@ -6,11 +6,7 @@ import pytest
 from homeassistant.components.sun.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -21,9 +17,8 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
 
     with patch(
         "homeassistant.components.sun.async_setup_entry",
@@ -34,7 +29,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
             user_input={},
         )
 
-    assert result.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result.get("type") == FlowResultType.CREATE_ENTRY
     assert result.get("title") == "Sun"
     assert result.get("data") == {}
     assert result.get("options") == {}
@@ -55,7 +50,7 @@ async def test_single_instance_allowed(
         DOMAIN, context={"source": source}
     )
 
-    assert result.get("type") == RESULT_TYPE_ABORT
+    assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == "single_instance_allowed"
 
 
@@ -69,7 +64,7 @@ async def test_import_flow(
         data={},
     )
 
-    assert result.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result.get("type") == FlowResultType.CREATE_ENTRY
     assert result.get("title") == "Sun"
     assert result.get("data") == {}
     assert result.get("options") == {}

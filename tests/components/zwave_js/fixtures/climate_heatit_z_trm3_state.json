@@ -66,7 +66,8 @@
       "nodeId": 24,
       "index": 0,
       "installerIcon": 4608,
-      "userIcon": 4609
+      "userIcon": 4609,
+      "commandClasses": []
     },
     {
       "nodeId": 24,
@@ -93,7 +94,6 @@
       "userIcon": 3329
     }
   ],
-  "commandClasses": [],
   "values": [
     {
       "endpoint": 0,

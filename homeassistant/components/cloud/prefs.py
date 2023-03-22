@@ -5,6 +5,7 @@ from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import User
 from homeassistant.components import webhook
 from homeassistant.core import callback
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util.logging import async_create_catching_coro
 
@@ -17,7 +18,6 @@ from .const import (
     PREF_ALEXA_DEFAULT_EXPOSE,
     PREF_ALEXA_ENTITY_CONFIGS,
     PREF_ALEXA_REPORT_STATE,
-    PREF_ALIASES,
     PREF_CLOUD_USER,
     PREF_CLOUDHOOKS,
     PREF_DISABLE_2FA,
@@ -29,7 +29,6 @@ from .const import (
     PREF_GOOGLE_LOCAL_WEBHOOK_ID,
     PREF_GOOGLE_REPORT_STATE,
     PREF_GOOGLE_SECURE_DEVICES_PIN,
-    PREF_OVERRIDE_NAME,
     PREF_REMOTE_DOMAIN,
     PREF_SHOULD_EXPOSE,
     PREF_TTS_DEFAULT_VOICE,
@@ -46,9 +45,10 @@ class CloudPreferences:
     def __init__(self, hass):
         """Initialize cloud prefs."""
         self._hass = hass
-        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
         self._prefs = None
         self._listeners = []
+        self.last_updated: set[str] = set()
 
     async def async_initialize(self):
         """Finish initializing the preferences."""
@@ -116,9 +116,7 @@ class CloudPreferences:
         self,
         *,
         entity_id,
-        override_name=UNDEFINED,
         disable_2fa=UNDEFINED,
-        aliases=UNDEFINED,
         should_expose=UNDEFINED,
     ):
         """Update config for a Google entity."""
@@ -127,9 +125,7 @@ class CloudPreferences:
 
         changes = {}
         for key, value in (
-            (PREF_OVERRIDE_NAME, override_name),
             (PREF_DISABLE_2FA, disable_2fa),
-            (PREF_ALIASES, aliases),
             (PREF_SHOULD_EXPOSE, should_expose),
         ):
             if value is not UNDEFINED:
@@ -307,6 +303,9 @@ class CloudPreferences:
 
     async def _save_prefs(self, prefs):
         """Save preferences to disk."""
+        self.last_updated = {
+            key for key, value in prefs.items() if value != self._prefs.get(key)
+        }
         self._prefs = prefs
         await self._store.async_save(self._prefs)
 

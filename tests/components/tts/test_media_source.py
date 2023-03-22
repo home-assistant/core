@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
@@ -29,7 +30,7 @@ async def mock_get_tts_audio(hass):
         yield mock_get_tts
 
 
-async def test_browsing(hass):
+async def test_browsing(hass: HomeAssistant) -> None:
     """Test browsing TTS media source."""
     item = await media_source.async_browse_media(hass, "media-source://tts")
     assert item is not None
@@ -65,10 +66,10 @@ async def test_browsing(hass):
         await media_source.async_browse_media(hass, "media-source://tts/non-existing")
 
 
-async def test_resolving(hass, mock_get_tts_audio):
+async def test_resolving(hass: HomeAssistant, mock_get_tts_audio) -> None:
     """Test resolving."""
     media = await media_source.async_resolve_media(
-        hass, "media-source://tts/demo?message=Hello%20World"
+        hass, "media-source://tts/demo?message=Hello%20World", None
     )
     assert media.url.startswith("/api/tts_proxy/")
     assert media.mime_type == "audio/mpeg"
@@ -82,7 +83,9 @@ async def test_resolving(hass, mock_get_tts_audio):
     # Pass language and options
     mock_get_tts_audio.reset_mock()
     media = await media_source.async_resolve_media(
-        hass, "media-source://tts/demo?message=Bye%20World&language=de&voice=Paulus"
+        hass,
+        "media-source://tts/demo?message=Bye%20World&language=de&voice=Paulus",
+        None,
     )
     assert media.url.startswith("/api/tts_proxy/")
     assert media.mime_type == "audio/mpeg"
@@ -94,20 +97,22 @@ async def test_resolving(hass, mock_get_tts_audio):
     assert mock_get_tts_audio.mock_calls[0][2]["options"] == {"voice": "Paulus"}
 
 
-async def test_resolving_errors(hass):
+async def test_resolving_errors(hass: HomeAssistant) -> None:
     """Test resolving."""
     # No message added
     with pytest.raises(media_source.Unresolvable):
-        await media_source.async_resolve_media(hass, "media-source://tts/demo")
+        await media_source.async_resolve_media(hass, "media-source://tts/demo", None)
 
     # Non-existing provider
     with pytest.raises(media_source.Unresolvable):
         await media_source.async_resolve_media(
-            hass, "media-source://tts/non-existing?message=bla"
+            hass, "media-source://tts/non-existing?message=bla", None
         )
 
     # Non-existing option
     with pytest.raises(media_source.Unresolvable):
         await media_source.async_resolve_media(
-            hass, "media-source://tts/non-existing?message=bla&non_existing_option=bla"
+            hass,
+            "media-source://tts/non-existing?message=bla&non_existing_option=bla",
+            None,
         )

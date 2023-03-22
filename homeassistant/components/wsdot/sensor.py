@@ -10,14 +10,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_NAME,
-    CONF_API_KEY,
-    CONF_ID,
-    CONF_NAME,
-    TIME_MINUTES,
-)
+from homeassistant.const import ATTR_NAME, CONF_API_KEY, CONF_ID, CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -75,8 +68,7 @@ def setup_platform(
 
 
 class WashingtonStateTransportSensor(SensorEntity):
-    """
-    Sensor that reads the WSDOT web API.
+    """Sensor that reads the WSDOT web API.
 
     WSDOT provides ferry schedules, toll rates, weather conditions,
     mountain pass conditions, and more. Subclasses of this
@@ -106,14 +98,15 @@ class WashingtonStateTransportSensor(SensorEntity):
 class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
     """Travel time sensor from WSDOT."""
 
-    _attr_native_unit_of_measurement = TIME_MINUTES
+    _attr_attribution = ATTRIBUTION
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
     def __init__(self, name, access_code, travel_time_id):
         """Construct a travel time sensor."""
         self._travel_time_id = travel_time_id
         WashingtonStateTransportSensor.__init__(self, name, access_code)
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from WSDOT."""
         params = {
             ATTR_ACCESS_CODE: self._access_code,
@@ -131,7 +124,7 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
     def extra_state_attributes(self):
         """Return other details about the sensor state."""
         if self._data is not None:
-            attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
+            attrs = {}
             for key in (
                 ATTR_AVG_TIME,
                 ATTR_NAME,

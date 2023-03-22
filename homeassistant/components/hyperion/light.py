@@ -13,10 +13,9 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_EFFECT,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -74,8 +73,6 @@ DEFAULT_PORT = const.DEFAULT_PORT_JSON
 DEFAULT_HDMI_PRIORITY = 880
 DEFAULT_EFFECT_LIST: list[str] = []
 
-SUPPORT_HYPERION = SUPPORT_COLOR | SUPPORT_BRIGHTNESS | SUPPORT_EFFECT
-
 ICON_LIGHTBULB = "mdi:lightbulb"
 ICON_EFFECT = "mdi:lava-lamp"
 ICON_EXTERNAL_SOURCE = "mdi:television-ambient-light"
@@ -126,6 +123,11 @@ async def async_setup_entry(
 
 class HyperionBaseLight(LightEntity):
     """A Hyperion light base class."""
+
+    _attr_color_mode = ColorMode.HS
+    _attr_should_poll = False
+    _attr_supported_color_modes = {ColorMode.HS}
+    _attr_supported_features = LightEntityFeature.EFFECT
 
     def __init__(
         self,
@@ -178,11 +180,6 @@ class HyperionBaseLight(LightEntity):
         return True
 
     @property
-    def should_poll(self) -> bool:
-        """Return whether or not this entity should be polled."""
-        return False
-
-    @property
     def name(self) -> str:
         """Return the name of the light."""
         return self._name
@@ -220,11 +217,6 @@ class HyperionBaseLight(LightEntity):
     def effect_list(self) -> list[str]:
         """Return the list of supported effects."""
         return self._effect_list
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_HYPERION
 
     @property
     def available(self) -> bool:
@@ -300,8 +292,10 @@ class HyperionBaseLight(LightEntity):
                 component = const.KEY_COMPONENTID_FROM_NAME[effect]
             else:
                 _LOGGER.warning(
-                    "Use of Hyperion effect '%s' is deprecated and will be removed "
-                    "in a future release. Please use '%s' instead",
+                    (
+                        "Use of Hyperion effect '%s' is deprecated and will be removed "
+                        "in a future release. Please use '%s' instead"
+                    ),
                     effect,
                     const.KEY_COMPONENTID_TO_NAME[effect],
                 )
@@ -441,8 +435,10 @@ class HyperionBaseLight(LightEntity):
         self._update_effect_list()
 
         _LOGGER.debug(
-            "Hyperion full state update: On=%s,Brightness=%i,Effect=%s "
-            "(%i effects total),Color=%s",
+            (
+                "Hyperion full state update: On=%s,Brightness=%i,Effect=%s "
+                "(%i effects total),Color=%s"
+            ),
             self.is_on,
             self._brightness,
             self._effect,
@@ -489,7 +485,6 @@ class HyperionBaseLight(LightEntity):
         priority: dict[str, Any] | None = self._client.visible_priority
         return priority
 
-    # pylint: disable=no-self-use
     def _allow_priority_update(self, priority: dict[str, Any] | None = None) -> bool:
         """Determine whether to allow a priority to update internal state."""
         return True

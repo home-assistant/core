@@ -1,28 +1,22 @@
 """Adapter to wrap the rachiopy api for home assistant."""
 
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DEFAULT_NAME, DOMAIN
+from .device import RachioIro
 
 
 class RachioDevice(Entity):
     """Base class for rachio devices."""
 
-    def __init__(self, controller):
+    _attr_should_poll = False
+
+    def __init__(self, controller: RachioIro) -> None:
         """Initialize a Rachio device."""
         super().__init__()
         self._controller = controller
-
-    @property
-    def should_poll(self) -> bool:
-        """Declare that this entity pushes its state to HA."""
-        return False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device_info of the device."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={
                 (
                     DOMAIN,
@@ -31,7 +25,7 @@ class RachioDevice(Entity):
             },
             connections={
                 (
-                    device_registry.CONNECTION_NETWORK_MAC,
+                    dr.CONNECTION_NETWORK_MAC,
                     self._controller.mac_address,
                 )
             },

@@ -1,15 +1,16 @@
 """Test the Advantage Air Select Platform."""
 from json import loads
 
-from homeassistant.components.select.const import (
+from homeassistant.components.select import (
     ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.components.advantage_air import (
+from . import (
     TEST_SET_RESPONSE,
     TEST_SET_URL,
     TEST_SYSTEM_DATA,
@@ -17,9 +18,13 @@ from tests.components.advantage_air import (
     add_mock_config,
 )
 
+from tests.test_util.aiohttp import AiohttpClientMocker
 
-async def test_select_async_setup_entry(hass, aioclient_mock):
-    """Test climate setup without sensors."""
+
+async def test_select_async_setup_entry(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test select platform."""
 
     aioclient_mock.get(
         TEST_SYSTEM_URL,
@@ -36,7 +41,7 @@ async def test_select_async_setup_entry(hass, aioclient_mock):
 
     assert len(aioclient_mock.mock_calls) == 1
 
-    # Test Select Entity
+    # Test MyZone Select Entity
     entity_id = "select.ac_one_myzone"
     state = hass.states.get(entity_id)
     assert state

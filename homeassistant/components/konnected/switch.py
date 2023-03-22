@@ -1,5 +1,6 @@
 """Support for wired switches attached to a Konnected device."""
 import logging
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -89,11 +90,11 @@ class KonnectedSwitch(SwitchEntity):
         return DeviceInfo(identifiers={(KONNECTED_DOMAIN, self._device_id)})
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return whether the panel is available."""
         return self.panel.available
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Send a command to turn on the switch."""
         resp = await self.panel.update_switch(
             self._zone_num,
@@ -110,7 +111,7 @@ class KonnectedSwitch(SwitchEntity):
                 # Immediately set the state back off for momentary switches
                 self._set_state(False)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Send a command to turn off the switch."""
         resp = await self.panel.update_switch(
             self._zone_num, int(self._activation == STATE_LOW)
@@ -142,7 +143,7 @@ class KonnectedSwitch(SwitchEntity):
         """Update the switch state."""
         self._set_state(state)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Store entity_id and register state change callback."""
         self._data["entity_id"] = self.entity_id
         self.async_on_remove(

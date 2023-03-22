@@ -7,7 +7,7 @@ from __future__ import annotations
 import asyncio
 from collections import OrderedDict
 import logging
-from typing import Any
+from typing import Any, cast
 
 import attr
 import voluptuous as vol
@@ -17,6 +17,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import ServiceNotFound
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.storage import Store
 
 from . import (
     MULTI_FACTOR_AUTH_MODULE_SCHEMA,
@@ -25,7 +26,7 @@ from . import (
     SetupFlow,
 )
 
-REQUIREMENTS = ["pyotp==2.6.0"]
+REQUIREMENTS = ["pyotp==2.8.0"]
 
 CONF_MESSAGE = "message"
 
@@ -99,8 +100,8 @@ class NotifyAuthModule(MultiFactorAuthModule):
         """Initialize the user data store."""
         super().__init__(hass, config)
         self._user_settings: _UsersDict | None = None
-        self._user_store = hass.helpers.storage.Store(
-            STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
+        self._user_store = Store[dict[str, dict[str, Any]]](
+            hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
         self._include = config.get(CONF_INCLUDE, [])
         self._exclude = config.get(CONF_EXCLUDE, [])
@@ -119,7 +120,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
                 return
 
             if (data := await self._user_store.async_load()) is None:
-                data = {STORAGE_USERS: {}}
+                data = cast(dict[str, dict[str, Any]], {STORAGE_USERS: {}})
 
             self._user_settings = {
                 user_id: NotifySetting(**setting)
@@ -319,6 +320,7 @@ class NotifySetupFlow(SetupFlow):
         errors: dict[str, str] = {}
 
         hass = self._auth_module.hass
+        assert self._secret and self._count
         if user_input:
             verified = await hass.async_add_executor_job(
                 _verify_otp, self._secret, user_input["code"], self._count
@@ -328,12 +330,11 @@ class NotifySetupFlow(SetupFlow):
                     self._user_id,
                     {"notify_service": self._notify_service, "target": self._target},
                 )
-                return self.async_create_entry(title=self._auth_module.name, data={})
+                return self.async_create_entry(data={})
 
             errors["base"] = "invalid_code"
 
         # generate code every time, no retry logic
-        assert self._secret and self._count
         code = await hass.async_add_executor_job(
             _generate_otp, self._secret, self._count
         )

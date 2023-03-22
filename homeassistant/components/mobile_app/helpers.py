@@ -1,10 +1,11 @@
 """Helpers for mobile_app."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from http import HTTPStatus
 import json
 import logging
+from typing import Any
 
 from aiohttp.web import Response, json_response
 from nacl.encoding import Base64Encoder, HexEncoder, RawEncoder
@@ -14,6 +15,7 @@ from homeassistant.const import ATTR_DEVICE_ID, CONTENT_TYPE_JSON
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.json import JSONEncoder
+from homeassistant.util.json import JsonValueType, json_loads
 
 from .const import (
     ATTR_APP_DATA,
@@ -70,7 +72,7 @@ def _decrypt_payload_helper(
     ciphertext: str,
     get_key_bytes: Callable[[str, int], str | bytes],
     key_encoder,
-) -> dict[str, str] | None:
+) -> JsonValueType | None:
     """Decrypt encrypted payload."""
     try:
         keylen, decrypt = setup_decrypt(key_encoder)
@@ -85,12 +87,12 @@ def _decrypt_payload_helper(
     key_bytes = get_key_bytes(key, keylen)
 
     msg_bytes = decrypt(ciphertext, key_bytes)
-    message = json.loads(msg_bytes.decode("utf-8"))
+    message = json_loads(msg_bytes)
     _LOGGER.debug("Successfully decrypted mobile_app payload")
     return message
 
 
-def _decrypt_payload(key: str | None, ciphertext: str) -> dict[str, str] | None:
+def decrypt_payload(key: str | None, ciphertext: str) -> JsonValueType | None:
     """Decrypt encrypted payload."""
 
     def get_key_bytes(key: str, keylen: int) -> str:
@@ -99,7 +101,7 @@ def _decrypt_payload(key: str | None, ciphertext: str) -> dict[str, str] | None:
     return _decrypt_payload_helper(key, ciphertext, get_key_bytes, HexEncoder)
 
 
-def _decrypt_payload_legacy(key: str | None, ciphertext: str) -> dict[str, str] | None:
+def decrypt_payload_legacy(key: str | None, ciphertext: str) -> JsonValueType | None:
     """Decrypt encrypted payload."""
 
     def get_key_bytes(key: str, keylen: int) -> bytes:
@@ -111,13 +113,13 @@ def _decrypt_payload_legacy(key: str | None, ciphertext: str) -> dict[str, str] 
     return _decrypt_payload_helper(key, ciphertext, get_key_bytes, RawEncoder)
 
 
-def registration_context(registration: dict) -> Context:
+def registration_context(registration: Mapping[str, Any]) -> Context:
     """Generate a context from a request."""
     return Context(user_id=registration[CONF_USER_ID])
 
 
 def empty_okay_response(
-    headers: dict = None, status: HTTPStatus = HTTPStatus.OK
+    headers: dict | None = None, status: HTTPStatus = HTTPStatus.OK
 ) -> Response:
     """Return a Response with empty JSON object and a 200."""
     return Response(
@@ -129,7 +131,7 @@ def error_response(
     code: str,
     message: str,
     status: HTTPStatus = HTTPStatus.BAD_REQUEST,
-    headers: dict = None,
+    headers: dict | None = None,
 ) -> Response:
     """Return an error Response."""
     return json_response(
@@ -173,11 +175,11 @@ def savable_state(hass: HomeAssistant) -> dict:
 
 
 def webhook_response(
-    data,
+    data: Any,
     *,
-    registration: dict,
+    registration: Mapping[str, Any],
     status: HTTPStatus = HTTPStatus.OK,
-    headers: dict = None,
+    headers: Mapping[str, str] | None = None,
 ) -> Response:
     """Return a encrypted response if registration supports it."""
     data = json.dumps(data, cls=JSONEncoder)

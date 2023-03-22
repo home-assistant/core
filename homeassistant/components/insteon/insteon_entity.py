@@ -28,6 +28,8 @@ _LOGGER = logging.getLogger(__name__)
 class InsteonEntity(Entity):
     """INSTEON abstract base entity."""
 
+    _attr_should_poll = False
+
     def __init__(self, device, group):
         """Initialize the INSTEON binary sensor."""
         self._insteon_device_group = device.groups[group]
@@ -36,11 +38,6 @@ class InsteonEntity(Entity):
     def __hash__(self):
         """Return the hash of the Insteon Entity."""
         return hash(self._insteon_device)
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def address(self):
@@ -85,10 +82,16 @@ class InsteonEntity(Entity):
         """Return device information."""
         return DeviceInfo(
             identifiers={(DOMAIN, str(self._insteon_device.address))},
-            manufacturer="Smart Home",
-            model=f"{self._insteon_device.model} ({self._insteon_device.cat!r}, 0x{self._insteon_device.subcat:02x})",
+            manufacturer="SmartLabs, Inc",
+            model=(
+                f"{self._insteon_device.model} ({self._insteon_device.cat!r},"
+                f" 0x{self._insteon_device.subcat:02x})"
+            ),
             name=f"{self._insteon_device.description} {self._insteon_device.address}",
-            sw_version=f"{self._insteon_device.firmware:02x} Engine Version: {self._insteon_device.engine_version}",
+            sw_version=(
+                f"{self._insteon_device.firmware:02x} Engine Version:"
+                f" {self._insteon_device.engine_version}"
+            ),
             via_device=(DOMAIN, str(devices.modem.address)),
         )
 
@@ -153,10 +156,9 @@ class InsteonEntity(Entity):
 
     def get_device_property(self, name: str):
         """Get a single Insteon device property value (raw)."""
-        value = None
         if (prop := self._insteon_device.properties.get(name)) is not None:
-            value = prop.value if prop.new_value is None else prop.new_value
-        return value
+            return prop.value
+        return None
 
     def _get_label(self):
         """Get the device label for grouped devices."""

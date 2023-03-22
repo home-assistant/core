@@ -7,6 +7,14 @@
         },
         "description": "Choose connection method to the gateway"
       },
+      "select_gateway_type": {
+        "description": "Select which gateway to configure.",
+        "menu_options": {
+          "gw_mqtt": "Configure an MQTT gateway",
+          "gw_serial": "Configure a serial gateway",
+          "gw_tcp": "Configure a TCP gateway"
+        }
+      },
       "gw_tcp": {
         "description": "Ethernet gateway setup",
         "data": {
@@ -51,7 +59,6 @@
       "invalid_serial": "Invalid serial port",
       "invalid_device": "Invalid device",
       "invalid_version": "Invalid MySensors version",
-      "mqtt_required": "The MQTT integration is not set up",
       "not_a_number": "Please enter a number",
       "port_out_of_range": "Port number must be at least 1 and at most 65535",
       "unknown": "[%key:common::config_flow::error::unknown%]"
@@ -71,9 +78,34 @@
       "invalid_serial": "Invalid serial port",
       "invalid_device": "Invalid device",
       "invalid_version": "Invalid MySensors version",
+      "mqtt_required": "The MQTT integration is not set up",
       "not_a_number": "Please enter a number",
       "port_out_of_range": "Port number must be at least 1 and at most 65535",
       "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "issues": {
+    "deprecated_entity": {
+      "title": "The {deprecated_entity} entity will be removed",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "The {deprecated_entity} entity will be removed",
+            "description": "Update any automations or scripts that use this entity in service calls using the `{deprecated_service}` service to instead use the `{alternate_service}` service with a target entity ID of `{alternate_target}`."
+          }
+        }
+      }
+    },
+    "deprecated_service": {
+      "title": "The {deprecated_service} service will be removed",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "The {deprecated_service} service will be removed",
+            "description": "Update any automations or scripts that use this service to instead use the `{alternate_service}` service with a target entity ID of `{alternate_target}`."
+          }
+        }
+      }
     }
   }
 }

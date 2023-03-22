@@ -7,7 +7,7 @@ from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from dataclasses import dataclass
 from itertools import groupby
 import logging
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -22,6 +22,7 @@ from . import entity_registry
 from .entity import Entity
 from .entity_component import EntityComponent
 from .storage import Store
+from .typing import ConfigType
 
 STORAGE_VERSION = 1
 SAVE_DELAY = 10
@@ -101,6 +102,24 @@ class IDManager:
         return proposal
 
 
+class CollectionEntity(Entity):
+    """Mixin class for entities managed by an ObservableCollection."""
+
+    @classmethod
+    @abstractmethod
+    def from_storage(cls, config: ConfigType) -> CollectionEntity:
+        """Create instance from storage."""
+
+    @classmethod
+    @abstractmethod
+    def from_yaml(cls, config: ConfigType) -> CollectionEntity:
+        """Create instance from yaml config."""
+
+    @abstractmethod
+    async def async_update_config(self, config: ConfigType) -> None:
+        """Handle updated configuration."""
+
+
 class ObservableCollection(ABC):
     """Base collection type that can be observed."""
 
@@ -155,6 +174,13 @@ class ObservableCollection(ABC):
 class YamlCollection(ObservableCollection):
     """Offer a collection based on static data."""
 
+    @staticmethod
+    def create_entity(
+        entity_class: type[CollectionEntity], config: ConfigType
+    ) -> CollectionEntity:
+        """Create a CollectionEntity instance."""
+        return entity_class.from_yaml(config)
+
     async def async_load(self, data: list[dict]) -> None:
         """Load the YAML collection. Overrides existing data."""
         old_ids = set(self.data)
@@ -185,7 +211,7 @@ class YamlCollection(ObservableCollection):
             await self.notify_changes(change_sets)
 
 
-class StorageCollection(ObservableCollection):
+class StorageCollection(ObservableCollection, ABC):
     """Offer a CRUD interface on top of JSON storage."""
 
     def __init__(
@@ -198,6 +224,13 @@ class StorageCollection(ObservableCollection):
         super().__init__(logger, id_manager)
         self.store = store
 
+    @staticmethod
+    def create_entity(
+        entity_class: type[CollectionEntity], config: ConfigType
+    ) -> CollectionEntity:
+        """Create a CollectionEntity instance."""
+        return entity_class.from_storage(config)
+
     @property
     def hass(self) -> HomeAssistant:
         """Home Assistant object."""
@@ -205,7 +238,7 @@ class StorageCollection(ObservableCollection):
 
     async def _async_load_data(self) -> dict | None:
         """Load the data."""
-        return cast(Optional[dict], await self.store.async_load())
+        return cast(dict | None, await self.store.async_load())
 
     async def async_load(self) -> None:
         """Load the storage Manager."""
@@ -290,7 +323,7 @@ class StorageCollection(ObservableCollection):
         return {"items": list(self.data.values())}
 
 
-class IDLessCollection(ObservableCollection):
+class IDLessCollection(YamlCollection):
     """A collection without IDs."""
 
     counter = 0
@@ -326,15 +359,23 @@ def sync_entity_lifecycle(
     domain: str,
     platform: str,
     entity_component: EntityComponent,
-    collection: ObservableCollection,
-    create_entity: Callable[[dict], Entity],
+    collection: StorageCollection | YamlCollection,
+    entity_class: type[CollectionEntity],
 ) -> None:
     """Map a collection to an entity component."""
-    entities: dict[str, Entity] = {}
+    entities: dict[str, CollectionEntity] = {}
     ent_reg = entity_registry.async_get(hass)
 
-    async def _add_entity(change_set: CollectionChangeSet) -> Entity:
-        entities[change_set.item_id] = create_entity(change_set.item)
+    async def _add_entity(change_set: CollectionChangeSet) -> CollectionEntity:
+        def entity_removed() -> None:
+            """Remove entity from entities if it's removed or not added."""
+            if change_set.item_id in entities:
+                entities.pop(change_set.item_id)
+
+        entities[change_set.item_id] = collection.create_entity(
+            entity_class, change_set.item
+        )
+        entities[change_set.item_id].async_on_remove(entity_removed)
         return entities[change_set.item_id]
 
     async def _remove_entity(change_set: CollectionChangeSet) -> None:
@@ -343,15 +384,21 @@ def sync_entity_lifecycle(
         )
         if ent_to_remove is not None:
             ent_reg.async_remove(ent_to_remove)
-        else:
+        elif change_set.item_id in entities:
             await entities[change_set.item_id].async_remove(force_remove=True)
-        entities.pop(change_set.item_id)
+        # Unconditionally pop the entity from the entity list to avoid racing against
+        # the entity registry event handled by Entity._async_registry_updated
+        if change_set.item_id in entities:
+            entities.pop(change_set.item_id)
 
     async def _update_entity(change_set: CollectionChangeSet) -> None:
-        await entities[change_set.item_id].async_update_config(change_set.item)  # type: ignore[attr-defined]
+        if change_set.item_id not in entities:
+            return
+        await entities[change_set.item_id].async_update_config(change_set.item)
 
     _func_map: dict[
-        str, Callable[[CollectionChangeSet], Coroutine[Any, Any, Entity | None]]
+        str,
+        Callable[[CollectionChangeSet], Coroutine[Any, Any, CollectionEntity | None]],
     ] = {
         CHANGE_ADDED: _add_entity,
         CHANGE_REMOVED: _remove_entity,

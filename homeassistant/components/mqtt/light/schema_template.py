@@ -1,5 +1,9 @@
 """Support for MQTT Template lights."""
+from __future__ import annotations
+
+from collections.abc import Callable
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -10,17 +14,13 @@ from homeassistant.components.light import (
     ATTR_FLASH,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
-    ATTR_WHITE_VALUE,
     ENTITY_ID_FORMAT,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
-    SUPPORT_EFFECT,
-    SUPPORT_FLASH,
-    SUPPORT_TRANSITION,
-    SUPPORT_WHITE_VALUE,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
+    filter_supported_color_modes,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     CONF_OPTIMISTIC,
@@ -28,13 +28,15 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, TemplateVarsType
 import homeassistant.util.color as color_util
 
-from .. import MqttValueTemplate, subscription
-from ... import mqtt
+from .. import subscription
+from ..config import MQTT_RW_SCHEMA
 from ..const import (
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
@@ -45,6 +47,14 @@ from ..const import (
 )
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
+from ..models import (
+    MqttCommandTemplate,
+    MqttValueTemplate,
+    PublishPayloadType,
+    ReceiveMessage,
+    ReceivePayloadType,
+)
+from ..util import get_mqtt_data
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 from .schema_basic import MQTT_LIGHT_ATTRIBUTES_BLOCKED
 
@@ -53,7 +63,6 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "mqtt_template"
 
 DEFAULT_NAME = "MQTT Template Light"
-DEFAULT_OPTIMISTIC = False
 
 CONF_BLUE_TEMPLATE = "blue_template"
 CONF_BRIGHTNESS_TEMPLATE = "brightness_template"
@@ -68,8 +77,19 @@ CONF_MIN_MIREDS = "min_mireds"
 CONF_RED_TEMPLATE = "red_template"
 CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
 
-PLATFORM_SCHEMA_TEMPLATE = (
-    mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
+COMMAND_TEMPLATES = (CONF_COMMAND_ON_TEMPLATE, CONF_COMMAND_OFF_TEMPLATE)
+VALUE_TEMPLATES = (
+    CONF_BLUE_TEMPLATE,
+    CONF_BRIGHTNESS_TEMPLATE,
+    CONF_COLOR_TEMP_TEMPLATE,
+    CONF_EFFECT_TEMPLATE,
+    CONF_GREEN_TEMPLATE,
+    CONF_RED_TEMPLATE,
+    CONF_STATE_TEMPLATE,
+)
+
+_PLATFORM_SCHEMA_BASE = (
+    MQTT_RW_SCHEMA.extend(
         {
             vol.Optional(CONF_BLUE_TEMPLATE): cv.template,
             vol.Optional(CONF_BRIGHTNESS_TEMPLATE): cv.template,
@@ -82,22 +102,34 @@ PLATFORM_SCHEMA_TEMPLATE = (
             vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
             vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
             vol.Optional(CONF_RED_TEMPLATE): cv.template,
             vol.Optional(CONF_STATE_TEMPLATE): cv.template,
-            vol.Optional(CONF_WHITE_VALUE_TEMPLATE): cv.template,
         }
     )
     .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 )
 
-DISCOVERY_SCHEMA_TEMPLATE = PLATFORM_SCHEMA_TEMPLATE.extend({}, extra=vol.REMOVE_EXTRA)
+DISCOVERY_SCHEMA_TEMPLATE = vol.All(
+    # CONF_WHITE_VALUE_TEMPLATE is no longer supported, support was removed in 2022.9
+    cv.removed(CONF_WHITE_VALUE_TEMPLATE),
+    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
+)
+
+PLATFORM_SCHEMA_MODERN_TEMPLATE = vol.All(
+    # CONF_WHITE_VALUE_TEMPLATE is no longer supported, support was removed in 2022.9
+    cv.removed(CONF_WHITE_VALUE_TEMPLATE),
+    _PLATFORM_SCHEMA_BASE,
+)
 
 
 async def async_setup_entity_template(
-    hass, config, async_add_entities, config_entry, discovery_data
-):
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    config_entry: ConfigEntry,
+    discovery_data: DiscoveryInfoType | None,
+) -> None:
     """Set up a MQTT Template light."""
     async_add_entities([MqttLightTemplate(hass, config, config_entry, discovery_data)])
 
@@ -107,144 +139,149 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
 
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_LIGHT_ATTRIBUTES_BLOCKED
+    _optimistic: bool
+    _command_templates: dict[
+        str, Callable[[PublishPayloadType, TemplateVarsType], PublishPayloadType]
+    ]
+    _value_templates: dict[str, Callable[[ReceivePayloadType], ReceivePayloadType]]
+    _fixed_color_mode: ColorMode | str | None
+    _topics: dict[str, str | None]
 
-    def __init__(self, hass, config, config_entry, discovery_data):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        config_entry: ConfigEntry,
+        discovery_data: DiscoveryInfoType | None,
+    ) -> None:
         """Initialize a MQTT Template light."""
-        self._state = None
-
-        self._topics = None
-        self._templates = None
-        self._optimistic = False
-
-        # features
-        self._brightness = None
-        self._color_temp = None
-        self._white_value = None
-        self._hs = None
-        self._effect = None
-
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
-    def config_schema():
+    def config_schema() -> vol.Schema:
         """Return the config schema."""
         return DISCOVERY_SCHEMA_TEMPLATE
 
-    def _setup_from_config(self, config):
+    def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
+        self._attr_max_mireds = config.get(CONF_MAX_MIREDS, super().max_mireds)
+        self._attr_min_mireds = config.get(CONF_MIN_MIREDS, super().min_mireds)
+        self._attr_effect_list = config.get(CONF_EFFECT_LIST)
+
         self._topics = {
             key: config.get(key) for key in (CONF_STATE_TOPIC, CONF_COMMAND_TOPIC)
         }
-        self._templates = {
-            key: config.get(key)
-            for key in (
-                CONF_BLUE_TEMPLATE,
-                CONF_BRIGHTNESS_TEMPLATE,
-                CONF_COLOR_TEMP_TEMPLATE,
-                CONF_COMMAND_OFF_TEMPLATE,
-                CONF_COMMAND_ON_TEMPLATE,
-                CONF_EFFECT_TEMPLATE,
-                CONF_GREEN_TEMPLATE,
-                CONF_RED_TEMPLATE,
-                CONF_STATE_TEMPLATE,
-                CONF_WHITE_VALUE_TEMPLATE,
-            )
+        self._command_templates = {
+            key: MqttCommandTemplate(config[key], entity=self).async_render
+            for key in COMMAND_TEMPLATES
         }
-        optimistic = config[CONF_OPTIMISTIC]
+        self._value_templates = {
+            key: MqttValueTemplate(
+                config.get(key), entity=self
+            ).async_render_with_possible_json_value
+            for key in VALUE_TEMPLATES
+        }
+        optimistic: bool = config[CONF_OPTIMISTIC]
         self._optimistic = (
             optimistic
             or self._topics[CONF_STATE_TOPIC] is None
-            or self._templates[CONF_STATE_TEMPLATE] is None
+            or CONF_STATE_TEMPLATE not in self._config
         )
 
-    def _prepare_subscribe_topics(self):
+        color_modes = {ColorMode.ONOFF}
+        if CONF_BRIGHTNESS_TEMPLATE in config:
+            color_modes.add(ColorMode.BRIGHTNESS)
+        if CONF_COLOR_TEMP_TEMPLATE in config:
+            color_modes.add(ColorMode.COLOR_TEMP)
+        if (
+            CONF_RED_TEMPLATE in config
+            and CONF_GREEN_TEMPLATE in config
+            and CONF_BLUE_TEMPLATE in config
+        ):
+            color_modes.add(ColorMode.HS)
+        self._attr_supported_color_modes = filter_supported_color_modes(color_modes)
+        self._fixed_color_mode = None
+        if self.supported_color_modes and len(self.supported_color_modes) == 1:
+            self._fixed_color_mode = next(iter(self.supported_color_modes))
+            self._attr_color_mode = self._fixed_color_mode
+
+        features = LightEntityFeature.FLASH | LightEntityFeature.TRANSITION
+        if config.get(CONF_EFFECT_LIST) is not None:
+            features = features | LightEntityFeature.EFFECT
+        self._attr_supported_features = features
+
+    def _update_color_mode(self) -> None:
+        """Update the color_mode attribute."""
+        if self._fixed_color_mode:
+            return
+        # Support for ct + hs, prioritize hs
+        self._attr_color_mode = ColorMode.HS if self.hs_color else ColorMode.COLOR_TEMP
+
+    def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        for tpl in self._templates.values():
-            if tpl is not None:
-                tpl = MqttValueTemplate(tpl, entity=self)
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def state_received(msg):
+        def state_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
-            state = self._templates[
-                CONF_STATE_TEMPLATE
-            ].async_render_with_possible_json_value(msg.payload)
+            state = self._value_templates[CONF_STATE_TEMPLATE](msg.payload)
             if state == STATE_ON:
-                self._state = True
+                self._attr_is_on = True
             elif state == STATE_OFF:
-                self._state = False
+                self._attr_is_on = False
             elif state == PAYLOAD_NONE:
-                self._state = None
+                self._attr_is_on = None
             else:
                 _LOGGER.warning("Invalid state value received")
 
-            if self._templates[CONF_BRIGHTNESS_TEMPLATE] is not None:
+            if CONF_BRIGHTNESS_TEMPLATE in self._config:
                 try:
-                    self._brightness = int(
-                        self._templates[
-                            CONF_BRIGHTNESS_TEMPLATE
-                        ].async_render_with_possible_json_value(msg.payload)
+                    self._attr_brightness = int(
+                        self._value_templates[CONF_BRIGHTNESS_TEMPLATE](msg.payload)
                     )
                 except ValueError:
                     _LOGGER.warning("Invalid brightness value received")
 
-            if self._templates[CONF_COLOR_TEMP_TEMPLATE] is not None:
+            if CONF_COLOR_TEMP_TEMPLATE in self._config:
                 try:
-                    self._color_temp = int(
-                        self._templates[
-                            CONF_COLOR_TEMP_TEMPLATE
-                        ].async_render_with_possible_json_value(msg.payload)
+                    color_temp = self._value_templates[CONF_COLOR_TEMP_TEMPLATE](
+                        msg.payload
+                    )
+                    self._attr_color_temp = (
+                        int(color_temp) if color_temp != "None" else None
                     )
                 except ValueError:
                     _LOGGER.warning("Invalid color temperature value received")
 
             if (
-                self._templates[CONF_RED_TEMPLATE] is not None
-                and self._templates[CONF_GREEN_TEMPLATE] is not None
-                and self._templates[CONF_BLUE_TEMPLATE] is not None
+                CONF_RED_TEMPLATE in self._config
+                and CONF_GREEN_TEMPLATE in self._config
+                and CONF_BLUE_TEMPLATE in self._config
             ):
                 try:
-                    red = int(
-                        self._templates[
-                            CONF_RED_TEMPLATE
-                        ].async_render_with_possible_json_value(msg.payload)
-                    )
-                    green = int(
-                        self._templates[
-                            CONF_GREEN_TEMPLATE
-                        ].async_render_with_possible_json_value(msg.payload)
-                    )
-                    blue = int(
-                        self._templates[
-                            CONF_BLUE_TEMPLATE
-                        ].async_render_with_possible_json_value(msg.payload)
-                    )
-                    self._hs = color_util.color_RGB_to_hs(red, green, blue)
+                    red = self._value_templates[CONF_RED_TEMPLATE](msg.payload)
+                    green = self._value_templates[CONF_GREEN_TEMPLATE](msg.payload)
+                    blue = self._value_templates[CONF_BLUE_TEMPLATE](msg.payload)
+                    if red == "None" and green == "None" and blue == "None":
+                        self._attr_hs_color = None
+                    else:
+                        self._attr_hs_color = color_util.color_RGB_to_hs(
+                            int(red), int(green), int(blue)
+                        )
+                    self._update_color_mode()
                 except ValueError:
                     _LOGGER.warning("Invalid color value received")
 
-            if self._templates[CONF_WHITE_VALUE_TEMPLATE] is not None:
-                try:
-                    self._white_value = int(
-                        self._templates[
-                            CONF_WHITE_VALUE_TEMPLATE
-                        ].async_render_with_possible_json_value(msg.payload)
-                    )
-                except ValueError:
-                    _LOGGER.warning("Invalid white value received")
-
-            if self._templates[CONF_EFFECT_TEMPLATE] is not None:
-                effect = self._templates[
-                    CONF_EFFECT_TEMPLATE
-                ].async_render_with_possible_json_value(msg.payload)
-
-                if effect in self._config.get(CONF_EFFECT_LIST):
-                    self._effect = effect
+            if CONF_EFFECT_TEMPLATE in self._config:
+                effect = str(self._value_templates[CONF_EFFECT_TEMPLATE](msg.payload))
+                if (
+                    effect_list := self._config[CONF_EFFECT_LIST]
+                ) and effect in effect_list:
+                    self._attr_effect = effect
                 else:
                     _LOGGER.warning("Unsupported effect value received")
 
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._topics[CONF_STATE_TOPIC] is not None:
             self._sub_state = subscription.async_prepare_subscribe_topics(
@@ -260,106 +297,62 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                 },
             )
 
-    async def _subscribe_topics(self):
+    async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
         last_state = await self.async_get_last_state()
         if self._optimistic and last_state:
-            self._state = last_state.state == STATE_ON
+            self._attr_is_on = last_state.state == STATE_ON
             if last_state.attributes.get(ATTR_BRIGHTNESS):
-                self._brightness = last_state.attributes.get(ATTR_BRIGHTNESS)
+                self._attr_brightness = last_state.attributes.get(ATTR_BRIGHTNESS)
             if last_state.attributes.get(ATTR_HS_COLOR):
-                self._hs = last_state.attributes.get(ATTR_HS_COLOR)
+                self._attr_hs_color = last_state.attributes.get(ATTR_HS_COLOR)
+                self._update_color_mode()
             if last_state.attributes.get(ATTR_COLOR_TEMP):
-                self._color_temp = last_state.attributes.get(ATTR_COLOR_TEMP)
+                self._attr_color_temp = last_state.attributes.get(ATTR_COLOR_TEMP)
             if last_state.attributes.get(ATTR_EFFECT):
-                self._effect = last_state.attributes.get(ATTR_EFFECT)
-            if last_state.attributes.get(ATTR_WHITE_VALUE):
-                self._white_value = last_state.attributes.get(ATTR_WHITE_VALUE)
+                self._attr_effect = last_state.attributes.get(ATTR_EFFECT)
 
     @property
-    def brightness(self):
-        """Return the brightness of this light between 0..255."""
-        return self._brightness
-
-    @property
-    def color_temp(self):
-        """Return the color temperature in mired."""
-        return self._color_temp
-
-    @property
-    def min_mireds(self):
-        """Return the coldest color_temp that this light supports."""
-        return self._config.get(CONF_MIN_MIREDS, super().min_mireds)
-
-    @property
-    def max_mireds(self):
-        """Return the warmest color_temp that this light supports."""
-        return self._config.get(CONF_MAX_MIREDS, super().max_mireds)
-
-    @property
-    def hs_color(self):
-        """Return the hs color value [int, int]."""
-        return self._hs
-
-    @property
-    def white_value(self):
-        """Return the white property."""
-        return self._white_value
-
-    @property
-    def is_on(self):
-        """Return True if entity is on."""
-        return self._state
-
-    @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return True if unable to access real state of the entity."""
         return self._optimistic
 
-    @property
-    def effect_list(self):
-        """Return the list of supported effects."""
-        return self._config.get(CONF_EFFECT_LIST)
-
-    @property
-    def effect(self):
-        """Return the current effect."""
-        return self._effect
-
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on.
 
         This method is a coroutine.
         """
-        values = {"state": True}
+        values: dict[str, Any] = {"state": True}
         if self._optimistic:
-            self._state = True
+            self._attr_is_on = True
 
         if ATTR_BRIGHTNESS in kwargs:
             values["brightness"] = int(kwargs[ATTR_BRIGHTNESS])
 
             if self._optimistic:
-                self._brightness = kwargs[ATTR_BRIGHTNESS]
+                self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
 
         if ATTR_COLOR_TEMP in kwargs:
             values["color_temp"] = int(kwargs[ATTR_COLOR_TEMP])
 
             if self._optimistic:
-                self._color_temp = kwargs[ATTR_COLOR_TEMP]
+                self._attr_color_temp = kwargs[ATTR_COLOR_TEMP]
+                self._attr_hs_color = None
+                self._update_color_mode()
 
         if ATTR_HS_COLOR in kwargs:
             hs_color = kwargs[ATTR_HS_COLOR]
 
             # If there's a brightness topic set, we don't want to scale the RGB
             # values given using the brightness.
-            if self._templates[CONF_BRIGHTNESS_TEMPLATE] is not None:
+            if CONF_BRIGHTNESS_TEMPLATE in self._config:
                 brightness = 255
             else:
                 brightness = kwargs.get(
                     ATTR_BRIGHTNESS,
-                    self._brightness if self._brightness is not None else 255,
+                    self._attr_brightness if self._attr_brightness is not None else 255,
                 )
             rgb = color_util.color_hsv_to_RGB(
                 hs_color[0], hs_color[1], brightness / 255 * 100
@@ -371,19 +364,15 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             values["sat"] = hs_color[1]
 
             if self._optimistic:
-                self._hs = kwargs[ATTR_HS_COLOR]
-
-        if ATTR_WHITE_VALUE in kwargs:
-            values["white_value"] = int(kwargs[ATTR_WHITE_VALUE])
-
-            if self._optimistic:
-                self._white_value = kwargs[ATTR_WHITE_VALUE]
+                self._attr_color_temp = None
+                self._attr_hs_color = kwargs[ATTR_HS_COLOR]
+                self._update_color_mode()
 
         if ATTR_EFFECT in kwargs:
             values["effect"] = kwargs.get(ATTR_EFFECT)
 
             if self._optimistic:
-                self._effect = kwargs[ATTR_EFFECT]
+                self._attr_effect = kwargs[ATTR_EFFECT]
 
         if ATTR_FLASH in kwargs:
             values["flash"] = kwargs.get(ATTR_FLASH)
@@ -392,10 +381,8 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             values["transition"] = kwargs[ATTR_TRANSITION]
 
         await self.async_publish(
-            self._topics[CONF_COMMAND_TOPIC],
-            self._templates[CONF_COMMAND_ON_TEMPLATE].async_render(
-                parse_result=False, **values
-            ),
+            str(self._topics[CONF_COMMAND_TOPIC]),
+            self._command_templates[CONF_COMMAND_ON_TEMPLATE](None, values),
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
             self._config[CONF_ENCODING],
@@ -404,23 +391,21 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         if self._optimistic:
             self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off.
 
         This method is a coroutine.
         """
-        values = {"state": False}
+        values: dict[str, Any] = {"state": False}
         if self._optimistic:
-            self._state = False
+            self._attr_is_on = False
 
         if ATTR_TRANSITION in kwargs:
             values["transition"] = kwargs[ATTR_TRANSITION]
 
         await self.async_publish(
-            self._topics[CONF_COMMAND_TOPIC],
-            self._templates[CONF_COMMAND_OFF_TEMPLATE].async_render(
-                parse_result=False, **values
-            ),
+            str(self._topics[CONF_COMMAND_TOPIC]),
+            self._command_templates[CONF_COMMAND_OFF_TEMPLATE](None, values),
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
             self._config[CONF_ENCODING],
@@ -428,24 +413,3 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
 
         if self._optimistic:
             self.async_write_ha_state()
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        features = SUPPORT_FLASH | SUPPORT_TRANSITION
-        if self._templates[CONF_BRIGHTNESS_TEMPLATE] is not None:
-            features = features | SUPPORT_BRIGHTNESS
-        if (
-            self._templates[CONF_RED_TEMPLATE] is not None
-            and self._templates[CONF_GREEN_TEMPLATE] is not None
-            and self._templates[CONF_BLUE_TEMPLATE] is not None
-        ):
-            features = features | SUPPORT_COLOR | SUPPORT_BRIGHTNESS
-        if self._config.get(CONF_EFFECT_LIST) is not None:
-            features = features | SUPPORT_EFFECT
-        if self._templates[CONF_COLOR_TEMP_TEMPLATE] is not None:
-            features = features | SUPPORT_COLOR_TEMP
-        if self._templates[CONF_WHITE_VALUE_TEMPLATE] is not None:
-            features = features | SUPPORT_WHITE_VALUE
-
-        return features

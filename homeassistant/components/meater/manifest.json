@@ -1,0 +1,9 @@
+{
+  "domain": "meater",
+  "name": "Meater",
+  "codeowners": ["@Sotolotl", "@emontnemery"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/meater",
+  "iot_class": "cloud_polling",
+  "requirements": ["meater-python==0.0.8"]
+}

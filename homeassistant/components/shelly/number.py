@@ -1,11 +1,10 @@
 """Number for Shelly."""
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
 from typing import Any, Final, cast
 
-import async_timeout
+from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 
 from homeassistant.components.number import (
     NumberEntity,
@@ -13,19 +12,18 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 
-from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC, CONF_SLEEP_PERIOD, LOGGER
+from .const import CONF_SLEEP_PERIOD, LOGGER
 from .entity import (
     BlockEntityDescription,
     ShellySleepingBlockAttributeEntity,
     async_setup_entry_attribute_entities,
 )
-from .utils import get_device_entry_gen
 
 
 @dataclass
@@ -41,13 +39,13 @@ NUMBERS: Final = {
     ("device", "valvePos"): BlockNumberDescription(
         key="device|valvepos",
         icon="mdi:pipe-valve",
-        name="Valve Position",
-        unit_of_measurement=PERCENTAGE,
+        name="Valve position",
+        native_unit_of_measurement=PERCENTAGE,
         available=lambda block: cast(int, block.valveError) != 1,
         entity_category=EntityCategory.CONFIG,
-        min_value=0,
-        max_value=100,
-        step=1,
+        native_min_value=0,
+        native_max_value=100,
+        native_step=1,
         mode=NumberMode("slider"),
         rest_path="thermostat/0",
         rest_arg="pos",
@@ -62,11 +60,11 @@ def _build_block_description(entry: RegistryEntry) -> BlockNumberDescription:
         key="",
         name="",
         icon=entry.original_icon,
-        unit_of_measurement=entry.unit_of_measurement,
+        native_unit_of_measurement=entry.unit_of_measurement,
         device_class=entry.original_device_class,
-        min_value=cast(float, entry.capabilities.get("min")),
-        max_value=cast(float, entry.capabilities.get("max")),
-        step=cast(float, entry.capabilities.get("step")),
+        native_min_value=cast(float, entry.capabilities.get("min")),
+        native_max_value=cast(float, entry.capabilities.get("max")),
+        native_step=cast(float, entry.capabilities.get("step")),
         mode=cast(NumberMode, entry.capabilities.get("mode")),
     )
 
@@ -77,11 +75,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up numbers for device."""
-    if get_device_entry_gen(config_entry) == 2:
-        return
-
     if config_entry.data[CONF_SLEEP_PERIOD]:
-        await async_setup_entry_attribute_entities(
+        async_setup_entry_attribute_entities(
             hass,
             config_entry,
             async_add_entities,
@@ -97,14 +92,17 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, NumberEntity):
     entity_description: BlockNumberDescription
 
     @property
-    def value(self) -> float:
+    def native_value(self) -> float | None:
         """Return value of number."""
         if self.block is not None:
             return cast(float, self.attribute_value)
 
-        return cast(float, self.last_state)
+        if self.last_state is None:
+            return None
 
-    async def async_set_value(self, value: float) -> None:
+        return cast(float, self.last_state.state)
+
+    async def async_set_native_value(self, value: float) -> None:
         """Set value."""
         # Example for Shelly Valve: http://192.168.188.187/thermostat/0?pos=13.0
         await self._set_state_full_path(
@@ -115,15 +113,14 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, NumberEntity):
 
     async def _set_state_full_path(self, path: str, params: Any) -> Any:
         """Set block state (HTTP request)."""
-
         LOGGER.debug("Setting state for entity %s, state: %s", self.name, params)
         try:
-            async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
-                return await self.wrapper.device.http_request("get", path, params)
-        except (asyncio.TimeoutError, OSError) as err:
-            LOGGER.error(
-                "Setting state for entity %s failed, state: %s, error: %s",
-                self.name,
-                params,
-                repr(err),
-            )
+            return await self.coordinator.device.http_request("get", path, params)
+        except DeviceConnectionError as err:
+            self.coordinator.last_update_success = False
+            raise HomeAssistantError(
+                f"Setting state for entity {self.name} failed, state: {params}, error:"
+                f" {repr(err)}"
+            ) from err
+        except InvalidAuthError:
+            self.coordinator.entry.async_start_reauth(self.hass)

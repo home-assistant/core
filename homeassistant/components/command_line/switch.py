@@ -172,13 +172,13 @@ class CommandSwitch(SwitchEntity):
                 payload = self._value_template.render_with_possible_json_value(payload)
             self._attr_is_on = payload.lower() == "true"
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         if self._switch(self._command_on) and not self._command_state:
             self._attr_is_on = True
             self.schedule_update_ha_state()
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if self._switch(self._command_off) and not self._command_state:
             self._attr_is_on = False

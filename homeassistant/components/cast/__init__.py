@@ -7,7 +7,7 @@ from typing import Protocol
 from pychromecast import Chromecast
 import voluptuous as vol
 
-from homeassistant.components.media_player import BrowseMedia
+from homeassistant.components.media_player import BrowseMedia, MediaType
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -57,8 +57,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Cast from a config entry."""
     await home_assistant_cast.async_setup_ha_cast(hass, entry)
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-    hass.data[DOMAIN] = {}
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    hass.data[DOMAIN] = {"cast_platform": {}, "unknown_models": {}}
     await async_process_integration_platforms(hass, DOMAIN, _register_cast_platform)
     return True
 
@@ -74,13 +74,14 @@ class CastProtocol(Protocol):
     async def async_browse_media(
         self,
         hass: HomeAssistant,
-        media_content_type: str,
+        media_content_type: MediaType | str,
         media_content_id: str,
         cast_type: str,
     ) -> BrowseMedia | None:
         """Browse media.
 
-        Return a BrowseMedia object or None if the media does not belong to this platform.
+        Return a BrowseMedia object or None if the media does not belong to
+        this platform.
         """
 
     async def async_play_media(
@@ -88,7 +89,7 @@ class CastProtocol(Protocol):
         hass: HomeAssistant,
         cast_entity_id: str,
         chromecast: Chromecast,
-        media_type: str,
+        media_type: MediaType | str,
         media_id: str,
     ) -> bool:
         """Play media.
@@ -107,7 +108,7 @@ async def _register_cast_platform(
         or not hasattr(platform, "async_play_media")
     ):
         raise HomeAssistantError(f"Invalid cast platform {platform}")
-    hass.data[DOMAIN][integration_domain] = platform
+    hass.data[DOMAIN]["cast_platform"][integration_domain] = platform
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:

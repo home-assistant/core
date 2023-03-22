@@ -2,14 +2,16 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
 from logging import Logger
-from typing import Any
+from typing import Generic, TypeVar
 
 from homeassistant.core import HassJob, HomeAssistant, callback
 
+_R_co = TypeVar("_R_co", covariant=True)
 
-class Debouncer:
+
+class Debouncer(Generic[_R_co]):
     """Class to rate limit calls to a specific command."""
 
     def __init__(
@@ -19,7 +21,7 @@ class Debouncer:
         *,
         cooldown: float,
         immediate: bool,
-        function: Callable[..., Awaitable[Any]] | None = None,
+        function: Callable[[], _R_co] | None = None,
     ) -> None:
         """Initialize debounce.
 
@@ -35,19 +37,28 @@ class Debouncer:
         self._timer_task: asyncio.TimerHandle | None = None
         self._execute_at_end_of_timer: bool = False
         self._execute_lock = asyncio.Lock()
-        self._job: HassJob | None = None if function is None else HassJob(function)
+        self._job: HassJob[[], _R_co] | None = (
+            None
+            if function is None
+            else HassJob(
+                function, f"debouncer cooldown={cooldown}, immediate={immediate}"
+            )
+        )
 
     @property
-    def function(self) -> Callable[..., Awaitable[Any]] | None:
+    def function(self) -> Callable[[], _R_co] | None:
         """Return the function being wrapped by the Debouncer."""
         return self._function
 
     @function.setter
-    def function(self, function: Callable[..., Awaitable[Any]]) -> None:
+    def function(self, function: Callable[[], _R_co]) -> None:
         """Update the function being wrapped by the Debouncer."""
         self._function = function
         if self._job is None or function != self._job.target:
-            self._job = HassJob(function)
+            self._job = HassJob(
+                function,
+                f"debouncer cooldown={self.cooldown}, immediate={self.immediate}",
+            )
 
     async def async_call(self) -> None:
         """Call the function."""
@@ -83,11 +94,6 @@ class Debouncer:
         """Handle a finished timer."""
         assert self._job is not None
 
-        self._timer_task = None
-
-        if not self._execute_at_end_of_timer:
-            return
-
         self._execute_at_end_of_timer = False
 
         # Locked means a call is in progress. Any call is good, so abort.
@@ -97,7 +103,7 @@ class Debouncer:
         async with self._execute_lock:
             # Abort if timer got set while we're waiting for the lock.
             if self._timer_task:
-                return  # type: ignore[unreachable]
+                return
 
             try:
                 task = self.hass.async_run_hass_job(self._job)
@@ -106,6 +112,7 @@ class Debouncer:
             except Exception:  # pylint: disable=broad-except
                 self.logger.exception("Unexpected exception from %s", self.function)
 
+            # Schedule a new timer to prevent new runs during cooldown
             self._schedule_timer()
 
     @callback
@@ -118,9 +125,16 @@ class Debouncer:
         self._execute_at_end_of_timer = False
 
     @callback
+    def _on_debounce(self) -> None:
+        """Create job task, but only if pending."""
+        self._timer_task = None
+        if self._execute_at_end_of_timer:
+            self.hass.async_create_task(
+                self._handle_timer_finish(),
+                f"debouncer {self._job} finish cooldown={self.cooldown}, immediate={self.immediate}",
+            )
+
+    @callback
     def _schedule_timer(self) -> None:
         """Schedule a timer."""
-        self._timer_task = self.hass.loop.call_later(
-            self.cooldown,
-            lambda: self.hass.async_create_task(self._handle_timer_finish()),
-        )
+        self._timer_task = self.hass.loop.call_later(self.cooldown, self._on_debounce)

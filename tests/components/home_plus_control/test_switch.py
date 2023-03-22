@@ -16,13 +16,12 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+
+from .conftest import CLIENT_ID, CLIENT_SECRET, SUBSCRIPTION_KEY
 
 from tests.common import async_fire_time_changed
-from tests.components.home_plus_control.conftest import (
-    CLIENT_ID,
-    CLIENT_SECRET,
-    SUBSCRIPTION_KEY,
-)
 
 
 def entity_assertions(
@@ -33,8 +32,8 @@ def entity_assertions(
     expected_devices=None,
 ):
     """Assert number of entities and devices."""
-    entity_reg = hass.helpers.entity_registry.async_get(hass)
-    device_reg = hass.helpers.device_registry.async_get(hass)
+    entity_reg = er.async_get(hass)
+    device_reg = dr.async_get(hass)
 
     if num_exp_devices is None:
         num_exp_devices = num_exp_entities
@@ -53,13 +52,11 @@ def entity_assertions(
 
 def one_entity_state(hass, device_uid):
     """Assert the presence of an entity and return its state."""
-    entity_reg = hass.helpers.entity_registry.async_get(hass)
-    device_reg = hass.helpers.device_registry.async_get(hass)
+    entity_reg = er.async_get(hass)
+    device_reg = dr.async_get(hass)
 
     device_id = device_reg.async_get_device({(DOMAIN, device_uid)}).id
-    entity_entries = hass.helpers.entity_registry.async_entries_for_device(
-        entity_reg, device_id
-    )
+    entity_entries = er.async_entries_for_device(entity_reg, device_id)
 
     assert len(entity_entries) == 1
     entity_entry = entity_entries[0]
@@ -67,10 +64,10 @@ def one_entity_state(hass, device_uid):
 
 
 async def test_plant_update(
-    hass,
+    hass: HomeAssistant,
     mock_config_entry,
     mock_modules,
-):
+) -> None:
     """Test entity and device loading."""
     # Load the entry
     mock_config_entry.add_to_hass(hass)
@@ -104,10 +101,10 @@ async def test_plant_update(
 
 
 async def test_plant_topology_reduction_change(
-    hass,
+    hass: HomeAssistant,
     mock_config_entry,
     mock_modules,
-):
+) -> None:
     """Test an entity leaving the plant topology."""
     # Load the entry
     mock_config_entry.add_to_hass(hass)
@@ -163,10 +160,10 @@ async def test_plant_topology_reduction_change(
 
 
 async def test_plant_topology_increase_change(
-    hass,
+    hass: HomeAssistant,
     mock_config_entry,
     mock_modules,
-):
+) -> None:
     """Test an entity entering the plant topology."""
     # Remove one module initially
     new_module = mock_modules.pop("0000000987654321fedcba")
@@ -223,7 +220,9 @@ async def test_plant_topology_increase_change(
     )
 
 
-async def test_module_status_unavailable(hass, mock_config_entry, mock_modules):
+async def test_module_status_unavailable(
+    hass: HomeAssistant, mock_config_entry, mock_modules
+) -> None:
     """Test a module becoming unreachable in the plant."""
     # Load the entry
     mock_config_entry.add_to_hass(hass)
@@ -289,10 +288,10 @@ async def test_module_status_unavailable(hass, mock_config_entry, mock_modules):
 
 
 async def test_module_status_available(
-    hass,
+    hass: HomeAssistant,
     mock_config_entry,
     mock_modules,
-):
+) -> None:
     """Test a module becoming reachable in the plant."""
     # Set the module initially unreachable
     mock_modules["0000000987654321fedcba"].reachable = False
@@ -361,10 +360,10 @@ async def test_module_status_available(
 
 
 async def test_initial_api_error(
-    hass,
+    hass: HomeAssistant,
     mock_config_entry,
     mock_modules,
-):
+) -> None:
     """Test an API error on initial call."""
     # Load the entry
     mock_config_entry.add_to_hass(hass)
@@ -395,10 +394,10 @@ async def test_initial_api_error(
 
 
 async def test_update_with_api_error(
-    hass,
+    hass: HomeAssistant,
     mock_config_entry,
     mock_modules,
-):
+) -> None:
     """Test an API timeout when updating the module data."""
     # Load the entry
     mock_config_entry.add_to_hass(hass)

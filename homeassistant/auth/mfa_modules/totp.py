@@ -3,13 +3,14 @@ from __future__ import annotations
 
 import asyncio
 from io import BytesIO
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
 from homeassistant.auth.models import User
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.storage import Store
 
 from . import (
     MULTI_FACTOR_AUTH_MODULE_SCHEMA,
@@ -18,7 +19,7 @@ from . import (
     SetupFlow,
 )
 
-REQUIREMENTS = ["pyotp==2.6.0", "PyQRCode==1.2.1"]
+REQUIREMENTS = ["pyotp==2.8.0", "PyQRCode==1.2.1"]
 
 CONFIG_SCHEMA = MULTI_FACTOR_AUTH_MODULE_SCHEMA.extend({}, extra=vol.PREVENT_EXTRA)
 
@@ -46,8 +47,10 @@ def _generate_qr_code(data: str) -> str:
             .decode("ascii")
             .replace("\n", "")
             .replace(
-                '<?xml version="1.0" encoding="UTF-8"?>'
-                '<svg xmlns="http://www.w3.org/2000/svg"',
+                (
+                    '<?xml version="1.0" encoding="UTF-8"?>'
+                    '<svg xmlns="http://www.w3.org/2000/svg"'
+                ),
                 "<svg",
             )
         )
@@ -76,8 +79,8 @@ class TotpAuthModule(MultiFactorAuthModule):
         """Initialize the user data store."""
         super().__init__(hass, config)
         self._users: dict[str, str] | None = None
-        self._user_store = hass.helpers.storage.Store(
-            STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
+        self._user_store = Store[dict[str, dict[str, str]]](
+            hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
         self._init_lock = asyncio.Lock()
 
@@ -93,13 +96,13 @@ class TotpAuthModule(MultiFactorAuthModule):
                 return
 
             if (data := await self._user_store.async_load()) is None:
-                data = {STORAGE_USERS: {}}
+                data = cast(dict[str, dict[str, str]], {STORAGE_USERS: {}})
 
             self._users = data.get(STORAGE_USERS, {})
 
     async def _async_save(self) -> None:
         """Save data."""
-        await self._user_store.async_save({STORAGE_USERS: self._users})
+        await self._user_store.async_save({STORAGE_USERS: self._users or {}})
 
     def _add_ota_secret(self, user_id: str, secret: str | None = None) -> str:
         """Create a ota_secret for user."""
@@ -205,9 +208,7 @@ class TotpSetupFlow(SetupFlow):
                 result = await self._auth_module.async_setup_user(
                     self._user_id, {"secret": self._ota_secret}
                 )
-                return self.async_create_entry(
-                    title=self._auth_module.name, data={"result": result}
-                )
+                return self.async_create_entry(data={"result": result})
 
             errors["base"] = "invalid_code"
 

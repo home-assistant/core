@@ -1,5 +1,4 @@
 """The sensor tests for the AEMET OpenData platform."""
-
 from unittest.mock import patch
 
 from homeassistant.components.aemet.const import ATTRIBUTION
@@ -22,12 +21,13 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
 )
 from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
 from .util import async_init_integration
 
 
-async def test_aemet_weather(hass):
+async def test_aemet_weather(hass: HomeAssistant) -> None:
     """Test states of the weather."""
 
     hass.config.set_time_zone("UTC")
@@ -42,10 +42,10 @@ async def test_aemet_weather(hass):
     assert state.state == ATTR_CONDITION_SNOWY
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_WEATHER_HUMIDITY) == 99.0
-    assert state.attributes.get(ATTR_WEATHER_PRESSURE) == 1004.4
+    assert state.attributes.get(ATTR_WEATHER_PRESSURE) == 1004.4  # 100440.0 Pa -> hPa
     assert state.attributes.get(ATTR_WEATHER_TEMPERATURE) == -0.7
     assert state.attributes.get(ATTR_WEATHER_WIND_BEARING) == 90.0
-    assert state.attributes.get(ATTR_WEATHER_WIND_SPEED) == 15
+    assert state.attributes.get(ATTR_WEATHER_WIND_SPEED) == 15.0  # 4.17 m/s -> km/h
     forecast = state.attributes.get(ATTR_FORECAST)[0]
     assert forecast.get(ATTR_FORECAST_CONDITION) == ATTR_CONDITION_PARTLYCLOUDY
     assert forecast.get(ATTR_FORECAST_PRECIPITATION) is None
@@ -57,7 +57,7 @@ async def test_aemet_weather(hass):
         == dt_util.parse_datetime("2021-01-10 00:00:00+00:00").isoformat()
     )
     assert forecast.get(ATTR_FORECAST_WIND_BEARING) == 45.0
-    assert forecast.get(ATTR_FORECAST_WIND_SPEED) == 20
+    assert forecast.get(ATTR_FORECAST_WIND_SPEED) == 20.0  # 5.56 m/s -> km/h
 
     state = hass.states.get("weather.aemet_hourly")
     assert state is None

@@ -13,10 +13,10 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEGREE,
-    LENGTH_MILLIMETERS,
     PERCENTAGE,
-    SPEED_METERS_PER_SECOND,
-    TEMP_CELSIUS,
+    UnitOfSpeed,
+    UnitOfTemperature,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -24,12 +24,10 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.dt import as_utc, get_time_zone
+from homeassistant.util.dt import as_utc
 
 from .const import ATTRIBUTION, CONF_STATION, DOMAIN, NONE_IS_ZERO_SENSORS
 from .coordinator import TVDataUpdateCoordinator
-
-STOCKHOLM_TIMEZONE = get_time_zone("Europe/Stockholm")
 
 
 @dataclass
@@ -51,8 +49,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         key="air_temp",
         api_key="air_temp",
         name="Air temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        icon="mdi:thermometer",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -60,8 +57,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         key="road_temp",
         api_key="road_temp",
         name="Road temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        icon="mdi:thermometer",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -90,15 +86,16 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         key="wind_speed",
         api_key="windforce",
         name="Wind speed",
-        native_unit_of_measurement=SPEED_METERS_PER_SECOND,
-        icon="mdi:weather-windy",
+        native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
+        device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     TrafikverketSensorEntityDescription(
         key="wind_speed_max",
         api_key="windforcemax",
         name="Wind speed max",
-        native_unit_of_measurement=SPEED_METERS_PER_SECOND,
+        native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
+        device_class=SensorDeviceClass.WIND_SPEED,
         icon="mdi:weather-windy-variant",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
@@ -117,8 +114,8 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         key="precipitation_amount",
         api_key="precipitation_amount",
         name="Precipitation amount",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:cup-water",
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     TrafikverketSensorEntityDescription(
@@ -156,8 +153,8 @@ async def async_setup_entry(
 
 def _to_datetime(measuretime: str) -> datetime:
     """Return isoformatted utc time."""
-    time_obj = datetime.strptime(measuretime, "%Y-%m-%dT%H:%M:%S")
-    return as_utc(time_obj.replace(tzinfo=STOCKHOLM_TIMEZONE))
+    time_obj = datetime.strptime(measuretime, "%Y-%m-%dT%H:%M:%S.%f%z")
+    return as_utc(time_obj)
 
 
 class TrafikverketWeatherStation(
@@ -167,6 +164,7 @@ class TrafikverketWeatherStation(
 
     entity_description: TrafikverketSensorEntityDescription
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -178,13 +176,12 @@ class TrafikverketWeatherStation(
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = f"{sensor_station} {description.name}"
         self._attr_unique_id = f"{entry_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry_id)},
             manufacturer="Trafikverket",
-            model="v1.2",
+            model="v2.0",
             name=sensor_station,
             configuration_url="https://api.trafikinfo.trafikverket.se/",
         )

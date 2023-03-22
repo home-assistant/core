@@ -23,7 +23,7 @@
           "usb_path": "[%key:common::config_flow::data::usb_path%]"
         },
         "title": "Crownstone USB dongle configuration",
-        "description": "Select the serial port of the Crownstone USB dongle, or select 'Don't use USB' if you don't want to setup a USB dongle.\n\nLook for a device with VID 10C4 and PID EA60."
+        "description": "Select the serial port of the Crownstone USB dongle, or select 'Don't use USB' if you don't want to set up a USB dongle.\n\nLook for a device with VID 10C4 and PID EA60."
       },
       "usb_manual_config": {
         "data": {

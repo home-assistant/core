@@ -1,10 +1,11 @@
 """Tests for the Sonos statistics."""
 from homeassistant.components.sonos.const import DATA_SONOS
+from homeassistant.core import HomeAssistant
 
 
 async def test_statistics_duplicate(
-    hass, async_autosetup_sonos, soco, device_properties_event
-):
+    hass: HomeAssistant, async_autosetup_sonos, soco, device_properties_event
+) -> None:
     """Test Sonos statistics."""
     speaker = list(hass.data[DATA_SONOS].discovered.values())[0]
 

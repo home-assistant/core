@@ -1,24 +1,7 @@
 {
-  "options": {
-    "step": {
-      "init": {
-        "description": "Adjust Plugwise Options",
-        "data": {
-          "scan_interval": "Scan Interval (seconds)"
-        }
-      }
-    }
-  },
   "config": {
     "step": {
       "user": {
-        "title": "Plugwise type",
-        "description": "Product:",
-        "data": {
-          "flow_type": "Connection type"
-        }
-      },
-      "user_gateway": {
         "title": "Connect to the Smile",
         "description": "Please enter",
         "data": {
@@ -32,12 +15,50 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_setup": "Add your Adam instead of your Anna, see the Home Assistant Plugwise integration documentation for more information",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "invalid_setup": "Add your Adam instead of your Anna, see the documentation",
+      "response_error": "Invalid XML data, or error indication received",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unsupported": "Device with unsupported firmware"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "anna_with_adam": "Both Anna and Adam detected. Add your Adam instead of your Anna"
+    }
+  },
+  "entity": {
+    "climate": {
+      "plugwise": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "asleep": "Night",
+              "away": "Away",
+              "home": "Home",
+              "no_frost": "Anti-frost",
+              "vacation": "Vacation"
+            }
+          }
+        }
+      }
     },
-    "flow_title": "{name}"
+    "select": {
+      "dhw_mode": {
+        "state": {
+          "off": "Off",
+          "auto": "Auto",
+          "boost": "Boost",
+          "comfort": "Comfort"
+        }
+      },
+      "regulation_mode": {
+        "state": {
+          "bleeding_cold": "Bleeding cold",
+          "bleeding_hot": "Bleeding hot",
+          "cooling": "Cooling",
+          "heating": "Heating",
+          "off": "Off"
+        }
+      }
+    }
   }
 }

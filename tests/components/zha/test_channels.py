@@ -13,11 +13,19 @@ import homeassistant.components.zha.core.channels as zha_channels
 import homeassistant.components.zha.core.channels.base as base_channels
 import homeassistant.components.zha.core.const as zha_const
 import homeassistant.components.zha.core.registries as registries
+from homeassistant.core import HomeAssistant
 
 from .common import get_zha_gateway, make_zcl_header
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 
 from tests.common import async_capture_events
+
+
+@pytest.fixture(autouse=True)
+def disable_platform_only():
+    """Disable platforms to speed up tests."""
+    with patch("homeassistant.components.zha.PLATFORMS", []):
+        yield
 
 
 @pytest.fixture
@@ -97,37 +105,45 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
 
 
 @pytest.mark.parametrize(
-    "cluster_id, bind_count, attrs",
+    ("cluster_id", "bind_count", "attrs"),
     [
-        (0x0000, 0, {}),
-        (0x0001, 1, {"battery_voltage", "battery_percentage_remaining"}),
-        (0x0002, 1, {"current_temperature"}),
-        (0x0003, 0, {}),
-        (0x0004, 0, {}),
-        (0x0005, 1, {}),
-        (0x0006, 1, {"on_off"}),
-        (0x0007, 1, {}),
-        (0x0008, 1, {"current_level"}),
-        (0x0009, 1, {}),
-        (0x000C, 1, {"present_value"}),
-        (0x000D, 1, {"present_value"}),
-        (0x000E, 1, {"present_value"}),
-        (0x000D, 1, {"present_value"}),
-        (0x0010, 1, {"present_value"}),
-        (0x0011, 1, {"present_value"}),
-        (0x0012, 1, {"present_value"}),
-        (0x0013, 1, {"present_value"}),
-        (0x0014, 1, {"present_value"}),
-        (0x0015, 1, {}),
-        (0x0016, 1, {}),
-        (0x0019, 0, {}),
-        (0x001A, 1, {}),
-        (0x001B, 1, {}),
-        (0x0020, 1, {}),
-        (0x0021, 0, {}),
-        (0x0101, 1, {"lock_state"}),
+        (zigpy.zcl.clusters.general.Basic.cluster_id, 0, {}),
         (
-            0x0201,
+            zigpy.zcl.clusters.general.PowerConfiguration.cluster_id,
+            1,
+            {"battery_voltage", "battery_percentage_remaining"},
+        ),
+        (
+            zigpy.zcl.clusters.general.DeviceTemperature.cluster_id,
+            1,
+            {"current_temperature"},
+        ),
+        (zigpy.zcl.clusters.general.Identify.cluster_id, 0, {}),
+        (zigpy.zcl.clusters.general.Groups.cluster_id, 0, {}),
+        (zigpy.zcl.clusters.general.Scenes.cluster_id, 1, {}),
+        (zigpy.zcl.clusters.general.OnOff.cluster_id, 1, {"on_off"}),
+        (zigpy.zcl.clusters.general.OnOffConfiguration.cluster_id, 1, {}),
+        (zigpy.zcl.clusters.general.LevelControl.cluster_id, 1, {"current_level"}),
+        (zigpy.zcl.clusters.general.Alarms.cluster_id, 1, {}),
+        (zigpy.zcl.clusters.general.AnalogInput.cluster_id, 1, {"present_value"}),
+        (zigpy.zcl.clusters.general.AnalogOutput.cluster_id, 1, {"present_value"}),
+        (zigpy.zcl.clusters.general.AnalogValue.cluster_id, 1, {"present_value"}),
+        (zigpy.zcl.clusters.general.AnalogOutput.cluster_id, 1, {"present_value"}),
+        (zigpy.zcl.clusters.general.BinaryOutput.cluster_id, 1, {"present_value"}),
+        (zigpy.zcl.clusters.general.BinaryValue.cluster_id, 1, {"present_value"}),
+        (zigpy.zcl.clusters.general.MultistateInput.cluster_id, 1, {"present_value"}),
+        (zigpy.zcl.clusters.general.MultistateOutput.cluster_id, 1, {"present_value"}),
+        (zigpy.zcl.clusters.general.MultistateValue.cluster_id, 1, {"present_value"}),
+        (zigpy.zcl.clusters.general.Commissioning.cluster_id, 1, {}),
+        (zigpy.zcl.clusters.general.Partition.cluster_id, 1, {}),
+        (zigpy.zcl.clusters.general.Ota.cluster_id, 0, {}),
+        (zigpy.zcl.clusters.general.PowerProfile.cluster_id, 1, {}),
+        (zigpy.zcl.clusters.general.ApplianceControl.cluster_id, 1, {}),
+        (zigpy.zcl.clusters.general.PollControl.cluster_id, 1, {}),
+        (zigpy.zcl.clusters.general.GreenPowerProxy.cluster_id, 0, {}),
+        (zigpy.zcl.clusters.closures.DoorLock.cluster_id, 1, {"lock_state"}),
+        (
+            zigpy.zcl.clusters.hvac.Thermostat.cluster_id,
             1,
             {
                 "local_temperature",
@@ -143,18 +159,67 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
                 "pi_heating_demand",
             },
         ),
-        (0x0202, 1, {"fan_mode"}),
-        (0x0300, 1, {"current_x", "current_y", "color_temperature"}),
-        (0x0400, 1, {"measured_value"}),
-        (0x0401, 1, {"level_status"}),
-        (0x0402, 1, {"measured_value"}),
-        (0x0403, 1, {"measured_value"}),
-        (0x0404, 1, {"measured_value"}),
-        (0x0405, 1, {"measured_value"}),
-        (0x0406, 1, {"occupancy"}),
-        (0x0702, 1, {"instantaneous_demand"}),
+        (zigpy.zcl.clusters.hvac.Fan.cluster_id, 1, {"fan_mode"}),
         (
-            0x0B04,
+            zigpy.zcl.clusters.lighting.Color.cluster_id,
+            1,
+            {
+                "current_x",
+                "current_y",
+                "color_temperature",
+                "current_hue",
+                "enhanced_current_hue",
+                "current_saturation",
+            },
+        ),
+        (
+            zigpy.zcl.clusters.measurement.IlluminanceMeasurement.cluster_id,
+            1,
+            {"measured_value"},
+        ),
+        (
+            zigpy.zcl.clusters.measurement.IlluminanceLevelSensing.cluster_id,
+            1,
+            {"level_status"},
+        ),
+        (
+            zigpy.zcl.clusters.measurement.TemperatureMeasurement.cluster_id,
+            1,
+            {"measured_value"},
+        ),
+        (
+            zigpy.zcl.clusters.measurement.PressureMeasurement.cluster_id,
+            1,
+            {"measured_value"},
+        ),
+        (
+            zigpy.zcl.clusters.measurement.FlowMeasurement.cluster_id,
+            1,
+            {"measured_value"},
+        ),
+        (
+            zigpy.zcl.clusters.measurement.RelativeHumidity.cluster_id,
+            1,
+            {"measured_value"},
+        ),
+        (zigpy.zcl.clusters.measurement.OccupancySensing.cluster_id, 1, {"occupancy"}),
+        (
+            zigpy.zcl.clusters.smartenergy.Metering.cluster_id,
+            1,
+            {
+                "instantaneous_demand",
+                "current_summ_delivered",
+                "current_tier1_summ_delivered",
+                "current_tier2_summ_delivered",
+                "current_tier3_summ_delivered",
+                "current_tier4_summ_delivered",
+                "current_tier5_summ_delivered",
+                "current_tier6_summ_delivered",
+                "status",
+            },
+        ),
+        (
+            zigpy.zcl.clusters.homeautomation.ElectricalMeasurement.cluster_id,
             1,
             {
                 "active_power",
@@ -170,7 +235,7 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
 )
 async def test_in_channel_config(
     cluster_id, bind_count, attrs, channel_pool, zigpy_device_mock, zha_gateway
-):
+) -> None:
     """Test ZHA core channel configuration for input clusters."""
     zigpy_dev = zigpy_device_mock(
         {1: {SIG_EP_INPUT: [cluster_id], SIG_EP_OUTPUT: [], SIG_EP_TYPE: 0x1234}},
@@ -200,7 +265,7 @@ async def test_in_channel_config(
 
 
 @pytest.mark.parametrize(
-    "cluster_id, bind_count",
+    ("cluster_id", "bind_count"),
     [
         (0x0000, 0),
         (0x0001, 1),
@@ -233,7 +298,7 @@ async def test_in_channel_config(
 )
 async def test_out_channel_config(
     cluster_id, bind_count, channel_pool, zigpy_device_mock, zha_gateway
-):
+) -> None:
     """Test ZHA core channel configuration for output clusters."""
     zigpy_dev = zigpy_device_mock(
         {1: {SIG_EP_OUTPUT: [cluster_id], SIG_EP_INPUT: [], SIG_EP_TYPE: 0x1234}},
@@ -255,15 +320,15 @@ async def test_out_channel_config(
     assert cluster.configure_reporting.call_count == 0
 
 
-def test_channel_registry():
+def test_channel_registry() -> None:
     """Test ZIGBEE Channel Registry."""
-    for (cluster_id, channel) in registries.ZIGBEE_CHANNEL_REGISTRY.items():
+    for cluster_id, channel in registries.ZIGBEE_CHANNEL_REGISTRY.items():
         assert isinstance(cluster_id, int)
         assert 0 <= cluster_id <= 0xFFFF
         assert issubclass(channel, base_channels.ZigbeeChannel)
 
 
-def test_epch_unclaimed_channels(channel):
+def test_epch_unclaimed_channels(channel) -> None:
     """Test unclaimed channels."""
 
     ch_1 = channel(zha_const.CHANNEL_ON_OFF, 6)
@@ -299,7 +364,7 @@ def test_epch_unclaimed_channels(channel):
         assert ch_3 not in available
 
 
-def test_epch_claim_channels(channel):
+def test_epch_claim_channels(channel) -> None:
     """Test channel claiming."""
 
     ch_1 = channel(zha_const.CHANNEL_ON_OFF, 6)
@@ -338,7 +403,7 @@ def test_epch_claim_channels(channel):
     "homeassistant.components.zha.core.discovery.PROBE.discover_entities",
     mock.MagicMock(),
 )
-def test_ep_channels_all_channels(m1, zha_device_mock):
+def test_ep_channels_all_channels(m1, zha_device_mock) -> None:
     """Test EndpointChannels adding all channels."""
     zha_device = zha_device_mock(
         {
@@ -389,7 +454,7 @@ def test_ep_channels_all_channels(m1, zha_device_mock):
     "homeassistant.components.zha.core.discovery.PROBE.discover_entities",
     mock.MagicMock(),
 )
-def test_channel_power_config(m1, zha_device_mock):
+def test_channel_power_config(m1, zha_device_mock) -> None:
     """Test that channels only get a single power channel."""
     in_clusters = [0, 1, 6, 8]
     zha_device = zha_device_mock(
@@ -434,7 +499,7 @@ def test_channel_power_config(m1, zha_device_mock):
     assert "2:0x0001" in pools[2].all_channels
 
 
-async def test_ep_channels_configure(channel):
+async def test_ep_channels_configure(channel) -> None:
     """Test unclaimed channels."""
 
     ch_1 = channel(zha_const.CHANNEL_ON_OFF, 6)
@@ -471,7 +536,7 @@ async def test_ep_channels_configure(channel):
     assert ch_5.warning.call_count == 2
 
 
-async def test_poll_control_configure(poll_control_ch):
+async def test_poll_control_configure(poll_control_ch) -> None:
     """Test poll control channel configuration."""
     await poll_control_ch.async_configure()
     assert poll_control_ch.cluster.write_attributes.call_count == 1
@@ -480,7 +545,7 @@ async def test_poll_control_configure(poll_control_ch):
     }
 
 
-async def test_poll_control_checkin_response(poll_control_ch):
+async def test_poll_control_checkin_response(poll_control_ch) -> None:
     """Test poll control channel checkin response."""
     rsp_mock = AsyncMock()
     set_interval_mock = AsyncMock()
@@ -505,12 +570,14 @@ async def test_poll_control_checkin_response(poll_control_ch):
     assert cluster.endpoint.request.call_args_list[1][0][0] == 0x0020
 
 
-async def test_poll_control_cluster_command(hass, poll_control_device):
+async def test_poll_control_cluster_command(
+    hass: HomeAssistant, poll_control_device
+) -> None:
     """Test poll control channel response to cluster command."""
     checkin_mock = AsyncMock()
     poll_control_ch = poll_control_device.channels.pools[0].all_channels["1:0x0020"]
     cluster = poll_control_ch.cluster
-    events = async_capture_events(hass, "zha_event")
+    events = async_capture_events(hass, zha_const.ZHA_EVENT)
 
     with mock.patch.object(poll_control_ch, "check_in_response", checkin_mock):
         tsn = 22
@@ -534,7 +601,9 @@ async def test_poll_control_cluster_command(hass, poll_control_device):
     assert data["device_id"] == poll_control_device.device_id
 
 
-async def test_poll_control_ignore_list(hass, poll_control_device):
+async def test_poll_control_ignore_list(
+    hass: HomeAssistant, poll_control_device
+) -> None:
     """Test poll control channel ignore list."""
     set_long_poll_mock = AsyncMock()
     poll_control_ch = poll_control_device.channels.pools[0].all_channels["1:0x0020"]
@@ -553,7 +622,7 @@ async def test_poll_control_ignore_list(hass, poll_control_device):
     assert set_long_poll_mock.call_count == 0
 
 
-async def test_poll_control_ikea(hass, poll_control_device):
+async def test_poll_control_ikea(hass: HomeAssistant, poll_control_device) -> None:
     """Test poll control channel ignore list for ikea."""
     set_long_poll_mock = AsyncMock()
     poll_control_ch = poll_control_device.channels.pools[0].all_channels["1:0x0020"]
@@ -580,7 +649,7 @@ def zigpy_zll_device(zigpy_device_mock):
 
 async def test_zll_device_groups(
     zigpy_zll_device, channel_pool, zigpy_coordinator_device
-):
+) -> None:
     """Test adding coordinator to ZLL groups."""
 
     cluster = zigpy_zll_device.endpoints[1].lightlink
@@ -646,7 +715,7 @@ async def test_zll_device_groups(
     "homeassistant.components.zha.core.discovery.PROBE.discover_entities",
     mock.MagicMock(),
 )
-async def test_cluster_no_ep_attribute(m1, zha_device_mock):
+async def test_cluster_no_ep_attribute(m1, zha_device_mock) -> None:
     """Test channels for clusters without ep_attribute."""
 
     zha_device = zha_device_mock(

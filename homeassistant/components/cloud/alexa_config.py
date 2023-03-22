@@ -1,5 +1,8 @@
 """Alexa configuration for Home Assistant Cloud."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Callable
 from contextlib import suppress
 from datetime import timedelta
 from http import HTTPStatus
@@ -24,7 +27,15 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from .const import CONF_ENTITY_CONFIG, CONF_FILTER, PREF_SHOULD_EXPOSE
+from .const import (
+    CONF_ENTITY_CONFIG,
+    CONF_FILTER,
+    PREF_ALEXA_DEFAULT_EXPOSE,
+    PREF_ALEXA_ENTITY_CONFIGS,
+    PREF_ALEXA_REPORT_STATE,
+    PREF_ENABLE_ALEXA,
+    PREF_SHOULD_EXPOSE,
+)
 from .prefs import CloudPreferences
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,8 +65,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         self._token = None
         self._token_valid = None
         self._cur_entity_prefs = prefs.alexa_entity_configs
-        self._cur_default_expose = prefs.alexa_default_expose
-        self._alexa_sync_unsub = None
+        self._alexa_sync_unsub: Callable[[], None] | None = None
         self._endpoint = None
 
     @property
@@ -75,7 +85,11 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
     @property
     def should_report_state(self):
         """Return if states should be proactively reported."""
-        return self._prefs.alexa_report_state and self.authorized
+        return (
+            self._prefs.alexa_enabled
+            and self._prefs.alexa_report_state
+            and self.authorized
+        )
 
     @property
     def endpoint(self):
@@ -164,9 +178,11 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
                 if self.should_report_state:
                     persistent_notification.async_create(
                         self.hass,
-                        f"There was an error reporting state to Alexa ({body['reason']}). "
-                        "Please re-link your Alexa skill via the Alexa app to "
-                        "continue using it.",
+                        (
+                            "There was an error reporting state to Alexa"
+                            f" ({body['reason']}). Please re-link your Alexa skill via"
+                            " the Alexa app to continue using it."
+                        ),
                         "Alexa state reporting disabled",
                         "cloud_alexa_report",
                     )
@@ -179,7 +195,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         self._token_valid = utcnow() + timedelta(seconds=body["expires_in"])
         return self._token
 
-    async def _async_prefs_updated(self, prefs):
+    async def _async_prefs_updated(self, prefs: CloudPreferences) -> None:
         """Handle updated preferences."""
         if not self._cloud.is_logged_in:
             if self.is_reporting_states:
@@ -189,6 +205,8 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
                 self._alexa_sync_unsub()
                 self._alexa_sync_unsub = None
             return
+
+        updated_prefs = prefs.last_updated
 
         if (
             ALEXA_DOMAIN not in self.hass.config.components
@@ -211,28 +229,30 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
             await self.async_sync_entities()
             return
 
-        # If user has filter in config.yaml, don't sync.
-        if not self._config[CONF_FILTER].empty_filter:
-            return
-
-        # If entity prefs are the same, don't sync.
-        if (
-            self._cur_entity_prefs is prefs.alexa_entity_configs
-            and self._cur_default_expose is prefs.alexa_default_expose
+        # Nothing to do if no Alexa related things have changed
+        if not any(
+            key in updated_prefs
+            for key in (
+                PREF_ALEXA_DEFAULT_EXPOSE,
+                PREF_ALEXA_ENTITY_CONFIGS,
+                PREF_ALEXA_REPORT_STATE,
+                PREF_ENABLE_ALEXA,
+            )
         ):
             return
 
-        if self._alexa_sync_unsub:
-            self._alexa_sync_unsub()
-            self._alexa_sync_unsub = None
+        # If we update just entity preferences, delay updating
+        # as we might update more
+        if updated_prefs == {PREF_ALEXA_ENTITY_CONFIGS}:
+            if self._alexa_sync_unsub:
+                self._alexa_sync_unsub()
 
-        if self._cur_default_expose is not prefs.alexa_default_expose:
-            await self.async_sync_entities()
+            self._alexa_sync_unsub = async_call_later(
+                self.hass, SYNC_DELAY, self._sync_prefs
+            )
             return
 
-        self._alexa_sync_unsub = async_call_later(
-            self.hass, SYNC_DELAY, self._sync_prefs
-        )
+        await self.async_sync_entities()
 
     async def _sync_prefs(self, _now):
         """Sync the updated preferences to Alexa."""
@@ -243,9 +263,14 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         seen = set()
         to_update = []
         to_remove = []
+        is_enabled = self.enabled
 
         for entity_id, info in old_prefs.items():
             seen.add(entity_id)
+
+            if not is_enabled:
+                to_remove.append(entity_id)
+
             old_expose = info.get(PREF_SHOULD_EXPOSE)
 
             if entity_id in new_prefs:
@@ -291,8 +316,10 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         to_update = []
         to_remove = []
 
+        is_enabled = self.enabled
+
         for entity in alexa_entities.async_get_entities(self.hass, self):
-            if self.should_expose(entity.entity_id):
+            if is_enabled and self.should_expose(entity.entity_id):
                 to_update.append(entity.entity_id)
             else:
                 to_remove.append(entity.entity_id)
@@ -314,14 +341,20 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
 
         if to_update:
             tasks.append(
-                alexa_state_report.async_send_add_or_update_message(
-                    self.hass, self, to_update
+                asyncio.create_task(
+                    alexa_state_report.async_send_add_or_update_message(
+                        self.hass, self, to_update
+                    )
                 )
             )
 
         if to_remove:
             tasks.append(
-                alexa_state_report.async_send_delete_message(self.hass, self, to_remove)
+                asyncio.create_task(
+                    alexa_state_report.async_send_delete_message(
+                        self.hass, self, to_remove
+                    )
+                )
             )
 
         try:

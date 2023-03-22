@@ -1,10 +1,7 @@
 """deCONZ switch platform tests."""
-
 from unittest.mock import patch
 
-from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.siren import ATTR_DURATION, DOMAIN as SIREN_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -13,7 +10,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.helpers import entity_registry as er
+from homeassistant.core import HomeAssistant
 
 from .test_gateway import (
     DECONZ_WEB_REQUEST,
@@ -21,8 +18,12 @@ from .test_gateway import (
     setup_deconz_integration,
 )
 
+from tests.test_util.aiohttp import AiohttpClientMocker
 
-async def test_sirens(hass, aioclient_mock, mock_deconz_websocket):
+
+async def test_sirens(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test that siren entities are created."""
     data = {
         "lights": {
@@ -103,30 +104,3 @@ async def test_sirens(hass, aioclient_mock, mock_deconz_websocket):
     await hass.config_entries.async_remove(config_entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
-
-
-async def test_remove_legacy_siren_switch(hass, aioclient_mock):
-    """Test that switch platform cleans up legacy siren entities."""
-    unique_id = "00:00:00:00:00:00:00:00-00"
-
-    registry = er.async_get(hass)
-    switch_siren_entity = registry.async_get_or_create(
-        SWITCH_DOMAIN, DECONZ_DOMAIN, unique_id
-    )
-
-    assert switch_siren_entity
-
-    data = {
-        "lights": {
-            "1": {
-                "name": "Warning device",
-                "type": "Warning device",
-                "state": {"alert": "lselect", "reachable": True},
-                "uniqueid": unique_id,
-            },
-        }
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        await setup_deconz_integration(hass, aioclient_mock)
-
-    assert not registry.async_get(switch_siren_entity.entity_id)

@@ -7,7 +7,7 @@ from xknx import XKNX
 from xknx.devices import Notification as XknxNotification
 
 from homeassistant.components.notify import BaseNotificationService
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -34,6 +34,7 @@ async def async_get_service(
                     xknx,
                     name=device_config[CONF_NAME],
                     group_address=device_config[KNX_ADDRESS],
+                    value_type=device_config[CONF_TYPE],
                 )
             )
         return (

@@ -5,8 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from rokuecp import RokuConnectionError, RokuConnectionTimeoutError, RokuError
 
-from homeassistant.components.media_player import MediaPlayerDeviceClass
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     ATTR_APP_ID,
     ATTR_APP_NAME,
     ATTR_INPUT_SOURCE,
@@ -19,30 +18,12 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_TITLE,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MP_DOMAIN,
-    MEDIA_CLASS_APP,
-    MEDIA_CLASS_CHANNEL,
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_CLASS_VIDEO,
-    MEDIA_TYPE_APP,
-    MEDIA_TYPE_APPS,
-    MEDIA_TYPE_CHANNEL,
-    MEDIA_TYPE_CHANNELS,
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_URL,
-    MEDIA_TYPE_VIDEO,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
-    SUPPORT_BROWSE_MEDIA,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_STEP,
+    MediaClass,
+    MediaPlayerDeviceClass,
+    MediaPlayerEntityFeature,
+    MediaType,
 )
 from homeassistant.components.roku.const import (
     ATTR_CONTENT_ID,
@@ -52,7 +33,7 @@ from homeassistant.components.roku.const import (
     DOMAIN,
     SERVICE_SEARCH,
 )
-from homeassistant.components.stream.const import FORMAT_CONTENT_TYPE, HLS_PROVIDER
+from homeassistant.components.stream import FORMAT_CONTENT_TYPE, HLS_PROVIDER
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
@@ -68,7 +49,6 @@ from homeassistant.const import (
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_UP,
-    STATE_HOME,
     STATE_IDLE,
     STATE_ON,
     STATE_PAUSED,
@@ -82,6 +62,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.typing import WebSocketGenerator
 
 MAIN_ENTITY_ID = f"{MP_DOMAIN}.my_roku_3"
 TV_ENTITY_ID = f"{MP_DOMAIN}.58_onn_roku_tv"
@@ -195,7 +176,7 @@ async def test_availability(
         mock_roku.update.side_effect = None
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
-        assert hass.states.get(MAIN_ENTITY_ID).state == STATE_HOME
+        assert hass.states.get(MAIN_ENTITY_ID).state == STATE_IDLE
 
 
 async def test_supported_features(
@@ -207,17 +188,17 @@ async def test_supported_features(
     # Features supported for Rokus
     state = hass.states.get(MAIN_ENTITY_ID)
     assert (
-        SUPPORT_PREVIOUS_TRACK
-        | SUPPORT_NEXT_TRACK
-        | SUPPORT_VOLUME_STEP
-        | SUPPORT_VOLUME_MUTE
-        | SUPPORT_SELECT_SOURCE
-        | SUPPORT_PAUSE
-        | SUPPORT_PLAY
-        | SUPPORT_PLAY_MEDIA
-        | SUPPORT_TURN_ON
-        | SUPPORT_TURN_OFF
-        | SUPPORT_BROWSE_MEDIA
+        MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.BROWSE_MEDIA
         == state.attributes.get("supported_features")
     )
 
@@ -232,17 +213,17 @@ async def test_tv_supported_features(
     state = hass.states.get(TV_ENTITY_ID)
     assert state
     assert (
-        SUPPORT_PREVIOUS_TRACK
-        | SUPPORT_NEXT_TRACK
-        | SUPPORT_VOLUME_STEP
-        | SUPPORT_VOLUME_MUTE
-        | SUPPORT_SELECT_SOURCE
-        | SUPPORT_PAUSE
-        | SUPPORT_PLAY
-        | SUPPORT_PLAY_MEDIA
-        | SUPPORT_TURN_ON
-        | SUPPORT_TURN_OFF
-        | SUPPORT_BROWSE_MEDIA
+        MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.BROWSE_MEDIA
         == state.attributes.get("supported_features")
     )
 
@@ -253,7 +234,7 @@ async def test_attributes(
     """Test attributes."""
     state = hass.states.get(MAIN_ENTITY_ID)
     assert state
-    assert state.state == STATE_HOME
+    assert state.state == STATE_IDLE
 
     assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) is None
     assert state.attributes.get(ATTR_APP_ID) is None
@@ -272,7 +253,7 @@ async def test_attributes_app(
     assert state
     assert state.state == STATE_ON
 
-    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_APP
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MediaType.APP
     assert state.attributes.get(ATTR_APP_ID) == "12"
     assert state.attributes.get(ATTR_APP_NAME) == "Netflix"
     assert state.attributes.get(ATTR_INPUT_SOURCE) == "Netflix"
@@ -291,7 +272,7 @@ async def test_attributes_app_media_playing(
     assert state
     assert state.state == STATE_PLAYING
 
-    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_APP
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MediaType.APP
     assert state.attributes.get(ATTR_MEDIA_DURATION) == 6496
     assert state.attributes.get(ATTR_MEDIA_POSITION) == 38
     assert state.attributes.get(ATTR_APP_ID) == "74519"
@@ -310,7 +291,7 @@ async def test_attributes_app_media_paused(
     assert state
     assert state.state == STATE_PAUSED
 
-    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_APP
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MediaType.APP
     assert state.attributes.get(ATTR_MEDIA_DURATION) == 6496
     assert state.attributes.get(ATTR_MEDIA_POSITION) == 313
     assert state.attributes.get(ATTR_APP_ID) == "74519"
@@ -347,7 +328,7 @@ async def test_tv_attributes(
     assert state.attributes.get(ATTR_APP_ID) == "tvinput.dtv"
     assert state.attributes.get(ATTR_APP_NAME) == "Antenna TV"
     assert state.attributes.get(ATTR_INPUT_SOURCE) == "Antenna TV"
-    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_CHANNEL
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MediaType.CHANNEL
     assert state.attributes.get(ATTR_MEDIA_CHANNEL) == "getTV (14.3)"
     assert state.attributes.get(ATTR_MEDIA_TITLE) == "Airwolf"
 
@@ -437,7 +418,7 @@ async def test_services(
         SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: MAIN_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_APP,
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.APP,
             ATTR_MEDIA_CONTENT_ID: "11",
         },
         blocking=True,
@@ -451,7 +432,7 @@ async def test_services(
         SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: MAIN_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_APP,
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.APP,
             ATTR_MEDIA_CONTENT_ID: "291097",
             ATTR_MEDIA_EXTRA: {
                 ATTR_MEDIA_TYPE: "movie",
@@ -518,7 +499,7 @@ async def test_services_play_media(
         SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: MAIN_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
             ATTR_MEDIA_CONTENT_ID: "https://localhost/media.m4a",
             ATTR_MEDIA_EXTRA: {ATTR_FORMAT: "blah"},
         },
@@ -529,13 +510,13 @@ async def test_services_play_media(
 
 
 @pytest.mark.parametrize(
-    "content_type, content_id, resolved_name, resolved_format",
+    ("content_type", "content_id", "resolved_name", "resolved_format"),
     [
-        (MEDIA_TYPE_URL, "http://localhost/media.m4a", "media.m4a", "m4a"),
-        (MEDIA_TYPE_MUSIC, "http://localhost/media.m4a", "media.m4a", "m4a"),
-        (MEDIA_TYPE_MUSIC, "http://localhost/media.mka", "media.mka", "mka"),
+        (MediaType.URL, "http://localhost/media.m4a", "media.m4a", "m4a"),
+        (MediaType.MUSIC, "http://localhost/media.m4a", "media.m4a", "m4a"),
+        (MediaType.MUSIC, "http://localhost/media.mka", "media.mka", "mka"),
         (
-            MEDIA_TYPE_MUSIC,
+            MediaType.MUSIC,
             "http://localhost/api/tts_proxy/generated.mp3",
             "Text to Speech",
             "mp3",
@@ -574,17 +555,17 @@ async def test_services_play_media_audio(
 
 
 @pytest.mark.parametrize(
-    "content_type, content_id, resolved_name, resolved_format",
+    ("content_type", "content_id", "resolved_name", "resolved_format"),
     [
-        (MEDIA_TYPE_URL, "http://localhost/media.mp4", "media.mp4", "mp4"),
-        (MEDIA_TYPE_VIDEO, "http://localhost/media.m4v", "media.m4v", "mp4"),
-        (MEDIA_TYPE_VIDEO, "http://localhost/media.mov", "media.mov", "mp4"),
-        (MEDIA_TYPE_VIDEO, "http://localhost/media.mkv", "media.mkv", "mkv"),
-        (MEDIA_TYPE_VIDEO, "http://localhost/media.mks", "media.mks", "mks"),
-        (MEDIA_TYPE_VIDEO, "http://localhost/media.m3u8", "media.m3u8", "hls"),
-        (MEDIA_TYPE_VIDEO, "http://localhost/media.dash", "media.dash", "dash"),
-        (MEDIA_TYPE_VIDEO, "http://localhost/media.mpd", "media.mpd", "dash"),
-        (MEDIA_TYPE_VIDEO, "http://localhost/media.ism/manifest", "media.ism", "ism"),
+        (MediaType.URL, "http://localhost/media.mp4", "media.mp4", "mp4"),
+        (MediaType.VIDEO, "http://localhost/media.m4v", "media.m4v", "mp4"),
+        (MediaType.VIDEO, "http://localhost/media.mov", "media.mov", "mp4"),
+        (MediaType.VIDEO, "http://localhost/media.mkv", "media.mkv", "mkv"),
+        (MediaType.VIDEO, "http://localhost/media.mks", "media.mks", "mks"),
+        (MediaType.VIDEO, "http://localhost/media.m3u8", "media.m3u8", "hls"),
+        (MediaType.VIDEO, "http://localhost/media.dash", "media.dash", "dash"),
+        (MediaType.VIDEO, "http://localhost/media.mpd", "media.mpd", "dash"),
+        (MediaType.VIDEO, "http://localhost/media.ism/manifest", "media.ism", "ism"),
     ],
 )
 async def test_services_play_media_video(
@@ -718,7 +699,7 @@ async def test_tv_services(
         SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: TV_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_CHANNEL,
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
             ATTR_MEDIA_CONTENT_ID: "55",
         },
         blocking=True,
@@ -729,11 +710,11 @@ async def test_tv_services(
 
 
 async def test_media_browse(
-    hass,
+    hass: HomeAssistant,
     init_integration,
     mock_roku,
-    hass_ws_client,
-):
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test browsing media."""
     client = await hass_ws_client(hass)
 
@@ -753,16 +734,16 @@ async def test_media_browse(
 
     assert msg["result"]
     assert msg["result"]["title"] == "Apps"
-    assert msg["result"]["media_class"] == MEDIA_CLASS_DIRECTORY
-    assert msg["result"]["media_content_type"] == MEDIA_TYPE_APPS
-    assert msg["result"]["children_media_class"] == MEDIA_CLASS_APP
+    assert msg["result"]["media_class"] == MediaClass.DIRECTORY
+    assert msg["result"]["media_content_type"] == MediaType.APPS
+    assert msg["result"]["children_media_class"] == MediaClass.APP
     assert msg["result"]["can_expand"]
     assert not msg["result"]["can_play"]
     assert len(msg["result"]["children"]) == 8
-    assert msg["result"]["children_media_class"] == MEDIA_CLASS_APP
+    assert msg["result"]["children_media_class"] == MediaClass.APP
 
     assert msg["result"]["children"][0]["title"] == "Roku Channel Store"
-    assert msg["result"]["children"][0]["media_content_type"] == MEDIA_TYPE_APP
+    assert msg["result"]["children"][0]["media_content_type"] == MediaType.APP
     assert msg["result"]["children"][0]["media_content_id"] == "11"
     assert (
         msg["result"]["children"][0]["thumbnail"]
@@ -789,11 +770,11 @@ async def test_media_browse(
 
 
 async def test_media_browse_internal(
-    hass,
+    hass: HomeAssistant,
     init_integration,
     mock_roku,
-    hass_ws_client,
-):
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test browsing media with internal url."""
     await async_process_ha_core_config(
         hass,
@@ -812,7 +793,7 @@ async def test_media_browse_internal(
                 "id": 1,
                 "type": "media_player/browse_media",
                 "entity_id": MAIN_ENTITY_ID,
-                "media_content_type": MEDIA_TYPE_APPS,
+                "media_content_type": MediaType.APPS,
                 "media_content_id": "apps",
             }
         )
@@ -825,27 +806,27 @@ async def test_media_browse_internal(
 
     assert msg["result"]
     assert msg["result"]["title"] == "Apps"
-    assert msg["result"]["media_class"] == MEDIA_CLASS_DIRECTORY
-    assert msg["result"]["media_content_type"] == MEDIA_TYPE_APPS
-    assert msg["result"]["children_media_class"] == MEDIA_CLASS_APP
+    assert msg["result"]["media_class"] == MediaClass.DIRECTORY
+    assert msg["result"]["media_content_type"] == MediaType.APPS
+    assert msg["result"]["children_media_class"] == MediaClass.APP
     assert msg["result"]["can_expand"]
     assert not msg["result"]["can_play"]
     assert len(msg["result"]["children"]) == 8
-    assert msg["result"]["children_media_class"] == MEDIA_CLASS_APP
+    assert msg["result"]["children_media_class"] == MediaClass.APP
 
     assert msg["result"]["children"][0]["title"] == "Roku Channel Store"
-    assert msg["result"]["children"][0]["media_content_type"] == MEDIA_TYPE_APP
+    assert msg["result"]["children"][0]["media_content_type"] == MediaType.APP
     assert msg["result"]["children"][0]["media_content_id"] == "11"
     assert "/query/icon/11" in msg["result"]["children"][0]["thumbnail"]
     assert msg["result"]["children"][0]["can_play"]
 
 
 async def test_media_browse_local_source(
-    hass,
+    hass: HomeAssistant,
     init_integration,
     mock_roku,
-    hass_ws_client,
-):
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test browsing local media source."""
     local_media = hass.config.path("media")
     await async_process_ha_core_config(
@@ -874,17 +855,17 @@ async def test_media_browse_local_source(
 
     assert msg["result"]
     assert msg["result"]["title"] == "Roku"
-    assert msg["result"]["media_class"] == MEDIA_CLASS_DIRECTORY
+    assert msg["result"]["media_class"] == MediaClass.DIRECTORY
     assert msg["result"]["media_content_type"] == "root"
     assert msg["result"]["can_expand"]
     assert not msg["result"]["can_play"]
     assert len(msg["result"]["children"]) == 2
 
     assert msg["result"]["children"][0]["title"] == "Apps"
-    assert msg["result"]["children"][0]["media_content_type"] == MEDIA_TYPE_APPS
+    assert msg["result"]["children"][0]["media_content_type"] == MediaType.APPS
 
     assert msg["result"]["children"][1]["title"] == "Local Media"
-    assert msg["result"]["children"][1]["media_class"] == MEDIA_CLASS_DIRECTORY
+    assert msg["result"]["children"][1]["media_class"] == MediaClass.DIRECTORY
     assert msg["result"]["children"][1]["media_content_type"] is None
     assert (
         msg["result"]["children"][1]["media_content_id"]
@@ -912,7 +893,7 @@ async def test_media_browse_local_source(
 
     assert msg["result"]
     assert msg["result"]["title"] == "Local Media"
-    assert msg["result"]["media_class"] == MEDIA_CLASS_DIRECTORY
+    assert msg["result"]["media_class"] == MediaClass.DIRECTORY
     assert msg["result"]["media_content_type"] is None
     assert len(msg["result"]["children"]) == 2
 
@@ -948,12 +929,12 @@ async def test_media_browse_local_source(
     assert msg["success"]
 
     assert msg["result"]["title"] == "media"
-    assert msg["result"]["media_class"] == MEDIA_CLASS_DIRECTORY
+    assert msg["result"]["media_class"] == MediaClass.DIRECTORY
     assert msg["result"]["media_content_type"] == ""
     assert len(msg["result"]["children"]) == 2
 
     assert msg["result"]["children"][0]["title"] == "Epic Sax Guy 10 Hours.mp4"
-    assert msg["result"]["children"][0]["media_class"] == MEDIA_CLASS_VIDEO
+    assert msg["result"]["children"][0]["media_class"] == MediaClass.VIDEO
     assert msg["result"]["children"][0]["media_content_type"] == "video/mp4"
     assert (
         msg["result"]["children"][0]["media_content_id"]
@@ -963,11 +944,11 @@ async def test_media_browse_local_source(
 
 @pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
 async def test_tv_media_browse(
-    hass,
+    hass: HomeAssistant,
     init_integration,
     mock_roku,
-    hass_ws_client,
-):
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test browsing media."""
     client = await hass_ws_client(hass)
 
@@ -987,7 +968,7 @@ async def test_tv_media_browse(
 
     assert msg["result"]
     assert msg["result"]["title"] == "Roku"
-    assert msg["result"]["media_class"] == MEDIA_CLASS_DIRECTORY
+    assert msg["result"]["media_class"] == MediaClass.DIRECTORY
     assert msg["result"]["media_content_type"] == "root"
     assert msg["result"]["can_expand"]
     assert not msg["result"]["can_play"]
@@ -999,7 +980,7 @@ async def test_tv_media_browse(
             "id": 2,
             "type": "media_player/browse_media",
             "entity_id": TV_ENTITY_ID,
-            "media_content_type": MEDIA_TYPE_APPS,
+            "media_content_type": MediaType.APPS,
             "media_content_id": "apps",
         }
     )
@@ -1012,16 +993,16 @@ async def test_tv_media_browse(
 
     assert msg["result"]
     assert msg["result"]["title"] == "Apps"
-    assert msg["result"]["media_class"] == MEDIA_CLASS_DIRECTORY
-    assert msg["result"]["media_content_type"] == MEDIA_TYPE_APPS
-    assert msg["result"]["children_media_class"] == MEDIA_CLASS_APP
+    assert msg["result"]["media_class"] == MediaClass.DIRECTORY
+    assert msg["result"]["media_content_type"] == MediaType.APPS
+    assert msg["result"]["children_media_class"] == MediaClass.APP
     assert msg["result"]["can_expand"]
     assert not msg["result"]["can_play"]
     assert len(msg["result"]["children"]) == 11
-    assert msg["result"]["children_media_class"] == MEDIA_CLASS_APP
+    assert msg["result"]["children_media_class"] == MediaClass.APP
 
     assert msg["result"]["children"][0]["title"] == "Satellite TV"
-    assert msg["result"]["children"][0]["media_content_type"] == MEDIA_TYPE_APP
+    assert msg["result"]["children"][0]["media_content_type"] == MediaType.APP
     assert msg["result"]["children"][0]["media_content_id"] == "tvinput.hdmi2"
     assert (
         msg["result"]["children"][0]["thumbnail"]
@@ -1030,7 +1011,7 @@ async def test_tv_media_browse(
     assert msg["result"]["children"][0]["can_play"]
 
     assert msg["result"]["children"][3]["title"] == "Roku Channel Store"
-    assert msg["result"]["children"][3]["media_content_type"] == MEDIA_TYPE_APP
+    assert msg["result"]["children"][3]["media_content_type"] == MediaType.APP
     assert msg["result"]["children"][3]["media_content_id"] == "11"
     assert (
         msg["result"]["children"][3]["thumbnail"]
@@ -1044,7 +1025,7 @@ async def test_tv_media_browse(
             "id": 3,
             "type": "media_player/browse_media",
             "entity_id": TV_ENTITY_ID,
-            "media_content_type": MEDIA_TYPE_CHANNELS,
+            "media_content_type": MediaType.CHANNELS,
             "media_content_id": "channels",
         }
     )
@@ -1057,16 +1038,16 @@ async def test_tv_media_browse(
 
     assert msg["result"]
     assert msg["result"]["title"] == "TV Channels"
-    assert msg["result"]["media_class"] == MEDIA_CLASS_DIRECTORY
-    assert msg["result"]["media_content_type"] == MEDIA_TYPE_CHANNELS
-    assert msg["result"]["children_media_class"] == MEDIA_CLASS_CHANNEL
+    assert msg["result"]["media_class"] == MediaClass.DIRECTORY
+    assert msg["result"]["media_content_type"] == MediaType.CHANNELS
+    assert msg["result"]["children_media_class"] == MediaClass.CHANNEL
     assert msg["result"]["can_expand"]
     assert not msg["result"]["can_play"]
     assert len(msg["result"]["children"]) == 4
-    assert msg["result"]["children_media_class"] == MEDIA_CLASS_CHANNEL
+    assert msg["result"]["children_media_class"] == MediaClass.CHANNEL
 
     assert msg["result"]["children"][0]["title"] == "WhatsOn (1.1)"
-    assert msg["result"]["children"][0]["media_content_type"] == MEDIA_TYPE_CHANNEL
+    assert msg["result"]["children"][0]["media_content_type"] == MediaType.CHANNEL
     assert msg["result"]["children"][0]["media_content_id"] == "1.1"
     assert msg["result"]["children"][0]["can_play"]
 

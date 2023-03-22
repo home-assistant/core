@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional, cast
+from typing import cast
 import uuid
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_RESOURCES, CONF_TYPE
+from homeassistant.const import CONF_ID, CONF_RESOURCES, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, storage
@@ -71,7 +71,7 @@ class ResourceStorageCollection(collection.StorageCollection):
     async def _async_load_data(self) -> dict | None:
         """Load the data."""
         if (data := await self.store.async_load()) is not None:
-            return cast(Optional[dict], data)
+            return cast(dict | None, data)
 
         # Import it from config.
         try:
@@ -94,7 +94,7 @@ class ResourceStorageCollection(collection.StorageCollection):
         conf.pop(CONF_RESOURCES)
 
         for item in data:
-            item[collection.CONF_ID] = uuid.uuid4().hex
+            item[CONF_ID] = uuid.uuid4().hex
 
         data = {"items": data}
 

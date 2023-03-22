@@ -1,81 +1,59 @@
 """Test UniFi Network integration setup process."""
-from unittest.mock import AsyncMock, patch
+from typing import Any
+from unittest.mock import patch
 
 from homeassistant.components import unifi
-from homeassistant.components.unifi import async_flatten_entry_data
-from homeassistant.components.unifi.const import CONF_CONTROLLER, DOMAIN as UNIFI_DOMAIN
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.components.unifi.const import DOMAIN as UNIFI_DOMAIN
+from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .test_controller import (
-    CONTROLLER_DATA,
-    DEFAULT_CONFIG_ENTRY_ID,
-    ENTRY_CONFIG,
-    setup_unifi_integration,
-)
+from .test_controller import DEFAULT_CONFIG_ENTRY_ID, setup_unifi_integration
 
-from tests.common import MockConfigEntry, flush_store
+from tests.common import flush_store
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_setup_with_no_config(hass):
+async def test_setup_with_no_config(hass: HomeAssistant) -> None:
     """Test that we do not discover anything or try to set up a controller."""
     assert await async_setup_component(hass, UNIFI_DOMAIN, {}) is True
     assert UNIFI_DOMAIN not in hass.data
 
 
-async def test_successful_config_entry(hass, aioclient_mock):
+async def test_successful_config_entry(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that configured options for a host are loaded via config entry."""
     await setup_unifi_integration(hass, aioclient_mock, unique_id=None)
     assert hass.data[UNIFI_DOMAIN]
 
 
-async def test_controller_fail_setup(hass):
-    """Test that a failed setup still stores controller."""
-    with patch("homeassistant.components.unifi.UniFiController") as mock_controller:
-        mock_controller.return_value.async_setup = AsyncMock(return_value=False)
+async def test_setup_entry_fails_config_entry_not_ready(hass: HomeAssistant) -> None:
+    """Failed authentication trigger a reauthentication flow."""
+    with patch(
+        "homeassistant.components.unifi.get_unifi_controller",
+        side_effect=CannotConnect,
+    ):
         await setup_unifi_integration(hass)
 
     assert hass.data[UNIFI_DOMAIN] == {}
 
 
-async def test_controller_mac(hass):
-    """Test that configured options for a host are loaded via config entry."""
-    entry = MockConfigEntry(
-        domain=UNIFI_DOMAIN, data=ENTRY_CONFIG, unique_id="1", entry_id=1
-    )
-    entry.add_to_hass(hass)
+async def test_setup_entry_fails_trigger_reauth_flow(hass: HomeAssistant) -> None:
+    """Failed authentication trigger a reauthentication flow."""
+    with patch(
+        "homeassistant.components.unifi.get_unifi_controller",
+        side_effect=AuthenticationRequired,
+    ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
+        await setup_unifi_integration(hass)
+        mock_flow_init.assert_called_once()
 
-    with patch("homeassistant.components.unifi.UniFiController") as mock_controller:
-        mock_controller.return_value.async_setup = AsyncMock(return_value=True)
-        mock_controller.return_value.mac = "mac1"
-        mock_controller.return_value.api.url = "https://123:443"
-        assert await unifi.async_setup_entry(hass, entry) is True
-
-    assert len(mock_controller.mock_calls) == 2
-
-    device_registry = await hass.helpers.device_registry.async_get_registry()
-    device = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id, connections={(CONNECTION_NETWORK_MAC, "mac1")}
-    )
-    assert device.configuration_url == "https://123:443"
-    assert device.manufacturer == "Ubiquiti Networks"
-    assert device.model == "UniFi Network"
-    assert device.name == "UniFi Network"
-    assert device.sw_version is None
+    assert hass.data[UNIFI_DOMAIN] == {}
 
 
-async def test_flatten_entry_data(hass):
-    """Verify entry data can be flattened."""
-    entry = MockConfigEntry(
-        domain=UNIFI_DOMAIN,
-        data={CONF_CONTROLLER: CONTROLLER_DATA},
-    )
-    await async_flatten_entry_data(hass, entry)
-
-    assert entry.data == ENTRY_CONFIG
-
-
-async def test_unload_entry(hass, aioclient_mock):
+async def test_unload_entry(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test being able to unload an entry."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
     assert hass.data[UNIFI_DOMAIN]
@@ -84,7 +62,11 @@ async def test_unload_entry(hass, aioclient_mock):
     assert not hass.data[UNIFI_DOMAIN]
 
 
-async def test_wireless_clients(hass, hass_storage, aioclient_mock):
+async def test_wireless_clients(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
     """Verify wireless clients class."""
     hass_storage[unifi.STORAGE_KEY] = {
         "version": unifi.STORAGE_VERSION,

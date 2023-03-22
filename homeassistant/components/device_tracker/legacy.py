@@ -6,7 +6,7 @@ from collections.abc import Callable, Coroutine, Sequence
 from datetime import datetime, timedelta
 import hashlib
 from types import ModuleType
-from typing import Any, Final, final
+from typing import Any, Final, Protocol, final
 
 import attr
 import voluptuous as vol
@@ -30,9 +30,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_per_platform, discovery
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_registry import async_get_registry
+from homeassistant.helpers import (
+    config_per_platform,
+    config_validation as cv,
+    discovery,
+    entity_registry as er,
+)
 from homeassistant.helpers.event import (
     async_track_time_interval,
     async_track_utc_time_change,
@@ -63,20 +66,12 @@ from .const import (
     LOGGER,
     PLATFORM_TYPE_LEGACY,
     SCAN_INTERVAL,
-    SOURCE_TYPE_BLUETOOTH,
-    SOURCE_TYPE_BLUETOOTH_LE,
-    SOURCE_TYPE_GPS,
-    SOURCE_TYPE_ROUTER,
+    SourceType,
 )
 
 SERVICE_SEE: Final = "see"
 
-SOURCE_TYPES: Final[tuple[str, ...]] = (
-    SOURCE_TYPE_GPS,
-    SOURCE_TYPE_ROUTER,
-    SOURCE_TYPE_BLUETOOTH,
-    SOURCE_TYPE_BLUETOOTH_LE,
-)
+SOURCE_TYPES = [cls.value for cls in SourceType]
 
 NEW_DEVICE_DEFAULTS_SCHEMA = vol.Any(
     None,
@@ -108,7 +103,7 @@ SERVICE_SEE_PAYLOAD_SCHEMA: Final[vol.Schema] = vol.Schema(
             ATTR_GPS_ACCURACY: cv.positive_int,
             ATTR_BATTERY: cv.positive_int,
             ATTR_ATTRIBUTES: dict,
-            ATTR_SOURCE_TYPE: vol.In(SOURCE_TYPES),
+            ATTR_SOURCE_TYPE: vol.Coerce(SourceType),
             ATTR_CONSIDER_HOME: cv.time_period,
             # Temp workaround for iOS app introduced in 0.65
             vol.Optional("battery_status"): str,
@@ -121,6 +116,48 @@ YAML_DEVICES: Final = "known_devices.yaml"
 EVENT_NEW_DEVICE: Final = "device_tracker_new_device"
 
 
+class SeeCallback(Protocol):
+    """Protocol type for DeviceTracker.see callback."""
+
+    def __call__(
+        self,
+        mac: str | None = None,
+        dev_id: str | None = None,
+        host_name: str | None = None,
+        location_name: str | None = None,
+        gps: GPSType | None = None,
+        gps_accuracy: int | None = None,
+        battery: int | None = None,
+        attributes: dict[str, Any] | None = None,
+        source_type: SourceType | str = SourceType.GPS,
+        picture: str | None = None,
+        icon: str | None = None,
+        consider_home: timedelta | None = None,
+    ) -> None:
+        """Define see type."""
+
+
+class AsyncSeeCallback(Protocol):
+    """Protocol type for DeviceTracker.async_see callback."""
+
+    async def __call__(
+        self,
+        mac: str | None = None,
+        dev_id: str | None = None,
+        host_name: str | None = None,
+        location_name: str | None = None,
+        gps: GPSType | None = None,
+        gps_accuracy: int | None = None,
+        battery: int | None = None,
+        attributes: dict[str, Any] | None = None,
+        source_type: SourceType | str = SourceType.GPS,
+        picture: str | None = None,
+        icon: str | None = None,
+        consider_home: timedelta | None = None,
+    ) -> None:
+        """Define async_see type."""
+
+
 def see(
     hass: HomeAssistant,
     mac: str | None = None,
@@ -130,7 +167,7 @@ def see(
     gps: GPSType | None = None,
     gps_accuracy: int | None = None,
     battery: int | None = None,
-    attributes: dict | None = None,
+    attributes: dict[str, Any] | None = None,
 ) -> None:
     """Call service to notify you see device."""
     data: dict[str, Any] = {
@@ -342,8 +379,10 @@ def async_setup_scanner_platform(
         """Handle interval matches."""
         if update_lock.locked():
             LOGGER.warning(
-                "Updating device list from %s took longer than the scheduled "
-                "scan interval %s",
+                (
+                    "Updating device list from %s took longer than the scheduled "
+                    "scan interval %s"
+                ),
                 platform,
                 interval,
             )
@@ -367,7 +406,7 @@ def async_setup_scanner_platform(
             kwargs: dict[str, Any] = {
                 "mac": mac,
                 "host_name": host_name,
-                "source_type": SOURCE_TYPE_ROUTER,
+                "source_type": SourceType.ROUTER,
                 "attributes": {
                     "scanner": scanner.__class__.__name__,
                     **extra_attributes,
@@ -444,8 +483,8 @@ class DeviceTracker:
         gps: GPSType | None = None,
         gps_accuracy: int | None = None,
         battery: int | None = None,
-        attributes: dict | None = None,
-        source_type: str = SOURCE_TYPE_GPS,
+        attributes: dict[str, Any] | None = None,
+        source_type: SourceType | str = SourceType.GPS,
         picture: str | None = None,
         icon: str | None = None,
         consider_home: timedelta | None = None,
@@ -477,8 +516,8 @@ class DeviceTracker:
         gps: GPSType | None = None,
         gps_accuracy: int | None = None,
         battery: int | None = None,
-        attributes: dict | None = None,
-        source_type: str = SOURCE_TYPE_GPS,
+        attributes: dict[str, Any] | None = None,
+        source_type: SourceType | str = SourceType.GPS,
         picture: str | None = None,
         icon: str | None = None,
         consider_home: timedelta | None = None,
@@ -487,7 +526,7 @@ class DeviceTracker:
 
         This method is a coroutine.
         """
-        registry = await async_get_registry(self.hass)
+        registry = er.async_get(self.hass)
         if mac is None and dev_id is None:
             raise HomeAssistantError("Neither mac or device id passed in")
         if mac is not None:
@@ -664,7 +703,7 @@ class Device(RestoreEntity):
 
         self._icon = icon
 
-        self.source_type: str | None = None
+        self.source_type: SourceType | str | None = None
 
         self._attributes: dict[str, Any] = {}
 
@@ -717,7 +756,7 @@ class Device(RestoreEntity):
         gps_accuracy: int | None = None,
         battery: int | None = None,
         attributes: dict[str, Any] | None = None,
-        source_type: str = SOURCE_TYPE_GPS,
+        source_type: SourceType | str = SourceType.GPS,
         consider_home: timedelta | None = None,
     ) -> None:
         """Mark the device as seen."""
@@ -770,7 +809,7 @@ class Device(RestoreEntity):
             return
         if self.location_name:
             self._state = self.location_name
-        elif self.gps is not None and self.source_type == SOURCE_TYPE_GPS:
+        elif self.gps is not None and self.source_type == SourceType.GPS:
             zone_state = zone.async_active_zone(
                 self.hass, self.gps[0], self.gps[1], self.gps_accuracy
             )
@@ -917,6 +956,6 @@ def get_gravatar_for_email(email: str) -> str:
     """
 
     return (
-        f"https://www.gravatar.com/avatar/"
+        "https://www.gravatar.com/avatar/"
         f"{hashlib.md5(email.encode('utf-8').lower()).hexdigest()}.jpg?s=80&d=wavatar"
     )

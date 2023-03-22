@@ -1,6 +1,8 @@
 """Support for Tellstick covers."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.cover import CoverEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -42,24 +44,24 @@ class TellstickCover(TellstickDevice, CoverEntity):
     """Representation of a Tellstick cover."""
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> None:
         """Return the current position of the cover is not possible."""
         return None
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return True if unable to access real state of the entity."""
         return True
 
-    def close_cover(self, **kwargs):
+    def close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         self._tellcore_device.down()
 
-    def open_cover(self, **kwargs):
+    def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         self._tellcore_device.up()
 
-    def stop_cover(self, **kwargs):
+    def stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         self._tellcore_device.stop()
 

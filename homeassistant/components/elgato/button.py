@@ -1,22 +1,58 @@
 """Support for Elgato button."""
 from __future__ import annotations
 
-import logging
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
+from typing import Any
 
-from elgato import Elgato, ElgatoError, Info
+from elgato import Elgato, ElgatoError
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.components.button import (
+    ButtonDeviceClass,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MAC
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HomeAssistantElgatoData
 from .const import DOMAIN
+from .coordinator import ElgatoDataUpdateCoordinator
 from .entity import ElgatoEntity
 
-_LOGGER = logging.getLogger(__name__)
+
+@dataclass
+class ElgatoButtonEntityDescriptionMixin:
+    """Mixin values for Elgato entities."""
+
+    press_fn: Callable[[Elgato], Awaitable[Any]]
+
+
+@dataclass
+class ElgatoButtonEntityDescription(
+    ButtonEntityDescription, ElgatoButtonEntityDescriptionMixin
+):
+    """Class describing Elgato button entities."""
+
+
+BUTTONS = [
+    ElgatoButtonEntityDescription(
+        key="identify",
+        name="Identify",
+        icon="mdi:help",
+        entity_category=EntityCategory.CONFIG,
+        press_fn=lambda client: client.identify(),
+    ),
+    ElgatoButtonEntityDescription(
+        key="restart",
+        name="Restart",
+        device_class=ButtonDeviceClass.RESTART,
+        entity_category=EntityCategory.CONFIG,
+        press_fn=lambda client: client.restart(),
+    ),
+]
 
 
 async def async_setup_entry(
@@ -25,29 +61,38 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Elgato button based on a config entry."""
-    data: HomeAssistantElgatoData = hass.data[DOMAIN][entry.entry_id]
+    coordinator: ElgatoDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [ElgatoIdentifyButton(data.client, data.info, entry.data.get(CONF_MAC))]
+        ElgatoButtonEntity(
+            coordinator=coordinator,
+            description=description,
+        )
+        for description in BUTTONS
     )
 
 
-class ElgatoIdentifyButton(ElgatoEntity, ButtonEntity):
-    """Defines an Elgato identify button."""
+class ElgatoButtonEntity(ElgatoEntity, ButtonEntity):
+    """Defines an Elgato button."""
 
-    def __init__(self, client: Elgato, info: Info, mac: str | None) -> None:
+    entity_description: ElgatoButtonEntityDescription
+
+    def __init__(
+        self,
+        coordinator: ElgatoDataUpdateCoordinator,
+        description: ElgatoButtonEntityDescription,
+    ) -> None:
         """Initialize the button entity."""
-        super().__init__(client, info, mac)
-        self.entity_description = ButtonEntityDescription(
-            key="identify",
-            name="Identify",
-            icon="mdi:help",
-            entity_category=EntityCategory.CONFIG,
+        super().__init__(coordinator=coordinator)
+        self.entity_description = description
+        self._attr_unique_id = (
+            f"{coordinator.data.info.serial_number}_{description.key}"
         )
-        self._attr_unique_id = f"{info.serial_number}_{self.entity_description.key}"
 
     async def async_press(self) -> None:
-        """Identify the light, will make it blink."""
+        """Trigger button press on the Elgato device."""
         try:
-            await self.client.identify()
-        except ElgatoError:
-            _LOGGER.exception("An error occurred while identifying the Elgato Light")
+            await self.entity_description.press_fn(self.coordinator.client)
+        except ElgatoError as error:
+            raise HomeAssistantError(
+                "An error occurred while communicating with the Elgato Light"
+            ) from error

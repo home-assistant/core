@@ -2,6 +2,8 @@
 import datetime
 from unittest.mock import patch
 
+from freezegun import freeze_time
+
 from homeassistant.components import gdacs
 from homeassistant.components.gdacs import DEFAULT_SCAN_INTERVAL, DOMAIN, FEED
 from homeassistant.components.gdacs.geo_location import (
@@ -27,20 +29,22 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_RADIUS,
     EVENT_HOMEASSISTANT_START,
-    LENGTH_KILOMETERS,
+    UnitOfLength,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
+
+from . import _generate_mock_feed_entry
 
 from tests.common import async_fire_time_changed
-from tests.components.gdacs import _generate_mock_feed_entry
 
 CONFIG = {gdacs.DOMAIN: {CONF_RADIUS: 200}}
 
 
-async def test_setup(hass, legacy_patchable_time):
+async def test_setup(hass: HomeAssistant) -> None:
     """Test the general setup of the integration."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
@@ -86,7 +90,7 @@ async def test_setup(hass, legacy_patchable_time):
 
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
+    with freeze_time(utcnow), patch(
         "aio_georss_client.feed.GeoRssFeed.update"
     ) as mock_feed_update:
         mock_feed_update.return_value = "OK", [mock_entry_1, mock_entry_2, mock_entry_3]
@@ -128,7 +132,7 @@ async def test_setup(hass, legacy_patchable_time):
             ATTR_EVENT_TYPE: "Drought",
             ATTR_SEVERITY: "Severity 1",
             ATTR_VULNERABILITY: "Vulnerability 1",
-            ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
             ATTR_SOURCE: "gdacs",
             ATTR_ICON: "mdi:water-off",
         }
@@ -144,7 +148,7 @@ async def test_setup(hass, legacy_patchable_time):
             ATTR_FRIENDLY_NAME: "Tropical Cyclone: Name 2",
             ATTR_DESCRIPTION: "Description 2",
             ATTR_EVENT_TYPE: "Tropical Cyclone",
-            ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
             ATTR_SOURCE: "gdacs",
             ATTR_ICON: "mdi:weather-hurricane",
         }
@@ -161,7 +165,7 @@ async def test_setup(hass, legacy_patchable_time):
             ATTR_DESCRIPTION: "Description 3",
             ATTR_EVENT_TYPE: "Tropical Cyclone",
             ATTR_COUNTRY: "Country 2",
-            ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
             ATTR_SOURCE: "gdacs",
             ATTR_ICON: "mdi:weather-hurricane",
         }
@@ -203,9 +207,9 @@ async def test_setup(hass, legacy_patchable_time):
         assert len(entity_registry.entities) == 1
 
 
-async def test_setup_imperial(hass, legacy_patchable_time):
+async def test_setup_imperial(hass: HomeAssistant) -> None:
     """Test the setup of the integration using imperial unit system."""
-    hass.config.units = IMPERIAL_SYSTEM
+    hass.config.units = US_CUSTOMARY_SYSTEM
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
         "1234",
@@ -219,7 +223,7 @@ async def test_setup_imperial(hass, legacy_patchable_time):
 
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
+    with freeze_time(utcnow), patch(
         "aio_georss_client.feed.GeoRssFeed.update"
     ) as mock_feed_update, patch(
         "aio_georss_client.feed.GeoRssFeed.last_timestamp", create=True

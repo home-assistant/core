@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<zone master="020000000001" senderIPAddress="192.168.42.1" senderIsMaster="true">
+    <member ipaddress="192.168.42.2">020000000002</member>
+</zone>

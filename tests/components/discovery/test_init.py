@@ -7,6 +7,7 @@ from homeassistant import config_entries
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import discovery
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
 from tests.common import async_fire_time_changed, mock_coro
@@ -16,17 +17,11 @@ from tests.common import async_fire_time_changed, mock_coro
 SERVICE = "yamaha"
 SERVICE_COMPONENT = "media_player"
 
-# sabnzbd is the last no platform integration to be migrated
-# drop these tests once it is migrated
-SERVICE_NO_PLATFORM = "sabnzbd"
-SERVICE_NO_PLATFORM_COMPONENT = "sabnzbd"
 SERVICE_INFO = {"key": "value"}  # Can be anything
 
 UNKNOWN_SERVICE = "this_service_will_never_be_supported"
 
 BASE_CONFIG = {discovery.DOMAIN: {"ignore": [], "enable": []}}
-
-IGNORE_CONFIG = {discovery.DOMAIN: {"ignore": [SERVICE_NO_PLATFORM]}}
 
 
 @pytest.fixture(autouse=True)
@@ -59,7 +54,7 @@ async def mock_discovery(hass, discoveries, config=BASE_CONFIG):
     return mock_discover, mock_platform
 
 
-async def test_unknown_service(hass):
+async def test_unknown_service(hass: HomeAssistant) -> None:
     """Test that unknown service is ignored."""
 
     def discover(netdisco, zeroconf_instance, suppress_mdns_types):
@@ -72,7 +67,7 @@ async def test_unknown_service(hass):
     assert not mock_platform.called
 
 
-async def test_load_platform(hass):
+async def test_load_platform(hass: HomeAssistant) -> None:
     """Test load a platform."""
 
     def discover(netdisco, zeroconf_instance, suppress_mdns_types):
@@ -88,64 +83,7 @@ async def test_load_platform(hass):
     )
 
 
-async def test_load_component(hass):
-    """Test load a component."""
-
-    def discover(netdisco, zeroconf_instance, suppress_mdns_types):
-        """Fake discovery."""
-        return [(SERVICE_NO_PLATFORM, SERVICE_INFO)]
-
-    mock_discover, mock_platform = await mock_discovery(hass, discover)
-
-    assert mock_discover.called
-    assert not mock_platform.called
-    mock_discover.assert_called_with(
-        hass,
-        SERVICE_NO_PLATFORM,
-        SERVICE_INFO,
-        SERVICE_NO_PLATFORM_COMPONENT,
-        BASE_CONFIG,
-    )
-
-
-async def test_ignore_service(hass):
-    """Test ignore service."""
-
-    def discover(netdisco, zeroconf_instance, suppress_mdns_types):
-        """Fake discovery."""
-        return [(SERVICE_NO_PLATFORM, SERVICE_INFO)]
-
-    mock_discover, mock_platform = await mock_discovery(hass, discover, IGNORE_CONFIG)
-
-    assert not mock_discover.called
-    assert not mock_platform.called
-
-
-async def test_discover_duplicates(hass):
-    """Test load a component."""
-
-    def discover(netdisco, zeroconf_instance, suppress_mdns_types):
-        """Fake discovery."""
-        return [
-            (SERVICE_NO_PLATFORM, SERVICE_INFO),
-            (SERVICE_NO_PLATFORM, SERVICE_INFO),
-        ]
-
-    mock_discover, mock_platform = await mock_discovery(hass, discover)
-
-    assert mock_discover.called
-    assert mock_discover.call_count == 1
-    assert not mock_platform.called
-    mock_discover.assert_called_with(
-        hass,
-        SERVICE_NO_PLATFORM,
-        SERVICE_INFO,
-        SERVICE_NO_PLATFORM_COMPONENT,
-        BASE_CONFIG,
-    )
-
-
-async def test_discover_config_flow(hass):
+async def test_discover_config_flow(hass: HomeAssistant) -> None:
     """Test discovery triggering a config flow."""
     discovery_info = {"hello": "world"}
 
@@ -155,7 +93,9 @@ async def test_discover_config_flow(hass):
 
     with patch.dict(
         discovery.CONFIG_ENTRY_HANDLERS, {"mock-service": "mock-component"}
-    ), patch("homeassistant.data_entry_flow.FlowManager.async_init") as m_init:
+    ), patch(
+        "homeassistant.config_entries.ConfigEntriesFlowManager.async_init"
+    ) as m_init:
         await mock_discovery(hass, discover)
 
     assert len(m_init.mock_calls) == 1

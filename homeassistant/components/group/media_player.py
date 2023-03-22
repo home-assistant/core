@@ -1,6 +1,8 @@
-"""This platform allows several media players to be grouped into one media player."""
+"""Platform allowing several media players to be grouped into one media player."""
 from __future__ import annotations
 
+from collections.abc import Mapping
+from contextlib import suppress
 from typing import Any
 
 import voluptuous as vol
@@ -16,21 +18,10 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_PLAY_MEDIA,
-    SUPPORT_CLEAR_PLAYLIST,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK,
-    SUPPORT_SHUFFLE_SET,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
     MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -50,8 +41,6 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
-    STATE_OFF,
-    STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -116,11 +105,12 @@ async def async_setup_entry(
 class MediaPlayerGroup(MediaPlayerEntity):
     """Representation of a Media Group."""
 
+    _attr_available: bool = False
+    _attr_should_poll = False
+
     def __init__(self, unique_id: str | None, name: str, entities: list[str]) -> None:
         """Initialize a Media Group entity."""
         self._name = name
-        self._state: str | None = None
-        self._supported_features: int = 0
         self._attr_unique_id = unique_id
 
         self._entities = entities
@@ -157,36 +147,47 @@ class MediaPlayerGroup(MediaPlayerEntity):
             return
 
         new_features = new_state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        if new_features & SUPPORT_CLEAR_PLAYLIST:
+        if new_features & MediaPlayerEntityFeature.CLEAR_PLAYLIST:
             self._features[KEY_CLEAR_PLAYLIST].add(entity_id)
         else:
             self._features[KEY_CLEAR_PLAYLIST].discard(entity_id)
-        if new_features & (SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK):
+        if new_features & (
+            MediaPlayerEntityFeature.NEXT_TRACK
+            | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        ):
             self._features[KEY_TRACKS].add(entity_id)
         else:
             self._features[KEY_TRACKS].discard(entity_id)
-        if new_features & (SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_STOP):
+        if new_features & (
+            MediaPlayerEntityFeature.PAUSE
+            | MediaPlayerEntityFeature.PLAY
+            | MediaPlayerEntityFeature.STOP
+        ):
             self._features[KEY_PAUSE_PLAY_STOP].add(entity_id)
         else:
             self._features[KEY_PAUSE_PLAY_STOP].discard(entity_id)
-        if new_features & SUPPORT_PLAY_MEDIA:
+        if new_features & MediaPlayerEntityFeature.PLAY_MEDIA:
             self._features[KEY_PLAY_MEDIA].add(entity_id)
         else:
             self._features[KEY_PLAY_MEDIA].discard(entity_id)
-        if new_features & SUPPORT_SEEK:
+        if new_features & MediaPlayerEntityFeature.SEEK:
             self._features[KEY_SEEK].add(entity_id)
         else:
             self._features[KEY_SEEK].discard(entity_id)
-        if new_features & SUPPORT_SHUFFLE_SET:
+        if new_features & MediaPlayerEntityFeature.SHUFFLE_SET:
             self._features[KEY_SHUFFLE].add(entity_id)
         else:
             self._features[KEY_SHUFFLE].discard(entity_id)
-        if new_features & (SUPPORT_TURN_ON | SUPPORT_TURN_OFF):
+        if new_features & (
+            MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF
+        ):
             self._features[KEY_ON_OFF].add(entity_id)
         else:
             self._features[KEY_ON_OFF].discard(entity_id)
         if new_features & (
-            SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP
+            MediaPlayerEntityFeature.VOLUME_MUTE
+            | MediaPlayerEntityFeature.VOLUME_SET
+            | MediaPlayerEntityFeature.VOLUME_STEP
         ):
             self._features[KEY_VOLUME].add(entity_id)
         else:
@@ -208,22 +209,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
         return self._name
 
     @property
-    def state(self) -> str | None:
-        """Return the state of the media group."""
-        return self._state
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return self._supported_features
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed for a media group."""
-        return False
-
-    @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes for the media group."""
         return {ATTR_ENTITY_ID: self._entities}
 
@@ -277,7 +263,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
             context=self._context,
         )
 
-    async def async_media_seek(self, position: int) -> None:
+    async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
         data = {
             ATTR_ENTITY_ID: self._features[KEY_SEEK],
@@ -314,7 +300,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
         )
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
         data = {
@@ -392,47 +378,62 @@ class MediaPlayerGroup(MediaPlayerEntity):
     @callback
     def async_update_state(self) -> None:
         """Query all members and determine the media group state."""
-        states = [self.hass.states.get(entity) for entity in self._entities]
-        states_values = [state.state for state in states if state is not None]
-        off_values = STATE_OFF, STATE_UNAVAILABLE, STATE_UNKNOWN
+        states = [
+            state.state
+            for entity_id in self._entities
+            if (state := self.hass.states.get(entity_id)) is not None
+        ]
 
-        if states_values:
-            if states_values.count(states_values[0]) == len(states_values):
-                self._state = states_values[0]
-            elif any(state for state in states_values if state not in off_values):
-                self._state = STATE_ON
-            else:
-                self._state = STATE_OFF
+        # Set group as unavailable if all members are unavailable or missing
+        self._attr_available = any(state != STATE_UNAVAILABLE for state in states)
+
+        valid_state = any(
+            state not in (STATE_UNKNOWN, STATE_UNAVAILABLE) for state in states
+        )
+        if not valid_state:
+            # Set as unknown if all members are unknown or unavailable
+            self._attr_state = None
         else:
-            self._state = None
+            off_values = {MediaPlayerState.OFF, STATE_UNAVAILABLE, STATE_UNKNOWN}
+            if states.count(single_state := states[0]) == len(states):
+                self._attr_state = None
+                with suppress(ValueError):
+                    self._attr_state = MediaPlayerState(single_state)
+            elif any(state for state in states if state not in off_values):
+                self._attr_state = MediaPlayerState.ON
+            else:
+                self._attr_state = MediaPlayerState.OFF
 
-        supported_features = 0
-        supported_features |= (
-            SUPPORT_CLEAR_PLAYLIST if self._features[KEY_CLEAR_PLAYLIST] else 0
-        )
-        supported_features |= (
-            SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK
-            if self._features[KEY_TRACKS]
-            else 0
-        )
-        supported_features |= (
-            SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_STOP
-            if self._features[KEY_PAUSE_PLAY_STOP]
-            else 0
-        )
-        supported_features |= (
-            SUPPORT_PLAY_MEDIA if self._features[KEY_PLAY_MEDIA] else 0
-        )
-        supported_features |= SUPPORT_SEEK if self._features[KEY_SEEK] else 0
-        supported_features |= SUPPORT_SHUFFLE_SET if self._features[KEY_SHUFFLE] else 0
-        supported_features |= (
-            SUPPORT_TURN_ON | SUPPORT_TURN_OFF if self._features[KEY_ON_OFF] else 0
-        )
-        supported_features |= (
-            SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP
-            if self._features[KEY_VOLUME]
-            else 0
-        )
+        supported_features = MediaPlayerEntityFeature(0)
+        if self._features[KEY_CLEAR_PLAYLIST]:
+            supported_features |= MediaPlayerEntityFeature.CLEAR_PLAYLIST
+        if self._features[KEY_TRACKS]:
+            supported_features |= (
+                MediaPlayerEntityFeature.NEXT_TRACK
+                | MediaPlayerEntityFeature.PREVIOUS_TRACK
+            )
+        if self._features[KEY_PAUSE_PLAY_STOP]:
+            supported_features |= (
+                MediaPlayerEntityFeature.PAUSE
+                | MediaPlayerEntityFeature.PLAY
+                | MediaPlayerEntityFeature.STOP
+            )
+        if self._features[KEY_PLAY_MEDIA]:
+            supported_features |= MediaPlayerEntityFeature.PLAY_MEDIA
+        if self._features[KEY_SEEK]:
+            supported_features |= MediaPlayerEntityFeature.SEEK
+        if self._features[KEY_SHUFFLE]:
+            supported_features |= MediaPlayerEntityFeature.SHUFFLE_SET
+        if self._features[KEY_ON_OFF]:
+            supported_features |= (
+                MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF
+            )
+        if self._features[KEY_VOLUME]:
+            supported_features |= (
+                MediaPlayerEntityFeature.VOLUME_MUTE
+                | MediaPlayerEntityFeature.VOLUME_SET
+                | MediaPlayerEntityFeature.VOLUME_STEP
+            )
 
-        self._supported_features = supported_features
+        self._attr_supported_features = supported_features
         self.async_write_ha_state()

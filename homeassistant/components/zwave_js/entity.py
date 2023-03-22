@@ -1,23 +1,18 @@
 """Generic Z-Wave Entity Class."""
 from __future__ import annotations
 
-import logging
-
-from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import NodeStatus
-from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
+from zwave_js_server.model.driver import Driver
+from zwave_js_server.model.value import Value as ZwaveValue, get_value_id_str
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 from .discovery import ZwaveDiscoveryInfo
-from .helpers import get_device_id, get_unique_id
-from .migrate import async_add_migration_entity_value
-
-LOGGER = logging.getLogger(__name__)
+from .helpers import get_device_id, get_unique_id, get_valueless_base_unique_id
 
 EVENT_VALUE_UPDATED = "value updated"
 EVENT_VALUE_REMOVED = "value removed"
@@ -29,13 +24,14 @@ class ZWaveBaseEntity(Entity):
     """Generic Entity Class for a Z-Wave Device."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(
-        self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
+        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize a generic Z-Wave device entity."""
         self.config_entry = config_entry
-        self.client = client
+        self.driver = driver
         self.info = info
         # entities requiring additional values, can add extra ids to this list
         self.watched_value_ids = {self.info.primary_value.value_id}
@@ -47,16 +43,14 @@ class ZWaveBaseEntity(Entity):
 
         # Entity class attributes
         self._attr_name = self.generate_name()
-        self._attr_unique_id = get_unique_id(
-            self.client, self.info.primary_value.value_id
-        )
+        self._attr_unique_id = get_unique_id(driver, self.info.primary_value.value_id)
         self._attr_entity_registry_enabled_default = (
             self.info.entity_registry_enabled_default
         )
         self._attr_assumed_state = self.info.assumed_state
         # device is precreated in main handler
         self._attr_device_info = DeviceInfo(
-            identifiers={get_device_id(self.client, self.info.node)},
+            identifiers={get_device_id(driver, self.info.node)},
         )
 
     @callback
@@ -103,6 +97,17 @@ class ZWaveBaseEntity(Entity):
         self.async_on_remove(
             self.info.node.on(EVENT_VALUE_REMOVED, self._value_removed)
         )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                (
+                    f"{DOMAIN}_"
+                    f"{get_valueless_base_unique_id(self.driver, self.info.node)}_"
+                    "remove_entity_on_ready_node"
+                ),
+                self.async_remove,
+            )
+        )
 
         for status_event in (EVENT_ALIVE, EVENT_DEAD):
             self.async_on_remove(
@@ -117,41 +122,42 @@ class ZWaveBaseEntity(Entity):
             )
         )
 
-        # Add legacy Z-Wave migration data.
-        await async_add_migration_entity_value(
-            self.hass, self.config_entry, self.entity_id, self.info
-        )
-
     def generate_name(
         self,
         include_value_name: bool = False,
         alternate_value_name: str | None = None,
         additional_info: list[str] | None = None,
-        name_suffix: str | None = None,
+        name_prefix: str | None = None,
     ) -> str:
         """Generate entity name."""
-        if additional_info is None:
-            additional_info = []
-        name: str = (
-            self.info.node.name
-            or self.info.node.device_config.description
-            or f"Node {self.info.node.node_id}"
-        )
-        if name_suffix:
-            name = f"{name} {name_suffix}"
-        if include_value_name:
+        name = ""
+        if (
+            hasattr(self, "entity_description")
+            and self.entity_description
+            and self.entity_description.name
+        ):
+            name = self.entity_description.name
+
+        if name_prefix:
+            name = f"{name_prefix} {name}".strip()
+
+        value_name = ""
+        if alternate_value_name:
+            value_name = alternate_value_name
+        elif include_value_name:
             value_name = (
-                alternate_value_name
-                or self.info.primary_value.metadata.label
+                self.info.primary_value.metadata.label
                 or self.info.primary_value.property_key_name
                 or self.info.primary_value.property_name
+                or ""
             )
-            name = f"{name}: {value_name}"
-        for item in additional_info:
-            if item:
-                name += f" - {item}"
+        name = f"{name} {value_name}".strip()
+        name = f"{name} {' '.join(additional_info or [])}".strip()
         # append endpoint if > 1
-        if self.info.primary_value.endpoint > 1:
+        if (
+            self.info.primary_value.endpoint is not None
+            and self.info.primary_value.endpoint > 1
+        ):
             name += f" ({self.info.primary_value.endpoint})"
 
         return name
@@ -160,15 +166,14 @@ class ZWaveBaseEntity(Entity):
     def available(self) -> bool:
         """Return entity availability."""
         return (
-            self.client.connected
+            self.driver.client.connected
             and bool(self.info.node.ready)
             and self.info.node.status != NodeStatus.DEAD
         )
 
     @callback
     def _node_status_alive_or_dead(self, event_data: dict) -> None:
-        """
-        Call when node status changes to alive or dead.
+        """Call when node status changes to alive or dead.
 
         Should not be overridden by subclasses.
         """
@@ -236,7 +241,7 @@ class ZWaveBaseEntity(Entity):
             endpoint = self.info.primary_value.endpoint
 
         # lookup value by value_id
-        value_id = get_value_id(
+        value_id = get_value_id_str(
             self.info.node,
             command_class,
             value_property,
@@ -250,7 +255,7 @@ class ZWaveBaseEntity(Entity):
         if return_value is None and check_all_endpoints:
             for endpoint_idx in self.info.node.endpoints:
                 if endpoint_idx != self.info.primary_value.endpoint:
-                    value_id = get_value_id(
+                    value_id = get_value_id_str(
                         self.info.node,
                         command_class,
                         value_property,

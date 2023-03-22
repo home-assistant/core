@@ -13,7 +13,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import condition, config_validation as cv, entity_registry
+from homeassistant.helpers import (
+    condition,
+    config_validation as cv,
+    entity_registry as er,
+)
 from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.entity import get_capability, get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
@@ -45,11 +49,11 @@ async def async_get_conditions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device conditions for Climate devices."""
-    registry = await entity_registry.async_get_registry(hass)
+    registry = er.async_get(hass)
     conditions = []
 
     # Get all the integrations entities for this device
-    for entry in entity_registry.async_entries_for_device(registry, device_id):
+    for entry in er.async_entries_for_device(registry, device_id):
         if entry.domain != DOMAIN:
             continue
 
@@ -75,20 +79,26 @@ def async_condition_from_config(
     hass: HomeAssistant, config: ConfigType
 ) -> condition.ConditionCheckerType:
     """Create a function to test a device condition."""
-    if config[CONF_TYPE] == "is_hvac_mode":
-        attribute = const.ATTR_HVAC_MODE
-    else:
-        attribute = const.ATTR_PRESET_MODE
 
     def test_is_state(hass: HomeAssistant, variables: TemplateVarsType) -> bool:
         """Test if an entity is a certain state."""
-        state = hass.states.get(config[ATTR_ENTITY_ID])
-        return state.attributes.get(attribute) == config[attribute] if state else False
+        if (state := hass.states.get(config[ATTR_ENTITY_ID])) is None:
+            return False
+
+        if config[CONF_TYPE] == "is_hvac_mode":
+            return state.state == config[const.ATTR_HVAC_MODE]
+
+        return (
+            state.attributes.get(const.ATTR_PRESET_MODE)
+            == config[const.ATTR_PRESET_MODE]
+        )
 
     return test_is_state
 
 
-async def async_get_condition_capabilities(hass, config):
+async def async_get_condition_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List condition capabilities."""
     condition_type = config[CONF_TYPE]
 

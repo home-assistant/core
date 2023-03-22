@@ -1,7 +1,0 @@
-reject_call:
-  name: Reject Call
-  description: Reject incoming call.
-  target:
-    entity:
-      integration: modem_callerid
-      domain: sensor

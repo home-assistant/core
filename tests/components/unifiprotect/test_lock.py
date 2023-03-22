@@ -1,13 +1,10 @@
 """Test the UniFi Protect lock platform."""
-# pylint: disable=protected-access
+
 from __future__ import annotations
 
-from copy import copy
 from unittest.mock import AsyncMock, Mock
 
-import pytest
-from pyunifiprotect.data import Doorlock
-from pyunifiprotect.data.types import LockStatusType
+from pyunifiprotect.data import Doorlock, LockStatusType
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.const import (
@@ -24,45 +21,41 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MockEntityFixture, assert_entity_counts
+from .utils import (
+    MockUFPFixture,
+    adopt_devices,
+    assert_entity_counts,
+    init_entry,
+    remove_entities,
+)
 
 
-@pytest.fixture(name="doorlock")
-async def doorlock_fixture(
-    hass: HomeAssistant, mock_entry: MockEntityFixture, mock_doorlock: Doorlock
-):
-    """Fixture for a single doorlock for testing the lock platform."""
+async def test_lock_remove(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorlock: Doorlock
+) -> None:
+    """Test removing and re-adding a lock device."""
 
-    # disable pydantic validation so mocking can happen
-    Doorlock.__config__.validate_assignment = False
-
-    lock_obj = mock_doorlock.copy(deep=True)
-    lock_obj._api = mock_entry.api
-    lock_obj.name = "Test Lock"
-    lock_obj.lock_status = LockStatusType.OPEN
-
-    mock_entry.api.bootstrap.doorlocks = {
-        lock_obj.id: lock_obj,
-    }
-
-    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
-    await hass.async_block_till_done()
-
+    await init_entry(hass, ufp, [doorlock])
     assert_entity_counts(hass, Platform.LOCK, 1, 1)
-
-    yield (lock_obj, "lock.test_lock_lock")
-
-    Doorlock.__config__.validate_assignment = True
+    await remove_entities(hass, ufp, [doorlock])
+    assert_entity_counts(hass, Platform.LOCK, 0, 0)
+    await adopt_devices(hass, ufp, [doorlock])
+    assert_entity_counts(hass, Platform.LOCK, 1, 1)
 
 
 async def test_lock_setup(
     hass: HomeAssistant,
-    doorlock: tuple[Doorlock, str],
-):
+    ufp: MockUFPFixture,
+    doorlock: Doorlock,
+    unadopted_doorlock: Doorlock,
+) -> None:
     """Test lock entity setup."""
 
-    unique_id = f"{doorlock[0].id}_lock"
-    entity_id = doorlock[1]
+    await init_entry(hass, ufp, [doorlock, unadopted_doorlock])
+    assert_entity_counts(hass, Platform.LOCK, 1, 1)
+
+    unique_id = f"{doorlock.mac}_lock"
+    entity_id = "lock.test_lock_lock"
 
     entity_registry = er.async_get(hass)
     entity = entity_registry.async_get(entity_id)
@@ -77,175 +70,192 @@ async def test_lock_setup(
 
 async def test_lock_locked(
     hass: HomeAssistant,
-    mock_entry: MockEntityFixture,
-    doorlock: tuple[Doorlock, str],
-):
+    ufp: MockUFPFixture,
+    doorlock: Doorlock,
+    unadopted_doorlock: Doorlock,
+) -> None:
     """Test lock entity locked."""
 
-    new_bootstrap = copy(mock_entry.api.bootstrap)
-    new_lock = doorlock[0].copy()
+    await init_entry(hass, ufp, [doorlock, unadopted_doorlock])
+    assert_entity_counts(hass, Platform.LOCK, 1, 1)
+
+    new_lock = doorlock.copy()
     new_lock.lock_status = LockStatusType.CLOSED
 
     mock_msg = Mock()
     mock_msg.changed_data = {}
     mock_msg.new_obj = new_lock
 
-    new_bootstrap.doorlocks = {new_lock.id: new_lock}
-    mock_entry.api.bootstrap = new_bootstrap
-    mock_entry.api.ws_subscription(mock_msg)
+    ufp.api.bootstrap.doorlocks = {new_lock.id: new_lock}
+    ufp.ws_msg(mock_msg)
     await hass.async_block_till_done()
 
-    state = hass.states.get(doorlock[1])
+    state = hass.states.get("lock.test_lock_lock")
     assert state
     assert state.state == STATE_LOCKED
 
 
 async def test_lock_unlocking(
     hass: HomeAssistant,
-    mock_entry: MockEntityFixture,
-    doorlock: tuple[Doorlock, str],
-):
+    ufp: MockUFPFixture,
+    doorlock: Doorlock,
+    unadopted_doorlock: Doorlock,
+) -> None:
     """Test lock entity unlocking."""
 
-    new_bootstrap = copy(mock_entry.api.bootstrap)
-    new_lock = doorlock[0].copy()
+    await init_entry(hass, ufp, [doorlock, unadopted_doorlock])
+    assert_entity_counts(hass, Platform.LOCK, 1, 1)
+
+    new_lock = doorlock.copy()
     new_lock.lock_status = LockStatusType.OPENING
 
     mock_msg = Mock()
     mock_msg.changed_data = {}
     mock_msg.new_obj = new_lock
 
-    new_bootstrap.doorlocks = {new_lock.id: new_lock}
-    mock_entry.api.bootstrap = new_bootstrap
-    mock_entry.api.ws_subscription(mock_msg)
+    ufp.api.bootstrap.doorlocks = {new_lock.id: new_lock}
+    ufp.ws_msg(mock_msg)
     await hass.async_block_till_done()
 
-    state = hass.states.get(doorlock[1])
+    state = hass.states.get("lock.test_lock_lock")
     assert state
     assert state.state == STATE_UNLOCKING
 
 
 async def test_lock_locking(
     hass: HomeAssistant,
-    mock_entry: MockEntityFixture,
-    doorlock: tuple[Doorlock, str],
-):
+    ufp: MockUFPFixture,
+    doorlock: Doorlock,
+    unadopted_doorlock: Doorlock,
+) -> None:
     """Test lock entity locking."""
 
-    new_bootstrap = copy(mock_entry.api.bootstrap)
-    new_lock = doorlock[0].copy()
+    await init_entry(hass, ufp, [doorlock, unadopted_doorlock])
+    assert_entity_counts(hass, Platform.LOCK, 1, 1)
+
+    new_lock = doorlock.copy()
     new_lock.lock_status = LockStatusType.CLOSING
 
     mock_msg = Mock()
     mock_msg.changed_data = {}
     mock_msg.new_obj = new_lock
 
-    new_bootstrap.doorlocks = {new_lock.id: new_lock}
-    mock_entry.api.bootstrap = new_bootstrap
-    mock_entry.api.ws_subscription(mock_msg)
+    ufp.api.bootstrap.doorlocks = {new_lock.id: new_lock}
+    ufp.ws_msg(mock_msg)
     await hass.async_block_till_done()
 
-    state = hass.states.get(doorlock[1])
+    state = hass.states.get("lock.test_lock_lock")
     assert state
     assert state.state == STATE_LOCKING
 
 
 async def test_lock_jammed(
     hass: HomeAssistant,
-    mock_entry: MockEntityFixture,
-    doorlock: tuple[Doorlock, str],
-):
+    ufp: MockUFPFixture,
+    doorlock: Doorlock,
+    unadopted_doorlock: Doorlock,
+) -> None:
     """Test lock entity jammed."""
 
-    new_bootstrap = copy(mock_entry.api.bootstrap)
-    new_lock = doorlock[0].copy()
+    await init_entry(hass, ufp, [doorlock, unadopted_doorlock])
+    assert_entity_counts(hass, Platform.LOCK, 1, 1)
+
+    new_lock = doorlock.copy()
     new_lock.lock_status = LockStatusType.JAMMED_WHILE_CLOSING
 
     mock_msg = Mock()
     mock_msg.changed_data = {}
     mock_msg.new_obj = new_lock
 
-    new_bootstrap.doorlocks = {new_lock.id: new_lock}
-    mock_entry.api.bootstrap = new_bootstrap
-    mock_entry.api.ws_subscription(mock_msg)
+    ufp.api.bootstrap.doorlocks = {new_lock.id: new_lock}
+    ufp.ws_msg(mock_msg)
     await hass.async_block_till_done()
 
-    state = hass.states.get(doorlock[1])
+    state = hass.states.get("lock.test_lock_lock")
     assert state
     assert state.state == STATE_JAMMED
 
 
 async def test_lock_unavailable(
     hass: HomeAssistant,
-    mock_entry: MockEntityFixture,
-    doorlock: tuple[Doorlock, str],
-):
+    ufp: MockUFPFixture,
+    doorlock: Doorlock,
+    unadopted_doorlock: Doorlock,
+) -> None:
     """Test lock entity unavailable."""
 
-    new_bootstrap = copy(mock_entry.api.bootstrap)
-    new_lock = doorlock[0].copy()
+    await init_entry(hass, ufp, [doorlock, unadopted_doorlock])
+    assert_entity_counts(hass, Platform.LOCK, 1, 1)
+
+    new_lock = doorlock.copy()
     new_lock.lock_status = LockStatusType.NOT_CALIBRATED
 
     mock_msg = Mock()
     mock_msg.changed_data = {}
     mock_msg.new_obj = new_lock
 
-    new_bootstrap.doorlocks = {new_lock.id: new_lock}
-    mock_entry.api.bootstrap = new_bootstrap
-    mock_entry.api.ws_subscription(mock_msg)
+    ufp.api.bootstrap.doorlocks = {new_lock.id: new_lock}
+    ufp.ws_msg(mock_msg)
     await hass.async_block_till_done()
 
-    state = hass.states.get(doorlock[1])
+    state = hass.states.get("lock.test_lock_lock")
     assert state
     assert state.state == STATE_UNAVAILABLE
 
 
 async def test_lock_do_lock(
     hass: HomeAssistant,
-    doorlock: tuple[Doorlock, str],
-):
+    ufp: MockUFPFixture,
+    doorlock: Doorlock,
+    unadopted_doorlock: Doorlock,
+) -> None:
     """Test lock entity lock service."""
 
-    doorlock[0].__fields__["close_lock"] = Mock()
-    doorlock[0].close_lock = AsyncMock()
+    await init_entry(hass, ufp, [doorlock, unadopted_doorlock])
+    assert_entity_counts(hass, Platform.LOCK, 1, 1)
+
+    doorlock.__fields__["close_lock"] = Mock(final=False)
+    doorlock.close_lock = AsyncMock()
 
     await hass.services.async_call(
         "lock",
         "lock",
-        {ATTR_ENTITY_ID: doorlock[1]},
+        {ATTR_ENTITY_ID: "lock.test_lock_lock"},
         blocking=True,
     )
 
-    doorlock[0].close_lock.assert_called_once()
+    doorlock.close_lock.assert_called_once()
 
 
 async def test_lock_do_unlock(
     hass: HomeAssistant,
-    mock_entry: MockEntityFixture,
-    doorlock: tuple[Doorlock, str],
-):
+    ufp: MockUFPFixture,
+    doorlock: Doorlock,
+    unadopted_doorlock: Doorlock,
+) -> None:
     """Test lock entity unlock service."""
 
-    new_bootstrap = copy(mock_entry.api.bootstrap)
-    new_lock = doorlock[0].copy()
+    await init_entry(hass, ufp, [doorlock, unadopted_doorlock])
+    assert_entity_counts(hass, Platform.LOCK, 1, 1)
+
+    new_lock = doorlock.copy()
     new_lock.lock_status = LockStatusType.CLOSED
 
     mock_msg = Mock()
     mock_msg.changed_data = {}
     mock_msg.new_obj = new_lock
 
-    new_bootstrap.doorlocks = {new_lock.id: new_lock}
-    mock_entry.api.bootstrap = new_bootstrap
-    mock_entry.api.ws_subscription(mock_msg)
+    ufp.api.bootstrap.doorlocks = {new_lock.id: new_lock}
+    ufp.ws_msg(mock_msg)
     await hass.async_block_till_done()
 
-    new_lock.__fields__["open_lock"] = Mock()
+    new_lock.__fields__["open_lock"] = Mock(final=False)
     new_lock.open_lock = AsyncMock()
 
     await hass.services.async_call(
         "lock",
         "unlock",
-        {ATTR_ENTITY_ID: doorlock[1]},
+        {ATTR_ENTITY_ID: "lock.test_lock_lock"},
         blocking=True,
     )
 

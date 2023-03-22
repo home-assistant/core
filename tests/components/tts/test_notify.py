@@ -3,13 +3,14 @@ import pytest
 import yarl
 
 import homeassistant.components.media_player as media_player
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     DOMAIN as DOMAIN_MP,
     SERVICE_PLAY_MEDIA,
 )
 import homeassistant.components.notify as notify
 import homeassistant.components.tts as tts
 from homeassistant.config import async_process_ha_core_config
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, async_mock_service
@@ -29,7 +30,7 @@ async def internal_url_mock(hass):
     )
 
 
-async def test_setup_platform(hass):
+async def test_setup_platform(hass: HomeAssistant) -> None:
     """Set up the tts platform ."""
     config = {
         notify.DOMAIN: {
@@ -45,7 +46,7 @@ async def test_setup_platform(hass):
     assert hass.services.has_service(notify.DOMAIN, "tts_test")
 
 
-async def test_setup_component_and_test_service(hass):
+async def test_setup_component_and_test_service(hass: HomeAssistant) -> None:
     """Set up the demo platform and call service."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 

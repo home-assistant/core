@@ -1,7 +1,7 @@
 """Generic Plugwise Entity Class."""
 from __future__ import annotations
 
-from typing import Any
+from plugwise.constants import DeviceData
 
 from homeassistant.const import ATTR_NAME, ATTR_VIA_DEVICE, CONF_HOST
 from homeassistant.helpers.device_registry import (
@@ -17,6 +17,8 @@ from .coordinator import PlugwiseDataUpdateCoordinator
 
 class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
     """Represent a PlugWise Entity."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -44,9 +46,9 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
             connections=connections,
             manufacturer=data.get("vendor"),
             model=data.get("model"),
-            name=f"Smile {coordinator.data.gateway['smile_name']}",
-            sw_version=data.get("fw"),
-            hw_version=data.get("hw"),
+            name=coordinator.data.gateway["smile_name"],
+            sw_version=data.get("firmware"),
+            hw_version=data.get("hardware"),
         )
 
         if device_id != coordinator.data.gateway["gateway_id"]:
@@ -63,10 +65,14 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and self._dev_id in self.coordinator.data.devices
+        return (
+            self._dev_id in self.coordinator.data.devices
+            and ("available" not in self.device or self.device["available"])
+            and super().available
+        )
 
     @property
-    def device(self) -> dict[str, Any]:
+    def device(self) -> DeviceData:
         """Return data for this device."""
         return self.coordinator.data.devices[self._dev_id]
 

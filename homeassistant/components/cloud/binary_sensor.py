@@ -7,9 +7,9 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -56,7 +56,7 @@ class CloudRemoteBinary(BinarySensorEntity):
         """Return True if entity is available."""
         return self.cloud.remote.certificate is not None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register update dispatcher."""
 
         async def async_state_update(data):
@@ -68,7 +68,7 @@ class CloudRemoteBinary(BinarySensorEntity):
             self.hass, DISPATCHER_REMOTE_UPDATE, async_state_update
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Register update dispatcher."""
         if self._unsub_dispatcher is not None:
             self._unsub_dispatcher()

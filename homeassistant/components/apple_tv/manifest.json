@@ -1,10 +1,13 @@
 {
   "domain": "apple_tv",
   "name": "Apple TV",
+  "codeowners": ["@postlund"],
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/apple_tv",
-  "requirements": ["pyatv==0.10.0"],
   "dependencies": ["zeroconf"],
+  "documentation": "https://www.home-assistant.io/integrations/apple_tv",
+  "iot_class": "local_push",
+  "loggers": ["pyatv", "srptools"],
+  "requirements": ["pyatv==0.10.3"],
   "zeroconf": [
     "_mediaremotetv._tcp.local.",
     "_companion-link._tcp.local.",
@@ -13,17 +16,41 @@
     "_touch-able._tcp.local.",
     "_appletv-v2._tcp.local.",
     "_hscp._tcp.local.",
-    { "type": "_airplay._tcp.local.", "properties": { "model": "appletv*" } },
     {
       "type": "_airplay._tcp.local.",
-      "properties": { "model": "audioaccessory*" }
+      "properties": {
+        "model": "appletv*"
+      }
     },
-    { "type": "_airplay._tcp.local.", "properties": { "am": "airport*" } },
-    { "type": "_raop._tcp.local.", "properties": { "am": "appletv*" } },
-    { "type": "_raop._tcp.local.", "properties": { "am": "audioaccessory*" } },
-    { "type": "_raop._tcp.local.", "properties": { "am": "airport*" } }
-  ],
-  "codeowners": ["@postlund"],
-  "iot_class": "local_push",
-  "loggers": ["pyatv", "srptools"]
+    {
+      "type": "_airplay._tcp.local.",
+      "properties": {
+        "model": "audioaccessory*"
+      }
+    },
+    {
+      "type": "_airplay._tcp.local.",
+      "properties": {
+        "am": "airport*"
+      }
+    },
+    {
+      "type": "_raop._tcp.local.",
+      "properties": {
+        "am": "appletv*"
+      }
+    },
+    {
+      "type": "_raop._tcp.local.",
+      "properties": {
+        "am": "audioaccessory*"
+      }
+    },
+    {
+      "type": "_raop._tcp.local.",
+      "properties": {
+        "am": "airport*"
+      }
+    }
+  ]
 }

@@ -1,10 +1,10 @@
 {
   "domain": "goodwe",
   "name": "GoodWe Inverter",
-  "documentation": "https://www.home-assistant.io/integrations/goodwe",
   "codeowners": ["@mletenay", "@starkillerOG"],
-  "requirements": ["goodwe==0.2.15"],
   "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/goodwe",
   "iot_class": "local_polling",
-  "loggers": ["goodwe"]
+  "loggers": ["goodwe"],
+  "requirements": ["goodwe==0.2.25"]
 }

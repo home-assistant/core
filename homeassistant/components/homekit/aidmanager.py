@@ -1,5 +1,4 @@
-"""
-Manage allocation of accessory ID's.
+"""Manage allocation of accessory ID's.
 
 HomeKit needs to allocate unique numbers to each accessory. These need to
 be stable between reboots and upgrades.
@@ -17,7 +16,7 @@ import random
 from fnvhash import fnv1a_32
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
 
 from .util import get_aid_storage_filename_for_entry_id
@@ -34,7 +33,7 @@ AID_MIN = 2
 AID_MAX = 18446744073709551615
 
 
-def get_system_unique_id(entity: RegistryEntry) -> str:
+def get_system_unique_id(entity: er.RegistryEntry) -> str:
     """Determine the system wide unique_id for an entity."""
     return f"{entity.platform}.{entity.domain}.{entity.unique_id}"
 
@@ -60,8 +59,7 @@ def _generate_aids(unique_id: str | None, entity_id: str) -> Generator[int, None
 
 
 class AccessoryAidStorage:
-    """
-    Holds a map of entity ID to HomeKit ID.
+    """Holds a map of entity ID to HomeKit ID.
 
     Will generate new ID's, ensure they are unique and store them to make sure they
     persist over reboots.
@@ -74,13 +72,11 @@ class AccessoryAidStorage:
         self.allocated_aids: set[int] = set()
         self._entry_id = entry_id
         self.store: Store | None = None
-        self._entity_registry: EntityRegistry | None = None
+        self._entity_registry: er.EntityRegistry | None = None
 
     async def async_initialize(self) -> None:
         """Load the latest AID data."""
-        self._entity_registry = (
-            await self.hass.helpers.entity_registry.async_get_registry()
-        )
+        self._entity_registry = er.async_get(self.hass)
         aidstore = get_aid_storage_filename_for_entry_id(self._entry_id)
         self.store = Store(self.hass, AID_MANAGER_STORAGE_VERSION, aidstore)
 

@@ -1,10 +1,11 @@
 """Support for iOS push notifications."""
+from __future__ import annotations
+
 from http import HTTPStatus
 import logging
 
 import requests
 
-from homeassistant.components import ios
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_MESSAGE,
@@ -13,7 +14,11 @@ from homeassistant.components.notify import (
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
+
+from .. import ios
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +47,11 @@ def log_rate_limits(hass, target, resp, level=20):
     )
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> iOSNotificationService | None:
     """Get the iOS notification service."""
     if "notify.ios" not in hass.config.components:
         # Need this to enable requirements checking in the app.
@@ -57,7 +66,7 @@ def get_service(hass, config, discovery_info=None):
 class iOSNotificationService(BaseNotificationService):
     """Implement the notification service for iOS."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the service."""
 
     @property

@@ -6,15 +6,19 @@ from homeassistant.components.fronius.coordinator import (
     FroniusPowerFlowUpdateCoordinator,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt
 
 from . import enable_all_entities, mock_responses, setup_fronius_integration
 
 from tests.common import async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_symo_inverter(hass, aioclient_mock):
+async def test_symo_inverter(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test Fronius Symo inverter entities."""
 
     def assert_state(entity_id, expected_state):
@@ -30,11 +34,11 @@ async def test_symo_inverter(hass, aioclient_mock):
         hass, config_entry.entry_id, FroniusInverterUpdateCoordinator.default_interval
     )
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 52
-    assert_state("sensor.current_dc_fronius_inverter_1_http_fronius", 0)
-    assert_state("sensor.energy_day_fronius_inverter_1_http_fronius", 10828)
-    assert_state("sensor.energy_total_fronius_inverter_1_http_fronius", 44186900)
-    assert_state("sensor.energy_year_fronius_inverter_1_http_fronius", 25507686)
-    assert_state("sensor.voltage_dc_fronius_inverter_1_http_fronius", 16)
+    assert_state("sensor.symo_20_current_dc", 0)
+    assert_state("sensor.symo_20_energy_day", 10828)
+    assert_state("sensor.symo_20_energy_total", 44186900)
+    assert_state("sensor.symo_20_energy_year", 25507686)
+    assert_state("sensor.symo_20_voltage_dc", 16)
 
     # Second test at daytime when inverter is producing
     mock_responses(aioclient_mock, night=False)
@@ -48,15 +52,15 @@ async def test_symo_inverter(hass, aioclient_mock):
     )
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 58
     # 4 additional AC entities
-    assert_state("sensor.current_dc_fronius_inverter_1_http_fronius", 2.19)
-    assert_state("sensor.energy_day_fronius_inverter_1_http_fronius", 1113)
-    assert_state("sensor.energy_total_fronius_inverter_1_http_fronius", 44188000)
-    assert_state("sensor.energy_year_fronius_inverter_1_http_fronius", 25508798)
-    assert_state("sensor.voltage_dc_fronius_inverter_1_http_fronius", 518)
-    assert_state("sensor.current_ac_fronius_inverter_1_http_fronius", 5.19)
-    assert_state("sensor.frequency_ac_fronius_inverter_1_http_fronius", 49.94)
-    assert_state("sensor.power_ac_fronius_inverter_1_http_fronius", 1190)
-    assert_state("sensor.voltage_ac_fronius_inverter_1_http_fronius", 227.90)
+    assert_state("sensor.symo_20_current_dc", 2.19)
+    assert_state("sensor.symo_20_energy_day", 1113)
+    assert_state("sensor.symo_20_energy_total", 44188000)
+    assert_state("sensor.symo_20_energy_year", 25508798)
+    assert_state("sensor.symo_20_voltage_dc", 518)
+    assert_state("sensor.symo_20_current_ac", 5.19)
+    assert_state("sensor.symo_20_frequency_ac", 49.94)
+    assert_state("sensor.symo_20_power_ac", 1190)
+    assert_state("sensor.symo_20_voltage_ac", 227.90)
 
     # Third test at nighttime - additional AC entities aren't changed
     mock_responses(aioclient_mock, night=True)
@@ -64,13 +68,15 @@ async def test_symo_inverter(hass, aioclient_mock):
         hass, dt.utcnow() + FroniusInverterUpdateCoordinator.default_interval
     )
     await hass.async_block_till_done()
-    assert_state("sensor.current_ac_fronius_inverter_1_http_fronius", 5.19)
-    assert_state("sensor.frequency_ac_fronius_inverter_1_http_fronius", 49.94)
-    assert_state("sensor.power_ac_fronius_inverter_1_http_fronius", 1190)
-    assert_state("sensor.voltage_ac_fronius_inverter_1_http_fronius", 227.90)
+    assert_state("sensor.symo_20_current_ac", 5.19)
+    assert_state("sensor.symo_20_frequency_ac", 49.94)
+    assert_state("sensor.symo_20_power_ac", 1190)
+    assert_state("sensor.symo_20_voltage_ac", 227.90)
 
 
-async def test_symo_logger(hass, aioclient_mock):
+async def test_symo_logger(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test Fronius Symo logger entities."""
 
     def assert_state(entity_id, expected_state):
@@ -82,21 +88,14 @@ async def test_symo_logger(hass, aioclient_mock):
     await setup_fronius_integration(hass)
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 24
     # states are rounded to 4 decimals
-    assert_state(
-        "sensor.cash_factor_fronius_logger_info_0_http_fronius",
-        0.078,
-    )
-    assert_state(
-        "sensor.co2_factor_fronius_logger_info_0_http_fronius",
-        0.53,
-    )
-    assert_state(
-        "sensor.delivery_factor_fronius_logger_info_0_http_fronius",
-        0.15,
-    )
+    assert_state("sensor.solarnet_grid_export_tariff", 0.078)
+    assert_state("sensor.solarnet_co2_factor", 0.53)
+    assert_state("sensor.solarnet_grid_import_tariff", 0.15)
 
 
-async def test_symo_meter(hass, aioclient_mock):
+async def test_symo_meter(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test Fronius Symo meter entities."""
 
     def assert_state(entity_id, expected_state):
@@ -113,51 +112,43 @@ async def test_symo_meter(hass, aioclient_mock):
     )
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 58
     # states are rounded to 4 decimals
-    assert_state("sensor.current_ac_phase_1_fronius_meter_0_http_fronius", 7.755)
-    assert_state("sensor.current_ac_phase_2_fronius_meter_0_http_fronius", 6.68)
-    assert_state("sensor.current_ac_phase_3_fronius_meter_0_http_fronius", 10.102)
-    assert_state(
-        "sensor.energy_reactive_ac_consumed_fronius_meter_0_http_fronius", 59960790
-    )
-    assert_state(
-        "sensor.energy_reactive_ac_produced_fronius_meter_0_http_fronius", 723160
-    )
-    assert_state("sensor.energy_real_ac_minus_fronius_meter_0_http_fronius", 35623065)
-    assert_state("sensor.energy_real_ac_plus_fronius_meter_0_http_fronius", 15303334)
-    assert_state("sensor.energy_real_consumed_fronius_meter_0_http_fronius", 15303334)
-    assert_state("sensor.energy_real_produced_fronius_meter_0_http_fronius", 35623065)
-    assert_state("sensor.frequency_phase_average_fronius_meter_0_http_fronius", 50)
-    assert_state("sensor.power_apparent_phase_1_fronius_meter_0_http_fronius", 1772.793)
-    assert_state("sensor.power_apparent_phase_2_fronius_meter_0_http_fronius", 1527.048)
-    assert_state("sensor.power_apparent_phase_3_fronius_meter_0_http_fronius", 2333.562)
-    assert_state("sensor.power_apparent_fronius_meter_0_http_fronius", 5592.57)
-    assert_state("sensor.power_factor_phase_1_fronius_meter_0_http_fronius", -0.99)
-    assert_state("sensor.power_factor_phase_2_fronius_meter_0_http_fronius", -0.99)
-    assert_state("sensor.power_factor_phase_3_fronius_meter_0_http_fronius", 0.99)
-    assert_state("sensor.power_factor_fronius_meter_0_http_fronius", 1)
-    assert_state("sensor.power_reactive_phase_1_fronius_meter_0_http_fronius", 51.48)
-    assert_state("sensor.power_reactive_phase_2_fronius_meter_0_http_fronius", 115.63)
-    assert_state("sensor.power_reactive_phase_3_fronius_meter_0_http_fronius", -164.24)
-    assert_state("sensor.power_reactive_fronius_meter_0_http_fronius", 2.87)
-    assert_state("sensor.power_real_phase_1_fronius_meter_0_http_fronius", 1765.55)
-    assert_state("sensor.power_real_phase_2_fronius_meter_0_http_fronius", 1515.8)
-    assert_state("sensor.power_real_phase_3_fronius_meter_0_http_fronius", 2311.22)
-    assert_state("sensor.power_real_fronius_meter_0_http_fronius", 5592.57)
-    assert_state("sensor.voltage_ac_phase_1_fronius_meter_0_http_fronius", 228.6)
-    assert_state("sensor.voltage_ac_phase_2_fronius_meter_0_http_fronius", 228.6)
-    assert_state("sensor.voltage_ac_phase_3_fronius_meter_0_http_fronius", 231)
-    assert_state(
-        "sensor.voltage_ac_phase_to_phase_12_fronius_meter_0_http_fronius", 395.9
-    )
-    assert_state(
-        "sensor.voltage_ac_phase_to_phase_23_fronius_meter_0_http_fronius", 398
-    )
-    assert_state(
-        "sensor.voltage_ac_phase_to_phase_31_fronius_meter_0_http_fronius", 398
-    )
+    assert_state("sensor.smart_meter_63a_current_ac_phase_1", 7.755)
+    assert_state("sensor.smart_meter_63a_current_ac_phase_2", 6.68)
+    assert_state("sensor.smart_meter_63a_current_ac_phase_3", 10.102)
+    assert_state("sensor.smart_meter_63a_energy_reactive_ac_consumed", 59960790)
+    assert_state("sensor.smart_meter_63a_energy_reactive_ac_produced", 723160)
+    assert_state("sensor.smart_meter_63a_energy_real_ac_minus", 35623065)
+    assert_state("sensor.smart_meter_63a_energy_real_ac_plus", 15303334)
+    assert_state("sensor.smart_meter_63a_energy_real_consumed", 15303334)
+    assert_state("sensor.smart_meter_63a_energy_real_produced", 35623065)
+    assert_state("sensor.smart_meter_63a_frequency_phase_average", 50)
+    assert_state("sensor.smart_meter_63a_power_apparent_phase_1", 1772.793)
+    assert_state("sensor.smart_meter_63a_power_apparent_phase_2", 1527.048)
+    assert_state("sensor.smart_meter_63a_power_apparent_phase_3", 2333.562)
+    assert_state("sensor.smart_meter_63a_power_apparent", 5592.57)
+    assert_state("sensor.smart_meter_63a_power_factor_phase_1", -0.99)
+    assert_state("sensor.smart_meter_63a_power_factor_phase_2", -0.99)
+    assert_state("sensor.smart_meter_63a_power_factor_phase_3", 0.99)
+    assert_state("sensor.smart_meter_63a_power_factor", 1)
+    assert_state("sensor.smart_meter_63a_power_reactive_phase_1", 51.48)
+    assert_state("sensor.smart_meter_63a_power_reactive_phase_2", 115.63)
+    assert_state("sensor.smart_meter_63a_power_reactive_phase_3", -164.24)
+    assert_state("sensor.smart_meter_63a_power_reactive", 2.87)
+    assert_state("sensor.smart_meter_63a_power_real_phase_1", 1765.55)
+    assert_state("sensor.smart_meter_63a_power_real_phase_2", 1515.8)
+    assert_state("sensor.smart_meter_63a_power_real_phase_3", 2311.22)
+    assert_state("sensor.smart_meter_63a_power_real", 5592.57)
+    assert_state("sensor.smart_meter_63a_voltage_ac_phase_1", 228.6)
+    assert_state("sensor.smart_meter_63a_voltage_ac_phase_2", 228.6)
+    assert_state("sensor.smart_meter_63a_voltage_ac_phase_3", 231)
+    assert_state("sensor.smart_meter_63a_voltage_ac_phase_1_2", 395.9)
+    assert_state("sensor.smart_meter_63a_voltage_ac_phase_2_3", 398)
+    assert_state("sensor.smart_meter_63a_voltage_ac_phase_3_1", 398)
 
 
-async def test_symo_power_flow(hass, aioclient_mock):
+async def test_symo_power_flow(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test Fronius Symo power flow entities."""
     async_fire_time_changed(hass, dt.utcnow())
 
@@ -175,30 +166,12 @@ async def test_symo_power_flow(hass, aioclient_mock):
     )
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 52
     # states are rounded to 4 decimals
-    assert_state(
-        "sensor.energy_day_fronius_power_flow_0_http_fronius",
-        10828,
-    )
-    assert_state(
-        "sensor.energy_total_fronius_power_flow_0_http_fronius",
-        44186900,
-    )
-    assert_state(
-        "sensor.energy_year_fronius_power_flow_0_http_fronius",
-        25507686,
-    )
-    assert_state(
-        "sensor.power_grid_fronius_power_flow_0_http_fronius",
-        975.31,
-    )
-    assert_state(
-        "sensor.power_load_fronius_power_flow_0_http_fronius",
-        -975.31,
-    )
-    assert_state(
-        "sensor.relative_autonomy_fronius_power_flow_0_http_fronius",
-        0,
-    )
+    assert_state("sensor.solarnet_energy_day", 10828)
+    assert_state("sensor.solarnet_energy_total", 44186900)
+    assert_state("sensor.solarnet_energy_year", 25507686)
+    assert_state("sensor.solarnet_power_grid", 975.31)
+    assert_state("sensor.solarnet_power_load", -975.31)
+    assert_state("sensor.solarnet_relative_autonomy", 0)
 
     # Second test at daytime when inverter is producing
     mock_responses(aioclient_mock, night=False)
@@ -208,41 +181,17 @@ async def test_symo_power_flow(hass, aioclient_mock):
     await hass.async_block_till_done()
     # 54 because power_flow `rel_SelfConsumption` and `P_PV` is not `null` anymore
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 54
-    assert_state(
-        "sensor.energy_day_fronius_power_flow_0_http_fronius",
-        1101.7001,
-    )
-    assert_state(
-        "sensor.energy_total_fronius_power_flow_0_http_fronius",
-        44188000,
-    )
-    assert_state(
-        "sensor.energy_year_fronius_power_flow_0_http_fronius",
-        25508788,
-    )
-    assert_state(
-        "sensor.power_grid_fronius_power_flow_0_http_fronius",
-        1703.74,
-    )
-    assert_state(
-        "sensor.power_load_fronius_power_flow_0_http_fronius",
-        -2814.74,
-    )
-    assert_state(
-        "sensor.power_photovoltaics_fronius_power_flow_0_http_fronius",
-        1111,
-    )
-    assert_state(
-        "sensor.relative_autonomy_fronius_power_flow_0_http_fronius",
-        39.4708,
-    )
-    assert_state(
-        "sensor.relative_self_consumption_fronius_power_flow_0_http_fronius",
-        100,
-    )
+    assert_state("sensor.solarnet_energy_day", 1101.7001)
+    assert_state("sensor.solarnet_energy_total", 44188000)
+    assert_state("sensor.solarnet_energy_year", 25508788)
+    assert_state("sensor.solarnet_power_grid", 1703.74)
+    assert_state("sensor.solarnet_power_load", -2814.74)
+    assert_state("sensor.solarnet_power_photovoltaics", 1111)
+    assert_state("sensor.solarnet_relative_autonomy", 39.4708)
+    assert_state("sensor.solarnet_relative_self_consumption", 100)
 
 
-async def test_gen24(hass, aioclient_mock):
+async def test_gen24(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Test Fronius Gen24 inverter entities."""
 
     def assert_state(entity_id, expected_state):
@@ -259,77 +208,65 @@ async def test_gen24(hass, aioclient_mock):
     )
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 52
     # inverter 1
-    assert_state("sensor.current_ac_fronius_inverter_1_http_fronius", 0.1589)
-    assert_state("sensor.current_dc_2_fronius_inverter_1_http_fronius", 0.0754)
-    assert_state("sensor.status_code_fronius_inverter_1_http_fronius", 7)
-    assert_state("sensor.current_dc_fronius_inverter_1_http_fronius", 0.0783)
-    assert_state("sensor.voltage_dc_2_fronius_inverter_1_http_fronius", 403.4312)
-    assert_state("sensor.power_ac_fronius_inverter_1_http_fronius", 37.3204)
-    assert_state("sensor.error_code_fronius_inverter_1_http_fronius", 0)
-    assert_state("sensor.voltage_dc_fronius_inverter_1_http_fronius", 411.3811)
-    assert_state("sensor.energy_total_fronius_inverter_1_http_fronius", 1530193.42)
-    assert_state("sensor.inverter_state_fronius_inverter_1_http_fronius", "Running")
-    assert_state("sensor.voltage_ac_fronius_inverter_1_http_fronius", 234.9168)
-    assert_state("sensor.frequency_ac_fronius_inverter_1_http_fronius", 49.9917)
+    assert_state("sensor.inverter_name_current_ac", 0.1589)
+    assert_state("sensor.inverter_name_current_dc_2", 0.0754)
+    assert_state("sensor.inverter_name_status_code", 7)
+    assert_state("sensor.inverter_name_current_dc", 0.0783)
+    assert_state("sensor.inverter_name_voltage_dc_2", 403.4312)
+    assert_state("sensor.inverter_name_power_ac", 37.3204)
+    assert_state("sensor.inverter_name_error_code", 0)
+    assert_state("sensor.inverter_name_voltage_dc", 411.3811)
+    assert_state("sensor.inverter_name_energy_total", 1530193.42)
+    assert_state("sensor.inverter_name_inverter_state", "Running")
+    assert_state("sensor.inverter_name_voltage_ac", 234.9168)
+    assert_state("sensor.inverter_name_frequency_ac", 49.9917)
     # meter
-    assert_state("sensor.energy_real_produced_fronius_meter_0_http_fronius", 3863340.0)
-    assert_state("sensor.energy_real_consumed_fronius_meter_0_http_fronius", 2013105.0)
-    assert_state("sensor.power_real_fronius_meter_0_http_fronius", 653.1)
-    assert_state("sensor.frequency_phase_average_fronius_meter_0_http_fronius", 49.9)
-    assert_state("sensor.meter_location_fronius_meter_0_http_fronius", 0.0)
-    assert_state("sensor.power_factor_fronius_meter_0_http_fronius", 0.828)
-    assert_state(
-        "sensor.energy_reactive_ac_consumed_fronius_meter_0_http_fronius", 88221.0
-    )
-    assert_state("sensor.energy_real_ac_minus_fronius_meter_0_http_fronius", 3863340.0)
-    assert_state("sensor.current_ac_phase_2_fronius_meter_0_http_fronius", 2.33)
-    assert_state("sensor.voltage_ac_phase_1_fronius_meter_0_http_fronius", 235.9)
-    assert_state(
-        "sensor.voltage_ac_phase_to_phase_12_fronius_meter_0_http_fronius", 408.7
-    )
-    assert_state("sensor.power_real_phase_2_fronius_meter_0_http_fronius", 294.9)
-    assert_state("sensor.energy_real_ac_plus_fronius_meter_0_http_fronius", 2013105.0)
-    assert_state("sensor.voltage_ac_phase_2_fronius_meter_0_http_fronius", 236.1)
-    assert_state(
-        "sensor.energy_reactive_ac_produced_fronius_meter_0_http_fronius", 1989125.0
-    )
-    assert_state("sensor.voltage_ac_phase_3_fronius_meter_0_http_fronius", 236.9)
-    assert_state("sensor.power_factor_phase_1_fronius_meter_0_http_fronius", 0.441)
-    assert_state(
-        "sensor.voltage_ac_phase_to_phase_23_fronius_meter_0_http_fronius", 409.6
-    )
-    assert_state("sensor.current_ac_phase_3_fronius_meter_0_http_fronius", 1.825)
-    assert_state("sensor.power_factor_phase_3_fronius_meter_0_http_fronius", 0.832)
-    assert_state("sensor.power_apparent_phase_1_fronius_meter_0_http_fronius", 243.3)
-    assert_state(
-        "sensor.voltage_ac_phase_to_phase_31_fronius_meter_0_http_fronius", 409.4
-    )
-    assert_state("sensor.power_apparent_phase_2_fronius_meter_0_http_fronius", 323.4)
-    assert_state("sensor.power_apparent_phase_3_fronius_meter_0_http_fronius", 301.2)
-    assert_state("sensor.power_real_phase_1_fronius_meter_0_http_fronius", 106.8)
-    assert_state("sensor.power_factor_phase_2_fronius_meter_0_http_fronius", 0.934)
-    assert_state("sensor.power_real_phase_3_fronius_meter_0_http_fronius", 251.3)
-    assert_state("sensor.power_reactive_phase_1_fronius_meter_0_http_fronius", -218.6)
-    assert_state("sensor.power_reactive_phase_2_fronius_meter_0_http_fronius", -132.8)
-    assert_state("sensor.power_reactive_phase_3_fronius_meter_0_http_fronius", -166.0)
-    assert_state("sensor.power_apparent_fronius_meter_0_http_fronius", 868.0)
-    assert_state("sensor.power_reactive_fronius_meter_0_http_fronius", -517.4)
-    assert_state("sensor.current_ac_phase_1_fronius_meter_0_http_fronius", 1.145)
+    assert_state("sensor.smart_meter_ts_65a_3_energy_real_produced", 3863340.0)
+    assert_state("sensor.smart_meter_ts_65a_3_energy_real_consumed", 2013105.0)
+    assert_state("sensor.smart_meter_ts_65a_3_power_real", 653.1)
+    assert_state("sensor.smart_meter_ts_65a_3_frequency_phase_average", 49.9)
+    assert_state("sensor.smart_meter_ts_65a_3_meter_location", 0.0)
+    assert_state("sensor.smart_meter_ts_65a_3_power_factor", 0.828)
+    assert_state("sensor.smart_meter_ts_65a_3_energy_reactive_ac_consumed", 88221.0)
+    assert_state("sensor.smart_meter_ts_65a_3_energy_real_ac_minus", 3863340.0)
+    assert_state("sensor.smart_meter_ts_65a_3_current_ac_phase_2", 2.33)
+    assert_state("sensor.smart_meter_ts_65a_3_voltage_ac_phase_1", 235.9)
+    assert_state("sensor.smart_meter_ts_65a_3_voltage_ac_phase_1_2", 408.7)
+    assert_state("sensor.smart_meter_ts_65a_3_power_real_phase_2", 294.9)
+    assert_state("sensor.smart_meter_ts_65a_3_energy_real_ac_plus", 2013105.0)
+    assert_state("sensor.smart_meter_ts_65a_3_voltage_ac_phase_2", 236.1)
+    assert_state("sensor.smart_meter_ts_65a_3_energy_reactive_ac_produced", 1989125.0)
+    assert_state("sensor.smart_meter_ts_65a_3_voltage_ac_phase_3", 236.9)
+    assert_state("sensor.smart_meter_ts_65a_3_power_factor_phase_1", 0.441)
+    assert_state("sensor.smart_meter_ts_65a_3_voltage_ac_phase_2_3", 409.6)
+    assert_state("sensor.smart_meter_ts_65a_3_current_ac_phase_3", 1.825)
+    assert_state("sensor.smart_meter_ts_65a_3_power_factor_phase_3", 0.832)
+    assert_state("sensor.smart_meter_ts_65a_3_power_apparent_phase_1", 243.3)
+    assert_state("sensor.smart_meter_ts_65a_3_voltage_ac_phase_3_1", 409.4)
+    assert_state("sensor.smart_meter_ts_65a_3_power_apparent_phase_2", 323.4)
+    assert_state("sensor.smart_meter_ts_65a_3_power_apparent_phase_3", 301.2)
+    assert_state("sensor.smart_meter_ts_65a_3_power_real_phase_1", 106.8)
+    assert_state("sensor.smart_meter_ts_65a_3_power_factor_phase_2", 0.934)
+    assert_state("sensor.smart_meter_ts_65a_3_power_real_phase_3", 251.3)
+    assert_state("sensor.smart_meter_ts_65a_3_power_reactive_phase_1", -218.6)
+    assert_state("sensor.smart_meter_ts_65a_3_power_reactive_phase_2", -132.8)
+    assert_state("sensor.smart_meter_ts_65a_3_power_reactive_phase_3", -166.0)
+    assert_state("sensor.smart_meter_ts_65a_3_power_apparent", 868.0)
+    assert_state("sensor.smart_meter_ts_65a_3_power_reactive", -517.4)
+    assert_state("sensor.smart_meter_ts_65a_3_current_ac_phase_1", 1.145)
     # power_flow
-    assert_state("sensor.power_grid_fronius_power_flow_0_http_fronius", 658.4)
-    assert_state(
-        "sensor.relative_self_consumption_fronius_power_flow_0_http_fronius", 100.0
-    )
-    assert_state(
-        "sensor.power_photovoltaics_fronius_power_flow_0_http_fronius", 62.9481
-    )
-    assert_state("sensor.power_load_fronius_power_flow_0_http_fronius", -695.6827)
-    assert_state("sensor.meter_mode_fronius_power_flow_0_http_fronius", "meter")
-    assert_state("sensor.relative_autonomy_fronius_power_flow_0_http_fronius", 5.3592)
-    assert_state("sensor.energy_total_fronius_power_flow_0_http_fronius", 1530193.42)
+    assert_state("sensor.solarnet_power_grid", 658.4)
+    assert_state("sensor.solarnet_relative_self_consumption", 100.0)
+    assert_state("sensor.solarnet_power_photovoltaics", 62.9481)
+    assert_state("sensor.solarnet_power_load", -695.6827)
+    assert_state("sensor.solarnet_meter_mode", "meter")
+    assert_state("sensor.solarnet_relative_autonomy", 5.3592)
+    assert_state("sensor.solarnet_energy_total", 1530193.42)
 
 
-async def test_gen24_storage(hass, aioclient_mock):
+async def test_gen24_storage(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test Fronius Gen24 inverter with BYD battery and Ohmpilot entities."""
 
     def assert_state(entity_id, expected_state):
@@ -348,92 +285,74 @@ async def test_gen24_storage(hass, aioclient_mock):
     )
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 64
     # inverter 1
-    assert_state("sensor.current_dc_fronius_inverter_1_http_fronius", 0.3952)
-    assert_state("sensor.voltage_dc_2_fronius_inverter_1_http_fronius", 318.8103)
-    assert_state("sensor.current_dc_2_fronius_inverter_1_http_fronius", 0.3564)
-    assert_state("sensor.current_ac_fronius_inverter_1_http_fronius", 1.1087)
-    assert_state("sensor.power_ac_fronius_inverter_1_http_fronius", 250.9093)
-    assert_state("sensor.error_code_fronius_inverter_1_http_fronius", 0)
-    assert_state("sensor.status_code_fronius_inverter_1_http_fronius", 7)
-    assert_state("sensor.energy_total_fronius_inverter_1_http_fronius", 7512794.0117)
-    assert_state("sensor.inverter_state_fronius_inverter_1_http_fronius", "Running")
-    assert_state("sensor.voltage_dc_fronius_inverter_1_http_fronius", 419.1009)
-    assert_state("sensor.voltage_ac_fronius_inverter_1_http_fronius", 227.354)
-    assert_state("sensor.frequency_ac_fronius_inverter_1_http_fronius", 49.9816)
+    assert_state("sensor.gen24_storage_current_dc", 0.3952)
+    assert_state("sensor.gen24_storage_voltage_dc_2", 318.8103)
+    assert_state("sensor.gen24_storage_current_dc_2", 0.3564)
+    assert_state("sensor.gen24_storage_current_ac", 1.1087)
+    assert_state("sensor.gen24_storage_power_ac", 250.9093)
+    assert_state("sensor.gen24_storage_error_code", 0)
+    assert_state("sensor.gen24_storage_status_code", 7)
+    assert_state("sensor.gen24_storage_energy_total", 7512794.0117)
+    assert_state("sensor.gen24_storage_inverter_state", "Running")
+    assert_state("sensor.gen24_storage_voltage_dc", 419.1009)
+    assert_state("sensor.gen24_storage_voltage_ac", 227.354)
+    assert_state("sensor.gen24_storage_frequency_ac", 49.9816)
     # meter
-    assert_state("sensor.energy_real_produced_fronius_meter_0_http_fronius", 1705128.0)
-    assert_state("sensor.power_real_fronius_meter_0_http_fronius", 487.7)
-    assert_state("sensor.power_factor_fronius_meter_0_http_fronius", 0.698)
-    assert_state("sensor.energy_real_consumed_fronius_meter_0_http_fronius", 1247204.0)
-    assert_state("sensor.frequency_phase_average_fronius_meter_0_http_fronius", 49.9)
-    assert_state("sensor.meter_location_fronius_meter_0_http_fronius", 0.0)
-    assert_state("sensor.power_reactive_fronius_meter_0_http_fronius", -501.5)
-    assert_state(
-        "sensor.energy_reactive_ac_produced_fronius_meter_0_http_fronius", 3266105.0
-    )
-    assert_state("sensor.power_real_phase_3_fronius_meter_0_http_fronius", 19.6)
-    assert_state("sensor.current_ac_phase_3_fronius_meter_0_http_fronius", 0.645)
-    assert_state("sensor.energy_real_ac_minus_fronius_meter_0_http_fronius", 1705128.0)
-    assert_state("sensor.power_apparent_phase_2_fronius_meter_0_http_fronius", 383.9)
-    assert_state("sensor.current_ac_phase_1_fronius_meter_0_http_fronius", 1.701)
-    assert_state("sensor.current_ac_phase_2_fronius_meter_0_http_fronius", 1.832)
-    assert_state("sensor.power_apparent_phase_1_fronius_meter_0_http_fronius", 319.5)
-    assert_state("sensor.voltage_ac_phase_1_fronius_meter_0_http_fronius", 229.4)
-    assert_state("sensor.power_real_phase_2_fronius_meter_0_http_fronius", 150.0)
-    assert_state(
-        "sensor.voltage_ac_phase_to_phase_31_fronius_meter_0_http_fronius", 394.3
-    )
-    assert_state("sensor.voltage_ac_phase_2_fronius_meter_0_http_fronius", 225.6)
-    assert_state(
-        "sensor.energy_reactive_ac_consumed_fronius_meter_0_http_fronius", 5482.0
-    )
-    assert_state("sensor.energy_real_ac_plus_fronius_meter_0_http_fronius", 1247204.0)
-    assert_state("sensor.power_factor_phase_1_fronius_meter_0_http_fronius", 0.995)
-    assert_state("sensor.power_factor_phase_3_fronius_meter_0_http_fronius", 0.163)
-    assert_state("sensor.power_factor_phase_2_fronius_meter_0_http_fronius", 0.389)
-    assert_state("sensor.power_reactive_phase_1_fronius_meter_0_http_fronius", -31.3)
-    assert_state("sensor.power_reactive_phase_3_fronius_meter_0_http_fronius", -116.7)
-    assert_state(
-        "sensor.voltage_ac_phase_to_phase_12_fronius_meter_0_http_fronius", 396.0
-    )
-    assert_state(
-        "sensor.voltage_ac_phase_to_phase_23_fronius_meter_0_http_fronius", 393.0
-    )
-    assert_state("sensor.power_reactive_phase_2_fronius_meter_0_http_fronius", -353.4)
-    assert_state("sensor.power_real_phase_1_fronius_meter_0_http_fronius", 317.9)
-    assert_state("sensor.voltage_ac_phase_3_fronius_meter_0_http_fronius", 228.3)
-    assert_state("sensor.power_apparent_fronius_meter_0_http_fronius", 821.9)
-    assert_state("sensor.power_apparent_phase_3_fronius_meter_0_http_fronius", 118.4)
+    assert_state("sensor.smart_meter_ts_65a_3_energy_real_produced", 1705128.0)
+    assert_state("sensor.smart_meter_ts_65a_3_power_real", 487.7)
+    assert_state("sensor.smart_meter_ts_65a_3_power_factor", 0.698)
+    assert_state("sensor.smart_meter_ts_65a_3_energy_real_consumed", 1247204.0)
+    assert_state("sensor.smart_meter_ts_65a_3_frequency_phase_average", 49.9)
+    assert_state("sensor.smart_meter_ts_65a_3_meter_location", 0.0)
+    assert_state("sensor.smart_meter_ts_65a_3_power_reactive", -501.5)
+    assert_state("sensor.smart_meter_ts_65a_3_energy_reactive_ac_produced", 3266105.0)
+    assert_state("sensor.smart_meter_ts_65a_3_power_real_phase_3", 19.6)
+    assert_state("sensor.smart_meter_ts_65a_3_current_ac_phase_3", 0.645)
+    assert_state("sensor.smart_meter_ts_65a_3_energy_real_ac_minus", 1705128.0)
+    assert_state("sensor.smart_meter_ts_65a_3_power_apparent_phase_2", 383.9)
+    assert_state("sensor.smart_meter_ts_65a_3_current_ac_phase_1", 1.701)
+    assert_state("sensor.smart_meter_ts_65a_3_current_ac_phase_2", 1.832)
+    assert_state("sensor.smart_meter_ts_65a_3_power_apparent_phase_1", 319.5)
+    assert_state("sensor.smart_meter_ts_65a_3_voltage_ac_phase_1", 229.4)
+    assert_state("sensor.smart_meter_ts_65a_3_power_real_phase_2", 150.0)
+    assert_state("sensor.smart_meter_ts_65a_3_voltage_ac_phase_3_1", 394.3)
+    assert_state("sensor.smart_meter_ts_65a_3_voltage_ac_phase_2", 225.6)
+    assert_state("sensor.smart_meter_ts_65a_3_energy_reactive_ac_consumed", 5482.0)
+    assert_state("sensor.smart_meter_ts_65a_3_energy_real_ac_plus", 1247204.0)
+    assert_state("sensor.smart_meter_ts_65a_3_power_factor_phase_1", 0.995)
+    assert_state("sensor.smart_meter_ts_65a_3_power_factor_phase_3", 0.163)
+    assert_state("sensor.smart_meter_ts_65a_3_power_factor_phase_2", 0.389)
+    assert_state("sensor.smart_meter_ts_65a_3_power_reactive_phase_1", -31.3)
+    assert_state("sensor.smart_meter_ts_65a_3_power_reactive_phase_3", -116.7)
+    assert_state("sensor.smart_meter_ts_65a_3_voltage_ac_phase_1_2", 396.0)
+    assert_state("sensor.smart_meter_ts_65a_3_voltage_ac_phase_2_3", 393.0)
+    assert_state("sensor.smart_meter_ts_65a_3_power_reactive_phase_2", -353.4)
+    assert_state("sensor.smart_meter_ts_65a_3_power_real_phase_1", 317.9)
+    assert_state("sensor.smart_meter_ts_65a_3_voltage_ac_phase_3", 228.3)
+    assert_state("sensor.smart_meter_ts_65a_3_power_apparent", 821.9)
+    assert_state("sensor.smart_meter_ts_65a_3_power_apparent_phase_3", 118.4)
     # ohmpilot
-    assert_state(
-        "sensor.energy_real_ac_consumed_fronius_ohmpilot_0_http_fronius", 1233295.0
-    )
-    assert_state("sensor.power_real_ac_fronius_ohmpilot_0_http_fronius", 0.0)
-    assert_state("sensor.temperature_channel_1_fronius_ohmpilot_0_http_fronius", 38.9)
-    assert_state("sensor.state_code_fronius_ohmpilot_0_http_fronius", 0.0)
-    assert_state(
-        "sensor.state_message_fronius_ohmpilot_0_http_fronius", "Up and running"
-    )
+    assert_state("sensor.ohmpilot_energy_consumed", 1233295.0)
+    assert_state("sensor.ohmpilot_power", 0.0)
+    assert_state("sensor.ohmpilot_temperature_channel_1", 38.9)
+    assert_state("sensor.ohmpilot_state_code", 0.0)
+    assert_state("sensor.ohmpilot_state_message", "Up and running")
     # power_flow
-    assert_state("sensor.power_grid_fronius_power_flow_0_http_fronius", 2274.9)
-    assert_state("sensor.power_battery_fronius_power_flow_0_http_fronius", 0.1591)
-    assert_state("sensor.power_load_fronius_power_flow_0_http_fronius", -2459.3092)
-    assert_state(
-        "sensor.relative_self_consumption_fronius_power_flow_0_http_fronius", 100.0
-    )
-    assert_state(
-        "sensor.power_photovoltaics_fronius_power_flow_0_http_fronius", 216.4328
-    )
-    assert_state("sensor.relative_autonomy_fronius_power_flow_0_http_fronius", 7.4984)
-    assert_state("sensor.meter_mode_fronius_power_flow_0_http_fronius", "bidirectional")
-    assert_state("sensor.energy_total_fronius_power_flow_0_http_fronius", 7512664.4042)
+    assert_state("sensor.solarnet_power_grid", 2274.9)
+    assert_state("sensor.solarnet_power_battery", 0.1591)
+    assert_state("sensor.solarnet_power_load", -2459.3092)
+    assert_state("sensor.solarnet_relative_self_consumption", 100.0)
+    assert_state("sensor.solarnet_power_photovoltaics", 216.4328)
+    assert_state("sensor.solarnet_relative_autonomy", 7.4984)
+    assert_state("sensor.solarnet_meter_mode", "bidirectional")
+    assert_state("sensor.solarnet_energy_total", 7512664.4042)
     # storage
-    assert_state("sensor.current_dc_fronius_storage_0_http_fronius", 0.0)
-    assert_state("sensor.state_of_charge_fronius_storage_0_http_fronius", 4.6)
-    assert_state("sensor.capacity_maximum_fronius_storage_0_http_fronius", 16588)
-    assert_state("sensor.temperature_cell_fronius_storage_0_http_fronius", 21.5)
-    assert_state("sensor.capacity_designed_fronius_storage_0_http_fronius", 16588)
-    assert_state("sensor.voltage_dc_fronius_storage_0_http_fronius", 0.0)
+    assert_state("sensor.byd_battery_box_premium_hv_current_dc", 0.0)
+    assert_state("sensor.byd_battery_box_premium_hv_state_of_charge", 4.6)
+    assert_state("sensor.byd_battery_box_premium_hv_capacity_maximum", 16588)
+    assert_state("sensor.byd_battery_box_premium_hv_temperature_cell", 21.5)
+    assert_state("sensor.byd_battery_box_premium_hv_capacity_designed", 16588)
+    assert_state("sensor.byd_battery_box_premium_hv_voltage_dc", 0.0)
 
     # Devices
     device_registry = dr.async_get(hass)
@@ -469,7 +388,9 @@ async def test_gen24_storage(hass, aioclient_mock):
     assert storage.name == "BYD Battery-Box Premium HV"
 
 
-async def test_primo_s0(hass, aioclient_mock):
+async def test_primo_s0(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test Fronius Primo dual inverter with S0 meter entities."""
 
     def assert_state(entity_id, expected_state):
@@ -486,52 +407,50 @@ async def test_primo_s0(hass, aioclient_mock):
     )
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 40
     # logger
-    assert_state("sensor.cash_factor_fronius_logger_info_0_http_fronius", 1)
-    assert_state("sensor.co2_factor_fronius_logger_info_0_http_fronius", 0.53)
-    assert_state("sensor.delivery_factor_fronius_logger_info_0_http_fronius", 1)
+    assert_state("sensor.solarnet_grid_export_tariff", 1)
+    assert_state("sensor.solarnet_co2_factor", 0.53)
+    assert_state("sensor.solarnet_grid_import_tariff", 1)
     # inverter 1
-    assert_state("sensor.energy_total_fronius_inverter_1_http_fronius", 17114940)
-    assert_state("sensor.energy_day_fronius_inverter_1_http_fronius", 22504)
-    assert_state("sensor.voltage_dc_fronius_inverter_1_http_fronius", 452.3)
-    assert_state("sensor.power_ac_fronius_inverter_1_http_fronius", 862)
-    assert_state("sensor.error_code_fronius_inverter_1_http_fronius", 0)
-    assert_state("sensor.current_dc_fronius_inverter_1_http_fronius", 4.23)
-    assert_state("sensor.status_code_fronius_inverter_1_http_fronius", 7)
-    assert_state("sensor.energy_year_fronius_inverter_1_http_fronius", 7532755.5)
-    assert_state("sensor.current_ac_fronius_inverter_1_http_fronius", 3.85)
-    assert_state("sensor.voltage_ac_fronius_inverter_1_http_fronius", 223.9)
-    assert_state("sensor.frequency_ac_fronius_inverter_1_http_fronius", 60)
-    assert_state("sensor.led_color_fronius_inverter_1_http_fronius", 2)
-    assert_state("sensor.led_state_fronius_inverter_1_http_fronius", 0)
+    assert_state("sensor.primo_5_0_1_energy_total", 17114940)
+    assert_state("sensor.primo_5_0_1_energy_day", 22504)
+    assert_state("sensor.primo_5_0_1_voltage_dc", 452.3)
+    assert_state("sensor.primo_5_0_1_power_ac", 862)
+    assert_state("sensor.primo_5_0_1_error_code", 0)
+    assert_state("sensor.primo_5_0_1_current_dc", 4.23)
+    assert_state("sensor.primo_5_0_1_status_code", 7)
+    assert_state("sensor.primo_5_0_1_energy_year", 7532755.5)
+    assert_state("sensor.primo_5_0_1_current_ac", 3.85)
+    assert_state("sensor.primo_5_0_1_voltage_ac", 223.9)
+    assert_state("sensor.primo_5_0_1_frequency_ac", 60)
+    assert_state("sensor.primo_5_0_1_led_color", 2)
+    assert_state("sensor.primo_5_0_1_led_state", 0)
     # inverter 2
-    assert_state("sensor.energy_total_fronius_inverter_2_http_fronius", 5796010)
-    assert_state("sensor.energy_day_fronius_inverter_2_http_fronius", 14237)
-    assert_state("sensor.voltage_dc_fronius_inverter_2_http_fronius", 329.5)
-    assert_state("sensor.power_ac_fronius_inverter_2_http_fronius", 296)
-    assert_state("sensor.error_code_fronius_inverter_2_http_fronius", 0)
-    assert_state("sensor.current_dc_fronius_inverter_2_http_fronius", 0.97)
-    assert_state("sensor.status_code_fronius_inverter_2_http_fronius", 7)
-    assert_state("sensor.energy_year_fronius_inverter_2_http_fronius", 3596193.25)
-    assert_state("sensor.current_ac_fronius_inverter_2_http_fronius", 1.32)
-    assert_state("sensor.voltage_ac_fronius_inverter_2_http_fronius", 223.6)
-    assert_state("sensor.frequency_ac_fronius_inverter_2_http_fronius", 60.01)
-    assert_state("sensor.led_color_fronius_inverter_2_http_fronius", 2)
-    assert_state("sensor.led_state_fronius_inverter_2_http_fronius", 0)
+    assert_state("sensor.primo_3_0_1_energy_total", 5796010)
+    assert_state("sensor.primo_3_0_1_energy_day", 14237)
+    assert_state("sensor.primo_3_0_1_voltage_dc", 329.5)
+    assert_state("sensor.primo_3_0_1_power_ac", 296)
+    assert_state("sensor.primo_3_0_1_error_code", 0)
+    assert_state("sensor.primo_3_0_1_current_dc", 0.97)
+    assert_state("sensor.primo_3_0_1_status_code", 7)
+    assert_state("sensor.primo_3_0_1_energy_year", 3596193.25)
+    assert_state("sensor.primo_3_0_1_current_ac", 1.32)
+    assert_state("sensor.primo_3_0_1_voltage_ac", 223.6)
+    assert_state("sensor.primo_3_0_1_frequency_ac", 60.01)
+    assert_state("sensor.primo_3_0_1_led_color", 2)
+    assert_state("sensor.primo_3_0_1_led_state", 0)
     # meter
-    assert_state("sensor.meter_location_fronius_meter_0_http_fronius", 1)
-    assert_state("sensor.power_real_fronius_meter_0_http_fronius", -2216.7487)
+    assert_state("sensor.s0_meter_at_inverter_1_meter_location", 1)
+    assert_state("sensor.s0_meter_at_inverter_1_power_real", -2216.7487)
     # power_flow
-    assert_state("sensor.power_load_fronius_power_flow_0_http_fronius", -2218.9349)
-    assert_state("sensor.meter_mode_fronius_power_flow_0_http_fronius", "vague-meter")
-    assert_state("sensor.power_photovoltaics_fronius_power_flow_0_http_fronius", 1834)
-    assert_state("sensor.power_grid_fronius_power_flow_0_http_fronius", 384.9349)
-    assert_state(
-        "sensor.relative_self_consumption_fronius_power_flow_0_http_fronius", 100
-    )
-    assert_state("sensor.relative_autonomy_fronius_power_flow_0_http_fronius", 82.6523)
-    assert_state("sensor.energy_total_fronius_power_flow_0_http_fronius", 22910919.5)
-    assert_state("sensor.energy_day_fronius_power_flow_0_http_fronius", 36724)
-    assert_state("sensor.energy_year_fronius_power_flow_0_http_fronius", 11128933.25)
+    assert_state("sensor.solarnet_power_load", -2218.9349)
+    assert_state("sensor.solarnet_meter_mode", "vague-meter")
+    assert_state("sensor.solarnet_power_photovoltaics", 1834)
+    assert_state("sensor.solarnet_power_grid", 384.9349)
+    assert_state("sensor.solarnet_relative_self_consumption", 100)
+    assert_state("sensor.solarnet_relative_autonomy", 82.6523)
+    assert_state("sensor.solarnet_energy_total", 22910919.5)
+    assert_state("sensor.solarnet_energy_day", 36724)
+    assert_state("sensor.solarnet_energy_year", 11128933.25)
 
     # Devices
     device_registry = dr.async_get(hass)

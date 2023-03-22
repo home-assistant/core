@@ -4,34 +4,31 @@ import datetime
 from homematicip.base.enums import AbsenceType
 from homematicip.functionalHomes import IndoorClimateHome
 
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_ACTION,
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
+    DOMAIN as CLIMATE_DOMAIN,
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_ECO,
     PRESET_NONE,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
 from homeassistant.components.homematicip_cloud.climate import (
     ATTR_PRESET_END_TIME,
     PERMANENT_END_TIME,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .helper import HAPID, async_manipulate_test_data, get_and_check_entity_basics
 
 
-async def test_manually_configured_platform(hass):
+async def test_manually_configured_platform(hass: HomeAssistant) -> None:
     """Test that we do not set up an access point."""
     assert await async_setup_component(
         hass, CLIMATE_DOMAIN, {CLIMATE_DOMAIN: {"platform": HMIPC_DOMAIN}}
@@ -39,7 +36,9 @@ async def test_manually_configured_platform(hass):
     assert not hass.data.get(HMIPC_DOMAIN)
 
 
-async def test_hmip_heating_group_heat(hass, default_mock_hap_factory):
+async def test_hmip_heating_group_heat(
+    hass: HomeAssistant, default_mock_hap_factory
+) -> None:
     """Test HomematicipHeatingGroup."""
     entity_id = "climate.badezimmer"
     entity_name = "Badezimmer"
@@ -53,7 +52,7 @@ async def test_hmip_heating_group_heat(hass, default_mock_hap_factory):
         hass, mock_hap, entity_id, entity_name, device_model
     )
 
-    assert ha_state.state == HVAC_MODE_AUTO
+    assert ha_state.state == HVACMode.AUTO
     assert ha_state.attributes["current_temperature"] == 23.8
     assert ha_state.attributes["min_temp"] == 5.0
     assert ha_state.attributes["max_temp"] == 30.0
@@ -80,7 +79,7 @@ async def test_hmip_heating_group_heat(hass, default_mock_hap_factory):
     await hass.services.async_call(
         "climate",
         "set_hvac_mode",
-        {"entity_id": entity_id, "hvac_mode": HVAC_MODE_HEAT},
+        {"entity_id": entity_id, "hvac_mode": HVACMode.HEAT},
         blocking=True,
     )
     assert len(hmip_device.mock_calls) == service_call_counter + 3
@@ -88,12 +87,12 @@ async def test_hmip_heating_group_heat(hass, default_mock_hap_factory):
     assert hmip_device.mock_calls[-1][1] == ("MANUAL",)
     await async_manipulate_test_data(hass, hmip_device, "controlMode", "MANUAL")
     ha_state = hass.states.get(entity_id)
-    assert ha_state.state == HVAC_MODE_HEAT
+    assert ha_state.state == HVACMode.HEAT
 
     await hass.services.async_call(
         "climate",
         "set_hvac_mode",
-        {"entity_id": entity_id, "hvac_mode": HVAC_MODE_AUTO},
+        {"entity_id": entity_id, "hvac_mode": HVACMode.AUTO},
         blocking=True,
     )
     assert len(hmip_device.mock_calls) == service_call_counter + 5
@@ -101,7 +100,7 @@ async def test_hmip_heating_group_heat(hass, default_mock_hap_factory):
     assert hmip_device.mock_calls[-1][1] == ("AUTOMATIC",)
     await async_manipulate_test_data(hass, hmip_device, "controlMode", "AUTO")
     ha_state = hass.states.get(entity_id)
-    assert ha_state.state == HVAC_MODE_AUTO
+    assert ha_state.state == HVACMode.AUTO
 
     await hass.services.async_call(
         "climate",
@@ -185,7 +184,7 @@ async def test_hmip_heating_group_heat(hass, default_mock_hap_factory):
     await hass.services.async_call(
         "climate",
         "set_hvac_mode",
-        {"entity_id": entity_id, "hvac_mode": HVAC_MODE_HEAT},
+        {"entity_id": entity_id, "hvac_mode": HVACMode.HEAT},
         blocking=True,
     )
     assert len(hmip_device.mock_calls) == service_call_counter + 20
@@ -193,7 +192,7 @@ async def test_hmip_heating_group_heat(hass, default_mock_hap_factory):
     assert hmip_device.mock_calls[-1][1] == ("MANUAL",)
     await async_manipulate_test_data(hass, hmip_device, "controlMode", "MANUAL")
     ha_state = hass.states.get(entity_id)
-    assert ha_state.state == HVAC_MODE_HEAT
+    assert ha_state.state == HVACMode.HEAT
 
     await hass.services.async_call(
         "climate",
@@ -208,7 +207,7 @@ async def test_hmip_heating_group_heat(hass, default_mock_hap_factory):
     hmip_device.activeProfile = hmip_device.profiles[0]
     await async_manipulate_test_data(hass, hmip_device, "controlMode", "AUTOMATIC")
     ha_state = hass.states.get(entity_id)
-    assert ha_state.state == HVAC_MODE_AUTO
+    assert ha_state.state == HVACMode.AUTO
 
     await hass.services.async_call(
         "climate",
@@ -223,16 +222,18 @@ async def test_hmip_heating_group_heat(hass, default_mock_hap_factory):
     await async_manipulate_test_data(hass, hmip_device, "floorHeatingMode", "RADIATOR")
     await async_manipulate_test_data(hass, hmip_device, "valvePosition", 0.1)
     ha_state = hass.states.get(entity_id)
-    assert ha_state.state == HVAC_MODE_AUTO
-    assert ha_state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_HEAT
+    assert ha_state.state == HVACMode.AUTO
+    assert ha_state.attributes[ATTR_HVAC_ACTION] == HVACAction.HEATING
     await async_manipulate_test_data(hass, hmip_device, "floorHeatingMode", "RADIATOR")
     await async_manipulate_test_data(hass, hmip_device, "valvePosition", 0.0)
     ha_state = hass.states.get(entity_id)
-    assert ha_state.state == HVAC_MODE_AUTO
-    assert ha_state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
+    assert ha_state.state == HVACMode.AUTO
+    assert ha_state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
 
 
-async def test_hmip_heating_group_cool(hass, default_mock_hap_factory):
+async def test_hmip_heating_group_cool(
+    hass: HomeAssistant, default_mock_hap_factory
+) -> None:
     """Test HomematicipHeatingGroup."""
     entity_id = "climate.badezimmer"
     entity_name = "Badezimmer"
@@ -251,7 +252,7 @@ async def test_hmip_heating_group_cool(hass, default_mock_hap_factory):
     await async_manipulate_test_data(hass, hmip_device, "coolingIgnored", False)
     ha_state = hass.states.get(entity_id)
 
-    assert ha_state.state == HVAC_MODE_AUTO
+    assert ha_state.state == HVACMode.AUTO
     assert ha_state.attributes["current_temperature"] == 23.8
     assert ha_state.attributes["min_temp"] == 5.0
     assert ha_state.attributes["max_temp"] == 30.0
@@ -265,7 +266,7 @@ async def test_hmip_heating_group_cool(hass, default_mock_hap_factory):
     await hass.services.async_call(
         "climate",
         "set_hvac_mode",
-        {"entity_id": entity_id, "hvac_mode": HVAC_MODE_COOL},
+        {"entity_id": entity_id, "hvac_mode": HVACMode.COOL},
         blocking=True,
     )
     assert len(hmip_device.mock_calls) == service_call_counter + 1
@@ -273,12 +274,12 @@ async def test_hmip_heating_group_cool(hass, default_mock_hap_factory):
     assert hmip_device.mock_calls[-1][1] == ("MANUAL",)
     await async_manipulate_test_data(hass, hmip_device, "controlMode", "MANUAL")
     ha_state = hass.states.get(entity_id)
-    assert ha_state.state == HVAC_MODE_COOL
+    assert ha_state.state == HVACMode.COOL
 
     await hass.services.async_call(
         "climate",
         "set_hvac_mode",
-        {"entity_id": entity_id, "hvac_mode": HVAC_MODE_AUTO},
+        {"entity_id": entity_id, "hvac_mode": HVACMode.AUTO},
         blocking=True,
     )
     assert len(hmip_device.mock_calls) == service_call_counter + 3
@@ -286,7 +287,7 @@ async def test_hmip_heating_group_cool(hass, default_mock_hap_factory):
     assert hmip_device.mock_calls[-1][1] == ("AUTOMATIC",)
     await async_manipulate_test_data(hass, hmip_device, "controlMode", "AUTO")
     ha_state = hass.states.get(entity_id)
-    assert ha_state.state == HVAC_MODE_AUTO
+    assert ha_state.state == HVACMode.AUTO
 
     await hass.services.async_call(
         "climate",
@@ -305,7 +306,7 @@ async def test_hmip_heating_group_cool(hass, default_mock_hap_factory):
     await async_manipulate_test_data(hass, hmip_device, "coolingIgnored", False)
     ha_state = hass.states.get(entity_id)
 
-    assert ha_state.state == HVAC_MODE_OFF
+    assert ha_state.state == HVACMode.OFF
     assert ha_state.attributes[ATTR_PRESET_MODE] == "none"
     assert ha_state.attributes[ATTR_PRESET_MODES] == []
 
@@ -315,7 +316,7 @@ async def test_hmip_heating_group_cool(hass, default_mock_hap_factory):
     await async_manipulate_test_data(hass, hmip_device, "coolingIgnored", True)
     ha_state = hass.states.get(entity_id)
 
-    assert ha_state.state == HVAC_MODE_OFF
+    assert ha_state.state == HVACMode.OFF
     assert ha_state.attributes[ATTR_PRESET_MODE] == "none"
     assert ha_state.attributes[ATTR_PRESET_MODES] == []
 
@@ -336,7 +337,7 @@ async def test_hmip_heating_group_cool(hass, default_mock_hap_factory):
     await async_manipulate_test_data(hass, hmip_device, "coolingIgnored", False)
     ha_state = hass.states.get(entity_id)
 
-    assert ha_state.state == HVAC_MODE_AUTO
+    assert ha_state.state == HVACMode.AUTO
     assert ha_state.attributes[ATTR_PRESET_MODE] == "Cool2"
     assert ha_state.attributes[ATTR_PRESET_MODES] == ["Cool1", "Cool2"]
 
@@ -352,7 +353,9 @@ async def test_hmip_heating_group_cool(hass, default_mock_hap_factory):
     assert hmip_device.mock_calls[-1][1] == (4,)
 
 
-async def test_hmip_heating_group_heat_with_switch(hass, default_mock_hap_factory):
+async def test_hmip_heating_group_heat_with_switch(
+    hass: HomeAssistant, default_mock_hap_factory
+) -> None:
     """Test HomematicipHeatingGroup."""
     entity_id = "climate.schlafzimmer"
     entity_name = "Schlafzimmer"
@@ -366,7 +369,7 @@ async def test_hmip_heating_group_heat_with_switch(hass, default_mock_hap_factor
     )
 
     assert hmip_device
-    assert ha_state.state == HVAC_MODE_AUTO
+    assert ha_state.state == HVACMode.AUTO
     assert ha_state.attributes["current_temperature"] == 24.7
     assert ha_state.attributes["min_temp"] == 5.0
     assert ha_state.attributes["max_temp"] == 30.0
@@ -376,7 +379,9 @@ async def test_hmip_heating_group_heat_with_switch(hass, default_mock_hap_factor
     assert ha_state.attributes[ATTR_PRESET_MODES] == [PRESET_BOOST, "STD", "P2"]
 
 
-async def test_hmip_heating_group_heat_with_radiator(hass, default_mock_hap_factory):
+async def test_hmip_heating_group_heat_with_radiator(
+    hass: HomeAssistant, default_mock_hap_factory
+) -> None:
     """Test HomematicipHeatingGroup."""
     entity_id = "climate.vorzimmer"
     entity_name = "Vorzimmer"
@@ -390,7 +395,7 @@ async def test_hmip_heating_group_heat_with_radiator(hass, default_mock_hap_fact
     )
 
     assert hmip_device
-    assert ha_state.state == HVAC_MODE_AUTO
+    assert ha_state.state == HVACMode.AUTO
     assert ha_state.attributes["current_temperature"] == 20
     assert ha_state.attributes["min_temp"] == 5.0
     assert ha_state.attributes["max_temp"] == 30.0
@@ -399,7 +404,9 @@ async def test_hmip_heating_group_heat_with_radiator(hass, default_mock_hap_fact
     assert ha_state.attributes[ATTR_PRESET_MODES] == [PRESET_NONE, PRESET_BOOST]
 
 
-async def test_hmip_climate_services(hass, mock_hap_with_service):
+async def test_hmip_climate_services(
+    hass: HomeAssistant, mock_hap_with_service
+) -> None:
     """Test HomematicipHeatingGroup."""
 
     home = mock_hap_with_service.home
@@ -412,7 +419,7 @@ async def test_hmip_climate_services(hass, mock_hap_with_service):
     )
     assert home.mock_calls[-1][0] == "activate_absence_with_duration"
     assert home.mock_calls[-1][1] == (60,)
-    assert len(home._connection.mock_calls) == 1  # pylint: disable=protected-access
+    assert len(home._connection.mock_calls) == 1
 
     await hass.services.async_call(
         "homematicip_cloud",
@@ -422,7 +429,7 @@ async def test_hmip_climate_services(hass, mock_hap_with_service):
     )
     assert home.mock_calls[-1][0] == "activate_absence_with_duration"
     assert home.mock_calls[-1][1] == (60,)
-    assert len(home._connection.mock_calls) == 2  # pylint: disable=protected-access
+    assert len(home._connection.mock_calls) == 2
 
     await hass.services.async_call(
         "homematicip_cloud",
@@ -432,7 +439,7 @@ async def test_hmip_climate_services(hass, mock_hap_with_service):
     )
     assert home.mock_calls[-1][0] == "activate_absence_with_period"
     assert home.mock_calls[-1][1] == (datetime.datetime(2019, 2, 17, 14, 0),)
-    assert len(home._connection.mock_calls) == 3  # pylint: disable=protected-access
+    assert len(home._connection.mock_calls) == 3
 
     await hass.services.async_call(
         "homematicip_cloud",
@@ -442,7 +449,7 @@ async def test_hmip_climate_services(hass, mock_hap_with_service):
     )
     assert home.mock_calls[-1][0] == "activate_absence_with_period"
     assert home.mock_calls[-1][1] == (datetime.datetime(2019, 2, 17, 14, 0),)
-    assert len(home._connection.mock_calls) == 4  # pylint: disable=protected-access
+    assert len(home._connection.mock_calls) == 4
 
     await hass.services.async_call(
         "homematicip_cloud",
@@ -452,7 +459,7 @@ async def test_hmip_climate_services(hass, mock_hap_with_service):
     )
     assert home.mock_calls[-1][0] == "activate_vacation"
     assert home.mock_calls[-1][1] == (datetime.datetime(2019, 2, 17, 14, 0), 18.5)
-    assert len(home._connection.mock_calls) == 5  # pylint: disable=protected-access
+    assert len(home._connection.mock_calls) == 5
 
     await hass.services.async_call(
         "homematicip_cloud",
@@ -462,7 +469,7 @@ async def test_hmip_climate_services(hass, mock_hap_with_service):
     )
     assert home.mock_calls[-1][0] == "activate_vacation"
     assert home.mock_calls[-1][1] == (datetime.datetime(2019, 2, 17, 14, 0), 18.5)
-    assert len(home._connection.mock_calls) == 6  # pylint: disable=protected-access
+    assert len(home._connection.mock_calls) == 6
 
     await hass.services.async_call(
         "homematicip_cloud",
@@ -472,14 +479,14 @@ async def test_hmip_climate_services(hass, mock_hap_with_service):
     )
     assert home.mock_calls[-1][0] == "deactivate_absence"
     assert home.mock_calls[-1][1] == ()
-    assert len(home._connection.mock_calls) == 7  # pylint: disable=protected-access
+    assert len(home._connection.mock_calls) == 7
 
     await hass.services.async_call(
         "homematicip_cloud", "deactivate_eco_mode", blocking=True
     )
     assert home.mock_calls[-1][0] == "deactivate_absence"
     assert home.mock_calls[-1][1] == ()
-    assert len(home._connection.mock_calls) == 8  # pylint: disable=protected-access
+    assert len(home._connection.mock_calls) == 8
 
     await hass.services.async_call(
         "homematicip_cloud",
@@ -489,14 +496,14 @@ async def test_hmip_climate_services(hass, mock_hap_with_service):
     )
     assert home.mock_calls[-1][0] == "deactivate_vacation"
     assert home.mock_calls[-1][1] == ()
-    assert len(home._connection.mock_calls) == 9  # pylint: disable=protected-access
+    assert len(home._connection.mock_calls) == 9
 
     await hass.services.async_call(
         "homematicip_cloud", "deactivate_vacation", blocking=True
     )
     assert home.mock_calls[-1][0] == "deactivate_vacation"
     assert home.mock_calls[-1][1] == ()
-    assert len(home._connection.mock_calls) == 10  # pylint: disable=protected-access
+    assert len(home._connection.mock_calls) == 10
 
     not_existing_hap_id = "5555F7110000000000000001"
     await hass.services.async_call(
@@ -508,10 +515,12 @@ async def test_hmip_climate_services(hass, mock_hap_with_service):
     assert home.mock_calls[-1][0] == "deactivate_vacation"
     assert home.mock_calls[-1][1] == ()
     # There is no further call on connection.
-    assert len(home._connection.mock_calls) == 10  # pylint: disable=protected-access
+    assert len(home._connection.mock_calls) == 10
 
 
-async def test_hmip_heating_group_services(hass, default_mock_hap_factory):
+async def test_hmip_heating_group_services(
+    hass: HomeAssistant, default_mock_hap_factory
+) -> None:
     """Test HomematicipHeatingGroup services."""
     entity_id = "climate.badezimmer"
     entity_name = "Badezimmer"
@@ -533,9 +542,7 @@ async def test_hmip_heating_group_services(hass, default_mock_hap_factory):
     )
     assert hmip_device.mock_calls[-1][0] == "set_active_profile"
     assert hmip_device.mock_calls[-1][1] == (1,)
-    assert (
-        len(hmip_device._connection.mock_calls) == 2  # pylint: disable=protected-access
-    )
+    assert len(hmip_device._connection.mock_calls) == 2
 
     await hass.services.async_call(
         "homematicip_cloud",
@@ -545,6 +552,4 @@ async def test_hmip_heating_group_services(hass, default_mock_hap_factory):
     )
     assert hmip_device.mock_calls[-1][0] == "set_active_profile"
     assert hmip_device.mock_calls[-1][1] == (1,)
-    assert (
-        len(hmip_device._connection.mock_calls) == 4  # pylint: disable=protected-access
-    )
+    assert len(hmip_device._connection.mock_calls) == 4

@@ -6,20 +6,12 @@ from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_SOURCE,
-    CONF_UNIT_OF_MEASUREMENT,
-    TIME_DAYS,
-    TIME_HOURS,
-    TIME_MINUTES,
-    TIME_SECONDS,
-)
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import CONF_NAME, CONF_SOURCE, UnitOfTime
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
     SchemaFlowFormStep,
-    SchemaFlowMenuStep,
 )
 
 from .const import (
@@ -31,59 +23,60 @@ from .const import (
 )
 
 UNIT_PREFIXES = [
-    {"value": "none", "label": "none"},
-    {"value": "n", "label": "n (nano)"},
-    {"value": "µ", "label": "µ (micro)"},
-    {"value": "m", "label": "m (milli)"},
-    {"value": "k", "label": "k (kilo)"},
-    {"value": "M", "label": "M (mega)"},
-    {"value": "G", "label": "T (tera)"},
-    {"value": "T", "label": "P (peta)"},
+    selector.SelectOptionDict(value="none", label="none"),
+    selector.SelectOptionDict(value="n", label="n (nano)"),
+    selector.SelectOptionDict(value="µ", label="µ (micro)"),
+    selector.SelectOptionDict(value="m", label="m (milli)"),
+    selector.SelectOptionDict(value="k", label="k (kilo)"),
+    selector.SelectOptionDict(value="M", label="M (mega)"),
+    selector.SelectOptionDict(value="G", label="G (giga)"),
+    selector.SelectOptionDict(value="T", label="T (tera)"),
+    selector.SelectOptionDict(value="P", label="P (peta)"),
 ]
 TIME_UNITS = [
-    {"value": TIME_SECONDS, "label": "Seconds"},
-    {"value": TIME_MINUTES, "label": "Minutes"},
-    {"value": TIME_HOURS, "label": "Hours"},
-    {"value": TIME_DAYS, "label": "Days"},
+    UnitOfTime.SECONDS,
+    UnitOfTime.MINUTES,
+    UnitOfTime.HOURS,
+    UnitOfTime.DAYS,
 ]
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ROUND_DIGITS, default=2): selector.selector(
-            {
-                "number": {
-                    "min": 0,
-                    "max": 6,
-                    "mode": "box",
-                    CONF_UNIT_OF_MEASUREMENT: "decimals",
-                }
-            }
+        vol.Required(CONF_ROUND_DIGITS, default=2): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=0,
+                max=6,
+                mode=selector.NumberSelectorMode.BOX,
+                unit_of_measurement="decimals",
+            ),
         ),
-        vol.Required(CONF_TIME_WINDOW): selector.selector({"duration": {}}),
-        vol.Required(CONF_UNIT_PREFIX, default="none"): selector.selector(
-            {"select": {"options": UNIT_PREFIXES}}
+        vol.Required(CONF_TIME_WINDOW): selector.DurationSelector(),
+        vol.Required(CONF_UNIT_PREFIX, default="none"): selector.SelectSelector(
+            selector.SelectSelectorConfig(options=UNIT_PREFIXES),
         ),
-        vol.Required(CONF_UNIT_TIME, default=TIME_HOURS): selector.selector(
-            {"select": {"options": TIME_UNITS}}
+        vol.Required(CONF_UNIT_TIME, default=UnitOfTime.HOURS): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=TIME_UNITS, translation_key="time_unit"
+            ),
         ),
     }
 )
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME): selector.selector({"text": {}}),
-        vol.Required(CONF_SOURCE): selector.selector(
-            {"entity": {"domain": "sensor"}},
+        vol.Required(CONF_NAME): selector.TextSelector(),
+        vol.Required(CONF_SOURCE): selector.EntitySelector(
+            selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
         ),
     }
 ).extend(OPTIONS_SCHEMA.schema)
 
-CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
-    "user": SchemaFlowFormStep(CONFIG_SCHEMA)
+CONFIG_FLOW = {
+    "user": SchemaFlowFormStep(CONFIG_SCHEMA),
 }
 
-OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
-    "init": SchemaFlowFormStep(OPTIONS_SCHEMA)
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
 }
 
 

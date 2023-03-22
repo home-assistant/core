@@ -9,9 +9,9 @@ from aiotractive.exceptions import TractiveError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import Trackables
@@ -47,7 +47,7 @@ class TractiveSwitchEntityDescription(
 SWITCH_TYPES: tuple[TractiveSwitchEntityDescription, ...] = (
     TractiveSwitchEntityDescription(
         key=ATTR_BUZZER,
-        name="Tracker Buzzer",
+        name="Tracker buzzer",
         icon="mdi:volume-high",
         method="async_set_buzzer",
         entity_category=EntityCategory.CONFIG,
@@ -61,7 +61,7 @@ SWITCH_TYPES: tuple[TractiveSwitchEntityDescription, ...] = (
     ),
     TractiveSwitchEntityDescription(
         key=ATTR_LIVE_TRACKING,
-        name="Live Tracking",
+        name="Live tracking",
         icon="mdi:map-marker-path",
         method="async_set_live_tracking",
         entity_category=EntityCategory.CONFIG,
@@ -88,6 +88,7 @@ async def async_setup_entry(
 class TractiveSwitch(TractiveEntity, SwitchEntity):
     """Tractive switch."""
 
+    _attr_has_entity_name = True
     entity_description: TractiveSwitchEntityDescription
 
     def __init__(
@@ -99,7 +100,6 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
         """Initialize switch entity."""
         super().__init__(user_id, item.trackable, item.tracker_details)
 
-        self._attr_name = f"{item.trackable['details']['name']} {description.name}"
         self._attr_unique_id = f"{item.trackable['_id']}_{description.key}"
         self._attr_available = False
         self._tracker = item.tracker

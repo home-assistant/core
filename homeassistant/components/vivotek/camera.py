@@ -4,7 +4,7 @@ from __future__ import annotations
 from libpyvivotek import VivotekCamera
 import voluptuous as vol
 
-from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera, CameraEntityFeature
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_IP_ADDRESS,
@@ -68,13 +68,17 @@ def setup_platform(
             digest_auth=config[CONF_AUTHENTICATION] == HTTP_DIGEST_AUTHENTICATION,
             sec_lvl=config[CONF_SECURITY_LEVEL],
         ),
-        "stream_source": f"rtsp://{creds}@{config[CONF_IP_ADDRESS]}:554/{config[CONF_STREAM_PATH]}",
+        "stream_source": (
+            f"rtsp://{creds}@{config[CONF_IP_ADDRESS]}:554/{config[CONF_STREAM_PATH]}"
+        ),
     }
     add_entities([VivotekCam(**args)], True)
 
 
 class VivotekCam(Camera):
     """A Vivotek IP camera."""
+
+    _attr_supported_features = CameraEntityFeature.STREAM
 
     def __init__(self, config, cam, stream_source):
         """Initialize a Vivotek camera."""
@@ -86,11 +90,6 @@ class VivotekCam(Camera):
         self._model_name = None
         self._name = config[CONF_NAME]
         self._stream_source = stream_source
-
-    @property
-    def supported_features(self):
-        """Return supported features for this camera."""
-        return SUPPORT_STREAM
 
     @property
     def frame_interval(self):
@@ -117,12 +116,12 @@ class VivotekCam(Camera):
         """Return the camera motion detection status."""
         return self._motion_detection_enabled
 
-    def disable_motion_detection(self):
+    def disable_motion_detection(self) -> None:
         """Disable motion detection in camera."""
         response = self._cam.set_param(DEFAULT_EVENT_0_KEY, 0)
         self._motion_detection_enabled = int(response) == 1
 
-    def enable_motion_detection(self):
+    def enable_motion_detection(self) -> None:
         """Enable motion detection in camera."""
         response = self._cam.set_param(DEFAULT_EVENT_0_KEY, 1)
         self._motion_detection_enabled = int(response) == 1
@@ -137,6 +136,6 @@ class VivotekCam(Camera):
         """Return the camera model."""
         return self._model_name
 
-    def update(self):
+    def update(self) -> None:
         """Update entity status."""
         self._model_name = self._cam.model_name

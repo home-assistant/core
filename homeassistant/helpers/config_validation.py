@@ -36,31 +36,41 @@ from homeassistant.const import (
     CONF_CHOOSE,
     CONF_CONDITION,
     CONF_CONDITIONS,
+    CONF_CONTINUE_ON_ERROR,
     CONF_CONTINUE_ON_TIMEOUT,
     CONF_COUNT,
     CONF_DEFAULT,
     CONF_DELAY,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
+    CONF_ELSE,
+    CONF_ENABLED,
     CONF_ENTITY_ID,
     CONF_ENTITY_NAMESPACE,
+    CONF_ERROR,
     CONF_EVENT,
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
     CONF_FOR,
+    CONF_FOR_EACH,
     CONF_ID,
+    CONF_IF,
+    CONF_MATCH,
+    CONF_PARALLEL,
     CONF_PLATFORM,
     CONF_REPEAT,
     CONF_SCAN_INTERVAL,
     CONF_SCENE,
     CONF_SEQUENCE,
     CONF_SERVICE,
+    CONF_SERVICE_DATA,
+    CONF_SERVICE_DATA_TEMPLATE,
     CONF_SERVICE_TEMPLATE,
     CONF_STATE,
+    CONF_STOP,
     CONF_TARGET,
+    CONF_THEN,
     CONF_TIMEOUT,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_UNIT_SYSTEM_METRIC,
     CONF_UNTIL,
     CONF_VALUE_TEMPLATE,
     CONF_VARIABLES,
@@ -68,15 +78,23 @@ from homeassistant.const import (
     CONF_WAIT_TEMPLATE,
     CONF_WHILE,
     ENTITY_MATCH_ALL,
+    ENTITY_MATCH_ANY,
     ENTITY_MATCH_NONE,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
     WEEKDAYS,
+    UnitOfTemperature,
 )
-from homeassistant.core import split_entity_id, valid_entity_id
+from homeassistant.core import (
+    HomeAssistant,
+    async_get_hass,
+    split_entity_id,
+    valid_entity_id,
+)
 from homeassistant.exceptions import TemplateError
+from homeassistant.generated import currencies
+from homeassistant.generated.countries import COUNTRIES
+from homeassistant.generated.languages import LANGUAGES
 from homeassistant.util import raise_if_invalid_path, slugify as util_slugify
 import homeassistant.util.dt as dt_util
 
@@ -290,7 +308,7 @@ def entity_id_or_uuid(value: Any) -> str:
 def _entity_ids(value: str | list, allow_uuid: bool) -> list[str]:
     """Help validate entity IDs or UUIDs."""
     if value is None:
-        raise vol.Invalid("Entity IDs can not be None")
+        raise vol.Invalid("Entity IDs cannot be None")
     if isinstance(value, str):
         value = [ent_id.strip() for ent_id in value.split(",")]
 
@@ -373,6 +391,8 @@ def icon(value: Any) -> str:
     raise vol.Invalid('Icons should be specified in the form "prefix:name"')
 
 
+_TIME_PERIOD_DICT_KEYS = ("days", "hours", "minutes", "seconds", "milliseconds")
+
 time_period_dict = vol.All(
     dict,
     vol.Schema(
@@ -384,7 +404,7 @@ time_period_dict = vol.All(
             "milliseconds": vol.Coerce(float),
         }
     ),
-    has_at_least_one_key("days", "hours", "minutes", "seconds", "milliseconds"),
+    has_at_least_one_key(*_TIME_PERIOD_DICT_KEYS),
     lambda value: timedelta(**value),
 )
 
@@ -524,7 +544,7 @@ def schema_with_slug_keys(
         if not isinstance(value, dict):
             raise vol.Invalid("expected dictionary")
 
-        for key in value.keys():
+        for key in value:
             slug_validator(key)
 
         return cast(dict, schema(value))
@@ -565,19 +585,14 @@ def string_with_no_html(value: Any) -> str:
     return str(value)
 
 
-def temperature_unit(value: Any) -> str:
+def temperature_unit(value: Any) -> UnitOfTemperature:
     """Validate and transform temperature unit."""
     value = str(value).upper()
     if value == "C":
-        return TEMP_CELSIUS
+        return UnitOfTemperature.CELSIUS
     if value == "F":
-        return TEMP_FAHRENHEIT
+        return UnitOfTemperature.FAHRENHEIT
     raise vol.Invalid("invalid temperature unit (expected C or F)")
-
-
-unit_system = vol.All(
-    vol.Lower, vol.Any(CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL)
-)
 
 
 def template(value: Any | None) -> template_helper.Template:
@@ -587,7 +602,11 @@ def template(value: Any | None) -> template_helper.Template:
     if isinstance(value, (list, dict, template_helper.Template)):
         raise vol.Invalid("template value should be a string")
 
-    template_value = template_helper.Template(str(value))  # type: ignore[no-untyped-call]
+    hass: HomeAssistant | None = None
+    with contextlib.suppress(LookupError):
+        hass = async_get_hass()
+
+    template_value = template_helper.Template(str(value), hass)
 
     try:
         template_value.ensure_valid()
@@ -605,7 +624,12 @@ def dynamic_template(value: Any | None) -> template_helper.Template:
     if not template_helper.is_template_string(str(value)):
         raise vol.Invalid("template value does not contain a dynamic template")
 
-    template_value = template_helper.Template(str(value))  # type: ignore[no-untyped-call]
+    hass: HomeAssistant | None = None
+    with contextlib.suppress(LookupError):
+        hass = async_get_hass()
+
+    template_value = template_helper.Template(str(value), hass)
+
     try:
         template_value.ensure_valid()
         return template_value
@@ -631,8 +655,24 @@ def template_complex(value: Any) -> Any:
     return value
 
 
+def _positive_time_period_template_complex(value: Any) -> Any:
+    """Do basic validation of a positive time period expressed as a templated dict."""
+    if not isinstance(value, dict) or not value:
+        raise vol.Invalid("template should be a dict")
+    for key, element in value.items():
+        if not isinstance(key, str):
+            raise vol.Invalid("key should be a string")
+        if not template_helper.is_template_string(key):
+            vol.In(_TIME_PERIOD_DICT_KEYS)(key)
+        if not isinstance(element, str) or (
+            isinstance(element, str) and not template_helper.is_template_string(element)
+        ):
+            vol.All(vol.Coerce(float), vol.Range(min=0))(element)
+    return template_complex(value)
+
+
 positive_time_period_template = vol.Any(
-    positive_time_period, template, template_complex
+    positive_time_period, dynamic_template, _positive_time_period_template_complex
 )
 
 
@@ -747,7 +787,7 @@ def ensure_list_csv(value: Any) -> list:
 class multi_select:
     """Multi select validator returning list of selected values."""
 
-    def __init__(self, options: dict) -> None:
+    def __init__(self, options: dict | list) -> None:
         """Initialize multi select."""
         self.options = options
 
@@ -770,12 +810,12 @@ def _deprecated_or_removed(
     raise_if_present: bool,
     option_removed: bool,
 ) -> Callable[[dict], dict]:
-    """
-    Log key as deprecated and provide a replacement (if exists) or fail.
+    """Log key as deprecated and provide a replacement (if exists) or fail.
 
     Expected behavior:
         - Outputs or throws the appropriate deprecation warning if key is detected
-        - Outputs or throws the appropriate error if key is detected and removed from support
+        - Outputs or throws the appropriate error if key is detected
+          and removed from support
         - Processes schema moving the value from key to replacement_key
         - Processes schema changing nothing if only replacement_key provided
         - No warning if only replacement_key provided
@@ -801,7 +841,10 @@ def _deprecated_or_removed(
         """Check if key is in config and log warning or error."""
         if key in config:
             try:
-                near = f"near {config.__config_file__}:{config.__line__} "  # type: ignore[attr-defined]
+                near = (
+                    f"near {config.__config_file__}"  # type: ignore[attr-defined]
+                    f":{config.__line__} "
+                )
             except AttributeError:
                 near = ""
             arguments: tuple[str, ...]
@@ -843,11 +886,11 @@ def deprecated(
     default: Any | None = None,
     raise_if_present: bool | None = False,
 ) -> Callable[[dict], dict]:
-    """
-    Log key as deprecated and provide a replacement (if exists).
+    """Log key as deprecated and provide a replacement (if exists).
 
     Expected behavior:
-        - Outputs the appropriate deprecation warning if key is detected or raises an exception
+        - Outputs the appropriate deprecation warning if key is detected
+          or raises an exception
         - Processes schema moving the value from key to replacement_key
         - Processes schema changing nothing if only replacement_key provided
         - No warning if only replacement_key provided
@@ -868,11 +911,11 @@ def removed(
     default: Any | None = None,
     raise_if_present: bool | None = True,
 ) -> Callable[[dict], dict]:
-    """
-    Log key as deprecated and fail the config validation.
+    """Log key as deprecated and fail the config validation.
 
     Expected behavior:
-        - Outputs the appropriate error if key is detected and removed from support or raises an exception
+        - Outputs the appropriate error if key is detected and removed from
+          support or raises an exception.
     """
     return _deprecated_or_removed(
         key,
@@ -907,9 +950,9 @@ def key_value_schemas(
             with contextlib.suppress(vol.Invalid):
                 return cast(dict[Hashable, Any], default_schema(value))
 
-        alternatives = ", ".join(str(key) for key in value_schemas)
+        alternatives = ", ".join(str(alternative) for alternative in value_schemas)
         if default_description:
-            alternatives += ", " + default_description
+            alternatives = f"{alternatives}, {default_description}"
         raise vol.Invalid(
             f"Unexpected value for {key}: '{key_value}'. Expected {alternatives}"
         )
@@ -960,6 +1003,41 @@ def custom_serializer(schema: Any) -> Any:
         return schema.serialize()
 
     return voluptuous_serialize.UNSUPPORTED
+
+
+def expand_condition_shorthand(value: Any | None) -> Any:
+    """Expand boolean condition shorthand notations."""
+
+    if not isinstance(value, dict) or CONF_CONDITIONS in value:
+        return value
+
+    for key, schema in (
+        ("and", AND_CONDITION_SHORTHAND_SCHEMA),
+        ("or", OR_CONDITION_SHORTHAND_SCHEMA),
+        ("not", NOT_CONDITION_SHORTHAND_SCHEMA),
+    ):
+        try:
+            schema(value)
+            return {
+                CONF_CONDITION: key,
+                CONF_CONDITIONS: value[key],
+                **{k: value[k] for k in value if k != key},
+            }
+        except vol.MultipleInvalid:
+            pass
+
+    if isinstance(value.get(CONF_CONDITION), list):
+        try:
+            CONDITION_SHORTHAND_SCHEMA(value)
+            return {
+                CONF_CONDITION: "and",
+                CONF_CONDITIONS: value[CONF_CONDITION],
+                **{k: value[k] for k in value if k != CONF_CONDITION},
+            }
+        except vol.MultipleInvalid:
+            pass
+
+    return value
 
 
 # Schemas
@@ -1014,6 +1092,8 @@ def make_entity_service_schema(
         vol.All(
             vol.Schema(
                 {
+                    # The frontend stores data here. Don't use in core.
+                    vol.Remove("metadata"): dict,
                     **schema,
                     **ENTITY_SERVICE_FIELDS,
                 },
@@ -1026,7 +1106,7 @@ def make_entity_service_schema(
 
 SCRIPT_VARIABLES_SCHEMA = vol.All(
     vol.Schema({str: template_complex}),
-    # pylint: disable=unnecessary-lambda
+    # pylint: disable-next=unnecessary-lambda
     lambda val: script_variables_helper.ScriptVariables(val),
 )
 
@@ -1046,7 +1126,11 @@ def script_action(value: Any) -> dict:
 
 SCRIPT_SCHEMA = vol.All(ensure_list, [script_action])
 
-SCRIPT_ACTION_BASE_SCHEMA = {vol.Optional(CONF_ALIAS): string}
+SCRIPT_ACTION_BASE_SCHEMA = {
+    vol.Optional(CONF_ALIAS): string,
+    vol.Optional(CONF_CONTINUE_ON_ERROR): boolean,
+    vol.Optional(CONF_ENABLED): boolean,
+}
 
 EVENT_SCHEMA = vol.Schema(
     {
@@ -1067,8 +1151,10 @@ SERVICE_SCHEMA = vol.All(
             vol.Exclusive(CONF_SERVICE_TEMPLATE, "service name"): vol.Any(
                 service, dynamic_template
             ),
-            vol.Optional("data"): vol.Any(template, vol.All(dict, template_complex)),
-            vol.Optional("data_template"): vol.Any(
+            vol.Optional(CONF_SERVICE_DATA): vol.Any(
+                template, vol.All(dict, template_complex)
+            ),
+            vol.Optional(CONF_SERVICE_DATA_TEMPLATE): vol.Any(
                 template, vol.All(dict, template_complex)
             ),
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
@@ -1084,7 +1170,10 @@ NUMERIC_STATE_THRESHOLD_SCHEMA = vol.Any(
     vol.Coerce(float), vol.All(str, entity_domain(["input_number", "number", "sensor"]))
 )
 
-CONDITION_BASE_SCHEMA = {vol.Optional(CONF_ALIAS): string}
+CONDITION_BASE_SCHEMA = {
+    vol.Optional(CONF_ALIAS): string,
+    vol.Optional(CONF_ENABLED): boolean,
+}
 
 NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
     vol.Schema(
@@ -1105,8 +1194,11 @@ STATE_CONDITION_BASE_SCHEMA = {
     **CONDITION_BASE_SCHEMA,
     vol.Required(CONF_CONDITION): "state",
     vol.Required(CONF_ENTITY_ID): entity_ids_or_uuids,
+    vol.Optional(CONF_MATCH, default=ENTITY_MATCH_ALL): vol.All(
+        vol.Lower, vol.Any(ENTITY_MATCH_ALL, ENTITY_MATCH_ANY)
+    ),
     vol.Optional(CONF_ATTRIBUTE): str,
-    vol.Optional(CONF_FOR): positive_time_period,
+    vol.Optional(CONF_FOR): positive_time_period_template,
     # To support use_trigger_value in automation
     # Deprecated 2016/04/25
     vol.Optional("from"): str,
@@ -1207,7 +1299,18 @@ AND_CONDITION_SCHEMA = vol.Schema(
         vol.Required(CONF_CONDITION): "and",
         vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
-            # pylint: disable=unnecessary-lambda
+            # pylint: disable-next=unnecessary-lambda
+            [lambda value: CONDITION_SCHEMA(value)],
+        ),
+    }
+)
+
+AND_CONDITION_SHORTHAND_SCHEMA = vol.Schema(
+    {
+        **CONDITION_BASE_SCHEMA,
+        vol.Required("and"): vol.All(
+            ensure_list,
+            # pylint: disable-next=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
         ),
     }
@@ -1219,7 +1322,18 @@ OR_CONDITION_SCHEMA = vol.Schema(
         vol.Required(CONF_CONDITION): "or",
         vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
-            # pylint: disable=unnecessary-lambda
+            # pylint: disable-next=unnecessary-lambda
+            [lambda value: CONDITION_SCHEMA(value)],
+        ),
+    }
+)
+
+OR_CONDITION_SHORTHAND_SCHEMA = vol.Schema(
+    {
+        **CONDITION_BASE_SCHEMA,
+        vol.Required("or"): vol.All(
+            ensure_list,
+            # pylint: disable-next=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
         ),
     }
@@ -1231,7 +1345,18 @@ NOT_CONDITION_SCHEMA = vol.Schema(
         vol.Required(CONF_CONDITION): "not",
         vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
-            # pylint: disable=unnecessary-lambda
+            # pylint: disable-next=unnecessary-lambda
+            [lambda value: CONDITION_SCHEMA(value)],
+        ),
+    }
+)
+
+NOT_CONDITION_SHORTHAND_SCHEMA = vol.Schema(
+    {
+        **CONDITION_BASE_SCHEMA,
+        vol.Required("not"): vol.All(
+            ensure_list,
+            # pylint: disable-next=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
         ),
     }
@@ -1243,6 +1368,7 @@ DEVICE_CONDITION_BASE_SCHEMA = vol.Schema(
         vol.Required(CONF_CONDITION): "device",
         vol.Required(CONF_DEVICE_ID): str,
         vol.Required(CONF_DOMAIN): str,
+        vol.Remove("metadata"): dict,
     }
 )
 
@@ -1257,24 +1383,37 @@ dynamic_template_condition_action = vol.All(
     },
 )
 
+CONDITION_SHORTHAND_SCHEMA = vol.Schema(
+    {
+        **CONDITION_BASE_SCHEMA,
+        vol.Required(CONF_CONDITION): vol.All(
+            ensure_list,
+            # pylint: disable-next=unnecessary-lambda
+            [lambda value: CONDITION_SCHEMA(value)],
+        ),
+    }
+)
 
 CONDITION_SCHEMA: vol.Schema = vol.Schema(
     vol.Any(
-        key_value_schemas(
-            CONF_CONDITION,
-            {
-                "and": AND_CONDITION_SCHEMA,
-                "device": DEVICE_CONDITION_SCHEMA,
-                "not": NOT_CONDITION_SCHEMA,
-                "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
-                "or": OR_CONDITION_SCHEMA,
-                "state": STATE_CONDITION_SCHEMA,
-                "sun": SUN_CONDITION_SCHEMA,
-                "template": TEMPLATE_CONDITION_SCHEMA,
-                "time": TIME_CONDITION_SCHEMA,
-                "trigger": TRIGGER_CONDITION_SCHEMA,
-                "zone": ZONE_CONDITION_SCHEMA,
-            },
+        vol.All(
+            expand_condition_shorthand,
+            key_value_schemas(
+                CONF_CONDITION,
+                {
+                    "and": AND_CONDITION_SCHEMA,
+                    "device": DEVICE_CONDITION_SCHEMA,
+                    "not": NOT_CONDITION_SCHEMA,
+                    "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
+                    "or": OR_CONDITION_SCHEMA,
+                    "state": STATE_CONDITION_SCHEMA,
+                    "sun": SUN_CONDITION_SCHEMA,
+                    "template": TEMPLATE_CONDITION_SCHEMA,
+                    "time": TIME_CONDITION_SCHEMA,
+                    "trigger": TRIGGER_CONDITION_SCHEMA,
+                    "zone": ZONE_CONDITION_SCHEMA,
+                },
+            ),
         ),
         dynamic_template_condition_action,
     )
@@ -1295,31 +1434,36 @@ dynamic_template_condition_action = vol.All(
 
 
 CONDITION_ACTION_SCHEMA: vol.Schema = vol.Schema(
-    key_value_schemas(
-        CONF_CONDITION,
-        {
-            "and": AND_CONDITION_SCHEMA,
-            "device": DEVICE_CONDITION_SCHEMA,
-            "not": NOT_CONDITION_SCHEMA,
-            "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
-            "or": OR_CONDITION_SCHEMA,
-            "state": STATE_CONDITION_SCHEMA,
-            "sun": SUN_CONDITION_SCHEMA,
-            "template": TEMPLATE_CONDITION_SCHEMA,
-            "time": TIME_CONDITION_SCHEMA,
-            "trigger": TRIGGER_CONDITION_SCHEMA,
-            "zone": ZONE_CONDITION_SCHEMA,
-        },
-        dynamic_template_condition_action,
-        "a valid template",
+    vol.All(
+        expand_condition_shorthand,
+        key_value_schemas(
+            CONF_CONDITION,
+            {
+                "and": AND_CONDITION_SCHEMA,
+                "device": DEVICE_CONDITION_SCHEMA,
+                "not": NOT_CONDITION_SCHEMA,
+                "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
+                "or": OR_CONDITION_SCHEMA,
+                "state": STATE_CONDITION_SCHEMA,
+                "sun": SUN_CONDITION_SCHEMA,
+                "template": TEMPLATE_CONDITION_SCHEMA,
+                "time": TIME_CONDITION_SCHEMA,
+                "trigger": TRIGGER_CONDITION_SCHEMA,
+                "zone": ZONE_CONDITION_SCHEMA,
+            },
+            dynamic_template_condition_action,
+            "a list of conditions or a valid template",
+        ),
     )
 )
 
 TRIGGER_BASE_SCHEMA = vol.Schema(
     {
+        vol.Optional(CONF_ALIAS): str,
         vol.Required(CONF_PLATFORM): str,
         vol.Optional(CONF_ID): str,
         vol.Optional(CONF_VARIABLES): SCRIPT_VARIABLES_SCHEMA,
+        vol.Optional(CONF_ENABLED): boolean,
     }
 )
 
@@ -1357,6 +1501,7 @@ DEVICE_ACTION_BASE_SCHEMA = vol.Schema(
         **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_DEVICE_ID): string,
         vol.Required(CONF_DOMAIN): str,
+        vol.Remove("metadata"): dict,
     }
 )
 
@@ -1372,6 +1517,9 @@ _SCRIPT_REPEAT_SCHEMA = vol.Schema(
         vol.Required(CONF_REPEAT): vol.All(
             {
                 vol.Exclusive(CONF_COUNT, "repeat"): vol.Any(vol.Coerce(int), template),
+                vol.Exclusive(CONF_FOR_EACH, "repeat"): vol.Any(
+                    dynamic_template, vol.All(list, template_complex)
+                ),
                 vol.Exclusive(CONF_WHILE, "repeat"): vol.All(
                     ensure_list, [CONDITION_SCHEMA]
                 ),
@@ -1380,7 +1528,7 @@ _SCRIPT_REPEAT_SCHEMA = vol.Schema(
                 ),
                 vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
             },
-            has_at_least_one_key(CONF_COUNT, CONF_WHILE, CONF_UNTIL),
+            has_at_least_one_key(CONF_COUNT, CONF_FOR_EACH, CONF_WHILE, CONF_UNTIL),
         ),
     }
 )
@@ -1413,12 +1561,54 @@ _SCRIPT_WAIT_FOR_TRIGGER_SCHEMA = vol.Schema(
     }
 )
 
+_SCRIPT_IF_SCHEMA = vol.Schema(
+    {
+        **SCRIPT_ACTION_BASE_SCHEMA,
+        vol.Required(CONF_IF): vol.All(ensure_list, [CONDITION_SCHEMA]),
+        vol.Required(CONF_THEN): SCRIPT_SCHEMA,
+        vol.Optional(CONF_ELSE): SCRIPT_SCHEMA,
+    }
+)
+
 _SCRIPT_SET_SCHEMA = vol.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_VARIABLES): SCRIPT_VARIABLES_SCHEMA,
     }
 )
+
+_SCRIPT_STOP_SCHEMA = vol.Schema(
+    {
+        **SCRIPT_ACTION_BASE_SCHEMA,
+        vol.Required(CONF_STOP): vol.Any(None, string),
+        vol.Optional(CONF_ERROR, default=False): boolean,
+    }
+)
+
+_SCRIPT_PARALLEL_SEQUENCE = vol.Schema(
+    {
+        **SCRIPT_ACTION_BASE_SCHEMA,
+        vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
+    }
+)
+
+_parallel_sequence_action = vol.All(
+    # Wrap a shorthand sequences in a parallel action
+    SCRIPT_SCHEMA,
+    lambda config: {
+        CONF_SEQUENCE: config,
+    },
+)
+
+_SCRIPT_PARALLEL_SCHEMA = vol.Schema(
+    {
+        **SCRIPT_ACTION_BASE_SCHEMA,
+        vol.Required(CONF_PARALLEL): vol.All(
+            ensure_list, [vol.Any(_SCRIPT_PARALLEL_SEQUENCE, _parallel_sequence_action)]
+        ),
+    }
+)
+
 
 SCRIPT_ACTION_DELAY = "delay"
 SCRIPT_ACTION_WAIT_TEMPLATE = "wait_template"
@@ -1431,6 +1621,9 @@ SCRIPT_ACTION_REPEAT = "repeat"
 SCRIPT_ACTION_CHOOSE = "choose"
 SCRIPT_ACTION_WAIT_FOR_TRIGGER = "wait_for_trigger"
 SCRIPT_ACTION_VARIABLES = "variables"
+SCRIPT_ACTION_STOP = "stop"
+SCRIPT_ACTION_IF = "if"
+SCRIPT_ACTION_PARALLEL = "parallel"
 
 
 def determine_script_action(action: dict[str, Any]) -> str:
@@ -1441,7 +1634,7 @@ def determine_script_action(action: dict[str, Any]) -> str:
     if CONF_WAIT_TEMPLATE in action:
         return SCRIPT_ACTION_WAIT_TEMPLATE
 
-    if CONF_CONDITION in action:
+    if any(key in action for key in (CONF_CONDITION, "and", "or", "not")):
         return SCRIPT_ACTION_CHECK_CONDITION
 
     if CONF_EVENT in action:
@@ -1465,8 +1658,17 @@ def determine_script_action(action: dict[str, Any]) -> str:
     if CONF_VARIABLES in action:
         return SCRIPT_ACTION_VARIABLES
 
+    if CONF_IF in action:
+        return SCRIPT_ACTION_IF
+
     if CONF_SERVICE in action or CONF_SERVICE_TEMPLATE in action:
         return SCRIPT_ACTION_CALL_SERVICE
+
+    if CONF_STOP in action:
+        return SCRIPT_ACTION_STOP
+
+    if CONF_PARALLEL in action:
+        return SCRIPT_ACTION_PARALLEL
 
     raise ValueError("Unable to determine action")
 
@@ -1483,170 +1685,20 @@ ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {
     SCRIPT_ACTION_CHOOSE: _SCRIPT_CHOOSE_SCHEMA,
     SCRIPT_ACTION_WAIT_FOR_TRIGGER: _SCRIPT_WAIT_FOR_TRIGGER_SCHEMA,
     SCRIPT_ACTION_VARIABLES: _SCRIPT_SET_SCHEMA,
+    SCRIPT_ACTION_STOP: _SCRIPT_STOP_SCHEMA,
+    SCRIPT_ACTION_IF: _SCRIPT_IF_SCHEMA,
+    SCRIPT_ACTION_PARALLEL: _SCRIPT_PARALLEL_SCHEMA,
 }
 
 
-# Validate currencies adopted by countries
 currency = vol.In(
-    {
-        "AED",
-        "AFN",
-        "ALL",
-        "AMD",
-        "ANG",
-        "AOA",
-        "ARS",
-        "AUD",
-        "AWG",
-        "AZN",
-        "BAM",
-        "BBD",
-        "BDT",
-        "BGN",
-        "BHD",
-        "BIF",
-        "BMD",
-        "BND",
-        "BOB",
-        "BRL",
-        "BSD",
-        "BTN",
-        "BWP",
-        "BYN",
-        "BYR",
-        "BZD",
-        "CAD",
-        "CDF",
-        "CHF",
-        "CLP",
-        "CNY",
-        "COP",
-        "CRC",
-        "CUP",
-        "CVE",
-        "CZK",
-        "DJF",
-        "DKK",
-        "DOP",
-        "DZD",
-        "EGP",
-        "ERN",
-        "ETB",
-        "EUR",
-        "FJD",
-        "FKP",
-        "GBP",
-        "GEL",
-        "GHS",
-        "GIP",
-        "GMD",
-        "GNF",
-        "GTQ",
-        "GYD",
-        "HKD",
-        "HNL",
-        "HRK",
-        "HTG",
-        "HUF",
-        "IDR",
-        "ILS",
-        "INR",
-        "IQD",
-        "IRR",
-        "ISK",
-        "JMD",
-        "JOD",
-        "JPY",
-        "KES",
-        "KGS",
-        "KHR",
-        "KMF",
-        "KPW",
-        "KRW",
-        "KWD",
-        "KYD",
-        "KZT",
-        "LAK",
-        "LBP",
-        "LKR",
-        "LRD",
-        "LSL",
-        "LTL",
-        "LYD",
-        "MAD",
-        "MDL",
-        "MGA",
-        "MKD",
-        "MMK",
-        "MNT",
-        "MOP",
-        "MRO",
-        "MUR",
-        "MVR",
-        "MWK",
-        "MXN",
-        "MYR",
-        "MZN",
-        "NAD",
-        "NGN",
-        "NIO",
-        "NOK",
-        "NPR",
-        "NZD",
-        "OMR",
-        "PAB",
-        "PEN",
-        "PGK",
-        "PHP",
-        "PKR",
-        "PLN",
-        "PYG",
-        "QAR",
-        "RON",
-        "RSD",
-        "RUB",
-        "RWF",
-        "SAR",
-        "SBD",
-        "SCR",
-        "SDG",
-        "SEK",
-        "SGD",
-        "SHP",
-        "SLL",
-        "SOS",
-        "SRD",
-        "SSP",
-        "STD",
-        "SYP",
-        "SZL",
-        "THB",
-        "TJS",
-        "TMT",
-        "TND",
-        "TOP",
-        "TRY",
-        "TTD",
-        "TWD",
-        "TZS",
-        "UAH",
-        "UGX",
-        "USD",
-        "UYU",
-        "UZS",
-        "VEF",
-        "VND",
-        "VUV",
-        "WST",
-        "XAF",
-        "XCD",
-        "XOF",
-        "XPF",
-        "YER",
-        "ZAR",
-        "ZMK",
-        "ZMW",
-        "ZWL",
-    },
-    msg="invalid ISO 4217 formatted currency",
+    currencies.ACTIVE_CURRENCIES, msg="invalid ISO 4217 formatted currency"
 )
+
+historic_currency = vol.In(
+    currencies.HISTORIC_CURRENCIES, msg="invalid ISO 4217 formatted historic currency"
+)
+
+country = vol.In(COUNTRIES, msg="invalid ISO 3166 formatted country")
+
+language = vol.In(LANGUAGES, msg="invalid RFC 5646 formatted language")

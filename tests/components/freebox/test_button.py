@@ -1,8 +1,7 @@
 """Tests for the Freebox config flow."""
 from unittest.mock import Mock, patch
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
-from homeassistant.components.button.const import SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.freebox.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -13,7 +12,7 @@ from .const import MOCK_HOST, MOCK_PORT
 from tests.common import MockConfigEntry
 
 
-async def test_reboot_button(hass: HomeAssistant, router: Mock):
+async def test_reboot_button(hass: HomeAssistant, router: Mock) -> None:
     """Test reboot button."""
     entry = MockConfigEntry(
         domain=DOMAIN,

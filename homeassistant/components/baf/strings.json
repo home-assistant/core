@@ -1,0 +1,23 @@
+{
+  "config": {
+    "flow_title": "{name} - {model} ({ip_address})",
+    "step": {
+      "user": {
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]"
+        }
+      },
+      "discovery_confirm": {
+        "description": "Do you want to set up {name} - {model} ({ip_address})?"
+      }
+    },
+    "abort": {
+      "ipv6_not_supported": "IPv6 is not supported.",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  }
+}

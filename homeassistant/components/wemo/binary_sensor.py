@@ -1,8 +1,7 @@
 """Support for WeMo binary sensors."""
 import asyncio
-from typing import cast
 
-from pywemo import Insight, Maker
+from pywemo import Insight, Maker, StandbyState
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -49,19 +48,21 @@ class MakerBinarySensor(WemoEntity, BinarySensorEntity):
     """Maker device's sensor port."""
 
     _name_suffix = "Sensor"
+    wemo: Maker
 
     @property
     def is_on(self) -> bool:
         """Return true if the Maker's sensor is pulled low."""
-        return cast(int, self.wemo.has_sensor) != 0 and self.wemo.sensor_state == 0
+        return self.wemo.has_sensor != 0 and self.wemo.sensor_state == 0
 
 
 class InsightBinarySensor(WemoBinarySensor):
     """Sensor representing the device connected to the Insight Switch."""
 
     _name_suffix = "Device"
+    wemo: Insight
 
     @property
     def is_on(self) -> bool:
         """Return true device connected to the Insight Switch is on."""
-        return super().is_on and self.wemo.insight_params["state"] == "1"
+        return super().is_on and self.wemo.standby_state == StandbyState.ON

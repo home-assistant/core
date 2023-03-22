@@ -86,6 +86,7 @@ def setup_platform(
 class SighthoundEntity(ImageProcessingEntity):
     """Create a sighthound entity."""
 
+    _attr_should_poll = False
     _attr_unit_of_measurement = ATTR_PEOPLE
 
     def __init__(
@@ -166,11 +167,6 @@ class SighthoundEntity(ImageProcessingEntity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
 
     @property
     def state(self):

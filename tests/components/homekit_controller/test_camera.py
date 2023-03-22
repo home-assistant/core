@@ -5,8 +5,10 @@ from aiohomekit.model.services import ServicesTypes
 from aiohomekit.testing import FAKE_CAMERA_IMAGE
 
 from homeassistant.components import camera
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from tests.components.homekit_controller.common import setup_test_component
+from .common import get_next_aid, setup_test_component
 
 
 def create_camera(accessory):
@@ -14,7 +16,23 @@ def create_camera(accessory):
     accessory.add_service(ServicesTypes.CAMERA_RTP_STREAM_MANAGEMENT)
 
 
-async def test_read_state(hass, utcnow):
+async def test_migrate_unique_ids(hass: HomeAssistant, utcnow) -> None:
+    """Test migrating entity unique ids."""
+    entity_registry = er.async_get(hass)
+    aid = get_next_aid()
+    camera = entity_registry.async_get_or_create(
+        "camera",
+        "homekit_controller",
+        f"homekit-0001-aid:{aid}",
+    )
+    await setup_test_component(hass, create_camera)
+    assert (
+        entity_registry.async_get(camera.entity_id).unique_id
+        == f"00:00:00:00:00:00_{aid}"
+    )
+
+
+async def test_read_state(hass: HomeAssistant, utcnow) -> None:
     """Test reading the state of a HomeKit camera."""
     helper = await setup_test_component(hass, create_camera)
 
@@ -22,7 +40,7 @@ async def test_read_state(hass, utcnow):
     assert state.state == "idle"
 
 
-async def test_get_image(hass, utcnow):
+async def test_get_image(hass: HomeAssistant, utcnow) -> None:
     """Test getting a JPEG from a camera."""
     helper = await setup_test_component(hass, create_camera)
     image = await camera.async_get_image(hass, helper.entity_id)

@@ -1,4 +1,5 @@
-"""Tests for 1-Wire devices connected on OWServer."""
+"""Tests for 1-Wire binary sensors."""
+from collections.abc import Generator
 import logging
 from unittest.mock import MagicMock, patch
 
@@ -7,6 +8,7 @@ import pytest
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.config_validation import ensure_list
 
 from . import (
@@ -17,30 +19,27 @@ from . import (
 )
 from .const import ATTR_DEVICE_INFO, ATTR_UNKNOWN_DEVICE, MOCK_OWPROXY_DEVICES
 
-from tests.common import mock_device_registry, mock_registry
-
 
 @pytest.fixture(autouse=True)
-def override_platforms():
+def override_platforms() -> Generator[None, None, None]:
     """Override PLATFORMS."""
     with patch("homeassistant.components.onewire.PLATFORMS", [Platform.BINARY_SENSOR]):
         yield
 
 
-async def test_owserver_binary_sensor(
+async def test_binary_sensors(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     owproxy: MagicMock,
     device_id: str,
     caplog: pytest.LogCaptureFixture,
-):
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test for 1-Wire binary sensor.
 
     This test forces all entities to be enabled.
     """
-    device_registry = mock_device_registry(hass)
-    entity_registry = mock_registry(hass)
-
     mock_device = MOCK_OWPROXY_DEVICES[device_id]
     expected_entities = mock_device.get(Platform.BINARY_SENSOR, [])
     expected_devices = ensure_list(mock_device.get(ATTR_DEVICE_INFO))

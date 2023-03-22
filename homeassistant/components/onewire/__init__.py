@@ -6,6 +6,7 @@ from pyownet import protocol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, PLATFORMS
 from .onewirehub import CannotConnect, OneWireHub
@@ -17,22 +18,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a 1-Wire proxy for a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    onewirehub = OneWireHub(hass)
+    onewire_hub = OneWireHub(hass)
     try:
-        await onewirehub.initialize(entry)
+        await onewire_hub.initialize(entry)
     except (
         CannotConnect,  # Failed to connect to the server
         protocol.OwnetError,  # Connected to server, but failed to list the devices
     ) as exc:
         raise ConfigEntryNotReady() from exc
 
-    hass.data[DOMAIN][entry.entry_id] = onewirehub
+    hass.data[DOMAIN][entry.entry_id] = onewire_hub
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(options_update_listener))
 
     return True
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove a config entry from a device."""
+    onewire_hub: OneWireHub = hass.data[DOMAIN][config_entry.entry_id]
+    return not device_entry.identifiers.intersection(
+        (DOMAIN, device.id) for device in onewire_hub.devices or []
+    )
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:

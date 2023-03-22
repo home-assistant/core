@@ -9,10 +9,9 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_BATTERY_CHARGING
+from homeassistant.const import ATTR_BATTERY_CHARGING, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import Trackables
@@ -31,13 +30,14 @@ TRACKERS_WITH_BUILTIN_BATTERY = ("TRNJA4", "TRAXL1")
 class TractiveBinarySensor(TractiveEntity, BinarySensorEntity):
     """Tractive sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self, user_id: str, item: Trackables, description: BinarySensorEntityDescription
     ) -> None:
         """Initialize sensor entity."""
         super().__init__(user_id, item.trackable, item.tracker_details)
 
-        self._attr_name = f"{item.trackable['details']['name']} {description.name}"
         self._attr_unique_id = f"{item.trackable['_id']}_{description.key}"
         self.entity_description = description
 
@@ -76,7 +76,7 @@ class TractiveBinarySensor(TractiveEntity, BinarySensorEntity):
 
 SENSOR_TYPE = BinarySensorEntityDescription(
     key=ATTR_BATTERY_CHARGING,
-    name="Battery Charging",
+    name="Tracker battery charging",
     device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
     entity_category=EntityCategory.DIAGNOSTIC,
 )

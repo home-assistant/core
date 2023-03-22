@@ -1,14 +1,16 @@
 """Config flow for Discord integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
+from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectorError
 import nextcord
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_API_TOKEN, CONF_NAME, CONF_TOKEN
+from homeassistant.const import CONF_API_TOKEN, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN, URL_PLACEHOLDER
@@ -21,13 +23,9 @@ CONFIG_SCHEMA = vol.Schema({vol.Required(CONF_API_TOKEN): str})
 class DiscordFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Discord."""
 
-    async def async_step_reauth(self, user_input: dict | None = None) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle a reauthorization flow request."""
-        if user_input is not None:
-            return await self.async_step_reauth_confirm()
-
-        self._set_confirm_only()
-        return self.async_show_form(step_id="reauth")
+        return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, str] | None = None
@@ -69,7 +67,7 @@ class DiscordFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=info.name,
-                    data=user_input | {CONF_NAME: user_input.get(CONF_NAME, info.name)},
+                    data=user_input | {CONF_NAME: info.name},
                 )
 
         user_input = user_input or {}
@@ -79,20 +77,6 @@ class DiscordFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders=URL_PLACEHOLDER,
             errors=errors,
         )
-
-    async def async_step_import(self, import_config: dict[str, str]) -> FlowResult:
-        """Import a config entry from configuration.yaml."""
-        _LOGGER.warning(
-            "Configuration of the Discord integration in YAML is deprecated and "
-            "will be removed in Home Assistant 2022.6; Your existing configuration "
-            "has been imported into the UI automatically and can be safely removed "
-            "from your configuration.yaml file"
-        )
-        for entry in self._async_current_entries():
-            if entry.data[CONF_API_TOKEN] == import_config[CONF_TOKEN]:
-                return self.async_abort(reason="already_configured")
-        import_config[CONF_API_TOKEN] = import_config.pop(CONF_TOKEN)
-        return await self.async_step_user(import_config)
 
 
 async def _async_try_connect(token: str) -> tuple[str | None, nextcord.AppInfo | None]:

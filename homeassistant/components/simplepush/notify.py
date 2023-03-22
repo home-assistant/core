@@ -1,58 +1,88 @@
 """Simplepush notification service."""
-from simplepush import send, send_encrypted
-import voluptuous as vol
+from __future__ import annotations
+
+import logging
+from typing import Any
+
+from simplepush import BadRequest, UnknownError, send
 
 from homeassistant.components.notify import (
+    ATTR_DATA,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import CONF_EVENT, CONF_PASSWORD
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-ATTR_ENCRYPTED = "encrypted"
+from .const import ATTR_EVENT, CONF_DEVICE_KEY, CONF_SALT, DOMAIN
 
-CONF_DEVICE_KEY = "device_key"
-CONF_SALT = "salt"
+# Configuring Simplepush under the notify has been removed in 2022.9.0
+PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_DEVICE_KEY): cv.string,
-        vol.Optional(CONF_EVENT): cv.string,
-        vol.Inclusive(CONF_PASSWORD, ATTR_ENCRYPTED): cv.string,
-        vol.Inclusive(CONF_SALT, ATTR_ENCRYPTED): cv.string,
-    }
-)
+_LOGGER = logging.getLogger(__name__)
 
 
-def get_service(hass, config, discovery_info=None):
+async def async_get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> SimplePushNotificationService | None:
     """Get the Simplepush notification service."""
-    return SimplePushNotificationService(config)
+    if discovery_info is None:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "removed_yaml",
+            breaks_in_ha_version="2022.9.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="removed_yaml",
+        )
+        return None
+
+    return SimplePushNotificationService(discovery_info)
 
 
 class SimplePushNotificationService(BaseNotificationService):
     """Implementation of the notification service for Simplepush."""
 
-    def __init__(self, config):
+    def __init__(self, config: dict[str, Any]) -> None:
         """Initialize the Simplepush notification service."""
-        self._device_key = config.get(CONF_DEVICE_KEY)
-        self._event = config.get(CONF_EVENT)
-        self._password = config.get(CONF_PASSWORD)
-        self._salt = config.get(CONF_SALT)
+        self._device_key: str = config[CONF_DEVICE_KEY]
+        self._event: str | None = config.get(CONF_EVENT)
+        self._password: str | None = config.get(CONF_PASSWORD)
+        self._salt: str | None = config.get(CONF_SALT)
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message to a Simplepush user."""
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
 
-        if self._password:
-            send_encrypted(
-                self._device_key,
-                self._password,
-                self._salt,
-                title,
-                message,
-                event=self._event,
-            )
-        else:
-            send(self._device_key, title, message, event=self._event)
+        # event can now be passed in the service data
+        event = None
+        if data := kwargs.get(ATTR_DATA):
+            event = data.get(ATTR_EVENT)
+
+        # use event from config until YAML config is removed
+        event = event or self._event
+
+        try:
+            if self._password:
+                send(
+                    key=self._device_key,
+                    password=self._password,
+                    salt=self._salt,
+                    title=title,
+                    message=message,
+                    event=event,
+                )
+            else:
+                send(key=self._device_key, title=title, message=message, event=event)
+
+        except BadRequest:
+            _LOGGER.error("Bad request. Title or message are too long")
+        except UnknownError:
+            _LOGGER.error("Failed to send the notification")

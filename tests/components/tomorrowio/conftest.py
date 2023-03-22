@@ -1,6 +1,6 @@
 """Configure py.test."""
 import json
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 import pytest
 
@@ -23,24 +23,13 @@ def tomorrowio_config_entry_update_fixture():
     with patch(
         "homeassistant.components.tomorrowio.TomorrowioV4.realtime_and_all_forecasts",
         return_value=json.loads(load_fixture("v4.json", "tomorrowio")),
-    ):
-        yield
-
-
-@pytest.fixture(name="climacell_config_entry_update")
-def climacell_config_entry_update_fixture():
-    """Mock valid climacell config entry setup."""
-    with patch(
-        "homeassistant.components.climacell.ClimaCellV3.realtime",
-        return_value={},
-    ), patch(
-        "homeassistant.components.climacell.ClimaCellV3.forecast_hourly",
-        return_value={},
-    ), patch(
-        "homeassistant.components.climacell.ClimaCellV3.forecast_daily",
-        return_value={},
-    ), patch(
-        "homeassistant.components.climacell.ClimaCellV3.forecast_nowcast",
-        return_value={},
-    ):
-        yield
+    ) as mock_update, patch(
+        "homeassistant.components.tomorrowio.TomorrowioV4.max_requests_per_day",
+        new_callable=PropertyMock,
+    ) as mock_max_requests_per_day, patch(
+        "homeassistant.components.tomorrowio.TomorrowioV4.num_api_requests",
+        new_callable=PropertyMock,
+    ) as mock_num_api_requests:
+        mock_max_requests_per_day.return_value = 100
+        mock_num_api_requests.return_value = 2
+        yield mock_update

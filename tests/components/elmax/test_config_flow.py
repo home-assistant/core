@@ -13,9 +13,9 @@ from homeassistant.components.elmax.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
-from tests.components.elmax import (
+from . import (
     MOCK_PANEL_ID,
     MOCK_PANEL_NAME,
     MOCK_PANEL_PIN,
@@ -23,19 +23,21 @@ from tests.components.elmax import (
     MOCK_USERNAME,
 )
 
+from tests.common import MockConfigEntry
+
 CONF_POLLING = "polling"
 
 
-async def test_show_form(hass):
+async def test_show_form(hass: HomeAssistant) -> None:
     """Test that the form is served with no input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
-async def test_standard_setup(hass):
+async def test_standard_setup(hass: HomeAssistant) -> None:
     """Test the standard setup case."""
     # Setup once.
     show_form_result = await hass.config_entries.flow.async_init(
@@ -60,10 +62,10 @@ async def test_standard_setup(hass):
             },
         )
         await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
-async def test_one_config_allowed(hass):
+async def test_one_config_allowed(hass: HomeAssistant) -> None:
     """Test that only one Elmax configuration is allowed for each panel."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -94,11 +96,11 @@ async def test_one_config_allowed(hass):
             CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
         },
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_invalid_credentials(hass):
+async def test_invalid_credentials(hass: HomeAssistant) -> None:
     """Test that invalid credentials throws an error."""
     with patch(
         "elmax_api.http.Elmax.login",
@@ -115,11 +117,11 @@ async def test_invalid_credentials(hass):
             },
         )
         assert login_result["step_id"] == "user"
-        assert login_result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert login_result["type"] == data_entry_flow.FlowResultType.FORM
         assert login_result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_connection_error(hass):
+async def test_connection_error(hass: HomeAssistant) -> None:
     """Test other than invalid credentials throws an error."""
     with patch(
         "elmax_api.http.Elmax.login",
@@ -136,11 +138,11 @@ async def test_connection_error(hass):
             },
         )
         assert login_result["step_id"] == "user"
-        assert login_result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert login_result["type"] == data_entry_flow.FlowResultType.FORM
         assert login_result["errors"] == {"base": "network_error"}
 
 
-async def test_unhandled_error(hass):
+async def test_unhandled_error(hass: HomeAssistant) -> None:
     """Test unhandled exceptions."""
     with patch(
         "elmax_api.http.Elmax.get_panel_status",
@@ -164,11 +166,11 @@ async def test_unhandled_error(hass):
             },
         )
         assert result["step_id"] == "panels"
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"] == {"base": "unknown"}
 
 
-async def test_invalid_pin(hass):
+async def test_invalid_pin(hass: HomeAssistant) -> None:
     """Test error is thrown when a wrong pin is used to pair a panel."""
     # Simulate bad pin response.
     with patch(
@@ -193,11 +195,11 @@ async def test_invalid_pin(hass):
             },
         )
         assert result["step_id"] == "panels"
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"] == {"base": "invalid_pin"}
 
 
-async def test_no_online_panel(hass):
+async def test_no_online_panel(hass: HomeAssistant) -> None:
     """Test no-online panel is available."""
     # Simulate low-level api returns no panels.
     with patch(
@@ -215,11 +217,11 @@ async def test_no_online_panel(hass):
             },
         )
         assert login_result["step_id"] == "user"
-        assert login_result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert login_result["type"] == data_entry_flow.FlowResultType.FORM
         assert login_result["errors"] == {"base": "no_panel_online"}
 
 
-async def test_show_reauth(hass):
+async def test_show_reauth(hass: HomeAssistant) -> None:
     """Test that the reauth form shows."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -231,11 +233,11 @@ async def test_show_reauth(hass):
             CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
         },
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
 
-async def test_reauth_flow(hass):
+async def test_reauth_flow(hass: HomeAssistant) -> None:
     """Test that the reauth flow works."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -272,12 +274,12 @@ async def test_reauth_flow(hass):
                 CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
             },
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         await hass.async_block_till_done()
         assert result["reason"] == "reauth_successful"
 
 
-async def test_reauth_panel_disappeared(hass):
+async def test_reauth_panel_disappeared(hass: HomeAssistant) -> None:
     """Test that the case where panel is no longer associated with the user."""
     # Simulate a first setup
     MockConfigEntry(
@@ -316,11 +318,11 @@ async def test_reauth_panel_disappeared(hass):
             },
         )
         assert result["step_id"] == "reauth_confirm"
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"] == {"base": "reauth_panel_disappeared"}
 
 
-async def test_reauth_invalid_pin(hass):
+async def test_reauth_invalid_pin(hass: HomeAssistant) -> None:
     """Test that the case where panel is no longer associated with the user."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -358,11 +360,11 @@ async def test_reauth_invalid_pin(hass):
             },
         )
         assert result["step_id"] == "reauth_confirm"
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"] == {"base": "invalid_pin"}
 
 
-async def test_reauth_bad_login(hass):
+async def test_reauth_bad_login(hass: HomeAssistant) -> None:
     """Test bad login attempt at reauth time."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -400,5 +402,5 @@ async def test_reauth_bad_login(hass):
             },
         )
         assert result["step_id"] == "reauth_confirm"
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"] == {"base": "invalid_auth"}

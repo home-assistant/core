@@ -1,13 +1,13 @@
 """The tests for the filesize sensor."""
 import os
 
-from homeassistant.components.filesize.const import DOMAIN
+import py
+
 from homeassistant.const import CONF_FILE_PATH, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
-from homeassistant.setup import async_setup_component
 
-from . import TEST_FILE, TEST_FILE_NAME, create_file
+from . import TEST_FILE, TEST_FILE_NAME, async_create_file
 
 from tests.common import MockConfigEntry
 
@@ -26,11 +26,11 @@ async def test_invalid_path(
 
 
 async def test_valid_path(
-    hass: HomeAssistant, tmpdir: str, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, tmpdir: py.path.local, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test for a valid path."""
     testfile = f"{tmpdir}/file.txt"
-    create_file(testfile)
+    await async_create_file(hass, testfile)
     hass.config.allowlist_external_dirs = {tmpdir}
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
@@ -48,11 +48,11 @@ async def test_valid_path(
 
 
 async def test_state_unavailable(
-    hass: HomeAssistant, tmpdir: str, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, tmpdir: py.path.local, mock_config_entry: MockConfigEntry
 ) -> None:
     """Verify we handle state unavailable."""
     testfile = f"{tmpdir}/file.txt"
-    create_file(testfile)
+    await async_create_file(hass, testfile)
     hass.config.allowlist_external_dirs = {tmpdir}
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
@@ -71,23 +71,3 @@ async def test_state_unavailable(
 
     state = hass.states.get("sensor.file_txt_size")
     assert state.state == STATE_UNAVAILABLE
-
-
-async def test_import_query(hass: HomeAssistant, tmpdir: str) -> None:
-    """Test import from yaml."""
-    testfile = f"{tmpdir}/file.txt"
-    create_file(testfile)
-    hass.config.allowlist_external_dirs = {tmpdir}
-    config = {
-        "sensor": {
-            "platform": "filesize",
-            "file_paths": [testfile],
-        }
-    }
-
-    assert await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
-
-    assert hass.config_entries.async_entries(DOMAIN)
-    data = hass.config_entries.async_entries(DOMAIN)[0].data
-    assert data[CONF_FILE_PATH] == testfile

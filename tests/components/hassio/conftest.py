@@ -1,5 +1,6 @@
 """Fixtures for Hass.io."""
 import os
+import re
 from unittest.mock import Mock, patch
 
 import pytest
@@ -9,16 +10,26 @@ from homeassistant.core import CoreState
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.setup import async_setup_component
 
-from . import HASSIO_TOKEN
+from . import SUPERVISOR_TOKEN
+
+
+@pytest.fixture(autouse=True)
+def disable_security_filter():
+    """Disable the security filter to ensure the integration is secure."""
+    with patch(
+        "homeassistant.components.http.security_filter.FILTERS",
+        re.compile("not-matching-anything"),
+    ):
+        yield
 
 
 @pytest.fixture
 def hassio_env():
     """Fixture to inject hassio env."""
-    with patch.dict(os.environ, {"HASSIO": "127.0.0.1"}), patch(
+    with patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}), patch(
         "homeassistant.components.hassio.HassIO.is_connected",
         return_value={"result": "ok", "data": {}},
-    ), patch.dict(os.environ, {"HASSIO_TOKEN": HASSIO_TOKEN}), patch(
+    ), patch.dict(os.environ, {"SUPERVISOR_TOKEN": SUPERVISOR_TOKEN}), patch(
         "homeassistant.components.hassio.HassIO.get_info",
         Mock(side_effect=HassioAPIError()),
     ):
@@ -37,6 +48,13 @@ def hassio_stubs(hassio_env, hass, hass_client, aioclient_mock):
     ), patch(
         "homeassistant.components.hassio.HassIO.get_info",
         side_effect=HassioAPIError(),
+    ), patch(
+        "homeassistant.components.hassio.HassIO.get_ingress_panels",
+        return_value={"panels": []},
+    ), patch(
+        "homeassistant.components.hassio.issues.SupervisorIssues.setup"
+    ), patch(
+        "homeassistant.components.hassio.HassIO.refresh_updates"
     ):
         hass.state = CoreState.starting
         hass.loop.run_until_complete(async_setup_component(hass, "hassio", {}))
@@ -67,13 +85,7 @@ async def hassio_client_supervisor(hass, aiohttp_client, hassio_stubs):
 
 
 @pytest.fixture
-def hassio_handler(hass, aioclient_mock):
+async def hassio_handler(hass, aioclient_mock):
     """Create mock hassio handler."""
-
-    async def get_client_session():
-        return async_get_clientsession(hass)
-
-    websession = hass.loop.run_until_complete(get_client_session())
-
-    with patch.dict(os.environ, {"HASSIO_TOKEN": HASSIO_TOKEN}):
-        yield HassIO(hass.loop, websession, "127.0.0.1")
+    with patch.dict(os.environ, {"SUPERVISOR_TOKEN": SUPERVISOR_TOKEN}):
+        yield HassIO(hass.loop, async_get_clientsession(hass), "127.0.0.1")

@@ -19,21 +19,17 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    LENGTH_KILOMETERS,
-    LENGTH_METERS,
-    LENGTH_MILES,
-    PRESSURE_HPA,
-    PRESSURE_INHG,
-    PRESSURE_PA,
-    SPEED_KILOMETERS_PER_HOUR,
-    SPEED_MILES_PER_HOUR,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfLength,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
-from homeassistant.util.distance import convert as convert_distance
-from homeassistant.util.pressure import convert as convert_pressure
-from homeassistant.util.speed import convert as convert_speed
-from homeassistant.util.temperature import convert as convert_temperature
+from homeassistant.util.unit_conversion import (
+    DistanceConverter,
+    PressureConverter,
+    SpeedConverter,
+    TemperatureConverter,
+)
 
 NWS_CONFIG = {
     CONF_API_KEY: "test",
@@ -78,40 +74,83 @@ SENSOR_EXPECTED_OBSERVATION_METRIC = {
 }
 
 SENSOR_EXPECTED_OBSERVATION_IMPERIAL = {
-    "dewpoint": str(round(convert_temperature(5, TEMP_CELSIUS, TEMP_FAHRENHEIT))),
-    "temperature": str(round(convert_temperature(10, TEMP_CELSIUS, TEMP_FAHRENHEIT))),
-    "windChill": str(round(convert_temperature(5, TEMP_CELSIUS, TEMP_FAHRENHEIT))),
-    "heatIndex": str(round(convert_temperature(15, TEMP_CELSIUS, TEMP_FAHRENHEIT))),
+    "dewpoint": str(
+        round(
+            TemperatureConverter.convert(
+                5, UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT
+            )
+        )
+    ),
+    "temperature": str(
+        round(
+            TemperatureConverter.convert(
+                10, UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT
+            )
+        )
+    ),
+    "windChill": str(
+        round(
+            TemperatureConverter.convert(
+                5, UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT
+            )
+        )
+    ),
+    "heatIndex": str(
+        round(
+            TemperatureConverter.convert(
+                15, UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT
+            )
+        )
+    ),
     "relativeHumidity": "10",
     "windSpeed": str(
-        round(convert_speed(10, SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR))
+        round(
+            SpeedConverter.convert(
+                10, UnitOfSpeed.KILOMETERS_PER_HOUR, UnitOfSpeed.MILES_PER_HOUR
+            )
+        )
     ),
     "windGust": str(
-        round(convert_speed(20, SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR))
+        round(
+            SpeedConverter.convert(
+                20, UnitOfSpeed.KILOMETERS_PER_HOUR, UnitOfSpeed.MILES_PER_HOUR
+            )
+        )
     ),
     "windDirection": "180",
     "barometricPressure": str(
-        round(convert_pressure(100000, PRESSURE_PA, PRESSURE_INHG), 2)
+        round(
+            PressureConverter.convert(100000, UnitOfPressure.PA, UnitOfPressure.INHG), 2
+        )
     ),
     "seaLevelPressure": str(
-        round(convert_pressure(100000, PRESSURE_PA, PRESSURE_INHG), 2)
+        round(
+            PressureConverter.convert(100000, UnitOfPressure.PA, UnitOfPressure.INHG), 2
+        )
     ),
-    "visibility": str(round(convert_distance(10000, LENGTH_METERS, LENGTH_MILES))),
+    "visibility": str(
+        round(DistanceConverter.convert(10000, UnitOfLength.METERS, UnitOfLength.MILES))
+    ),
 }
 
 WEATHER_EXPECTED_OBSERVATION_IMPERIAL = {
     ATTR_WEATHER_TEMPERATURE: round(
-        convert_temperature(10, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+        TemperatureConverter.convert(
+            10, UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT
+        )
     ),
     ATTR_WEATHER_WIND_BEARING: 180,
     ATTR_WEATHER_WIND_SPEED: round(
-        convert_speed(10, SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR)
+        SpeedConverter.convert(
+            10, UnitOfSpeed.KILOMETERS_PER_HOUR, UnitOfSpeed.MILES_PER_HOUR
+        ),
+        2,
     ),
     ATTR_WEATHER_PRESSURE: round(
-        convert_pressure(100000, PRESSURE_PA, PRESSURE_INHG), 2
+        PressureConverter.convert(100000, UnitOfPressure.PA, UnitOfPressure.INHG), 2
     ),
     ATTR_WEATHER_VISIBILITY: round(
-        convert_distance(10000, LENGTH_METERS, LENGTH_MILES)
+        DistanceConverter.convert(10000, UnitOfLength.METERS, UnitOfLength.MILES), 2
     ),
     ATTR_WEATHER_HUMIDITY: 10,
 }
@@ -120,9 +159,11 @@ WEATHER_EXPECTED_OBSERVATION_METRIC = {
     ATTR_WEATHER_TEMPERATURE: 10,
     ATTR_WEATHER_WIND_BEARING: 180,
     ATTR_WEATHER_WIND_SPEED: 10,
-    ATTR_WEATHER_PRESSURE: round(convert_pressure(100000, PRESSURE_PA, PRESSURE_HPA)),
+    ATTR_WEATHER_PRESSURE: round(
+        PressureConverter.convert(100000, UnitOfPressure.PA, UnitOfPressure.HPA)
+    ),
     ATTR_WEATHER_VISIBILITY: round(
-        convert_distance(10000, LENGTH_METERS, LENGTH_KILOMETERS)
+        DistanceConverter.convert(10000, UnitOfLength.METERS, UnitOfLength.KILOMETERS)
     ),
     ATTR_WEATHER_HUMIDITY: 10,
 }
@@ -158,10 +199,16 @@ EXPECTED_FORECAST_METRIC = {
     ATTR_FORECAST_CONDITION: ATTR_CONDITION_LIGHTNING_RAINY,
     ATTR_FORECAST_TIME: "2019-08-12T20:00:00-04:00",
     ATTR_FORECAST_TEMP: round(
-        convert_temperature(10, TEMP_FAHRENHEIT, TEMP_CELSIUS), 1
+        TemperatureConverter.convert(
+            10, UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS
+        ),
+        1,
     ),
     ATTR_FORECAST_WIND_SPEED: round(
-        convert_speed(10, SPEED_MILES_PER_HOUR, SPEED_KILOMETERS_PER_HOUR)
+        SpeedConverter.convert(
+            10, UnitOfSpeed.MILES_PER_HOUR, UnitOfSpeed.KILOMETERS_PER_HOUR
+        ),
+        2,
     ),
     ATTR_FORECAST_WIND_BEARING: 180,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY: 90,

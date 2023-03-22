@@ -117,8 +117,7 @@ class YeelightDevice:
 
     @property
     def is_nightlight_supported(self) -> bool:
-        """
-        Return true / false if nightlight is supported.
+        """Return true / false if nightlight is supported.
 
         Uses brightness as it appears to be supported in both ceiling and other lights.
         """
@@ -169,12 +168,6 @@ class YeelightDevice:
             self._available = True
             if not self._initialized:
                 self._initialized = True
-        except OSError as ex:
-            if self._available:  # just inform once
-                _LOGGER.error(
-                    "Unable to update device %s, %s: %s", self._host, self.name, ex
-                )
-            self._available = False
         except asyncio.TimeoutError as ex:
             _LOGGER.debug(
                 "timed out while trying to update device %s, %s: %s",
@@ -182,6 +175,12 @@ class YeelightDevice:
                 self.name,
                 ex,
             )
+        except OSError as ex:
+            if self._available:  # just inform once
+                _LOGGER.error(
+                    "Unable to update device %s, %s: %s", self._host, self.name, ex
+                )
+            self._available = False
         except BulbException as ex:
             _LOGGER.debug(
                 "Unable to update device %s, %s: %s", self._host, self.name, ex
@@ -219,6 +218,7 @@ class YeelightDevice:
     @callback
     def async_update_callback(self, data):
         """Update push from device."""
+        _LOGGER.debug("Received callback: %s", data)
         was_available = self._available
         self._available = data.get(KEY_CONNECTED, True)
         if update_needs_bg_power_workaround(data) or (

@@ -1,20 +1,21 @@
-"""
-Security channels module for Zigbee Home Automation.
+"""Security channels module for Zigbee Home Automation.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
 """
 from __future__ import annotations
 
-import asyncio
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any
 
 from zigpy.exceptions import ZigbeeException
+import zigpy.zcl
 from zigpy.zcl.clusters import security
 from zigpy.zcl.clusters.security import IasAce as AceCluster
 
 from homeassistant.core import callback
 
-from .. import registries, typing as zha_typing
+from .. import registries
 from ..const import (
     SIGNAL_ATTR_UPDATED,
     WARNING_DEVICE_MODE_EMERGENCY,
@@ -23,8 +24,10 @@ from ..const import (
     WARNING_DEVICE_STROBE_HIGH,
     WARNING_DEVICE_STROBE_YES,
 )
-from ..typing import CALLABLE_T
 from .base import ChannelStatus, ZigbeeChannel
+
+if TYPE_CHECKING:
+    from . import ChannelPool
 
 IAS_ACE_ARM = 0x0000  # ("arm", (t.enum8, t.CharacterString, t.uint8_t), False),
 IAS_ACE_BYPASS = 0x0001  # ("bypass", (t.LVList(t.uint8_t), t.CharacterString), False),
@@ -47,12 +50,10 @@ SIGNAL_ALARM_TRIGGERED = "zha_armed_triggered"
 class IasAce(ZigbeeChannel):
     """IAS Ancillary Control Equipment channel."""
 
-    def __init__(
-        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
-    ) -> None:
+    def __init__(self, cluster: zigpy.zcl.Cluster, ch_pool: ChannelPool) -> None:
         """Initialize IAS Ancillary Control Equipment channel."""
         super().__init__(cluster, ch_pool)
-        self.command_map: dict[int, CALLABLE_T] = {
+        self.command_map: dict[int, Callable[..., Any]] = {
             IAS_ACE_ARM: self.arm,
             IAS_ACE_BYPASS: self._bypass,
             IAS_ACE_EMERGENCY: self._emergency,
@@ -64,7 +65,7 @@ class IasAce(ZigbeeChannel):
             IAS_ACE_GET_BYPASSED_ZONE_LIST: self._get_bypassed_zone_list,
             IAS_ACE_GET_ZONE_STATUS: self._get_zone_status,
         }
-        self.arm_map: dict[AceCluster.ArmMode, CALLABLE_T] = {
+        self.arm_map: dict[AceCluster.ArmMode, Callable[..., Any]] = {
             AceCluster.ArmMode.Disarm: self._disarm,
             AceCluster.ArmMode.Arm_All_Zones: self._arm_away,
             AceCluster.ArmMode.Arm_Day_Home_Only: self._arm_day,
@@ -73,7 +74,7 @@ class IasAce(ZigbeeChannel):
         self.armed_state: AceCluster.PanelStatus = AceCluster.PanelStatus.Panel_Disarmed
         self.invalid_tries: int = 0
 
-        # These will all be setup by the entity from zha configuration
+        # These will all be setup by the entity from ZHA configuration
         self.panel_code: str = "1234"
         self.code_required_arm_actions = False
         self.max_invalid_tries: int = 3
@@ -84,12 +85,12 @@ class IasAce(ZigbeeChannel):
     @callback
     def cluster_command(self, tsn, command_id, args) -> None:
         """Handle commands received to this cluster."""
-        self.warning(
+        self.debug(
             "received command %s", self._cluster.server_commands[command_id].name
         )
         self.command_map[command_id](*args)
 
-    def arm(self, arm_mode: int, code: str, zone_id: int):
+    def arm(self, arm_mode: int, code: str | None, zone_id: int) -> None:
         """Handle the IAS ACE arm command."""
         mode = AceCluster.ArmMode(arm_mode)
 
@@ -120,7 +121,7 @@ class IasAce(ZigbeeChannel):
             code != self.panel_code
             and self.armed_state != AceCluster.PanelStatus.Panel_Disarmed
         ):
-            self.warning("Invalid code supplied to IAS ACE")
+            self.debug("Invalid code supplied to IAS ACE")
             self.invalid_tries += 1
             zigbee_reply = self.arm_response(
                 AceCluster.ArmNotification.Invalid_Arm_Disarm_Code
@@ -131,12 +132,12 @@ class IasAce(ZigbeeChannel):
                 self.armed_state == AceCluster.PanelStatus.Panel_Disarmed
                 and self.alarm_status == AceCluster.AlarmStatus.No_Alarm
             ):
-                self.warning("IAS ACE already disarmed")
+                self.debug("IAS ACE already disarmed")
                 zigbee_reply = self.arm_response(
                     AceCluster.ArmNotification.Already_Disarmed
                 )
             else:
-                self.warning("Disarming all IAS ACE zones")
+                self.debug("Disarming all IAS ACE zones")
                 zigbee_reply = self.arm_response(
                     AceCluster.ArmNotification.All_Zones_Disarmed
                 )
@@ -177,12 +178,12 @@ class IasAce(ZigbeeChannel):
     ) -> None:
         """Arm the panel with the specified statuses."""
         if self.code_required_arm_actions and code != self.panel_code:
-            self.warning("Invalid code supplied to IAS ACE")
+            self.debug("Invalid code supplied to IAS ACE")
             zigbee_reply = self.arm_response(
                 AceCluster.ArmNotification.Invalid_Arm_Disarm_Code
             )
         else:
-            self.warning("Arming all IAS ACE zones")
+            self.debug("Arming all IAS ACE zones")
             self.armed_state = panel_status
             zigbee_reply = self.arm_response(armed_type)
         return zigbee_reply
@@ -196,26 +197,17 @@ class IasAce(ZigbeeChannel):
 
     def _emergency(self) -> None:
         """Handle the IAS ACE emergency command."""
-        self._set_alarm(
-            AceCluster.AlarmStatus.Emergency,
-            IAS_ACE_EMERGENCY,
-        )
+        self._set_alarm(AceCluster.AlarmStatus.Emergency)
 
     def _fire(self) -> None:
         """Handle the IAS ACE fire command."""
-        self._set_alarm(
-            AceCluster.AlarmStatus.Fire,
-            IAS_ACE_FIRE,
-        )
+        self._set_alarm(AceCluster.AlarmStatus.Fire)
 
     def _panic(self) -> None:
         """Handle the IAS ACE panic command."""
-        self._set_alarm(
-            AceCluster.AlarmStatus.Emergency_Panic,
-            IAS_ACE_PANIC,
-        )
+        self._set_alarm(AceCluster.AlarmStatus.Emergency_Panic)
 
-    def _set_alarm(self, status: AceCluster.PanelStatus, event: str) -> None:
+    def _set_alarm(self, status: AceCluster.AlarmStatus) -> None:
         """Set the specified alarm status."""
         self.alarm_status = status
         self.armed_state = AceCluster.PanelStatus.In_Alarm
@@ -283,9 +275,9 @@ class IasWd(ZigbeeChannel):
     ):
         """Issue a squawk command.
 
-        This command uses the WD capabilities to emit a quick audible/visible pulse called a
-        "squawk". The squawk command has no effect if the WD is currently active
-        (warning in progress).
+        This command uses the WD capabilities to emit a quick audible/visible
+        pulse called a "squawk". The squawk command has no effect if the WD
+        is currently active (warning in progress).
         """
         value = 0
         value = IasWd.set_bit(value, 0, squawk_level, 0)
@@ -311,16 +303,18 @@ class IasWd(ZigbeeChannel):
     ):
         """Issue a start warning command.
 
-        This command starts the WD operation. The WD alerts the surrounding area by audible
-        (siren) and visual (strobe) signals.
+        This command starts the WD operation. The WD alerts the surrounding area
+        by audible (siren) and visual (strobe) signals.
 
         strobe_duty_cycle indicates the length of the flash cycle. This provides a means
-        of varying the flash duration for different alarm types (e.g., fire, police, burglar).
-        Valid range is 0-100 in increments of 10. All other values SHALL be rounded to the
-        nearest valid value. Strobe SHALL calculate duty cycle over a duration of one second.
-        The ON state SHALL precede the OFF state. For example, if Strobe Duty Cycle Field specifies
-        “40,” then the strobe SHALL flash ON for 4/10ths of a second and then turn OFF for
-        6/10ths of a second.
+        of varying the flash duration for different alarm types (e.g., fire, police,
+        burglar). Valid range is 0-100 in increments of 10. All other values SHALL
+        be rounded to the nearest valid value. Strobe SHALL calculate duty cycle over
+        a duration of one second.
+
+        The ON state SHALL precede the OFF state. For example, if Strobe Duty Cycle
+        Field specifies “40,” then the strobe SHALL flash ON for 4/10ths of a second
+        and then turn OFF for 6/10ths of a second.
         """
         value = 0
         value = IasWd.set_bit(value, 0, siren_level, 0)
@@ -356,7 +350,7 @@ class IASZoneChannel(ZigbeeChannel):
         elif command_id == 1:
             self.debug("Enroll requested")
             res = self._cluster.enroll_response(0, 0)
-            asyncio.create_task(res)
+            self._cluster.create_catching_task(res)
 
     async def async_configure(self):
         """Configure IAS device."""

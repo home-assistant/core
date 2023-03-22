@@ -1,4 +1,4 @@
-"""Common stuff for AVM Fritz!Box tests."""
+"""Common stuff for Fritz!Tools tests."""
 import logging
 from unittest.mock import MagicMock, patch
 
@@ -57,7 +57,6 @@ class FritzConnectionMock:  # pylint: disable=too-few-public-methods
             service = service + "1"
 
         if kwargs:
-
             if (index := kwargs.get("NewIndex")) is None:
                 index = next(iter(kwargs.values()))
 
@@ -73,17 +72,23 @@ class FritzHostMock(FritzHosts):
         return MOCK_MESH_DATA
 
 
-@pytest.fixture()
-def fc_class_mock():
+@pytest.fixture(name="fc_data")
+def fc_data_mock():
+    """Fixture for default fc_data."""
+    return MOCK_FB_SERVICES
+
+
+@pytest.fixture
+def fc_class_mock(fc_data):
     """Fixture that sets up a mocked FritzConnection class."""
     with patch(
         "homeassistant.components.fritz.common.FritzConnection", autospec=True
     ) as result:
-        result.return_value = FritzConnectionMock(MOCK_FB_SERVICES)
+        result.return_value = FritzConnectionMock(fc_data)
         yield result
 
 
-@pytest.fixture()
+@pytest.fixture
 def fh_class_mock():
     """Fixture that sets up a mocked FritzHosts class."""
     with patch(

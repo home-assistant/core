@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from mficlient.client import FailedToLogin, MFiClient
 import requests
@@ -94,19 +95,19 @@ class MfiSwitch(SwitchEntity):
         """Return true if the device is on."""
         return self._port.output
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest state and update the state."""
         self._port.refresh()
         if self._target_state is not None:
             self._port.data["output"] = float(self._target_state)
             self._target_state = None
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self._port.control(True)
         self._target_state = True
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self._port.control(False)
         self._target_state = False

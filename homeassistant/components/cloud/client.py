@@ -10,12 +10,12 @@ from typing import Any
 import aiohttp
 from hass_nabucasa.client import CloudClient as Interface
 
-from homeassistant.components import persistent_notification, webhook
+from homeassistant.components import google_assistant, persistent_notification, webhook
 from homeassistant.components.alexa import (
     errors as alexa_errors,
     smart_home as alexa_smart_home,
 )
-from homeassistant.components.google_assistant import const as gc, smart_home as ga
+from homeassistant.components.google_assistant import smart_home as ga
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
@@ -118,14 +118,15 @@ class CloudClient(Interface):
 
                 cloud_user = await self._prefs.get_cloud_user()
 
-                self._google_config = google_config.CloudGoogleConfig(
+                google_conf = google_config.CloudGoogleConfig(
                     self._hass,
                     self.google_user_config,
                     cloud_user,
                     self._prefs,
                     self.cloud,
                 )
-                await self._google_config.async_initialize()
+                await google_conf.async_initialize()
+                self._google_config = google_conf
 
         return self._google_config
 
@@ -141,7 +142,10 @@ class CloudClient(Interface):
             except aiohttp.ClientError as err:  # If no internet available yet
                 if self._hass.is_running:
                     logging.getLogger(__package__).warning(
-                        "Unable to activate Alexa Report State: %s. Retrying in 30 seconds",
+                        (
+                            "Unable to activate Alexa Report State: %s. Retrying in 30"
+                            " seconds"
+                        ),
                         err,
                     )
                 async_call_later(self._hass, 30, enable_alexa)
@@ -209,13 +213,13 @@ class CloudClient(Interface):
 
     async def async_google_message(self, payload: dict[Any, Any]) -> dict[Any, Any]:
         """Process cloud google message to client."""
-        if not self._prefs.google_enabled:
-            return ga.turned_off_response(payload)
-
         gconf = await self.get_google_config()
 
+        if not self._prefs.google_enabled:
+            return ga.api_disabled_response(payload, gconf.agent_user_id)
+
         return await ga.async_handle_message(
-            self._hass, gconf, gconf.cloud_user, payload, gc.SOURCE_CLOUD
+            self._hass, gconf, gconf.cloud_user, payload, google_assistant.SOURCE_CLOUD
         )
 
     async def async_webhook_message(self, payload: dict[Any, Any]) -> dict[Any, Any]:

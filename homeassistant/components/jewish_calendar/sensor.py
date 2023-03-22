@@ -24,7 +24,7 @@ from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SENSORS = (
+INFO_SENSORS = (
     SensorEntityDescription(
         key="date",
         name="Date",
@@ -64,6 +64,11 @@ TIME_SENSORS = (
         icon="mdi:calendar-clock",
     ),
     SensorEntityDescription(
+        key="sunrise",
+        name="Hanetz Hachama",
+        icon="mdi:calendar-clock",
+    ),
+    SensorEntityDescription(
         key="gra_end_shma",
         name='Latest time for Shma Gr"a',
         icon="mdi:calendar-clock",
@@ -81,6 +86,11 @@ TIME_SENSORS = (
     SensorEntityDescription(
         key="mga_end_tfila",
         name='Latest time for Tefilla MG"A',
+        icon="mdi:calendar-clock",
+    ),
+    SensorEntityDescription(
+        key="midday",
+        name="Chatzot Hayom",
         icon="mdi:calendar-clock",
     ),
     SensorEntityDescription(
@@ -143,7 +153,7 @@ async def async_setup_platform(
 
     sensors = [
         JewishCalendarSensor(hass.data[DOMAIN], description)
-        for description in DATA_SENSORS
+        for description in INFO_SENSORS
     ]
     sensors.extend(
         JewishCalendarTimeSensor(hass.data[DOMAIN], description)
@@ -257,7 +267,7 @@ class JewishCalendarSensor(SensorEntity):
 
 
 class JewishCalendarTimeSensor(JewishCalendarSensor):
-    """Implement attrbutes for sensors returning times."""
+    """Implement attributes for sensors returning times."""
 
     _attr_device_class = SensorDeviceClass.TIMESTAMP
 

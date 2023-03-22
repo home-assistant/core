@@ -1,125 +1,75 @@
 """Tests for Transmission init."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
-from transmissionrpc.error import TransmissionError
+from transmission_rpc.error import TransmissionError
 
-from homeassistant.components import transmission
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.setup import async_setup_component
+from homeassistant.components.transmission.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, mock_coro
+from . import MOCK_CONFIG_DATA
 
-MOCK_ENTRY = MockConfigEntry(
-    domain=transmission.DOMAIN,
-    data={
-        transmission.CONF_NAME: "Transmission",
-        transmission.CONF_HOST: "0.0.0.0",
-        transmission.CONF_USERNAME: "user",
-        transmission.CONF_PASSWORD: "pass",
-        transmission.CONF_PORT: 9091,
-    },
-)
+from tests.common import MockConfigEntry
 
 
-@pytest.fixture(name="api")
-def mock_transmission_api():
+@pytest.fixture(autouse=True)
+def mock_api():
     """Mock an api."""
-    with patch("transmissionrpc.Client"):
-        yield
+    with patch("transmission_rpc.Client") as api:
+        yield api
 
 
-@pytest.fixture(name="auth_error")
-def mock_api_authentication_error():
-    """Mock an api."""
-    with patch(
-        "transmissionrpc.Client", side_effect=TransmissionError("401: Unauthorized")
-    ):
-        yield
+async def test_successful_config_entry(hass: HomeAssistant) -> None:
+    """Test settings up integration from config entry."""
 
-
-@pytest.fixture(name="unknown_error")
-def mock_api_unknown_error():
-    """Mock an api."""
-    with patch("transmissionrpc.Client", side_effect=TransmissionError):
-        yield
-
-
-async def test_setup_with_no_config(hass):
-    """Test that we do not discover anything or try to set up a Transmission client."""
-    assert await async_setup_component(hass, transmission.DOMAIN, {}) is True
-    assert transmission.DOMAIN not in hass.data
-
-
-async def test_setup_with_config(hass, api):
-    """Test that we import the config and setup the client."""
-    config = {
-        transmission.DOMAIN: {
-            transmission.CONF_NAME: "Transmission",
-            transmission.CONF_HOST: "0.0.0.0",
-            transmission.CONF_USERNAME: "user",
-            transmission.CONF_PASSWORD: "pass",
-            transmission.CONF_PORT: 9091,
-        },
-        transmission.DOMAIN: {
-            transmission.CONF_NAME: "Transmission2",
-            transmission.CONF_HOST: "0.0.0.1",
-            transmission.CONF_USERNAME: "user",
-            transmission.CONF_PASSWORD: "pass",
-            transmission.CONF_PORT: 9091,
-        },
-    }
-    assert await async_setup_component(hass, transmission.DOMAIN, config) is True
-
-
-async def test_successful_config_entry(hass, api):
-    """Test that configured transmission is configured successfully."""
-
-    entry = MOCK_ENTRY
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_DATA)
     entry.add_to_hass(hass)
 
-    assert await transmission.async_setup_entry(hass, entry) is True
-    assert entry.options == {
-        transmission.CONF_SCAN_INTERVAL: transmission.DEFAULT_SCAN_INTERVAL,
-        transmission.CONF_LIMIT: transmission.DEFAULT_LIMIT,
-        transmission.CONF_ORDER: transmission.DEFAULT_ORDER,
-    }
+    await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.state == ConfigEntryState.LOADED
 
 
-async def test_setup_failed(hass):
-    """Test transmission failed due to an error."""
+async def test_setup_failed_connection_error(
+    hass: HomeAssistant, mock_api: MagicMock
+) -> None:
+    """Test integration failed due to connection error."""
 
-    entry = MOCK_ENTRY
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_DATA)
     entry.add_to_hass(hass)
 
-    # test connection error raising ConfigEntryNotReady
-    with patch(
-        "transmissionrpc.Client",
-        side_effect=TransmissionError("111: Connection refused"),
-    ), pytest.raises(ConfigEntryNotReady):
+    mock_api.side_effect = TransmissionError("111: Connection refused")
 
-        await transmission.async_setup_entry(hass, entry)
-
-    # test Authentication error returning false
-
-    with patch(
-        "transmissionrpc.Client", side_effect=TransmissionError("401: Unauthorized")
-    ):
-
-        assert await transmission.async_setup_entry(hass, entry) is False
+    await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state == ConfigEntryState.SETUP_RETRY
 
 
-async def test_unload_entry(hass, api):
-    """Test removing transmission client."""
-    entry = MOCK_ENTRY
+async def test_setup_failed_auth_error(
+    hass: HomeAssistant, mock_api: MagicMock
+) -> None:
+    """Test integration failed due to invalid credentials error."""
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_DATA)
     entry.add_to_hass(hass)
 
-    with patch.object(
-        hass.config_entries, "async_forward_entry_unload", return_value=mock_coro(True)
-    ) as unload_entry:
-        assert await transmission.async_setup_entry(hass, entry)
+    mock_api.side_effect = TransmissionError("401: Unauthorized")
 
-        assert await transmission.async_unload_entry(hass, entry)
-        assert unload_entry.call_count == 2
-        assert entry.entry_id not in hass.data[transmission.DOMAIN]
+    await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state == ConfigEntryState.SETUP_ERROR
+
+
+async def test_unload_entry(hass: HomeAssistant) -> None:
+    """Test removing integration."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_DATA)
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.NOT_LOADED
+    assert not hass.data[DOMAIN]

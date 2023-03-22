@@ -9,6 +9,7 @@ from homeassistant.components import dhcp
 from homeassistant.components.motion_blinds import const
 from homeassistant.components.motion_blinds.config_flow import DEFAULT_GATEWAY_NAME
 from homeassistant.const import CONF_API_KEY, CONF_HOST
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -77,6 +78,9 @@ def motion_blinds_connect_fixture(mock_get_source_ip):
         "homeassistant.components.motion_blinds.gateway.MotionGateway.Update",
         return_value=True,
     ), patch(
+        "homeassistant.components.motion_blinds.gateway.MotionGateway.Check_gateway_multicast",
+        return_value=True,
+    ), patch(
         "homeassistant.components.motion_blinds.gateway.MotionGateway.device_list",
         TEST_DEVICE_LIST,
     ), patch(
@@ -86,13 +90,19 @@ def motion_blinds_connect_fixture(mock_get_source_ip):
         "homeassistant.components.motion_blinds.config_flow.MotionDiscovery.discover",
         return_value=TEST_DISCOVERY_1,
     ), patch(
-        "homeassistant.components.motion_blinds.config_flow.AsyncMotionMulticast.Start_listen",
+        "homeassistant.components.motion_blinds.config_flow.MotionGateway.GetDeviceList",
         return_value=True,
     ), patch(
-        "homeassistant.components.motion_blinds.config_flow.AsyncMotionMulticast.Stop_listen",
+        "homeassistant.components.motion_blinds.config_flow.MotionGateway.available",
+        True,
+    ), patch(
+        "homeassistant.components.motion_blinds.gateway.AsyncMotionMulticast.Start_listen",
         return_value=True,
     ), patch(
-        "homeassistant.components.motion_blinds.config_flow.network.async_get_adapters",
+        "homeassistant.components.motion_blinds.gateway.AsyncMotionMulticast.Stop_listen",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.motion_blinds.gateway.network.async_get_adapters",
         return_value=TEST_INTERFACES,
     ), patch(
         "homeassistant.components.motion_blinds.async_setup_entry", return_value=True
@@ -100,7 +110,7 @@ def motion_blinds_connect_fixture(mock_get_source_ip):
         yield
 
 
-async def test_config_flow_manual_host_success(hass):
+async def test_config_flow_manual_host_success(hass: HomeAssistant) -> None:
     """Successful flow manually initialized by the user."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -129,11 +139,11 @@ async def test_config_flow_manual_host_success(hass):
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
         CONF_API_KEY: TEST_API_KEY,
-        const.CONF_INTERFACE: TEST_HOST_HA,
+        const.CONF_INTERFACE: TEST_HOST_ANY,
     }
 
 
-async def test_config_flow_discovery_1_success(hass):
+async def test_config_flow_discovery_1_success(hass: HomeAssistant) -> None:
     """Successful flow with 1 gateway discovered."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -152,21 +162,25 @@ async def test_config_flow_discovery_1_success(hass):
     assert result["step_id"] == "connect"
     assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_API_KEY: TEST_API_KEY},
-    )
+    with patch(
+        "homeassistant.components.motion_blinds.gateway.AsyncMotionMulticast.Stop_listen",
+        side_effect=socket.gaierror,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: TEST_API_KEY},
+        )
 
     assert result["type"] == "create_entry"
     assert result["title"] == DEFAULT_GATEWAY_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
         CONF_API_KEY: TEST_API_KEY,
-        const.CONF_INTERFACE: TEST_HOST_HA,
+        const.CONF_INTERFACE: TEST_HOST_ANY,
     }
 
 
-async def test_config_flow_discovery_2_success(hass):
+async def test_config_flow_discovery_2_success(hass: HomeAssistant) -> None:
     """Successful flow with 2 gateway discovered."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -202,21 +216,25 @@ async def test_config_flow_discovery_2_success(hass):
     assert result["step_id"] == "connect"
     assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_API_KEY: TEST_API_KEY},
-    )
+    with patch(
+        "homeassistant.components.motion_blinds.gateway.MotionGateway.Check_gateway_multicast",
+        side_effect=socket.timeout,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: TEST_API_KEY},
+        )
 
     assert result["type"] == "create_entry"
     assert result["title"] == DEFAULT_GATEWAY_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST2,
         CONF_API_KEY: TEST_API_KEY,
-        const.CONF_INTERFACE: TEST_HOST_HA,
+        const.CONF_INTERFACE: TEST_HOST_ANY,
     }
 
 
-async def test_config_flow_connection_error(hass):
+async def test_config_flow_connection_error(hass: HomeAssistant) -> None:
     """Failed flow manually initialized by the user with connection timeout."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -248,7 +266,7 @@ async def test_config_flow_connection_error(hass):
     assert result["reason"] == "connection_error"
 
 
-async def test_config_flow_discovery_fail(hass):
+async def test_config_flow_discovery_fail(hass: HomeAssistant) -> None:
     """Failed flow with no gateways discovered."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -272,40 +290,7 @@ async def test_config_flow_discovery_fail(hass):
     assert result["errors"] == {"base": "discovery_error"}
 
 
-async def test_config_flow_interface(hass):
-    """Successful flow manually initialized by the user with interface specified."""
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: TEST_HOST},
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "connect"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_API_KEY: TEST_API_KEY, const.CONF_INTERFACE: TEST_HOST_HA},
-    )
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == DEFAULT_GATEWAY_NAME
-    assert result["data"] == {
-        CONF_HOST: TEST_HOST,
-        CONF_API_KEY: TEST_API_KEY,
-        const.CONF_INTERFACE: TEST_HOST_HA,
-    }
-
-
-async def test_config_flow_invalid_interface(hass):
+async def test_config_flow_invalid_interface(hass: HomeAssistant) -> None:
     """Failed flow manually initialized by the user with invalid interface."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -325,20 +310,24 @@ async def test_config_flow_invalid_interface(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.motion_blinds.config_flow.AsyncMotionMulticast.Start_listen",
+        "homeassistant.components.motion_blinds.gateway.AsyncMotionMulticast.Start_listen",
         side_effect=socket.gaierror,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_API_KEY: TEST_API_KEY, const.CONF_INTERFACE: TEST_HOST_HA},
+            {CONF_API_KEY: TEST_API_KEY},
         )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "connect"
-    assert result["errors"] == {const.CONF_INTERFACE: "invalid_interface"}
+    assert result["type"] == "create_entry"
+    assert result["title"] == DEFAULT_GATEWAY_NAME
+    assert result["data"] == {
+        CONF_HOST: TEST_HOST,
+        CONF_API_KEY: TEST_API_KEY,
+        const.CONF_INTERFACE: TEST_HOST_ANY,
+    }
 
 
-async def test_dhcp_flow(hass):
+async def test_dhcp_flow(hass: HomeAssistant) -> None:
     """Successful flow from DHCP discovery."""
     dhcp_data = dhcp.DhcpServiceInfo(
         ip=TEST_HOST,
@@ -354,21 +343,65 @@ async def test_dhcp_flow(hass):
     assert result["step_id"] == "connect"
     assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_API_KEY: TEST_API_KEY},
-    )
+    with patch(
+        "homeassistant.components.motion_blinds.gateway.AsyncMotionMulticast.Start_listen",
+        side_effect=OSError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: TEST_API_KEY},
+        )
 
     assert result["type"] == "create_entry"
     assert result["title"] == DEFAULT_GATEWAY_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
         CONF_API_KEY: TEST_API_KEY,
-        const.CONF_INTERFACE: TEST_HOST_HA,
+        const.CONF_INTERFACE: TEST_HOST_ANY,
     }
 
 
-async def test_options_flow(hass):
+async def test_dhcp_flow_abort(hass: HomeAssistant) -> None:
+    """Test that DHCP discovery aborts if not Motion Blinds."""
+    dhcp_data = dhcp.DhcpServiceInfo(
+        ip=TEST_HOST,
+        hostname="MOTION_abcdef",
+        macaddress=TEST_MAC,
+    )
+
+    with patch(
+        "homeassistant.components.motion_blinds.config_flow.MotionGateway.GetDeviceList",
+        side_effect=socket.timeout,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            const.DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_data
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_motionblinds"
+
+
+async def test_dhcp_flow_abort_invalid_response(hass: HomeAssistant) -> None:
+    """Test that DHCP discovery aborts if device responded with invalid data."""
+    dhcp_data = dhcp.DhcpServiceInfo(
+        ip=TEST_HOST,
+        hostname="MOTION_abcdef",
+        macaddress=TEST_MAC,
+    )
+
+    with patch(
+        "homeassistant.components.motion_blinds.config_flow.MotionGateway.available",
+        False,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            const.DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_data
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_motionblinds"
+
+
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test specifying non default settings using options flow."""
     config_entry = MockConfigEntry(
         domain=const.DOMAIN,
@@ -386,7 +419,7 @@ async def test_options_flow(hass):
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -394,13 +427,13 @@ async def test_options_flow(hass):
         user_input={const.CONF_WAIT_FOR_PUSH: False},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         const.CONF_WAIT_FOR_PUSH: False,
     }
 
 
-async def test_change_connection_settings(hass):
+async def test_change_connection_settings(hass: HomeAssistant) -> None:
     """Test changing connection settings by issuing a second user config flow."""
     config_entry = MockConfigEntry(
         domain=const.DOMAIN,
@@ -433,7 +466,7 @@ async def test_change_connection_settings(hass):
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_API_KEY: TEST_API_KEY2, const.CONF_INTERFACE: TEST_HOST_ANY},
+        {CONF_API_KEY: TEST_API_KEY2},
     )
 
     assert result["type"] == "abort"

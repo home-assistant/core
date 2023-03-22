@@ -39,7 +39,7 @@ activate_scene:
       selector:
         number:
           min: 0
-          max: 300
+          max: 3600
           unit_of_measurement: seconds
     dynamic:
       name: Dynamic
@@ -60,5 +60,5 @@ activate_scene:
       advanced: true
       selector:
         number:
-          min: 0
+          min: 1
           max: 255

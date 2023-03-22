@@ -1,6 +1,7 @@
 """Config flow to configure Renault component."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 
 from renault_api.const import AVAILABLE_LOCALES
@@ -21,7 +22,7 @@ class RenaultFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the Renault config flow."""
-        self._original_data: dict[str, Any] | None = None
+        self._original_data: Mapping[str, Any] | None = None
         self.renault_config: dict[str, Any] = {}
         self.renault_hub: RenaultHub | None = None
 
@@ -92,9 +93,9 @@ class RenaultFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    async def async_step_reauth(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
-        self._original_data = user_input.copy()
+        self._original_data = entry_data
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(

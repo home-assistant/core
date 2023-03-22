@@ -12,7 +12,7 @@ creates a packet sequence, with a mocked output buffer to capture the segments
 pushed to the output streams. The packet sequence can be used to exercise
 failure modes or corner cases like how out of order packets are handled.
 """
-
+import asyncio
 import fractions
 import io
 import logging
@@ -21,6 +21,7 @@ import threading
 from unittest.mock import patch
 
 import av
+import numpy as np
 import pytest
 
 from homeassistant.components.stream import KeyFrameConverter, Stream, create_stream
@@ -33,27 +34,31 @@ from homeassistant.components.stream.const import (
     HLS_PROVIDER,
     MAX_MISSING_DTS,
     PACKETS_TO_WAIT_FOR_AUDIO,
+    RECORDER_PROVIDER,
     SEGMENT_DURATION_ADJUSTER,
     TARGET_SEGMENT_DURATION_NON_LL_HLS,
 )
-from homeassistant.components.stream.core import StreamSettings
+from homeassistant.components.stream.core import Orientation, StreamSettings
 from homeassistant.components.stream.worker import (
     StreamEndedError,
     StreamState,
     StreamWorkerError,
     stream_worker,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from .common import dynamic_stream_settings, generate_h264_video, generate_h265_video
+from .test_ll_hls import TEST_PART_DURATION
+
 from tests.components.camera.common import EMPTY_8_6_JPEG, mock_turbo_jpeg
-from tests.components.stream.common import generate_h264_video, generate_h265_video
-from tests.components.stream.test_ll_hls import TEST_PART_DURATION
 
 STREAM_SOURCE = "some-stream-source"
 # Formats here are arbitrary, not exercised by tests
 AUDIO_STREAM_FORMAT = "mp3"
 VIDEO_STREAM_FORMAT = "h264"
 VIDEO_FRAME_RATE = 12
+VIDEO_TIME_BASE = fractions.Fraction(1 / 90000)
 AUDIO_SAMPLE_RATE = 11025
 KEYFRAME_INTERVAL = 1  # in seconds
 PACKET_DURATION = fractions.Fraction(1, VIDEO_FRAME_RATE)  # in seconds
@@ -67,6 +72,12 @@ OUT_OF_ORDER_PACKET_INDEX = 3 * VIDEO_FRAME_RATE
 PACKETS_PER_SEGMENT = SEGMENT_DURATION / PACKET_DURATION
 SEGMENTS_PER_PACKET = PACKET_DURATION / SEGMENT_DURATION
 TIMEOUT = 15
+
+
+@pytest.fixture
+def filename(tmpdir):
+    """Use this filename for the tests."""
+    return f"{tmpdir}/test.mp4"
 
 
 @pytest.fixture(autouse=True)
@@ -87,10 +98,10 @@ def mock_stream_settings(hass):
 class FakeAvInputStream:
     """A fake pyav Stream."""
 
-    def __init__(self, name, rate):
+    def __init__(self, name, time_base):
         """Initialize the stream."""
         self.name = name
-        self.time_base = fractions.Fraction(1, rate)
+        self.time_base = time_base
         self.profile = "ignored-profile"
 
         class FakeCodec:
@@ -114,8 +125,10 @@ class FakeAvInputStream:
         return f"FakePyAvStream<{self.name}, {self.time_base}>"
 
 
-VIDEO_STREAM = FakeAvInputStream(VIDEO_STREAM_FORMAT, VIDEO_FRAME_RATE)
-AUDIO_STREAM = FakeAvInputStream(AUDIO_STREAM_FORMAT, AUDIO_SAMPLE_RATE)
+VIDEO_STREAM = FakeAvInputStream(VIDEO_STREAM_FORMAT, VIDEO_TIME_BASE)
+AUDIO_STREAM = FakeAvInputStream(
+    AUDIO_STREAM_FORMAT, fractions.Fraction(1 / AUDIO_SAMPLE_RATE)
+)
 
 
 class PacketSequence:
@@ -148,10 +161,10 @@ class PacketSequence:
             def __init__(self):
                 super().__init__(3)
 
-            time_base = fractions.Fraction(1, VIDEO_FRAME_RATE)
-            dts = int(self.packet * PACKET_DURATION / time_base)
-            pts = int(self.packet * PACKET_DURATION / time_base)
-            duration = int(PACKET_DURATION / time_base)
+            time_base = VIDEO_TIME_BASE
+            dts = round(self.packet * PACKET_DURATION / time_base)
+            pts = round(self.packet * PACKET_DURATION / time_base)
+            duration = round(PACKET_DURATION / time_base)
             stream = VIDEO_STREAM
             # Pretend we get 1 keyframe every second
             is_keyframe = not (self.packet - 1) % (VIDEO_FRAME_RATE * KEYFRAME_INTERVAL)
@@ -231,7 +244,7 @@ class FakePyAvBuffer:
         # Forward to appropriate FakeStream
         packet.stream.mux(packet)
         # Make new init/part data available to the worker
-        self.memory_file.write(b"0")
+        self.memory_file.write(b"\x00\x00\x00\x00moov")
 
     def close(self):
         """Close the buffer."""
@@ -268,17 +281,28 @@ class MockPyAv:
         return self.container
 
 
-def run_worker(hass, stream, stream_source):
+def run_worker(hass, stream, stream_source, stream_settings=None):
     """Run the stream worker under test."""
     stream_state = StreamState(hass, stream.outputs, stream._diagnostics)
     stream_worker(
-        stream_source, {}, stream_state, KeyFrameConverter(hass), threading.Event()
+        stream_source,
+        {},
+        stream_settings or hass.data[DOMAIN][ATTR_SETTINGS],
+        stream_state,
+        KeyFrameConverter(hass, stream_settings, dynamic_stream_settings()),
+        threading.Event(),
     )
 
 
-async def async_decode_stream(hass, packets, py_av=None):
+async def async_decode_stream(hass, packets, py_av=None, stream_settings=None):
     """Start a stream worker that decodes incoming stream packets into output segments."""
-    stream = Stream(hass, STREAM_SOURCE, {})
+    stream = Stream(
+        hass,
+        STREAM_SOURCE,
+        {},
+        stream_settings or hass.data[DOMAIN][ATTR_SETTINGS],
+        dynamic_stream_settings(),
+    )
     stream.add_provider(HLS_PROVIDER)
 
     if not py_av:
@@ -290,7 +314,7 @@ async def async_decode_stream(hass, packets, py_av=None):
         side_effect=py_av.capture_buffer.capture_output_segment,
     ):
         try:
-            run_worker(hass, stream, STREAM_SOURCE)
+            run_worker(hass, stream, STREAM_SOURCE, stream_settings)
         except StreamEndedError:
             # Tests only use a limited number of packets, then the worker exits as expected. In
             # production, stream ending would be unexpected.
@@ -302,9 +326,15 @@ async def async_decode_stream(hass, packets, py_av=None):
     return py_av.capture_buffer
 
 
-async def test_stream_open_fails(hass):
+async def test_stream_open_fails(hass: HomeAssistant) -> None:
     """Test failure on stream open."""
-    stream = Stream(hass, STREAM_SOURCE, {})
+    stream = Stream(
+        hass,
+        STREAM_SOURCE,
+        {},
+        hass.data[DOMAIN][ATTR_SETTINGS],
+        dynamic_stream_settings(),
+    )
     stream.add_provider(HLS_PROVIDER)
     with patch("av.open") as av_open, pytest.raises(StreamWorkerError):
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
@@ -313,7 +343,7 @@ async def test_stream_open_fails(hass):
         av_open.assert_called_once()
 
 
-async def test_stream_worker_success(hass):
+async def test_stream_worker_success(hass: HomeAssistant) -> None:
     """Test a short stream that ends and outputs everything correctly."""
     decoded_stream = await async_decode_stream(
         hass, PacketSequence(TEST_SEQUENCE_LENGTH)
@@ -333,7 +363,7 @@ async def test_stream_worker_success(hass):
     assert len(decoded_stream.audio_packets) == 0
 
 
-async def test_skip_out_of_order_packet(hass):
+async def test_skip_out_of_order_packet(hass: HomeAssistant) -> None:
     """Skip a single out of order packet."""
     packets = list(PacketSequence(TEST_SEQUENCE_LENGTH))
     # for this test, make sure the out of order index doesn't happen on a keyframe
@@ -373,12 +403,14 @@ async def test_skip_out_of_order_packet(hass):
     assert len(decoded_stream.audio_packets) == 0
 
 
-async def test_discard_old_packets(hass):
+async def test_discard_old_packets(hass: HomeAssistant) -> None:
     """Skip a series of out of order packets."""
 
     packets = list(PacketSequence(TEST_SEQUENCE_LENGTH))
     # Packets after this one are considered out of order
-    packets[OUT_OF_ORDER_PACKET_INDEX - 1].dts = 9090
+    packets[OUT_OF_ORDER_PACKET_INDEX - 1].dts = round(
+        TEST_SEQUENCE_LENGTH / VIDEO_FRAME_RATE / VIDEO_TIME_BASE
+    )
 
     decoded_stream = await async_decode_stream(hass, packets)
     segments = decoded_stream.segments
@@ -395,7 +427,7 @@ async def test_discard_old_packets(hass):
     assert len(decoded_stream.audio_packets) == 0
 
 
-async def test_packet_overflow(hass):
+async def test_packet_overflow(hass: HomeAssistant) -> None:
     """Packet is too far out of order, and looks like overflow, ending stream early."""
 
     packets = list(PacketSequence(TEST_SEQUENCE_LENGTH))
@@ -403,7 +435,7 @@ async def test_packet_overflow(hass):
     packets[OUT_OF_ORDER_PACKET_INDEX].dts = -9000000
 
     py_av = MockPyAv()
-    with pytest.raises(StreamWorkerError, match=r"Timestamp overflow detected"):
+    with pytest.raises(StreamWorkerError, match=r"Timestamp discontinuity detected"):
         await async_decode_stream(hass, packets, py_av=py_av)
     decoded_stream = py_av.capture_buffer
     segments = decoded_stream.segments
@@ -420,7 +452,7 @@ async def test_packet_overflow(hass):
     assert len(decoded_stream.audio_packets) == 0
 
 
-async def test_skip_initial_bad_packets(hass):
+async def test_skip_initial_bad_packets(hass: HomeAssistant) -> None:
     """Tests a small number of initial "bad" packets with missing dts."""
 
     num_packets = LONGER_TEST_SEQUENCE_LENGTH
@@ -450,7 +482,7 @@ async def test_skip_initial_bad_packets(hass):
     assert len(decoded_stream.audio_packets) == 0
 
 
-async def test_too_many_initial_bad_packets_fails(hass):
+async def test_too_many_initial_bad_packets_fails(hass: HomeAssistant) -> None:
     """Test initial bad packets are too high, causing it to never start."""
 
     num_packets = LONGER_TEST_SEQUENCE_LENGTH
@@ -469,7 +501,7 @@ async def test_too_many_initial_bad_packets_fails(hass):
     assert len(decoded_stream.audio_packets) == 0
 
 
-async def test_skip_missing_dts(hass):
+async def test_skip_missing_dts(hass: HomeAssistant) -> None:
     """Test packets in the middle of the stream missing DTS are skipped."""
 
     num_packets = LONGER_TEST_SEQUENCE_LENGTH
@@ -493,7 +525,7 @@ async def test_skip_missing_dts(hass):
     assert len(decoded_stream.audio_packets) == 0
 
 
-async def test_too_many_bad_packets(hass):
+async def test_too_many_bad_packets(hass: HomeAssistant) -> None:
     """Test bad packets are too many, causing it to end."""
 
     num_packets = LONGER_TEST_SEQUENCE_LENGTH
@@ -513,7 +545,7 @@ async def test_too_many_bad_packets(hass):
     assert len(decoded_stream.audio_packets) == 0
 
 
-async def test_no_video_stream(hass):
+async def test_no_video_stream(hass: HomeAssistant) -> None:
     """Test no video stream in the container means no resulting output."""
     py_av = MockPyAv(video=False)
 
@@ -529,7 +561,7 @@ async def test_no_video_stream(hass):
     assert len(decoded_stream.audio_packets) == 0
 
 
-async def test_audio_packets_not_found(hass):
+async def test_audio_packets_not_found(hass: HomeAssistant) -> None:
     """Set up an audio stream, but no audio packets are found."""
     py_av = MockPyAv(audio=True)
 
@@ -543,26 +575,7 @@ async def test_audio_packets_not_found(hass):
     assert len(decoded_stream.audio_packets) == 0
 
 
-async def test_adts_aac_audio(hass):
-    """Set up an ADTS AAC audio stream and disable audio."""
-    py_av = MockPyAv(audio=True)
-
-    num_packets = PACKETS_TO_WAIT_FOR_AUDIO + 1
-    packets = list(PacketSequence(num_packets))
-    packets[1].stream = AUDIO_STREAM
-    packets[1].dts = int(packets[0].dts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE)
-    packets[1].pts = int(packets[0].pts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE)
-    # The following is packet data is a sign of ADTS AAC
-    packets[1][0] = 255
-    packets[1][1] = 241
-
-    decoded_stream = await async_decode_stream(hass, packets, py_av=py_av)
-    assert len(decoded_stream.audio_packets) == 0
-    # All decoded video packets are still preserved
-    assert len(decoded_stream.video_packets) == num_packets - 1
-
-
-async def test_audio_is_first_packet(hass):
+async def test_audio_is_first_packet(hass: HomeAssistant) -> None:
     """Set up an audio stream and audio packet is the first packet in the stream."""
     py_av = MockPyAv(audio=True)
 
@@ -570,12 +583,12 @@ async def test_audio_is_first_packet(hass):
     packets = list(PacketSequence(num_packets))
     # Pair up an audio packet for each video packet
     packets[0].stream = AUDIO_STREAM
-    packets[0].dts = int(packets[1].dts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE)
-    packets[0].pts = int(packets[1].pts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE)
+    packets[0].dts = round(packets[1].dts * VIDEO_TIME_BASE * AUDIO_SAMPLE_RATE)
+    packets[0].pts = round(packets[1].pts * VIDEO_TIME_BASE * AUDIO_SAMPLE_RATE)
     packets[1].is_keyframe = True  # Move the video keyframe from packet 0 to packet 1
     packets[2].stream = AUDIO_STREAM
-    packets[2].dts = int(packets[3].dts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE)
-    packets[2].pts = int(packets[3].pts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE)
+    packets[2].dts = round(packets[3].dts * VIDEO_TIME_BASE * AUDIO_SAMPLE_RATE)
+    packets[2].pts = round(packets[3].pts * VIDEO_TIME_BASE * AUDIO_SAMPLE_RATE)
 
     decoded_stream = await async_decode_stream(hass, packets, py_av=py_av)
     complete_segments = decoded_stream.complete_segments
@@ -585,15 +598,15 @@ async def test_audio_is_first_packet(hass):
     assert len(decoded_stream.audio_packets) == 1
 
 
-async def test_audio_packets_found(hass):
+async def test_audio_packets_found(hass: HomeAssistant) -> None:
     """Set up an audio stream and audio packets are found at the start of the stream."""
     py_av = MockPyAv(audio=True)
 
     num_packets = PACKETS_TO_WAIT_FOR_AUDIO + 1
     packets = list(PacketSequence(num_packets))
     packets[1].stream = AUDIO_STREAM
-    packets[1].dts = int(packets[0].dts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE)
-    packets[1].pts = int(packets[0].pts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE)
+    packets[1].dts = round(packets[0].dts * VIDEO_TIME_BASE * AUDIO_SAMPLE_RATE)
+    packets[1].pts = round(packets[0].pts * VIDEO_TIME_BASE * AUDIO_SAMPLE_RATE)
 
     decoded_stream = await async_decode_stream(hass, packets, py_av=py_av)
     complete_segments = decoded_stream.complete_segments
@@ -603,7 +616,7 @@ async def test_audio_packets_found(hass):
     assert len(decoded_stream.audio_packets) == 1
 
 
-async def test_pts_out_of_order(hass):
+async def test_pts_out_of_order(hass: HomeAssistant) -> None:
     """Test pts can be out of order and still be valid."""
 
     # Create a sequence of packets with some out of order pts
@@ -628,7 +641,7 @@ async def test_pts_out_of_order(hass):
     assert len(decoded_stream.audio_packets) == 0
 
 
-async def test_stream_stopped_while_decoding(hass):
+async def test_stream_stopped_while_decoding(hass: HomeAssistant) -> None:
     """Tests that worker quits when stop() is called while decodign."""
     # Add some synchronization so that the test can pause the background
     # worker. When the worker is stopped, the test invokes stop() which
@@ -637,7 +650,13 @@ async def test_stream_stopped_while_decoding(hass):
     worker_open = threading.Event()
     worker_wake = threading.Event()
 
-    stream = Stream(hass, STREAM_SOURCE, {})
+    stream = Stream(
+        hass,
+        STREAM_SOURCE,
+        {},
+        hass.data[DOMAIN][ATTR_SETTINGS],
+        dynamic_stream_settings(),
+    )
     stream.add_provider(HLS_PROVIDER)
 
     py_av = MockPyAv()
@@ -651,23 +670,29 @@ async def test_stream_stopped_while_decoding(hass):
         return py_av.open(stream_source, args, kwargs)
 
     with patch("av.open", new=blocking_open):
-        stream.start()
+        await stream.start()
         assert worker_open.wait(TIMEOUT)
         # Note: There is a race here where the worker could start as soon
         # as the wake event is sent, completing all decode work.
         worker_wake.set()
-        stream.stop()
+        await stream.stop()
 
     # Stream is still considered available when the worker was still active and asked to stop
     assert stream.available
 
 
-async def test_update_stream_source(hass):
+async def test_update_stream_source(hass: HomeAssistant) -> None:
     """Tests that the worker is re-invoked when the stream source is updated."""
     worker_open = threading.Event()
     worker_wake = threading.Event()
 
-    stream = Stream(hass, STREAM_SOURCE, {})
+    stream = Stream(
+        hass,
+        STREAM_SOURCE,
+        {},
+        hass.data[DOMAIN][ATTR_SETTINGS],
+        dynamic_stream_settings(),
+    )
     stream.add_provider(HLS_PROVIDER)
     # Note that retries are disabled by default in tests, however the stream is "restarted" when
     # the stream source is updated.
@@ -688,7 +713,7 @@ async def test_update_stream_source(hass):
         return py_av.open(stream_source, args, kwargs)
 
     with patch("av.open", new=blocking_open):
-        stream.start()
+        await stream.start()
         assert worker_open.wait(TIMEOUT)
         assert last_stream_source == STREAM_SOURCE
         assert stream.available
@@ -704,26 +729,67 @@ async def test_update_stream_source(hass):
         assert stream.available
 
         # Cleanup
-        stream.stop()
+        await stream.stop()
 
 
-async def test_worker_log(hass, caplog):
+test_worker_log_cases = (
+    ("https://abcd:efgh@foo.bar", "https://****:****@foo.bar"),
+    (
+        "https://foo.bar/baz?user=abcd&password=efgh",
+        "https://foo.bar/baz?user=****&password=****",
+    ),
+    (
+        "https://foo.bar/baz?param1=abcd&param2=efgh",
+        "https://foo.bar/baz?param1=abcd&param2=efgh",
+    ),
+    (
+        "https://foo.bar/baz?param1=abcd&password=efgh",
+        "https://foo.bar/baz?param1=abcd&password=****",
+    ),
+)
+
+
+@pytest.mark.parametrize(("stream_url", "redacted_url"), test_worker_log_cases)
+async def test_worker_log(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, stream_url, redacted_url
+) -> None:
     """Test that the worker logs the url without username and password."""
-    stream = Stream(hass, "https://abcd:efgh@foo.bar", {})
+    stream = Stream(
+        hass,
+        stream_url,
+        {},
+        hass.data[DOMAIN][ATTR_SETTINGS],
+        dynamic_stream_settings(),
+    )
     stream.add_provider(HLS_PROVIDER)
 
     with patch("av.open") as av_open, pytest.raises(StreamWorkerError) as err:
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
-        run_worker(hass, stream, "https://abcd:efgh@foo.bar")
+        run_worker(hass, stream, stream_url)
         await hass.async_block_till_done()
     assert (
-        str(err.value)
-        == "Error opening stream (ERRORTYPE_-2, error) https://****:****@foo.bar"
+        str(err.value) == f"Error opening stream (ERRORTYPE_-2, error) {redacted_url}"
     )
-    assert "https://abcd:efgh@foo.bar" not in caplog.text
+    assert stream_url not in caplog.text
 
 
-async def test_durations(hass, record_worker_sync):
+@pytest.fixture
+def worker_finished_stream():
+    """Fixture that helps call a stream and wait for the worker to finish."""
+    worker_finished = asyncio.Event()
+
+    class MockStream(Stream):
+        """Mock Stream so we can patch remove_provider."""
+
+        async def remove_provider(self, provider):
+            """Add a finished event to Stream.remove_provider."""
+            await Stream.remove_provider(self, provider)
+            worker_finished.set()
+
+    return worker_finished, MockStream
+
+
+async def test_durations(hass: HomeAssistant, worker_finished_stream) -> None:
     """Test that the duration metadata matches the media."""
 
     # Use a target part duration which has a slight mismatch
@@ -741,14 +807,22 @@ async def test_durations(hass, record_worker_sync):
         },
     )
 
-    source = generate_h264_video(duration=SEGMENT_DURATION + 1)
-    stream = create_stream(hass, source, {}, stream_label="camera")
+    source = generate_h264_video(
+        duration=round(SEGMENT_DURATION + target_part_duration + 1)
+    )
+    worker_finished, mock_stream = worker_finished_stream
 
-    # use record_worker_sync to grab output segments
-    with patch.object(hass.config, "is_allowed_path", return_value=True):
-        await stream.async_record("/example/path")
+    with patch("homeassistant.components.stream.Stream", wraps=mock_stream):
+        stream = create_stream(
+            hass, source, {}, dynamic_stream_settings(), stream_label="camera"
+        )
 
-    complete_segments = list(await record_worker_sync.get_segments())[:-1]
+    recorder_output = stream.add_provider(RECORDER_PROVIDER, timeout=30)
+    await stream.start()
+    await worker_finished.wait()
+
+    complete_segments = list(recorder_output.get_segments())[:-1]
+
     assert len(complete_segments) >= 1
 
     # check that the Part duration metadata matches the durations in the media
@@ -771,7 +845,7 @@ async def test_durations(hass, record_worker_sync):
             assert math.isclose(
                 (av_part.duration - av_part.start_time) / av.time_base,
                 part.duration,
-                abs_tol=2 / av_part.streams.video[0].rate + 1e-6,
+                abs_tol=2 / av_part.streams.video[0].average_rate + 1e-6,
             )
             # Also check that the sum of the durations so far matches the last dts
             # in the media.
@@ -794,12 +868,12 @@ async def test_durations(hass, record_worker_sync):
             abs_tol=1e-6,
         )
 
-    await record_worker_sync.join()
-
-    stream.stop()
+    await stream.stop()
 
 
-async def test_has_keyframe(hass, record_worker_sync, h264_video):
+async def test_has_keyframe(
+    hass: HomeAssistant, h264_video, worker_finished_stream
+) -> None:
     """Test that the has_keyframe metadata matches the media."""
     await async_setup_component(
         hass,
@@ -815,13 +889,19 @@ async def test_has_keyframe(hass, record_worker_sync, h264_video):
         },
     )
 
-    stream = create_stream(hass, h264_video, {}, stream_label="camera")
+    worker_finished, mock_stream = worker_finished_stream
 
-    # use record_worker_sync to grab output segments
-    with patch.object(hass.config, "is_allowed_path", return_value=True):
-        await stream.async_record("/example/path")
+    with patch("homeassistant.components.stream.Stream", wraps=mock_stream):
+        stream = create_stream(
+            hass, h264_video, {}, dynamic_stream_settings(), stream_label="camera"
+        )
 
-    complete_segments = list(await record_worker_sync.get_segments())[:-1]
+    recorder_output = stream.add_provider(RECORDER_PROVIDER, timeout=30)
+    await stream.start()
+    await worker_finished.wait()
+
+    complete_segments = list(recorder_output.get_segments())[:-1]
+
     assert len(complete_segments) >= 1
 
     # check that the Part has_keyframe metadata matches the keyframes in the media
@@ -834,12 +914,10 @@ async def test_has_keyframe(hass, record_worker_sync, h264_video):
             av_part.close()
             assert part.has_keyframe == media_has_keyframe
 
-    await record_worker_sync.join()
-
-    stream.stop()
+    await stream.stop()
 
 
-async def test_h265_video_is_hvc1(hass, record_worker_sync):
+async def test_h265_video_is_hvc1(hass: HomeAssistant, worker_finished_stream) -> None:
     """Test that a h265 video gets muxed as hvc1."""
     await async_setup_component(
         hass,
@@ -854,13 +932,18 @@ async def test_h265_video_is_hvc1(hass, record_worker_sync):
     )
 
     source = generate_h265_video()
-    stream = create_stream(hass, source, {}, stream_label="camera")
 
-    # use record_worker_sync to grab output segments
-    with patch.object(hass.config, "is_allowed_path", return_value=True):
-        await stream.async_record("/example/path")
+    worker_finished, mock_stream = worker_finished_stream
+    with patch("homeassistant.components.stream.Stream", wraps=mock_stream):
+        stream = create_stream(
+            hass, source, {}, dynamic_stream_settings(), stream_label="camera"
+        )
 
-    complete_segments = list(await record_worker_sync.get_segments())[:-1]
+    recorder_output = stream.add_provider(RECORDER_PROVIDER, timeout=30)
+    await stream.start()
+    await worker_finished.wait()
+
+    complete_segments = list(recorder_output.get_segments())[:-1]
     assert len(complete_segments) >= 1
 
     segment = complete_segments[0]
@@ -869,40 +952,87 @@ async def test_h265_video_is_hvc1(hass, record_worker_sync):
     assert av_part.streams.video[0].codec_tag == "hvc1"
     av_part.close()
 
-    await record_worker_sync.join()
-
-    stream.stop()
+    await stream.stop()
 
     assert stream.get_diagnostics() == {
         "container_format": "mov,mp4,m4a,3gp,3g2,mj2",
         "keepalive": False,
+        "orientation": Orientation.NO_TRANSFORM,
         "start_worker": 1,
         "video_codec": "hevc",
         "worker_error": 1,
     }
 
 
-async def test_get_image(hass, record_worker_sync):
+async def test_get_image(hass: HomeAssistant, h264_video, filename) -> None:
     """Test that the has_keyframe metadata matches the media."""
     await async_setup_component(hass, "stream", {"stream": {}})
-
-    source = generate_h264_video()
 
     # Since libjpeg-turbo is not installed on the CI runner, we use a mock
     with patch(
         "homeassistant.components.camera.img_util.TurboJPEGSingleton"
     ) as mock_turbo_jpeg_singleton:
         mock_turbo_jpeg_singleton.instance.return_value = mock_turbo_jpeg()
-        stream = create_stream(hass, source, {})
+        stream = create_stream(hass, h264_video, {}, dynamic_stream_settings())
 
-    # use record_worker_sync to grab output segments
     with patch.object(hass.config, "is_allowed_path", return_value=True):
-        await stream.async_record("/example/path")
-
+        make_recording = hass.async_create_task(stream.async_record(filename))
+        await make_recording
     assert stream._keyframe_converter._image is None
-
-    await record_worker_sync.join()
 
     assert await stream.async_get_image() == EMPTY_8_6_JPEG
 
-    stream.stop()
+    await stream.stop()
+
+
+async def test_worker_disable_ll_hls(hass: HomeAssistant) -> None:
+    """Test that the worker disables ll-hls for hls inputs."""
+    stream_settings = StreamSettings(
+        ll_hls=True,
+        min_segment_duration=TARGET_SEGMENT_DURATION_NON_LL_HLS
+        - SEGMENT_DURATION_ADJUSTER,
+        part_target_duration=TARGET_SEGMENT_DURATION_NON_LL_HLS,
+        hls_advance_part_limit=3,
+        hls_part_timeout=TARGET_SEGMENT_DURATION_NON_LL_HLS,
+    )
+    py_av = MockPyAv()
+    py_av.container.format.name = "hls"
+    await async_decode_stream(
+        hass,
+        PacketSequence(TEST_SEQUENCE_LENGTH),
+        py_av=py_av,
+        stream_settings=stream_settings,
+    )
+    assert stream_settings.ll_hls is False
+
+
+async def test_get_image_rotated(hass: HomeAssistant, h264_video, filename) -> None:
+    """Test that the has_keyframe metadata matches the media."""
+    await async_setup_component(hass, "stream", {"stream": {}})
+
+    # Since libjpeg-turbo is not installed on the CI runner, we use a mock
+    with patch(
+        "homeassistant.components.camera.img_util.TurboJPEGSingleton"
+    ) as mock_turbo_jpeg_singleton:
+        mock_turbo_jpeg_singleton.instance.return_value = mock_turbo_jpeg()
+        for orientation in (Orientation.NO_TRANSFORM, Orientation.ROTATE_RIGHT):
+            stream = create_stream(hass, h264_video, {}, dynamic_stream_settings())
+            stream.dynamic_stream_settings.orientation = orientation
+
+            with patch.object(hass.config, "is_allowed_path", return_value=True):
+                make_recording = hass.async_create_task(stream.async_record(filename))
+                await make_recording
+            assert stream._keyframe_converter._image is None
+
+            assert await stream.async_get_image() == EMPTY_8_6_JPEG
+            await stream.stop()
+        assert (
+            np.rot90(
+                mock_turbo_jpeg_singleton.instance.return_value.encode.call_args_list[
+                    0
+                ][0][0]
+            )
+            == mock_turbo_jpeg_singleton.instance.return_value.encode.call_args_list[1][
+                0
+            ][0]
+        ).all()

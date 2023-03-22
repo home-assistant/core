@@ -16,8 +16,8 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONF_SHOW_ON_MAP,
     PERCENTAGE,
-    PRESSURE_PA,
-    TEMP_CELSIUS,
+    UnitOfPressure,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -33,7 +33,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="temperature",
         name="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -47,14 +47,14 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="pressure",
         name="Pressure",
-        native_unit_of_measurement=PRESSURE_PA,
+        native_unit_of_measurement=UnitOfPressure.PA,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="pressure_at_sealevel",
         name="Pressure at sealevel",
-        native_unit_of_measurement=PRESSURE_PA,
+        native_unit_of_measurement=UnitOfPressure.PA,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -97,6 +97,7 @@ class SensorCommunitySensor(CoordinatorEntity, SensorEntity):
     """Implementation of a Sensor.Community sensor."""
 
     _attr_attribution = "Data provided by Sensor.Community"
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(
@@ -115,7 +116,9 @@ class SensorCommunitySensor(CoordinatorEntity, SensorEntity):
             ATTR_SENSOR_ID: sensor_id,
         }
         self._attr_device_info = DeviceInfo(
-            configuration_url=f"https://devices.sensor.community/sensors/{sensor_id}/settings",
+            configuration_url=(
+                f"https://devices.sensor.community/sensors/{sensor_id}/settings"
+            ),
             identifiers={(DOMAIN, str(sensor_id))},
             name=f"Sensor {sensor_id}",
             manufacturer="Sensor.Community",

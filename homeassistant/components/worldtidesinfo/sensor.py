@@ -9,13 +9,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_API_KEY,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_NAME,
-)
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -67,6 +61,8 @@ def setup_platform(
 class WorldTidesInfoSensor(SensorEntity):
     """Representation of a WorldTidesInfo sensor."""
 
+    _attr_attribution = ATTRIBUTION
+
     def __init__(self, name, lat, lon, key):
         """Initialize the sensor."""
         self._name = name
@@ -83,7 +79,7 @@ class WorldTidesInfoSensor(SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes of this device."""
-        attr = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        attr = {}
 
         if "High" in str(self.data["extremes"][0]["type"]):
             attr["high_tide_time_utc"] = self.data["extremes"][0]["date"]
@@ -114,7 +110,7 @@ class WorldTidesInfoSensor(SensorEntity):
             return None
         return None
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from WorldTidesInfo API."""
         start = int(time.time())
         resource = (

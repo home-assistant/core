@@ -1,6 +1,7 @@
-"""Config flow for Universal Devices ISY994 integration."""
+"""Config flow for Universal Devices ISY/IoX integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 from urllib.parse import urlparse, urlunparse
@@ -12,10 +13,11 @@ from pyisy.configuration import Configuration
 from pyisy.connection import Connection
 import voluptuous as vol
 
-from homeassistant import config_entries, core, data_entry_flow, exceptions
+from homeassistant import config_entries, core, exceptions
 from homeassistant.components import dhcp, ssdp
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import aiohttp_client
 
 from .const import (
@@ -32,6 +34,8 @@ from .const import (
     DOMAIN,
     HTTP_PORT,
     HTTPS_PORT,
+    ISY_CONF_NAME,
+    ISY_CONF_UUID,
     ISY_URL_POSTFIX,
     SCHEME_HTTP,
     SCHEME_HTTPS,
@@ -77,7 +81,7 @@ async def validate_input(
         port = host.port or HTTPS_PORT
         session = aiohttp_client.async_get_clientsession(hass)
     else:
-        _LOGGER.error("The isy994 host value in configuration is invalid")
+        _LOGGER.error("The ISY/IoX host value in configuration is invalid")
         raise InvalidHost
 
     # Connect to ISY controller.
@@ -104,21 +108,25 @@ async def validate_input(
         isy_conf = Configuration(xml=isy_conf_xml)
     except ISYResponseParseError as error:
         raise CannotConnect from error
-    if not isy_conf or "name" not in isy_conf or not isy_conf["name"]:
+    if not isy_conf or ISY_CONF_NAME not in isy_conf or not isy_conf[ISY_CONF_NAME]:
         raise CannotConnect
 
     # Return info that you want to store in the config entry.
-    return {"title": f"{isy_conf['name']} ({host.hostname})", "uuid": isy_conf["uuid"]}
+    return {
+        "title": f"{isy_conf[ISY_CONF_NAME]} ({host.hostname})",
+        ISY_CONF_UUID: isy_conf[ISY_CONF_UUID],
+    }
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Universal Devices ISY994."""
+    """Handle a config flow for Universal Devices ISY/IoX."""
 
     VERSION = 1
 
     def __init__(self) -> None:
-        """Initialize the isy994 config flow."""
+        """Initialize the ISY/IoX config flow."""
         self.discovered_conf: dict[str, str] = {}
+        self._existing_entry: config_entries.ConfigEntry | None = None
 
     @staticmethod
     @callback
@@ -130,7 +138,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> FlowResult:
         """Handle the initial step."""
         errors = {}
         info: dict[str, str] = {}
@@ -142,13 +150,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except InvalidHost:
                 errors["base"] = "invalid_host"
             except InvalidAuth:
-                errors["base"] = "invalid_auth"
+                errors[CONF_PASSWORD] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
             if not errors:
-                await self.async_set_unique_id(info["uuid"], raise_on_progress=False)
+                await self.async_set_unique_id(
+                    info[ISY_CONF_UUID], raise_on_progress=False
+                )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=info["title"], data=user_input)
 
@@ -158,9 +168,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(
-        self, user_input: dict[str, Any]
-    ) -> data_entry_flow.FlowResult:
+    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
         """Handle import."""
         return await self.async_step_user(user_input)
 
@@ -172,7 +180,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not existing_entry:
             return
         if existing_entry.source == config_entries.SOURCE_IGNORE:
-            raise data_entry_flow.AbortFlow("already_configured")
+            raise AbortFlow("already_configured")
         parsed_url = urlparse(existing_entry.data[CONF_HOST])
         if parsed_url.hostname != ip_address:
             new_netloc = ip_address
@@ -196,14 +204,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ),
                 },
             )
-        raise data_entry_flow.AbortFlow("already_configured")
+        raise AbortFlow("already_configured")
 
-    async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
-    ) -> data_entry_flow.FlowResult:
-        """Handle a discovered isy994 via dhcp."""
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+        """Handle a discovered ISY/IoX device via dhcp."""
         friendly_name = discovery_info.hostname
-        url = f"http://{discovery_info.ip}"
+        if friendly_name.startswith("polisy") or friendly_name.startswith("eisy"):
+            url = f"http://{discovery_info.ip}:8080"
+        else:
+            url = f"http://{discovery_info.ip}"
         mac = discovery_info.macaddress
         isy_mac = (
             f"{mac[0:2]}:{mac[2:4]}:{mac[4:6]}:{mac[6:8]}:{mac[8:10]}:{mac[10:12]}"
@@ -218,19 +227,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = self.discovered_conf
         return await self.async_step_user()
 
-    async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
-    ) -> data_entry_flow.FlowResult:
-        """Handle a discovered isy994."""
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
+        """Handle a discovered ISY/IoX Device."""
         friendly_name = discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]
         url = discovery_info.ssdp_location
         assert isinstance(url, str)
         parsed_url = urlparse(url)
         mac = discovery_info.upnp[ssdp.ATTR_UPNP_UDN]
-        if mac.startswith(UDN_UUID_PREFIX):
-            mac = mac[len(UDN_UUID_PREFIX) :]
-        if url.endswith(ISY_URL_POSTFIX):
-            url = url[: -len(ISY_URL_POSTFIX)]
+        mac = mac.removeprefix(UDN_UUID_PREFIX)
+        url = url.removesuffix(ISY_URL_POSTFIX)
 
         port = HTTP_PORT
         if parsed_url.port:
@@ -249,9 +254,58 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = self.discovered_conf
         return await self.async_step_user()
 
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Handle reauth."""
+        self._existing_entry = await self.async_set_unique_id(self.context["unique_id"])
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle reauth input."""
+        errors = {}
+        assert self._existing_entry is not None
+        existing_entry = self._existing_entry
+        existing_data = existing_entry.data
+        if user_input is not None:
+            new_data = {
+                **existing_data,
+                CONF_USERNAME: user_input[CONF_USERNAME],
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+            }
+            try:
+                await validate_input(self.hass, new_data)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors[CONF_PASSWORD] = "invalid_auth"
+            else:
+                cfg_entries = self.hass.config_entries
+                cfg_entries.async_update_entry(existing_entry, data=new_data)
+                await cfg_entries.async_reload(existing_entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
+
+        self.context["title_placeholders"] = {
+            CONF_NAME: existing_entry.title,
+            CONF_HOST: existing_data[CONF_HOST],
+        }
+        return self.async_show_form(
+            description_placeholders={CONF_HOST: existing_data[CONF_HOST]},
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_USERNAME, default=existing_data[CONF_USERNAME]
+                    ): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            errors=errors,
+        )
+
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle a option flow for isy994."""
+    """Handle a option flow for ISY/IoX."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
@@ -259,7 +313,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> FlowResult:
         """Handle options flow."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

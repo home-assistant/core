@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from nexia.const import UNIT_CELSIUS
+from nexia.thermostat import NexiaThermostat
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -9,7 +10,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -32,7 +33,7 @@ async def async_setup_entry(
 
     # Thermostat / System Sensors
     for thermostat_id in nexia_home.get_thermostat_ids():
-        thermostat = nexia_home.get_thermostat_by_id(thermostat_id)
+        thermostat: NexiaThermostat = nexia_home.get_thermostat_by_id(thermostat_id)
 
         entities.append(
             NexiaThermostatSensor(
@@ -85,11 +86,10 @@ async def async_setup_entry(
             )
         # Outdoor Temperature
         if thermostat.has_outdoor_temperature():
-            unit = (
-                TEMP_CELSIUS
-                if thermostat.get_unit() == UNIT_CELSIUS
-                else TEMP_FAHRENHEIT
-            )
+            if thermostat.get_unit() == UNIT_CELSIUS:
+                unit = UnitOfTemperature.CELSIUS
+            else:
+                unit = UnitOfTemperature.FAHRENHEIT
             entities.append(
                 NexiaThermostatSensor(
                     coordinator,
@@ -119,11 +119,10 @@ async def async_setup_entry(
         # Zone Sensors
         for zone_id in thermostat.get_zone_ids():
             zone = thermostat.get_zone_by_id(zone_id)
-            unit = (
-                TEMP_CELSIUS
-                if thermostat.get_unit() == UNIT_CELSIUS
-                else TEMP_FAHRENHEIT
-            )
+            if thermostat.get_unit() == UNIT_CELSIUS:
+                unit = UnitOfTemperature.CELSIUS
+            else:
+                unit = UnitOfTemperature.FAHRENHEIT
             # Temperature
             entities.append(
                 NexiaThermostatZoneSensor(

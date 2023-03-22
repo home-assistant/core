@@ -6,17 +6,18 @@ from datetime import timedelta
 from ipaddress import ip_address
 import logging
 import secrets
-from typing import Final
-from urllib.parse import unquote
+from typing import Any, Final
 
 from aiohttp import hdrs
 from aiohttp.web import Application, Request, StreamResponse, middleware
 import jwt
+from yarl import URL
 
 from homeassistant.auth.const import GROUP_ID_READ_ONLY
 from homeassistant.auth.models import User
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 from homeassistant.util.network import is_local
 
@@ -28,6 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 DATA_API_PASSWORD: Final = "api_password"
 DATA_SIGN_SECRET: Final = "http.auth.sign_secret"
 SIGN_QUERY_PARAM: Final = "authSig"
+SAFE_QUERY_PARAMS: Final = ["height", "width"]
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "http.auth"
@@ -56,18 +58,26 @@ def async_sign_path(
         else:
             refresh_token_id = hass.data[STORAGE_KEY]
 
+    url = URL(path)
     now = dt_util.utcnow()
+    params = dict(sorted(url.query.items()))
+    for param in SAFE_QUERY_PARAMS:
+        params.pop(param, None)
     encoded = jwt.encode(
         {
             "iss": refresh_token_id,
-            "path": unquote(path),
+            "path": url.path,
+            "params": params,
             "iat": now,
             "exp": now + expiration,
         },
         secret,
         algorithm="HS256",
     )
-    return f"{path}?{SIGN_QUERY_PARAM}={encoded}"
+
+    params[SIGN_QUERY_PARAM] = encoded
+    url = url.with_query(params)
+    return f"{url.path}?{url.query_string}"
 
 
 @callback
@@ -89,14 +99,14 @@ def async_user_not_allowed_do_auth(
         return "No request available to validate local access"
 
     if "cloud" in hass.config.components:
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         from hass_nabucasa import remote
 
         if remote.is_cloud_request.get():
             return "User is local only"
 
     try:
-        remote = ip_address(request.remote)
+        remote = ip_address(request.remote)  # type: ignore[arg-type]
     except ValueError:
         return "Invalid remote IP"
 
@@ -108,7 +118,7 @@ def async_user_not_allowed_do_auth(
 
 async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
     """Create auth middleware for the app."""
-    store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+    store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
     if (data := await store.async_load()) is None:
         data = {}
 
@@ -129,8 +139,7 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
     hass.data[STORAGE_KEY] = refresh_token.id
 
     async def async_validate_auth_header(request: Request) -> bool:
-        """
-        Test authorization header against access token.
+        """Test authorization header against access token.
 
         Basic auth_type is legacy code, should be removed with api_password.
         """
@@ -175,6 +184,13 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
         if claims["path"] != request.path:
             return False
 
+        params = dict(sorted(request.query.items()))
+        del params[SIGN_QUERY_PARAM]
+        for param in SAFE_QUERY_PARAMS:
+            params.pop(param, None)
+        if claims["params"] != params:
+            return False
+
         refresh_token = await hass.auth.async_get_refresh_token(claims["iss"])
 
         if refresh_token is None:
@@ -201,7 +217,7 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
         # for every request.
         elif (
             request.method == "GET"
-            and SIGN_QUERY_PARAM in request.query
+            and SIGN_QUERY_PARAM in request.query_string
             and await async_validate_signed_request(request)
         ):
             authenticated = True

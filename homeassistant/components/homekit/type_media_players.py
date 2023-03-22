@@ -10,12 +10,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN,
     SERVICE_SELECT_SOURCE,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -101,7 +96,9 @@ class MediaPlayer(HomeAccessory):
 
         if FEATURE_ON_OFF in feature_list:
             name = self.generate_service_name(FEATURE_ON_OFF)
-            serv_on_off = self.add_preload_service(SERV_SWITCH, CHAR_NAME)
+            serv_on_off = self.add_preload_service(
+                SERV_SWITCH, CHAR_NAME, unique_id=FEATURE_ON_OFF
+            )
             serv_on_off.configure_char(CHAR_NAME, value=name)
             self.chars[FEATURE_ON_OFF] = serv_on_off.configure_char(
                 CHAR_ON, value=False, setter_callback=self.set_on_off
@@ -109,7 +106,9 @@ class MediaPlayer(HomeAccessory):
 
         if FEATURE_PLAY_PAUSE in feature_list:
             name = self.generate_service_name(FEATURE_PLAY_PAUSE)
-            serv_play_pause = self.add_preload_service(SERV_SWITCH, CHAR_NAME)
+            serv_play_pause = self.add_preload_service(
+                SERV_SWITCH, CHAR_NAME, unique_id=FEATURE_PLAY_PAUSE
+            )
             serv_play_pause.configure_char(CHAR_NAME, value=name)
             self.chars[FEATURE_PLAY_PAUSE] = serv_play_pause.configure_char(
                 CHAR_ON, value=False, setter_callback=self.set_play_pause
@@ -117,7 +116,9 @@ class MediaPlayer(HomeAccessory):
 
         if FEATURE_PLAY_STOP in feature_list:
             name = self.generate_service_name(FEATURE_PLAY_STOP)
-            serv_play_stop = self.add_preload_service(SERV_SWITCH, CHAR_NAME)
+            serv_play_stop = self.add_preload_service(
+                SERV_SWITCH, CHAR_NAME, unique_id=FEATURE_PLAY_STOP
+            )
             serv_play_stop.configure_char(CHAR_NAME, value=name)
             self.chars[FEATURE_PLAY_STOP] = serv_play_stop.configure_char(
                 CHAR_ON, value=False, setter_callback=self.set_play_stop
@@ -125,7 +126,9 @@ class MediaPlayer(HomeAccessory):
 
         if FEATURE_TOGGLE_MUTE in feature_list:
             name = self.generate_service_name(FEATURE_TOGGLE_MUTE)
-            serv_toggle_mute = self.add_preload_service(SERV_SWITCH, CHAR_NAME)
+            serv_toggle_mute = self.add_preload_service(
+                SERV_SWITCH, CHAR_NAME, unique_id=FEATURE_TOGGLE_MUTE
+            )
             serv_toggle_mute.configure_char(CHAR_NAME, value=name)
             self.chars[FEATURE_TOGGLE_MUTE] = serv_toggle_mute.configure_char(
                 CHAR_ON, value=False, setter_callback=self.set_toggle_mute
@@ -218,7 +221,7 @@ class TelevisionMediaPlayer(RemoteInputSelectAccessory):
     def __init__(self, *args):
         """Initialize a Television Media Player accessory object."""
         super().__init__(
-            SUPPORT_SELECT_SOURCE,
+            MediaPlayerEntityFeature.SELECT_SOURCE,
             ATTR_INPUT_SOURCE,
             ATTR_INPUT_SOURCE_LIST,
             *args,
@@ -228,12 +231,17 @@ class TelevisionMediaPlayer(RemoteInputSelectAccessory):
 
         self.chars_speaker = []
 
-        self._supports_play_pause = features & (SUPPORT_PLAY | SUPPORT_PAUSE)
-        if features & SUPPORT_VOLUME_MUTE or features & SUPPORT_VOLUME_STEP:
+        self._supports_play_pause = features & (
+            MediaPlayerEntityFeature.PLAY | MediaPlayerEntityFeature.PAUSE
+        )
+        if (
+            features & MediaPlayerEntityFeature.VOLUME_MUTE
+            or features & MediaPlayerEntityFeature.VOLUME_STEP
+        ):
             self.chars_speaker.extend(
                 (CHAR_NAME, CHAR_ACTIVE, CHAR_VOLUME_CONTROL_TYPE, CHAR_VOLUME_SELECTOR)
             )
-            if features & SUPPORT_VOLUME_SET:
+            if features & MediaPlayerEntityFeature.VOLUME_SET:
                 self.chars_speaker.append(CHAR_VOLUME)
 
         if CHAR_VOLUME_SELECTOR in self.chars_speaker:
@@ -297,8 +305,8 @@ class TelevisionMediaPlayer(RemoteInputSelectAccessory):
     def set_input_source(self, value):
         """Send input set value if call came from HomeKit."""
         _LOGGER.debug("%s: Set current input to %s", self.entity_id, value)
-        source = self.sources[value]
-        params = {ATTR_ENTITY_ID: self.entity_id, ATTR_INPUT_SOURCE: source}
+        source_name = self._mapped_sources[self.sources[value]]
+        params = {ATTR_ENTITY_ID: self.entity_id, ATTR_INPUT_SOURCE: source_name}
         self.async_call_service(DOMAIN, SERVICE_SELECT_SOURCE, params)
 
     def set_remote_key(self, value):

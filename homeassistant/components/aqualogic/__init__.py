@@ -1,4 +1,6 @@
 """Support for AquaLogic devices."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 import threading
@@ -13,8 +15,9 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,7 +52,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class AquaLogicProcessor(threading.Thread):
     """AquaLogic event processor thread."""
 
-    def __init__(self, hass, host, port):
+    def __init__(self, hass: HomeAssistant, host: str, port: int) -> None:
         """Initialize the data object."""
         super().__init__(daemon=True)
         self._hass = hass
@@ -58,27 +61,28 @@ class AquaLogicProcessor(threading.Thread):
         self._shutdown = False
         self._panel = None
 
-    def start_listen(self, event):
+    def start_listen(self, event: Event) -> None:
         """Start event-processing thread."""
         _LOGGER.debug("Event processing thread started")
         self.start()
 
-    def shutdown(self, event):
+    def shutdown(self, event: Event) -> None:
         """Signal shutdown of processing event."""
         _LOGGER.debug("Event processing signaled exit")
         self._shutdown = True
 
-    def data_changed(self, panel):
+    def data_changed(self, panel: AquaLogic) -> None:
         """Aqualogic data changed callback."""
-        self._hass.helpers.dispatcher.dispatcher_send(UPDATE_TOPIC)
+        dispatcher_send(self._hass, UPDATE_TOPIC)
 
-    def run(self):
+    def run(self) -> None:
         """Event thread."""
 
         while True:
-            self._panel = AquaLogic()
-            self._panel.connect(self._host, self._port)
-            self._panel.process(self.data_changed)
+            panel = AquaLogic()
+            self._panel = panel
+            panel.connect(self._host, self._port)
+            panel.process(self.data_changed)
 
             if self._shutdown:
                 return
@@ -87,6 +91,6 @@ class AquaLogicProcessor(threading.Thread):
             time.sleep(RECONNECT_INTERVAL.total_seconds())
 
     @property
-    def panel(self):
+    def panel(self) -> AquaLogic | None:
         """Retrieve the AquaLogic object."""
         return self._panel

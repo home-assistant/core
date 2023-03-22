@@ -22,6 +22,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
 import os
+from typing import Any
 
 from google_nest_sdm.camera_traits import CameraClipPreviewTrait, CameraEventImageTrait
 from google_nest_sdm.device import Device
@@ -35,14 +36,7 @@ from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 from google_nest_sdm.transcoder import Transcoder
 
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_CLASS_IMAGE,
-    MEDIA_CLASS_VIDEO,
-    MEDIA_TYPE_IMAGE,
-    MEDIA_TYPE_VIDEO,
-)
-from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_player import BrowseError, MediaClass, MediaType
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.components.media_source.models import (
     BrowseMediaSource,
@@ -50,14 +44,14 @@ from homeassistant.components.media_source.models import (
     MediaSourceItem,
     PlayMedia,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.util import dt as dt_util
 
-from .const import DATA_SUBSCRIBER, DOMAIN
-from .device_info import NestDeviceInfo
+from .const import DOMAIN
+from .device_info import NestDeviceInfo, async_nest_devices_by_device_id
 from .events import EVENT_NAME_MAP, MEDIA_SOURCE_EVENT_TITLE_MAP
 
 _LOGGER = logging.getLogger(__name__)
@@ -89,7 +83,7 @@ async def async_get_media_event_store(
         os.makedirs(media_path, exist_ok=True)
 
     await hass.async_add_executor_job(mkdir)
-    store = Store(hass, STORAGE_VERSION, STORAGE_KEY, private=True)
+    store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY, private=True)
     return NestEventMediaStore(hass, subscriber, store, media_path)
 
 
@@ -119,7 +113,7 @@ class NestEventMediaStore(EventMediaStore):
         self,
         hass: HomeAssistant,
         subscriber: GoogleNestSubscriber,
-        store: Store,
+        store: Store[dict[str, Any]],
         media_path: str,
     ) -> None:
         """Initialize NestEventMediaStore."""
@@ -127,7 +121,7 @@ class NestEventMediaStore(EventMediaStore):
         self._subscriber = subscriber
         self._store = store
         self._media_path = media_path
-        self._data: dict | None = None
+        self._data: dict[str, Any] | None = None
         self._devices: Mapping[str, str] | None = {}
 
     async def async_load(self) -> dict | None:
@@ -137,15 +131,9 @@ class NestEventMediaStore(EventMediaStore):
             if (data := await self._store.async_load()) is None:
                 _LOGGER.debug("Loaded empty event store")
                 self._data = {}
-            elif isinstance(data, dict):
+            else:
                 _LOGGER.debug("Loaded event store with %d records", len(data))
                 self._data = data
-            else:
-                raise ValueError(
-                    "Unexpected data in storage version={}, key={}".format(
-                        STORAGE_VERSION, STORAGE_KEY
-                    )
-                )
         return self._data
 
     async def async_save(self, data: dict) -> None:
@@ -267,24 +255,16 @@ async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     return NestMediaSource(hass)
 
 
-async def get_media_source_devices(hass: HomeAssistant) -> Mapping[str, Device]:
+@callback
+def async_get_media_source_devices(hass: HomeAssistant) -> Mapping[str, Device]:
     """Return a mapping of device id to eligible Nest event media devices."""
-    if DATA_SUBSCRIBER not in hass.data[DOMAIN]:
-        # Integration unloaded, or is legacy nest integration
-        return {}
-    subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
-    device_manager = await subscriber.async_get_device_manager()
-    device_registry = dr.async_get(hass)
-    devices = {}
-    for device in device_manager.devices.values():
-        if not (
-            CameraEventImageTrait.NAME in device.traits
-            or CameraClipPreviewTrait.NAME in device.traits
-        ):
-            continue
-        if device_entry := device_registry.async_get_device({(DOMAIN, device.name)}):
-            devices[device_entry.id] = device
-    return devices
+    devices = async_nest_devices_by_device_id(hass)
+    return {
+        device_id: device
+        for device_id, device in devices.items()
+        if CameraEventImageTrait.NAME in device.traits
+        or CameraClipPreviewTrait.NAME in device.traits
+    }
 
 
 @dataclass
@@ -339,7 +319,7 @@ class NestMediaSource(MediaSource):
         media_id: MediaId | None = parse_media_id(item.identifier)
         if not media_id:
             raise Unresolvable("No identifier specified for MediaSourceItem")
-        devices = await self.devices()
+        devices = async_get_media_source_devices(self.hass)
         if not (device := devices.get(media_id.device_id)):
             raise Unresolvable(
                 "Unable to find device with identifier: %s" % item.identifier
@@ -376,7 +356,7 @@ class NestMediaSource(MediaSource):
         _LOGGER.debug(
             "Browsing media for identifier=%s, media_id=%s", item.identifier, media_id
         )
-        devices = await self.devices()
+        devices = async_get_media_source_devices(self.hass)
         if media_id is None:
             # Browse the root and return child devices
             browse_root = _browse_root()
@@ -443,10 +423,6 @@ class NestMediaSource(MediaSource):
             )
         return _browse_image_event(media_id, device, single_image)
 
-    async def devices(self) -> Mapping[str, Device]:
-        """Return all event media related devices."""
-        return await get_media_source_devices(self.hass)
-
 
 async def _async_get_clip_preview_sessions(
     device: Device,
@@ -467,9 +443,9 @@ def _browse_root() -> BrowseMediaSource:
     return BrowseMediaSource(
         domain=DOMAIN,
         identifier="",
-        media_class=MEDIA_CLASS_DIRECTORY,
-        media_content_type=MEDIA_TYPE_VIDEO,
-        children_media_class=MEDIA_CLASS_VIDEO,
+        media_class=MediaClass.DIRECTORY,
+        media_content_type=MediaType.VIDEO,
+        children_media_class=MediaClass.VIDEO,
         title=MEDIA_SOURCE_TITLE,
         can_play=False,
         can_expand=True,
@@ -499,9 +475,9 @@ def _browse_device(device_id: MediaId, device: Device) -> BrowseMediaSource:
     return BrowseMediaSource(
         domain=DOMAIN,
         identifier=device_id.identifier,
-        media_class=MEDIA_CLASS_DIRECTORY,
-        media_content_type=MEDIA_TYPE_VIDEO,
-        children_media_class=MEDIA_CLASS_VIDEO,
+        media_class=MediaClass.DIRECTORY,
+        media_content_type=MediaType.VIDEO,
+        children_media_class=MediaClass.VIDEO,
         title=DEVICE_TITLE_FORMAT.format(device_name=device_info.device_name),
         can_play=False,
         can_expand=True,
@@ -520,8 +496,8 @@ def _browse_clip_preview(
     return BrowseMediaSource(
         domain=DOMAIN,
         identifier=event_id.identifier,
-        media_class=MEDIA_CLASS_IMAGE,
-        media_content_type=MEDIA_TYPE_IMAGE,
+        media_class=MediaClass.IMAGE,
+        media_content_type=MediaType.IMAGE,
         title=CLIP_TITLE_FORMAT.format(
             event_name=", ".join(types),
             event_time=dt_util.as_local(event.timestamp).strftime(DATE_STR_FORMAT),
@@ -542,8 +518,8 @@ def _browse_image_event(
     return BrowseMediaSource(
         domain=DOMAIN,
         identifier=event_id.identifier,
-        media_class=MEDIA_CLASS_IMAGE,
-        media_content_type=MEDIA_TYPE_IMAGE,
+        media_class=MediaClass.IMAGE,
+        media_content_type=MediaType.IMAGE,
         title=CLIP_TITLE_FORMAT.format(
             event_name=MEDIA_SOURCE_EVENT_TITLE_MAP.get(event.event_type, "Event"),
             event_time=dt_util.as_local(event.timestamp).strftime(DATE_STR_FORMAT),

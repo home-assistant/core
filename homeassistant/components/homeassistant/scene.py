@@ -1,8 +1,9 @@
 """Allow users to set and activate scenes."""
 from __future__ import annotations
 
+from collections.abc import Mapping, ValuesView
 import logging
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, cast
 
 import voluptuous as vol
 
@@ -34,15 +35,16 @@ from homeassistant.helpers import (
     config_validation as cv,
     entity_platform,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback, EntityPlatform
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.state import async_reproduce_state
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.loader import async_get_integration
 
 
-def _convert_states(states):
+def _convert_states(states: dict[str, Any]) -> dict[str, State]:
     """Convert state definitions to State objects."""
-    result = {}
+    result: dict[str, State] = {}
 
     for entity_id, info in states.items():
         entity_id = cv.entity_id(entity_id)
@@ -67,7 +69,7 @@ def _convert_states(states):
     return result
 
 
-def _ensure_no_intersection(value):
+def _ensure_no_intersection(value: dict[str, Any]) -> dict[str, Any]:
     """Validate that entities and snapshot_entities do not overlap."""
     if (
         CONF_SNAPSHOT not in value
@@ -100,6 +102,7 @@ PLATFORM_SCHEMA = vol.Schema(
                         vol.Required(CONF_NAME): cv.string,
                         vol.Optional(CONF_ICON): cv.icon,
                         vol.Required(CONF_ENTITIES): STATES_SCHEMA,
+                        vol.Optional("metadata"): dict,
                     }
                 )
             ],
@@ -141,11 +144,12 @@ def scenes_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
     if DATA_PLATFORM not in hass.data:
         return []
 
-    platform = hass.data[DATA_PLATFORM]
+    platform: EntityPlatform = hass.data[DATA_PLATFORM]
 
+    scene_entities = cast(ValuesView[HomeAssistantScene], platform.entities.values())
     return [
         scene_entity.entity_id
-        for scene_entity in platform.entities.values()
+        for scene_entity in scene_entities
         if entity_id in scene_entity.scene_config.states
     ]
 
@@ -156,12 +160,12 @@ def entities_in_scene(hass: HomeAssistant, entity_id: str) -> list[str]:
     if DATA_PLATFORM not in hass.data:
         return []
 
-    platform = hass.data[DATA_PLATFORM]
+    platform: EntityPlatform = hass.data[DATA_PLATFORM]
 
     if (entity := platform.entities.get(entity_id)) is None:
         return []
 
-    return list(entity.scene_config.states)
+    return list(cast(HomeAssistantScene, entity).scene_config.states)
 
 
 async def async_setup_platform(
@@ -206,9 +210,7 @@ async def async_setup_platform(
 
         hass.bus.async_fire(EVENT_SCENE_RELOADED, context=call.context)
 
-    hass.helpers.service.async_register_admin_service(
-        SCENE_DOMAIN, SERVICE_RELOAD, reload_config
-    )
+    async_register_admin_service(hass, SCENE_DOMAIN, SERVICE_RELOAD, reload_config)
 
     async def apply_service(call: ServiceCall) -> None:
         """Apply a scene."""
@@ -270,9 +272,12 @@ async def async_setup_platform(
     )
 
 
-def _process_scenes_config(hass, async_add_entities, config):
+def _process_scenes_config(
+    hass: HomeAssistant, async_add_entities: AddEntitiesCallback, config: dict[str, Any]
+) -> None:
     """Process multiple scenes and add them."""
     # Check empty list
+    scene_config: list[dict[str, Any]]
     if not (scene_config := config[STATES]):
         return
 
@@ -293,31 +298,33 @@ def _process_scenes_config(hass, async_add_entities, config):
 class HomeAssistantScene(Scene):
     """A scene is a group of entities and the states we want them to be."""
 
-    def __init__(self, hass, scene_config, from_service=False):
+    def __init__(
+        self, hass: HomeAssistant, scene_config: SceneConfig, from_service: bool = False
+    ) -> None:
         """Initialize the scene."""
         self.hass = hass
         self.scene_config = scene_config
         self.from_service = from_service
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the scene."""
         return self.scene_config.name
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Return the icon of the scene."""
         return self.scene_config.icon
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str | None:
         """Return unique ID."""
         return self.scene_config.id
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the scene state attributes."""
-        attributes = {ATTR_ENTITY_ID: list(self.scene_config.states)}
+        attributes: dict[str, Any] = {ATTR_ENTITY_ID: list(self.scene_config.states)}
         if (unique_id := self.unique_id) is not None:
             attributes[CONF_ID] = unique_id
         return attributes

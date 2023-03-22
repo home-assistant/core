@@ -1,11 +1,11 @@
 {
   "domain": "sonarr",
   "name": "Sonarr",
-  "documentation": "https://www.home-assistant.io/integrations/sonarr",
   "codeowners": ["@ctalkington"],
-  "requirements": ["aiopyarr==22.2.2"],
   "config_flow": true,
-  "quality_scale": "silver",
+  "documentation": "https://www.home-assistant.io/integrations/sonarr",
   "iot_class": "local_polling",
-  "loggers": ["aiopyarr"]
+  "loggers": ["aiopyarr"],
+  "quality_scale": "silver",
+  "requirements": ["aiopyarr==22.11.0"]
 }

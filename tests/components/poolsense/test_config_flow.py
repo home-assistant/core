@@ -5,19 +5,20 @@ from homeassistant import data_entry_flow
 from homeassistant.components.poolsense.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.core import HomeAssistant
 
 
-async def test_show_form(hass):
+async def test_show_form(hass: HomeAssistant) -> None:
     """Test that the form is served with no input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
 
-async def test_invalid_credentials(hass):
+async def test_invalid_credentials(hass: HomeAssistant) -> None:
     """Test we handle invalid credentials."""
     with patch(
         "poolsense.PoolSense.test_poolsense_credentials",
@@ -33,7 +34,7 @@ async def test_invalid_credentials(hass):
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_valid_credentials(hass):
+async def test_valid_credentials(hass: HomeAssistant) -> None:
     """Test we handle invalid credentials."""
     with patch(
         "poolsense.PoolSense.test_poolsense_credentials", return_value=True
@@ -47,7 +48,7 @@ async def test_valid_credentials(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-email"
 
     assert len(mock_setup_entry.mock_calls) == 1

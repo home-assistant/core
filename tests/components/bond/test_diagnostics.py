@@ -1,13 +1,16 @@
 """Test bond diagnostics."""
-
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
+from homeassistant.core import HomeAssistant
 
 from .common import ceiling_fan_with_breeze, setup_platform
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
-async def test_diagnostics(hass, hass_client):
+async def test_diagnostics(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test generating diagnostics for a config entry."""
 
     entry = await setup_platform(
@@ -39,5 +42,5 @@ async def test_diagnostics(hass, hass_client):
             "data": {"access_token": "**REDACTED**", "host": "some host"},
             "title": "Mock Title",
         },
-        "hub": {"version": {"bondid": "test-bond-id"}},
+        "hub": {"version": {"bondid": "ZXXX12345"}},
     }

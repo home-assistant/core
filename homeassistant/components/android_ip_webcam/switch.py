@@ -1,88 +1,171 @@
 """Support for Android IP Webcam settings."""
 from __future__ import annotations
 
-from homeassistant.components.switch import SwitchEntity
+from collections.abc import Callable, Coroutine
+from dataclasses import dataclass
+from typing import Any
+
+from pydroid_ipcam import PyDroidIPCam
+
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_SWITCHES,
-    DATA_IP_WEBCAM,
-    ICON_MAP,
-    KEY_MAP,
-    AndroidIPCamEntity,
+from .const import DOMAIN
+from .coordinator import AndroidIPCamDataUpdateCoordinator
+from .entity import AndroidIPCamBaseEntity
+
+
+@dataclass
+class AndroidIPWebcamSwitchEntityDescriptionMixin:
+    """Mixin for required keys."""
+
+    on_func: Callable[[PyDroidIPCam], Coroutine[Any, Any, bool]]
+    off_func: Callable[[PyDroidIPCam], Coroutine[Any, Any, bool]]
+
+
+@dataclass
+class AndroidIPWebcamSwitchEntityDescription(
+    SwitchEntityDescription, AndroidIPWebcamSwitchEntityDescriptionMixin
+):
+    """Entity description class for Android IP Webcam switches."""
+
+
+SWITCH_TYPES: tuple[AndroidIPWebcamSwitchEntityDescription, ...] = (
+    AndroidIPWebcamSwitchEntityDescription(
+        key="exposure_lock",
+        name="Exposure lock",
+        icon="mdi:camera",
+        entity_category=EntityCategory.CONFIG,
+        on_func=lambda ipcam: ipcam.change_setting("exposure_lock", True),
+        off_func=lambda ipcam: ipcam.change_setting("exposure_lock", False),
+    ),
+    AndroidIPWebcamSwitchEntityDescription(
+        key="ffc",
+        name="Front-facing camera",
+        icon="mdi:camera-front-variant",
+        entity_category=EntityCategory.CONFIG,
+        on_func=lambda ipcam: ipcam.change_setting("ffc", True),
+        off_func=lambda ipcam: ipcam.change_setting("ffc", False),
+    ),
+    AndroidIPWebcamSwitchEntityDescription(
+        key="focus",
+        name="Focus",
+        icon="mdi:image-filter-center-focus",
+        entity_category=EntityCategory.CONFIG,
+        on_func=lambda ipcam: ipcam.focus(activate=True),
+        off_func=lambda ipcam: ipcam.focus(activate=False),
+    ),
+    AndroidIPWebcamSwitchEntityDescription(
+        key="gps_active",
+        name="GPS active",
+        icon="mdi:crosshairs-gps",
+        entity_category=EntityCategory.CONFIG,
+        on_func=lambda ipcam: ipcam.change_setting("gps_active", True),
+        off_func=lambda ipcam: ipcam.change_setting("gps_active", False),
+    ),
+    AndroidIPWebcamSwitchEntityDescription(
+        key="motion_detect",
+        name="Motion detection",
+        icon="mdi:flash",
+        entity_category=EntityCategory.CONFIG,
+        on_func=lambda ipcam: ipcam.change_setting("motion_detect", True),
+        off_func=lambda ipcam: ipcam.change_setting("motion_detect", False),
+    ),
+    AndroidIPWebcamSwitchEntityDescription(
+        key="night_vision",
+        name="Night vision",
+        icon="mdi:weather-night",
+        entity_category=EntityCategory.CONFIG,
+        on_func=lambda ipcam: ipcam.change_setting("night_vision", True),
+        off_func=lambda ipcam: ipcam.change_setting("night_vision", False),
+    ),
+    AndroidIPWebcamSwitchEntityDescription(
+        key="overlay",
+        name="Overlay",
+        icon="mdi:monitor",
+        entity_category=EntityCategory.CONFIG,
+        on_func=lambda ipcam: ipcam.change_setting("overlay", True),
+        off_func=lambda ipcam: ipcam.change_setting("overlay", False),
+    ),
+    AndroidIPWebcamSwitchEntityDescription(
+        key="torch",
+        name="Torch",
+        icon="mdi:white-balance-sunny",
+        entity_category=EntityCategory.CONFIG,
+        on_func=lambda ipcam: ipcam.torch(activate=True),
+        off_func=lambda ipcam: ipcam.torch(activate=False),
+    ),
+    AndroidIPWebcamSwitchEntityDescription(
+        key="whitebalance_lock",
+        name="White balance lock",
+        icon="mdi:white-balance-auto",
+        entity_category=EntityCategory.CONFIG,
+        on_func=lambda ipcam: ipcam.change_setting("whitebalance_lock", True),
+        off_func=lambda ipcam: ipcam.change_setting("whitebalance_lock", False),
+    ),
+    AndroidIPWebcamSwitchEntityDescription(
+        key="video_recording",
+        name="Video recording",
+        icon="mdi:record-rec",
+        entity_category=EntityCategory.CONFIG,
+        on_func=lambda ipcam: ipcam.record(record=True),
+        off_func=lambda ipcam: ipcam.record(record=False),
+    ),
 )
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the IP Webcam switch platform."""
-    if discovery_info is None:
-        return
+    """Set up the IP Webcam switches from config entry."""
 
-    host = discovery_info[CONF_HOST]
-    name = discovery_info[CONF_NAME]
-    switches = discovery_info[CONF_SWITCHES]
-    ipcam = hass.data[DATA_IP_WEBCAM][host]
+    coordinator: AndroidIPCamDataUpdateCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ]
+    switch_types = [
+        switch
+        for switch in SWITCH_TYPES
+        if switch.key in coordinator.cam.enabled_settings
+    ]
+    async_add_entities(
+        [
+            IPWebcamSettingSwitch(coordinator, description)
+            for description in switch_types
+        ]
+    )
 
-    all_switches = []
 
-    for setting in switches:
-        all_switches.append(IPWebcamSettingsSwitch(name, host, ipcam, setting))
+class IPWebcamSettingSwitch(AndroidIPCamBaseEntity, SwitchEntity):
+    """Representation of a IP Webcam setting."""
 
-    async_add_entities(all_switches, True)
+    entity_description: AndroidIPWebcamSwitchEntityDescription
 
-
-class IPWebcamSettingsSwitch(AndroidIPCamEntity, SwitchEntity):
-    """An abstract class for an IP Webcam setting."""
-
-    def __init__(self, name, host, ipcam, setting):
-        """Initialize the settings switch."""
-        super().__init__(host, ipcam)
-
-        self._setting = setting
-        self._mapped_name = KEY_MAP.get(self._setting, self._setting)
-        self._attr_name = f"{name} {self._mapped_name}"
-        self._attr_is_on = False
-
-    async def async_update(self):
-        """Get the updated status of the switch."""
-        self._attr_is_on = bool(self._ipcam.current_settings.get(self._setting))
-
-    async def async_turn_on(self, **kwargs):
-        """Turn device on."""
-        if self._setting == "torch":
-            await self._ipcam.torch(activate=True)
-        elif self._setting == "focus":
-            await self._ipcam.focus(activate=True)
-        elif self._setting == "video_recording":
-            await self._ipcam.record(record=True)
-        else:
-            await self._ipcam.change_setting(self._setting, True)
-        self._attr_is_on = True
-        self.async_write_ha_state()
-
-    async def async_turn_off(self, **kwargs):
-        """Turn device off."""
-        if self._setting == "torch":
-            await self._ipcam.torch(activate=False)
-        elif self._setting == "focus":
-            await self._ipcam.focus(activate=False)
-        elif self._setting == "video_recording":
-            await self._ipcam.record(record=False)
-        else:
-            await self._ipcam.change_setting(self._setting, False)
-        self._attr_is_on = False
-        self.async_write_ha_state()
+    def __init__(
+        self,
+        coordinator: AndroidIPCamDataUpdateCoordinator,
+        description: AndroidIPWebcamSwitchEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        self.entity_description = description
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}-{description.key}"
 
     @property
-    def icon(self):
-        """Return the icon for the switch."""
-        return ICON_MAP.get(self._setting, "mdi:flash")
+    def is_on(self) -> bool:
+        """Return if settings is on or off."""
+        return bool(self.cam.current_settings.get(self.entity_description.key))
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn device on."""
+        await self.entity_description.on_func(self.cam)
+        await self.coordinator.async_request_refresh()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn device off."""
+        await self.entity_description.off_func(self.cam)
+        await self.coordinator.async_request_refresh()

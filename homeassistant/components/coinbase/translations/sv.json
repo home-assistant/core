@@ -1,8 +1,0 @@
-{
-    "options": {
-        "error": {
-            "currency_unavailable": "En eller flera av de beg\u00e4rda valutasaldona tillhandah\u00e5lls inte av ditt Coinbase API.",
-            "exchange_rate_unavailable": "En eller flera av de beg\u00e4rda v\u00e4xelkurserna tillhandah\u00e5lls inte av Coinbase."
-        }
-    }
-}

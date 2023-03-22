@@ -6,11 +6,11 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.select import SelectEntity
-from homeassistant.components.select.const import (
+from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
+    SelectEntity,
 )
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_STATE, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
@@ -94,6 +94,8 @@ async def async_setup_platform(
 class TemplateSelect(TemplateEntity, SelectEntity):
     """Representation of a template select."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -133,8 +135,10 @@ class TemplateSelect(TemplateEntity, SelectEntity):
         if self._optimistic:
             self._attr_current_option = option
             self.async_write_ha_state()
-        await self._command_select_option.async_run(
-            {ATTR_OPTION: option}, context=self._context
+        await self.async_run_script(
+            self._command_select_option,
+            run_variables={ATTR_OPTION: option},
+            context=self._context,
         )
 
 

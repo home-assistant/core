@@ -1,4 +1,4 @@
-"""Test zha alarm control panel."""
+"""Test ZHA alarm control panel."""
 from unittest.mock import AsyncMock, call, patch, sentinel
 
 import pytest
@@ -17,9 +17,25 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     Platform,
 )
+from homeassistant.core import HomeAssistant
 
 from .common import async_enable_traffic, find_entity_id
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
+
+
+@pytest.fixture(autouse=True)
+def alarm_control_panel_platform_only():
+    """Only set up the alarm_control_panel and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.ALARM_CONTROL_PANEL,
+            Platform.DEVICE_TRACKER,
+            Platform.NUMBER,
+            Platform.SELECT,
+        ),
+    ):
+        yield
 
 
 @pytest.fixture
@@ -42,8 +58,10 @@ def zigpy_device(zigpy_device_mock):
     "zigpy.zcl.clusters.security.IasAce.client_command",
     new=AsyncMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
 )
-async def test_alarm_control_panel(hass, zha_device_joined_restored, zigpy_device):
-    """Test zha alarm control panel platform."""
+async def test_alarm_control_panel(
+    hass: HomeAssistant, zha_device_joined_restored, zigpy_device
+) -> None:
+    """Test ZHA alarm control panel platform."""
 
     zha_device = await zha_device_joined_restored(zigpy_device)
     cluster = zigpy_device.endpoints.get(1).ias_ace

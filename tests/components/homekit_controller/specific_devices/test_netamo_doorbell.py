@@ -1,10 +1,10 @@
-"""
-Regression tests for Netamo Doorbell.
+"""Regression tests for Netamo Doorbell.
 
 https://github.com/home-assistant/core/issues/44596
 """
+from homeassistant.core import HomeAssistant
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     DeviceTriggerInfo,
@@ -15,7 +15,7 @@ from tests.components.homekit_controller.common import (
 )
 
 
-async def test_netamo_doorbell_setup(hass):
+async def test_netamo_doorbell_setup(hass: HomeAssistant) -> None:
     """Test that a Netamo Doorbell can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "netamo_doorbell.json")
     await setup_test_accessories(hass, accessories)
@@ -35,7 +35,7 @@ async def test_netamo_doorbell_setup(hass):
                 EntityTestInfo(
                     entity_id="camera.netatmo_doorbell_g738658",
                     friendly_name="Netatmo-Doorbell-g738658",
-                    unique_id="homekit-g738658-aid:1",
+                    unique_id="00:00:00:00:00:00_1",
                     state="idle",
                 ),
             ],

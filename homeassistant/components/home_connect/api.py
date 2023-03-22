@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_DEVICE,
     CONF_ENTITIES,
     PERCENTAGE,
-    TIME_SECONDS,
+    UnitOfTime,
 )
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -167,7 +167,7 @@ class DeviceWithPrograms(HomeConnectDevice):
         """
         sensors = {
             "Remaining Program Time": (None, None, SensorDeviceClass.TIMESTAMP, 1),
-            "Duration": (TIME_SECONDS, "mdi:update", None, 1),
+            "Duration": (UnitOfTime.SECONDS, "mdi:update", None, 1),
             "Program Progress": (PERCENTAGE, "mdi:progress-clock", None, 1),
         }
         return [
@@ -312,7 +312,6 @@ class Dishwasher(
     """Dishwasher class."""
 
     PROGRAMS = [
-        {"name": "Dishcare.Dishwasher.Program.PreRinse"},
         {"name": "Dishcare.Dishwasher.Program.Auto1"},
         {"name": "Dishcare.Dishwasher.Program.Auto2"},
         {"name": "Dishcare.Dishwasher.Program.Auto3"},

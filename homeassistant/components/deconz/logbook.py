@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from homeassistant.const import ATTR_DEVICE_ID, CONF_EVENT
+from homeassistant.components.logbook import LOGBOOK_ENTRY_MESSAGE, LOGBOOK_ENTRY_NAME
+from homeassistant.const import ATTR_DEVICE_ID, CONF_EVENT, CONF_ID
 from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.device_registry as dr
 
@@ -16,6 +17,10 @@ from .device_trigger import (
     CONF_BUTTON_2,
     CONF_BUTTON_3,
     CONF_BUTTON_4,
+    CONF_BUTTON_5,
+    CONF_BUTTON_6,
+    CONF_BUTTON_7,
+    CONF_BUTTON_8,
     CONF_CLOSE,
     CONF_DIM_DOWN,
     CONF_DIM_UP,
@@ -94,6 +99,10 @@ INTERFACES = {
     CONF_BUTTON_2: "Button 2",
     CONF_BUTTON_3: "Button 3",
     CONF_BUTTON_4: "Button 4",
+    CONF_BUTTON_5: "Button 5",
+    CONF_BUTTON_6: "Button 6",
+    CONF_BUTTON_7: "Button 7",
+    CONF_BUTTON_8: "Button 8",
     CONF_SIDE_1: "Side 1",
     CONF_SIDE_2: "Side 2",
     CONF_SIDE_3: "Side 3",
@@ -129,27 +138,34 @@ def async_describe_events(
     @callback
     def async_describe_deconz_alarm_event(event: Event) -> dict[str, str]:
         """Describe deCONZ logbook alarm event."""
-        device = device_registry.devices[event.data[ATTR_DEVICE_ID]]
-        deconz_alarm_event = _get_deconz_event_from_device(hass, device)
+        if device := device_registry.devices.get(event.data[ATTR_DEVICE_ID]):
+            deconz_alarm_event = _get_deconz_event_from_device(hass, device)
+            name = deconz_alarm_event.device.name
+        else:
+            name = event.data[CONF_ID]
 
         data = event.data[CONF_EVENT]
 
         return {
-            "name": f"{deconz_alarm_event.device.name}",
-            "message": f"fired event '{data}'.",
+            LOGBOOK_ENTRY_NAME: name,
+            LOGBOOK_ENTRY_MESSAGE: f"fired event '{data}'",
         }
 
     @callback
     def async_describe_deconz_event(event: Event) -> dict[str, str]:
         """Describe deCONZ logbook event."""
-        device = device_registry.devices[event.data[ATTR_DEVICE_ID]]
-        deconz_event = _get_deconz_event_from_device(hass, device)
+        if device := device_registry.devices.get(event.data[ATTR_DEVICE_ID]):
+            deconz_event = _get_deconz_event_from_device(hass, device)
+            name = deconz_event.device.name
+        else:
+            deconz_event = None
+            name = event.data[CONF_ID]
 
         action = None
         interface = None
         data = event.data.get(CONF_EVENT) or event.data.get(CONF_GESTURE, "")
 
-        if data and deconz_event.device.model_id in REMOTES:
+        if data and deconz_event and deconz_event.device.model_id in REMOTES:
             action, interface = _get_device_event_description(
                 deconz_event.device.model_id, data
             )
@@ -157,27 +173,29 @@ def async_describe_events(
         # Unknown event
         if not data:
             return {
-                "name": f"{deconz_event.device.name}",
-                "message": "fired an unknown event.",
+                LOGBOOK_ENTRY_NAME: name,
+                LOGBOOK_ENTRY_MESSAGE: "fired an unknown event",
             }
 
         # No device event match
         if not action:
             return {
-                "name": f"{deconz_event.device.name}",
-                "message": f"fired event '{data}'.",
+                LOGBOOK_ENTRY_NAME: name,
+                LOGBOOK_ENTRY_MESSAGE: f"fired event '{data}'",
             }
 
         # Gesture event
         if not interface:
             return {
-                "name": f"{deconz_event.device.name}",
-                "message": f"fired event '{ACTIONS[action]}'.",
+                LOGBOOK_ENTRY_NAME: name,
+                LOGBOOK_ENTRY_MESSAGE: f"fired event '{ACTIONS[action]}'",
             }
 
         return {
-            "name": f"{deconz_event.device.name}",
-            "message": f"'{ACTIONS[action]}' event for '{INTERFACES[interface]}' was fired.",
+            LOGBOOK_ENTRY_NAME: name,
+            LOGBOOK_ENTRY_MESSAGE: (
+                f"'{ACTIONS[action]}' event for '{INTERFACES[interface]}' was fired"
+            ),
         }
 
     async_describe_event(

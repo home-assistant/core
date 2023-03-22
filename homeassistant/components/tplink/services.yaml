@@ -43,6 +43,16 @@ sequence_effect:
           step: 1
           max: 5000
           unit_of_measurement: "ms"
+    repeat_times:
+      description: Repetitions (0 for continuous)
+      example: 0
+      default: 0
+      required: false
+      selector:
+        number:
+          min: 0
+          step: 1
+          max: 10
     transition:
       description: Transition
       example: 2000
@@ -93,7 +103,7 @@ random_effect:
         - [199, 89, 50]
         - [160, 50, 50]
         - [180, 100, 50]
-      required: true
+      required: false
       selector:
         object:
     segments:
@@ -180,4 +190,4 @@ random_effect:
         number:
           min: 1
           step: 1
-          max: 100
+          max: 600

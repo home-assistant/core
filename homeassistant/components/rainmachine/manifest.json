@@ -1,19 +1,20 @@
 {
   "domain": "rainmachine",
   "name": "RainMachine",
+  "codeowners": ["@bachya"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/rainmachine",
-  "requirements": ["regenmaschine==2022.01.0"],
-  "codeowners": ["@bachya"],
-  "iot_class": "local_polling",
   "homekit": {
     "models": ["Touch HD", "SPK5"]
   },
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["regenmaschine"],
+  "requirements": ["regenmaschine==2022.11.0"],
   "zeroconf": [
     {
       "type": "_http._tcp.local.",
       "name": "rainmachine*"
     }
-  ],
-  "loggers": ["regenmaschine"]
+  ]
 }

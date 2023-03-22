@@ -15,12 +15,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class EzvizDataUpdateCoordinator(DataUpdateCoordinator):
-    """Class to manage fetching Ezviz data."""
+    """Class to manage fetching EZVIZ data."""
 
     def __init__(
         self, hass: HomeAssistant, *, api: EzvizClient, api_timeout: int
     ) -> None:
-        """Initialize global Ezviz data updater."""
+        """Initialize global EZVIZ data updater."""
         self.ezviz_client = api
         self._api_timeout = api_timeout
         update_interval = timedelta(seconds=30)
@@ -28,11 +28,11 @@ class EzvizDataUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
 
     def _update_data(self) -> dict:
-        """Fetch data from Ezviz via camera load function."""
+        """Fetch data from EZVIZ via camera load function."""
         return self.ezviz_client.load_cameras()
 
     async def _async_update_data(self) -> dict:
-        """Fetch data from Ezviz."""
+        """Fetch data from EZVIZ."""
         try:
             async with timeout(self._api_timeout):
                 return await self.hass.async_add_executor_job(self._update_data)

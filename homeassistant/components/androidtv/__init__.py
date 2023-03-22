@@ -1,9 +1,24 @@
 """Support for functionality to interact with Android TV/Fire TV devices."""
+from __future__ import annotations
+
+from collections.abc import Mapping
 import os
+from typing import Any
 
 from adb_shell.auth.keygen import keygen
-from androidtv.adb_manager.adb_manager_sync import ADBPythonSync
-from androidtv.setup_async import setup as async_androidtv_setup
+from adb_shell.exceptions import (
+    AdbTimeoutError,
+    InvalidChecksumError,
+    InvalidCommandError,
+    InvalidResponseError,
+    TcpTimeoutException,
+)
+from androidtv.adb_manager.adb_manager_sync import ADBPythonSync, PythonRSASigner
+from androidtv.setup_async import (
+    AndroidTVAsync,
+    FireTVAsync,
+    setup as async_androidtv_setup,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -35,13 +50,25 @@ from .const import (
     SIGNAL_CONFIG_ENTITY,
 )
 
+ADB_PYTHON_EXCEPTIONS: tuple = (
+    AdbTimeoutError,
+    BrokenPipeError,
+    ConnectionResetError,
+    ValueError,
+    InvalidChecksumError,
+    InvalidCommandError,
+    InvalidResponseError,
+    TcpTimeoutException,
+)
+ADB_TCP_EXCEPTIONS: tuple = (ConnectionResetError, RuntimeError)
+
 PLATFORMS = [Platform.MEDIA_PLAYER]
 RELOAD_OPTIONS = [CONF_STATE_DETECTION_RULES]
 
 _INVALID_MACS = {"ff:ff:ff:ff:ff:ff"}
 
 
-def get_androidtv_mac(dev_props):
+def get_androidtv_mac(dev_props: dict[str, Any]) -> str | None:
     """Return formatted mac from device properties."""
     for prop_mac in (PROP_ETHMAC, PROP_WIFIMAC):
         if if_mac := dev_props.get(prop_mac):
@@ -51,9 +78,13 @@ def get_androidtv_mac(dev_props):
     return None
 
 
-def _setup_androidtv(hass, config):
+def _setup_androidtv(
+    hass: HomeAssistant, config: Mapping[str, Any]
+) -> tuple[str, PythonRSASigner | None, str]:
     """Generate an ADB key (if needed) and load it."""
-    adbkey = config.get(CONF_ADBKEY, hass.config.path(STORAGE_DIR, "androidtv_adbkey"))
+    adbkey: str = config.get(
+        CONF_ADBKEY, hass.config.path(STORAGE_DIR, "androidtv_adbkey")
+    )
     if CONF_ADB_SERVER_IP not in config:
         # Use "adb_shell" (Python ADB implementation)
         if not os.path.isfile(adbkey):
@@ -67,14 +98,21 @@ def _setup_androidtv(hass, config):
     else:
         # Use "pure-python-adb" (communicate with ADB server)
         signer = None
-        adb_log = f"using ADB server at {config[CONF_ADB_SERVER_IP]}:{config[CONF_ADB_SERVER_PORT]}"
+        adb_log = (
+            "using ADB server at"
+            f" {config[CONF_ADB_SERVER_IP]}:{config[CONF_ADB_SERVER_PORT]}"
+        )
 
     return adbkey, signer, adb_log
 
 
 async def async_connect_androidtv(
-    hass, config, *, state_detection_rules=None, timeout=30.0
-):
+    hass: HomeAssistant,
+    config: Mapping[str, Any],
+    *,
+    state_detection_rules: dict[str, Any] | None = None,
+    timeout: float = 30.0,
+) -> tuple[AndroidTVAsync | FireTVAsync | None, str | None]:
     """Connect to Android device."""
     address = f"{config[CONF_HOST]}:{config[CONF_PORT]}"
 
@@ -113,9 +151,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Android TV platform."""
 
     state_det_rules = entry.options.get(CONF_STATE_DETECTION_RULES)
-    aftv, error_message = await async_connect_androidtv(
-        hass, entry.data, state_detection_rules=state_det_rules
-    )
+    if CONF_ADB_SERVER_IP not in entry.data:
+        exceptions = ADB_PYTHON_EXCEPTIONS
+    else:
+        exceptions = ADB_TCP_EXCEPTIONS
+
+    try:
+        aftv, error_message = await async_connect_androidtv(
+            hass, entry.data, state_detection_rules=state_det_rules
+        )
+    except exceptions as exc:
+        raise ConfigEntryNotReady(exc) from exc
+
     if not aftv:
         raise ConfigEntryNotReady(error_message)
 
@@ -133,7 +180,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ANDROID_DEV_OPT: entry.options.copy(),
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

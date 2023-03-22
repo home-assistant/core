@@ -12,8 +12,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TailscaleEntity
@@ -44,7 +44,7 @@ BINARY_SENSORS: tuple[TailscaleBinarySensorEntityDescription, ...] = (
     ),
     TailscaleBinarySensorEntityDescription(
         key="client_supports_hair_pinning",
-        name="Supports Hairpinning",
+        name="Supports hairpinning",
         icon="mdi:wan",
         entity_category=EntityCategory.DIAGNOSTIC,
         is_on_fn=lambda device: device.client_connectivity.client_supports.hair_pinning,

@@ -1,48 +1,63 @@
 """clicksend_tts platform for notify component."""
+from __future__ import annotations
+
 from http import HTTPStatus
 import json
 import logging
 
-from aiohttp.hdrs import CONTENT_TYPE
 import requests
 import voluptuous as vol
 
 from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_NAME,
     CONF_RECIPIENT,
     CONF_USERNAME,
     CONTENT_TYPE_JSON,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
 BASE_API_URL = "https://rest.clicksend.com/v3"
 
-HEADERS = {CONTENT_TYPE: CONTENT_TYPE_JSON}
+HEADERS = {"Content-Type": CONTENT_TYPE_JSON}
 
 CONF_LANGUAGE = "language"
 CONF_VOICE = "voice"
-CONF_CALLER = "caller"
 
+MALE_VOICE = "male"
+FEMALE_VOICE = "female"
+
+DEFAULT_NAME = "clicksend_tts"
 DEFAULT_LANGUAGE = "en-us"
-DEFAULT_VOICE = "female"
+DEFAULT_VOICE = FEMALE_VOICE
 TIMEOUT = 5
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_RECIPIENT): cv.string,
+        vol.Required(CONF_RECIPIENT): vol.All(
+            cv.string, vol.Match(r"^\+?[1-9]\d{1,14}$")
+        ),
         vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): cv.string,
-        vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): cv.string,
-        vol.Optional(CONF_CALLER): cv.string,
+        vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): vol.In(
+            [MALE_VOICE, FEMALE_VOICE]
+        ),
     }
 )
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> ClicksendNotificationService | None:
     """Get the ClickSend notification service."""
     if not _authenticate(config):
         _LOGGER.error("You are not authorized to access ClickSend")
@@ -61,9 +76,6 @@ class ClicksendNotificationService(BaseNotificationService):
         self.recipient = config[CONF_RECIPIENT]
         self.language = config[CONF_LANGUAGE]
         self.voice = config[CONF_VOICE]
-        self.caller = config.get(CONF_CALLER)
-        if self.caller is None:
-            self.caller = self.recipient
 
     def send_message(self, message="", **kwargs):
         """Send a voice call to a user."""
@@ -71,7 +83,6 @@ class ClicksendNotificationService(BaseNotificationService):
             "messages": [
                 {
                     "source": "hass.notify",
-                    "from": self.caller,
                     "to": self.recipient,
                     "body": message,
                     "lang": self.language,

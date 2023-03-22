@@ -9,7 +9,7 @@ import pytest
 import homeassistant.components.google_pubsub as google_pubsub
 from homeassistant.components.google_pubsub import DateTimeJSONEncoder as victim
 from homeassistant.const import EVENT_STATE_CHANGED
-from homeassistant.core import split_entity_id
+from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.setup import async_setup_component
 
 GOOGLE_PUBSUB_PATH = "homeassistant.components.google_pubsub"
@@ -23,18 +23,18 @@ class FilterTest:
     should_pass: bool
 
 
-async def test_datetime():
+async def test_datetime() -> None:
     """Test datetime encoding."""
     time = datetime(2019, 1, 13, 12, 30, 5)
     assert victim().encode(time) == '"2019-01-13T12:30:05"'
 
 
-async def test_no_datetime():
+async def test_no_datetime() -> None:
     """Test integer encoding."""
     assert victim().encode(42) == "42"
 
 
-async def test_nested():
+async def test_nested() -> None:
     """Test dictionary encoding."""
     assert victim().encode({"foo": "bar"}) == '{"foo": "bar"}'
 
@@ -68,7 +68,7 @@ def mock_bus_and_json(hass, monkeypatch):
     )
 
 
-async def test_minimal_config(hass, mock_client):
+async def test_minimal_config(hass: HomeAssistant, mock_client) -> None:
     """Test the minimal config and defaults of component."""
     config = {
         google_pubsub.DOMAIN: {
@@ -88,7 +88,7 @@ async def test_minimal_config(hass, mock_client):
     )
 
 
-async def test_full_config(hass, mock_client):
+async def test_full_config(hass: HomeAssistant, mock_client) -> None:
     """Test the full config of the component."""
     config = {
         google_pubsub.DOMAIN: {
@@ -143,7 +143,7 @@ async def _setup(hass, filter_config):
     return hass.bus.listen.call_args_list[0][0][1]
 
 
-async def test_allowlist(hass, mock_client):
+async def test_allowlist(hass: HomeAssistant, mock_client) -> None:
     """Test an allowlist only config."""
     handler_method = await _setup(
         hass,
@@ -173,7 +173,7 @@ async def test_allowlist(hass, mock_client):
         publish_client.publish.reset_mock()
 
 
-async def test_denylist(hass, mock_client):
+async def test_denylist(hass: HomeAssistant, mock_client) -> None:
     """Test a denylist only config."""
     handler_method = await _setup(
         hass,
@@ -203,7 +203,7 @@ async def test_denylist(hass, mock_client):
         publish_client.publish.reset_mock()
 
 
-async def test_filtered_allowlist(hass, mock_client):
+async def test_filtered_allowlist(hass: HomeAssistant, mock_client) -> None:
     """Test an allowlist config with a filtering denylist."""
     handler_method = await _setup(
         hass,
@@ -222,7 +222,7 @@ async def test_filtered_allowlist(hass, mock_client):
         FilterTest("light.excluded_test", False),
         FilterTest("light.excluded", False),
         FilterTest("sensor.included_test", True),
-        FilterTest("climate.included_test", False),
+        FilterTest("climate.included_test", True),
     ]
 
     for test in tests:
@@ -234,7 +234,7 @@ async def test_filtered_allowlist(hass, mock_client):
         publish_client.publish.reset_mock()
 
 
-async def test_filtered_denylist(hass, mock_client):
+async def test_filtered_denylist(hass: HomeAssistant, mock_client) -> None:
     """Test a denylist config with a filtering allowlist."""
     handler_method = await _setup(
         hass,

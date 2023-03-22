@@ -1,8 +1,8 @@
 {
   "domain": "rest",
   "name": "RESTful",
-  "documentation": "https://www.home-assistant.io/integrations/rest",
-  "requirements": ["jsonpath==0.82", "xmltodict==0.12.0"],
   "codeowners": [],
-  "iot_class": "local_polling"
+  "documentation": "https://www.home-assistant.io/integrations/rest",
+  "iot_class": "local_polling",
+  "requirements": ["jsonpath==0.82", "xmltodict==0.13.0"]
 }

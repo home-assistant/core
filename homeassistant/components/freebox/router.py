@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from freebox_api import Freepybox
+from freebox_api.api.call import Call
 from freebox_api.api.wifi import Wifi
 from freebox_api.exceptions import NotOpenError
 
@@ -18,6 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.storage import Store
 from homeassistant.util import slugify
 
 from .const import (
@@ -32,7 +34,7 @@ from .const import (
 
 async def get_api(hass: HomeAssistant, host: str) -> Freepybox:
     """Get the Freebox API."""
-    freebox_path = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY).path
+    freebox_path = Store(hass, STORAGE_VERSION, STORAGE_KEY).path
 
     if not os.path.exists(freebox_path):
         await hass.async_add_executor_job(os.makedirs, freebox_path)
@@ -112,7 +114,7 @@ class FreeboxRouter:
         # According to the doc `syst_datas["sensors"]` is temperature sensors in celsius degree.
         # Name and id of sensors may vary under Freebox devices.
         for sensor in syst_datas["sensors"]:
-            self.sensors_temperature[sensor["name"]] = sensor["value"]
+            self.sensors_temperature[sensor["name"]] = sensor.get("value")
 
         # Connection sensors
         connection_datas: dict[str, Any] = await self._api.connection.get_status()
@@ -184,6 +186,11 @@ class FreeboxRouter:
     def sensors(self) -> dict[str, Any]:
         """Return sensors."""
         return {**self.sensors_temperature, **self.sensors_connection}
+
+    @property
+    def call(self) -> Call:
+        """Return the call."""
+        return self._api.call
 
     @property
     def wifi(self) -> Wifi:

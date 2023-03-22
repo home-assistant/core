@@ -37,74 +37,43 @@ async def async_setup_entry(
 class NightscoutSensor(SensorEntity):
     """Implementation of a Nightscout sensor."""
 
-    def __init__(self, api: NightscoutAPI, name, unique_id):
+    def __init__(self, api: NightscoutAPI, name, unique_id) -> None:
         """Initialize the Nightscout sensor."""
         self.api = api
-        self._unique_id = unique_id
-        self._name = name
-        self._state = None
-        self._attributes: dict[str, Any] = {}
-        self._unit_of_measurement = "mg/dL"
-        self._icon = "mdi:cloud-question"
-        self._available = False
+        self._attr_unique_id = unique_id
+        self._attr_name = name
+        self._attr_extra_state_attributes: dict[str, Any] = {}
+        self._attr_native_unit_of_measurement = "mg/dL"
+        self._attr_icon = "mdi:cloud-question"
+        self._attr_available = False
 
-    @property
-    def unique_id(self):
-        """Return the unique ID of the sensor."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
-
-    @property
-    def available(self):
-        """Return if the sensor data are available."""
-        return self._available
-
-    @property
-    def native_value(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return self._icon
-
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Fetch the latest data from Nightscout REST API and update the state."""
         try:
             values = await self.api.get_sgvs()
         except (ClientError, AsyncIOTimeoutError, OSError) as error:
             _LOGGER.error("Error fetching data. Failed with %s", error)
-            self._available = False
+            self._attr_available = False
             return
 
-        self._available = True
-        self._attributes = {}
-        self._state = None
+        self._attr_available = True
+        self._attr_extra_state_attributes = {}
+        self._attr_native_value = None
         if values:
             value = values[0]
-            self._attributes = {
+            self._attr_extra_state_attributes = {
                 ATTR_DEVICE: value.device,
                 ATTR_DATE: value.date,
                 ATTR_DELTA: value.delta,
                 ATTR_DIRECTION: value.direction,
             }
-            self._state = value.sgv
-            self._icon = self._parse_icon()
+            self._attr_native_value = value.sgv
+            self._attr_icon = self._parse_icon(value.direction)
         else:
-            self._available = False
+            self._attr_available = False
             _LOGGER.warning("Empty reply found when expecting JSON data")
 
-    def _parse_icon(self) -> str:
+    def _parse_icon(self, direction: str) -> str:
         """Update the icon based on the direction attribute."""
         switcher = {
             "Flat": "mdi:arrow-right",
@@ -115,9 +84,4 @@ class NightscoutSensor(SensorEntity):
             "FortyFiveUp": "mdi:arrow-top-right",
             "DoubleUp": "mdi:chevron-triple-up",
         }
-        return switcher.get(self._attributes[ATTR_DIRECTION], "mdi:cloud-question")
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return self._attributes
+        return switcher.get(direction, "mdi:cloud-question")

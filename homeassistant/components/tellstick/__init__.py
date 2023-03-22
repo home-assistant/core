@@ -17,7 +17,10 @@ from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 
@@ -36,10 +39,6 @@ SIGNAL_TELLCORE_CALLBACK = "tellstick_callback"
 # Use a global tellstick domain lock to avoid getting Tellcore errors when
 # calling concurrently.
 TELLSTICK_LOCK = threading.RLock()
-
-# A TellstickRegistry that keeps a map from tellcore_id to the corresponding
-# tellcore_device and HA device (entity).
-TELLCORE_REGISTRY = None
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -147,8 +146,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     @callback
     def async_handle_callback(tellcore_id, tellcore_command, tellcore_data, cid):
         """Handle the actual callback from Tellcore."""
-        hass.helpers.dispatcher.async_dispatcher_send(
-            SIGNAL_TELLCORE_CALLBACK, tellcore_id, tellcore_command, tellcore_data
+        async_dispatcher_send(
+            hass, SIGNAL_TELLCORE_CALLBACK, tellcore_id, tellcore_command, tellcore_data
         )
 
     # Register callback

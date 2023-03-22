@@ -1,6 +1,8 @@
 """Config flow for flume integration."""
+from collections.abc import Mapping
 import logging
 import os
+from typing import Any
 
 from pyflume import FlumeAuth, FlumeDeviceList
 from requests.exceptions import RequestException
@@ -13,6 +15,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import BASE_TOKEN_FILENAME, DOMAIN
 
@@ -80,7 +83,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Init flume config flow."""
         self._reauth_unique_id = None
 
@@ -103,7 +106,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(self, user_input=None):
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle reauth."""
         self._reauth_unique_id = self.context["unique_id"]
         return await self.async_step_reauth_confirm()

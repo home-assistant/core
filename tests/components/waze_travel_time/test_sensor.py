@@ -1,5 +1,4 @@
 """Test Waze Travel Time sensors."""
-
 from WazeRouteCalculator import WRCError
 import pytest
 
@@ -10,9 +9,11 @@ from homeassistant.components.waze_travel_time.const import (
     CONF_REALTIME,
     CONF_UNITS,
     CONF_VEHICLE_TYPE,
+    DEFAULT_OPTIONS,
     DOMAIN,
+    IMPERIAL_UNITS,
 )
-from homeassistant.const import CONF_UNIT_SYSTEM_IMPERIAL
+from homeassistant.core import HomeAssistant
 
 from .const import MOCK_CONFIG
 
@@ -38,7 +39,6 @@ def mock_update_wrcerror_fixture(mock_wrc):
     """Mock an update to the sensor failed with WRCError."""
     obj = mock_wrc.return_value
     obj.calc_all_routes_info.side_effect = WRCError("test")
-    yield
 
 
 @pytest.fixture(name="mock_update_keyerror")
@@ -46,15 +46,14 @@ def mock_update_keyerror_fixture(mock_wrc):
     """Mock an update to the sensor failed with KeyError."""
     obj = mock_wrc.return_value
     obj.calc_all_routes_info.side_effect = KeyError("test")
-    yield
 
 
 @pytest.mark.parametrize(
-    "data,options",
-    [(MOCK_CONFIG, {})],
+    ("data", "options"),
+    [(MOCK_CONFIG, DEFAULT_OPTIONS)],
 )
 @pytest.mark.usefixtures("mock_update", "mock_config")
-async def test_sensor(hass):
+async def test_sensor(hass: HomeAssistant) -> None:
     """Test that sensor works."""
     assert hass.states.get("sensor.waze_travel_time").state == "150"
     assert (
@@ -79,12 +78,12 @@ async def test_sensor(hass):
 
 
 @pytest.mark.parametrize(
-    "data,options",
+    ("data", "options"),
     [
         (
             MOCK_CONFIG,
             {
-                CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
+                CONF_UNITS: IMPERIAL_UNITS,
                 CONF_REALTIME: True,
                 CONF_VEHICLE_TYPE: "car",
                 CONF_AVOID_TOLL_ROADS: True,
@@ -95,15 +94,21 @@ async def test_sensor(hass):
     ],
 )
 @pytest.mark.usefixtures("mock_update", "mock_config")
-async def test_imperial(hass):
+async def test_imperial(hass: HomeAssistant) -> None:
     """Test that the imperial option works."""
-    assert hass.states.get("sensor.waze_travel_time").attributes["distance"] == 186.4113
+    assert hass.states.get("sensor.waze_travel_time").attributes[
+        "distance"
+    ] == pytest.approx(186.4113)
 
 
 @pytest.mark.usefixtures("mock_update_wrcerror")
-async def test_sensor_failed_wrcerror(hass, caplog):
+async def test_sensor_failed_wrcerror(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that sensor update fails with log message."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, options=DEFAULT_OPTIONS, entry_id="test"
+    )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -113,9 +118,13 @@ async def test_sensor_failed_wrcerror(hass, caplog):
 
 
 @pytest.mark.usefixtures("mock_update_keyerror")
-async def test_sensor_failed_keyerror(hass, caplog):
+async def test_sensor_failed_keyerror(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that sensor update fails with log message."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, options=DEFAULT_OPTIONS, entry_id="test"
+    )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

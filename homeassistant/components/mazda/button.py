@@ -61,20 +61,11 @@ async def handle_refresh_vehicle_status(
 
 
 @dataclass
-class MazdaButtonRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    # Suffix to be appended to the vehicle name to obtain the button name
-    name_suffix: str
-
-
-@dataclass
-class MazdaButtonEntityDescription(
-    ButtonEntityDescription, MazdaButtonRequiredKeysMixin
-):
+class MazdaButtonEntityDescription(ButtonEntityDescription):
     """Describes a Mazda button entity."""
 
-    # Function to determine whether the vehicle supports this button, given the coordinator data
+    # Function to determine whether the vehicle supports this button,
+    # given the coordinator data
     is_supported: Callable[[dict[str, Any]], bool] = lambda data: True
 
     async_press: Callable[
@@ -85,27 +76,27 @@ class MazdaButtonEntityDescription(
 BUTTON_ENTITIES = [
     MazdaButtonEntityDescription(
         key="start_engine",
-        name_suffix="Start Engine",
+        name="Start engine",
         icon="mdi:engine",
     ),
     MazdaButtonEntityDescription(
         key="stop_engine",
-        name_suffix="Stop Engine",
+        name="Stop engine",
         icon="mdi:engine-off",
     ),
     MazdaButtonEntityDescription(
         key="turn_on_hazard_lights",
-        name_suffix="Turn On Hazard Lights",
+        name="Turn on hazard lights",
         icon="mdi:hazard-lights",
     ),
     MazdaButtonEntityDescription(
         key="turn_off_hazard_lights",
-        name_suffix="Turn Off Hazard Lights",
+        name="Turn off hazard lights",
         icon="mdi:hazard-lights",
     ),
     MazdaButtonEntityDescription(
         key="refresh_vehicle_status",
-        name_suffix="Refresh Status",
+        name="Refresh status",
         icon="mdi:refresh",
         async_press=handle_refresh_vehicle_status,
         is_supported=lambda data: data["isElectric"],
@@ -146,7 +137,6 @@ class MazdaButtonEntity(MazdaEntity, ButtonEntity):
         super().__init__(client, coordinator, index)
         self.entity_description = description
 
-        self._attr_name = f"{self.vehicle_name} {description.name_suffix}"
         self._attr_unique_id = f"{self.vin}_{description.key}"
 
     async def async_press(self) -> None:

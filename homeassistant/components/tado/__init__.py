@@ -6,7 +6,7 @@ from PyTado.interface import Tado
 from requests import RequestException
 import requests.exceptions
 
-from homeassistant.components.climate.const import PRESET_AWAY, PRESET_HOME
+from homeassistant.components.climate import PRESET_AWAY, PRESET_HOME
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
@@ -18,7 +18,10 @@ from homeassistant.util import Throttle
 
 from .const import (
     CONF_FALLBACK,
+    CONST_OVERLAY_MANUAL,
+    CONST_OVERLAY_TADO_DEFAULT,
     CONST_OVERLAY_TADO_MODE,
+    CONST_OVERLAY_TADO_OPTIONS,
     DATA,
     DOMAIN,
     INSIDE_TEMPERATURE_MEASUREMENT,
@@ -51,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
-    fallback = entry.options.get(CONF_FALLBACK, CONST_OVERLAY_TADO_MODE)
+    fallback = entry.options.get(CONF_FALLBACK, CONST_OVERLAY_TADO_DEFAULT)
 
     tadoconnector = TadoConnector(hass, username, password, fallback)
 
@@ -90,7 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         UPDATE_LISTENER: update_listener,
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -99,7 +102,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: ConfigEntry):
     options = dict(entry.options)
     if CONF_FALLBACK not in options:
-        options[CONF_FALLBACK] = entry.data.get(CONF_FALLBACK, CONST_OVERLAY_TADO_MODE)
+        options[CONF_FALLBACK] = entry.data.get(
+            CONF_FALLBACK, CONST_OVERLAY_TADO_DEFAULT
+        )
+        hass.config_entries.async_update_entry(entry, options=options)
+
+    if options[CONF_FALLBACK] not in CONST_OVERLAY_TADO_OPTIONS:
+        if options[CONF_FALLBACK]:
+            options[CONF_FALLBACK] = CONST_OVERLAY_TADO_MODE
+        else:
+            options[CONF_FALLBACK] = CONST_OVERLAY_MANUAL
         hass.config_entries.async_update_entry(entry, options=options)
 
 
@@ -256,6 +268,7 @@ class TadoConnector:
             self.tado.setAway()
         elif presence == PRESET_HOME:
             self.tado.setHome()
+        self.update_zones()
 
     def set_zone_overlay(
         self,
@@ -270,7 +283,10 @@ class TadoConnector:
     ):
         """Set a zone overlay."""
         _LOGGER.debug(
-            "Set overlay for zone %s: overlay_mode=%s, temp=%s, duration=%s, type=%s, mode=%s fan_speed=%s swing=%s",
+            (
+                "Set overlay for zone %s: overlay_mode=%s, temp=%s, duration=%s,"
+                " type=%s, mode=%s fan_speed=%s swing=%s"
+            ),
             zone_id,
             overlay_mode,
             temperature,

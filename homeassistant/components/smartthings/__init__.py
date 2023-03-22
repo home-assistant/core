@@ -92,7 +92,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if not validate_webhook_requirements(hass):
         _LOGGER.warning(
-            "The 'base_url' of the 'http' integration must be configured and start with 'https://'"
+            "The 'base_url' of the 'http' integration must be configured and start with"
+            " 'https://'"
         )
         return False
 
@@ -135,7 +136,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 await device.status.refresh()
             except ClientResponseError:
                 _LOGGER.debug(
-                    "Unable to update status for device: %s (%s), the device will be excluded",
+                    (
+                        "Unable to update status for device: %s (%s), the device will"
+                        " be excluded"
+                    ),
                     device.label,
                     device.device_id,
                     exc_info=True,
@@ -161,7 +165,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except ClientResponseError as ex:
         if ex.status in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
             _LOGGER.exception(
-                "Unable to setup configuration entry '%s' - please reconfigure the integration",
+                (
+                    "Unable to setup configuration entry '%s' - please reconfigure the"
+                    " integration"
+                ),
                 entry.title,
             )
             remove_entry = True
@@ -183,7 +190,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
         return False
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
@@ -194,7 +201,10 @@ async def async_get_entry_scenes(entry: ConfigEntry, api):
     except ClientResponseError as ex:
         if ex.status == HTTPStatus.FORBIDDEN:
             _LOGGER.exception(
-                "Unable to load scenes for configuration entry '%s' because the access token does not have the required access",
+                (
+                    "Unable to load scenes for configuration entry '%s' because the"
+                    " access token does not have the required access"
+                ),
                 entry.title,
             )
         else:
@@ -237,7 +247,10 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     app_count = sum(1 for entry in all_entries if entry.data[CONF_APP_ID] == app_id)
     if app_count > 1:
         _LOGGER.debug(
-            "App %s was not removed because it is in use by other configuration entries",
+            (
+                "App %s was not removed because it is in use by other configuration"
+                " entries"
+            ),
             app_id,
         )
         return
@@ -266,7 +279,7 @@ class DeviceBroker:
         smart_app,
         devices: Iterable,
         scenes: Iterable,
-    ):
+    ) -> None:
         """Create a new instance of the DeviceBroker."""
         self._hass = hass
         self._entry = entry
@@ -305,6 +318,7 @@ class DeviceBroker:
 
     def connect(self):
         """Connect handlers/listeners for device/lifecycle events."""
+
         # Setup interval to regenerate the refresh token on a periodic basis.
         # Tokens expire in 30 days and once expired, cannot be recovered.
         async def regenerate_refresh_token(now):
@@ -405,6 +419,8 @@ class DeviceBroker:
 class SmartThingsEntity(Entity):
     """Defines a SmartThings entity."""
 
+    _attr_should_poll = False
+
     def __init__(self, device: DeviceEntity) -> None:
         """Initialize the instance."""
         self._device = device
@@ -442,11 +458,6 @@ class SmartThingsEntity(Entity):
     def name(self) -> str:
         """Return the name of the device."""
         return self._device.label
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed for this device."""
-        return False
 
     @property
     def unique_id(self) -> str:

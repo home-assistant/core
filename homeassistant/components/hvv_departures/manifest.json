@@ -1,10 +1,10 @@
 {
   "domain": "hvv_departures",
   "name": "HVV Departures",
+  "codeowners": ["@vigonotion"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hvv_departures",
-  "requirements": ["pygti==0.9.2"],
-  "codeowners": ["@vigonotion"],
   "iot_class": "cloud_polling",
-  "loggers": ["pygti"]
+  "loggers": ["pygti"],
+  "requirements": ["pygti==0.9.3"]
 }

@@ -1,11 +1,12 @@
 """The tests for Octoptint binary sensor module."""
-
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
 
 
-async def test_sensors(hass):
+async def test_sensors(hass: HomeAssistant) -> None:
     """Test the underlying sensors."""
     printer = {
         "state": {
@@ -16,7 +17,7 @@ async def test_sensors(hass):
     }
     await init_integration(hass, "binary_sensor", printer=printer)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     state = hass.states.get("binary_sensor.octoprint_printing")
     assert state is not None
@@ -33,11 +34,11 @@ async def test_sensors(hass):
     assert entry.unique_id == "Printing Error-uuid"
 
 
-async def test_sensors_printer_offline(hass):
+async def test_sensors_printer_offline(hass: HomeAssistant) -> None:
     """Test the underlying sensors when the printer is offline."""
     await init_integration(hass, "binary_sensor", printer=None)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     state = hass.states.get("binary_sensor.octoprint_printing")
     assert state is not None

@@ -9,7 +9,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.switch_as_x.const import CONF_TARGET_DOMAIN, DOMAIN
 from homeassistant.const import CONF_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
@@ -33,7 +33,7 @@ async def test_config_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
@@ -45,7 +45,7 @@ async def test_config_flow(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "ceiling"
     assert result["data"] == {}
     assert result["options"] == {
@@ -63,10 +63,10 @@ async def test_config_flow(
 
 
 @pytest.mark.parametrize(
-    "hidden_by_before,hidden_by_after",
+    ("hidden_by_before", "hidden_by_after"),
     (
-        (er.RegistryEntryHider.USER.value, er.RegistryEntryHider.USER.value),
-        (None, er.RegistryEntryHider.INTEGRATION.value),
+        (er.RegistryEntryHider.USER, er.RegistryEntryHider.USER),
+        (None, er.RegistryEntryHider.INTEGRATION),
     ),
 )
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
@@ -88,7 +88,7 @@ async def test_config_flow_registered_entity(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
@@ -100,7 +100,7 @@ async def test_config_flow_registered_entity(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "ceiling"
     assert result["data"] == {}
     assert result["options"] == {

@@ -21,12 +21,12 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     ATTR_CONDITION_WINDY,
     ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_PRECIPITATION,
+    ATTR_FORECAST_NATIVE_TEMP,
+    ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
-    ATTR_FORECAST_WIND_SPEED,
     PLATFORM_SCHEMA,
     WeatherEntity,
 )
@@ -36,10 +36,11 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MODE,
     CONF_NAME,
-    PRESSURE_HPA,
-    PRESSURE_INHG,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfLength,
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -47,7 +48,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 from homeassistant.util.dt import utc_from_timestamp
-from homeassistant.util.pressure import convert as convert_pressure
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,15 +75,18 @@ CONF_UNITS = "units"
 
 DEFAULT_NAME = "Dark Sky"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_LATITUDE): cv.latitude,
-        vol.Optional(CONF_LONGITUDE): cv.longitude,
-        vol.Optional(CONF_MODE, default="hourly"): vol.In(FORECAST_MODE),
-        vol.Optional(CONF_UNITS): vol.In(["auto", "si", "us", "ca", "uk", "uk2"]),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
+PLATFORM_SCHEMA = vol.All(
+    cv.removed(CONF_UNITS),
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Required(CONF_API_KEY): cv.string,
+            vol.Optional(CONF_LATITUDE): cv.latitude,
+            vol.Optional(CONF_LONGITUDE): cv.longitude,
+            vol.Optional(CONF_MODE, default="hourly"): vol.In(FORECAST_MODE),
+            vol.Optional(CONF_UNITS): vol.In(["auto", "si", "us", "ca", "uk", "uk2"]),
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        }
+    ),
 )
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=3)
@@ -101,9 +104,7 @@ def setup_platform(
     name = config.get(CONF_NAME)
     mode = config.get(CONF_MODE)
 
-    if not (units := config.get(CONF_UNITS)):
-        units = "ca" if hass.config.units.is_metric else "us"
-
+    units = "si"
     dark_sky = DarkSkyData(config.get(CONF_API_KEY), latitude, longitude, units)
 
     add_entities([DarkSkyWeather(name, dark_sky, mode)], True)
@@ -111,6 +112,12 @@ def setup_platform(
 
 class DarkSkyWeather(WeatherEntity):
     """Representation of a weather condition."""
+
+    _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
+    _attr_native_pressure_unit = UnitOfPressure.MBAR
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_visibility_unit = UnitOfLength.KILOMETERS
+    _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
 
     def __init__(self, name, dark_sky, mode):
         """Initialize Dark Sky weather."""
@@ -124,7 +131,7 @@ class DarkSkyWeather(WeatherEntity):
         self._ds_daily = None
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if weather data is available from Dark Sky."""
         return self._ds_data is not None
 
@@ -139,16 +146,9 @@ class DarkSkyWeather(WeatherEntity):
         return self._name
 
     @property
-    def temperature(self):
+    def native_temperature(self):
         """Return the temperature."""
         return self._ds_currently.get("temperature")
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        if self._dark_sky.units is None:
-            return None
-        return TEMP_FAHRENHEIT if "us" in self._dark_sky.units else TEMP_CELSIUS
 
     @property
     def humidity(self):
@@ -156,7 +156,7 @@ class DarkSkyWeather(WeatherEntity):
         return round(self._ds_currently.get("humidity") * 100.0, 2)
 
     @property
-    def wind_speed(self):
+    def native_wind_speed(self):
         """Return the wind speed."""
         return self._ds_currently.get("windSpeed")
 
@@ -171,15 +171,12 @@ class DarkSkyWeather(WeatherEntity):
         return self._ds_currently.get("ozone")
 
     @property
-    def pressure(self):
+    def native_pressure(self):
         """Return the pressure."""
-        pressure = self._ds_currently.get("pressure")
-        if "us" in self._dark_sky.units:
-            return round(convert_pressure(pressure, PRESSURE_HPA, PRESSURE_INHG), 2)
-        return pressure
+        return self._ds_currently.get("pressure")
 
     @property
-    def visibility(self):
+    def native_visibility(self):
         """Return the visibility."""
         return self._ds_currently.get("visibility")
 
@@ -191,6 +188,7 @@ class DarkSkyWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
+
         # Per conversation with Joshua Reyes of Dark Sky, to get the total
         # forecasted precipitation, you have to multiple the intensity by
         # the hours for the forecast interval
@@ -208,12 +206,12 @@ class DarkSkyWeather(WeatherEntity):
                     ATTR_FORECAST_TIME: utc_from_timestamp(
                         entry.d.get("time")
                     ).isoformat(),
-                    ATTR_FORECAST_TEMP: entry.d.get("temperatureHigh"),
-                    ATTR_FORECAST_TEMP_LOW: entry.d.get("temperatureLow"),
-                    ATTR_FORECAST_PRECIPITATION: calc_precipitation(
+                    ATTR_FORECAST_NATIVE_TEMP: entry.d.get("temperatureHigh"),
+                    ATTR_FORECAST_NATIVE_TEMP_LOW: entry.d.get("temperatureLow"),
+                    ATTR_FORECAST_NATIVE_PRECIPITATION: calc_precipitation(
                         entry.d.get("precipIntensity"), 24
                     ),
-                    ATTR_FORECAST_WIND_SPEED: entry.d.get("windSpeed"),
+                    ATTR_FORECAST_NATIVE_WIND_SPEED: entry.d.get("windSpeed"),
                     ATTR_FORECAST_WIND_BEARING: entry.d.get("windBearing"),
                     ATTR_FORECAST_CONDITION: MAP_CONDITION.get(entry.d.get("icon")),
                 }
@@ -225,8 +223,8 @@ class DarkSkyWeather(WeatherEntity):
                     ATTR_FORECAST_TIME: utc_from_timestamp(
                         entry.d.get("time")
                     ).isoformat(),
-                    ATTR_FORECAST_TEMP: entry.d.get("temperature"),
-                    ATTR_FORECAST_PRECIPITATION: calc_precipitation(
+                    ATTR_FORECAST_NATIVE_TEMP: entry.d.get("temperature"),
+                    ATTR_FORECAST_NATIVE_PRECIPITATION: calc_precipitation(
                         entry.d.get("precipIntensity"), 1
                     ),
                     ATTR_FORECAST_CONDITION: MAP_CONDITION.get(entry.d.get("icon")),
@@ -236,7 +234,7 @@ class DarkSkyWeather(WeatherEntity):
 
         return data
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from Dark Sky."""
         self._dark_sky.update()
 
@@ -281,10 +279,3 @@ class DarkSkyData:
                 self._connect_error = True
                 _LOGGER.error("Unable to connect to Dark Sky. %s", error)
             self.data = None
-
-    @property
-    def units(self):
-        """Get the unit system of returned data."""
-        if self.data is None:
-            return None
-        return self.data.json.get("flags").get("units")

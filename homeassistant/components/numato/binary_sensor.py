@@ -52,13 +52,15 @@ def setup_platform(
         ports = platform[CONF_PORTS]
         for port, port_name in ports.items():
             try:
-
                 api.setup_input(device_id, port)
                 api.edge_detect(device_id, port, partial(read_gpio, device_id))
 
             except NumatoGpioError as err:
                 _LOGGER.error(
-                    "Failed to initialize binary sensor '%s' on Numato device %s port %s: %s",
+                    (
+                        "Failed to initialize binary sensor '%s' on Numato device %s"
+                        " port %s: %s"
+                    ),
                     port_name,
                     device_id,
                     port,
@@ -81,6 +83,8 @@ def setup_platform(
 class NumatoGpioBinarySensor(BinarySensorEntity):
     """Represents a binary sensor (input) port of a Numato GPIO expander."""
 
+    _attr_should_poll = False
+
     def __init__(self, name, device_id, port, invert_logic, api):
         """Initialize the Numato GPIO based binary sensor object."""
         self._name = name or DEVICE_DEFAULT_NAME
@@ -90,7 +94,7 @@ class NumatoGpioBinarySensor(BinarySensorEntity):
         self._state = None
         self._api = api
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Connect state update callback."""
         self.async_on_remove(
             async_dispatcher_connect(
@@ -107,11 +111,6 @@ class NumatoGpioBinarySensor(BinarySensorEntity):
         self.async_write_ha_state()
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
@@ -121,7 +120,7 @@ class NumatoGpioBinarySensor(BinarySensorEntity):
         """Return the state of the entity."""
         return self._state != self._invert_logic
 
-    def update(self):
+    def update(self) -> None:
         """Update the GPIO state."""
         try:
             self._state = self._api.read_input(self._device_id, self._port)

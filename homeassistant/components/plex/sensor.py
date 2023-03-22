@@ -16,13 +16,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_SERVER_IDENTIFIER,
-    DOMAIN as PLEX_DOMAIN,
+    DOMAIN,
     NAME_FORMAT,
     PLEX_UPDATE_LIBRARY_SIGNAL,
     PLEX_UPDATE_SENSOR_SIGNAL,
-    SERVERS,
 )
-from .helpers import pretty_title
+from .helpers import get_plex_server, pretty_title
 
 LIBRARY_ATTRIBUTE_TYPES = {
     "artist": ["artist", "album"],
@@ -57,7 +56,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Plex sensor from a config entry."""
     server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
-    plexserver = hass.data[PLEX_DOMAIN][SERVERS][server_id]
+    plexserver = get_plex_server(hass, server_id)
     sensors = [PlexSensor(hass, plexserver)]
 
     def create_library_sensors():
@@ -89,7 +88,7 @@ class PlexSensor(SensorEntity):
             function=self._async_refresh_sensor,
         ).async_call
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         server_id = self._server.machine_identifier
         self.async_on_remove(
@@ -100,7 +99,7 @@ class PlexSensor(SensorEntity):
             )
         )
 
-    async def _async_refresh_sensor(self):
+    async def _async_refresh_sensor(self) -> None:
         """Set instance object and trigger an entity state update."""
         _LOGGER.debug("Refreshing sensor [%s]", self.unique_id)
         self._attr_native_value = len(self._server.sensor_attributes)
@@ -118,7 +117,7 @@ class PlexSensor(SensorEntity):
             return None
 
         return DeviceInfo(
-            identifiers={(PLEX_DOMAIN, self._server.machine_identifier)},
+            identifiers={(DOMAIN, self._server.machine_identifier)},
             manufacturer="Plex",
             model="Plex Media Server",
             name=self._server.friendly_name,
@@ -147,7 +146,7 @@ class PlexLibrarySectionSensor(SensorEntity):
         self._attr_unique_id = f"library-{self.server_id}-{plex_library_section.uuid}"
         self._attr_native_unit_of_measurement = "Items"
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         self.async_on_remove(
             async_dispatcher_connect(
@@ -158,7 +157,7 @@ class PlexLibrarySectionSensor(SensorEntity):
         )
         await self.async_refresh_sensor()
 
-    async def async_refresh_sensor(self):
+    async def async_refresh_sensor(self) -> None:
         """Update state and attributes for the library sensor."""
         _LOGGER.debug("Refreshing library sensor for '%s'", self.name)
         try:
@@ -209,7 +208,7 @@ class PlexLibrarySectionSensor(SensorEntity):
             return None
 
         return DeviceInfo(
-            identifiers={(PLEX_DOMAIN, self.server_id)},
+            identifiers={(DOMAIN, self.server_id)},
             manufacturer="Plex",
             model="Plex Media Server",
             name=self.server_name,

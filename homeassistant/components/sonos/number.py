@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 import logging
+from typing import cast
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import SONOS_CREATE_LEVELS
@@ -20,7 +21,11 @@ LEVEL_TYPES = {
     "bass": (-10, 10),
     "treble": (-10, 10),
     "sub_gain": (-15, 15),
+    "surround_level": (-15, 15),
+    "music_surround_level": (-15, 15),
 }
+
+SocoFeatures = list[tuple[str, tuple[int, int]]]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,8 +37,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Sonos number platform from a config entry."""
 
-    def available_soco_attributes(speaker: SonosSpeaker) -> list[str]:
-        features = []
+    def available_soco_attributes(speaker: SonosSpeaker) -> SocoFeatures:
+        features: SocoFeatures = []
         for level_type, valid_range in LEVEL_TYPES.items():
             if (state := getattr(speaker.soco, level_type, None)) is not None:
                 setattr(speaker, level_type, state)
@@ -65,15 +70,14 @@ class SonosLevelEntity(SonosEntity, NumberEntity):
     _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
-        self, speaker: SonosSpeaker, level_type: str, valid_range: tuple[int]
+        self, speaker: SonosSpeaker, level_type: str, valid_range: tuple[int, int]
     ) -> None:
         """Initialize the level entity."""
         super().__init__(speaker)
         self._attr_unique_id = f"{self.soco.uid}-{level_type}"
-        name_suffix = level_type.replace("_", " ").title()
-        self._attr_name = f"{self.speaker.zone_name} {name_suffix}"
+        self._attr_name = level_type.replace("_", " ").capitalize()
         self.level_type = level_type
-        self._attr_min_value, self._attr_max_value = valid_range
+        self._attr_native_min_value, self._attr_native_max_value = valid_range
 
     async def _async_fallback_poll(self) -> None:
         """Poll the value if subscriptions are not working."""
@@ -86,11 +90,11 @@ class SonosLevelEntity(SonosEntity, NumberEntity):
         setattr(self.speaker, self.level_type, state)
 
     @soco_error()
-    def set_value(self, value: float) -> None:
+    def set_native_value(self, value: float) -> None:
         """Set a new value."""
         setattr(self.soco, self.level_type, value)
 
     @property
-    def value(self) -> float:
+    def native_value(self) -> float:
         """Return the current value."""
-        return getattr(self.speaker, self.level_type)
+        return cast(float, getattr(self.speaker, self.level_type))

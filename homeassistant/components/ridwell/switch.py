@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from aioridwell.errors import RidwellError
-from aioridwell.model import EventState, RidwellPickupEvent
+from aioridwell.model import EventState
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -12,14 +12,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RidwellEntity
-from .const import DATA_ACCOUNT, DATA_COORDINATOR, DOMAIN
+from .const import DOMAIN
+from .coordinator import RidwellDataUpdateCoordinator
+from .entity import RidwellEntity
 
 SWITCH_TYPE_OPT_IN = "opt_in"
 
 SWITCH_DESCRIPTION = SwitchEntityDescription(
     key=SWITCH_TYPE_OPT_IN,
-    name="Opt-In to Next Pickup",
+    name="Opt-in to next pickup",
     icon="mdi:calendar-check",
 )
 
@@ -28,14 +29,11 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Ridwell sensors based on a config entry."""
-    accounts = hass.data[DOMAIN][entry.entry_id][DATA_ACCOUNT]
-    coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
+    coordinator: RidwellDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        [
-            RidwellSwitch(coordinator, account, SWITCH_DESCRIPTION)
-            for account in accounts.values()
-        ]
+        RidwellSwitch(coordinator, account, SWITCH_DESCRIPTION)
+        for account in coordinator.accounts.values()
     )
 
 
@@ -45,15 +43,12 @@ class RidwellSwitch(RidwellEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
-        event: RidwellPickupEvent = self.coordinator.data[self._account.account_id]
-        return event.state == EventState.SCHEDULED
+        return self.next_pickup_event.state == EventState.SCHEDULED
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        event: RidwellPickupEvent = self.coordinator.data[self._account.account_id]
-
         try:
-            await event.async_opt_out()
+            await self.next_pickup_event.async_opt_out()
         except RidwellError as err:
             raise HomeAssistantError(f"Error while opting out: {err}") from err
 
@@ -61,10 +56,8 @@ class RidwellSwitch(RidwellEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        event: RidwellPickupEvent = self.coordinator.data[self._account.account_id]
-
         try:
-            await event.async_opt_in()
+            await self.next_pickup_event.async_opt_in()
         except RidwellError as err:
             raise HomeAssistantError(f"Error while opting in: {err}") from err
 

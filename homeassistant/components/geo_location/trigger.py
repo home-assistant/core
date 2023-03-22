@@ -1,23 +1,33 @@
 """Offer geolocation automation rules."""
+from __future__ import annotations
+
 import logging
+from typing import Final
 
 import voluptuous as vol
 
 from homeassistant.const import CONF_EVENT, CONF_PLATFORM, CONF_SOURCE, CONF_ZONE
-from homeassistant.core import HassJob, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HassJob,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.config_validation import entity_domain
 from homeassistant.helpers.event import TrackStates, async_track_state_change_filtered
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
 _LOGGER = logging.getLogger(__name__)
 
-EVENT_ENTER = "enter"
-EVENT_LEAVE = "leave"
-DEFAULT_EVENT = EVENT_ENTER
+EVENT_ENTER: Final = "enter"
+EVENT_LEAVE: Final = "leave"
+DEFAULT_EVENT: Final = EVENT_ENTER
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
@@ -31,21 +41,26 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-def source_match(state, source):
+def source_match(state: State | None, source: str) -> bool:
     """Check if the state matches the provided source."""
-    return state and state.attributes.get("source") == source
+    return state is not None and state.attributes.get("source") == source
 
 
-async def async_attach_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
+) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    trigger_data = automation_info["trigger_data"]
-    source = config.get(CONF_SOURCE).lower()
-    zone_entity_id = config.get(CONF_ZONE)
-    trigger_event = config.get(CONF_EVENT)
+    trigger_data = trigger_info["trigger_data"]
+    source: str = config[CONF_SOURCE].lower()
+    zone_entity_id: str = config[CONF_ZONE]
+    trigger_event: str = config[CONF_EVENT]
     job = HassJob(action)
 
     @callback
-    def state_change_listener(event):
+    def state_change_listener(event: Event) -> None:
         """Handle specific state changes."""
         # Skip if the event's source does not match the trigger's source.
         from_state = event.data.get("old_state")
@@ -56,7 +71,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
         if (zone_state := hass.states.get(zone_entity_id)) is None:
             _LOGGER.warning(
                 "Unable to execute automation %s: Zone %s not found",
-                automation_info["name"],
+                trigger_info["name"],
                 zone_entity_id,
             )
             return

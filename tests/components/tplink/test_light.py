@@ -10,7 +10,7 @@ from homeassistant.components import tplink
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_EFFECT_LIST,
     ATTR_HS_COLOR,
@@ -58,7 +58,7 @@ async def test_light_unique_id(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "bulb, transition", [(_mocked_bulb(), 2.0), (_mocked_smart_light_strip(), None)]
+    ("bulb", "transition"), [(_mocked_bulb(), 2.0), (_mocked_smart_light_strip(), None)]
 )
 async def test_color_light(
     hass: HomeAssistant, bulb: MagicMock, transition: float | None
@@ -113,7 +113,7 @@ async def test_color_light(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
-        {**BASE_PAYLOAD, ATTR_COLOR_TEMP: 150},
+        {**BASE_PAYLOAD, ATTR_COLOR_TEMP_KELVIN: 6666},
         blocking=True,
     )
     bulb.set_color_temp.assert_called_with(
@@ -124,7 +124,7 @@ async def test_color_light(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
-        {**BASE_PAYLOAD, ATTR_COLOR_TEMP: 150},
+        {**BASE_PAYLOAD, ATTR_COLOR_TEMP_KELVIN: 6666},
         blocking=True,
     )
     bulb.set_color_temp.assert_called_with(
@@ -198,7 +198,7 @@ async def test_color_light_no_temp(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "bulb, is_color", [(_mocked_bulb(), True), (_mocked_smart_light_strip(), False)]
+    ("bulb", "is_color"), [(_mocked_bulb(), True), (_mocked_smart_light_strip(), False)]
 )
 async def test_color_temp_light(
     hass: HomeAssistant, bulb: MagicMock, is_color: bool
@@ -233,7 +233,7 @@ async def test_color_temp_light(
         assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["brightness", "color_temp"]
     assert attributes[ATTR_MIN_MIREDS] == 111
     assert attributes[ATTR_MAX_MIREDS] == 250
-    assert attributes[ATTR_COLOR_TEMP] == 250
+    assert attributes[ATTR_COLOR_TEMP_KELVIN] == 4000
 
     await hass.services.async_call(
         LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -258,7 +258,7 @@ async def test_color_temp_light(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
-        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 150},
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 6666},
         blocking=True,
     )
     bulb.set_color_temp.assert_called_with(6666, brightness=None, transition=None)
@@ -412,13 +412,28 @@ async def test_smart_strip_effects(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_EFFECT] == "Effect1"
     assert state.attributes[ATTR_EFFECT_LIST] == ["Effect1", "Effect2"]
 
+    # Ensure setting color temp when an effect
+    # is in progress calls set_hsv to clear the effect
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 4000},
+        blocking=True,
+    )
+    strip.set_hsv.assert_called_once_with(0, 0, None)
+    strip.set_color_temp.assert_called_once_with(4000, brightness=None, transition=None)
+    strip.set_hsv.reset_mock()
+    strip.set_color_temp.reset_mock()
+
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
         {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "Effect2"},
         blocking=True,
     )
-    strip.set_effect.assert_called_once_with("Effect2")
+    strip.set_effect.assert_called_once_with(
+        "Effect2", brightness=None, transition=None
+    )
     strip.set_effect.reset_mock()
 
     strip.effect = {"name": "Effect1", "enable": 0, "custom": 0}
@@ -444,8 +459,8 @@ async def test_smart_strip_effects(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    strip.set_effect.assert_called_once_with("Effect1")
-    strip.set_effect.reset_mock()
+    strip.turn_on.assert_called_once()
+    strip.turn_on.reset_mock()
 
     strip.is_off = False
     strip.is_on = True
@@ -504,6 +519,34 @@ async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
     )
     strip.set_custom_effect.reset_mock()
 
+    await hass.services.async_call(
+        DOMAIN,
+        "random_effect",
+        {
+            ATTR_ENTITY_ID: entity_id,
+            "init_states": [340, 20, 50],
+            "random_seed": 600,
+        },
+        blocking=True,
+    )
+    strip.set_custom_effect.assert_called_once_with(
+        {
+            "custom": 1,
+            "id": "yMwcNpLxijmoKamskHCvvravpbnIqAIN",
+            "brightness": 100,
+            "name": "Custom",
+            "segments": [0],
+            "expansion_strategy": 1,
+            "enable": 1,
+            "duration": 0,
+            "transition": 0,
+            "type": "random",
+            "init_states": [[340, 20, 50]],
+            "random_seed": 600,
+        }
+    )
+    strip.set_custom_effect.reset_mock()
+
     strip.effect = {
         "custom": 1,
         "id": "yMwcNpLxijmoKamskHCvvravpbnIqAIN",
@@ -539,24 +582,8 @@ async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    strip.set_custom_effect.assert_called_once_with(
-        {
-            "custom": 1,
-            "id": "yMwcNpLxijmoKamskHCvvravpbnIqAIN",
-            "brightness": 100,
-            "name": "Custom",
-            "segments": [0],
-            "expansion_strategy": 1,
-            "enable": 1,
-            "duration": 0,
-            "transition": 0,
-            "type": "random",
-            "init_states": [[340, 20, 50]],
-            "random_seed": 100,
-            "backgrounds": [(340, 20, 50), (20, 50, 50), (0, 100, 50)],
-        }
-    )
-    strip.set_custom_effect.reset_mock()
+    strip.turn_on.assert_called_once()
+    strip.turn_on.reset_mock()
 
     await hass.services.async_call(
         DOMAIN,
@@ -632,8 +659,8 @@ async def test_smart_strip_custom_random_effect_at_start(hass: HomeAssistant) ->
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    strip.set_hsv.assert_called_with(0, 0, 100, transition=None)
-    strip.set_hsv.reset_mock()
+    strip.turn_on.assert_called_once()
+    strip.turn_on.reset_mock()
 
 
 async def test_smart_strip_custom_sequence_effect(hass: HomeAssistant) -> None:

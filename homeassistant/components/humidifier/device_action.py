@@ -1,8 +1,6 @@
 """Provides device actions for Humidifier."""
 from __future__ import annotations
 
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant.components.device_automation import toggle_entity
@@ -16,9 +14,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import get_capability, get_supported_features
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import DOMAIN, const
 
@@ -49,11 +48,11 @@ async def async_get_actions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device actions for Humidifier devices."""
-    registry = await entity_registry.async_get_registry(hass)
+    registry = er.async_get(hass)
     actions = await toggle_entity.async_get_actions(hass, device_id, DOMAIN)
 
     # Get all the integrations entities for this device
-    for entry in entity_registry.async_entries_for_device(registry, device_id):
+    for entry in er.async_entries_for_device(registry, device_id):
         if entry.domain != DOMAIN:
             continue
 
@@ -66,7 +65,7 @@ async def async_get_actions(
         }
         actions.append({**base_action, CONF_TYPE: "set_humidity"})
 
-        if supported_features & const.SUPPORT_MODES:
+        if supported_features & const.HumidifierEntityFeature.MODES:
             actions.append({**base_action, CONF_TYPE: "set_mode"})
 
     return actions
@@ -74,8 +73,8 @@ async def async_get_actions(
 
 async def async_call_action_from_config(
     hass: HomeAssistant,
-    config: dict[str, Any],
-    variables: dict[str, Any],
+    config: ConfigType,
+    variables: TemplateVarsType,
     context: Context | None,
 ) -> None:
     """Execute a device action."""
@@ -97,7 +96,9 @@ async def async_call_action_from_config(
     )
 
 
-async def async_get_action_capabilities(hass, config):
+async def async_get_action_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List action capabilities."""
     action_type = config[CONF_TYPE]
 

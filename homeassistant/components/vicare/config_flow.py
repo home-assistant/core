@@ -16,7 +16,6 @@ from homeassistant.helpers.device_registry import format_mac
 
 from . import vicare_login
 from .const import (
-    CONF_CIRCUIT,
     CONF_HEATING_TYPE,
     DEFAULT_HEATING_TYPE,
     DOMAIN,
@@ -32,7 +31,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Invoke when a user initiates a flow via the user interface."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -75,17 +76,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
 
         return await self.async_step_user()
-
-    async def async_step_import(self, import_info):
-        """Handle a flow initiated by a YAML config import."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
-        # Remove now unsupported config parameters
-        import_info.pop(CONF_CIRCUIT, None)
-
-        # CONF_HEATING_TYPE is now required but was optional in yaml config. Add if missing.
-        if import_info.get(CONF_HEATING_TYPE) is None:
-            import_info[CONF_HEATING_TYPE] = DEFAULT_HEATING_TYPE.value
-
-        return await self.async_step_user(import_info)

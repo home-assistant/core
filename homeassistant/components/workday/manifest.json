@@ -1,15 +1,15 @@
 {
   "domain": "workday",
   "name": "Workday",
-  "documentation": "https://www.home-assistant.io/integrations/workday",
-  "requirements": ["holidays==0.13"],
   "codeowners": ["@fabaff"],
-  "quality_scale": "internal",
+  "documentation": "https://www.home-assistant.io/integrations/workday",
   "iot_class": "local_polling",
   "loggers": [
     "convertdate",
     "hijri_converter",
     "holidays",
     "korean_lunar_calendar"
-  ]
+  ],
+  "quality_scale": "internal",
+  "requirements": ["holidays==0.18.0"]
 }

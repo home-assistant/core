@@ -49,7 +49,7 @@ class TotalConnectBinarySensor(BinarySensorEntity):
         """Return the name of the device."""
         return self._name
 
-    def update(self):
+    def update(self) -> None:
         """Return the state of the device."""
         self._is_tampered = self._zone.is_tampered()
         self._is_low_battery = self._zone.is_low_battery()

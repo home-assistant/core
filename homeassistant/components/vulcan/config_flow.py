@@ -1,18 +1,27 @@
 """Adds config flow for Vulcan."""
+from collections.abc import Mapping
 import logging
+from typing import Any
 
 from aiohttp import ClientConnectionError
 import voluptuous as vol
-from vulcan import Account, Keystore, Vulcan
-from vulcan._utils import VulcanAPIException
+from vulcan import (
+    Account,
+    ExpiredTokenException,
+    InvalidPINException,
+    InvalidSymbolException,
+    InvalidTokenException,
+    Keystore,
+    UnauthorizedCertificateException,
+    Vulcan,
+)
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PIN, CONF_REGION, CONF_SCAN_INTERVAL, CONF_TOKEN
-from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_PIN, CONF_REGION, CONF_TOKEN
+from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import DOMAIN
-from .const import DEFAULT_SCAN_INTERVAL
 from .register import register
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,11 +38,11 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry):
-        """Get the options flow for this handler."""
-        return VulcanOptionsFlowHandler(config_entry)
+    def __init__(self) -> None:
+        """Initialize config flow."""
+        self.account = None
+        self.keystore = None
+        self.students = None
 
     async def async_step_user(self, user_input=None):
         """Handle config flow."""
@@ -53,22 +62,14 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     user_input[CONF_REGION],
                     user_input[CONF_PIN],
                 )
-            except VulcanAPIException as err:
-                if str(err) == "Invalid token!" or str(err) == "Invalid token.":
-                    errors = {"base": "invalid_token"}
-                elif str(err) == "Expired token.":
-                    errors = {"base": "expired_token"}
-                elif str(err) == "Invalid PIN.":
-                    errors = {"base": "invalid_pin"}
-                else:
-                    errors = {"base": "unknown"}
-                    _LOGGER.error(err)
-            except RuntimeError as err:
-                if str(err) == "Internal Server Error (ArgumentException)":
-                    errors = {"base": "invalid_symbol"}
-                else:
-                    errors = {"base": "unknown"}
-                    _LOGGER.error(err)
+            except InvalidSymbolException:
+                errors = {"base": "invalid_symbol"}
+            except InvalidTokenException:
+                errors = {"base": "invalid_token"}
+            except InvalidPINException:
+                errors = {"base": "invalid_pin"}
+            except ExpiredTokenException:
+                errors = {"base": "expired_token"}
             except ClientConnectionError as err:
                 errors = {"base": "cannot_connect"}
                 _LOGGER.error("Connection error: %s", err)
@@ -78,12 +79,10 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if not errors:
                 account = credentials["account"]
                 keystore = credentials["keystore"]
-                client = Vulcan(keystore, account)
+                client = Vulcan(keystore, account, async_get_clientsession(self.hass))
                 students = await client.get_students()
-                await client.close()
 
                 if len(students) > 1:
-                    # pylint:disable=attribute-defined-outside-init
                     self.account = account
                     self.keystore = keystore
                     self.students = students
@@ -109,10 +108,10 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_select_student(self, user_input=None):
         """Allow user to select student."""
         errors = {}
-        students_list = {}
+        students = {}
         if self.students is not None:
             for student in self.students:
-                students_list[
+                students[
                     str(student.pupil.id)
                 ] = f"{student.pupil.first_name} {student.pupil.last_name}"
         if user_input is not None:
@@ -120,7 +119,7 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(str(student_id))
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title=students_list[student_id],
+                title=students[student_id],
                 data={
                     "student_id": str(student_id),
                     "keystore": self.keystore.as_dict,
@@ -128,37 +127,30 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        data_schema = {
-            vol.Required(
-                "student",
-            ): vol.In(students_list),
-        }
         return self.async_show_form(
             step_id="select_student",
-            data_schema=vol.Schema(data_schema),
+            data_schema=vol.Schema({vol.Required("student"): vol.In(students)}),
             errors=errors,
         )
 
     async def async_step_select_saved_credentials(self, user_input=None, errors=None):
         """Allow user to select saved credentials."""
-        credentials_list = {}
+
+        credentials = {}
         for entry in self.hass.config_entries.async_entries(DOMAIN):
-            credentials_list[entry.entry_id] = entry.data["account"]["UserName"]
+            credentials[entry.entry_id] = entry.data["account"]["UserName"]
 
         if user_input is not None:
             entry = self.hass.config_entries.async_get_entry(user_input["credentials"])
             keystore = Keystore.load(entry.data["keystore"])
             account = Account.load(entry.data["account"])
-            client = Vulcan(keystore, account)
+            client = Vulcan(keystore, account, async_get_clientsession(self.hass))
             try:
                 students = await client.get_students()
-            except VulcanAPIException as err:
-                if str(err) == "The certificate is not authorized.":
-                    return await self.async_step_auth(
-                        errors={"base": "expired_credentials"}
-                    )
-                _LOGGER.error(err)
-                return await self.async_step_auth(errors={"base": "unknown"})
+            except UnauthorizedCertificateException:
+                return await self.async_step_auth(
+                    errors={"base": "expired_credentials"}
+                )
             except ClientConnectionError as err:
                 _LOGGER.error("Connection error: %s", err)
                 return await self.async_step_select_saved_credentials(
@@ -167,8 +159,6 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 return await self.async_step_auth(errors={"base": "unknown"})
-            finally:
-                await client.close()
             if len(students) == 1:
                 student = students[0]
                 await self.async_set_unique_id(str(student.pupil.id))
@@ -181,7 +171,6 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         "account": account.as_dict,
                     },
                 )
-            # pylint:disable=attribute-defined-outside-init
             self.account = account
             self.keystore = keystore
             self.students = students
@@ -190,7 +179,7 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         data_schema = {
             vol.Required(
                 "credentials",
-            ): vol.In(credentials_list),
+            ): vol.In(credentials),
         }
         return self.async_show_form(
             step_id="select_saved_credentials",
@@ -200,46 +189,48 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_add_next_config_entry(self, user_input=None):
         """Flow initialized when user is adding next entry of that integration."""
+
         existing_entries = []
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             existing_entries.append(entry)
 
         errors = {}
+
         if user_input is not None:
-            if user_input["use_saved_credentials"]:
-                if len(existing_entries) == 1:
-                    keystore = Keystore.load(existing_entries[0].data["keystore"])
-                    account = Account.load(existing_entries[0].data["account"])
-                    client = Vulcan(keystore, account)
-                    students = await client.get_students()
-                    await client.close()
-                    new_students = []
-                    existing_entry_ids = []
-                    for entry in self.hass.config_entries.async_entries(DOMAIN):
-                        existing_entry_ids.append(entry.data["student_id"])
-                    for student in students:
-                        if str(student.pupil.id) not in existing_entry_ids:
-                            new_students.append(student)
-                    if not new_students:
-                        return self.async_abort(reason="all_student_already_configured")
-                    if len(new_students) == 1:
-                        await self.async_set_unique_id(str(new_students[0].pupil.id))
-                        self._abort_if_unique_id_configured()
-                        return self.async_create_entry(
-                            title=f"{new_students[0].pupil.first_name} {new_students[0].pupil.last_name}",
-                            data={
-                                "student_id": str(new_students[0].pupil.id),
-                                "keystore": keystore.as_dict,
-                                "account": account.as_dict,
-                            },
-                        )
-                    # pylint:disable=attribute-defined-outside-init
-                    self.account = account
-                    self.keystore = keystore
-                    self.students = new_students
-                    return await self.async_step_select_student()
+            if not user_input["use_saved_credentials"]:
+                return await self.async_step_auth()
+            if len(existing_entries) > 1:
                 return await self.async_step_select_saved_credentials()
-            return await self.async_step_auth()
+            keystore = Keystore.load(existing_entries[0].data["keystore"])
+            account = Account.load(existing_entries[0].data["account"])
+            client = Vulcan(keystore, account, async_get_clientsession(self.hass))
+            students = await client.get_students()
+            new_students = []
+            existing_entry_ids = []
+            for entry in self.hass.config_entries.async_entries(DOMAIN):
+                existing_entry_ids.append(entry.data["student_id"])
+            for student in students:
+                if str(student.pupil.id) not in existing_entry_ids:
+                    new_students.append(student)
+            if not new_students:
+                return self.async_abort(reason="all_student_already_configured")
+            if len(new_students) == 1:
+                await self.async_set_unique_id(str(new_students[0].pupil.id))
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(
+                    title=(
+                        f"{new_students[0].pupil.first_name} {new_students[0].pupil.last_name}"
+                    ),
+                    data={
+                        "student_id": str(new_students[0].pupil.id),
+                        "keystore": keystore.as_dict,
+                        "account": account.as_dict,
+                    },
+                )
+            self.account = account
+            self.keystore = keystore
+            self.students = new_students
+            return await self.async_step_select_student()
 
         data_schema = {
             vol.Required("use_saved_credentials", default=True): bool,
@@ -250,7 +241,11 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, user_input=None):
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(self, user_input=None):
         """Reauthorize integration."""
         errors = {}
         if user_input is not None:
@@ -261,22 +256,14 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     user_input[CONF_REGION],
                     user_input[CONF_PIN],
                 )
-            except VulcanAPIException as err:
-                if str(err) == "Invalid token!" or str(err) == "Invalid token.":
-                    errors["base"] = "invalid_token"
-                elif str(err) == "Expired token.":
-                    errors["base"] = "expired_token"
-                elif str(err) == "Invalid PIN.":
-                    errors["base"] = "invalid_pin"
-                else:
-                    errors["base"] = "unknown"
-                    _LOGGER.error(err)
-            except RuntimeError as err:
-                if str(err) == "Internal Server Error (ArgumentException)":
-                    errors["base"] = "invalid_symbol"
-                else:
-                    errors["base"] = "unknown"
-                    _LOGGER.error(err)
+            except InvalidSymbolException:
+                errors = {"base": "invalid_symbol"}
+            except InvalidTokenException:
+                errors = {"base": "invalid_token"}
+            except InvalidPINException:
+                errors = {"base": "invalid_pin"}
+            except ExpiredTokenException:
+                errors = {"base": "expired_token"}
             except ClientConnectionError as err:
                 errors["base"] = "cannot_connect"
                 _LOGGER.error("Connection error: %s", err)
@@ -286,18 +273,20 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if not errors:
                 account = credentials["account"]
                 keystore = credentials["keystore"]
-                client = Vulcan(keystore, account)
+                client = Vulcan(keystore, account, async_get_clientsession(self.hass))
                 students = await client.get_students()
-                await client.close()
                 existing_entries = []
                 for entry in self.hass.config_entries.async_entries(DOMAIN):
                     existing_entries.append(entry)
+                matching_entries = False
                 for student in students:
                     for entry in existing_entries:
                         if str(student.pupil.id) == str(entry.data["student_id"]):
                             self.hass.config_entries.async_update_entry(
                                 entry,
-                                title=f"{student.pupil.first_name} {student.pupil.last_name}",
+                                title=(
+                                    f"{student.pupil.first_name} {student.pupil.last_name}"
+                                ),
                                 data={
                                     "student_id": str(student.pupil.id),
                                     "keystore": keystore.as_dict,
@@ -305,38 +294,13 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                                 },
                             )
                             await self.hass.config_entries.async_reload(entry.entry_id)
+                            matching_entries = True
+                if not matching_entries:
+                    return self.async_abort(reason="no_matching_entries")
                 return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
-            step_id="reauth",
+            step_id="reauth_confirm",
             data_schema=vol.Schema(LOGIN_SCHEMA),
             errors=errors,
-        )
-
-
-class VulcanOptionsFlowHandler(config_entries.OptionsFlow):
-    """Config flow options for Uonet+ Vulcan."""
-
-    def __init__(self, config_entry):
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(self, user_input=None):
-        """Manage the options."""
-        errors = {}
-
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        options = {
-            vol.Optional(
-                CONF_SCAN_INTERVAL,
-                default=self.config_entry.options.get(
-                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                ),
-            ): cv.positive_int,
-        }
-
-        return self.async_show_form(
-            step_id="init", data_schema=vol.Schema(options), errors=errors
         )

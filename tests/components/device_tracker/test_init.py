@@ -9,7 +9,7 @@ import pytest
 
 from homeassistant.components import zone
 import homeassistant.components.device_tracker as device_tracker
-from homeassistant.components.device_tracker import const, legacy
+from homeassistant.components.device_tracker import SourceType, const, legacy
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
@@ -21,12 +21,14 @@ from homeassistant.const import (
     STATE_HOME,
     STATE_NOT_HOME,
 )
-from homeassistant.core import State, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import discovery
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
+
+from . import common
 
 from tests.common import (
     assert_setup_component,
@@ -35,7 +37,6 @@ from tests.common import (
     mock_restore_cache,
     patch_yaml_files,
 )
-from tests.components.device_tracker import common
 
 TEST_PLATFORM = {device_tracker.DOMAIN: {CONF_PLATFORM: "test"}}
 
@@ -53,7 +54,7 @@ def mock_yaml_devices(hass):
         os.remove(yaml_devices)
 
 
-async def test_is_on(hass):
+async def test_is_on(hass: HomeAssistant) -> None:
     """Test is_on method."""
     entity_id = f"{const.DOMAIN}.test"
 
@@ -66,7 +67,7 @@ async def test_is_on(hass):
     assert not device_tracker.is_on(hass, entity_id)
 
 
-async def test_reading_broken_yaml_config(hass):
+async def test_reading_broken_yaml_config(hass: HomeAssistant) -> None:
     """Test when known devices contains invalid data."""
     files = {
         "empty.yaml": "",
@@ -74,7 +75,7 @@ async def test_reading_broken_yaml_config(hass):
         "badkey.yaml": "@:\n  name: Device",
         "noname.yaml": "my_device:\n",
         "allok.yaml": "My Device:\n  name: Device",
-        "oneok.yaml": ("My Device!:\n  name: Device\nbad_device:\n  nme: Device"),
+        "oneok.yaml": "My Device!:\n  name: Device\nbad_device:\n  nme: Device",
     }
     args = {"hass": hass, "consider_home": timedelta(seconds=60)}
     with patch_yaml_files(files):
@@ -94,7 +95,9 @@ async def test_reading_broken_yaml_config(hass):
         assert res[0].dev_id == "my_device"
 
 
-async def test_reading_yaml_config(hass, yaml_devices, enable_custom_integrations):
+async def test_reading_yaml_config(
+    hass: HomeAssistant, yaml_devices, enable_custom_integrations: None
+) -> None:
     """Test the rendering of the YAML configuration."""
     dev_id = "test"
     device = legacy.Device(
@@ -124,7 +127,7 @@ async def test_reading_yaml_config(hass, yaml_devices, enable_custom_integration
 
 
 @patch("homeassistant.components.device_tracker.const.LOGGER.warning")
-async def test_duplicate_mac_dev_id(mock_warning, hass):
+async def test_duplicate_mac_dev_id(mock_warning, hass: HomeAssistant) -> None:
     """Test adding duplicate MACs or device IDs to DeviceTracker."""
     devices = [
         legacy.Device(
@@ -161,13 +164,16 @@ async def test_duplicate_mac_dev_id(mock_warning, hass):
     assert "Duplicate device IDs" in args[0], "Duplicate device IDs warning expected"
 
 
-async def test_setup_without_yaml_file(hass, enable_custom_integrations):
+async def test_setup_without_yaml_file(
+    hass: HomeAssistant, yaml_devices, enable_custom_integrations: None
+) -> None:
     """Test with no YAML file."""
     with assert_setup_component(1, device_tracker.DOMAIN):
         assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)
+        await hass.async_block_till_done()
 
 
-async def test_gravatar(hass):
+async def test_gravatar(hass: HomeAssistant) -> None:
     """Test the Gravatar generation."""
     dev_id = "test"
     device = legacy.Device(
@@ -186,7 +192,7 @@ async def test_gravatar(hass):
     assert device.config_picture == gravatar_url
 
 
-async def test_gravatar_and_picture(hass):
+async def test_gravatar_and_picture(hass: HomeAssistant) -> None:
     """Test that Gravatar overrides picture."""
     dev_id = "test"
     device = legacy.Device(
@@ -208,12 +214,15 @@ async def test_gravatar_and_picture(hass):
 
 @patch("homeassistant.components.device_tracker.legacy.DeviceTracker.see")
 @patch("homeassistant.components.demo.device_tracker.setup_scanner", autospec=True)
-async def test_discover_platform(mock_demo_setup_scanner, mock_see, hass):
+async def test_discover_platform(
+    mock_demo_setup_scanner, mock_see, hass: HomeAssistant
+) -> None:
     """Test discovery of device_tracker demo platform."""
-    await discovery.async_load_platform(
-        hass, device_tracker.DOMAIN, "demo", {"test_key": "test_val"}, {"bla": {}}
-    )
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.device_tracker.legacy.update_config"):
+        await discovery.async_load_platform(
+            hass, device_tracker.DOMAIN, "demo", {"test_key": "test_val"}, {"bla": {}}
+        )
+        await hass.async_block_till_done()
     assert device_tracker.DOMAIN in hass.config.components
     assert mock_demo_setup_scanner.called
     assert mock_demo_setup_scanner.call_args[0] == (
@@ -224,7 +233,11 @@ async def test_discover_platform(mock_demo_setup_scanner, mock_see, hass):
     )
 
 
-async def test_update_stale(hass, mock_device_tracker_conf, enable_custom_integrations):
+async def test_update_stale(
+    hass: HomeAssistant,
+    mock_device_tracker_conf: list[legacy.Device],
+    enable_custom_integrations: None,
+) -> None:
     """Test stalled update."""
 
     scanner = getattr(hass.components, "test.device_tracker").SCANNER
@@ -266,8 +279,10 @@ async def test_update_stale(hass, mock_device_tracker_conf, enable_custom_integr
 
 
 async def test_entity_attributes(
-    hass, mock_device_tracker_conf, enable_custom_integrations
-):
+    hass: HomeAssistant,
+    mock_device_tracker_conf: list[legacy.Device],
+    enable_custom_integrations: None,
+) -> None:
     """Test the entity attributes."""
     devices = mock_device_tracker_conf
     dev_id = "test_entity"
@@ -299,7 +314,9 @@ async def test_entity_attributes(
 
 
 @patch("homeassistant.components.device_tracker.legacy.DeviceTracker.async_see")
-async def test_see_service(mock_see, hass, enable_custom_integrations):
+async def test_see_service(
+    mock_see, hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test the see service with a unicode dev_id and NO MAC."""
     with assert_setup_component(1, device_tracker.DOMAIN):
         assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)
@@ -327,8 +344,10 @@ async def test_see_service(mock_see, hass, enable_custom_integrations):
 
 
 async def test_see_service_guard_config_entry(
-    hass, mock_device_tracker_conf, enable_custom_integrations
-):
+    hass: HomeAssistant,
+    mock_device_tracker_conf: list[legacy.Device],
+    enable_custom_integrations: None,
+) -> None:
     """Test the guard if the device is registered in the entity registry."""
     mock_entry = Mock()
     dev_id = "test"
@@ -345,8 +364,10 @@ async def test_see_service_guard_config_entry(
 
 
 async def test_new_device_event_fired(
-    hass, mock_device_tracker_conf, enable_custom_integrations
-):
+    hass: HomeAssistant,
+    mock_device_tracker_conf: list[legacy.Device],
+    enable_custom_integrations: None,
+) -> None:
     """Test that the device tracker will fire an event."""
     with assert_setup_component(1, device_tracker.DOMAIN):
         assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)
@@ -377,8 +398,10 @@ async def test_new_device_event_fired(
 
 
 async def test_duplicate_yaml_keys(
-    hass, mock_device_tracker_conf, enable_custom_integrations
-):
+    hass: HomeAssistant,
+    mock_device_tracker_conf: list[legacy.Device],
+    enable_custom_integrations: None,
+) -> None:
     """Test that the device tracker will not generate invalid YAML."""
     devices = mock_device_tracker_conf
     with assert_setup_component(1, device_tracker.DOMAIN):
@@ -394,8 +417,10 @@ async def test_duplicate_yaml_keys(
 
 
 async def test_invalid_dev_id(
-    hass, mock_device_tracker_conf, enable_custom_integrations
-):
+    hass: HomeAssistant,
+    mock_device_tracker_conf: list[legacy.Device],
+    enable_custom_integrations: None,
+) -> None:
     """Test that the device tracker will not allow invalid dev ids."""
     devices = mock_device_tracker_conf
     with assert_setup_component(1, device_tracker.DOMAIN):
@@ -407,7 +432,9 @@ async def test_invalid_dev_id(
     assert not devices
 
 
-async def test_see_state(hass, yaml_devices, enable_custom_integrations):
+async def test_see_state(
+    hass: HomeAssistant, yaml_devices, enable_custom_integrations: None
+) -> None:
     """Test device tracker see records state correctly."""
     assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)
 
@@ -444,8 +471,10 @@ async def test_see_state(hass, yaml_devices, enable_custom_integrations):
 
 
 async def test_see_passive_zone_state(
-    hass, mock_device_tracker_conf, enable_custom_integrations
-):
+    hass: HomeAssistant,
+    mock_device_tracker_conf: list[legacy.Device],
+    enable_custom_integrations: None,
+) -> None:
     """Test that the device tracker sets gps for passive trackers."""
     now = dt_util.utcnow()
 
@@ -492,7 +521,7 @@ async def test_see_passive_zone_state(
     assert attrs.get("latitude") == 1
     assert attrs.get("longitude") == 2
     assert attrs.get("gps_accuracy") == 0
-    assert attrs.get("source_type") == device_tracker.SOURCE_TYPE_ROUTER
+    assert attrs.get("source_type") == SourceType.ROUTER
 
     scanner.leave_home("dev1")
 
@@ -512,11 +541,13 @@ async def test_see_passive_zone_state(
     assert attrs.get("latitude") is None
     assert attrs.get("longitude") is None
     assert attrs.get("gps_accuracy") is None
-    assert attrs.get("source_type") == device_tracker.SOURCE_TYPE_ROUTER
+    assert attrs.get("source_type") == SourceType.ROUTER
 
 
 @patch("homeassistant.components.device_tracker.const.LOGGER.warning")
-async def test_see_failures(mock_warning, hass, mock_device_tracker_conf):
+async def test_see_failures(
+    mock_warning, hass: HomeAssistant, mock_device_tracker_conf: list[legacy.Device]
+) -> None:
     """Test that the device tracker see failures."""
     devices = mock_device_tracker_conf
     tracker = legacy.DeviceTracker(hass, timedelta(seconds=60), 0, {}, [])
@@ -539,7 +570,7 @@ async def test_see_failures(mock_warning, hass, mock_device_tracker_conf):
     assert len(devices) == 4
 
 
-async def test_async_added_to_hass(hass):
+async def test_async_added_to_hass(hass: HomeAssistant) -> None:
     """Test restoring state."""
     attr = {
         ATTR_LONGITUDE: 18,
@@ -565,7 +596,7 @@ async def test_async_added_to_hass(hass):
         assert atr == val, f"{key}={atr} expected: {val}"
 
 
-async def test_bad_platform(hass):
+async def test_bad_platform(hass: HomeAssistant) -> None:
     """Test bad platform."""
     config = {"device_tracker": [{"platform": "bad_platform"}]}
     with assert_setup_component(0, device_tracker.DOMAIN):
@@ -575,8 +606,10 @@ async def test_bad_platform(hass):
 
 
 async def test_adding_unknown_device_to_config(
-    mock_device_tracker_conf, hass, enable_custom_integrations
-):
+    mock_device_tracker_conf: list[legacy.Device],
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+) -> None:
     """Test the adding of unknown devices to configuration file."""
     scanner = getattr(hass.components, "test.device_tracker").SCANNER
     scanner.reset()
@@ -594,7 +627,9 @@ async def test_adding_unknown_device_to_config(
     assert device.track
 
 
-async def test_picture_and_icon_on_see_discovery(mock_device_tracker_conf, hass):
+async def test_picture_and_icon_on_see_discovery(
+    mock_device_tracker_conf: list[legacy.Device], hass: HomeAssistant
+) -> None:
     """Test that picture and icon are set in initial see."""
     tracker = legacy.DeviceTracker(hass, timedelta(seconds=60), False, {}, [])
     await tracker.async_see(dev_id=11, picture="pic_url", icon="mdi:icon")
@@ -604,7 +639,9 @@ async def test_picture_and_icon_on_see_discovery(mock_device_tracker_conf, hass)
     assert mock_device_tracker_conf[0].entity_picture == "pic_url"
 
 
-async def test_backward_compatibility_for_track_new(mock_device_tracker_conf, hass):
+async def test_backward_compatibility_for_track_new(
+    mock_device_tracker_conf: list[legacy.Device], hass: HomeAssistant
+) -> None:
     """Test backward compatibility for track new."""
     tracker = legacy.DeviceTracker(
         hass, timedelta(seconds=60), False, {device_tracker.CONF_TRACK_NEW: True}, []
@@ -615,7 +652,9 @@ async def test_backward_compatibility_for_track_new(mock_device_tracker_conf, ha
     assert mock_device_tracker_conf[0].track is False
 
 
-async def test_old_style_track_new_is_skipped(mock_device_tracker_conf, hass):
+async def test_old_style_track_new_is_skipped(
+    mock_device_tracker_conf: list[legacy.Device], hass: HomeAssistant
+) -> None:
     """Test old style config is skipped."""
     tracker = legacy.DeviceTracker(
         hass, timedelta(seconds=60), None, {device_tracker.CONF_TRACK_NEW: False}, []
@@ -626,7 +665,7 @@ async def test_old_style_track_new_is_skipped(mock_device_tracker_conf, hass):
     assert mock_device_tracker_conf[0].track is False
 
 
-def test_see_schema_allowing_ios_calls():
+def test_see_schema_allowing_ios_calls() -> None:
     """Test SEE service schema allows extra keys.
 
     Temp work around because the iOS app sends incorrect data.

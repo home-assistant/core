@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from boschshcpy import (
     SHCCamera360,
@@ -19,8 +20,8 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -94,7 +95,6 @@ async def async_setup_entry(
     session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
 
     for switch in session.device_helper.smart_plugs:
-
         entities.append(
             SHCSwitch(
                 device=switch,
@@ -112,7 +112,6 @@ async def async_setup_entry(
         )
 
     for switch in session.device_helper.light_switches:
-
         entities.append(
             SHCSwitch(
                 device=switch,
@@ -123,7 +122,6 @@ async def async_setup_entry(
         )
 
     for switch in session.device_helper.smart_plugs_compact:
-
         entities.append(
             SHCSwitch(
                 device=switch,
@@ -134,7 +132,6 @@ async def async_setup_entry(
         )
 
     for switch in session.device_helper.camera_eyes:
-
         entities.append(
             SHCSwitch(
                 device=switch,
@@ -145,7 +142,6 @@ async def async_setup_entry(
         )
 
     for switch in session.device_helper.camera_360:
-
         entities.append(
             SHCSwitch(
                 device=switch,
@@ -155,8 +151,7 @@ async def async_setup_entry(
             )
         )
 
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class SHCSwitch(SHCEntity, SwitchEntity):
@@ -183,11 +178,11 @@ class SHCSwitch(SHCEntity, SwitchEntity):
             == self.entity_description.on_value
         )
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         setattr(self._device, self.entity_description.on_key, True)
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         setattr(self._device, self.entity_description.on_key, False)
 
@@ -218,10 +213,10 @@ class SHCRoutingSwitch(SHCEntity, SwitchEntity):
         """Return the state of the switch."""
         return self._device.routing.name == "ENABLED"
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self._device.routing = True
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self._device.routing = False

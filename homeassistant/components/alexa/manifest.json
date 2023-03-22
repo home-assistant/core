@@ -1,9 +1,9 @@
 {
   "domain": "alexa",
   "name": "Amazon Alexa",
-  "documentation": "https://www.home-assistant.io/integrations/alexa",
-  "dependencies": ["http"],
   "after_dependencies": ["camera"],
-  "codeowners": ["@home-assistant/cloud", "@ochlocracy"],
+  "codeowners": ["@home-assistant/cloud", "@ochlocracy", "@jbouwh"],
+  "dependencies": ["http"],
+  "documentation": "https://www.home-assistant.io/integrations/alexa",
   "iot_class": "cloud_push"
 }

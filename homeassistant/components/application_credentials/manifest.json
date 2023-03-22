@@ -1,0 +1,10 @@
+{
+  "domain": "application_credentials",
+  "name": "Application Credentials",
+  "codeowners": ["@home-assistant/core"],
+  "config_flow": false,
+  "dependencies": ["auth", "websocket_api"],
+  "documentation": "https://www.home-assistant.io/integrations/application_credentials",
+  "integration_type": "system",
+  "quality_scale": "internal"
+}

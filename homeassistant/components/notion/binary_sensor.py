@@ -10,8 +10,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NotionEntity
@@ -48,7 +48,7 @@ class NotionBinarySensorDescription(
 BINARY_SENSOR_DESCRIPTIONS = (
     NotionBinarySensorDescription(
         key=SENSOR_BATTERY,
-        name="Low Battery",
+        name="Low battery",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state="critical",
@@ -61,13 +61,13 @@ BINARY_SENSOR_DESCRIPTIONS = (
     ),
     NotionBinarySensorDescription(
         key=SENSOR_GARAGE_DOOR,
-        name="Garage Door",
+        name="Garage door",
         device_class=BinarySensorDeviceClass.GARAGE_DOOR,
         on_state="open",
     ),
     NotionBinarySensorDescription(
         key=SENSOR_LEAK,
-        name="Leak Detector",
+        name="Leak detector",
         device_class=BinarySensorDeviceClass.MOISTURE,
         on_state="leak",
     ),
@@ -86,25 +86,25 @@ BINARY_SENSOR_DESCRIPTIONS = (
     ),
     NotionBinarySensorDescription(
         key=SENSOR_SLIDING,
-        name="Sliding Door/Window",
+        name="Sliding door/window",
         device_class=BinarySensorDeviceClass.DOOR,
         on_state="open",
     ),
     NotionBinarySensorDescription(
         key=SENSOR_SMOKE_CO,
-        name="Smoke/Carbon Monoxide Detector",
+        name="Smoke/Carbon monoxide detector",
         device_class=BinarySensorDeviceClass.SMOKE,
         on_state="alarm",
     ),
     NotionBinarySensorDescription(
         key=SENSOR_WINDOW_HINGED_HORIZONTAL,
-        name="Hinged Window",
+        name="Hinged window",
         device_class=BinarySensorDeviceClass.WINDOW,
         on_state="open",
     ),
     NotionBinarySensorDescription(
         key=SENSOR_WINDOW_HINGED_VERTICAL,
-        name="Hinged Window",
+        name="Hinged window",
         device_class=BinarySensorDeviceClass.WINDOW,
         on_state="open",
     ),

@@ -13,6 +13,7 @@ from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import discovery_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_discover, async_load_platform
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -58,13 +59,10 @@ class ServiceDetails(NamedTuple):
 # These have no config flows
 SERVICE_HANDLERS = {
     SERVICE_ENIGMA2: ServiceDetails("media_player", "enigma2"),
-    SERVICE_SABNZBD: ServiceDetails("sabnzbd", None),
     "yamaha": ServiceDetails("media_player", "yamaha"),
     "frontier_silicon": ServiceDetails("media_player", "frontier_silicon"),
     "openhome": ServiceDetails("media_player", "openhome"),
-    "bose_soundtouch": ServiceDetails("media_player", "soundtouch"),
     "bluesound": ServiceDetails("media_player", "bluesound"),
-    "lg_smart_device": ServiceDetails("media_player", "lg_soundbar"),
 }
 
 OPTIONAL_SERVICE_HANDLERS: dict[str, tuple[str, str | None]] = {}
@@ -72,6 +70,7 @@ OPTIONAL_SERVICE_HANDLERS: dict[str, tuple[str, str | None]] = {}
 MIGRATED_SERVICE_HANDLERS = [
     SERVICE_APPLE_TV,
     "axis",
+    "bose_soundtouch",
     "deconz",
     SERVICE_DAIKIN,
     "denonavr",
@@ -97,7 +96,9 @@ MIGRATED_SERVICE_HANDLERS = [
     SERVICE_XIAOMI_GW,
     "volumio",
     SERVICE_YEELIGHT,
+    SERVICE_SABNZBD,
     "nanoleaf_aurora",
+    "lg_smart_device",
 ]
 
 DEFAULT_ENABLED = (
@@ -145,8 +146,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     for platform in enabled_platforms:
         if platform in DEFAULT_ENABLED:
             logger.warning(
-                "Please remove %s from your discovery.enable configuration "
-                "as it is now enabled by default",
+                (
+                    "Please remove %s from your discovery.enable configuration "
+                    "as it is now enabled by default"
+                ),
                 platform,
             )
 
@@ -173,7 +176,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         already_discovered.add(discovery_hash)
 
         if service in CONFIG_ENTRY_HANDLERS:
-            await hass.config_entries.flow.async_init(
+            discovery_flow.async_create_flow(
+                hass,
                 CONFIG_ENTRY_HANDLERS[service],
                 context={"source": config_entries.SOURCE_DISCOVERY},
                 data=info,

@@ -1,14 +1,15 @@
 """Tests for the Sonos config flow."""
 from unittest.mock import patch
 
-from homeassistant import config_entries, core, data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import sonos, zeroconf
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
 async def test_creating_entry_sets_up_media_player(
-    hass: core.HomeAssistant, zeroconf_payload: zeroconf.ZeroconfServiceInfo
-):
+    hass: HomeAssistant, zeroconf_payload: zeroconf.ZeroconfServiceInfo
+) -> None:
     """Test setting up Sonos loads the media player."""
 
     # Initiate a discovery to allow a user config flow
@@ -26,17 +27,17 @@ async def test_creating_entry_sets_up_media_player(
         )
 
         # Confirmation form
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
         await hass.async_block_till_done()
 
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_configuring_sonos_creates_entry(hass: core.HomeAssistant):
+async def test_configuring_sonos_creates_entry(hass: HomeAssistant) -> None:
     """Test that specifying config will create an entry."""
     with patch(
         "homeassistant.components.sonos.async_setup_entry",
@@ -52,7 +53,7 @@ async def test_configuring_sonos_creates_entry(hass: core.HomeAssistant):
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_not_configuring_sonos_not_creates_entry(hass: core.HomeAssistant):
+async def test_not_configuring_sonos_not_creates_entry(hass: HomeAssistant) -> None:
     """Test that no config will not create an entry."""
     with patch(
         "homeassistant.components.sonos.async_setup_entry",

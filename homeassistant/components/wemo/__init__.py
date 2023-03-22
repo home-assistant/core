@@ -4,7 +4,6 @@ from __future__ import annotations
 from collections.abc import Sequence
 from datetime import datetime
 import logging
-from typing import Optional
 
 import pywemo
 import voluptuous as vol
@@ -32,7 +31,7 @@ WEMO_MODEL_DISPATCH = {
     "CoffeeMaker": [Platform.SWITCH],
     "Dimmer": [Platform.LIGHT],
     "Humidifier": [Platform.FAN],
-    "Insight": [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH],
+    "Insight": [Platform.BINARY_SENSOR, Platform.SWITCH],
     "LightSwitch": [Platform.SWITCH],
     "Maker": [Platform.BINARY_SENSOR, Platform.SWITCH],
     "Motion": [Platform.BINARY_SENSOR],
@@ -43,7 +42,7 @@ WEMO_MODEL_DISPATCH = {
 
 _LOGGER = logging.getLogger(__name__)
 
-HostPortTuple = tuple[str, Optional[int]]
+HostPortTuple = tuple[str, int | None]
 
 
 def coerce_host_port(value: str) -> HostPortTuple:
@@ -141,7 +140,7 @@ class WemoDispatcher:
         """Initialize the WemoDispatcher."""
         self._config_entry = config_entry
         self._added_serial_numbers: set[str] = set()
-        self._loaded_components: set[str] = set()
+        self._loaded_platforms: set[Platform] = set()
 
     async def async_add_unique_device(
         self, hass: HomeAssistant, wemo: pywemo.WeMoDevice
@@ -151,28 +150,30 @@ class WemoDispatcher:
             return
 
         coordinator = await async_register_device(hass, self._config_entry, wemo)
-        for component in WEMO_MODEL_DISPATCH.get(wemo.model_name, [Platform.SWITCH]):
+        platforms = set(WEMO_MODEL_DISPATCH.get(wemo.model_name, [Platform.SWITCH]))
+        platforms.add(Platform.SENSOR)
+        for platform in platforms:
             # Three cases:
-            # - First time we see component, we need to load it and initialize the backlog
-            # - Component is being loaded, add to backlog
-            # - Component is loaded, backlog is gone, dispatch discovery
+            # - First time we see platform, we need to load it and initialize the backlog
+            # - Platform is being loaded, add to backlog
+            # - Platform is loaded, backlog is gone, dispatch discovery
 
-            if component not in self._loaded_components:
-                hass.data[DOMAIN]["pending"][component] = [coordinator]
-                self._loaded_components.add(component)
+            if platform not in self._loaded_platforms:
+                hass.data[DOMAIN]["pending"][platform] = [coordinator]
+                self._loaded_platforms.add(platform)
                 hass.async_create_task(
                     hass.config_entries.async_forward_entry_setup(
-                        self._config_entry, component
+                        self._config_entry, platform
                     )
                 )
 
-            elif component in hass.data[DOMAIN]["pending"]:
-                hass.data[DOMAIN]["pending"][component].append(coordinator)
+            elif platform in hass.data[DOMAIN]["pending"]:
+                hass.data[DOMAIN]["pending"][platform].append(coordinator)
 
             else:
                 async_dispatcher_send(
                     hass,
-                    f"{DOMAIN}.{component}",
+                    f"{DOMAIN}.{platform}",
                     coordinator,
                 )
 

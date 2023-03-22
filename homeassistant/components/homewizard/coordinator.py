@@ -1,12 +1,12 @@
 """Update coordinator for HomeWizard."""
 from __future__ import annotations
 
-import asyncio
 import logging
 
-import aiohwenergy
-import async_timeout
+from homewizard_energy import HomeWizardEnergy
+from homewizard_energy.errors import DisabledError, RequestError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -19,66 +19,46 @@ _LOGGER = logging.getLogger(__name__)
 class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]):
     """Gather data for the energy device."""
 
-    api: aiohwenergy.HomeWizardEnergy
+    api: HomeWizardEnergy
+    api_disabled: bool = False
 
     def __init__(
         self,
         hass: HomeAssistant,
+        entry: ConfigEntry,
         host: str,
     ) -> None:
-        """Initialize Update Coordinator."""
-
+        """Initialize update coordinator."""
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
-
-        session = async_get_clientsession(hass)
-        self.api = aiohwenergy.HomeWizardEnergy(host, clientsession=session)
+        self.entry = entry
+        self.api = HomeWizardEnergy(host, clientsession=async_get_clientsession(hass))
 
     async def _async_update_data(self) -> DeviceResponseEntry:
         """Fetch all device and sensor data from api."""
+        try:
+            data = DeviceResponseEntry(
+                device=await self.api.device(),
+                data=await self.api.data(),
+                features=await self.api.features(),
+                state=await self.api.state(),
+            )
 
-        async with async_timeout.timeout(10):
+            if data.features.has_system:
+                data.system = await self.api.system()
 
-            if self.api.device is None:
-                await self.initialize_api()
+        except RequestError as ex:
+            raise UpdateFailed(ex) from ex
 
-            # Update all properties
-            try:
-                if not await self.api.update():
-                    raise UpdateFailed("Failed to communicate with device")
+        except DisabledError as ex:
+            if not self.api_disabled:
+                self.api_disabled = True
 
-            except aiohwenergy.DisabledError as ex:
-                raise UpdateFailed(
-                    "API disabled, API must be enabled in the app"
-                ) from ex
+                # Do not reload when performing first refresh
+                if self.data is not None:
+                    await self.hass.config_entries.async_reload(self.entry.entry_id)
 
-            data: DeviceResponseEntry = {
-                "device": self.api.device,
-                "data": {},
-            }
+            raise UpdateFailed(ex) from ex
 
-            for datapoint in self.api.data.available_datapoints:
-                data["data"][datapoint] = getattr(self.api.data, datapoint)
+        self.api_disabled = False
 
         return data
-
-    async def initialize_api(self) -> aiohwenergy:
-        """Initialize API and validate connection."""
-
-        try:
-            await self.api.initialize()
-
-        except (asyncio.TimeoutError, aiohwenergy.RequestError) as ex:
-            raise UpdateFailed(
-                f"Error connecting to the Energy device at {self.api.host}"
-            ) from ex
-
-        except aiohwenergy.DisabledError as ex:
-            raise ex
-
-        except aiohwenergy.AiohwenergyException as ex:
-            raise UpdateFailed("Unknown Energy API error occurred") from ex
-
-        except Exception as ex:
-            raise UpdateFailed(
-                f"Unknown error connecting with Energy Device at {self.api.host}"
-            ) from ex

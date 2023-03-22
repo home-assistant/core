@@ -2,47 +2,40 @@
 import pytest
 
 from homeassistant.components.config import device_registry
-from homeassistant.helpers import device_registry as helpers_dr
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    mock_device_registry,
-    mock_integration,
-)
+from tests.common import MockConfigEntry, MockModule, mock_integration
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
 def client(hass, hass_ws_client):
     """Fixture that can interact with the config manager API."""
     hass.loop.run_until_complete(device_registry.async_setup(hass))
-    yield hass.loop.run_until_complete(hass_ws_client(hass))
+    return hass.loop.run_until_complete(hass_ws_client(hass))
 
 
-@pytest.fixture
-def registry(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-async def test_list_devices(hass, client, registry):
+async def test_list_devices(
+    hass: HomeAssistant, client, device_registry: dr.DeviceRegistry
+) -> None:
     """Test list entries."""
-    registry.async_get_or_create(
+    device1 = device_registry.async_get_or_create(
         config_entry_id="1234",
         connections={("ethernet", "12:34:56:78:90:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
         model="model",
     )
-    registry.async_get_or_create(
+    device2 = device_registry.async_get_or_create(
         config_entry_id="1234",
         identifiers={("bridgeid", "1234")},
         manufacturer="manufacturer",
         model="model",
         via_device=("bridgeid", "0123"),
-        entry_type=helpers_dr.DeviceEntryType.SERVICE,
+        entry_type=dr.DeviceEntryType.SERVICE,
     )
 
     await client.send_json({"id": 5, "type": "config/device_registry/list"})
@@ -52,55 +45,93 @@ async def test_list_devices(hass, client, registry):
 
     assert msg["result"] == [
         {
+            "area_id": None,
             "config_entries": ["1234"],
+            "configuration_url": None,
             "connections": [["ethernet", "12:34:56:78:90:AB:CD:EF"]],
+            "disabled_by": None,
+            "entry_type": None,
+            "hw_version": None,
             "identifiers": [["bridgeid", "0123"]],
             "manufacturer": "manufacturer",
             "model": "model",
+            "name_by_user": None,
             "name": None,
             "sw_version": None,
-            "hw_version": None,
-            "entry_type": None,
             "via_device_id": None,
-            "area_id": None,
-            "name_by_user": None,
-            "disabled_by": None,
-            "configuration_url": None,
         },
         {
+            "area_id": None,
             "config_entries": ["1234"],
+            "configuration_url": None,
             "connections": [],
+            "disabled_by": None,
+            "entry_type": dr.DeviceEntryType.SERVICE,
+            "hw_version": None,
             "identifiers": [["bridgeid", "1234"]],
             "manufacturer": "manufacturer",
             "model": "model",
+            "name_by_user": None,
             "name": None,
             "sw_version": None,
-            "hw_version": None,
-            "entry_type": helpers_dr.DeviceEntryType.SERVICE,
             "via_device_id": dev1,
-            "area_id": None,
-            "name_by_user": None,
-            "disabled_by": None,
-            "configuration_url": None,
         },
     ]
 
+    class Unserializable:
+        """Good luck serializing me."""
+
+    device_registry.async_update_device(device2.id, name=Unserializable())
+    await hass.async_block_till_done()
+
+    await client.send_json({"id": 6, "type": "config/device_registry/list"})
+    msg = await client.receive_json()
+
+    assert msg["result"] == [
+        {
+            "area_id": None,
+            "config_entries": ["1234"],
+            "configuration_url": None,
+            "connections": [["ethernet", "12:34:56:78:90:AB:CD:EF"]],
+            "disabled_by": None,
+            "entry_type": None,
+            "hw_version": None,
+            "id": device1.id,
+            "identifiers": [["bridgeid", "0123"]],
+            "manufacturer": "manufacturer",
+            "model": "model",
+            "name_by_user": None,
+            "name": None,
+            "sw_version": None,
+            "via_device_id": None,
+        }
+    ]
+
+    # Remove the bad device to avoid errors when test is being torn down
+    device_registry.async_remove_device(device2.id)
+
 
 @pytest.mark.parametrize(
-    "payload_key,payload_value",
+    ("payload_key", "payload_value"),
     [
         ["area_id", "12345A"],
         ["area_id", None],
-        ["disabled_by", helpers_dr.DeviceEntryDisabler.USER],
+        ["disabled_by", dr.DeviceEntryDisabler.USER],
         ["disabled_by", "user"],
         ["disabled_by", None],
         ["name_by_user", "Test Friendly Name"],
         ["name_by_user", None],
     ],
 )
-async def test_update_device(hass, client, registry, payload_key, payload_value):
+async def test_update_device(
+    hass: HomeAssistant,
+    client,
+    device_registry: dr.DeviceRegistry,
+    payload_key,
+    payload_value,
+) -> None:
     """Test update entry."""
-    device = registry.async_get_or_create(
+    device = device_registry.async_get_or_create(
         config_entry_id="1234",
         connections={("ethernet", "12:34:56:78:90:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
@@ -121,9 +152,9 @@ async def test_update_device(hass, client, registry, payload_key, payload_value)
 
     msg = await client.receive_json()
     await hass.async_block_till_done()
-    assert len(registry.devices) == 1
+    assert len(device_registry.devices) == 1
 
-    device = registry.async_get_device(
+    device = device_registry.async_get_device(
         identifiers={("bridgeid", "0123")},
         connections={("ethernet", "12:34:56:78:90:AB:CD:EF")},
     )
@@ -131,14 +162,17 @@ async def test_update_device(hass, client, registry, payload_key, payload_value)
     assert msg["result"][payload_key] == payload_value
     assert getattr(device, payload_key) == payload_value
 
-    assert isinstance(device.disabled_by, (helpers_dr.DeviceEntryDisabler, type(None)))
+    assert isinstance(device.disabled_by, (dr.DeviceEntryDisabler, type(None)))
 
 
-async def test_remove_config_entry_from_device(hass, hass_ws_client):
+async def test_remove_config_entry_from_device(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test removing config entry from device."""
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
-    device_registry = mock_device_registry(hass)
 
     can_remove = False
 
@@ -176,11 +210,11 @@ async def test_remove_config_entry_from_device(hass, hass_ws_client):
 
     device_registry.async_get_or_create(
         config_entry_id=entry_1.entry_id,
-        connections={(helpers_dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     device_entry = device_registry.async_get_or_create(
         config_entry_id=entry_2.entry_id,
-        connections={(helpers_dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     assert device_entry.config_entries == {entry_1.entry_id, entry_2.entry_id}
 
@@ -239,11 +273,14 @@ async def test_remove_config_entry_from_device(hass, hass_ws_client):
     assert not device_registry.async_get(device_entry.id)
 
 
-async def test_remove_config_entry_from_device_fails(hass, hass_ws_client):
+async def test_remove_config_entry_from_device_fails(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test removing config entry from device failing cases."""
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
-    device_registry = mock_device_registry(hass)
 
     async def async_remove_config_entry_device(hass, config_entry, device_entry):
         return True
@@ -284,15 +321,15 @@ async def test_remove_config_entry_from_device_fails(hass, hass_ws_client):
 
     device_registry.async_get_or_create(
         config_entry_id=entry_1.entry_id,
-        connections={(helpers_dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     device_registry.async_get_or_create(
         config_entry_id=entry_2.entry_id,
-        connections={(helpers_dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     device_entry = device_registry.async_get_or_create(
         config_entry_id=entry_3.entry_id,
-        connections={(helpers_dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     assert device_entry.config_entries == {
         entry_1.entry_id,

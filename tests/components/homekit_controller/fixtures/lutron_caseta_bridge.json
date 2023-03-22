@@ -1,0 +1,178 @@
+[
+  {
+    "aid": 1,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "iid": 85899345921,
+            "perms": ["pw"],
+            "format": "bool",
+            "description": "Identify"
+          },
+          {
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "iid": 137438953473,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Lutron Electronics Co., Inc",
+            "description": "Manufacturer",
+            "maxLen": 64
+          },
+          {
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "iid": 141733920769,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "L-BDG2-WH",
+            "description": "Model",
+            "maxLen": 64
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 150323855361,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Smart Bridge 2",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "iid": 206158430209,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "12344331",
+            "description": "Serial Number",
+            "maxLen": 64
+          },
+          {
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "iid": 352187318273,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "08.08",
+            "description": "Firmware Revision",
+            "maxLen": 64
+          }
+        ]
+      },
+      {
+        "iid": 2,
+        "type": "000000A2-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "iid": 236223201282,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "1.1.0",
+            "description": "Version",
+            "maxLen": 64
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "aid": 21474836482,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "iid": 85899345921,
+            "perms": ["pw"],
+            "format": "bool",
+            "description": "Identify"
+          },
+          {
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "iid": 137438953473,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Lutron Electronics Co., Inc",
+            "description": "Manufacturer",
+            "maxLen": 64
+          },
+          {
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "iid": 141733920769,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "PD-FSQN-XX",
+            "description": "Model",
+            "maxLen": 64
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 150323855361,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Cas\u00e9ta\u00ae Wireless Fan Speed Control",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "iid": 206158430209,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "39024290",
+            "description": "Serial Number",
+            "maxLen": 64
+          },
+          {
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "iid": 352187318273,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "001.005",
+            "description": "Firmware Revision",
+            "maxLen": 64
+          }
+        ]
+      },
+      {
+        "iid": 2,
+        "type": "00000040-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000029-0000-1000-8000-0026BB765291",
+            "iid": 176093659138,
+            "perms": ["pr", "pw", "ev"],
+            "format": "float",
+            "value": 0,
+            "description": "Rotation Speed",
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 25
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 150323855362,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Cas\u00e9ta\u00ae Wireless Fan Speed Control",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000025-0000-1000-8000-0026BB765291",
+            "iid": 158913789954,
+            "perms": ["pr", "pw", "ev"],
+            "format": "bool",
+            "value": false,
+            "description": "On"
+          }
+        ]
+      }
+    ]
+  }
+]

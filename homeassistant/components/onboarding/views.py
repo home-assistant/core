@@ -10,11 +10,13 @@ import voluptuous as vol
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import person
 from homeassistant.components.auth import indieauth
-from homeassistant.components.http.const import KEY_HASS_REFRESH_TOKEN_ID
+from homeassistant.components.http import KEY_HASS_REFRESH_TOKEN_ID
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import callback
+from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers.system_info import async_get_system_info
+from homeassistant.helpers.translation import async_get_translations
 
 from .const import (
     DEFAULT_AREAS,
@@ -147,22 +149,24 @@ class UserOnboardingView(_BaseOnboardingView):
                 await person.async_create_person(hass, data["name"], user_id=user.id)
 
             # Create default areas using the users supplied language.
-            translations = await hass.helpers.translation.async_get_translations(
-                data["language"], "area", DOMAIN
+            translations = await async_get_translations(
+                hass, data["language"], "area", {DOMAIN}
             )
 
-            area_registry = await hass.helpers.area_registry.async_get_registry()
+            area_registry = ar.async_get(hass)
 
             for area in DEFAULT_AREAS:
-                area_registry.async_create(
-                    translations[f"component.onboarding.area.{area}"]
-                )
+                name = translations[f"component.onboarding.area.{area}"]
+                # Guard because area might have been created by an automatically
+                # set up integration.
+                if not area_registry.async_get_area_by_name(name):
+                    area_registry.async_create(name)
 
             await self._async_mark_done(hass)
 
             # Return authorization code for fetching tokens and connect
             # during onboarding.
-            # pylint: disable=import-outside-toplevel
+            # pylint: disable-next=import-outside-toplevel
             from homeassistant.components.auth import create_auth_code
 
             auth_code = create_auth_code(hass, data["client_id"], credentials)
@@ -191,7 +195,7 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
             # Integrations to set up when finishing onboarding
             onboard_integrations = ["met", "radio_browser"]
 
-            # pylint: disable=import-outside-toplevel
+            # pylint: disable-next=import-outside-toplevel
             from homeassistant.components import hassio
 
             if (
@@ -251,7 +255,7 @@ class IntegrationOnboardingView(_BaseOnboardingView):
                 )
 
             # Return authorization code so we can redirect user and log them in
-            # pylint: disable=import-outside-toplevel
+            # pylint: disable-next=import-outside-toplevel
             from homeassistant.components.auth import create_auth_code
 
             auth_code = create_auth_code(

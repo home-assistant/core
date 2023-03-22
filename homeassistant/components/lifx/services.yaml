@@ -1,3 +1,29 @@
+set_hev_cycle_state:
+  name: Set HEV cycle state
+  description: Control the HEV LEDs on a LIFX Clean bulb.
+  target:
+    entity:
+      integration: lifx
+      domain: light
+  fields:
+    power:
+      name: enable
+      description: Start or stop a Clean cycle.
+      required: true
+      example: true
+      selector:
+        boolean:
+    duration:
+      name: Duration
+      description: How long the HEV LEDs will remain on. Uses the configured default duration if not specified.
+      required: false
+      default: 7200
+      example: 3600
+      selector:
+        number:
+          min: 0
+          max: 86400
+          unit_of_measurement: seconds
 set_state:
   name: Set State
   description: Set a color/brightness and possibly turn the light on/off.
@@ -53,12 +79,20 @@ effect_pulse:
             - "strobe"
             - "solid"
     brightness:
-      name: Brightness
-      description: Number indicating brightness of the temporary color.
+      name: Brightness value
+      description: Number indicating brightness of the temporary color, where 1 is the minimum brightness and 255 is the maximum brightness supported by the light.
       selector:
         number:
-          min: 0
+          min: 1
           max: 255
+    brightness_pct:
+      name: Brightness
+      description: Percentage indicating the brightness of the temporary color, where 1 is the minimum brightness and 100 is the maximum brightness supported by the light.
+      selector:
+        number:
+          min: 1
+          max: 100
+          unit_of_measurement: "%"
     color_name:
       name: Color name
       description: A human readable color name.
@@ -105,12 +139,38 @@ effect_colorloop:
       domain: light
   fields:
     brightness:
-      name: Brightness
-      description: Number indicating brightness of the effect. Leave this out to maintain the current brightness of each participating light.
+      name: Brightness value
+      description: Number indicating brightness of the color loop, where 1 is the minimum brightness and 255 is the maximum brightness supported by the light.
       selector:
         number:
           min: 0
           max: 255
+    brightness_pct:
+      name: Brightness
+      description: Percentage indicating the brightness of the color loop, where 1 is the minimum brightness and 100 is the maximum brightness supported by the light.
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+    saturation_min:
+      name: Minimum saturation
+      description: Percentage indicating the minimum saturation of the colors in the loop.
+      default: 80
+      selector:
+        number:
+          min: 1
+          max: 100
+          unit_of_measurement: "%"
+    saturation_max:
+      name: Maximum saturation
+      description: Percentage indicating the maximum saturation of the colors in the loop.
+      default: 100
+      selector:
+        number:
+          min: 1
+          max: 100
+          unit_of_measurement: "%"
     period:
       name: Period
       description: Duration between color changes.
@@ -145,7 +205,160 @@ effect_colorloop:
       default: true
       selector:
         boolean:
-
+effect_move:
+  name: Move effect
+  description: Start the firmware-based Move effect on a LIFX Z, Lightstrip or Beam.
+  target:
+    entity:
+      integration: lifx
+      domain: light
+  fields:
+    speed:
+      name: Speed
+      description: How long in seconds for the effect to move across the length of the light.
+      default: 3.0
+      example: 3.0
+      selector:
+        number:
+          min: 0.1
+          max: 60
+          step: 0.1
+          unit_of_measurement: seconds
+    direction:
+      name: Direction
+      description: Direction the effect will move across the device.
+      default: right
+      example: right
+      selector:
+        select:
+          mode: dropdown
+          options:
+            - right
+            - left
+    theme:
+      name: Theme
+      description: (Optional) set one of the predefined themes onto the device before starting the effect.
+      example: exciting
+      default: exciting
+      selector:
+        select:
+          mode: dropdown
+          options:
+            - "autumn"
+            - "blissful"
+            - "cheerful"
+            - "dream"
+            - "energizing"
+            - "epic"
+            - "exciting"
+            - "focusing"
+            - "halloween"
+            - "hanukkah"
+            - "holly"
+            - "independence_day"
+            - "intense"
+            - "mellow"
+            - "peaceful"
+            - "powerful"
+            - "relaxing"
+            - "santa"
+            - "serene"
+            - "soothing"
+            - "sports"
+            - "spring"
+            - "tranquil"
+            - "warming"
+    power_on:
+      name: Power on
+      description: Powered off lights will be turned on before starting the effect.
+      default: true
+      selector:
+        boolean:
+effect_flame:
+  name: Flame effect
+  description: Start the firmware-based Flame effect on LIFX Tiles or Candle.
+  target:
+    entity:
+      integration: lifx
+      domain: light
+  fields:
+    speed:
+      name: Speed
+      description: How fast the flames will move.
+      default: 3
+      selector:
+        number:
+          min: 1
+          max: 25
+          step: 1
+          unit_of_measurement: seconds
+    power_on:
+      name: Power on
+      description: Powered off lights will be turned on before starting the effect.
+      default: true
+      selector:
+        boolean:
+effect_morph:
+  name: Morph effect
+  description: Start the firmware-based Morph effect on LIFX Tiles on Candle.
+  target:
+    entity:
+      integration: lifx
+      domain: light
+  fields:
+    speed:
+      name: Speed
+      description: How fast the colors will move.
+      default: 3
+      selector:
+        number:
+          min: 1
+          max: 25
+          step: 1
+          unit_of_measurement: seconds
+    palette:
+      name: Palette
+      description: List of at least 2 and at most 16 colors as hue (0-360), saturation (0-100), brightness (0-100) and kelvin (1500-900) values to use for this effect. Overrides the theme attribute.
+      example:
+        - "[[0, 100, 100, 3500], [60, 100, 100, 3500]]"
+      selector:
+        object:
+    theme:
+      name: Theme
+      description: Predefined color theme to use for the effect. Overridden by the palette attribute.
+      selector:
+        select:
+          options:
+            - "autumn"
+            - "blissful"
+            - "cheerful"
+            - "dream"
+            - "energizing"
+            - "epic"
+            - "exciting"
+            - "focusing"
+            - "halloween"
+            - "hanukkah"
+            - "holly"
+            - "independence_day"
+            - "intense"
+            - "mellow"
+            - "peaceful"
+            - "powerful"
+            - "relaxing"
+            - "santa"
+            - "serene"
+            - "soothing"
+            - "sports"
+            - "spring"
+            - "tranquil"
+            - "warming"
+    power_on:
+      name: Power on
+      description: Powered off lights will be turned on before starting the effect.
+      default: true
+      selector:
+        boolean:
 effect_stop:
   name: Stop effect
   description: Stop a running effect.

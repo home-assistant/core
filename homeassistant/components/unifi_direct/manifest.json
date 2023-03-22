@@ -1,9 +1,9 @@
 {
   "domain": "unifi_direct",
-  "name": "Ubiquiti UniFi AP",
-  "documentation": "https://www.home-assistant.io/integrations/unifi_direct",
-  "requirements": ["pexpect==4.6.0"],
+  "name": "UniFi AP",
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/unifi_direct",
   "iot_class": "local_polling",
-  "loggers": ["pexpect", "ptyprocess"]
+  "loggers": ["pexpect", "ptyprocess"],
+  "requirements": ["pexpect==4.6.0"]
 }

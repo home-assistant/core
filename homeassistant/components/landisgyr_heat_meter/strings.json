@@ -1,0 +1,19 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "device": "Select device"
+        }
+      },
+      "setup_serial_manual_path": {
+        "data": {
+          "device": "[%key:common::config_flow::data::usb_path%]"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}

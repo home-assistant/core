@@ -1,5 +1,6 @@
 """Support for August lock."""
 import logging
+from typing import Any
 
 from aiohttp import ClientResponseError
 from yalexs.activity import SOURCE_PUBNUB, ActivityType
@@ -44,14 +45,14 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
         self._attr_unique_id = f"{self._device_id:s}_lock"
         self._update_from_data()
 
-    async def async_lock(self, **kwargs):
+    async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         if self._data.activity_stream.pubnub.connected:
             await self._data.async_lock_async(self._device_id, self._hyper_bridge)
             return
         await self._call_lock_operation(self._data.async_lock)
 
-    async def async_unlock(self, **kwargs):
+    async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
         if self._data.activity_stream.pubnub.connected:
             await self._data.async_unlock_async(self._device_id, self._hyper_bridge)
@@ -126,7 +127,7 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
                 "keypad_battery_level"
             ] = self._detail.keypad.battery_level
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Restore ATTR_CHANGED_BY on startup since it is likely no longer in the activity log."""
         await super().async_added_to_hass()
 

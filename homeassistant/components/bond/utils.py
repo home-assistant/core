@@ -5,7 +5,7 @@ import logging
 from typing import Any, cast
 
 from aiohttp import ClientResponseError
-from bond_api import Action, Bond
+from bond_async import Action, Bond, BondType
 
 from homeassistant.util.async_ import gather_with_concurrency
 
@@ -20,11 +20,16 @@ class BondDevice:
     """Helper device class to hold ID and attributes together."""
 
     def __init__(
-        self, device_id: str, attrs: dict[str, Any], props: dict[str, Any]
+        self,
+        device_id: str,
+        attrs: dict[str, Any],
+        props: dict[str, Any],
+        state: dict[str, Any],
     ) -> None:
         """Create a helper device from ID and attributes returned by API."""
         self.device_id = device_id
         self.props = props
+        self.state = state
         self._attrs = attrs or {}
         self._supported_actions: set[str] = set(self._attrs.get("actions", []))
 
@@ -34,6 +39,7 @@ class BondDevice:
             "device_id": self.device_id,
             "props": self.props,
             "attrs": self._attrs,
+            "state": self.state,
         }.__repr__()
 
     @property
@@ -81,6 +87,10 @@ class BondDevice:
     def supports_direction(self) -> bool:
         """Return True if this device supports any of the direction related commands."""
         return self._has_any_action({Action.SET_DIRECTION})
+
+    def supports_set_position(self) -> bool:
+        """Return True if this device supports setting the position."""
+        return self._has_any_action({Action.SET_POSITION})
 
     def supports_open(self) -> bool:
         """Return True if this device supports opening."""
@@ -146,7 +156,11 @@ class BondHub:
                 break
             setup_device_ids.append(device_id)
             tasks.extend(
-                [self.bond.device(device_id), self.bond.device_properties(device_id)]
+                [
+                    self.bond.device(device_id),
+                    self.bond.device_properties(device_id),
+                    self.bond.device_state(device_id),
+                ]
             )
 
         responses = await gather_with_concurrency(MAX_REQUESTS, *tasks)
@@ -154,10 +168,13 @@ class BondHub:
         for device_id in setup_device_ids:
             self._devices.append(
                 BondDevice(
-                    device_id, responses[response_idx], responses[response_idx + 1]
+                    device_id,
+                    responses[response_idx],
+                    responses[response_idx + 1],
+                    responses[response_idx + 2],
                 )
             )
-            response_idx += 2
+            response_idx += 3
 
         _LOGGER.debug("Discovered Bond devices: %s", self._devices)
         try:
@@ -220,4 +237,5 @@ class BondHub:
     @property
     def is_bridge(self) -> bool:
         """Return if the Bond is a Bond Bridge."""
-        return bool(self._bridge)
+        bondid = self._version["bondid"]
+        return bool(BondType.is_bridge_from_serial(bondid))

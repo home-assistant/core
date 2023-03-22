@@ -1,17 +1,16 @@
 """Constants for the Homewizard integration."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
-from typing import TypedDict
 
-# Set up.
-from aiohwenergy.device import Device
+from homewizard_energy.features import Features
+from homewizard_energy.models import Data, Device, State, System
 
 from homeassistant.const import Platform
-from homeassistant.helpers.typing import StateType
 
 DOMAIN = "homewizard"
-PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [Platform.BUTTON, Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
 
 # Platform config.
 CONF_API_ENABLED = "api_enabled"
@@ -25,8 +24,12 @@ CONF_SERIAL = "serial"
 UPDATE_INTERVAL = timedelta(seconds=5)
 
 
-class DeviceResponseEntry(TypedDict):
+@dataclass
+class DeviceResponseEntry:
     """Dict describing a single response entry."""
 
     device: Device
-    data: dict[str, StateType]
+    data: Data
+    features: Features
+    state: State | None
+    system: System | None = None

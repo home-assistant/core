@@ -1,0 +1,14 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "There aren't any Melnor Bluetooth devices nearby."
+    },
+    "step": {
+      "bluetooth_confirm": {
+        "description": "Do you want to add the Melnor Bluetooth valve `{name}` to Home Assistant?",
+        "title": "Discovered Melnor Bluetooth valve"
+      }
+    }
+  }
+}

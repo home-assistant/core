@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import CONF_MONITORED_CONDITIONS, TIME_MINUTES
+from homeassistant.const import CONF_MONITORED_CONDITIONS, UnitOfTime
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -32,7 +32,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="watering_time",
         name="Watering Time",
         icon="mdi:water-pump",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
     ),
 )
 
@@ -73,7 +73,7 @@ def setup_platform(
 class HydrawiseSensor(HydrawiseEntity, SensorEntity):
     """A sensor implementation for Hydrawise device."""
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and updates the states."""
         mydata = self.hass.data[DATA_HYDRAWISE].data
         _LOGGER.debug("Updating Hydrawise sensor: %s", self.name)

@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import json
 import logging
+from typing import Any
 
 import nikohomecontrol
 import voluptuous as vol
@@ -12,7 +13,7 @@ import voluptuous as vol
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.const import CONF_HOST
@@ -59,6 +60,9 @@ async def async_setup_platform(
 class NikoHomeControlLight(LightEntity):
     """Representation of an Niko Light."""
 
+    _attr_color_mode = ColorMode.ONOFF
+    _attr_supported_color_modes = {ColorMode.ONOFF}
+
     def __init__(self, light, data):
         """Set up the Niko Home Control light platform."""
         self._data = data
@@ -67,9 +71,8 @@ class NikoHomeControlLight(LightEntity):
         self._name = light.name
         self._state = light.is_on
         self._brightness = None
-        self._supported_features = (
-            light._state["type"] == 2 if SUPPORT_BRIGHTNESS else None
-        )
+        if light._state["type"] == 2:
+            self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
 
     @property
     def unique_id(self):
@@ -88,26 +91,21 @@ class NikoHomeControlLight(LightEntity):
         return None if value == 0 else value
 
     @property
-    def supported_features(self):
-        """Return if the light is dimmable."""
-        return self._supported_features
-
-    @property
     def is_on(self):
         """Return true if light is on."""
         return self._state
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         _LOGGER.debug("Turn on: %s", self.name)
         self._data.turn_light_on(self._light.id, kwargs.get(ATTR_BRIGHTNESS, 255))
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         _LOGGER.debug("Turn off: %s", self.name)
         self._light.turn_off()
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data from NikoHomeControl API."""
         await self._data.async_update()
         self._state = self._data.get_state(self._light.id)

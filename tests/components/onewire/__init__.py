@@ -7,7 +7,6 @@ from unittest.mock import MagicMock
 
 from pyownet.protocol import ProtocolError
 
-from homeassistant.components.onewire.const import DEFAULT_SYSBUS_MOUNT_DIR
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_IDENTIFIERS,
@@ -16,6 +15,7 @@ from homeassistant.const import (
     ATTR_NAME,
     ATTR_STATE,
     ATTR_VIA_DEVICE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
@@ -29,7 +29,6 @@ from .const import (
     ATTR_UNIQUE_ID,
     FIXED_ATTRIBUTES,
     MOCK_OWPROXY_DEVICES,
-    MOCK_SYSBUS_DEVICES,
 )
 
 
@@ -92,7 +91,7 @@ def check_entities(
 
 
 def setup_owproxy_mock_devices(
-    owproxy: MagicMock, platform: str, device_ids: list[str]
+    owproxy: MagicMock, platform: Platform, device_ids: list[str]
 ) -> None:
     """Set up mock for owproxy."""
     main_dir_return_value = []
@@ -127,7 +126,7 @@ def _setup_owproxy_mock_device(
     main_read_side_effect: list,
     sub_read_side_effect: list,
     device_id: str,
-    platform: str,
+    platform: Platform,
 ) -> None:
     """Set up mock for owproxy."""
     mock_device = MOCK_OWPROXY_DEVICES[device_id]
@@ -169,7 +168,7 @@ def _setup_owproxy_mock_device_reads(
     sub_read_side_effect: list,
     mock_device: Any,
     device_id: str,
-    platform: str,
+    platform: Platform,
 ) -> None:
     """Set up mock for owproxy."""
     # Setup device reads
@@ -179,32 +178,9 @@ def _setup_owproxy_mock_device_reads(
 
     # Setup sub-device reads
     device_sensors = mock_device.get(platform, [])
+    if platform is Platform.SENSOR and device_id.startswith("12"):
+        # We need to check if there is TAI8570 plugged in
+        for expected_sensor in device_sensors:
+            sub_read_side_effect.append(expected_sensor[ATTR_INJECT_READS])
     for expected_sensor in device_sensors:
         sub_read_side_effect.append(expected_sensor[ATTR_INJECT_READS])
-
-
-def setup_sysbus_mock_devices(
-    platform: str, device_ids: list[str]
-) -> tuple[list[str], list[Any]]:
-    """Set up mock for sysbus."""
-    glob_result = []
-    read_side_effect = []
-
-    for device_id in device_ids:
-        mock_device = MOCK_SYSBUS_DEVICES[device_id]
-
-        # Setup directory listing
-        glob_result += [f"/{DEFAULT_SYSBUS_MOUNT_DIR}/{device_id}"]
-
-        # Setup sub-device reads
-        device_sensors = mock_device.get(platform, [])
-        for expected_sensor in device_sensors:
-            if isinstance(expected_sensor[ATTR_INJECT_READS], list):
-                read_side_effect += expected_sensor[ATTR_INJECT_READS]
-            else:
-                read_side_effect.append(expected_sensor[ATTR_INJECT_READS])
-
-    # Ensure enough read side effect
-    read_side_effect.extend([FileNotFoundError("Missing injected value")] * 20)
-
-    return (glob_result, read_side_effect)

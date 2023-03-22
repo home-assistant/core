@@ -7,11 +7,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import (
-    ELECTRIC_CURRENT_AMPERE,
-    ENERGY_KILO_WATT_HOUR,
-    POWER_KILO_WATT,
-)
+from homeassistant.const import UnitOfElectricCurrent, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -38,7 +34,7 @@ async def async_setup_platform(
             SensorEntityDescription(
                 key="Curr user",
                 name="Max Current",
-                native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+                native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
                 device_class=SensorDeviceClass.CURRENT,
             ),
         ),
@@ -48,7 +44,7 @@ async def async_setup_platform(
             SensorEntityDescription(
                 key="Setenergy",
                 name="Energy Target",
-                native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+                native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 device_class=SensorDeviceClass.ENERGY,
             ),
         ),
@@ -58,7 +54,7 @@ async def async_setup_platform(
             SensorEntityDescription(
                 key="P",
                 name="Charging Power",
-                native_unit_of_measurement=POWER_KILO_WATT,
+                native_unit_of_measurement=UnitOfPower.KILO_WATT,
                 device_class=SensorDeviceClass.POWER,
                 state_class=SensorStateClass.MEASUREMENT,
             ),
@@ -69,7 +65,7 @@ async def async_setup_platform(
             SensorEntityDescription(
                 key="E pres",
                 name="Session Energy",
-                native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+                native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 device_class=SensorDeviceClass.ENERGY,
             ),
         ),
@@ -79,7 +75,7 @@ async def async_setup_platform(
             SensorEntityDescription(
                 key="E total",
                 name="Total Energy",
-                native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+                native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 device_class=SensorDeviceClass.ENERGY,
                 state_class=SensorStateClass.TOTAL_INCREASING,
             ),
@@ -109,11 +105,11 @@ class KebaSensor(SensorEntity):
         self._attributes: dict[str, str] = {}
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes of the binary sensor."""
         return self._attributes
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get latest cached states from the device."""
         self._attr_native_value = self._keba.get_value(self.entity_description.key)
 
@@ -128,10 +124,10 @@ class KebaSensor(SensorEntity):
         elif self.entity_description.key == "Curr user":
             self._attributes["max_current_hardware"] = self._keba.get_value("Curr HW")
 
-    def update_callback(self):
+    def update_callback(self) -> None:
         """Schedule a state update."""
         self.async_schedule_update_ha_state(True)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Add update callback after being added to hass."""
         self._keba.add_update_listener(self.update_callback)

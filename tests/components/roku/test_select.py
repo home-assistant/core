@@ -2,14 +2,24 @@
 from unittest.mock import MagicMock
 
 import pytest
-from rokuecp import Application, Device as RokuDevice, RokuError
+from rokuecp import (
+    Application,
+    Device as RokuDevice,
+    RokuConnectionError,
+    RokuConnectionTimeoutError,
+    RokuError,
+)
 
 from homeassistant.components.roku.const import DOMAIN
 from homeassistant.components.roku.coordinator import SCAN_INTERVAL
-from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
-from homeassistant.components.select.const import ATTR_OPTION, ATTR_OPTIONS
+from homeassistant.components.select import (
+    ATTR_OPTION,
+    ATTR_OPTIONS,
+    DOMAIN as SELECT_DOMAIN,
+)
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_ICON, SERVICE_SELECT_OPTION
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
@@ -102,11 +112,20 @@ async def test_application_state(
     assert state.state == "Home"
 
 
+@pytest.mark.parametrize(
+    ("error", "error_string"),
+    [
+        (RokuConnectionError, "Error communicating with Roku API"),
+        (RokuConnectionTimeoutError, "Timeout communicating with Roku API"),
+        (RokuError, "Invalid response from Roku API"),
+    ],
+)
 async def test_application_select_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_roku: MagicMock,
-    caplog: pytest.LogCaptureFixture,
+    error: RokuError,
+    error_string: str,
 ) -> None:
     """Test error handling of the Roku selects."""
     entity_registry = er.async_get(hass)
@@ -123,22 +142,22 @@ async def test_application_select_error(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_roku.launch.side_effect = RokuError
+    mock_roku.launch.side_effect = error
 
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {
-            ATTR_ENTITY_ID: "select.my_roku_3_application",
-            ATTR_OPTION: "Netflix",
-        },
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError, match=error_string):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: "select.my_roku_3_application",
+                ATTR_OPTION: "Netflix",
+            },
+            blocking=True,
+        )
 
     state = hass.states.get("select.my_roku_3_application")
     assert state
     assert state.state == "Home"
-    assert "Invalid response from API" in caplog.text
     assert mock_roku.launch.call_count == 1
     mock_roku.launch.assert_called_with("12")
 
@@ -218,24 +237,23 @@ async def test_channel_select_error(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_roku: MagicMock,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test error handling of the Roku selects."""
     mock_roku.tune.side_effect = RokuError
 
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {
-            ATTR_ENTITY_ID: "select.58_onn_roku_tv_channel",
-            ATTR_OPTION: "99.1",
-        },
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError, match="Invalid response from Roku API"):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: "select.58_onn_roku_tv_channel",
+                ATTR_OPTION: "99.1",
+            },
+            blocking=True,
+        )
 
     state = hass.states.get("select.58_onn_roku_tv_channel")
     assert state
     assert state.state == "getTV (14.3)"
-    assert "Invalid response from API" in caplog.text
     assert mock_roku.tune.call_count == 1
     mock_roku.tune.assert_called_with("99.1")

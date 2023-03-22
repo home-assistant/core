@@ -1,14 +1,12 @@
-"""
-Module with location helpers.
+"""Module with location helpers.
 
 detect_location_info and elevation are mocked by default during tests.
 """
 from __future__ import annotations
 
 import asyncio
-import collections
 import math
-from typing import Any
+from typing import Any, NamedTuple
 
 import aiohttp
 
@@ -30,22 +28,21 @@ MILES_PER_KILOMETER = 0.621371
 MAX_ITERATIONS = 200
 CONVERGENCE_THRESHOLD = 1e-12
 
-LocationInfo = collections.namedtuple(
-    "LocationInfo",
-    [
-        "ip",
-        "country_code",
-        "currency",
-        "region_code",
-        "region_name",
-        "city",
-        "zip_code",
-        "time_zone",
-        "latitude",
-        "longitude",
-        "use_metric",
-    ],
-)
+
+class LocationInfo(NamedTuple):
+    """Tuple with location information."""
+
+    ip: str
+    country_code: str
+    currency: str
+    region_code: str
+    region_name: str
+    city: str
+    zip_code: str
+    time_zone: str
+    latitude: float
+    longitude: float
+    use_metric: bool
 
 
 async def async_detect_location_info(
@@ -81,8 +78,7 @@ def distance(
 def vincenty(
     point1: tuple[float, float], point2: tuple[float, float], miles: bool = False
 ) -> float | None:
-    """
-    Vincenty formula (inverse method) to calculate the distance.
+    """Vincenty formula (inverse method) to calculate the distance.
 
     Result in kilometers or miles between two points on the surface of a
     spheroid.

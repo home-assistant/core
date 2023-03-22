@@ -38,8 +38,8 @@ class DiffuserPerfumeAmount(DiffuserEntity, NumberEntity):
     """Representation of a diffuser perfume amount number."""
 
     _attr_icon = "mdi:gauge"
-    _attr_max_value = MAX_PERFUME_AMOUNT
-    _attr_min_value = MIN_PERFUME_AMOUNT
+    _attr_native_max_value = MAX_PERFUME_AMOUNT
+    _attr_native_min_value = MIN_PERFUME_AMOUNT
 
     def __init__(
         self, diffuser: Diffuser, coordinator: RitualsDataUpdateCoordinator
@@ -48,14 +48,15 @@ class DiffuserPerfumeAmount(DiffuserEntity, NumberEntity):
         super().__init__(diffuser, coordinator, PERFUME_AMOUNT_SUFFIX)
 
     @property
-    def value(self) -> int:
+    def native_value(self) -> int:
         """Return the current perfume amount."""
         return self._diffuser.perfume_amount
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set the perfume amount."""
         if not value.is_integer():
             raise ValueError(
-                f"Can't set the perfume amount to {value}. Perfume amount must be an integer."
+                f"Can't set the perfume amount to {value}. Perfume amount must be an"
+                " integer."
             )
         await self._diffuser.set_perfume_amount(int(value))

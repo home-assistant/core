@@ -1,138 +1,101 @@
-"""Sensor for data from Austrian Zentralanstalt für Meteorologie."""
+"""Sensor for the zamg integration."""
 from __future__ import annotations
 
-import logging
-
-import voluptuous as vol
-
-from homeassistant.components.weather import (
-    ATTR_WEATHER_HUMIDITY,
-    ATTR_WEATHER_PRESSURE,
-    ATTR_WEATHER_TEMPERATURE,
-    ATTR_WEATHER_WIND_BEARING,
-    ATTR_WEATHER_WIND_SPEED,
-    PLATFORM_SCHEMA,
-    WeatherEntity,
+from homeassistant.components.weather import WeatherEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-# Reuse data and API logic from the sensor implementation
-from .sensor import (
-    ATTRIBUTION,
-    CONF_STATION_ID,
-    ZamgData,
-    closest_station,
-    zamg_stations,
-)
-
-_LOGGER = logging.getLogger(__name__)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_STATION_ID): cv.string,
-        vol.Inclusive(
-            CONF_LATITUDE, "coordinates", "Latitude and longitude must exist together"
-        ): cv.latitude,
-        vol.Inclusive(
-            CONF_LONGITUDE, "coordinates", "Latitude and longitude must exist together"
-        ): cv.longitude,
-    }
-)
+from .const import ATTRIBUTION, CONF_STATION_ID, DOMAIN, MANUFACTURER_URL
+from .coordinator import ZamgDataUpdateCoordinator
 
 
-def setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the ZAMG weather platform."""
-    name = config.get(CONF_NAME)
-    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-
-    station_id = config.get(CONF_STATION_ID) or closest_station(
-        latitude, longitude, hass.config.config_dir
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities(
+        [ZamgWeather(coordinator, entry.title, entry.data[CONF_STATION_ID])]
     )
-    if station_id not in zamg_stations(hass.config.config_dir):
-        _LOGGER.error(
-            "Configured ZAMG %s (%s) is not a known station",
-            CONF_STATION_ID,
-            station_id,
-        )
-        return
-
-    probe = ZamgData(station_id=station_id)
-    try:
-        probe.update()
-    except (ValueError, TypeError) as err:
-        _LOGGER.error("Received error from ZAMG: %s", err)
-        return
-
-    add_entities([ZamgWeather(probe, name)], True)
 
 
-class ZamgWeather(WeatherEntity):
+class ZamgWeather(CoordinatorEntity, WeatherEntity):
     """Representation of a weather condition."""
 
-    def __init__(self, zamg_data, stationname=None):
+    _attr_attribution = ATTRIBUTION
+
+    def __init__(
+        self, coordinator: ZamgDataUpdateCoordinator, name: str, station_id: str
+    ) -> None:
         """Initialise the platform with a data instance and station name."""
-        self.zamg_data = zamg_data
-        self.stationname = stationname
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return (
-            self.stationname
-            or f"ZAMG {self.zamg_data.data.get('Name') or '(unknown station)'}"
+        super().__init__(coordinator)
+        self._attr_unique_id = station_id
+        self._attr_name = f"ZAMG {name}"
+        self.station_id = f"{station_id}"
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, station_id)},
+            manufacturer=ATTRIBUTION,
+            configuration_url=MANUFACTURER_URL,
+            name=coordinator.name,
         )
+        # set units of ZAMG API
+        self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+        self._attr_native_pressure_unit = UnitOfPressure.HPA
+        self._attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
+        self._attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
 
     @property
-    def condition(self):
+    def condition(self) -> str | None:
         """Return the current condition."""
         return None
 
     @property
-    def attribution(self):
-        """Return the attribution."""
-        return ATTRIBUTION
-
-    @property
-    def temperature(self):
+    def native_temperature(self) -> float | None:
         """Return the platform temperature."""
-        return self.zamg_data.get_data(ATTR_WEATHER_TEMPERATURE)
+        try:
+            return float(self.coordinator.data[self.station_id]["TL"]["data"])
+        except (KeyError, ValueError):
+            return None
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
-    def pressure(self):
+    def native_pressure(self) -> float | None:
         """Return the pressure."""
-        return self.zamg_data.get_data(ATTR_WEATHER_PRESSURE)
+        try:
+            return float(self.coordinator.data[self.station_id]["P"]["data"])
+        except (KeyError, ValueError):
+            return None
 
     @property
-    def humidity(self):
+    def humidity(self) -> float | None:
         """Return the humidity."""
-        return self.zamg_data.get_data(ATTR_WEATHER_HUMIDITY)
+        try:
+            return float(self.coordinator.data[self.station_id]["RFAM"]["data"])
+        except (KeyError, ValueError):
+            return None
 
     @property
-    def wind_speed(self):
+    def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
-        return self.zamg_data.get_data(ATTR_WEATHER_WIND_SPEED)
+        try:
+            return float(self.coordinator.data[self.station_id]["FFAM"]["data"])
+        except (KeyError, ValueError):
+            return None
 
     @property
-    def wind_bearing(self):
+    def wind_bearing(self) -> float | str | None:
         """Return the wind bearing."""
-        return self.zamg_data.get_data(ATTR_WEATHER_WIND_BEARING)
-
-    def update(self):
-        """Update current conditions."""
-        self.zamg_data.update()
+        try:
+            return self.coordinator.data[self.station_id]["DD"]["data"]
+        except (KeyError, ValueError):
+            return None

@@ -12,11 +12,8 @@ from homeassistant.components.cover import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_STOP,
     CoverDeviceClass,
+    CoverEntityFeature,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -27,6 +24,7 @@ from homeassistant.const import (
     SERVICE_STOP_COVER,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import async_setup_entity, mock_feature
@@ -95,11 +93,11 @@ def gate_fixture():
     return (feature, "cover.gatecontroller_position")
 
 
-async def test_init_gatecontroller(gatecontroller, hass, config):
+async def test_init_gatecontroller(gatecontroller, hass: HomeAssistant) -> None:
     """Test gateController default state."""
 
     _, entity_id = gatecontroller
-    entry = await async_setup_entity(hass, config, entity_id)
+    entry = await async_setup_entity(hass, entity_id)
     assert entry.unique_id == "BleBox-gateController-2bee34e750b8-position"
 
     state = hass.states.get(entity_id)
@@ -107,11 +105,11 @@ async def test_init_gatecontroller(gatecontroller, hass, config):
     assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.GATE
 
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
-    assert supported_features & SUPPORT_OPEN
-    assert supported_features & SUPPORT_CLOSE
-    assert supported_features & SUPPORT_STOP
+    assert supported_features & CoverEntityFeature.OPEN
+    assert supported_features & CoverEntityFeature.CLOSE
+    assert supported_features & CoverEntityFeature.STOP
 
-    assert supported_features & SUPPORT_SET_POSITION
+    assert supported_features & CoverEntityFeature.SET_POSITION
     assert ATTR_CURRENT_POSITION not in state.attributes
     assert state.state == STATE_UNKNOWN
 
@@ -125,11 +123,11 @@ async def test_init_gatecontroller(gatecontroller, hass, config):
     assert device.sw_version == "1.23"
 
 
-async def test_init_shutterbox(shutterbox, hass, config):
+async def test_init_shutterbox(shutterbox, hass: HomeAssistant) -> None:
     """Test gateBox default state."""
 
     _, entity_id = shutterbox
-    entry = await async_setup_entity(hass, config, entity_id)
+    entry = await async_setup_entity(hass, entity_id)
     assert entry.unique_id == "BleBox-shutterBox-2bee34e750b8-position"
 
     state = hass.states.get(entity_id)
@@ -137,11 +135,11 @@ async def test_init_shutterbox(shutterbox, hass, config):
     assert entry.original_device_class == CoverDeviceClass.SHUTTER
 
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
-    assert supported_features & SUPPORT_OPEN
-    assert supported_features & SUPPORT_CLOSE
-    assert supported_features & SUPPORT_STOP
+    assert supported_features & CoverEntityFeature.OPEN
+    assert supported_features & CoverEntityFeature.CLOSE
+    assert supported_features & CoverEntityFeature.STOP
 
-    assert supported_features & SUPPORT_SET_POSITION
+    assert supported_features & CoverEntityFeature.SET_POSITION
     assert ATTR_CURRENT_POSITION not in state.attributes
     assert state.state == STATE_UNKNOWN
 
@@ -155,11 +153,11 @@ async def test_init_shutterbox(shutterbox, hass, config):
     assert device.sw_version == "1.23"
 
 
-async def test_init_gatebox(gatebox, hass, config):
+async def test_init_gatebox(gatebox, hass: HomeAssistant) -> None:
     """Test cover default state."""
 
     _, entity_id = gatebox
-    entry = await async_setup_entity(hass, config, entity_id)
+    entry = await async_setup_entity(hass, entity_id)
     assert entry.unique_id == "BleBox-gateBox-1afe34db9437-position"
 
     state = hass.states.get(entity_id)
@@ -167,13 +165,13 @@ async def test_init_gatebox(gatebox, hass, config):
     assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.DOOR
 
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
-    assert supported_features & SUPPORT_OPEN
-    assert supported_features & SUPPORT_CLOSE
+    assert supported_features & CoverEntityFeature.OPEN
+    assert supported_features & CoverEntityFeature.CLOSE
 
     # Not available during init since requires fetching state to detect
-    assert not supported_features & SUPPORT_STOP
+    assert not supported_features & CoverEntityFeature.STOP
 
-    assert not supported_features & SUPPORT_SET_POSITION
+    assert not supported_features & CoverEntityFeature.SET_POSITION
     assert ATTR_CURRENT_POSITION not in state.attributes
     assert state.state == STATE_UNKNOWN
 
@@ -188,7 +186,7 @@ async def test_init_gatebox(gatebox, hass, config):
 
 
 @pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
-async def test_open(feature, hass, config):
+async def test_open(feature, hass: HomeAssistant) -> None:
     """Test cover opening."""
 
     feature_mock, entity_id = feature
@@ -202,7 +200,7 @@ async def test_open(feature, hass, config):
     feature_mock.async_update = AsyncMock(side_effect=initial_update)
     feature_mock.async_open = AsyncMock(side_effect=open_gate)
 
-    await async_setup_entity(hass, config, entity_id)
+    await async_setup_entity(hass, entity_id)
     assert hass.states.get(entity_id).state == STATE_CLOSED
 
     feature_mock.async_update = AsyncMock()
@@ -216,7 +214,7 @@ async def test_open(feature, hass, config):
 
 
 @pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
-async def test_close(feature, hass, config):
+async def test_close(feature, hass: HomeAssistant) -> None:
     """Test cover closing."""
 
     feature_mock, entity_id = feature
@@ -230,7 +228,7 @@ async def test_close(feature, hass, config):
     feature_mock.async_update = AsyncMock(side_effect=initial_update)
     feature_mock.async_close = AsyncMock(side_effect=close)
 
-    await async_setup_entity(hass, config, entity_id)
+    await async_setup_entity(hass, entity_id)
     assert hass.states.get(entity_id).state == STATE_OPEN
 
     feature_mock.async_update = AsyncMock()
@@ -254,13 +252,13 @@ def opening_to_stop_feature_mock(feature_mock):
 
 
 @pytest.mark.parametrize("feature", FIXTURES_SUPPORTING_STOP, indirect=["feature"])
-async def test_stop(feature, hass, config):
+async def test_stop(feature, hass: HomeAssistant) -> None:
     """Test cover stopping."""
 
     feature_mock, entity_id = feature
     opening_to_stop_feature_mock(feature_mock)
 
-    await async_setup_entity(hass, config, entity_id)
+    await async_setup_entity(hass, entity_id)
     assert hass.states.get(entity_id).state == STATE_OPENING
 
     feature_mock.async_update = AsyncMock()
@@ -271,7 +269,7 @@ async def test_stop(feature, hass, config):
 
 
 @pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
-async def test_update(feature, hass, config):
+async def test_update(feature, hass: HomeAssistant) -> None:
     """Test cover updating."""
 
     feature_mock, entity_id = feature
@@ -282,7 +280,7 @@ async def test_update(feature, hass, config):
 
     feature_mock.async_update = AsyncMock(side_effect=initial_update)
 
-    await async_setup_entity(hass, config, entity_id)
+    await async_setup_entity(hass, entity_id)
 
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_CURRENT_POSITION] == 71  # 100 - 29
@@ -292,7 +290,7 @@ async def test_update(feature, hass, config):
 @pytest.mark.parametrize(
     "feature", ["gatecontroller", "shutterbox"], indirect=["feature"]
 )
-async def test_set_position(feature, hass, config):
+async def test_set_position(feature, hass: HomeAssistant) -> None:
     """Test cover position setting."""
 
     feature_mock, entity_id = feature
@@ -308,7 +306,7 @@ async def test_set_position(feature, hass, config):
     feature_mock.async_update = AsyncMock(side_effect=initial_update)
     feature_mock.async_set_position = AsyncMock(side_effect=set_position)
 
-    await async_setup_entity(hass, config, entity_id)
+    await async_setup_entity(hass, entity_id)
     assert hass.states.get(entity_id).state == STATE_CLOSED
 
     feature_mock.async_update = AsyncMock()
@@ -321,7 +319,7 @@ async def test_set_position(feature, hass, config):
     assert hass.states.get(entity_id).state == STATE_OPENING
 
 
-async def test_unknown_position(shutterbox, hass, config):
+async def test_unknown_position(shutterbox, hass: HomeAssistant) -> None:
     """Test cover position setting."""
 
     feature_mock, entity_id = shutterbox
@@ -332,56 +330,58 @@ async def test_unknown_position(shutterbox, hass, config):
 
     feature_mock.async_update = AsyncMock(side_effect=initial_update)
 
-    await async_setup_entity(hass, config, entity_id)
+    await async_setup_entity(hass, entity_id)
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_OPEN
     assert ATTR_CURRENT_POSITION not in state.attributes
 
 
-async def test_with_stop(gatebox, hass, config):
+async def test_with_stop(gatebox, hass: HomeAssistant) -> None:
     """Test stop capability is available."""
 
     feature_mock, entity_id = gatebox
     opening_to_stop_feature_mock(feature_mock)
     feature_mock.has_stop = True
 
-    await async_setup_entity(hass, config, entity_id)
+    await async_setup_entity(hass, entity_id)
 
     state = hass.states.get(entity_id)
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
-    assert supported_features & SUPPORT_STOP
+    assert supported_features & CoverEntityFeature.STOP
 
 
-async def test_with_no_stop(gatebox, hass, config):
+async def test_with_no_stop(gatebox, hass: HomeAssistant) -> None:
     """Test stop capability is not available."""
 
     feature_mock, entity_id = gatebox
     opening_to_stop_feature_mock(feature_mock)
     feature_mock.has_stop = False
 
-    await async_setup_entity(hass, config, entity_id)
+    await async_setup_entity(hass, entity_id)
 
     state = hass.states.get(entity_id)
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
-    assert not supported_features & SUPPORT_STOP
+    assert not supported_features & CoverEntityFeature.STOP
 
 
 @pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
-async def test_update_failure(feature, hass, config, caplog):
+async def test_update_failure(
+    feature, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that update failures are logged."""
 
     caplog.set_level(logging.ERROR)
 
     feature_mock, entity_id = feature
     feature_mock.async_update = AsyncMock(side_effect=blebox_uniapi.error.ClientError)
-    await async_setup_entity(hass, config, entity_id)
+    await async_setup_entity(hass, entity_id)
 
     assert f"Updating '{feature_mock.full_name}' failed: " in caplog.text
 
 
 @pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
-async def test_opening_state(feature, hass, config):
+async def test_opening_state(feature, hass: HomeAssistant) -> None:
     """Test that entity properties work."""
 
     feature_mock, entity_id = feature
@@ -390,12 +390,12 @@ async def test_opening_state(feature, hass, config):
         feature_mock.state = 1  # opening
 
     feature_mock.async_update = AsyncMock(side_effect=initial_update)
-    await async_setup_entity(hass, config, entity_id)
+    await async_setup_entity(hass, entity_id)
     assert hass.states.get(entity_id).state == STATE_OPENING
 
 
 @pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
-async def test_closing_state(feature, hass, config):
+async def test_closing_state(feature, hass: HomeAssistant) -> None:
     """Test that entity properties work."""
 
     feature_mock, entity_id = feature
@@ -404,12 +404,12 @@ async def test_closing_state(feature, hass, config):
         feature_mock.state = 0  # closing
 
     feature_mock.async_update = AsyncMock(side_effect=initial_update)
-    await async_setup_entity(hass, config, entity_id)
+    await async_setup_entity(hass, entity_id)
     assert hass.states.get(entity_id).state == STATE_CLOSING
 
 
 @pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
-async def test_closed_state(feature, hass, config):
+async def test_closed_state(feature, hass: HomeAssistant) -> None:
     """Test that entity properties work."""
 
     feature_mock, entity_id = feature
@@ -418,5 +418,5 @@ async def test_closed_state(feature, hass, config):
         feature_mock.state = 3  # closed
 
     feature_mock.async_update = AsyncMock(side_effect=initial_update)
-    await async_setup_entity(hass, config, entity_id)
+    await async_setup_entity(hass, entity_id)
     assert hass.states.get(entity_id).state == STATE_CLOSED

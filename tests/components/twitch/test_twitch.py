@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 
 from homeassistant.components import sensor
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 ENTITY_ID = "sensor.channel123"
@@ -28,6 +29,7 @@ USER_OBJECT = {
     "id": 123,
     "display_name": "channel123",
     "offline_image_url": "logo.png",
+    "profile_image_url": "logo.png",
     "view_count": 42,
 }
 STREAM_OBJECT_ONLINE = {
@@ -47,7 +49,7 @@ def make_data(data):
     return {"data": data, "total": len(data)}
 
 
-async def test_init(hass):
+async def test_init(hass: HomeAssistant) -> None:
     """Test initial config."""
 
     twitch_mock = MagicMock()
@@ -71,7 +73,7 @@ async def test_init(hass):
     assert sensor_state.attributes["followers"] == 24
 
 
-async def test_offline(hass):
+async def test_offline(hass: HomeAssistant) -> None:
     """Test offline state."""
 
     twitch_mock = MagicMock()
@@ -92,7 +94,7 @@ async def test_offline(hass):
     assert sensor_state.attributes["entity_picture"] == "logo.png"
 
 
-async def test_streaming(hass):
+async def test_streaming(hass: HomeAssistant) -> None:
     """Test streaming state."""
 
     twitch_mock = MagicMock()
@@ -115,7 +117,7 @@ async def test_streaming(hass):
     assert sensor_state.attributes["title"] == "Title"
 
 
-async def test_oauth_without_sub_and_follow(hass):
+async def test_oauth_without_sub_and_follow(hass: HomeAssistant) -> None:
     """Test state with oauth."""
 
     twitch_mock = MagicMock()
@@ -144,7 +146,7 @@ async def test_oauth_without_sub_and_follow(hass):
     assert sensor_state.attributes["following"] is False
 
 
-async def test_oauth_with_sub(hass):
+async def test_oauth_with_sub(hass: HomeAssistant) -> None:
     """Test state with oauth and sub."""
 
     twitch_mock = MagicMock()
@@ -176,7 +178,7 @@ async def test_oauth_with_sub(hass):
     assert sensor_state.attributes["following"] is False
 
 
-async def test_oauth_with_follow(hass):
+async def test_oauth_with_follow(hass: HomeAssistant) -> None:
     """Test state with oauth and follow."""
 
     twitch_mock = MagicMock()

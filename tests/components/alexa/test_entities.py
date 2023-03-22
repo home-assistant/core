@@ -1,15 +1,17 @@
 """Test Alexa entity representation."""
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.alexa import smart_home
-from homeassistant.const import __version__
+from homeassistant.const import EntityCategory, __version__
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 
-from . import get_default_config, get_new_request
+from .test_common import get_default_config, get_new_request
 
 
-async def test_unsupported_domain(hass):
+async def test_unsupported_domain(hass: HomeAssistant) -> None:
     """Discovery ignores entities of unknown domains."""
     request = get_new_request("Alexa.Discovery", "Discover")
 
@@ -23,7 +25,7 @@ async def test_unsupported_domain(hass):
     assert not msg["payload"]["endpoints"]
 
 
-async def test_categorized_hidden_entities(hass):
+async def test_categorized_hidden_entities(hass: HomeAssistant) -> None:
     """Discovery ignores hidden and categorized entities."""
     entity_registry = er.async_get(hass)
     request = get_new_request("Alexa.Discovery", "Discover")
@@ -45,18 +47,11 @@ async def test_categorized_hidden_entities(hass):
     entity_entry3 = entity_registry.async_get_or_create(
         "switch",
         "test",
-        "switch_system_id",
-        suggested_object_id="system_switch",
-        entity_category=EntityCategory.SYSTEM,
-    )
-    entity_entry4 = entity_registry.async_get_or_create(
-        "switch",
-        "test",
         "switch_hidden_integration_id",
         suggested_object_id="hidden_integration_switch",
         hidden_by=er.RegistryEntryHider.INTEGRATION,
     )
-    entity_entry5 = entity_registry.async_get_or_create(
+    entity_entry4 = entity_registry.async_get_or_create(
         "switch",
         "test",
         "switch_hidden_user_id",
@@ -69,7 +64,6 @@ async def test_categorized_hidden_entities(hass):
     hass.states.async_set(entity_entry2.entity_id, "something_else")
     hass.states.async_set(entity_entry3.entity_id, "blah")
     hass.states.async_set(entity_entry4.entity_id, "foo")
-    hass.states.async_set(entity_entry5.entity_id, "bar")
 
     msg = await smart_home.async_handle_message(hass, get_default_config(hass), request)
 
@@ -79,7 +73,7 @@ async def test_categorized_hidden_entities(hass):
     assert not msg["payload"]["endpoints"]
 
 
-async def test_serialize_discovery(hass):
+async def test_serialize_discovery(hass: HomeAssistant) -> None:
     """Test we handle an interface raising unexpectedly during serialize discovery."""
     request = get_new_request("Alexa.Discovery", "Discover")
 
@@ -99,7 +93,9 @@ async def test_serialize_discovery(hass):
     }
 
 
-async def test_serialize_discovery_recovers(hass, caplog):
+async def test_serialize_discovery_recovers(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test we handle an interface raising unexpectedly during serialize discovery."""
     request = get_new_request("Alexa.Discovery", "Discover")
 
@@ -122,6 +118,6 @@ async def test_serialize_discovery_recovers(hass, caplog):
 
     assert "Alexa.PowerController" not in interfaces
     assert (
-        f"Error serializing Alexa.PowerController discovery for {hass.states.get('switch.bla')}"
-        in caplog.text
-    )
+        "Error serializing Alexa.PowerController discovery"
+        f" for {hass.states.get('switch.bla')}"
+    ) in caplog.text

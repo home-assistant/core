@@ -9,10 +9,11 @@ import xmltodict
 from homeassistant.components.network import async_get_source_ip
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
@@ -39,14 +40,14 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def deflection_entities_list(
+async def _async_deflection_entities_list(
     avm_wrapper: AvmWrapper, device_friendly_name: str
 ) -> list[FritzBoxDeflectionSwitch]:
     """Get list of deflection entities."""
 
     _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_DEFLECTION)
 
-    deflections_response = avm_wrapper.get_ontel_num_deflections()
+    deflections_response = await avm_wrapper.async_get_ontel_num_deflections()
     if not deflections_response:
         _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_DEFLECTION)
         return []
@@ -61,7 +62,7 @@ def deflection_entities_list(
         _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_DEFLECTION)
         return []
 
-    if not (deflection_list := avm_wrapper.get_ontel_deflections()):
+    if not (deflection_list := await avm_wrapper.async_get_ontel_deflections()):
         return []
 
     items = xmltodict.parse(deflection_list["NewDeflectionList"])["List"]["Item"]
@@ -74,7 +75,7 @@ def deflection_entities_list(
     ]
 
 
-def port_entities_list(
+async def _async_port_entities_list(
     avm_wrapper: AvmWrapper, device_friendly_name: str, local_ip: str
 ) -> list[FritzBoxPortSwitch]:
     """Get list of port forwarding entities."""
@@ -86,7 +87,7 @@ def port_entities_list(
         return []
 
     # Query port forwardings and setup a switch for each forward for the current device
-    resp = avm_wrapper.get_num_port_mapping(avm_wrapper.device_conn_type)
+    resp = await avm_wrapper.async_get_num_port_mapping(avm_wrapper.device_conn_type)
     if not resp:
         _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_DEFLECTION)
         return []
@@ -102,8 +103,9 @@ def port_entities_list(
     _LOGGER.debug("IP source for %s is %s", avm_wrapper.host, local_ip)
 
     for i in range(port_forwards_count):
-
-        portmap = avm_wrapper.get_port_mapping(avm_wrapper.device_conn_type, i)
+        portmap = await avm_wrapper.async_get_port_mapping(
+            avm_wrapper.device_conn_type, i
+        )
         if not portmap:
             _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_DEFLECTION)
             continue
@@ -136,7 +138,7 @@ def port_entities_list(
     return entities_list
 
 
-def wifi_entities_list(
+async def _async_wifi_entities_list(
     avm_wrapper: AvmWrapper, device_friendly_name: str
 ) -> list[FritzBoxWifiSwitch]:
     """Get list of wifi entities."""
@@ -155,9 +157,7 @@ def wifi_entities_list(
     _LOGGER.debug("WiFi networks count: %s", wifi_count)
     networks: dict = {}
     for i in range(1, wifi_count + 1):
-        network_info = avm_wrapper.connection.call_action(
-            f"WLANConfiguration{i}", "GetInfo"
-        )
+        network_info = await avm_wrapper.async_get_wlan_configuration(i)
         # Devices with 4 WLAN services, use the 2nd for internal communications
         if not (wifi_count == 4 and i == 2):
             networks[i] = {
@@ -169,7 +169,16 @@ def wifi_entities_list(
             }
     for i, network in networks.copy().items():
         networks[i]["switch_name"] = network["ssid"]
-        if len([j for j, n in networks.items() if n["ssid"] == network["ssid"]]) > 1:
+        if (
+            len(
+                [
+                    j
+                    for j, n in networks.items()
+                    if slugify(n["ssid"]) == slugify(network["ssid"])
+                ]
+            )
+            > 1
+        ):
             networks[i]["switch_name"] += f" ({WIFI_STANDARD[i]})"
 
     _LOGGER.debug("WiFi networks list: %s", networks)
@@ -181,7 +190,7 @@ def wifi_entities_list(
     ]
 
 
-def profile_entities_list(
+async def _async_profile_entities_list(
     avm_wrapper: AvmWrapper,
     data_fritz: FritzData,
 ) -> list[FritzBoxProfileSwitch]:
@@ -212,7 +221,7 @@ def profile_entities_list(
     return new_profiles
 
 
-def all_entities_list(
+async def async_all_entities_list(
     avm_wrapper: AvmWrapper,
     device_friendly_name: str,
     data_fritz: FritzData,
@@ -224,10 +233,10 @@ def all_entities_list(
         return []
 
     return [
-        *deflection_entities_list(avm_wrapper, device_friendly_name),
-        *port_entities_list(avm_wrapper, device_friendly_name, local_ip),
-        *wifi_entities_list(avm_wrapper, device_friendly_name),
-        *profile_entities_list(avm_wrapper, data_fritz),
+        *await _async_deflection_entities_list(avm_wrapper, device_friendly_name),
+        *await _async_port_entities_list(avm_wrapper, device_friendly_name, local_ip),
+        *await _async_wifi_entities_list(avm_wrapper, device_friendly_name),
+        *await _async_profile_entities_list(avm_wrapper, data_fritz),
     ]
 
 
@@ -243,8 +252,7 @@ async def async_setup_entry(
 
     local_ip = await async_get_source_ip(avm_wrapper.hass, target_ip=avm_wrapper.host)
 
-    entities_list = await hass.async_add_executor_job(
-        all_entities_list,
+    entities_list = await async_all_entities_list(
         avm_wrapper,
         entry.title,
         data_fritz,
@@ -254,12 +262,14 @@ async def async_setup_entry(
     async_add_entities(entities_list)
 
     @callback
-    def update_avm_device() -> None:
+    async def async_update_avm_device() -> None:
         """Update the values of the AVM device."""
-        async_add_entities(profile_entities_list(avm_wrapper, data_fritz))
+        async_add_entities(await _async_profile_entities_list(avm_wrapper, data_fritz))
 
     entry.async_on_unload(
-        async_dispatcher_connect(hass, avm_wrapper.signal_device_new, update_avm_device)
+        async_dispatcher_connect(
+            hass, avm_wrapper.signal_device_new, async_update_avm_device
+        )
     )
 
 
@@ -396,7 +406,6 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
             self._attributes[attr] = self.port_mapping[key]
 
     async def _async_switch_on_off_executor(self, turn_on: bool) -> bool:
-
         if self.port_mapping is None:
             return False
 

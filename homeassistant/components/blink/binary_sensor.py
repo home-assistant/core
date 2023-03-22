@@ -7,8 +7,9 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -55,7 +56,9 @@ async def async_setup_entry(
 class BlinkBinarySensor(BinarySensorEntity):
     """Representation of a Blink binary sensor."""
 
-    def __init__(self, data, camera, description: BinarySensorEntityDescription):
+    def __init__(
+        self, data, camera, description: BinarySensorEntityDescription
+    ) -> None:
         """Initialize the sensor."""
         self.data = data
         self.entity_description = description
@@ -69,7 +72,7 @@ class BlinkBinarySensor(BinarySensorEntity):
             model=self._camera.camera_type,
         )
 
-    def update(self):
+    def update(self) -> None:
         """Update sensor state."""
         self.data.refresh()
         state = self._camera.attributes[self.entity_description.key]

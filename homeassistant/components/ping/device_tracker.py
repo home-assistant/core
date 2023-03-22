@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
 import subprocess
@@ -10,15 +9,15 @@ import subprocess
 from icmplib import async_multiping
 import voluptuous as vol
 
-from homeassistant import const, util
+from homeassistant import util
 from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
-)
-from homeassistant.components.device_tracker.const import (
     CONF_SCAN_INTERVAL,
+    PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
     SCAN_INTERVAL,
-    SOURCE_TYPE_ROUTER,
+    AsyncSeeCallback,
+    SourceType,
 )
+from homeassistant.const import CONF_HOSTS
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -36,7 +35,7 @@ CONCURRENT_PING_LIMIT = 6
 
 PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(const.CONF_HOSTS): {cv.slug: cv.string},
+        vol.Required(CONF_HOSTS): {cv.slug: cv.string},
         vol.Optional(CONF_PING_COUNT, default=1): cv.positive_int,
     }
 )
@@ -56,7 +55,10 @@ class HostSubProcess:
     def ping(self):
         """Send an ICMP echo request and return True if success."""
         with subprocess.Popen(
-            self._ping_cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
+            self._ping_cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            close_fds=False,  # required for posix_spawn
         ) as pinger:
             try:
                 pinger.communicate(timeout=1 + PING_TIMEOUT)
@@ -83,13 +85,13 @@ class HostSubProcess:
 async def async_setup_scanner(
     hass: HomeAssistant,
     config: ConfigType,
-    async_see: Callable[..., Awaitable[None]],
+    async_see: AsyncSeeCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Set up the Host objects and return the update function."""
 
     privileged = hass.data[DOMAIN][PING_PRIVS]
-    ip_to_dev_id = {ip: dev_id for (dev_id, ip) in config[const.CONF_HOSTS].items()}
+    ip_to_dev_id = {ip: dev_id for (dev_id, ip) in config[CONF_HOSTS].items()}
     interval = config.get(
         CONF_SCAN_INTERVAL,
         timedelta(seconds=len(ip_to_dev_id) * config[CONF_PING_COUNT]) + SCAN_INTERVAL,
@@ -103,7 +105,7 @@ async def async_setup_scanner(
     if privileged is None:
         hosts = [
             HostSubProcess(ip, dev_id, hass, config, privileged)
-            for (dev_id, ip) in config[const.CONF_HOSTS].items()
+            for (dev_id, ip) in config[CONF_HOSTS].items()
         ]
 
         async def async_update(now):
@@ -114,7 +116,7 @@ async def async_setup_scanner(
             )
             await asyncio.gather(
                 *(
-                    async_see(dev_id=host.dev_id, source_type=SOURCE_TYPE_ROUTER)
+                    async_see(dev_id=host.dev_id, source_type=SourceType.ROUTER)
                     for idx, host in enumerate(hosts)
                     if results[idx]
                 )
@@ -133,7 +135,7 @@ async def async_setup_scanner(
             _LOGGER.debug("Multiping responses: %s", responses)
             await asyncio.gather(
                 *(
-                    async_see(dev_id=dev_id, source_type=SOURCE_TYPE_ROUTER)
+                    async_see(dev_id=dev_id, source_type=SourceType.ROUTER)
                     for idx, dev_id in enumerate(ip_to_dev_id.values())
                     if responses[idx].is_alive
                 )

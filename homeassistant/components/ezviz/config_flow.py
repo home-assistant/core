@@ -1,4 +1,6 @@
 """Config flow for ezviz."""
+from __future__ import annotations
+
 import logging
 
 from pyezviz.client import EzvizClient
@@ -12,7 +14,7 @@ from pyezviz.exceptions import (
 from pyezviz.test_cam_rtsp import TestRTSPAuth
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, OptionsFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import (
     CONF_CUSTOMIZE,
     CONF_IP_ADDRESS,
@@ -65,7 +67,7 @@ def _test_camera_rtsp_creds(data):
 
 
 class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Ezviz."""
+    """Handle a config flow for EZVIZ."""
 
     VERSION = 1
 
@@ -99,7 +101,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _validate_and_create_camera_rtsp(self, data):
         """Try DESCRIBE on RTSP camera with credentials."""
 
-        # Get Ezviz cloud credentials from config entry
+        # Get EZVIZ cloud credentials from config entry
         ezviz_client_creds = {
             CONF_USERNAME: None,
             CONF_PASSWORD: None,
@@ -164,7 +166,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(config_entry: ConfigEntry) -> EzvizOptionsFlowHandler:
         """Get the options flow for this handler."""
         return EzvizOptionsFlowHandler(config_entry)
 
@@ -180,7 +182,6 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-
             if user_input[CONF_URL] == CONF_CUSTOMIZE:
                 self.context["data"] = {
                     CONF_USERNAME: user_input[CONF_USERNAME],
@@ -309,14 +310,14 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class EzvizOptionsFlowHandler(OptionsFlow):
-    """Handle Ezviz client options."""
+    """Handle EZVIZ client options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
     async def async_step_init(self, user_input=None):
-        """Manage Ezviz options."""
+        """Manage EZVIZ options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 

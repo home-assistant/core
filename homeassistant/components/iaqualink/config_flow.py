@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+import httpx
 from iaqualink.client import AqualinkClient
 from iaqualink.exception import (
     AqualinkServiceException,
@@ -12,6 +13,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
@@ -21,7 +23,9 @@ class AqualinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow start."""
         # Supporting a single account.
         entries = self._async_current_entries()
@@ -39,7 +43,7 @@ class AqualinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     pass
             except AqualinkServiceUnauthorizedException:
                 errors["base"] = "invalid_auth"
-            except AqualinkServiceException:
+            except (AqualinkServiceException, httpx.HTTPError):
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(title=username, data=user_input)
@@ -54,7 +58,3 @@ class AqualinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-    async def async_step_import(self, user_input: dict[str, Any] | None = None):
-        """Occurs when an entry is setup through config."""
-        return await self.async_step_user(user_input)

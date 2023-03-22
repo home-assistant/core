@@ -1,10 +1,17 @@
 """The tests for SleepIQ number platform."""
-from homeassistant.components.number import DOMAIN
-from homeassistant.components.number.const import ATTR_VALUE, SERVICE_SET_VALUE
+from homeassistant.components.number import (
+    ATTR_MAX,
+    ATTR_MIN,
+    ATTR_STEP,
+    ATTR_VALUE,
+    DOMAIN,
+    SERVICE_SET_VALUE,
+)
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_ICON
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.components.sleepiq.conftest import (
+from .conftest import (
     BED_ID,
     BED_NAME,
     BED_NAME_LOWER,
@@ -18,7 +25,7 @@ from tests.components.sleepiq.conftest import (
 )
 
 
-async def test_firmness(hass, mock_asyncsleepiq):
+async def test_firmness(hass: HomeAssistant, mock_asyncsleepiq) -> None:
     """Test the SleepIQ firmness number values for a bed with two sides."""
     entry = await setup_platform(hass, DOMAIN)
     entity_registry = er.async_get(hass)
@@ -28,6 +35,9 @@ async def test_firmness(hass, mock_asyncsleepiq):
     )
     assert state.state == "40.0"
     assert state.attributes.get(ATTR_ICON) == "mdi:bed"
+    assert state.attributes.get(ATTR_MIN) == 5
+    assert state.attributes.get(ATTR_MAX) == 100
+    assert state.attributes.get(ATTR_STEP) == 5
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == f"SleepNumber {BED_NAME} {SLEEPER_L_NAME} Firmness"
@@ -44,6 +54,9 @@ async def test_firmness(hass, mock_asyncsleepiq):
     )
     assert state.state == "80.0"
     assert state.attributes.get(ATTR_ICON) == "mdi:bed"
+    assert state.attributes.get(ATTR_MIN) == 5
+    assert state.attributes.get(ATTR_MAX) == 100
+    assert state.attributes.get(ATTR_STEP) == 5
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == f"SleepNumber {BED_NAME} {SLEEPER_R_NAME} Firmness"
@@ -70,7 +83,7 @@ async def test_firmness(hass, mock_asyncsleepiq):
     mock_asyncsleepiq.beds[BED_ID].sleepers[0].set_sleepnumber.assert_called_with(42)
 
 
-async def test_actuators(hass, mock_asyncsleepiq):
+async def test_actuators(hass: HomeAssistant, mock_asyncsleepiq) -> None:
     """Test the SleepIQ actuator position values for a bed with adjustable head and foot."""
     entry = await setup_platform(hass, DOMAIN)
     entity_registry = er.async_get(hass)
@@ -78,6 +91,9 @@ async def test_actuators(hass, mock_asyncsleepiq):
     state = hass.states.get(f"number.sleepnumber_{BED_NAME_LOWER}_right_head_position")
     assert state.state == "60.0"
     assert state.attributes.get(ATTR_ICON) == "mdi:bed"
+    assert state.attributes.get(ATTR_MIN) == 0
+    assert state.attributes.get(ATTR_MAX) == 100
+    assert state.attributes.get(ATTR_STEP) == 1
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == f"SleepNumber {BED_NAME} Right Head Position"
@@ -92,6 +108,9 @@ async def test_actuators(hass, mock_asyncsleepiq):
     state = hass.states.get(f"number.sleepnumber_{BED_NAME_LOWER}_left_head_position")
     assert state.state == "50.0"
     assert state.attributes.get(ATTR_ICON) == "mdi:bed"
+    assert state.attributes.get(ATTR_MIN) == 0
+    assert state.attributes.get(ATTR_MAX) == 100
+    assert state.attributes.get(ATTR_STEP) == 1
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == f"SleepNumber {BED_NAME} Left Head Position"
@@ -106,6 +125,9 @@ async def test_actuators(hass, mock_asyncsleepiq):
     state = hass.states.get(f"number.sleepnumber_{BED_NAME_LOWER}_foot_position")
     assert state.state == "10.0"
     assert state.attributes.get(ATTR_ICON) == "mdi:bed"
+    assert state.attributes.get(ATTR_MIN) == 0
+    assert state.attributes.get(ATTR_MAX) == 100
+    assert state.attributes.get(ATTR_STEP) == 1
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == f"SleepNumber {BED_NAME} Foot Position"

@@ -1,4 +1,6 @@
 """Offer zone automation rules."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
@@ -10,7 +12,14 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_ZONE,
 )
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HassJob,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers import (
     condition,
     config_validation as cv,
@@ -18,10 +27,8 @@ from homeassistant.helpers import (
     location,
 )
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
-
-# mypy: allow-incomplete-defs, allow-untyped-defs
-# mypy: no-check-untyped-defs
 
 EVENT_ENTER = "enter"
 EVENT_LEAVE = "leave"
@@ -56,33 +63,42 @@ async def async_validate_trigger_config(
 
 
 async def async_attach_trigger(
-    hass, config, action, automation_info, *, platform_type: str = "zone"
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
+    *,
+    platform_type: str = "zone",
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    trigger_data = automation_info["trigger_data"]
-    entity_id = config.get(CONF_ENTITY_ID)
-    zone_entity_id = config.get(CONF_ZONE)
-    event = config.get(CONF_EVENT)
+    trigger_data = trigger_info["trigger_data"]
+    entity_id: list[str] = config[CONF_ENTITY_ID]
+    zone_entity_id: str = config[CONF_ZONE]
+    event: str = config[CONF_EVENT]
     job = HassJob(action)
 
     @callback
-    def zone_automation_listener(zone_event):
+    def zone_automation_listener(zone_event: Event) -> None:
         """Listen for state changes and calls action."""
         entity = zone_event.data.get("entity_id")
-        from_s = zone_event.data.get("old_state")
-        to_s = zone_event.data.get("new_state")
+        from_s: State | None = zone_event.data.get("old_state")
+        to_s: State | None = zone_event.data.get("new_state")
 
         if (
             from_s
             and not location.has_location(from_s)
-            or not location.has_location(to_s)
+            or to_s
+            and not location.has_location(to_s)
         ):
             return
 
         if not (zone_state := hass.states.get(zone_entity_id)):
             _LOGGER.warning(
-                "Automation '%s' is referencing non-existing zone '%s' in a zone trigger",
-                automation_info["name"],
+                (
+                    "Automation '%s' is referencing non-existing zone '%s' in a zone"
+                    " trigger"
+                ),
+                trigger_info["name"],
                 zone_entity_id,
             )
             return
@@ -113,7 +129,7 @@ async def async_attach_trigger(
                         "description": description,
                     }
                 },
-                to_s.context,
+                to_s.context if to_s else None,
             )
 
     return async_track_state_change_event(hass, entity_id, zone_automation_listener)

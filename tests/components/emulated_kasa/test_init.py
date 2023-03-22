@@ -24,6 +24,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 ENTITY_SWITCH = "switch.ac"
@@ -141,7 +142,7 @@ def nested_value(ndict, *keys):
     return nested_value(ndict[key], *keys[1:])
 
 
-async def test_setup(hass):
+async def test_setup(hass: HomeAssistant) -> None:
     """Test that devices are reported correctly."""
     with patch(
         "sense_energy.SenseLink",
@@ -150,7 +151,7 @@ async def test_setup(hass):
         assert await async_setup_component(hass, DOMAIN, CONFIG) is True
 
 
-async def test_float(hass):
+async def test_float(hass: HomeAssistant) -> None:
     """Test a configuration using a simple float."""
     config = CONFIG_SWITCH[DOMAIN][CONF_ENTITIES]
     assert await async_setup_component(
@@ -193,7 +194,7 @@ async def test_float(hass):
     assert math.isclose(power, 0)
 
 
-async def test_switch_power(hass):
+async def test_switch_power(hass: HomeAssistant) -> None:
     """Test a configuration using a simple float."""
     config = CONFIG_SWITCH_NO_POWER[DOMAIN][CONF_ENTITIES]
     assert await async_setup_component(
@@ -226,7 +227,7 @@ async def test_switch_power(hass):
     assert math.isclose(power, 0)
 
 
-async def test_template(hass):
+async def test_template(hass: HomeAssistant) -> None:
     """Test a configuration using a complex template."""
     config = CONFIG_FAN[DOMAIN][CONF_ENTITIES]
     assert await async_setup_component(
@@ -285,7 +286,7 @@ async def test_template(hass):
     assert math.isclose(power, 0)
 
 
-async def test_sensor(hass):
+async def test_sensor(hass: HomeAssistant) -> None:
     """Test a configuration using a sensor in a template."""
     config = CONFIG_LIGHT[DOMAIN][CONF_ENTITIES]
     assert await async_setup_component(
@@ -342,7 +343,7 @@ async def test_sensor(hass):
     assert math.isclose(power, 0)
 
 
-async def test_sensor_state(hass):
+async def test_sensor_state(hass: HomeAssistant) -> None:
     """Test a configuration using a sensor in a template."""
     config = CONFIG_SENSOR[DOMAIN][CONF_ENTITIES]
     assert await async_setup_component(
@@ -389,7 +390,7 @@ async def test_sensor_state(hass):
     assert math.isclose(power, 0)
 
 
-async def test_multiple_devices(hass):
+async def test_multiple_devices(hass: HomeAssistant) -> None:
     """Test that devices are reported correctly."""
     config = CONFIG[DOMAIN][CONF_ENTITIES]
     assert await async_setup_component(

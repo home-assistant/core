@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_TYPE,
     Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -55,7 +56,7 @@ async def setup_automation(hass, device_id, trigger_type):
     )
 
 
-async def test_get_triggers(hass, wemo_entity):
+async def test_get_triggers(hass: HomeAssistant, wemo_entity) -> None:
     """Test that the triggers appear for a supported device."""
     assert wemo_entity.device_id is not None
 
@@ -65,6 +66,7 @@ async def test_get_triggers(hass, wemo_entity):
             CONF_DOMAIN: DOMAIN,
             CONF_PLATFORM: "device",
             CONF_TYPE: EVENT_TYPE_LONG_PRESS,
+            "metadata": {},
         },
         {
             CONF_DEVICE_ID: wemo_entity.device_id,
@@ -72,6 +74,7 @@ async def test_get_triggers(hass, wemo_entity):
             CONF_ENTITY_ID: wemo_entity.entity_id,
             CONF_PLATFORM: "device",
             CONF_TYPE: "changed_states",
+            "metadata": {"secondary": False},
         },
         {
             CONF_DEVICE_ID: wemo_entity.device_id,
@@ -79,6 +82,7 @@ async def test_get_triggers(hass, wemo_entity):
             CONF_ENTITY_ID: wemo_entity.entity_id,
             CONF_PLATFORM: "device",
             CONF_TYPE: "turned_off",
+            "metadata": {"secondary": False},
         },
         {
             CONF_DEVICE_ID: wemo_entity.device_id,
@@ -86,6 +90,7 @@ async def test_get_triggers(hass, wemo_entity):
             CONF_ENTITY_ID: wemo_entity.entity_id,
             CONF_PLATFORM: "device",
             CONF_TYPE: "turned_on",
+            "metadata": {"secondary": False},
         },
     ]
     triggers = await async_get_device_automations(
@@ -94,7 +99,7 @@ async def test_get_triggers(hass, wemo_entity):
     assert_lists_same(triggers, expected_triggers)
 
 
-async def test_fires_on_long_press(hass):
+async def test_fires_on_long_press(hass: HomeAssistant) -> None:
     """Test wemo long press trigger firing."""
     assert await setup_automation(hass, MOCK_DEVICE_ID, EVENT_TYPE_LONG_PRESS)
     calls = async_mock_service(hass, "test", "automation")

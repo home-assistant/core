@@ -1,101 +1,85 @@
 """Support for the Skybell HD Doorbell."""
-import logging
+from __future__ import annotations
 
-from requests.exceptions import ConnectTimeout, HTTPError
-from skybellpy import Skybell
-import voluptuous as vol
+import asyncio
 
-from homeassistant.components import persistent_notification
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    __version__,
-)
+from aioskybell import Skybell
+from aioskybell.exceptions import SkybellAuthenticationException, SkybellException
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
+from .coordinator import SkybellDataUpdateCoordinator
 
-ATTRIBUTION = "Data provided by Skybell.com"
-
-NOTIFICATION_ID = "skybell_notification"
-NOTIFICATION_TITLE = "Skybell Sensor Setup"
-
-DOMAIN = "skybell"
-DEFAULT_CACHEDB = "./skybell_cache.pickle"
-DEFAULT_ENTITY_NAMESPACE = "skybell"
-
-AGENT_IDENTIFIER = f"HomeAssistant/{__version__}"
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CAMERA,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Skybell component."""
-    conf = config[DOMAIN]
-    username = conf.get(CONF_USERNAME)
-    password = conf.get(CONF_PASSWORD)
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the SkyBell component."""
+    hass.data.setdefault(DOMAIN, {})
 
-    try:
-        cache = hass.config.path(DEFAULT_CACHEDB)
-        skybell = Skybell(
-            username=username,
-            password=password,
-            get_devices=True,
-            cache_path=cache,
-            agent_identifier=AGENT_IDENTIFIER,
-        )
-
-        hass.data[DOMAIN] = skybell
-    except (ConnectTimeout, HTTPError) as ex:
-        _LOGGER.error("Unable to connect to Skybell service: %s", str(ex))
-        persistent_notification.create(
+    if DOMAIN in config:
+        async_create_issue(
             hass,
-            "Error: {}<br />"
-            "You will need to restart hass after fixing."
-            "".format(ex),
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID,
+            DOMAIN,
+            "removed_yaml",
+            breaks_in_ha_version="2022.9.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="removed_yaml",
         )
-        return False
+
     return True
 
 
-class SkybellDevice(Entity):
-    """A HA implementation for Skybell devices."""
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Skybell from a config entry."""
+    email = entry.data[CONF_EMAIL]
+    password = entry.data[CONF_PASSWORD]
 
-    def __init__(self, device):
-        """Initialize a sensor for Skybell device."""
-        self._device = device
+    api = Skybell(
+        username=email,
+        password=password,
+        get_devices=True,
+        cache_path=hass.config.path(f"./skybell_{entry.unique_id}.pickle"),
+        session=async_get_clientsession(hass),
+    )
+    try:
+        devices = await api.async_initialize()
+    except SkybellAuthenticationException as ex:
+        raise ConfigEntryAuthFailed from ex
+    except SkybellException as ex:
+        raise ConfigEntryNotReady(f"Unable to connect to Skybell service: {ex}") from ex
 
-    def update(self):
-        """Update automation state."""
-        self._device.refresh()
+    device_coordinators: list[SkybellDataUpdateCoordinator] = [
+        SkybellDataUpdateCoordinator(hass, device) for device in devices
+    ]
+    await asyncio.gather(
+        *[
+            coordinator.async_config_entry_first_refresh()
+            for coordinator in device_coordinators
+        ]
+    )
+    hass.data[DOMAIN][entry.entry_id] = device_coordinators
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-            "device_id": self._device.device_id,
-            "status": self._device.status,
-            "location": self._device.location,
-            "wifi_ssid": self._device.wifi_ssid,
-            "wifi_status": self._device.wifi_status,
-            "last_check_in": self._device.last_check_in,
-            "motion_threshold": self._device.motion_threshold,
-            "video_profile": self._device.video_profile,
-        }
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
+    return unload_ok

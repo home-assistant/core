@@ -1,10 +1,44 @@
 {
   "domain": "switchbot",
   "name": "SwitchBot",
-  "documentation": "https://www.home-assistant.io/integrations/switchbot",
-  "requirements": ["PySwitchbot==0.13.3"],
+  "bluetooth": [
+    {
+      "service_data_uuid": "00000d00-0000-1000-8000-00805f9b34fb",
+      "connectable": false
+    },
+    {
+      "service_data_uuid": "0000fd3d-0000-1000-8000-00805f9b34fb",
+      "connectable": false
+    },
+    {
+      "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b",
+      "connectable": false
+    },
+    {
+      "manufacturer_id": 2409,
+      "connectable": false
+    },
+    {
+      "manufacturer_id": 89,
+      "connectable": true
+    },
+    {
+      "manufacturer_id": 741,
+      "connectable": true
+    }
+  ],
+  "codeowners": [
+    "@bdraco",
+    "@danielhiversen",
+    "@RenierM26",
+    "@murtas",
+    "@Eloston",
+    "@dsypniewski"
+  ],
   "config_flow": true,
-  "codeowners": ["@danielhiversen", "@RenierM26"],
-  "iot_class": "local_polling",
-  "loggers": ["switchbot"]
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/switchbot",
+  "iot_class": "local_push",
+  "loggers": ["switchbot"],
+  "requirements": ["PySwitchbot==0.37.3"]
 }

@@ -8,20 +8,12 @@ from pyowm.commons.exceptions import APIRequestError, UnauthorizedError
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_SUNNY,
-    ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
-    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
-    ATTR_FORECAST_PRESSURE,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
-    ATTR_FORECAST_TIME,
-    ATTR_FORECAST_WIND_BEARING,
-    ATTR_FORECAST_WIND_SPEED,
 )
+from homeassistant.const import UnitOfTemperature
 from homeassistant.helpers import sun
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt
-from homeassistant.util.temperature import kelvin_to_celsius
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
     ATTR_API_CLOUDS,
@@ -29,6 +21,15 @@ from .const import (
     ATTR_API_DEW_POINT,
     ATTR_API_FEELS_LIKE_TEMPERATURE,
     ATTR_API_FORECAST,
+    ATTR_API_FORECAST_CONDITION,
+    ATTR_API_FORECAST_PRECIPITATION,
+    ATTR_API_FORECAST_PRECIPITATION_PROBABILITY,
+    ATTR_API_FORECAST_PRESSURE,
+    ATTR_API_FORECAST_TEMP,
+    ATTR_API_FORECAST_TEMP_LOW,
+    ATTR_API_FORECAST_TIME,
+    ATTR_API_FORECAST_WIND_BEARING,
+    ATTR_API_FORECAST_WIND_SPEED,
     ATTR_API_HUMIDITY,
     ATTR_API_PRECIPITATION_KIND,
     ATTR_API_PRESSURE,
@@ -36,6 +37,7 @@ from .const import (
     ATTR_API_SNOW,
     ATTR_API_TEMPERATURE,
     ATTR_API_UV_INDEX,
+    ATTR_API_VISIBILITY_DISTANCE,
     ATTR_API_WEATHER,
     ATTR_API_WEATHER_CODE,
     ATTR_API_WIND_BEARING,
@@ -72,6 +74,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         )
 
     async def _async_update_data(self):
+        """Update the data."""
         data = {}
         async with async_timeout.timeout(20):
             try:
@@ -137,11 +140,13 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ATTR_API_WEATHER: current_weather.detailed_status,
             ATTR_API_CONDITION: self._get_condition(current_weather.weather_code),
             ATTR_API_UV_INDEX: current_weather.uvi,
+            ATTR_API_VISIBILITY_DISTANCE: current_weather.visibility_distance,
             ATTR_API_WEATHER_CODE: current_weather.weather_code,
             ATTR_API_FORECAST: forecast_weather,
         }
 
     def _get_forecast_from_weather_response(self, weather_response):
+        """Extract the forecast data from the weather response."""
         forecast_arg = "forecast"
         if self._forecast_mode == FORECAST_MODE_ONECALL_HOURLY:
             forecast_arg = "forecast_hourly"
@@ -152,20 +157,21 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         ]
 
     def _convert_forecast(self, entry):
+        """Convert the forecast data."""
         forecast = {
-            ATTR_FORECAST_TIME: dt.utc_from_timestamp(
+            ATTR_API_FORECAST_TIME: dt.utc_from_timestamp(
                 entry.reference_time("unix")
             ).isoformat(),
-            ATTR_FORECAST_PRECIPITATION: self._calc_precipitation(
+            ATTR_API_FORECAST_PRECIPITATION: self._calc_precipitation(
                 entry.rain, entry.snow
             ),
-            ATTR_FORECAST_PRECIPITATION_PROBABILITY: (
+            ATTR_API_FORECAST_PRECIPITATION_PROBABILITY: (
                 round(entry.precipitation_probability * 100)
             ),
-            ATTR_FORECAST_PRESSURE: entry.pressure.get("press"),
-            ATTR_FORECAST_WIND_SPEED: entry.wind().get("speed"),
-            ATTR_FORECAST_WIND_BEARING: entry.wind().get("deg"),
-            ATTR_FORECAST_CONDITION: self._get_condition(
+            ATTR_API_FORECAST_PRESSURE: entry.pressure.get("press"),
+            ATTR_API_FORECAST_WIND_SPEED: entry.wind().get("speed"),
+            ATTR_API_FORECAST_WIND_BEARING: entry.wind().get("deg"),
+            ATTR_API_FORECAST_CONDITION: self._get_condition(
                 entry.weather_code, entry.reference_time("unix")
             ),
             ATTR_API_CLOUDS: entry.clouds,
@@ -173,17 +179,25 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
         temperature_dict = entry.temperature("celsius")
         if "max" in temperature_dict and "min" in temperature_dict:
-            forecast[ATTR_FORECAST_TEMP] = entry.temperature("celsius").get("max")
-            forecast[ATTR_FORECAST_TEMP_LOW] = entry.temperature("celsius").get("min")
+            forecast[ATTR_API_FORECAST_TEMP] = entry.temperature("celsius").get("max")
+            forecast[ATTR_API_FORECAST_TEMP_LOW] = entry.temperature("celsius").get(
+                "min"
+            )
         else:
-            forecast[ATTR_FORECAST_TEMP] = entry.temperature("celsius").get("temp")
+            forecast[ATTR_API_FORECAST_TEMP] = entry.temperature("celsius").get("temp")
 
         return forecast
 
     @staticmethod
     def _fmt_dewpoint(dewpoint):
+        """Format the dewpoint data."""
         if dewpoint is not None:
-            return round(kelvin_to_celsius(dewpoint), 1)
+            return round(
+                TemperatureConverter.convert(
+                    dewpoint, UnitOfTemperature.KELVIN, UnitOfTemperature.CELSIUS
+                ),
+                1,
+            )
         return None
 
     @staticmethod
@@ -237,7 +251,6 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     def _get_condition(self, weather_code, timestamp=None):
         """Get weather condition from weather data."""
         if weather_code == WEATHER_CODE_SUNNY_OR_CLEAR_NIGHT:
-
             if timestamp:
                 timestamp = dt.utc_from_timestamp(timestamp)
 

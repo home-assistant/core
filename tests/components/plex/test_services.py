@@ -6,8 +6,9 @@ import plexapi.audio
 from plexapi.exceptions import NotFound
 import plexapi.playqueue
 import pytest
+import requests_mock
 
-from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
+from homeassistant.components.media_player import MediaType
 from homeassistant.components.plex.const import (
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
@@ -19,6 +20,7 @@ from homeassistant.components.plex.const import (
 )
 from homeassistant.components.plex.services import process_plex_payload
 from homeassistant.const import CONF_URL
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS, SECONDARY_DATA
@@ -27,14 +29,14 @@ from tests.common import MockConfigEntry
 
 
 async def test_refresh_library(
-    hass,
+    hass: HomeAssistant,
     mock_plex_server,
     setup_plex_server,
-    requests_mock,
+    requests_mock: requests_mock.Mocker,
     empty_payload,
     plex_server_accounts,
     plex_server_base,
-):
+) -> None:
     """Test refresh_library service call."""
     url = mock_plex_server.url_in_use
     refresh = requests_mock.get(
@@ -104,7 +106,7 @@ async def test_refresh_library(
     assert refresh.call_count == 1
 
 
-async def test_scan_clients(hass, mock_plex_server):
+async def test_scan_clients(hass: HomeAssistant, mock_plex_server) -> None:
     """Test scan_for_clients service call."""
     assert await hass.services.async_call(
         DOMAIN,
@@ -114,13 +116,13 @@ async def test_scan_clients(hass, mock_plex_server):
 
 
 async def test_lookup_media_for_other_integrations(
-    hass,
+    hass: HomeAssistant,
     entry,
     setup_plex_server,
-    requests_mock,
+    requests_mock: requests_mock.Mocker,
     playqueue_1234,
     playqueue_created,
-):
+) -> None:
     """Test media lookup for media_player.play_media calls from cast/sonos."""
     CONTENT_ID = PLEX_URI_SCHEME + '{"library_name": "Music", "artist_name": "Artist"}'
     CONTENT_ID_KEY = PLEX_URI_SCHEME + "100"
@@ -140,7 +142,7 @@ async def test_lookup_media_for_other_integrations(
 
     # Test with no Plex integration available
     with pytest.raises(HomeAssistantError) as excinfo:
-        process_plex_payload(hass, MEDIA_TYPE_MUSIC, CONTENT_ID)
+        process_plex_payload(hass, MediaType.MUSIC, CONTENT_ID)
     assert "Plex integration not configured" in str(excinfo.value)
 
     with patch(
@@ -152,7 +154,7 @@ async def test_lookup_media_for_other_integrations(
 
         # Test with no Plex servers available
         with pytest.raises(HomeAssistantError) as excinfo:
-            process_plex_payload(hass, MEDIA_TYPE_MUSIC, CONTENT_ID)
+            process_plex_payload(hass, MediaType.MUSIC, CONTENT_ID)
         assert "No Plex servers available" in str(excinfo.value)
 
     # Complete setup of a Plex server
@@ -161,28 +163,28 @@ async def test_lookup_media_for_other_integrations(
 
     # Test lookup success without playqueue
     result = process_plex_payload(
-        hass, MEDIA_TYPE_MUSIC, CONTENT_ID, supports_playqueues=False
+        hass, MediaType.MUSIC, CONTENT_ID, supports_playqueues=False
     )
     assert isinstance(result.media, plexapi.audio.Artist)
     assert not result.shuffle
 
     # Test media key payload without playqueue
     result = process_plex_payload(
-        hass, MEDIA_TYPE_MUSIC, CONTENT_ID_KEY, supports_playqueues=False
+        hass, MediaType.MUSIC, CONTENT_ID_KEY, supports_playqueues=False
     )
     assert isinstance(result.media, plexapi.audio.Track)
     assert not result.shuffle
 
     # Test with specified server without playqueue
     result = process_plex_payload(
-        hass, MEDIA_TYPE_MUSIC, CONTENT_ID_SERVER, supports_playqueues=False
+        hass, MediaType.MUSIC, CONTENT_ID_SERVER, supports_playqueues=False
     )
     assert isinstance(result.media, plexapi.audio.Artist)
     assert not result.shuffle
 
     # Test shuffle without playqueue
     result = process_plex_payload(
-        hass, MEDIA_TYPE_MUSIC, CONTENT_ID_SHUFFLE, supports_playqueues=False
+        hass, MediaType.MUSIC, CONTENT_ID_SHUFFLE, supports_playqueues=False
     )
     assert isinstance(result.media, plexapi.audio.Artist)
     assert result.shuffle
@@ -190,12 +192,12 @@ async def test_lookup_media_for_other_integrations(
     # Test with media not found
     with patch("plexapi.library.LibrarySection.search", return_value=None):
         with pytest.raises(HomeAssistantError) as excinfo:
-            process_plex_payload(hass, MEDIA_TYPE_MUSIC, CONTENT_ID_BAD_MEDIA)
-        assert f"No {MEDIA_TYPE_MUSIC} results in 'Music' for" in str(excinfo.value)
+            process_plex_payload(hass, MediaType.MUSIC, CONTENT_ID_BAD_MEDIA)
+        assert f"No {MediaType.MUSIC} results in 'Music' for" in str(excinfo.value)
 
     # Test with playqueue
     requests_mock.get("https://1.2.3.4:32400/playQueues/1234", text=playqueue_1234)
-    result = process_plex_payload(hass, MEDIA_TYPE_MUSIC, CONTENT_ID_PLAYQUEUE)
+    result = process_plex_payload(hass, MediaType.MUSIC, CONTENT_ID_PLAYQUEUE)
     assert isinstance(result.media, plexapi.playqueue.PlayQueue)
 
     # Test with invalid playqueue
@@ -203,22 +205,22 @@ async def test_lookup_media_for_other_integrations(
         "https://1.2.3.4:32400/playQueues/1235", status_code=HTTPStatus.NOT_FOUND
     )
     with pytest.raises(HomeAssistantError) as excinfo:
-        process_plex_payload(hass, MEDIA_TYPE_MUSIC, CONTENT_ID_BAD_PLAYQUEUE)
+        process_plex_payload(hass, MediaType.MUSIC, CONTENT_ID_BAD_PLAYQUEUE)
     assert "PlayQueue '1235' could not be found" in str(excinfo.value)
 
     # Test playqueue is created with shuffle
     requests_mock.post("/playqueues", text=playqueue_created)
-    result = process_plex_payload(hass, MEDIA_TYPE_MUSIC, CONTENT_ID_SHUFFLE)
+    result = process_plex_payload(hass, MediaType.MUSIC, CONTENT_ID_SHUFFLE)
     assert isinstance(result.media, plexapi.playqueue.PlayQueue)
 
 
-async def test_lookup_media_with_urls(hass, mock_plex_server):
+async def test_lookup_media_with_urls(hass: HomeAssistant, mock_plex_server) -> None:
     """Test media lookup for media_player.play_media calls from cast/sonos."""
     CONTENT_ID_URL = f"{PLEX_URI_SCHEME}{DEFAULT_DATA[CONF_SERVER_IDENTIFIER]}/100"
 
     # Test URL format
     result = process_plex_payload(
-        hass, MEDIA_TYPE_MUSIC, CONTENT_ID_URL, supports_playqueues=False
+        hass, MediaType.MUSIC, CONTENT_ID_URL, supports_playqueues=False
     )
     assert isinstance(result.media, plexapi.audio.Track)
     assert result.shuffle is False
@@ -226,7 +228,7 @@ async def test_lookup_media_with_urls(hass, mock_plex_server):
     # Test URL format with shuffle
     CONTENT_ID_URL_WITH_SHUFFLE = CONTENT_ID_URL + "?shuffle=1"
     result = process_plex_payload(
-        hass, MEDIA_TYPE_MUSIC, CONTENT_ID_URL_WITH_SHUFFLE, supports_playqueues=False
+        hass, MediaType.MUSIC, CONTENT_ID_URL_WITH_SHUFFLE, supports_playqueues=False
     )
     assert isinstance(result.media, plexapi.audio.Track)
     assert result.shuffle is True

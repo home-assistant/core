@@ -1,7 +1,7 @@
 """Handle MySensors devices."""
 from __future__ import annotations
 
-from functools import partial
+from abc import ABC, abstractmethod
 import logging
 from typing import Any
 
@@ -10,6 +10,7 @@ from mysensors.sensor import ChildSensor
 
 from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
@@ -34,7 +35,7 @@ ATTR_HEARTBEAT = "heartbeat"
 MYSENSORS_PLATFORM_DEVICES = "mysensors_devices_{}"
 
 
-class MySensorsDevice:
+class MySensorsDevice(ABC):
     """Representation of a MySensors device."""
 
     hass: HomeAssistant
@@ -52,10 +53,11 @@ class MySensorsDevice:
         self.gateway: BaseAsyncGateway = gateway
         self.node_id: int = node_id
         self.child_id: int = child_id
-        self.value_type: int = value_type  # value_type as int. string variant can be looked up in gateway consts
+        # value_type as int. string variant can be looked up in gateway consts
+        self.value_type: int = value_type
         self.child_type = self._child.type
         self._values: dict[int, Any] = {}
-        self._update_scheduled = False
+        self._debouncer: Debouncer | None = None
 
     @property
     def dev_id(self) -> DevId:
@@ -151,7 +153,8 @@ class MySensorsDevice:
 
         return attr
 
-    async def async_update(self) -> None:
+    @callback
+    def _async_update(self) -> None:
         """Update the controller with the latest value from a sensor."""
         node = self.gateway.sensors[self.node_id]
         child = node.children[self.child_id]
@@ -178,28 +181,23 @@ class MySensorsDevice:
             else:
                 self._values[value_type] = value
 
-    async def _async_update_callback(self) -> None:
-        """Update the device."""
-        raise NotImplementedError
-
     @callback
-    def async_update_callback(self) -> None:
+    @abstractmethod
+    def _async_update_callback(self) -> None:
+        """Update the device."""
+
+    async def async_update_callback(self) -> None:
         """Update the device after delay."""
-        if self._update_scheduled:
-            return
+        if not self._debouncer:
+            self._debouncer = Debouncer(
+                self.hass,
+                _LOGGER,
+                cooldown=UPDATE_DELAY,
+                immediate=False,
+                function=self._async_update_callback,
+            )
 
-        async def update() -> None:
-            """Perform update."""
-            try:
-                await self._async_update_callback()
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Error updating %s", self.name)
-            finally:
-                self._update_scheduled = False
-
-        self._update_scheduled = True
-        delayed_update = partial(self.hass.async_create_task, update())
-        self.hass.loop.call_later(UPDATE_DELAY, delayed_update)
+        await self._debouncer.async_call()
 
 
 def get_mysensors_devices(
@@ -217,10 +215,7 @@ def get_mysensors_devices(
 class MySensorsEntity(MySensorsDevice, Entity):
     """Representation of a MySensors entity."""
 
-    @property
-    def should_poll(self) -> bool:
-        """Return the polling state. The gateway pushes its states."""
-        return False
+    _attr_should_poll = False
 
     @property
     def available(self) -> bool:
@@ -238,9 +233,11 @@ class MySensorsEntity(MySensorsDevice, Entity):
 
         return attr
 
-    async def _async_update_callback(self) -> None:
+    @callback
+    def _async_update_callback(self) -> None:
         """Update the entity."""
-        await self.async_update_ha_state(True)
+        self._async_update()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Register update callback."""
@@ -258,3 +255,4 @@ class MySensorsEntity(MySensorsDevice, Entity):
                 self.async_update_callback,
             )
         )
+        self._async_update()

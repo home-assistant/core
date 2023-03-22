@@ -3,17 +3,12 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
-from typing import Any
 
 import attr
 from hatasmota.models import DiscoveryHashType
 from hatasmota.trigger import TasmotaTrigger, TasmotaTriggerConfig
 import voluptuous as vol
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
-)
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.config_entries import ConfigEntry
@@ -23,6 +18,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, TASMOTA_EVENT
@@ -52,8 +48,8 @@ DEVICE_TRIGGERS = "tasmota_device_triggers"
 class TriggerInstance:
     """Attached trigger settings."""
 
-    action: AutomationActionType = attr.ib()
-    automation_info: AutomationTriggerInfo = attr.ib()
+    action: TriggerActionType = attr.ib()
+    trigger_info: TriggerInfo = attr.ib()
     trigger: Trigger = attr.ib()
     remove: CALLBACK_TYPE | None = attr.ib(default=None)
 
@@ -73,12 +69,13 @@ class TriggerInstance:
         event_config = event_trigger.TRIGGER_SCHEMA(event_config)
         if self.remove:
             self.remove()
-        # Note: No lock needed, event_trigger.async_attach_trigger is an synchronous function
+        # Note: No lock needed, event_trigger.async_attach_trigger
+        # is an synchronous function
         self.remove = await event_trigger.async_attach_trigger(
             self.trigger.hass,
             event_config,
             self.action,
-            self.automation_info,
+            self.trigger_info,
             platform_type="device",
         )
 
@@ -97,10 +94,10 @@ class Trigger:
     trigger_instances: list[TriggerInstance] = attr.ib(factory=list)
 
     async def add_trigger(
-        self, action: AutomationActionType, automation_info: AutomationTriggerInfo
+        self, action: TriggerActionType, trigger_info: TriggerInfo
     ) -> Callable[[], None]:
         """Add Tasmota trigger."""
-        instance = TriggerInstance(action, automation_info, self)
+        instance = TriggerInstance(action, trigger_info, self)
         self.trigger_instances.append(instance)
 
         if self.tasmota_trigger is not None:
@@ -189,11 +186,13 @@ async def async_setup_trigger(
         _LOGGER.debug(
             "Got update for trigger with hash: %s '%s'", discovery_hash, trigger_config
         )
+        device_triggers: dict[str, Trigger] = hass.data[DEVICE_TRIGGERS]
         if not trigger_config.is_active:
             # Empty trigger_config: Remove trigger
             _LOGGER.debug("Removing trigger: %s", discovery_hash)
-            if discovery_id in hass.data[DEVICE_TRIGGERS]:
-                device_trigger = hass.data[DEVICE_TRIGGERS][discovery_id]
+            if discovery_id in device_triggers:
+                device_trigger = device_triggers[discovery_id]
+                assert device_trigger.tasmota_trigger
                 await device_trigger.tasmota_trigger.unsubscribe_topics()
                 device_trigger.detach_trigger()
                 clear_discovery_hash(hass, discovery_hash)
@@ -201,7 +200,8 @@ async def async_setup_trigger(
                     remove_update_signal()
             return
 
-        device_trigger = hass.data[DEVICE_TRIGGERS][discovery_id]
+        device_trigger = device_triggers[discovery_id]
+        assert device_trigger.tasmota_trigger
         if device_trigger.tasmota_trigger.config_same(trigger_config):
             # Unchanged payload: Ignore to avoid unnecessary unsubscribe / subscribe
             _LOGGER.debug("Ignoring unchanged update for: %s", discovery_hash)
@@ -210,6 +210,7 @@ async def async_setup_trigger(
         # Non-empty, changed trigger_config: Update trigger
         _LOGGER.debug("Updating trigger: %s", discovery_hash)
         device_trigger.tasmota_trigger.config_update(trigger_config)
+        assert remove_update_signal
         await device_trigger.update_tasmota_trigger(
             trigger_config, remove_update_signal
         )
@@ -231,7 +232,8 @@ async def async_setup_trigger(
 
     if DEVICE_TRIGGERS not in hass.data:
         hass.data[DEVICE_TRIGGERS] = {}
-    if discovery_id not in hass.data[DEVICE_TRIGGERS]:
+    device_triggers: dict[str, Trigger] = hass.data[DEVICE_TRIGGERS]
+    if discovery_id not in device_triggers:
         device_trigger = Trigger(
             hass=hass,
             device_id=device.id,
@@ -241,10 +243,10 @@ async def async_setup_trigger(
             type=tasmota_trigger.cfg.type,
             remove_update_signal=remove_update_signal,
         )
-        hass.data[DEVICE_TRIGGERS][discovery_id] = device_trigger
+        device_triggers[discovery_id] = device_trigger
     else:
         # This Tasmota trigger is wanted by device trigger(s), set them up
-        device_trigger = hass.data[DEVICE_TRIGGERS][discovery_id]
+        device_trigger = device_triggers[discovery_id]
         await device_trigger.set_tasmota_trigger(tasmota_trigger, remove_update_signal)
     await device_trigger.arm_tasmota_trigger()
 
@@ -252,27 +254,34 @@ async def async_setup_trigger(
 async def async_remove_triggers(hass: HomeAssistant, device_id: str) -> None:
     """Cleanup any device triggers for a Tasmota device."""
     triggers = await async_get_triggers(hass, device_id)
+
+    if not triggers:
+        return
+    device_triggers: dict[str, Trigger] = hass.data[DEVICE_TRIGGERS]
     for trig in triggers:
-        device_trigger = hass.data[DEVICE_TRIGGERS].pop(trig[CONF_DISCOVERY_ID])
+        device_trigger = device_triggers.pop(trig[CONF_DISCOVERY_ID])
         if device_trigger:
             discovery_hash = device_trigger.discovery_hash
 
+            assert device_trigger.tasmota_trigger
             await device_trigger.tasmota_trigger.unsubscribe_topics()
             device_trigger.detach_trigger()
             clear_discovery_hash(hass, discovery_hash)
+            assert device_trigger.remove_update_signal
             device_trigger.remove_update_signal()
 
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
+) -> list[dict[str, str]]:
     """List device triggers for a Tasmota device."""
     triggers: list[dict[str, str]] = []
 
     if DEVICE_TRIGGERS not in hass.data:
         return triggers
 
-    for discovery_id, trig in hass.data[DEVICE_TRIGGERS].items():
+    device_triggers: dict[str, Trigger] = hass.data[DEVICE_TRIGGERS]
+    for discovery_id, trig in device_triggers.items():
         if trig.device_id != device_id or trig.tasmota_trigger is None:
             continue
 
@@ -292,18 +301,19 @@ async def async_get_triggers(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: Callable,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a device trigger."""
     if DEVICE_TRIGGERS not in hass.data:
         hass.data[DEVICE_TRIGGERS] = {}
+    device_triggers: dict[str, Trigger] = hass.data[DEVICE_TRIGGERS]
     device_id = config[CONF_DEVICE_ID]
     discovery_id = config[CONF_DISCOVERY_ID]
 
-    if discovery_id not in hass.data[DEVICE_TRIGGERS]:
+    if discovery_id not in device_triggers:
         # The trigger has not (yet) been discovered, prepare it for later
-        hass.data[DEVICE_TRIGGERS][discovery_id] = Trigger(
+        device_triggers[discovery_id] = Trigger(
             hass=hass,
             device_id=device_id,
             discovery_hash=None,
@@ -312,5 +322,5 @@ async def async_attach_trigger(
             subtype=config[CONF_SUBTYPE],
             tasmota_trigger=None,
         )
-    trigger: Trigger = hass.data[DEVICE_TRIGGERS][discovery_id]
-    return await trigger.add_trigger(action, automation_info)
+    trigger: Trigger = device_triggers[discovery_id]
+    return await trigger.add_trigger(action, trigger_info)

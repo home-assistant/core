@@ -10,8 +10,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SimpliSafe, SimpliSafeEntity
@@ -21,6 +21,7 @@ SUPPORTED_BATTERY_SENSOR_TYPES = [
     DeviceTypes.CARBON_MONOXIDE,
     DeviceTypes.ENTRY,
     DeviceTypes.GLASS_BREAK,
+    DeviceTypes.KEYPAD,
     DeviceTypes.LEAK,
     DeviceTypes.LOCK_KEYPAD,
     DeviceTypes.MOTION,
@@ -77,7 +78,7 @@ class TriggeredBinarySensor(SimpliSafeEntity, BinarySensorEntity):
         simplisafe: SimpliSafe,
         system: SystemV3,
         sensor: SensorV3,
-        device_class: str,
+        device_class: BinarySensorDeviceClass,
     ) -> None:
         """Initialize."""
         super().__init__(simplisafe, system, device=sensor)
@@ -103,7 +104,7 @@ class BatteryBinarySensor(SimpliSafeEntity, BinarySensorEntity):
         """Initialize."""
         super().__init__(simplisafe, system, device=sensor)
 
-        self._attr_name = f"{super().name} Battery"
+        self._attr_name = "Battery"
         self._attr_unique_id = f"{super().unique_id}-battery"
         self._device: SensorV3
 

@@ -11,7 +11,8 @@ from homeassistant.components.kraken.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START
-from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -24,7 +25,7 @@ from .const import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_sensor(hass):
+async def test_sensor(hass: HomeAssistant) -> None:
     """Test that sensor has a value."""
     utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.
@@ -52,7 +53,7 @@ async def test_sensor(hass):
         )
         entry.add_to_hass(hass)
 
-        registry = await hass.helpers.entity_registry.async_get_registry()
+        registry = er.async_get(hass)
 
         # Pre-create registry entries for disabled by default sensors
         registry.async_get_or_create(
@@ -229,7 +230,7 @@ async def test_sensor(hass):
         assert xbt_usd_opening_price_today.state == "0.0003513"
 
 
-async def test_sensors_available_after_restart(hass):
+async def test_sensors_available_after_restart(hass: HomeAssistant) -> None:
     """Test that all sensors are added again after a restart."""
     utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.
@@ -248,13 +249,13 @@ async def test_sensors_available_after_restart(hass):
             },
         )
 
-        device_registry = await hass.helpers.device_registry.async_get_registry()
+        device_registry = dr.async_get(hass)
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, "XBT_USD")},
             name="XBT USD",
             manufacturer="Kraken.com",
-            entry_type=DeviceEntryType.SERVICE,
+            entry_type=dr.DeviceEntryType.SERVICE,
         )
         entry.add_to_hass(hass)
 
@@ -269,7 +270,7 @@ async def test_sensors_available_after_restart(hass):
         assert sensor.state == "0.0003494"
 
 
-async def test_sensors_added_after_config_update(hass):
+async def test_sensors_added_after_config_update(hass: HomeAssistant) -> None:
     """Test that sensors are added when another tracked asset pair is added."""
     utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.
@@ -315,7 +316,7 @@ async def test_sensors_added_after_config_update(hass):
         assert hass.states.get("sensor.ada_xbt_ask")
 
 
-async def test_missing_pair_marks_sensor_unavailable(hass):
+async def test_missing_pair_marks_sensor_unavailable(hass: HomeAssistant) -> None:
     """Test that a missing tradable asset pair marks the sensor unavailable."""
     utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.

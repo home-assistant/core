@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 from homeassistant.components import tradfri
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import GATEWAY_ID
@@ -9,7 +10,7 @@ from . import GATEWAY_ID
 from tests.common import MockConfigEntry
 
 
-async def test_entry_setup_unload(hass, mock_api_factory):
+async def test_entry_setup_unload(hass: HomeAssistant, mock_api_factory) -> None:
     """Test config entry setup and unload."""
     entry = MockConfigEntry(
         domain=tradfri.DOMAIN,
@@ -17,7 +18,6 @@ async def test_entry_setup_unload(hass, mock_api_factory):
             tradfri.CONF_HOST: "mock-host",
             tradfri.CONF_IDENTITY: "mock-identity",
             tradfri.CONF_KEY: "mock-key",
-            tradfri.CONF_IMPORT_GROUPS: True,
             tradfri.CONF_GATEWAY_ID: GATEWAY_ID,
         },
     )
@@ -38,9 +38,9 @@ async def test_entry_setup_unload(hass, mock_api_factory):
     assert dev_entry.identifiers == {
         (tradfri.DOMAIN, entry.data[tradfri.CONF_GATEWAY_ID])
     }
-    assert dev_entry.manufacturer == tradfri.ATTR_TRADFRI_MANUFACTURER
-    assert dev_entry.name == tradfri.ATTR_TRADFRI_GATEWAY
-    assert dev_entry.model == tradfri.ATTR_TRADFRI_GATEWAY_MODEL
+    assert dev_entry.manufacturer == "IKEA of Sweden"
+    assert dev_entry.name == "Gateway"
+    assert dev_entry.model == "E1526"
 
     with patch.object(
         hass.config_entries, "async_forward_entry_unload", return_value=True
@@ -51,7 +51,7 @@ async def test_entry_setup_unload(hass, mock_api_factory):
         assert mock_api_factory.shutdown.call_count == 1
 
 
-async def test_remove_stale_devices(hass, mock_api_factory):
+async def test_remove_stale_devices(hass: HomeAssistant, mock_api_factory) -> None:
     """Test remove stale device registry entries."""
     entry = MockConfigEntry(
         domain=tradfri.DOMAIN,
@@ -59,7 +59,6 @@ async def test_remove_stale_devices(hass, mock_api_factory):
             tradfri.CONF_HOST: "mock-host",
             tradfri.CONF_IDENTITY: "mock-identity",
             tradfri.CONF_KEY: "mock-key",
-            tradfri.CONF_IMPORT_GROUPS: True,
             tradfri.CONF_GATEWAY_ID: GATEWAY_ID,
         },
     )
@@ -87,6 +86,6 @@ async def test_remove_stale_devices(hass, mock_api_factory):
     assert dev_entry.identifiers == {
         (tradfri.DOMAIN, entry.data[tradfri.CONF_GATEWAY_ID])
     }
-    assert dev_entry.manufacturer == tradfri.ATTR_TRADFRI_MANUFACTURER
-    assert dev_entry.name == tradfri.ATTR_TRADFRI_GATEWAY
-    assert dev_entry.model == tradfri.ATTR_TRADFRI_GATEWAY_MODEL
+    assert dev_entry.manufacturer == "IKEA of Sweden"
+    assert dev_entry.name == "Gateway"
+    assert dev_entry.model == "E1526"

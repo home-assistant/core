@@ -1,10 +1,11 @@
 {
   "domain": "openuv",
   "name": "OpenUV",
+  "codeowners": ["@bachya"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/openuv",
-  "requirements": ["pyopenuv==2021.11.0"],
-  "codeowners": ["@bachya"],
+  "integration_type": "service",
   "iot_class": "cloud_polling",
-  "loggers": ["pyopenuv"]
+  "loggers": ["pyopenuv"],
+  "requirements": ["pyopenuv==2023.02.0"]
 }

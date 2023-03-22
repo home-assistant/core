@@ -6,8 +6,8 @@ from tololib.const import LampMode
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ToloSaunaCoordinatorEntity, ToloSaunaUpdateCoordinator
@@ -27,11 +27,11 @@ async def async_setup_entry(
 class ToloLampModeSelect(ToloSaunaCoordinatorEntity, SelectEntity):
     """TOLO Sauna lamp mode select."""
 
-    _attr_device_class = "tolo__lamp_mode"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon = "mdi:lightbulb-multiple-outline"
     _attr_name = "Lamp Mode"
     _attr_options = [lamp_mode.name.lower() for lamp_mode in LampMode]
+    _attr_translation_key = "lamp_mode"
 
     def __init__(
         self, coordinator: ToloSaunaUpdateCoordinator, entry: ConfigEntry

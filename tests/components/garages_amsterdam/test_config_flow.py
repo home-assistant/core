@@ -8,11 +8,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.garages_amsterdam.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 
 async def test_full_flow(hass: HomeAssistant) -> None:
@@ -21,8 +17,7 @@ async def test_full_flow(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == RESULT_TYPE_FORM
-    assert "flow_id" in result
+    assert result.get("type") == FlowResultType.FORM
 
     with patch(
         "homeassistant.components.garages_amsterdam.async_setup_entry",
@@ -34,7 +29,7 @@ async def test_full_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result2.get("type") == FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "IJDok"
     assert "result" in result2
     assert result2["result"].unique_id == "IJDok"
@@ -42,7 +37,7 @@ async def test_full_flow(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "side_effect,reason",
+    ("side_effect", "reason"),
     [
         (RuntimeError, "unknown"),
         (
@@ -57,11 +52,11 @@ async def test_error_handling(
     """Test we get the form."""
 
     with patch(
-        "homeassistant.components.garages_amsterdam.config_flow.GaragesAmsterdam.all_garages",
+        "homeassistant.components.garages_amsterdam.config_flow.ODPAmsterdam.all_garages",
         side_effect=side_effect,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-    assert result.get("type") == RESULT_TYPE_ABORT
+    assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == reason

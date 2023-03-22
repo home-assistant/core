@@ -1,4 +1,4 @@
-"""This platform allows several switches to be grouped into one switch."""
+"""Platform allowing several switches to be grouped into one switch."""
 from __future__ import annotations
 
 import logging
@@ -170,4 +170,5 @@ class SwitchGroup(GroupEntity, SwitchEntity):
             # Set as ON if any / all member is ON
             self._attr_is_on = self.mode(state == STATE_ON for state in states)
 
+        # Set group as unavailable if all members are unavailable or missing
         self._attr_available = any(state != STATE_UNAVAILABLE for state in states)

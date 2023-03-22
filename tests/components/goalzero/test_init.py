@@ -17,7 +17,7 @@ from tests.common import async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_setup_config_and_unload(hass: HomeAssistant):
+async def test_setup_config_and_unload(hass: HomeAssistant) -> None:
     """Test Goal Zero setup and unload."""
     entry = create_entry(hass)
     mocked_yeti = await create_mocked_yeti()
@@ -35,7 +35,7 @@ async def test_setup_config_and_unload(hass: HomeAssistant):
     assert not hass.data.get(DOMAIN)
 
 
-async def test_async_setup_entry_not_ready(hass: HomeAssistant):
+async def test_async_setup_entry_not_ready(hass: HomeAssistant) -> None:
     """Test that it throws ConfigEntryNotReady when exception occurs during setup."""
     entry = create_entry(hass)
     with patch(
@@ -65,10 +65,12 @@ async def test_update_failed(
         assert state.state == STATE_UNAVAILABLE
 
 
-async def test_device_info(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
+async def test_device_info(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test device info."""
     entry = await async_init_integration(hass, aioclient_mock)
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
 
     device = device_registry.async_get_device({(DOMAIN, entry.entry_id)})
 

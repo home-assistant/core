@@ -1,0 +1,39 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "description": "Check the documentation for how to find the offline key. If you are using the August cloud integration to obtain the key, you may need to reload the August cloud integration while the lock is in Bluetooth range.",
+        "data": {
+          "address": "Bluetooth address",
+          "key": "Offline Key (32-byte hex string)",
+          "slot": "Offline Key Slot (Integer between 0 and 255)"
+        }
+      },
+      "reauth_validate": {
+        "description": "Enter the updated key for the {title} lock with address {address}. If you are using the August cloud integration to obtain the key, you may be able to avoid manual reauthentication by reloading the August cloud integration while the lock is in Bluetooth range.",
+        "data": {
+          "key": "[%key:component::yalexs_ble::config::step::user::data::key%]",
+          "slot": "[%key:component::yalexs_ble::config::step::user::data::slot%]"
+        }
+      },
+      "integration_discovery_confirm": {
+        "description": "Do you want to set up {name} over Bluetooth with address {address}?"
+      }
+    },
+    "error": {
+      "no_longer_in_range": "The lock is no longer in Bluetooth range. Move the lock or adapter and again.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "invalid_key_format": "The offline key must be a 32-byte hex string.",
+      "invalid_key_index": "The offline key slot must be an integer between 0 and 255."
+    },
+    "abort": {
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  }
+}

@@ -1,10 +1,11 @@
 """The tests for the MQTT automation."""
-from unittest.mock import ANY
+from unittest.mock import ANY, patch
 
 import pytest
 
 import homeassistant.components.automation as automation
 from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_fire_mqtt_message, async_mock_service, mock_component
@@ -12,18 +13,26 @@ from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa:
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant):
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
 @pytest.fixture(autouse=True)
-def setup_comp(hass, mqtt_mock):
+def no_platforms():
+    """Skip platform setup to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", []):
+        yield
+
+
+@pytest.fixture(autouse=True)
+async def setup_comp(hass: HomeAssistant, mqtt_mock_entry_no_yaml_config):
     """Initialize components."""
     mock_component(hass, "group")
+    return await mqtt_mock_entry_no_yaml_config()
 
 
-async def test_if_fires_on_topic_match(hass, calls):
+async def test_if_fires_on_topic_match(hass: HomeAssistant, calls) -> None:
     """Test if message is fired on topic match."""
     assert await async_setup_component(
         hass,
@@ -61,7 +70,7 @@ async def test_if_fires_on_topic_match(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_fires_on_topic_and_payload_match(hass, calls):
+async def test_if_fires_on_topic_and_payload_match(hass: HomeAssistant, calls) -> None:
     """Test if message is fired on topic and payload match."""
     assert await async_setup_component(
         hass,
@@ -83,7 +92,7 @@ async def test_if_fires_on_topic_and_payload_match(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_fires_on_topic_and_payload_match2(hass, calls):
+async def test_if_fires_on_topic_and_payload_match2(hass: HomeAssistant, calls) -> None:
     """Test if message is fired on topic and payload match.
 
     Make sure a payload which would render as a non string can still be matched.
@@ -108,7 +117,9 @@ async def test_if_fires_on_topic_and_payload_match2(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_fires_on_templated_topic_and_payload_match(hass, calls):
+async def test_if_fires_on_templated_topic_and_payload_match(
+    hass: HomeAssistant, calls
+) -> None:
     """Test if message is fired on templated topic and payload match."""
     assert await async_setup_component(
         hass,
@@ -138,7 +149,7 @@ async def test_if_fires_on_templated_topic_and_payload_match(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_fires_on_payload_template(hass, calls):
+async def test_if_fires_on_payload_template(hass: HomeAssistant, calls) -> None:
     """Test if message is fired on templated topic and payload match."""
     assert await async_setup_component(
         hass,
@@ -169,7 +180,9 @@ async def test_if_fires_on_payload_template(hass, calls):
     assert len(calls) == 1
 
 
-async def test_non_allowed_templates(hass, calls, caplog):
+async def test_non_allowed_templates(
+    hass: HomeAssistant, calls, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test non allowed function in template."""
     assert await async_setup_component(
         hass,
@@ -186,12 +199,14 @@ async def test_non_allowed_templates(hass, calls, caplog):
     )
 
     assert (
-        "Got error 'TemplateError: str: Use of 'states' is not supported in limited templates' when setting up triggers"
+        "Got error 'TemplateError: Use of 'states' is not supported in limited templates' when setting up triggers"
         in caplog.text
     )
 
 
-async def test_if_not_fires_on_topic_but_no_payload_match(hass, calls):
+async def test_if_not_fires_on_topic_but_no_payload_match(
+    hass: HomeAssistant, calls
+) -> None:
     """Test if message is not fired on topic but no payload."""
     assert await async_setup_component(
         hass,
@@ -213,7 +228,7 @@ async def test_if_not_fires_on_topic_but_no_payload_match(hass, calls):
     assert len(calls) == 0
 
 
-async def test_encoding_default(hass, calls, mqtt_mock):
+async def test_encoding_default(hass: HomeAssistant, calls, setup_comp) -> None:
     """Test default encoding."""
     assert await async_setup_component(
         hass,
@@ -226,10 +241,10 @@ async def test_encoding_default(hass, calls, mqtt_mock):
         },
     )
 
-    mqtt_mock.async_subscribe.assert_called_once_with("test-topic", ANY, 0, "utf-8")
+    setup_comp.async_subscribe.assert_called_with("test-topic", ANY, 0, "utf-8")
 
 
-async def test_encoding_custom(hass, calls, mqtt_mock):
+async def test_encoding_custom(hass: HomeAssistant, calls, setup_comp) -> None:
     """Test default encoding."""
     assert await async_setup_component(
         hass,
@@ -242,4 +257,4 @@ async def test_encoding_custom(hass, calls, mqtt_mock):
         },
     )
 
-    mqtt_mock.async_subscribe.assert_called_once_with("test-topic", ANY, 0, None)
+    setup_comp.async_subscribe.assert_called_with("test-topic", ANY, 0, None)

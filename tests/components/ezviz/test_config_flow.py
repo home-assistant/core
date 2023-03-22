@@ -1,5 +1,4 @@
-"""Test the Ezviz config flow."""
-
+"""Test the EZVIZ config flow."""
 from unittest.mock import patch
 
 from pyezviz.exceptions import (
@@ -29,11 +28,8 @@ from homeassistant.const import (
     CONF_URL,
     CONF_USERNAME,
 )
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     DISCOVERY_INFO,
@@ -44,13 +40,13 @@ from . import (
 )
 
 
-async def test_user_form(hass, ezviz_config_flow):
+async def test_user_form(hass: HomeAssistant, ezviz_config_flow) -> None:
     """Test the user initiated form."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -61,7 +57,7 @@ async def test_user_form(hass, ezviz_config_flow):
         )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-username"
     assert result["data"] == {**USER_INPUT}
 
@@ -70,11 +66,11 @@ async def test_user_form(hass, ezviz_config_flow):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured_account"
 
 
-async def test_user_custom_url(hass, ezviz_config_flow):
+async def test_user_custom_url(hass: HomeAssistant, ezviz_config_flow) -> None:
     """Test custom url step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -85,7 +81,7 @@ async def test_user_custom_url(hass, ezviz_config_flow):
         {CONF_USERNAME: "test-user", CONF_PASSWORD: "test-pass", CONF_URL: "customize"},
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user_custom_url"
     assert result["errors"] == {}
 
@@ -95,7 +91,7 @@ async def test_user_custom_url(hass, ezviz_config_flow):
             {CONF_URL: "test-user"},
         )
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_PASSWORD: "test-pass",
         CONF_TYPE: ATTR_TYPE_CLOUD,
@@ -106,13 +102,15 @@ async def test_user_custom_url(hass, ezviz_config_flow):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_step_discovery_abort_if_cloud_account_missing(hass):
+async def test_step_discovery_abort_if_cloud_account_missing(
+    hass: HomeAssistant,
+) -> None:
     """Test discovery and confirm step, abort if cloud account was removed."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_INTEGRATION_DISCOVERY}, data=DISCOVERY_INFO
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["errors"] == {}
 
@@ -125,13 +123,13 @@ async def test_step_discovery_abort_if_cloud_account_missing(hass):
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "ezviz_cloud_account_missing"
 
 
 async def test_async_step_integration_discovery(
-    hass, ezviz_config_flow, ezviz_test_rtsp_config_flow
-):
+    hass: HomeAssistant, ezviz_config_flow, ezviz_test_rtsp_config_flow
+) -> None:
     """Test discovery and confirm step."""
     with patch("homeassistant.components.ezviz.PLATFORMS", []):
         await init_integration(hass)
@@ -139,7 +137,7 @@ async def test_async_step_integration_discovery(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_INTEGRATION_DISCOVERY}, data=DISCOVERY_INFO
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["errors"] == {}
 
@@ -153,7 +151,7 @@ async def test_async_step_integration_discovery(
         )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_PASSWORD: "test-pass",
         CONF_TYPE: ATTR_TYPE_CAMERA,
@@ -163,7 +161,7 @@ async def test_async_step_integration_discovery(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_options_flow(hass):
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test updating options."""
     with _patch_async_setup_entry() as mock_setup_entry:
         entry = await init_integration(hass)
@@ -172,7 +170,7 @@ async def test_options_flow(hass):
         assert entry.options[CONF_TIMEOUT] == DEFAULT_TIMEOUT
 
         result = await hass.config_entries.options.async_init(entry.entry_id)
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "init"
         assert result["errors"] is None
 
@@ -182,14 +180,14 @@ async def test_options_flow(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_FFMPEG_ARGUMENTS] == "/H.264"
     assert result["data"][CONF_TIMEOUT] == 25
 
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_form_exception(hass, ezviz_config_flow):
+async def test_user_form_exception(hass: HomeAssistant, ezviz_config_flow) -> None:
     """Test we handle exception on user form."""
     ezviz_config_flow.side_effect = PyEzvizError
 
@@ -202,7 +200,7 @@ async def test_user_form_exception(hass, ezviz_config_flow):
         USER_INPUT_VALIDATE,
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_auth"}
 
@@ -213,7 +211,7 @@ async def test_user_form_exception(hass, ezviz_config_flow):
         USER_INPUT_VALIDATE,
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_host"}
 
@@ -224,7 +222,7 @@ async def test_user_form_exception(hass, ezviz_config_flow):
         USER_INPUT_VALIDATE,
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -235,14 +233,14 @@ async def test_user_form_exception(hass, ezviz_config_flow):
         USER_INPUT_VALIDATE,
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "unknown"
 
 
 async def test_discover_exception_step1(
-    hass,
+    hass: HomeAssistant,
     ezviz_config_flow,
-):
+) -> None:
     """Test we handle unexpected exception on discovery."""
     with patch("homeassistant.components.ezviz.PLATFORMS", []):
         await init_integration(hass)
@@ -252,7 +250,7 @@ async def test_discover_exception_step1(
         context={"source": SOURCE_INTEGRATION_DISCOVERY},
         data={ATTR_SERIAL: "C66666", CONF_IP_ADDRESS: "test-ip"},
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["errors"] == {}
 
@@ -267,7 +265,7 @@ async def test_discover_exception_step1(
         },
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["errors"] == {"base": "invalid_auth"}
 
@@ -281,7 +279,7 @@ async def test_discover_exception_step1(
         },
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["errors"] == {"base": "invalid_host"}
 
@@ -295,7 +293,7 @@ async def test_discover_exception_step1(
         },
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["errors"] == {"base": "invalid_host"}
 
@@ -309,15 +307,15 @@ async def test_discover_exception_step1(
         },
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "unknown"
 
 
 async def test_discover_exception_step3(
-    hass,
+    hass: HomeAssistant,
     ezviz_config_flow,
     ezviz_test_rtsp_config_flow,
-):
+) -> None:
     """Test we handle unexpected exception on discovery."""
     with patch("homeassistant.components.ezviz.PLATFORMS", []):
         await init_integration(hass)
@@ -327,7 +325,7 @@ async def test_discover_exception_step3(
         context={"source": SOURCE_INTEGRATION_DISCOVERY},
         data={ATTR_SERIAL: "C66666", CONF_IP_ADDRESS: "test-ip"},
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["errors"] == {}
 
@@ -342,7 +340,7 @@ async def test_discover_exception_step3(
         },
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["errors"] == {"base": "invalid_auth"}
 
@@ -356,7 +354,7 @@ async def test_discover_exception_step3(
         },
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["errors"] == {"base": "invalid_host"}
 
@@ -370,11 +368,13 @@ async def test_discover_exception_step3(
         },
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "unknown"
 
 
-async def test_user_custom_url_exception(hass, ezviz_config_flow):
+async def test_user_custom_url_exception(
+    hass: HomeAssistant, ezviz_config_flow
+) -> None:
     """Test we handle unexpected exception."""
     ezviz_config_flow.side_effect = PyEzvizError()
     result = await hass.config_entries.flow.async_init(
@@ -390,7 +390,7 @@ async def test_user_custom_url_exception(hass, ezviz_config_flow):
         },
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user_custom_url"
     assert result["errors"] == {}
 
@@ -399,7 +399,7 @@ async def test_user_custom_url_exception(hass, ezviz_config_flow):
         {CONF_URL: "test-user"},
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user_custom_url"
     assert result["errors"] == {"base": "invalid_auth"}
 
@@ -410,7 +410,7 @@ async def test_user_custom_url_exception(hass, ezviz_config_flow):
         {CONF_URL: "test-user"},
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user_custom_url"
     assert result["errors"] == {"base": "invalid_host"}
 
@@ -421,7 +421,7 @@ async def test_user_custom_url_exception(hass, ezviz_config_flow):
         {CONF_URL: "test-user"},
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user_custom_url"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -432,5 +432,5 @@ async def test_user_custom_url_exception(hass, ezviz_config_flow):
         {CONF_URL: "test-user"},
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "unknown"

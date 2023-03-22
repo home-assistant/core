@@ -3,13 +3,15 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from asyncio import gather
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
 import pprint
 
 from aiohttp.web import json_response
+from awesomeversion import AwesomeVersion
+from yarl import URL
 
 from homeassistant.components import webhook
 from homeassistant.const import (
@@ -20,7 +22,12 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import Context, HomeAssistant, State, callback
-from homeassistant.helpers import area_registry, device_registry, entity_registry, start
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+    start,
+)
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.storage import Store
@@ -43,16 +50,18 @@ from .error import SmartHomeError
 
 SYNC_DELAY = 15
 _LOGGER = logging.getLogger(__name__)
+LOCAL_SDK_VERSION_HEADER = "HA-Cloud-Version"
+LOCAL_SDK_MIN_VERSION = AwesomeVersion("2.1.5")
 
 
 @callback
 def _get_registry_entries(
     hass: HomeAssistant, entity_id: str
-) -> tuple[device_registry.DeviceEntry, area_registry.AreaEntry]:
+) -> tuple[er.RegistryEntry | None, dr.DeviceEntry | None, ar.AreaEntry | None,]:
     """Get registry entries."""
-    ent_reg = entity_registry.async_get(hass)
-    dev_reg = device_registry.async_get(hass)
-    area_reg = area_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
+    dev_reg = dr.async_get(hass)
+    area_reg = ar.async_get(hass)
 
     if (entity_entry := ent_reg.async_get(entity_id)) and entity_entry.device_id:
         device_entry = dev_reg.devices.get(entity_entry.device_id)
@@ -71,13 +80,13 @@ def _get_registry_entries(
     else:
         area_entry = None
 
-    return device_entry, area_entry
+    return entity_entry, device_entry, area_entry
 
 
 class AbstractConfig(ABC):
     """Hold the configuration for Google Assistant."""
 
-    _unsub_report_state = None
+    _unsub_report_state: Callable[[], None] | None = None
 
     def __init__(self, hass):
         """Initialize abstract config."""
@@ -86,6 +95,8 @@ class AbstractConfig(ABC):
         self._google_sync_unsub = {}
         self._local_sdk_active = False
         self._local_last_active: datetime | None = None
+        self._local_sdk_version_warn = False
+        self.is_supported_cache: dict[str, tuple[int | None, bool]] = {}
 
     async def async_initialize(self):
         """Perform async initialization of config."""
@@ -155,7 +166,9 @@ class AbstractConfig(ABC):
 
     def get_local_webhook_id(self, agent_user_id):
         """Return the webhook ID to be used for actions for a given agent user id via the local SDK."""
-        return self._store.agent_user_ids[agent_user_id][STORE_GOOGLE_LOCAL_WEBHOOK_ID]
+        if data := self._store.agent_user_ids.get(agent_user_id):
+            return data[STORE_GOOGLE_LOCAL_WEBHOOK_ID]
+        return None
 
     @abstractmethod
     def get_agent_user_id(self, context):
@@ -167,7 +180,6 @@ class AbstractConfig(ABC):
 
     def should_2fa(self, state):
         """If an entity should have 2FA checked."""
-        # pylint: disable=no-self-use
         return True
 
     async def async_report_state(self, message, agent_user_id: str):
@@ -186,7 +198,7 @@ class AbstractConfig(ABC):
     def async_enable_report_state(self):
         """Enable proactive mode."""
         # Circular dep
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         from .report_state import async_enable_report_state
 
         if self._unsub_report_state is None:
@@ -210,6 +222,9 @@ class AbstractConfig(ABC):
 
     async def async_sync_entities_all(self):
         """Sync all entities to Google for all registered agents."""
+        if not self._store.agent_user_ids:
+            return 204
+
         res = await gather(
             *(
                 self.async_sync_entities(agent_user_id)
@@ -275,7 +290,6 @@ class AbstractConfig(ABC):
             return
 
         for user_agent_id, _ in self._store.agent_user_ids.items():
-
             if (webhook_id := self.get_local_webhook_id(user_agent_id)) is None:
                 setup_successful = False
                 break
@@ -324,10 +338,25 @@ class AbstractConfig(ABC):
     async def _handle_local_webhook(self, hass, webhook_id, request):
         """Handle an incoming local SDK message."""
         # Circular dep
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         from . import smart_home
 
         self._local_last_active = utcnow()
+
+        # Check version local SDK.
+        version = request.headers.get("HA-Cloud-Version")
+        if not self._local_sdk_version_warn and (
+            not version or AwesomeVersion(version) < LOCAL_SDK_MIN_VERSION
+        ):
+            _LOGGER.warning(
+                (
+                    "Local SDK version is too old (%s), check documentation on how to"
+                    " update to the latest version"
+                ),
+                version,
+            )
+            self._local_sdk_version_warn = True
+
         payload = await request.json()
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
@@ -338,19 +367,24 @@ class AbstractConfig(ABC):
                 pprint.pformat(payload),
             )
 
-        if not self.enabled:
-            return json_response(smart_home.turned_off_response(payload))
-
         if (agent_user_id := self.get_local_agent_user_id(webhook_id)) is None:
             # No agent user linked to this webhook, means that the user has somehow unregistered
             # removing webhook and stopping processing of this request.
             _LOGGER.error(
-                "Cannot process request for webhook %s as no linked agent user is found:\n%s\n",
+                (
+                    "Cannot process request for webhook %s as no linked agent user is"
+                    " found:\n%s\n"
+                ),
                 webhook_id,
                 pprint.pformat(payload),
             )
             webhook.async_unregister(self.hass, webhook_id)
             return None
+
+        if not self.enabled:
+            return json_response(
+                smart_home.api_disabled_response(payload, agent_user_id)
+            )
 
         result = await smart_home.async_handle_message(
             self.hass,
@@ -521,7 +555,17 @@ class GoogleEntity:
     @callback
     def is_supported(self) -> bool:
         """Return if the entity is supported by Google."""
-        return bool(self.traits())
+        features: int | None = self.state.attributes.get(ATTR_SUPPORTED_FEATURES)
+
+        result = self.config.is_supported_cache.get(self.entity_id)
+
+        if result is None or result[0] != features:
+            result = self.config.is_supported_cache[self.entity_id] = (
+                features,
+                bool(self.traits()),
+            )
+
+        return result[1]
 
     @callback
     def might_2fa(self) -> bool:
@@ -554,7 +598,9 @@ class GoogleEntity:
         name = (entity_config.get(CONF_NAME) or state.name).strip()
 
         # Find entity/device/area registry entries
-        device_entry, area_entry = _get_registry_entries(self.hass, self.entity_id)
+        entity_entry, device_entry, area_entry = _get_registry_entries(
+            self.hass, self.entity_id
+        )
 
         # Build the device info
         device = {
@@ -569,19 +615,20 @@ class GoogleEntity:
         }
 
         # Add aliases
-        if aliases := entity_config.get(CONF_ALIASES):
-            device["name"]["nicknames"] = [name] + aliases
+        if (config_aliases := entity_config.get(CONF_ALIASES, [])) or (
+            entity_entry and entity_entry.aliases
+        ):
+            device["name"]["nicknames"] = [name] + config_aliases
+            if entity_entry:
+                device["name"]["nicknames"].extend(entity_entry.aliases)
 
         # Add local SDK info if enabled
         if self.config.is_local_sdk_active and self.should_expose_local():
             device["otherDeviceIds"] = [{"deviceId": self.entity_id}]
             device["customData"] = {
                 "webhookId": self.config.get_local_webhook_id(agent_user_id),
-                "httpPort": self.hass.http.server_port,
-                "httpSSL": self.hass.config.api.use_ssl,
+                "httpPort": URL(get_url(self.hass, allow_external=False)).port,
                 "uuid": instance_uuid,
-                "baseUrl": get_url(self.hass, prefer_external=True),
-                "proxyDeviceId": agent_user_id,
             }
 
         # Add trait sync attributes

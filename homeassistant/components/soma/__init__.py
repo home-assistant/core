@@ -54,11 +54,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Soma from a config entry."""
     hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][API] = SomaApi(entry.data[HOST], entry.data[PORT])
-    devices = await hass.async_add_executor_job(hass.data[DOMAIN][API].list_devices)
-    hass.data[DOMAIN][DEVICES] = devices["shades"]
+    api = await hass.async_add_executor_job(SomaApi, entry.data[HOST], entry.data[PORT])
+    devices = await hass.async_add_executor_job(api.list_devices)
+    hass.data[DOMAIN] = {API: api, DEVICES: devices["shades"]}
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -88,7 +88,10 @@ def soma_api_call(api_call):
                 if self.is_available:
                     self.is_available = False
                     _LOGGER.warning(
-                        "Device is unreachable (%s). Error while fetching the state: %s",
+                        (
+                            "Device is unreachable (%s). Error while fetching the"
+                            " state: %s"
+                        ),
                         self.name,
                         response_from_api["msg"],
                     )

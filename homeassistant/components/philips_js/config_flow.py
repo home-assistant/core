@@ -15,14 +15,15 @@ from homeassistant.const import (
     CONF_PIN,
     CONF_USERNAME,
 )
+from homeassistant.data_entry_flow import FlowResult
 
 from . import LOGGER
 from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, CONST_APP_ID, CONST_APP_NAME, DOMAIN
 
 
-async def validate_input(
+async def _validate_input(
     hass: core.HomeAssistant, host: str, api_version: int
-) -> tuple[dict, PhilipsTV]:
+) -> PhilipsTV:
     """Validate the user input allows us to connect."""
     hub = PhilipsTV(host, api_version)
 
@@ -43,23 +44,24 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize flow."""
         super().__init__()
-        self._current = {}
+        self._current: dict[str, Any] = {}
         self._hub: PhilipsTV | None = None
         self._pair_state: Any = None
 
-    async def _async_create_current(self):
-
+    async def _async_create_current(self) -> FlowResult:
         system = self._current[CONF_SYSTEM]
         return self.async_create_entry(
             title=f"{system['name']} ({system['serialnumber']})",
             data=self._current,
         )
 
-    async def async_step_pair(self, user_input: dict | None = None) -> dict:
+    async def async_step_pair(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Attempt to pair with device."""
         assert self._hub
 
-        errors = {}
+        errors: dict[str, str] = {}
         schema = vol.Schema(
             {
                 vol.Required(CONF_PIN): str,
@@ -106,13 +108,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._current[CONF_PASSWORD] = password
         return await self._async_create_current()
 
-    async def async_step_user(self, user_input: dict | None = None) -> dict:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input:
             self._current = user_input
             try:
-                hub = await validate_input(
+                hub = await _validate_input(
                     self.hass, user_input[CONF_HOST], user_input[CONF_API_VERSION]
                 )
             except ConnectionFailure as exc:
@@ -146,7 +150,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @core.callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
@@ -158,7 +164,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle options flow."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

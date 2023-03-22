@@ -13,6 +13,7 @@ from aiolookin import (
     LookInHttpProtocol,
     LookinUDPSubscriptions,
     MeteoSensor,
+    NoUsableService,
     Remote,
     start_lookin_udp,
 )
@@ -22,6 +23,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, PLATFORMS, TYPE_TO_PLATFORM
@@ -94,23 +96,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         lookin_device = await lookin_protocol.get_info()
         devices = await lookin_protocol.get_devices()
-    except (asyncio.TimeoutError, aiohttp.ClientError) as ex:
+    except (asyncio.TimeoutError, aiohttp.ClientError, NoUsableService) as ex:
         raise ConfigEntryNotReady from ex
 
     push_coordinator = LookinPushCoordinator(entry.title)
 
-    meteo_coordinator: LookinDataUpdateCoordinator = LookinDataUpdateCoordinator(
-        hass,
-        push_coordinator,
-        name=entry.title,
-        update_method=lookin_protocol.get_meteo_sensor,
-        update_interval=timedelta(
-            minutes=5
-        ),  # Updates are pushed (fallback is polling)
-    )
-    await meteo_coordinator.async_config_entry_first_refresh()
+    if lookin_device.model >= 2:
+        meteo_coordinator = LookinDataUpdateCoordinator[MeteoSensor](
+            hass,
+            push_coordinator,
+            name=entry.title,
+            update_method=lookin_protocol.get_meteo_sensor,
+            update_interval=timedelta(
+                minutes=5
+            ),  # Updates are pushed (fallback is polling)
+        )
+        await meteo_coordinator.async_config_entry_first_refresh()
 
-    device_coordinators: dict[str, LookinDataUpdateCoordinator] = {}
+    device_coordinators: dict[str, LookinDataUpdateCoordinator[Remote]] = {}
     for remote in devices:
         if (platform := TYPE_TO_PLATFORM.get(remote["Type"])) is None:
             continue
@@ -146,23 +149,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     lookin_udp_subs = await manager.async_get_subscriptions()
 
-    entry.async_on_unload(
-        lookin_udp_subs.subscribe_event(
-            lookin_device.id, UDPCommandType.meteo, None, _async_meteo_push_update
+    if lookin_device.model >= 2:
+        entry.async_on_unload(
+            lookin_udp_subs.subscribe_event(
+                lookin_device.id, UDPCommandType.meteo, None, _async_meteo_push_update
+            )
         )
-    )
 
     hass.data[DOMAIN][entry.entry_id] = LookinData(
         host=host,
         lookin_udp_subs=lookin_udp_subs,
         lookin_device=lookin_device,
-        meteo_coordinator=meteo_coordinator,
+        meteo_coordinator=meteo_coordinator if lookin_device.model >= 2 else None,
         devices=devices,
         lookin_protocol=lookin_protocol,
         device_coordinators=device_coordinators,
     )
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -181,3 +185,19 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         manager: LookinUDPManager = hass.data[DOMAIN][UDP_MANAGER]
         await manager.async_stop()
     return unload_ok
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove lookin config entry from a device."""
+    data: LookinData = hass.data[DOMAIN][entry.entry_id]
+    all_identifiers: set[tuple[str, str]] = {
+        (DOMAIN, data.lookin_device.id),
+        *((DOMAIN, remote["UUID"]) for remote in data.devices),
+    }
+    return not any(
+        identifier
+        for identifier in device_entry.identifiers
+        if identifier in all_identifiers
+    )

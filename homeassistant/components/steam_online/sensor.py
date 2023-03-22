@@ -1,230 +1,94 @@
 """Sensor for Steam account status."""
 from __future__ import annotations
 
-from datetime import timedelta
-import logging
-from time import mktime
+from datetime import datetime
+from time import localtime, mktime
+from typing import cast
 
-import steam
-import voluptuous as vol
-
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_API_KEY
-from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import track_time_interval
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utc_from_timestamp
 
-_LOGGER = logging.getLogger(__name__)
-
-CONF_ACCOUNTS = "accounts"
-
-ICON = "mdi:steam"
-
-STATE_OFFLINE = "offline"
-STATE_ONLINE = "online"
-STATE_BUSY = "busy"
-STATE_AWAY = "away"
-STATE_SNOOZE = "snooze"
-STATE_LOOKING_TO_TRADE = "looking_to_trade"
-STATE_LOOKING_TO_PLAY = "looking_to_play"
-
-STEAM_API_URL = "https://steamcdn-a.akamaihd.net/steam/apps/"
-STEAM_HEADER_IMAGE_FILE = "header.jpg"
-STEAM_MAIN_IMAGE_FILE = "capsule_616x353.jpg"
-STEAM_ICON_URL = (
-    "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/%d/%s.jpg"
+from . import SteamEntity
+from .const import (
+    CONF_ACCOUNTS,
+    DOMAIN,
+    STEAM_API_URL,
+    STEAM_HEADER_IMAGE_FILE,
+    STEAM_ICON_URL,
+    STEAM_MAIN_IMAGE_FILE,
+    STEAM_STATUSES,
 )
+from .coordinator import SteamDataUpdateCoordinator
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_ACCOUNTS, default=[]): vol.All(cv.ensure_list, [cv.string]),
-    }
-)
-
-APP_LIST_KEY = "steam_online.app_list"
-BASE_INTERVAL = timedelta(minutes=1)
+PARALLEL_UPDATES = 1
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Steam platform."""
-
-    steam.api.key.set(config[CONF_API_KEY])
-    # Initialize steammods app list before creating sensors
-    # to benefit from internal caching of the list.
-    hass.data[APP_LIST_KEY] = steam.apps.app_list()
-    entities = [SteamSensor(account, steam) for account in config[CONF_ACCOUNTS]]
-    if not entities:
-        return
-    add_entities(entities, True)
-
-    # Only one sensor update once every 60 seconds to avoid
-    # flooding steam and getting disconnected.
-    entity_next = 0
-
-    @callback
-    def do_update(time):
-        nonlocal entity_next
-        entities[entity_next].async_schedule_update_ha_state(True)
-        entity_next = (entity_next + 1) % len(entities)
-
-    track_time_interval(hass, do_update, BASE_INTERVAL)
+    async_add_entities(
+        SteamSensor(hass.data[DOMAIN][entry.entry_id], account)
+        for account in entry.options[CONF_ACCOUNTS]
+    )
 
 
-class SteamSensor(SensorEntity):
+class SteamSensor(SteamEntity, SensorEntity):
     """A class for the Steam account."""
 
-    def __init__(self, account, steamod):
+    def __init__(self, coordinator: SteamDataUpdateCoordinator, account: str) -> None:
         """Initialize the sensor."""
-        self._steamod = steamod
-        self._account = account
-        self._profile = None
-        self._game = None
-        self._game_id = None
-        self._extra_game_info = None
-        self._state = None
-        self._name = None
-        self._avatar = None
-        self._last_online = None
-        self._level = None
-        self._owned_games = None
+        super().__init__(coordinator)
+        self.entity_description = SensorEntityDescription(
+            key=account,
+            name=f"steam_{account}",
+            icon="mdi:steam",
+        )
+        self._attr_unique_id = f"sensor.steam_{account}"
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def entity_id(self):
-        """Return the entity ID."""
-        return f"sensor.steam_{self._account}"
-
-    @property
-    def native_value(self):
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def should_poll(self):
-        """Turn off polling, will do ourselves."""
-        return False
-
-    def update(self):
-        """Update device state."""
-        try:
-            self._profile = self._steamod.user.profile(self._account)
-            # Only if need be, get the owned games
-            if not self._owned_games:
-                self._owned_games = self._steamod.api.interface(
-                    "IPlayerService"
-                ).GetOwnedGames(steamid=self._account, include_appinfo=1)
-
-            self._game = self._get_current_game()
-            self._game_id = self._profile.current_game[0]
-            self._extra_game_info = self._get_game_info()
-            self._state = {
-                1: STATE_ONLINE,
-                2: STATE_BUSY,
-                3: STATE_AWAY,
-                4: STATE_SNOOZE,
-                5: STATE_LOOKING_TO_TRADE,
-                6: STATE_LOOKING_TO_PLAY,
-            }.get(self._profile.status, STATE_OFFLINE)
-            self._name = self._profile.persona
-            self._avatar = self._profile.avatar_medium
-            self._last_online = self._get_last_online()
-            self._level = self._profile.level
-        except self._steamod.api.HTTPTimeoutError as error:
-            _LOGGER.warning(error)
-            self._game = None
-            self._game_id = None
-            self._state = None
-            self._name = None
-            self._avatar = None
-            self._last_online = None
-            self._level = None
-
-    def _get_current_game(self):
-        """Gather current game name from APP ID."""
-        if game_extra_info := self._profile.current_game[2]:
-            return game_extra_info
-
-        if not (game_id := self._profile.current_game[0]):
-            return None
-
-        app_list = self.hass.data[APP_LIST_KEY]
-        try:
-            _, res = app_list[game_id]
-            return res
-        except KeyError:
-            pass
-
-        # Try reloading the app list, must be a new app
-        app_list = self._steamod.apps.app_list()
-        self.hass.data[APP_LIST_KEY] = app_list
-        try:
-            _, res = app_list[game_id]
-            return res
-        except KeyError:
-            pass
-
-        _LOGGER.error("Unable to find name of app with ID=%s", game_id)
-        return repr(game_id)
-
-    def _get_game_info(self):
-        if (game_id := self._profile.current_game[0]) is not None:
-
-            for game in self._owned_games["response"]["games"]:
-                if game["appid"] == game_id:
-                    return game
-
-        return None
-
-    def _get_last_online(self):
-        """Convert last_online from the steam module into timestamp UTC."""
-        last_online = utc_from_timestamp(mktime(self._profile.last_online))
-
-        if last_online:
-            return last_online
-
+        if self.entity_description.key in self.coordinator.data:
+            player = self.coordinator.data[self.entity_description.key]
+            return STEAM_STATUSES[cast(int, player["personastate"])]
         return None
 
     @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        attr = {}
-        if self._game is not None:
-            attr["game"] = self._game
-        if self._game_id is not None:
-            attr["game_id"] = self._game_id
-            game_url = f"{STEAM_API_URL}{self._game_id}/"
-            attr["game_image_header"] = f"{game_url}{STEAM_HEADER_IMAGE_FILE}"
-            attr["game_image_main"] = f"{game_url}{STEAM_MAIN_IMAGE_FILE}"
-        if self._extra_game_info is not None and self._game_id is not None:
-            attr["game_icon"] = STEAM_ICON_URL % (
-                self._game_id,
-                self._extra_game_info["img_icon_url"],
-            )
-        if self._last_online is not None:
-            attr["last_online"] = self._last_online
-        if self._level is not None:
-            attr["level"] = self._level
-        return attr
+    def extra_state_attributes(self) -> dict[str, str | int | datetime]:
+        """Return the state attributes of the sensor."""
+        if self.entity_description.key not in self.coordinator.data:
+            return {}
+        player = self.coordinator.data[self.entity_description.key]
 
-    @property
-    def entity_picture(self):
-        """Avatar of the account."""
-        return self._avatar
+        attrs: dict[str, str | int | datetime] = {}
+        if game := player.get("gameextrainfo"):
+            attrs["game"] = game
+        if game_id := player.get("gameid"):
+            attrs["game_id"] = game_id
+            game_url = f"{STEAM_API_URL}{player['gameid']}/"
+            attrs["game_image_header"] = f"{game_url}{STEAM_HEADER_IMAGE_FILE}"
+            attrs["game_image_main"] = f"{game_url}{STEAM_MAIN_IMAGE_FILE}"
+            if info := self._get_game_icon(player):
+                attrs["game_icon"] = f"{STEAM_ICON_URL}{game_id}/{info}.jpg"
+        self._attr_name = str(player["personaname"]) or None
+        self._attr_entity_picture = str(player["avatarmedium"]) or None
+        if last_online := cast(int | None, player.get("lastlogoff")):
+            attrs["last_online"] = utc_from_timestamp(mktime(localtime(last_online)))
+        if level := self.coordinator.data[self.entity_description.key]["level"]:
+            attrs["level"] = level
+        return attrs
 
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return ICON
+    def _get_game_icon(self, player: dict) -> str | None:
+        """Get game icon identifier."""
+        if player.get("gameid") in self.coordinator.game_icons:
+            return self.coordinator.game_icons[player["gameid"]]
+        # Reset game icons to have coordinator get id for new game
+        self.coordinator.game_icons = {}
+        return None

@@ -1,0 +1,17 @@
+{
+  "system_health": {
+    "info": {
+      "oldest_recorder_run": "Oldest Run Start Time",
+      "current_recorder_run": "Current Run Start Time",
+      "estimated_db_size": "Estimated Database Size (MiB)",
+      "database_engine": "Database Engine",
+      "database_version": "Database Version"
+    }
+  },
+  "issues": {
+    "maria_db_range_index_regression": {
+      "title": "Update MariaDB to {min_version} or later resolve a significant performance issue",
+      "description": "Older versions of MariaDB suffer from a significant performance regression when retrieving history data or purging the database. Update to MariaDB version {min_version} or later and restart Home Assistant. If you are using the MariaDB core add-on, make sure to update it to the latest version."
+    }
+  }
+}

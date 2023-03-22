@@ -2,15 +2,22 @@
 import asyncio
 from http import HTTPStatus
 import logging
+from typing import Any
 
 from hass_nabucasa import Cloud, cloud_api
 from hass_nabucasa.google_report_state import ErrorResponse
 
-from homeassistant.components.google_assistant.const import DOMAIN as GOOGLE_DOMAIN
+from homeassistant.components.google_assistant import DOMAIN as GOOGLE_DOMAIN
 from homeassistant.components.google_assistant.helpers import AbstractConfig
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
-from homeassistant.core import CoreState, split_entity_id
-from homeassistant.helpers import entity_registry as er, start
+from homeassistant.core import (
+    CoreState,
+    Event,
+    HomeAssistant,
+    callback,
+    split_entity_id,
+)
+from homeassistant.helpers import device_registry as dr, entity_registry as er, start
 from homeassistant.setup import async_setup_component
 
 from .const import (
@@ -28,8 +35,13 @@ class CloudGoogleConfig(AbstractConfig):
     """HA Cloud Configuration for Google Assistant."""
 
     def __init__(
-        self, hass, config, cloud_user: str, prefs: CloudPreferences, cloud: Cloud
-    ):
+        self,
+        hass: HomeAssistant,
+        config: dict[str, Any],
+        cloud_user: str,
+        prefs: CloudPreferences,
+        cloud: Cloud,
+    ) -> None:
         """Initialize the Google config."""
         super().__init__(hass)
         self._config = config
@@ -39,7 +51,6 @@ class CloudGoogleConfig(AbstractConfig):
         self._cur_entity_prefs = self._prefs.google_entity_configs
         self._cur_default_expose = self._prefs.google_default_expose
         self._sync_entities_lock = asyncio.Lock()
-        self._sync_on_started = False
 
     @property
     def enabled(self):
@@ -102,6 +113,10 @@ class CloudGoogleConfig(AbstractConfig):
         self.hass.bus.async_listen(
             er.EVENT_ENTITY_REGISTRY_UPDATED,
             self._handle_entity_registry_updated,
+        )
+        self.hass.bus.async_listen(
+            dr.EVENT_DEVICE_REGISTRY_UPDATED,
+            self._handle_device_registry_updated,
         )
 
     def should_expose(self, state):
@@ -191,6 +206,8 @@ class CloudGoogleConfig(AbstractConfig):
         ):
             await async_setup_component(self.hass, GOOGLE_DOMAIN, {})
 
+        sync_entities = False
+
         if self.should_report_state != self.is_reporting_state:
             if self.should_report_state:
                 self.async_enable_report_state()
@@ -199,7 +216,7 @@ class CloudGoogleConfig(AbstractConfig):
 
             # State reporting is reported as a property on entities.
             # So when we change it, we need to sync all entities.
-            await self.async_sync_entities_all()
+            sync_entities = True
 
         # If entity prefs are the same or we have filter in config.yaml,
         # don't sync.
@@ -211,15 +228,25 @@ class CloudGoogleConfig(AbstractConfig):
 
         if self.enabled and not self.is_local_sdk_active:
             self.async_enable_local_sdk()
+            sync_entities = True
         elif not self.enabled and self.is_local_sdk_active:
             self.async_disable_local_sdk()
+            sync_entities = True
 
         self._cur_entity_prefs = prefs.google_entity_configs
         self._cur_default_expose = prefs.google_default_expose
 
-    async def _handle_entity_registry_updated(self, event):
+        if sync_entities and self.hass.is_running:
+            await self.async_sync_entities_all()
+
+    @callback
+    def _handle_entity_registry_updated(self, event: Event) -> None:
         """Handle when entity registry updated."""
-        if not self.enabled or not self._cloud.is_logged_in:
+        if (
+            not self.enabled
+            or not self._cloud.is_logged_in
+            or self.hass.state != CoreState.running
+        ):
             return
 
         # Only consider entity registry updates if info relevant for Google has changed
@@ -233,7 +260,30 @@ class CloudGoogleConfig(AbstractConfig):
         if not self._should_expose_entity_id(entity_id):
             return
 
-        if self.hass.state != CoreState.running:
+        self.async_schedule_google_sync_all()
+
+    @callback
+    def _handle_device_registry_updated(self, event: Event) -> None:
+        """Handle when device registry updated."""
+        if (
+            not self.enabled
+            or not self._cloud.is_logged_in
+            or self.hass.state != CoreState.running
+        ):
+            return
+
+        # Device registry is only used for area changes. All other changes are ignored.
+        if event.data["action"] != "update" or "area_id" not in event.data["changes"]:
+            return
+
+        # Check if any exposed entity uses the device area
+        if not any(
+            entity_entry.area_id is None
+            and self._should_expose_entity_id(entity_entry.entity_id)
+            for entity_entry in er.async_entries_for_device(
+                er.async_get(self.hass), event.data["device_id"]
+            )
+        ):
             return
 
         self.async_schedule_google_sync_all()

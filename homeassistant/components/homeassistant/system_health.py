@@ -29,4 +29,5 @@ async def system_health_info(hass):
         "os_version": info.get("os_version"),
         "arch": info.get("arch"),
         "timezone": info.get("timezone"),
+        "config_dir": hass.config.config_dir,
     }

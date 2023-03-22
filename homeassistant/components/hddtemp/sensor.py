@@ -18,8 +18,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -91,7 +90,7 @@ class HddTempSensor(SensorEntity):
         if self._details is not None:
             return {ATTR_DEVICE: self._details[0], ATTR_MODEL: self._details[1]}
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from HDDTemp daemon and updates the state."""
         self.hddtemp.update()
 
@@ -99,9 +98,9 @@ class HddTempSensor(SensorEntity):
             self._details = self.hddtemp.data[self.disk].split("|")
             self._attr_native_value = self._details[2]
             if self._details is not None and self._details[3] == "F":
-                self._attr_native_unit_of_measurement = TEMP_FAHRENHEIT
+                self._attr_native_unit_of_measurement = UnitOfTemperature.FAHRENHEIT
             else:
-                self._attr_native_unit_of_measurement = TEMP_CELSIUS
+                self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
         else:
             self._attr_native_value = None
 

@@ -1,0 +1,72 @@
+{
+  "audio": {
+    "volume": 100,
+    "volume_limit": {
+      "max": 100,
+      "min": 0
+    },
+    "volume_range": {
+      "max": 100,
+      "min": 0
+    }
+  },
+  "bluetooth": {
+    "active": false,
+    "address": "AA:BB:CC:DD:EE:FF",
+    "available": true,
+    "discoverable": true,
+    "low_energy": {
+      "active": true,
+      "advertising": true,
+      "connectable": true
+    },
+    "name": "LM1234",
+    "pairable": true
+  },
+  "display": {
+    "brightness": 100,
+    "brightness_limit": {
+      "max": 100,
+      "min": 2
+    },
+    "brightness_mode": "auto",
+    "brightness_range": {
+      "max": 100,
+      "min": 0
+    },
+    "height": 8,
+    "screensaver": {
+      "enabled": false,
+      "modes": {
+        "time_based": {
+          "enabled": true,
+          "local_start_time": "01:00:39",
+          "start_time": "00:00:39"
+        },
+        "when_dark": {
+          "enabled": false
+        }
+      },
+      "widget": "08b8eac21074f8f7e5a29f2855ba8060"
+    },
+    "type": "mixed",
+    "width": 37
+  },
+  "id": "12345",
+  "mode": "auto",
+  "model": "LM 37X8",
+  "name": "Frenck's LaMetric",
+  "os_version": "2.2.2",
+  "serial_number": "SA110405124500W00BS9",
+  "wifi": {
+    "active": true,
+    "mac": "AA:BB:CC:DD:EE:FF",
+    "available": true,
+    "encryption": "WPA",
+    "ssid": "IoT",
+    "ip": "127.0.0.1",
+    "mode": "dhcp",
+    "netmask": "255.255.255.0",
+    "rssi": 21
+  }
+}

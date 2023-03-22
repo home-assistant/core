@@ -1,10 +1,11 @@
 """Test basic initialization for the Legacy Nest API using mocks for the Nest python library."""
-
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
-from .common import TEST_CONFIG_LEGACY
+from homeassistant.core import HomeAssistant
+
+from .common import TEST_CONFIG_ENTRY_LEGACY, TEST_CONFIG_LEGACY
 
 DOMAIN = "nest"
 
@@ -33,7 +34,10 @@ def make_thermostat():
     return device
 
 
-async def test_thermostat(hass, setup_base_platform):
+@pytest.mark.parametrize(
+    "nest_test_config", [TEST_CONFIG_LEGACY, TEST_CONFIG_ENTRY_LEGACY]
+)
+async def test_thermostat(hass: HomeAssistant, setup_base_platform) -> None:
     """Test simple initialization for thermostat entities."""
 
     thermostat = make_thermostat()

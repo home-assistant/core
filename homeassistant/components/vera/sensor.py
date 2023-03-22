@@ -6,14 +6,18 @@ from typing import cast
 
 import pyvera as veraApi
 
-from homeassistant.components.sensor import ENTITY_ID_FORMAT, SensorEntity
+from homeassistant.components.sensor import (
+    ENTITY_ID_FORMAT,
+    SensorDeviceClass,
+    SensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
     Platform,
+    UnitOfPower,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -60,6 +64,19 @@ class VeraSensor(VeraDevice[veraApi.VeraSensor], SensorEntity):
         return self.current_value
 
     @property
+    def device_class(self) -> SensorDeviceClass | None:
+        """Return the class of this entity."""
+        if self.vera_device.category == veraApi.CATEGORY_TEMPERATURE_SENSOR:
+            return SensorDeviceClass.TEMPERATURE
+        if self.vera_device.category == veraApi.CATEGORY_LIGHT_SENSOR:
+            return SensorDeviceClass.ILLUMINANCE
+        if self.vera_device.category == veraApi.CATEGORY_HUMIDITY_SENSOR:
+            return SensorDeviceClass.HUMIDITY
+        if self.vera_device.category == veraApi.CATEGORY_POWER_METER:
+            return SensorDeviceClass.POWER
+        return None
+
+    @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
 
@@ -72,7 +89,7 @@ class VeraSensor(VeraDevice[veraApi.VeraSensor], SensorEntity):
         if self.vera_device.category == veraApi.CATEGORY_HUMIDITY_SENSOR:
             return PERCENTAGE
         if self.vera_device.category == veraApi.CATEGORY_POWER_METER:
-            return "watts"
+            return UnitOfPower.WATT
         return None
 
     def update(self) -> None:
@@ -84,9 +101,9 @@ class VeraSensor(VeraDevice[veraApi.VeraSensor], SensorEntity):
             vera_temp_units = self.vera_device.vera_controller.temperature_units
 
             if vera_temp_units == "F":
-                self._temperature_units = TEMP_FAHRENHEIT
+                self._temperature_units = UnitOfTemperature.FAHRENHEIT
             else:
-                self._temperature_units = TEMP_CELSIUS
+                self._temperature_units = UnitOfTemperature.CELSIUS
 
         elif self.vera_device.category == veraApi.CATEGORY_LIGHT_SENSOR:
             self.current_value = self.vera_device.light
