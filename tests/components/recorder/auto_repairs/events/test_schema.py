@@ -47,7 +47,7 @@ async def test_validate_db_schema_fix_float_issue(
 
 
 @pytest.mark.parametrize("enable_schema_validation", [True])
-async def test_validate_db_schema_fix_utf8_issue_state_attributes(
+async def test_validate_db_schema_fix_utf8_issue_event_data(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,

@@ -27,5 +27,5 @@ def correct_db_schema(
     schema_errors: set[str],
 ) -> None:
     """Correct issues detected by validate_db_schema."""
-    correct_db_schema_utf8(instance, Events, schema_errors)
+    correct_db_schema_utf8(instance, EventData, schema_errors)
     correct_db_schema_precision(instance, Events, schema_errors)
