@@ -148,12 +148,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # try to login with default pin
             afsapi = AFSAPI(self._webfsapi_url, DEFAULT_PIN)
 
-            name = await afsapi.get_friendly_name()
+            self._name = await afsapi.get_friendly_name()
         except InvalidPinException:
             # Ask for a PIN
             return await self.async_step_device_config()
 
-        self.context["title_placeholders"] = {"name": name}
+        self.context["title_placeholders"] = {"name": self._name}
 
         # unique_id will already be set when discovered through SSDP with the SSDP UDN,
         # however, when adding a device manually, it will still be empty at this point.
@@ -165,13 +165,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
         if show_confirm:
-            self._name = name
             return await self.async_step_confirm()
 
-        return self.async_create_entry(
-            title=name,
-            data={CONF_WEBFSAPI_URL: self._webfsapi_url, CONF_PIN: DEFAULT_PIN},
-        )
+        return await self._async_create_entry()
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -179,13 +175,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Allow the user to confirm adding the device. Used when the default PIN could successfully be used."""
 
         if user_input is not None:
-            return self.async_create_entry(
-                title=self._name,
-                data={
-                    CONF_WEBFSAPI_URL: self._webfsapi_url,
-                    CONF_PIN: DEFAULT_PIN,
-                },
-            )
+            return await self._async_create_entry()
 
         self._set_confirm_only()
         return self.async_show_form(step_id="confirm")
@@ -208,7 +198,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             afsapi = AFSAPI(self._webfsapi_url, user_input[CONF_PIN])
 
-            name = await afsapi.get_friendly_name()
+            self._name = await afsapi.get_friendly_name()
 
         except FSConnectionError:
             errors["base"] = "cannot_connect"
@@ -221,13 +211,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             unique_id = await afsapi.get_radio_id()
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
-            return self.async_create_entry(
-                title=name,
-                data={
-                    CONF_WEBFSAPI_URL: self._webfsapi_url,
-                    CONF_PIN: user_input[CONF_PIN],
-                },
-            )
+            return await self._async_create_entry(user_input[CONF_PIN])
 
         data_schema = self.add_suggested_values_to_schema(
             STEP_DEVICE_CONFIG_DATA_SCHEMA, user_input
@@ -236,4 +220,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="device_config",
             data_schema=data_schema,
             errors=errors,
+        )
+
+    async def _async_create_entry(self, pin: str | None = None):
+        """Create the entry."""
+
+        return self.async_create_entry(
+            title=self._name,
+            data={CONF_WEBFSAPI_URL: self._webfsapi_url, CONF_PIN: pin or DEFAULT_PIN},
         )
