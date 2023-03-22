@@ -1282,13 +1282,16 @@ def hass_recorder(
     # pylint: disable-next=import-outside-toplevel
     from homeassistant.components import recorder
 
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant.components.recorder.auto_repairs.statistics import schema
+
     original_tz = dt_util.DEFAULT_TIME_ZONE
 
     hass = get_test_home_assistant()
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
     stats_validate = (
-        recorder.statistics.validate_db_schema
+        schema.validate_db_schema
         if enable_statistics_table_validation
         else itertools.repeat(set())
     )
@@ -1398,12 +1401,15 @@ async def async_setup_recorder_instance(
     from homeassistant.components import recorder
 
     # pylint: disable-next=import-outside-toplevel
+    from homeassistant.components.recorder.auto_repairs.statistics import schema
+
+    # pylint: disable-next=import-outside-toplevel
     from .components.recorder.common import async_recorder_block_till_done
 
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
     stats_validate = (
-        recorder.statistics.validate_db_schema
+        schema.validate_db_schema
         if enable_statistics_table_validation
         else itertools.repeat(set())
     )

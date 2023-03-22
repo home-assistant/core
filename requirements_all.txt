@@ -1299,7 +1299,7 @@ openwrt-luci-rpc==1.1.11
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.oralb
-oralb-ble==0.17.5
+oralb-ble==0.17.6
 
 # homeassistant.components.oru
 oru==0.1.11
@@ -2536,7 +2536,7 @@ ttls==1.5.1
 tuya-iot-py-sdk==0.6.6
 
 # homeassistant.components.twentemilieu
-twentemilieu==0.6.1
+twentemilieu==1.0.0
 
 # homeassistant.components.twilio
 twilio==6.32.0
