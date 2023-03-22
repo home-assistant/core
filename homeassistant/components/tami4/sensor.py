@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import VOLUME_MILLILITERS
+from homeassistant.const import UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -68,7 +68,7 @@ ENTITY_DESCRIPTIONS = [
     SensorEntityDescription(
         key="filter_milli_litters_passed",
         name="Filter Water Passed",
-        native_unit_of_measurement=VOLUME_MILLILITERS,
+        native_unit_of_measurement=UnitOfVolume.MILLILITERS,
         icon="mdi:water",
         state_class=SensorStateClass.MEASUREMENT,
     ),
