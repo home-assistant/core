@@ -223,8 +223,8 @@ async def test_validate_db_schema_precision_with_unrepairable_broken_schema(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test validating DB schema when the schema is broken and cannot be repaired."""
-    if not recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This problem only happens on MySQL and PostgreSQL
+    if not recorder_db_url.startswith("mysql://"):
+        # This problem only happens on MySQL
         return
     await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
