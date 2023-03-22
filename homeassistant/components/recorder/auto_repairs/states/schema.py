@@ -14,15 +14,18 @@ from ..schema import (
 if TYPE_CHECKING:
     from ... import Recorder
 
+TABLE_UTF8_COLUMNS = {
+    States: ("state",),
+    StateAttributes: ("shared_attrs",),
+}
+
 
 def validate_db_schema(instance: Recorder) -> set[str]:
     """Do some basic checks for common schema errors caused by manual migration."""
     schema_errors: set[str] = set()
-    schema_errors |= validate_table_schema_supports_utf8(instance, States, ("state",))
+    for table, columns in TABLE_UTF8_COLUMNS.items():
+        schema_errors |= validate_table_schema_supports_utf8(instance, table, columns)
     schema_errors |= validate_db_schema_precision(instance, States)
-    schema_errors |= validate_table_schema_supports_utf8(
-        instance, StateAttributes, ("shared_attrs",)
-    )
     return schema_errors
 
 
@@ -31,6 +34,6 @@ def correct_db_schema(
     schema_errors: set[str],
 ) -> None:
     """Correct issues detected by validate_db_schema."""
-    correct_db_schema_utf8(instance, States, schema_errors)
+    for table in (States, StateAttributes):
+        correct_db_schema_utf8(instance, table, schema_errors)
     correct_db_schema_precision(instance, States, schema_errors)
-    correct_db_schema_utf8(instance, StateAttributes, schema_errors)
