@@ -32,8 +32,8 @@ class NextcloudConfigFlow(ConfigFlow, domain=DOMAIN):
         """Try to connect to nextcloud server."""
         return NextcloudMonitor(
             user_input.get(CONF_URL),
-            user_input.get(CONF_PASSWORD),
             user_input.get(CONF_USERNAME),
+            user_input.get(CONF_PASSWORD),
         )
 
     async def async_step_import(
