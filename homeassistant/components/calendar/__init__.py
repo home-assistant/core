@@ -36,6 +36,7 @@ from homeassistant.util import dt
 from .const import (
     CONF_EVENT,
     EVENT_DESCRIPTION,
+    EVENT_LOCATION,
     EVENT_END,
     EVENT_END_DATE,
     EVENT_END_DATETIME,
