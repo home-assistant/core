@@ -1,13 +1,12 @@
 """Schema repairs."""
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Iterable, Mapping
 import logging
 from typing import TYPE_CHECKING
 
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.orm.session import Session
 
 from ..const import SupportedDialect
 from ..db_schema import DOUBLE_PRECISION_TYPE_SQL, DOUBLE_TYPE
@@ -27,7 +26,7 @@ UTF8_NAME = "𓆚𓃗"
 PRECISE_NUMBER = 1.000000000000001
 
 
-def get_precision_column_types(
+def _get_precision_column_types(
     table_object: type[DeclarativeBase],
 ) -> list[str]:
     """Get the column names for the columns that need to be checked for precision."""
@@ -42,7 +41,6 @@ def validate_table_schema_supports_utf8(
     instance: Recorder,
     table_object: type[DeclarativeBase],
     columns: tuple[str, ...],
-    session_maker: Callable[[], Session],
 ) -> set[str]:
     """Do some basic checks for common schema errors caused by manual migration."""
     schema_errors: set[str] = set()
@@ -51,6 +49,7 @@ def validate_table_schema_supports_utf8(
     if instance.dialect_name != SupportedDialect.MYSQL:
         return schema_errors
 
+    session_maker = instance.get_session
     # Try inserting some data which needs utf8mb4 support
     try:
         # Mark the session as read_only to ensure that the test data is not committed
@@ -74,13 +73,14 @@ def validate_table_schema_supports_utf8(
                     raise
     except Exception as exc:  # pylint: disable=broad-except
         _LOGGER.exception("Error when validating DB schema: %s", exc)
+
+    _log_schema_errors(table_object, schema_errors)
     return schema_errors
 
 
 def validate_db_schema_precision(
     instance: Recorder,
     table_object: type[DeclarativeBase],
-    session_maker: Callable[[], Session],
 ) -> set[str]:
     """Do some basic checks for common schema errors caused by manual migration."""
     schema_errors: set[str] = set()
@@ -91,7 +91,8 @@ def validate_db_schema_precision(
     ):
         return schema_errors
 
-    columns = get_precision_column_types(table_object)
+    columns = _get_precision_column_types(table_object)
+    session_maker = instance.get_session
 
     try:
         # Mark the session as read_only to ensure that the test data is not committed
@@ -113,7 +114,21 @@ def validate_db_schema_precision(
     except Exception as exc:  # pylint: disable=broad-except
         _LOGGER.exception("Error when validating DB schema: %s", exc)
 
+    _log_schema_errors(table_object, schema_errors)
     return schema_errors
+
+
+def _log_schema_errors(
+    table_object: type[DeclarativeBase], schema_errors: set[str]
+) -> None:
+    """Log schema errors."""
+    if not schema_errors:
+        return
+    _LOGGER.debug(
+        "Detected %s schema errors: %s",
+        table_object.__tablename__,
+        ", ".join(sorted(schema_errors)),
+    )
 
 
 def check_columns(
@@ -139,37 +154,6 @@ def check_columns(
                 stored[column],
                 expected[column],
             )
-
-
-def validate_db_schema_utf8_and_precision(
-    instance: Recorder,
-    table_object: type[DeclarativeBase],
-    utf8_columns: tuple[str, ...],
-) -> set[str]:
-    """Do some basic checks for common schema errors caused by manual migration."""
-    schema_errors: set[str] = set()
-    session_maker = instance.get_session
-    schema_errors |= validate_table_schema_supports_utf8(
-        instance, table_object, utf8_columns, session_maker
-    )
-    schema_errors |= validate_db_schema_precision(instance, table_object, session_maker)
-    if schema_errors:
-        _LOGGER.debug(
-            "Detected %s schema errors: %s",
-            table_object.__tablename__,
-            ", ".join(sorted(schema_errors)),
-        )
-    return schema_errors
-
-
-def correct_db_schema_utf8_and_precision(
-    instance: Recorder,
-    table_object: type[DeclarativeBase],
-    schema_errors: set[str],
-) -> None:
-    """Correct issues detected by validate_db_schema."""
-    correct_db_schema_utf8(instance, table_object, schema_errors)
-    correct_db_schema_precision(instance, table_object, schema_errors)
 
 
 def correct_db_schema_utf8(
@@ -198,7 +182,7 @@ def correct_db_schema_precision(
             _modify_columns,
         )
 
-        precision_columns = get_precision_column_types(table_object)
+        precision_columns = _get_precision_column_types(table_object)
         # Attempt to convert timestamp columns to µs precision
         session_maker = instance.get_session
         engine = instance.engine

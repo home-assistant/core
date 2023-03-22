@@ -21,12 +21,11 @@ _LOGGER = logging.getLogger(__name__)
 def validate_db_schema(instance: Recorder) -> set[str]:
     """Do some basic checks for common schema errors caused by manual migration."""
     schema_errors: set[str] = set()
-    session_maker = instance.get_session
     schema_errors |= validate_table_schema_supports_utf8(
-        instance, StatisticsMeta, ("statistic_id",), session_maker
+        instance, StatisticsMeta, ("statistic_id",)
     )
     for table in (Statistics, StatisticsShortTerm):
-        schema_errors |= validate_db_schema_precision(instance, table, session_maker)
+        schema_errors |= validate_db_schema_precision(instance, table)
     if schema_errors:
         _LOGGER.debug(
             "Detected statistics schema errors: %s", ", ".join(sorted(schema_errors))
