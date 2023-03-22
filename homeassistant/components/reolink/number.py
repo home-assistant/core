@@ -63,7 +63,7 @@ NUMBER_ENTITIES = (
         native_step=1,
         get_min_value=lambda api, ch: api.zoom_range(ch)["focus"]["pos"]["min"],
         get_max_value=lambda api, ch: api.zoom_range(ch)["focus"]["pos"]["max"],
-        supported=lambda api, ch: api.supported(ch, "zoom"),
+        supported=lambda api, ch: api.supported(ch, "focus"),
         value=lambda api, ch: api.get_focus(ch),
         method=lambda api, ch, value: api.set_focus(ch, int(value)),
     ),

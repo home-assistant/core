@@ -10,15 +10,15 @@ atomicwrites-homeassistant==1.4.1
 attrs==22.2.0
 awesomeversion==22.9.0
 bcrypt==4.0.1
-bleak-retry-connector==2.13.0
-bleak==0.19.5
-bluetooth-adapters==0.15.2
+bleak-retry-connector==3.0.1
+bleak==0.20.0
+bluetooth-adapters==0.15.3
 bluetooth-auto-recovery==1.0.3
 bluetooth-data-tools==0.3.1
 certifi>=2021.5.30
 ciso8601==2.3.0
 cryptography==39.0.1
-dbus-fast==1.84.1
+dbus-fast==1.84.2
 fnvhash==0.1.0
 hass-nabucasa==0.61.1
 hassil==1.0.6
@@ -48,7 +48,7 @@ ulid-transform==0.4.2
 voluptuous-serialize==2.6.0
 voluptuous==0.13.1
 yarl==1.8.1
-zeroconf==0.47.3
+zeroconf==0.47.4
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238

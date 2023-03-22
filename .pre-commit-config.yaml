@@ -5,14 +5,6 @@ repos:
       - id: ruff
         args:
           - --fix
-  - repo: https://github.com/PyCQA/autoflake
-    rev: v2.0.0
-    hooks:
-      - id: autoflake
-        args:
-          - --in-place
-          - --remove-all-unused-imports
-        stages: [manual]
   - repo: https://github.com/psf/black
     rev: 23.1.0
     hooks:

@@ -9,6 +9,7 @@ import functools
 import gc
 import itertools
 import logging
+import os
 import sqlite3
 import ssl
 import threading
@@ -262,6 +263,22 @@ def expected_lingering_tasks() -> bool:
     return False
 
 
+@pytest.fixture(autouse=True)
+def expected_lingering_timers() -> bool:
+    """Temporary ability to bypass test failures.
+
+    Parametrize to True to bypass the pytest failure.
+    @pytest.mark.parametrize("expected_lingering_timers", [True])
+
+    This should be removed when all lingering timers have been cleaned up.
+    """
+    current_test = os.getenv("PYTEST_CURRENT_TEST")
+    if current_test and current_test.startswith("tests/components"):
+        # As a starting point, we ignore components
+        return True
+    return False
+
+
 @pytest.fixture
 def wait_for_stop_scripts_after_shutdown() -> bool:
     """Add ability to bypass _schedule_stop_scripts_after_shutdown.
@@ -291,7 +308,9 @@ def skip_stop_scripts(
 
 @pytest.fixture(autouse=True)
 def verify_cleanup(
-    event_loop: asyncio.AbstractEventLoop, expected_lingering_tasks: bool
+    event_loop: asyncio.AbstractEventLoop,
+    expected_lingering_tasks: bool,
+    expected_lingering_timers: bool,
 ) -> Generator[None, None, None]:
     """Verify that the test has cleaned up resources correctly."""
     threads_before = frozenset(threading.enumerate())
@@ -311,16 +330,19 @@ def verify_cleanup(
     tasks = asyncio.all_tasks(event_loop) - tasks_before
     for task in tasks:
         if expected_lingering_tasks:
-            _LOGGER.warning("Linger task after test %r", task)
+            _LOGGER.warning("Lingering task after test %r", task)
         else:
-            pytest.fail(f"Linger task after test {repr(task)}")
+            pytest.fail(f"Lingering task after test {repr(task)}")
         task.cancel()
     if tasks:
         event_loop.run_until_complete(asyncio.wait(tasks))
 
     for handle in event_loop._scheduled:  # type: ignore[attr-defined]
         if not handle.cancelled():
-            _LOGGER.warning("Lingering timer after test %r", handle)
+            if expected_lingering_timers:
+                _LOGGER.warning("Lingering timer after test %r", handle)
+            else:
+                pytest.fail(f"Lingering timer after test {repr(handle)}")
             handle.cancel()
 
     # Verify no threads where left behind.
@@ -1260,13 +1282,16 @@ def hass_recorder(
     # pylint: disable-next=import-outside-toplevel
     from homeassistant.components import recorder
 
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant.components.recorder.auto_repairs.statistics import schema
+
     original_tz = dt_util.DEFAULT_TIME_ZONE
 
     hass = get_test_home_assistant()
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
     stats_validate = (
-        recorder.statistics.validate_db_schema
+        schema.validate_db_schema
         if enable_statistics_table_validation
         else itertools.repeat(set())
     )
@@ -1376,12 +1401,15 @@ async def async_setup_recorder_instance(
     from homeassistant.components import recorder
 
     # pylint: disable-next=import-outside-toplevel
+    from homeassistant.components.recorder.auto_repairs.statistics import schema
+
+    # pylint: disable-next=import-outside-toplevel
     from .components.recorder.common import async_recorder_block_till_done
 
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
     stats_validate = (
-        recorder.statistics.validate_db_schema
+        schema.validate_db_schema
         if enable_statistics_table_validation
         else itertools.repeat(set())
     )

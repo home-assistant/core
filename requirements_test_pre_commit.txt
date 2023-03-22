@@ -1,6 +1,5 @@
 # Automatically generated from .pre-commit-config.yaml by gen_requirements_all.py, do not edit
 
-autoflake==2.0.0
 bandit==1.7.4
 black==23.1.0
 codespell==2.2.2

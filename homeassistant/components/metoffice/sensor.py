@@ -20,6 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -207,7 +208,7 @@ class MetOfficeCurrentSensor(
         )
 
     @property
-    def native_value(self) -> Any | None:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         value = None
 

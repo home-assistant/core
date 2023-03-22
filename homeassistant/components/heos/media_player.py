@@ -195,7 +195,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
 
     @log_command_error("play media")
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
         if media_source.is_media_source_id(media_id):

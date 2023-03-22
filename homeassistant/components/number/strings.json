@@ -7,7 +7,26 @@
   },
   "entity_component": {
     "_": {
-      "name": "[%key:component::number::title%]"
+      "name": "[%key:component::number::title%]",
+      "state_attributes": {
+        "max": {
+          "name": "Maximum"
+        },
+        "min": {
+          "name": "Minimum"
+        },
+        "mode": {
+          "name": "Mode",
+          "state": {
+            "auto": "Automatic",
+            "box": "Box",
+            "slider": "Slider"
+          }
+        },
+        "step": {
+          "name": "Step"
+        }
+      }
     },
     "apparent_power": {
       "name": "[%key:component::sensor::entity_component::apparent_power::name%]"

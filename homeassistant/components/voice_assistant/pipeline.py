@@ -22,7 +22,6 @@ DEFAULT_TIMEOUT = 30  # seconds
 
 _LOGGER = logging.getLogger(__name__)
 
-
 class PipelineEventType(StrEnum):
     """Event types emitted during a pipeline run."""
 

@@ -25,11 +25,21 @@ from sqlalchemy.schema import AddConstraint, DropConstraint
 from sqlalchemy.sql.expression import true
 
 from homeassistant.core import HomeAssistant
+from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.ulid import ulid_to_bytes
 
+from .auto_repairs.statistics.duplicates import (
+    delete_statistics_duplicates,
+    delete_statistics_meta_duplicates,
+)
+from .auto_repairs.statistics.schema import (
+    correct_db_schema as statistics_correct_db_schema,
+    validate_db_schema as statistics_validate_db_schema,
+)
 from .const import SupportedDialect
 from .db_schema import (
     CONTEXT_ID_BIN_MAX_LENGTH,
+    LEGACY_STATES_EVENT_ID_INDEX,
     SCHEMA_VERSION,
     STATISTICS_TABLES,
     TABLE_STATES,
@@ -51,20 +61,20 @@ from .queries import (
     find_event_type_to_migrate,
     find_events_context_ids_to_migrate,
     find_states_context_ids_to_migrate,
+    has_used_states_event_ids,
 )
-from .statistics import (
-    correct_db_schema as statistics_correct_db_schema,
-    delete_statistics_duplicates,
-    delete_statistics_meta_duplicates,
-    get_start_time,
-    validate_db_schema as statistics_validate_db_schema,
-)
+from .statistics import get_start_time
 from .tasks import (
     CommitTask,
     PostSchemaMigrationTask,
     StatisticsTimestampMigrationCleanupTask,
 )
-from .util import database_job_retry_wrapper, retryable_database_job, session_scope
+from .util import (
+    database_job_retry_wrapper,
+    get_index_by_name,
+    retryable_database_job,
+    session_scope,
+)
 
 if TYPE_CHECKING:
     from . import Recorder
@@ -75,6 +85,38 @@ _EMPTY_ENTITY_ID = "missing.entity_id"
 _EMPTY_EVENT_TYPE = "missing_event_type"
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class _ColumnTypesForDialect:
+    big_int_type: str
+    timestamp_type: str
+    context_bin_type: str
+
+
+_MYSQL_COLUMN_TYPES = _ColumnTypesForDialect(
+    big_int_type="INTEGER(20)",
+    timestamp_type="DOUBLE PRECISION",
+    context_bin_type=f"BLOB({CONTEXT_ID_BIN_MAX_LENGTH})",
+)
+
+_POSTGRESQL_COLUMN_TYPES = _ColumnTypesForDialect(
+    big_int_type="INTEGER",
+    timestamp_type="DOUBLE PRECISION",
+    context_bin_type="BYTEA",
+)
+
+_SQLITE_COLUMN_TYPES = _ColumnTypesForDialect(
+    big_int_type="INTEGER",
+    timestamp_type="FLOAT",
+    context_bin_type="BLOB",
+)
+
+_COLUMN_TYPES_FOR_DIALECT: dict[SupportedDialect | None, _ColumnTypesForDialect] = {
+    SupportedDialect.MYSQL: _MYSQL_COLUMN_TYPES,
+    SupportedDialect.POSTGRESQL: _POSTGRESQL_COLUMN_TYPES,
+    SupportedDialect.SQLITE: _SQLITE_COLUMN_TYPES,
+}
 
 
 def raise_if_exception_missing_str(ex: Exception, match_substrs: Iterable[str]) -> None:
@@ -308,18 +350,7 @@ def _drop_index(
         with session_scope(session=session_maker()) as session, contextlib.suppress(
             SQLAlchemyError
         ):
-            connection = session.connection()
-            inspector = sqlalchemy.inspect(connection)
-            indexes = inspector.get_indexes(table_name)
-            if index_to_drop := next(
-                (
-                    possible_index["name"]
-                    for possible_index in indexes
-                    if possible_index["name"]
-                    and possible_index["name"].endswith(f"_{index_name}")
-                ),
-                None,
-            ):
+            if index_to_drop := get_index_by_name(session, table_name, index_name):
                 connection.execute(text(f"DROP INDEX {index_to_drop}"))
                 success = True
 
@@ -517,11 +548,7 @@ def _drop_foreign_key_constraints(
     inspector = sqlalchemy.inspect(engine)
     drops = []
     for foreign_key in inspector.get_foreign_keys(table):
-        if (
-            foreign_key["name"]
-            and foreign_key.get("options", {}).get("ondelete")
-            and foreign_key["constrained_columns"] == columns
-        ):
+        if foreign_key["name"] and foreign_key["constrained_columns"] == columns:
             drops.append(ForeignKeyConstraint((), (), name=foreign_key["name"]))
 
     # Bind the ForeignKeyConstraints to the table
@@ -552,18 +579,9 @@ def _apply_update(  # noqa: C901
     old_version: int,
 ) -> None:
     """Perform operations to bring schema up to date."""
-    dialect = engine.dialect.name
-    big_int = "INTEGER(20)" if dialect == SupportedDialect.MYSQL else "INTEGER"
-    if dialect == SupportedDialect.MYSQL:
-        timestamp_type = "DOUBLE PRECISION"
-        context_bin_type = f"BLOB({CONTEXT_ID_BIN_MAX_LENGTH})"
-    if dialect == SupportedDialect.POSTGRESQL:
-        timestamp_type = "DOUBLE PRECISION"
-        context_bin_type = "BYTEA"
-    else:
-        timestamp_type = "FLOAT"
-        context_bin_type = "BLOB"
-
+    assert engine.dialect.name is not None, "Dialect name must be set"
+    dialect = try_parse_enum(SupportedDialect, engine.dialect.name)
+    _column_types = _COLUMN_TYPES_FOR_DIALECT.get(dialect, _SQLITE_COLUMN_TYPES)
     if new_version == 1:
         # This used to create ix_events_time_fired, but it was removed in version 32
         pass
@@ -593,7 +611,7 @@ def _apply_update(  # noqa: C901
         # but it was removed in version 32
     elif new_version == 5:
         # Create supporting index for States.event_id foreign key
-        _create_index(session_maker, "states", "ix_states_event_id")
+        _create_index(session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX)
     elif new_version == 6:
         _add_columns(
             session_maker,
@@ -825,12 +843,14 @@ def _apply_update(  # noqa: C901
         # of removing any duplicate if they still exist.
         pass
     elif new_version == 25:
-        _add_columns(session_maker, "states", [f"attributes_id {big_int}"])
+        _add_columns(
+            session_maker, "states", [f"attributes_id {_column_types.big_int_type}"]
+        )
         _create_index(session_maker, "states", "ix_states_attributes_id")
     elif new_version == 26:
         _create_index(session_maker, "statistics_runs", "ix_statistics_runs_start")
     elif new_version == 27:
-        _add_columns(session_maker, "events", [f"data_id {big_int}"])
+        _add_columns(session_maker, "events", [f"data_id {_column_types.big_int_type}"])
         _create_index(session_maker, "events", "ix_events_data_id")
     elif new_version == 28:
         _add_columns(session_maker, "events", ["origin_idx INTEGER"])
@@ -889,11 +909,16 @@ def _apply_update(  # noqa: C901
         # ALTER TABLE events DROP COLUMN time_fired
         # ALTER TABLE states DROP COLUMN last_updated
         # ALTER TABLE states DROP COLUMN last_changed
-        _add_columns(session_maker, "events", [f"time_fired_ts {timestamp_type}"])
+        _add_columns(
+            session_maker, "events", [f"time_fired_ts {_column_types.timestamp_type}"]
+        )
         _add_columns(
             session_maker,
             "states",
-            [f"last_updated_ts {timestamp_type}", f"last_changed_ts {timestamp_type}"],
+            [
+                f"last_updated_ts {_column_types.timestamp_type}",
+                f"last_changed_ts {_column_types.timestamp_type}",
+            ],
         )
         _create_index(session_maker, "events", "ix_events_time_fired_ts")
         _create_index(session_maker, "events", "ix_events_event_type_time_fired_ts")
@@ -925,18 +950,18 @@ def _apply_update(  # noqa: C901
             session_maker,
             "statistics",
             [
-                f"created_ts {timestamp_type}",
-                f"start_ts {timestamp_type}",
-                f"last_reset_ts {timestamp_type}",
+                f"created_ts {_column_types.timestamp_type}",
+                f"start_ts {_column_types.timestamp_type}",
+                f"last_reset_ts {_column_types.timestamp_type}",
             ],
         )
         _add_columns(
             session_maker,
             "statistics_short_term",
             [
-                f"created_ts {timestamp_type}",
-                f"start_ts {timestamp_type}",
-                f"last_reset_ts {timestamp_type}",
+                f"created_ts {_column_types.timestamp_type}",
+                f"start_ts {_column_types.timestamp_type}",
+                f"last_reset_ts {_column_types.timestamp_type}",
             ],
         )
         _create_index(session_maker, "statistics", "ix_statistics_start_ts")
@@ -991,20 +1016,24 @@ def _apply_update(  # noqa: C901
                 session_maker,
                 table,
                 [
-                    f"context_id_bin {context_bin_type}",
-                    f"context_user_id_bin {context_bin_type}",
-                    f"context_parent_id_bin {context_bin_type}",
+                    f"context_id_bin {_column_types.context_bin_type}",
+                    f"context_user_id_bin {_column_types.context_bin_type}",
+                    f"context_parent_id_bin {_column_types.context_bin_type}",
                 ],
             )
         _create_index(session_maker, "events", "ix_events_context_id_bin")
         _create_index(session_maker, "states", "ix_states_context_id_bin")
     elif new_version == 37:
-        _add_columns(session_maker, "events", [f"event_type_id {big_int}"])
+        _add_columns(
+            session_maker, "events", [f"event_type_id {_column_types.big_int_type}"]
+        )
         _create_index(session_maker, "events", "ix_events_event_type_id")
         _drop_index(session_maker, "events", "ix_events_event_type_time_fired_ts")
         _create_index(session_maker, "events", "ix_events_event_type_id_time_fired_ts")
     elif new_version == 38:
-        _add_columns(session_maker, "states", [f"metadata_id {big_int}"])
+        _add_columns(
+            session_maker, "states", [f"metadata_id {_column_types.big_int_type}"]
+        )
         _create_index(session_maker, "states", "ix_states_metadata_id")
         _create_index(session_maker, "states", "ix_states_metadata_id_last_updated_ts")
     elif new_version == 39:
@@ -1527,6 +1556,42 @@ def post_migrate_entity_ids(instance: Recorder) -> bool:
 
     _LOGGER.debug("Cleanup legacy entity_ids done=%s", is_done)
     return is_done
+
+
+@retryable_database_job("cleanup_legacy_event_ids")
+def cleanup_legacy_states_event_ids(instance: Recorder) -> bool:
+    """Remove old event_id index from states.
+
+    We used to link states to events using the event_id column but we no
+    longer store state changed events in the events table.
+
+    If all old states have been purged and existing states are in the new
+    format we can drop the index since it can take up ~10MB per 1M rows.
+    """
+    session_maker = instance.get_session
+    _LOGGER.debug("Cleanup legacy entity_ids")
+    with session_scope(session=session_maker()) as session:
+        result = session.execute(has_used_states_event_ids()).scalar()
+        # In the future we may migrate existing states to the new format
+        # but in practice very few of these still exist in production and
+        # removing the index is the likely all that needs to happen.
+        all_gone = not result
+
+    if all_gone:
+        # Only drop the index if there are no more event_ids in the states table
+        # ex all NULL
+        assert instance.engine is not None, "engine should never be None"
+        if instance.dialect_name != SupportedDialect.SQLITE:
+            # SQLite does not support dropping foreign key constraints
+            # so we can't drop the index at this time but we can avoid
+            # looking for legacy rows during purge
+            _drop_foreign_key_constraints(
+                session_maker, instance.engine, TABLE_STATES, ["event_id"]
+            )
+            _drop_index(session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX)
+        instance.use_legacy_events_index = False
+
+    return True
 
 
 def _initialize_database(session: Session) -> bool:
