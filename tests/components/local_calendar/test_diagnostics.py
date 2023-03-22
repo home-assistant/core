@@ -1,6 +1,5 @@
 """Tests for diagnostics platform of local calendar."""
 
-from freezegun import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -20,7 +19,7 @@ async def setup_diag(hass):
     assert await async_setup_component(hass, "diagnostics", {})
 
 
-@freeze_time("2023-03-13 12:05:00-07:00")
+@pytest.mark.freeze_time("2023-03-13 12:05:00-07:00")
 async def test_empty_calendar(
     hass: HomeAssistant,
     setup_integration: None,
@@ -33,7 +32,7 @@ async def test_empty_calendar(
     assert data == snapshot
 
 
-@freeze_time("2023-03-13 12:05:00-07:00")
+@pytest.mark.freeze_time("2023-03-13 12:05:00-07:00")
 async def test_api_date_time_event(
     hass: HomeAssistant,
     setup_integration: None,

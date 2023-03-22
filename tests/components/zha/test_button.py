@@ -1,7 +1,6 @@
 """Test ZHA button."""
 from unittest.mock import call, patch
 
-from freezegun import freeze_time
 import pytest
 from zhaquirks.const import (
     DEVICE_TYPE,
@@ -120,7 +119,7 @@ async def tuya_water_valve(hass, zigpy_device_mock, zha_device_joined_restored):
     return zha_device, zigpy_device.endpoints[1].tuya_manufacturer
 
 
-@freeze_time("2021-11-04 17:37:00", tz_offset=-1)
+@pytest.mark.freeze_time("2021-11-04 17:37:00", tz_offset=-1)
 async def test_button(hass: HomeAssistant, contact_sensor) -> None:
     """Test ZHA button platform."""
 
