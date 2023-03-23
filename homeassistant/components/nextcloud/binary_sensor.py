@@ -7,6 +7,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
+from .coordinator import NextcloudDataUpdateCoordinator
 from .entity import NextcloudEntity
 
 BINARY_SENSORS = (
@@ -26,11 +27,16 @@ def setup_platform(
     """Set up the Nextcloud sensors."""
     if discovery_info is None:
         return
-    binary_sensors = []
-    for name in hass.data[DOMAIN]:
-        if name in BINARY_SENSORS:
-            binary_sensors.append(NextcloudBinarySensor(name))
-    add_entities(binary_sensors, True)
+    coordinator: NextcloudDataUpdateCoordinator = hass.data[DOMAIN]
+
+    add_entities(
+        [
+            NextcloudBinarySensor(coordinator, name)
+            for name in coordinator.data
+            if name in BINARY_SENSORS
+        ],
+        True,
+    )
 
 
 class NextcloudBinarySensor(NextcloudEntity, BinarySensorEntity):
@@ -39,4 +45,4 @@ class NextcloudBinarySensor(NextcloudEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        return self._state == "yes"
+        return self.coordinator.data.get(self.item) == "yes"
