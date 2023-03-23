@@ -26,11 +26,7 @@ async def test_config_entry_diagnostics(
     bmw_fixture,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test config entry diagnostics.
-
-    Could fail after every change (either to HA or the library). If so, regenerate using
-    pytest --snapshot-update tests/components/bmw_connected_drive/ and check the output.
-    """
+    """Test config entry diagnostics."""
 
     # Make sure that local timezone for test is UTC
     os.environ["TZ"] = "UTC"
@@ -52,11 +48,7 @@ async def test_device_diagnostics(
     bmw_fixture,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test device diagnostics.
-
-    Could fail after every change (either to HA or the library). If so, regenerate using
-    pytest --snapshot-update tests/components/bmw_connected_drive/ and check the output.
-    """
+    """Test device diagnostics."""
 
     # Make sure that local timezone for test is UTC
     os.environ["TZ"] = "UTC"
@@ -84,11 +76,7 @@ async def test_device_diagnostics_vehicle_not_found(
     bmw_fixture,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test device diagnostics when the vehicle cannot be found.
-
-    Could fail after every change (either to HA or the library). If so, regenerate using
-    pytest --snapshot-update tests/components/bmw_connected_drive/ and check the output.
-    """
+    """Test device diagnostics when the vehicle cannot be found."""
 
     # Make sure that local timezone for test is UTC
     os.environ["TZ"] = "UTC"
