@@ -10,6 +10,8 @@ from typing import Any, Concatenate, ParamSpec, TypeVar
 from aiohttp import web
 import voluptuous as vol
 
+from homeassistant.util.json import json_loads
+
 from .view import HomeAssistantView
 
 _HassViewT = TypeVar("_HassViewT", bound=HomeAssistantView)
@@ -54,7 +56,7 @@ class RequestDataValidator:
             """Wrap a request handler with data validation."""
             raw_data = None
             try:
-                raw_data = await request.json()
+                raw_data = await request.json(loads=json_loads)
             except ValueError:
                 if not self._allow_empty or (await request.content.read()) != b"":
                     _LOGGER.error("Invalid JSON received")
