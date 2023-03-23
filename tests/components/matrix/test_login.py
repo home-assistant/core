@@ -9,8 +9,7 @@ from tests.components.matrix.conftest import TEST_MXID, TEST_TOKEN
 
 
 async def test_login(matrix_bot: MatrixBot, mock_client):
-    """
-    Test various good and bad login paths.
+    """Test various good and bad login paths.
 
     "Good" test password is configured by default from config.
     """

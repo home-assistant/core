@@ -196,10 +196,9 @@ def mock_allowed_path():
 async def matrix_bot(
     hass: HomeAssistant, mock_client, mock_save_json, mock_allowed_path
 ) -> MatrixBot:
-    """
-    Set up Matrix and Notify component.
+    """Set up Matrix and Notify component.
 
-    the resulting MatrixBot will have a mocked _client.
+    The resulting MatrixBot will have a mocked _client.
     """
 
     assert await async_setup_component(hass, MATRIX_DOMAIN, MOCK_CONFIG_DATA)
