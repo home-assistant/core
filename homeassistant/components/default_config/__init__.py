@@ -11,3 +11,5 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize default configuration."""
     if not is_hassio(hass):
         await async_setup_component(hass, "backup", config)
+
+    return True
