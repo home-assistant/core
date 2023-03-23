@@ -115,7 +115,7 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _request_code(self, username: str) -> RoborockClient | None:
-        """Return true if credentials are valid."""
+        """Return the client if credentials are valid."""
         try:
             _LOGGER.debug("Requesting code for Roborock account")
             client = RoborockClient(username)
