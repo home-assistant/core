@@ -27,7 +27,7 @@ GREE_SWITCHES: tuple[SwitchEntityDescription, ...] = (
         key="quiet",
     ),
     SwitchEntityDescription(
-        name="Fresh air",
+        name="Fresh Air",
         key="fresh_air",
     ),
     SwitchEntityDescription(name="XFan", key="xfan"),
