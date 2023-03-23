@@ -46,7 +46,13 @@ class NextcloudConfigFlow(ConfigFlow, domain=DOMAIN):
                 "Connection error during import of yaml configuration, import aborted"
             )
             return self.async_abort(reason="connection_error_during_import")
-        return await self.async_step_user(user_input)
+        return await self.async_step_user(
+            {
+                CONF_URL: user_input[CONF_URL],
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+                CONF_USERNAME: user_input[CONF_USERNAME],
+            }
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -63,11 +69,7 @@ class NextcloudConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_create_entry(
                     title=user_input[CONF_URL],
-                    data={
-                        CONF_URL: user_input[CONF_URL],
-                        CONF_PASSWORD: user_input[CONF_PASSWORD],
-                        CONF_USERNAME: user_input[CONF_USERNAME],
-                    },
+                    data=user_input,
                 )
 
         data_schema = self.add_suggested_values_to_schema(DATA_SCHEMA_USER, user_input)
