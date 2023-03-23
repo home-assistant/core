@@ -326,7 +326,6 @@ class IkeaAirPurifierChannel(ZigbeeChannel):
             )
 
 
-@registries.BINDABLE_CLUSTERS.register(0xFC80)
 @registries.CHANNEL_ONLY_CLUSTERS.register(0xFC80)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(0xFC80)
 class IkeaRemote(ZigbeeChannel):
