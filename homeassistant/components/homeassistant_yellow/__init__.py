@@ -4,8 +4,8 @@ from __future__ import annotations
 from homeassistant.components.hassio import get_os_info
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
     check_multi_pan_addon,
-    get_multi_pan_addon_info,
     get_zigbee_socket,
+    multi_pan_addon_using_device,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -31,15 +31,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except HomeAssistantError as err:
         raise ConfigEntryNotReady from err
 
-    addon_info = await get_multi_pan_addon_info(hass, RADIO_DEVICE)
-
-    if not addon_info:
+    if not await multi_pan_addon_using_device(hass, RADIO_DEVICE):
         hw_discovery_data = ZHA_HW_DISCOVERY_DATA
     else:
         hw_discovery_data = {
             "name": "Yellow Multi-PAN",
             "port": {
-                "path": get_zigbee_socket(hass, addon_info),
+                "path": get_zigbee_socket(),
             },
             "radio_type": "ezsp",
         }
