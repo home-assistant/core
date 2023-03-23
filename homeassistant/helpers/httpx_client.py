@@ -65,8 +65,13 @@ def create_async_httpx_client(
 
     This method must be run in the event loop.
     """
+    ssl_context = (
+        ssl_util.get_default_context()
+        if verify_ssl
+        else ssl_util.get_default_no_verify_context()
+    )
     client = HassHttpXAsyncClient(
-        verify=ssl_util.get_default_context() if verify_ssl else False,
+        verify=ssl_context,
         headers={USER_AGENT: SERVER_SOFTWARE},
         **kwargs,
     )
