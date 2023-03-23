@@ -96,6 +96,7 @@ async def test_async_poll_manual_hosts_warnings(
             [],
             OSError(),
         ]
+        # First call fails, it should be logged as a WARNING message
         caplog.clear()
         await manager.async_poll_manual_hosts()
         assert len(caplog.messages) == 1
