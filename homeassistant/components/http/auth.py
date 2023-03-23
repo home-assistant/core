@@ -13,6 +13,7 @@ from aiohttp.web import Application, Request, StreamResponse, middleware
 import jwt
 from yarl import URL
 
+from homeassistant.auth import jwt_wrapper
 from homeassistant.auth.const import GROUP_ID_READ_ONLY
 from homeassistant.auth.models import User
 from homeassistant.components import websocket_api
@@ -175,7 +176,7 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
             return False
 
         try:
-            claims = jwt.decode(
+            claims = jwt_wrapper.verify_and_decode(
                 signature, secret, algorithms=["HS256"], options={"verify_iss": False}
             )
         except jwt.InvalidTokenError:
