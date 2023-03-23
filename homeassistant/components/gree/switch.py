@@ -51,6 +51,7 @@ GREE_SWITCHES: tuple[GreeSwitchEntityDescription, ...] = (
         name="Health mode",
         key="health_mode",
         property=Props.ANION,
+        entity_registry_enabled_default=False,
     ),
 )
 
