@@ -26,6 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 def async_get_pipeline(
     hass: HomeAssistant, pipeline_id: str | None = None, language: str | None = None
 ) -> Pipeline | None:
+    """Get a pipeline by id or create one for a language."""
     if pipeline_id is not None:
         return hass.data[DOMAIN].get(pipeline_id)
 
@@ -44,6 +45,7 @@ class PipelineError(Exception):
     """Base class for pipeline errors."""
 
     def __init__(self, code: str, message: str) -> None:
+        """Set error message."""
         self.code = code
         self.message = message
 
