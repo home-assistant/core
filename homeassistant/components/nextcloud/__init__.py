@@ -25,10 +25,10 @@ PLATFORMS = (Platform.SENSOR, Platform.BINARY_SENSOR)
 
 # Validate user configuration
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            vol.All(
-                cv.deprecated(DOMAIN),
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
                 {
                     vol.Required(CONF_URL): cv.url,
                     vol.Required(CONF_USERNAME): cv.string,
@@ -38,26 +38,25 @@ CONFIG_SCHEMA = vol.Schema(
                     ): cv.time_period,
                 },
             )
-        )
-    },
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Nextcloud integration."""
-
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_yaml",
-        breaks_in_ha_version="2023.6.0",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-    )
-
     if DOMAIN in config:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml",
+            breaks_in_ha_version="2023.6.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+        )
+
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
@@ -65,6 +64,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 data=config[DOMAIN],
             )
         )
+
     return True
 
 

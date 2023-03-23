@@ -31,9 +31,9 @@ class NextcloudConfigFlow(ConfigFlow, domain=DOMAIN):
     def _try_connect_nc(self, user_input: dict) -> NextcloudMonitor:
         """Try to connect to nextcloud server."""
         return NextcloudMonitor(
-            user_input.get(CONF_URL),
-            user_input.get(CONF_USERNAME),
-            user_input.get(CONF_PASSWORD),
+            user_input[CONF_URL],
+            user_input[CONF_USERNAME],
+            user_input[CONF_PASSWORD],
         )
 
     async def async_step_import(
@@ -63,8 +63,7 @@ class NextcloudConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.hass.async_add_executor_job(self._try_connect_nc, user_input)
             except NextcloudMonitorError:
                 errors["base"] = "connection_error"
-
-            if not errors:
+            else:
                 return self.async_create_entry(
                     title=user_input[CONF_URL],
                     data={
