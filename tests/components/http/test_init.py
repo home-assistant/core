@@ -514,10 +514,10 @@ async def test_hass_access_logger_at_info_level(
     response = AiohttpClientMockResponse(
         "POST", "http://127.0.0.1", status=HTTPStatus.OK
     )
-    setattr(response, "body_length", 10)
+    setattr(response, "body_length", 42)
     logger.log(mock_request, response, time.time())
-    assert "HTTPStatus.OK 10" in caplog.text
+    assert "42" in caplog.text
     caplog.clear()
     test_logger.setLevel(logging.WARNING)
     logger.log(mock_request, response, time.time())
-    assert "HTTPStatus.OK 10" not in caplog.text
+    assert "42" not in caplog.text
