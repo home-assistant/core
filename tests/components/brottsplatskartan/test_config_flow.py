@@ -3,17 +3,17 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.brottsplatskartan.const import CONF_AREA, DOMAIN
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
+
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -22,16 +22,13 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.brottsplatskartan.config_flow.uuid.getnode",
         return_value="1234567890",
-    ), patch(
-        "homeassistant.components.brottsplatskartan.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -48,7 +45,6 @@ async def test_form(hass: HomeAssistant) -> None:
         "longitude": None,
         "app_id": "ha-1234567890",
     }
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_location(hass: HomeAssistant) -> None:
@@ -57,15 +53,12 @@ async def test_form_location(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.brottsplatskartan.config_flow.uuid.getnode",
         return_value="1234567890",
-    ), patch(
-        "homeassistant.components.brottsplatskartan.async_setup_entry",
-        return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -95,15 +88,12 @@ async def test_form_area(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.brottsplatskartan.config_flow.uuid.getnode",
         return_value="1234567890",
-    ), patch(
-        "homeassistant.components.brottsplatskartan.async_setup_entry",
-        return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -135,10 +125,7 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
     ), patch(
         "homeassistant.components.brottsplatskartan.config_flow.uuid.getnode",
         return_value="1234567890",
-    ), patch(
-        "homeassistant.components.brottsplatskartan.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    ):
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
@@ -146,7 +133,7 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Brottsplatskartan HOME"
     assert result2["data"] == {
         "latitude": None,
@@ -154,7 +141,6 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
         "area": "N/A",
         "app_id": "ha-1234567890",
     }
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_import_flow_location_success(hass: HomeAssistant) -> None:
@@ -165,10 +151,7 @@ async def test_import_flow_location_success(hass: HomeAssistant) -> None:
     ), patch(
         "homeassistant.components.brottsplatskartan.config_flow.uuid.getnode",
         return_value="1234567890",
-    ), patch(
-        "homeassistant.components.brottsplatskartan.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    ):
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
@@ -179,7 +162,7 @@ async def test_import_flow_location_success(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Brottsplatskartan 59.32, 18.06"
     assert result2["data"] == {
         "latitude": 59.32,
@@ -187,7 +170,6 @@ async def test_import_flow_location_success(hass: HomeAssistant) -> None:
         "area": "N/A",
         "app_id": "ha-1234567890",
     }
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
@@ -209,9 +191,6 @@ async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
     ), patch(
         "homeassistant.components.brottsplatskartan.config_flow.uuid.getnode",
         return_value="1234567890",
-    ), patch(
-        "homeassistant.components.trafikverket_train.async_setup_entry",
-        return_value=True,
     ):
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -220,5 +199,5 @@ async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == RESULT_TYPE_ABORT
+    assert result3["type"] == FlowResultType.ABORT
     assert result3["reason"] == "already_configured"
