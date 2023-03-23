@@ -11,7 +11,6 @@ from homeassistant.core import HomeAssistant, callback
 
 from .pipeline import (
     DEFAULT_TIMEOUT,
-    PipelineError,
     PipelineInput,
     PipelineRun,
     PipelineStage,
@@ -30,8 +29,8 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "voice_assistant/run",
-        vol.Required("start_stage"): str,
-        vol.Required("end_stage"): str,
+        vol.Required("start_stage"): vol.In(set(PipelineStage)),
+        vol.Required("end_stage"): vol.In(set(PipelineStage)),
         vol.Optional("input"): {"text": str},
         vol.Optional("language"): str,
         vol.Optional("pipeline"): str,
@@ -132,8 +131,6 @@ async def websocket_run(
     try:
         # Task contains a timeout
         await run_task
-    except PipelineError as err:
-        connection.send_error(msg["id"], err.code, err.message)
     finally:
         if unregister_handler is not None:
             # Unregister binary handler

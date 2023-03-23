@@ -383,8 +383,8 @@ async def test_intent_failed(
 
         # intent error
         msg = await client.receive_json()
-        assert not msg["success"]
-        assert msg["error"]["code"] == "intent-failed"
+        assert msg["event"]["type"] == "error"
+        assert msg["event"]["data"]["code"] == "intent-failed"
 
 
 async def test_audio_pipeline_timeout(
@@ -418,6 +418,10 @@ async def test_audio_pipeline_timeout(
         msg = await client.receive_json()
         assert not msg["success"]
         assert msg["error"]["code"] == "timeout"
+
+        # timeout error
+        # msg = await client.receive_json()
+        # assert msg["event"]["type"] == "timeout"
 
 
 async def test_stt_provider_missing(
@@ -471,9 +475,10 @@ async def test_stt_provider_missing(
         # End of audio stream (handler id + empty payload)
         await client.send_bytes(b"1")
 
+        # stt error
         msg = await client.receive_json()
-        assert not msg["success"]
-        assert msg["error"]["code"] == "stt-provider-missing"
+        assert msg["event"]["type"] == "error"
+        assert msg["event"]["data"]["code"] == "stt-provider-missing"
 
 
 async def test_stt_stream_failed(
@@ -527,9 +532,10 @@ async def test_stt_stream_failed(
         # End of audio stream (handler id + empty payload)
         await client.send_bytes(b"1")
 
+        # stt error
         msg = await client.receive_json()
-        assert not msg["success"]
-        assert msg["error"]["code"] == "stt-stream-failed"
+        assert msg["event"]["type"] == "error"
+        assert msg["event"]["data"]["code"] == "stt-stream-failed"
 
 
 async def test_tts_failed(
@@ -574,5 +580,5 @@ async def test_tts_failed(
 
         # tts error
         msg = await client.receive_json()
-        assert not msg["success"]
-        assert msg["error"]["code"] == "tts-failed"
+        assert msg["event"]["type"] == "error"
+        assert msg["event"]["data"]["code"] == "tts-failed"

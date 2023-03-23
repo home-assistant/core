@@ -199,11 +199,19 @@ class PipelineRun:
             # Load provider
             stt_provider = stt.async_get_provider(self.hass, self.pipeline.stt_engine)
             assert stt_provider is not None
-        except Exception as stt_error:
-            raise SpeechToTextError(
-                "stt-provider-missing",
-                f"No speech to text provider for: {engine}",
-            ) from stt_error
+        except Exception as src_error:
+            stt_error = SpeechToTextError(
+                code="stt-provider-missing",
+                message=f"No speech to text provider for: {engine}",
+            )
+            _LOGGER.exception(stt_error.message)
+            self.event_callback(
+                PipelineEvent(
+                    PipelineEventType.ERROR,
+                    {"code": stt_error.code, "message": stt_error.message},
+                )
+            )
+            raise stt_error from src_error
 
         try:
             # Transcribe audio stream
@@ -211,11 +219,19 @@ class PipelineRun:
             assert (result.text is not None) and (
                 result.result == stt.SpeechResultState.SUCCESS
             )
-        except Exception as stt_error:
-            raise SpeechToTextError(
-                "stt-stream-failed",
-                "Unexpected error during speech to text",
-            ) from stt_error
+        except Exception as src_error:
+            stt_error = SpeechToTextError(
+                code="stt-stream-failed",
+                message="Unexpected error during speech to text",
+            )
+            _LOGGER.exception(stt_error.message)
+            self.event_callback(
+                PipelineEvent(
+                    PipelineEventType.ERROR,
+                    {"code": stt_error.code, "message": stt_error.message},
+                )
+            )
+            raise stt_error from src_error
 
         self.event_callback(
             PipelineEvent(
@@ -253,11 +269,19 @@ class PipelineRun:
                 language=self.language,
                 agent_id=self.pipeline.conversation_engine,
             )
-        except Exception as intent_error:
-            raise IntentRecognitionError(
+        except Exception as src_error:
+            intent_error = IntentRecognitionError(
                 code="intent-failed",
                 message="Unexpected error during intent recognition",
-            ) from intent_error
+            )
+            _LOGGER.exception(intent_error.message)
+            self.event_callback(
+                PipelineEvent(
+                    PipelineEventType.ERROR,
+                    {"code": intent_error.code, "message": intent_error.message},
+                )
+            )
+            raise intent_error from src_error
 
         self.event_callback(
             PipelineEvent(
@@ -292,10 +316,19 @@ class PipelineRun:
                     engine=self.pipeline.tts_engine,
                 ),
             )
-        except Exception as tts_error:
-            raise TextToSpeechError(
-                code="tts-failed", message="Unexpected error during text to speech"
-            ) from tts_error
+        except Exception as src_error:
+            tts_error = TextToSpeechError(
+                code="tts-failed",
+                message="Unexpected error during text to speech",
+            )
+            _LOGGER.exception(tts_error.message)
+            self.event_callback(
+                PipelineEvent(
+                    PipelineEventType.ERROR,
+                    {"code": tts_error.code, "message": tts_error.message},
+                )
+            )
+            raise tts_error from src_error
 
         self.event_callback(
             PipelineEvent(
