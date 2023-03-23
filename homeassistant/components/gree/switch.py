@@ -105,6 +105,6 @@ class GreeSwitch(GreeEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        self.coordinator.device.set_property(self.entity_description.property, 0)
+        setattr(self.coordinator.device, self.entity_description.key, False)
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
