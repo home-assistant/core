@@ -5,20 +5,14 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.core import HomeAssistant, Context
-from homeassistant.setup import async_setup_component
 from homeassistant.components import stt
-from homeassistant.components.voice_assistant.pipeline import (
-    Pipeline,
-    PipelineEventType,
-    PipelineRun,
-)
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from tests.components.tts.conftest import (  # noqa: F401, pylint: disable=unused-import
     mock_get_cache_files,
     mock_init_cache_dir,
 )
-
 from tests.typing import WebSocketGenerator
 
 _TRANSCRIPT = "test transcript"
@@ -170,6 +164,8 @@ async def test_audio_pipeline(
         {
             "id": 5,
             "type": "voice_assistant/run",
+            "start_stage": "stt",
+            "end_stage": "tts",
         }
     )
 
@@ -278,7 +274,9 @@ async def test_conversation_timeout(
             {
                 "id": 5,
                 "type": "voice_assistant/run",
-                "intent_input": "Are the lights on?",
+                "start_stage": "intent",
+                "end_stage": "intent",
+                "input": {"text": "Are the lights on?"},
                 "timeout": 0.00001,
             }
         )
@@ -319,14 +317,16 @@ async def test_text_pipeline_timeout(
         await asyncio.sleep(3600)
 
     with patch(
-        "homeassistant.components.voice_assistant.pipeline.TextPipelineRequest._execute",
+        "homeassistant.components.voice_assistant.pipeline.PipelineInput._execute",
         new=sleepy_run,
     ):
         await client.send_json(
             {
                 "id": 5,
                 "type": "voice_assistant/run",
-                "intent_input": "Are the lights on?",
+                "start_stage": "intent",
+                "end_stage": "intent",
+                "input": {"text": "Are the lights on?"},
                 "timeout": 0.0001,
             }
         )
@@ -351,13 +351,15 @@ async def test_audio_pipeline_timeout(
         await asyncio.sleep(3600)
 
     with patch(
-        "homeassistant.components.voice_assistant.pipeline.AudioPipelineRequest._execute",
+        "homeassistant.components.voice_assistant.pipeline.PipelineInput._execute",
         new=sleepy_run,
     ):
         await client.send_json(
             {
                 "id": 5,
                 "type": "voice_assistant/run",
+                "start_stage": "stt",
+                "end_stage": "tts",
                 "timeout": 0.0001,
             }
         )
@@ -387,6 +389,8 @@ async def test_stt_provider_missing(
             {
                 "id": 5,
                 "type": "voice_assistant/run",
+                "start_stage": "stt",
+                "end_stage": "tts",
             }
         )
 
@@ -441,6 +445,8 @@ async def test_stt_stream_failed(
             {
                 "id": 5,
                 "type": "voice_assistant/run",
+                "start_stage": "stt",
+                "end_stage": "tts",
             }
         )
 
