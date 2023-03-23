@@ -34,7 +34,6 @@ class SnapcastConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             host = user_input[CONF_HOST]
             port = user_input[CONF_PORT]
-            client = None
 
             # Attempt to create the server - make sure it's going to work
             try:

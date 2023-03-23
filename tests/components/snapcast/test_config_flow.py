@@ -38,7 +38,7 @@ async def test_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "create_entry"
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert (
         result["title"] == f"{TEST_CONNECTION[CONF_HOST]}:{TEST_CONNECTION[CONF_PORT]}"
     )
@@ -102,7 +102,7 @@ async def test_import(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "create_entry"
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert (
         result["title"] == f"{TEST_CONNECTION[CONF_HOST]}:{TEST_CONNECTION[CONF_PORT]}"
     )
