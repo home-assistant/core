@@ -180,7 +180,6 @@ class PipelineRun:
         self,
         metadata: stt.SpeechMetadata,
         stream: AsyncIterable[bytes],
-        binary_handler_id: int,
     ) -> str:
         """Run speech to text portion of pipeline. Returns the spoken text."""
         engine = self.pipeline.stt_engine or "default"
@@ -190,7 +189,6 @@ class PipelineRun:
                 {
                     "engine": engine,
                     "metadata": asdict(metadata),
-                    "handler_id": binary_handler_id,
                 },
             )
         )
@@ -344,9 +342,6 @@ class PipelineRun:
 class PipelineInput:
     """Input to a pipeline run."""
 
-    binary_handler_id: int | None = None
-    """Id of binary websocket handler. Required when start_stage = stt."""
-
     stt_metadata: stt.SpeechMetadata | None = None
     """Metadata of stt input audio. Required when start_stage = stt."""
 
@@ -380,11 +375,11 @@ class PipelineInput:
         # Speech to text
         intent_input = self.intent_input
         if current_stage == PipelineStage.STT:
-            assert self.binary_handler_id is not None
             assert self.stt_metadata is not None
             assert self.stt_stream is not None
             intent_input = await run.speech_to_text(
-                self.stt_metadata, self.stt_stream, self.binary_handler_id
+                self.stt_metadata,
+                self.stt_stream,
             )
             current_stage = PipelineStage.INTENT
 
@@ -408,11 +403,6 @@ class PipelineInput:
     def _validate(self, stage: PipelineStage):
         """Validate pipeline input against start stage."""
         if stage == PipelineStage.STT:
-            if self.binary_handler_id is None:
-                raise PipelineRunValidationError(
-                    "binary_handler_id is required for speech to text"
-                )
-
             if self.stt_metadata is None:
                 raise PipelineRunValidationError(
                     "stt_metadata is required for speech to text"

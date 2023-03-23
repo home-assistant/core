@@ -173,6 +173,10 @@ async def test_audio_pipeline(
     msg = await client.receive_json()
     assert msg["success"]
 
+    # handler id
+    msg = await client.receive_json()
+    assert msg["event"]["handler_id"] == 1
+
     # run start
     msg = await client.receive_json()
     assert msg["event"]["type"] == "run-start"
@@ -194,7 +198,6 @@ async def test_audio_pipeline(
             "language": "en",
             "sample_rate": 16000,
         },
-        "handler_id": 1,
     }
 
     # End of audio stream (handler id + empty payload)
@@ -414,14 +417,14 @@ async def test_audio_pipeline_timeout(
         msg = await client.receive_json()
         assert msg["success"]
 
+        # handler id
+        msg = await client.receive_json()
+        assert msg["event"]["handler_id"] == 1
+
         # timeout error
         msg = await client.receive_json()
         assert not msg["success"]
         assert msg["error"]["code"] == "timeout"
-
-        # timeout error
-        # msg = await client.receive_json()
-        # assert msg["event"]["type"] == "timeout"
 
 
 async def test_stt_provider_missing(
@@ -448,6 +451,10 @@ async def test_stt_provider_missing(
         msg = await client.receive_json()
         assert msg["success"]
 
+        # handler id
+        msg = await client.receive_json()
+        assert msg["event"]["handler_id"] == 1
+
         # run start
         msg = await client.receive_json()
         assert msg["event"]["type"] == "run-start"
@@ -469,7 +476,6 @@ async def test_stt_provider_missing(
                 "language": "en",
                 "sample_rate": 16000,
             },
-            "handler_id": 1,
         }
 
         # End of audio stream (handler id + empty payload)
@@ -505,6 +511,10 @@ async def test_stt_stream_failed(
         msg = await client.receive_json()
         assert msg["success"]
 
+        # handler id
+        msg = await client.receive_json()
+        assert msg["event"]["handler_id"] == 1
+
         # run start
         msg = await client.receive_json()
         assert msg["event"]["type"] == "run-start"
@@ -526,7 +536,6 @@ async def test_stt_stream_failed(
                 "language": "en",
                 "sample_rate": 16000,
             },
-            "handler_id": 1,
         }
 
         # End of audio stream (handler id + empty payload)

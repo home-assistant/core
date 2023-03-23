@@ -63,6 +63,7 @@ async def websocket_run(
     timeout = msg.get("timeout", DEFAULT_TIMEOUT)
     start_stage = PipelineStage(msg["start_stage"])
     end_stage = PipelineStage(msg["end_stage"])
+    handler_id: int | None = None
     unregister_handler: Callable[[], None] | None = None
 
     # Arguments to PipelineInput
@@ -86,8 +87,6 @@ async def websocket_run(
         handler_id, unregister_handler = connection.async_register_binary_handler(
             handle_binary
         )
-
-        input_args["binary_handler_id"] = handler_id
 
         # Audio input must be raw PCM at 16Khz with 16-bit mono samples
         input_args["stt_metadata"] = stt.SpeechMetadata(
@@ -127,6 +126,10 @@ async def websocket_run(
 
     # Confirm subscription
     connection.send_result(msg["id"])
+
+    if handler_id is not None:
+        # Send handler id to client
+        connection.send_event(msg["id"], {"handler_id": handler_id})
 
     try:
         # Task contains a timeout
