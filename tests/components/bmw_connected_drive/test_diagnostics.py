@@ -4,7 +4,7 @@ import json
 import os
 import time
 
-from freezegun import freeze_time
+import pytest
 
 from homeassistant.components.bmw_connected_drive.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -20,7 +20,7 @@ from tests.components.diagnostics import (
 from tests.typing import ClientSessionGenerator
 
 
-@freeze_time(datetime.datetime(2022, 7, 10, 11))
+@pytest.mark.freeze_time(datetime.datetime(2022, 7, 10, 11))
 async def test_config_entry_diagnostics(
     hass: HomeAssistant, hass_client: ClientSessionGenerator, bmw_fixture
 ) -> None:
@@ -43,7 +43,7 @@ async def test_config_entry_diagnostics(
     assert diagnostics == diagnostics_fixture
 
 
-@freeze_time(datetime.datetime(2022, 7, 10, 11))
+@pytest.mark.freeze_time(datetime.datetime(2022, 7, 10, 11))
 async def test_device_diagnostics(
     hass: HomeAssistant, hass_client: ClientSessionGenerator, bmw_fixture
 ) -> None:
@@ -72,7 +72,7 @@ async def test_device_diagnostics(
     assert diagnostics == diagnostics_fixture
 
 
-@freeze_time(datetime.datetime(2022, 7, 10, 11))
+@pytest.mark.freeze_time(datetime.datetime(2022, 7, 10, 11))
 async def test_device_diagnostics_vehicle_not_found(
     hass: HomeAssistant, hass_client: ClientSessionGenerator, bmw_fixture
 ) -> None:
