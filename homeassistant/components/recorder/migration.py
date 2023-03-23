@@ -28,6 +28,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.ulid import ulid_to_bytes
 
+from .auto_repairs.events.schema import (
+    correct_db_schema as events_correct_db_schema,
+    validate_db_schema as events_validate_db_schema,
+)
 from .auto_repairs.states.schema import (
     correct_db_schema as states_correct_db_schema,
     validate_db_schema as states_validate_db_schema,
@@ -199,6 +203,7 @@ def _find_schema_errors(
     schema_errors: set[str] = set()
     schema_errors |= statistics_validate_db_schema(instance)
     schema_errors |= states_validate_db_schema(instance)
+    schema_errors |= events_validate_db_schema(instance)
     return schema_errors
 
 
@@ -250,6 +255,7 @@ def migrate_schema(
         )
         statistics_correct_db_schema(instance, schema_errors)
         states_correct_db_schema(instance, schema_errors)
+        events_correct_db_schema(instance, schema_errors)
 
     if current_version != SCHEMA_VERSION:
         instance.queue_task(PostSchemaMigrationTask(current_version, SCHEMA_VERSION))
