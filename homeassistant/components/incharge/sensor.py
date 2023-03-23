@@ -5,6 +5,7 @@ import datetime
 import logging
 
 import async_timeout
+from incharge.api import InCharge
 import requests
 
 from homeassistant.components.sensor import (
@@ -30,8 +31,8 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = datetime.timedelta(minutes=5)
 
-SENSOR_TYPES: dict[str, SensorEntityDescription] = {
-    "total_energy_consumption": SensorEntityDescription(
+SENSOR_TYPES: list[SensorEntityDescription] = [
+    SensorEntityDescription(
         key="total_energy_consumption",
         name="Total Energy Consumption",
         suggested_display_precision=2,
@@ -39,7 +40,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     )
-}
+]
 
 
 async def async_setup_entry(
@@ -49,7 +50,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the InCharge sensor."""
     # Add entities for each charging station
-    incharge_data_coordinator = hass.data.setdefault(DOMAIN, {})[config_entry.entry_id]
+    incharge_data_coordinator = hass.data[DOMAIN][config_entry.entry_id]
     response = await hass.async_add_executor_job(
         incharge_data_coordinator.incharge_api.get_stations
     )
@@ -61,7 +62,7 @@ async def async_setup_entry(
                 unique_id=f"{station['name']}-{description.name}",
                 description=description,
             )
-            for _, description in SENSOR_TYPES.items()
+            for description in SENSOR_TYPES
         ]
         async_add_entities(entities, update_before_add=True)
 
@@ -72,7 +73,11 @@ class InChargeEntity(CoordinatorEntity, SensorEntity):
     entity_description: SensorEntityDescription
 
     def __init__(
-        self, coordinator, station_id, unique_id, description: SensorEntityDescription
+        self,
+        coordinator: InChargeDataCoordinator,
+        station_id: str,
+        unique_id: str,
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize a InCharge sensor."""
         super().__init__(coordinator, context=station_id)
@@ -93,15 +98,13 @@ class InChargeEntity(CoordinatorEntity, SensorEntity):
     def native_value(self) -> float:
         """Return the state of the sensor."""
         result = self.coordinator.data[self.station_id][self.entity_description.key]
-        if self.entity_description.suggested_display_precision is not None:
-            result = round(result, self.entity_description.suggested_display_precision)
         return result
 
 
 class InChargeDataCoordinator(DataUpdateCoordinator):
     """The class for handling data retrieval."""
 
-    def __init__(self, hass, incharge_api):
+    def __init__(self, hass: HomeAssistant, incharge_api: InCharge) -> None:
         """Initialize the InCharge data coordinator."""
         super().__init__(
             hass,

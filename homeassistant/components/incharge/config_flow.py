@@ -46,8 +46,6 @@ class InChargeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self.api = InCharge(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
         login_response = await self.hass.async_add_executor_job(self.api.authenticate)
-        if login_response.status_code == HTTPStatus.UNAUTHORIZED:
-            return self._async_show_user_form({"base": "invalid_auth"})
         if login_response.status_code == HTTPStatus.NOT_FOUND:
             return self._async_show_user_form({"base": "cannot_connect"})
         if login_response.status_code != HTTPStatus.OK:
