@@ -68,13 +68,13 @@ class PipelineEventType(StrEnum):
     """Event types emitted during a pipeline run."""
 
     RUN_START = "run-start"
-    RUN_FINISH = "run-finish"
+    RUN_END = "run-end"
     STT_START = "stt-start"
-    STT_FINISH = "stt-finish"
+    STT_END = "stt-end"
     INTENT_START = "intent-start"
-    INTENT_FINISH = "intent-finish"
+    INTENT_END = "intent-end"
     TTS_START = "tts-start"
-    TTS_FINISH = "tts-finish"
+    TTS_END = "tts-end"
     ERROR = "error"
 
 
@@ -173,11 +173,11 @@ class PipelineRun:
             )
         )
 
-    def finish(self):
-        """Emit run finish event."""
+    def end(self):
+        """Emit run end event."""
         self.event_callback(
             PipelineEvent(
-                PipelineEventType.RUN_FINISH,
+                PipelineEventType.RUN_END,
             )
         )
 
@@ -238,7 +238,7 @@ class PipelineRun:
 
         self.event_callback(
             PipelineEvent(
-                PipelineEventType.STT_FINISH,
+                PipelineEventType.STT_END,
                 {
                     "stt_output": {
                         "text": result.text,
@@ -288,7 +288,7 @@ class PipelineRun:
 
         self.event_callback(
             PipelineEvent(
-                PipelineEventType.INTENT_FINISH,
+                PipelineEventType.INTENT_END,
                 {"intent_output": conversation_result.as_dict()},
             )
         )
@@ -335,7 +335,7 @@ class PipelineRun:
 
         self.event_callback(
             PipelineEvent(
-                PipelineEventType.TTS_FINISH,
+                PipelineEventType.TTS_END,
                 {"tts_output": asdict(tts_media)},
             )
         )
@@ -403,7 +403,7 @@ class PipelineInput:
                     assert tts_input is not None
                     await run.text_to_speech(tts_input)
 
-        run.finish()
+        run.end()
 
     def _validate(self, stage: PipelineStage):
         """Validate pipeline input against start stage."""

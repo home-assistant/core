@@ -128,7 +128,7 @@ async def test_text_only_pipeline(
     }
 
     msg = await client.receive_json()
-    assert msg["event"]["type"] == "intent-finish"
+    assert msg["event"]["type"] == "intent-end"
     assert msg["event"]["data"] == {
         "intent_output": {
             "response": {
@@ -147,9 +147,9 @@ async def test_text_only_pipeline(
         }
     }
 
-    # run finish
+    # run end
     msg = await client.receive_json()
-    assert msg["event"]["type"] == "run-finish"
+    assert msg["event"]["type"] == "run-end"
     assert msg["event"]["data"] == {}
 
 
@@ -204,7 +204,7 @@ async def test_audio_pipeline(
     await client.send_bytes(b"1")
 
     msg = await client.receive_json()
-    assert msg["event"]["type"] == "stt-finish"
+    assert msg["event"]["type"] == "stt-end"
     assert msg["event"]["data"] == {
         "stt_output": {"text": _TRANSCRIPT},
     }
@@ -218,7 +218,7 @@ async def test_audio_pipeline(
     }
 
     msg = await client.receive_json()
-    assert msg["event"]["type"] == "intent-finish"
+    assert msg["event"]["type"] == "intent-end"
     assert msg["event"]["data"] == {
         "intent_output": {
             "response": {
@@ -246,7 +246,7 @@ async def test_audio_pipeline(
     }
 
     msg = await client.receive_json()
-    assert msg["event"]["type"] == "tts-finish"
+    assert msg["event"]["type"] == "tts-end"
     assert msg["event"]["data"] == {
         "tts_output": {
             "url": f"/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_{hass.config.language}_-_demo.mp3",
@@ -254,9 +254,9 @@ async def test_audio_pipeline(
         },
     }
 
-    # run finish
+    # run end
     msg = await client.receive_json()
-    assert msg["event"]["type"] == "run-finish"
+    assert msg["event"]["type"] == "run-end"
     assert msg["event"]["data"] == {}
 
 
