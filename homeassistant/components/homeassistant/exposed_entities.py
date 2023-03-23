@@ -18,7 +18,7 @@ from homeassistant.helpers.storage import Store
 
 from .const import DATA_EXPOSED_ENTITIES, DOMAIN
 
-KNOWN_ASSISTANTS = ("cloud.alexa",)
+KNOWN_ASSISTANTS = ("cloud.alexa", "cloud.google_assistant")
 
 STORAGE_KEY = f"{DOMAIN}.exposed_entities"
 STORAGE_VERSION = 1
@@ -111,11 +111,11 @@ class ExposedEntities:
             return
 
         if (
-            assistant_options := registry_entry.options.get(assistant)
-        ) and assistant_options["should_expose"] == should_expose:
+            assistant_options := registry_entry.options.get(assistant, {})
+        ) and assistant_options.get("should_expose") == should_expose:
             return
 
-        assistant_options = {"should_expose": should_expose}
+        assistant_options = assistant_options | {"should_expose": should_expose}
         entity_registry.async_update_entity_options(
             entity_id, assistant, assistant_options
         )
@@ -156,15 +156,17 @@ class ExposedEntities:
             return False
 
         if assistant in registry_entry.options:
-            should_expose = registry_entry.options[assistant]["should_expose"]
-            return should_expose
+            if "should_expose" in registry_entry.options[assistant]:
+                should_expose = registry_entry.options[assistant]["should_expose"]
+                return should_expose
 
         if (prefs := self._assistants.get(assistant)) and prefs.expose_new:
             should_expose = self._is_default_exposed(entity_id, registry_entry)
         else:
             should_expose = False
 
-        assistant_options = {"should_expose": should_expose}
+        assistant_options = registry_entry.options.get(assistant, {})
+        assistant_options = assistant_options | {"should_expose": should_expose}
         entity_registry.async_update_entity_options(
             entity_id, assistant, assistant_options
         )

@@ -23,20 +23,22 @@ from homeassistant.components.google_assistant import helpers as google_helpers
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.location import async_detect_location_info
 
 from .const import (
     DOMAIN,
     PREF_ALEXA_REPORT_STATE,
+    PREF_DISABLE_2FA,
     PREF_ENABLE_ALEXA,
     PREF_ENABLE_GOOGLE,
-    PREF_GOOGLE_DEFAULT_EXPOSE,
     PREF_GOOGLE_REPORT_STATE,
     PREF_GOOGLE_SECURE_DEVICES_PIN,
     PREF_TTS_DEFAULT_VOICE,
     REQUEST_TIMEOUT,
 )
+from .google_config import CLOUD_GOOGLE
 from .repairs import async_manage_legacy_subscription_issue
 from .subscription import async_subscription_info
 
@@ -348,7 +350,6 @@ async def websocket_subscription(
         vol.Optional(PREF_ENABLE_ALEXA): bool,
         vol.Optional(PREF_ALEXA_REPORT_STATE): bool,
         vol.Optional(PREF_GOOGLE_REPORT_STATE): bool,
-        vol.Optional(PREF_GOOGLE_DEFAULT_EXPOSE): [str],
         vol.Optional(PREF_GOOGLE_SECURE_DEVICES_PIN): vol.Any(None, str),
         vol.Optional(PREF_TTS_DEFAULT_VOICE): vol.All(
             vol.Coerce(tuple), vol.In(MAP_VOICE)
@@ -555,8 +556,7 @@ async def google_assistant_list(
     {
         "type": "cloud/google_assistant/entities/update",
         "entity_id": str,
-        vol.Optional("should_expose"): vol.Any(None, bool),
-        vol.Optional("disable_2fa"): bool,
+        vol.Optional(PREF_DISABLE_2FA): bool,
     }
 )
 @websocket_api.async_response
@@ -566,17 +566,29 @@ async def google_assistant_update(
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Update google assistant config."""
-    cloud = hass.data[DOMAIN]
-    changes = dict(msg)
-    changes.pop("type")
-    changes.pop("id")
+    """Update google assistant entity config."""
+    entity_registry = er.async_get(hass)
+    entity_id: str = msg["entity_id"]
 
-    await cloud.client.prefs.async_update_google_entity_config(**changes)
+    if not (registry_entry := entity_registry.async_get(entity_id)):
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_NOT_ALLOWED,
+            f"can't configure {entity_id}",
+        )
+        return
 
-    connection.send_result(
-        msg["id"], cloud.client.prefs.google_entity_configs.get(msg["entity_id"])
+    disable_2fa = msg[PREF_DISABLE_2FA]
+    if (
+        assistant_options := registry_entry.options.get(CLOUD_GOOGLE, {})
+    ) and assistant_options.get(PREF_DISABLE_2FA) == disable_2fa:
+        return
+
+    assistant_options = assistant_options | {PREF_DISABLE_2FA: disable_2fa}
+    entity_registry.async_update_entity_options(
+        entity_id, CLOUD_GOOGLE, assistant_options
     )
+    connection.send_result(msg["id"])
 
 
 @websocket_api.require_admin

@@ -400,7 +400,6 @@ async def test_websocket_status(
             "alexa_enabled": True,
             "cloudhooks": {},
             "google_enabled": True,
-            "google_entity_configs": {},
             "google_secure_devices_pin": None,
             "google_default_expose": None,
             "alexa_default_expose": None,
@@ -520,7 +519,6 @@ async def test_websocket_update_preferences(
             "alexa_enabled": False,
             "google_enabled": False,
             "google_secure_devices_pin": "1234",
-            "google_default_expose": ["light", "switch"],
             "tts_default_voice": ["en-GB", "male"],
         }
     )
@@ -530,7 +528,6 @@ async def test_websocket_update_preferences(
     assert not setup_api.google_enabled
     assert not setup_api.alexa_enabled
     assert setup_api.google_secure_devices_pin == "1234"
-    assert setup_api.google_default_expose == ["light", "switch"]
     assert setup_api.tts_default_voice == ("en-GB", "male")
 
 
@@ -715,44 +712,41 @@ async def test_list_google_entities(
 
 
 async def test_update_google_entity(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, setup_api, mock_cloud_login
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    setup_api,
+    mock_cloud_login,
 ) -> None:
     """Test that we can update config of a Google entity."""
+    entry = entity_registry.async_get_or_create(
+        "light", "test", "unique", suggested_object_id="kitchen"
+    )
     client = await hass_ws_client(hass)
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 5,
             "type": "cloud/google_assistant/entities/update",
             "entity_id": "light.kitchen",
-            "should_expose": False,
             "disable_2fa": False,
         }
     )
     response = await client.receive_json()
-
     assert response["success"]
-    prefs = hass.data[DOMAIN].client.prefs
-    assert prefs.google_entity_configs["light.kitchen"] == {
-        "should_expose": False,
-        "disable_2fa": False,
-    }
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
-            "type": "cloud/google_assistant/entities/update",
-            "entity_id": "light.kitchen",
-            "should_expose": None,
+            "type": "homeassistant/expose_entity",
+            "assistants": ["cloud.google_assistant"],
+            "entity_ids": [entry.entity_id],
+            "should_expose": False,
         }
     )
     response = await client.receive_json()
-
     assert response["success"]
-    prefs = hass.data[DOMAIN].client.prefs
-    assert prefs.google_entity_configs["light.kitchen"] == {
-        "should_expose": None,
-        "disable_2fa": False,
-    }
+
+    assert entity_registry.async_get(entry.entity_id).options[
+        "cloud.google_assistant"
+    ] == {"disable_2fa": False, "should_expose": False}
 
 
 async def test_list_alexa_entities(
