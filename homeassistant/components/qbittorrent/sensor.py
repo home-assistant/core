@@ -28,13 +28,14 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import (
+    DEFAULT_NAME,
+    SENSOR_TYPE_CURRENT_STATUS,
+    SENSOR_TYPE_DOWNLOAD_SPEED,
+    SENSOR_TYPE_UPLOAD_SPEED,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-SENSOR_TYPE_CURRENT_STATUS = "current_status"
-SENSOR_TYPE_DOWNLOAD_SPEED = "download_speed"
-SENSOR_TYPE_UPLOAD_SPEED = "upload_speed"
-
-DEFAULT_NAME = "qBittorrent"
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
