@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_create_sensors
+# name: test_create_sensors[mock_heat_meter_response0]
   list([
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -276,7 +276,7 @@
       'entity_id': 'sensor.heat_meter_meter_date_time',
       'last_changed': <ANY>,
       'last_updated': <ANY>,
-      'state': '2022-05-20T02:41:17+00:00',
+      'state': '2022-05-19T19:41:17+00:00',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -302,8 +302,22 @@
     }),
   ])
 # ---
-# name: test_sensors_gj
+# name: test_create_sensors[mock_heat_meter_response1]
   list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'energy',
+        'friendly_name': 'Heat Meter Heat usage MWh',
+        'icon': 'mdi:fire',
+        'state_class': <SensorStateClass.TOTAL: 'total'>,
+        'unit_of_measurement': <UnitOfEnergy.MEGA_WATT_HOUR: 'MWh'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.heat_meter_heat_usage_mwh',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': '123.0',
+    }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'device_class': 'volume',
@@ -321,26 +335,12 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'device_class': 'energy',
-        'friendly_name': 'Heat Meter Heat usage GJ',
+        'friendly_name': 'Heat Meter Heat previous year MWh',
         'icon': 'mdi:fire',
-        'state_class': <SensorStateClass.TOTAL: 'total'>,
-        'unit_of_measurement': <UnitOfEnergy.GIGA_JOULE: 'GJ'>,
+        'unit_of_measurement': <UnitOfEnergy.MEGA_WATT_HOUR: 'MWh'>,
       }),
       'context': <ANY>,
-      'entity_id': 'sensor.heat_meter_heat_usage_gj',
-      'last_changed': <ANY>,
-      'last_updated': <ANY>,
-      'state': '123.0',
-    }),
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'device_class': 'energy',
-        'friendly_name': 'Heat Meter Heat previous year GJ',
-        'icon': 'mdi:fire',
-        'unit_of_measurement': <UnitOfEnergy.GIGA_JOULE: 'GJ'>,
-      }),
-      'context': <ANY>,
-      'entity_id': 'sensor.heat_meter_heat_previous_year_gj',
+      'entity_id': 'sensor.heat_meter_heat_previous_year_mwh',
       'last_changed': <ANY>,
       'last_updated': <ANY>,
       'state': '111.0',
@@ -579,7 +579,7 @@
       'entity_id': 'sensor.heat_meter_meter_date_time',
       'last_changed': <ANY>,
       'last_updated': <ANY>,
-      'state': '2022-05-20T02:41:17+00:00',
+      'state': '2022-05-19T19:41:17+00:00',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({

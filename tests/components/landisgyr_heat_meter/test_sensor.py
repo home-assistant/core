@@ -3,22 +3,13 @@ from dataclasses import dataclass
 import datetime
 from unittest.mock import patch
 
+import pytest
 import serial
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
 from homeassistant.components.landisgyr_heat_meter.const import DOMAIN, POLLING_INTERVAL
-from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
-    SensorDeviceClass,
-    SensorStateClass,
-)
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
-    STATE_UNAVAILABLE,
-    UnitOfEnergy,
-)
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -35,21 +26,49 @@ API_HEAT_METER_SERVICE = (
 class MockHeatMeterResponse:
     """Mock for HeatMeterResponse."""
 
-    heat_usage_gj: float
-    heat_usage_mwh: float
+    heat_usage_gj: float | None
+    heat_usage_mwh: float | None
     volume_usage_m3: float
-    heat_previous_year_gj: float
-    heat_previous_year_mwh: float
+    heat_previous_year_gj: float | None
+    heat_previous_year_mwh: float | None
     device_number: str
     meter_date_time: datetime.datetime
 
 
+@pytest.mark.parametrize(
+    "mock_heat_meter_response",
+    [
+        {
+            "heat_usage_gj": 123.0,
+            "heat_usage_mwh": None,
+            "volume_usage_m3": 456.0,
+            "heat_previous_year_gj": 111.0,
+            "heat_previous_year_mwh": None,
+            "device_number": "devicenr_789",
+            "meter_date_time": dt_util.as_utc(
+                datetime.datetime(2022, 5, 19, 19, 41, 17)
+            ),
+        },
+        {
+            "heat_usage_gj": None,
+            "heat_usage_mwh": 123.0,
+            "volume_usage_m3": 456.0,
+            "heat_previous_year_gj": None,
+            "heat_previous_year_mwh": 111.0,
+            "device_number": "devicenr_789",
+            "meter_date_time": dt_util.as_utc(
+                datetime.datetime(2022, 5, 19, 19, 41, 17)
+            ),
+        },
+    ],
+)
 @patch(API_HEAT_METER_SERVICE)
-async def test_sensors_gj(
+async def test_create_sensors(
     mock_heat_meter,
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
+    mock_heat_meter_response,
 ) -> None:
     """Test sensor."""
     entry_data = {
@@ -60,15 +79,7 @@ async def test_sensors_gj(
     mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
     mock_entry.add_to_hass(hass)
 
-    mock_heat_meter_response = MockHeatMeterResponse(
-        heat_usage_gj=123.0,
-        heat_usage_mwh=None,
-        volume_usage_m3=456.0,
-        heat_previous_year_gj=111.0,
-        heat_previous_year_mwh=None,
-        device_number="devicenr_789",
-        meter_date_time=dt_util.as_utc(datetime.datetime(2022, 5, 19, 19, 41, 17)),
-    )
+    mock_heat_meter_response = MockHeatMeterResponse(**mock_heat_meter_response)
 
     mock_heat_meter().read.return_value = mock_heat_meter_response
 
@@ -77,55 +88,6 @@ async def test_sensors_gj(
     await hass.async_block_till_done()
 
     assert hass.states.async_all() == snapshot
-
-
-@patch(API_HEAT_METER_SERVICE)
-async def test_sensors_mwh(mock_heat_meter, hass: HomeAssistant) -> None:
-    """Test sensor."""
-    entry_data = {
-        "device": "/dev/USB0",
-        "model": "LUGCUH50",
-        "device_number": "123456789",
-    }
-    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
-
-    mock_entry.add_to_hass(hass)
-
-    mock_heat_meter_response = MockHeatMeterResponse(
-        heat_usage_gj=None,
-        heat_usage_mwh=123.0,
-        volume_usage_m3=456.0,
-        heat_previous_year_gj=None,
-        heat_previous_year_mwh=111.0,
-        device_number="devicenr_789",
-        meter_date_time=dt_util.as_utc(datetime.datetime(2022, 5, 19, 19, 41, 17)),
-    )
-
-    mock_heat_meter().read.return_value = mock_heat_meter_response
-
-    await hass.config_entries.async_setup(mock_entry.entry_id)
-    await async_setup_component(hass, HA_DOMAIN, {})
-    await hass.async_block_till_done()
-
-    assert len(hass.states.async_all()) == 25
-
-    state = hass.states.get("sensor.heat_meter_heat_usage_mwh")
-    assert state
-    assert state.state == "123.0"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.MEGA_WATT_HOUR
-    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
-
-    state = hass.states.get("sensor.heat_meter_heat_previous_year_mwh")
-    assert state
-    assert state.state == "111.0"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.MEGA_WATT_HOUR
-
-    state = hass.states.get("sensor.heat_meter_heat_usage_gj")
-    assert not state
-
-    state = hass.states.get("sensor.heat_meter_heat_previous_year_gj")
-    assert not state
 
 
 @patch(API_HEAT_METER_SERVICE)

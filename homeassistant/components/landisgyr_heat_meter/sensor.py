@@ -323,12 +323,12 @@ class HeatMeterSensor(
         self.entity_description = description
         self._attr_device_info = device
 
-        # Some meters will return MWh, others will return GJ.
         if (
             description.native_unit_of_measurement
             in {UnitOfEnergy.GIGA_JOULE, UnitOfEnergy.MEGA_WATT_HOUR}
             and self.native_value is None
         ):
+            # Some meters will return MWh, others will return GJ.
             self._attr_entity_registry_enabled_default = False
 
     @property
