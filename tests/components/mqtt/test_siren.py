@@ -19,9 +19,9 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .test_common import (
+    help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
@@ -86,13 +86,9 @@ async def async_turn_off(
     await hass.services.async_call(siren.DOMAIN, SERVICE_TURN_OFF, data, blocking=True)
 
 
-async def test_controlling_state_via_topic(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
-) -> None:
-    """Test the controlling state via topic."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 siren.DOMAIN: {
@@ -103,10 +99,14 @@ async def test_controlling_state_via_topic(
                     "payload_off": 0,
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_controlling_state_via_topic(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
+    """Test the controlling state via topic."""
+    await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("siren.test")
     assert state.state == STATE_UNKNOWN
@@ -123,13 +123,9 @@ async def test_controlling_state_via_topic(
     assert state.state == STATE_OFF
 
 
-async def test_sending_mqtt_commands_and_optimistic(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
-) -> None:
-    """Test the sending MQTT commands in optimistic mode."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 siren.DOMAIN: {
@@ -140,10 +136,15 @@ async def test_sending_mqtt_commands_and_optimistic(
                     "qos": "2",
                 }
             }
-        },
-    )
+        }
+    ],
+)
+async def test_sending_mqtt_commands_and_optimistic(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
+    """Test the sending MQTT commands in optimistic mode."""
     await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("siren.test")
     assert state.state == STATE_OFF
@@ -167,15 +168,9 @@ async def test_sending_mqtt_commands_and_optimistic(
     assert state.state == STATE_OFF
 
 
-async def test_controlling_state_via_topic_and_json_message(
-    hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test the controlling state via topic and JSON message."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 siren.DOMAIN: {
@@ -187,10 +182,16 @@ async def test_controlling_state_via_topic_and_json_message(
                     "state_value_template": "{{ value_json.val }}",
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_controlling_state_via_topic_and_json_message(
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the controlling state via topic and JSON message."""
+    await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("siren.test")
     assert state.state == STATE_UNKNOWN
@@ -210,15 +211,9 @@ async def test_controlling_state_via_topic_and_json_message(
     assert state.state == STATE_OFF
 
 
-async def test_controlling_state_and_attributes_with_json_message_without_template(
-    hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test the controlling state via topic and JSON message without a value template."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 siren.DOMAIN: {
@@ -230,10 +225,16 @@ async def test_controlling_state_and_attributes_with_json_message_without_templa
                     "available_tones": ["ping", "siren", "bell"],
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_controlling_state_and_attributes_with_json_message_without_template(
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the controlling state via topic and JSON message without a value template."""
+    await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("siren.test")
     assert state.state == STATE_UNKNOWN
@@ -292,31 +293,41 @@ async def test_controlling_state_and_attributes_with_json_message_without_templa
     assert state.attributes.get(siren.ATTR_VOLUME_LEVEL) == 0.6
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            siren.DOMAIN,
+            {
+                mqtt.DOMAIN: {
+                    siren.DOMAIN: {
+                        "command_topic": "command-topic",
+                    }
+                }
+            },
+            (
+                {
+                    "name": "test1",
+                    "available_tones": ["ping", "siren", "bell"],
+                    "support_duration": False,
+                },
+                {
+                    "name": "test2",
+                    "available_tones": ["ping", "siren", "bell"],
+                    "support_volume_set": False,
+                },
+                {
+                    "name": "test3",
+                },
+            ),
+        )
+    ],
+)
 async def test_filtering_not_supported_attributes_optimistic(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test setting attributes with support flags optimistic."""
-    config = {
-        "command_topic": "command-topic",
-        "available_tones": ["ping", "siren", "bell"],
-    }
-    config1 = copy.deepcopy(config)
-    config1["name"] = "test1"
-    config1["support_duration"] = False
-    config2 = copy.deepcopy(config)
-    config2["name"] = "test2"
-    config2["support_volume_set"] = False
-    config3 = copy.deepcopy(config)
-    config3["name"] = "test3"
-    del config3["available_tones"]
-
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
-        {mqtt.DOMAIN: {siren.DOMAIN: [config1, config2, config3]}},
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+    await mqtt_mock_entry_no_yaml_config()
 
     state1 = hass.states.get("siren.test1")
     assert state1.state == STATE_OFF
@@ -377,34 +388,44 @@ async def test_filtering_not_supported_attributes_optimistic(
     assert state3.attributes.get(siren.ATTR_VOLUME_LEVEL) == 0.88
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            siren.DOMAIN,
+            {
+                mqtt.DOMAIN: {
+                    siren.DOMAIN: {
+                        "command_topic": "command-topic",
+                    }
+                }
+            },
+            (
+                {
+                    "name": "test1",
+                    "state_topic": "state-topic1",
+                    "available_tones": ["ping", "siren", "bell"],
+                    "support_duration": False,
+                },
+                {
+                    "name": "test2",
+                    "state_topic": "state-topic2",
+                    "available_tones": ["ping", "siren", "bell"],
+                    "support_volume_set": False,
+                },
+                {
+                    "name": "test3",
+                    "state_topic": "state-topic3",
+                },
+            ),
+        )
+    ],
+)
 async def test_filtering_not_supported_attributes_via_state(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test setting attributes with support flags via state."""
-    config = {
-        "command_topic": "command-topic",
-        "available_tones": ["ping", "siren", "bell"],
-    }
-    config1 = copy.deepcopy(config)
-    config1["name"] = "test1"
-    config1["state_topic"] = "state-topic1"
-    config1["support_duration"] = False
-    config2 = copy.deepcopy(config)
-    config2["name"] = "test2"
-    config2["state_topic"] = "state-topic2"
-    config2["support_volume_set"] = False
-    config3 = copy.deepcopy(config)
-    config3["name"] = "test3"
-    config3["state_topic"] = "state-topic3"
-    del config3["available_tones"]
-
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
-        {mqtt.DOMAIN: {siren.DOMAIN: [config1, config2, config3]}},
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+    await mqtt_mock_entry_no_yaml_config()
 
     state1 = hass.states.get("siren.test1")
     assert state1.state == STATE_UNKNOWN
@@ -529,13 +550,9 @@ async def test_custom_availability_payload(
     )
 
 
-async def test_custom_state_payload(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
-) -> None:
-    """Test the state payload."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 siren.DOMAIN: {
@@ -548,10 +565,14 @@ async def test_custom_state_payload(
                     "state_off": "LOW",
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_custom_state_payload(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
+    """Test the state payload."""
+    await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("siren.test")
     assert state.state == STATE_UNKNOWN
@@ -762,30 +783,36 @@ async def test_discovery_update_siren_template(
     )
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            siren.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "name": "Beer",
+                    "available_tones": ["ping", "chimes"],
+                    "command_template": "CMD: {{ value }}, DURATION: {{ duration }},"
+                    " TONE: {{ tone }}, VOLUME: {{ volume_level }}",
+                },
+                {
+                    "name": "Milk",
+                    "available_tones": ["ping", "chimes"],
+                    "command_template": "CMD: {{ value }}, DURATION: {{ duration }},"
+                    " TONE: {{ tone }}, VOLUME: {{ volume_level }}",
+                    "command_off_template": "CMD_OFF: {{ value }}",
+                },
+            ),
+        )
+    ],
+)
 async def test_command_templates(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test siren with command templates optimistic."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][siren.DOMAIN])
-    config1["name"] = "Beer"
-    config1["available_tones"] = ["ping", "chimes"]
-    config1[
-        "command_template"
-    ] = "CMD: {{ value }}, DURATION: {{ duration }}, TONE: {{ tone }}, VOLUME: {{ volume_level }}"
-
-    config2 = copy.deepcopy(config1)
-    config2["name"] = "Milk"
-    config2["command_off_template"] = "CMD_OFF: {{ value }}"
-
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
-        {mqtt.DOMAIN: {siren.DOMAIN: [config1, config2]}},
-    )
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
 
     state1 = hass.states.get("siren.beer")
     assert state1.state == STATE_OFF
