@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import timedelta
-import json
 import logging
 from typing import Any
 
@@ -10,12 +9,7 @@ import nikohomecontrol
 import voluptuous as vol
 
 # Import the device class from the component that you want to support
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    PLATFORM_SCHEMA,
-    ColorMode,
-    LightEntity,
-)
+from homeassistant.components.light import PLATFORM_SCHEMA, ColorMode, LightEntity
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
@@ -70,9 +64,6 @@ class NikoHomeControlLight(LightEntity):
         self._unique_id = f"light-{light.id}"
         self._name = light.name
         self._state = light.is_on
-        self._brightness = None
-        if light._state["type"] == 2:
-            self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
 
     @property
     def unique_id(self):
@@ -85,12 +76,6 @@ class NikoHomeControlLight(LightEntity):
         return self._name
 
     @property
-    def brightness(self):
-        """Return the brightness of the light."""
-        value = self._data.get_brightness(self._light.id)
-        return None if value == 0 else value
-
-    @property
     def is_on(self):
         """Return true if light is on."""
         return self._state
@@ -98,7 +83,7 @@ class NikoHomeControlLight(LightEntity):
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         _LOGGER.debug("Turn on: %s", self.name)
-        self._data.turn_light_on(self._light.id, kwargs.get(ATTR_BRIGHTNESS, 255))
+        self._light.turn_on()
 
     def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
@@ -141,20 +126,3 @@ class NikoHomeControlData:
             if state["id"] == aid:
                 return state["value1"] != 0
         _LOGGER.error("Failed to retrieve state off unknown light")
-
-    def get_brightness(self, aid):
-        """Find and filter brightness on action id."""
-        for state in self.data:
-            if state["id"] == aid:
-                return state["value1"] * 2.55
-        _LOGGER.error("Failed to retrieve brightness unknown light")
-
-    def turn_light_on(self, aid, brightness=255):
-        """Turn light on."""
-        obj = {
-            "cmd": "executeactions",
-            "id": aid,
-            "value1": brightness / 2.55,
-            "value2": 0,
-        }
-        self._nhc.connection.send(json.dumps(obj))
