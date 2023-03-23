@@ -1,7 +1,6 @@
 """Support for interface with a Gree climate systems."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any, cast
 
 from homeassistant.components.switch import (
@@ -17,28 +16,22 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import COORDINATORS, DISPATCH_DEVICE_DISCOVERED, DISPATCHERS, DOMAIN
 from .entity import GreeEntity
 
-
-@dataclass
-class GreeSwitchEntityDescription(SwitchEntityDescription):
-    """Describes a switch entity."""
-
-
-GREE_SWITCHES: tuple[GreeSwitchEntityDescription, ...] = (
-    GreeSwitchEntityDescription(
+GREE_SWITCHES: tuple[SwitchEntityDescription, ...] = (
+    SwitchEntityDescription(
         icon="mdi:lightbulb",
         name="Panel light",
         key="panel_light",
     ),
-    GreeSwitchEntityDescription(
+    SwitchEntityDescription(
         name="Quiet",
         key="quiet",
     ),
-    GreeSwitchEntityDescription(
+    SwitchEntityDescription(
         name="Fresh air",
         key="fresh_air",
     ),
-    GreeSwitchEntityDescription(name="XFan", key="xfan"),
-    GreeSwitchEntityDescription(
+    SwitchEntityDescription(name="XFan", key="xfan"),
+    SwitchEntityDescription(
         icon="mdi:pine-tree",
         name="Health mode",
         key="health_mode",
@@ -75,9 +68,9 @@ class GreeSwitch(GreeEntity, SwitchEntity):
     """Generic Gree entity to use with a modern style configuration."""
 
     _attr_device_class = SwitchDeviceClass.SWITCH
-    entity_description: GreeSwitchEntityDescription
+    entity_description: SwitchEntityDescription
 
-    def __init__(self, coordinator, description: GreeSwitchEntityDescription) -> None:
+    def __init__(self, coordinator, description: SwitchEntityDescription) -> None:
         """Initialize the Gree device."""
         self.entity_description = description
 
