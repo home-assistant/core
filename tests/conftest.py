@@ -1161,11 +1161,11 @@ def enable_statistics() -> bool:
 
 
 @pytest.fixture
-def enable_statistics_table_validation() -> bool:
+def enable_schema_validation() -> bool:
     """Fixture to control enabling of recorder's statistics table validation.
 
     To enable statistics table validation, tests can be marked with:
-    @pytest.mark.parametrize("enable_statistics_table_validation", [True])
+    @pytest.mark.parametrize("enable_schema_validation", [True])
     """
     return False
 
@@ -1272,7 +1272,7 @@ def hass_recorder(
     recorder_db_url: str,
     enable_nightly_purge: bool,
     enable_statistics: bool,
-    enable_statistics_table_validation: bool,
+    enable_schema_validation: bool,
     enable_migrate_context_ids: bool,
     enable_migrate_event_type_ids: bool,
     enable_migrate_entity_ids: bool,
@@ -1282,14 +1282,17 @@ def hass_recorder(
     # pylint: disable-next=import-outside-toplevel
     from homeassistant.components import recorder
 
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant.components.recorder import migration
+
     original_tz = dt_util.DEFAULT_TIME_ZONE
 
     hass = get_test_home_assistant()
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
-    stats_validate = (
-        recorder.statistics.validate_db_schema
-        if enable_statistics_table_validation
+    schema_validate = (
+        migration._find_schema_errors
+        if enable_schema_validation
         else itertools.repeat(set())
     )
     migrate_states_context_ids = (
@@ -1319,8 +1322,8 @@ def hass_recorder(
         side_effect=stats,
         autospec=True,
     ), patch(
-        "homeassistant.components.recorder.migration.statistics_validate_db_schema",
-        side_effect=stats_validate,
+        "homeassistant.components.recorder.migration._find_schema_errors",
+        side_effect=schema_validate,
         autospec=True,
     ), patch(
         "homeassistant.components.recorder.Recorder._migrate_events_context_ids",
@@ -1388,7 +1391,7 @@ async def async_setup_recorder_instance(
     recorder_db_url: str,
     enable_nightly_purge: bool,
     enable_statistics: bool,
-    enable_statistics_table_validation: bool,
+    enable_schema_validation: bool,
     enable_migrate_context_ids: bool,
     enable_migrate_event_type_ids: bool,
     enable_migrate_entity_ids: bool,
@@ -1398,13 +1401,16 @@ async def async_setup_recorder_instance(
     from homeassistant.components import recorder
 
     # pylint: disable-next=import-outside-toplevel
+    from homeassistant.components.recorder import migration
+
+    # pylint: disable-next=import-outside-toplevel
     from .components.recorder.common import async_recorder_block_till_done
 
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
-    stats_validate = (
-        recorder.statistics.validate_db_schema
-        if enable_statistics_table_validation
+    schema_validate = (
+        migration._find_schema_errors
+        if enable_schema_validation
         else itertools.repeat(set())
     )
     migrate_states_context_ids = (
@@ -1434,8 +1440,8 @@ async def async_setup_recorder_instance(
         side_effect=stats,
         autospec=True,
     ), patch(
-        "homeassistant.components.recorder.migration.statistics_validate_db_schema",
-        side_effect=stats_validate,
+        "homeassistant.components.recorder.migration._find_schema_errors",
+        side_effect=schema_validate,
         autospec=True,
     ), patch(
         "homeassistant.components.recorder.Recorder._migrate_events_context_ids",

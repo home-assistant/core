@@ -194,6 +194,340 @@ def test_compile_hourly_statistics(
 
 
 @pytest.mark.parametrize(
+    (
+        "device_class",
+        "state_unit",
+        "display_unit",
+        "statistics_unit",
+        "unit_class",
+        "mean",
+        "min",
+        "max",
+    ),
+    [
+        ("temperature", "°C", "°C", "°C", "temperature", 27.796610169491526, -10, 60),
+        ("temperature", "°F", "°F", "°F", "temperature", 27.796610169491526, -10, 60),
+    ],
+)
+def test_compile_hourly_statistics_with_some_same_last_updated(
+    hass_recorder: Callable[..., HomeAssistant],
+    caplog: pytest.LogCaptureFixture,
+    device_class,
+    state_unit,
+    display_unit,
+    statistics_unit,
+    unit_class,
+    mean,
+    min,
+    max,
+) -> None:
+    """Test compiling hourly statistics with the some of the same last updated value.
+
+    If the last updated value is the same we will have a zero duration.
+    """
+    zero = dt_util.utcnow()
+    hass = hass_recorder()
+    setup_component(hass, "sensor", {})
+    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
+    entity_id = "sensor.test1"
+    attributes = {
+        "device_class": device_class,
+        "state_class": "measurement",
+        "unit_of_measurement": state_unit,
+    }
+    attributes = dict(attributes)
+    seq = [-10, 15, 30, 60]
+
+    def set_state(entity_id, state, **kwargs):
+        """Set the state."""
+        hass.states.set(entity_id, state, **kwargs)
+        wait_recording_done(hass)
+        return hass.states.get(entity_id)
+
+    one = zero + timedelta(seconds=1 * 5)
+    two = one + timedelta(seconds=10 * 5)
+    three = two + timedelta(seconds=40 * 5)
+    four = three + timedelta(seconds=10 * 5)
+
+    states = {entity_id: []}
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=one
+    ):
+        states[entity_id].append(
+            set_state(entity_id, str(seq[0]), attributes=attributes)
+        )
+
+    # Record two states at the exact same time
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two
+    ):
+        states[entity_id].append(
+            set_state(entity_id, str(seq[1]), attributes=attributes)
+        )
+        states[entity_id].append(
+            set_state(entity_id, str(seq[2]), attributes=attributes)
+        )
+
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=three
+    ):
+        states[entity_id].append(
+            set_state(entity_id, str(seq[3]), attributes=attributes)
+        )
+
+    hist = history.get_significant_states(hass, zero, four)
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
+
+    do_adhoc_statistics(hass, start=zero)
+    wait_recording_done(hass)
+    statistic_ids = list_statistic_ids(hass)
+    assert statistic_ids == [
+        {
+            "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": display_unit,
+            "has_mean": True,
+            "has_sum": False,
+            "name": None,
+            "source": "recorder",
+            "statistics_unit_of_measurement": statistics_unit,
+            "unit_class": unit_class,
+        }
+    ]
+    stats = statistics_during_period(hass, zero, period="5minute")
+    assert stats == {
+        "sensor.test1": [
+            {
+                "start": process_timestamp(zero).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
+                "mean": pytest.approx(mean),
+                "min": pytest.approx(min),
+                "max": pytest.approx(max),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            }
+        ]
+    }
+    assert "Error while processing event StatisticsTask" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    (
+        "device_class",
+        "state_unit",
+        "display_unit",
+        "statistics_unit",
+        "unit_class",
+        "mean",
+        "min",
+        "max",
+    ),
+    [
+        ("temperature", "°C", "°C", "°C", "temperature", 60, -10, 60),
+        ("temperature", "°F", "°F", "°F", "temperature", 60, -10, 60),
+    ],
+)
+def test_compile_hourly_statistics_with_all_same_last_updated(
+    hass_recorder: Callable[..., HomeAssistant],
+    caplog: pytest.LogCaptureFixture,
+    device_class,
+    state_unit,
+    display_unit,
+    statistics_unit,
+    unit_class,
+    mean,
+    min,
+    max,
+) -> None:
+    """Test compiling hourly statistics with the all of the same last updated value.
+
+    If the last updated value is the same we will have a zero duration.
+    """
+    zero = dt_util.utcnow()
+    hass = hass_recorder()
+    setup_component(hass, "sensor", {})
+    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
+    entity_id = "sensor.test1"
+    attributes = {
+        "device_class": device_class,
+        "state_class": "measurement",
+        "unit_of_measurement": state_unit,
+    }
+    attributes = dict(attributes)
+    seq = [-10, 15, 30, 60]
+
+    def set_state(entity_id, state, **kwargs):
+        """Set the state."""
+        hass.states.set(entity_id, state, **kwargs)
+        wait_recording_done(hass)
+        return hass.states.get(entity_id)
+
+    one = zero + timedelta(seconds=1 * 5)
+    two = one + timedelta(seconds=10 * 5)
+    three = two + timedelta(seconds=40 * 5)
+    four = three + timedelta(seconds=10 * 5)
+
+    states = {entity_id: []}
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two
+    ):
+        states[entity_id].append(
+            set_state(entity_id, str(seq[0]), attributes=attributes)
+        )
+        states[entity_id].append(
+            set_state(entity_id, str(seq[1]), attributes=attributes)
+        )
+        states[entity_id].append(
+            set_state(entity_id, str(seq[2]), attributes=attributes)
+        )
+        states[entity_id].append(
+            set_state(entity_id, str(seq[3]), attributes=attributes)
+        )
+
+    hist = history.get_significant_states(hass, zero, four)
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
+
+    do_adhoc_statistics(hass, start=zero)
+    wait_recording_done(hass)
+    statistic_ids = list_statistic_ids(hass)
+    assert statistic_ids == [
+        {
+            "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": display_unit,
+            "has_mean": True,
+            "has_sum": False,
+            "name": None,
+            "source": "recorder",
+            "statistics_unit_of_measurement": statistics_unit,
+            "unit_class": unit_class,
+        }
+    ]
+    stats = statistics_during_period(hass, zero, period="5minute")
+    assert stats == {
+        "sensor.test1": [
+            {
+                "start": process_timestamp(zero).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
+                "mean": pytest.approx(mean),
+                "min": pytest.approx(min),
+                "max": pytest.approx(max),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            }
+        ]
+    }
+    assert "Error while processing event StatisticsTask" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    (
+        "device_class",
+        "state_unit",
+        "display_unit",
+        "statistics_unit",
+        "unit_class",
+        "mean",
+        "min",
+        "max",
+    ),
+    [
+        ("temperature", "°C", "°C", "°C", "temperature", 0, 60, 60),
+        ("temperature", "°F", "°F", "°F", "temperature", 0, 60, 60),
+    ],
+)
+def test_compile_hourly_statistics_only_state_is_and_end_of_period(
+    hass_recorder: Callable[..., HomeAssistant],
+    caplog: pytest.LogCaptureFixture,
+    device_class,
+    state_unit,
+    display_unit,
+    statistics_unit,
+    unit_class,
+    mean,
+    min,
+    max,
+) -> None:
+    """Test compiling hourly statistics when the only state at end of period."""
+    zero = dt_util.utcnow()
+    hass = hass_recorder()
+    setup_component(hass, "sensor", {})
+    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
+    entity_id = "sensor.test1"
+    attributes = {
+        "device_class": device_class,
+        "state_class": "measurement",
+        "unit_of_measurement": state_unit,
+    }
+    attributes = dict(attributes)
+    seq = [-10, 15, 30, 60]
+
+    def set_state(entity_id, state, **kwargs):
+        """Set the state."""
+        hass.states.set(entity_id, state, **kwargs)
+        wait_recording_done(hass)
+        return hass.states.get(entity_id)
+
+    one = zero + timedelta(seconds=1 * 5)
+    two = one + timedelta(seconds=10 * 5)
+    three = two + timedelta(seconds=40 * 5)
+    four = three + timedelta(seconds=10 * 5)
+    end = zero + timedelta(minutes=5)
+
+    states = {entity_id: []}
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=end
+    ):
+        states[entity_id].append(
+            set_state(entity_id, str(seq[0]), attributes=attributes)
+        )
+        states[entity_id].append(
+            set_state(entity_id, str(seq[1]), attributes=attributes)
+        )
+        states[entity_id].append(
+            set_state(entity_id, str(seq[2]), attributes=attributes)
+        )
+        states[entity_id].append(
+            set_state(entity_id, str(seq[3]), attributes=attributes)
+        )
+
+    hist = history.get_significant_states(hass, zero, four)
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
+
+    do_adhoc_statistics(hass, start=zero)
+    wait_recording_done(hass)
+    statistic_ids = list_statistic_ids(hass)
+    assert statistic_ids == [
+        {
+            "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": display_unit,
+            "has_mean": True,
+            "has_sum": False,
+            "name": None,
+            "source": "recorder",
+            "statistics_unit_of_measurement": statistics_unit,
+            "unit_class": unit_class,
+        }
+    ]
+    stats = statistics_during_period(hass, zero, period="5minute")
+    assert stats == {
+        "sensor.test1": [
+            {
+                "start": process_timestamp(zero).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
+                "mean": pytest.approx(mean),
+                "min": pytest.approx(min),
+                "max": pytest.approx(max),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            }
+        ]
+    }
+    assert "Error while processing event StatisticsTask" not in caplog.text
+
+
+@pytest.mark.parametrize(
     ("device_class", "state_unit", "display_unit", "statistics_unit", "unit_class"),
     [
         (None, "%", "%", "%", "unitless"),
