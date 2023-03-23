@@ -11,7 +11,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_GIID, DOMAIN, LOGGER
+from .const import CONF_GIID, DOMAIN
 from .coordinator import VerisureDataUpdateCoordinator
 
 
