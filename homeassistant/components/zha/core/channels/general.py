@@ -360,6 +360,8 @@ class OnOffChannel(ZigbeeChannel):
             )
             self.ZCL_INIT_ATTRS["backlight_mode"] = True
             self.ZCL_INIT_ATTRS["power_on_state"] = True
+            if self.cluster.endpoint.model == "TS011F":
+                self.ZCL_INIT_ATTRS["child_lock"] = True
 
     @property
     def on_off(self) -> bool | None:

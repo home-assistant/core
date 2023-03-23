@@ -16,6 +16,7 @@ from homeassistant.const import CONF_API_KEY, CONF_MONITORED_CONDITIONS, CONF_NA
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
@@ -80,6 +81,20 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Magicseaweed sensor."""
+    create_issue(
+        hass,
+        "magicseaweed",
+        "pending_removal",
+        breaks_in_ha_version="2023.3.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="pending_removal",
+    )
+    _LOGGER.warning(
+        "The Magicseaweed integration is deprecated"
+        " and will be removed in Home Assistant 2023.3"
+    )
+
     name = config.get(CONF_NAME)
     spot_id = config[CONF_SPOT_ID]
     api_key = config[CONF_API_KEY]
@@ -131,7 +146,7 @@ class MagicSeaweedSensor(SensorEntity):
         unit_system,
         description: SensorEntityDescription,
         hour=None,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.client_name = name
@@ -168,12 +183,18 @@ class MagicSeaweedSensor(SensorEntity):
         elif sensor_type == "max_breaking_swell":
             self._attr_native_value = forecast.swell_maxBreakingHeight
         elif sensor_type == "swell_forecast":
-            summary = f"{forecast.swell_minBreakingHeight} - {forecast.swell_maxBreakingHeight}"
+            summary = (
+                f"{forecast.swell_minBreakingHeight} -"
+                f" {forecast.swell_maxBreakingHeight}"
+            )
             self._attr_native_value = summary
             if self.hour is None:
                 for hour, data in self.data.hourly.items():
                     occurs = hour
-                    hr_summary = f"{data.swell_minBreakingHeight} - {data.swell_maxBreakingHeight} {data.swell_unit}"
+                    hr_summary = (
+                        f"{data.swell_minBreakingHeight} -"
+                        f" {data.swell_maxBreakingHeight} {data.swell_unit}"
+                    )
                     self._attr_extra_state_attributes[occurs] = hr_summary
 
         if sensor_type != "swell_forecast":

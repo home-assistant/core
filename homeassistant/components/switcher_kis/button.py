@@ -16,11 +16,12 @@ from aioswitcher.device import DeviceCategory
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -93,7 +94,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up Switcher button from config entry."""
 
-    @callback
     async def async_add_buttons(coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Get remote and add button from Switcher device."""
         if coordinator.data.device_type.category == DeviceCategory.THERMOSTAT:
@@ -132,9 +132,7 @@ class SwitcherThermostatButtonEntity(
         self._attr_name = f"{coordinator.name} {description.name}"
         self._attr_unique_id = f"{coordinator.mac_address}-{description.key}"
         self._attr_device_info = DeviceInfo(
-            connections={
-                (device_registry.CONNECTION_NETWORK_MAC, coordinator.mac_address)
-            }
+            connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)}
         )
 
     async def async_press(self) -> None:
@@ -154,6 +152,5 @@ class SwitcherThermostatButtonEntity(
             self.coordinator.last_update_success = False
             self.async_write_ha_state()
             raise HomeAssistantError(
-                f"Call api for {self.name} failed, "
-                f"response/error: {response or error}"
+                f"Call api for {self.name} failed, response/error: {response or error}"
             )

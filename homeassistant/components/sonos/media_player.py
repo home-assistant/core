@@ -21,6 +21,7 @@ from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_ENQUEUE,
     BrowseMedia,
+    MediaPlayerDeviceClass,
     MediaPlayerEnqueue,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -205,6 +206,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.VOLUME_SET
     )
     _attr_media_content_type = MediaType.MUSIC
+    _attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
     def __init__(self, speaker: SonosSpeaker) -> None:
         """Initialize the media player entity."""
@@ -259,7 +261,8 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             "STOPPED",
         ):
             # Sonos can consider itself "paused" but without having media loaded
-            # (happens if playing Spotify and via Spotify app you pick another device to play on)
+            # (happens if playing Spotify and via Spotify app
+            # you pick another device to play on)
             if self.media.title is None:
                 return MediaPlayerState.IDLE
             return MediaPlayerState.PAUSED
@@ -300,7 +303,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         return PLAY_MODES[self.media.play_mode][0]
 
     @property
-    def repeat(self) -> str | None:
+    def repeat(self) -> RepeatMode | None:
         """Return current repeat mode."""
         sonos_repeat = PLAY_MODES[self.media.play_mode][1]
         return SONOS_TO_REPEAT[sonos_repeat]
@@ -323,7 +326,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     @property
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
-        return int(self.media.position) if self.media.position else None
+        return self.media.position
 
     @property
     def media_position_updated_at(self) -> datetime.datetime | None:
@@ -490,10 +493,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
     @soco_error()
     def play_media(  # noqa: C901
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
-        """
-        Send the play_media command to the media player.
+        """Send the play_media command to the media player.
 
         If media_id is a Plex payload, attempt Plex->Sonos playback.
 

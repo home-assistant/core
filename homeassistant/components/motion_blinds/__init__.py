@@ -3,7 +3,7 @@ import asyncio
 from datetime import timedelta
 import logging
 from socket import timeout
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from motionblinds import DEVICE_TYPES_WIFI, AsyncMotionMulticast, ParseException
 
@@ -43,20 +43,18 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
 
     def __init__(
         self,
-        hass,
-        logger,
-        coordinator_info,
+        hass: HomeAssistant,
+        logger: logging.Logger,
+        coordinator_info: dict[str, Any],
         *,
-        name,
-        update_interval=None,
-        update_method=None,
+        name: str,
+        update_interval: timedelta,
     ) -> None:
         """Initialize global data updater."""
         super().__init__(
             hass,
             logger,
             name=name,
-            update_method=update_method,
             update_interval=update_interval,
         )
 
@@ -71,8 +69,8 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
         except (timeout, ParseException):
             # let the error be logged and handled by the motionblinds library
             return {ATTR_AVAILABLE: False}
-        else:
-            return {ATTR_AVAILABLE: True}
+
+        return {ATTR_AVAILABLE: True}
 
     def update_blind(self, blind):
         """Fetch data from a blind."""
@@ -84,8 +82,8 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
         except (timeout, ParseException):
             # let the error be logged and handled by the motionblinds library
             return {ATTR_AVAILABLE: False}
-        else:
-            return {ATTR_AVAILABLE: True}
+
+        return {ATTR_AVAILABLE: True}
 
     async def _async_update_data(self):
         """Fetch the latest data from the gateway and blinds."""
@@ -135,8 +133,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 data = {**entry.data, CONF_INTERFACE: working_interface}
                 hass.config_entries.async_update_entry(entry, data=data)
                 _LOGGER.debug(
-                    "Motion Blinds interface updated from %s to %s, "
-                    "this should only occur after a network change",
+                    (
+                        "Motion Blinds interface updated from %s to %s, "
+                        "this should only occur after a network change"
+                    ),
                     multicast_interface,
                     working_interface,
                 )

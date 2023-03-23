@@ -1,5 +1,9 @@
 """Analytics helper class for the analytics integration."""
+from __future__ import annotations
+
 import asyncio
+from dataclasses import asdict as dataclass_asdict, dataclass
+from datetime import datetime
 from typing import Any
 import uuid
 
@@ -12,6 +16,10 @@ from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.energy import (
     DOMAIN as ENERGY_DOMAIN,
     is_configured as energy_is_configured,
+)
+from homeassistant.components.recorder import (
+    DOMAIN as RECORDER_DOMAIN,
+    get_instance as get_recorder_instance,
 )
 from homeassistant.const import ATTR_DOMAIN, __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant
@@ -36,13 +44,13 @@ from .const import (
     ATTR_CUSTOM_INTEGRATIONS,
     ATTR_DIAGNOSTICS,
     ATTR_ENERGY,
+    ATTR_ENGINE,
     ATTR_HEALTHY,
     ATTR_INTEGRATION_COUNT,
     ATTR_INTEGRATIONS,
-    ATTR_ONBOARDED,
     ATTR_OPERATING_SYSTEM,
-    ATTR_PREFERENCES,
     ATTR_PROTECTED,
+    ATTR_RECORDER,
     ATTR_SLUG,
     ATTR_STATE_COUNT,
     ATTR_STATISTICS,
@@ -59,6 +67,24 @@ from .const import (
 )
 
 
+@dataclass
+class AnalyticsData:
+    """Analytics data."""
+
+    onboarded: bool
+    preferences: dict[str, bool]
+    uuid: str | None
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> AnalyticsData:
+        """Initialize analytics data from a dict."""
+        return cls(
+            data["onboarded"],
+            data["preferences"],
+            data["uuid"],
+        )
+
+
 class Analytics:
     """Analytics helper class for the analytics integration."""
 
@@ -66,17 +92,13 @@ class Analytics:
         """Initialize the Analytics class."""
         self.hass: HomeAssistant = hass
         self.session = async_get_clientsession(hass)
-        self._data: dict[str, Any] = {
-            ATTR_PREFERENCES: {},
-            ATTR_ONBOARDED: False,
-            ATTR_UUID: None,
-        }
+        self._data = AnalyticsData(False, {}, None)
         self._store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
 
     @property
     def preferences(self) -> dict:
         """Return the current active preferences."""
-        preferences = self._data[ATTR_PREFERENCES]
+        preferences = self._data.preferences
         return {
             ATTR_BASE: preferences.get(ATTR_BASE, False),
             ATTR_DIAGNOSTICS: preferences.get(ATTR_DIAGNOSTICS, False),
@@ -87,12 +109,12 @@ class Analytics:
     @property
     def onboarded(self) -> bool:
         """Return bool if the user has made a choice."""
-        return self._data[ATTR_ONBOARDED]
+        return self._data.onboarded
 
     @property
-    def uuid(self) -> bool:
+    def uuid(self) -> str | None:
         """Return the uuid for the analytics integration."""
-        return self._data[ATTR_UUID]
+        return self._data.uuid
 
     @property
     def endpoint(self) -> str:
@@ -111,7 +133,7 @@ class Analytics:
         """Load preferences."""
         stored = await self._store.async_load()
         if stored:
-            self._data = stored
+            self._data = AnalyticsData.from_dict(stored)
 
         if (
             self.supervisor
@@ -122,41 +144,41 @@ class Analytics:
                 if supervisor_info[ATTR_DIAGNOSTICS] and not self.preferences.get(
                     ATTR_DIAGNOSTICS, False
                 ):
-                    self._data[ATTR_PREFERENCES][ATTR_DIAGNOSTICS] = True
+                    self._data.preferences[ATTR_DIAGNOSTICS] = True
                 elif not supervisor_info[ATTR_DIAGNOSTICS] and self.preferences.get(
                     ATTR_DIAGNOSTICS, False
                 ):
-                    self._data[ATTR_PREFERENCES][ATTR_DIAGNOSTICS] = False
+                    self._data.preferences[ATTR_DIAGNOSTICS] = False
 
     async def save_preferences(self, preferences: dict) -> None:
         """Save preferences."""
         preferences = PREFERENCE_SCHEMA(preferences)
-        self._data[ATTR_PREFERENCES].update(preferences)
-        self._data[ATTR_ONBOARDED] = True
+        self._data.preferences.update(preferences)
+        self._data.onboarded = True
 
-        await self._store.async_save(self._data)
+        await self._store.async_save(dataclass_asdict(self._data))
 
         if self.supervisor:
             await hassio.async_update_diagnostics(
                 self.hass, self.preferences.get(ATTR_DIAGNOSTICS, False)
             )
 
-    async def send_analytics(self, _=None) -> None:
+    async def send_analytics(self, _: datetime | None = None) -> None:
         """Send analytics."""
         supervisor_info = None
-        operating_system_info = {}
+        operating_system_info: dict[str, Any] = {}
 
         if not self.onboarded or not self.preferences.get(ATTR_BASE, False):
             LOGGER.debug("Nothing to submit")
             return
 
-        if self._data.get(ATTR_UUID) is None:
-            self._data[ATTR_UUID] = uuid.uuid4().hex
-            await self._store.async_save(self._data)
+        if self._data.uuid is None:
+            self._data.uuid = uuid.uuid4().hex
+            await self._store.async_save(dataclass_asdict(self._data))
 
         if self.supervisor:
             supervisor_info = hassio.get_supervisor_info(self.hass)
-            operating_system_info = hassio.get_os_info(self.hass)
+            operating_system_info = hassio.get_os_info(self.hass) or {}
 
         system_info = await async_get_system_info(self.hass)
         integrations = []
@@ -235,6 +257,15 @@ class Analytics:
                 payload[ATTR_ENERGY] = {
                     ATTR_CONFIGURED: await energy_is_configured(self.hass)
                 }
+
+            if RECORDER_DOMAIN in integrations:
+                instance = get_recorder_instance(self.hass)
+                engine = instance.database_engine
+                if engine and engine.version is not None:
+                    payload[ATTR_RECORDER] = {
+                        ATTR_ENGINE: engine.dialect.value,
+                        ATTR_VERSION: engine.version,
+                    }
 
         if self.preferences.get(ATTR_STATISTICS, False):
             payload[ATTR_STATE_COUNT] = len(self.hass.states.async_all())

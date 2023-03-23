@@ -40,7 +40,8 @@ PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         vol.Optional(CONF_OBJECT_ID): cv.string,
-        # CONF_ENABLED_BY_DEFAULT is not added by default because we are not using the common schema here
+        # CONF_ENABLED_BY_DEFAULT is not added by default because
+        # we are not using the common schema here
         vol.Optional(CONF_ENABLED_BY_DEFAULT, default=True): cv.boolean,
     }
 ).extend(MQTT_AVAILABILITY_SCHEMA.schema)
@@ -59,7 +60,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT scene through configuration.yaml and dynamically through MQTT discovery."""
+    """Set up MQTT scene through YAML and through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )

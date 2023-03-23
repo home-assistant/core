@@ -1,7 +1,7 @@
 """Update coordinator for the Bluetooth integration."""
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 import logging
 from typing import cast
 
@@ -19,7 +19,7 @@ from . import (
 )
 
 
-class BasePassiveBluetoothCoordinator:
+class BasePassiveBluetoothCoordinator(ABC):
     """Base class for passive bluetooth coordinator for bluetooth advertisements.
 
     The coordinator is responsible for tracking devices.

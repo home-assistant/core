@@ -1,6 +1,4 @@
 """Test the switchbot sensors."""
-
-
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.components.switchbot.const import DOMAIN
 from homeassistant.const import (
@@ -11,6 +9,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_SENSOR_TYPE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import WOHAND_SERVICE_INFO
@@ -19,7 +18,7 @@ from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 
-async def test_sensors(hass, entity_registry_enabled_by_default):
+async def test_sensors(hass: HomeAssistant, entity_registry_enabled_by_default) -> None:
     """Test setting up creates the sensors."""
     await async_setup_component(hass, DOMAIN, {})
     inject_bluetooth_service_info(hass, WOHAND_SERVICE_INFO)

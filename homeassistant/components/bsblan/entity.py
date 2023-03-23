@@ -1,7 +1,7 @@
 """Base entity for the BSBLAN integration."""
 from __future__ import annotations
 
-from bsblan import BSBLAN, Device, Info
+from bsblan import BSBLAN, Device, Info, StaticState
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -19,6 +19,7 @@ class BSBLANEntity(Entity):
         client: BSBLAN,
         device: Device,
         info: Info,
+        static: StaticState,
         entry: ConfigEntry,
     ) -> None:
         """Initialize an BSBLAN entity."""

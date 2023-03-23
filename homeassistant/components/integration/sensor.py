@@ -22,10 +22,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TIME_DAYS,
-    TIME_HOURS,
-    TIME_MINUTES,
-    TIME_SECONDS,
+    UnitOfTime,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -55,10 +52,10 @@ UNIT_PREFIXES = {None: 1, "k": 10**3, "M": 10**6, "G": 10**9, "T": 10**12}
 
 # SI Time prefixes
 UNIT_TIME = {
-    TIME_SECONDS: 1,
-    TIME_MINUTES: 60,
-    TIME_HOURS: 60 * 60,
-    TIME_DAYS: 24 * 60 * 60,
+    UnitOfTime.SECONDS: 1,
+    UnitOfTime.MINUTES: 60,
+    UnitOfTime.HOURS: 60 * 60,
+    UnitOfTime.DAYS: 24 * 60 * 60,
 }
 
 DEFAULT_ROUND = 3
@@ -72,7 +69,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
             vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
             vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
-            vol.Optional(CONF_UNIT_TIME, default=TIME_HOURS): vol.In(UNIT_TIME),
+            vol.Optional(CONF_UNIT_TIME, default=UnitOfTime.HOURS): vol.In(UNIT_TIME),
             vol.Remove(CONF_UNIT_OF_MEASUREMENT): cv.string,
             vol.Optional(CONF_METHOD, default=METHOD_TRAPEZOIDAL): vol.In(
                 INTEGRATION_METHODS
@@ -146,7 +143,7 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
         source_entity: str,
         unique_id: str | None,
         unit_prefix: str | None,
-        unit_time: str,
+        unit_time: UnitOfTime,
     ) -> None:
         """Initialize the integration sensor."""
         self._attr_unique_id = unique_id

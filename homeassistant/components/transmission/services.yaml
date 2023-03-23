@@ -8,12 +8,6 @@ add_torrent:
       selector:
         config_entry:
           integration: transmission
-    name:
-      name: Name
-      description: Instance name as entered during entry config
-      example: Transmission
-      selector:
-        text:
     torrent:
       name: Torrent
       description: URL, magnet link or Base64 encoded file.

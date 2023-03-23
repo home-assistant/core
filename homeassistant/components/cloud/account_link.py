@@ -38,7 +38,7 @@ async def async_provide_implementation(hass: HomeAssistant, domain: str):
     for service in services:
         if (
             service["service"] == domain
-            and CURRENT_PLAIN_VERSION >= service["min_version"]
+            and service["min_version"] <= CURRENT_PLAIN_VERSION
             and (
                 service.get("accepts_new_authorizations", True)
                 or (

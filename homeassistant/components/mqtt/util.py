@@ -84,8 +84,7 @@ def valid_subscribe_topic(topic: Any) -> str:
         if index != len(validated_topic) - 1:
             # If there are multiple wildcards, this will also trigger
             raise vol.Invalid(
-                "Multi-level wildcard must be the last "
-                "character in the topic filter."
+                "Multi-level wildcard must be the last character in the topic filter."
             )
         if len(validated_topic) > 1 and validated_topic[index - 1] != "/":
             raise vol.Invalid(
@@ -109,7 +108,7 @@ def valid_publish_topic(topic: Any) -> str:
     """Validate that we can publish using this MQTT topic."""
     validated_topic = valid_topic(topic)
     if "+" in validated_topic or "#" in validated_topic:
-        raise vol.Invalid("Wildcards can not be used in topic names")
+        raise vol.Invalid("Wildcards cannot be used in topic names")
     return validated_topic
 
 
@@ -177,7 +176,7 @@ async def async_create_certificate_temp_files(
     await hass.async_add_executor_job(_create_temp_dir_and_files)
 
 
-def get_file_path(option: str, default: str | None = None) -> Path | str | None:
+def get_file_path(option: str, default: str | None = None) -> str | None:
     """Get file path of a certificate file."""
     temp_dir = Path(tempfile.gettempdir()) / TEMP_DIR_NAME
     if not temp_dir.exists():
@@ -187,7 +186,7 @@ def get_file_path(option: str, default: str | None = None) -> Path | str | None:
     if not file_path.exists():
         return default
 
-    return temp_dir / option
+    return str(temp_dir / option)
 
 
 def migrate_certificate_file_to_content(file_name_or_auto: str) -> str | None:

@@ -1,19 +1,24 @@
 """Test deCONZ diagnostics."""
-
 from pydeconz.websocket import State
 
 from homeassistant.components.deconz.const import CONF_MASTER_GATEWAY
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, Platform
+from homeassistant.core import HomeAssistant
 
 from .test_gateway import HOST, PORT, setup_deconz_integration
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 
 async def test_entry_diagnostics(
-    hass, hass_client, aioclient_mock, mock_deconz_websocket
-):
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_deconz_websocket,
+) -> None:
     """Test config entry diagnostics."""
     config_entry = await setup_deconz_integration(hass, aioclient_mock)
 

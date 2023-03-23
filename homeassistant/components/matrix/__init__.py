@@ -35,8 +35,9 @@ from homeassistant.const import (
 from homeassistant.core import Event as HassEvent, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.json import load_json, save_json
+from homeassistant.util.json import JsonObjectType, load_json_object
 
 from .const import DOMAIN, FORMAT_HTML, FORMAT_TEXT, SERVICE_SEND_MESSAGE
 
@@ -278,27 +279,17 @@ class MatrixBot:
         rooms = {self._join_room(room_id) for room_id in self._listening_rooms}
         await asyncio.wait(rooms)
 
-    async def _get_auth_tokens(self) -> dict[str, str]:
+    async def _get_auth_tokens(self) -> JsonObjectType:
         """Read sorted authentication tokens from disk."""
         try:
-            auth_tokens = await self.hass.async_add_executor_job(
-                load_json, self._session_filepath
-            )
-            assert isinstance(auth_tokens, dict)
-        except AssertionError:
-            _LOGGER.warning(
-                "Loading authentication tokens from file '%s' failed: does not meet expected schema",
-                self._session_filepath,
-            )
+            return load_json_object(self._session_filepath)
         except HomeAssistantError as ex:
             _LOGGER.warning(
                 "Loading authentication tokens from file '%s' failed: %s",
                 self._session_filepath,
                 str(ex),
             )
-        else:
-            return auth_tokens
-        return {}
+            return {}
 
     async def _store_auth_token(self, token: str) -> None:
         """Store authentication token to session and persistent storage."""
@@ -309,8 +300,7 @@ class MatrixBot:
         )
 
     async def _login(self) -> None:
-        """
-        Login to the Matrix homeserver.
+        """Login to the Matrix homeserver.
 
         Attempts to use the stored authentication token.
         If that fails, then tries using the password.

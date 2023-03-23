@@ -9,7 +9,7 @@ import pytest
 def mock_cases():
     """Mock garages_amsterdam garages."""
     with patch(
-        "garages_amsterdam.GaragesAmsterdam.all_garages",
+        "odp_amsterdam.ODPAmsterdam.all_garages",
         return_value=[
             Mock(
                 garage_name="IJDok",

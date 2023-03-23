@@ -7,112 +7,41 @@ import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
 
-_LOGGER = logging.getLogger(__name__)
+from .const import MAP_LANG_TLD, SUPPORT_LANGUAGES, SUPPORT_TLD
 
-SUPPORT_LANGUAGES = [
-    "af",
-    "ar",
-    "bg",
-    "bn",
-    "bs",
-    "ca",
-    "cs",
-    "cy",
-    "da",
-    "de",
-    "el",
-    "en",
-    "eo",
-    "es",
-    "et",
-    "fi",
-    "fr",
-    "gu",
-    "hi",
-    "hr",
-    "hu",
-    "hy",
-    "id",
-    "is",
-    "it",
-    "iw",
-    "ja",
-    "jw",
-    "km",
-    "kn",
-    "ko",
-    "la",
-    "lv",
-    "mk",
-    "ml",
-    "mr",
-    "my",
-    "ne",
-    "nl",
-    "no",
-    "pl",
-    "pt",
-    "ro",
-    "ru",
-    "si",
-    "sk",
-    "sq",
-    "sr",
-    "su",
-    "sv",
-    "sw",
-    "ta",
-    "te",
-    "th",
-    "tl",
-    "tr",
-    "uk",
-    "ur",
-    "vi",
-    # dialects
-    "zh-CN",
-    "zh-cn",
-    "zh-tw",
-    "en-us",
-    "en-ca",
-    "en-uk",
-    "en-gb",
-    "en-au",
-    "en-gh",
-    "en-in",
-    "en-ie",
-    "en-nz",
-    "en-ng",
-    "en-ph",
-    "en-za",
-    "en-tz",
-    "fr-ca",
-    "fr-fr",
-    "pt-br",
-    "pt-pt",
-    "es-es",
-    "es-us",
-]
+_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_LANG = "en"
 
+SUPPORT_OPTIONS = ["tld"]
+
+DEFAULT_TLD = "com"
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES)}
+    {
+        vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
+        vol.Optional("tld", default=DEFAULT_TLD): vol.In(SUPPORT_TLD),
+    }
 )
 
 
 async def async_get_engine(hass, config, discovery_info=None):
     """Set up Google speech component."""
-    return GoogleProvider(hass, config[CONF_LANG])
+    return GoogleProvider(hass, config[CONF_LANG], config["tld"])
 
 
 class GoogleProvider(Provider):
     """The Google speech API provider."""
 
-    def __init__(self, hass, lang):
+    def __init__(self, hass, lang, tld):
         """Init Google TTS service."""
         self.hass = hass
-        self._lang = lang
+        if lang in MAP_LANG_TLD:
+            self._lang = MAP_LANG_TLD[lang].lang
+            self._tld = MAP_LANG_TLD[lang].tld
+        else:
+            self._lang = lang
+            self._tld = tld
         self.name = "Google"
 
     @property
@@ -125,9 +54,20 @@ class GoogleProvider(Provider):
         """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
+    @property
+    def supported_options(self):
+        """Return a list of supported options."""
+        return SUPPORT_OPTIONS
+
     def get_tts_audio(self, message, language, options=None):
         """Load TTS from google."""
-        tts = gTTS(text=message, lang=language)
+        tld = self._tld
+        if language in MAP_LANG_TLD:
+            tld = MAP_LANG_TLD[language].tld
+            language = MAP_LANG_TLD[language].lang
+        if options is not None and "tld" in options:
+            tld = options["tld"]
+        tts = gTTS(text=message, lang=language, tld=tld)
         mp3_data = BytesIO()
 
         try:

@@ -262,4 +262,4 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class WrongVersion(exceptions.HomeAssistantError):
-    """Error to indicate the powerwall uses a software version we cannot interact with."""
+    """Error indicating we cannot interact with the powerwall software version."""

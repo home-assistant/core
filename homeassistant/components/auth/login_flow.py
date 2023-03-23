@@ -122,7 +122,9 @@ class WellKnownOAuthInfoView(HomeAssistantView):
                 "token_endpoint": "/auth/token",
                 "revocation_endpoint": "/auth/revoke",
                 "response_types_supported": ["code"],
-                "service_documentation": "https://developers.home-assistant.io/docs/auth_api",
+                "service_documentation": (
+                    "https://developers.home-assistant.io/docs/auth_api"
+                ),
             }
         )
 

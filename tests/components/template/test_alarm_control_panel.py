@@ -17,7 +17,7 @@ from homeassistant.const import (
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 
 TEMPLATE_NAME = "alarm_control_panel.test_template_panel"
 PANEL_NAME = "alarm_control_panel.test"
@@ -87,7 +87,7 @@ TEMPLATE_ALARM_CONFIG = {
 }
 
 
-@pytest.mark.parametrize("count,domain", [(1, "alarm_control_panel")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "alarm_control_panel")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -99,7 +99,7 @@ TEMPLATE_ALARM_CONFIG = {
         },
     ],
 )
-async def test_template_state_text(hass, start_ha):
+async def test_template_state_text(hass: HomeAssistant, start_ha) -> None:
     """Test the state text of a template."""
 
     for set_state in [
@@ -124,7 +124,7 @@ async def test_template_state_text(hass, start_ha):
     assert state.state == "unknown"
 
 
-@pytest.mark.parametrize("count,domain", [(1, "alarm_control_panel")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "alarm_control_panel")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -136,7 +136,7 @@ async def test_template_state_text(hass, start_ha):
         },
     ],
 )
-async def test_optimistic_states(hass, start_ha):
+async def test_optimistic_states(hass: HomeAssistant, start_ha) -> None:
     """Test the optimistic state."""
 
     state = hass.states.get(TEMPLATE_NAME)
@@ -159,9 +159,9 @@ async def test_optimistic_states(hass, start_ha):
         assert hass.states.get(TEMPLATE_NAME).state == set_state
 
 
-@pytest.mark.parametrize("count,domain", [(0, "alarm_control_panel")])
+@pytest.mark.parametrize(("count", "domain"), [(0, "alarm_control_panel")])
 @pytest.mark.parametrize(
-    "config,msg",
+    ("config", "msg"),
     [
         (
             {
@@ -223,13 +223,15 @@ async def test_optimistic_states(hass, start_ha):
         ),
     ],
 )
-async def test_template_syntax_error(hass, msg, start_ha, caplog_setup_text):
+async def test_template_syntax_error(
+    hass: HomeAssistant, msg, start_ha, caplog_setup_text
+) -> None:
     """Test templating syntax error."""
     assert len(hass.states.async_all("alarm_control_panel")) == 0
     assert (msg) in caplog_setup_text
 
 
-@pytest.mark.parametrize("count,domain", [(1, "alarm_control_panel")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "alarm_control_panel")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -247,14 +249,14 @@ async def test_template_syntax_error(hass, msg, start_ha, caplog_setup_text):
         },
     ],
 )
-async def test_name(hass, start_ha):
+async def test_name(hass: HomeAssistant, start_ha) -> None:
     """Test the accessibility of the name attribute."""
     state = hass.states.get(TEMPLATE_NAME)
     assert state is not None
     assert state.attributes.get("friendly_name") == "Template Alarm Panel"
 
 
-@pytest.mark.parametrize("count,domain", [(1, "alarm_control_panel")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "alarm_control_panel")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -278,7 +280,7 @@ async def test_name(hass, start_ha):
         "alarm_trigger",
     ],
 )
-async def test_actions(hass, service, start_ha, service_calls):
+async def test_actions(hass: HomeAssistant, service, start_ha, service_calls) -> None:
     """Test alarm actions."""
     await hass.services.async_call(
         ALARM_DOMAIN, service, {"entity_id": TEMPLATE_NAME}, blocking=True
@@ -289,7 +291,7 @@ async def test_actions(hass, service, start_ha, service_calls):
     assert service_calls[0].data["service_data"]["code"] == TEMPLATE_NAME
 
 
-@pytest.mark.parametrize("count,domain", [(1, "alarm_control_panel")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "alarm_control_panel")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -310,14 +312,14 @@ async def test_actions(hass, service, start_ha, service_calls):
         },
     ],
 )
-async def test_unique_id(hass, start_ha):
+async def test_unique_id(hass: HomeAssistant, start_ha) -> None:
     """Test unique_id option only creates one alarm control panel per id."""
     assert len(hass.states.async_all()) == 1
 
 
-@pytest.mark.parametrize("count,domain", [(1, "alarm_control_panel")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "alarm_control_panel")])
 @pytest.mark.parametrize(
-    "config,code_format,code_arm_required",
+    ("config", "code_format", "code_arm_required"),
     [
         (
             {
@@ -382,7 +384,9 @@ async def test_unique_id(hass, start_ha):
         ),
     ],
 )
-async def test_code_config(hass, code_format, code_arm_required, start_ha):
+async def test_code_config(
+    hass: HomeAssistant, code_format, code_arm_required, start_ha
+) -> None:
     """Test configuration options related to alarm code."""
     state = hass.states.get(TEMPLATE_NAME)
     assert state.attributes.get("code_format") == code_format

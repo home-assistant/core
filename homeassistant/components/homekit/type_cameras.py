@@ -325,7 +325,8 @@ class Camera(HomeAccessory, PyhapCamera):
             )
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
-                "Failed to get stream source - this could be a transient error or your camera might not be compatible with HomeKit yet"
+                "Failed to get stream source - this could be a transient error or your"
+                " camera might not be compatible with HomeKit yet"
             )
         return stream_source
 
@@ -442,7 +443,9 @@ class Camera(HomeAccessory, PyhapCamera):
     async def stop(self):
         """Stop any streams when the accessory is stopped."""
         for session_info in self.sessions.values():
-            asyncio.create_task(self.stop_stream(session_info))
+            self.hass.async_create_background_task(
+                self.stop_stream(session_info), "homekit.camera-stop-stream"
+            )
         await super().stop()
 
     async def stop_stream(self, session_info):

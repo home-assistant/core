@@ -22,6 +22,15 @@ CONF_DEFAULT_ROOM = "default_room"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_DEFAULT_ROOM): cv.string})
 
 
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> MatrixNotificationService:
+    """Get the Matrix notification service."""
+    return MatrixNotificationService(config[CONF_DEFAULT_ROOM])
+
+
 class MatrixNotificationService(BaseNotificationService):
     """Send notifications to a Matrix room."""
 
@@ -36,12 +45,3 @@ class MatrixNotificationService(BaseNotificationService):
         if (data := kwargs.get(ATTR_DATA)) is not None:
             service_data[ATTR_DATA] = data
         self.hass.services.call(DOMAIN, SERVICE_SEND_MESSAGE, service_data=service_data)
-
-
-def get_service(
-    hass: HomeAssistant,
-    config: ConfigType,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> MatrixNotificationService:
-    """Get the Matrix notification service."""
-    return MatrixNotificationService(config[CONF_DEFAULT_ROOM])

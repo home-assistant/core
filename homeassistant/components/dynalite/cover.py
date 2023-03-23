@@ -4,17 +4,15 @@ from typing import Any
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
-    DEVICE_CLASSES,
     CoverDeviceClass,
     CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.enum import try_parse_enum
 
 from .dynalitebase import DynaliteBase, async_setup_entry_base
-
-DEFAULT_COVER_CLASS = CoverDeviceClass.SHUTTER
 
 
 async def async_setup_entry(
@@ -39,13 +37,10 @@ class DynaliteCover(DynaliteBase, CoverEntity):
     """Representation of a Dynalite Channel as a Home Assistant Cover."""
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> CoverDeviceClass:
         """Return the class of the device."""
-        dev_cls = self._device.device_class
-        ret_val = DEFAULT_COVER_CLASS
-        if dev_cls in DEVICE_CLASSES:
-            ret_val = dev_cls
-        return ret_val
+        device_class = try_parse_enum(CoverDeviceClass, self._device.device_class)
+        return device_class or CoverDeviceClass.SHUTTER
 
     @property
     def current_cover_position(self) -> int:

@@ -6,7 +6,7 @@ from unittest.mock import DEFAULT, AsyncMock, Mock, patch
 
 import pytest
 from xknx import XKNX
-from xknx.core import XknxConnectionState
+from xknx.core import XknxConnectionState, XknxConnectionType
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.telegram import Telegram, TelegramDirection
@@ -58,13 +58,17 @@ class KNXTestKit:
 
         async def patch_xknx_start():
             """Patch `xknx.start` for unittests."""
+            self.xknx.cemi_handler.send_telegram = AsyncMock(
+                side_effect=self._outgoing_telegrams.put
+            )
             # after XKNX.__init__() to not overwrite it by the config entry again
             # before StateUpdater starts to avoid slow down of tests
             self.xknx.rate_limit = 0
             # set XknxConnectionState.CONNECTED to avoid `unavailable` entities at startup
             # and start StateUpdater. This would be awaited on normal startup too.
             await self.xknx.connection_manager.connection_state_changed(
-                XknxConnectionState.CONNECTED
+                state=XknxConnectionState.CONNECTED,
+                connection_type=XknxConnectionType.TUNNEL_TCP,
             )
 
         def knx_ip_interface_mock():
@@ -72,7 +76,6 @@ class KNXTestKit:
             mock = Mock()
             mock.start = AsyncMock(side_effect=patch_xknx_start)
             mock.stop = AsyncMock()
-            mock.send_telegram = AsyncMock(side_effect=self._outgoing_telegrams.put)
             return mock
 
         def fish_xknx(*args, **kwargs):

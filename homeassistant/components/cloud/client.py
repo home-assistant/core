@@ -142,7 +142,10 @@ class CloudClient(Interface):
             except aiohttp.ClientError as err:  # If no internet available yet
                 if self._hass.is_running:
                     logging.getLogger(__package__).warning(
-                        "Unable to activate Alexa Report State: %s. Retrying in 30 seconds",
+                        (
+                            "Unable to activate Alexa Report State: %s. Retrying in 30"
+                            " seconds"
+                        ),
                         err,
                     )
                 async_call_later(self._hass, 30, enable_alexa)

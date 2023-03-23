@@ -80,11 +80,11 @@ async def async_attach_trigger(
             extra=vol.ALLOW_EXTRA,
         )
 
-    job = HassJob(action)
+    job = HassJob(action, f"event trigger {trigger_info}")
 
     @callback
-    def handle_event(event: Event) -> None:
-        """Listen for events and calls the action when data matches."""
+    def filter_event(event: Event) -> bool:
+        """Filter events."""
         try:
             # Check that the event data and context match the configured
             # schema if one was provided
@@ -94,8 +94,12 @@ async def async_attach_trigger(
                 event_context_schema(event.context.as_dict())
         except vol.Invalid:
             # If event doesn't match, skip event
-            return
+            return False
+        return True
 
+    @callback
+    def handle_event(event: Event) -> None:
+        """Listen for events and calls the action when data matches."""
         hass.async_run_hass_job(
             job,
             {
@@ -110,7 +114,8 @@ async def async_attach_trigger(
         )
 
     removes = [
-        hass.bus.async_listen(event_type, handle_event) for event_type in event_types
+        hass.bus.async_listen(event_type, handle_event, event_filter=filter_event)
+        for event_type in event_types
     ]
 
     @callback

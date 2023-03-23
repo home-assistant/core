@@ -40,7 +40,7 @@ async def async_setup_entry(
 
 
 class GeonetnzQuakesSensor(SensorEntity):
-    """This is a status sensor for the GeoNet NZ Quakes integration."""
+    """Status sensor for the GeoNet NZ Quakes integration."""
 
     _attr_should_poll = False
 

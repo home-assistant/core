@@ -12,7 +12,7 @@ from functools import partial
 import logging
 import os
 from random import SystemRandom
-from typing import Any, Final, Optional, cast, final
+from typing import Any, Final, cast, final
 
 from aiohttp import hdrs, web
 import async_timeout
@@ -41,6 +41,7 @@ from homeassistant.const import (
     CONF_FILENAME,
     CONTENT_TYPE_MULTIPART,
     EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
@@ -294,7 +295,7 @@ def _get_camera_from_entity_id(hass: HomeAssistant, entity_id: str) -> Camera:
 #     stream_id: A unique id for the stream, used to update an existing source
 # The output is the SDP answer, or None if the source or offer is not eligible.
 # The Callable may throw HomeAssistantError on failure.
-RtspToWebRtcProviderType = Callable[[str, str, str], Awaitable[Optional[str]]]
+RtspToWebRtcProviderType = Callable[[str, str, str], Awaitable[str | None]]
 
 
 def async_register_rtsp_to_web_rtc_provider(
@@ -378,7 +379,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             entity.async_update_token()
             entity.async_write_ha_state()
 
-    async_track_time_interval(hass, update_tokens, TOKEN_CHANGE_INTERVAL)
+    unsub = async_track_time_interval(hass, update_tokens, TOKEN_CHANGE_INTERVAL)
+
+    @callback
+    def unsub_track_time_interval(_event: Event) -> None:
+        """Unsubscribe track time interval timer."""
+        unsub()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unsub_track_time_interval)
 
     component.async_register_entity_service(
         SERVICE_ENABLE_MOTION, {}, "async_enable_motion_detection"
@@ -747,8 +755,8 @@ class CameraImageView(CameraView):
             )
         except (HomeAssistantError, ValueError) as ex:
             raise web.HTTPInternalServerError() from ex
-        else:
-            return web.Response(body=image.content, content_type=image.content_type)
+
+        return web.Response(body=image.content, content_type=image.content_type)
 
 
 class CameraMjpegStream(CameraView):
@@ -773,7 +781,7 @@ class CameraMjpegStream(CameraView):
             # Compose camera stream from stills
             interval = float(interval_str)
             if interval < MIN_STREAM_INTERVAL:
-                raise ValueError(f"Stream interval must be be > {MIN_STREAM_INTERVAL}")
+                raise ValueError(f"Stream interval must be > {MIN_STREAM_INTERVAL}")
             return await camera.handle_async_still_stream(request, interval)
         except ValueError as err:
             raise web.HTTPBadRequest() from err
@@ -836,7 +844,10 @@ async def ws_camera_web_rtc_offer(
         connection.send_error(
             msg["id"],
             "web_rtc_offer_failed",
-            f"Camera does not support WebRTC, frontend_stream_type={camera.frontend_stream_type}",
+            (
+                "Camera does not support WebRTC,"
+                f" frontend_stream_type={camera.frontend_stream_type}"
+            ),
         )
         return
     try:
