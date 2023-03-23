@@ -1,16 +1,14 @@
 """Classes for voice assistant pipelines."""
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import AsyncIterable, Callable
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 import logging
 from typing import Any
 
 from homeassistant.backports.enum import StrEnum
-from homeassistant.components import conversation, stt
-from homeassistant.components.media_source import async_resolve_media
+from homeassistant.components import conversation, media_source, stt
 from homeassistant.components.tts.media_source import (
     generate_media_source_id as tts_generate_media_source_id,
 )
@@ -54,6 +52,14 @@ class PipelineError(Exception):
 
 class SpeechToTextError(PipelineError):
     """Error in speech to text portion of pipeline."""
+
+
+class IntentRecognitionError(PipelineError):
+    """Error in intent recognition portion of pipeline."""
+
+
+class TextToSpeechError(PipelineError):
+    """Error in text to speech portion of pipeline."""
 
 
 class PipelineEventType(StrEnum):
@@ -113,7 +119,12 @@ class PipelineRunValidationError(Exception):
 class InvalidPipelineStagesError(PipelineRunValidationError):
     """Error when given an invalid combination of start/end stages."""
 
-    def __init__(self, start_stage: PipelineStage, end_stage: PipelineStage) -> None:
+    def __init__(
+        self,
+        start_stage: PipelineStage,
+        end_stage: PipelineStage,
+    ) -> None:
+        """Set error message."""
         super().__init__(
             f"Invalid stage combination: start={start_stage}, end={end_stage}"
         )
@@ -183,6 +194,7 @@ class PipelineRun:
         )
 
         try:
+            # Load provider
             stt_provider = stt.async_get_provider(self.hass, self.pipeline.stt_engine)
             assert stt_provider is not None
         except Exception as stt_error:
@@ -192,6 +204,7 @@ class PipelineRun:
             ) from stt_error
 
         try:
+            # Transcribe audio stream
             result = await stt_provider.async_process_audio_stream(metadata, stream)
             assert (result.text is not None) and (
                 result.result == stt.SpeechResultState.SUCCESS
@@ -199,7 +212,7 @@ class PipelineRun:
         except Exception as stt_error:
             raise SpeechToTextError(
                 "stt-stream-failed",
-                "Speech to text failed while processing audio stream",
+                "Unexpected error during speech to text",
             ) from stt_error
 
         self.event_callback(
@@ -229,15 +242,20 @@ class PipelineRun:
             )
         )
 
-        conversation_result = await conversation.async_converse(
-            hass=self.hass,
-            text=intent_input,
-            conversation_id=conversation_id,
-            context=self.context,
-            language=self.language,
-            agent_id=self.pipeline.conversation_engine,
-        )
-        _LOGGER.debug("intent result: %s", conversation_result)
+        try:
+            conversation_result = await conversation.async_converse(
+                hass=self.hass,
+                text=intent_input,
+                conversation_id=conversation_id,
+                context=self.context,
+                language=self.language,
+                agent_id=self.pipeline.conversation_engine,
+            )
+        except Exception as intent_error:
+            raise IntentRecognitionError(
+                code="intent-failed",
+                message="Unexpected error during intent recognition",
+            ) from intent_error
 
         self.event_callback(
             PipelineEvent(
@@ -262,15 +280,20 @@ class PipelineRun:
             )
         )
 
-        tts_media = await async_resolve_media(
-            self.hass,
-            tts_generate_media_source_id(
+        try:
+            # Synthesize audio and get URL
+            tts_media = await media_source.async_resolve_media(
                 self.hass,
-                tts_input,
-                engine=self.pipeline.tts_engine,
-            ),
-        )
-        _LOGGER.debug("tts result: %s", tts_media)
+                tts_generate_media_source_id(
+                    self.hass,
+                    tts_input,
+                    engine=self.pipeline.tts_engine,
+                ),
+            )
+        except Exception as tts_error:
+            raise TextToSpeechError(
+                code="tts-failed", message="Unexpected error during text to speech"
+            ) from tts_error
 
         self.event_callback(
             PipelineEvent(
@@ -287,10 +310,20 @@ class PipelineInput:
     """Input to a pipeline run."""
 
     binary_handler_id: int | None = None
+    """Id of binary websocket handler. Required when start_stage = stt."""
+
     stt_metadata: stt.SpeechMetadata | None = None
+    """Metadata of stt input audio. Required when start_stage = stt."""
+
     stt_stream: AsyncIterable[bytes] | None = None
+    """Input audio for stt. Required when start_stage = stt."""
+
     intent_input: str | None = None
+    """Input for conversation agent. Required when start_stage = intent."""
+
     tts_input: str | None = None
+    """Input for text to speech. Required when start_stage = tts."""
+
     conversation_id: str | None = None
 
     async def execute(
@@ -305,32 +338,33 @@ class PipelineInput:
     async def _execute(self, run: PipelineRun):
         self._validate(run.start_stage)
 
+        # stt -> intent -> tts
         run.start()
-        stage = run.start_stage
+        current_stage = run.start_stage
 
         # Speech to text
         intent_input = self.intent_input
-        if stage == PipelineStage.STT:
+        if current_stage == PipelineStage.STT:
             assert self.binary_handler_id is not None
             assert self.stt_metadata is not None
             assert self.stt_stream is not None
             intent_input = await run.speech_to_text(
                 self.stt_metadata, self.stt_stream, self.binary_handler_id
             )
-            stage = PipelineStage.INTENT
+            current_stage = PipelineStage.INTENT
 
         if run.end_stage != PipelineStage.STT:
             tts_input = self.tts_input
 
-            if stage == PipelineStage.INTENT:
+            if current_stage == PipelineStage.INTENT:
                 assert intent_input is not None
                 tts_input = await run.recognize_intent(
                     intent_input, self.conversation_id
                 )
-                stage = PipelineStage.TTS
+                current_stage = PipelineStage.TTS
 
             if run.end_stage != PipelineStage.INTENT:
-                if stage == PipelineStage.TTS:
+                if current_stage == PipelineStage.TTS:
                     assert tts_input is not None
                     await run.text_to_speech(tts_input)
 

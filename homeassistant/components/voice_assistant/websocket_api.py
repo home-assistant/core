@@ -1,24 +1,21 @@
 """Voice Assistant Websocket API."""
 import asyncio
-import logging
 from collections.abc import Callable
+import logging
 from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components import stt, websocket_api
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
 
-from .const import DOMAIN
 from .pipeline import (
-    async_get_pipeline,
     DEFAULT_TIMEOUT,
-    PipelineInput,
-    Pipeline,
-    PipelineRun,
     PipelineError,
+    PipelineInput,
+    PipelineRun,
     PipelineStage,
+    async_get_pipeline,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,7 +48,11 @@ async def websocket_run(
     """Run a pipeline."""
     language = msg.get("language", hass.config.language)
     pipeline_id = msg.get("pipeline")
-    pipeline = async_get_pipeline(hass, pipeline_id=pipeline_id, language=language)
+    pipeline = async_get_pipeline(
+        hass,
+        pipeline_id=pipeline_id,
+        language=language,
+    )
     if pipeline is None:
         connection.send_error(
             msg["id"],
@@ -66,18 +67,21 @@ async def websocket_run(
     unregister_handler: Callable[[], None] | None = None
 
     # Arguments to PipelineInput
-    input_args: dict[str, Any] = {"conversation_id": msg.get("conversation_id")}
+    input_args: dict[str, Any] = {
+        "conversation_id": msg.get("conversation_id"),
+    }
 
     if start_stage == PipelineStage.STT:
-        # Audio pipeline
+        # Audio pipeline that will receive audio as binary websocket messages
         audio_queue: "asyncio.Queue[bytes]" = asyncio.Queue()
 
         async def stt_stream():
+            # Yield until we receive an empty chunk
             while chunk := await audio_queue.get():
-                _LOGGER.debug("Received %s byte(s) of audio", len(chunk))
                 yield chunk
 
         def handle_binary(_hass, _connection, data: bytes):
+            # Forward to STT audio stream
             audio_queue.put_nowait(data)
 
         handler_id, unregister_handler = connection.async_register_binary_handler(
@@ -85,6 +89,8 @@ async def websocket_run(
         )
 
         input_args["binary_handler_id"] = handler_id
+
+        # Audio input must be raw PCM at 16Khz with 16-bit mono samples
         input_args["stt_metadata"] = stt.SpeechMetadata(
             language=language,
             format=stt.AudioFormats.WAV,
@@ -95,8 +101,10 @@ async def websocket_run(
         )
         input_args["stt_stream"] = stt_stream()
     elif start_stage == PipelineStage.INTENT:
+        # Input to conversation agent
         input_args["intent_input"] = msg["input"]["text"]
     elif start_stage == PipelineStage.TTS:
+        # Input to text to speech system
         input_args["tts_input"] = msg["input"]["text"]
 
     run_task = hass.async_create_task(
@@ -118,6 +126,7 @@ async def websocket_run(
     # Cancel pipeline if user unsubscribes
     connection.subscriptions[msg["id"]] = run_task.cancel
 
+    # Confirm subscription
     connection.send_result(msg["id"])
 
     try:

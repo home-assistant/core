@@ -257,7 +257,7 @@ async def test_audio_pipeline(
     assert msg["event"]["data"] == {}
 
 
-async def test_conversation_timeout(
+async def test_intent_timeout(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, init_components
 ) -> None:
     """Test partial pipeline run with conversation agent timeout."""
@@ -339,6 +339,52 @@ async def test_text_pipeline_timeout(
         msg = await client.receive_json()
         assert not msg["success"]
         assert msg["error"]["code"] == "timeout"
+
+
+async def test_intent_failed(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, init_components
+) -> None:
+    """Test text-only pipeline run with conversation agent error."""
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "homeassistant.components.conversation.async_converse",
+        new=MagicMock(return_value=RuntimeError),
+    ):
+        await client.send_json(
+            {
+                "id": 5,
+                "type": "voice_assistant/run",
+                "start_stage": "intent",
+                "end_stage": "intent",
+                "input": {"text": "Are the lights on?"},
+            }
+        )
+
+        # result
+        msg = await client.receive_json()
+        assert msg["success"]
+
+        # run start
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "run-start"
+        assert msg["event"]["data"] == {
+            "pipeline": hass.config.language,
+            "language": hass.config.language,
+        }
+
+        # intent start
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "intent-start"
+        assert msg["event"]["data"] == {
+            "engine": "default",
+            "intent_input": "Are the lights on?",
+        }
+
+        # intent error
+        msg = await client.receive_json()
+        assert not msg["success"]
+        assert msg["error"]["code"] == "intent-failed"
 
 
 async def test_audio_pipeline_timeout(
@@ -484,3 +530,49 @@ async def test_stt_stream_failed(
         msg = await client.receive_json()
         assert not msg["success"]
         assert msg["error"]["code"] == "stt-stream-failed"
+
+
+async def test_tts_failed(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, init_components
+) -> None:
+    """Test pipeline run with text to speech error."""
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "homeassistant.components.media_source.async_resolve_media",
+        new=MagicMock(return_value=RuntimeError),
+    ):
+        await client.send_json(
+            {
+                "id": 5,
+                "type": "voice_assistant/run",
+                "start_stage": "tts",
+                "end_stage": "tts",
+                "input": {"text": "Lights are on."},
+            }
+        )
+
+        # result
+        msg = await client.receive_json()
+        assert msg["success"]
+
+        # run start
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "run-start"
+        assert msg["event"]["data"] == {
+            "pipeline": hass.config.language,
+            "language": hass.config.language,
+        }
+
+        # tts start
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "tts-start"
+        assert msg["event"]["data"] == {
+            "engine": "default",
+            "tts_input": "Lights are on.",
+        }
+
+        # tts error
+        msg = await client.receive_json()
+        assert not msg["success"]
+        assert msg["error"]["code"] == "tts-failed"
