@@ -17,7 +17,7 @@ class NextcloudEntity(Entity):
         self._state: StateType = None
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the unique ID for this sensor."""
         return f"{self.hass.data[DOMAIN]['instance']}#{self.item}"
 

@@ -35,7 +35,6 @@ class NextCloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_try_connect(
         self, url: str, user: str, password: str, verify_ssl: bool
     ) -> bool:
-
         try:
             loop = asyncio.get_running_loop()
             await loop.run_in_executor(

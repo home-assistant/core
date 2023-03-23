@@ -35,7 +35,7 @@ def _initiate_flow(hass: HomeAssistant):
 
 
 async def test_successful_connection(hass: HomeAssistant):
-    """This test patches the connection test to simulate a successful connection to the nextclodu API."""
+    """A test patches the connection test to simulate a successful connection to the nextclodu API."""
     result = await _initiate_flow(hass)
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
@@ -69,7 +69,7 @@ async def test_successful_connection(hass: HomeAssistant):
 
 
 async def test_connection_method(hass: HomeAssistant):
-    """This test patches the NextcloudMonitorWrapper class to test the connection test method."""
+    """A test patches the NextcloudMonitorWrapper class to test the connection test method."""
     result = await _initiate_flow(hass)
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
@@ -133,7 +133,7 @@ async def test_connection_method(hass: HomeAssistant):
 
 
 async def test_duplicated_entry(hass: HomeAssistant):
-    """This test the NextcloudMonitorWrapper class to test the connection test method."""
+    """A test the NextcloudMonitorWrapper class to test the connection test method."""
 
     # first entry must be successful
     result = await _initiate_flow(hass)
@@ -146,7 +146,6 @@ async def test_duplicated_entry(hass: HomeAssistant):
         "homeassistant.components.nextcloud.config_flow.NextcloudMonitorWrapper",
         return_value=None,
     ):
-
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -182,7 +181,6 @@ async def test_duplicated_entry(hass: HomeAssistant):
         "homeassistant.components.nextcloud.config_flow.NextcloudMonitorWrapper",
         return_value=None,
     ):
-
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

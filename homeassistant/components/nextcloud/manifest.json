@@ -1,9 +1,9 @@
 {
-  "requirements": ["nextcloudmonitor==1.2.0"],
-  "codeowners": ["@devPeete"],
-  "config_flow": true,
-  "iot_class": "local_polling",
   "domain": "nextcloud",
   "name": "Nextcloud Monitor",
-  "documentation": "https://www.home-assistant.io/integrations/nextcloud"
+  "codeowners": ["@devPeete"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/nextcloud",
+  "iot_class": "local_polling",
+  "requirements": ["nextcloudmonitor==1.2.0"]
 }
