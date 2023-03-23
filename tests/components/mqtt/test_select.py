@@ -1,4 +1,5 @@
 """The tests for mqtt select component."""
+from collections.abc import Generator
 import copy
 import json
 from typing import Any
@@ -21,6 +22,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers.typing import ConfigType
 
 from .test_common import (
     help_test_availability_when_connection_lost,
@@ -73,35 +75,44 @@ def select_platform_only():
         yield
 
 
-@pytest.mark.parametrize(
-    "hass_config",
-    [
+def _test_run_select_setup_params(
+    topic: str,
+) -> Generator[tuple[ConfigType, str], None]:
+    yield (
         {
             mqtt.DOMAIN: {
                 select.DOMAIN: {
-                    "state_topic": "test/select_stat",
+                    "state_topic": topic,
                     "command_topic": "test/select_cmd",
                     "name": "Test Select",
                     "options": ["milk", "beer"],
                 }
             }
-        }
-    ],
+        },
+        topic,
+    )
+
+
+@pytest.mark.parametrize(
+    ("hass_config", "topic"),
+    _test_run_select_setup_params("test/select_stat"),
 )
 async def test_run_select_setup(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    topic: str,
 ) -> None:
     """Test that it fetches the given payload."""
     await mqtt_mock_entry_no_yaml_config()
 
-    async_fire_mqtt_message(hass, "test/select_stat", "milk")
+    async_fire_mqtt_message(hass, topic, "milk")
 
     await hass.async_block_till_done()
 
     state = hass.states.get("select.test_select")
     assert state.state == "milk"
 
-    async_fire_mqtt_message(hass, "test/select_stat", "beer")
+    async_fire_mqtt_message(hass, topic, "beer")
 
     await hass.async_block_till_done()
 
@@ -602,49 +613,28 @@ async def test_entity_debug_info_message(
     )
 
 
+def _test_options_attributes_options_config(
+    request: tuple[list[str]],
+) -> Generator[tuple[ConfigType, list[str]], None]:
+    for option in request:
+        yield (
+            {
+                mqtt.DOMAIN: {
+                    select.DOMAIN: {
+                        "command_topic": "test/select/set",
+                        "state_topic": "test/select",
+                        "name": "Test select",
+                        "options": option,
+                    }
+                }
+            },
+            option,
+        )
+
+
 @pytest.mark.parametrize(
     ("hass_config", "options"),
-    [
-        (
-            {
-                mqtt.DOMAIN: {
-                    select.DOMAIN: {
-                        "command_topic": "test/select/set",
-                        "state_topic": "test/select",
-                        "name": "Test select",
-                        "options": ["milk", "beer"],
-                    }
-                }
-            },
-            ["milk", "beer"],
-        ),
-        (
-            {
-                mqtt.DOMAIN: {
-                    select.DOMAIN: {
-                        "command_topic": "test/select/set",
-                        "state_topic": "test/select",
-                        "name": "Test select",
-                        "options": ["milk"],
-                    }
-                }
-            },
-            ["milk"],
-        ),
-        (
-            {
-                mqtt.DOMAIN: {
-                    select.DOMAIN: {
-                        "command_topic": "test/select/set",
-                        "state_topic": "test/select",
-                        "name": "Test select",
-                        "options": [],
-                    }
-                }
-            },
-            [],
-        ),
-    ],
+    _test_options_attributes_options_config((["milk", "beer"], ["milk"], [])),
 )
 async def test_options_attributes(
     hass: HomeAssistant,
