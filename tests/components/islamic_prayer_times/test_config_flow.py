@@ -52,9 +52,17 @@ async def test_options(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_CALC_METHOD: "makkah"}
-    )
+    with patch(
+        "prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times",
+        return_value=PRAYER_TIMES,
+    ) as fetch_prayer_times_mock:
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_CALC_METHOD: "makkah"}
+        )
+        await hass.async_block_till_done()
+
+    # Test updating options refreshes data
+    fetch_prayer_times_mock.assert_called_once()
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_CALC_METHOD] == "makkah"
