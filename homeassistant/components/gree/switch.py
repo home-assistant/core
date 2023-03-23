@@ -89,8 +89,7 @@ class GreeSwitch(GreeSwitchEntityDescription, GreeEntity):
         """Initialize the Gree device."""
         self.entity_description = description
 
-        if name := self.entity_description.name:
-            super().__init__(coordinator, name)
+        super().__init__(coordinator, cast(str, description.name))
 
     @property
     def is_on(self) -> bool:
