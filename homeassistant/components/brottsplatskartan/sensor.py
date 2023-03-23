@@ -73,11 +73,10 @@ async def async_setup_entry(
     longitude = entry.data.get(CONF_LONGITUDE, hass.config.longitude)
     app = entry.data[CONF_APP_ID]
     name = entry.title
-    unique_id = f"bpk-{latitude}-{longitude}-{area}"
 
     bpk = BrottsplatsKartan(app=app, area=area, latitude=latitude, longitude=longitude)
 
-    async_add_entities([BrottsplatskartanSensor(bpk, name, unique_id)], True)
+    async_add_entities([BrottsplatskartanSensor(bpk, name, app)], True)
 
 
 class BrottsplatskartanSensor(SensorEntity):
