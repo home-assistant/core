@@ -152,7 +152,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class OptionsFlow(config_entries.OptionsFlowWithConfigEntry):
     """Option flow handler."""
 
-    def validate_key_options_input(
+    def _async_abort_entries_match(
         self, user_input: dict[str, Any] | None
     ) -> dict[str, str]:
         """Validate the user input against other config entries."""
@@ -170,7 +170,7 @@ class OptionsFlow(config_entries.OptionsFlowWithConfigEntry):
                 for item in user_input.items()
                 if item[0] in KEY_OPTIONS
             ):
-                errors["base"] = "entry_exists"
+                errors["base"] = "already_configured"
                 break
         return errors
 
@@ -178,7 +178,7 @@ class OptionsFlow(config_entries.OptionsFlowWithConfigEntry):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the options."""
-        errors: dict[str, str] = self.validate_key_options_input(user_input)
+        errors: dict[str, str] = self._async_abort_entries_match(user_input)
         entry_data: dict[str, Any] = dict(self._config_entry.data)
         if not errors and user_input is not None:
             entry_data.update(user_input)

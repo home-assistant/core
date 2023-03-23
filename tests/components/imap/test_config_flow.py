@@ -389,6 +389,6 @@ async def test_key_options_in_options_form(hass: HomeAssistant) -> None:
             new_config,
         )
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
-    assert result2["errors"] == {"base": "entry_exists"}
+    assert result2["errors"] == {"base": "already_configured"}
 
     await hass.async_block_till_done()
