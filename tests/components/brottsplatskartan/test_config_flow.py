@@ -25,17 +25,13 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.brottsplatskartan.config_flow.uuid.getnode",
-        return_value="1234567890",
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_AREA: "N/A",
-            },
-        )
-        await hass.async_block_till_done()
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_AREA: "N/A",
+        },
+    )
+    await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Brottsplatskartan HOME"
@@ -56,21 +52,17 @@ async def test_form_location(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.brottsplatskartan.config_flow.uuid.getnode",
-        return_value="1234567890",
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_AREA: "N/A",
-                CONF_LOCATION: {
-                    CONF_LATITUDE: 59.32,
-                    CONF_LONGITUDE: 18.06,
-                },
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_AREA: "N/A",
+            CONF_LOCATION: {
+                CONF_LATITUDE: 59.32,
+                CONF_LONGITUDE: 18.06,
             },
-        )
-        await hass.async_block_till_done()
+        },
+    )
+    await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Brottsplatskartan 59.32, 18.06"
@@ -91,21 +83,17 @@ async def test_form_area(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.brottsplatskartan.config_flow.uuid.getnode",
-        return_value="1234567890",
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_LOCATION: {
-                    CONF_LATITUDE: 59.32,
-                    CONF_LONGITUDE: 18.06,
-                },
-                CONF_AREA: "Stockholms län",
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_LOCATION: {
+                CONF_LATITUDE: 59.32,
+                CONF_LONGITUDE: 18.06,
             },
-        )
-        await hass.async_block_till_done()
+            CONF_AREA: "Stockholms län",
+        },
+    )
+    await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Brottsplatskartan Stockholms län"
@@ -122,9 +110,6 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.brottsplatskartan.sensor.BrottsplatsKartan",
-    ), patch(
-        "homeassistant.components.brottsplatskartan.config_flow.uuid.getnode",
-        return_value="1234567890",
     ):
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -148,9 +133,6 @@ async def test_import_flow_location_success(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.brottsplatskartan.sensor.BrottsplatsKartan",
-    ), patch(
-        "homeassistant.components.brottsplatskartan.config_flow.uuid.getnode",
-        return_value="1234567890",
     ):
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -177,9 +159,6 @@ async def test_import_flow_location_area_success(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.brottsplatskartan.sensor.BrottsplatsKartan",
-    ), patch(
-        "homeassistant.components.brottsplatskartan.config_flow.uuid.getnode",
-        return_value="1234567890",
     ):
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -218,9 +197,6 @@ async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.brottsplatskartan.sensor.BrottsplatsKartan",
-    ), patch(
-        "homeassistant.components.brottsplatskartan.config_flow.uuid.getnode",
-        return_value="1234567890",
     ):
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,

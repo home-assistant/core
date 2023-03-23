@@ -13,3 +13,13 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
         return_value=True,
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+
+@pytest.fixture(autouse=True)
+def uuid_generator() -> Generator[AsyncMock, None, None]:
+    """Generate uuid for app-id."""
+    with patch(
+        "homeassistant.components.brottsplatskartan.config_flow.uuid.getnode",
+        return_value="1234567890",
+    ) as uuid_generator:
+        yield uuid_generator
