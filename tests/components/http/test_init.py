@@ -504,10 +504,10 @@ async def test_logging(
     assert "GET /api/states/logging.entity" not in caplog.text
 
 
-async def test_hass_access_logger(
+async def test_hass_access_logger_at_info_level(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test that the access logger is created."""
+    """Test that logging happens at info level."""
     test_logger = logging.getLogger("test.aiohttp.logger")
     logger = http.HomeAssistantAccessLogger(test_logger)
     mock_request = MagicMock()
