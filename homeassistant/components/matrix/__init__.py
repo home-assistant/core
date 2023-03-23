@@ -166,7 +166,7 @@ class MatrixBot:
         self.hass = hass
 
         self._session_filepath = config_file
-        self._auth_tokens: dict[str, str] = {}
+        self._auth_tokens: JsonObjectType = {}
 
         self._homeserver = homeserver
         self._verify_tls = verify_ssl
