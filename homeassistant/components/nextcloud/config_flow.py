@@ -36,19 +36,16 @@ class NextcloudConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input[CONF_PASSWORD],
         )
 
-    async def async_step_import(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
         """Handle a flow initiated by configuration file."""
-        if user_input is not None:
-            self._async_abort_entries_match({CONF_URL: user_input.get(CONF_URL)})
-            try:
-                await self.hass.async_add_executor_job(self._try_connect_nc, user_input)
-            except NextcloudMonitorError:
-                _LOGGER.error(
-                    "Connection error during import of yaml configuration, import aborted"
-                )
-                return self.async_abort(reason="connection_error_during_import")
+        self._async_abort_entries_match({CONF_URL: user_input.get(CONF_URL)})
+        try:
+            await self.hass.async_add_executor_job(self._try_connect_nc, user_input)
+        except NextcloudMonitorError:
+            _LOGGER.error(
+                "Connection error during import of yaml configuration, import aborted"
+            )
+            return self.async_abort(reason="connection_error_during_import")
         return await self.async_step_user(user_input)
 
     async def async_step_user(

@@ -3,6 +3,7 @@ from unittest.mock import Mock, patch
 
 from nextcloudmonitor import NextcloudMonitorError
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nextcloud import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
@@ -16,14 +17,14 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def test_user_create_entry(
-    hass: HomeAssistant, mock_nextcloud_monitor: Mock
+    hass: HomeAssistant, mock_nextcloud_monitor: Mock, snapshot: SnapshotAssertion
 ) -> None:
     """Test that the user step works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
     assert result["errors"] == {}
 
     with patch(
@@ -38,9 +39,7 @@ async def test_user_create_entry(
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "nc_url"
-    assert result["data"][CONF_URL] == "nc_url"
-    assert result["data"][CONF_USERNAME] == "nc_user"
-    assert result["data"][CONF_PASSWORD] == "nc_pass"
+    assert result["data"] == snapshot
 
 
 async def test_user_already_configured(
@@ -59,7 +58,7 @@ async def test_user_already_configured(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
     assert result["errors"] == {}
 
     with patch(
@@ -84,7 +83,7 @@ async def test_user_connection_error(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
     assert result["errors"] == {}
 
     with patch(
@@ -97,11 +96,13 @@ async def test_user_connection_error(
         )
         await hass.async_block_till_done()
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
     assert result["errors"] == {"base": "connection_error"}
 
 
-async def test_import(hass: HomeAssistant, mock_nextcloud_monitor: Mock) -> None:
+async def test_import(
+    hass: HomeAssistant, mock_nextcloud_monitor: Mock, snapshot: SnapshotAssertion
+) -> None:
     """Test that the import step works."""
     with patch(
         "homeassistant.components.nextcloud.config_flow.NextcloudMonitor",
@@ -118,9 +119,7 @@ async def test_import(hass: HomeAssistant, mock_nextcloud_monitor: Mock) -> None
         )
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "nc_url"
-    assert result["data"][CONF_URL] == "nc_url"
-    assert result["data"][CONF_USERNAME] == "nc_user"
-    assert result["data"][CONF_PASSWORD] == "nc_pass"
+    assert result["data"] == snapshot
 
 
 async def test_import_already_configured(
