@@ -119,9 +119,9 @@ async def test_async_poll_manual_hosts_warnings(
         assert record.levelname == "INFO"
         assert "Connection restablished to Sonos device" in record.message
 
+        # Fourth call succeeds again, no need to log
         caplog.clear()
         await manager.async_poll_manual_hosts()
-        # Success in the call, no message should be logged since not clearing error state
         assert len(caplog.messages) == 0
 
         mock_async_add_executor_job.side_effect = OSError()
