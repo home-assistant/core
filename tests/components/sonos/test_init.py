@@ -1,8 +1,13 @@
 """Tests for the Sonos config flow."""
-from unittest.mock import patch
+import logging
+from unittest.mock import AsyncMock, patch
+
+import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import sonos, zeroconf
+from homeassistant.components.sonos import SonosDiscoveryManager
+from homeassistant.components.sonos.const import DATA_SONOS_DISCOVERY_MANAGER
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -63,3 +68,57 @@ async def test_not_configuring_sonos_not_creates_entry(hass: HomeAssistant) -> N
         await hass.async_block_till_done()
 
     assert len(mock_setup.mock_calls) == 0
+
+
+async def test_async_poll_manual_hosts_warnings(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that host warnings are not logged repeatedly."""
+    await async_setup_component(
+        hass,
+        sonos.DOMAIN,
+        {"sonos": {"media_player": {"interface_addr": "127.0.0.1"}}},
+    )
+    await hass.async_block_till_done()
+    manager: SonosDiscoveryManager = hass.data[DATA_SONOS_DISCOVERY_MANAGER]
+    manager.hosts.add("10.10.10.10")
+    with caplog.at_level(logging.DEBUG), patch.object(
+        manager, "_async_handle_discovery_message"
+    ), patch("homeassistant.components.sonos.async_call_later"), patch(
+        "homeassistant.components.sonos.async_dispatcher_send"
+    ), patch.object(
+        hass, "async_add_executor_job", new=AsyncMock()
+    ) as mock_async_add_executor_job:
+        mock_async_add_executor_job.side_effect = [
+            OSError(),
+            OSError(),
+            [],
+            OSError(),
+        ]
+        caplog.clear()
+        await manager.async_poll_manual_hosts()
+        assert len(caplog.messages) == 1
+        record = caplog.records[0]
+        assert record.levelname == "WARNING"
+        assert "Could not get visible Sonos devices from" in record.message
+        # On second call it should be logged as a DEBUG message
+        caplog.clear()
+        await manager.async_poll_manual_hosts()
+        assert len(caplog.messages) == 1
+        record = caplog.records[0]
+        assert record.levelname == "DEBUG"
+        assert "Could not get visible Sonos devices from" in record.message
+
+        caplog.clear()
+        await manager.async_poll_manual_hosts()
+        # Success in the call, should clear the host from the error list
+        assert len(caplog.messages) == 0
+
+        mock_async_add_executor_job.side_effect = OSError()
+        caplog.clear()
+        await manager.async_poll_manual_hosts()
+        assert len(caplog.messages) == 1
+        record = caplog.records[0]
+        # Warning should be logged again.
+        assert record.levelname == "WARNING"
+        assert "Could not get visible Sonos devices from" in record.message
