@@ -184,12 +184,3 @@ class AqaraPetFeederFeedButton(ZHAAttributeButton, id_suffix="feeding"):
     _attribute_name = "feeding"
     _attr_name = "Feed"
     _attribute_value = 1
-
-
-# @CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
-# class AqaraThermostatCalibrateButton(ZHAAttributeButton, id_suffix="calibrate"):
-#     """Defines a calibrate button for the Aqara E1 thermostat."""
-#
-#     _attribute_name = "calibrate"
-#     _attr_name = "Calibrate"
-#     _attribute_value = 1
