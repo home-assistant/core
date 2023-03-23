@@ -1,11 +1,10 @@
 """Tests for the OralB integration."""
 
-from bleak.backends.device import BLEDevice
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
-from tests.components.bluetooth import generate_advertisement_data
+from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 NOT_ORALB_SERVICE_INFO = BluetoothServiceInfo(
     name="Not it",
@@ -41,7 +40,7 @@ ORALB_IO_SERIES_4_SERVICE_INFO = BluetoothServiceInfo(
 ORALB_IO_SERIES_6_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="Oral-B Toothbrush",
     address="B0:D2:78:20:1D:CF",
-    device=BLEDevice("B0:D2:78:20:1D:CF", "Oral-B Toothbrush"),
+    device=generate_ble_device("B0:D2:78:20:1D:CF", "Oral-B Toothbrush"),
     rssi=-56,
     manufacturer_data={220: b"\x062k\x02r\x00\x00\x02\x01\x00\x04"},
     service_data={"a0f0ff00-5047-4d53-8208-4f72616c2d42": bytearray(b"1\x00\x00\x00")},

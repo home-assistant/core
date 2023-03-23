@@ -26,8 +26,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.typing import ConfigType
 
@@ -92,6 +96,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN not in config:
         return True
 
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2023.6.0",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "on_action_url": "https://www.home-assistant.io/integrations/samsungtv/#turn-on-action"
+        },
+        learn_more_url="https://www.home-assistant.io/integrations/samsungtv/#turn-on-action",
+    )
     for entry_config in config[DOMAIN]:
         ip_address = await hass.async_add_executor_job(
             socket.gethostbyname, entry_config[CONF_HOST]

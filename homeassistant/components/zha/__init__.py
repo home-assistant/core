@@ -17,7 +17,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
-from . import api
+from . import websocket_api
 from .core import ZHAGateway
 from .core.const import (
     BAUD_RATES,
@@ -131,7 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         model=zha_gateway.radio_description,
     )
 
-    api.async_load_api(hass)
+    websocket_api.async_load_api(hass)
 
     async def async_zha_shutdown(event):
         """Handle shutdown tasks."""
@@ -150,11 +150,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload ZHA config entry."""
-    zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    zha_gateway: ZHAGateway = hass.data[DATA_ZHA].pop(DATA_ZHA_GATEWAY)
     await zha_gateway.shutdown()
 
     GROUP_PROBE.cleanup()
-    api.async_unload_api(hass)
+    websocket_api.async_unload_api(hass)
 
     # our components don't have unload methods so no need to look at return values
     await asyncio.gather(

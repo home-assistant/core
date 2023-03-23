@@ -18,7 +18,7 @@ from awesomeversion import (
     AwesomeVersionStrategy,
 )
 import ciso8601
-from sqlalchemy import text
+from sqlalchemy import inspect, text
 from sqlalchemy.engine import Result, Row
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm.query import Query
@@ -832,3 +832,22 @@ def chunked(iterable: Iterable, chunked_num: int) -> Iterable[Any]:
     From more-itertools
     """
     return iter(partial(take, chunked_num, iter(iterable)), [])
+
+
+def get_index_by_name(session: Session, table_name: str, index_name: str) -> str | None:
+    """Get an index by name."""
+    connection = session.connection()
+    inspector = inspect(connection)
+    indexes = inspector.get_indexes(table_name)
+    return next(
+        (
+            possible_index["name"]
+            for possible_index in indexes
+            if possible_index["name"]
+            and (
+                possible_index["name"] == index_name
+                or possible_index["name"].endswith(f"_{index_name}")
+            )
+        ),
+        None,
+    )
