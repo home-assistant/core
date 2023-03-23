@@ -103,7 +103,7 @@ async def test_async_poll_manual_hosts_warnings(
         record = caplog.records[0]
         assert record.levelname == "WARNING"
         assert "Could not get visible Sonos devices from" in record.message
-        # On second call it should be logged as a DEBUG message
+        # Second call fails again, it should be logged as a DEBUG message
         caplog.clear()
         await manager.async_poll_manual_hosts()
         assert len(caplog.messages) == 1
