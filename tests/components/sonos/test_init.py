@@ -110,9 +110,9 @@ async def test_async_poll_manual_hosts_warnings(
         assert record.levelname == "DEBUG"
         assert "Could not get visible Sonos devices from" in record.message
 
+        # Third call succeeds, it should log an info message
         caplog.clear()
         await manager.async_poll_manual_hosts()
-        # Success in the call, should clear the host from the error list, and log an info message
         assert len(caplog.messages) == 1
         record = caplog.records[0]
         assert record.levelname == "INFO"
