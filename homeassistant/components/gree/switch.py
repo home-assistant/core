@@ -19,7 +19,7 @@ from .entity import GreeEntity
 GREE_SWITCHES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
         icon="mdi:lightbulb",
-        name="Panel light",
+        name="Panel Light",
         key="light",
     ),
     SwitchEntityDescription(
