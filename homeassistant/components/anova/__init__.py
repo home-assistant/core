@@ -10,6 +10,7 @@ from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
 from .coordinator import AnovaCoordinator
+from .models import AnovaData
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -25,16 +26,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         for device in entry.data["devices"]
     ]
-    coordinators = {
-        device.device_key: AnovaCoordinator(hass, device) for device in devices
-    }
-    for coordinator in coordinators.values():
+    coordinators = [AnovaCoordinator(hass, device) for device in devices]
+    for coordinator in coordinators:
         await coordinator.async_config_entry_first_refresh()
         firmware_version = coordinator.data["sensors"][
             AnovaPrecisionCookerSensor.FIRMWARE_VERSION
         ]
         coordinator.async_setup(firmware_version)
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinators
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = AnovaData(
+        api_jwt=entry.data["jwt"], precision_cookers=devices, coordinators=coordinators
+    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
