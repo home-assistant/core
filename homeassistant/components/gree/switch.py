@@ -20,7 +20,7 @@ GREE_SWITCHES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
         icon="mdi:lightbulb",
         name="Panel light",
-        key="panel_light",
+        key="light",
     ),
     SwitchEntityDescription(
         name="Quiet",
