@@ -11,6 +11,7 @@ from homeassistant.components.zha.core.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
 
@@ -159,6 +160,7 @@ async def test_option_flow_install_multi_pan_addon(
     start_addon,
 ) -> None:
     """Test installing the multi pan addon."""
+    assert await async_setup_component(hass, "usb", {})
     mock_integration(hass, MockModule("hassio"))
 
     # Setup the config entry
@@ -253,6 +255,7 @@ async def test_option_flow_install_multi_pan_addon_zha(
     start_addon,
 ) -> None:
     """Test installing the multi pan addon when a zha config entry exists."""
+    assert await async_setup_component(hass, "usb", {})
     mock_integration(hass, MockModule("hassio"))
 
     # Setup the config entry

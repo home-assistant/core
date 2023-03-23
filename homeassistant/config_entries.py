@@ -752,7 +752,7 @@ class ConfigEntry:
         target: Coroutine[Any, Any, _R],
         name: str | None = None,
     ) -> asyncio.Task[_R]:
-        """Create a task from within the eventloop.
+        """Create a task from within the event loop.
 
         This method must be run in the event loop.
 
@@ -954,25 +954,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
 
         Handler key is the domain of the component that we want to set up.
         """
-        try:
-            integration = await loader.async_get_integration(self.hass, handler_key)
-        except loader.IntegrationNotFound as err:
-            _LOGGER.error("Cannot find integration %s", handler_key)
-            raise data_entry_flow.UnknownHandler from err
-
-        # Make sure requirements and dependencies of component are resolved
-        await async_process_deps_reqs(self.hass, self._hass_config, integration)
-
-        try:
-            integration.get_platform("config_flow")
-        except ImportError as err:
-            _LOGGER.error(
-                "Error occurred loading configuration flow for integration %s: %s",
-                handler_key,
-                err,
-            )
-            raise data_entry_flow.UnknownHandler
-
+        await _load_integration(self.hass, handler_key, self._hass_config)
         if (handler := HANDLERS.get(handler_key)) is None:
             raise data_entry_flow.UnknownHandler
 
@@ -1131,7 +1113,13 @@ class ConfigEntries:
     async def _async_shutdown(self, event: Event) -> None:
         """Call when Home Assistant is stopping."""
         await asyncio.gather(
-            *(entry.async_shutdown() for entry in self._entries.values())
+            *(
+                asyncio.create_task(
+                    entry.async_shutdown(),
+                    name=f"config entry shutdown {entry.title} {entry.domain} {entry.entry_id}",
+                )
+                for entry in self._entries.values()
+            )
         )
         await self.flow.async_shutdown()
 
@@ -1390,7 +1378,13 @@ class ConfigEntries:
     ) -> None:
         """Forward the setup of an entry to platforms."""
         await asyncio.gather(
-            *(self.async_forward_entry_setup(entry, platform) for platform in platforms)
+            *(
+                asyncio.create_task(
+                    self.async_forward_entry_setup(entry, platform),
+                    name=f"config entry forward setup {entry.title} {entry.domain} {entry.entry_id} {platform}",
+                )
+                for platform in platforms
+            )
         )
 
     async def async_forward_entry_setup(
@@ -1421,7 +1415,10 @@ class ConfigEntries:
         return all(
             await asyncio.gather(
                 *(
-                    self.async_forward_entry_unload(entry, platform)
+                    asyncio.create_task(
+                        self.async_forward_entry_unload(entry, platform),
+                        name=f"config entry forward unload {entry.title} {entry.domain} {entry.entry_id} {platform}",
+                    )
                     for platform in platforms
                 )
             )
@@ -1827,6 +1824,8 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
         if entry is None:
             raise UnknownEntry(handler_key)
 
+        await _load_integration(self.hass, entry.domain, {})
+
         if entry.domain not in HANDLERS:
             raise data_entry_flow.UnknownHandler
 
@@ -1952,7 +1951,13 @@ class EntityRegistryDisabledHandler:
         )
 
         await asyncio.gather(
-            *(self.hass.config_entries.async_reload(entry_id) for entry_id in to_reload)
+            *(
+                asyncio.create_task(
+                    self.hass.config_entries.async_reload(entry_id),
+                    name="config entry reload {entry.title} {entry.domain} {entry.entry_id}",
+                )
+                for entry_id in to_reload
+            )
         )
 
 
@@ -1985,3 +1990,26 @@ async def support_remove_from_device(hass: HomeAssistant, domain: str) -> bool:
     integration = await loader.async_get_integration(hass, domain)
     component = integration.get_component()
     return hasattr(component, "async_remove_config_entry_device")
+
+
+async def _load_integration(
+    hass: HomeAssistant, domain: str, hass_config: ConfigType
+) -> None:
+    try:
+        integration = await loader.async_get_integration(hass, domain)
+    except loader.IntegrationNotFound as err:
+        _LOGGER.error("Cannot find integration %s", domain)
+        raise data_entry_flow.UnknownHandler from err
+
+    # Make sure requirements and dependencies of component are resolved
+    await async_process_deps_reqs(hass, hass_config, integration)
+
+    try:
+        integration.get_platform("config_flow")
+    except ImportError as err:
+        _LOGGER.error(
+            "Error occurred loading flow for integration %s: %s",
+            domain,
+            err,
+        )
+        raise data_entry_flow.UnknownHandler

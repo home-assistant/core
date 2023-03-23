@@ -1,8 +1,6 @@
 """Support for getting statistical data from a Pi-hole system."""
 from __future__ import annotations
 
-from typing import Any
-
 from hole import Hole
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
@@ -10,6 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import PiHoleEntity
@@ -113,9 +112,9 @@ class PiHoleSensor(PiHoleEntity, SensorEntity):
         self._attr_unique_id = f"{self._server_unique_id}/{description.name}"
 
     @property
-    def native_value(self) -> Any:
+    def native_value(self) -> StateType:
         """Return the state of the device."""
         try:
-            return round(self.api.data[self.entity_description.key], 2)
+            return round(self.api.data[self.entity_description.key], 2)  # type: ignore[no-any-return]
         except TypeError:
-            return self.api.data[self.entity_description.key]
+            return self.api.data[self.entity_description.key]  # type: ignore[no-any-return]

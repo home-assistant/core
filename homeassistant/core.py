@@ -149,7 +149,7 @@ MAX_EXPECTED_ENTITY_IDS = 16384
 
 _LOGGER = logging.getLogger(__name__)
 
-_cv_hass: ContextVar[HomeAssistant] = ContextVar("current_entry")
+_cv_hass: ContextVar[HomeAssistant] = ContextVar("hass")
 
 
 @functools.lru_cache(MAX_EXPECTED_ENTITY_IDS)
@@ -516,7 +516,7 @@ class HomeAssistant:
     def async_create_task(
         self, target: Coroutine[Any, Any, _R], name: str | None = None
     ) -> asyncio.Task[_R]:
-        """Create a task from within the eventloop.
+        """Create a task from within the event loop.
 
         This method must be run in the event loop. If you are using this in your
         integration, use the create task methods on the config entry instead.
@@ -534,7 +534,7 @@ class HomeAssistant:
         target: Coroutine[Any, Any, _R],
         name: str,
     ) -> asyncio.Task[_R]:
-        """Create a task from within the eventloop.
+        """Create a task from within the event loop.
 
         This is a background task which will not block startup and will be
         automatically cancelled on shutdown. If you are using this in your
@@ -1042,7 +1042,7 @@ class EventBus:
         return self._async_listen_filterable_job(
             event_type,
             _FilterableJob(
-                HassJob(listener, "listen {event_type}"), event_filter, run_immediately
+                HassJob(listener, f"listen {event_type}"), event_filter, run_immediately
             ),
         )
 
@@ -1118,7 +1118,7 @@ class EventBus:
         )
 
         filterable_job = _FilterableJob(
-            HassJob(_onetime_listener, "onetime listen {event_type} {listener}"),
+            HassJob(_onetime_listener, f"onetime listen {event_type} {listener}"),
             None,
             False,
         )
