@@ -4,8 +4,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, cast
 
-from greeclimate.device import Props
-
 from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntity,
@@ -21,14 +19,7 @@ from .entity import GreeEntity
 
 
 @dataclass
-class GreeSwitchRequiredKeysMixin:
-    """Mixin for require keys."""
-
-    property: Props
-
-
-@dataclass
-class GreeSwitchEntityDescription(SwitchEntityDescription, GreeSwitchRequiredKeysMixin):
+class GreeSwitchEntityDescription(SwitchEntityDescription):
     """Describes a switch entity."""
 
 
@@ -37,24 +28,20 @@ GREE_SWITCHES: tuple[GreeSwitchEntityDescription, ...] = (
         icon="mdi:lightbulb",
         name="Panel light",
         key="panel_light",
-        property=Props.LIGHT,
     ),
     GreeSwitchEntityDescription(
         name="Quiet",
         key="quiet",
-        property=Props.QUIET,
     ),
     GreeSwitchEntityDescription(
         name="Fresh air",
         key="fresh_air",
-        property=Props.FRESH_AIR,
     ),
-    GreeSwitchEntityDescription(name="XFan", key="xfan", property=Props.XFAN),
+    GreeSwitchEntityDescription(name="XFan", key="xfan"),
     GreeSwitchEntityDescription(
         icon="mdi:pine-tree",
         name="Health mode",
         key="health_mode",
-        property=Props.ANION,
         entity_registry_enabled_default=False,
     ),
 )
