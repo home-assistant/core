@@ -68,7 +68,6 @@ class GreeSwitch(GreeEntity, SwitchEntity):
     """Generic Gree entity to use with a modern style configuration."""
 
     _attr_device_class = SwitchDeviceClass.SWITCH
-    entity_description: SwitchEntityDescription
 
     def __init__(self, coordinator, description: SwitchEntityDescription) -> None:
         """Initialize the Gree device."""
