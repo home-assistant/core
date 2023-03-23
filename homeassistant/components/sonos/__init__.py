@@ -365,7 +365,8 @@ class SonosDiscoveryManager:
                     )
 
             else:
-                if self.hosts_in_error.pop(ip_addr):
+                if self.hosts_in_error.get(ip_addr):
+                    self.hosts_in_error[ip_addr] = False
                     _LOGGER.info("Connection restablished to Sonos device %s", ip_addr)
                 if new_hosts := {
                     x.ip_address
