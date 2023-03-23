@@ -87,14 +87,14 @@ async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) 
     await hass.async_block_till_done()
 
 
-GetEventsFn = Callable[[str, str], Awaitable[dict[str, Any]]]
+GetEventsFn = Callable[[str, str], Awaitable[list[dict[str, Any]]]]
 
 
 @pytest.fixture(name="get_events")
 def get_events_fixture(hass_client: ClientSessionGenerator) -> GetEventsFn:
     """Fetch calendar events from the HTTP API."""
 
-    async def _fetch(start: str, end: str) -> None:
+    async def _fetch(start: str, end: str) -> list[dict[str, Any]]:
         client = await hass_client()
         response = await client.get(
             f"/api/calendars/{TEST_ENTITY}?start={urllib.parse.quote(start)}&end={urllib.parse.quote(end)}"
@@ -108,9 +108,7 @@ def get_events_fixture(hass_client: ClientSessionGenerator) -> GetEventsFn:
 def event_fields(data: dict[str, str]) -> dict[str, str]:
     """Filter event API response to minimum fields."""
     return {
-        k: data.get(k)
-        for k in ["summary", "start", "end", "recurrence_id"]
-        if data.get(k)
+        k: data[k] for k in ["summary", "start", "end", "recurrence_id"] if data.get(k)
     }
 
 
@@ -122,7 +120,9 @@ class Client:
         self.client = client
         self.id = 0
 
-    async def cmd(self, cmd: str, payload: dict[str, Any] = None) -> dict[str, Any]:
+    async def cmd(
+        self, cmd: str, payload: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Send a command and receive the json result."""
         self.id += 1
         await self.client.send_json(
@@ -136,7 +136,9 @@ class Client:
         assert resp.get("id") == self.id
         return resp
 
-    async def cmd_result(self, cmd: str, payload: dict[str, Any] = None) -> Any:
+    async def cmd_result(
+        self, cmd: str, payload: dict[str, Any] | None = None
+    ) -> dict[str, Any] | None:
         """Send a command and parse the result."""
         resp = await self.cmd(cmd, payload)
         assert resp.get("success")

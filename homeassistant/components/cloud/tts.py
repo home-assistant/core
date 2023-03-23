@@ -1,7 +1,7 @@
 """Support for the cloud for text to speech service."""
 
 from hass_nabucasa import Cloud
-from hass_nabucasa.voice import MAP_VOICE, VoiceError
+from hass_nabucasa.voice import MAP_VOICE, AudioOutput, VoiceError
 import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
@@ -99,7 +99,10 @@ class CloudProvider(Provider):
         # Process TTS
         try:
             data = await self.cloud.voice.process_tts(
-                message, language, gender=options[CONF_GENDER]
+                message,
+                language,
+                gender=options[CONF_GENDER],
+                output=AudioOutput.MP3,
             )
         except VoiceError:
             return (None, None)

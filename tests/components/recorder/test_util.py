@@ -6,7 +6,7 @@ from pathlib import Path
 import sqlite3
 from unittest.mock import MagicMock, Mock, patch
 
-from freezegun import freeze_time
+import py
 import pytest
 from sqlalchemy import text
 from sqlalchemy.engine.result import ChunkedIteratorResult
@@ -73,7 +73,7 @@ def test_recorder_bad_execute(hass_recorder: Callable[..., HomeAssistant]) -> No
 
 
 def test_validate_or_move_away_sqlite_database(
-    hass: HomeAssistant, tmpdir, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, tmpdir: py.path.local, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Ensure a malformed sqlite database is moved away."""
 
@@ -908,7 +908,7 @@ def test_execute_stmt_lambda_element(
 
     with session_scope(hass=hass) as session:
         # No time window, we always get a list
-        metadata_id = instance.states_meta_manager.get("sensor.on", session)
+        metadata_id = instance.states_meta_manager.get("sensor.on", session, True)
         stmt = _get_single_entity_states_stmt(dt_util.utcnow(), metadata_id, False)
         rows = util.execute_stmt_lambda_element(session, stmt)
         assert isinstance(rows, list)
@@ -933,7 +933,7 @@ def test_execute_stmt_lambda_element(
             assert rows == ["mock_row"]
 
 
-@freeze_time(datetime(2022, 10, 21, 7, 25, tzinfo=timezone.utc))
+@pytest.mark.freeze_time(datetime(2022, 10, 21, 7, 25, tzinfo=timezone.utc))
 async def test_resolve_period(hass: HomeAssistant) -> None:
     """Test statistic_during_period."""
 

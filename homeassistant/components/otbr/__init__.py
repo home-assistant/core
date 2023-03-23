@@ -155,6 +155,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _warn_on_default_network_settings(hass, entry, dataset_tlvs)
         await async_add_dataset(hass, DOMAIN, dataset_tlvs.hex())
 
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+
     hass.data[DOMAIN] = otbrdata
 
     return True
@@ -164,6 +166,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     hass.data.pop(DOMAIN)
     return True
+
+
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle an options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_get_active_dataset_tlvs(hass: HomeAssistant) -> bytes | None:

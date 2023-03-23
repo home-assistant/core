@@ -185,7 +185,7 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
         await self._remote.async_send_key(Keys.rewind)
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play media."""
         if media_source.is_media_source_id(media_id):

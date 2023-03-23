@@ -17,9 +17,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
+
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -58,7 +60,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
-
 
 class NextcloudMonitorWrapper:
     """TThis is an object containing a dictionary representation of dat returned by Nextcloud's monitoring api.

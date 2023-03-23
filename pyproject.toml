@@ -39,7 +39,7 @@ dependencies    = [
     "ifaddr==0.1.7",
     "jinja2==3.1.2",
     "lru-dict==1.1.8",
-    "PyJWT==2.5.0",
+    "PyJWT==2.6.0",
     # PyJWT has loose dependency. We want the latest one.
     "cryptography==39.0.1",
     # pyOpenSSL 23.0.0 is required to work with cryptography 39+
@@ -50,7 +50,7 @@ dependencies    = [
     "pyyaml==6.0",
     "requests==2.28.2",
     "typing-extensions>=4.5.0,<5.0",
-    "ulid-transform==0.4.2",
+    "ulid-transform==0.5.1",
     "voluptuous==0.13.1",
     "voluptuous-serialize==2.6.0",
     "yarl==1.8.1",
@@ -291,15 +291,6 @@ fixture-parentheses = false
 keep-runtime-typing = true
 
 [tool.ruff.per-file-ignores]
-
-# TODO: these files have functions that are too complex, but flake8's and ruff's
-#       complexity (and/or nested-function) handling differs; trying to add a noqa doesn't work
-#       because the flake8-noqa plugin then disagrees on whether there should be a C901 noqa
-#       on that line.  So, for now, we just ignore C901s on these files as far as ruff is concerned.
-
-"homeassistant/components/light/__init__.py" = ["C901"]
-"homeassistant/components/mqtt/discovery.py" = ["C901"]
-"homeassistant/components/websocket_api/http.py" = ["C901"]
 
 # Allow for main entry & scripts to write to stdout
 "homeassistant/__main__.py" = ["T201"]

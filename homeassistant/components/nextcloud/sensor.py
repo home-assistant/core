@@ -11,7 +11,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from . import NextcloudEntity, NextcloudMonitorWrapper
 from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN, SENSORS
 
-
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -67,3 +66,4 @@ class NextcloudSensor(NextcloudEntity, SensorEntity):
     def native_value(self) -> str:
         """Return the state for this sensor."""
         return self.api.data[self._item]
+

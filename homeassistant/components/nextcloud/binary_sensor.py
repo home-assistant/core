@@ -11,11 +11,11 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from . import NextcloudEntity, NextcloudMonitorWrapper
 from .const import BINARY_SENSORS, DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN
 
-
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Nextcloud sensors."""
+
     binary_sensors = []
 
     instance_name = entry.data[CONF_NAME]
@@ -33,7 +33,6 @@ async def async_setup_entry(
                 )
             )
     async_add_entities(binary_sensors, True)
-
 
 class NextcloudBinarySensor(NextcloudEntity, BinarySensorEntity):
     """Represents a Nextcloud binary sensor."""
@@ -68,3 +67,4 @@ class NextcloudBinarySensor(NextcloudEntity, BinarySensorEntity):
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.api.data[self._item] == "yes"
+
