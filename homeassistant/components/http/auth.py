@@ -61,9 +61,7 @@ def async_sign_path(
 
     url = URL(path)
     now = dt_util.utcnow()
-    params = dict(sorted(url.query.items()))
-    for param in SAFE_QUERY_PARAMS:
-        params.pop(param, None)
+    params = [itm for itm in url.query.items() if itm[0] not in SAFE_QUERY_PARAMS]
     encoded = jwt.encode(
         {
             "iss": refresh_token_id,
@@ -76,7 +74,7 @@ def async_sign_path(
         algorithm="HS256",
     )
 
-    params[SIGN_QUERY_PARAM] = encoded
+    params.append((SIGN_QUERY_PARAM, encoded))
     url = url.with_query(params)
     return f"{url.path}?{url.query_string}"
 
@@ -185,10 +183,11 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
         if claims["path"] != request.path:
             return False
 
-        params = dict(sorted(request.query.items()))
-        del params[SIGN_QUERY_PARAM]
-        for param in SAFE_QUERY_PARAMS:
-            params.pop(param, None)
+        params = [
+            list(itm)  # claims stores tuples as lists
+            for itm in request.query.items()
+            if itm[0] not in SAFE_QUERY_PARAMS and itm[0] != SIGN_QUERY_PARAM
+        ]
         if claims["params"] != params:
             return False
 
