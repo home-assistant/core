@@ -65,7 +65,7 @@ async def async_setup_entry(
 
 
 class GreeSwitch(GreeEntity, SwitchEntity):
-    """Generic Gree entity to use with a modern style configuration."""
+    """Generic Gree switch entity."""
 
     _attr_device_class = SwitchDeviceClass.SWITCH
 
