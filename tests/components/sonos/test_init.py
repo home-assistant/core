@@ -103,6 +103,7 @@ async def test_async_poll_manual_hosts_warnings(
         record = caplog.records[0]
         assert record.levelname == "WARNING"
         assert "Could not get visible Sonos devices from" in record.message
+
         # Second call fails again, it should be logged as a DEBUG message
         caplog.clear()
         await manager.async_poll_manual_hosts()
@@ -124,7 +125,7 @@ async def test_async_poll_manual_hosts_warnings(
         await manager.async_poll_manual_hosts()
         assert len(caplog.messages) == 0
 
-        mock_async_add_executor_job.side_effect = OSError()
+        # Fifth call fail again again, should be logged as a WARNING message
         caplog.clear()
         await manager.async_poll_manual_hosts()
         assert len(caplog.messages) == 1
