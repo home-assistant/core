@@ -24,6 +24,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_charset": "The specified charset is not supported",
+      "invalid_folder": "The selected folder is invalid",
       "invalid_search": "The selected search is invalid"
     },
     "abort": {
