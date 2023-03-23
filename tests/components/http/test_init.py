@@ -5,7 +5,8 @@ from http import HTTPStatus
 from ipaddress import ip_network
 import logging
 import pathlib
-from unittest.mock import Mock, patch
+import time
+from unittest.mock import MagicMock, Mock, patch
 
 import py
 import pytest
@@ -21,6 +22,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.ssl import server_context_intermediate, server_context_modern
 
 from tests.common import async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMockResponse
 from tests.typing import ClientSessionGenerator
 
 
@@ -500,3 +502,22 @@ async def test_logging(
     response = await client.get("/api/states/logging.entity")
     assert response.status == HTTPStatus.OK
     assert "GET /api/states/logging.entity" not in caplog.text
+
+
+async def test_hass_access_logger(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that the access logger is created."""
+    test_logger = logging.getLogger("test.aiohttp.logger")
+    logger = http.HomeAssistantAccessLogger(test_logger)
+    mock_request = MagicMock()
+    response = AiohttpClientMockResponse(
+        "POST", "http://127.0.0.1", status=HTTPStatus.OK
+    )
+    setattr(response, "body_length", 10)
+    logger.log(mock_request, response, time.time())
+    assert "HTTPStatus.OK 10" in caplog.text
+    caplog.clear()
+    test_logger.setLevel(logging.WARNING)
+    logger.log(mock_request, response, time.time())
+    assert "HTTPStatus.OK 10" not in caplog.text
