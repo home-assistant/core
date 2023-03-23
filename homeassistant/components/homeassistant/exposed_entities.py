@@ -125,7 +125,6 @@ class ExposedEntities:
     @callback
     def async_expose_new_entities(self, assistant: str, expose_new: bool) -> None:
         """Enable an assistant to expose new entities."""
-
         self._assistants[assistant] = AssistantPreferences(expose_new=expose_new)
         self._async_schedule_save()
 
@@ -160,10 +159,10 @@ class ExposedEntities:
             should_expose = registry_entry.options[assistant]["should_expose"]
             return should_expose
 
-        if not (prefs := self._assistants.get(assistant)) or not prefs.expose_new:
-            should_expose = False
-        else:
+        if (prefs := self._assistants.get(assistant)) and prefs.expose_new:
             should_expose = self._is_default_exposed(entity_id, registry_entry)
+        else:
+            should_expose = False
 
         assistant_options = {"should_expose": should_expose}
         entity_registry.async_update_entity_options(

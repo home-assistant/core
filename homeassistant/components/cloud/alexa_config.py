@@ -124,6 +124,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
     def _migrate_alexa_entity_settings_v1(self):
         """Migrate alexa entity settings to entity registry options."""
         if not self._config[CONF_FILTER].empty_filter:
+            # Don't migrate if there's a YAML config
             return
 
         entity_registry = er.async_get(self.hass)
