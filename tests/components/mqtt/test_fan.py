@@ -32,7 +32,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .test_common import (
     help_test_availability_when_connection_lost,
@@ -85,30 +84,24 @@ def fan_platform_only():
         yield
 
 
+@pytest.mark.parametrize("hass_config", [{mqtt.DOMAIN: {fan.DOMAIN: {"name": "test"}}}])
 async def test_fail_setup_if_no_command_topic(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test if command fails with command topic."""
-    assert not await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
-        {mqtt.DOMAIN: {fan.DOMAIN: {"name": "test"}}},
-    )
+    with pytest.raises(AssertionError):
+        await mqtt_mock_entry_no_yaml_config()
     assert (
         "Invalid config for [mqtt]: required key not provided @ data['mqtt']['fan'][0]['command_topic']"
         in caplog.text
     )
 
 
-async def test_controlling_state_via_topic(
-    hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test the controlling state via topic."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 fan.DOMAIN: {
@@ -139,10 +132,16 @@ async def test_controlling_state_via_topic(
                     "payload_reset_preset_mode": "rEset_preset_mode",
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_controlling_state_via_topic(
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the controlling state via topic."""
+    await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("fan.test")
     assert state.state == STATE_UNKNOWN
@@ -224,15 +223,9 @@ async def test_controlling_state_via_topic(
     assert state.state == STATE_UNKNOWN
 
 
-async def test_controlling_state_via_topic_with_different_speed_range(
-    hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test the controlling state via topic using an alternate speed range."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 fan.DOMAIN: [
@@ -262,10 +255,16 @@ async def test_controlling_state_via_topic_with_different_speed_range(
                     },
                 ]
             }
-        },
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_controlling_state_via_topic_with_different_speed_range(
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the controlling state via topic using an alternate speed range."""
+    await mqtt_mock_entry_no_yaml_config()
 
     async_fire_mqtt_message(hass, "percentage-state-topic1", "100")
     state = hass.states.get("fan.test1")
@@ -288,15 +287,9 @@ async def test_controlling_state_via_topic_with_different_speed_range(
     caplog.clear()
 
 
-async def test_controlling_state_via_topic_no_percentage_topics(
-    hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test the controlling state via topic without percentage topics."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 fan.DOMAIN: {
@@ -314,10 +307,16 @@ async def test_controlling_state_via_topic_no_percentage_topics(
                     ],
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_controlling_state_via_topic_no_percentage_topics(
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the controlling state via topic without percentage topics."""
+    await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("fan.test")
     assert state.state == STATE_UNKNOWN
@@ -347,15 +346,9 @@ async def test_controlling_state_via_topic_no_percentage_topics(
     caplog.clear()
 
 
-async def test_controlling_state_via_topic_and_json_message(
-    hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test the controlling state via topic and JSON message (percentage mode)."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 fan.DOMAIN: {
@@ -384,10 +377,16 @@ async def test_controlling_state_via_topic_and_json_message(
                     "speed_range_max": 100,
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_controlling_state_via_topic_and_json_message(
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the controlling state via topic and JSON message (percentage mode)."""
+    await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("fan.test")
     assert state.state == STATE_UNKNOWN
@@ -454,15 +453,9 @@ async def test_controlling_state_via_topic_and_json_message(
     assert state.attributes.get("preset_mode") is None
 
 
-async def test_controlling_state_via_topic_and_json_message_shared_topic(
-    hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test the controlling state via topic and JSON message using a shared topic."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 fan.DOMAIN: {
@@ -491,10 +484,16 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
                     "speed_range_max": 100,
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_controlling_state_via_topic_and_json_message_shared_topic(
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the controlling state via topic and JSON message using a shared topic."""
+    await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("fan.test")
     assert state.state == STATE_UNKNOWN
@@ -544,15 +543,9 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
     caplog.clear()
 
 
-async def test_sending_mqtt_commands_and_optimistic(
-    hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test optimistic mode without state topic."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 fan.DOMAIN: {
@@ -572,10 +565,15 @@ async def test_sending_mqtt_commands_and_optimistic(
                     ],
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_sending_mqtt_commands_and_optimistic(
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+) -> None:
+    """Test optimistic mode without state topic."""
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("fan.test")
     assert state.state == STATE_UNKNOWN
@@ -671,13 +669,9 @@ async def test_sending_mqtt_commands_and_optimistic(
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
-async def test_sending_mqtt_commands_with_alternate_speed_range(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
-) -> None:
-    """Test the controlling state via topic using an alternate speed range."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 fan.DOMAIN: [
@@ -707,10 +701,14 @@ async def test_sending_mqtt_commands_with_alternate_speed_range(
                     },
                 ]
             }
-        },
-    )
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_sending_mqtt_commands_with_alternate_speed_range(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
+    """Test the controlling state via topic using an alternate speed range."""
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
 
     await common.async_set_percentage(hass, "fan.test1", 0)
     mqtt_mock.async_publish.assert_called_once_with(
@@ -777,15 +775,9 @@ async def test_sending_mqtt_commands_with_alternate_speed_range(
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
-async def test_sending_mqtt_commands_and_optimistic_no_legacy(
-    hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test optimistic mode without state topic without legacy speed command topic."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 fan.DOMAIN: {
@@ -800,10 +792,16 @@ async def test_sending_mqtt_commands_and_optimistic_no_legacy(
                     ],
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_sending_mqtt_commands_and_optimistic_no_legacy(
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test optimistic mode without state topic without legacy speed command topic."""
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("fan.test")
     assert state.state == STATE_UNKNOWN
@@ -911,15 +909,9 @@ async def test_sending_mqtt_commands_and_optimistic_no_legacy(
         await common.async_turn_on(hass, "fan.test", preset_mode="freaking-high")
 
 
-async def test_sending_mqtt_command_templates_(
-    hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test optimistic mode without state topic without legacy speed command topic."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 fan.DOMAIN: {
@@ -939,10 +931,15 @@ async def test_sending_mqtt_command_templates_(
                     ],
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_sending_mqtt_command_templates_(
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+) -> None:
+    """Test optimistic mode without state topic without legacy speed command topic."""
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("fan.test")
     assert state.state == STATE_UNKNOWN
@@ -1056,15 +1053,9 @@ async def test_sending_mqtt_command_templates_(
         await common.async_turn_on(hass, "fan.test", preset_mode="low")
 
 
-async def test_sending_mqtt_commands_and_optimistic_no_percentage_topic(
-    hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test optimistic mode without state topic without percentage command topic."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 fan.DOMAIN: {
@@ -1080,10 +1071,15 @@ async def test_sending_mqtt_commands_and_optimistic_no_percentage_topic(
                     ],
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_sending_mqtt_commands_and_optimistic_no_percentage_topic(
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+) -> None:
+    """Test optimistic mode without state topic without percentage command topic."""
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("fan.test")
     assert state.state == STATE_UNKNOWN
@@ -1120,15 +1116,9 @@ async def test_sending_mqtt_commands_and_optimistic_no_percentage_topic(
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
-async def test_sending_mqtt_commands_and_explicit_optimistic(
-    hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test optimistic mode with state topic and turn on attributes."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 fan.DOMAIN: {
@@ -1149,10 +1139,15 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
                     "optimistic": True,
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_sending_mqtt_commands_and_explicit_optimistic(
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+) -> None:
+    """Test optimistic mode with state topic and turn on attributes."""
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("fan.test")
     assert state.state == STATE_UNKNOWN
@@ -1395,15 +1390,9 @@ async def test_encoding_subscribable_topics(
     )
 
 
-async def test_attributes(
-    hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test attributes."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 fan.DOMAIN: {
@@ -1418,10 +1407,16 @@ async def test_attributes(
                     ],
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_attributes(
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test attributes."""
+    await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("fan.test")
     assert state.state == STATE_UNKNOWN
@@ -1452,13 +1447,17 @@ async def test_attributes(
 
 
 @pytest.mark.parametrize(
-    ("name", "config", "success", "features"),
+    ("name", "hass_config", "success", "features"),
     [
         (
             "test1",
             {
-                "name": "test1",
-                "command_topic": "command-topic",
+                mqtt.DOMAIN: {
+                    fan.DOMAIN: {
+                        "name": "test1",
+                        "command_topic": "command-topic",
+                    }
+                }
             },
             True,
             0,
@@ -1466,29 +1465,41 @@ async def test_attributes(
         (
             "test2",
             {
-                "name": "test2",
-                "command_topic": "command-topic",
-                "oscillation_command_topic": "oscillation-command-topic",
+                mqtt.DOMAIN: {
+                    fan.DOMAIN: {
+                        "name": "test2",
+                        "command_topic": "command-topic",
+                        "oscillation_command_topic": "oscillation-command-topic",
+                    }
+                }
             },
             True,
-            fan.SUPPORT_OSCILLATE,
+            fan.FanEntityFeature.OSCILLATE,
         ),
         (
             "test3",
             {
-                "name": "test3",
-                "command_topic": "command-topic",
-                "percentage_command_topic": "percentage-command-topic",
+                mqtt.DOMAIN: {
+                    fan.DOMAIN: {
+                        "name": "test3",
+                        "command_topic": "command-topic",
+                        "percentage_command_topic": "percentage-command-topic",
+                    }
+                }
             },
             True,
-            fan.SUPPORT_SET_SPEED,
+            fan.FanEntityFeature.SET_SPEED,
         ),
         (
             "test4",
             {
-                "name": "test4",
-                "command_topic": "command-topic",
-                "preset_mode_command_topic": "preset-mode-command-topic",
+                mqtt.DOMAIN: {
+                    fan.DOMAIN: {
+                        "name": "test4",
+                        "command_topic": "command-topic",
+                        "preset_mode_command_topic": "preset-mode-command-topic",
+                    }
+                }
             },
             False,
             None,
@@ -1496,100 +1507,136 @@ async def test_attributes(
         (
             "test5",
             {
-                "name": "test5",
-                "command_topic": "command-topic",
-                "preset_mode_command_topic": "preset-mode-command-topic",
-                "preset_modes": ["eco", "auto"],
+                mqtt.DOMAIN: {
+                    fan.DOMAIN: {
+                        "name": "test5",
+                        "command_topic": "command-topic",
+                        "preset_mode_command_topic": "preset-mode-command-topic",
+                        "preset_modes": ["eco", "auto"],
+                    }
+                }
             },
             True,
-            fan.SUPPORT_PRESET_MODE,
+            fan.FanEntityFeature.PRESET_MODE,
         ),
         (
             "test6",
             {
-                "name": "test6",
-                "command_topic": "command-topic",
-                "preset_mode_command_topic": "preset-mode-command-topic",
-                "preset_modes": ["eco", "smart", "auto"],
+                mqtt.DOMAIN: {
+                    fan.DOMAIN: {
+                        "name": "test6",
+                        "command_topic": "command-topic",
+                        "preset_mode_command_topic": "preset-mode-command-topic",
+                        "preset_modes": ["eco", "smart", "auto"],
+                    }
+                }
             },
             True,
-            fan.SUPPORT_PRESET_MODE,
+            fan.FanEntityFeature.PRESET_MODE,
         ),
         (
             "test7",
             {
-                "name": "test7",
-                "command_topic": "command-topic",
-                "percentage_command_topic": "percentage-command-topic",
+                mqtt.DOMAIN: {
+                    fan.DOMAIN: {
+                        "name": "test7",
+                        "command_topic": "command-topic",
+                        "percentage_command_topic": "percentage-command-topic",
+                    }
+                }
             },
             True,
-            fan.SUPPORT_SET_SPEED,
+            fan.FanEntityFeature.SET_SPEED,
         ),
         (
             "test8",
             {
-                "name": "test8",
-                "command_topic": "command-topic",
-                "oscillation_command_topic": "oscillation-command-topic",
-                "percentage_command_topic": "percentage-command-topic",
+                mqtt.DOMAIN: {
+                    fan.DOMAIN: {
+                        "name": "test8",
+                        "command_topic": "command-topic",
+                        "oscillation_command_topic": "oscillation-command-topic",
+                        "percentage_command_topic": "percentage-command-topic",
+                    }
+                }
             },
             True,
-            fan.SUPPORT_OSCILLATE | fan.SUPPORT_SET_SPEED,
+            fan.FanEntityFeature.OSCILLATE | fan.FanEntityFeature.SET_SPEED,
         ),
         (
             "test9",
             {
-                "name": "test9",
-                "command_topic": "command-topic",
-                "preset_mode_command_topic": "preset-mode-command-topic",
-                "preset_modes": ["Mode1", "Mode2", "Mode3"],
+                mqtt.DOMAIN: {
+                    fan.DOMAIN: {
+                        "name": "test9",
+                        "command_topic": "command-topic",
+                        "preset_mode_command_topic": "preset-mode-command-topic",
+                        "preset_modes": ["Mode1", "Mode2", "Mode3"],
+                    }
+                }
             },
             True,
-            fan.SUPPORT_PRESET_MODE,
+            fan.FanEntityFeature.PRESET_MODE,
         ),
         (
             "test10",
             {
-                "name": "test10",
-                "command_topic": "command-topic",
-                "preset_mode_command_topic": "preset-mode-command-topic",
-                "preset_modes": ["whoosh", "silent", "auto"],
+                mqtt.DOMAIN: {
+                    fan.DOMAIN: {
+                        "name": "test10",
+                        "command_topic": "command-topic",
+                        "preset_mode_command_topic": "preset-mode-command-topic",
+                        "preset_modes": ["whoosh", "silent", "auto"],
+                    }
+                }
             },
             True,
-            fan.SUPPORT_PRESET_MODE,
+            fan.FanEntityFeature.PRESET_MODE,
         ),
         (
             "test11",
             {
-                "name": "test11",
-                "command_topic": "command-topic",
-                "oscillation_command_topic": "oscillation-command-topic",
-                "preset_mode_command_topic": "preset-mode-command-topic",
-                "preset_modes": ["Mode1", "Mode2", "Mode3"],
+                mqtt.DOMAIN: {
+                    fan.DOMAIN: {
+                        "name": "test11",
+                        "command_topic": "command-topic",
+                        "oscillation_command_topic": "oscillation-command-topic",
+                        "preset_mode_command_topic": "preset-mode-command-topic",
+                        "preset_modes": ["Mode1", "Mode2", "Mode3"],
+                    }
+                }
             },
             True,
-            fan.SUPPORT_PRESET_MODE | fan.SUPPORT_OSCILLATE,
+            fan.FanEntityFeature.PRESET_MODE | fan.FanEntityFeature.OSCILLATE,
         ),
         (
             "test12",
             {
-                "name": "test12",
-                "command_topic": "command-topic",
-                "percentage_command_topic": "percentage-command-topic",
-                "speed_range_min": 1,
-                "speed_range_max": 40,
+                mqtt.DOMAIN: {
+                    fan.DOMAIN: {
+                        "name": "test12",
+                        "command_topic": "command-topic",
+                        "percentage_command_topic": "percentage-command-topic",
+                        "speed_range_min": 1,
+                        "speed_range_max": 40,
+                    }
+                }
             },
             True,
-            fan.SUPPORT_SET_SPEED,
+            fan.FanEntityFeature.SET_SPEED,
         ),
         (
             "test13",
             {
-                "name": "test13",
-                "command_topic": "command-topic",
-                "percentage_command_topic": "percentage-command-topic",
-                "speed_range_min": 50,
-                "speed_range_max": 40,
+                mqtt.DOMAIN: {
+                    fan.DOMAIN: {
+                        "name": "test13",
+                        "command_topic": "command-topic",
+                        "percentage_command_topic": "percentage-command-topic",
+                        "speed_range_min": 50,
+                        "speed_range_max": 40,
+                    }
+                }
             },
             False,
             None,
@@ -1597,11 +1644,15 @@ async def test_attributes(
         (
             "test14",
             {
-                "name": "test14",
-                "command_topic": "command-topic",
-                "percentage_command_topic": "percentage-command-topic",
-                "speed_range_min": 0,
-                "speed_range_max": 40,
+                mqtt.DOMAIN: {
+                    fan.DOMAIN: {
+                        "name": "test14",
+                        "command_topic": "command-topic",
+                        "percentage_command_topic": "percentage-command-topic",
+                        "speed_range_min": 0,
+                        "speed_range_max": 40,
+                    }
+                }
             },
             False,
             None,
@@ -1609,10 +1660,14 @@ async def test_attributes(
         (
             "test15",
             {
-                "name": "test7reset_payload_in_preset_modes_a",
-                "command_topic": "command-topic",
-                "preset_mode_command_topic": "preset-mode-command-topic",
-                "preset_modes": ["auto", "smart", "normal", "None"],
+                mqtt.DOMAIN: {
+                    fan.DOMAIN: {
+                        "name": "test7reset_payload_in_preset_modes_a",
+                        "command_topic": "command-topic",
+                        "preset_mode_command_topic": "preset-mode-command-topic",
+                        "preset_modes": ["auto", "smart", "normal", "None"],
+                    }
+                }
             },
             False,
             None,
@@ -1620,39 +1675,37 @@ async def test_attributes(
         (
             "test16",
             {
-                "name": "test16",
-                "command_topic": "command-topic",
-                "preset_mode_command_topic": "preset-mode-command-topic",
-                "preset_modes": ["whoosh", "silent", "auto", "None"],
-                "payload_reset_preset_mode": "normal",
+                mqtt.DOMAIN: {
+                    fan.DOMAIN: {
+                        "name": "test16",
+                        "command_topic": "command-topic",
+                        "preset_mode_command_topic": "preset-mode-command-topic",
+                        "preset_modes": ["whoosh", "silent", "auto", "None"],
+                        "payload_reset_preset_mode": "normal",
+                    }
+                }
             },
             True,
-            fan.SUPPORT_PRESET_MODE,
+            fan.FanEntityFeature.PRESET_MODE,
         ),
     ],
 )
 async def test_supported_features(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    name,
-    config,
-    success,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    name: str,
+    success: bool,
     features,
 ) -> None:
     """Test optimistic mode without state topic."""
-
-    assert (
-        await async_setup_component(
-            hass, mqtt.DOMAIN, {mqtt.DOMAIN: {fan.DOMAIN: config}}
-        )
-        is success
-    )
     if success:
-        await hass.async_block_till_done()
-        await mqtt_mock_entry_with_yaml_config()
+        await mqtt_mock_entry_no_yaml_config()
 
         state = hass.states.get(f"fan.{name}")
         assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == features
+        return
+    with pytest.raises(AssertionError):
+        await mqtt_mock_entry_no_yaml_config()
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
