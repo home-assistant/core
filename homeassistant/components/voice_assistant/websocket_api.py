@@ -30,8 +30,10 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "voice_assistant/run",
-        vol.Required("start_stage"): vol.In(set(PipelineStage)),
-        vol.Required("end_stage"): vol.In(set(PipelineStage)),
+        # pylint: disable-next=unnecessary-lambda
+        vol.Required("start_stage"): lambda val: PipelineStage(val),
+        # pylint: disable-next=unnecessary-lambda
+        vol.Required("end_stage"): lambda val: PipelineStage(val),
         vol.Optional("input"): {"text": str},
         vol.Optional("language"): str,
         vol.Optional("pipeline"): str,
