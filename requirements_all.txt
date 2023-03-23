@@ -40,7 +40,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.37.3
+PySwitchbot==0.37.4
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -171,7 +171,7 @@ aiogithubapi==22.10.1
 aioguardian==2022.07.0
 
 # homeassistant.components.harmony
-aioharmony==0.2.9
+aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
 aiohomekit==2.6.1
@@ -214,7 +214,7 @@ aiolyric==1.0.9
 aiomodernforms==0.1.8
 
 # homeassistant.components.yamaha_musiccast
-aiomusiccast==0.14.7
+aiomusiccast==0.14.8
 
 # homeassistant.components.nanoleaf
 aionanoleaf==0.2.1
@@ -625,7 +625,7 @@ dynalite_devices==0.1.47
 eagle100==0.1.1
 
 # homeassistant.components.easyenergy
-easyenergy==0.1.2
+easyenergy==0.2.2
 
 # homeassistant.components.ebusd
 ebusdpy==0.0.17
@@ -1299,7 +1299,7 @@ openwrt-luci-rpc==1.1.11
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.oralb
-oralb-ble==0.17.5
+oralb-ble==0.17.6
 
 # homeassistant.components.oru
 oru==0.1.11
@@ -2669,14 +2669,12 @@ xs1-api-client==3.0.0
 # homeassistant.components.yale_smart_alarm
 yalesmartalarmclient==0.3.9
 
+# homeassistant.components.august
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.0.4
+yalexs-ble==2.1.1
 
 # homeassistant.components.august
 yalexs==1.2.7
-
-# homeassistant.components.august
-yalexs_ble==2.0.4
 
 # homeassistant.components.yeelight
 yeelight==0.7.10
