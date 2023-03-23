@@ -95,7 +95,7 @@ class GreeSwitch(GreeEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return if the state is turned on."""
-        return self.coordinator.device.get_property(self.entity_description.property)
+        return getattr(self.coordinator.device, self.entity_description.key)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
