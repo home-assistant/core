@@ -27,7 +27,7 @@ async def test_success(hass: HomeAssistant) -> None:
     with patch(
         "snapcast.control.create_server",
         return_value=mock_connection,
-    ) as mock_setup_entry:
+    ) as mock_create_server:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_CONNECTION
         )
@@ -38,7 +38,7 @@ async def test_success(hass: HomeAssistant) -> None:
         result["title"] == f"{TEST_CONNECTION[CONF_HOST]}:{TEST_CONNECTION[CONF_PORT]}"
     )
     assert result["data"] == TEST_CONNECTION
-    assert len(mock_setup_entry.mock_calls) == 2
+    assert len(mock_create_server.mock_calls) == 2
 
 
 async def test_unknown_error(hass: HomeAssistant) -> None:
@@ -88,7 +88,7 @@ async def test_import(hass: HomeAssistant) -> None:
     with patch(
         "snapcast.control.create_server",
         return_value=mock_connection,
-    ) as mock_setup_entry:
+    ) as mock_create_server:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
@@ -101,4 +101,4 @@ async def test_import(hass: HomeAssistant) -> None:
         result["title"] == f"{TEST_CONNECTION[CONF_HOST]}:{TEST_CONNECTION[CONF_PORT]}"
     )
     assert result["data"] == TEST_CONNECTION
-    assert len(mock_setup_entry.mock_calls) == 2
+    assert len(mock_create_server.mock_calls) == 2
