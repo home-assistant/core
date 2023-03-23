@@ -7,7 +7,11 @@ import holidays
 from holidays import HolidayBase
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    OptionsFlowWithConfigEntry,
+)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
@@ -201,12 +205,8 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class WorkdayOptionsFlowHandler(OptionsFlow):
+class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
     """Handle Workday options."""
-
-    def __init__(self, entry: ConfigEntry) -> None:
-        """Initialize Workday options flow."""
-        self.entry = entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -217,7 +217,7 @@ class WorkdayOptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             try:
                 await self.hass.async_add_executor_job(
-                    validate_custom_dates, {**self.entry.options, **user_input}
+                    validate_custom_dates, {**self.options, **user_input}
                 )
             except AddDatesError:
                 errors["add_holidays"] = "add_holiday_error"
@@ -227,18 +227,18 @@ class WorkdayOptionsFlowHandler(OptionsFlow):
                 return self.async_create_entry(
                     title="",
                     data={
-                        **self.entry.options,
+                        **self.options,
                         **user_input,
                     },
                 )
         schema: vol.Schema = await self.hass.async_add_executor_job(
-            get_providence_to_schema, DATA_SCHEMA_OPT, self.entry.options
+            get_providence_to_schema, DATA_SCHEMA_OPT, self.options
         )
         new_schema = vol.Schema(
             {
                 vol.Optional(
                     key.schema,
-                    description={"suggested_value": self.entry.options.get(key.schema)},
+                    description={"suggested_value": self.options.get(key.schema)},
                 ): value
                 for key, value in schema.schema.items()
             }
