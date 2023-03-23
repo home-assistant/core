@@ -30,40 +30,26 @@ class SnapcastConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle first step."""
-
-        def _show_form(errors=None):
-            return self.async_show_form(
-                step_id="user",
-                data_schema=SNAPCAST_SCHEMA,
-                errors=errors,
-            )
-
-        if not user_input:
-            return _show_form()
-
-        host = user_input[CONF_HOST]
-        port = user_input[CONF_PORT]
         errors = {}
-        client = None
+        if user_input:
+            host = user_input[CONF_HOST]
+            port = user_input[CONF_PORT]
+            client = None
 
-        # Attempt to create the server - make sure it's going to work
-        try:
-            client = await snapcast.control.create_server(
-                self.hass.loop, host, port, reconnect=False
-            )
-        except socket.gaierror:
-            errors["base"] = "invalid_host"
-        except OSError:
-            errors["base"] = "cannot_connect"
-        finally:
-            del client
-
-        if errors:
-            return _show_form(errors=errors)
-
-        return self.async_create_entry(
-            title=f"{host}:{port}",
-            data=user_input,
+            # Attempt to create the server - make sure it's going to work
+            try:
+                client = await snapcast.control.create_server(
+                    self.hass.loop, host, port, reconnect=False
+                )
+            except socket.gaierror:
+                errors["base"] = "invalid_host"
+            except OSError:
+                errors["base"] = "cannot_connect"
+            else:
+                await client.stop()
+                return self.async_create_entry(title=f"{host}:{port}", data=user_input)
+        return self.async_show_form(
+            step_id="user", data_schema=SNAPCAST_SCHEMA, errors=errors
         )
 
     async def async_step_import(self, import_config: dict[str, str]) -> FlowResult:
