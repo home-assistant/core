@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1)
 SCAN_INTERVAL = timedelta(seconds=30)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Optional(CONF_HOST): cv.string})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
 
 
 async def async_setup_platform(
@@ -38,11 +38,9 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Niko Home Control light platform."""
-    host = config.get(CONF_HOST)
+    host = config[CONF_HOST]
 
     try:
-        if host is None:
-            host = nikohomecontrol.NikoHomeControlDiscover().find()
         nhc = nikohomecontrol.NikoHomeControl(
             {"ip": host, "port": 8000, "timeout": 20000}
         )
