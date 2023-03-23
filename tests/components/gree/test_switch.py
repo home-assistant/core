@@ -185,10 +185,10 @@ async def test_send_switch_toggle(
 @pytest.mark.parametrize(
     ("entity", "name"),
     [
-        (ENTITY_ID_LIGHT_PANEL, "Panel Light"),
+        (ENTITY_ID_LIGHT_PANEL, "Panel light"),
         (ENTITY_ID_HEALTH_MODE, "Health mode"),
         (ENTITY_ID_QUIET, "Quiet"),
-        (ENTITY_ID_FRESH_AIR, "Fresh Air"),
+        (ENTITY_ID_FRESH_AIR, "Fresh air"),
         (ENTITY_ID_XFAN, "XFan"),
     ],
 )

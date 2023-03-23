@@ -2,11 +2,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 from greeclimate.device import Props
 
-from homeassistant.components.switch import SwitchEntityDescription
+from homeassistant.components.switch import (
+    SwitchDeviceClass,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -31,7 +35,7 @@ class GreeSwitchEntityDescription(SwitchEntityDescription, GreeSwitchRequiredKey
 GREE_SWITCHES: tuple[GreeSwitchEntityDescription, ...] = (
     GreeSwitchEntityDescription(
         icon="mdi:lightbulb",
-        name="Panel Light",
+        name="Panel light",
         key="panel_light",
         property=Props.LIGHT,
     ),
@@ -41,7 +45,7 @@ GREE_SWITCHES: tuple[GreeSwitchEntityDescription, ...] = (
         property=Props.QUIET,
     ),
     GreeSwitchEntityDescription(
-        name="Fresh Air",
+        name="Fresh air",
         key="fresh_air",
         property=Props.FRESH_AIR,
     ),
