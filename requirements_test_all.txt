@@ -36,7 +36,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.37.3
+PySwitchbot==0.37.4
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -1881,7 +1881,7 @@ wiffi==1.1.2
 withings-api==2.4.0
 
 # homeassistant.components.wled
-wled==0.15.0
+wled==0.16.0
 
 # homeassistant.components.wolflink
 wolf_smartset==0.1.11
