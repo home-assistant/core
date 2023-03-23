@@ -1356,8 +1356,8 @@ build.json @home-assistant/supervisor
 /tests/components/wled/ @frenck
 /homeassistant/components/wolflink/ @adamkrol93
 /tests/components/wolflink/ @adamkrol93
-/homeassistant/components/workday/ @fabaff
-/tests/components/workday/ @fabaff
+/homeassistant/components/workday/ @fabaff @gjohansson-ST
+/tests/components/workday/ @fabaff @gjohansson-ST
 /homeassistant/components/worldclock/ @fabaff
 /tests/components/worldclock/ @fabaff
 /homeassistant/components/ws66i/ @ssaenger
