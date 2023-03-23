@@ -172,6 +172,36 @@ async def test_import_flow_location_success(hass: HomeAssistant) -> None:
     }
 
 
+async def test_import_flow_location_area_success(hass: HomeAssistant) -> None:
+    """Test a successful import of yaml with location and area."""
+
+    with patch(
+        "homeassistant.components.brottsplatskartan.sensor.BrottsplatsKartan",
+    ), patch(
+        "homeassistant.components.brottsplatskartan.config_flow.uuid.getnode",
+        return_value="1234567890",
+    ):
+        result2 = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                CONF_LATITUDE: 59.32,
+                CONF_LONGITUDE: 18.06,
+                CONF_AREA: ["Blekinge län"],
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Brottsplatskartan Blekinge län"
+    assert result2["data"] == {
+        "latitude": 59.32,
+        "longitude": 18.06,
+        "area": "Blekinge län",
+        "app_id": "ha-1234567890",
+    }
+
+
 async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
     """Test import of yaml already exist."""
 

@@ -44,6 +44,8 @@ class BPKConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         if not config.get(CONF_AREA):
             config[CONF_AREA] = "N/A"
+        else:
+            config[CONF_AREA] = config[CONF_AREA][0]
 
         return await self.async_step_user(user_input=config)
 
