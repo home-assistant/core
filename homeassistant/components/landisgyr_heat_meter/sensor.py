@@ -323,6 +323,7 @@ class HeatMeterSensor(
         self.entity_description = description
         self._attr_device_info = device
 
+        # Some meters will return MWh, others will return GJ.
         if (
             description.native_unit_of_measurement
             in {UnitOfEnergy.GIGA_JOULE, UnitOfEnergy.MEGA_WATT_HOUR}
