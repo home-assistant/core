@@ -1,6 +1,7 @@
 """Platform allowing several media players to be grouped into one media player."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from contextlib import suppress
 from typing import Any
 
@@ -20,6 +21,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
+    MediaType,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -207,7 +209,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
         return self._name
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes for the media group."""
         return {ATTR_ENTITY_ID: self._entities}
 
@@ -298,7 +300,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
         )
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
         data = {

@@ -36,7 +36,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.37.3
+PySwitchbot==0.37.4
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -493,7 +493,7 @@ dynalite_devices==0.1.47
 eagle100==0.1.1
 
 # homeassistant.components.easyenergy
-easyenergy==0.2.1
+easyenergy==0.2.2
 
 # homeassistant.components.elgato
 elgato==4.0.1
@@ -666,7 +666,7 @@ ha-philipsjs==3.0.0
 habitipy==0.2.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.61.1
+hass-nabucasa==0.62.0
 
 # homeassistant.components.conversation
 hassil==1.0.6
@@ -741,7 +741,7 @@ influxdb==5.3.1
 inkbird-ble==0.5.6
 
 # homeassistant.components.insteon
-insteon-frontend-home-assistant==0.3.3
+insteon-frontend-home-assistant==0.3.4
 
 # homeassistant.components.intellifire
 intellifire4py==2.2.2
@@ -950,7 +950,7 @@ openai==0.26.2
 openerz-api==0.2.0
 
 # homeassistant.components.oralb
-oralb-ble==0.17.5
+oralb-ble==0.17.6
 
 # homeassistant.components.ovo_energy
 ovoenergy==1.2.0
@@ -1039,7 +1039,7 @@ pushbullet.py==0.11.0
 pushover_complete==1.1.1
 
 # homeassistant.components.pvoutput
-pvo==0.2.2
+pvo==1.0.0
 
 # homeassistant.components.canary
 py-canary==0.5.3
@@ -1215,7 +1215,7 @@ pyialarm==2.2.0
 pyicloud==1.0.0
 
 # homeassistant.components.insteon
-pyinsteon==1.3.4
+pyinsteon==1.4.0
 
 # homeassistant.components.ipma
 pyipma==3.0.6
@@ -1594,7 +1594,7 @@ regenmaschine==2022.11.0
 renault-api==0.1.12
 
 # homeassistant.components.reolink
-reolink-aio==0.5.5
+reolink-aio==0.5.6
 
 # homeassistant.components.python_script
 restrictedpython==6.0
@@ -1797,7 +1797,7 @@ ttls==1.5.1
 tuya-iot-py-sdk==0.6.6
 
 # homeassistant.components.twentemilieu
-twentemilieu==0.6.1
+twentemilieu==1.0.0
 
 # homeassistant.components.twilio
 twilio==6.32.0
@@ -1878,7 +1878,7 @@ wiffi==1.1.2
 withings-api==2.4.0
 
 # homeassistant.components.wled
-wled==0.15.0
+wled==0.16.0
 
 # homeassistant.components.wolflink
 wolf_smartset==0.1.11
@@ -1903,14 +1903,12 @@ xmltodict==0.13.0
 # homeassistant.components.yale_smart_alarm
 yalesmartalarmclient==0.3.9
 
+# homeassistant.components.august
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.1.0
+yalexs-ble==2.1.1
 
 # homeassistant.components.august
 yalexs==1.2.7
-
-# homeassistant.components.august
-yalexs_ble==2.1.0
 
 # homeassistant.components.yeelight
 yeelight==0.7.10

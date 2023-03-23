@@ -21,18 +21,14 @@ async def async_setup_entry(
     entity_id = er.async_validate_entity_id(
         registry, config_entry.options[CONF_ENTITY_ID]
     )
-    wrapped_switch = registry.async_get(entity_id)
-    device_id = wrapped_switch.device_id if wrapped_switch else None
-    entity_category = wrapped_switch.entity_category if wrapped_switch else None
 
     async_add_entities(
         [
             LightSwitch(
+                hass,
                 config_entry.title,
                 entity_id,
                 config_entry.entry_id,
-                device_id,
-                entity_category,
             )
         ]
     )

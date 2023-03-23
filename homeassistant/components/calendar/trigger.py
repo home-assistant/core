@@ -64,7 +64,7 @@ class Timespan:
         """Return a new interval shifted by the specified offset."""
         return Timespan(self.start + offset, self.end + offset)
 
-    def contains(self, trigger: datetime.datetime) -> bool:
+    def __contains__(self, trigger: datetime.datetime) -> bool:
         """Return true if the trigger time is within the time span."""
         return self.start <= trigger < self.end
 
@@ -83,7 +83,7 @@ class Timespan:
         return Timespan(self.end, max(self.end, now) + interval)
 
     def __str__(self) -> str:
-        """Return a compact string representation."""
+        """Return a string representing the half open interval timespan."""
         return f"[{self.start}, {self.end})"
 
 
@@ -125,9 +125,10 @@ def queued_event_fetcher(
         for trigger_time, event in zip(
             map(get_trigger_time, active_events), active_events
         ):
-            if not offset_timespan.contains(trigger_time):
+            if trigger_time not in offset_timespan:
                 continue
             results.append(QueuedCalendarEvent(trigger_time + offset, event))
+
         _LOGGER.debug(
             "Scan events @ %s%s found %s eligble of %s active",
             offset_timespan,
