@@ -1,4 +1,5 @@
 """The tests for the Home Assistant HTTP component."""
+import asyncio
 from datetime import timedelta
 from http import HTTPStatus
 from ipaddress import ip_network
@@ -463,3 +464,39 @@ async def test_storing_config(
     restored["trusted_proxies"][0] = ip_network(restored["trusted_proxies"][0])
 
     assert restored == http.HTTP_SCHEMA(config)
+
+
+async def test_logging(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Testing the access log works."""
+    await asyncio.gather(
+        *(
+            async_setup_component(hass, component, {})
+            for component in ("http", "logger", "api")
+        )
+    )
+    hass.states.async_set("logging.entity", "hello")
+    await hass.services.async_call(
+        "logger",
+        "set_level",
+        {"aiohttp.access": "info"},
+        blocking=True,
+    )
+    client = await hass_client()
+    response = await client.get("/api/states/logging.entity")
+    assert response.status == HTTPStatus.OK
+
+    assert "GET /api/states/logging.entity" in caplog.text
+    caplog.clear()
+    await hass.services.async_call(
+        "logger",
+        "set_level",
+        {"aiohttp.access": "warning"},
+        blocking=True,
+    )
+    response = await client.get("/api/states/logging.entity")
+    assert response.status == HTTPStatus.OK
+    assert "GET /api/states/logging.entity" not in caplog.text
