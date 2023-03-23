@@ -36,7 +36,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.37.3
+PySwitchbot==0.37.4
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -358,7 +358,7 @@ beautifulsoup4==4.11.1
 bellows==0.34.10
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.12.1
+bimmer_connected==0.13.0
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.0.1
@@ -1039,7 +1039,7 @@ pushbullet.py==0.11.0
 pushover_complete==1.1.1
 
 # homeassistant.components.pvoutput
-pvo==0.2.2
+pvo==1.0.0
 
 # homeassistant.components.canary
 py-canary==0.5.3
@@ -1397,7 +1397,7 @@ pyroute2==0.7.5
 pyruckus==0.16
 
 # homeassistant.components.rympro
-pyrympro==0.0.4
+pyrympro==0.0.7
 
 # homeassistant.components.sabnzbd
 pysabnzbd==1.1.1
@@ -1878,7 +1878,7 @@ wiffi==1.1.2
 withings-api==2.4.0
 
 # homeassistant.components.wled
-wled==0.15.0
+wled==0.16.0
 
 # homeassistant.components.wolflink
 wolf_smartset==0.1.11
@@ -1905,7 +1905,7 @@ yalesmartalarmclient==0.3.9
 
 # homeassistant.components.august
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.1.1
+yalexs-ble==2.1.2
 
 # homeassistant.components.august
 yalexs==1.2.7

@@ -28,6 +28,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.ulid import ulid_to_bytes
 
+from .auto_repairs.events.schema import (
+    correct_db_schema as events_correct_db_schema,
+    validate_db_schema as events_validate_db_schema,
+)
+from .auto_repairs.states.schema import (
+    correct_db_schema as states_correct_db_schema,
+    validate_db_schema as states_validate_db_schema,
+)
 from .auto_repairs.statistics.duplicates import (
     delete_statistics_duplicates,
     delete_statistics_meta_duplicates,
@@ -39,7 +47,10 @@ from .auto_repairs.statistics.schema import (
 from .const import SupportedDialect
 from .db_schema import (
     CONTEXT_ID_BIN_MAX_LENGTH,
+    DOUBLE_PRECISION_TYPE_SQL,
     LEGACY_STATES_EVENT_ID_INDEX,
+    MYSQL_COLLATE,
+    MYSQL_DEFAULT_CHARSET,
     SCHEMA_VERSION,
     STATISTICS_TABLES,
     TABLE_STATES,
@@ -96,13 +107,13 @@ class _ColumnTypesForDialect:
 
 _MYSQL_COLUMN_TYPES = _ColumnTypesForDialect(
     big_int_type="INTEGER(20)",
-    timestamp_type="DOUBLE PRECISION",
+    timestamp_type=DOUBLE_PRECISION_TYPE_SQL,
     context_bin_type=f"BLOB({CONTEXT_ID_BIN_MAX_LENGTH})",
 )
 
 _POSTGRESQL_COLUMN_TYPES = _ColumnTypesForDialect(
     big_int_type="INTEGER",
-    timestamp_type="DOUBLE PRECISION",
+    timestamp_type=DOUBLE_PRECISION_TYPE_SQL,
     context_bin_type="BYTEA",
 )
 
@@ -151,7 +162,7 @@ class SchemaValidationStatus:
     """Store schema validation status."""
 
     current_version: int
-    statistics_schema_errors: set[str]
+    schema_errors: set[str]
     valid: bool
 
 
@@ -178,11 +189,22 @@ def validate_db_schema(
     if is_current := _schema_is_current(current_version):
         # We can only check for further errors if the schema is current, because
         # columns may otherwise not exist etc.
-        schema_errors |= statistics_validate_db_schema(hass, instance, session_maker)
+        schema_errors = _find_schema_errors(hass, instance, session_maker)
 
     valid = is_current and not schema_errors
 
     return SchemaValidationStatus(current_version, schema_errors, valid)
+
+
+def _find_schema_errors(
+    hass: HomeAssistant, instance: Recorder, session_maker: Callable[[], Session]
+) -> set[str]:
+    """Find schema errors."""
+    schema_errors: set[str] = set()
+    schema_errors |= statistics_validate_db_schema(instance)
+    schema_errors |= states_validate_db_schema(instance)
+    schema_errors |= events_validate_db_schema(instance)
+    return schema_errors
 
 
 def live_migration(schema_status: SchemaValidationStatus) -> bool:
@@ -226,12 +248,14 @@ def migrate_schema(
         # so its clear that the upgrade is done
         _LOGGER.warning("Upgrade to version %s done", new_version)
 
-    if schema_errors := schema_status.statistics_schema_errors:
+    if schema_errors := schema_status.schema_errors:
         _LOGGER.warning(
             "Database is about to correct DB schema errors: %s",
             ", ".join(sorted(schema_errors)),
         )
-        statistics_correct_db_schema(instance, engine, session_maker, schema_errors)
+        statistics_correct_db_schema(instance, schema_errors)
+        states_correct_db_schema(instance, schema_errors)
+        events_correct_db_schema(instance, schema_errors)
 
     if current_version != SCHEMA_VERSION:
         instance.queue_task(PostSchemaMigrationTask(current_version, SCHEMA_VERSION))
@@ -279,6 +303,19 @@ def _create_index(
     _LOGGER.debug("Finished creating %s", index_name)
 
 
+def _execute_or_collect_error(
+    session_maker: Callable[[], Session], query: str, errors: list[str]
+) -> bool:
+    """Execute a query or collect an error."""
+    with session_scope(session=session_maker()) as session:
+        try:
+            session.connection().execute(text(query))
+            return True
+        except SQLAlchemyError as err:
+            errors.append(str(err))
+    return False
+
+
 def _drop_index(
     session_maker: Callable[[], Session],
     table_name: str,
@@ -304,74 +341,45 @@ def _drop_index(
         index_name,
         table_name,
     )
-    success = False
+    index_to_drop: str | None = None
+    with session_scope(session=session_maker()) as session:
+        index_to_drop = get_index_by_name(session, table_name, index_name)
 
-    # Engines like DB2/Oracle
-    with session_scope(session=session_maker()) as session, contextlib.suppress(
-        SQLAlchemyError
-    ):
-        connection = session.connection()
-        connection.execute(text(f"DROP INDEX {index_name}"))
-        success = True
-
-    # Engines like SQLite, SQL Server
-    if not success:
-        with session_scope(session=session_maker()) as session, contextlib.suppress(
-            SQLAlchemyError
-        ):
-            connection = session.connection()
-            connection.execute(
-                text(
-                    "DROP INDEX {table}.{index}".format(
-                        index=index_name, table=table_name
-                    )
-                )
-            )
-            success = True
-
-    if not success:
-        # Engines like MySQL, MS Access
-        with session_scope(session=session_maker()) as session, contextlib.suppress(
-            SQLAlchemyError
-        ):
-            connection = session.connection()
-            connection.execute(
-                text(
-                    "DROP INDEX {index} ON {table}".format(
-                        index=index_name, table=table_name
-                    )
-                )
-            )
-            success = True
-
-    if not success:
-        # Engines like postgresql may have a prefix
-        # ex idx_16532_ix_events_event_type_time_fired
-        with session_scope(session=session_maker()) as session, contextlib.suppress(
-            SQLAlchemyError
-        ):
-            if index_to_drop := get_index_by_name(session, table_name, index_name):
-                connection.execute(text(f"DROP INDEX {index_to_drop}"))
-                success = True
-
-    if success:
+    if index_to_drop is None:
         _LOGGER.debug(
-            "Finished dropping index %s from table %s", index_name, table_name
+            "The index %s on table %s no longer exists", index_name, table_name
         )
         return
 
-    if quiet:
-        return
+    errors: list[str] = []
+    for query in (
+        # Engines like DB2/Oracle
+        f"DROP INDEX {index_name}",
+        # Engines like SQLite, SQL Server
+        f"DROP INDEX {table_name}.{index_name}",
+        # Engines like MySQL, MS Access
+        f"DROP INDEX {index_name} ON {table_name}",
+        # Engines like postgresql may have a prefix
+        # ex idx_16532_ix_events_event_type_time_fired
+        f"DROP INDEX {index_to_drop}",
+    ):
+        if _execute_or_collect_error(session_maker, query, errors):
+            _LOGGER.debug(
+                "Finished dropping index %s from table %s", index_name, table_name
+            )
+            return
 
-    _LOGGER.warning(
-        (
-            "Failed to drop index `%s` from table `%s`. Schema "
-            "Migration will continue; this is not a "
-            "critical operation"
-        ),
-        index_name,
-        table_name,
-    )
+    if not quiet:
+        _LOGGER.warning(
+            (
+                "Failed to drop index `%s` from table `%s`. Schema "
+                "Migration will continue; this is not a "
+                "critical operation: %s"
+            ),
+            index_name,
+            table_name,
+            errors,
+        )
 
 
 def _add_columns(
@@ -732,38 +740,15 @@ def _apply_update(  # noqa: C901
                 engine,
                 "statistics",
                 [
-                    "mean DOUBLE PRECISION",
-                    "min DOUBLE PRECISION",
-                    "max DOUBLE PRECISION",
-                    "state DOUBLE PRECISION",
-                    "sum DOUBLE PRECISION",
+                    f"{column} {DOUBLE_PRECISION_TYPE_SQL}"
+                    for column in ("max", "mean", "min", "state", "sum")
                 ],
             )
     elif new_version == 21:
         # Try to change the character set of the statistic_meta table
         if engine.dialect.name == SupportedDialect.MYSQL:
             for table in ("events", "states", "statistics_meta"):
-                _LOGGER.warning(
-                    (
-                        "Updating character set and collation of table %s to utf8mb4."
-                        " Note: this can take several minutes on large databases and"
-                        " slow computers. Please be patient!"
-                    ),
-                    table,
-                )
-                with contextlib.suppress(SQLAlchemyError), session_scope(
-                    session=session_maker()
-                ) as session:
-                    connection = session.connection()
-                    connection.execute(
-                        # Using LOCK=EXCLUSIVE to prevent
-                        # the database from corrupting
-                        # https://github.com/home-assistant/core/issues/56104
-                        text(
-                            f"ALTER TABLE {table} CONVERT TO CHARACTER SET utf8mb4"
-                            " COLLATE utf8mb4_unicode_ci, LOCK=EXCLUSIVE"
-                        )
-                    )
+                _correct_table_character_set_and_collation(table, session_maker)
     elif new_version == 22:
         # Recreate the all statistics tables for Oracle DB with Identity columns
         #
@@ -1088,6 +1073,33 @@ def _apply_update(  # noqa: C901
         _create_index(session_maker, "states_meta", "ix_states_meta_entity_id")
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
+
+
+def _correct_table_character_set_and_collation(
+    table: str,
+    session_maker: Callable[[], Session],
+) -> None:
+    """Correct issues detected by validate_db_schema."""
+    # Attempt to convert the table to utf8mb4
+    _LOGGER.warning(
+        "Updating character set and collation of table %s to utf8mb4. "
+        "Note: this can take several minutes on large databases and slow "
+        "computers. Please be patient!",
+        table,
+    )
+    with contextlib.suppress(SQLAlchemyError), session_scope(
+        session=session_maker()
+    ) as session:
+        connection = session.connection()
+        connection.execute(
+            # Using LOCK=EXCLUSIVE to prevent the database from corrupting
+            # https://github.com/home-assistant/core/issues/56104
+            text(
+                f"ALTER TABLE {table} CONVERT TO CHARACTER SET "
+                f"{MYSQL_DEFAULT_CHARSET} "
+                f"COLLATE {MYSQL_COLLATE}, LOCK=EXCLUSIVE"
+            )
+        )
 
 
 def post_schema_migration(
