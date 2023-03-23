@@ -15,7 +15,6 @@ from homeassistant.const import ATTR_NAME, ATTR_SERVICE, EVENT_HOMEASSISTANT_STA
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import discovery_flow
-from homeassistant.util.json import json_loads
 
 from .const import ATTR_ADDON, ATTR_CONFIG, ATTR_DISCOVERY, ATTR_UUID
 from .handler import HassIO, HassioAPIError
@@ -70,7 +69,7 @@ class HassIODiscovery(HomeAssistantView):
         self.hass = hass
         self.hassio = hassio
 
-    async def post(self, request: web.Request, uuid: str) -> web.Response:
+    async def post(self, request, uuid):
         """Handle new discovery requests."""
         # Fetch discovery data and prevent injections
         try:
@@ -82,9 +81,9 @@ class HassIODiscovery(HomeAssistantView):
         await self.async_process_new(data)
         return web.Response()
 
-    async def delete(self, request: web.Request, uuid: str) -> web.Response:
+    async def delete(self, request, uuid):
         """Handle remove discovery requests."""
-        data = await request.json(loads=json_loads)
+        data = await request.json()
 
         await self.async_process_del(data)
         return web.Response()

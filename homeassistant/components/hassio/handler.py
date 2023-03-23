@@ -16,7 +16,6 @@ from homeassistant.components.http import (
 from homeassistant.const import SERVER_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import bind_hass
-from homeassistant.util.json import json_loads
 
 from .const import ATTR_DISCOVERY, DOMAIN, X_HASS_SOURCE
 
@@ -490,7 +489,7 @@ class HassIO:
             if return_text:
                 return await request.text(encoding="utf-8")
 
-            return await request.json(loads=json_loads)
+            return await request.json()
 
         except asyncio.TimeoutError:
             _LOGGER.error("Timeout on %s request", command)
