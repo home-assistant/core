@@ -354,7 +354,7 @@ class SonosDiscoveryManager:
                     soco,
                 )
             except (OSError, SoCoException, Timeout) as ex:
-                if self.hosts_in_error.get(ip_addr, False) is False:
+                if not self.hosts_in_error.get(ip_addr):
                     _LOGGER.warning(
                         "Could not get visible Sonos devices from %s: %s", ip_addr, ex
                     )
