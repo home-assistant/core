@@ -15,6 +15,7 @@ from homeassistant.components.hassio import (
     AddonInfo,
     AddonManager,
     AddonState,
+    hostname_from_addon_slug,
     is_hassio,
 )
 from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN
@@ -64,12 +65,13 @@ class SerialPortSettings:
     flow_control: bool
 
 
-def get_zigbee_socket(hass: HomeAssistant, addon_info: AddonInfo) -> str:
+def get_zigbee_socket() -> str:
     """Return the zigbee socket.
 
     Raises AddonError on error
     """
-    return f"socket://{addon_info.hostname}:9999"
+    hostname = hostname_from_addon_slug(SILABS_MULTIPROTOCOL_ADDON_SLUG)
+    return f"socket://{hostname}:9999"
 
 
 class BaseMultiPanFlow(FlowHandler, ABC):
@@ -290,7 +292,7 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
                 "new_discovery_info": {
                     "name": self._zha_name(),
                     "port": {
-                        "path": get_zigbee_socket(self.hass, addon_info),
+                        "path": get_zigbee_socket(),
                     },
                     "radio_type": "ezsp",
                 },
@@ -386,24 +388,22 @@ async def check_multi_pan_addon(hass: HomeAssistant) -> None:
         raise HomeAssistantError
 
 
-async def get_multi_pan_addon_info(
-    hass: HomeAssistant, device_path: str
-) -> AddonInfo | None:
-    """Return AddonInfo if the multi-PAN addon is using the given device.
+async def multi_pan_addon_using_device(hass: HomeAssistant, device_path: str) -> bool:
+    """Return True if the multi-PAN addon is using the given device.
 
-    Returns None if Hass.io is not loaded, the addon is not running or the addon is
+    Returns False if Hass.io is not loaded, the addon is not running or the addon is
     connected to another device.
     """
     if not is_hassio(hass):
-        return None
+        return False
 
     addon_manager: AddonManager = get_addon_manager(hass)
     addon_info: AddonInfo = await addon_manager.async_get_addon_info()
 
     if addon_info.state != AddonState.RUNNING:
-        return None
+        return False
 
     if addon_info.options["device"] != device_path:
-        return None
+        return False
 
-    return addon_info
+    return True
