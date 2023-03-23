@@ -591,3 +591,24 @@ async def test_tts_failed(
         msg = await client.receive_json()
         assert msg["event"]["type"] == "error"
         assert msg["event"]["data"]["code"] == "tts-failed"
+
+
+async def test_invalid_stage_order(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, init_components
+) -> None:
+    """Test pipeline run with invalid stage order."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "voice_assistant/run",
+            "start_stage": "tts",
+            "end_stage": "stt",
+            "input": {"text": "Lights are on."},
+        }
+    )
+
+    # result
+    msg = await client.receive_json()
+    assert not msg["success"]

@@ -114,6 +114,13 @@ class PipelineStage(StrEnum):
     TTS = "tts"
 
 
+PIPELINE_STAGE_ORDER = [
+    PipelineStage.STT,
+    PipelineStage.INTENT,
+    PipelineStage.TTS,
+]
+
+
 class PipelineRunValidationError(Exception):
     """Error when a pipeline run is not valid."""
 
@@ -149,10 +156,8 @@ class PipelineRun:
         self.language = self.pipeline.language or self.hass.config.language
 
         # stt -> intent -> tts
-        if (self.start_stage, self.end_stage) in (
-            (PipelineStage.INTENT, PipelineStage.STT),
-            (PipelineStage.TTS, PipelineStage.STT),
-            (PipelineStage.TTS, PipelineStage.INTENT),
+        if PIPELINE_STAGE_ORDER.index(self.end_stage) < PIPELINE_STAGE_ORDER.index(
+            self.start_stage
         ):
             raise InvalidPipelineStagesError(self.start_stage, self.end_stage)
 

@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant, callback
 
 from .pipeline import (
     DEFAULT_TIMEOUT,
+    PipelineError,
     PipelineInput,
     PipelineRun,
     PipelineStage,
@@ -134,6 +135,9 @@ async def websocket_run(
     try:
         # Task contains a timeout
         await run_task
+    except PipelineError as error:
+        # Report more specific error when possible
+        connection.send_error(msg["id"], error.code, error.message)
     finally:
         if unregister_handler is not None:
             # Unregister binary handler
