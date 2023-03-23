@@ -27,6 +27,13 @@ SUBSCRIPTION_ERRORS = (
 )
 
 
+def _stringify_onvif_error(error: Exception) -> str:
+    """Stringify ONVIF error."""
+    if isinstance(error, Fault):
+        return error.message or str(error) or "Device sent empty error"
+    return str(error)
+
+
 class EventManager:
     """ONVIF Event Manager."""
 
@@ -79,30 +86,34 @@ class EventManager:
 
     async def async_start(self) -> bool:
         """Start polling events."""
-        if await self.device.create_pullpoint_subscription():
-            # Create subscription manager
-            self._subscription = self.device.create_subscription_service(
-                "PullPointSubscription"
-            )
+        if not await self.device.create_pullpoint_subscription():
+            return False
 
-            # Renew immediately
+        # Create subscription manager
+        self._subscription = self.device.create_subscription_service(
+            "PullPointSubscription"
+        )
+
+        # Renew immediately
+        with suppress(*SUBSCRIPTION_ERRORS):
+            # The first time we renew, we may get a Fault error so we
+            # suppress it. The subscription will be restarted in
+            # async_restart later.
             await self.async_renew()
 
-            # Initialize events
-            pullpoint = self.device.create_pullpoint_service()
-            with suppress(*SUBSCRIPTION_ERRORS):
-                await pullpoint.SetSynchronizationPoint()
-            response = await pullpoint.PullMessages(
-                {"MessageLimit": 100, "Timeout": dt.timedelta(seconds=5)}
-            )
+        # Initialize events
+        pullpoint = self.device.create_pullpoint_service()
+        with suppress(*SUBSCRIPTION_ERRORS):
+            await pullpoint.SetSynchronizationPoint()
+        response = await pullpoint.PullMessages(
+            {"MessageLimit": 100, "Timeout": dt.timedelta(seconds=5)}
+        )
 
-            # Parse event initialization
-            await self.async_parse_messages(response.NotificationMessage)
+        # Parse event initialization
+        await self.async_parse_messages(response.NotificationMessage)
 
-            self.started = True
-            return True
-
-        return False
+        self.started = True
+        return True
 
     async def async_stop(self) -> None:
         """Unsubscribe from events."""
@@ -148,7 +159,7 @@ class EventManager:
                     "Retrying later: %s"
                 ),
                 self.unique_id,
-                err,
+                _stringify_onvif_error(err),
             )
 
         if not restarted:
@@ -203,7 +214,7 @@ class EventManager:
                         " '%s': %s"
                     ),
                     self.unique_id,
-                    err,
+                    _stringify_onvif_error(err),
                 )
                 # Treat errors as if the camera restarted. Assume that the pullpoint
                 # subscription is no longer valid.
