@@ -34,7 +34,7 @@ GREE_SWITCHES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
         icon="mdi:pine-tree",
         name="Health mode",
-        key="health_mode",
+        key="anion",
         entity_registry_enabled_default=False,
     ),
 )
