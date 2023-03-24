@@ -11,14 +11,14 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import create_mock_snapcast
-
 TEST_CONNECTION = {CONF_HOST: "snapserver.test", CONF_PORT: 1705}
 
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+pytestmark = pytest.mark.usefixtures("mock_setup_entry", "mock_create_server")
 
 
-async def test_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_success(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_create_server: AsyncMock
+) -> None:
     """Test successful connection."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
@@ -27,16 +27,10 @@ async def test_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None
     assert result["type"] == FlowResultType.FORM
     assert not result["errors"]
 
-    mock_connection = create_mock_snapcast()
-
-    with patch(
-        "snapcast.control.create_server",
-        return_value=mock_connection,
-    ) as mock_create_server:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], TEST_CONNECTION
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], TEST_CONNECTION
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert (
@@ -87,20 +81,15 @@ async def test_connection_error(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_import(hass: HomeAssistant) -> None:
+async def test_import(hass: HomeAssistant, mock_create_server: AsyncMock) -> None:
     """Test successful import."""
-    mock_connection = create_mock_snapcast()
 
-    with patch(
-        "snapcast.control.create_server",
-        return_value=mock_connection,
-    ) as mock_create_server:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=TEST_CONNECTION,
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data=TEST_CONNECTION,
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert (
