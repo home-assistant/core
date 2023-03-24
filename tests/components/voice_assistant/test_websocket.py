@@ -10,6 +10,10 @@ from homeassistant.components import stt
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.components.tts.conftest import (  # noqa: F401, pylint: disable=unused-import
+    mock_get_cache_files,
+    mock_init_cache_dir,
+)
 from tests.typing import WebSocketGenerator
 
 _TRANSCRIPT = "test transcript"
@@ -63,8 +67,8 @@ class MockSttProvider(stt.Provider):
 @pytest.fixture(autouse=True)
 async def init_components(
     hass: HomeAssistant,
-    mock_get_cache_files,
-    mock_init_cache_dir,
+    mock_get_cache_files,  # noqa: F811
+    mock_init_cache_dir,  # noqa: F811
 ):
     """Initialize relevant components with empty configs."""
     assert await async_setup_component(hass, "media_source", {})
