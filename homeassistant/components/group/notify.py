@@ -72,7 +72,7 @@ class GroupNotifyPlatform(BaseNotificationService):
         for entity in self.entities:
             sending_payload = deepcopy(payload.copy())
             if (data := entity.get(ATTR_DATA)) is not None:
-                update(sending_payload, data)
+                update(data, sending_payload)
             tasks.append(
                 asyncio.create_task(
                     self.hass.services.async_call(
