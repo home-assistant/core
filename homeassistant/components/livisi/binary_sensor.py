@@ -94,7 +94,7 @@ class LivisiWindowDoorSensor(LivisiBinarySensor):
 
         self._attr_device_class = (
             BinarySensorDeviceClass.DOOR
-            if (device.get("tags", {}).get("typeCategory", "") == "TCDoorId")
+            if (device.get("tags", {}).get("typeCategory") == "TCDoorId")
             else BinarySensorDeviceClass.WINDOW
         )
 
