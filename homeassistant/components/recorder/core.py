@@ -779,6 +779,10 @@ class Recorder(threading.Thread):
         for task in startup_tasks:
             self._guarded_process_one_task_or_recover(task)
 
+        # Clear startup tasks since this thread runs forever
+        # and we don't want to hold them in memory
+        startup_tasks.clear()
+
         self.stop_requested = False
         while not self.stop_requested:
             self._guarded_process_one_task_or_recover(queue_.get())
