@@ -179,7 +179,7 @@ def mock_save_json():
 def mock_load_json():
     """Mock loading access_tokens from a file."""
     with patch(
-        "homeassistant.components.matrix.load_json",
+        "homeassistant.components.matrix.load_json_object",
         return_value={TEST_MXID: TEST_TOKEN},
     ) as mock:
         yield mock

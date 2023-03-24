@@ -49,11 +49,6 @@ async def test_get_auth_tokens(matrix_bot: MatrixBot, mock_load_json):
     loaded_tokens = await matrix_bot._get_auth_tokens()
     assert loaded_tokens == {TEST_MXID: TEST_TOKEN}
 
-    # Test loading invalid schema.
-    mock_load_json.return_value = ["invalid_json"]
-    loaded_tokens = await matrix_bot._get_auth_tokens()
-    assert loaded_tokens == {}
-
     # Test miscellaneous error from hass.
     mock_load_json.side_effect = HomeAssistantError()
     loaded_tokens = await matrix_bot._get_auth_tokens()
