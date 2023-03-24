@@ -17,8 +17,7 @@ LIVISI_REACHABILITY_CHANGE: Final = "livisi_reachability_change"
 SWITCH_DEVICE_TYPES: Final = ["ISS", "ISS2", "PSS", "PSSO"]
 VRCC_DEVICE_TYPE: Final = "VRCC"
 
-EVENT_STATE_CHANGED = "StateChanged"
-EVENT_BUTTON_PRESSED = "ButtonPressed"
+EVENT_BUTTON_PRESSED = "button_pressed"
 
 MAX_TEMPERATURE: Final = 30.0
 MIN_TEMPERATURE: Final = 6.0
