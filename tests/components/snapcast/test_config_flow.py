@@ -16,10 +16,10 @@ TEST_CONNECTION = {CONF_HOST: "snapserver.test", CONF_PORT: 1705}
 pytestmark = pytest.mark.usefixtures("mock_setup_entry", "mock_create_server")
 
 
-async def test_success(
+async def test_form(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_create_server: AsyncMock
 ) -> None:
-    """Test successful connection."""
+    """Test we get the form and handle errors and successful connection."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -27,6 +27,29 @@ async def test_success(
     assert result["type"] == FlowResultType.FORM
     assert not result["errors"]
 
+    # test invalid host error
+    with patch("snapcast.control.create_server", side_effect=socket.gaierror):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            TEST_CONNECTION,
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_host"}
+
+    # test connection error
+    with patch("snapcast.control.create_server", side_effect=ConnectionRefusedError):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            TEST_CONNECTION,
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    # test success
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], TEST_CONNECTION
     )
@@ -39,46 +62,6 @@ async def test_success(
     assert result["data"] == TEST_CONNECTION
     assert len(mock_create_server.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_unknown_error(hass: HomeAssistant) -> None:
-    """Test what happens when there is no server to connect."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert not result["errors"]
-
-    with patch("snapcast.control.create_server", side_effect=socket.gaierror):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            TEST_CONNECTION,
-        )
-    await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_host"}
-
-
-async def test_connection_error(hass: HomeAssistant) -> None:
-    """Test what happens when there is no server to connect."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert not result["errors"]
-
-    with patch("snapcast.control.create_server", side_effect=ConnectionRefusedError):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            TEST_CONNECTION,
-        )
-    await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_import(hass: HomeAssistant, mock_create_server: AsyncMock) -> None:
