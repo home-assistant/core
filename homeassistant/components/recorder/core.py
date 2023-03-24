@@ -781,7 +781,7 @@ class Recorder(threading.Thread):
 
         # Clear startup tasks since this thread runs forever
         # and we don't want to hold them in memory
-        startup_tasks.clear()
+        del startup_tasks
 
         self.stop_requested = False
         while not self.stop_requested:
