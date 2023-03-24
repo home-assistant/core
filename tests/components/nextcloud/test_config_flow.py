@@ -15,6 +15,8 @@ from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
+VALID_CONFIG = {CONF_URL: "nc_url", CONF_USERNAME: "nc_user", CONF_PASSWORD: "nc_pass"}
+
 
 async def test_user_create_entry(
     hass: HomeAssistant, mock_nextcloud_monitor: Mock, snapshot: SnapshotAssertion
@@ -29,11 +31,24 @@ async def test_user_create_entry(
 
     with patch(
         "homeassistant.components.nextcloud.config_flow.NextcloudMonitor",
+        side_effect=NextcloudMonitorError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            VALID_CONFIG,
+        )
+        await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "connection_error"}
+
+    with patch(
+        "homeassistant.components.nextcloud.config_flow.NextcloudMonitor",
         return_value=mock_nextcloud_monitor,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_URL: "nc_url", CONF_USERNAME: "nc_user", CONF_PASSWORD: "nc_pass"},
+            VALID_CONFIG,
         )
         await hass.async_block_till_done()
 
@@ -50,7 +65,7 @@ async def test_user_already_configured(
         domain=DOMAIN,
         title="nc_url",
         unique_id="nc_url",
-        data={CONF_URL: "nc_url", CONF_USERNAME: "nc_user", CONF_PASSWORD: "nc_pass"},
+        data=VALID_CONFIG,
     )
     entry.add_to_hass(hass)
 
@@ -67,37 +82,12 @@ async def test_user_already_configured(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_URL: "nc_url", CONF_USERNAME: "nc_user", CONF_PASSWORD: "nc_pass"},
+            VALID_CONFIG,
         )
         await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-async def test_user_connection_error(
-    hass: HomeAssistant, mock_nextcloud_monitor: Mock
-) -> None:
-    """Test that errors are shown when connection fails."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    with patch(
-        "homeassistant.components.nextcloud.config_flow.NextcloudMonitor",
-        side_effect=NextcloudMonitorError,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_URL: "nc_url", CONF_USERNAME: "nc_user", CONF_PASSWORD: "nc_pass"},
-        )
-        await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "connection_error"}
 
 
 async def test_import(
@@ -111,11 +101,7 @@ async def test_import(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
-            data={
-                CONF_URL: "nc_url",
-                CONF_USERNAME: "nc_user",
-                CONF_PASSWORD: "nc_pass",
-            },
+            data=VALID_CONFIG,
         )
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "nc_url"
@@ -130,7 +116,7 @@ async def test_import_already_configured(
         domain=DOMAIN,
         title="nc_url",
         unique_id="nc_url",
-        data={CONF_URL: "nc_url", CONF_USERNAME: "nc_user", CONF_PASSWORD: "nc_pass"},
+        data=VALID_CONFIG,
     )
     entry.add_to_hass(hass)
 
@@ -141,11 +127,7 @@ async def test_import_already_configured(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
-            data={
-                CONF_URL: "nc_url",
-                CONF_USERNAME: "nc_user",
-                CONF_PASSWORD: "nc_pass",
-            },
+            data=VALID_CONFIG,
         )
         await hass.async_block_till_done()
 
@@ -162,11 +144,7 @@ async def test_import_connection_error(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
-            data={
-                CONF_URL: "nc_url",
-                CONF_USERNAME: "nc_user",
-                CONF_PASSWORD: "nc_pass",
-            },
+            data=VALID_CONFIG,
         )
         await hass.async_block_till_done()
     assert result["type"] == FlowResultType.ABORT
