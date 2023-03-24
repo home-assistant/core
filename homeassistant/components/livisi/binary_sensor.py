@@ -55,7 +55,7 @@ class LivisiBinarySensor(LivisiEntity, BinarySensorEntity):
         config_entry: ConfigEntry,
         coordinator: LivisiDataUpdateCoordinator,
         device: dict[str, Any],
-        capabilityName: str,
+        capability_name: str,
     ) -> None:
         """Initialize the Livisi sensor."""
         super().__init__(config_entry, coordinator, device)
