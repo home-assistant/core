@@ -33,7 +33,7 @@ async def async_setup_gree(hass):
     await hass.async_block_till_done()
 
 
-async def test_health_mode_disabled_by_default(hass):
+async def test_health_mode_disabled_by_default(hass: HomeAssistant) -> None:
     """Test for making sure health mode is disabled on first load."""
     await async_setup_gree(hass)
 
