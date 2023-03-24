@@ -1,4 +1,5 @@
 """Tests for gree component."""
+from unittest.mock import patch
 
 from greeclimate.exceptions import DeviceTimeoutError
 import pytest
@@ -36,6 +37,7 @@ async def async_setup_gree(hass: HomeAssistant) -> MockConfigEntry:
     return entry
 
 
+@patch("homeassistant.components.gree.PLATFORMS", [DOMAIN])
 async def test_registry_settings(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
