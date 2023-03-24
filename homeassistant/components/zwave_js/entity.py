@@ -48,7 +48,8 @@ class ZWaveBaseEntity(Entity):
             self._attr_entity_registry_enabled_default = False
         if self.info.entity_category is not None:
             self._attr_entity_category = self.info.entity_category
-        self._attr_assumed_state = self.info.assumed_state
+        if self.info.assumed_state:
+            self._attr_assumed_state = True
         # device is precreated in main handler
         self._attr_device_info = DeviceInfo(
             identifiers={get_device_id(driver, self.info.node)},
