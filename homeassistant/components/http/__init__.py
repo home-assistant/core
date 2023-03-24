@@ -250,10 +250,9 @@ class HomeAssistantRequest(web.Request):
     """Home Assistant request object."""
 
     async def json(self, *, loads: JSONDecoder = json_loads) -> Any:
-        """Return BODY as JSON."""
+        """Return body as JSON."""
         # json_loads is a wrapper around orjson.loads that handles
-        # bytes and str. If we are using the default, we can
-        # pass the bytes directly to json_loads.
+        # bytes and str. We can pass the bytes directly to json_loads.
         return json_loads(await self.read())
 
 
