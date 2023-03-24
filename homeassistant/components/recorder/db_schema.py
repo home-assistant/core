@@ -591,18 +591,18 @@ class StatisticsBase:
     """Statistics base class."""
 
     id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
-    created: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
+    created: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_COLUMN)
     created_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE, default=time.time)
     metadata_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey(f"{TABLE_STATISTICS_META}.id", ondelete="CASCADE"),
     )
-    start: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
+    start: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_COLUMN)
     start_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE, index=True)
     mean: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
     min: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
     max: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
-    last_reset: Mapped[datetime | None] = mapped_column(DATETIME_TYPE)
+    last_reset: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_COLUMN)
     last_reset_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE)
     state: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
     sum: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
