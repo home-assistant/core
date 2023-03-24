@@ -30,7 +30,6 @@ MOCK_CONFIG = {
 }
 
 MOCK_OPTIONS = {
-    "charset": "utf-8",
     "folder": "INBOX",
     "search": "UnSeen UnDeleted",
 }
@@ -325,7 +324,6 @@ async def test_options_form(hass: HomeAssistant) -> None:
 
     new_config = MOCK_OPTIONS.copy()
     new_config["folder"] = "INBOX.Notifications"
-    new_config["charset"] = "utf-16"
     new_config["search"] = "UnSeen UnDeleted!!INVALID"
 
     # simulate initial search setup error

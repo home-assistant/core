@@ -36,7 +36,6 @@
     "step": {
       "init": {
         "data": {
-          "charset": "[%key:component::imap::config::step::user::data::charset%]",
           "folder": "[%key:component::imap::config::step::user::data::folder%]",
           "search": "[%key:component::imap::config::step::user::data::search%]"
         }
