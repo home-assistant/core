@@ -7,6 +7,7 @@ from typing import Any
 from fullykiosk import FullyKiosk
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
@@ -48,11 +49,11 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             if device:
                 for key in device.config_entries:
                     entry = hass.config_entries.async_get_entry(key)
-                    if not entry:
-                        continue
-                    if entry.domain != DOMAIN:
-                        continue
-                    if DOMAIN not in hass.data or key not in hass.data[DOMAIN]:
+                    if (
+                        not entry
+                        or entry.domain != DOMAIN
+                        or entry.state != ConfigEntryState.LOADED
+                    ):
                         continue
                     coordinator = hass.data[DOMAIN][key]
                     # fully_method(coordinator.fully, *args, **kwargs) would make
