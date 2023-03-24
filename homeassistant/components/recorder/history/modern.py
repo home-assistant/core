@@ -5,6 +5,7 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable, Iterator, MutableMapping
 from datetime import datetime
 from itertools import groupby
+import logging
 from operator import itemgetter
 from typing import Any, cast
 
@@ -39,6 +40,7 @@ from .const import (
     STATE_KEY,
 )
 
+_LOGGER = logging.getLogger(__name__)
 _BASE_STATES = (
     States.metadata_id,
     States.state,
@@ -406,16 +408,38 @@ def _get_last_state_changes_stmt(
     stmt, join_attributes = _lambda_stmt_and_join_attributes(
         False, include_last_changed=False
     )
-    stmt += lambda q: q.where(
-        States.state_id
-        == (
-            select(States.state_id)
-            .filter(States.metadata_id == metadata_id)
-            .order_by(States.last_updated_ts.desc())
-            .limit(number_of_states)
-            .subquery()
-        ).c.state_id
-    )
+    if number_of_states == 1:
+        stmt += lambda q: q.join(
+            (
+                lastest_state_for_metadata_id := (
+                    select(
+                        States.metadata_id.label("max_metadata_id"),
+                        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+                        # pylint: disable-next=not-callable
+                        func.max(States.last_updated_ts).label("max_last_updated"),
+                    )
+                    .filter(States.metadata_id == metadata_id)
+                    .group_by(States.metadata_id)
+                    .subquery()
+                )
+            ),
+            and_(
+                States.metadata_id == lastest_state_for_metadata_id.c.max_metadata_id,
+                States.last_updated_ts
+                == lastest_state_for_metadata_id.c.max_last_updated,
+            ),
+        )
+    else:
+        stmt += lambda q: q.where(
+            States.state_id
+            == (
+                select(States.state_id)
+                .filter(States.metadata_id == metadata_id)
+                .order_by(States.last_updated_ts.desc())
+                .limit(number_of_states)
+                .subquery()
+            ).c.state_id
+        )
     if join_attributes:
         stmt += lambda q: q.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
@@ -431,6 +455,8 @@ def get_last_state_changes(
     """Return the last number_of_states."""
     entity_id_lower = entity_id.lower()
     entity_ids = [entity_id_lower]
+    # Calling this function with number_of_states > 1 is deprecated
+    # and can can cause database instability; It may be removed in a future release
 
     with session_scope(hass=hass, read_only=True) as session:
         instance = recorder.get_instance(hass)
