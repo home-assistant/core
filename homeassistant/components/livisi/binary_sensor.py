@@ -12,15 +12,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import LivisiEntity
-
-from .const import (
-    DOMAIN,
-    LIVISI_STATE_CHANGE,
-    LOGGER,
-    WDS_DEVICE_TYPE,
-)
+from .const import DOMAIN, LIVISI_STATE_CHANGE, LOGGER, WDS_DEVICE_TYPE
 from .coordinator import LivisiDataUpdateCoordinator
+from .entity import LivisiEntity
 
 
 async def async_setup_entry(
