@@ -158,6 +158,7 @@ DOUBLE_TYPE = (
     .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )
 UNUSED_LEGACY_COLUMN = CHAR(0)
+UNUSED_LEGACY_DATETIME_COLUMN = DATETIME_TYPE
 DOUBLE_PRECISION_TYPE_SQL = "DOUBLE PRECISION"
 
 TIMESTAMP_TYPE = DOUBLE_TYPE
@@ -203,7 +204,7 @@ class Events(Base):
     event_data: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
     origin: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
     origin_idx: Mapped[int | None] = mapped_column(SmallInteger)
-    time_fired: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_COLUMN)
+    time_fired: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)
     time_fired_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE, index=True)
     context_id: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
     context_user_id: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
@@ -374,9 +375,9 @@ class States(Base):
     state: Mapped[str | None] = mapped_column(String(MAX_LENGTH_STATE_STATE))
     attributes: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
     event_id: Mapped[int | None] = mapped_column(UNUSED_LEGACY_COLUMN)
-    last_changed: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_COLUMN)
+    last_changed: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)
     last_changed_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE)
-    last_updated: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_COLUMN)
+    last_updated: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)
     last_updated_ts: Mapped[float | None] = mapped_column(
         TIMESTAMP_TYPE, default=time.time, index=True
     )
@@ -421,9 +422,11 @@ class States(Base):
     @property
     def _last_updated_isotime(self) -> str | None:
         """Return last_updated as an isotime string."""
-        date_time: datetime | None = None
+        date_time: datetime | None
         if self.last_updated_ts is not None:
             date_time = dt_util.utc_from_timestamp(self.last_updated_ts)
+        else:
+            date_time = process_timestamp(self.last_updated)
         if date_time is None:
             return None
         return date_time.isoformat(sep=" ", timespec="seconds")
@@ -591,18 +594,18 @@ class StatisticsBase:
     """Statistics base class."""
 
     id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
-    created: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_COLUMN)
+    created: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)
     created_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE, default=time.time)
     metadata_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey(f"{TABLE_STATISTICS_META}.id", ondelete="CASCADE"),
     )
-    start: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_COLUMN)
+    start: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)
     start_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE, index=True)
     mean: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
     min: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
     max: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
-    last_reset: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_COLUMN)
+    last_reset: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)
     last_reset_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE)
     state: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
     sum: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
