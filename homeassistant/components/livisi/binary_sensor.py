@@ -59,7 +59,7 @@ class LivisiBinarySensor(LivisiEntity, BinarySensorEntity):
     ) -> None:
         """Initialize the Livisi sensor."""
         super().__init__(config_entry, coordinator, device)
-        self._capability_id = self.capabilities[capabilityName]
+        self._capability_id = self.capabilities[capability_name]
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
