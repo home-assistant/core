@@ -55,7 +55,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.decorator import Registry
-from homeassistant.util.json import json_loads
 
 from .const import (
     ATTR_ALTITUDE,
@@ -183,7 +182,7 @@ async def handle_webhook(
     device_name: str = config_entry.data[ATTR_DEVICE_NAME]
 
     try:
-        req_data = await request.json(loads=json_loads)
+        req_data = await request.json()
     except ValueError:
         _LOGGER.warning("Received invalid JSON from mobile_app device: %s", device_name)
         return empty_okay_response(status=HTTPStatus.BAD_REQUEST)

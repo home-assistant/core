@@ -4,7 +4,6 @@ from http import HTTPStatus
 import importlib
 import os
 
-from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components import frontend
@@ -15,7 +14,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import ATTR_COMPONENT
 from homeassistant.util.file import write_utf8_file_atomic
-from homeassistant.util.json import json_loads
 from homeassistant.util.yaml import dump, load_yaml
 
 DOMAIN = "config"
@@ -114,10 +112,10 @@ class BaseEditConfigView(HomeAssistantView):
 
         return self.json(value)
 
-    async def post(self, request: web.Request, config_key: str) -> web.Response:
+    async def post(self, request, config_key):
         """Validate config and return results."""
         try:
-            data = await request.json(loads=json_loads)
+            data = await request.json()
         except ValueError:
             return self.json_message("Invalid JSON specified", HTTPStatus.BAD_REQUEST)
 

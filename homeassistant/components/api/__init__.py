@@ -197,13 +197,13 @@ class APIEntityStateView(HomeAssistantView):
             return self.json(state)
         return self.json_message("Entity not found.", HTTPStatus.NOT_FOUND)
 
-    async def post(self, request: web.Request, entity_id: str) -> web.Response:
+    async def post(self, request, entity_id):
         """Update state of entity."""
         if not request["hass_user"].is_admin:
             raise Unauthorized(entity_id=entity_id)
         hass = request.app["hass"]
         try:
-            data = await request.json(loads=json_loads)
+            data = await request.json()
         except ValueError:
             return self.json_message("Invalid JSON specified.", HTTPStatus.BAD_REQUEST)
 
@@ -346,7 +346,7 @@ class APIComponentsView(HomeAssistantView):
     name = "api:components"
 
     @ha.callback
-    def get(self, request: web.Request) -> web.Response:
+    def get(self, request):
         """Get current loaded components."""
         return self.json(request.app["hass"].config.components)
 
@@ -363,12 +363,12 @@ class APITemplateView(HomeAssistantView):
     url = URL_API_TEMPLATE
     name = "api:template"
 
-    async def post(self, request: web.Request) -> web.Response:
+    async def post(self, request):
         """Render a template."""
         if not request["hass_user"].is_admin:
             raise Unauthorized()
         try:
-            data = await request.json(loads=json_loads)
+            data = await request.json()
             tpl = _cached_template(data["template"], request.app["hass"])
             return tpl.async_render(variables=data.get("variables"), parse_result=False)
         except (ValueError, TemplateError) as ex:
@@ -383,7 +383,7 @@ class APIErrorLog(HomeAssistantView):
     url = URL_API_ERROR_LOG
     name = "api:error_log"
 
-    async def get(self, request: web.Request) -> web.FileResponse:
+    async def get(self, request):
         """Retrieve API error log."""
         if not request["hass_user"].is_admin:
             raise Unauthorized()
