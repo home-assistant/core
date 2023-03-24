@@ -58,6 +58,10 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         except ClientConnectorError as exc:
             raise UpdateFailed("Failed to get LIVISI the devices") from exc
 
+    def _async_dispatcher_send(self, event: str, source: str, data: Any) -> None:
+        if data is not None:
+            async_dispatcher_send(self.hass, f"{event}_{source}", data)
+
     async def async_setup(self) -> None:
         """Set up the Livisi Smart Home Controller."""
         if not self.aiolivisi.livisi_connection_data:
@@ -83,44 +87,14 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         """Set the discovered devices list."""
         return await self.aiolivisi.async_get_devices()
 
-    async def async_get_pss_state(self, capability: str) -> bool | None:
-        """Set the PSS state."""
-        response: dict[str, Any] | None = await self.aiolivisi.async_get_device_state(
+    async def async_get_device_state(self, capability: str, key: str) -> Any | None:
+        """Get state from livisi devices."""
+        response: dict[str, Any] = await self.aiolivisi.async_get_device_state(
             capability[1:]
         )
         if response is None:
             return None
-        on_state = response["onState"]
-        return on_state["value"]
-
-    async def async_get_vrcc_target_temperature(self, capability: str) -> float | None:
-        """Get the target temperature of the climate device."""
-        response: dict[str, Any] | None = await self.aiolivisi.async_get_device_state(
-            capability[1:]
-        )
-        if response is None:
-            return None
-        if self.is_avatar:
-            return response["setpointTemperature"]["value"]
-        return response["pointTemperature"]["value"]
-
-    async def async_get_vrcc_temperature(self, capability: str) -> float | None:
-        """Get the temperature of the climate device."""
-        response: dict[str, Any] | None = await self.aiolivisi.async_get_device_state(
-            capability[1:]
-        )
-        if response is None:
-            return None
-        return response["temperature"]["value"]
-
-    async def async_get_vrcc_humidity(self, capability: str) -> int | None:
-        """Get the humidity of the climate device."""
-        response: dict[str, Any] | None = await self.aiolivisi.async_get_device_state(
-            capability[1:]
-        )
-        if response is None:
-            return None
-        return response["humidity"]["value"]
+        return response.get(key, {}).get("value")
 
     async def async_set_all_rooms(self) -> None:
         """Set the room list."""
@@ -132,34 +106,20 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
 
     def on_data(self, event_data: LivisiEvent) -> None:
         """Define a handler to fire when the data is received."""
-        if event_data.onState is not None:
-            async_dispatcher_send(
-                self.hass,
-                f"{LIVISI_STATE_CHANGE}_{event_data.source}",
-                event_data.onState,
-            )
-        if event_data.vrccData is not None:
-            async_dispatcher_send(
-                self.hass,
-                f"{LIVISI_STATE_CHANGE}_{event_data.source}",
-                event_data.vrccData,
-            )
-        if event_data.isReachable is not None:
-            async_dispatcher_send(
-                self.hass,
-                f"{LIVISI_REACHABILITY_CHANGE}_{event_data.source}",
-                event_data.isReachable,
-            )
+        self._async_dispatcher_send(
+            LIVISI_STATE_CHANGE, event_data.source, event_data.onState
+        )
+        self._async_dispatcher_send(
+            LIVISI_STATE_CHANGE, event_data.source, event_data.vrccData
+        )
+        self._async_dispatcher_send(
+            LIVISI_REACHABILITY_CHANGE, event_data.source, event_data.isReachable
+        )
 
     async def on_close(self) -> None:
         """Define a handler to fire when the websocket is closed."""
         for device_id in self.devices:
-            is_reachable: bool = False
-            async_dispatcher_send(
-                self.hass,
-                f"{LIVISI_REACHABILITY_CHANGE}_{device_id}",
-                is_reachable,
-            )
+            self._async_dispatcher_send(LIVISI_REACHABILITY_CHANGE, device_id, False)
 
         await self.websocket.connect(self.on_data, self.on_close, self.port)
 
