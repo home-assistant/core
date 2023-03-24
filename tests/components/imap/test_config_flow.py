@@ -348,12 +348,11 @@ async def test_options_form(hass: HomeAssistant) -> None:
             result2["flow_id"],
             new_config,
         )
+        await hass.async_block_till_done()
     assert result3["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result3["data"] == {}
     for key, value in new_config.items():
         assert entry.data[key] == value
-
-    await hass.async_block_till_done()
 
 
 async def test_key_options_in_options_form(hass: HomeAssistant) -> None:
@@ -386,7 +385,6 @@ async def test_key_options_in_options_form(hass: HomeAssistant) -> None:
             result["flow_id"],
             new_config,
         )
+        await hass.async_block_till_done()
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "already_configured"}
-
-    await hass.async_block_till_done()
