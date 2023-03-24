@@ -34,6 +34,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .test_common import (
+    help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
@@ -226,36 +227,37 @@ async def test_controlling_state_via_topic(
 @pytest.mark.parametrize(
     "hass_config",
     [
-        {
-            mqtt.DOMAIN: {
-                fan.DOMAIN: [
-                    {
-                        "name": "test1",
+        help_custom_config(
+            fan.DOMAIN,
+            {
+                mqtt.DOMAIN: {
+                    fan.DOMAIN: {
                         "command_topic": "command-topic",
-                        "percentage_state_topic": "percentage-state-topic1",
-                        "percentage_command_topic": "percentage-command-topic1",
-                        "speed_range_min": 1,
-                        "speed_range_max": 100,
-                    },
-                    {
-                        "name": "test2",
-                        "command_topic": "command-topic",
-                        "percentage_state_topic": "percentage-state-topic2",
-                        "percentage_command_topic": "percentage-command-topic2",
-                        "speed_range_min": 1,
-                        "speed_range_max": 200,
-                    },
-                    {
-                        "name": "test3",
-                        "command_topic": "command-topic",
-                        "percentage_state_topic": "percentage-state-topic3",
-                        "percentage_command_topic": "percentage-command-topic3",
-                        "speed_range_min": 81,
-                        "speed_range_max": 1023,
-                    },
-                ]
-            }
-        }
+                        "percentage_command_topic": "percentage-command-topic",
+                    }
+                }
+            },
+            (
+                {
+                    "name": "test1",
+                    "percentage_state_topic": "percentage-state-topic1",
+                    "speed_range_min": 1,
+                    "speed_range_max": 100,
+                },
+                {
+                    "name": "test2",
+                    "percentage_state_topic": "percentage-state-topic2",
+                    "speed_range_min": 1,
+                    "speed_range_max": 200,
+                },
+                {
+                    "name": "test3",
+                    "percentage_state_topic": "percentage-state-topic3",
+                    "speed_range_min": 81,
+                    "speed_range_max": 1023,
+                },
+            ),
+        ),
     ],
 )
 async def test_controlling_state_via_topic_with_different_speed_range(
@@ -672,36 +674,40 @@ async def test_sending_mqtt_commands_and_optimistic(
 @pytest.mark.parametrize(
     "hass_config",
     [
-        {
-            mqtt.DOMAIN: {
-                fan.DOMAIN: [
-                    {
+        help_custom_config(
+            fan.DOMAIN,
+            {
+                mqtt.DOMAIN: {
+                    fan.DOMAIN: {
                         "name": "test1",
                         "command_topic": "command-topic",
-                        "percentage_state_topic": "percentage-state-topic1",
-                        "percentage_command_topic": "percentage-command-topic1",
+                        "percentage_state_topic": "percentage-state-topic",
                         "speed_range_min": 1,
                         "speed_range_max": 3,
-                    },
-                    {
-                        "name": "test2",
-                        "command_topic": "command-topic",
-                        "percentage_state_topic": "percentage-state-topic2",
-                        "percentage_command_topic": "percentage-command-topic2",
-                        "speed_range_min": 1,
-                        "speed_range_max": 200,
-                    },
-                    {
-                        "name": "test3",
-                        "command_topic": "command-topic",
-                        "percentage_state_topic": "percentage-state-topic3",
-                        "percentage_command_topic": "percentage-command-topic3",
-                        "speed_range_min": 81,
-                        "speed_range_max": 1023,
-                    },
-                ]
-            }
-        }
+                    }
+                }
+            },
+            (
+                {
+                    "name": "test1",
+                    "percentage_command_topic": "percentage-command-topic1",
+                    "speed_range_min": 1,
+                    "speed_range_max": 3,
+                },
+                {
+                    "name": "test2",
+                    "percentage_command_topic": "percentage-command-topic2",
+                    "speed_range_min": 1,
+                    "speed_range_max": 200,
+                },
+                {
+                    "name": "test3",
+                    "percentage_command_topic": "percentage-command-topic3",
+                    "speed_range_min": 81,
+                    "speed_range_max": 1023,
+                },
+            ),
+        ),
     ],
 )
 async def test_sending_mqtt_commands_with_alternate_speed_range(
@@ -1460,7 +1466,7 @@ async def test_attributes(
                 }
             },
             True,
-            0,
+            fan.FanEntityFeature(0),
         ),
         (
             "test2",
