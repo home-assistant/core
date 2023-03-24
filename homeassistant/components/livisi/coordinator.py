@@ -60,8 +60,9 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         """Get device configuration from LIVISI."""
         try:
             return await self.async_get_devices()
-        except TokenExpiredException as exc:
-            raise ConfigEntryAuthFailed("Token expired") from exc
+        except TokenExpiredException:
+            await self.aiolivisi.async_set_token()
+            return await self.async_get_devices()
         except ClientConnectorError as exc:
             raise UpdateFailed("Failed to get livisi devices from controller") from exc
 
