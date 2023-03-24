@@ -1,4 +1,6 @@
 """Test the OralB sensors."""
+from unittest.mock import Mock
+
 from homeassistant.components.oralb.const import DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
@@ -16,7 +18,9 @@ from tests.components.bluetooth import (
 )
 
 
-async def test_sensors(hass: HomeAssistant, entity_registry_enabled_by_default) -> None:
+async def test_sensors(
+    hass: HomeAssistant, entity_registry_enabled_by_default: Mock
+) -> None:
     """Test setting up creates the sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -47,7 +51,7 @@ async def test_sensors(hass: HomeAssistant, entity_registry_enabled_by_default) 
 
 
 async def test_sensors_io_series_4(
-    hass: HomeAssistant, entity_registry_enabled_by_default
+    hass: HomeAssistant, entity_registry_enabled_by_default: Mock
 ) -> None:
     """Test setting up creates the sensors with an io series 4."""
     entry = MockConfigEntry(

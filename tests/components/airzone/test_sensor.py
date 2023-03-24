@@ -1,6 +1,5 @@
 """The sensor tests for the Airzone platform."""
-
-from unittest.mock import AsyncMock
+from unittest.mock import Mock
 
 from homeassistant.core import HomeAssistant
 
@@ -8,7 +7,7 @@ from .util import async_init_integration
 
 
 async def test_airzone_create_sensors(
-    hass: HomeAssistant, entity_registry_enabled_by_default: AsyncMock
+    hass: HomeAssistant, entity_registry_enabled_by_default: Mock
 ) -> None:
     """Test creation of sensors."""
 

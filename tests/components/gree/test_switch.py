@@ -1,4 +1,6 @@
 """Tests for gree component."""
+from unittest.mock import Mock
+
 from greeclimate.exceptions import DeviceTimeoutError
 import pytest
 
@@ -54,7 +56,7 @@ async def test_health_mode_disabled_by_default(hass):
     ],
 )
 async def test_send_switch_on(
-    hass: HomeAssistant, entity, entity_registry_enabled_by_default
+    hass: HomeAssistant, entity, entity_registry_enabled_by_default: Mock
 ) -> None:
     """Test for sending power on command to the device."""
     await async_setup_gree(hass)
@@ -82,7 +84,7 @@ async def test_send_switch_on(
     ],
 )
 async def test_send_switch_on_device_timeout(
-    hass: HomeAssistant, device, entity, entity_registry_enabled_by_default
+    hass: HomeAssistant, device, entity, entity_registry_enabled_by_default: Mock
 ) -> None:
     """Test for sending power on command to the device with a device timeout."""
     device().push_state_update.side_effect = DeviceTimeoutError
@@ -112,7 +114,7 @@ async def test_send_switch_on_device_timeout(
     ],
 )
 async def test_send_switch_off(
-    hass: HomeAssistant, entity, entity_registry_enabled_by_default
+    hass: HomeAssistant, entity, entity_registry_enabled_by_default: Mock
 ) -> None:
     """Test for sending power on command to the device."""
     await async_setup_gree(hass)
@@ -140,7 +142,7 @@ async def test_send_switch_off(
     ],
 )
 async def test_send_switch_toggle(
-    hass: HomeAssistant, entity, entity_registry_enabled_by_default
+    hass: HomeAssistant, entity, entity_registry_enabled_by_default: Mock
 ) -> None:
     """Test for sending power on command to the device."""
     await async_setup_gree(hass)
@@ -193,7 +195,7 @@ async def test_send_switch_toggle(
     ],
 )
 async def test_entity_name(
-    hass: HomeAssistant, entity, name, entity_registry_enabled_by_default
+    hass: HomeAssistant, entity, name, entity_registry_enabled_by_default: Mock
 ) -> None:
     """Test for name property."""
     await async_setup_gree(hass)
