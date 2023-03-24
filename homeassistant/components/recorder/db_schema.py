@@ -374,9 +374,9 @@ class States(Base):
     state: Mapped[str | None] = mapped_column(String(MAX_LENGTH_STATE_STATE))
     attributes: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
     event_id: Mapped[int | None] = mapped_column(UNUSED_LEGACY_COLUMN)
-    last_changed: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
+    last_changed: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_COLUMN)
     last_changed_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE)
-    last_updated: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
+    last_updated: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_COLUMN)
     last_updated_ts: Mapped[float | None] = mapped_column(
         TIMESTAMP_TYPE, default=time.time, index=True
     )
@@ -421,7 +421,7 @@ class States(Base):
     @property
     def _last_updated_isotime(self) -> str | None:
         """Return last_updated as an isotime string."""
-        date_time: datetime | None
+        date_time: datetime | None = None
         if self.last_updated_ts is not None:
             date_time = dt_util.utc_from_timestamp(self.last_updated_ts)
         if date_time is None:
