@@ -58,7 +58,7 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         except ClientConnectorError as exc:
             raise UpdateFailed("Failed to get LIVISI the devices") from exc
 
-    def _async_dispatcher_send(self, data, event, source):
+    def _async_dispatcher_send(self, event: str, source: str, data: Any):
         if data is not None:
             async_dispatcher_send(self.hass, f"{event}_{source}", data)
 
@@ -107,19 +107,19 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
     def on_data(self, event_data: LivisiEvent) -> None:
         """Define a handler to fire when the data is received."""
         self._async_dispatcher_send(
-            event_data.onState, LIVISI_STATE_CHANGE, event_data.source
+            LIVISI_STATE_CHANGE, event_data.source, event_data.onState
         )
         self._async_dispatcher_send(
-            event_data.vrccData, LIVISI_STATE_CHANGE, event_data.source
+            LIVISI_STATE_CHANGE, event_data.source, event_data.vrccData
         )
         self._async_dispatcher_send(
-            event_data.isReachable, LIVISI_REACHABILITY_CHANGE, event_data.source
+            LIVISI_REACHABILITY_CHANGE, event_data.source, event_data.isReachable
         )
 
     async def on_close(self) -> None:
         """Define a handler to fire when the websocket is closed."""
         for device_id in self.devices:
-            self._async_dispatcher_send(False, LIVISI_REACHABILITY_CHANGE, device_id)
+            self._async_dispatcher_send(LIVISI_REACHABILITY_CHANGE, device_id, False)
 
         await self.websocket.connect(self.on_data, self.on_close, self.port)
 
