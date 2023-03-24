@@ -226,8 +226,7 @@ class SnapcastClientDevice(MediaPlayerEntity):
 
     @property
     def unique_id(self):
-        """
-        Return the ID of this snapcast client.
+        """Return the ID of this snapcast client.
 
         Note: Host part is needed, when using multiple snapservers
         """

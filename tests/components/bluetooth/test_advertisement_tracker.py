@@ -1,10 +1,9 @@
 """Tests for the Bluetooth integration advertisement tracking."""
-
 from datetime import timedelta
 import time
 from unittest.mock import patch
 
-from bleak.backends.scanner import BLEDevice
+import pytest
 
 from homeassistant.components.bluetooth import (
     async_register_scanner,
@@ -18,12 +17,13 @@ from homeassistant.components.bluetooth.const import (
     SOURCE_LOCAL,
     UNAVAILABLE_TRACK_SECONDS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
 
 from . import (
     FakeScanner,
     generate_advertisement_data,
+    generate_ble_device,
     inject_advertisement_with_time_and_source,
     inject_advertisement_with_time_and_source_connectable,
 )
@@ -34,11 +34,14 @@ ONE_HOUR_SECONDS = 3600
 
 
 async def test_advertisment_interval_shorter_than_adapter_stack_timeout(
-    hass, caplog, enable_bluetooth, macos_adapter
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_bluetooth: None,
+    macos_adapter: None,
+) -> None:
     """Test we can determine the advertisement interval."""
     start_monotonic_time = time.monotonic()
-    switchbot_device = BLEDevice("44:44:33:11:23:12", "wohand")
+    switchbot_device = generate_ble_device("44:44:33:11:23:12", "wohand")
     switchbot_adv = generate_advertisement_data(
         local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
     )
@@ -78,11 +81,14 @@ async def test_advertisment_interval_shorter_than_adapter_stack_timeout(
 
 
 async def test_advertisment_interval_longer_than_adapter_stack_timeout_connectable(
-    hass, caplog, enable_bluetooth, macos_adapter
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_bluetooth: None,
+    macos_adapter: None,
+) -> None:
     """Test device with a long advertisement interval."""
     start_monotonic_time = time.monotonic()
-    switchbot_device = BLEDevice("44:44:33:11:23:18", "wohand")
+    switchbot_device = generate_ble_device("44:44:33:11:23:18", "wohand")
     switchbot_adv = generate_advertisement_data(
         local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
     )
@@ -124,11 +130,14 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_connectab
 
 
 async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_change_connectable(
-    hass, caplog, enable_bluetooth, macos_adapter
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_bluetooth: None,
+    macos_adapter: None,
+) -> None:
     """Test device with a long advertisement interval with an adapter change."""
     start_monotonic_time = time.monotonic()
-    switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+    switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
     switchbot_adv = generate_advertisement_data(
         local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
     )
@@ -179,11 +188,14 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
 
 
 async def test_advertisment_interval_longer_than_adapter_stack_timeout_not_connectable(
-    hass, caplog, enable_bluetooth, macos_adapter
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_bluetooth: None,
+    macos_adapter: None,
+) -> None:
     """Test device with a long advertisement interval that is not connectable not reaching the advertising interval."""
     start_monotonic_time = time.monotonic()
-    switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+    switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
     switchbot_adv = generate_advertisement_data(
         local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
     )
@@ -228,11 +240,14 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_not_conne
 
 
 async def test_advertisment_interval_shorter_than_adapter_stack_timeout_adapter_change_not_connectable(
-    hass, caplog, enable_bluetooth, macos_adapter
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_bluetooth: None,
+    macos_adapter: None,
+) -> None:
     """Test device with a short advertisement interval with an adapter change that is not connectable."""
     start_monotonic_time = time.monotonic()
-    switchbot_device = BLEDevice("44:44:33:11:23:5C", "wohand")
+    switchbot_device = generate_ble_device("44:44:33:11:23:5C", "wohand")
     switchbot_adv = generate_advertisement_data(
         local_name="wohand",
         service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
@@ -293,11 +308,14 @@ async def test_advertisment_interval_shorter_than_adapter_stack_timeout_adapter_
 
 
 async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_change_not_connectable(
-    hass, caplog, enable_bluetooth, macos_adapter
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_bluetooth: None,
+    macos_adapter: None,
+) -> None:
     """Test device with a long advertisement interval with an adapter change that is not connectable."""
     start_monotonic_time = time.monotonic()
-    switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+    switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
     switchbot_adv = generate_advertisement_data(
         local_name="wohand",
         service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
@@ -391,11 +409,14 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
 
 
 async def test_advertisment_interval_longer_increasing_than_adapter_stack_timeout_adapter_change_not_connectable(
-    hass, caplog, enable_bluetooth, macos_adapter
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_bluetooth: None,
+    macos_adapter: None,
+) -> None:
     """Test device with a increasing advertisement interval with an adapter change that is not connectable."""
     start_monotonic_time = time.monotonic()
-    switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+    switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
     switchbot_adv = generate_advertisement_data(
         local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
     )

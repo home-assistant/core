@@ -30,6 +30,7 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_ENTITY_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityCategory,
     Platform,
 )
 from homeassistant.core import (
@@ -42,21 +43,16 @@ from homeassistant.core import (
 from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.loader import bind_hass
 from homeassistant.util import slugify, uuid as uuid_util
-from homeassistant.util.json import (
-    find_paths_unserializable_data,
-    format_unserializable_data,
-)
+from homeassistant.util.json import format_unserializable_data
 
 from . import device_registry as dr, storage
 from .device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from .frame import report
-from .json import JSON_DUMP
+from .json import JSON_DUMP, find_paths_unserializable_data
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
-
-    from .entity import EntityCategory
 
 T = TypeVar("T")
 
@@ -68,6 +64,13 @@ _LOGGER = logging.getLogger(__name__)
 STORAGE_VERSION_MAJOR = 1
 STORAGE_VERSION_MINOR = 10
 STORAGE_KEY = "core.entity_registry"
+
+ENTITY_CATEGORY_VALUE_TO_INDEX: dict[EntityCategory | None, int] = {
+    # mypy does not understand strenum
+    val: idx  # type: ignore[misc]
+    for idx, val in enumerate(EntityCategory)
+}
+ENTITY_CATEGORY_INDEX_TO_VALUE = dict(enumerate(EntityCategory))
 
 # Attributes relevant to describing entity
 # to external services.
@@ -100,6 +103,12 @@ class RegistryEntryHider(StrEnum):
 
 
 EntityOptionsType = Mapping[str, Mapping[str, Any]]
+
+DISLAY_DICT_OPTIONAL = (
+    ("ai", "area_id"),
+    ("di", "device_id"),
+    ("tk", "translation_key"),
+)
 
 
 @attr.s(slots=True, frozen=True)
@@ -135,7 +144,12 @@ class RegistryEntry:
     translation_key: str | None = attr.ib(default=None)
     unit_of_measurement: str | None = attr.ib(default=None)
 
-    _json_repr: str | None = attr.ib(cmp=False, default=None, init=False, repr=False)
+    _partial_repr: str | None | UndefinedType = attr.ib(
+        cmp=False, default=UNDEFINED, init=False, repr=False
+    )
+    _display_repr: str | None | UndefinedType = attr.ib(
+        cmp=False, default=UNDEFINED, init=False, repr=False
+    )
 
     @domain.default
     def _domain_default(self) -> str:
@@ -153,6 +167,57 @@ class RegistryEntry:
         return self.hidden_by is not None
 
     @property
+    def _as_display_dict(self) -> dict[str, Any] | None:
+        """Return a partial dict representation of the entry.
+
+        This version only includes what's needed for display.
+        Returns None if there's no data needed for display.
+        """
+        display_dict: dict[str, Any] = {"ei": self.entity_id, "pl": self.platform}
+        for key, attr_name in DISLAY_DICT_OPTIONAL:
+            if (attr_val := getattr(self, attr_name)) is not None:
+                display_dict[key] = attr_val
+        if (category := self.entity_category) is not None:
+            display_dict["ec"] = ENTITY_CATEGORY_VALUE_TO_INDEX[category]
+        if self.hidden_by is not None:
+            display_dict["hb"] = True
+        if not self.name and self.has_entity_name:
+            display_dict["en"] = self.original_name
+        if self.domain == "sensor" and (sensor_options := self.options.get("sensor")):
+            if (precision := sensor_options.get("display_precision")) is not None:
+                display_dict["dp"] = precision
+            elif (
+                precision := sensor_options.get("suggested_display_precision")
+            ) is not None:
+                display_dict["dp"] = precision
+        return display_dict
+
+    @property
+    def display_json_repr(self) -> str | None:
+        """Return a cached partial JSON representation of the entry.
+
+        This version only includes what's needed for display.
+        """
+        if self._display_repr is not UNDEFINED:
+            return self._display_repr
+
+        try:
+            dict_repr = self._as_display_dict
+            json_repr: str | None = JSON_DUMP(dict_repr) if dict_repr else None
+            object.__setattr__(self, "_display_repr", json_repr)
+        except (ValueError, TypeError):
+            object.__setattr__(self, "_display_repr", None)
+            _LOGGER.error(
+                "Unable to serialize entry %s to JSON. Bad data found at %s",
+                self.entity_id,
+                format_unserializable_data(
+                    find_paths_unserializable_data(dict_repr, dump=JSON_DUMP)
+                ),
+            )
+        # Mypy doesn't understand the __setattr__ business
+        return self._display_repr  # type: ignore[return-value]
+
+    @property
     def as_partial_dict(self) -> dict[str, Any]:
         """Return a partial dict representation of the entry."""
         return {
@@ -167,6 +232,7 @@ class RegistryEntry:
             "icon": self.icon,
             "id": self.id,
             "name": self.name,
+            "options": self.options,
             "original_name": self.original_name,
             "platform": self.platform,
             "translation_key": self.translation_key,
@@ -176,13 +242,14 @@ class RegistryEntry:
     @property
     def partial_json_repr(self) -> str | None:
         """Return a cached partial JSON representation of the entry."""
-        if self._json_repr is not None:
-            return self._json_repr
+        if self._partial_repr is not UNDEFINED:
+            return self._partial_repr
 
         try:
             dict_repr = self.as_partial_dict
-            object.__setattr__(self, "_json_repr", JSON_DUMP(dict_repr))
+            object.__setattr__(self, "_partial_repr", JSON_DUMP(dict_repr))
         except (ValueError, TypeError):
+            object.__setattr__(self, "_partial_repr", None)
             _LOGGER.error(
                 "Unable to serialize entry %s to JSON. Bad data found at %s",
                 self.entity_id,
@@ -190,7 +257,8 @@ class RegistryEntry:
                     find_paths_unserializable_data(dict_repr, dump=JSON_DUMP)
                 ),
             )
-        return self._json_repr
+        # Mypy doesn't understand the __setattr__ business
+        return self._partial_repr  # type: ignore[return-value]
 
     @callback
     def write_unavailable_state(self, hass: HomeAssistant) -> None:
@@ -525,8 +593,6 @@ class EntityRegistry:
         ):
             disabled_by = RegistryEntryDisabler.INTEGRATION
 
-        from .entity import EntityCategory  # pylint: disable=import-outside-toplevel
-
         if (
             entity_category
             and entity_category is not UNDEFINED
@@ -689,8 +755,6 @@ class EntityRegistry:
             and not isinstance(hidden_by, RegistryEntryHider)
         ):
             raise ValueError("hidden_by must be a RegistryEntryHider value")
-
-        from .entity import EntityCategory  # pylint: disable=import-outside-toplevel
 
         if (
             entity_category
@@ -859,11 +923,18 @@ class EntityRegistry:
 
     @callback
     def async_update_entity_options(
-        self, entity_id: str, domain: str, options: dict[str, Any]
+        self, entity_id: str, domain: str, options: Mapping[str, Any] | None
     ) -> RegistryEntry:
-        """Update entity options."""
+        """Update entity options for a domain.
+
+        If the domain options are set to None, they will be removed.
+        """
         old = self.entities[entity_id]
-        new_options: EntityOptionsType = {**old.options, domain: options}
+        new_options = {
+            key: value for key, value in old.options.items() if key != domain
+        }
+        if options is not None:
+            new_options[domain] = options
         return self._async_update_entity(entity_id, options=new_options)
 
     async def async_load(self) -> None:
@@ -872,8 +943,6 @@ class EntityRegistry:
 
         data = await self._store.async_load()
         entities = EntityRegistryItems()
-
-        from .entity import EntityCategory  # pylint: disable=import-outside-toplevel
 
         if data is not None:
             for entity in data["entities"]:

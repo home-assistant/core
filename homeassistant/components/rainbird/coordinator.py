@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
 import datetime
 import logging
@@ -84,27 +83,18 @@ class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
             raise UpdateFailed(f"Error communicating with Device: {err}") from err
 
     async def _fetch_data(self) -> RainbirdDeviceState:
-        """Fetch data from the Rain Bird device."""
-        (zones, states, rain, rain_delay) = await asyncio.gather(
-            self._fetch_zones(),
-            self._controller.get_zone_states(),
-            self._controller.get_rain_sensor_state(),
-            self._controller.get_rain_delay(),
-        )
+        """Fetch data from the Rain Bird device.
+
+        Rainbird devices can only reliably handle a single request at a time,
+        so the requests are sent serially.
+        """
+        available_stations = await self._controller.get_available_stations()
+        states = await self._controller.get_zone_states()
+        rain = await self._controller.get_rain_sensor_state()
+        rain_delay = await self._controller.get_rain_delay()
         return RainbirdDeviceState(
-            zones=set(zones),
-            active_zones={zone for zone in zones if states.active(zone)},
+            zones=available_stations.active_set,
+            active_zones=states.active_set,
             rain=rain,
             rain_delay=rain_delay,
         )
-
-    async def _fetch_zones(self) -> set[int]:
-        """Fetch the zones from the device, caching the results."""
-        if self._zones is None:
-            available_stations = await self._controller.get_available_stations()
-            self._zones = {
-                zone
-                for zone in range(1, available_stations.stations.count + 1)
-                if available_stations.stations.active(zone)
-            }
-        return self._zones

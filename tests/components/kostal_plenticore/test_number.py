@@ -91,7 +91,7 @@ async def test_setup_all_entries(
     mock_plenticore_client: ApiClient,
     mock_get_setting_values: list,
     entity_registry_enabled_by_default,
-):
+) -> None:
     """Test if all available entries are setup."""
 
     mock_config_entry.add_to_hass(hass)
@@ -110,7 +110,7 @@ async def test_setup_no_entries(
     mock_plenticore_client: ApiClient,
     mock_get_setting_values: list,
     entity_registry_enabled_by_default,
-):
+) -> None:
     """Test that no entries are setup if Plenticore does not provide data."""
 
     mock_plenticore_client.get_settings.return_value = []
@@ -131,7 +131,7 @@ async def test_number_has_value(
     mock_plenticore_client: ApiClient,
     mock_get_setting_values: list,
     entity_registry_enabled_by_default,
-):
+) -> None:
     """Test if number has a value if data is provided on update."""
 
     mock_get_setting_values.append({"devices:local": {"Battery:MinSoc": "42"}})
@@ -156,7 +156,7 @@ async def test_number_is_unavailable(
     mock_plenticore_client: ApiClient,
     mock_get_setting_values: list,
     entity_registry_enabled_by_default,
-):
+) -> None:
     """Test if number is unavailable if no data is provided on update."""
 
     mock_config_entry.add_to_hass(hass)
@@ -177,7 +177,7 @@ async def test_set_value(
     mock_plenticore_client: ApiClient,
     mock_get_setting_values: list,
     entity_registry_enabled_by_default,
-):
+) -> None:
     """Test if a new value could be set."""
 
     mock_get_setting_values.append({"devices:local": {"Battery:MinSoc": "42"}})

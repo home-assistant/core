@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.components.climate import DOMAIN
 from homeassistant.components.gree.const import COORDINATORS, DOMAIN as GREE
+from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
 from .common import async_setup_gree, build_device_mock
@@ -22,7 +23,9 @@ def mock_now():
     return dt_util.utcnow()
 
 
-async def test_discovery_after_setup(hass, discovery, device, mock_now):
+async def test_discovery_after_setup(
+    hass: HomeAssistant, discovery, device, mock_now
+) -> None:
     """Test gree devices don't change after multiple discoveries."""
     mock_device_1 = build_device_mock(
         name="fake-device-1", ipAddress="1.1.1.1", mac="aabbcc112233"

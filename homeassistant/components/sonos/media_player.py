@@ -261,7 +261,8 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             "STOPPED",
         ):
             # Sonos can consider itself "paused" but without having media loaded
-            # (happens if playing Spotify and via Spotify app you pick another device to play on)
+            # (happens if playing Spotify and via Spotify app
+            # you pick another device to play on)
             if self.media.title is None:
                 return MediaPlayerState.IDLE
             return MediaPlayerState.PAUSED
@@ -302,7 +303,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         return PLAY_MODES[self.media.play_mode][0]
 
     @property
-    def repeat(self) -> str | None:
+    def repeat(self) -> RepeatMode | None:
         """Return current repeat mode."""
         sonos_repeat = PLAY_MODES[self.media.play_mode][1]
         return SONOS_TO_REPEAT[sonos_repeat]
@@ -492,10 +493,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
     @soco_error()
     def play_media(  # noqa: C901
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
-        """
-        Send the play_media command to the media player.
+        """Send the play_media command to the media player.
 
         If media_id is a Plex payload, attempt Plex->Sonos playback.
 

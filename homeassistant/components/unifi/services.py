@@ -91,14 +91,12 @@ async def async_remove_clients(hass: HomeAssistant, data: Mapping[str, Any]) -> 
     - Neither IP, hostname nor name is configured.
     """
     for controller in hass.data[UNIFI_DOMAIN].values():
-
         if not controller.available:
             continue
 
         clients_to_remove = []
 
         for client in controller.api.clients_all.values():
-
             if (
                 client.last_seen
                 and client.first_seen

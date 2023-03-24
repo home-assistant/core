@@ -3,10 +3,11 @@ from __future__ import annotations
 
 from collections.abc import MutableMapping
 from dataclasses import dataclass, field
-from typing import TypeVar, cast
+from typing import cast
 
 from bleak.backends.service import BleakGATTServiceCollection
 from lru import LRU  # pylint: disable=no-name-in-module
+from typing_extensions import Self
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -18,8 +19,6 @@ from .entry_data import RuntimeEntryData
 
 STORAGE_VERSION = 1
 MAX_CACHED_SERVICES = 128
-
-_DomainDataSelfT = TypeVar("_DomainDataSelfT", bound="DomainData")
 
 
 @dataclass
@@ -94,10 +93,10 @@ class DomainData:
         )
 
     @classmethod
-    def get(cls: type[_DomainDataSelfT], hass: HomeAssistant) -> _DomainDataSelfT:
+    def get(cls, hass: HomeAssistant) -> Self:
         """Get the global DomainData instance stored in hass.data."""
         # Don't use setdefault - this is a hot code path
         if DOMAIN in hass.data:
-            return cast(_DomainDataSelfT, hass.data[DOMAIN])
+            return cast(Self, hass.data[DOMAIN])
         ret = hass.data[DOMAIN] = cls()
         return ret

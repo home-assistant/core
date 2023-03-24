@@ -96,7 +96,8 @@ class PowerwallDataManager:
                 raise UpdateFailed("Unable to fetch data from powerwall") from err
             except MissingAttributeError as err:
                 _LOGGER.error("The powerwall api has changed: %s", str(err))
-                # The error might include some important information about what exactly changed.
+                # The error might include some important information
+                # about what exactly changed.
                 persistent_notification.create(
                     self.hass, API_CHANGED_ERROR_BODY, API_CHANGED_TITLE
                 )
@@ -109,7 +110,8 @@ class PowerwallDataManager:
                 if self.password is None:
                     raise ConfigEntryAuthFailed from err
                 _LOGGER.debug("Access denied, trying to reauthenticate")
-                # there is still an attempt left to authenticate, so we continue in the loop
+                # there is still an attempt left to authenticate,
+                # so we continue in the loop
             except APIError as err:
                 raise UpdateFailed(f"Updated failed due to {err}, will retry") from err
             else:

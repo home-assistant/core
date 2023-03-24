@@ -1,5 +1,5 @@
 """Tests for the SleepIQ config flow."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from asyncsleepiq import SleepIQLoginException, SleepIQTimeoutException
 import pytest
@@ -10,6 +10,8 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from .conftest import SLEEPIQ_CONFIG, setup_platform
+
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def test_import(hass: HomeAssistant) -> None:
@@ -51,7 +53,7 @@ async def test_show_set_form(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "side_effect,error",
+    ("side_effect", "error"),
     [
         (SleepIQLoginException, "invalid_auth"),
         (SleepIQTimeoutException, "cannot_connect"),
@@ -72,7 +74,7 @@ async def test_login_failure(hass: HomeAssistant, side_effect, error) -> None:
         assert result["errors"] == {"base": error}
 
 
-async def test_success(hass: HomeAssistant) -> None:
+async def test_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test successful flow provides entry creation data."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -80,11 +82,7 @@ async def test_success(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch("asyncsleepiq.AsyncSleepIQ.login", return_value=True), patch(
-        "homeassistant.components.sleepiq.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-
+    with patch("asyncsleepiq.AsyncSleepIQ.login", return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], SLEEPIQ_CONFIG
         )
@@ -96,7 +94,7 @@ async def test_success(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_reauth_password(hass):
+async def test_reauth_password(hass: HomeAssistant) -> None:
     """Test reauth form."""
 
     # set up initially
@@ -117,9 +115,6 @@ async def test_reauth_password(hass):
 
     with patch(
         "homeassistant.components.sleepiq.config_flow.AsyncSleepIQ.login",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.sleepiq.async_setup_entry",
         return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(

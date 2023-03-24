@@ -43,7 +43,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the RSS feed template component."""
-    for (feeduri, feedconfig) in config[DOMAIN].items():
+    for feeduri, feedconfig in config[DOMAIN].items():
         url = f"/api/rss_template/{feeduri}"
 
         requires_auth: bool = feedconfig["requires_api_password"]

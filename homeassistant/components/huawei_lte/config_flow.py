@@ -251,8 +251,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates={CONF_URL: url})
 
         def _is_supported_device() -> bool:
-            """
-            See if we are looking at a possibly supported device.
+            """See if we are looking at a possibly supported device.
 
             Matching solely on SSDP data does not yield reliable enough results.
             """

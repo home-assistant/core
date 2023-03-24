@@ -1,7 +1,6 @@
 """Test samsungtv diagnostics."""
 from unittest.mock import Mock
 
-from aiohttp import ClientSession
 import pytest
 from samsungtvws.exceptions import HttpApiError
 
@@ -17,11 +16,12 @@ from .const import (
 from .test_media_player import MOCK_ENTRY_WS_WITH_MAC
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.usefixtures("remotews", "rest_api")
 async def test_entry_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSession
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test config entry diagnostics."""
     config_entry = await setup_samsungtv_entry(hass, MOCK_ENTRY_WS_WITH_MAC)
@@ -55,7 +55,7 @@ async def test_entry_diagnostics(
 
 @pytest.mark.usefixtures("remoteencws")
 async def test_entry_diagnostics_encrypted(
-    hass: HomeAssistant, rest_api: Mock, hass_client: ClientSession
+    hass: HomeAssistant, rest_api: Mock, hass_client: ClientSessionGenerator
 ) -> None:
     """Test config entry diagnostics."""
     rest_api.rest_device_info.return_value = SAMPLE_DEVICE_INFO_UE48JU6400
@@ -91,7 +91,7 @@ async def test_entry_diagnostics_encrypted(
 
 @pytest.mark.usefixtures("remoteencws")
 async def test_entry_diagnostics_encrypte_offline(
-    hass: HomeAssistant, rest_api: Mock, hass_client: ClientSession
+    hass: HomeAssistant, rest_api: Mock, hass_client: ClientSessionGenerator
 ) -> None:
     """Test config entry diagnostics."""
     rest_api.rest_device_info.side_effect = HttpApiError

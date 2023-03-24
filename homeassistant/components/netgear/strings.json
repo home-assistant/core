@@ -14,7 +14,9 @@
       "config": "Connection or login error: please check your configuration"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "not_ipv4_address": "No IPv4 address in ssdp discovery information",
+      "no_serial": "No serial number in ssdp discovery information"
     }
   },
   "options": {

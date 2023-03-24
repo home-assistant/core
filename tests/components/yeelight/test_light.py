@@ -138,7 +138,7 @@ SUPPORT_YEELIGHT = (
 )
 
 
-async def test_services(hass: HomeAssistant, caplog):
+async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     """Test Yeelight services."""
     assert await async_setup_component(hass, "homeassistant", {})
     config_entry = MockConfigEntry(
@@ -525,7 +525,9 @@ async def test_services(hass: HomeAssistant, caplog):
     assert hass.states.get(ENTITY_LIGHT).state == STATE_UNAVAILABLE
 
 
-async def test_update_errors(hass: HomeAssistant, caplog):
+async def test_update_errors(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test update errors."""
     assert await async_setup_component(hass, "homeassistant", {})
     config_entry = MockConfigEntry(
@@ -575,7 +577,7 @@ async def test_update_errors(hass: HomeAssistant, caplog):
     assert hass.states.get(ENTITY_LIGHT).state == STATE_UNAVAILABLE
 
 
-async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant):
+async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant) -> None:
     """Ensure we suppress state changes that will increase the rate limit when there is no change."""
     mocked_bulb = _mocked_bulb()
     properties = {**PROPERTIES}
@@ -767,7 +769,9 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant):
     mocked_bulb.last_properties["flowing"] = "0"
 
 
-async def test_device_types(hass: HomeAssistant, caplog):
+async def test_device_types(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test different device types."""
     mocked_bulb = _mocked_bulb()
     properties = {**PROPERTIES}
@@ -1337,7 +1341,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
     )
 
 
-async def test_effects(hass: HomeAssistant):
+async def test_effects(hass: HomeAssistant) -> None:
     """Test effects."""
     assert await async_setup_component(
         hass,
@@ -1508,7 +1512,7 @@ async def test_effects(hass: HomeAssistant):
     await _async_test_effect("not_existed", called=False)
 
 
-async def test_ambilight_with_nightlight_disabled(hass: HomeAssistant):
+async def test_ambilight_with_nightlight_disabled(hass: HomeAssistant) -> None:
     """Test that main light on ambilights with the nightlight disabled shows the correct brightness."""
     mocked_bulb = _mocked_bulb()
     properties = {**PROPERTIES}
@@ -1542,7 +1546,7 @@ async def test_ambilight_with_nightlight_disabled(hass: HomeAssistant):
     assert state.attributes[ATTR_BRIGHTNESS] == 128
 
 
-async def test_state_fails_to_update_triggers_update(hass: HomeAssistant):
+async def test_state_fails_to_update_triggers_update(hass: HomeAssistant) -> None:
     """Ensure we call async_get_properties if the turn on/off fails to update the state."""
     mocked_bulb = _mocked_bulb()
     properties = {**PROPERTIES}

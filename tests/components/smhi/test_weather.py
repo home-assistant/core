@@ -252,7 +252,7 @@ async def test_refresh_weather_forecast_retry(
         assert mock_get_forecast.call_count == 3
 
 
-def test_condition_class():
+def test_condition_class() -> None:
     """Test condition class."""
 
     def get_condition(index: int) -> str:

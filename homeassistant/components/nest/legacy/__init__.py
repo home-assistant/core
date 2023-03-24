@@ -82,8 +82,7 @@ CANCEL_ETA_SCHEMA = vol.Schema(
 
 
 def nest_update_event_broker(hass, nest):
-    """
-    Dispatch SIGNAL_NEST_UPDATE to devices when nest stream API received data.
+    """Dispatch SIGNAL_NEST_UPDATE to devices when nest stream API received data.
 
     Used for the legacy nest API.
 

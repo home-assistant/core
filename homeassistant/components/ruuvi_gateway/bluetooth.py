@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-import datetime
 import logging
+import time
 
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 
 from homeassistant.components.bluetooth import (
+    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     BaseHaRemoteScanner,
     async_get_advertisement_callback,
     async_register_scanner,
@@ -15,7 +16,6 @@ from homeassistant.components.bluetooth import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 
-from .const import OLD_ADVERTISEMENT_CUTOFF
 from .coordinator import RuuviGatewayUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,10 +46,11 @@ class RuuviGatewayScanner(BaseHaRemoteScanner):
 
     @callback
     def _async_handle_new_data(self) -> None:
-        now = datetime.datetime.now()
+        now = time.time()
         for tag_data in self.coordinator.data:
-            if now - tag_data.datetime > OLD_ADVERTISEMENT_CUTOFF:
-                # Don't process data that is older than 10 minutes
+            data_age_seconds = now - tag_data.timestamp  # Both are Unix time
+            if data_age_seconds > FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS:
+                # Don't process stale data at all
                 continue
             anno = tag_data.parse_announcement()
             self._async_on_advertisement(

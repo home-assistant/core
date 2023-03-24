@@ -216,13 +216,7 @@ class BluetoothManager:
             if address in seen:
                 continue
             seen.add(address)
-            for domain in self._integration_matcher.match_domains(service_info):
-                discovery_flow.async_create_flow(
-                    self.hass,
-                    domain,
-                    {"source": config_entries.SOURCE_BLUETOOTH},
-                    service_info,
-                )
+            self._async_trigger_matching_discovery(service_info)
 
     @hass_callback
     def async_stop(self, event: Event) -> None:
@@ -321,6 +315,8 @@ class BluetoothManager:
                     # the device from all the interval tracking since it is no longer
                     # available for both connectable and non-connectable
                     tracker.async_remove_address(address)
+                    self._integration_matcher.async_clear_address(address)
+                    self._async_dismiss_discoveries(address)
 
                 service_info = history.pop(address)
 
@@ -332,6 +328,14 @@ class BluetoothManager:
                         callback(service_info)
                     except Exception:  # pylint: disable=broad-except
                         _LOGGER.exception("Error in unavailable callback")
+
+    def _async_dismiss_discoveries(self, address: str) -> None:
+        """Dismiss all discoveries for the given address."""
+        for flow in self.hass.config_entries.flow.async_progress_by_init_data_type(
+            BluetoothServiceInfoBleak,
+            lambda service_info: bool(service_info.address == address),
+        ):
+            self.hass.config_entries.flow.async_abort(flow["flow_id"])
 
     def _prefer_previous_adv_from_different_source(
         self,
@@ -649,10 +653,27 @@ class BluetoothManager:
         """Return the last service info for an address."""
         return self._get_history_by_type(connectable).get(address)
 
+    def _async_trigger_matching_discovery(
+        self, service_info: BluetoothServiceInfoBleak
+    ) -> None:
+        """Trigger discovery for matching domains."""
+        for domain in self._integration_matcher.match_domains(service_info):
+            discovery_flow.async_create_flow(
+                self.hass,
+                domain,
+                {"source": config_entries.SOURCE_BLUETOOTH},
+                service_info,
+            )
+
     @hass_callback
     def async_rediscover_address(self, address: str) -> None:
         """Trigger discovery of devices which have already been seen."""
         self._integration_matcher.async_clear_address(address)
+        if service_info := self._connectable_history.get(address):
+            self._async_trigger_matching_discovery(service_info)
+            return
+        if service_info := self._all_history.get(address):
+            self._async_trigger_matching_discovery(service_info)
 
     def _get_scanners_by_type(self, connectable: bool) -> list[BaseHaScanner]:
         """Return the scanners by type."""

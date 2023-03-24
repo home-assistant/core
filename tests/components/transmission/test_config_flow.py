@@ -67,7 +67,7 @@ async def test_device_already_configured(
     assert result2["reason"] == "already_configured"
 
 
-async def test_name_already_configured(hass):
+async def test_name_already_configured(hass: HomeAssistant) -> None:
     """Test name is already configured."""
     entry = MockConfigEntry(
         domain=transmission.DOMAIN,

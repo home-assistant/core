@@ -15,6 +15,7 @@ from homeassistant.components.zwave_js.triggers.trigger_helpers import (
     async_bypass_dynamic_config_validation,
 )
 from homeassistant.const import SERVICE_RELOAD
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
 from homeassistant.setup import async_setup_component
 
@@ -23,7 +24,9 @@ from .common import SCHLAGE_BE469_LOCK_ENTITY
 from tests.common import async_capture_events
 
 
-async def test_zwave_js_value_updated(hass, client, lock_schlage_be469, integration):
+async def test_zwave_js_value_updated(
+    hass: HomeAssistant, client, lock_schlage_be469, integration
+) -> None:
     """Test for zwave_js.value_updated automation trigger."""
     trigger_type = f"{DOMAIN}.value_updated"
     node: Node = lock_schlage_be469
@@ -271,8 +274,8 @@ async def test_zwave_js_value_updated(hass, client, lock_schlage_be469, integrat
 
 
 async def test_zwave_js_value_updated_bypass_dynamic_validation(
-    hass, client, lock_schlage_be469, integration
-):
+    hass: HomeAssistant, client, lock_schlage_be469, integration
+) -> None:
     """Test zwave_js.value_updated trigger when bypassing dynamic validation."""
     trigger_type = f"{DOMAIN}.value_updated"
     node: Node = lock_schlage_be469
@@ -329,8 +332,8 @@ async def test_zwave_js_value_updated_bypass_dynamic_validation(
 
 
 async def test_zwave_js_value_updated_bypass_dynamic_validation_no_nodes(
-    hass, client, lock_schlage_be469, integration
-):
+    hass: HomeAssistant, client, lock_schlage_be469, integration
+) -> None:
     """Test value_updated trigger when bypassing dynamic validation with no nodes."""
     trigger_type = f"{DOMAIN}.value_updated"
     node: Node = lock_schlage_be469
@@ -387,8 +390,8 @@ async def test_zwave_js_value_updated_bypass_dynamic_validation_no_nodes(
 
 
 async def test_zwave_js_value_updated_bypass_dynamic_validation_no_driver(
-    hass, client, lock_schlage_be469, integration
-):
+    hass: HomeAssistant, client, lock_schlage_be469, integration
+) -> None:
     """Test zwave_js.value_updated trigger without driver."""
     trigger_type = f"{DOMAIN}.value_updated"
     node: Node = lock_schlage_be469
@@ -445,7 +448,9 @@ async def test_zwave_js_value_updated_bypass_dynamic_validation_no_driver(
     assert len(no_value_filter) == 0
 
 
-async def test_zwave_js_event(hass, client, lock_schlage_be469, integration):
+async def test_zwave_js_event(
+    hass: HomeAssistant, client, lock_schlage_be469, integration
+) -> None:
     """Test for zwave_js.event automation trigger."""
     trigger_type = f"{DOMAIN}.event"
     node: Node = lock_schlage_be469
@@ -824,8 +829,8 @@ async def test_zwave_js_event(hass, client, lock_schlage_be469, integration):
 
 
 async def test_zwave_js_event_bypass_dynamic_validation(
-    hass, client, lock_schlage_be469, integration
-):
+    hass: HomeAssistant, client, lock_schlage_be469, integration
+) -> None:
     """Test zwave_js.event trigger when bypassing dynamic config validation."""
     trigger_type = f"{DOMAIN}.event"
     node: Node = lock_schlage_be469
@@ -874,8 +879,8 @@ async def test_zwave_js_event_bypass_dynamic_validation(
 
 
 async def test_zwave_js_event_bypass_dynamic_validation_no_nodes(
-    hass, client, lock_schlage_be469, integration
-):
+    hass: HomeAssistant, client, lock_schlage_be469, integration
+) -> None:
     """Test event trigger when bypassing dynamic validation with no nodes."""
     trigger_type = f"{DOMAIN}.event"
     node: Node = lock_schlage_be469
@@ -925,8 +930,8 @@ async def test_zwave_js_event_bypass_dynamic_validation_no_nodes(
 
 
 async def test_zwave_js_event_invalid_config_entry_id(
-    hass, client, integration, caplog
-):
+    hass: HomeAssistant, client, integration, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test zwave_js.event automation trigger fails when config entry ID is invalid."""
     trigger_type = f"{DOMAIN}.event"
 
@@ -954,7 +959,7 @@ async def test_zwave_js_event_invalid_config_entry_id(
     caplog.clear()
 
 
-async def test_async_validate_trigger_config(hass):
+async def test_async_validate_trigger_config(hass: HomeAssistant) -> None:
     """Test async_validate_trigger_config."""
     mock_platform = AsyncMock()
     with patch(
@@ -966,7 +971,7 @@ async def test_async_validate_trigger_config(hass):
         mock_platform.async_validate_trigger_config.assert_awaited()
 
 
-async def test_invalid_trigger_configs(hass):
+async def test_invalid_trigger_configs(hass: HomeAssistant) -> None:
     """Test invalid trigger configs."""
     with pytest.raises(vol.Invalid):
         await async_validate_trigger_config(
@@ -992,8 +997,8 @@ async def test_invalid_trigger_configs(hass):
 
 
 async def test_zwave_js_trigger_config_entry_unloaded(
-    hass, client, lock_schlage_be469, integration
-):
+    hass: HomeAssistant, client, lock_schlage_be469, integration
+) -> None:
     """Test zwave_js triggers bypass dynamic validation when needed."""
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device(

@@ -18,8 +18,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
-    TextSelector,
-    TextSelectorConfig,
+    TemplateSelector,
 )
 
 from .const import (
@@ -132,9 +131,7 @@ def openai_config_option_schema(options: MappingProxyType[str, Any]) -> dict:
     if not options:
         options = DEFAULT_OPTIONS
     return {
-        vol.Required(CONF_PROMPT, default=options.get(CONF_PROMPT)): TextSelector(
-            TextSelectorConfig(multiline=True)
-        ),
+        vol.Required(CONF_PROMPT, default=options.get(CONF_PROMPT)): TemplateSelector(),
         vol.Required(CONF_MODEL, default=options.get(CONF_MODEL)): str,
         vol.Required(CONF_MAX_TOKENS, default=options.get(CONF_MAX_TOKENS)): int,
         vol.Required(CONF_TOP_P, default=options.get(CONF_TOP_P)): NumberSelector(

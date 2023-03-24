@@ -33,7 +33,10 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         placeholders = {
             "local_token": "/112f7a4a-0051-cc2b-3b61-1898181b9950",
-            "find_token": "0481effe8a5c6f757b455babb678dc0e764feae279/112f7a4a-0051-cc2b-3b61-1898181b9950",
+            "find_token": (
+                "0481effe8a5c6f757b455babb678dc0e764feae279/112f7a4a-0051"
+                "-cc2b-3b61-1898181b9950"
+            ),
             "local_url": "ws://192.168.1.39:8083",
             "add_on_url": "ws://127.0.0.1:8083",
             "find_url": "wss://find.z-wave.me",
@@ -86,8 +89,7 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> FlowResult:
-        """
-        Handle a discovered Z-Wave accessory - get url to pass into user step.
+        """Handle a discovered Z-Wave accessory - get url to pass into user step.
 
         This flow is triggered by the discovery component.
         """

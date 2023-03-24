@@ -8,8 +8,9 @@ from homeassistant.helpers import intent
 class MockAgent(conversation.AbstractConversationAgent):
     """Test Agent."""
 
-    def __init__(self) -> None:
+    def __init__(self, agent_id: str) -> None:
         """Initialize the agent."""
+        self.agent_id = agent_id
         self.calls = []
         self.response = "Test response"
 

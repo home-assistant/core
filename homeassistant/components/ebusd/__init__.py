@@ -66,7 +66,6 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     server_address = (conf.get(CONF_HOST), conf.get(CONF_PORT))
 
     try:
-
         ebusdpy.init(server_address)
         hass.data[DOMAIN] = EbusdData(server_address, circuit)
 

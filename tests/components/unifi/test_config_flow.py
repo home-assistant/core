@@ -1,5 +1,4 @@
 """Test UniFi Network config flow."""
-
 import socket
 from unittest.mock import patch
 
@@ -31,10 +30,12 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     CONTENT_TYPE_JSON,
 )
+from homeassistant.core import HomeAssistant
 
 from .test_controller import setup_unifi_integration
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 CLIENTS = [{"mac": "00:00:00:00:00:01"}]
 
@@ -86,7 +87,9 @@ DPI_GROUPS = [
 ]
 
 
-async def test_flow_works(hass, aioclient_mock, mock_discovery):
+async def test_flow_works(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_discovery
+) -> None:
     """Test config flow."""
     mock_discovery.return_value = "1"
     result = await hass.config_entries.flow.async_init(
@@ -145,7 +148,9 @@ async def test_flow_works(hass, aioclient_mock, mock_discovery):
     }
 
 
-async def test_flow_works_negative_discovery(hass, aioclient_mock, mock_discovery):
+async def test_flow_works_negative_discovery(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_discovery
+) -> None:
     """Test config flow with a negative outcome of async_discovery_unifi."""
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -162,7 +167,9 @@ async def test_flow_works_negative_discovery(hass, aioclient_mock, mock_discover
     }
 
 
-async def test_flow_multiple_sites(hass, aioclient_mock):
+async def test_flow_multiple_sites(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test config flow works when finding multiple sites."""
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -208,7 +215,9 @@ async def test_flow_multiple_sites(hass, aioclient_mock):
     assert result["data_schema"]({"site": "2"})
 
 
-async def test_flow_raise_already_configured(hass, aioclient_mock):
+async def test_flow_raise_already_configured(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test config flow aborts since a connected config entry already exists."""
     await setup_unifi_integration(hass, aioclient_mock)
 
@@ -255,7 +264,9 @@ async def test_flow_raise_already_configured(hass, aioclient_mock):
     assert result["reason"] == "already_configured"
 
 
-async def test_flow_aborts_configuration_updated(hass, aioclient_mock):
+async def test_flow_aborts_configuration_updated(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test config flow aborts since a connected config entry already exists."""
     entry = MockConfigEntry(
         domain=UNIFI_DOMAIN, data={"host": "1.2.3.4", "site": "office"}, unique_id="2"
@@ -309,7 +320,9 @@ async def test_flow_aborts_configuration_updated(hass, aioclient_mock):
     assert result["reason"] == "configuration_updated"
 
 
-async def test_flow_fails_user_credentials_faulty(hass, aioclient_mock):
+async def test_flow_fails_user_credentials_faulty(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test config flow."""
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -336,7 +349,9 @@ async def test_flow_fails_user_credentials_faulty(hass, aioclient_mock):
     assert result["errors"] == {"base": "faulty_credentials"}
 
 
-async def test_flow_fails_controller_unavailable(hass, aioclient_mock):
+async def test_flow_fails_controller_unavailable(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test config flow."""
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -363,7 +378,9 @@ async def test_flow_fails_controller_unavailable(hass, aioclient_mock):
     assert result["errors"] == {"base": "service_unavailable"}
 
 
-async def test_reauth_flow_update_configuration(hass, aioclient_mock):
+async def test_reauth_flow_update_configuration(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Verify reauth flow can update controller configuration."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
@@ -421,7 +438,9 @@ async def test_reauth_flow_update_configuration(hass, aioclient_mock):
     assert config_entry.data[CONF_PASSWORD] == "new_pass"
 
 
-async def test_advanced_option_flow(hass, aioclient_mock):
+async def test_advanced_option_flow(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test advanced config flow options."""
     config_entry = await setup_unifi_integration(
         hass,
@@ -494,7 +513,9 @@ async def test_advanced_option_flow(hass, aioclient_mock):
     }
 
 
-async def test_simple_option_flow(hass, aioclient_mock):
+async def test_simple_option_flow(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test simple config flow options."""
     config_entry = await setup_unifi_integration(
         hass,
@@ -530,7 +551,9 @@ async def test_simple_option_flow(hass, aioclient_mock):
     }
 
 
-async def test_option_flow_integration_not_setup(hass, aioclient_mock):
+async def test_option_flow_integration_not_setup(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test advanced config flow options."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
 
@@ -541,7 +564,7 @@ async def test_option_flow_integration_not_setup(hass, aioclient_mock):
     assert result["reason"] == "integration_not_setup"
 
 
-async def test_form_ssdp(hass):
+async def test_form_ssdp(hass: HomeAssistant) -> None:
     """Test we get the form with ssdp source."""
 
     result = await hass.config_entries.flow.async_init(
@@ -581,7 +604,7 @@ async def test_form_ssdp(hass):
     }
 
 
-async def test_form_ssdp_aborts_if_host_already_exists(hass):
+async def test_form_ssdp_aborts_if_host_already_exists(hass: HomeAssistant) -> None:
     """Test we abort if the host is already configured."""
 
     entry = MockConfigEntry(
@@ -607,7 +630,7 @@ async def test_form_ssdp_aborts_if_host_already_exists(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_form_ssdp_aborts_if_serial_already_exists(hass):
+async def test_form_ssdp_aborts_if_serial_already_exists(hass: HomeAssistant) -> None:
     """Test we abort if the serial is already configured."""
 
     entry = MockConfigEntry(
@@ -634,7 +657,7 @@ async def test_form_ssdp_aborts_if_serial_already_exists(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_form_ssdp_gets_form_with_ignored_entry(hass):
+async def test_form_ssdp_gets_form_with_ignored_entry(hass: HomeAssistant) -> None:
     """Test we can still setup if there is an ignored entry."""
 
     entry = MockConfigEntry(
@@ -671,13 +694,13 @@ async def test_form_ssdp_gets_form_with_ignored_entry(hass):
     }
 
 
-async def test_discover_unifi_positive(hass):
+async def test_discover_unifi_positive(hass: HomeAssistant) -> None:
     """Verify positive run of UniFi discovery."""
     with patch("socket.gethostbyname", return_value=True):
         assert await _async_discover_unifi(hass)
 
 
-async def test_discover_unifi_negative(hass):
+async def test_discover_unifi_negative(hass: HomeAssistant) -> None:
     """Verify negative run of UniFi discovery."""
     with patch("socket.gethostbyname", side_effect=socket.gaierror):
         assert await _async_discover_unifi(hass) is None

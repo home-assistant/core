@@ -538,8 +538,7 @@ class Stream:
         width: int | None = None,
         height: int | None = None,
     ) -> bytes | None:
-        """
-        Fetch an image from the Stream and return it as a jpeg in bytes.
+        """Fetch an image from the Stream and return it as a jpeg in bytes.
 
         Calls async_get_image from KeyFrameConverter. async_get_image should only be
         called directly from the main loop and not from an executor thread as it uses

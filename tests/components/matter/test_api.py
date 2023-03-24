@@ -1,19 +1,21 @@
 """Test the api module."""
-from collections.abc import Awaitable, Callable
 from unittest.mock import MagicMock, call
 
-from aiohttp import ClientWebSocketResponse
-from matter_server.client.exceptions import FailedCommand
+from matter_server.common.errors import InvalidCommand, NodeCommissionFailed
+import pytest
 
 from homeassistant.components.matter.api import ID, TYPE
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_commission(
     hass: HomeAssistant,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
     matter_client: MagicMock,
     integration: MockConfigEntry,
 ) -> None:
@@ -33,8 +35,8 @@ async def test_commission(
     matter_client.commission_with_code.assert_called_once_with("12345678")
 
     matter_client.commission_with_code.reset_mock()
-    matter_client.commission_with_code.side_effect = FailedCommand(
-        "test_id", "test_code", "Failed to commission"
+    matter_client.commission_with_code.side_effect = InvalidCommand(
+        "test_id", "9", "Failed to commission"
     )
 
     await ws_client.send_json(
@@ -47,13 +49,15 @@ async def test_commission(
     msg = await ws_client.receive_json()
 
     assert not msg["success"]
-    assert msg["error"]["code"] == "test_code"
+    assert msg["error"]["code"] == "9"
     matter_client.commission_with_code.assert_called_once_with("12345678")
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_commission_on_network(
     hass: HomeAssistant,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
     matter_client: MagicMock,
     integration: MockConfigEntry,
 ) -> None:
@@ -73,8 +77,8 @@ async def test_commission_on_network(
     matter_client.commission_on_network.assert_called_once_with(1234)
 
     matter_client.commission_on_network.reset_mock()
-    matter_client.commission_on_network.side_effect = FailedCommand(
-        "test_id", "test_code", "Failed to commission on network"
+    matter_client.commission_on_network.side_effect = NodeCommissionFailed(
+        "test_id", "1", "Failed to commission on network"
     )
 
     await ws_client.send_json(
@@ -87,13 +91,15 @@ async def test_commission_on_network(
     msg = await ws_client.receive_json()
 
     assert not msg["success"]
-    assert msg["error"]["code"] == "test_code"
+    assert msg["error"]["code"] == "1"
     matter_client.commission_on_network.assert_called_once_with(1234)
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_set_thread_dataset(
     hass: HomeAssistant,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
     matter_client: MagicMock,
     integration: MockConfigEntry,
 ) -> None:
@@ -113,8 +119,8 @@ async def test_set_thread_dataset(
     matter_client.set_thread_operational_dataset.assert_called_once_with("test_dataset")
 
     matter_client.set_thread_operational_dataset.reset_mock()
-    matter_client.set_thread_operational_dataset.side_effect = FailedCommand(
-        "test_id", "test_code", "Failed to commission"
+    matter_client.set_thread_operational_dataset.side_effect = NodeCommissionFailed(
+        "test_id", "1", "Failed to commission"
     )
 
     await ws_client.send_json(
@@ -127,13 +133,15 @@ async def test_set_thread_dataset(
     msg = await ws_client.receive_json()
 
     assert not msg["success"]
-    assert msg["error"]["code"] == "test_code"
+    assert msg["error"]["code"] == "1"
     matter_client.set_thread_operational_dataset.assert_called_once_with("test_dataset")
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_set_wifi_credentials(
     hass: HomeAssistant,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
     matter_client: MagicMock,
     integration: MockConfigEntry,
 ) -> None:
@@ -157,8 +165,8 @@ async def test_set_wifi_credentials(
     )
 
     matter_client.set_wifi_credentials.reset_mock()
-    matter_client.set_wifi_credentials.side_effect = FailedCommand(
-        "test_id", "test_code", "Failed to commission on network"
+    matter_client.set_wifi_credentials.side_effect = NodeCommissionFailed(
+        "test_id", "1", "Failed to commission on network"
     )
 
     await ws_client.send_json(
@@ -172,7 +180,7 @@ async def test_set_wifi_credentials(
     msg = await ws_client.receive_json()
 
     assert not msg["success"]
-    assert msg["error"]["code"] == "test_code"
+    assert msg["error"]["code"] == "1"
     assert matter_client.set_wifi_credentials.call_count == 1
     assert matter_client.set_wifi_credentials.call_args == call(
         ssid="test_network", credentials="test_password"

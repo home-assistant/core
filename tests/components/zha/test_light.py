@@ -22,6 +22,7 @@ from homeassistant.components.zha.core.const import (
 from homeassistant.components.zha.core.group import GroupMember
 from homeassistant.components.zha.light import FLASH_EFFECTS
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
+from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
 from .common import (
@@ -253,7 +254,9 @@ async def eWeLink_light(hass, zigpy_device_mock, zha_device_joined):
     return zha_device
 
 
-async def test_light_refresh(hass, zigpy_device_mock, zha_device_joined_restored):
+async def test_light_refresh(
+    hass: HomeAssistant, zigpy_device_mock, zha_device_joined_restored
+) -> None:
     """Test ZHA light platform refresh."""
 
     # create zigpy devices
@@ -308,12 +311,16 @@ async def test_light_refresh(hass, zigpy_device_mock, zha_device_joined_restored
     new=AsyncMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
 )
 @pytest.mark.parametrize(
-    "device, reporting",
+    ("device", "reporting"),
     [(LIGHT_ON_OFF, (1, 0, 0)), (LIGHT_LEVEL, (1, 1, 0)), (LIGHT_COLOR, (1, 1, 6))],
 )
 async def test_light(
-    hass, zigpy_device_mock, zha_device_joined_restored, device, reporting
-):
+    hass: HomeAssistant,
+    zigpy_device_mock,
+    zha_device_joined_restored,
+    device,
+    reporting,
+) -> None:
     """Test ZHA light platform."""
 
     # create zigpy devices
@@ -373,7 +380,7 @@ async def test_light(
 
 
 @pytest.mark.parametrize(
-    "plugged_attr_reads, config_override, expected_state",
+    ("plugged_attr_reads", "config_override", "expected_state"),
     [
         # HS light without cached hue or saturation
         (
@@ -422,13 +429,13 @@ async def test_light(
     ],
 )
 async def test_light_initialization(
-    hass,
+    hass: HomeAssistant,
     zigpy_device_mock,
     zha_device_joined_restored,
     plugged_attr_reads,
     config_override,
     expected_state,
-):
+) -> None:
     """Test ZHA light initialization with cached attributes and color modes."""
 
     # create zigpy devices
@@ -463,8 +470,8 @@ async def test_light_initialization(
     new=AsyncMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
 )
 async def test_transitions(
-    hass, device_light_1, device_light_2, eWeLink_light, coordinator
-):
+    hass: HomeAssistant, device_light_1, device_light_2, eWeLink_light, coordinator
+) -> None:
     """Test ZHA light transition code."""
     zha_gateway = get_zha_gateway(hass)
     assert zha_gateway is not None
@@ -1212,7 +1219,7 @@ async def test_transitions(
     "zigpy.zcl.clusters.general.OnOff.request",
     new=AsyncMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
 )
-async def test_on_with_off_color(hass, device_light_1):
+async def test_on_with_off_color(hass: HomeAssistant, device_light_1) -> None:
     """Test turning on the light and sending color commands before on/level commands for supporting lights."""
 
     device_1_entity_id = await find_entity_id(Platform.LIGHT, device_light_1, hass)
@@ -1561,8 +1568,8 @@ async def async_test_flash_from_hass(hass, cluster, entity_id, flash):
     new=0,
 )
 async def test_zha_group_light_entity(
-    hass, device_light_1, device_light_2, device_light_3, coordinator
-):
+    hass: HomeAssistant, device_light_1, device_light_2, device_light_3, coordinator
+) -> None:
     """Test the light entity for a ZHA group."""
     zha_gateway = get_zha_gateway(hass)
     assert zha_gateway is not None
@@ -1790,13 +1797,13 @@ async def test_zha_group_light_entity(
     new=0,
 )
 async def test_group_member_assume_state(
-    hass,
+    hass: HomeAssistant,
     zigpy_device_mock,
     zha_device_joined,
     coordinator,
     device_light_1,
     device_light_2,
-):
+) -> None:
     """Test the group members assume state function."""
     with patch_zha_config(
         "light", {(ZHA_OPTIONS, CONF_GROUP_MEMBERS_ASSUME_STATE): True}

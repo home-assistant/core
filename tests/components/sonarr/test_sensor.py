@@ -42,7 +42,7 @@ async def test_sensors(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    for (unique, oid) in sensors.items():
+    for unique, oid in sensors.items():
         entity = registry.async_get(f"sensor.{oid}")
         assert entity
         assert entity.unique_id == f"{mock_config_entry.entry_id}_{unique}"

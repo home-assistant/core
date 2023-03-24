@@ -24,8 +24,7 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity, entity_registry
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers import device_registry as dr, entity, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -186,7 +185,9 @@ class IotaWattSensor(CoordinatorEntity[IotawattUpdater], SensorEntity):
     def device_info(self) -> entity.DeviceInfo:
         """Return device info."""
         return entity.DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self._sensor_data.hub_mac_address)},
+            connections={
+                (dr.CONNECTION_NETWORK_MAC, self._sensor_data.hub_mac_address)
+            },
             manufacturer="IoTaWatt",
             model="IoTaWatt",
         )
@@ -196,7 +197,7 @@ class IotaWattSensor(CoordinatorEntity[IotawattUpdater], SensorEntity):
         """Handle updated data from the coordinator."""
         if self._key not in self.coordinator.data["sensors"]:
             if self._attr_unique_id:
-                entity_registry.async_get(self.hass).async_remove(self.entity_id)
+                er.async_get(self.hass).async_remove(self.entity_id)
             else:
                 self.hass.async_create_task(self.async_remove())
             return

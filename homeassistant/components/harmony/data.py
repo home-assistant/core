@@ -9,6 +9,7 @@ from aioharmony.const import ClientCallbackType, SendCommandDevice
 import aioharmony.exceptions as aioexc
 from aioharmony.harmonyapi import HarmonyAPI as HarmonyClient
 
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import DeviceInfo
 
@@ -23,7 +24,9 @@ class HarmonyData(HarmonySubscriberMixin):
 
     _client: HarmonyClient
 
-    def __init__(self, hass, address: str, name: str, unique_id: str | None) -> None:
+    def __init__(
+        self, hass: HomeAssistant, address: str, name: str, unique_id: str | None
+    ) -> None:
         """Initialize a data object."""
         super().__init__(hass)
         self._name = name

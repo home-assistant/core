@@ -1,29 +1,30 @@
 """Test the httpx client helper."""
-
 from unittest.mock import Mock, patch
 
 import httpx
 import pytest
 
-from homeassistant.core import EVENT_HOMEASSISTANT_CLOSE
+from homeassistant.core import EVENT_HOMEASSISTANT_CLOSE, HomeAssistant
 import homeassistant.helpers.httpx_client as client
 
 
-async def test_get_async_client_with_ssl(hass):
+async def test_get_async_client_with_ssl(hass: HomeAssistant) -> None:
     """Test init async client with ssl."""
     client.get_async_client(hass)
 
     assert isinstance(hass.data[client.DATA_ASYNC_CLIENT], httpx.AsyncClient)
 
 
-async def test_get_async_client_without_ssl(hass):
+async def test_get_async_client_without_ssl(hass: HomeAssistant) -> None:
     """Test init async client without ssl."""
     client.get_async_client(hass, verify_ssl=False)
 
     assert isinstance(hass.data[client.DATA_ASYNC_CLIENT_NOVERIFY], httpx.AsyncClient)
 
 
-async def test_create_async_httpx_client_with_ssl_and_cookies(hass):
+async def test_create_async_httpx_client_with_ssl_and_cookies(
+    hass: HomeAssistant,
+) -> None:
     """Test init async client with ssl and cookies."""
     client.get_async_client(hass)
 
@@ -32,7 +33,9 @@ async def test_create_async_httpx_client_with_ssl_and_cookies(hass):
     assert hass.data[client.DATA_ASYNC_CLIENT] != httpx_client
 
 
-async def test_create_async_httpx_client_without_ssl_and_cookies(hass):
+async def test_create_async_httpx_client_without_ssl_and_cookies(
+    hass: HomeAssistant,
+) -> None:
     """Test init async client without ssl and cookies."""
     client.get_async_client(hass, verify_ssl=False)
 
@@ -43,7 +46,7 @@ async def test_create_async_httpx_client_without_ssl_and_cookies(hass):
     assert hass.data[client.DATA_ASYNC_CLIENT_NOVERIFY] != httpx_client
 
 
-async def test_get_async_client_cleanup(hass):
+async def test_get_async_client_cleanup(hass: HomeAssistant) -> None:
     """Test init async client with ssl."""
     client.get_async_client(hass)
 
@@ -55,7 +58,7 @@ async def test_get_async_client_cleanup(hass):
     assert hass.data[client.DATA_ASYNC_CLIENT].is_closed
 
 
-async def test_get_async_client_cleanup_without_ssl(hass):
+async def test_get_async_client_cleanup_without_ssl(hass: HomeAssistant) -> None:
     """Test init async client without ssl."""
     client.get_async_client(hass, verify_ssl=False)
 
@@ -67,7 +70,7 @@ async def test_get_async_client_cleanup_without_ssl(hass):
     assert hass.data[client.DATA_ASYNC_CLIENT_NOVERIFY].is_closed
 
 
-async def test_get_async_client_patched_close(hass):
+async def test_get_async_client_patched_close(hass: HomeAssistant) -> None:
     """Test closing the async client does not work."""
 
     with patch("httpx.AsyncClient.aclose") as mock_aclose:
@@ -80,7 +83,7 @@ async def test_get_async_client_patched_close(hass):
         assert mock_aclose.call_count == 0
 
 
-async def test_get_async_client_context_manager(hass):
+async def test_get_async_client_context_manager(hass: HomeAssistant) -> None:
     """Test using the async client with a context manager does not close the session."""
 
     with patch("httpx.AsyncClient.aclose") as mock_aclose:
@@ -94,7 +97,9 @@ async def test_get_async_client_context_manager(hass):
 
 
 @patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set())
-async def test_warning_close_session_integration(hass, caplog):
+async def test_warning_close_session_integration(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test log warning message when closing the session from integration context."""
     with patch(
         "homeassistant.helpers.frame.extract_stack",
@@ -127,7 +132,9 @@ async def test_warning_close_session_integration(hass, caplog):
 
 
 @patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set())
-async def test_warning_close_session_custom(hass, caplog):
+async def test_warning_close_session_custom(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test log warning message when closing the session from custom context."""
     with patch(
         "homeassistant.helpers.frame.extract_stack",

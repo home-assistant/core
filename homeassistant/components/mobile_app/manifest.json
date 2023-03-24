@@ -1,13 +1,13 @@
 {
   "domain": "mobile_app",
   "name": "Mobile App",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/mobile_app",
-  "requirements": ["PyNaCl==1.5.0"],
-  "dependencies": ["http", "webhook", "person", "tag", "websocket_api"],
   "after_dependencies": ["cloud", "camera", "conversation", "notify"],
   "codeowners": ["@home-assistant/core"],
-  "quality_scale": "internal",
+  "config_flow": true,
+  "dependencies": ["http", "webhook", "person", "tag", "websocket_api"],
+  "documentation": "https://www.home-assistant.io/integrations/mobile_app",
   "iot_class": "local_push",
-  "loggers": ["nacl"]
+  "loggers": ["nacl"],
+  "quality_scale": "internal",
+  "requirements": ["PyNaCl==1.5.0"]
 }

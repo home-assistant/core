@@ -53,7 +53,8 @@ class MySensorsDevice(ABC):
         self.gateway: BaseAsyncGateway = gateway
         self.node_id: int = node_id
         self.child_id: int = child_id
-        self.value_type: int = value_type  # value_type as int. string variant can be looked up in gateway consts
+        # value_type as int. string variant can be looked up in gateway consts
+        self.value_type: int = value_type
         self.child_type = self._child.type
         self._values: dict[int, Any] = {}
         self._debouncer: Debouncer | None = None

@@ -19,6 +19,7 @@ from homeassistant.components.cover import (
     STATE_OPENING,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import slugify
 
@@ -29,7 +30,7 @@ ENTITY_ID = f"{COVER_DOMAIN}.{slugify(DEVICE.name)}"
 
 
 @pytest.mark.parametrize("mock_bridge", [[DEVICE]], indirect=True)
-async def test_cover(hass, mock_bridge, mock_api, monkeypatch):
+async def test_cover(hass: HomeAssistant, mock_bridge, mock_api, monkeypatch) -> None:
     """Test cover services."""
     await init_integration(hass)
     assert mock_bridge
@@ -130,7 +131,7 @@ async def test_cover(hass, mock_bridge, mock_api, monkeypatch):
 
 
 @pytest.mark.parametrize("mock_bridge", [[DEVICE]], indirect=True)
-async def test_cover_control_fail(hass, mock_bridge, mock_api):
+async def test_cover_control_fail(hass: HomeAssistant, mock_bridge, mock_api) -> None:
     """Test cover control fail."""
     await init_integration(hass)
     assert mock_bridge

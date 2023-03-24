@@ -44,7 +44,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     discovery,
-    entity_registry,
+    entity_registry as er,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -359,8 +359,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Transitional from < 2021.8: update None config entry and entity unique ids
         if router_info and (serial_number := router_info.get("SerialNumber")):
             hass.config_entries.async_update_entry(entry, unique_id=serial_number)
-            ent_reg = entity_registry.async_get(hass)
-            for entity_entry in entity_registry.async_entries_for_config_entry(
+            ent_reg = er.async_get(hass)
+            for entity_entry in er.async_entries_for_config_entry(
                 ent_reg, entry.entry_id
             ):
                 if not entity_entry.unique_id.startswith("None-"):
@@ -456,8 +456,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     def _update_router(*_: Any) -> None:
-        """
-        Update router data.
+        """Update router data.
 
         Separate passthrough function because lambdas don't work with track_time_interval.
         """
@@ -496,8 +495,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.data[DOMAIN] = HuaweiLteData(hass_config=config, routers={})
 
     def service_handler(service: ServiceCall) -> None:
-        """
-        Apply a service.
+        """Apply a service.
 
         We key this using the router URL instead of its unique id / serial number,
         because the latter is not available anywhere in the UI.
