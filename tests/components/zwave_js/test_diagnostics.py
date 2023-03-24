@@ -94,13 +94,7 @@ async def test_device_diagnostics(
     )
     assert diagnostics_data["state"] == {
         **multisensor_6.data,
-        "statistics": {
-            "commandsDroppedRX": 0,
-            "commandsDroppedTX": 0,
-            "commandsRX": 0,
-            "commandsTX": 0,
-            "timeoutResponse": 0,
-        },
+        "statistics": None,
     }
 
 
