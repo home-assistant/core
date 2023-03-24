@@ -2,6 +2,7 @@
 
 from greeclimate.exceptions import DeviceTimeoutError
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.gree.const import DOMAIN as GREE_DOMAIN
 from homeassistant.components.switch import DOMAIN
@@ -27,21 +28,25 @@ ENTITY_ID_FRESH_AIR = f"{DOMAIN}.fake_device_1_fresh_air"
 ENTITY_ID_XFAN = f"{DOMAIN}.fake_device_1_xfan"
 
 
-async def async_setup_gree(hass):
+async def async_setup_gree(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the gree switch platform."""
-    MockConfigEntry(domain=GREE_DOMAIN).add_to_hass(hass)
+    entry = MockConfigEntry(domain=GREE_DOMAIN)
+    entry.add_to_hass(hass)
     await async_setup_component(hass, GREE_DOMAIN, {GREE_DOMAIN: {DOMAIN: {}}})
     await hass.async_block_till_done()
+    return entry
 
 
-async def test_health_mode_disabled_by_default(hass):
-    """Test for making sure health mode is disabled on first load."""
-    await async_setup_gree(hass)
+async def test_registry_settings(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test for entity registry settings (disabled_by, unique_id)."""
+    entry = await async_setup_gree(hass)
 
-    assert (
-        er.async_get(hass).async_get(ENTITY_ID_HEALTH_MODE).disabled_by
-        == er.RegistryEntryDisabler.INTEGRATION
-    )
+    state = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    assert state == snapshot
 
 
 @pytest.mark.parametrize(
