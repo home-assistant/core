@@ -3,7 +3,7 @@ from copy import deepcopy
 from unittest.mock import patch
 
 from bimmer_connected.api.authentication import MyBMWAuthentication
-from httpx import HTTPError
+from httpx import HTTPError, HTTPStatusError, Request, Response
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.bmw_connected_drive.config_flow import DOMAIN
@@ -35,6 +35,26 @@ async def test_show_form(hass: HomeAssistant) -> None:
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
+
+
+async def test_authentication_error(hass: HomeAssistant) -> None:
+    """Test we show user form on BMW connected drive connection error."""
+
+    with patch(
+        "bimmer_connected.api.authentication.MyBMWAuthentication.login",
+        side_effect=HTTPStatusError(
+            "Login failed", request=Request("POST", ""), response=Response(403)
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data=FIXTURE_USER_INPUT,
+        )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_connection_error(hass: HomeAssistant) -> None:
