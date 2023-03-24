@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
-import logging
 from typing import Any
 
 import holidays
@@ -13,31 +12,28 @@ from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_NAME, WEEKDAYS
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt
 
-_LOGGER = logging.getLogger(__name__)
-
-ALLOWED_DAYS = WEEKDAYS + ["holiday"]
-
-CONF_COUNTRY = "country"
-CONF_PROVINCE = "province"
-CONF_WORKDAYS = "workdays"
-CONF_EXCLUDES = "excludes"
-CONF_OFFSET = "days_offset"
-CONF_ADD_HOLIDAYS = "add_holidays"
-CONF_REMOVE_HOLIDAYS = "remove_holidays"
-
-# By default, Monday - Friday are workdays
-DEFAULT_WORKDAYS = ["mon", "tue", "wed", "thu", "fri"]
-# By default, public holidays, Saturdays and Sundays are excluded from workdays
-DEFAULT_EXCLUDES = ["sat", "sun", "holiday"]
-DEFAULT_NAME = "Workday Sensor"
-DEFAULT_OFFSET = 0
+from .const import (
+    ALLOWED_DAYS,
+    CONF_ADD_HOLIDAYS,
+    CONF_COUNTRY,
+    CONF_EXCLUDES,
+    CONF_OFFSET,
+    CONF_PROVINCE,
+    CONF_REMOVE_HOLIDAYS,
+    CONF_WORKDAYS,
+    DEFAULT_EXCLUDES,
+    DEFAULT_NAME,
+    DEFAULT_OFFSET,
+    DEFAULT_WORKDAYS,
+    LOGGER,
+)
 
 
 def valid_country(value: Any) -> str:
@@ -106,14 +102,14 @@ def setup_platform(
         ):
             obj_holidays = getattr(holidays, country)(subdiv=province, years=year)
         else:
-            _LOGGER.error("There is no subdivision %s in country %s", province, country)
+            LOGGER.error("There is no subdivision %s in country %s", province, country)
             return
 
     # Add custom holidays
     try:
         obj_holidays.append(add_holidays)
     except TypeError:
-        _LOGGER.debug("No custom holidays or invalid holidays")
+        LOGGER.debug("No custom holidays or invalid holidays")
 
     # Remove holidays
     try:
@@ -123,25 +119,23 @@ def setup_platform(
                 if dt.parse_date(remove_holiday):
                     # remove holiday by date
                     removed = obj_holidays.pop(remove_holiday)
-                    _LOGGER.debug("Removed %s", remove_holiday)
+                    LOGGER.debug("Removed %s", remove_holiday)
                 else:
                     # remove holiday by name
-                    _LOGGER.debug("Treating '%s' as named holiday", remove_holiday)
+                    LOGGER.debug("Treating '%s' as named holiday", remove_holiday)
                     removed = obj_holidays.pop_named(remove_holiday)
                     for holiday in removed:
-                        _LOGGER.debug(
-                            "Removed %s by name '%s'", holiday, remove_holiday
-                        )
+                        LOGGER.debug("Removed %s by name '%s'", holiday, remove_holiday)
             except KeyError as unmatched:
-                _LOGGER.warning("No holiday found matching %s", unmatched)
+                LOGGER.warning("No holiday found matching %s", unmatched)
     except TypeError:
-        _LOGGER.debug("No holidays to remove or invalid holidays")
+        LOGGER.debug("No holidays to remove or invalid holidays")
 
-    _LOGGER.debug("Found the following holidays for your configuration:")
+    LOGGER.debug("Found the following holidays for your configuration:")
     for holiday_date, name in sorted(obj_holidays.items()):
         # Make explicit str variable to avoid "Incompatible types in assignment"
         _holiday_string = holiday_date.strftime("%Y-%m-%d")
-        _LOGGER.debug("%s %s", _holiday_string, name)
+        LOGGER.debug("%s %s", _holiday_string, name)
 
     add_entities(
         [IsWorkdaySensor(obj_holidays, workdays, excludes, days_offset, sensor_name)],

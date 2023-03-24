@@ -718,7 +718,7 @@ class Recorder(threading.Thread):
             if (
                 self.schema_version < CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
                 or execute_stmt_lambda_element(
-                    session, has_events_context_ids_to_migrate()
+                    session, has_states_context_ids_to_migrate()
                 )
             ):
                 self.queue_task(StatesContextIDMigrationTask())
@@ -726,7 +726,7 @@ class Recorder(threading.Thread):
             if (
                 self.schema_version < CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
                 or execute_stmt_lambda_element(
-                    session, has_states_context_ids_to_migrate()
+                    session, has_events_context_ids_to_migrate()
                 )
             ):
                 self.queue_task(EventsContextIDMigrationTask())

@@ -12,6 +12,7 @@ from typing import Any, Final, TypedDict, cast
 from aiohttp import web
 from aiohttp.typedefs import StrOrURL
 from aiohttp.web_exceptions import HTTPMovedPermanently, HTTPRedirection
+from aiohttp.web_log import AccessLogger
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -218,6 +219,25 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     return True
+
+
+class HomeAssistantAccessLogger(AccessLogger):
+    """Access logger for Home Assistant that does not log when disabled."""
+
+    def log(
+        self, request: web.BaseRequest, response: web.StreamResponse, time: float
+    ) -> None:
+        """Log the request.
+
+        The default implementation logs the request to the logger
+        with the INFO level and than throws it away if the logger
+        is not enabled for the INFO level. This implementation
+        does not log the request if the logger is not enabled for
+        the INFO level.
+        """
+        if not self.logger.isEnabledFor(logging.INFO):
+            return
+        super().log(request, response, time)
 
 
 class HomeAssistantHTTP:
@@ -462,7 +482,9 @@ class HomeAssistantHTTP:
         # pylint: disable-next=protected-access
         self.app._router.freeze = lambda: None  # type: ignore[method-assign]
 
-        self.runner = web.AppRunner(self.app)
+        self.runner = web.AppRunner(
+            self.app, access_log_class=HomeAssistantAccessLogger
+        )
         await self.runner.setup()
 
         self.site = HomeAssistantTCPSite(

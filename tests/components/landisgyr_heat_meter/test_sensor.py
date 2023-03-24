@@ -4,23 +4,11 @@ import datetime
 from unittest.mock import patch
 
 import serial
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
 from homeassistant.components.landisgyr_heat_meter.const import DOMAIN, POLLING_INTERVAL
-from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
-    SensorDeviceClass,
-    SensorStateClass,
-)
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_ICON,
-    ATTR_UNIT_OF_MEASUREMENT,
-    STATE_UNAVAILABLE,
-    EntityCategory,
-    UnitOfEnergy,
-    UnitOfVolume,
-)
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -46,7 +34,10 @@ class MockHeatMeterResponse:
 
 @patch(API_HEAT_METER_SERVICE)
 async def test_create_sensors(
-    mock_heat_meter, hass: HomeAssistant, entity_registry: er.EntityRegistry
+    mock_heat_meter,
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test sensor."""
     entry_data = {
@@ -55,7 +46,6 @@ async def test_create_sensors(
         "device_number": "123456789",
     }
     mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
-
     mock_entry.add_to_hass(hass)
 
     mock_heat_meter_response = MockHeatMeterResponse(
@@ -72,37 +62,7 @@ async def test_create_sensors(
     await async_setup_component(hass, HA_DOMAIN, {})
     await hass.async_block_till_done()
 
-    # check if 26 attributes have been created
-    assert len(hass.states.async_all()) == 25
-
-    state = hass.states.get("sensor.heat_meter_heat_usage_gj")
-    assert state
-    assert state.state == "123.0"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.GIGA_JOULE
-    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
-
-    state = hass.states.get("sensor.heat_meter_volume_usage")
-    assert state
-    assert state.state == "456.0"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfVolume.CUBIC_METERS
-    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
-
-    state = hass.states.get("sensor.heat_meter_device_number")
-    assert state
-    assert state.state == "devicenr_789"
-    assert state.attributes.get(ATTR_STATE_CLASS) is None
-    entity_registry_entry = entity_registry.async_get("sensor.heat_meter_device_number")
-    assert entity_registry_entry.entity_category == EntityCategory.DIAGNOSTIC
-
-    state = hass.states.get("sensor.heat_meter_meter_date_time")
-    assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:clock-outline"
-    assert state.attributes.get(ATTR_STATE_CLASS) is None
-    entity_registry_entry = entity_registry.async_get(
-        "sensor.heat_meter_meter_date_time"
-    )
-    assert entity_registry_entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert hass.states.async_all() == snapshot
 
 
 @patch(API_HEAT_METER_SERVICE)
