@@ -62,8 +62,6 @@ async def async_setup_entry(
 class ZwaveBooleanNodeButton(ZWaveBaseEntity, ButtonEntity):
     """Representation of a ZWave button entity for a boolean value."""
 
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-
     def __init__(
         self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:

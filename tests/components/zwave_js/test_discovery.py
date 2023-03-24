@@ -22,7 +22,7 @@ from homeassistant.components.zwave_js.discovery import (
 from homeassistant.components.zwave_js.discovery_data_template import (
     DynamicCurrentTempClimateDataTemplate,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_UNKNOWN
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_UNKNOWN, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -161,9 +161,13 @@ async def test_zooz_zen72(
     hass: HomeAssistant, client, switch_zooz_zen72, integration
 ) -> None:
     """Test that Zooz ZEN72 Indicators are discovered as number entities."""
+    ent_reg = er.async_get(hass)
     assert len(hass.states.async_entity_ids(NUMBER_DOMAIN)) == 4
     assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 2  # includes ping
     entity_id = "number.z_wave_plus_700_series_dimmer_switch_indicator_value"
+    entry = ent_reg.async_get(entity_id)
+    assert entry
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_UNKNOWN
@@ -190,6 +194,9 @@ async def test_zooz_zen72(
     client.async_send_command.reset_mock()
 
     entity_id = "button.z_wave_plus_700_series_dimmer_switch_identify"
+    entry = ent_reg.async_get(entity_id)
+    assert entry
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
@@ -215,6 +222,7 @@ async def test_indicator_test(
 
     This test covers indicators that we don't already have device fixtures for.
     """
+    ent_reg = er.async_get(hass)
     assert len(hass.states.async_entity_ids(NUMBER_DOMAIN)) == 0
     assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 1  # only ping
     assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 1
@@ -222,6 +230,9 @@ async def test_indicator_test(
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
     entity_id = "binary_sensor.this_is_a_fake_device_binary_sensor"
+    entry = ent_reg.async_get(entity_id)
+    assert entry
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OFF
@@ -229,6 +240,9 @@ async def test_indicator_test(
     client.async_send_command.reset_mock()
 
     entity_id = "sensor.this_is_a_fake_device_sensor"
+    entry = ent_reg.async_get(entity_id)
+    assert entry
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "0.0"
@@ -236,6 +250,9 @@ async def test_indicator_test(
     client.async_send_command.reset_mock()
 
     entity_id = "switch.this_is_a_fake_device_switch"
+    entry = ent_reg.async_get(entity_id)
+    assert entry
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OFF

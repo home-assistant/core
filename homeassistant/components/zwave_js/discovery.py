@@ -44,7 +44,7 @@ from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.backports.enum import StrEnum
-from homeassistant.const import Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceEntry
 
@@ -123,6 +123,8 @@ class ZwaveDiscoveryInfo:
     platform_data_template: BaseDiscoverySchemaDataTemplate | None = None
     # bool to specify whether entity should be enabled by default
     entity_registry_enabled_default: bool = True
+    # the entity category for the discovered entity
+    entity_category: EntityCategory | None = None
 
 
 @dataclass
@@ -201,6 +203,8 @@ class ZWaveDiscoverySchema:
     assumed_state: bool = False
     # [optional] bool to specify whether entity should be enabled by default
     entity_registry_enabled_default: bool = True
+    # [optional] the entity category for the discovered entity
+    entity_category: EntityCategory | None = None
 
 
 def get_config_parameter_discovery_schema(
@@ -709,6 +713,7 @@ DISCOVERY_SCHEMAS = [
             readable=True,
             writeable=False,
         ),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # generic text sensors
     ZWaveDiscoverySchema(
@@ -743,6 +748,7 @@ DISCOVERY_SCHEMAS = [
             writeable=False,
         ),
         data_template=NumericSensorDataTemplate(),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # Meter sensors for Meter CC
     ZWaveDiscoverySchema(
@@ -799,6 +805,7 @@ DISCOVERY_SCHEMAS = [
             readable=True,
             writeable=True,
         ),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # button for Indicator CC
     ZWaveDiscoverySchema(
@@ -809,6 +816,7 @@ DISCOVERY_SCHEMAS = [
             readable=False,
             writeable=True,
         ),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # binary switches
     ZWaveDiscoverySchema(
@@ -825,6 +833,7 @@ DISCOVERY_SCHEMAS = [
             readable=True,
             writeable=True,
         ),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # binary switch
     # barrier operator signaling states
@@ -1064,6 +1073,7 @@ def async_discover_single_value(
             platform_data=resolved_data,
             additional_value_ids_to_watch=additional_value_ids_to_watch,
             entity_registry_enabled_default=schema.entity_registry_enabled_default,
+            entity_category=schema.entity_category,
         )
 
         if not schema.allow_multi:
