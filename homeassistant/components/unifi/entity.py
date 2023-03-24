@@ -13,12 +13,8 @@ from aiounifi.interfaces.api_handlers import (
     ItemEvent,
     UnsubscribeType,
 )
-from aiounifi.interfaces.outlets import Outlets
-from aiounifi.interfaces.ports import Ports
-from aiounifi.models.api import APIItem
+from aiounifi.models.api import ApiItem
 from aiounifi.models.event import Event, EventKey
-from aiounifi.models.outlet import Outlet
-from aiounifi.models.port import Port
 
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
@@ -31,8 +27,8 @@ from .const import ATTR_MANUFACTURER
 if TYPE_CHECKING:
     from .controller import UniFiController
 
-DataT = TypeVar("DataT", bound=APIItem | Outlet | Port)
-HandlerT = TypeVar("HandlerT", bound=APIHandler | Outlets | Ports)
+DataT = TypeVar("DataT", bound=ApiItem)
+HandlerT = TypeVar("HandlerT", bound=APIHandler)
 SubscriptionT = Callable[[CallbackType, ItemEvent], UnsubscribeType]
 
 
