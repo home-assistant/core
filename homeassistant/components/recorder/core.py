@@ -296,7 +296,10 @@ class Recorder(threading.Thread):
             run_immediately=True,
         )
         self._queue_watcher = async_track_time_interval(
-            self.hass, self._async_check_queue, timedelta(minutes=10)
+            self.hass,
+            self._async_check_queue,
+            timedelta(minutes=10),
+            "Recorder queue watcher",
         )
 
     @callback
@@ -596,13 +599,19 @@ class Recorder(threading.Thread):
         # to prevent errors from unexpected disconnects
         if self.dialect_name != SupportedDialect.SQLITE:
             self._keep_alive_listener = async_track_time_interval(
-                self.hass, self._async_keep_alive, timedelta(seconds=KEEPALIVE_TIME)
+                self.hass,
+                self._async_keep_alive,
+                timedelta(seconds=KEEPALIVE_TIME),
+                "Recorder keep alive",
             )
 
         # If the commit interval is not 0, we need to commit periodically
         if self.commit_interval:
             self._commit_listener = async_track_time_interval(
-                self.hass, self._async_commit, timedelta(seconds=self.commit_interval)
+                self.hass,
+                self._async_commit,
+                timedelta(seconds=self.commit_interval),
+                "Recorder commit",
             )
 
         # Run nightly tasks at 4:12am
