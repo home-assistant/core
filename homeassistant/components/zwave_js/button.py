@@ -5,14 +5,16 @@ from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node as ZwaveNode
 
-from homeassistant.components.button import ButtonEntity
+from homeassistant.components.button import DOMAIN as NUMBER_DOMAIN, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import ZwaveDiscoveryInfo
 from .const import DATA_CLIENT, DOMAIN, LOGGER
+from .entity import ZWaveBaseEntity
 from .helpers import get_device_info, get_valueless_base_unique_id
 
 PARALLEL_UPDATES = 0
@@ -25,6 +27,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up Z-Wave button from config entry."""
     client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+
+    @callback
+    def async_add_button(info: ZwaveDiscoveryInfo) -> None:
+        """Add button entity."""
+        driver = client.driver
+        assert driver is not None  # Driver is ready before platforms are loaded.
+        async_add_entities([ZwaveBooleanNodeButton(config_entry, driver, info)])
 
     @callback
     def async_add_ping_button_entity(node: ZwaveNode) -> None:
@@ -40,6 +49,33 @@ async def async_setup_entry(
             async_add_ping_button_entity,
         )
     )
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"{DOMAIN}_{config_entry.entry_id}_add_{NUMBER_DOMAIN}",
+            async_add_button,
+        )
+    )
+
+
+class ZwaveBooleanNodeButton(ZWaveBaseEntity, ButtonEntity):
+    """Representation of a ZWave button entity for a boolean value."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(
+        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+    ) -> None:
+        """Initialize entity."""
+        super().__init__(config_entry, driver, info)
+        self._attr_name = self.generate_name(include_value_name=True)
+
+    async def async_press(self) -> None:
+        """Press the button."""
+        self.hass.async_create_task(
+            self.info.primary_value.node.async_set_value(self.info.primary_value, True)
+        )
 
 
 class ZWaveNodePingButton(ButtonEntity):

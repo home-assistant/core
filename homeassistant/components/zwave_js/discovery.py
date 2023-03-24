@@ -108,7 +108,8 @@ class ZwaveDiscoveryInfo:
     node: ZwaveNode
     # the value object itself for primary value
     primary_value: ZwaveValue
-    # bool to specify whether state is assumed and events should be fired on value update
+    # bool to specify whether state is assumed and events should be fired on value
+    # update
     assumed_state: bool
     # the home assistant platform for which an entity should be created
     platform: Platform
@@ -147,6 +148,10 @@ class ZWaveValueDiscoverySchema(DataclassMustHaveAtLeastOne):
     property_key_name: set[str | None] | None = None
     # [optional] the value's metadata_type must match ANY of these values
     type: set[str] | None = None
+    # [optional] the value's metadata_readable must match this value
+    readable: bool | None = None
+    # [optional] the value's metadata_writeable must match this value
+    writeable: bool | None = None
 
 
 @dataclass
@@ -694,6 +699,17 @@ DISCOVERY_SCHEMAS = [
         ),
         allow_multi=True,
     ),
+    # binary sensor for Indicator CC
+    ZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        hint="boolean",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.INDICATOR},
+            type={ValueType.BOOLEAN},
+            readable=True,
+            writeable=False,
+        ),
+    ),
     # generic text sensors
     ZWaveDiscoverySchema(
         platform=Platform.SENSOR,
@@ -702,15 +718,6 @@ DISCOVERY_SCHEMAS = [
             command_class={CommandClass.SENSOR_ALARM},
             type={ValueType.STRING},
         ),
-    ),
-    ZWaveDiscoverySchema(
-        platform=Platform.SENSOR,
-        hint="string_sensor",
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.INDICATOR},
-            type={ValueType.STRING},
-        ),
-        entity_registry_enabled_default=False,
     ),
     # generic numeric sensors
     ZWaveDiscoverySchema(
@@ -732,9 +739,10 @@ DISCOVERY_SCHEMAS = [
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.INDICATOR},
             type={ValueType.NUMBER},
+            readable=True,
+            writeable=False,
         ),
         data_template=NumericSensorDataTemplate(),
-        entity_registry_enabled_default=False,
     ),
     # Meter sensors for Meter CC
     ZWaveDiscoverySchema(
@@ -767,9 +775,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.NUMBER,
         hint="Basic",
         primary_value=ZWaveValueDiscoverySchema(
-            command_class={
-                CommandClass.BASIC,
-            },
+            command_class={CommandClass.BASIC},
             type={ValueType.NUMBER},
             property={CURRENT_VALUE_PROPERTY},
         ),
@@ -782,13 +788,43 @@ DISCOVERY_SCHEMAS = [
                 property={TARGET_VALUE_PROPERTY},
             )
         ],
-        data_template=NumericSensorDataTemplate(),
         entity_registry_enabled_default=False,
+    ),
+    # number for Indicator CC
+    ZWaveDiscoverySchema(
+        platform=Platform.NUMBER,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.INDICATOR},
+            type={ValueType.NUMBER},
+            readable=True,
+            writeable=True,
+        ),
+    ),
+    # button for Indicator CC
+    ZWaveDiscoverySchema(
+        platform=Platform.BUTTON,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.INDICATOR},
+            type={ValueType.BOOLEAN},
+            readable=False,
+            writeable=True,
+        ),
     ),
     # binary switches
     ZWaveDiscoverySchema(
         platform=Platform.SWITCH,
         primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
+    ),
+    # switch for Indicator CC
+    ZWaveDiscoverySchema(
+        platform=Platform.SWITCH,
+        hint="indicator",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.INDICATOR},
+            type={ValueType.BOOLEAN},
+            readable=True,
+            writeable=True,
+        ),
     ),
     # binary switch
     # barrier operator signaling states
@@ -1071,6 +1107,12 @@ def check_value(value: ZwaveValue, schema: ZWaveValueDiscoverySchema) -> bool:
         return False
     # check metadata_type
     if schema.type is not None and value.metadata.type not in schema.type:
+        return False
+    # check metadata_readable
+    if schema.readable is not None and value.metadata.readable != schema.readable:
+        return False
+    # check metadata_writeable
+    if schema.writeable is not None and value.metadata.writeable != schema.writeable:
         return False
     return True
 
