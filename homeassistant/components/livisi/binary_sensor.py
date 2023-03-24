@@ -101,8 +101,9 @@ class LivisiWindowDoorSensor(LivisiBinarySensor):
     async def async_added_to_hass(self) -> None:
         """Get current state."""
         await super().async_added_to_hass()
-
-        response = await self.coordinator.async_get_wds_state(self._capability_id)
+        response = await self.coordinator.async_get_device_state(
+            self._capability_id, "isOpen"
+        )
         if response is None:
             self._attr_available = False
         else:
