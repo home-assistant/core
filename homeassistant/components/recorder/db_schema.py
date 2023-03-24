@@ -157,7 +157,7 @@ DOUBLE_TYPE = (
     .with_variant(oracle.DOUBLE_PRECISION(), "oracle")
     .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )
-UNUSED_LEGACY_COLUMN = CHAR(0)
+UNUSED_LEGACY_COLUMN = CHAR(0).with_variant(mysql.CHAR(0), "mysql", "mariadb")  # type: ignore[no-untyped-call]
 UNUSED_LEGACY_DATETIME_COLUMN = DATETIME_TYPE
 DOUBLE_PRECISION_TYPE_SQL = "DOUBLE PRECISION"
 
