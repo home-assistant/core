@@ -128,7 +128,14 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.info.wifi.bssid if device.info.wifi else None,
     ),
-)
+    WLEDSensorEntityDescription(
+        key="ip",
+        name="IP",
+        icon="mdi:ip-network",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda device: device.info.ip,
+    ),)
 
 
 async def async_setup_entry(
