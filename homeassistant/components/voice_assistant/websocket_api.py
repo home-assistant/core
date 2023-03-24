@@ -1,5 +1,6 @@
 """Voice Assistant Websocket API."""
 import asyncio
+import audioop
 from collections.abc import Callable
 from typing import Any
 
@@ -83,8 +84,11 @@ async def websocket_run(
         audio_queue: "asyncio.Queue[bytes]" = asyncio.Queue()
 
         async def stt_stream():
+            state = None
+
             # Yield until we receive an empty chunk
             while chunk := await audio_queue.get():
+                chunk, state = audioop.ratecv(chunk, 2, 1, 44100, 16000, state)
                 yield chunk
 
         def handle_binary(_hass, _connection, data: bytes):
