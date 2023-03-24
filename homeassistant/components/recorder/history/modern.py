@@ -455,8 +455,10 @@ def get_last_state_changes(
     """Return the last number_of_states."""
     entity_id_lower = entity_id.lower()
     entity_ids = [entity_id_lower]
-    # Calling this function with number_of_states > 1 is deprecated
-    # and can can cause database instability; It may be removed in a future release
+
+    # Calling this function with number_of_states > 1 can cause instability
+    # because it has to scan the table to find the last number_of_states states
+    # because the metadata_id_last_updated_ts index is in ascending order.
 
     with session_scope(hass=hass, read_only=True) as session:
         instance = recorder.get_instance(hass)
