@@ -99,14 +99,15 @@ class LivisiClimate(LivisiEntity, ClimateEntity):
 
         await super().async_added_to_hass()
 
-        target_temperature = await self.coordinator.async_get_vrcc_target_temperature(
-            self._target_temperature_capability
+        target_temperature = await self.coordinator.async_get_device_state(
+            self._target_temperature_capability,
+            "setpointTemperature" if self.coordinator.is_avatar else "pointTemperature",
         )
-        temperature = await self.coordinator.async_get_vrcc_temperature(
-            self._temperature_capability
+        temperature = await self.coordinator.async_get_device_state(
+            self._temperature_capability, "temperature"
         )
-        humidity = await self.coordinator.async_get_vrcc_humidity(
-            self._humidity_capability
+        humidity = await self.coordinator.async_get_device_state(
+            self._humidity_capability, "humidity"
         )
         if temperature is None:
             self._attr_current_temperature = None
