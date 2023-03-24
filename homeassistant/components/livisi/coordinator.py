@@ -58,7 +58,7 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         except ClientConnectorError as exc:
             raise UpdateFailed("Failed to get LIVISI the devices") from exc
 
-    def _async_dispatcher_send(self, event: str, source: str, data: Any):
+    def _async_dispatcher_send(self, event: str, source: str, data: Any) -> None:
         if data is not None:
             async_dispatcher_send(self.hass, f"{event}_{source}", data)
 
