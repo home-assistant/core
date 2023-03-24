@@ -5,7 +5,6 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable, Iterator, MutableMapping
 from datetime import datetime
 from itertools import groupby
-import logging
 from operator import itemgetter
 from typing import Any, cast
 
@@ -40,7 +39,6 @@ from .const import (
     STATE_KEY,
 )
 
-_LOGGER = logging.getLogger(__name__)
 _BASE_STATES = (
     States.metadata_id,
     States.state,
