@@ -107,9 +107,6 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
     def on_data(self, event_data: LivisiEvent) -> None:
         """Define a handler to fire when the data is received."""
         self._async_dispatcher_send(
-            event_data.isOpen, LIVISI_STATE_CHANGE, event_data.source
-        )
-        self._async_dispatcher_send(
             event_data.onState, LIVISI_STATE_CHANGE, event_data.source
         )
         self._async_dispatcher_send(
