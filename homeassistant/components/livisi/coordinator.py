@@ -58,7 +58,7 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         except ClientConnectorError as exc:
             raise UpdateFailed("Failed to get LIVISI the devices") from exc
 
-    def _async_dispatcher_send(self, event: str, source: str, data: Any):
+    def _async_dispatcher_send(self, event: str, source: str, data: Any) -> None:
         if data is not None:
             async_dispatcher_send(self.hass, f"{event}_{source}", data)
 
@@ -87,7 +87,7 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         """Set the discovered devices list."""
         return await self.aiolivisi.async_get_devices()
 
-    async def async_get_device_state(self, capability, key):
+    async def async_get_device_state(self, capability: str, key: str) -> Any | None:
         """Get state from livisi devices."""
         response: dict[str, Any] = await self.aiolivisi.async_get_device_state(
             capability[1:]
