@@ -94,7 +94,7 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         )
         if response is None:
             return None
-        return response[key]["value"]
+        return response.get(key, {}).get("value")
 
     async def async_set_all_rooms(self) -> None:
         """Set the room list."""
