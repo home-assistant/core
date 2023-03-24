@@ -100,7 +100,8 @@ def _time_weighted_average(
     for fstate, state in fstates:
         # The recorder will give us the last known state, which may be well
         # before the requested start time for the statistics
-        start_time = start if state.last_updated < start else state.last_updated
+        last_updated = state.last_updated
+        start_time = start if last_updated < start else last_updated
         if old_start_time is None:
             # Adjust start time, if there was no last known state
             start = start_time

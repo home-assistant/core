@@ -49,6 +49,7 @@ from .db_schema import (
     CONTEXT_ID_BIN_MAX_LENGTH,
     DOUBLE_PRECISION_TYPE_SQL,
     LEGACY_STATES_EVENT_ID_INDEX,
+    METADATA_ID_LAST_UPDATED_INDEX_TS_DESC,
     MYSQL_COLLATE,
     MYSQL_DEFAULT_CHARSET,
     SCHEMA_VERSION,
@@ -1071,6 +1072,8 @@ def _apply_update(  # noqa: C901
     elif new_version == 41:
         _create_index(session_maker, "event_types", "ix_event_types_event_type")
         _create_index(session_maker, "states_meta", "ix_states_meta_entity_id")
+    elif new_version == 42:
+        _create_index(session_maker, "states", METADATA_ID_LAST_UPDATED_INDEX_TS_DESC)
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
