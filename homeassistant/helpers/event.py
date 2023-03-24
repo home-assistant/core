@@ -1421,9 +1421,9 @@ def async_track_time_interval(
         hass.async_run_hass_job(job, now)
 
     if name:
-        job_name = f"{name}: track time interval listener {interval}"
+        job_name = f"{name}: track time interval {interval}"
     else:
-        job_name = f"track time interval listener {interval}"
+        job_name = f"track time interval {interval}"
 
     interval_listener_job = HassJob(interval_listener, job_name)
     remove = async_track_point_in_utc_time(hass, interval_listener_job, next_interval())
