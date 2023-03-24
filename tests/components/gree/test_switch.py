@@ -8,7 +8,6 @@ from homeassistant.components.gree.const import DOMAIN as GREE_DOMAIN
 from homeassistant.components.switch import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -188,20 +187,14 @@ async def test_send_switch_toggle(
     assert state.state == STATE_ON
 
 
-@pytest.mark.parametrize(
-    ("entity", "name"),
-    [
-        (ENTITY_ID_LIGHT_PANEL, "Panel Light"),
-        (ENTITY_ID_HEALTH_MODE, "Health mode"),
-        (ENTITY_ID_QUIET, "Quiet"),
-        (ENTITY_ID_FRESH_AIR, "Fresh Air"),
-        (ENTITY_ID_XFAN, "XFan"),
-    ],
-)
-async def test_entity_name(
-    hass: HomeAssistant, entity, name, entity_registry_enabled_by_default: None
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_entity_state(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test for name property."""
+    """Test for entity registry settings (disabled_by, unique_id)."""
     await async_setup_gree(hass)
-    state = hass.states.get(entity)
-    assert state.attributes[ATTR_FRIENDLY_NAME] == f"fake-device-1 {name}"
+
+    state = hass.states.async_all(DOMAIN)
+    assert state == snapshot

@@ -1,4 +1,65 @@
 # serializer version: 1
+# name: test_entity_state
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'switch',
+        'friendly_name': 'fake-device-1 Panel Light',
+        'icon': 'mdi:lightbulb',
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.fake_device_1_panel_light',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'switch',
+        'friendly_name': 'fake-device-1 Health mode',
+        'icon': 'mdi:pine-tree',
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.fake_device_1_health_mode',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'switch',
+        'friendly_name': 'fake-device-1 Quiet',
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.fake_device_1_quiet',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'switch',
+        'friendly_name': 'fake-device-1 Fresh Air',
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.fake_device_1_fresh_air',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'switch',
+        'friendly_name': 'fake-device-1 XFan',
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.fake_device_1_xfan',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+  ])
+# ---
 # name: test_registry_settings
   list([
     EntityRegistryEntrySnapshot({
