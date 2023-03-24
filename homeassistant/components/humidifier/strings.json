@@ -22,10 +22,17 @@
   },
   "entity_component": {
     "_": {
+      "name": "[%key:component::humidifier::title%]",
       "state": {
         "off": "[%key:common::state::off%]",
         "on": "[%key:common::state::on%]"
       }
+    },
+    "dehumidifier": {
+      "name": "Dehumidifier"
+    },
+    "humidifier": {
+      "name": "[%key:component::humidifier::entity_component::_::name%]"
     }
   }
 }

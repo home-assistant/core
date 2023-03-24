@@ -266,6 +266,7 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
             },
             vol.Optional("entity_component"): cv.schema_with_slug_keys(
                 {
+                    vol.Optional("name"): str,
                     vol.Optional("state"): cv.schema_with_slug_keys(
                         cv.string_with_no_html,
                         slug_validator=translation_key_validator,

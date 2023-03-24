@@ -14,7 +14,7 @@ from . import BaseLRUTableManager
 from ..const import SQLITE_MAX_BIND_VARS
 from ..db_schema import EventData
 from ..queries import get_shared_event_datas
-from ..util import chunked
+from ..util import chunked, execute_stmt_lambda_element
 
 if TYPE_CHECKING:
     from ..core import Recorder
@@ -96,8 +96,8 @@ class EventDataManager(BaseLRUTableManager[EventData]):
         results: dict[str, int | None] = {}
         with session.no_autoflush:
             for hashs_chunk in chunked(hashes, SQLITE_MAX_BIND_VARS):
-                for data_id, shared_data in session.execute(
-                    get_shared_event_datas(hashs_chunk)
+                for data_id, shared_data in execute_stmt_lambda_element(
+                    session, get_shared_event_datas(hashs_chunk)
                 ):
                     results[shared_data] = self._id_map[shared_data] = cast(
                         int, data_id
