@@ -1,10 +1,4 @@
 """Test the qBittorrent config flow."""
-from unittest.mock import patch
-
-import pytest
-from requests.exceptions import RequestException
-from requests.sessions import Session
-
 from homeassistant.components.qbittorrent.const import DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import (
@@ -51,56 +45,7 @@ CONFIG_IMPORT_VALID = {
 }
 
 
-@pytest.fixture(name="api")
-def mock_qbittorrent_api():
-    """Mock an api."""
-    with patch.object(Session, "get"), patch.object(Session, "post"):
-        yield
-
-
-@pytest.fixture(name="ok")
-def mock_api_login_ok():
-    """Mock successful login."""
-
-    class OkResponse:
-        """Mock an OK response for login."""
-
-        text: str = "Ok."
-
-    with patch.object(Session, "post", return_value=OkResponse()):
-        yield
-
-
-@pytest.fixture(name="invalid_auth")
-def mock_api_invalid_auth():
-    """Mock invalid credential."""
-
-    class InvalidAuthResponse:
-        """Mock an invalid auth response."""
-
-        text: str = "Wrong username/password"
-
-    with patch.object(Session, "post", return_value=InvalidAuthResponse()):
-        yield
-
-
-@pytest.fixture(name="cannot_connect")
-def mock_api_cannot_connect():
-    """Mock connection failure."""
-    with patch.object(Session, "get", side_effect=RequestException()):
-        yield
-
-
-@pytest.fixture(name="qbittorrent_setup", autouse=True)
-def qbittorrent_setup_fixture():
-    """Mock qbittorrent entry setup."""
-    with patch(
-        "homeassistant.components.qbittorrent.async_setup_entry", return_value=True
-    ):
-        yield
-
-
-async def test_show_form_no_input(hass: HomeAssistant):
+async def test_show_form_no_input(hass: HomeAssistant) -> None:
     """Test that the form is served with no input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
@@ -109,7 +54,7 @@ async def test_show_form_no_input(hass: HomeAssistant):
     assert result["step_id"] == SOURCE_USER
 
 
-async def test_flow_user(hass: HomeAssistant, api, ok):
+async def test_flow_user(hass: HomeAssistant, ok) -> None:
     """Test user initialized flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -121,7 +66,7 @@ async def test_flow_user(hass: HomeAssistant, api, ok):
     assert result["data"] == CONFIG_VALID
 
 
-async def test_invalid_auth(hass: HomeAssistant, api, invalid_auth):
+async def test_invalid_auth(hass: HomeAssistant, invalid_auth) -> None:
     """Test user initialized flow with invalid credential."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -133,7 +78,7 @@ async def test_invalid_auth(hass: HomeAssistant, api, invalid_auth):
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_cannot_connect(hass: HomeAssistant, api, cannot_connect):
+async def test_cannot_connect(hass: HomeAssistant, cannot_connect) -> None:
     """Test user initialized flow with connection error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -145,7 +90,7 @@ async def test_cannot_connect(hass: HomeAssistant, api, cannot_connect):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_flow_user_already_configured(hass: HomeAssistant, api):
+async def test_flow_user_already_configured(hass: HomeAssistant) -> None:
     """Test user initialized flow with duplicate server."""
     entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_VALID)
     entry.add_to_hass(hass)
@@ -157,7 +102,7 @@ async def test_flow_user_already_configured(hass: HomeAssistant, api):
     assert result["reason"] == "already_configured"
 
 
-async def test_flow_import(hass: HomeAssistant):
+async def test_flow_import(hass: HomeAssistant) -> None:
     """Test import step."""
 
     result = await hass.config_entries.flow.async_init(
@@ -171,7 +116,7 @@ async def test_flow_import(hass: HomeAssistant):
     assert result["data"] == CONFIG_VALID | {CONF_NAME: DEFAULT_NAME}
 
 
-async def test_flow_import_already_configured(hass: HomeAssistant, api):
+async def test_flow_import_already_configured(hass: HomeAssistant) -> None:
     """Test import step already configured."""
     entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_VALID)
     entry.add_to_hass(hass)
