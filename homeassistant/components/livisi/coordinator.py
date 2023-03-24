@@ -87,7 +87,7 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         """Set the discovered devices list."""
         return await self.aiolivisi.async_get_devices()
 
-    async def async_get_device_state(self, capability, key):
+    async def async_get_device_state(self, capability: str, key: str) -> Any | None:
         """Get state from livisi devices."""
         response: dict[str, Any] = await self.aiolivisi.async_get_device_state(
             capability[1:]
