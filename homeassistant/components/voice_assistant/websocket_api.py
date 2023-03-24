@@ -1,7 +1,6 @@
 """Voice Assistant Websocket API."""
 import asyncio
 from collections.abc import Callable
-import logging
 from typing import Any
 
 import voluptuous as vol
@@ -12,13 +11,13 @@ from homeassistant.core import HomeAssistant, callback
 from .pipeline import (
     DEFAULT_TIMEOUT,
     PipelineError,
+    PipelineEvent,
+    PipelineEventType,
     PipelineInput,
     PipelineRun,
     PipelineStage,
     async_get_pipeline,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -49,6 +48,11 @@ async def websocket_run(
 ) -> None:
     """Run a pipeline."""
     language = msg.get("language", hass.config.language)
+
+    # Temporary workaround for language codes
+    if language == "en":
+        language = "en-US"
+
     pipeline_id = msg.get("pipeline")
     pipeline = async_get_pipeline(
         hass,
@@ -119,6 +123,9 @@ async def websocket_run(
                 event_callback=lambda event: connection.send_event(
                     msg["id"], event.as_dict()
                 ),
+                runner_data={
+                    "stt_binary_handler_id": handler_id,
+                },
             ),
             timeout=timeout,
         )
@@ -130,16 +137,20 @@ async def websocket_run(
     # Confirm subscription
     connection.send_result(msg["id"])
 
-    if handler_id is not None:
-        # Send handler id to client
-        connection.send_event(msg["id"], {"handler_id": handler_id})
-
     try:
         # Task contains a timeout
         await run_task
     except PipelineError as error:
         # Report more specific error when possible
         connection.send_error(msg["id"], error.code, error.message)
+    except asyncio.TimeoutError:
+        connection.send_event(
+            msg["id"],
+            PipelineEvent(
+                PipelineEventType.ERROR,
+                {"code": "timeout", "message": "Timeout running pipeline"},
+            ),
+        )
     finally:
         if unregister_handler is not None:
             # Unregister binary handler
