@@ -1,5 +1,5 @@
 """The sensor tests for the QNAP QSW platform."""
-from unittest.mock import Mock
+from unittest.mock import MagicMock
 
 from homeassistant.components.qnap_qsw.const import ATTR_MAX
 from homeassistant.core import HomeAssistant
@@ -9,7 +9,7 @@ from .util import async_init_integration
 
 async def test_qnap_qsw_create_sensors(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: Mock,
+    entity_registry_enabled_by_default: MagicMock,
 ) -> None:
     """Test creation of sensors."""
 

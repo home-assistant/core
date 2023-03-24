@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock
 
 from pyunifiprotect.data import (
     NVR,
@@ -397,7 +397,7 @@ async def test_sensor_setup_camera(
 
 async def test_sensor_setup_camera_with_last_trip_time(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: Mock,
+    entity_registry_enabled_by_default: MagicMock,
     ufp: MockUFPFixture,
     doorbell: Camera,
     fixed_now: datetime,
@@ -473,7 +473,7 @@ async def test_sensor_update_alarm(
 
 async def test_sensor_update_alarm_with_last_trip_time(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: Mock,
+    entity_registry_enabled_by_default: MagicMock,
     ufp: MockUFPFixture,
     sensor_all: Sensor,
     fixed_now: datetime,

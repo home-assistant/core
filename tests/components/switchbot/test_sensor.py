@@ -1,5 +1,5 @@
 """Test the switchbot sensors."""
-from unittest.mock import Mock
+from unittest.mock import MagicMock
 
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.components.switchbot.const import DOMAIN
@@ -21,7 +21,7 @@ from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 async def test_sensors(
-    hass: HomeAssistant, entity_registry_enabled_by_default: Mock
+    hass: HomeAssistant, entity_registry_enabled_by_default: MagicMock
 ) -> None:
     """Test setting up creates the sensors."""
     await async_setup_component(hass, DOMAIN, {})

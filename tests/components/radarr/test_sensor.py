@@ -1,5 +1,5 @@
 """The tests for Radarr sensor platform."""
-from unittest.mock import Mock
+from unittest.mock import MagicMock
 
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_UNIT_OF_MEASUREMENT
@@ -13,7 +13,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 async def test_sensors(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    entity_registry_enabled_by_default: Mock,
+    entity_registry_enabled_by_default: MagicMock,
 ) -> None:
     """Test for successfully setting up the Radarr platform."""
     await setup_integration(hass, aioclient_mock)

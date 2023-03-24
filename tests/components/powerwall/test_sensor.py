@@ -1,5 +1,5 @@
 """The sensor tests for the powerwall platform."""
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from tesla_powerwall.error import MissingAttributeError
 
@@ -21,7 +21,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_sensors(
-    hass: HomeAssistant, entity_registry_enabled_by_default: Mock
+    hass: HomeAssistant, entity_registry_enabled_by_default: MagicMock
 ) -> None:
     """Test creation of the sensors."""
 
