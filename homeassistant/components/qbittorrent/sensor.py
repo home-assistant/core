@@ -23,6 +23,7 @@ from homeassistant.const import (
     UnitOfDataRate,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -33,8 +34,6 @@ from .const import (
     SENSOR_TYPE_UPLOAD_SPEED,
 )
 from .helpers import setup_client
-
-from .const import DEFAULT_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,6 +70,14 @@ async def async_setup_platform(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=config
         )
+    )
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "manual_migration",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
     )
 
 
