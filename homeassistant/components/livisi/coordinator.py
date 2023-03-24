@@ -115,6 +115,9 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         self._async_dispatcher_send(
             LIVISI_REACHABILITY_CHANGE, event_data.source, event_data.isReachable
         )
+        self._async_dispatcher_send(
+            LIVISI_STATE_CHANGE, event_data.source, event_data.isOpen
+        )
 
     async def on_close(self) -> None:
         """Define a handler to fire when the websocket is closed."""
