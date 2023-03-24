@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 import json
 from unittest.mock import patch, sentinel
 
+import freezegun
 import pytest
 from sqlalchemy import text
 
@@ -254,27 +255,35 @@ def test_state_changes_during_period(
     start = dt_util.utcnow()
     point = start + timedelta(seconds=1)
     end = point + timedelta(seconds=1)
+    states = []
 
     with patch(
         "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
     ):
         set_state("idle")
-        set_state("YouTube")
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point
+        "homeassistant.components.recorder.core.dt_util.utcnow",
+        return_value=start + timedelta(microseconds=1),
     ):
-        states = [
-            set_state("idle"),
-            set_state("Netflix"),
-            set_state("Plex"),
-            set_state("YouTube"),
-        ]
+        states.append(set_state("YouTube"))
+
+    for offset, state in enumerate(("idle", "Netflix", "Plex", "YouTube")):
+        with patch(
+            "homeassistant.components.recorder.core.dt_util.utcnow",
+            return_value=point + timedelta(microseconds=offset),
+        ):
+            states.append(set_state(state))
 
     with patch(
         "homeassistant.components.recorder.core.dt_util.utcnow", return_value=end
     ):
         set_state("Netflix")
+
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow",
+        return_value=end + timedelta(microseconds=1),
+    ):
         set_state("Plex")
 
     hist = history.state_changes_during_period(
@@ -1091,7 +1100,6 @@ def test_state_changes_during_period_multiple_entities_single_test(
         hist[entity_id][0].state == value
 
 
-@pytest.mark.freeze_time("2039-01-19 03:14:07.555555-00:00")
 async def test_get_full_significant_states_past_year_2038(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
@@ -1099,13 +1107,18 @@ async def test_get_full_significant_states_past_year_2038(
     """Test we can store times past year 2038."""
     await async_setup_recorder_instance(hass, {})
     past_2038_time = dt_util.parse_datetime("2039-01-19 03:14:07.555555-00:00")
-    hass.states.async_set("sensor.one", "on", {"attr": "original"})
-    state0 = hass.states.get("sensor.one")
-    await hass.async_block_till_done()
+    with freezegun.freeze_time(past_2038_time):
+        hass.states.async_set("sensor.one", "on", {"attr": "original"})
+        state0 = hass.states.get("sensor.one")
+        await hass.async_block_till_done()
+    second_past_2038_time = dt_util.parse_datetime("2039-01-19 03:14:07.777777-00:00")
+    with freezegun.freeze_time(second_past_2038_time):
+        hass.states.async_set("sensor.one", "on", {"attr": "new"})
+        state1 = hass.states.get("sensor.one")
+        await hass.async_block_till_done()
 
-    hass.states.async_set("sensor.one", "on", {"attr": "new"})
-    state1 = hass.states.get("sensor.one")
-
+    assert state0.last_updated == past_2038_time
+    assert state1.last_updated == second_past_2038_time
     await async_wait_recording_done(hass)
 
     def _get_entries():
@@ -1125,3 +1138,5 @@ async def test_get_full_significant_states_past_year_2038(
     assert_states_equal_without_context(sensor_one_states[1], state1)
     assert sensor_one_states[0].last_changed == past_2038_time
     assert sensor_one_states[0].last_updated == past_2038_time
+    assert sensor_one_states[1].last_changed == past_2038_time
+    assert sensor_one_states[1].last_updated == second_past_2038_time

@@ -370,18 +370,6 @@ class EventTypes(Base):
 class States(Base):
     """State change history."""
 
-    __table_args__ = (
-        # Used for fetching the state of entities at a specific time
-        # (get_states in history.py)
-        Index(METADATA_ID_LAST_UPDATED_INDEX_TS, "metadata_id", "last_updated_ts"),
-        Index(
-            STATES_CONTEXT_ID_BIN_INDEX,
-            "context_id_bin",
-            mysql_length=CONTEXT_ID_BIN_MAX_LENGTH,
-            mariadb_length=CONTEXT_ID_BIN_MAX_LENGTH,
-        ),
-        _DEFAULT_TABLE_ARGS,
-    )
     __tablename__ = TABLE_STATES
     state_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
     entity_id: Mapped[str | None] = mapped_column(
@@ -435,6 +423,19 @@ class States(Base):
         Integer, ForeignKey("states_meta.metadata_id")
     )
     states_meta_rel: Mapped[StatesMeta | None] = relationship("StatesMeta")
+
+    __table_args__ = (
+        # Used for fetching the state of entities at a specific time
+        # (get_states in history.py)
+        Index(METADATA_ID_LAST_UPDATED_INDEX_TS, metadata_id, last_updated_ts.desc()),
+        Index(
+            STATES_CONTEXT_ID_BIN_INDEX,
+            context_id_bin,
+            mysql_length=CONTEXT_ID_BIN_MAX_LENGTH,
+            mariadb_length=CONTEXT_ID_BIN_MAX_LENGTH,
+        ),
+        _DEFAULT_TABLE_ARGS,
+    )
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""

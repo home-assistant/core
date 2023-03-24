@@ -5,7 +5,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 import math
 from statistics import mean
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 import pytest
 
@@ -299,7 +299,7 @@ def test_compile_hourly_statistics_with_some_same_last_updated(
             {
                 "start": process_timestamp(zero).timestamp(),
                 "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
-                "mean": pytest.approx(mean),
+                "mean": ANY,  # behavior is undefined when two different states happen at the same microsecond
                 "min": pytest.approx(min),
                 "max": pytest.approx(max),
                 "last_reset": None,
@@ -408,7 +408,7 @@ def test_compile_hourly_statistics_with_all_same_last_updated(
             {
                 "start": process_timestamp(zero).timestamp(),
                 "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
-                "mean": pytest.approx(mean),
+                "mean": ANY,  # behavior is undefined when two different states happen at the same microsecond
                 "min": pytest.approx(min),
                 "max": pytest.approx(max),
                 "last_reset": None,
