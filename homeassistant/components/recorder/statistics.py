@@ -47,6 +47,9 @@ from .const import (
     DOMAIN,
     EVENT_RECORDER_5MIN_STATISTICS_GENERATED,
     EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,
+    INTEGRATION_PLATFORM_COMPILE_STATISTICS,
+    INTEGRATION_PLATFORM_LIST_STATISTIC_IDS,
+    INTEGRATION_PLATFORM_VALIDATE_STATISTICS,
     SupportedDialect,
 )
 from .db_schema import (
@@ -502,9 +505,13 @@ def _compile_statistics(
     current_metadata: dict[str, tuple[int, StatisticMetaData]] = {}
     # Collect statistics from all platforms implementing support
     for domain, platform in instance.hass.data[DOMAIN].recorder_platforms.items():
-        if not hasattr(platform, "compile_statistics"):
+        if not (
+            platform_compile_statistics := getattr(
+                platform, INTEGRATION_PLATFORM_COMPILE_STATISTICS, None
+            )
+        ):
             continue
-        compiled: PlatformCompiledStatistics = platform.compile_statistics(
+        compiled: PlatformCompiledStatistics = platform_compile_statistics(
             instance.hass, start, end
         )
         _LOGGER.debug(
@@ -783,9 +790,13 @@ def list_statistic_ids(
         #
         # Query all integrations with a registered recorder platform
         for platform in hass.data[DOMAIN].recorder_platforms.values():
-            if not hasattr(platform, "list_statistic_ids"):
+            if not (
+                platform_list_statistic_ids := getattr(
+                    platform, INTEGRATION_PLATFORM_LIST_STATISTIC_IDS, None
+                )
+            ):
                 continue
-            platform_statistic_ids = platform.list_statistic_ids(
+            platform_statistic_ids = platform_list_statistic_ids(
                 hass, statistic_ids=statistic_ids, statistic_type=statistic_type
             )
 
@@ -1931,9 +1942,10 @@ def validate_statistics(hass: HomeAssistant) -> dict[str, list[ValidationIssue]]
     """Validate statistics."""
     platform_validation: dict[str, list[ValidationIssue]] = {}
     for platform in hass.data[DOMAIN].recorder_platforms.values():
-        if not hasattr(platform, "validate_statistics"):
-            continue
-        platform_validation.update(platform.validate_statistics(hass))
+        if platform_validate_statistics := getattr(
+            platform, INTEGRATION_PLATFORM_VALIDATE_STATISTICS, None
+        ):
+            platform_validation.update(platform_validate_statistics(hass))
     return platform_validation
 
 
