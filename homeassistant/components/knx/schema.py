@@ -104,7 +104,7 @@ def ga_validator(value: Any) -> str | int:
 ga_list_validator = vol.All(
     cv.ensure_list,
     [ga_validator],
-    vol.IsTrue("list must contain at least one group address"),
+    vol.IsTrue("value must be a group address or a list containing group addresses"),
 )
 
 ia_validator = vol.Any(
