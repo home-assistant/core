@@ -5,7 +5,6 @@ import copy
 from datetime import datetime, timedelta
 from functools import partial
 import json
-from pathlib import Path
 import ssl
 from typing import Any, TypedDict
 from unittest.mock import ANY, MagicMock, call, mock_open, patch
@@ -38,10 +37,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from .test_common import (
-    help_test_entry_reload_with_new_config,
-    help_test_validate_platform_config,
-)
+from .test_common import help_test_validate_platform_config
 
 from tests.common import (
     MockConfigEntry,
@@ -1525,22 +1521,19 @@ async def test_subscribed_at_highest_qos(
     ]
 
 
-@pytest.mark.parametrize("hass_config_yaml", "")
 async def test_reload_entry_with_restored_subscriptions(
     hass: HomeAssistant,
-    mock_hass_config_yaml: None,
-    tmp_path: Path,
     mqtt_client_mock: MqttMockPahoClient,
     record_calls: MessageCallbackType,
     calls: list[ReceiveMessage],
 ) -> None:
     """Test reloading the config entry with with subscriptions restored."""
-
+    # Setup the MQTT entry
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
     entry.add_to_hass(hass)
     mqtt_client_mock.connect.return_value = 0
-    assert await mqtt.async_setup_entry(hass, entry)
-    await hass.async_block_till_done()
+    with patch("homeassistant.config.load_yaml_config_file", return_value={}):
+        await entry.async_setup(hass)
 
     await mqtt.async_subscribe(hass, "test-topic", record_calls)
     await mqtt.async_subscribe(hass, "wild/+/card", record_calls)
@@ -1557,10 +1550,10 @@ async def test_reload_entry_with_restored_subscriptions(
     calls.clear()
 
     # Reload the entry
-    config_yaml_new = {}
-    await help_test_entry_reload_with_new_config(hass, tmp_path, config_yaml_new)
-
-    await hass.async_block_till_done()
+    with patch("homeassistant.config.load_yaml_config_file", return_value={}):
+        assert await hass.config_entries.async_reload(entry.entry_id)
+        assert entry.state is ConfigEntryState.LOADED
+        await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "test-topic", "test-payload2")
     async_fire_mqtt_message(hass, "wild/any/card", "wild-card-payload2")
@@ -1574,10 +1567,10 @@ async def test_reload_entry_with_restored_subscriptions(
     calls.clear()
 
     # Reload the entry again
-    config_yaml_new = {}
-    await help_test_entry_reload_with_new_config(hass, tmp_path, config_yaml_new)
-
-    await hass.async_block_till_done()
+    with patch("homeassistant.config.load_yaml_config_file", return_value={}):
+        assert await hass.config_entries.async_reload(entry.entry_id)
+        assert entry.state is ConfigEntryState.LOADED
+        await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "test-topic", "test-payload3")
     async_fire_mqtt_message(hass, "wild/any/card", "wild-card-payload3")

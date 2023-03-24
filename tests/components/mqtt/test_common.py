@@ -1796,27 +1796,6 @@ async def help_test_reload_with_config(
         await hass.async_block_till_done()
 
 
-async def help_test_entry_reload_with_new_config(
-    hass: HomeAssistant, tmp_path: Path, new_config: ConfigType
-) -> None:
-    """Test reloading with supplied config."""
-    mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    assert mqtt_config_entry.state is ConfigEntryState.LOADED
-    new_yaml_config_file = tmp_path / "configuration.yaml"
-    new_yaml_config = yaml.dump(new_config)
-    new_yaml_config_file.write_text(new_yaml_config)
-    assert new_yaml_config_file.read_text() == new_yaml_config
-
-    with patch.object(
-        module_hass_config, "YAML_CONFIG_FILE", new_yaml_config_file
-    ), patch("paho.mqtt.client.Client") as mock_client:
-        mock_client().connect = lambda *args: 0
-        # reload the config entry
-        assert await hass.config_entries.async_reload(mqtt_config_entry.entry_id)
-        assert mqtt_config_entry.state is ConfigEntryState.LOADED
-        await hass.async_block_till_done()
-
-
 async def help_test_reloadable(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
