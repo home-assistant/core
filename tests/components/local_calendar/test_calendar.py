@@ -912,5 +912,6 @@ async def test_create_event_service(
             "summary": "Bastille Day Party",
             "start": {"dateTime": "1997-07-14T11:00:00-06:00"},
             "end": {"dateTime": "1997-07-14T22:00:00-06:00"},
+            "location": "Test Location",
         }
     ]
