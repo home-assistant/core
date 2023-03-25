@@ -151,7 +151,7 @@ class RealTimeDataEndpoint:
             raise PlatformNotReady from err
         data = api_response.data
         for sensor in self.sensors:
-            if sensor.key in data:
+            if sensor.key in data and sensor.enabled:
                 sensor.value = data[sensor.key]
                 sensor.async_schedule_update_ha_state()
 
