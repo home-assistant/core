@@ -1,8 +1,7 @@
 """Test the qBittorrent config flow."""
-from homeassistant.components.qbittorrent.const import DEFAULT_NAME, DOMAIN
+from homeassistant.components.qbittorrent.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import (
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_SOURCE,
     CONF_URL,
@@ -15,7 +14,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 CONFIG_VALID = {
-    CONF_NAME: "abcd",
     CONF_URL: "http://localhost:8080",
     CONF_USERNAME: "user",
     CONF_PASSWORD: "pass",
@@ -23,7 +21,6 @@ CONFIG_VALID = {
 }
 
 CONFIG_INVALID_AUTH = {
-    CONF_NAME: "abcd",
     CONF_URL: "http://localhost:8080",
     CONF_USERNAME: "null",
     CONF_PASSWORD: "none",
@@ -31,7 +28,6 @@ CONFIG_INVALID_AUTH = {
 }
 
 CONFIG_CANNOT_CONNECT = {
-    CONF_NAME: "abcd",
     CONF_URL: "http://nowhere:23456",
     CONF_USERNAME: "user",
     CONF_PASSWORD: "pass",
@@ -62,7 +58,6 @@ async def test_flow_user(hass: HomeAssistant, ok) -> None:
         data=CONFIG_VALID,
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == CONFIG_VALID[CONF_NAME]
     assert result["data"] == CONFIG_VALID
 
 
@@ -112,8 +107,7 @@ async def test_flow_import(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == DEFAULT_NAME
-    assert result["data"] == CONFIG_VALID | {CONF_NAME: DEFAULT_NAME}
+    assert result["data"] == CONFIG_VALID
 
 
 async def test_flow_import_already_configured(hass: HomeAssistant) -> None:

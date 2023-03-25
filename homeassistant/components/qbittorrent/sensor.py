@@ -100,9 +100,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up qBittorrent sensor entries."""
     client = hass.data[DOMAIN][config_entry.entry_id]
-    name = config_entry.data[CONF_NAME]
     entities = [
-        QBittorrentSensor(description, client, name, LoginRequired)
+        QBittorrentSensor(
+            description,
+            client,
+            config_entry.title,
+            config_entry.entry_id,
+            LoginRequired,
+        )
         for description in SENSOR_TYPES
     ]
     async_add_entites(entities, True)
@@ -122,6 +127,7 @@ class QBittorrentSensor(SensorEntity):
         description: SensorEntityDescription,
         qbittorrent_client,
         client_name,
+        unique_id,
         exception,
     ) -> None:
         """Initialize the qBittorrent sensor."""
@@ -129,7 +135,7 @@ class QBittorrentSensor(SensorEntity):
         self.client = qbittorrent_client
         self._exception = exception
 
-        self._attr_unique_id = f"{client_name}-{description.key}".lower()
+        self._attr_unique_id = f"{unique_id}-{description.key}"
         self._attr_name = f"{client_name} {description.name}"
         self._attr_icon = description.icon
         self._attr_available = False

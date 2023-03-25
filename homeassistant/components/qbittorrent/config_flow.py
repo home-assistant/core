@@ -25,7 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 
 USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
         vol.Required(CONF_URL, default=DEFAULT_URL): str,
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
