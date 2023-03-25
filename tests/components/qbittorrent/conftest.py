@@ -2,11 +2,10 @@
 from unittest.mock import patch
 
 import pytest
-from requests.exceptions import RequestException
-from requests.sessions import Session
+import requests_mock
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def mock_setup_entry():
     """Mock qbittorrent entry setup."""
     with patch(
@@ -15,41 +14,11 @@ def mock_setup_entry():
         yield mock_setup_entry
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def mock_api():
     """Mock the qbittorrent API."""
-    with patch.object(Session, "get"), patch.object(Session, "post"):
-        yield
-
-
-@pytest.fixture(name="ok")
-def mock_api_login_ok():
-    """Mock successful login."""
-
-    class OkResponse:
-        """Mock an OK response for login."""
-
-        text: str = "Ok."
-
-    with patch.object(Session, "post", return_value=OkResponse()):
-        yield
-
-
-@pytest.fixture(name="invalid_auth")
-def mock_api_invalid_auth():
-    """Mock invalid credential."""
-
-    class InvalidAuthResponse:
-        """Mock an invalid auth response."""
-
-        text: str = "Wrong username/password"
-
-    with patch.object(Session, "post", return_value=InvalidAuthResponse()):
-        yield
-
-
-@pytest.fixture(name="cannot_connect")
-def mock_api_cannot_connect():
-    """Mock connection failure."""
-    with patch.object(Session, "get", side_effect=RequestException()):
-        yield
+    with requests_mock.Mocker() as mocker:
+        mocker.get("http://localhost:8080/api/v2/app/preferences", status_code=403)
+        mocker.get("http://localhost:8080/api/v2/transfer/speedLimitsMode")
+        mocker.post("http://localhost:8080/api/v2/auth/login", text="Ok.")
+        yield mocker
