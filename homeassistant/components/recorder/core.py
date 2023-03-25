@@ -718,7 +718,7 @@ class Recorder(threading.Thread):
             if (
                 self.schema_version < CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
                 or execute_stmt_lambda_element(
-                    session, has_events_context_ids_to_migrate()
+                    session, has_states_context_ids_to_migrate()
                 )
             ):
                 self.queue_task(StatesContextIDMigrationTask())
@@ -726,7 +726,7 @@ class Recorder(threading.Thread):
             if (
                 self.schema_version < CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
                 or execute_stmt_lambda_element(
-                    session, has_states_context_ids_to_migrate()
+                    session, has_events_context_ids_to_migrate()
                 )
             ):
                 self.queue_task(EventsContextIDMigrationTask())
@@ -778,6 +778,10 @@ class Recorder(threading.Thread):
         self._pre_process_startup_tasks(startup_tasks)
         for task in startup_tasks:
             self._guarded_process_one_task_or_recover(task)
+
+        # Clear startup tasks since this thread runs forever
+        # and we don't want to hold them in memory
+        del startup_tasks
 
         self.stop_requested = False
         while not self.stop_requested:

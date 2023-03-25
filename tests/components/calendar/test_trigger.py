@@ -668,7 +668,7 @@ async def test_trigger_timestamp_window_edge(
 
 
 async def test_event_start_trigger_dst(
-    hass: HomeAssistant, calls, fake_schedule, freezer
+    hass: HomeAssistant, calls, fake_schedule, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test a calendar event trigger happening at the start of daylight savings time."""
     tzinfo = zoneinfo.ZoneInfo("America/Los_Angeles")

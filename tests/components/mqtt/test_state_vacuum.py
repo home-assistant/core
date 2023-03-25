@@ -29,9 +29,9 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.const import CONF_NAME, ENTITY_MATCH_ALL, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .test_common import (
+    help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
@@ -83,6 +83,18 @@ DEFAULT_CONFIG = {
 
 DEFAULT_CONFIG_2 = {mqtt.DOMAIN: {vacuum.DOMAIN: {"schema": "state", "name": "test"}}}
 
+CONFIG_ALL_SERVICES = help_custom_config(
+    vacuum.DOMAIN,
+    DEFAULT_CONFIG,
+    (
+        {
+            mqttvacuum.CONF_SUPPORTED_FEATURES: services_to_strings(
+                mqttvacuum.ALL_SERVICES, SERVICE_TO_STRING
+            )
+        },
+    ),
+)
+
 
 @pytest.fixture(autouse=True)
 def vacuum_platform_only():
@@ -91,13 +103,12 @@ def vacuum_platform_only():
         yield
 
 
+@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
 async def test_default_supported_features(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test that the correct supported features."""
-    assert await async_setup_component(hass, mqtt.DOMAIN, DEFAULT_CONFIG)
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+    await mqtt_mock_entry_no_yaml_config()
     entity = hass.states.get("vacuum.mqtttest")
     entity_features = entity.attributes.get(mqttvacuum.CONF_SUPPORTED_FEATURES, 0)
     assert sorted(services_to_strings(entity_features, SERVICE_TO_STRING)) == sorted(
@@ -105,20 +116,12 @@ async def test_default_supported_features(
     )
 
 
+@pytest.mark.parametrize("hass_config", [CONFIG_ALL_SERVICES])
 async def test_all_commands(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test simple commands send to the vacuum."""
-    config = deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][vacuum.DOMAIN])
-    config[mqttvacuum.CONF_SUPPORTED_FEATURES] = services_to_strings(
-        mqttvacuum.ALL_SERVICES, SERVICE_TO_STRING
-    )
-
-    assert await async_setup_component(
-        hass, mqtt.DOMAIN, {mqtt.DOMAIN: {vacuum.DOMAIN: config}}
-    )
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
 
     await hass.services.async_call(
         DOMAIN, SERVICE_START, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
@@ -181,21 +184,27 @@ async def test_all_commands(
     }
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            vacuum.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    mqttvacuum.CONF_SUPPORTED_FEATURES: services_to_strings(
+                        mqttvacuum.STRING_TO_SERVICE["status"], SERVICE_TO_STRING
+                    )
+                },
+            ),
+        )
+    ],
+)
 async def test_commands_without_supported_features(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test commands which are not supported by the vacuum."""
-    config = deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][vacuum.DOMAIN])
-    services = mqttvacuum.STRING_TO_SERVICE["status"]
-    config[mqttvacuum.CONF_SUPPORTED_FEATURES] = services_to_strings(
-        services, SERVICE_TO_STRING
-    )
-
-    assert await async_setup_component(
-        hass, mqtt.DOMAIN, {mqtt.DOMAIN: {vacuum.DOMAIN: config}}
-    )
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
 
     await hass.services.async_call(
         DOMAIN, SERVICE_START, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
@@ -243,20 +252,12 @@ async def test_commands_without_supported_features(
     mqtt_mock.async_publish.assert_not_called()
 
 
+@pytest.mark.parametrize("hass_config", [CONFIG_ALL_SERVICES])
 async def test_status(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test status updates from the vacuum."""
-    config = deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][vacuum.DOMAIN])
-    config[mqttvacuum.CONF_SUPPORTED_FEATURES] = services_to_strings(
-        mqttvacuum.ALL_SERVICES, SERVICE_TO_STRING
-    )
-
-    assert await async_setup_component(
-        hass, mqtt.DOMAIN, {mqtt.DOMAIN: {vacuum.DOMAIN: config}}
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+    await mqtt_mock_entry_no_yaml_config()
     state = hass.states.get("vacuum.mqtttest")
     assert state.state == STATE_UNKNOWN
 
@@ -292,21 +293,27 @@ async def test_status(
     assert state.state == STATE_UNKNOWN
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            vacuum.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    mqttvacuum.CONF_SUPPORTED_FEATURES: services_to_strings(
+                        mqttvacuum.DEFAULT_SERVICES, SERVICE_TO_STRING
+                    )
+                },
+            ),
+        )
+    ],
+)
 async def test_no_fan_vacuum(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test status updates from the vacuum when fan is not supported."""
-    config = deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][vacuum.DOMAIN])
-    del config[mqttvacuum.CONF_FAN_SPEED_LIST]
-    config[mqttvacuum.CONF_SUPPORTED_FEATURES] = services_to_strings(
-        mqttvacuum.DEFAULT_SERVICES, SERVICE_TO_STRING
-    )
-
-    assert await async_setup_component(
-        hass, mqtt.DOMAIN, {mqtt.DOMAIN: {vacuum.DOMAIN: config}}
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+    await mqtt_mock_entry_no_yaml_config()
 
     message = """{
         "battery_level": 54,
@@ -347,21 +354,13 @@ async def test_no_fan_vacuum(
     assert state.attributes.get(ATTR_BATTERY_LEVEL) == 61
 
 
+@pytest.mark.parametrize("hass_config", [CONFIG_ALL_SERVICES])
 @pytest.mark.no_fail_on_log_exception
 async def test_status_invalid_json(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test to make sure nothing breaks if the vacuum sends bad JSON."""
-    config = deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][vacuum.DOMAIN])
-    config[mqttvacuum.CONF_SUPPORTED_FEATURES] = services_to_strings(
-        mqttvacuum.ALL_SERVICES, SERVICE_TO_STRING
-    )
-
-    assert await async_setup_component(
-        hass, mqtt.DOMAIN, {mqtt.DOMAIN: {vacuum.DOMAIN: config}}
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+    await mqtt_mock_entry_no_yaml_config()
 
     async_fire_mqtt_message(hass, "vacuum/state", '{"asdfasas false}')
     state = hass.states.get("vacuum.mqtttest")
