@@ -14,7 +14,7 @@ from homeassistant.core import Event
 from homeassistant.helpers.typing import UndefinedType
 
 from . import entity_registry, purge, statistics
-from .const import DOMAIN, EXCLUDE_ATTRIBUTES
+from .const import DOMAIN
 from .db_schema import Statistics, StatisticsShortTerm
 from .models import StatisticData, StatisticMetaData
 from .util import periodic_db_cleanups
@@ -317,11 +317,8 @@ class AddRecorderPlatformTask(RecorderTask):
         hass = instance.hass
         domain = self.domain
         platform = self.platform
-
         platforms: dict[str, Any] = hass.data[DOMAIN].recorder_platforms
         platforms[domain] = platform
-        if hasattr(self.platform, "exclude_attributes"):
-            hass.data[EXCLUDE_ATTRIBUTES][domain] = platform.exclude_attributes(hass)
 
 
 @dataclass
