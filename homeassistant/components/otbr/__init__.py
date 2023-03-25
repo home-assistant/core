@@ -60,7 +60,6 @@ class OTBRData:
 
     url: str
     api: python_otbr_api.OTBR
-    dataset_source: str
 
     @_handle_otbr_error
     async def set_enabled(self, enabled: bool) -> None:
@@ -78,6 +77,11 @@ class OTBRData:
     ) -> None:
         """Create an active operational dataset."""
         return await self.api.create_active_dataset(dataset)
+
+    @_handle_otbr_error
+    async def set_active_dataset_tlvs(self, dataset: bytes) -> None:
+        """Set current active operational dataset in TLVS format."""
+        await self.api.set_active_dataset_tlvs(dataset)
 
     @_handle_otbr_error
     async def get_extended_address(self) -> bytes:
@@ -138,7 +142,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an Open Thread Border Router config entry."""
     api = python_otbr_api.OTBR(entry.data["url"], async_get_clientsession(hass), 10)
 
-    otbrdata = OTBRData(entry.data["url"], api, entry.title)
+    otbrdata = OTBRData(entry.data["url"], api)
     try:
         dataset_tlvs = await otbrdata.get_active_dataset_tlvs()
     except (
@@ -149,7 +153,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady("Unable to connect") from err
     if dataset_tlvs:
         _warn_on_default_network_settings(hass, entry, dataset_tlvs)
-        await async_add_dataset(hass, otbrdata.dataset_source, dataset_tlvs.hex())
+        await async_add_dataset(hass, DOMAIN, dataset_tlvs.hex())
+
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     hass.data[DOMAIN] = otbrdata
 
@@ -160,6 +166,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     hass.data.pop(DOMAIN)
     return True
+
+
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle an options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_get_active_dataset_tlvs(hass: HomeAssistant) -> bytes | None:

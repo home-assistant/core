@@ -138,6 +138,26 @@ class ReolinkHost:
 
         await self.subscribe()
 
+        if self._api.sw_version_update_required:
+            ir.async_create_issue(
+                self._hass,
+                DOMAIN,
+                "firmware_update",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="firmware_update",
+                translation_placeholders={
+                    "required_firmware": self._api.sw_version_required.version_string,
+                    "current_firmware": self._api.sw_version,
+                    "model": self._api.model,
+                    "hw_version": self._api.hardware_version,
+                    "name": self._api.nvr_name,
+                    "download_link": "https://reolink.com/download-center/",
+                },
+            )
+        else:
+            ir.async_delete_issue(self._hass, DOMAIN, "firmware_update")
+
     async def update_states(self) -> None:
         """Call the API of the camera device to update the internal states."""
         await self._api.get_states()
@@ -306,6 +326,12 @@ class ReolinkHost:
         self.webhook_id = None
 
     async def handle_webhook(
+        self, hass: HomeAssistant, webhook_id: str, request: Request
+    ):
+        """Shield the incoming webhook callback from cancellation."""
+        await asyncio.shield(self.handle_webhook_shielded(hass, webhook_id, request))
+
+    async def handle_webhook_shielded(
         self, hass: HomeAssistant, webhook_id: str, request: Request
     ):
         """Handle incoming webhook from Reolink for inbound messages and calls."""

@@ -303,7 +303,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         return PLAY_MODES[self.media.play_mode][0]
 
     @property
-    def repeat(self) -> str | None:
+    def repeat(self) -> RepeatMode | None:
         """Return current repeat mode."""
         sonos_repeat = PLAY_MODES[self.media.play_mode][1]
         return SONOS_TO_REPEAT[sonos_repeat]
@@ -493,7 +493,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
     @soco_error()
     def play_media(  # noqa: C901
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Send the play_media command to the media player.
 
@@ -712,7 +712,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         return (None, None)
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_browser.async_browse_media(

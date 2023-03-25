@@ -74,26 +74,6 @@ def find_states_metadata_ids(entity_ids: Iterable[str]) -> StatementLambdaElemen
     )
 
 
-def find_shared_attributes_id(
-    data_hash: int, shared_attrs: str
-) -> StatementLambdaElement:
-    """Find an attributes_id by hash and shared_attrs."""
-    return lambda_stmt(
-        lambda: select(StateAttributes.attributes_id)
-        .filter(StateAttributes.hash == data_hash)
-        .filter(StateAttributes.shared_attrs == shared_attrs)
-    )
-
-
-def find_shared_data_id(attr_hash: int, shared_data: str) -> StatementLambdaElement:
-    """Find a data_id by hash and shared_data."""
-    return lambda_stmt(
-        lambda: select(EventData.data_id)
-        .filter(EventData.hash == attr_hash)
-        .filter(EventData.shared_data == shared_data)
-    )
-
-
 def _state_attrs_exist(attr: int | None) -> Select:
     """Check if a state attributes id exists in the states table."""
     # https://github.com/sqlalchemy/sqlalchemy/issues/9189
@@ -762,6 +742,13 @@ def batch_cleanup_entity_ids() -> StatementLambdaElement:
             )
         )
         .values(entity_id=None)
+    )
+
+
+def has_used_states_event_ids() -> StatementLambdaElement:
+    """Check if there are used event_ids in the states table."""
+    return lambda_stmt(
+        lambda: select(States.state_id).filter(States.event_id.isnot(None)).limit(1)
     )
 
 

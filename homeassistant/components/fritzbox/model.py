@@ -8,7 +8,6 @@ from typing import TypedDict
 from pyfritzhome import FritzhomeDevice
 
 
-@dataclass
 class ClimateExtraAttributes(TypedDict, total=False):
     """TypedDict for climates extra attributes."""
 
