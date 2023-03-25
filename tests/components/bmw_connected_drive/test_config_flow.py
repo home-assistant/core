@@ -123,18 +123,18 @@ async def test_reauth(hass: HomeAssistant) -> None:
         "homeassistant.components.bmw_connected_drive.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        WRONG_PASSWORD = "wrong"
+        wrong_password = "wrong"
 
-        FIXTURE_CONFIG_ENTRY_WRONG_PW = deepcopy(FIXTURE_CONFIG_ENTRY)
-        FIXTURE_CONFIG_ENTRY_WRONG_PW["data"][CONF_PASSWORD] = WRONG_PASSWORD
+        config_entry_with_wrong_password = deepcopy(FIXTURE_CONFIG_ENTRY)
+        config_entry_with_wrong_password["data"][CONF_PASSWORD] = wrong_password
 
-        config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY_WRONG_PW)
+        config_entry = MockConfigEntry(**config_entry_with_wrong_password)
         config_entry.add_to_hass(hass)
 
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert config_entry.data == FIXTURE_CONFIG_ENTRY_WRONG_PW["data"]
+        assert config_entry.data == config_entry_with_wrong_password["data"]
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
