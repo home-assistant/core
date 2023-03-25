@@ -2003,7 +2003,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="async_browse_media",
                     arg_types={
-                        1: "str | None",
+                        1: "MediaType | str | None",
                         2: "str | None",
                     },
                     return_type="BrowseMedia",
