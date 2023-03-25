@@ -444,7 +444,7 @@ def test_quirk_classes() -> None:
 
         module = importlib.import_module(quirk_mod)
         clss = dict(inspect.getmembers(module, inspect.isclass))
-        # Quirk class found
+        # Check quirk_cls in module classes
         return quirk_cls in clss
 
     def quirk_class_validator(value):
