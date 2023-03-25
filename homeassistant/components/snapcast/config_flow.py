@@ -32,6 +32,7 @@ class SnapcastConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle first step."""
         errors = {}
         if user_input:
+            self._async_abort_entries_match(user_input)
             host = user_input[CONF_HOST]
             port = user_input[CONF_PORT]
 
