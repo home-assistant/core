@@ -11,6 +11,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, async_capture_events, load_fixture
 from tests.components.image_processing import common
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture
@@ -118,8 +119,11 @@ async def test_setup_platform_without_region(hass: HomeAssistant) -> None:
 
 
 async def test_openalpr_process_image(
-    alpr_events, setup_openalpr_cloud, hass, aioclient_mock
-):
+    alpr_events,
+    setup_openalpr_cloud,
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
     """Set up and scan a picture and test plates from event."""
     aioclient_mock.post(
         OPENALPR_API_URL,
@@ -152,8 +156,11 @@ async def test_openalpr_process_image(
 
 
 async def test_openalpr_process_image_api_error(
-    alpr_events, setup_openalpr_cloud, hass, aioclient_mock
-):
+    alpr_events,
+    setup_openalpr_cloud,
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
     """Set up and scan a picture and test api error."""
     aioclient_mock.post(
         OPENALPR_API_URL,
@@ -174,8 +181,11 @@ async def test_openalpr_process_image_api_error(
 
 
 async def test_openalpr_process_image_api_timeout(
-    alpr_events, setup_openalpr_cloud, hass, aioclient_mock
-):
+    alpr_events,
+    setup_openalpr_cloud,
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
     """Set up and scan a picture and test api error."""
     aioclient_mock.post(OPENALPR_API_URL, params=PARAMS, exc=asyncio.TimeoutError())
 

@@ -1,7 +1,6 @@
 """Manager to set up IO with Crownstone devices for a config entry."""
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
@@ -87,7 +86,9 @@ class CrownstoneEntryManager:
             project_name=PROJECT_NAME,
         )
         # Listen for events in the background, without task tracking
-        asyncio.create_task(self.async_process_events(self.sse))
+        self.config_entry.async_create_background_task(
+            self.hass, self.async_process_events(self.sse), "crownstone-sse"
+        )
         setup_sse_listeners(self)
 
         # Set up a Crownstone USB only if path exists

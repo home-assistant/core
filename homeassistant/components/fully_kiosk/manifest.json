@@ -10,5 +10,6 @@
   ],
   "documentation": "https://www.home-assistant.io/integrations/fullykiosk",
   "iot_class": "local_polling",
+  "mqtt": ["fully/deviceInfo/+"],
   "requirements": ["python-fullykiosk==0.0.12"]
 }

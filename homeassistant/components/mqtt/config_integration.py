@@ -45,7 +45,6 @@ from .const import (
     CONF_DISCOVERY_PREFIX,
     CONF_KEEPALIVE,
     CONF_TLS_INSECURE,
-    CONF_TLS_VERSION,
     CONF_TRANSPORT,
     CONF_WILL_MESSAGE,
     CONF_WS_HEADERS,
@@ -72,7 +71,6 @@ DEFAULT_VALUES = {
     CONF_DISCOVERY_PREFIX: DEFAULT_PREFIX,
     CONF_PORT: DEFAULT_PORT,
     CONF_PROTOCOL: DEFAULT_PROTOCOL,
-    CONF_TLS_VERSION: DEFAULT_TLS_PROTOCOL,
     CONF_TRANSPORT: DEFAULT_TRANSPORT,
     CONF_WILL_MESSAGE: DEFAULT_WILL,
     CONF_KEEPALIVE: DEFAULT_KEEPALIVE,
@@ -182,7 +180,6 @@ CONFIG_SCHEMA_ENTRY = vol.Schema(
             CONF_CLIENT_CERT, "client_key_auth", msg=CLIENT_KEY_AUTH_MSG
         ): str,
         vol.Optional(CONF_TLS_INSECURE): cv.boolean,
-        vol.Optional(CONF_TLS_VERSION): vol.Any("auto", "1.0", "1.1", "1.2"),
         vol.Optional(CONF_PROTOCOL): vol.All(cv.string, vol.In(SUPPORTED_PROTOCOLS)),
         vol.Optional(CONF_WILL_MESSAGE): valid_birth_will,
         vol.Optional(CONF_BIRTH_MESSAGE): valid_birth_will,
@@ -214,7 +211,6 @@ CONFIG_SCHEMA_BASE = PLATFORM_CONFIG_SCHEMA_BASE.extend(
             CONF_CLIENT_CERT, "client_key_auth", msg=CLIENT_KEY_AUTH_MSG
         ): cv.isfile,
         vol.Optional(CONF_TLS_INSECURE): cv.boolean,
-        vol.Optional(CONF_TLS_VERSION): vol.Any("auto", "1.0", "1.1", "1.2"),
         vol.Optional(CONF_PROTOCOL): vol.All(cv.string, vol.In(SUPPORTED_PROTOCOLS)),
         vol.Optional(CONF_WILL_MESSAGE): valid_birth_will,
         vol.Optional(CONF_BIRTH_MESSAGE): valid_birth_will,
@@ -236,7 +232,6 @@ DEPRECATED_CONFIG_KEYS = [
     CONF_PORT,
     CONF_PROTOCOL,
     CONF_TLS_INSECURE,
-    CONF_TLS_VERSION,
     CONF_USERNAME,
     CONF_WILL_MESSAGE,
 ]

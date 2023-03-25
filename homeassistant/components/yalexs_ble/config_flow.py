@@ -33,7 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_validate_lock_or_error(
-    local_name: str, device: BLEDevice, key: str, slot: str
+    local_name: str, device: BLEDevice, key: str, slot: int
 ) -> dict[str, str]:
     """Validate the lock and return errors if any."""
     if len(key) != 32:
@@ -42,7 +42,7 @@ async def async_validate_lock_or_error(
         bytes.fromhex(key)
     except ValueError:
         return {CONF_KEY: "invalid_key_format"}
-    if not isinstance(slot, int) or slot < 0 or slot > 255:
+    if not isinstance(slot, int) or not 0 <= slot <= 255:
         return {CONF_SLOT: "invalid_key_index"}
     try:
         await PushLock(local_name, device.address, device, key, slot).validate()
@@ -184,7 +184,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return await self.async_step_reauth_validate()
 
-    async def async_step_reauth_validate(self, user_input=None):
+    async def async_step_reauth_validate(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle reauth and validation."""
         errors = {}
         reauth_entry = self._reauth_entry
@@ -205,7 +207,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             ):
                 self.hass.config_entries.async_update_entry(
-                    self._reauth_entry, data={**reauth_entry.data, **user_input}
+                    reauth_entry, data={**reauth_entry.data, **user_input}
                 )
                 await self.hass.config_entries.async_reload(reauth_entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
@@ -274,7 +276,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._discovered_devices[discovery.address] = discovery
 
         if not self._discovered_devices:
-            return self.async_abort(reason="no_unconfigured_devices")
+            return self.async_abort(reason="no_devices_found")
 
         data_schema = vol.Schema(
             {

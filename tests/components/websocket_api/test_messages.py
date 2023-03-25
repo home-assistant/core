@@ -1,4 +1,6 @@
 """Test Websocket API messages module."""
+import pytest
+
 from homeassistant.components.websocket_api.messages import (
     _cached_event_message as lru_event_cache,
     cached_event_message,
@@ -77,7 +79,7 @@ async def test_cached_event_message_with_different_idens(hass: HomeAssistant) ->
     assert cache_info.currsize == 1
 
 
-async def test_message_to_json(caplog):
+async def test_message_to_json(caplog: pytest.LogCaptureFixture) -> None:
     """Test we can serialize websocket messages."""
 
     json_str = message_to_json({"id": 1, "message": "xyz"})

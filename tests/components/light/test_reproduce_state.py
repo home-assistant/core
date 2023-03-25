@@ -171,7 +171,9 @@ async def test_reproducing_states(
         light.ColorMode.XY,
     ),
 )
-async def test_filter_color_modes(hass, caplog, color_mode):
+async def test_filter_color_modes(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, color_mode
+) -> None:
     """Test filtering of parameters according to color mode."""
     hass.states.async_set("light.entity", "off", {})
     all_colors = {

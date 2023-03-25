@@ -656,7 +656,7 @@ async def test_bad_certificate(
 
 
 @pytest.mark.parametrize(
-    "input_value, error",
+    ("input_value", "error"),
     [
         ("", True),
         ("-10", True),
@@ -843,7 +843,7 @@ async def test_invalid_discovery_prefix(
 
 def get_default(schema: vol.Schema, key: str) -> Any:
     """Get default value for key in voluptuous schema."""
-    for schema_key in schema.keys():
+    for schema_key in schema:
         if schema_key == key:
             if schema_key.default == vol.UNDEFINED:
                 return None
@@ -852,7 +852,7 @@ def get_default(schema: vol.Schema, key: str) -> Any:
 
 def get_suggested(schema: vol.Schema, key: str) -> Any:
     """Get suggested value for key in voluptuous schema."""
-    for schema_key in schema.keys():
+    for schema_key in schema:
         if schema_key == key:
             if (
                 schema_key.description is None
@@ -1015,7 +1015,7 @@ async def test_option_flow_default_suggested_values(
 
 
 @pytest.mark.parametrize(
-    "advanced_options, step_id", [(False, "options"), (True, "broker")]
+    ("advanced_options", "step_id"), [(False, "options"), (True, "broker")]
 )
 async def test_skipping_advanced_options(
     hass: HomeAssistant,

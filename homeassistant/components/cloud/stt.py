@@ -1,7 +1,8 @@
 """Support for the cloud for speech to text service."""
 from __future__ import annotations
 
-from aiohttp import StreamReader
+from collections.abc import AsyncIterable
+
 from hass_nabucasa import Cloud
 from hass_nabucasa.voice import VoiceError
 
@@ -88,7 +89,7 @@ class CloudProvider(Provider):
         return [AudioChannels.CHANNEL_MONO]
 
     async def async_process_audio_stream(
-        self, metadata: SpeechMetadata, stream: StreamReader
+        self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> SpeechResult:
         """Process an audio stream to STT service."""
         content = (

@@ -112,7 +112,7 @@ async def test_list_devices(
 
 
 @pytest.mark.parametrize(
-    "payload_key,payload_value",
+    ("payload_key", "payload_value"),
     [
         ["area_id", "12345A"],
         ["area_id", None],

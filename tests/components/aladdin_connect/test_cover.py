@@ -1,16 +1,12 @@
 """Test the Aladdin Connect Cover."""
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
-
 from homeassistant.components.aladdin_connect.const import DOMAIN
 from homeassistant.components.aladdin_connect.cover import SCAN_INTERVAL
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_PASSWORD,
-    CONF_USERNAME,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     STATE_CLOSED,
@@ -196,36 +192,3 @@ async def test_cover_operation(
         await hass.async_block_till_done()
 
     assert hass.states.get("cover.home").state == STATE_UNKNOWN
-
-
-async def test_yaml_import(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    mock_aladdinconnect_api: MagicMock,
-) -> None:
-    """Test setup YAML import."""
-    assert COVER_DOMAIN not in hass.config.components
-
-    with patch(
-        "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient",
-        return_value=mock_aladdinconnect_api,
-    ):
-        await async_setup_component(
-            hass,
-            COVER_DOMAIN,
-            {
-                COVER_DOMAIN: {
-                    "platform": DOMAIN,
-                    "username": "test-user",
-                    "password": "test-password",
-                }
-            },
-        )
-        await hass.async_block_till_done()
-    assert hass.config_entries.async_entries(DOMAIN)
-    assert "Configuring Aladdin Connect through yaml is deprecated" in caplog.text
-
-    assert hass.config_entries.async_entries(DOMAIN)
-    config_data = hass.config_entries.async_entries(DOMAIN)[0].data
-    assert config_data[CONF_USERNAME] == "test-user"
-    assert config_data[CONF_PASSWORD] == "test-password"

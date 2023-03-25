@@ -76,7 +76,7 @@ async def test_form_read_only(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "exception,error_key",
+    ("exception", "error_key"),
     [
         (Exception, "unknown"),
         (UptimeRobotException, "cannot_connect"),

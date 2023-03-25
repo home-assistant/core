@@ -35,7 +35,7 @@ def calls(hass):
 
 
 @pytest.mark.parametrize(
-    "set_state,features_reg,features_state,expected_condition_types",
+    ("set_state", "features_reg", "features_state", "expected_condition_types"),
     [
         (False, 0, 0, []),
         (
@@ -117,7 +117,7 @@ async def test_get_conditions(
 
 
 @pytest.mark.parametrize(
-    "hidden_by,entity_category",
+    ("hidden_by", "entity_category"),
     (
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),

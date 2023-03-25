@@ -88,7 +88,9 @@ async def test_scrape_sensor_platform_yaml(hass: HomeAssistant) -> None:
     assert state2.state == "secret text"
 
 
-async def test_scrape_sensor_platform_yaml_no_data(hass: HomeAssistant, caplog) -> None:
+async def test_scrape_sensor_platform_yaml_no_data(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test Scrape sensor load from sensor platform fetching no data."""
     config = {
         SENSOR_DOMAIN: [

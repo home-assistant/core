@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from WazeRouteCalculator import WazeRouteCalculator, WRCError
 
@@ -112,7 +113,7 @@ class WazeTravelTime(SensorEntity):
         return None
 
     @property
-    def extra_state_attributes(self) -> dict | None:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the last update."""
         if self._waze_data.duration is None:
             return None

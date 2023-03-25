@@ -35,7 +35,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "protocol,connection,title",
+    ("protocol", "connection", "title"),
     [
         (
             PROTOCOL_SOCKET,
@@ -394,7 +394,7 @@ async def test_options_zone_flow_validation(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "protocol,connection",
+    ("protocol", "connection"),
     [
         (
             PROTOCOL_SOCKET,

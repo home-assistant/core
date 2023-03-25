@@ -1,5 +1,5 @@
 """Test the Philips TV config flow."""
-from unittest.mock import ANY, patch
+from unittest.mock import ANY
 
 from haphilipsjs import PairingFailure
 import pytest
@@ -19,16 +19,7 @@ from . import (
 
 from tests.common import MockConfigEntry
 
-
-@pytest.fixture(autouse=True, name="mock_setup_entry")
-def mock_setup_entry_fixture():
-    """Disable component setup."""
-    with patch(
-        "homeassistant.components.philips_js.async_setup_entry", return_value=True
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.philips_js.async_unload_entry", return_value=True
-    ):
-        yield mock_setup_entry
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 @pytest.fixture
@@ -45,7 +36,7 @@ async def mock_tv_pairable(mock_tv):
     return mock_tv
 
 
-async def test_form(hass, mock_setup_entry):
+async def test_form(hass: HomeAssistant, mock_setup_entry) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -65,7 +56,7 @@ async def test_form(hass, mock_setup_entry):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass, mock_tv):
+async def test_form_cannot_connect(hass: HomeAssistant, mock_tv) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -80,7 +71,7 @@ async def test_form_cannot_connect(hass, mock_tv):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_unexpected_error(hass, mock_tv):
+async def test_form_unexpected_error(hass: HomeAssistant, mock_tv) -> None:
     """Test we handle unexpected exceptions."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -95,7 +86,7 @@ async def test_form_unexpected_error(hass, mock_tv):
     assert result["errors"] == {"base": "unknown"}
 
 
-async def test_pairing(hass, mock_tv_pairable, mock_setup_entry):
+async def test_pairing(hass: HomeAssistant, mock_tv_pairable, mock_setup_entry) -> None:
     """Test we get the form."""
     mock_tv = mock_tv_pairable
 
@@ -138,7 +129,9 @@ async def test_pairing(hass, mock_tv_pairable, mock_setup_entry):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_pair_request_failed(hass, mock_tv_pairable, mock_setup_entry):
+async def test_pair_request_failed(
+    hass: HomeAssistant, mock_tv_pairable, mock_setup_entry
+) -> None:
     """Test we get the form."""
     mock_tv = mock_tv_pairable
     mock_tv.pairRequest.side_effect = PairingFailure({})
@@ -163,7 +156,9 @@ async def test_pair_request_failed(hass, mock_tv_pairable, mock_setup_entry):
     }
 
 
-async def test_pair_grant_failed(hass, mock_tv_pairable, mock_setup_entry):
+async def test_pair_grant_failed(
+    hass: HomeAssistant, mock_tv_pairable, mock_setup_entry
+) -> None:
     """Test we get the form."""
     mock_tv = mock_tv_pairable
 

@@ -98,7 +98,9 @@ async def test_browse_media_error(hass: HomeAssistant) -> None:
     )
 
 
-async def test_browse_media(hass, mock_yaml_dashboard, mock_https_url):
+async def test_browse_media(
+    hass: HomeAssistant, mock_yaml_dashboard, mock_https_url
+) -> None:
     """Test browse media."""
     top_level_items = await lovelace_cast.async_browse_media(
         hass, "lovelace", "", lovelace_cast.CAST_TYPE_CHROMECAST
@@ -161,7 +163,7 @@ async def test_browse_media(hass, mock_yaml_dashboard, mock_https_url):
         )
 
 
-async def test_play_media(hass, mock_yaml_dashboard):
+async def test_play_media(hass: HomeAssistant, mock_yaml_dashboard) -> None:
     """Test playing media."""
     calls = async_mock_service(hass, "cast", "show_lovelace_view")
 

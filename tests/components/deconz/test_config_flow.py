@@ -357,7 +357,7 @@ async def test_manual_configuration_timeout_get_bridge(
 
 
 @pytest.mark.parametrize(
-    "raised_error, error_string",
+    ("raised_error", "error_string"),
     [
         (pydeconz.errors.LinkButtonNotPressed, "linking_not_possible"),
         (asyncio.TimeoutError, "no_key"),

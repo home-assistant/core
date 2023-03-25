@@ -33,6 +33,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.service import remove_entity_service_fields
 from homeassistant.helpers.typing import ConfigType, StateType
 
 _LOGGER = logging.getLogger(__name__)
@@ -92,7 +93,7 @@ async def _async_lock(entity: LockEntity, service_call: ServiceCall) -> None:
         raise ValueError(
             f"Code '{code}' for locking {entity.entity_id} doesn't match pattern {entity.code_format}"
         )
-    await entity.async_lock(**service_call.data)
+    await entity.async_lock(**remove_entity_service_fields(service_call))
 
 
 async def _async_unlock(entity: LockEntity, service_call: ServiceCall) -> None:
@@ -102,7 +103,7 @@ async def _async_unlock(entity: LockEntity, service_call: ServiceCall) -> None:
         raise ValueError(
             f"Code '{code}' for unlocking {entity.entity_id} doesn't match pattern {entity.code_format}"
         )
-    await entity.async_unlock(**service_call.data)
+    await entity.async_unlock(**remove_entity_service_fields(service_call))
 
 
 async def _async_open(entity: LockEntity, service_call: ServiceCall) -> None:
@@ -112,7 +113,7 @@ async def _async_open(entity: LockEntity, service_call: ServiceCall) -> None:
         raise ValueError(
             f"Code '{code}' for opening {entity.entity_id} doesn't match pattern {entity.code_format}"
         )
-    await entity.async_open(**service_call.data)
+    await entity.async_open(**remove_entity_service_fields(service_call))
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

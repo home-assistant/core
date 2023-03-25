@@ -210,7 +210,9 @@ async def test_websocket_browse_media(
 
 
 @pytest.mark.parametrize("filename", ["test.mp3", "Epic Sax Guy 10 Hours.mp4"])
-async def test_websocket_resolve_media(hass, hass_ws_client, filename):
+async def test_websocket_resolve_media(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, filename
+) -> None:
     """Test browse media websocket."""
     assert await async_setup_component(hass, media_source.DOMAIN, {})
     await hass.async_block_till_done()

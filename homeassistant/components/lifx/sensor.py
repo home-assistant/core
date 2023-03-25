@@ -52,7 +52,6 @@ class LIFXRssiSensor(LIFXSensorEntity, SensorEntity):
 
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = description.name
         self._attr_unique_id = f"{coordinator.parent.serial_number}_{description.key}"
         self._attr_native_unit_of_measurement = coordinator.rssi_uom
 

@@ -93,7 +93,7 @@ async def async_setup_component(
         return await setup_tasks[domain]
 
     task = setup_tasks[domain] = hass.async_create_task(
-        _async_setup_component(hass, domain, config)
+        _async_setup_component(hass, domain, config), f"setup component {domain}"
     )
 
     try:
@@ -264,7 +264,8 @@ async def _async_setup_component(
                 SLOW_SETUP_MAX_WAIT,
             )
             return False
-        except Exception:  # pylint: disable=broad-except
+        # pylint: disable-next=broad-except
+        except (asyncio.CancelledError, SystemExit, Exception):
             _LOGGER.exception("Error during setup of component %s", domain)
             async_notify_setup_error(hass, domain, integration.documentation)
             return False
@@ -294,7 +295,10 @@ async def _async_setup_component(
 
         await asyncio.gather(
             *(
-                entry.async_setup(hass, integration=integration)
+                asyncio.create_task(
+                    entry.async_setup(hass, integration=integration),
+                    name=f"config entry setup {entry.title} {entry.domain} {entry.entry_id}",
+                )
                 for entry in hass.config_entries.async_entries(domain)
             )
         )
@@ -425,7 +429,7 @@ def _async_when_setup(
             _LOGGER.exception("Error handling when_setup callback for %s", component)
 
     if component in hass.config.components:
-        hass.async_create_task(when_setup())
+        hass.async_create_task(when_setup(), f"when setup {component}")
         return
 
     listeners: list[CALLBACK_TYPE] = []

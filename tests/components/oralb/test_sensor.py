@@ -16,7 +16,7 @@ from tests.components.bluetooth import (
 )
 
 
-async def test_sensors(hass, entity_registry_enabled_by_default):
+async def test_sensors(hass: HomeAssistant, entity_registry_enabled_by_default) -> None:
     """Test setting up creates the sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -46,7 +46,9 @@ async def test_sensors(hass, entity_registry_enabled_by_default):
     await hass.async_block_till_done()
 
 
-async def test_sensors_io_series_4(hass, entity_registry_enabled_by_default):
+async def test_sensors_io_series_4(
+    hass: HomeAssistant, entity_registry_enabled_by_default
+) -> None:
     """Test setting up creates the sensors with an io series 4."""
     entry = MockConfigEntry(
         domain=DOMAIN,

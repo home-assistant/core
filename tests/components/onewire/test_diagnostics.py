@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from . import setup_owproxy_mock_devices
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -39,7 +40,7 @@ DEVICE_DETAILS = {
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    hass_client,
+    hass_client: ClientSessionGenerator,
     owproxy: MagicMock,
     device_id: str,
 ) -> None:

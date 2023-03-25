@@ -83,7 +83,7 @@ class MockConfigDevice:
 
 
 @pytest.mark.parametrize(
-    ["config", "eth_mac", "wifi_mac"],
+    ("config", "eth_mac", "wifi_mac"),
     [
         (CONFIG_PYTHON_ADB, ETH_MAC, None),
         (CONFIG_ADB_SERVER, ETH_MAC, None),
@@ -202,7 +202,7 @@ async def test_error_invalid_key(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ["config", "eth_mac", "wifi_mac"],
+    ("config", "eth_mac", "wifi_mac"),
     [
         (CONFIG_ADB_SERVER, None, None),
         (CONFIG_PYTHON_ADB, None, None),

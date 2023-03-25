@@ -24,7 +24,7 @@ from . import (
 from tests.common import MockConfigEntry
 
 
-async def test_manual_setup(hass: HomeAssistant):
+async def test_manual_setup(hass: HomeAssistant) -> None:
     """Test manually setting up."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -47,7 +47,7 @@ async def test_manual_setup(hass: HomeAssistant):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_manual_setup_already_exists(hass: HomeAssistant):
+async def test_manual_setup_already_exists(hass: HomeAssistant) -> None:
     """Test manually setting up and the device already exists."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=DEVICE_ID
@@ -70,7 +70,7 @@ async def test_manual_setup_already_exists(hass: HomeAssistant):
     assert result["reason"] == "already_configured"
 
 
-async def test_manual_setup_device_offline(hass: HomeAssistant):
+async def test_manual_setup_device_offline(hass: HomeAssistant) -> None:
     """Test manually setting up, device offline."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -89,7 +89,7 @@ async def test_manual_setup_device_offline(hass: HomeAssistant):
     assert result["errors"] == {CONF_HOST: "cannot_connect"}
 
 
-async def test_manual_setup_unknown_exception(hass: HomeAssistant):
+async def test_manual_setup_unknown_exception(hass: HomeAssistant) -> None:
     """Test manually setting up, unknown exception."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

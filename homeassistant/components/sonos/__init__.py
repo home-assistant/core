@@ -177,6 +177,7 @@ class SonosDiscoveryManager:
         self.entry = entry
         self.data = data
         self.hosts = set(hosts)
+        self.hosts_in_error: dict[str, bool] = {}
         self.discovery_lock = asyncio.Lock()
         self.creation_lock = asyncio.Lock()
         self._known_invisible: set[SoCo] = set()
@@ -298,6 +299,8 @@ class SonosDiscoveryManager:
         def _add_speakers():
             """Add all speakers in a single executor job."""
             for soco in socos:
+                if soco.uid in self.data.discovered:
+                    continue
                 sub = None
                 if soco.uid == zgs_subscription_uid and zgs_subscription:
                     sub = zgs_subscription
@@ -351,10 +354,19 @@ class SonosDiscoveryManager:
                     soco,
                 )
             except (OSError, SoCoException, Timeout) as ex:
-                _LOGGER.warning(
-                    "Could not get visible Sonos devices from %s: %s", ip_addr, ex
-                )
+                if not self.hosts_in_error.get(ip_addr):
+                    _LOGGER.warning(
+                        "Could not get visible Sonos devices from %s: %s", ip_addr, ex
+                    )
+                    self.hosts_in_error[ip_addr] = True
+                else:
+                    _LOGGER.debug(
+                        "Could not get visible Sonos devices from %s: %s", ip_addr, ex
+                    )
+
             else:
+                if self.hosts_in_error.pop(ip_addr, None):
+                    _LOGGER.info("Connection restablished to Sonos device %s", ip_addr)
                 if new_hosts := {
                     x.ip_address
                     for x in visible_zones
@@ -390,7 +402,7 @@ class SonosDiscoveryManager:
                 )
             elif not known_speaker.available:
                 try:
-                    known_speaker.ping()
+                    await self.hass.async_add_executor_job(known_speaker.ping)
                 except SonosUpdateError:
                     _LOGGER.debug(
                         "Manual poll to %s failed, keeping unavailable", ip_addr
@@ -483,13 +495,15 @@ class SonosDiscoveryManager:
         if uid not in self.data.discovery_known:
             _LOGGER.debug("New %s discovery uid=%s: %s", source, uid, info)
             self.data.discovery_known.add(uid)
-        asyncio.create_task(
+        self.entry.async_create_background_task(
+            self.hass,
             self._async_handle_discovery_message(
                 uid,
                 discovered_ip,
                 "discovery",
                 boot_seqnum=cast(int | None, boot_seqnum),
-            )
+            ),
+            "sonos-handle_discovery_message",
         )
 
     async def setup_platforms_and_discovery(self) -> None:

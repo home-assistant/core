@@ -3,6 +3,7 @@ import asyncio
 from unittest.mock import patch
 
 from bleak import BleakError
+import pytest
 from yalexs_ble import AuthError
 
 from homeassistant import config_entries
@@ -26,7 +27,8 @@ from . import (
 from tests.common import MockConfigEntry
 
 
-async def test_user_step_success(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("slot", [0, 1, 66])
+async def test_user_step_success(hass: HomeAssistant, slot: int) -> None:
     """Test user step success path."""
     with patch(
         "homeassistant.components.yalexs_ble.config_flow.async_discovered_service_info",
@@ -50,7 +52,7 @@ async def test_user_step_success(hass: HomeAssistant) -> None:
             {
                 CONF_ADDRESS: YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
                 CONF_KEY: "2fd51b8621c6a139eaffbedcb846b60f",
-                CONF_SLOT: 66,
+                CONF_SLOT: slot,
             },
         )
         await hass.async_block_till_done()
@@ -61,7 +63,7 @@ async def test_user_step_success(hass: HomeAssistant) -> None:
         CONF_LOCAL_NAME: YALE_ACCESS_LOCK_DISCOVERY_INFO.name,
         CONF_ADDRESS: YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
         CONF_KEY: "2fd51b8621c6a139eaffbedcb846b60f",
-        CONF_SLOT: 66,
+        CONF_SLOT: slot,
     }
     assert result2["result"].unique_id == YALE_ACCESS_LOCK_DISCOVERY_INFO.address
     assert len(mock_setup_entry.mock_calls) == 1
@@ -77,7 +79,7 @@ async def test_user_step_no_devices_found(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
     assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "no_unconfigured_devices"
+    assert result["reason"] == "no_devices_found"
 
 
 async def test_user_step_no_new_devices_found(hass: HomeAssistant) -> None:
@@ -101,7 +103,7 @@ async def test_user_step_no_new_devices_found(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
     assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "no_unconfigured_devices"
+    assert result["reason"] == "no_devices_found"
 
 
 async def test_user_step_invalid_keys(hass: HomeAssistant) -> None:

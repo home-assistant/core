@@ -1,7 +1,7 @@
 """Test init of Nettigo Air Monitor integration."""
 from unittest.mock import patch
 
-from nettigo_air_monitor import ApiError, AuthFailed
+from nettigo_air_monitor import ApiError, AuthFailedError
 
 from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
 from homeassistant.components.nam.const import DOMAIN
@@ -73,7 +73,7 @@ async def test_config_auth_failed(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
-        side_effect=AuthFailed("Authorization has failed"),
+        side_effect=AuthFailedError("Authorization has failed"),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         assert entry.state is ConfigEntryState.SETUP_ERROR

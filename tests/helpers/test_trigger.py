@@ -43,7 +43,7 @@ async def test_trigger_variables(hass: HomeAssistant) -> None:
     """Test trigger variables."""
 
 
-async def test_if_fires_on_event(hass, calls):
+async def test_if_fires_on_event(hass: HomeAssistant, calls) -> None:
     """Test the firing of events."""
     assert await async_setup_component(
         hass,

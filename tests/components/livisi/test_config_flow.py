@@ -36,7 +36,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "exception,expected_reason",
+    ("exception", "expected_reason"),
     [
         (livisi_errors.ShcUnreachableException(), "cannot_connect"),
         (livisi_errors.IncorrectIpAddressException(), "wrong_ip_address"),
@@ -44,8 +44,8 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     ],
 )
 async def test_create_entity_after_login_error(
-    hass, exception: livisi_errors.LivisiException, expected_reason: str
-):
+    hass: HomeAssistant, exception: livisi_errors.LivisiException, expected_reason: str
+) -> None:
     """Test the LIVISI integration can create an entity after the user had login errors."""
     with patch(
         "homeassistant.components.livisi.config_flow.AioLivisi.async_set_token",

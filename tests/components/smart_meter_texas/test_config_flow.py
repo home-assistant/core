@@ -65,7 +65,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     "side_effect", [asyncio.TimeoutError, ClientError, SmartMeterTexasAPIError]
 )
-async def test_form_cannot_connect(hass, side_effect):
+async def test_form_cannot_connect(hass: HomeAssistant, side_effect) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

@@ -44,8 +44,8 @@ async def test_auto_switchover(hass: HomeAssistant) -> None:
 
 
 async def test_light_entity_migration(
-    hass, mock_bridge_v2, mock_config_entry_v2, v2_resources_test_data
-):
+    hass: HomeAssistant, mock_bridge_v2, mock_config_entry_v2, v2_resources_test_data
+) -> None:
     """Test if entity schema for lights migrates from v1 to v2."""
     config_entry = mock_bridge_v2.config_entry = mock_config_entry_v2
 
@@ -88,8 +88,8 @@ async def test_light_entity_migration(
 
 
 async def test_sensor_entity_migration(
-    hass, mock_bridge_v2, mock_config_entry_v2, v2_resources_test_data
-):
+    hass: HomeAssistant, mock_bridge_v2, mock_config_entry_v2, v2_resources_test_data
+) -> None:
     """Test if entity schema for sensors migrates from v1 to v2."""
     config_entry = mock_bridge_v2.config_entry = mock_config_entry_v2
 
@@ -111,7 +111,7 @@ async def test_sensor_entity_migration(
     }
 
     # create entities with V1 schema in registry for Hue motion sensor
-    for dev_class, platform, new_id in sensor_mappings:
+    for dev_class, platform, _ in sensor_mappings:
         ent_reg.async_get_or_create(
             platform,
             hue.DOMAIN,
@@ -147,8 +147,8 @@ async def test_sensor_entity_migration(
 
 
 async def test_group_entity_migration_with_v1_id(
-    hass, mock_bridge_v2, mock_config_entry_v2, v2_resources_test_data
-):
+    hass: HomeAssistant, mock_bridge_v2, mock_config_entry_v2, v2_resources_test_data
+) -> None:
     """Test if entity schema for grouped_lights migrates from v1 to v2."""
     config_entry = mock_bridge_v2.config_entry = mock_config_entry_v2
 
@@ -180,8 +180,8 @@ async def test_group_entity_migration_with_v1_id(
 
 
 async def test_group_entity_migration_with_v2_group_id(
-    hass, mock_bridge_v2, mock_config_entry_v2, v2_resources_test_data
-):
+    hass: HomeAssistant, mock_bridge_v2, mock_config_entry_v2, v2_resources_test_data
+) -> None:
     """Test if entity schema for grouped_lights migrates from v1 to v2."""
     config_entry = mock_bridge_v2.config_entry = mock_config_entry_v2
 

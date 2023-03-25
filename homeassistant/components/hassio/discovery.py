@@ -47,7 +47,7 @@ def async_setup_discovery_view(hass: HomeAssistant, hassio):
             return
 
         jobs = [
-            hassio_discovery.async_process_new(discovery)
+            asyncio.create_task(hassio_discovery.async_process_new(discovery))
             for discovery in data[ATTR_DISCOVERY]
         ]
         if jobs:
@@ -130,4 +130,4 @@ class HassIODiscovery(HomeAssistantView):
         for entry in self.hass.config_entries.async_entries(service):
             if entry.source != config_entries.SOURCE_HASSIO:
                 continue
-            await self.hass.config_entries.async_remove(entry)
+            await self.hass.config_entries.async_remove(entry.entry_id)

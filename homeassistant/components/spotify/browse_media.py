@@ -140,7 +140,7 @@ async def async_browse_media(
     # Check if caller is requesting the root nodes
     if media_content_type is None and media_content_id is None:
         children = []
-        for config_entry_id, info in hass.data[DOMAIN].items():
+        for config_entry_id in hass.data[DOMAIN]:
             config_entry = hass.config_entries.async_get_entry(config_entry_id)
             assert config_entry is not None
             children.append(

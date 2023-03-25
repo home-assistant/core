@@ -59,49 +59,6 @@ async def test_form(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_import_flow_success(hass: HomeAssistant) -> None:
-    """Test a successful import of yaml."""
-    with patch(
-        "homeassistant.components.imap.config_flow.connect_to_server"
-    ) as mock_client, patch(
-        "homeassistant.components.imap.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        mock_client.return_value.search.return_value = (
-            "OK",
-            [b""],
-        )
-        result2 = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                "name": "IMAP",
-                "username": "email@email.com",
-                "password": "password",
-                "server": "imap.server.com",
-                "port": 993,
-                "charset": "utf-8",
-                "folder": "INBOX",
-                "search": "UnSeen UnDeleted",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "IMAP"
-    assert result2["data"] == {
-        "name": "IMAP",
-        "username": "email@email.com",
-        "password": "password",
-        "server": "imap.server.com",
-        "port": 993,
-        "charset": "utf-8",
-        "folder": "INBOX",
-        "search": "UnSeen UnDeleted",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
 async def test_entry_already_configured(hass: HomeAssistant) -> None:
     """Test aborting if the entry is already configured."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
@@ -171,6 +128,12 @@ async def test_form_cannot_connect(hass: HomeAssistant, exc: Exception) -> None:
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    # make sure we do not lose the user input if somethings gets wrong
+    assert {
+        key: key.description.get("suggested_value")
+        for key in result2["data_schema"].schema
+    } == MOCK_CONFIG
 
 
 async def test_form_invalid_charset(hass: HomeAssistant) -> None:
