@@ -23,6 +23,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -72,6 +73,13 @@ class FlexitClimateEntity(ClimateEntity):
         """Initialize the unit."""
         self._device = device
         self._attr_unique_id = device.serial_number
+        self._attr_device_info = DeviceInfo(
+            identifiers={
+                (DOMAIN, device.serial_number),
+            },
+            manufacturer="Flexit",
+            model="Nordic",
+        )
 
     async def async_update(self) -> None:
         """Refresh unit state."""
