@@ -177,7 +177,7 @@ CREATE_EVENT_SCHEMA = vol.All(
         {
             vol.Required(EVENT_SUMMARY): cv.string,
             vol.Optional(EVENT_DESCRIPTION, default=""): cv.string,
-            vol.Optional(EVENT_LOCATION, default=""): cv.string,
+            vol.Optional(EVENT_LOCATION): cv.string,
             vol.Inclusive(
                 EVENT_START_DATE, "dates", "Start and end dates must both be specified"
             ): cv.date,
