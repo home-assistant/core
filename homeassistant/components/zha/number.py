@@ -375,7 +375,7 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
 
     _attr_entity_category = EntityCategory.CONFIG
     _attr_native_step: float = 1.0
-    _attr_multiplier: float = 1.0
+    _attr_multiplier: float = 1
     _zcl_attribute: str
 
     @classmethod
