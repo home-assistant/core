@@ -11,6 +11,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
+    ATTR_MEDIA_VOLUME_STEP,
     DOMAIN,
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_PLAY_MEDIA,
@@ -73,28 +74,36 @@ def toggle(hass, entity_id=ENTITY_MATCH_ALL):
     hass.add_job(async_toggle, hass, entity_id)
 
 
-async def async_volume_up(hass, entity_id=ENTITY_MATCH_ALL):
+async def async_volume_up(hass, step, entity_id=ENTITY_MATCH_ALL):
     """Send the media player the command for volume up."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+
+    if step:
+        data[ATTR_MEDIA_VOLUME_STEP] = step
+
     await hass.services.async_call(DOMAIN, SERVICE_VOLUME_UP, data, blocking=True)
 
 
 @bind_hass
-def volume_up(hass, entity_id=ENTITY_MATCH_ALL):
+def volume_up(hass, step, entity_id=ENTITY_MATCH_ALL):
     """Send the media player the command for volume up."""
-    hass.add_job(async_volume_up, hass, entity_id)
+    hass.add_job(async_volume_up, hass, step, entity_id)
 
 
-async def async_volume_down(hass, entity_id=ENTITY_MATCH_ALL):
+async def async_volume_down(hass, step, entity_id=ENTITY_MATCH_ALL):
     """Send the media player the command for volume down."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+
+    if step:
+        data[ATTR_MEDIA_VOLUME_STEP] = step
+
     await hass.services.async_call(DOMAIN, SERVICE_VOLUME_DOWN, data, blocking=True)
 
 
 @bind_hass
-def volume_down(hass, entity_id=ENTITY_MATCH_ALL):
+def volume_down(hass, step, entity_id=ENTITY_MATCH_ALL):
     """Send the media player the command for volume down."""
-    hass.add_job(async_volume_down, hass, entity_id)
+    hass.add_job(async_volume_down, hass, step, entity_id)
 
 
 async def async_mute_volume(hass, mute, entity_id=ENTITY_MATCH_ALL):
