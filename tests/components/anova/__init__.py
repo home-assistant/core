@@ -1,7 +1,6 @@
 """Tests for the Anova integration."""
 from __future__ import annotations
 
-from datetime import timedelta
 from unittest.mock import patch
 
 from anova_wifi import AnovaPrecisionCookerBinarySensor, AnovaPrecisionCookerSensor
@@ -10,9 +9,8 @@ from homeassistant.components.anova.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
 DEVICE_UNIQUE_ID = "abc123def"
 
@@ -69,8 +67,6 @@ async def async_init_integration(
 
         if not skip_setup:
             await hass.config_entries.async_setup(entry.entry_id)
-            await hass.async_block_till_done()
-            async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=31))
             await hass.async_block_till_done()
 
         return entry
