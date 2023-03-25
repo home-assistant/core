@@ -2,7 +2,13 @@
 import asyncio.exceptions
 from typing import Any
 
-from flexit_bacnet import VENTILATION_MODE, VENTILATION_MODES, FlexitBACnet
+from flexit_bacnet import (
+    VENTILATION_MODE_AWAY,
+    VENTILATION_MODE_HOME,
+    VENTILATION_MODE_STOP,
+    VENTILATION_MODES,
+    FlexitBACnet,
+)
 from flexit_bacnet.bacnet import DecodingError
 
 from homeassistant.components.climate import (
@@ -79,15 +85,15 @@ class FlexitClimateEntity(ClimateEntity):
     @property
     def current_temperature(self) -> float:
         """Return the current temperature."""
-        return float(self._device.room_temperature)
+        return self._device.room_temperature
 
     @property
     def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
-        if self._device.ventilation_mode == VENTILATION_MODES[VENTILATION_MODE.AWAY]:
-            return float(self._device.air_temp_setpoint_away)
+        if self._device.ventilation_mode == VENTILATION_MODES[VENTILATION_MODE_AWAY]:
+            return self._device.air_temp_setpoint_away
 
-        return float(self._device.air_temp_setpoint_home)
+        return self._device.air_temp_setpoint_home
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -97,7 +103,7 @@ class FlexitClimateEntity(ClimateEntity):
         try:
             if (
                 self._device.ventilation_mode
-                == VENTILATION_MODES[VENTILATION_MODE.AWAY]
+                == VENTILATION_MODES[VENTILATION_MODE_AWAY]
             ):
                 await self._device.set_air_temp_setpoint_away(temperature)
             else:
@@ -125,7 +131,7 @@ class FlexitClimateEntity(ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
-        if self._device.ventilation_mode == VENTILATION_MODES[VENTILATION_MODE.STOP]:
+        if self._device.ventilation_mode == VENTILATION_MODES[VENTILATION_MODE_STOP]:
             return HVACMode.OFF
 
         return HVACMode.FAN_ONLY
@@ -134,9 +140,9 @@ class FlexitClimateEntity(ClimateEntity):
         """Set new target hvac mode."""
         try:
             if hvac_mode == HVACMode.OFF:
-                await self._device.set_ventilation_mode(VENTILATION_MODE.STOP)
+                await self._device.set_ventilation_mode(VENTILATION_MODE_STOP)
             else:
-                await self._device.set_ventilation_mode(VENTILATION_MODE.HOME)
+                await self._device.set_ventilation_mode(VENTILATION_MODE_HOME)
         except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
             raise HomeAssistantError from exc
 
@@ -146,7 +152,7 @@ class FlexitClimateEntity(ClimateEntity):
 
         Requires ClimateEntityFeature.AUX_HEAT.
         """
-        return bool(self._device.electric_heater)
+        return self._device.electric_heater
 
     async def async_turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
