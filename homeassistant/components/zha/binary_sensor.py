@@ -248,3 +248,4 @@ class AqaraLinkageAlarmState(BinarySensor, id_suffix="linkage_alarm_state"):
 
     SENSOR_ATTR = "linkage_alarm_state"
     _attr_name: str = "Linkage alarm state"
+    _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.SMOKE
