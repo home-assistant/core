@@ -38,14 +38,14 @@ async def async_setup_entry(
     name = config_entry.data[CONF_NAME]
 
     dev = [
-        TransmissionSpeedSensor(tm_client, name, "Down speed", "download"),
-        TransmissionSpeedSensor(tm_client, name, "Up speed", "upload"),
+        TransmissionSpeedSensor(tm_client, name, "Down Speed", "download"),
+        TransmissionSpeedSensor(tm_client, name, "Up Speed", "upload"),
         TransmissionStatusSensor(tm_client, name, "Status"),
-        TransmissionTorrentsSensor(tm_client, name, "Active torrents", "active"),
-        TransmissionTorrentsSensor(tm_client, name, "Paused torrents", "paused"),
-        TransmissionTorrentsSensor(tm_client, name, "Total torrents", "total"),
-        TransmissionTorrentsSensor(tm_client, name, "Completed torrents", "completed"),
-        TransmissionTorrentsSensor(tm_client, name, "Started torrents", "started"),
+        TransmissionTorrentsSensor(tm_client, name, "Active Torrents", "active"),
+        TransmissionTorrentsSensor(tm_client, name, "Paused Torrents", "paused"),
+        TransmissionTorrentsSensor(tm_client, name, "Total Torrents", "total"),
+        TransmissionTorrentsSensor(tm_client, name, "Completed Torrents", "completed"),
+        TransmissionTorrentsSensor(tm_client, name, "Started Torrents", "started"),
     ]
 
     async_add_entities(dev, True)

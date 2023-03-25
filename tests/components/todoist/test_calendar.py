@@ -91,7 +91,9 @@ async def test_calendar_entity_unique_id(
 
 
 @patch("homeassistant.components.todoist.calendar.TodoistAPIAsync")
-async def test_update_entity_for_custom_project_with_labels_on(todoist_api, hass, api):
+async def test_update_entity_for_custom_project_with_labels_on(
+    todoist_api, hass: HomeAssistant, api
+) -> None:
     """Test that the calendar's state is on for a custom project using labels."""
     todoist_api.return_value = api
     assert await setup.async_setup_component(

@@ -19,10 +19,72 @@
       "turned_off": "{entity_name} turned off"
     }
   },
-  "state": {
+  "entity_component": {
     "_": {
-      "off": "[%key:common::state::off%]",
-      "on": "[%key:common::state::on%]"
+      "name": "[%key:component::light::title%]",
+      "state": {
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]"
+      },
+      "state_attributes": {
+        "brightness": {
+          "name": "Brightness"
+        },
+        "color_mode": {
+          "name": "Color mode",
+          "state": {
+            "brightness": "Brightness only",
+            "color_temp": "Color temperature",
+            "hs": "HS",
+            "onoff": "On/Off",
+            "rgb": "RGB",
+            "rgbw": "RGBW",
+            "rgbww": "RGBWW",
+            "unknown": "Unknown",
+            "white": "White",
+            "xy": "XY"
+          }
+        },
+        "color_temp": {
+          "name": "Color temperature (mireds)"
+        },
+        "color_temp_kelvin": {
+          "name": "Color temperature (Kelvin)"
+        },
+        "effect": {
+          "name": "Effect"
+        },
+        "effect_list": {
+          "name": "Available effects"
+        },
+        "max_color_temp_kelvin": {
+          "name": "Maximum color temperature (Kelvin)"
+        },
+        "min_color_temp_kelvin": {
+          "name": "Minimum color temperature (Kelvin)"
+        },
+        "max_mireds": {
+          "name": "Maximum color temperature (mireds)"
+        },
+        "min_mireds": {
+          "name": "Minimum color temperature (mireds)"
+        },
+        "supported_color_modes": {
+          "name": "Available color modes",
+          "state": {
+            "brightness": "[%key:component::light::entity_component::_::state_attributes::color_mode::state::brightness%]",
+            "color_temp": "[%key:component::light::entity_component::_::state_attributes::color_mode::state::color_temp%]",
+            "hs": "[%key:component::light::entity_component::_::state_attributes::color_mode::state::hs%]",
+            "onoff": "[%key:component::light::entity_component::_::state_attributes::color_mode::state::onoff%]",
+            "rgb": "[%key:component::light::entity_component::_::state_attributes::color_mode::state::rgb%]",
+            "rgbw": "[%key:component::light::entity_component::_::state_attributes::color_mode::state::rgbw%]",
+            "rgbww": "[%key:component::light::entity_component::_::state_attributes::color_mode::state::rgbww%]",
+            "unknown": "[%key:component::light::entity_component::_::state_attributes::color_mode::state::unknown%]",
+            "white": "[%key:component::light::entity_component::_::state_attributes::color_mode::state::white%]",
+            "xy": "[%key:component::light::entity_component::_::state_attributes::color_mode::state::xy%]"
+          }
+        }
+      }
     }
   }
 }

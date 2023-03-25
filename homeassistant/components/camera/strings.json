@@ -1,10 +1,38 @@
 {
   "title": "Camera",
-  "state": {
+  "entity_component": {
     "_": {
-      "recording": "Recording",
-      "streaming": "Streaming",
-      "idle": "[%key:common::state::idle%]"
+      "name": "[%key:component::camera::title%]",
+      "state": {
+        "recording": "Recording",
+        "streaming": "Streaming",
+        "idle": "[%key:common::state::idle%]"
+      },
+      "state_attributes": {
+        "access_token": {
+          "name": "Access token"
+        },
+        "brand": {
+          "name": "Brand"
+        },
+        "frontend_stream_type": {
+          "name": "Stream type",
+          "state": {
+            "hls": "HLS",
+            "webrtc": "WebRTC"
+          }
+        },
+        "motion_detection": {
+          "name": "Motion detection",
+          "state": {
+            "true": "Enabled",
+            "false": "Disabled"
+          }
+        },
+        "model_name": {
+          "name": "[%key:common::generic::model%]"
+        }
+      }
     }
   }
 }
