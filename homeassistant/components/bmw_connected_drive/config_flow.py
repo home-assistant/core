@@ -74,13 +74,17 @@ class BMWConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             info = None
             try:
                 info = await validate_input(self.hass, user_input)
+                entry_data = {
+                    **user_input,
+                    CONF_REFRESH_TOKEN: info.get(CONF_REFRESH_TOKEN),
+                }
             except CannotConnect:
                 errors["base"] = "cannot_connect"
 
             if info:
                 if self._reauth_entry:
                     self.hass.config_entries.async_update_entry(
-                        self._reauth_entry, data=user_input
+                        self._reauth_entry, data=entry_data
                     )
                     self.hass.async_create_task(
                         self.hass.config_entries.async_reload(
@@ -91,10 +95,7 @@ class BMWConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 return self.async_create_entry(
                     title=info["title"],
-                    data={
-                        **user_input,
-                        CONF_REFRESH_TOKEN: info.get(CONF_REFRESH_TOKEN),
-                    },
+                    data=entry_data,
                 )
 
         schema = self.add_suggested_values_to_schema(
