@@ -4315,7 +4315,7 @@
     },
     "qbittorrent": {
       "name": "qBittorrent",
-      "integration_type": "service",
+      "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
     },

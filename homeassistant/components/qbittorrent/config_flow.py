@@ -23,6 +23,16 @@ from .helpers import setup_client
 
 _LOGGER = logging.getLogger(__name__)
 
+USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
+        vol.Required(CONF_URL, default=DEFAULT_URL): str,
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+        vol.Optional(CONF_VERIFY_SSL, default=True): bool,
+    }
+)
+
 
 class QbittorrentConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for the qBittorrent integration."""
@@ -34,9 +44,7 @@ class QbittorrentConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            for entry in self._async_current_entries():
-                if user_input[CONF_URL] == entry.data[CONF_URL]:
-                    return self.async_abort(reason="already_configured")
+            self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
             try:
                 await self.hass.async_add_executor_job(
                     setup_client,
@@ -49,46 +57,21 @@ class QbittorrentConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors = {"base": "invalid_auth"}
             except RequestException:
                 errors = {"base": "cannot_connect"}
-            if not errors:
-                await self.async_set_unique_id(
-                    user_input[CONF_URL], raise_on_progress=False
-                )
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
-                )
+            else:
+                return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
-                    vol.Required(CONF_URL, default=DEFAULT_URL): str,
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
-                    vol.Optional(CONF_VERIFY_SSL, default=True): bool,
-                }
-            ),
+            data_schema=USER_DATA_SCHEMA,
             errors=errors,
         )
 
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Import a config entry from configuration.yaml."""
-        for entry in self._async_current_entries():
-            if entry.data[CONF_URL] == config[CONF_URL]:
-                _LOGGER.warning(
-                    "YAML config for qBittorrent with URL %s has been imported. Please remove it",
-                    config[CONF_URL],
-                )
-                return self.async_abort(reason="already_configured")
-
-        config_name: str = (
-            str(config.get(CONF_NAME)) if config.get(CONF_NAME) else DEFAULT_NAME
-        )
-        await self.async_set_unique_id(config.get(CONF_URL), raise_on_progress=False)
+        self._async_abort_entries_match({CONF_URL: config[CONF_URL]})
         return self.async_create_entry(
-            title=config_name,
+            title=config.get(CONF_NAME) or DEFAULT_NAME,
             data={
-                CONF_NAME: config_name,
                 CONF_URL: config.get(CONF_URL),
                 CONF_USERNAME: config.get(CONF_USERNAME),
                 CONF_PASSWORD: config.get(CONF_PASSWORD),

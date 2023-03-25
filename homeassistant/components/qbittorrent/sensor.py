@@ -13,33 +13,25 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_URL,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-    STATE_IDLE,
-    UnitOfDataRate,
-)
+from homeassistant.const import CONF_NAME, STATE_IDLE, UnitOfDataRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import (
-    DOMAIN,
-    SENSOR_TYPE_CURRENT_STATUS,
-    SENSOR_TYPE_DOWNLOAD_SPEED,
-    SENSOR_TYPE_UPLOAD_SPEED,
-)
-from .helpers import setup_client
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+SENSOR_TYPE_CURRENT_STATUS = "current_status"
+SENSOR_TYPE_DOWNLOAD_SPEED = "download_speed"
+SENSOR_TYPE_UPLOAD_SPEED = "upload_speed"
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(key=SENSOR_TYPE_CURRENT_STATUS, name="Status"),
+    SensorEntityDescription(
+        key=SENSOR_TYPE_CURRENT_STATUS,
+        name="Status",
+    ),
     SensorEntityDescription(
         key=SENSOR_TYPE_DOWNLOAD_SPEED,
         name="Down Speed",
@@ -74,7 +66,8 @@ async def async_setup_platform(
     ir.async_create_issue(
         hass,
         DOMAIN,
-        "manual_migration",
+        "deprecated_yaml",
+        breaks_in_ha_version="2023.6.0",
         is_fixable=False,
         severity=ir.IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
@@ -83,25 +76,16 @@ async def async_setup_platform(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    config_entry: ConfigEntry,
     async_add_entites: AddEntitiesCallback,
 ) -> None:
     """Set up qBittorrent sensor entries."""
-    client = await hass.async_add_executor_job(
-        setup_client,
-        entry.data[CONF_URL],
-        entry.data[CONF_USERNAME],
-        entry.data[CONF_PASSWORD],
-        entry.data[CONF_VERIFY_SSL],
-    )
-
-    name = entry.data[CONF_NAME]
-
+    client = hass.data[DOMAIN][config_entry.entry_id]
+    name = config_entry.data[CONF_NAME]
     entities = [
         QBittorrentSensor(description, client, name, LoginRequired)
         for description in SENSOR_TYPES
     ]
-
     async_add_entites(entities, True)
 
 
