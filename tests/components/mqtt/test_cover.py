@@ -2235,7 +2235,6 @@ async def test_tilt_position_altered_range(
     )
 
 
-@pytest.mark.parametrize("hass_config", [])
 async def test_find_percentage_in_range_defaults(hass: HomeAssistant) -> None:
     """Test find percentage in range with default range."""
     mqtt_cover = MqttCover(

@@ -44,7 +44,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, State
-from homeassistant.setup import async_setup_component
 
 from .test_common import (
     help_test_availability_when_connection_lost,
@@ -100,53 +99,60 @@ def light_platform_only():
 
 
 @pytest.mark.parametrize(
-    "test_config",
+    "hass_config",
     [
-        ({"schema": "template", "name": "test"},),
+        ({mqtt.DOMAIN: {light.DOMAIN: {"schema": "template", "name": "test"}}},),
         (
             {
-                "schema": "template",
-                "name": "test",
-                "command_topic": "test_topic",
+                mqtt.DOMAIN: {
+                    light.DOMAIN: {
+                        "schema": "template",
+                        "name": "test",
+                        "command_topic": "test_topic",
+                    }
+                }
             },
         ),
         (
             {
-                "schema": "template",
-                "name": "test",
-                "command_topic": "test_topic",
-                "command_on_template": "on",
+                mqtt.DOMAIN: {
+                    light.DOMAIN: {
+                        "schema": "template",
+                        "name": "test",
+                        "command_topic": "test_topic",
+                        "command_on_template": "on",
+                    }
+                }
             },
         ),
         (
             {
-                "schema": "template",
-                "name": "test",
-                "command_topic": "test_topic",
-                "command_off_template": "off",
+                mqtt.DOMAIN: {
+                    light.DOMAIN: {
+                        "schema": "template",
+                        "name": "test",
+                        "command_topic": "test_topic",
+                        "command_off_template": "off",
+                    }
+                }
             },
         ),
     ],
 )
 async def test_setup_fails(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, test_config
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that setup fails with missing required configuration items."""
-    assert not await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
-        {mqtt.DOMAIN: {light.DOMAIN: test_config}},
-    )
-    assert "Invalid config for [mqtt]" in caplog.text
+    with pytest.raises(AssertionError):
+        await mqtt_mock_entry_no_yaml_config()
+    assert "Invalid config" in caplog.text
 
 
-async def test_rgb_light(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
-) -> None:
-    """Test RGB light flags brightness support."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 light.DOMAIN: {
@@ -160,10 +166,14 @@ async def test_rgb_light(
                     "blue_template": '{{ value.split(",")[4].' 'split("-")[2] }}',
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_rgb_light(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
+    """Test RGB light flags brightness support."""
+    await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -173,13 +183,9 @@ async def test_rgb_light(
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == expected_features
 
 
-async def test_state_change_via_topic(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
-) -> None:
-    """Test state change via topic."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 light.DOMAIN: {
@@ -197,10 +203,14 @@ async def test_state_change_via_topic(
                     "state_template": '{{ value.split(",")[0] }}',
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_state_change_via_topic(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
+    """Test state change via topic."""
+    await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -228,13 +238,9 @@ async def test_state_change_via_topic(
     assert state.state == STATE_UNKNOWN
 
 
-async def test_state_brightness_color_effect_temp_change_via_topic(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
-) -> None:
-    """Test state, bri, color, effect, color temp change."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 light.DOMAIN: {
@@ -254,16 +260,20 @@ async def test_state_brightness_color_effect_temp_change_via_topic(
                     "state_template": '{{ value.split(",")[0] }}',
                     "brightness_template": '{{ value.split(",")[1] }}',
                     "color_temp_template": '{{ value.split(",")[2] }}',
-                    "red_template": '{{ value.split(",")[3].' 'split("-")[0] }}',
-                    "green_template": '{{ value.split(",")[3].' 'split("-")[1] }}',
-                    "blue_template": '{{ value.split(",")[3].' 'split("-")[2] }}',
+                    "red_template": '{{ value.split(",")[3].split("-")[0] }}',
+                    "green_template": '{{ value.split(",")[3].split("-")[1] }}',
+                    "blue_template": '{{ value.split(",")[3].split("-")[2] }}',
                     "effect_template": '{{ value.split(",")[4] }}',
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_state_brightness_color_effect_temp_change_via_topic(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
+    """Test state, bri, color, effect, color temp change."""
+    await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -339,25 +349,9 @@ async def test_state_brightness_color_effect_temp_change_via_topic(
     assert light_state.attributes.get("effect") == "rainbow"
 
 
-async def test_sending_mqtt_commands_and_optimistic(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
-) -> None:
-    """Test the sending of command in optimistic mode."""
-    fake_state = State(
-        "light.test",
-        "on",
-        {
-            "brightness": 95,
-            "hs_color": [100, 100],
-            "effect": "random",
-            "color_temp": 100,
-        },
-    )
-    mock_restore_cache(hass, (fake_state,))
-
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 light.DOMAIN: {
@@ -384,10 +378,26 @@ async def test_sending_mqtt_commands_and_optimistic(
                     "qos": 2,
                 }
             }
+        }
+    ],
+)
+async def test_sending_mqtt_commands_and_optimistic(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
+    """Test the sending of command in optimistic mode."""
+    fake_state = State(
+        "light.test",
+        "on",
+        {
+            "brightness": 95,
+            "hs_color": [100, 100],
+            "effect": "random",
+            "color_temp": 100,
         },
     )
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mock_restore_cache(hass, (fake_state,))
+
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
@@ -481,13 +491,9 @@ async def test_sending_mqtt_commands_and_optimistic(
     assert state.attributes.get("rgb_color") == (0, 255, 127)
 
 
-async def test_sending_mqtt_commands_non_optimistic_brightness_template(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
-) -> None:
-    """Test the sending of command in optimistic mode."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 light.DOMAIN: {
@@ -508,16 +514,20 @@ async def test_sending_mqtt_commands_non_optimistic_brightness_template(
                     "state_template": '{{ value.split(",")[0] }}',
                     "brightness_template": '{{ value.split(",")[1] }}',
                     "color_temp_template": '{{ value.split(",")[2] }}',
-                    "red_template": '{{ value.split(",")[3].' 'split("-")[0] }}',
-                    "green_template": '{{ value.split(",")[3].' 'split("-")[1] }}',
-                    "blue_template": '{{ value.split(",")[3].' 'split("-")[2] }}',
+                    "red_template": '{{ value.split(",")[3].split("-")[0] }}',
+                    "green_template": '{{ value.split(",")[3].split("-")[1] }}',
+                    "blue_template": '{{ value.split(",")[3].split("-")[2] }}',
                     "effect_template": '{{ value.split(",")[4] }}',
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_sending_mqtt_commands_non_optimistic_brightness_template(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
+    """Test the sending of command in optimistic mode."""
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -604,13 +614,9 @@ async def test_sending_mqtt_commands_non_optimistic_brightness_template(
     state = hass.states.get("light.test")
 
 
-async def test_effect(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
-) -> None:
-    """Test effect sent over MQTT in optimistic mode."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 light.DOMAIN: {
@@ -623,10 +629,14 @@ async def test_effect(
                     "qos": 0,
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_effect(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
+    """Test effect sent over MQTT in optimistic mode."""
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -659,13 +669,9 @@ async def test_effect(
     assert state.attributes.get("effect") == "colorloop"
 
 
-async def test_flash(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
-) -> None:
-    """Test flash sent over MQTT in optimistic mode."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 light.DOMAIN: {
@@ -677,10 +683,14 @@ async def test_flash(
                     "qos": 0,
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_flash(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
+    """Test flash sent over MQTT in optimistic mode."""
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -710,13 +720,9 @@ async def test_flash(
     assert state.state == STATE_ON
 
 
-async def test_transition(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
-) -> None:
-    """Test for transition time being sent when included."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 light.DOMAIN: {
@@ -728,10 +734,14 @@ async def test_transition(
                     "qos": 1,
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_transition(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
+    """Test for transition time being sent when included."""
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -754,13 +764,9 @@ async def test_transition(
     assert state.state == STATE_OFF
 
 
-async def test_invalid_values(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
-) -> None:
-    """Test that invalid values are ignored."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 light.DOMAIN: {
@@ -780,16 +786,21 @@ async def test_invalid_values(
                     "state_template": '{{ value.split(",")[0] }}',
                     "brightness_template": '{{ value.split(",")[1] }}',
                     "color_temp_template": '{{ value.split(",")[2] }}',
-                    "red_template": '{{ value.split(",")[3].' 'split("-")[0] }}',
-                    "green_template": '{{ value.split(",")[3].' 'split("-")[1] }}',
-                    "blue_template": '{{ value.split(",")[3].' 'split("-")[2] }}',
+                    "red_template": '{{ value.split(",")[3].split("-")[0] }}',
+                    "green_template": '{{ value.split(",")[3].split("-")[1] }}',
+                    "blue_template": '{{ value.split(",")[3].split("-")[2] }}',
                     "effect_template": '{{ value.split(",")[4] }}',
                 }
             }
-        },
-    )
+        }
+    ],
+)
+async def test_invalid_values(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
+    """Test that invalid values are ignored."""
     await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+    await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -1173,25 +1184,29 @@ async def test_entity_debug_info_message(
     )
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "schema": "template",
+                    "name": "test",
+                    "command_topic": "test_max_mireds/set",
+                    "command_on_template": "on",
+                    "command_off_template": "off",
+                    "color_temp_template": "{{ value }}",
+                    "max_mireds": 370,
+                }
+            }
+        }
+    ],
+)
 async def test_max_mireds(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test setting min_mireds and max_mireds."""
-    config = {
-        light.DOMAIN: {
-            "schema": "template",
-            "name": "test",
-            "command_topic": "test_max_mireds/set",
-            "command_on_template": "on",
-            "command_off_template": "off",
-            "color_temp_template": "{{ value }}",
-            "max_mireds": 370,
-        }
-    }
-
-    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+    await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("light.test")
     assert state.attributes.get("min_mireds") == 153
