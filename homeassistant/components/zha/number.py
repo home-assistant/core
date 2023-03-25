@@ -375,6 +375,7 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
 
     _attr_entity_category = EntityCategory.CONFIG
     _attr_native_step: float = 1.0
+    _attr_multiplier: float = 1.0
     _zcl_attribute: str
 
     @classmethod
@@ -417,13 +418,13 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
     @property
     def native_value(self) -> float:
         """Return the current value."""
-        return self._channel.cluster.get(self._zcl_attribute)
+        return self._channel.cluster.get(self._zcl_attribute) * self._attr_multiplier
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value from HA."""
         try:
             res = await self._channel.cluster.write_attributes(
-                {self._zcl_attribute: int(value)}
+                {self._zcl_attribute: int(value / self._attr_multiplier)}
             )
         except zigpy.exceptions.ZigbeeException as ex:
             self.error("Could not set value: %s", ex)
@@ -870,8 +871,9 @@ class AqaraThermostatAwayTemp(
     """Aqara away preset temperature configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_native_min_value: float = 500
-    _attr_native_max_value: float = 3000
+    _attr_native_min_value: float = 5
+    _attr_native_max_value: float = 30
+    _attr_multiplier: float = 0.01
     _zcl_attribute: str = "away_preset_temperature"
     _attr_name: str = "Away preset temperature"
     _attr_mode: NumberMode = NumberMode.SLIDER
