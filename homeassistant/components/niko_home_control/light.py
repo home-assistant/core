@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import timedelta
-import json
 import logging
 from typing import Any
 
@@ -58,45 +57,23 @@ async def async_setup_platform(
 class NikoHomeControlLight(LightEntity):
     """Representation of an Niko Light."""
 
-    _attr_color_mode = ColorMode.ONOFF
-    _attr_supported_color_modes = {ColorMode.ONOFF}
-
     def __init__(self, light, data):
         """Set up the Niko Home Control light platform."""
         self._data = data
         self._light = light
-        self._unique_id = f"light-{light.id}"
-        self._name = light.name
-        self._state = light.is_on
-        self._brightness = None
+        self._attr_unique_id = f"light-{light.id}"
+        self._attr_name = light.name
+        self._attr_is_on = light.is_on
+        self._attr_color_mode = ColorMode.ONOFF
+        self._attr_supported_color_modes = {ColorMode.ONOFF}
         if light._state["type"] == 2:
+            self._attr_color_mode = ColorMode.BRIGHTNESS
             self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
-
-    @property
-    def unique_id(self):
-        """Return unique ID for light."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the display name of this light."""
-        return self._name
-
-    @property
-    def brightness(self):
-        """Return the brightness of the light."""
-        value = self._data.get_brightness(self._light.id)
-        return None if value == 0 else value
-
-    @property
-    def is_on(self):
-        """Return true if light is on."""
-        return self._state
 
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         _LOGGER.debug("Turn on: %s", self.name)
-        self._data.turn_light_on(self._light.id, kwargs.get(ATTR_BRIGHTNESS, 255))
+        self._light.turn_on(kwargs.get(ATTR_BRIGHTNESS, 255) / 2.55)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
@@ -106,7 +83,11 @@ class NikoHomeControlLight(LightEntity):
     async def async_update(self) -> None:
         """Get the latest data from NikoHomeControl API."""
         await self._data.async_update()
-        self._state = self._data.get_state(self._light.id)
+        state = self._data.get_state(self._light.id)
+        self._attr_is_on = state != 0
+        if self.supported_color_modes is not None:
+            if ColorMode.BRIGHTNESS in self.supported_color_modes:
+                self._attr_brightness = state * 2.55
 
 
 class NikoHomeControlData:
@@ -137,22 +118,5 @@ class NikoHomeControlData:
         """Find and filter state based on action id."""
         for state in self.data:
             if state["id"] == aid:
-                return state["value1"] != 0
+                return state["value1"]
         _LOGGER.error("Failed to retrieve state off unknown light")
-
-    def get_brightness(self, aid):
-        """Find and filter brightness on action id."""
-        for state in self.data:
-            if state["id"] == aid:
-                return state["value1"] * 2.55
-        _LOGGER.error("Failed to retrieve brightness unknown light")
-
-    def turn_light_on(self, aid, brightness=255):
-        """Turn light on."""
-        obj = {
-            "cmd": "executeactions",
-            "id": aid,
-            "value1": brightness / 2.55,
-            "value2": 0,
-        }
-        self._nhc.connection.send(json.dumps(obj))
