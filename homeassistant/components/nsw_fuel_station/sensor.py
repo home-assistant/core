@@ -26,17 +26,22 @@ ATTR_STATION_NAME = "station_name"
 CONF_STATION_ID = "station_id"
 CONF_FUEL_TYPES = "fuel_types"
 CONF_ALLOWED_FUEL_TYPES = [
+    "E10-U91",
     "E10",
     "U91",
     "E85",
+    "P95-P98",
     "P95",
     "P98",
+    "DL-PDL",
     "DL",
     "PDL",
     "B20",
-    "LPG",
-    "CNG",
     "EV",
+    "LPG",
+    "LNG",
+    "H2",
+    "CNG",
 ]
 CONF_DEFAULT_FUEL_TYPES = ["E10", "U91"]
 
