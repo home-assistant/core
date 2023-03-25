@@ -284,12 +284,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     component.async_register_entity_service(
         SERVICE_TOGGLE,
-        vol.All(
-            cv.make_entity_service_schema(
-                {vol.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float}
-            ),
-            _rename_keys(volume=ATTR_MEDIA_VOLUME_LEVEL),
-        ),
+        {},
         "async_toggle",
         [MediaPlayerEntityFeature.TURN_OFF | MediaPlayerEntityFeature.TURN_ON],
     )
