@@ -314,6 +314,7 @@ homeassistant.components.twentemilieu.*
 homeassistant.components.unifi
 homeassistant.components.unifi.config_flow
 homeassistant.components.unifi.controller
+homeassistant.components.unifi.sensor
 homeassistant.components.unifi.switch
 homeassistant.components.unifi.update
 homeassistant.components.unifiprotect.*

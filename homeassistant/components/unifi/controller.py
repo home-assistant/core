@@ -141,11 +141,11 @@ class UniFiController:
         # Statistics sensor options
 
         # Config entry option to allow bandwidth sensors.
-        self.option_allow_bandwidth_sensors = options.get(
+        self.option_allow_bandwidth_sensors: bool = options.get(
             CONF_ALLOW_BANDWIDTH_SENSORS, DEFAULT_ALLOW_BANDWIDTH_SENSORS
         )
         # Config entry option to allow uptime sensors.
-        self.option_allow_uptime_sensors = options.get(
+        self.option_allow_uptime_sensors: bool = options.get(
             CONF_ALLOW_UPTIME_SENSORS, DEFAULT_ALLOW_UPTIME_SENSORS
         )
 
