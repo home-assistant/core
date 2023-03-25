@@ -873,6 +873,7 @@ async def test_create_event_service(
             "start_date_time": start_date_time,
             "end_date_time": end_date_time,
             "summary": "Bastille Day Party",
+            "location": None,
         },
         target={"entity_id": TEST_ENTITY},
         blocking=True,
