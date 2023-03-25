@@ -10,7 +10,7 @@ from typing import Any
 from aiohttp import CookieJar
 import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
-from aiounifi.websocket import WebsocketSignal, WebsocketState
+from aiounifi.websocket import WebsocketState
 import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
@@ -83,7 +83,7 @@ class UniFiController:
         self.config_entry = config_entry
         self.api = api
 
-        api.callback = self.async_unifi_signalling_callback
+        api.ws_state_callback = self.async_unifi_ws_state_callback
 
         self.available = True
         self.wireless_clients = hass.data[UNIFI_WIRELESS_CLIENTS]
@@ -230,24 +230,21 @@ class UniFiController:
             async_load_entities(description)
 
     @callback
-    def async_unifi_signalling_callback(
-        self, signal: WebsocketSignal, data: WebsocketState
-    ) -> None:
+    def async_unifi_ws_state_callback(self, state: WebsocketState) -> None:
         """Handle messages back from UniFi library."""
-        if signal == WebsocketSignal.CONNECTION_STATE:
-            if data == WebsocketState.DISCONNECTED and self.available:
-                LOGGER.warning("Lost connection to UniFi Network")
+        if state == WebsocketState.DISCONNECTED and self.available:
+            LOGGER.warning("Lost connection to UniFi Network")
 
-            if (data == WebsocketState.RUNNING and not self.available) or (
-                data == WebsocketState.DISCONNECTED and self.available
-            ):
-                self.available = data == WebsocketState.RUNNING
-                async_dispatcher_send(self.hass, self.signal_reachable)
+        if (state == WebsocketState.RUNNING and not self.available) or (
+            state == WebsocketState.DISCONNECTED and self.available
+        ):
+            self.available = state == WebsocketState.RUNNING
+            async_dispatcher_send(self.hass, self.signal_reachable)
 
-                if not self.available:
-                    self.hass.loop.call_later(RETRY_TIMER, self.reconnect, True)
-                else:
-                    LOGGER.info("Connected to UniFi Network")
+            if not self.available:
+                self.hass.loop.call_later(RETRY_TIMER, self.reconnect, True)
+            else:
+                LOGGER.info("Connected to UniFi Network")
 
     @property
     def signal_reachable(self) -> str:
