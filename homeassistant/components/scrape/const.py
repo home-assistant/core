@@ -13,5 +13,6 @@ DEFAULT_SCAN_INTERVAL = timedelta(minutes=10)
 
 PLATFORMS = [Platform.SENSOR]
 
+CONF_CHARACTER_ENCODING = "character_encoding"
 CONF_SELECT = "select"
 CONF_INDEX = "index"

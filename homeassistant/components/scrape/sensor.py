@@ -20,7 +20,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ATTRIBUTE,
     CONF_AUTHENTICATION,
-    CONF_CHARACTER_ENCODING,
     CONF_DEVICE_CLASS,
     CONF_HEADERS,
     CONF_NAME,
@@ -49,6 +48,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
+    CONF_CHARACTER_ENCODING,
     CONF_INDEX,
     CONF_SELECT,
     DEFAULT_CHARACTER_ENCODING,

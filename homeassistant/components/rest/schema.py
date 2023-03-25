@@ -9,7 +9,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     CONF_AUTHENTICATION,
-    CONF_CHARACTER_ENCODING,
     CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
     CONF_HEADERS,
@@ -34,6 +33,7 @@ from homeassistant.helpers.template_entity import (
 )
 
 from .const import (
+    CONF_CHARACTER_ENCODING,
     CONF_JSON_ATTRS,
     CONF_JSON_ATTRS_PATH,
     DEFAULT_CHARACTER_ENCODING,
