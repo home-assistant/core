@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util.json import load_json
+from homeassistant.util.json import load_json_object
 
 from .const import _LOGGER, CONF_REFRESH_TOKEN, DATA_ECOBEE_CONFIG, DOMAIN
 
@@ -20,7 +20,7 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the ecobee flow."""
         self._ecobee = None
 
@@ -85,7 +85,7 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """
         try:
             legacy_config = await self.hass.async_add_executor_job(
-                load_json, self.hass.config.path(ECOBEE_CONFIG_FILENAME)
+                load_json_object, self.hass.config.path(ECOBEE_CONFIG_FILENAME)
             )
             config = {
                 ECOBEE_API_KEY: legacy_config[ECOBEE_API_KEY],

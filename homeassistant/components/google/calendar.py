@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Iterable
 from datetime import datetime, timedelta
 import logging
@@ -25,6 +24,7 @@ from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
     EVENT_DESCRIPTION,
     EVENT_END,
+    EVENT_LOCATION,
     EVENT_RRULE,
     EVENT_START,
     EVENT_SUMMARY,
@@ -246,6 +246,8 @@ async def async_setup_entry(
 class CalendarSyncUpdateCoordinator(DataUpdateCoordinator[Timeline]):
     """Coordinator for calendar RPC calls that use an efficient sync."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -299,6 +301,8 @@ class CalendarQueryUpdateCoordinator(DataUpdateCoordinator[list[Event]]):
     This sends a polling RPC, not using sync, as a workaround
     for limitations in the calendar API for supporting search.
     """
+
+    config_entry: ConfigEntry
 
     def __init__(
         self,
@@ -435,7 +439,9 @@ class GoogleCalendarEntity(
             await self.coordinator.async_request_refresh()
             self._apply_coordinator_update()
 
-        asyncio.create_task(refresh())
+        self.coordinator.config_entry.async_create_background_task(
+            self.hass, refresh(), "google.calendar-refresh"
+        )
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
@@ -502,6 +508,7 @@ class GoogleCalendarEntity(
                 "start": start,
                 "end": end,
                 EVENT_DESCRIPTION: kwargs.get(EVENT_DESCRIPTION),
+                EVENT_LOCATION: kwargs.get(EVENT_LOCATION),
             }
         )
         if rrule := kwargs.get(EVENT_RRULE):
@@ -598,6 +605,7 @@ async def async_create_event(entity: GoogleCalendarEntity, call: ServiceCall) ->
             Event(
                 summary=call.data[EVENT_SUMMARY],
                 description=call.data[EVENT_DESCRIPTION],
+                location=call.data[EVENT_LOCATION],
                 start=start,
                 end=end,
             ),

@@ -1040,3 +1040,74 @@ def test_notify_get_service(
         linter,
     ):
         type_hint_checker.visit_asyncfunctiondef(func_node)
+
+
+def test_pytest_function(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Ensure valid hints are accepted for async_get_service."""
+    func_node = astroid.extract_node(
+        """
+    async def test_sample( #@
+        hass: HomeAssistant,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        pass
+    """,
+        "tests.components.pylint_test.notify",
+    )
+    type_hint_checker.visit_module(func_node.parent)
+
+    with assert_no_messages(
+        linter,
+    ):
+        type_hint_checker.visit_asyncfunctiondef(func_node)
+
+
+def test_pytest_invalid_function(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Ensure invalid hints are rejected for async_get_service."""
+    func_node, hass_node, caplog_node = astroid.extract_node(
+        """
+    async def test_sample( #@
+        hass: Something, #@
+        caplog: SomethingElse, #@
+    ) -> Anything:
+        pass
+    """,
+        "tests.components.pylint_test.notify",
+    )
+    type_hint_checker.visit_module(func_node.parent)
+
+    with assert_adds_messages(
+        linter,
+        pylint.testutils.MessageTest(
+            msg_id="hass-argument-type",
+            node=hass_node,
+            args=("hass", ["HomeAssistant", "HomeAssistant | None"], "test_sample"),
+            line=3,
+            col_offset=4,
+            end_line=3,
+            end_col_offset=19,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-return-type",
+            node=func_node,
+            args=("None", "test_sample"),
+            line=2,
+            col_offset=0,
+            end_line=2,
+            end_col_offset=21,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-argument-type",
+            node=caplog_node,
+            args=("caplog", "pytest.LogCaptureFixture", "test_sample"),
+            line=4,
+            col_offset=4,
+            end_line=4,
+            end_col_offset=25,
+        ),
+    ):
+        type_hint_checker.visit_asyncfunctiondef(func_node)

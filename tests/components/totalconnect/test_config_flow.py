@@ -29,7 +29,7 @@ from .common import (
 from tests.common import MockConfigEntry
 
 
-async def test_user(hass):
+async def test_user(hass: HomeAssistant) -> None:
     """Test user step."""
     # user starts with no data entered, so show the user form
     result = await hass.config_entries.flow.async_init(
@@ -42,7 +42,7 @@ async def test_user(hass):
     assert result["step_id"] == "user"
 
 
-async def test_user_show_locations(hass):
+async def test_user_show_locations(hass: HomeAssistant) -> None:
     """Test user locations form."""
     # user/pass provided, so check if valid then ask for usercodes on locations form
     responses = [
@@ -92,7 +92,7 @@ async def test_user_show_locations(hass):
         assert mock_request.call_count == 6
 
 
-async def test_abort_if_already_setup(hass):
+async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     """Test abort if the account is already setup."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -112,7 +112,7 @@ async def test_abort_if_already_setup(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_login_failed(hass):
+async def test_login_failed(hass: HomeAssistant) -> None:
     """Test when we have errors during login."""
     with patch(
         "homeassistant.components.totalconnect.config_flow.TotalConnectClient"
@@ -128,7 +128,7 @@ async def test_login_failed(hass):
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_reauth(hass):
+async def test_reauth(hass: HomeAssistant) -> None:
     """Test reauth."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -171,7 +171,7 @@ async def test_reauth(hass):
     assert len(hass.config_entries.async_entries()) == 1
 
 
-async def test_no_locations(hass):
+async def test_no_locations(hass: HomeAssistant) -> None:
     """Test with no user locations."""
     responses = [
         RESPONSE_AUTHENTICATE,
@@ -201,7 +201,7 @@ async def test_no_locations(hass):
         assert mock_request.call_count == 1
 
 
-async def test_options_flow(hass: HomeAssistant):
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test config flow options."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

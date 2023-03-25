@@ -389,9 +389,7 @@ class SpeechManager:
         if options is not None:
             supported_options = provider.supported_options or []
             invalid_opts = [
-                opt_name
-                for opt_name in options.keys()
-                if opt_name not in supported_options
+                opt_name for opt_name in options if opt_name not in supported_options
             ]
             if invalid_opts:
                 raise HomeAssistantError(f"Invalid options found: {invalid_opts}")
@@ -504,7 +502,8 @@ class SpeechManager:
             )
 
         # Save to memory
-        data = self.write_tags(filename, data, provider, message, language, options)
+        if extension == "mp3":
+            data = self.write_tags(filename, data, provider, message, language, options)
         self._async_store_to_memcache(cache_key, filename, data)
 
         if cache:

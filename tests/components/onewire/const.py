@@ -29,11 +29,11 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    EntityCategory,
     UnitOfElectricPotential,
     UnitOfPressure,
     UnitOfTemperature,
 )
-from homeassistant.helpers.entity import EntityCategory
 
 ATTR_DEFAULT_DISABLED = "default_disabled"
 ATTR_DEVICE_FILE = "device_file"

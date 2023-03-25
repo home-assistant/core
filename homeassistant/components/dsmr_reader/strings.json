@@ -8,11 +8,5 @@
         "description": "Make sure to configure the 'split topic' data sources in DSMR Reader."
       }
     }
-  },
-  "issues": {
-    "deprecated_yaml": {
-      "title": "The DSMR Reader configuration is being removed",
-      "description": "Configuring DSMR Reader using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the DSMR Reader YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
-    }
   }
 }

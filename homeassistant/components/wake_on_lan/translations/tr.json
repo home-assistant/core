@@ -1,8 +1,0 @@
-{
-    "issues": {
-        "moved_yaml": {
-            "description": "Wake on Lan'\u0131 YAML kullanarak yap\u0131land\u0131rma, entegrasyon anahtar\u0131na ta\u015f\u0131nd\u0131. \n\n Mevcut YAML yap\u0131land\u0131rman\u0131z 2 s\u00fcr\u00fcm daha \u00e7al\u0131\u015facak. \n\n YAML yap\u0131land\u0131rman\u0131z\u0131 belgelere g\u00f6re entegrasyon anahtar\u0131na ge\u00e7irin.",
-            "title": "Wake on Lan YAML yap\u0131land\u0131rmas\u0131 ta\u015f\u0131nd\u0131"
-        }
-    }
-}

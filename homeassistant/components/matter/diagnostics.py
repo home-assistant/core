@@ -4,26 +4,30 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
-from matter_server.common.helpers.util import dataclass_to_dict
+from chip.clusters import Objects
+from matter_server.common.helpers.util import dataclass_to_dict, parse_attribute_path
 
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .const import DOMAIN, ID_TYPE_DEVICE_ID
-from .helpers import get_device_id, get_matter
+from .helpers import get_matter, get_node_from_device_entry
 
-ATTRIBUTES_TO_REDACT = {"chip.clusters.Objects.BasicInformation.Attributes.Location"}
+ATTRIBUTES_TO_REDACT = {Objects.BasicInformation.Attributes.Location}
 
 
 def redact_matter_attributes(node_data: dict[str, Any]) -> dict[str, Any]:
     """Redact Matter cluster attribute."""
     redacted = deepcopy(node_data)
     for attribute_to_redact in ATTRIBUTES_TO_REDACT:
-        for value in redacted["attributes"].values():
-            if value["attribute_type"] == attribute_to_redact:
-                value["value"] = REDACTED
+        for attribute_path, _value in redacted["attributes"].items():
+            _, cluster_id, attribute_id = parse_attribute_path(attribute_path)
+            if cluster_id != attribute_to_redact.cluster_id:
+                continue
+            if attribute_id != attribute_to_redact.attribute_id:
+                continue
+            redacted["attributes"][attribute_path] = REDACTED
 
     return redacted
 
@@ -41,7 +45,7 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     matter = get_matter(hass)
     server_diagnostics = await matter.matter_client.get_diagnostics()
-    data = remove_serialization_type(dataclass_to_dict(server_diagnostics))
+    data = dataclass_to_dict(server_diagnostics)
     nodes = [redact_matter_attributes(node_data) for node_data in data["nodes"]]
     data["nodes"] = nodes
 
@@ -53,28 +57,12 @@ async def async_get_device_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
     matter = get_matter(hass)
-    device_id_type_prefix = f"{ID_TYPE_DEVICE_ID}_"
-    device_id_full = next(
-        identifier[1]
-        for identifier in device.identifiers
-        if identifier[0] == DOMAIN and identifier[1].startswith(device_id_type_prefix)
-    )
-    device_id = device_id_full.lstrip(device_id_type_prefix)
-
     server_diagnostics = await matter.matter_client.get_diagnostics()
-
-    node = next(
-        node
-        for node in await matter.matter_client.get_nodes()
-        for node_device in node.node_devices
-        if get_device_id(server_diagnostics.info, node_device) == device_id
-    )
+    node = await get_node_from_device_entry(hass, device)
 
     return {
-        "server_info": remove_serialization_type(
-            dataclass_to_dict(server_diagnostics.info)
-        ),
+        "server_info": dataclass_to_dict(server_diagnostics.info),
         "node": redact_matter_attributes(
-            remove_serialization_type(dataclass_to_dict(node))
+            remove_serialization_type(dataclass_to_dict(node.node_data) if node else {})
         ),
     }

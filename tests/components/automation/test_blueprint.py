@@ -9,7 +9,7 @@ import pytest
 
 from homeassistant.components import automation
 from homeassistant.components.blueprint import models
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, yaml
 
@@ -40,7 +40,7 @@ def patch_blueprint(blueprint_path: str, data_path):
         yield
 
 
-async def test_notify_leaving_zone(hass):
+async def test_notify_leaving_zone(hass: HomeAssistant) -> None:
     """Test notifying leaving a zone blueprint."""
 
     def set_person_state(state, extra={}):
@@ -128,7 +128,7 @@ async def test_notify_leaving_zone(hass):
         assert len(mock_call_action.mock_calls) == 3
 
 
-async def test_motion_light(hass):
+async def test_motion_light(hass: HomeAssistant) -> None:
     """Test motion light blueprint."""
     hass.states.async_set("binary_sensor.kitchen", "off")
 

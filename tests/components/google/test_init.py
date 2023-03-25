@@ -42,6 +42,7 @@ HassApi = Callable[[], Awaitable[dict[str, Any]]]
 
 TEST_EVENT_SUMMARY = "Test Summary"
 TEST_EVENT_DESCRIPTION = "Test Description"
+TEST_EVENT_LOCATION = "Test Location"
 
 
 def assert_state(actual: State | None, expected: State | None) -> None:
@@ -93,6 +94,7 @@ def add_event_call_service(
                 **params,
                 "summary": TEST_EVENT_SUMMARY,
                 "description": TEST_EVENT_DESCRIPTION,
+                "location": TEST_EVENT_LOCATION,
             },
             target=target,
             blocking=True,
@@ -297,7 +299,7 @@ async def test_multiple_config_entries(
 
 
 @pytest.mark.parametrize(
-    "date_fields,expected_error,error_match",
+    ("date_fields", "expected_error", "error_match"),
     [
         (
             {},
@@ -436,7 +438,7 @@ async def test_add_event_invalid_params(
 
 
 @pytest.mark.parametrize(
-    "date_fields,start_timedelta,end_timedelta",
+    ("date_fields", "start_timedelta", "end_timedelta"),
     [
         (
             {"in": {"days": 3}},
@@ -484,6 +486,7 @@ async def test_add_event_date_in_x(
     assert aioclient_mock.mock_calls[0][2] == {
         "summary": TEST_EVENT_SUMMARY,
         "description": TEST_EVENT_DESCRIPTION,
+        "location": TEST_EVENT_LOCATION,
         "start": {"date": start_date.date().isoformat()},
         "end": {"date": end_date.date().isoformat()},
     }
@@ -524,6 +527,7 @@ async def test_add_event_date(
     assert aioclient_mock.mock_calls[0][2] == {
         "summary": TEST_EVENT_SUMMARY,
         "description": TEST_EVENT_DESCRIPTION,
+        "location": TEST_EVENT_LOCATION,
         "start": {"date": today.isoformat()},
         "end": {"date": end_date.isoformat()},
     }
@@ -564,6 +568,7 @@ async def test_add_event_date_time(
     assert aioclient_mock.mock_calls[0][2] == {
         "summary": TEST_EVENT_SUMMARY,
         "description": TEST_EVENT_DESCRIPTION,
+        "location": TEST_EVENT_LOCATION,
         "start": {
             "dateTime": start_datetime.isoformat(timespec="seconds"),
             "timeZone": "America/Regina",
@@ -597,7 +602,7 @@ async def test_add_event_failure(
 
     with pytest.raises(HomeAssistantError):
         await add_event_call_service(
-            {"start_date": "2022-05-01", "end_date": "2022-05-01"}
+            {"start_date": "2022-05-01", "end_date": "2022-05-02"}
         )
 
 
@@ -682,7 +687,7 @@ async def test_expired_token_requires_reauth(
 
 
 @pytest.mark.parametrize(
-    "calendars_config,expect_write_calls",
+    ("calendars_config", "expect_write_calls"),
     [
         (
             [
@@ -799,7 +804,7 @@ async def test_assign_unique_id(
 
 
 @pytest.mark.parametrize(
-    "config_entry_unique_id,request_status,config_entry_status",
+    ("config_entry_unique_id", "request_status", "config_entry_status"),
     [
         (None, http.HTTPStatus.BAD_REQUEST, ConfigEntryState.SETUP_RETRY),
         (

@@ -91,7 +91,7 @@ async def test_setup_component_no_error(hass: HomeAssistant) -> None:
 
 async def test_entry_password_fail(
     hass: HomeAssistant, mock_aladdinconnect_api: MagicMock
-):
+) -> None:
     """Test password fail during entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,

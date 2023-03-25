@@ -692,7 +692,9 @@ class BrSensor(SensorEntity):
     _attr_entity_registry_enabled_default = False
     _attr_should_poll = False
 
-    def __init__(self, client_name, coordinates, description: SensorEntityDescription):
+    def __init__(
+        self, client_name, coordinates, description: SensorEntityDescription
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self._attr_name = f"{client_name} {description.name}"

@@ -268,6 +268,7 @@ class TadoConnector:
             self.tado.setAway()
         elif presence == PRESET_HOME:
             self.tado.setHome()
+        self.update_zones()
 
     def set_zone_overlay(
         self,

@@ -86,7 +86,7 @@ class TotalConnectAlarm(
         name,
         location_id,
         partition_id,
-    ):
+    ) -> None:
         """Initialize the TotalConnect status."""
         super().__init__(coordinator)
         self._location_id = location_id

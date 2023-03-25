@@ -45,6 +45,64 @@
           "mappingStatus": "CONFIRMED"
         },
         "vin": "**REDACTED**",
+        "charging_settings": {
+          "chargeAndClimateSettings": {
+            "chargeAndClimateTimer": { "showDepartureTimers": false }
+          },
+          "chargeAndClimateTimerDetail": {
+            "chargingMode": {
+              "chargingPreference": "CHARGING_WINDOW",
+              "endTimeSlot": "0001-01-01T01:30:00",
+              "startTimeSlot": "0001-01-01T18:01:00",
+              "type": "TIME_SLOT"
+            },
+            "departureTimer": {
+              "type": "WEEKLY_DEPARTURE_TIMER",
+              "weeklyTimers": [
+                {
+                  "daysOfTheWeek": [
+                    "MONDAY",
+                    "TUESDAY",
+                    "WEDNESDAY",
+                    "THURSDAY",
+                    "FRIDAY"
+                  ],
+                  "id": 1,
+                  "time": "0001-01-01T07:35:00",
+                  "timerAction": "DEACTIVATE"
+                },
+                {
+                  "daysOfTheWeek": [
+                    "MONDAY",
+                    "TUESDAY",
+                    "WEDNESDAY",
+                    "THURSDAY",
+                    "FRIDAY",
+                    "SATURDAY",
+                    "SUNDAY"
+                  ],
+                  "id": 2,
+                  "time": "0001-01-01T18:00:00",
+                  "timerAction": "DEACTIVATE"
+                },
+                {
+                  "daysOfTheWeek": [],
+                  "id": 3,
+                  "time": "0001-01-01T07:00:00",
+                  "timerAction": "DEACTIVATE"
+                },
+                {
+                  "daysOfTheWeek": [],
+                  "id": 4,
+                  "time": "0001-01-01T00:00:00",
+                  "timerAction": "DEACTIVATE"
+                }
+              ]
+            },
+            "isPreconditionForDepartureActive": false
+          },
+          "servicePack": "TCB1"
+        },
         "is_metric": true,
         "fetched_at": "2022-07-10T11:00:00+00:00",
         "capabilities": {
@@ -230,6 +288,7 @@
         "charging_start_time_no_tz": "2022-07-10T18:01:00",
         "charging_end_time": null,
         "is_charger_connected": true,
+        "charging_target": 100,
         "account_timezone": {
           "_std_offset": "0:00:00",
           "_dst_offset": "0:00:00",
@@ -376,7 +435,10 @@
           "start_time": "18:01:00"
         },
         "charging_preferences": "CHARGING_WINDOW",
-        "charging_mode": "DELAYED_CHARGING"
+        "charging_mode": "DELAYED_CHARGING",
+        "ac_current_limit": null,
+        "ac_available_limits": null,
+        "charging_preferences_service_pack": "TCB1"
       },
       "available_attributes": [
         "gps_position",
@@ -384,6 +446,7 @@
         "remaining_range_total",
         "mileage",
         "charging_time_remaining",
+        "charging_start_time",
         "charging_end_time",
         "charging_time_label",
         "charging_status",
@@ -391,6 +454,11 @@
         "remaining_battery_percent",
         "remaining_range_electric",
         "last_charging_end_result",
+        "ac_current_limit",
+        "charging_target",
+        "charging_mode",
+        "charging_preferences",
+        "is_pre_entry_climatization_enabled",
         "remaining_fuel",
         "remaining_range_fuel",
         "remaining_fuel_percent",
@@ -407,6 +475,7 @@
         "remaining_range_total",
         "mileage",
         "charging_time_remaining",
+        "charging_start_time",
         "charging_end_time",
         "charging_time_label",
         "charging_status",
@@ -414,6 +483,11 @@
         "remaining_battery_percent",
         "remaining_range_electric",
         "last_charging_end_result",
+        "ac_current_limit",
+        "charging_target",
+        "charging_mode",
+        "charging_preferences",
+        "is_pre_entry_climatization_enabled",
         "remaining_fuel",
         "remaining_range_fuel",
         "remaining_fuel_percent"
@@ -422,6 +496,17 @@
       "has_electric_drivetrain": true,
       "is_charging_plan_supported": true,
       "is_lsc_enabled": true,
+      "is_remote_charge_start_enabled": false,
+      "is_remote_charge_stop_enabled": false,
+      "is_remote_climate_start_enabled": true,
+      "is_remote_climate_stop_enabled": false,
+      "is_remote_horn_enabled": true,
+      "is_remote_lights_enabled": true,
+      "is_remote_lock_enabled": true,
+      "is_remote_sendpoi_enabled": true,
+      "is_remote_set_ac_limit_enabled": false,
+      "is_remote_set_target_soc_enabled": false,
+      "is_remote_unlock_enabled": true,
       "is_vehicle_active": false,
       "is_vehicle_tracking_enabled": false,
       "lsc_type": "ACTIVATED",
@@ -433,7 +518,7 @@
   ],
   "fingerprint": [
     {
-      "filename": "bmw-vehicles.json",
+      "filename": "bmw-eadrax-vcs_v4_vehicles.json",
       "content": [
         {
           "appVehicleType": "CONNECTED",
@@ -476,9 +561,9 @@
         }
       ]
     },
-    { "filename": "mini-vehicles.json", "content": [] },
+    { "filename": "mini-eadrax-vcs_v4_vehicles.json", "content": [] },
     {
-      "filename": "bmw-vehicles_state_WBY0FINGERPRINT01.json",
+      "filename": "bmw-eadrax-vcs_v4_vehicles_state_WBY0FINGERPRINT01.json",
       "content": {
         "capabilities": {
           "climateFunction": "AIR_CONDITIONING",
@@ -651,6 +736,67 @@
             "rightFront": "CLOSED"
           }
         }
+      }
+    },
+    {
+      "filename": "bmw-eadrax-crccs_v2_vehicles_WBY0FINGERPRINT01.json",
+      "content": {
+        "chargeAndClimateSettings": {
+          "chargeAndClimateTimer": { "showDepartureTimers": false }
+        },
+        "chargeAndClimateTimerDetail": {
+          "chargingMode": {
+            "chargingPreference": "CHARGING_WINDOW",
+            "endTimeSlot": "0001-01-01T01:30:00",
+            "startTimeSlot": "0001-01-01T18:01:00",
+            "type": "TIME_SLOT"
+          },
+          "departureTimer": {
+            "type": "WEEKLY_DEPARTURE_TIMER",
+            "weeklyTimers": [
+              {
+                "daysOfTheWeek": [
+                  "MONDAY",
+                  "TUESDAY",
+                  "WEDNESDAY",
+                  "THURSDAY",
+                  "FRIDAY"
+                ],
+                "id": 1,
+                "time": "0001-01-01T07:35:00",
+                "timerAction": "DEACTIVATE"
+              },
+              {
+                "daysOfTheWeek": [
+                  "MONDAY",
+                  "TUESDAY",
+                  "WEDNESDAY",
+                  "THURSDAY",
+                  "FRIDAY",
+                  "SATURDAY",
+                  "SUNDAY"
+                ],
+                "id": 2,
+                "time": "0001-01-01T18:00:00",
+                "timerAction": "DEACTIVATE"
+              },
+              {
+                "daysOfTheWeek": [],
+                "id": 3,
+                "time": "0001-01-01T07:00:00",
+                "timerAction": "DEACTIVATE"
+              },
+              {
+                "daysOfTheWeek": [],
+                "id": 4,
+                "time": "0001-01-01T00:00:00",
+                "timerAction": "DEACTIVATE"
+              }
+            ]
+          },
+          "isPreconditionForDepartureActive": false
+        },
+        "servicePack": "TCB1"
       }
     }
   ]
