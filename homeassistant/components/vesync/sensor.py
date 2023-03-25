@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
-from pyvesync.vesyncfan import VeSyncAirBypass
+from pyvesync.vesyncfan import VeSyncAirBypass, VeSyncHumid200300S
 from pyvesync.vesyncoutlet import VeSyncOutlet
 from pyvesync.vesyncswitch import VeSyncSwitch
 
@@ -39,7 +39,9 @@ _LOGGER = logging.getLogger(__name__)
 class VeSyncSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch], StateType]
+    value_fn: Callable[
+        [VeSyncAirBypass | VeSyncHumid200300S | VeSyncOutlet | VeSyncSwitch], StateType
+    ]
 
 
 @dataclass
@@ -49,10 +51,10 @@ class VeSyncSensorEntityDescription(
     """Describe VeSync sensor entity."""
 
     exists_fn: Callable[
-        [VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch], bool
+        [VeSyncAirBypass | VeSyncHumid200300S | VeSyncOutlet | VeSyncSwitch], bool
     ] = lambda _: True
     update_fn: Callable[
-        [VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch], None
+        [VeSyncAirBypass | VeSyncHumid200300S | VeSyncOutlet | VeSyncSwitch], None
     ] = lambda _: None
 
 
@@ -161,6 +163,16 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         update_fn=update_energy,
         exists_fn=lambda device: ha_dev_type(device) == "outlet",
     ),
+    # Humidifier - VeSyncHumid200300S
+    VeSyncSensorEntityDescription(
+        key="humidity",
+        name="Humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda device: device.details["humidity"],
+        exists_fn=lambda device: "humidity" in device.details,
+    ),
 )
 
 
@@ -201,7 +213,7 @@ class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
 
     def __init__(
         self,
-        device: VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch,
+        device: VeSyncAirBypass | VeSyncHumid200300S | VeSyncOutlet | VeSyncSwitch,
         description: VeSyncSensorEntityDescription,
     ) -> None:
         """Initialize the VeSync outlet device."""
