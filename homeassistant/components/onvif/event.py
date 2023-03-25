@@ -119,7 +119,8 @@ class EventManager:
         if not self._subscription:
             return
 
-        await self._subscription.Unsubscribe()
+        with suppress(*SUBSCRIPTION_ERRORS):
+            await self._subscription.Unsubscribe()
         self._subscription = None
 
     async def async_restart(self, _now: dt.datetime | None = None) -> None:
