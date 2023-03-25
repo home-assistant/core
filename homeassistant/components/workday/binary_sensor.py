@@ -105,28 +105,25 @@ def setup_platform(
     # Add custom holidays
     try:
         obj_holidays.append(add_holidays)
-    except TypeError:
-        LOGGER.debug("No custom holidays or invalid holidays")
+    except ValueError as error:
+        LOGGER.error("Could not add custom holidays: %s", str(error))
 
     # Remove holidays
-    try:
-        for remove_holiday in remove_holidays:
-            try:
-                # is this formatted as a date?
-                if dt.parse_date(remove_holiday):
-                    # remove holiday by date
-                    removed = obj_holidays.pop(remove_holiday)
-                    LOGGER.debug("Removed %s", remove_holiday)
-                else:
-                    # remove holiday by name
-                    LOGGER.debug("Treating '%s' as named holiday", remove_holiday)
-                    removed = obj_holidays.pop_named(remove_holiday)
-                    for holiday in removed:
-                        LOGGER.debug("Removed %s by name '%s'", holiday, remove_holiday)
-            except KeyError as unmatched:
-                LOGGER.warning("No holiday found matching %s", unmatched)
-    except TypeError:
-        LOGGER.debug("No holidays to remove or invalid holidays")
+    for remove_holiday in remove_holidays:
+        try:
+            # is this formatted as a date?
+            if dt.parse_date(remove_holiday):
+                # remove holiday by date
+                removed = obj_holidays.pop(remove_holiday)
+                LOGGER.debug("Removed %s", remove_holiday)
+            else:
+                # remove holiday by name
+                LOGGER.debug("Treating '%s' as named holiday", remove_holiday)
+                removed = obj_holidays.pop_named(remove_holiday)
+                for holiday in removed:
+                    LOGGER.debug("Removed %s by name '%s'", holiday, remove_holiday)
+        except KeyError as unmatched:
+            LOGGER.warning("No holiday found matching %s", unmatched)
 
     LOGGER.debug("Found the following holidays for your configuration:")
     for holiday_date, name in sorted(obj_holidays.items()):
@@ -190,9 +187,6 @@ class IsWorkdaySensor(BinarySensorEntity):
         adjusted_date = dt.now() + timedelta(days=self._days_offset)
         day = adjusted_date.isoweekday() - 1
         day_of_week = ALLOWED_DAYS[day]
-
-        if day_of_week is None:
-            return
 
         if self.is_include(day_of_week, adjusted_date):
             self._attr_is_on = True
