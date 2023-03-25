@@ -41,8 +41,8 @@ def update(input_dict: dict[str, Any], update_source: dict[str, Any]) -> dict[st
         if isinstance(val, Mapping):
             recurse = update(input_dict.get(key, {}), val)  # type: ignore[arg-type]
             input_dict[key] = recurse
-        else:
-            input_dict[key] = update_source[key]
+        elif key not in input_dict:
+            input_dict[key] = val
     return input_dict
 
 
@@ -72,7 +72,7 @@ class GroupNotifyPlatform(BaseNotificationService):
         for entity in self.entities:
             sending_payload = deepcopy(payload.copy())
             if (data := entity.get(ATTR_DATA)) is not None:
-                update(data, sending_payload)
+                update(sending_payload, data)
             tasks.append(
                 asyncio.create_task(
                     self.hass.services.async_call(
