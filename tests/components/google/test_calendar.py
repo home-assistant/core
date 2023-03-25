@@ -888,6 +888,7 @@ async def test_websocket_create(
     assert aioclient_mock.mock_calls[0][2] == {
         "summary": "Bastille Day Party",
         "description": None,
+        "location": None,
         "start": {
             "dateTime": "1997-07-14T11:00:00-06:00",
             "timeZone": "America/Regina",
@@ -931,6 +932,7 @@ async def test_websocket_create_all_day(
     assert aioclient_mock.mock_calls[0][2] == {
         "summary": "Bastille Day Party",
         "description": None,
+        "location": None,
         "start": {
             "date": "1997-07-14",
         },
