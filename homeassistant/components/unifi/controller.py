@@ -115,7 +115,7 @@ class UniFiController:
             CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS
         )
         # Config entry option to not track devices.
-        self.option_track_devices = options.get(
+        self.option_track_devices: bool = options.get(
             CONF_TRACK_DEVICES, DEFAULT_TRACK_DEVICES
         )
         # Config entry option listing what SSIDs are being used to track clients.
