@@ -244,6 +244,11 @@ HARDWARE_INTEGRATIONS = {
 }
 
 
+def hostname_from_addon_slug(addon_slug: str) -> str:
+    """Return hostname of add-on."""
+    return addon_slug.replace("_", "-")
+
+
 @callback
 @bind_hass
 def get_info(hass: HomeAssistant) -> dict[str, Any] | None:

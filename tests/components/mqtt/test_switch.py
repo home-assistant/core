@@ -15,7 +15,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, State
-from homeassistant.setup import async_setup_component
 
 from .test_common import (
     help_test_availability_when_connection_lost,
@@ -62,13 +61,9 @@ def switch_platform_only():
         yield
 
 
-async def test_controlling_state_via_topic(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
-) -> None:
-    """Test the controlling state via topic."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 switch.DOMAIN: {
@@ -80,10 +75,14 @@ async def test_controlling_state_via_topic(
                     "device_class": "switch",
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_controlling_state_via_topic(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
+    """Test the controlling state via topic."""
+    await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("switch.test")
     assert state.state == STATE_UNKNOWN
@@ -106,16 +105,9 @@ async def test_controlling_state_via_topic(
     assert state.state == STATE_UNKNOWN
 
 
-async def test_sending_mqtt_commands_and_optimistic(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
-) -> None:
-    """Test the sending MQTT commands in optimistic mode."""
-    fake_state = State("switch.test", "on")
-    mock_restore_cache(hass, (fake_state,))
-
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 switch.DOMAIN: {
@@ -126,10 +118,17 @@ async def test_sending_mqtt_commands_and_optimistic(
                     "qos": "2",
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_sending_mqtt_commands_and_optimistic(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
+    """Test the sending MQTT commands in optimistic mode."""
+    fake_state = State("switch.test", "on")
+    mock_restore_cache(hass, (fake_state,))
+
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("switch.test")
     assert state.state == STATE_ON
@@ -153,13 +152,9 @@ async def test_sending_mqtt_commands_and_optimistic(
     assert state.state == STATE_OFF
 
 
-async def test_sending_inital_state_and_optimistic(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
-) -> None:
-    """Test the initial state in optimistic mode."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 switch.DOMAIN: {
@@ -167,23 +162,23 @@ async def test_sending_inital_state_and_optimistic(
                     "command_topic": "command-topic",
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_sending_inital_state_and_optimistic(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
+    """Test the initial state in optimistic mode."""
+    await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("switch.test")
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
-async def test_controlling_state_via_topic_and_json_message(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
-) -> None:
-    """Test the controlling state via topic and JSON message."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 switch.DOMAIN: {
@@ -195,10 +190,14 @@ async def test_controlling_state_via_topic_and_json_message(
                     "value_template": "{{ value_json.val }}",
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_controlling_state_via_topic_and_json_message(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
+    """Test the controlling state via topic and JSON message."""
+    await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("switch.test")
     assert state.state == STATE_UNKNOWN
@@ -292,13 +291,9 @@ async def test_custom_availability_payload(
     )
 
 
-async def test_custom_state_payload(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
-) -> None:
-    """Test the state payload."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 switch.DOMAIN: {
@@ -311,10 +306,14 @@ async def test_custom_state_payload(
                     "state_off": "LOW",
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_custom_state_payload(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
+    """Test the state payload."""
+    await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("switch.test")
     assert state.state == STATE_UNKNOWN

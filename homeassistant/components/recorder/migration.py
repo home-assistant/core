@@ -28,6 +28,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.ulid import ulid_to_bytes
 
+from .auto_repairs.events.schema import (
+    correct_db_schema as events_correct_db_schema,
+    validate_db_schema as events_validate_db_schema,
+)
 from .auto_repairs.states.schema import (
     correct_db_schema as states_correct_db_schema,
     validate_db_schema as states_validate_db_schema,
@@ -199,6 +203,7 @@ def _find_schema_errors(
     schema_errors: set[str] = set()
     schema_errors |= statistics_validate_db_schema(instance)
     schema_errors |= states_validate_db_schema(instance)
+    schema_errors |= events_validate_db_schema(instance)
     return schema_errors
 
 
@@ -250,6 +255,7 @@ def migrate_schema(
         )
         statistics_correct_db_schema(instance, schema_errors)
         states_correct_db_schema(instance, schema_errors)
+        events_correct_db_schema(instance, schema_errors)
 
     if current_version != SCHEMA_VERSION:
         instance.queue_task(PostSchemaMigrationTask(current_version, SCHEMA_VERSION))
@@ -297,6 +303,19 @@ def _create_index(
     _LOGGER.debug("Finished creating %s", index_name)
 
 
+def _execute_or_collect_error(
+    session_maker: Callable[[], Session], query: str, errors: list[str]
+) -> bool:
+    """Execute a query or collect an error."""
+    with session_scope(session=session_maker()) as session:
+        try:
+            session.connection().execute(text(query))
+            return True
+        except SQLAlchemyError as err:
+            errors.append(str(err))
+    return False
+
+
 def _drop_index(
     session_maker: Callable[[], Session],
     table_name: str,
@@ -322,74 +341,45 @@ def _drop_index(
         index_name,
         table_name,
     )
-    success = False
+    index_to_drop: str | None = None
+    with session_scope(session=session_maker()) as session:
+        index_to_drop = get_index_by_name(session, table_name, index_name)
 
-    # Engines like DB2/Oracle
-    with session_scope(session=session_maker()) as session, contextlib.suppress(
-        SQLAlchemyError
-    ):
-        connection = session.connection()
-        connection.execute(text(f"DROP INDEX {index_name}"))
-        success = True
-
-    # Engines like SQLite, SQL Server
-    if not success:
-        with session_scope(session=session_maker()) as session, contextlib.suppress(
-            SQLAlchemyError
-        ):
-            connection = session.connection()
-            connection.execute(
-                text(
-                    "DROP INDEX {table}.{index}".format(
-                        index=index_name, table=table_name
-                    )
-                )
-            )
-            success = True
-
-    if not success:
-        # Engines like MySQL, MS Access
-        with session_scope(session=session_maker()) as session, contextlib.suppress(
-            SQLAlchemyError
-        ):
-            connection = session.connection()
-            connection.execute(
-                text(
-                    "DROP INDEX {index} ON {table}".format(
-                        index=index_name, table=table_name
-                    )
-                )
-            )
-            success = True
-
-    if not success:
-        # Engines like postgresql may have a prefix
-        # ex idx_16532_ix_events_event_type_time_fired
-        with session_scope(session=session_maker()) as session, contextlib.suppress(
-            SQLAlchemyError
-        ):
-            if index_to_drop := get_index_by_name(session, table_name, index_name):
-                connection.execute(text(f"DROP INDEX {index_to_drop}"))
-                success = True
-
-    if success:
+    if index_to_drop is None:
         _LOGGER.debug(
-            "Finished dropping index %s from table %s", index_name, table_name
+            "The index %s on table %s no longer exists", index_name, table_name
         )
         return
 
-    if quiet:
-        return
+    errors: list[str] = []
+    for query in (
+        # Engines like DB2/Oracle
+        f"DROP INDEX {index_name}",
+        # Engines like SQLite, SQL Server
+        f"DROP INDEX {table_name}.{index_name}",
+        # Engines like MySQL, MS Access
+        f"DROP INDEX {index_name} ON {table_name}",
+        # Engines like postgresql may have a prefix
+        # ex idx_16532_ix_events_event_type_time_fired
+        f"DROP INDEX {index_to_drop}",
+    ):
+        if _execute_or_collect_error(session_maker, query, errors):
+            _LOGGER.debug(
+                "Finished dropping index %s from table %s", index_name, table_name
+            )
+            return
 
-    _LOGGER.warning(
-        (
-            "Failed to drop index `%s` from table `%s`. Schema "
-            "Migration will continue; this is not a "
-            "critical operation"
-        ),
-        index_name,
-        table_name,
-    )
+    if not quiet:
+        _LOGGER.warning(
+            (
+                "Failed to drop index `%s` from table `%s`. Schema "
+                "Migration will continue; this is not a "
+                "critical operation: %s"
+            ),
+            index_name,
+            table_name,
+            errors,
+        )
 
 
 def _add_columns(

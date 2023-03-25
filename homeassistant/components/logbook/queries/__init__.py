@@ -30,10 +30,10 @@ def statement_for_request(
     """Generate the logbook statement for a logbook request."""
     start_day = dt_util.utc_to_timestamp(start_day_dt)
     end_day = dt_util.utc_to_timestamp(end_day_dt)
-    context_id_bin = ulid_to_bytes_or_none(context_id)
     # No entities: logbook sends everything for the timeframe
     # limited by the context_id and the yaml configured filter
     if not entity_ids and not device_ids:
+        context_id_bin = ulid_to_bytes_or_none(context_id)
         states_entity_filter = (
             filters.states_metadata_entity_filter() if filters else None
         )
@@ -54,34 +54,30 @@ def statement_for_request(
 
     # entities and devices: logbook sends everything for the timeframe for the entities and devices
     if entity_ids and device_ids:
-        json_quoted_entity_ids = [json_dumps(entity_id) for entity_id in entity_ids]
-        json_quoted_device_ids = [json_dumps(device_id) for device_id in device_ids]
         return entities_devices_stmt(
             start_day,
             end_day,
             event_types,
             states_metadata_ids or [],
-            json_quoted_entity_ids,
-            json_quoted_device_ids,
+            [json_dumps(entity_id) for entity_id in entity_ids],
+            [json_dumps(device_id) for device_id in device_ids],
         )
 
     # entities: logbook sends everything for the timeframe for the entities
     if entity_ids:
-        json_quoted_entity_ids = [json_dumps(entity_id) for entity_id in entity_ids]
         return entities_stmt(
             start_day,
             end_day,
             event_types,
             states_metadata_ids or [],
-            json_quoted_entity_ids,
+            [json_dumps(entity_id) for entity_id in entity_ids],
         )
 
     # devices: logbook sends everything for the timeframe for the devices
     assert device_ids is not None
-    json_quoted_device_ids = [json_dumps(device_id) for device_id in device_ids]
     return devices_stmt(
         start_day,
         end_day,
         event_types,
-        json_quoted_device_ids,
+        [json_dumps(device_id) for device_id in device_ids],
     )
