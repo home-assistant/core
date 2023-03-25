@@ -1,4 +1,5 @@
 """Test the for the BMW Connected Drive config flow."""
+from copy import deepcopy
 from unittest.mock import patch
 
 from bimmer_connected.api.authentication import MyBMWAuthentication
@@ -124,7 +125,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
     ) as mock_setup_entry:
         WRONG_PASSWORD = "wrong"
 
-        FIXTURE_CONFIG_ENTRY_WRONG_PW = FIXTURE_CONFIG_ENTRY.copy()
+        FIXTURE_CONFIG_ENTRY_WRONG_PW = deepcopy(FIXTURE_CONFIG_ENTRY)
         FIXTURE_CONFIG_ENTRY_WRONG_PW["data"][CONF_PASSWORD] = WRONG_PASSWORD
 
         config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY_WRONG_PW)
@@ -155,6 +156,6 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
         assert result2["type"] == data_entry_flow.FlowResultType.ABORT
         assert result2["reason"] == "reauth_successful"
-        assert config_entry.data == FIXTURE_USER_INPUT
+        assert config_entry.data == FIXTURE_COMPLETE_ENTRY
 
         assert len(mock_setup_entry.mock_calls) == 1
