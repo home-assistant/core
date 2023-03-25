@@ -1,8 +1,4 @@
 """The ONVIF integration."""
-from typing import Any
-
-from httpx import AsyncClient
-from onvif import client
 from onvif.exceptions import ONVIFAuthError, ONVIFError, ONVIFTimeoutError
 
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS
@@ -16,24 +12,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.util.ssl import get_default_no_verify_context
 
 from .const import CONF_SNAPSHOT_AUTH, DEFAULT_ARGUMENTS, DOMAIN
 from .device import ONVIFDevice
-
-
-class SingleSSLContextAsyncClient(AsyncClient):
-    """An AsyncClient that will not create a new SSL context."""
-
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize SingleSSLContextAsyncClient."""
-        kwargs.pop("verify", None)
-        super().__init__(*args, **kwargs, verify=get_default_no_verify_context())
-
-
-# Work around until https://github.com/hunterjm/python-onvif-zeep-async/pull/9
-# is merged and released.
-client.AsyncClient = SingleSSLContextAsyncClient
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
