@@ -21,10 +21,15 @@ from .coordinator import RymProDataUpdateCoordinator
 
 
 @dataclass
-class RymProSensorDescription(SensorEntityDescription):
-    """Class describing rympro sensor entities."""
+class RymProSensorRequiredKeysMixin:
+    """Mixin for required keys."""
 
-    sensor: MeterSensor | None = None
+    sensor: MeterSensor
+
+
+@dataclass
+class RymProSensorDescription(SensorEntityDescription, RymProSensorRequiredKeysMixin):
+    """Class describing rympro sensor entities."""
 
 
 SENSOR_DESCRIPTIONS: tuple[RymProSensorDescription, ...] = (
@@ -85,7 +90,6 @@ class RymProSensor(CoordinatorEntity[RymProDataUpdateCoordinator], SensorEntity)
         super().__init__(coordinator)
         self.entity_description = description
         self._meter_id = meter_id
-        assert description.sensor
         self._sensor = description.sensor
         unique_id = f"{entry_id}_{meter_id}"
         self._attr_unique_id = f"{unique_id}_{description.key}"
