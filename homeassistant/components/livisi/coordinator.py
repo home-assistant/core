@@ -14,7 +14,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
-    ConfigEntryAuthFailed,
 )
 
 from .const import (
