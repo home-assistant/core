@@ -140,7 +140,7 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
     DeconzSensorDescription[AirQuality](
         key="air_quality_co2",
         supported_fn=lambda device: device.air_quality_co2 is not None,
-        update_key="airqualityco2",
+        update_key="airquality_co2_density",
         value_fn=lambda device: device.air_quality_co2,
         instance_check=AirQuality,
         name_suffix="CO2",
