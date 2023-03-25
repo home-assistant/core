@@ -11,8 +11,8 @@ def mock_setup_entry():
     """Mock qbittorrent entry setup."""
     with patch(
         "homeassistant.components.qbittorrent.async_setup_entry", return_value=True
-    ):
-        yield
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 @pytest.fixture(autouse=True)

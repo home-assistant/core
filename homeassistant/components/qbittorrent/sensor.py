@@ -5,21 +5,31 @@ import logging
 
 from qbittorrent.client import LoginRequired
 from requests.exceptions import RequestException
+import voluptuous as vol
 
 from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_NAME, STATE_IDLE, UnitOfDataRate
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_URL,
+    CONF_USERNAME,
+    STATE_IDLE,
+    UnitOfDataRate,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN
+from .const import DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,6 +58,15 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfDataRate.KIBIBYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+)
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_URL): cv.url,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
 )
 
 
