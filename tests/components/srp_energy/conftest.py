@@ -18,7 +18,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="setup_hass_config", autouse=True)
-def fixture_setup_hass_config(hass) -> None:
+def fixture_setup_hass_config(hass: HomeAssistant) -> None:
     """Set up things to be run when tests are started."""
     hass.config.latitude = 33.27
     hass.config.longitude = 112
@@ -26,13 +26,13 @@ def fixture_setup_hass_config(hass) -> None:
 
 
 @pytest.fixture(name="hass_tz_info")
-def fixture_hass_tz_info(hass, setup_hass_config) -> dt.tzinfo | None:
+def fixture_hass_tz_info(hass: HomeAssistant, setup_hass_config) -> dt.tzinfo | None:
     """Return timezone info for the hass timezone."""
     return dt_util.get_time_zone(hass.config.time_zone)
 
 
 @pytest.fixture(name="test_date")
-def fixture_test_date(hass, hass_tz_info) -> dt.datetime | None:
+def fixture_test_date(hass: HomeAssistant, hass_tz_info) -> dt.datetime | None:
     """Return test datetime for the hass timezone."""
     test_date = dt.datetime(2022, 8, 2, 0, 0, 0, 0, tzinfo=hass_tz_info)
     return test_date

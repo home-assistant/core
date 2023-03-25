@@ -8,13 +8,11 @@ from homeassistant.core import HomeAssistant
 from .const import (  # noqa: F401
     ATTRIBUTION,
     CONF_IS_TOU,
-    DEFAULT_NAME,
     DOMAIN,
     ICON,
     LOGGER,
     PHOENIX_TIME_ZONE,
     SENSOR_NAME,
-    SENSOR_TYPE,
 )
 
 PLATFORMS = [Platform.SENSOR]
@@ -25,17 +23,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api_account_id: str = entry.data[CONF_ID]
     api_username: str = entry.data[CONF_USERNAME]
     api_password: str = entry.data[CONF_PASSWORD]
-    name: str = DEFAULT_NAME
 
-    LOGGER.debug("Configuring %s using account_id %s", name, api_account_id)
+    LOGGER.debug("Configuring client using account_id %s", api_account_id)
 
     api_instance = SrpEnergyClient(
         api_account_id,
         api_username,
         api_password,
     )
-
-    LOGGER.debug("async_setup_entry: Client attributes: %s", dir(api_instance))
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = api_instance

@@ -40,9 +40,8 @@ async def async_setup_entry(
     # API object stored here by __init__.py
     entry_name: str = DEFAULT_NAME
     is_time_of_use: bool = False
-    if entry and entry.data:
-        api = hass.data[DOMAIN][entry.entry_id]
-        is_time_of_use = entry.data[CONF_IS_TOU]
+    api = hass.data[DOMAIN][entry.entry_id]
+    is_time_of_use = entry.data[CONF_IS_TOU]
 
     async def async_update_data():
         """Fetch data from API endpoint.
@@ -108,7 +107,7 @@ class SrpEntity(SensorEntity):
     _attr_attribution = ATTRIBUTION
     _attr_should_poll = False
 
-    def __init__(self, coordinator, entry_name):
+    def __init__(self, coordinator, entry_name) -> None:
         """Initialize the SrpEntity class."""
         self._name = SENSOR_NAME
         self.type = SENSOR_TYPE
@@ -124,18 +123,8 @@ class SrpEntity(SensorEntity):
         self._attr_native_value = self.coordinator.data
 
     @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return f"{self._entry_name} {self._name}"
-
-    @property
     def native_value(self) -> StateType:
         """Return the state of the device."""
-        LOGGER.debug(
-            "Reading entity native_value %s at %s",
-            self.coordinator.data,
-            dt_util.now(),
-        )
         return self.coordinator.data
 
     @property
@@ -154,12 +143,12 @@ class SrpEntity(SensorEntity):
         return self.coordinator.last_update_success
 
     @property
-    def device_class(self) -> SensorDeviceClass | None:
+    def device_class(self) -> SensorDeviceClass:
         """Return the device class."""
         return SensorDeviceClass.ENERGY
 
     @property
-    def state_class(self) -> str:
+    def state_class(self) -> SensorStateClass:
         """Return the state class."""
         return SensorStateClass.TOTAL_INCREASING
 

@@ -1,5 +1,5 @@
 """Test the SRP Energy config flow."""
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.srp_energy import CONF_IS_TOU, DOMAIN
@@ -12,7 +12,9 @@ from . import ACCNT_ID, ACCNT_IS_TOU, ACCNT_PASSWORD, ACCNT_USERNAME, TEST_USER_
 from tests.common import MockConfigEntry
 
 
-async def test_show_form(hass, mock_srp_energy_config_flow: MagicMock, capsys) -> None:
+async def test_show_form(
+    hass: HomeAssistant, mock_srp_energy_config_flow: MagicMock, capsys
+) -> None:
     """Test show configuration form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: config_entries.SOURCE_USER}
@@ -22,25 +24,28 @@ async def test_show_form(hass, mock_srp_energy_config_flow: MagicMock, capsys) -
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_configure(
-        flow_id=result["flow_id"], user_input=TEST_USER_INPUT
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.srp_energy.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            flow_id=result["flow_id"], user_input=TEST_USER_INPUT
+        )
+        await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "test home"
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["title"] == "test home"
 
-    assert "data" in result
-    assert result["data"][CONF_ID] == ACCNT_ID
-    assert result["data"][CONF_USERNAME] == ACCNT_USERNAME
-    assert result["data"][CONF_PASSWORD] == ACCNT_PASSWORD
-    assert result["data"][CONF_IS_TOU] == ACCNT_IS_TOU
+        assert "data" in result
+        assert result["data"][CONF_ID] == ACCNT_ID
+        assert result["data"][CONF_USERNAME] == ACCNT_USERNAME
+        assert result["data"][CONF_PASSWORD] == ACCNT_PASSWORD
+        assert result["data"][CONF_IS_TOU] == ACCNT_IS_TOU
 
-    assert "result" in result
-    assert result["result"].unique_id == ACCNT_ID
+        captured = capsys.readouterr()
+        assert "myaccount.srpnet.com" not in captured.err
 
-    captured = capsys.readouterr()
-    assert "myaccount.srpnet.com" not in captured.err
+        assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_invalid_account(
@@ -101,7 +106,7 @@ async def test_form_unknown_error(
 
 
 async def test_flow_entry_already_configured(
-    hass, init_integration: MockConfigEntry
+    hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
     """Test user input for config_entry that already exists."""
     user_input = {

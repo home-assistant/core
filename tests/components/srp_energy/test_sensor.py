@@ -9,10 +9,11 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     UnitOfEnergy,
 )
+
 from homeassistant.core import HomeAssistant
 
 
-async def test_loading_sensors(hass, init_integration) -> None:
+async def test_loading_sensors(hass: HomeAssistant, init_integration) -> None:
     """Test the srp energy sensors."""
     # Validate the Config Entry was initialized
     assert init_integration.state == ConfigEntryState.LOADED
@@ -22,7 +23,7 @@ async def test_loading_sensors(hass, init_integration) -> None:
     assert len(hass.states.async_all()) == 1
 
 
-async def test_srp_entity(hass, init_integration):
+async def test_srp_entity(hass: HomeAssistant, init_integration) -> None:
     """Test the SrpEntity."""
     usage_state = hass.states.get("sensor.energy_usage")
     assert usage_state.state == "150.8"

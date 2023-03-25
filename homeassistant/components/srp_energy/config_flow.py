@@ -20,7 +20,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    LOGGER.debug("Validate User Input with client")
     srp_client = SrpEnergyClient(
         data[CONF_ID],
         data[CONF_USERNAME],
@@ -45,7 +44,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
-        LOGGER.debug("Config entry")
         errors = {}
         default_title: str = DEFAULT_NAME
 
@@ -67,9 +65,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
             else:
-                await self.async_set_unique_id(user_input[CONF_ID])
-                self._abort_if_unique_id_configured()
-
                 return self.async_create_entry(title=default_title, data=user_input)
 
         return self.async_show_form(
