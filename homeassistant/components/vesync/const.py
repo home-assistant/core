@@ -5,9 +5,11 @@ VS_DISCOVERY = "vesync_discovery_{}"
 SERVICE_UPDATE_DEVS = "update_devices"
 
 VS_SWITCHES = "switches"
+VS_BINARY_SENSORS = "binary_sensors"
 VS_FANS = "fans"
 VS_HUMIDIFIERS = "humidifiers"
 VS_LIGHTS = "lights"
+VS_NUMBERS = "numbers"
 VS_SENSORS = "sensors"
 VS_MANAGER = "manager"
 

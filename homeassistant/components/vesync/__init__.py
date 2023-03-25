@@ -13,19 +13,23 @@ from .common import async_process_devices
 from .const import (
     DOMAIN,
     SERVICE_UPDATE_DEVS,
+    VS_BINARY_SENSORS,
     VS_DISCOVERY,
     VS_FANS,
     VS_HUMIDIFIERS,
     VS_LIGHTS,
     VS_MANAGER,
+    VS_NUMBERS,
     VS_SENSORS,
     VS_SWITCHES,
 )
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.FAN,
     Platform.HUMIDIFIER,
     Platform.LIGHT,
+    Platform.NUMBER,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
@@ -58,15 +62,21 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data[DOMAIN][VS_MANAGER] = manager
 
     switches = hass.data[DOMAIN][VS_SWITCHES] = []
+    binary_sensors = hass.data[DOMAIN][VS_BINARY_SENSORS] = []
     fans = hass.data[DOMAIN][VS_FANS] = []
     humidifiers = hass.data[DOMAIN][VS_HUMIDIFIERS] = []
     lights = hass.data[DOMAIN][VS_LIGHTS] = []
+    numbers = hass.data[DOMAIN][VS_NUMBERS] = []
     sensors = hass.data[DOMAIN][VS_SENSORS] = []
     platforms = []
 
     if device_dict[VS_SWITCHES]:
         switches.extend(device_dict[VS_SWITCHES])
         platforms.append(Platform.SWITCH)
+
+    if device_dict[VS_BINARY_SENSORS]:
+        binary_sensors.extend(device_dict[VS_BINARY_SENSORS])
+        platforms.append(Platform.BINARY_SENSOR)
 
     if device_dict[VS_FANS]:
         fans.extend(device_dict[VS_FANS])
@@ -80,6 +90,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         lights.extend(device_dict[VS_LIGHTS])
         platforms.append(Platform.LIGHT)
 
+    if device_dict[VS_NUMBERS]:
+        numbers.extend(device_dict[VS_NUMBERS])
+        platforms.append(Platform.NUMBER)
+
     if device_dict[VS_SENSORS]:
         sensors.extend(device_dict[VS_SENSORS])
         platforms.append(Platform.SENSOR)
@@ -90,16 +104,20 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         """Discover if new devices should be added."""
         manager = hass.data[DOMAIN][VS_MANAGER]
         switches = hass.data[DOMAIN][VS_SWITCHES]
+        binary_sensors = hass.data[DOMAIN][VS_BINARY_SENSORS]
         fans = hass.data[DOMAIN][VS_FANS]
         humidifiers = hass.data[DOMAIN][VS_HUMIDIFIERS]
         lights = hass.data[DOMAIN][VS_LIGHTS]
+        numbers = hass.data[DOMAIN][VS_NUMBERS]
         sensors = hass.data[DOMAIN][VS_SENSORS]
 
         dev_dict = await async_process_devices(hass, manager)
         switch_devs = dev_dict.get(VS_SWITCHES, [])
+        binary_sensor_devs = dev_dict.get(VS_BINARY_SENSORS, [])
         fan_devs = dev_dict.get(VS_FANS, [])
         humidifier_devs = dev_dict.get(VS_HUMIDIFIERS, [])
         light_devs = dev_dict.get(VS_LIGHTS, [])
+        number_devs = dev_dict.get(VS_NUMBERS, [])
         sensor_devs = dev_dict.get(VS_SENSORS, [])
 
         switch_set = set(switch_devs)
@@ -110,6 +128,17 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         elif new_switches and not switches:
             switches.extend(new_switches)
             hass.async_create_task(forward_setup(config_entry, Platform.SWITCH))
+
+        binary_sensor_set = set(binary_sensor_devs)
+        new_binary_sensors = list(binary_sensor_set.difference(binary_sensors))
+        if new_binary_sensors and binary_sensors:
+            binary_sensors.extend(new_binary_sensors)
+            async_dispatcher_send(
+                hass, VS_DISCOVERY.format(VS_BINARY_SENSORS), new_binary_sensors
+            )
+        elif new_binary_sensors and not binary_sensors:
+            binary_sensors.extend(new_binary_sensors)
+            hass.async_create_task(forward_setup(config_entry, Platform.BINARY_SENSOR))
 
         fan_set = set(fan_devs)
         new_fans = list(fan_set.difference(fans))
@@ -139,6 +168,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         elif new_lights and not lights:
             lights.extend(new_lights)
             hass.async_create_task(forward_setup(config_entry, Platform.LIGHT))
+
+        number_set = set(number_devs)
+        new_numbers = list(number_set.difference(numbers))
+        if new_numbers and numbers:
+            numbers.extend(new_numbers)
+            async_dispatcher_send(hass, VS_DISCOVERY.format(VS_NUMBERS), new_numbers)
+        elif new_numbers and not numbers:
+            numbers.extend(new_numbers)
+            hass.async_create_task(forward_setup(config_entry, Platform.NUMBER))
 
         sensor_set = set(sensor_devs)
         new_sensors = list(sensor_set.difference(sensors))

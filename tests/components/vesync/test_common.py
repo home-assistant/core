@@ -128,9 +128,11 @@ async def test_async_process_devices__no_devices(
         assert mock_add_executor_job.call_args[0][0] == manager.update
 
     assert devices == {
+        "binary_sensors": [],
         "fans": [],
         "humidifiers": [],
         "lights": [],
+        "numbers": [],
         "sensors": [],
         "switches": [],
     }
@@ -182,9 +184,11 @@ async def test_async_process_devices__devices(
         assert mock_add_executor_job.call_args[0][0] == manager.update
 
     assert devices == {
+        "binary_sensors": [fan, humidifier1, humidifier2],
         "fans": [fan],
         "humidifiers": [humidifier1, humidifier2],
         "lights": [fan, humidifier1, humidifier2, bulb, light],
+        "numbers": [fan, humidifier1, humidifier2],
         "sensors": [fan, humidifier1, humidifier2, outlet],
         "switches": [fan, humidifier1, humidifier2, outlet, switch],
     }

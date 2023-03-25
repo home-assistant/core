@@ -1,7 +1,8 @@
 """Common utilities for VeSync Component."""
+import abc
 from itertools import chain
 import logging
-from typing import Any
+from typing import Any, Generic, TypeVar
 
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.vesyncfan import humid_features
@@ -10,7 +11,16 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, Entity, ToggleEntity
 
-from .const import DOMAIN, VS_FANS, VS_HUMIDIFIERS, VS_LIGHTS, VS_SENSORS, VS_SWITCHES
+from .const import (
+    DOMAIN,
+    VS_BINARY_SENSORS,
+    VS_FANS,
+    VS_HUMIDIFIERS,
+    VS_LIGHTS,
+    VS_NUMBERS,
+    VS_SENSORS,
+    VS_SWITCHES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,8 +75,10 @@ async def async_process_devices(hass, manager):
     """Assign devices to proper component."""
     devices = {}
     devices[VS_SWITCHES] = []
+    devices[VS_BINARY_SENSORS] = []
     devices[VS_FANS] = []
     devices[VS_HUMIDIFIERS] = []
+    devices[VS_NUMBERS] = []
     devices[VS_LIGHTS] = []
     devices[VS_SENSORS] = []
 
@@ -82,6 +94,8 @@ async def async_process_devices(hass, manager):
             devices[VS_SWITCHES].append(fan)  # for automatic stop and display
             devices[VS_LIGHTS].append(fan)  # for night light
             devices[VS_SENSORS].append(fan)
+            devices[VS_NUMBERS].append(fan)  # for night light and mist level
+            devices[VS_BINARY_SENSORS].append(fan)
         _LOGGER.info("%d VeSync fans found", len(devices[VS_FANS]))
         _LOGGER.info("%d VeSync humidifiers found", len(devices[VS_HUMIDIFIERS]))
 
@@ -170,3 +184,28 @@ class VeSyncDevice(VeSyncBaseEntity, ToggleEntity):
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self.device.turn_off()
+
+
+T = TypeVar("T")
+
+
+class VeSyncEntityDescriptionFactory(Generic[T], metaclass=abc.ABCMeta):
+    """Describe a factory interface for creating EntityDescription objects."""
+
+    @classmethod
+    def __subclasshook__(cls, subclass):
+        """Impl of meta data."""
+        return (
+            hasattr(subclass, "create")
+            and callable(subclass.create)
+            and hasattr(subclass, "supports")
+            and callable(subclass.supports)
+        )
+
+    @abc.abstractmethod
+    def create(self, device: VeSyncBaseDevice) -> T:
+        """Interface method for create."""
+
+    @abc.abstractmethod
+    def supports(self, device: VeSyncBaseDevice) -> bool:
+        """Interface method for supports."""

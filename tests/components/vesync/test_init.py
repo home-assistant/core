@@ -9,10 +9,12 @@ from homeassistant.components.vesync import async_setup_entry
 from homeassistant.components.vesync.const import (
     DOMAIN,
     SERVICE_UPDATE_DEVS,
+    VS_BINARY_SENSORS,
     VS_FANS,
     VS_HUMIDIFIERS,
     VS_LIGHTS,
     VS_MANAGER,
+    VS_NUMBERS,
     VS_SENSORS,
     VS_SWITCHES,
 )
@@ -72,9 +74,11 @@ async def test_async_setup_entry__no_devices(
 
     assert manager.login.call_count == 1
     assert hass.data[DOMAIN][VS_MANAGER] == manager
+    assert not hass.data[DOMAIN][VS_BINARY_SENSORS]
     assert not hass.data[DOMAIN][VS_FANS]
     assert not hass.data[DOMAIN][VS_HUMIDIFIERS]
     assert not hass.data[DOMAIN][VS_LIGHTS]
+    assert not hass.data[DOMAIN][VS_NUMBERS]
     assert not hass.data[DOMAIN][VS_SENSORS]
     assert not hass.data[DOMAIN][VS_SWITCHES]
 
@@ -113,9 +117,11 @@ async def test_async_setup_entry__with_devices(
         assert setups_mock.call_args.args[0] == config_entry
         assert list(setups_mock.call_args.args[1]) == [
             Platform.SWITCH,
+            Platform.BINARY_SENSOR,
             Platform.FAN,
             Platform.HUMIDIFIER,
             Platform.LIGHT,
+            Platform.NUMBER,
             Platform.SENSOR,
         ]
         assert register_mock.call_count == 1
@@ -124,8 +130,11 @@ async def test_async_setup_entry__with_devices(
         assert callable(register_mock.call_args.args[2])
 
     assert hass.data[DOMAIN][VS_MANAGER] == manager_devices
+    assert len(hass.data[DOMAIN][VS_BINARY_SENSORS]) == 3
     assert len(hass.data[DOMAIN][VS_FANS]) == 1
+    assert len(hass.data[DOMAIN][VS_HUMIDIFIERS]) == 2
     assert len(hass.data[DOMAIN][VS_LIGHTS]) == 5
+    assert len(hass.data[DOMAIN][VS_NUMBERS]) == 3
     assert len(hass.data[DOMAIN][VS_SENSORS]) == 4
     assert len(hass.data[DOMAIN][VS_SWITCHES]) == 5
 
@@ -141,12 +150,12 @@ async def test_asynch_setup_entry__loaded_state(
     states = {}
     identifier = "200s-humidifier"
     entities = get_entities(hass, identifier)
-    assert len(entities) == 4
+    assert len(entities) == 8
     states[identifier] = get_states(hass, entities)
 
     identifier = "600s-humidifier"
     entities = get_entities(hass, identifier)
-    assert len(entities) == 5
+    assert len(entities) == 9
     states[identifier] = get_states(hass, entities)
 
     assert states == snapshot(name="humidifiers")
