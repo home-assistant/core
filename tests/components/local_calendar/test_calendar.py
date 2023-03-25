@@ -873,6 +873,7 @@ async def test_create_event_service(
             "start_date_time": start_date_time,
             "end_date_time": end_date_time,
             "summary": "Bastille Day Party",
+            "location": "Test Location",
         },
         target={"entity_id": TEST_ENTITY},
         blocking=True,
@@ -886,6 +887,7 @@ async def test_create_event_service(
             "summary": "Bastille Day Party",
             "start": {"dateTime": "1997-07-14T11:00:00-06:00"},
             "end": {"dateTime": "1997-07-14T22:00:00-06:00"},
+            "location": "Test Location",
         }
     ]
 
@@ -895,6 +897,7 @@ async def test_create_event_service(
             "summary": "Bastille Day Party",
             "start": {"dateTime": "1997-07-14T11:00:00-06:00"},
             "end": {"dateTime": "1997-07-14T22:00:00-06:00"},
+            "location": "Test Location",
         }
     ]
 
@@ -909,5 +912,6 @@ async def test_create_event_service(
             "summary": "Bastille Day Party",
             "start": {"dateTime": "1997-07-14T11:00:00-06:00"},
             "end": {"dateTime": "1997-07-14T22:00:00-06:00"},
+            "location": "Test Location",
         }
     ]

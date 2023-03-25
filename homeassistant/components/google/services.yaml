@@ -103,3 +103,9 @@ create_event:
       example: '"days": 2 or "weeks": 2'
       selector:
         object:
+    location:
+      name: Location
+      description: The location of the event. Optional.
+      example: "Conference Room - F123, Bldg. 002"
+      selector:
+        text:
