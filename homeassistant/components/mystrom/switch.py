@@ -9,12 +9,16 @@ from pymystrom.switch import MyStromSwitch as _MyStromSwitch
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import ATTR_MANUFACTURER, DOMAIN
 
 DEFAULT_NAME = "myStrom Switch"
 
@@ -26,6 +30,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the myStrom entities."""
+    info = hass.data[DOMAIN][entry.entry_id]["info"]
+    device_type = info["type"]
+
+    if device_type in [101, 106, 107]:
+        plug_name = entry.data[CONF_NAME]
+        device = hass.data[DOMAIN][entry.entry_id]["device"]
+        async_add_entities([MyStromSwitch(device, plug_name)])
 
 
 async def async_setup_platform(
@@ -102,3 +119,13 @@ class MyStromSwitch(SwitchEntity):
             if self._available:
                 self._available = False
                 _LOGGER.error("No route to myStrom plug")
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device info for the light entity."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._name)},
+            name=self._name,
+            manufacturer=ATTR_MANUFACTURER,
+            sw_version=self.plug.firmware,
+        )

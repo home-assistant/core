@@ -17,12 +17,16 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import ATTR_MANUFACTURER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,6 +44,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the myStrom entities."""
+    device_name = entry.data[CONF_NAME]
+    info = hass.data[DOMAIN][entry.entry_id]["info"]
+    device_type = info["type"]
+
+    if device_type == 102:
+        device = hass.data[DOMAIN][entry.entry_id]["device"]
+        async_add_entities([MyStromLight(device, device_name, info["mac"])])
 
 
 async def async_setup_platform(
@@ -120,6 +137,16 @@ class MyStromLight(LightEntity):
     def is_on(self):
         """Return true if light is on."""
         return self._state
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device info for the light entity."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._name)},
+            name=self._name,
+            manufacturer=ATTR_MANUFACTURER,
+            sw_version=self._bulb.firmware,
+        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""

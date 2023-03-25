@@ -275,6 +275,7 @@ FLOWS = {
         "mutesync",
         "myq",
         "mysensors",
+        "mystrom",
         "nam",
         "nanoleaf",
         "neato",
