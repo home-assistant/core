@@ -281,7 +281,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         return self._currently_playing.get("shuffle_state")
 
     @property
-    def repeat(self) -> str | None:
+    def repeat(self) -> RepeatMode | None:
         """Return current repeat mode."""
         if (
             not self._currently_playing
@@ -321,7 +321,9 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         self.data.client.seek_track(int(position * 1000))
 
     @spotify_exception_handler
-    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
+    def play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play media."""
         media_type = media_type.removeprefix(MEDIA_PLAYER_PREFIX)
 

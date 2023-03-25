@@ -34,7 +34,7 @@ QUERY_STATISTIC_META = (
 
 
 def _generate_get_metadata_stmt(
-    statistic_ids: list[str] | None = None,
+    statistic_ids: set[str] | None = None,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
     statistic_source: str | None = None,
 ) -> StatementLambdaElement:
@@ -89,7 +89,7 @@ class StatisticsMetaManager:
     def _get_from_database(
         self,
         session: Session,
-        statistic_ids: list[str] | None = None,
+        statistic_ids: set[str] | None = None,
         statistic_type: Literal["mean"] | Literal["sum"] | None = None,
         statistic_source: str | None = None,
     ) -> dict[str, tuple[int, StatisticMetaData]]:
@@ -112,6 +112,7 @@ class StatisticsMetaManager:
             ):
                 statistics_meta = cast(StatisticsMeta, row)
                 id_meta = _statistics_meta_to_id_statistics_metadata(statistics_meta)
+
                 statistic_id = cast(str, statistics_meta.statistic_id)
                 results[statistic_id] = id_meta
                 if update_cache:
@@ -149,7 +150,7 @@ class StatisticsMetaManager:
         statistic_id: str,
         new_metadata: StatisticMetaData,
         old_metadata_dict: dict[str, tuple[int, StatisticMetaData]],
-    ) -> tuple[bool, int]:
+    ) -> tuple[str | None, int]:
         """Update metadata in the database.
 
         This call is not thread-safe and must be called from the
@@ -163,7 +164,7 @@ class StatisticsMetaManager:
             or old_metadata["unit_of_measurement"]
             != new_metadata["unit_of_measurement"]
         ):
-            return False, metadata_id
+            return None, metadata_id
 
         self._assert_in_recorder_thread()
         session.query(StatisticsMeta).filter_by(statistic_id=statistic_id).update(
@@ -182,7 +183,7 @@ class StatisticsMetaManager:
             old_metadata,
             new_metadata,
         )
-        return True, metadata_id
+        return statistic_id, metadata_id
 
     def load(self, session: Session) -> None:
         """Load the statistic_id to metadata_id mapping into memory.
@@ -196,12 +197,12 @@ class StatisticsMetaManager:
         self, session: Session, statistic_id: str
     ) -> tuple[int, StatisticMetaData] | None:
         """Resolve statistic_id to the metadata_id."""
-        return self.get_many(session, [statistic_id]).get(statistic_id)
+        return self.get_many(session, {statistic_id}).get(statistic_id)
 
     def get_many(
         self,
         session: Session,
-        statistic_ids: list[str] | None = None,
+        statistic_ids: set[str] | None = None,
         statistic_type: Literal["mean"] | Literal["sum"] | None = None,
         statistic_source: str | None = None,
     ) -> dict[str, tuple[int, StatisticMetaData]]:
@@ -228,16 +229,8 @@ class StatisticsMetaManager:
                 "Providing statistic_type and statistic_source is mutually exclusive of statistic_ids"
             )
 
-        results: dict[str, tuple[int, StatisticMetaData]] = {}
-        missing_statistic_id: list[str] = []
-
-        for statistic_id in statistic_ids:
-            if id_meta := self._stat_id_to_id_meta.get(statistic_id):
-                results[statistic_id] = id_meta
-            else:
-                missing_statistic_id.append(statistic_id)
-
-        if not missing_statistic_id:
+        results = self.get_from_cache_threadsafe(statistic_ids)
+        if not (missing_statistic_id := statistic_ids.difference(results)):
             return results
 
         # Fetch metadata from the database
@@ -245,12 +238,29 @@ class StatisticsMetaManager:
             session, statistic_ids=missing_statistic_id
         )
 
+    def get_from_cache_threadsafe(
+        self, statistic_ids: set[str]
+    ) -> dict[str, tuple[int, StatisticMetaData]]:
+        """Get metadata from cache.
+
+        This call is thread safe and can be run in the event loop,
+        the database executor, or the recorder thread.
+        """
+        return {
+            statistic_id: id_meta
+            for statistic_id in statistic_ids
+            # We must use a get call here and never iterate over the dict
+            # because the dict can be modified by the recorder thread
+            # while we are iterating over it.
+            if (id_meta := self._stat_id_to_id_meta.get(statistic_id))
+        }
+
     def update_or_add(
         self,
         session: Session,
         new_metadata: StatisticMetaData,
         old_metadata_dict: dict[str, tuple[int, StatisticMetaData]],
-    ) -> tuple[bool, int]:
+    ) -> tuple[str | None, int]:
         """Get metadata_id for a statistic_id.
 
         If the statistic_id is previously unknown, add it. If it's already known, update
@@ -258,16 +268,16 @@ class StatisticsMetaManager:
 
         Updating metadata source is not possible.
 
-        Returns a tuple of (updated, metadata_id).
+        Returns a tuple of (statistic_id | None, metadata_id).
 
-        updated is True if the metadata was updated, False if it was not updated.
+        statistic_id is None if the metadata was not updated
 
         This call is not thread-safe and must be called from the
         recorder thread.
         """
         statistic_id = new_metadata["statistic_id"]
         if statistic_id not in old_metadata_dict:
-            return True, self._add_metadata(session, statistic_id, new_metadata)
+            return statistic_id, self._add_metadata(session, statistic_id, new_metadata)
         return self._update_metadata(
             session, statistic_id, new_metadata, old_metadata_dict
         )
@@ -319,4 +329,14 @@ class StatisticsMetaManager:
 
     def reset(self) -> None:
         """Reset the cache."""
-        self._stat_id_to_id_meta = {}
+        self._stat_id_to_id_meta.clear()
+
+    def adjust_lru_size(self, new_size: int) -> None:
+        """Adjust the LRU cache size.
+
+        This call is not thread-safe and must be called from the
+        recorder thread.
+        """
+        lru: LRU = self._stat_id_to_id_meta
+        if new_size > lru.get_size():
+            lru.set_size(new_size)

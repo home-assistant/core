@@ -23,7 +23,12 @@ import homeassistant.util.dt as dt_util
 from ... import recorder
 from ..db_schema import RecorderRuns, StateAttributes, States, StatesMeta
 from ..filters import Filters
-from ..models import LazyState, process_timestamp, row_to_compressed_state
+from ..models import (
+    LazyState,
+    extract_metadata_ids,
+    process_timestamp,
+    row_to_compressed_state,
+)
 from ..util import execute_stmt_lambda_element, session_scope
 from .const import (
     IGNORE_DOMAINS_ENTITY_ID_LIKE,
@@ -137,8 +142,8 @@ def _ignore_domains_filter(query: Query) -> Query:
 def _significant_states_stmt(
     start_time: datetime,
     end_time: datetime | None,
-    entity_ids: list[str] | None,
     metadata_ids: list[int] | None,
+    metadata_ids_in_significant_domains: list[int],
     filters: Filters | None,
     significant_changes_only: bool,
     no_attributes: bool,
@@ -148,17 +153,23 @@ def _significant_states_stmt(
         no_attributes, include_last_changed=not significant_changes_only
     )
     join_states_meta = False
-    if (
-        entity_ids
-        and len(entity_ids) == 1
-        and significant_changes_only
-        and split_entity_id(entity_ids[0])[0] not in SIGNIFICANT_DOMAINS
-    ):
+    if metadata_ids and significant_changes_only:
+        # Since we are filtering on entity_id (metadata_id) we can avoid
+        # the join of the states_meta table since we already know which
+        # metadata_ids are in the significant domains.
         stmt += lambda q: q.filter(
-            (States.last_changed_ts == States.last_updated_ts)
+            States.metadata_id.in_(metadata_ids_in_significant_domains)
+            | (States.last_changed_ts == States.last_updated_ts)
             | States.last_changed_ts.is_(None)
         )
     elif significant_changes_only:
+        # This is the case where we are not filtering on entity_id
+        # so we need to join the states_meta table to filter out
+        # the domains we do not care about. This query path was
+        # only used by the old history page to show all entities
+        # in the UI. The new history page filters on entity_id
+        # so this query path is not used anymore except for third
+        # party integrations that use the history API.
         stmt += lambda q: q.filter(
             or_(
                 *[
@@ -230,21 +241,27 @@ def get_significant_states_with_session(
     """
     metadata_ids: list[int] | None = None
     entity_id_to_metadata_id: dict[str, int | None] | None = None
+    metadata_ids_in_significant_domains: list[int] = []
     if entity_ids:
         instance = recorder.get_instance(hass)
-        entity_id_to_metadata_id = instance.states_meta_manager.get_many(
-            entity_ids, session, False
-        )
-        metadata_ids = [
-            metadata_id
-            for metadata_id in entity_id_to_metadata_id.values()
-            if metadata_id is not None
-        ]
+        if not (
+            entity_id_to_metadata_id := instance.states_meta_manager.get_many(
+                entity_ids, session, False
+            )
+        ) or not (metadata_ids := extract_metadata_ids(entity_id_to_metadata_id)):
+            return {}
+        if significant_changes_only:
+            metadata_ids_in_significant_domains = [
+                metadata_id
+                for entity_id, metadata_id in entity_id_to_metadata_id.items()
+                if metadata_id is not None
+                and split_entity_id(entity_id)[0] in SIGNIFICANT_DOMAINS
+            ]
     stmt = _significant_states_stmt(
         start_time,
         end_time,
-        entity_ids,
         metadata_ids,
+        metadata_ids_in_significant_domains,
         filters,
         significant_changes_only,
         no_attributes,
@@ -389,16 +406,38 @@ def _get_last_state_changes_stmt(
     stmt, join_attributes = _lambda_stmt_and_join_attributes(
         False, include_last_changed=False
     )
-    stmt += lambda q: q.where(
-        States.state_id
-        == (
-            select(States.state_id)
-            .filter(States.metadata_id == metadata_id)
-            .order_by(States.last_updated_ts.desc())
-            .limit(number_of_states)
-            .subquery()
-        ).c.state_id
-    )
+    if number_of_states == 1:
+        stmt += lambda q: q.join(
+            (
+                lastest_state_for_metadata_id := (
+                    select(
+                        States.metadata_id.label("max_metadata_id"),
+                        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+                        # pylint: disable-next=not-callable
+                        func.max(States.last_updated_ts).label("max_last_updated"),
+                    )
+                    .filter(States.metadata_id == metadata_id)
+                    .group_by(States.metadata_id)
+                    .subquery()
+                )
+            ),
+            and_(
+                States.metadata_id == lastest_state_for_metadata_id.c.max_metadata_id,
+                States.last_updated_ts
+                == lastest_state_for_metadata_id.c.max_last_updated,
+            ),
+        )
+    else:
+        stmt += lambda q: q.where(
+            States.state_id
+            == (
+                select(States.state_id)
+                .filter(States.metadata_id == metadata_id)
+                .order_by(States.last_updated_ts.desc())
+                .limit(number_of_states)
+                .subquery()
+            ).c.state_id
+        )
     if join_attributes:
         stmt += lambda q: q.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
@@ -414,6 +453,10 @@ def get_last_state_changes(
     """Return the last number_of_states."""
     entity_id_lower = entity_id.lower()
     entity_ids = [entity_id_lower]
+
+    # Calling this function with number_of_states > 1 can cause instability
+    # because it has to scan the table to find the last number_of_states states
+    # because the metadata_id_last_updated_ts index is in ascending order.
 
     with session_scope(hass=hass, read_only=True) as session:
         instance = recorder.get_instance(hass)
@@ -560,7 +603,7 @@ def _get_rows_with_session(
         )
 
     if run is None:
-        run = recorder.get_instance(hass).run_history.get(utc_point_in_time)
+        run = recorder.get_instance(hass).recorder_runs_manager.get(utc_point_in_time)
 
     if run is None or process_timestamp(run.start) > utc_point_in_time:
         # History did not run before utc_point_in_time
@@ -569,14 +612,9 @@ def _get_rows_with_session(
     # We have more than one entity to look at so we need to do a query on states
     # since the last recorder run started.
     if entity_ids:
-        if not entity_id_to_metadata_id:
-            return []
-        metadata_ids = [
-            metadata_id
-            for metadata_id in entity_id_to_metadata_id.values()
-            if metadata_id is not None
-        ]
-        if not metadata_ids:
+        if not entity_id_to_metadata_id or not (
+            metadata_ids := extract_metadata_ids(entity_id_to_metadata_id)
+        ):
             return []
         stmt = _get_states_for_entities_stmt(
             run.start, utc_point_in_time, metadata_ids, no_attributes

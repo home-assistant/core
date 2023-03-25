@@ -1,7 +1,7 @@
 """Test the Open Thread Border Router integration."""
 import asyncio
 from http import HTTPStatus
-from unittest.mock import patch
+from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import aiohttp
 import pytest
@@ -98,6 +98,31 @@ async def test_config_entry_not_ready(hass: HomeAssistant, error) -> None:
     config_entry.add_to_hass(hass)
     with patch("python_otbr_api.OTBR.get_active_dataset_tlvs", side_effect=error):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
+
+
+async def test_config_entry_update(hass: HomeAssistant) -> None:
+    """Test update config entry settings."""
+    config_entry = MockConfigEntry(
+        data=CONFIG_ENTRY_DATA,
+        domain=otbr.DOMAIN,
+        options={},
+        title="My OTBR",
+    )
+    config_entry.add_to_hass(hass)
+    mock_api = MagicMock()
+    mock_api.get_active_dataset_tlvs = AsyncMock(return_value=None)
+    with patch("python_otbr_api.OTBR", return_value=mock_api) as mock_otrb_api:
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    mock_otrb_api.assert_called_once_with(CONFIG_ENTRY_DATA["url"], ANY, ANY)
+
+    new_config_entry_data = {"url": "http://core-silabs-multiprotocol:8082"}
+    assert CONFIG_ENTRY_DATA["url"] != new_config_entry_data["url"]
+    with patch("python_otbr_api.OTBR", return_value=mock_api) as mock_otrb_api:
+        hass.config_entries.async_update_entry(config_entry, data=new_config_entry_data)
+        await hass.async_block_till_done()
+
+    mock_otrb_api.assert_called_once_with(new_config_entry_data["url"], ANY, ANY)
 
 
 async def test_remove_entry(

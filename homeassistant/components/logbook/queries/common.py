@@ -166,34 +166,6 @@ def select_states() -> Select:
     )
 
 
-def legacy_select_events_context_id(
-    start_day: float, end_day: float, context_id_bin: bytes
-) -> Select:
-    """Generate a legacy events context id select that also joins states."""
-    # This can be removed once we no longer have event_ids in the states table
-    return (
-        select(
-            *EVENT_COLUMNS,
-            literal(value=None, type_=sqlalchemy.String).label("shared_data"),
-            *STATE_COLUMNS,
-            NOT_CONTEXT_ONLY,
-        )
-        .outerjoin(States, (Events.event_id == States.event_id))
-        .where(
-            (States.last_updated_ts == States.last_changed_ts)
-            | States.last_changed_ts.is_(None)
-        )
-        .where(_not_continuous_entity_matcher())
-        .outerjoin(
-            StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
-        )
-        .outerjoin(StatesMeta, (States.metadata_id == StatesMeta.metadata_id))
-        .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
-        .where((Events.time_fired_ts > start_day) & (Events.time_fired_ts < end_day))
-        .where(Events.context_id_bin == context_id_bin)
-    )
-
-
 def apply_states_filters(sel: Select, start_day: float, end_day: float) -> Select:
     """Filter states by time range.
 

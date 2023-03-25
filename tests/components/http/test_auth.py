@@ -352,6 +352,12 @@ async def test_auth_access_signed_path_with_query_param(
     data = await req.json()
     assert data["user_id"] == refresh_token.user.id
 
+    # Without query params not allowed
+    url = yarl.URL(signed_path)
+    signed_path = f"{url.path}?{SIGN_QUERY_PARAM}={url.query.get(SIGN_QUERY_PARAM)}"
+    req = await client.get(signed_path)
+    assert req.status == HTTPStatus.UNAUTHORIZED
+
 
 async def test_auth_access_signed_path_with_query_param_order(
     hass: HomeAssistant,
@@ -374,12 +380,24 @@ async def test_auth_access_signed_path_with_query_param_order(
         refresh_token_id=refresh_token.id,
     )
     url = yarl.URL(signed_path)
-    signed_path = f"{url.path}?{SIGN_QUERY_PARAM}={url.query.get(SIGN_QUERY_PARAM)}&foo=bar&test=test"
 
-    req = await client.get(signed_path)
-    assert req.status == HTTPStatus.OK
-    data = await req.json()
-    assert data["user_id"] == refresh_token.user.id
+    # Change order
+    req = await client.get(
+        f"{url.path}?{SIGN_QUERY_PARAM}={url.query.get(SIGN_QUERY_PARAM)}&foo=bar&test=test"
+    )
+    assert req.status == HTTPStatus.UNAUTHORIZED
+
+    # Duplicate a param
+    req = await client.get(
+        f"{url.path}?{SIGN_QUERY_PARAM}={url.query.get(SIGN_QUERY_PARAM)}&test=test&foo=aaa&foo=bar"
+    )
+    assert req.status == HTTPStatus.UNAUTHORIZED
+
+    # Remove a param
+    req = await client.get(
+        f"{url.path}?{SIGN_QUERY_PARAM}={url.query.get(SIGN_QUERY_PARAM)}&test=test"
+    )
+    assert req.status == HTTPStatus.UNAUTHORIZED
 
 
 async def test_auth_access_signed_path_with_query_param_safe_param(

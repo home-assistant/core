@@ -44,13 +44,21 @@
       },
       "state_attributes": {
         "code_format": {
-          "name": "Code format"
+          "name": "Code format",
+          "state": {
+            "text": "Text",
+            "number": "Number"
+          }
         },
         "changed_by": {
           "name": "Changed by"
         },
         "code_arm_required": {
-          "name": "Code for arming required"
+          "name": "Code for arming",
+          "state": {
+            "true": "Required",
+            "false": "Not required"
+          }
         }
       }
     }

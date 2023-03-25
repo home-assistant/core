@@ -165,13 +165,13 @@ class BaseHaScanner(ABC):
             "monotonic_time": MONOTONIC_TIME(),
             "discovered_devices_and_advertisement_data": [
                 {
-                    "name": device_adv[0].name,
-                    "address": device_adv[0].address,
-                    "rssi": device_adv[0].rssi,
-                    "advertisement_data": device_adv[1],
-                    "details": device_adv[0].details,
+                    "name": device.name,
+                    "address": device.address,
+                    "rssi": advertisement_data.rssi,
+                    "advertisement_data": advertisement_data,
+                    "details": device.details,
                 }
-                for device_adv in device_adv_datas
+                for device, advertisement_data in device_adv_datas
             ],
         }
 
@@ -339,7 +339,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
             tx_power=NO_RSSI_VALUE if tx_power is None else tx_power,
             platform_data=(),
         )
-        device = BLEDevice(  # type: ignore[no-untyped-call]
+        device = BLEDevice(
             address=address,
             name=local_name,
             details=self._details | details,
