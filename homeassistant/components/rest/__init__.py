@@ -15,6 +15,7 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     CONF_AUTHENTICATION,
+    CONF_CHARACTER_ENCODING,
     CONF_HEADERS,
     CONF_METHOD,
     CONF_PARAMS,
@@ -182,6 +183,7 @@ def create_rest_data_from_config(hass: HomeAssistant, config: ConfigType) -> Res
     headers: dict[str, str] | None = config.get(CONF_HEADERS)
     params: dict[str, str] | None = config.get(CONF_PARAMS)
     timeout: int = config[CONF_TIMEOUT]
+    default__encoding: str = config[CONF_CHARACTER_ENCODING]
 
     if resource_template is not None:
         resource_template.hass = hass
@@ -201,5 +203,14 @@ def create_rest_data_from_config(hass: HomeAssistant, config: ConfigType) -> Res
             auth = (username, password)
 
     return RestData(
-        hass, method, resource, auth, headers, params, payload, verify_ssl, timeout
+        hass,
+        method,
+        resource,
+        default__encoding,
+        auth,
+        headers,
+        params,
+        payload,
+        verify_ssl,
+        timeout,
     )

@@ -22,6 +22,7 @@ class RestData:
         hass: HomeAssistant,
         method: str,
         resource: str,
+        default_encoding: str,
         auth: httpx.DigestAuth | tuple[str, str] | None,
         headers: dict[str, str] | None,
         params: dict[str, str] | None,
@@ -33,6 +34,7 @@ class RestData:
         self._hass = hass
         self._method = method
         self._resource = resource
+        self._default_encoding = default_encoding
         self._auth = auth
         self._headers = headers
         self._params = params
@@ -57,6 +59,9 @@ class RestData:
 
         rendered_headers = template.render_complex(self._headers, parse_result=False)
         rendered_params = template.render_complex(self._params)
+        self._async_client._default_encoding = (  # pylint: disable=protected-access
+            self._default_encoding
+        )
 
         _LOGGER.debug("Updating from %s", self._resource)
         try:

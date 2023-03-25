@@ -6,6 +6,7 @@ from datetime import timedelta
 from homeassistant.const import Platform
 
 DOMAIN = "scrape"
+DEFAULT_CHARACTER_ENCODING = "UTF-8"
 DEFAULT_NAME = "Web scrape"
 DEFAULT_VERIFY_SSL = True
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=10)

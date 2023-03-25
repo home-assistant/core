@@ -20,6 +20,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ATTRIBUTE,
     CONF_AUTHENTICATION,
+    CONF_CHARACTER_ENCODING,
     CONF_DEVICE_CLASS,
     CONF_HEADERS,
     CONF_NAME,
@@ -50,6 +51,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     CONF_INDEX,
     CONF_SELECT,
+    DEFAULT_CHARACTER_ENCODING,
     DEFAULT_NAME,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_VERIFY_SSL,
@@ -65,6 +67,9 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_AUTHENTICATION): vol.In(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
         ),
+        vol.Optional(
+            CONF_CHARACTER_ENCODING, default=DEFAULT_CHARACTER_ENCODING
+        ): cv.string,
         vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.string}),
         vol.Optional(CONF_PASSWORD): cv.string,
         vol.Required(CONF_RESOURCE): cv.string,
