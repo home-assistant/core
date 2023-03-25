@@ -328,7 +328,9 @@ class AFSAPIDevice(MediaPlayerEntity):
             await self.fs_device.set_eq_preset(mode)
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Browse media library and preset stations."""
         if not media_content_id:
