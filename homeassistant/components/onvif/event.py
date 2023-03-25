@@ -95,11 +95,7 @@ class EventManager:
         )
 
         # Renew immediately
-        with suppress(*SUBSCRIPTION_ERRORS):
-            # The first time we renew, we may get a Fault error so we
-            # suppress it. The subscription will be restarted in
-            # async_restart later.
-            await self.async_renew()
+        await self.async_renew()
 
         # Initialize events
         pullpoint = self.device.create_pullpoint_service()
@@ -181,7 +177,11 @@ class EventManager:
             .isoformat(timespec="seconds")
             .replace("+00:00", "Z")
         )
-        await self._subscription.Renew(termination_time)
+        with suppress(*SUBSCRIPTION_ERRORS):
+            # The first time we renew, we may get a Fault error so we
+            # suppress it. The subscription will be restarted in
+            # async_restart later.
+            await self._subscription.Renew(termination_time)
 
     def async_schedule_pull(self) -> None:
         """Schedule async_pull_messages to run."""
