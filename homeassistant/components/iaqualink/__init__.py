@@ -153,6 +153,7 @@ async def async_setup_entry(  # noqa: C901
                         system.serial,
                         svc_exception,
                     )
+                await system.aqualink.close()
             else:
                 cur = system.online
                 if cur and not prev:

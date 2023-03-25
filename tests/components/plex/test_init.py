@@ -15,7 +15,7 @@ from homeassistant.components.plex.models import (
     TRANSIENT_SECTION,
     UNKNOWN_SECTION,
 )
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     CONF_TOKEN,
     CONF_URL,
@@ -314,3 +314,49 @@ async def test_scan_clients_schedule(hass: HomeAssistant, setup_plex_server) -> 
         await hass.async_block_till_done()
 
     assert mock_scan_clients.called
+
+
+async def test_setup_with_limited_credentials(
+    hass: HomeAssistant, entry, setup_plex_server
+) -> None:
+    """Test setup with a user with limited permissions."""
+    with patch(
+        "plexapi.server.PlexServer.systemAccounts",
+        side_effect=plexapi.exceptions.Unauthorized,
+    ) as mock_accounts:
+        mock_plex_server = await setup_plex_server()
+
+    assert mock_accounts.called
+
+    plex_server = hass.data[const.DOMAIN][const.SERVERS][
+        mock_plex_server.machine_identifier
+    ]
+    assert len(plex_server.accounts) == 0
+    assert plex_server.owner is None
+
+    assert len(hass.config_entries.async_entries(const.DOMAIN)) == 1
+    assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_trigger_reauth(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+    mock_plex_server,
+    mock_websocket,
+) -> None:
+    """Test setup and reauthorization of a Plex token."""
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    with patch(
+        "plexapi.server.PlexServer.clients", side_effect=plexapi.exceptions.Unauthorized
+    ), patch("plexapi.server.PlexServer", side_effect=plexapi.exceptions.Unauthorized):
+        trigger_plex_update(mock_websocket)
+        await wait_for_debouncer(hass)
+
+    assert len(hass.config_entries.async_entries(const.DOMAIN)) == 1
+    assert entry.state is not ConfigEntryState.LOADED
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH

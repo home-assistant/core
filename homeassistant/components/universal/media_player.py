@@ -44,9 +44,12 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
+    MediaType,
+    RepeatMode,
 )
 from homeassistant.components.media_player.browse_media import BrowseMedia
 from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
     ATTR_ENTITY_PICTURE,
     ATTR_SUPPORTED_FEATURES,
@@ -290,6 +293,11 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     def name(self):
         """Return the name of universal player."""
         return self._name
+
+    @property
+    def assumed_state(self) -> bool:
+        """Return True if unable to access real state of the entity."""
+        return self._child_attr(ATTR_ASSUMED_STATE)
 
     @property
     def state(self):
@@ -568,7 +576,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         await self._async_call_service(SERVICE_MEDIA_SEEK, data)
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
         data = {ATTR_MEDIA_CONTENT_TYPE: media_type, ATTR_MEDIA_CONTENT_ID: media_id}
@@ -607,7 +615,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         data = {ATTR_MEDIA_SHUFFLE: shuffle}
         await self._async_call_service(SERVICE_SHUFFLE_SET, data, allow_override=True)
 
-    async def async_set_repeat(self, repeat: str) -> None:
+    async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
         data = {ATTR_MEDIA_REPEAT: repeat}
         await self._async_call_service(SERVICE_REPEAT_SET, data, allow_override=True)

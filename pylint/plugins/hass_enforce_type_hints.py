@@ -102,8 +102,9 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "enable_custom_integrations": "None",
     "enable_nightly_purge": "bool",
     "enable_statistics": "bool",
-    "enable_statistics_table_validation": "bool",
+    "enable_schema_validation": "bool",
     "entity_registry": "EntityRegistry",
+    "freezer": "FrozenDateTimeFactory",
     "hass_access_token": "str",
     "hass_admin_credential": "Credentials",
     "hass_admin_user": "MockUser",
@@ -141,6 +142,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "requests_mock": "requests_mock.Mocker",
     "snapshot": "SnapshotAssertion",
     "tmp_path": "Path",
+    "tmpdir": "py.path.local",
 }
 _TEST_FUNCTION_MATCH = TypeHintMatch(
     function_name="test_*",
@@ -678,6 +680,7 @@ _RESTORE_ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="extra_restore_state_data",
         return_type=["ExtraStoredData", None],
+        check_return_type_inheritance=True,
     ),
 ]
 _TOGGLE_ENTITY_MATCH: list[TypeHintMatch] = [

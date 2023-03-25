@@ -106,6 +106,8 @@ class ActiveBluetoothDataUpdateCoordinator(
 
     def needs_poll(self, service_info: BluetoothServiceInfoBleak) -> bool:
         """Return true if time to try and poll."""
+        if self.hass.is_stopping:
+            return False
         poll_age: float | None = None
         if self._last_poll:
             poll_age = monotonic_time_coarse() - self._last_poll

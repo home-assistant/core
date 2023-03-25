@@ -74,7 +74,6 @@ from .const import (  # noqa: F401
     CONF_QOS,
     CONF_STATE_TOPIC,
     CONF_TLS_INSECURE,
-    CONF_TLS_VERSION,
     CONF_TOPIC,
     CONF_TRANSPORT,
     CONF_WILL_MESSAGE,
@@ -160,7 +159,6 @@ CONFIG_SCHEMA = vol.Schema(
             cv.deprecated(CONF_PORT),  # Deprecated in HA Core 2022.3
             cv.deprecated(CONF_PROTOCOL),  # Deprecated in HA Core 2022.11
             cv.deprecated(CONF_TLS_INSECURE),  # Deprecated in HA Core 2022.11
-            cv.deprecated(CONF_TLS_VERSION),  # Deprecated June 2020
             cv.deprecated(CONF_USERNAME),  # Deprecated in HA Core 2022.3
             cv.deprecated(CONF_WILL_MESSAGE),  # Deprecated in HA Core 2022.3
             CONFIG_SCHEMA_BASE,
@@ -706,7 +704,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             for component in PLATFORMS
         )
     )
-    await hass.async_block_till_done()
+    await asyncio.sleep(0)
     # Unsubscribe reload dispatchers
     while reload_dispatchers := mqtt_data.reload_dispatchers:
         reload_dispatchers.pop()()

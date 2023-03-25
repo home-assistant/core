@@ -4,7 +4,6 @@ from math import sin
 import random
 from unittest.mock import patch
 
-from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import UnitOfPower, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -79,7 +78,6 @@ async def setup_tests(hass, config, times, values, expected_state):
     assert state is not None
 
     assert round(float(state.state), config["sensor"]["round"]) == expected_state
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
 
     return state
 

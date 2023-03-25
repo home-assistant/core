@@ -14,11 +14,13 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
 ENTITY_ID_LIGHT_PANEL = f"{DOMAIN}.fake_device_1_panel_light"
+ENTITY_ID_HEALTH_MODE = f"{DOMAIN}.fake_device_1_health_mode"
 ENTITY_ID_QUIET = f"{DOMAIN}.fake_device_1_quiet"
 ENTITY_ID_FRESH_AIR = f"{DOMAIN}.fake_device_1_fresh_air"
 ENTITY_ID_XFAN = f"{DOMAIN}.fake_device_1_xfan"
@@ -31,16 +33,29 @@ async def async_setup_gree(hass):
     await hass.async_block_till_done()
 
 
+async def test_health_mode_disabled_by_default(hass):
+    """Test for making sure health mode is disabled on first load."""
+    await async_setup_gree(hass)
+
+    assert (
+        er.async_get(hass).async_get(ENTITY_ID_HEALTH_MODE).disabled_by
+        == er.RegistryEntryDisabler.INTEGRATION
+    )
+
+
 @pytest.mark.parametrize(
     "entity",
     [
         ENTITY_ID_LIGHT_PANEL,
+        ENTITY_ID_HEALTH_MODE,
         ENTITY_ID_QUIET,
         ENTITY_ID_FRESH_AIR,
         ENTITY_ID_XFAN,
     ],
 )
-async def test_send_switch_on(hass: HomeAssistant, entity) -> None:
+async def test_send_switch_on(
+    hass: HomeAssistant, entity, entity_registry_enabled_by_default
+) -> None:
     """Test for sending power on command to the device."""
     await async_setup_gree(hass)
 
@@ -60,13 +75,14 @@ async def test_send_switch_on(hass: HomeAssistant, entity) -> None:
     "entity",
     [
         ENTITY_ID_LIGHT_PANEL,
+        ENTITY_ID_HEALTH_MODE,
         ENTITY_ID_QUIET,
         ENTITY_ID_FRESH_AIR,
         ENTITY_ID_XFAN,
     ],
 )
 async def test_send_switch_on_device_timeout(
-    hass: HomeAssistant, device, entity
+    hass: HomeAssistant, device, entity, entity_registry_enabled_by_default
 ) -> None:
     """Test for sending power on command to the device with a device timeout."""
     device().push_state_update.side_effect = DeviceTimeoutError
@@ -89,12 +105,15 @@ async def test_send_switch_on_device_timeout(
     "entity",
     [
         ENTITY_ID_LIGHT_PANEL,
+        ENTITY_ID_HEALTH_MODE,
         ENTITY_ID_QUIET,
         ENTITY_ID_FRESH_AIR,
         ENTITY_ID_XFAN,
     ],
 )
-async def test_send_switch_off(hass: HomeAssistant, entity) -> None:
+async def test_send_switch_off(
+    hass: HomeAssistant, entity, entity_registry_enabled_by_default
+) -> None:
     """Test for sending power on command to the device."""
     await async_setup_gree(hass)
 
@@ -114,12 +133,15 @@ async def test_send_switch_off(hass: HomeAssistant, entity) -> None:
     "entity",
     [
         ENTITY_ID_LIGHT_PANEL,
+        ENTITY_ID_HEALTH_MODE,
         ENTITY_ID_QUIET,
         ENTITY_ID_FRESH_AIR,
         ENTITY_ID_XFAN,
     ],
 )
-async def test_send_switch_toggle(hass: HomeAssistant, entity) -> None:
+async def test_send_switch_toggle(
+    hass: HomeAssistant, entity, entity_registry_enabled_by_default
+) -> None:
     """Test for sending power on command to the device."""
     await async_setup_gree(hass)
 
@@ -164,12 +186,15 @@ async def test_send_switch_toggle(hass: HomeAssistant, entity) -> None:
     ("entity", "name"),
     [
         (ENTITY_ID_LIGHT_PANEL, "Panel Light"),
+        (ENTITY_ID_HEALTH_MODE, "Health mode"),
         (ENTITY_ID_QUIET, "Quiet"),
         (ENTITY_ID_FRESH_AIR, "Fresh Air"),
         (ENTITY_ID_XFAN, "XFan"),
     ],
 )
-async def test_entity_name(hass: HomeAssistant, entity, name) -> None:
+async def test_entity_name(
+    hass: HomeAssistant, entity, name, entity_registry_enabled_by_default
+) -> None:
     """Test for name property."""
     await async_setup_gree(hass)
     state = hass.states.get(entity)

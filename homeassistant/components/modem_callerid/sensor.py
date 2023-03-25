@@ -7,15 +7,13 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_IDLE
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CID, DATA_KEY_API, DOMAIN, ICON
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: entity_platform.AddEntitiesCallback,
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Modem Caller ID sensor."""
     api = hass.data[DOMAIN][entry.entry_id][DATA_KEY_API]
