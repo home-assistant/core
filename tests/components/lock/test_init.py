@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.components.lock import (
     ATTR_CODE,
+    CONF_DEFAULT_CODE,
     DOMAIN,
     SERVICE_LOCK,
     SERVICE_OPEN,
@@ -24,6 +25,10 @@ from homeassistant.components.lock import (
     _async_unlock,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+import homeassistant.helpers.entity_registry as er
+from homeassistant.setup import async_setup_component
+
+from tests.testing_config.custom_components.test.lock import MockLock
 
 
 class MockLockEntity(LockEntity):
@@ -100,6 +105,37 @@ async def test_lock_states(hass: HomeAssistant) -> None:
     assert lock.is_jammed
     assert lock.state == STATE_JAMMED
     assert not lock.is_locked
+
+
+async def test_lock_reg_entry_update(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+) -> None:
+    """Test lock entity states."""
+    entity_registry = er.async_get(hass)
+
+    entry = entity_registry.async_get_or_create("lock", "test", "very_unique")
+    await hass.async_block_till_done()
+
+    platform = getattr(hass.components, "test.lock")
+    platform.init(empty=True)
+    platform.ENTITIES["lock1"] = platform.MockLock(
+        name="Test",
+        code_format=r"^\d{4}$",
+        supported_features=LockEntityFeature.OPEN,
+        unique_id="very_unique",
+    )
+
+    assert await async_setup_component(hass, "lock", {"lock": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    entity0: MockLock = platform.ENTITIES["lock1"]
+    entity_registry.async_update_entity_options(
+        entry.entity_id, "lock", {CONF_DEFAULT_CODE: "1234"}
+    )
+    await hass.async_block_till_done()
+
+    assert entity0._lock_option_default_code == "1234"
 
 
 async def test_lock_open_with_code(hass: HomeAssistant) -> None:
