@@ -93,8 +93,8 @@ from .const import (  # noqa: F401
     ATTR_MEDIA_TITLE,
     ATTR_MEDIA_TRACK,
     ATTR_MEDIA_VOLUME_LEVEL,
-    ATTR_MEDIA_VOLUME_STEP,
     ATTR_MEDIA_VOLUME_MUTED,
+    ATTR_MEDIA_VOLUME_STEP,
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
     CONTENT_AUTH_EXPIRY_TIME,
@@ -292,7 +292,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_VOLUME_UP,
         vol.All(
             cv.make_entity_service_schema(
-                {vol.Optional(ATTR_MEDIA_VOLUME_STEP): cv.small_float, default=0.1}
+                {vol.Optional(ATTR_MEDIA_VOLUME_STEP, default=0.1): cv.small_float}
             ),
             _rename_keys(step=ATTR_MEDIA_VOLUME_STEP),
         ),
@@ -303,7 +303,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_VOLUME_DOWN,
         vol.All(
             cv.make_entity_service_schema(
-                {vol.Optional(ATTR_MEDIA_VOLUME_STEP): cv.small_float, default=0.1}
+                {vol.Optional(ATTR_MEDIA_VOLUME_STEP, default=0.1): cv.small_float}
             ),
             _rename_keys(step=ATTR_MEDIA_VOLUME_STEP),
         ),
