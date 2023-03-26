@@ -108,7 +108,7 @@ class ProxmoxSensor(ProxmoxEntity, SensorEntity):
         self._attr_native_unit_of_measurement = description.native_unit_of_measurement
         super().__init__(
             coordinator,
-            unique_id=f"proxmox_{node_name}_{vm_id}_{description.name}",
+            unique_id=f"{node_name}_{vm_id}_{description.key}",
             name=f"{node_name}_{vm_name}_{description.name}",
             icon=description.icon,
             host_name=host_name,
