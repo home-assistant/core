@@ -115,7 +115,7 @@ class SouthernCompanyCoordinator(DataUpdateCoordinator):
                     None,
                     {"sum"},
                 )
-                _cost_sum = cost_stat[cost_statistic_id][0]["sum"]
+                _cost_sum = cost_stat[cost_statistic_id][0]["sum"] or 0.0
                 last_stats_time = cost_stat[cost_statistic_id][0]["start"]
                 usage_stat = await get_instance(self.hass).async_add_executor_job(
                     statistics_during_period,
@@ -127,7 +127,7 @@ class SouthernCompanyCoordinator(DataUpdateCoordinator):
                     None,
                     {"sum"},
                 )
-                _usage_sum = usage_stat[usage_statistic_id][0]["sum"]
+                _usage_sum = usage_stat[usage_statistic_id][0]["sum"] or 0.0
 
             cost_statistics = []
             usage_statistics = []
