@@ -133,7 +133,6 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
         name="IP",
         icon="mdi:ip-network",
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=True,
         value_fn=lambda device: device.info.ip,
     ),)
 
