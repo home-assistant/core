@@ -40,7 +40,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.37.4
+PySwitchbot==0.37.5
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -156,7 +156,7 @@ aioecowitt==2023.01.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==13.5.1
+aioesphomeapi==13.6.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -952,7 +952,7 @@ ibm-watson==5.2.2
 ibmiotf==0.3.4
 
 # homeassistant.components.local_calendar
-ical==4.5.0
+ical==4.5.1
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -964,7 +964,7 @@ ifaddr==0.1.7
 iglo==1.2.7
 
 # homeassistant.components.ihc
-ihcsdk==2.7.6
+ihcsdk==2.8.5
 
 # homeassistant.components.incomfort
 incomfort-client==0.5.0
