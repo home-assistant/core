@@ -8,10 +8,11 @@ import aiohttp
 import python_otbr_api
 from python_otbr_api import tlv_parser
 import voluptuous as vol
+import yarl
 
 from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.components.thread import async_get_preferred_dataset
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import SOURCE_HASSIO, ConfigFlow
 from homeassistant.const import CONF_URL
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -86,11 +87,25 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
         """Handle hassio discovery."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         config = discovery_info.config
         url = f"http://{config['host']}:{config['port']}"
+        config_entry_data = {"url": url}
+
+        if current_entries := self._async_current_entries():
+            for current_entry in current_entries:
+                if current_entry.source != SOURCE_HASSIO:
+                    continue
+                current_url = yarl.URL(current_entry.data["url"])
+                if (
+                    current_url.host != config["host"]
+                    or current_url.port == config["port"]
+                ):
+                    continue
+                # Update URL with the new port
+                self.hass.config_entries.async_update_entry(
+                    current_entry, data=config_entry_data
+                )
+            return self.async_abort(reason="single_instance_allowed")
 
         try:
             await self._connect_and_create_dataset(url)
@@ -101,5 +116,5 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(DOMAIN)
         return self.async_create_entry(
             title="Open Thread Border Router",
-            data={"url": url},
+            data=config_entry_data,
         )

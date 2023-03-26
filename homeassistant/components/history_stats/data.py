@@ -18,7 +18,7 @@ MIN_TIME_UTC = datetime.datetime.min.replace(tzinfo=dt_util.UTC)
 class HistoryStatsState:
     """The current stats of the history stats."""
 
-    hours_matched: float | None
+    seconds_matched: float | None
     match_count: int | None
     period: tuple[datetime.datetime, datetime.datetime]
 
@@ -125,12 +125,12 @@ class HistoryStats:
             await self._async_history_from_db(current_period_start, current_period_end)
             self._previous_run_before_start = False
 
-        hours_matched, match_count = self._async_compute_hours_and_changes(
+        seconds_matched, match_count = self._async_compute_seconds_and_changes(
             now_timestamp,
             current_period_start_timestamp,
             current_period_end_timestamp,
         )
-        self._state = HistoryStatsState(hours_matched, match_count, self._period)
+        self._state = HistoryStatsState(seconds_matched, match_count, self._period)
         return self._state
 
     async def _async_history_from_db(
@@ -162,10 +162,10 @@ class HistoryStats:
             no_attributes=True,
         ).get(self.entity_id, [])
 
-    def _async_compute_hours_and_changes(
+    def _async_compute_seconds_and_changes(
         self, now_timestamp: float, start_timestamp: float, end_timestamp: float
     ) -> tuple[float, int]:
-        """Compute the hours matched and changes from the history list and first state."""
+        """Compute the seconds matched and changes from the history list and first state."""
         # state_changes_during_period is called with include_start_time_state=True
         # which is the default and always provides the state at the start
         # of the period
@@ -195,6 +195,6 @@ class HistoryStats:
             measure_end = min(end_timestamp, now_timestamp)
             elapsed += measure_end - last_state_change_timestamp
 
-        # Save value in hours
-        hours_matched = elapsed / 3600
-        return hours_matched, match_count
+        # Save value in seconds
+        seconds_matched = elapsed
+        return seconds_matched, match_count

@@ -5,9 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Any
 
-from fritzconnection.core.exceptions import FritzConnectionException
 from fritzconnection.lib.fritzstatus import FritzStatus
 
 from homeassistant.components.sensor import (
@@ -25,9 +23,15 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from .common import AvmWrapper, ConnectionInfo, FritzBoxBaseEntity
+from .common import (
+    AvmWrapper,
+    ConnectionInfo,
+    FritzBoxBaseCoordinatorEntity,
+    FritzEntityDescription,
+)
 from .const import DOMAIN, DSL_CONNECTION, UPTIME_DEVIATION
 
 _LOGGER = logging.getLogger(__name__)
@@ -139,14 +143,7 @@ def _retrieve_link_attenuation_received_state(
 
 
 @dataclass
-class FritzRequireKeysMixin:
-    """Fritz sensor data class."""
-
-    value_fn: Callable[[FritzStatus, Any], Any]
-
-
-@dataclass
-class FritzSensorEntityDescription(SensorEntityDescription, FritzRequireKeysMixin):
+class FritzSensorEntityDescription(SensorEntityDescription, FritzEntityDescription):
     """Describes Fritz sensor entity."""
 
     is_suitable: Callable[[ConnectionInfo], bool] = lambda info: info.wan_enabled
@@ -304,36 +301,12 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
+class FritzBoxSensor(FritzBoxBaseCoordinatorEntity, SensorEntity):
     """Define FRITZ!Box connectivity class."""
 
     entity_description: FritzSensorEntityDescription
 
-    def __init__(
-        self,
-        avm_wrapper: AvmWrapper,
-        device_friendly_name: str,
-        description: FritzSensorEntityDescription,
-    ) -> None:
-        """Init FRITZ!Box connectivity class."""
-        self.entity_description = description
-        self._last_device_value: str | None = None
-        self._attr_available = True
-        self._attr_name = f"{device_friendly_name} {description.name}"
-        self._attr_unique_id = f"{avm_wrapper.unique_id}-{description.key}"
-        super().__init__(avm_wrapper, device_friendly_name)
-
-    def update(self) -> None:
-        """Update data."""
-        _LOGGER.debug("Updating FRITZ!Box sensors")
-
-        status: FritzStatus = self._avm_wrapper.fritz_status
-        try:
-            self._attr_native_value = (
-                self._last_device_value
-            ) = self.entity_description.value_fn(status, self._last_device_value)
-        except FritzConnectionException:
-            _LOGGER.error("Error getting the state from the FRITZ!Box", exc_info=True)
-            self._attr_available = False
-            return
-        self._attr_available = True
+    @property
+    def native_value(self) -> StateType:
+        """Return the value reported by the sensor."""
+        return self.coordinator.data.get(self.entity_description.key)

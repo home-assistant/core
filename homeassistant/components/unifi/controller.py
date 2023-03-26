@@ -10,8 +10,6 @@ from typing import Any
 from aiohttp import CookieJar
 import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
-from aiounifi.interfaces.messages import DATA_CLIENT_REMOVED, DATA_EVENT
-from aiounifi.models.event import EventKey
 from aiounifi.websocket import WebsocketSignal, WebsocketState
 import async_timeout
 
@@ -73,17 +71,6 @@ from .errors import AuthenticationRequired, CannotConnect
 RETRY_TIMER = 15
 CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
 
-CLIENT_CONNECTED = (
-    EventKey.WIRED_CLIENT_CONNECTED,
-    EventKey.WIRELESS_CLIENT_CONNECTED,
-    EventKey.WIRELESS_GUEST_CONNECTED,
-)
-DEVICE_CONNECTED = (
-    EventKey.ACCESS_POINT_CONNECTED,
-    EventKey.GATEWAY_CONNECTED,
-    EventKey.SWITCH_CONNECTED,
-)
-
 
 class UniFiController:
     """Manages a single UniFi Network instance."""
@@ -97,8 +84,7 @@ class UniFiController:
         api.callback = self.async_unifi_signalling_callback
 
         self.available = True
-        self.progress = None
-        self.wireless_clients = None
+        self.wireless_clients = hass.data[UNIFI_WIRELESS_CLIENTS]
 
         self.site_id: str = ""
         self._site_name = None
@@ -258,54 +244,10 @@ class UniFiController:
                 else:
                     LOGGER.info("Connected to UniFi Network")
 
-        elif signal == WebsocketSignal.DATA and data:
-            if DATA_EVENT in data:
-                clients_connected = set()
-                devices_connected = set()
-                wireless_clients_connected = False
-
-                for event in data[DATA_EVENT]:
-                    if event.key in CLIENT_CONNECTED:
-                        clients_connected.add(event.mac)
-
-                        if not wireless_clients_connected and event.key in (
-                            EventKey.WIRELESS_CLIENT_CONNECTED,
-                            EventKey.WIRELESS_GUEST_CONNECTED,
-                        ):
-                            wireless_clients_connected = True
-
-                    elif event.key in DEVICE_CONNECTED:
-                        devices_connected.add(event.mac)
-
-                if wireless_clients_connected:
-                    self.update_wireless_clients()
-                if clients_connected or devices_connected:
-                    async_dispatcher_send(
-                        self.hass,
-                        self.signal_update,
-                        clients_connected,
-                        devices_connected,
-                    )
-
-            elif DATA_CLIENT_REMOVED in data:
-                async_dispatcher_send(
-                    self.hass, self.signal_remove, data[DATA_CLIENT_REMOVED]
-                )
-
     @property
     def signal_reachable(self) -> str:
         """Integration specific event to signal a change in connection status."""
         return f"unifi-reachable-{self.config_entry.entry_id}"
-
-    @property
-    def signal_update(self) -> str:
-        """Event specific per UniFi entry to signal new data."""
-        return f"unifi-update-{self.config_entry.entry_id}"
-
-    @property
-    def signal_remove(self) -> str:
-        """Event specific per UniFi entry to signal removal of entities."""
-        return f"unifi-remove-{self.config_entry.entry_id}"
 
     @property
     def signal_options_update(self) -> str:
@@ -316,22 +258,6 @@ class UniFiController:
     def signal_heartbeat_missed(self) -> str:
         """Event specific per UniFi device tracker to signal new heartbeat missed."""
         return "unifi-heartbeat-missed"
-
-    def update_wireless_clients(self):
-        """Update set of known to be wireless clients."""
-        new_wireless_clients = set()
-
-        for client_id in self.api.clients:
-            if (
-                client_id not in self.wireless_clients
-                and not self.api.clients[client_id].is_wired
-            ):
-                new_wireless_clients.add(client_id)
-
-        if new_wireless_clients:
-            self.wireless_clients |= new_wireless_clients
-            unifi_wireless_clients = self.hass.data[UNIFI_WIRELESS_CLIENTS]
-            unifi_wireless_clients.update_data(self.wireless_clients, self.config_entry)
 
     async def initialize(self):
         """Set up a UniFi Network instance."""
@@ -372,9 +298,7 @@ class UniFiController:
                 client.mac,
             )
 
-        wireless_clients = self.hass.data[UNIFI_WIRELESS_CLIENTS]
-        self.wireless_clients = wireless_clients.get_data(self.config_entry)
-        self.update_wireless_clients()
+        self.wireless_clients.update_clients(set(self.api.clients.values()))
 
         self.config_entry.add_update_listener(self.async_config_entry_updated)
 
