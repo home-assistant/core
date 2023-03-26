@@ -79,6 +79,11 @@ class OTBRData:
         return await self.api.create_active_dataset(dataset)
 
     @_handle_otbr_error
+    async def set_active_dataset_tlvs(self, dataset: bytes) -> None:
+        """Set current active operational dataset in TLVS format."""
+        await self.api.set_active_dataset_tlvs(dataset)
+
+    @_handle_otbr_error
     async def get_extended_address(self) -> bytes:
         """Get extended address (EUI-64)."""
         return await self.api.get_extended_address()
@@ -148,7 +153,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady("Unable to connect") from err
     if dataset_tlvs:
         _warn_on_default_network_settings(hass, entry, dataset_tlvs)
-        await async_add_dataset(hass, entry.title, dataset_tlvs.hex())
+        await async_add_dataset(hass, DOMAIN, dataset_tlvs.hex())
+
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     hass.data[DOMAIN] = otbrdata
 
@@ -159,6 +166,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     hass.data.pop(DOMAIN)
     return True
+
+
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle an options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_get_active_dataset_tlvs(hass: HomeAssistant) -> bytes | None:

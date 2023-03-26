@@ -12,12 +12,7 @@ from homeassistant.components.recorder.db_schema import (
     States,
 )
 
-from .common import (
-    apply_states_filters,
-    legacy_select_events_context_id,
-    select_events_without_states,
-    select_states,
-)
+from .common import apply_states_filters, select_events_without_states, select_states
 
 
 def all_stmt(
@@ -33,17 +28,8 @@ def all_stmt(
         lambda: select_events_without_states(start_day, end_day, event_types)
     )
     if context_id_bin is not None:
-        # Once all the old `state_changed` events
-        # are gone from the database remove the
-        # _legacy_select_events_context_id()
         stmt += lambda s: s.where(Events.context_id_bin == context_id_bin).union_all(
             _states_query_for_context_id(
-                start_day,
-                end_day,
-                # https://github.com/python/mypy/issues/2608
-                context_id_bin,  # type:ignore[arg-type]
-            ),
-            legacy_select_events_context_id(
                 start_day,
                 end_day,
                 # https://github.com/python/mypy/issues/2608

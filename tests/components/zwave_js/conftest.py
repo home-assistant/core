@@ -235,6 +235,9 @@ def create_backup_fixture():
         yield create_backup
 
 
+# State fixtures
+
+
 @pytest.fixture(name="controller_state", scope="session")
 def controller_state_fixture():
     """Load the controller state fixture data."""
@@ -599,6 +602,9 @@ def light_express_controls_ezmultipli_state_fixture():
 def lock_home_connect_620_state_fixture():
     """Load the Home Connect 620 lock node state fixture data."""
     return json.loads(load_fixture("zwave_js/lock_home_connect_620_state.json"))
+
+
+# model fixtures
 
 
 @pytest.fixture(name="client")

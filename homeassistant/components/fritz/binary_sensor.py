@@ -41,15 +41,6 @@ SENSOR_TYPES: tuple[FritzBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.PLUG,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    FritzBinarySensorEntityDescription(
-        # Deprecated, scheduled to be removed in 2022.7 (#70096)
-        entity_registry_enabled_default=False,
-        key="firmware_update",
-        name="Firmware Update",
-        device_class=BinarySensorDeviceClass.UPDATE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        is_suitable=lambda info: True,
-    ),
 )
 
 
@@ -89,13 +80,6 @@ class FritzBoxBinarySensor(FritzBoxBaseEntity, BinarySensorEntity):
     def update(self) -> None:
         """Update data."""
         _LOGGER.debug("Updating FRITZ!Box binary sensors")
-
-        if self.entity_description.key == "firmware_update":
-            self._attr_is_on = self._avm_wrapper.update_available
-            self._attr_extra_state_attributes = {
-                "installed_version": self._avm_wrapper.current_firmware,
-                "latest_available_version": self._avm_wrapper.latest_firmware,
-            }
         if self.entity_description.key == "is_connected":
             self._attr_is_on = bool(self._avm_wrapper.fritz_status.is_connected)
         elif self.entity_description.key == "is_linked":

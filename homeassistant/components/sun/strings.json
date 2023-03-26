@@ -10,10 +10,13 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
-  "state": {
+  "entity_component": {
     "_": {
-      "above_horizon": "Above horizon",
-      "below_horizon": "Below horizon"
+      "name": "[%key:component::sun::title%]",
+      "state": {
+        "above_horizon": "Above horizon",
+        "below_horizon": "Below horizon"
+      }
     }
   }
 }

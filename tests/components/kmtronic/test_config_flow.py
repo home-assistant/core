@@ -37,6 +37,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
                 "password": "test-password",
             },
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "1.1.1.1"
@@ -45,7 +46,6 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         "username": "test-username",
         "password": "test-password",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup_entry.mock_calls) == 1
 
 

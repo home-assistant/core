@@ -1,3 +1,17 @@
 {
-  "title": "Siren"
+  "title": "Siren",
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::siren::title%]",
+      "state": {
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]"
+      },
+      "state_attributes": {
+        "available_tones": {
+          "name": "Available tones"
+        }
+      }
+    }
+  }
 }
