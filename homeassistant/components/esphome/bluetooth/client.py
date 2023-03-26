@@ -518,10 +518,11 @@ class ESPHomeClient(BaseBleakClient):
         if self._connection_version < MIN_BLUETOOTH_PROXY_HAS_CLEAR_CACHE:
             _LOGGER.warning(
                 "On device cache clear is not available in ESPHome with version %s, "
-                "only memory cache will be cleared",
+                "version %s is needed; Only memory cache will be cleared",
                 self._connection_version,
+                MIN_BLUETOOTH_PROXY_HAS_CLEAR_CACHE,
             )
-            return
+            return True
         response = await self._client.bluetooth_device_clear_cache(self._address_as_int)
         if response.success:
             return True
