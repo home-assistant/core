@@ -21,7 +21,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ID, UnitOfEnergy, UnitOfPower, UnitOfVolume
+from homeassistant.const import (
+    CONF_ID,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfVolume,
+    UnitOfVolumeFlowRate,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -32,7 +38,6 @@ from homeassistant.helpers.update_coordinator import (
 from .const import (
     DATA_COORDINATOR,
     DOMAIN,
-    FLOW_CUBIC_METERS_PER_HOUR,
     SENSOR_TYPE_RATE,
     SENSOR_TYPE_THIS_DAY,
     SENSOR_TYPE_THIS_MONTH,
@@ -179,7 +184,7 @@ SENSORS_INFO = [
     ),
     HuisbaasjeSensorEntityDescription(
         name="Huisbaasje Current Gas",
-        native_unit_of_measurement=FLOW_CUBIC_METERS_PER_HOUR,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         sensor_type=SENSOR_TYPE_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         key=SOURCE_TYPE_GAS,

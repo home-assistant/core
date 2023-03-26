@@ -502,7 +502,8 @@ class SpeechManager:
             )
 
         # Save to memory
-        data = self.write_tags(filename, data, provider, message, language, options)
+        if extension == "mp3":
+            data = self.write_tags(filename, data, provider, message, language, options)
         self._async_store_to_memcache(cache_key, filename, data)
 
         if cache:

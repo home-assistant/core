@@ -22,7 +22,12 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import Context, HomeAssistant, State, callback
-from homeassistant.helpers import area_registry, device_registry, entity_registry, start
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+    start,
+)
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.storage import Store
@@ -52,15 +57,11 @@ LOCAL_SDK_MIN_VERSION = AwesomeVersion("2.1.5")
 @callback
 def _get_registry_entries(
     hass: HomeAssistant, entity_id: str
-) -> tuple[
-    entity_registry.RegistryEntry | None,
-    device_registry.DeviceEntry | None,
-    area_registry.AreaEntry | None,
-]:
+) -> tuple[er.RegistryEntry | None, dr.DeviceEntry | None, ar.AreaEntry | None,]:
     """Get registry entries."""
-    ent_reg = entity_registry.async_get(hass)
-    dev_reg = device_registry.async_get(hass)
-    area_reg = area_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
+    dev_reg = dr.async_get(hass)
+    area_reg = ar.async_get(hass)
 
     if (entity_entry := ent_reg.async_get(entity_id)) and entity_entry.device_id:
         device_entry = dev_reg.devices.get(entity_entry.device_id)

@@ -832,7 +832,7 @@ class TemperatureControlTrait(_Trait):
             "temperatureUnitForUX": _google_temp_unit(
                 self.hass.config.units.temperature_unit
             ),
-            "queryOnlyTemperatureSetting": True,
+            "queryOnlyTemperatureControl": True,
             "temperatureRange": {
                 "minThresholdCelsius": -100,
                 "maxThresholdCelsius": 100,

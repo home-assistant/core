@@ -24,8 +24,11 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     HomeAssistantError,
 )
-from homeassistant.helpers import aiohttp_client, device_registry
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_validation as cv,
+    device_registry as dr,
+)
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -81,7 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_handle_service_call(service_call: ServiceCall) -> None:
         """Handle a service call."""
         # Get device entry from device registry
-        dev_reg = device_registry.async_get(hass)
+        dev_reg = dr.async_get(hass)
         device_id = service_call.data["device_id"]
         device_entry = dev_reg.async_get(device_id)
         if TYPE_CHECKING:
@@ -121,7 +124,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     def validate_mazda_device_id(device_id):
         """Check that a device ID exists in the registry and has at least one 'mazda' identifier."""
-        dev_reg = device_registry.async_get(hass)
+        dev_reg = dr.async_get(hass)
 
         if (device_entry := dev_reg.async_get(device_id)) is None:
             raise vol.Invalid("Invalid device ID")

@@ -8,11 +8,7 @@ from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
-    SensorEntity,
-    SensorStateClass,
-)
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -135,7 +131,6 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
 
     _attr_icon = ICON
     _attr_should_poll = False
-    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self,

@@ -6,7 +6,7 @@ import datetime
 from datetime import timedelta
 import logging
 from random import randrange
-from typing import Any
+from typing import Any, cast
 
 import aiohttp
 import tibber
@@ -41,9 +41,11 @@ from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_reg
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
+    UpdateFailed,
 )
 from homeassistant.util import Throttle, dt as dt_util
 
@@ -425,9 +427,9 @@ class TibberDataSensor(TibberSensor, CoordinatorEntity["TibberDataCoordinator"])
         self._device_name = self._home_name
 
     @property
-    def native_value(self) -> Any:
+    def native_value(self) -> StateType:
         """Return the value of the sensor."""
-        return getattr(self._tibber_home, self.entity_description.key)
+        return getattr(self._tibber_home, self.entity_description.key)  # type: ignore[no-any-return]
 
 
 class TibberSensorRT(TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"]):
@@ -559,6 +561,8 @@ class TibberRtDataCoordinator(DataUpdateCoordinator):
 class TibberDataCoordinator(DataUpdateCoordinator[None]):
     """Handle Tibber data and insert statistics."""
 
+    config_entry: ConfigEntry
+
     def __init__(self, hass: HomeAssistant, tibber_connection: tibber.Tibber) -> None:
         """Initialize the data handler."""
         super().__init__(
@@ -571,9 +575,17 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
 
     async def _async_update_data(self) -> None:
         """Update data via API."""
-        await self._tibber_connection.fetch_consumption_data_active_homes()
-        await self._tibber_connection.fetch_production_data_active_homes()
-        await self._insert_statistics()
+        try:
+            await self._tibber_connection.fetch_consumption_data_active_homes()
+            await self._tibber_connection.fetch_production_data_active_homes()
+            await self._insert_statistics()
+        except tibber.RetryableHttpException as err:
+            raise UpdateFailed(f"Error communicating with API ({err.status})") from err
+        except tibber.FatalHttpException:
+            # Fatal error. Reload config entry to show correct error.
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(self.config_entry.entry_id)
+            )
 
     async def _insert_statistics(self) -> None:
         """Insert Tibber statistics."""
@@ -603,7 +615,7 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
                         5 * 365 * 24, production=is_production
                     )
 
-                    _sum = 0
+                    _sum = 0.0
                     last_stats_time = None
                 else:
                     # hourly_consumption/production_data contains the last 30 days
@@ -625,13 +637,14 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
                         self.hass,
                         start,
                         None,
-                        [statistic_id],
+                        {statistic_id},
                         "hour",
                         None,
                         {"sum"},
                     )
-                    _sum = stat[statistic_id][0]["sum"]
-                    last_stats_time = stat[statistic_id][0]["start"]
+                    first_stat = stat[statistic_id][0]
+                    _sum = cast(float, first_stat["sum"])
+                    last_stats_time = first_stat["start"]
 
                 statistics = []
 
