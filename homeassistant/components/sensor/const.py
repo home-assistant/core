@@ -485,6 +485,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
         UnitOfTime.HOURS,
         UnitOfTime.MINUTES,
         UnitOfTime.SECONDS,
+        UnitOfTime.MILLISECONDS,
     },
     SensorDeviceClass.ENERGY: set(UnitOfEnergy),
     SensorDeviceClass.ENERGY_STORAGE: set(UnitOfEnergy),

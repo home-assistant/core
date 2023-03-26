@@ -322,15 +322,24 @@ class ESPHomeClient(BaseBleakClient):
                         address_type=self._address_type,
                     )
                 )
+            except asyncio.CancelledError:
+                if connected_future.done():
+                    with contextlib.suppress(BleakError):
+                        # If we are cancelled while connecting,
+                        # we need to make sure we await the future
+                        # to avoid a warning about an un-retrieved
+                        # exception.
+                        await connected_future
+                raise
             except Exception:
-                with contextlib.suppress(BleakError):
-                    # If the connect call throws an exception,
-                    # we need to make sure we await the future
-                    # to avoid a warning about an un-retrieved
-                    # exception since we prefer to raise the
-                    # exception from the connect call as it
-                    # will be more descriptive.
-                    if connected_future.done():
+                if connected_future.done():
+                    with contextlib.suppress(BleakError):
+                        # If the connect call throws an exception,
+                        # we need to make sure we await the future
+                        # to avoid a warning about an un-retrieved
+                        # exception since we prefer to raise the
+                        # exception from the connect call as it
+                        # will be more descriptive.
                         await connected_future
                 connected_future.cancel()
                 raise
