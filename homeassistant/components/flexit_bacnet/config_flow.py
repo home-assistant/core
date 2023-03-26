@@ -41,7 +41,7 @@ async def validate_input(data: dict[str, Any]) -> str:
         raise CannotConnect from exc
 
     # Return info that you want to store in the config entry.
-    return str(device.serial_number)
+    return device.serial_number
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
