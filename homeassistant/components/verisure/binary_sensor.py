@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_GIID, DOMAIN
 from .coordinator import VerisureDataUpdateCoordinator
@@ -83,9 +84,9 @@ class VerisureDoorWindowSensor(
     def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
-            ATTR_LAST_TRIP_TIME: self.coordinator.data["door_window"][
-                self.serial_number
-            ]["reportTime"]
+            ATTR_LAST_TRIP_TIME: dt_util.parse_datetime(
+                self.coordinator.data["door_window"][self.serial_number]["reportTime"]
+            )
         }
 
 
