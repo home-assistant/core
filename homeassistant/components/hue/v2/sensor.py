@@ -1,7 +1,7 @@
 """Support for Hue sensors."""
 from __future__ import annotations
 
-from typing import Any, Union
+from typing import Any, TypeAlias
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
@@ -23,22 +23,21 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import LIGHT_LUX, PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import LIGHT_LUX, PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from ..bridge import HueBridge
 from ..const import DOMAIN
 from .entity import HueBaseEntity
 
-SensorType = Union[DevicePower, LightLevel, Temperature, ZigbeeConnectivity]
-ControllerType = Union[
-    DevicePowerController,
-    LightLevelController,
-    TemperatureController,
-    ZigbeeConnectivityController,
-]
+SensorType: TypeAlias = DevicePower | LightLevel | Temperature | ZigbeeConnectivity
+ControllerType: TypeAlias = (
+    DevicePowerController
+    | LightLevelController
+    | TemperatureController
+    | ZigbeeConnectivityController
+)
 
 
 async def async_setup_entry(
@@ -79,8 +78,6 @@ async def async_setup_entry(
 class HueSensorBase(HueBaseEntity, SensorEntity):
     """Representation of a Hue sensor."""
 
-    _attr_state_class = SensorStateClass.MEASUREMENT
-
     def __init__(
         self,
         bridge: HueBridge,
@@ -96,8 +93,9 @@ class HueSensorBase(HueBaseEntity, SensorEntity):
 class HueTemperatureSensor(HueSensorBase):
     """Representation of a Hue Temperature sensor."""
 
-    _attr_native_unit_of_measurement = TEMP_CELSIUS
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
     def native_value(self) -> float:
@@ -115,6 +113,7 @@ class HueLightLevelSensor(HueSensorBase):
 
     _attr_native_unit_of_measurement = LIGHT_LUX
     _attr_device_class = SensorDeviceClass.ILLUMINANCE
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
     def native_value(self) -> int:
@@ -140,6 +139,7 @@ class HueBatterySensor(HueSensorBase):
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_device_class = SensorDeviceClass.BATTERY
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
     def native_value(self) -> int:

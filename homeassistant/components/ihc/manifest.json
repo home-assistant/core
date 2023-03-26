@@ -1,9 +1,9 @@
 {
   "domain": "ihc",
   "name": "IHC Controller",
-  "documentation": "https://www.home-assistant.io/integrations/ihc",
-  "requirements": ["defusedxml==0.7.1", "ihcsdk==2.7.6"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/ihc",
   "iot_class": "local_push",
-  "loggers": ["ihcsdk"]
+  "loggers": ["ihcsdk"],
+  "requirements": ["defusedxml==0.7.1", "ihcsdk==2.7.6"]
 }

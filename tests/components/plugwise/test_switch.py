@@ -28,7 +28,7 @@ async def test_adam_climate_switch_entities(
 
 async def test_adam_climate_switch_negative_testing(
     hass: HomeAssistant, mock_smile_adam: MagicMock, init_integration: MockConfigEntry
-):
+) -> None:
     """Test exceptions of climate related switch entities."""
     mock_smile_adam.set_switch_state.side_effect = PlugwiseException
 

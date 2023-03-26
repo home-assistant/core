@@ -1,4 +1,6 @@
 """Kodi notification service."""
+from __future__ import annotations
+
 import logging
 
 import aiohttp
@@ -20,8 +22,10 @@ from homeassistant.const import (
     CONF_PROXY_SSL,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,15 +46,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 ATTR_DISPLAYTIME = "displaytime"
 
 
-async def async_get_service(hass, config, discovery_info=None):
+async def async_get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> KodiNotificationService:
     """Return the notify service."""
-    url = f"{config.get(CONF_HOST)}:{config.get(CONF_PORT)}"
+    username: str | None = config.get(CONF_USERNAME)
+    password: str | None = config.get(CONF_PASSWORD)
 
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
+    host: str = config[CONF_HOST]
+    port: int = config[CONF_PORT]
     encryption = config.get(CONF_PROXY_SSL)
 
     if host.startswith("http://") or host.startswith("https://"):
@@ -64,7 +70,7 @@ async def async_get_service(hass, config, discovery_info=None):
     http_protocol = "https" if encryption else "http"
     url = f"{http_protocol}://{host}:{port}/jsonrpc"
 
-    if username is not None:
+    if username is not None and password is not None:
         auth = aiohttp.BasicAuth(username, password)
     else:
         auth = None

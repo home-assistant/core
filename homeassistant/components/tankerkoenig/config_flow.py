@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_RADIUS,
     CONF_SHOW_ON_MAP,
-    LENGTH_KILOMETERS,
+    UnitOfLength,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
@@ -67,37 +67,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
-        """Import YAML configuration."""
-        await self.async_set_unique_id(
-            f"{config[CONF_LOCATION][CONF_LATITUDE]}_{config[CONF_LOCATION][CONF_LONGITUDE]}"
-        )
-        self._abort_if_unique_id_configured()
-
-        selected_station_ids: list[str] = []
-        # add all nearby stations
-        nearby_stations = await async_get_nearby_stations(self.hass, config)
-        for station in nearby_stations.get("stations", []):
-            selected_station_ids.append(station["id"])
-
-        # add all manual added stations
-        for station_id in config[CONF_STATIONS]:
-            selected_station_ids.append(station_id)
-
-        return self._create_entry(
-            data={
-                CONF_NAME: "Home",
-                CONF_API_KEY: config[CONF_API_KEY],
-                CONF_FUEL_TYPES: config[CONF_FUEL_TYPES],
-                CONF_LOCATION: config[CONF_LOCATION],
-                CONF_RADIUS: config[CONF_RADIUS],
-                CONF_STATIONS: selected_station_ids,
-            },
-            options={
-                CONF_SHOW_ON_MAP: config[CONF_SHOW_ON_MAP],
-            },
-        )
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -118,9 +87,10 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if len(stations := data.get("stations", [])) == 0:
             return self._show_form_user(user_input, errors={CONF_RADIUS: "no_stations"})
         for station in stations:
-            self._stations[
-                station["id"]
-            ] = f"{station['brand']} {station['street']} {station['houseNumber']} - ({station['dist']}km)"
+            self._stations[station["id"]] = (
+                f"{station['brand']} {station['street']} {station['houseNumber']} -"
+                f" ({station['dist']}km)"
+            )
 
         self._data = user_input
 
@@ -204,7 +174,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                             min=1.0,
                             max=25,
                             step=0.1,
-                            unit_of_measurement=LENGTH_KILOMETERS,
+                            unit_of_measurement=UnitOfLength.KILOMETERS,
                         ),
                     ),
                 }
@@ -268,9 +238,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
         if stations := nearby_stations.get("stations"):
             for station in stations:
-                self._stations[
-                    station["id"]
-                ] = f"{station['brand']} {station['street']} {station['houseNumber']} - ({station['dist']}km)"
+                self._stations[station["id"]] = (
+                    f"{station['brand']} {station['street']} {station['houseNumber']} -"
+                    f" ({station['dist']}km)"
+                )
 
         # add possible extra selected stations from import
         for selected_station in self.config_entry.data[CONF_STATIONS]:

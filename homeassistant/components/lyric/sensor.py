@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import cast
 
+from aiolyric import Lyric
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
 
@@ -63,7 +64,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Honeywell Lyric sensor platform based on a config entry."""
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: DataUpdateCoordinator[Lyric] = hass.data[DOMAIN][entry.entry_id]
 
     entities = []
 
@@ -179,12 +180,12 @@ async def async_setup_entry(
 class LyricSensor(LyricDeviceEntity, SensorEntity):
     """Define a Honeywell Lyric sensor."""
 
-    coordinator: DataUpdateCoordinator
+    coordinator: DataUpdateCoordinator[Lyric]
     entity_description: LyricSensorEntityDescription
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[Lyric],
         description: LyricSensorEntityDescription,
         location: LyricLocation,
         device: LyricDevice,

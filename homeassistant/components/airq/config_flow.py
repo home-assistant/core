@@ -55,8 +55,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await airq.validate()
             except ClientConnectionError:
                 _LOGGER.debug(
-                    "Failed to connect to device %s. Check the IP address / device ID "
-                    "as well as whether the device is connected to power and the WiFi",
+                    (
+                        "Failed to connect to device %s. Check the IP address / device"
+                        " ID as well as whether the device is connected to power and"
+                        " the WiFi"
+                    ),
                     user_input[CONF_IP_ADDRESS],
                 )
                 errors["base"] = "cannot_connect"

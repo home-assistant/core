@@ -1,0 +1,321 @@
+# serializer version: 1
+# name: test_light_state_temperature[key-light-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': 54,
+      'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
+      'color_temp': 297,
+      'color_temp_kelvin': 3367,
+      'friendly_name': 'Frenck',
+      'hs_color': tuple(
+        27.316,
+        47.743,
+      ),
+      'max_color_temp_kelvin': 6993,
+      'max_mireds': 344,
+      'min_color_temp_kelvin': 2906,
+      'min_mireds': 143,
+      'rgb_color': tuple(
+        255,
+        188,
+        133,
+      ),
+      'supported_color_modes': list([
+        <ColorMode.COLOR_TEMP: 'color_temp'>,
+      ]),
+      'supported_features': 0,
+      'xy_color': tuple(
+        0.465,
+        0.376,
+      ),
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.frenck',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_light_state_temperature[key-light-state].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max_color_temp_kelvin': 6993,
+      'max_mireds': 344,
+      'min_color_temp_kelvin': 2906,
+      'min_mireds': 143,
+      'supported_color_modes': list([
+        <ColorMode.COLOR_TEMP: 'color_temp'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.frenck',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'elgato',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'CN11A1A00001',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_light_state_temperature[key-light-state].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '53',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'elgato',
+        'CN11A1A00001',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'Elgato',
+    'model': 'Elgato Key Light',
+    'name': 'Frenck',
+    'name_by_user': None,
+    'suggested_area': None,
+    'sw_version': '1.0.3 (192)',
+    'via_device_id': None,
+  })
+# ---
+# name: test_light_state_temperature[light-strip-state-color-temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': 54,
+      'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
+      'color_temp': 297,
+      'color_temp_kelvin': 3367,
+      'friendly_name': 'Frenck',
+      'hs_color': tuple(
+        27.316,
+        47.743,
+      ),
+      'max_color_temp_kelvin': 6535,
+      'max_mireds': 285,
+      'min_color_temp_kelvin': 3508,
+      'min_mireds': 153,
+      'rgb_color': tuple(
+        255,
+        188,
+        133,
+      ),
+      'supported_color_modes': list([
+        <ColorMode.COLOR_TEMP: 'color_temp'>,
+        <ColorMode.HS: 'hs'>,
+      ]),
+      'supported_features': 0,
+      'xy_color': tuple(
+        0.465,
+        0.376,
+      ),
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.frenck',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_light_state_temperature[light-strip-state-color-temperature].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max_color_temp_kelvin': 6535,
+      'max_mireds': 285,
+      'min_color_temp_kelvin': 3508,
+      'min_mireds': 153,
+      'supported_color_modes': list([
+        <ColorMode.COLOR_TEMP: 'color_temp'>,
+        <ColorMode.HS: 'hs'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.frenck',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'elgato',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'CN11A1A00001',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_light_state_temperature[light-strip-state-color-temperature].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '53',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'elgato',
+        'CN11A1A00001',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'Elgato',
+    'model': 'Elgato Key Light',
+    'name': 'Frenck',
+    'name_by_user': None,
+    'suggested_area': None,
+    'sw_version': '1.0.3 (192)',
+    'via_device_id': None,
+  })
+# ---
+# name: test_light_state_temperature[light-strip-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': 128,
+      'color_mode': <ColorMode.HS: 'hs'>,
+      'friendly_name': 'Frenck',
+      'hs_color': tuple(
+        358.0,
+        6.0,
+      ),
+      'max_color_temp_kelvin': 6535,
+      'max_mireds': 285,
+      'min_color_temp_kelvin': 3508,
+      'min_mireds': 153,
+      'rgb_color': tuple(
+        255,
+        239,
+        240,
+      ),
+      'supported_color_modes': list([
+        <ColorMode.COLOR_TEMP: 'color_temp'>,
+        <ColorMode.HS: 'hs'>,
+      ]),
+      'supported_features': 0,
+      'xy_color': tuple(
+        0.34,
+        0.327,
+      ),
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.frenck',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_light_state_temperature[light-strip-state].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max_color_temp_kelvin': 6535,
+      'max_mireds': 285,
+      'min_color_temp_kelvin': 3508,
+      'min_mireds': 153,
+      'supported_color_modes': list([
+        <ColorMode.COLOR_TEMP: 'color_temp'>,
+        <ColorMode.HS: 'hs'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.frenck',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'elgato',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'CN11A1A00001',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_light_state_temperature[light-strip-state].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '53',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'elgato',
+        'CN11A1A00001',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'Elgato',
+    'model': 'Elgato Key Light',
+    'name': 'Frenck',
+    'name_by_user': None,
+    'suggested_area': None,
+    'sw_version': '1.0.3 (192)',
+    'via_device_id': None,
+  })
+# ---

@@ -54,7 +54,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     def error_handle_factory(func):
-        """Return the provided API function wrapped in an error handler and coordinator refresh."""
+        """Return the provided API function wrapped.
+
+        Adds an error handler and coordinator refresh.
+        """
 
         async def error_handle(param):
             try:

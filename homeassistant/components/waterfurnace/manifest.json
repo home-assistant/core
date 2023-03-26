@@ -1,9 +1,9 @@
 {
   "domain": "waterfurnace",
   "name": "WaterFurnace",
-  "documentation": "https://www.home-assistant.io/integrations/waterfurnace",
-  "requirements": ["waterfurnace==1.1.0"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/waterfurnace",
   "iot_class": "cloud_polling",
-  "loggers": ["waterfurnace"]
+  "loggers": ["waterfurnace"],
+  "requirements": ["waterfurnace==1.1.0"]
 }

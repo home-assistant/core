@@ -42,11 +42,11 @@
     "sensor": {
       "caqi_level": {
         "state": {
-          "very low": "Very low",
+          "very_low": "Very low",
           "low": "Low",
           "medium": "Medium",
           "high": "High",
-          "very high": "Very high"
+          "very_high": "Very high"
         }
       }
     }

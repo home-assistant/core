@@ -12,10 +12,10 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import DOMAIN
-from .api import SERVICE_WARNING_DEVICE_SQUAWK, SERVICE_WARNING_DEVICE_WARN
 from .core.channels.manufacturerspecific import AllLEDEffectType, SingleLEDEffectType
 from .core.const import CHANNEL_IAS_WD, CHANNEL_INOVELLI
 from .core.helpers import async_get_zha_device
+from .websocket_api import SERVICE_WARNING_DEVICE_SQUAWK, SERVICE_WARNING_DEVICE_WARN
 
 # mypy: disallow-any-generics
 
@@ -210,12 +210,14 @@ async def _execute_channel_command_based_action(
 
     if action_channel is None:
         raise InvalidDeviceAutomationConfig(
-            f"Unable to execute channel action - channel: {channel_name} action: {action_type}"
+            f"Unable to execute channel action - channel: {channel_name} action:"
+            f" {action_type}"
         )
 
     if not hasattr(action_channel, action_type):
         raise InvalidDeviceAutomationConfig(
-            f"Unable to execute channel action - channel: {channel_name} action: {action_type}"
+            f"Unable to execute channel action - channel: {channel_name} action:"
+            f" {action_type}"
         )
 
     await getattr(action_channel, action_type)(**config)

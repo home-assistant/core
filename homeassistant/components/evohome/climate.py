@@ -112,8 +112,10 @@ async def async_setup_platform(
 
         else:
             _LOGGER.warning(
-                "Ignoring: %s (%s), id=%s, name=%s: unknown/invalid zone type, "
-                "report as an issue if you feel this zone type should be supported",
+                (
+                    "Ignoring: %s (%s), id=%s, name=%s: unknown/invalid zone type, "
+                    "report as an issue if you feel this zone type should be supported"
+                ),
                 zone.zoneType,
                 zone.modelType,
                 zone.zoneId,

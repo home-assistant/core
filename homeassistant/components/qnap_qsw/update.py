@@ -26,10 +26,9 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import __version__ as HAVERSION
+from homeassistant.const import EntityCategory, __version__ as HAVERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt, json as json_util
 

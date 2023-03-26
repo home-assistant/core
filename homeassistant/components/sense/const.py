@@ -40,8 +40,9 @@ SOLAR_POWERED_NAME = "Solar Powered Percentage"
 SOLAR_POWERED_ID = "solar_powered"
 
 SENSE_TIMEOUT_EXCEPTIONS = (asyncio.TimeoutError, SenseAPITimeoutException)
-SENSE_EXCEPTIONS = (socket.gaierror, SenseWebsocketException)
+SENSE_WEBSOCKET_EXCEPTIONS = (socket.gaierror, SenseWebsocketException)
 SENSE_CONNECT_EXCEPTIONS = (
+    socket.gaierror,
     asyncio.TimeoutError,
     SenseAPITimeoutException,
     SenseAPIException,

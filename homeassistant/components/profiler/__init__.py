@@ -15,6 +15,7 @@ from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TYPE
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import async_register_admin_service
@@ -68,7 +69,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         persistent_notification.async_create(
             hass,
-            "Object growth logging has started. See [the logs](/config/logs) to track the growth of new objects.",
+            (
+                "Object growth logging has started. See [the logs](/config/logs) to"
+                " track the growth of new objects."
+            ),
             title="Object growth logging started",
             notification_id="profile_object_logging",
         )
@@ -111,7 +115,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         persistent_notification.create(
             hass,
-            f"Objects with type {obj_type} have been dumped to the log. See [the logs](/config/logs) to review the repr of the objects.",
+            (
+                f"Objects with type {obj_type} have been dumped to the log. See [the"
+                " logs](/config/logs) to review the repr of the objects."
+            ),
             title="Object dump completed",
             notification_id="profile_object_dump",
         )
@@ -231,7 +238,10 @@ async def _async_generate_profile(hass: HomeAssistant, call: ServiceCall):
     start_time = int(time.time() * 1000000)
     persistent_notification.async_create(
         hass,
-        "The profile has started. This notification will be updated when it is complete.",
+        (
+            "The profile has started. This notification will be updated when it is"
+            " complete."
+        ),
         title="Profile Started",
         notification_id=f"profiler_{start_time}",
     )
@@ -247,7 +257,10 @@ async def _async_generate_profile(hass: HomeAssistant, call: ServiceCall):
     )
     persistent_notification.async_create(
         hass,
-        f"Wrote cProfile data to {cprofile_path} and callgrind data to {callgrind_path}",
+        (
+            f"Wrote cProfile data to {cprofile_path} and callgrind data to"
+            f" {callgrind_path}"
+        ),
         title="Profile Complete",
         notification_id=f"profiler_{start_time}",
     )
@@ -257,12 +270,20 @@ async def _async_generate_memory_profile(hass: HomeAssistant, call: ServiceCall)
     # Imports deferred to avoid loading modules
     # in memory since usually only one part of this
     # integration is used at a time
+    if sys.version_info >= (3, 11):
+        raise HomeAssistantError(
+            "Memory profiling is not supported on Python 3.11. Please use Python 3.10."
+        )
+
     from guppy import hpy  # pylint: disable=import-outside-toplevel
 
     start_time = int(time.time() * 1000000)
     persistent_notification.async_create(
         hass,
-        "The memory profile has started. This notification will be updated when it is complete.",
+        (
+            "The memory profile has started. This notification will be updated when it"
+            " is complete."
+        ),
         title="Profile Started",
         notification_id=f"memory_profiler_{start_time}",
     )

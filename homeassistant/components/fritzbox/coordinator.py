@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
-from xml.etree.ElementTree import ParseError
 
 from pyfritzhome import Fritzhome, FritzhomeDevice, LoginError
 from pyfritzhome.devicetypes import FritzhomeTemplate
@@ -30,17 +29,14 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
 
     configuration_url: str
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, has_templates: bool
+    ) -> None:
         """Initialize the Fritzbox Smarthome device coordinator."""
         self.entry = entry
         self.fritz: Fritzhome = hass.data[DOMAIN][self.entry.entry_id][CONF_CONNECTIONS]
         self.configuration_url = self.fritz.get_prefixed_host()
-        self.has_templates = True
-        try:
-            hass.async_add_executor_job(self.fritz.update_templates)
-        except ParseError:
-            LOGGER.info("Disable smarthome templates")
-            self.has_templates = False
+        self.has_templates = has_templates
 
         super().__init__(
             hass,

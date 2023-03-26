@@ -210,7 +210,6 @@ class SnmpSwitch(SwitchEntity):
         self._payload_off = payload_off
 
         if version == "3":
-
             if not authkey:
                 authproto = "none"
             if not privkey:
@@ -259,9 +258,10 @@ class SnmpSwitch(SwitchEntity):
 
     async def async_update(self) -> None:
         """Update the state."""
-        errindication, errstatus, errindex, restable = await getCmd(
+        get_result = await getCmd(
             *self._request_args, ObjectType(ObjectIdentity(self._baseoid))
         )
+        errindication, errstatus, errindex, restable = get_result
 
         if errindication:
             _LOGGER.error("SNMP error: %s", errindication)

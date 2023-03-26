@@ -4,6 +4,7 @@ from unittest.mock import patch
 from homeassistant import config_entries
 from homeassistant.components.progettihwsw.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
@@ -16,7 +17,7 @@ mock_value_step_user = {
 }
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -59,7 +60,7 @@ async def test_form(hass):
     assert result3["data"]["relay_count"] == result3["data"]["input_count"] == 1
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle unexisting board."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -81,7 +82,7 @@ async def test_form_cannot_connect(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_existing_entry_exception(hass):
+async def test_form_existing_entry_exception(hass: HomeAssistant) -> None:
     """Test we handle existing board."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -107,7 +108,7 @@ async def test_form_existing_entry_exception(hass):
     assert result2["reason"] == "already_configured"
 
 
-async def test_form_user_exception(hass):
+async def test_form_user_exception(hass: HomeAssistant) -> None:
     """Test we handle unknown exception."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

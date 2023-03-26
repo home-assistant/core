@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Iterable
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, cast
 
 from gcal_sync.api import (
     GoogleCalendarService,
@@ -19,12 +18,13 @@ from gcal_sync.model import AccessRole, DateOrDatetime, Event
 from gcal_sync.store import ScopedCalendarStore
 from gcal_sync.sync import CalendarEventSyncManager
 from gcal_sync.timeline import Timeline
-import voluptuous as vol
 
 from homeassistant.components.calendar import (
+    CREATE_EVENT_SCHEMA,
     ENTITY_ID_FORMAT,
     EVENT_DESCRIPTION,
     EVENT_END,
+    EVENT_LOCATION,
     EVENT_RRULE,
     EVENT_START,
     EVENT_SUMMARY,
@@ -38,11 +38,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITIES, CONF_NAME, CONF_OFFSET
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
-from homeassistant.helpers import (
-    config_validation as cv,
-    entity_platform,
-    entity_registry as er,
-)
+from homeassistant.helpers import entity_platform, entity_registry as er
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -63,6 +59,7 @@ from . import (
     load_config,
     update_config,
 )
+from .api import get_feature_access
 from .const import (
     DATA_SERVICE,
     DATA_STORE,
@@ -73,7 +70,7 @@ from .const import (
     EVENT_IN_WEEKS,
     EVENT_START_DATE,
     EVENT_START_DATETIME,
-    EVENT_TYPES_CONF,
+    FeatureAccess,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -89,41 +86,11 @@ SYNC_EVENT_MIN_TIME = timedelta(days=-90)
 # are not opaque are ignored by default.
 OPAQUE = "opaque"
 
-_EVENT_IN_TYPES = vol.Schema(
-    {
-        vol.Exclusive(EVENT_IN_DAYS, EVENT_TYPES_CONF): cv.positive_int,
-        vol.Exclusive(EVENT_IN_WEEKS, EVENT_TYPES_CONF): cv.positive_int,
-    }
-)
+# Google calendar prefixes recurrence rules with RRULE: which
+# we need to strip when working with the frontend recurrence rule values
+RRULE_PREFIX = "RRULE:"
 
 SERVICE_CREATE_EVENT = "create_event"
-CREATE_EVENT_SCHEMA = vol.All(
-    cv.has_at_least_one_key(EVENT_START_DATE, EVENT_START_DATETIME, EVENT_IN),
-    cv.has_at_most_one_key(EVENT_START_DATE, EVENT_START_DATETIME, EVENT_IN),
-    cv.make_entity_service_schema(
-        {
-            vol.Required(EVENT_SUMMARY): cv.string,
-            vol.Optional(EVENT_DESCRIPTION, default=""): cv.string,
-            vol.Inclusive(
-                EVENT_START_DATE, "dates", "Start and end dates must both be specified"
-            ): cv.date,
-            vol.Inclusive(
-                EVENT_END_DATE, "dates", "Start and end dates must both be specified"
-            ): cv.date,
-            vol.Inclusive(
-                EVENT_START_DATETIME,
-                "datetimes",
-                "Start and end datetimes must both be specified",
-            ): cv.datetime,
-            vol.Inclusive(
-                EVENT_END_DATETIME,
-                "datetimes",
-                "Start and end datetimes must both be specified",
-            ): cv.datetime,
-            vol.Optional(EVENT_IN): _EVENT_IN_TYPES,
-        }
-    ),
-)
 
 
 async def async_setup_entry(
@@ -162,26 +129,29 @@ async def async_setup_entry(
                 hass, calendar_item.dict(exclude_unset=True)
             )
             new_calendars.append(calendar_info)
-        # Yaml calendar config may map one calendar to multiple entities with extra options like
-        # offsets or search criteria.
+        # Yaml calendar config may map one calendar to multiple entities
+        # with extra options like offsets or search criteria.
         num_entities = len(calendar_info[CONF_ENTITIES])
         for data in calendar_info[CONF_ENTITIES]:
             entity_enabled = data.get(CONF_TRACK, True)
             if not entity_enabled:
                 _LOGGER.warning(
-                    "The 'track' option in google_calendars.yaml has been deprecated. The setting "
-                    "has been imported to the UI, and should now be removed from google_calendars.yaml"
+                    "The 'track' option in google_calendars.yaml has been deprecated."
+                    " The setting has been imported to the UI, and should now be"
+                    " removed from google_calendars.yaml"
                 )
             entity_name = data[CONF_DEVICE_ID]
-            # The unique id is based on the config entry and calendar id since multiple accounts
-            # can have a common calendar id (e.g. `en.usa#holiday@group.v.calendar.google.com`).
-            # When using google_calendars.yaml with multiple entities for a single calendar, we
-            # have no way to set a unique id.
+            # The unique id is based on the config entry and calendar id since
+            # multiple accounts can have a common calendar id
+            # (e.g. `en.usa#holiday@group.v.calendar.google.com`).
+            # When using google_calendars.yaml with multiple entities for a
+            # single calendar, we have no way to set a unique id.
             if num_entities > 1:
                 unique_id = None
             else:
                 unique_id = f"{config_entry.unique_id}-{calendar_id}"
-            # Migrate to new unique_id format which supports multiple config entries as of 2022.7
+            # Migrate to new unique_id format which supports
+            # multiple config entries as of 2022.7
             for old_unique_id in (calendar_id, f"{calendar_id}-{entity_name}"):
                 if not (entity_entry := entity_entry_map.get(old_unique_id)):
                     continue
@@ -205,13 +175,16 @@ async def async_setup_entry(
                         entity_entry.entity_id,
                     )
             coordinator: CalendarSyncUpdateCoordinator | CalendarQueryUpdateCoordinator
-            # Prefer calendar sync down of resources when possible. However, sync does not work
-            # for search. Also free-busy calendars denormalize recurring events as individual
-            # events which is not efficient for sync
+            # Prefer calendar sync down of resources when possible. However,
+            # sync does not work for search. Also free-busy calendars denormalize
+            # recurring events as individual events which is not efficient for sync
+            support_write = (
+                calendar_item.access_role.is_writer
+                and get_feature_access(hass, config_entry) is FeatureAccess.read_write
+            )
             if (
                 search := data.get(CONF_SEARCH)
-                or calendar_item.access_role == AccessRole.FREE_BUSY_READER
-            ):
+            ) or calendar_item.access_role == AccessRole.FREE_BUSY_READER:
                 coordinator = CalendarQueryUpdateCoordinator(
                     hass,
                     calendar_service,
@@ -219,6 +192,7 @@ async def async_setup_entry(
                     calendar_id,
                     search,
                 )
+                support_write = False
             else:
                 request_template = SyncEventsRequest(
                     calendar_id=calendar_id,
@@ -242,7 +216,7 @@ async def async_setup_entry(
                     generate_entity_id(ENTITY_ID_FORMAT, entity_name, hass=hass),
                     unique_id,
                     entity_enabled,
-                    calendar_item.access_role.is_writer,
+                    support_write,
                 )
             )
 
@@ -258,7 +232,10 @@ async def async_setup_entry(
         await hass.async_add_executor_job(append_calendars_to_config)
 
     platform = entity_platform.async_get_current_platform()
-    if any(calendar_item.access_role.is_writer for calendar_item in result.items):
+    if (
+        any(calendar_item.access_role.is_writer for calendar_item in result.items)
+        and get_feature_access(hass, config_entry) is FeatureAccess.read_write
+    ):
         platform.async_register_entity_service(
             SERVICE_CREATE_EVENT,
             CREATE_EVENT_SCHEMA,
@@ -268,6 +245,8 @@ async def async_setup_entry(
 
 class CalendarSyncUpdateCoordinator(DataUpdateCoordinator[Timeline]):
     """Coordinator for calendar RPC calls that use an efficient sync."""
+
+    config_entry: ConfigEntry
 
     def __init__(
         self,
@@ -323,6 +302,8 @@ class CalendarQueryUpdateCoordinator(DataUpdateCoordinator[list[Event]]):
     for limitations in the calendar API for supporting search.
     """
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -377,7 +358,10 @@ class CalendarQueryUpdateCoordinator(DataUpdateCoordinator[list[Event]]):
         return self.data
 
 
-class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
+class GoogleCalendarEntity(
+    CoordinatorEntity[CalendarSyncUpdateCoordinator | CalendarQueryUpdateCoordinator],
+    CalendarEntity,
+):
     """A calendar event entity."""
 
     _attr_has_entity_name = True
@@ -394,7 +378,6 @@ class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
     ) -> None:
         """Create the Calendar event device."""
         super().__init__(coordinator)
-        self.coordinator = coordinator
         self.calendar_id = calendar_id
         self._ignore_availability: bool = data.get(CONF_IGNORE_AVAILABILITY, False)
         self._event: CalendarEvent | None = None
@@ -456,7 +439,9 @@ class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
             await self.coordinator.async_request_refresh()
             self._apply_coordinator_update()
 
-        asyncio.create_task(refresh())
+        self.coordinator.config_entry.async_create_background_task(
+            self.hass, refresh(), "google.calendar-refresh"
+        )
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
@@ -523,12 +508,18 @@ class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
                 "start": start,
                 "end": end,
                 EVENT_DESCRIPTION: kwargs.get(EVENT_DESCRIPTION),
+                EVENT_LOCATION: kwargs.get(EVENT_LOCATION),
             }
         )
         if rrule := kwargs.get(EVENT_RRULE):
-            event.recurrence = [rrule]
+            event.recurrence = [f"{RRULE_PREFIX}{rrule}"]
 
-        await self.coordinator.sync.store_service.async_add_event(event)
+        try:
+            await cast(
+                CalendarSyncUpdateCoordinator, self.coordinator
+            ).sync.store_service.async_add_event(event)
+        except ApiException as err:
+            raise HomeAssistantError(f"Error while creating event: {str(err)}") from err
         await self.coordinator.async_refresh()
 
     async def async_delete_event(
@@ -541,7 +532,9 @@ class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
         range_value: Range = Range.NONE
         if recurrence_range == Range.THIS_AND_FUTURE:
             range_value = Range.THIS_AND_FUTURE
-        await self.coordinator.sync.store_service.async_delete_event(
+        await cast(
+            CalendarSyncUpdateCoordinator, self.coordinator
+        ).sync.store_service.async_delete_event(
             ical_uuid=uid,
             event_id=recurrence_id,
             recurrence_range=range_value,
@@ -551,10 +544,13 @@ class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
 
 def _get_calendar_event(event: Event) -> CalendarEvent:
     """Return a CalendarEvent from an API event."""
+    rrule: str | None = None
+    if len(event.recurrence) == 1:
+        rrule = event.recurrence[0].lstrip(RRULE_PREFIX)
     return CalendarEvent(
         uid=event.ical_uuid,
         recurrence_id=event.id if event.recurring_event_id else None,
-        rrule=event.recurrence[0] if len(event.recurrence) == 1 else None,
+        rrule=rrule,
         summary=event.summary,
         start=event.start.value,
         end=event.end.value,
@@ -602,11 +598,14 @@ async def async_create_event(entity: GoogleCalendarEntity, call: ServiceCall) ->
         raise ValueError("Missing required fields to set start or end date/datetime")
 
     try:
-        await entity.coordinator.sync.api.async_create_event(
+        await cast(
+            CalendarSyncUpdateCoordinator, entity.coordinator
+        ).sync.api.async_create_event(
             entity.calendar_id,
             Event(
                 summary=call.data[EVENT_SUMMARY],
                 description=call.data[EVENT_DESCRIPTION],
+                location=call.data[EVENT_LOCATION],
                 start=start,
                 end=end,
             ),

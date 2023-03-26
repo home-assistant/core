@@ -30,7 +30,10 @@ class AugustGateway:
 
     def __init__(self, hass):
         """Init the connection."""
-        self._aiohttp_session = aiohttp_client.async_get_clientsession(hass)
+        # Create an aiohttp session instead of using the default one since the
+        # default one is likely to trigger august's WAF if another integration
+        # is also using Cloudflare
+        self._aiohttp_session = aiohttp_client.async_create_clientsession(hass)
         self._token_refresh_lock = asyncio.Lock()
         self._access_token_cache_file = None
         self._hass = hass
@@ -131,7 +134,10 @@ class AugustGateway:
                 await self.authenticator.async_refresh_access_token(force=False)
             )
             _LOGGER.info(
-                "Refreshed august access token. The old token expired at %s, and the new token expires at %s",
+                (
+                    "Refreshed august access token. The old token expired at %s, and"
+                    " the new token expires at %s"
+                ),
                 self.authentication.access_token_expires,
                 refreshed_authentication.access_token_expires,
             )

@@ -1,8 +1,0 @@
-{
-    "issues": {
-        "moved_yaml": {
-            "description": "Wake on Lan'i seadistamine YAML-i abil on viidud integratsiooniv\u00f5tmesse.\n\nOlemasolev YAML-konfiguratsioon t\u00f6\u00f6tab veel 2 versiooni.\n\nMigreeri oma YAML-konfiguratsioon integratsiooniv\u00f5tmesse vastavalt dokumentatsioonile.",
-            "title": "Wake on Lan YAML-i konfiguratsioon on teisaldatud"
-        }
-    }
-}

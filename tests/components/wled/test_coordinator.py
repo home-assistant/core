@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 import pytest
 from wled import (
     Device as WLEDDevice,
-    WLEDConnectionClosed,
+    WLEDConnectionClosedError,
     WLEDConnectionError,
     WLEDError,
 )
@@ -32,7 +32,7 @@ async def test_not_supporting_websocket(
     assert mock_wled.connect.call_count == 0
 
 
-@pytest.mark.parametrize("mock_wled", ["wled/rgb_websocket.json"], indirect=True)
+@pytest.mark.parametrize("device_fixture", ["rgb_websocket"])
 async def test_websocket_already_connected(
     hass: HomeAssistant, init_integration: MockConfigEntry, mock_wled: MagicMock
 ) -> None:
@@ -46,7 +46,7 @@ async def test_websocket_already_connected(
     assert mock_wled.connect.call_count == 1
 
 
-@pytest.mark.parametrize("mock_wled", ["wled/rgb_websocket.json"], indirect=True)
+@pytest.mark.parametrize("device_fixture", ["rgb_websocket"])
 async def test_websocket_connect_error_no_listen(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -64,7 +64,7 @@ async def test_websocket_connect_error_no_listen(
     assert mock_wled.listen.call_count == 1
 
 
-@pytest.mark.parametrize("mock_wled", ["wled/rgb_websocket.json"], indirect=True)
+@pytest.mark.parametrize("device_fixture", ["rgb_websocket"])
 async def test_websocket(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -124,7 +124,7 @@ async def test_websocket(
     assert state.state == STATE_OFF
 
     # Resolve Future with a connection losed.
-    connection_finished.set_exception(WLEDConnectionClosed)
+    connection_finished.set_exception(WLEDConnectionClosedError)
     await hass.async_block_till_done()
 
     # Disconnect called, unsubbed Home Assistant stop listener
@@ -137,7 +137,7 @@ async def test_websocket(
     assert state.state == STATE_OFF
 
 
-@pytest.mark.parametrize("mock_wled", ["wled/rgb_websocket.json"], indirect=True)
+@pytest.mark.parametrize("device_fixture", ["rgb_websocket"])
 async def test_websocket_error(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -169,7 +169,7 @@ async def test_websocket_error(
     assert state.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("mock_wled", ["wled/rgb_websocket.json"], indirect=True)
+@pytest.mark.parametrize("device_fixture", ["rgb_websocket"])
 async def test_websocket_disconnect_on_home_assistant_stop(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,

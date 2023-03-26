@@ -115,7 +115,10 @@ async def async_setup_entry(
             director = entry_data[CONF_DIRECTOR]
             item_variables = await director.getItemVariables(item_id)
             _LOGGER.warning(
-                "Couldn't get light state data for %s, skipping setup. Available variables from Control4: %s",
+                (
+                    "Couldn't get light state data for %s, skipping setup. Available"
+                    " variables from Control4: %s"
+                ),
                 item_name,
                 item_variables,
             )
@@ -172,7 +175,7 @@ class Control4Light(Control4Entity, LightEntity):
             self._attr_color_mode = ColorMode.ONOFF
             self._attr_supported_color_modes = {ColorMode.ONOFF}
 
-    def create_api_object(self):
+    def _create_api_object(self):
         """Create a pyControl4 device object.
 
         This exists so the director token used is always the latest one, without needing to re-init the entire entity.
@@ -200,7 +203,7 @@ class Control4Light(Control4Entity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        c4_light = self.create_api_object()
+        c4_light = self._create_api_object()
         if self._is_dimmer:
             if ATTR_TRANSITION in kwargs:
                 transition_length = kwargs[ATTR_TRANSITION] * 1000
@@ -223,7 +226,7 @@ class Control4Light(Control4Entity, LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        c4_light = self.create_api_object()
+        c4_light = self._create_api_object()
         if self._is_dimmer:
             if ATTR_TRANSITION in kwargs:
                 transition_length = kwargs[ATTR_TRANSITION] * 1000

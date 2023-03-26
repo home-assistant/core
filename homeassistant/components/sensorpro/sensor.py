@@ -1,8 +1,6 @@
 """Support for SensorPro sensors."""
 from __future__ import annotations
 
-from typing import Optional, Union
-
 from sensorpro_ble import (
     SensorDeviceClass as SensorProSensorDeviceClass,
     SensorUpdate,
@@ -23,13 +21,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    ELECTRIC_POTENTIAL_VOLT,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    TEMP_CELSIUS,
+    EntityCategory,
+    UnitOfElectricPotential,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
@@ -67,7 +65,7 @@ SENSOR_DESCRIPTIONS = {
     ): SensorEntityDescription(
         key=f"{SensorProSensorDeviceClass.TEMPERATURE}_{Units.TEMP_CELSIUS}",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (
@@ -76,7 +74,7 @@ SENSOR_DESCRIPTIONS = {
     ): SensorEntityDescription(
         key=f"{SensorProSensorDeviceClass.VOLTAGE}_{Units.ELECTRIC_POTENTIAL_VOLT}",
         device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }
@@ -128,9 +126,7 @@ async def async_setup_entry(
 
 
 class SensorProBluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[
-        PassiveBluetoothDataProcessor[Optional[Union[float, int]]]
-    ],
+    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[float | int | None]],
     SensorEntity,
 ):
     """Representation of a SensorPro sensor."""

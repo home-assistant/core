@@ -1,6 +1,7 @@
 """Support for MQTT cover devices."""
 from __future__ import annotations
 
+from contextlib import suppress
 import functools
 import logging
 from typing import Any
@@ -30,9 +31,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.json import JSON_DECODE_EXCEPTIONS, json_loads
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
@@ -42,6 +43,7 @@ from .const import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
+    DEFAULT_OPTIMISTIC,
 )
 from .debug_info import log_messages
 from .mixins import (
@@ -84,7 +86,6 @@ TILT_PAYLOAD = "tilt"
 COVER_PAYLOAD = "cover"
 
 DEFAULT_NAME = "MQTT Cover"
-DEFAULT_OPTIMISTIC = False
 DEFAULT_PAYLOAD_CLOSE = "CLOSE"
 DEFAULT_PAYLOAD_OPEN = "OPEN"
 DEFAULT_PAYLOAD_STOP = "STOP"
@@ -120,7 +121,8 @@ def validate_options(config: ConfigType) -> ConfigType:
     """
     if CONF_SET_POSITION_TOPIC in config and CONF_GET_POSITION_TOPIC not in config:
         raise vol.Invalid(
-            f"'{CONF_SET_POSITION_TOPIC}' must be set together with '{CONF_GET_POSITION_TOPIC}'."
+            f"'{CONF_SET_POSITION_TOPIC}' must be set together with"
+            f" '{CONF_GET_POSITION_TOPIC}'."
         )
 
     # if templates are set make sure the topic for the template is also set
@@ -132,22 +134,26 @@ def validate_options(config: ConfigType) -> ConfigType:
 
     if CONF_GET_POSITION_TEMPLATE in config and CONF_GET_POSITION_TOPIC not in config:
         raise vol.Invalid(
-            f"'{CONF_GET_POSITION_TEMPLATE}' must be set together with '{CONF_GET_POSITION_TOPIC}'."
+            f"'{CONF_GET_POSITION_TEMPLATE}' must be set together with"
+            f" '{CONF_GET_POSITION_TOPIC}'."
         )
 
     if CONF_SET_POSITION_TEMPLATE in config and CONF_SET_POSITION_TOPIC not in config:
         raise vol.Invalid(
-            f"'{CONF_SET_POSITION_TEMPLATE}' must be set together with '{CONF_SET_POSITION_TOPIC}'."
+            f"'{CONF_SET_POSITION_TEMPLATE}' must be set together with"
+            f" '{CONF_SET_POSITION_TOPIC}'."
         )
 
     if CONF_TILT_COMMAND_TEMPLATE in config and CONF_TILT_COMMAND_TOPIC not in config:
         raise vol.Invalid(
-            f"'{CONF_TILT_COMMAND_TEMPLATE}' must be set together with '{CONF_TILT_COMMAND_TOPIC}'."
+            f"'{CONF_TILT_COMMAND_TEMPLATE}' must be set together with"
+            f" '{CONF_TILT_COMMAND_TOPIC}'."
         )
 
     if CONF_TILT_STATUS_TEMPLATE in config and CONF_TILT_STATUS_TOPIC not in config:
         raise vol.Invalid(
-            f"'{CONF_TILT_STATUS_TEMPLATE}' must be set together with '{CONF_TILT_STATUS_TOPIC}'."
+            f"'{CONF_TILT_STATUS_TEMPLATE}' must be set together with"
+            f" '{CONF_TILT_STATUS_TOPIC}'."
         )
 
     return config
@@ -156,7 +162,7 @@ def validate_options(config: ConfigType) -> ConfigType:
 _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
         vol.Optional(CONF_GET_POSITION_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
@@ -222,7 +228,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT cover through configuration.yaml and dynamically through MQTT discovery."""
+    """Set up MQTT cover through YAML and through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -388,7 +394,10 @@ class MqttCover(MqttEntity, CoverEntity):
                 self._state = STATE_CLOSED
             else:
                 _LOGGER.warning(
-                    "Payload is not supported (e.g. open, closed, opening, closing, stopped): %s",
+                    (
+                        "Payload is not supported (e.g. open, closed, opening, closing,"
+                        " stopped): %s"
+                    ),
                     payload,
                 )
                 return
@@ -406,15 +415,14 @@ class MqttCover(MqttEntity, CoverEntity):
                 _LOGGER.debug("Ignoring empty position message from '%s'", msg.topic)
                 return
 
-            try:
+            with suppress(*JSON_DECODE_EXCEPTIONS):
                 payload_dict = json_loads(payload)
-            except JSON_DECODE_EXCEPTIONS:
-                pass
 
             if payload_dict and isinstance(payload_dict, dict):
                 if "position" not in payload_dict:
                     _LOGGER.warning(
-                        "Template (position_template) returned JSON without position attribute"
+                        "Template (position_template) returned JSON without position"
+                        " attribute"
                     )
                     return
                 if "tilt_position" in payload_dict:
@@ -647,7 +655,8 @@ class MqttCover(MqttEntity, CoverEntity):
         tilt = kwargs[ATTR_TILT_POSITION]
         percentage_tilt = tilt
         tilt = self.find_in_range_from_percent(tilt)
-        # Handover the tilt after calculated from percent would make it more consistent with receiving templates
+        # Handover the tilt after calculated from percent would make it more
+        # consistent with receiving templates
         variables = {
             "tilt_position": percentage_tilt,
             "entity_id": self.entity_id,
@@ -739,8 +748,7 @@ class MqttCover(MqttEntity, CoverEntity):
     def find_in_range_from_percent(
         self, percentage: float, range_type: str = TILT_PAYLOAD
     ) -> int:
-        """
-        Find the adjusted value for 0-100% within the specified range.
+        """Find the adjusted value for 0-100% within the specified range.
 
         if the range is 80-180 and the percentage is 90
         this method would determine the value to send on the topic

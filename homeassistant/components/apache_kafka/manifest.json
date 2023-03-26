@@ -1,9 +1,9 @@
 {
   "domain": "apache_kafka",
   "name": "Apache Kafka",
-  "documentation": "https://www.home-assistant.io/integrations/apache_kafka",
-  "requirements": ["aiokafka==0.7.2"],
   "codeowners": ["@bachya"],
+  "documentation": "https://www.home-assistant.io/integrations/apache_kafka",
   "iot_class": "local_push",
-  "loggers": ["aiokafka", "kafka_python"]
+  "loggers": ["aiokafka", "kafka_python"],
+  "requirements": ["aiokafka==0.7.2"]
 }

@@ -1,6 +1,8 @@
 """Integrate with DuckDNS."""
-from datetime import timedelta
+from collections.abc import Callable, Coroutine
+from datetime import datetime, timedelta
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -100,14 +102,18 @@ async def _update_duckdns(session, domain, token, *, txt=_SENTINEL, clear=False)
 
 @callback
 @bind_hass
-def async_track_time_interval_backoff(hass, action, intervals) -> CALLBACK_TYPE:
+def async_track_time_interval_backoff(
+    hass: HomeAssistant,
+    action: Callable[[datetime], Coroutine[Any, Any, bool]],
+    intervals,
+) -> CALLBACK_TYPE:
     """Add a listener that fires repetitively at every timedelta interval."""
     if not isinstance(intervals, (list, tuple)):
         intervals = (intervals,)
     remove = None
     failed = 0
 
-    async def interval_listener(now):
+    async def interval_listener(now: datetime) -> None:
         """Handle elapsed intervals with backoff."""
         nonlocal failed, remove
         try:
@@ -120,7 +126,7 @@ def async_track_time_interval_backoff(hass, action, intervals) -> CALLBACK_TYPE:
 
     hass.async_run_job(interval_listener, dt_util.utcnow())
 
-    def remove_listener():
+    def remove_listener() -> None:
         """Remove interval listener."""
         if remove:
             remove()  # pylint: disable=not-callable
