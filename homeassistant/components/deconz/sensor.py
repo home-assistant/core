@@ -110,7 +110,7 @@ class DeconzSensorDescription(SensorEntityDescription, DeconzSensorDescriptionMi
 ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
     DeconzSensorDescription[AirQuality](
         key="air_quality",
-        supported_fn=lambda device: device.supports_air_quality is not False,
+        supported_fn=lambda device: device.supports_air_quality,
         update_key="airquality",
         value_fn=lambda device: device.air_quality,
         instance_check=AirQuality,
