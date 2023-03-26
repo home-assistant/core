@@ -25,7 +25,7 @@ async def test_sensors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_sonarr: MagicMock,
-    entity_registry_enabled_by_default: MagicMock,
+    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test the creation and values of the sensors."""
     registry = er.async_get(hass)

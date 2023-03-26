@@ -1,5 +1,4 @@
 """The binary sensor tests for the QNAP QSW platform."""
-from unittest.mock import MagicMock
 
 from homeassistant.components.qnap_qsw.const import ATTR_MESSAGE
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -11,7 +10,7 @@ from .util import async_init_integration
 
 async def test_qnap_qsw_create_binary_sensors(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: MagicMock,
+    entity_registry_enabled_by_default: None,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test creation of binary sensors."""

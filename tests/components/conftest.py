@@ -1,6 +1,6 @@
 """Fixtures for component testing."""
 from collections.abc import Generator
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -25,10 +25,10 @@ def prevent_io() -> Generator[None, None, None]:
 
 
 @pytest.fixture
-def entity_registry_enabled_by_default() -> Generator[MagicMock, None, None]:
+def entity_registry_enabled_by_default() -> Generator[None, None, None]:
     """Test fixture that ensures all entities are enabled in the registry."""
     with patch(
         "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
         return_value=True,
-    ) as mock_entity_registry_enabled_by_default:
-        yield mock_entity_registry_enabled_by_default
+    ):
+        yield
