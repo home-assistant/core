@@ -2796,7 +2796,7 @@ def _is_valid_type(
             _is_valid_type(match.group(1), node.value)
             and isinstance(node.slice, nodes.Tuple)
             and all(
-                _is_valid_type(match.group(n + 2), node.slice.elts[n])
+                _is_valid_type(match.group(n + 2), node.slice.elts[n], in_return)
                 for n in range(len(node.slice.elts))
             )
         )
