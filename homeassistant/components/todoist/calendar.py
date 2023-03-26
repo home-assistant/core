@@ -124,7 +124,7 @@ async def async_setup_platform(
 
     api = TodoistAPIAsync(token)
     coordinator = TodoistCoordinator(hass, _LOGGER, SCAN_INTERVAL, api)
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
     # Setup devices:
     # Grab all projects.
