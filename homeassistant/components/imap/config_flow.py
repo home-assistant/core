@@ -44,7 +44,7 @@ OPTIONS_SCHEMA = vol.Schema(
     }
 )
 
-KEY_OPTIONS = {CONF_FOLDER, CONF_SEARCH}
+KEY_OPTIONS = {CONF_USERNAME, CONF_SERVER, CONF_FOLDER, CONF_SEARCH}
 
 
 async def validate_input(user_input: dict[str, Any]) -> dict[str, str]:
@@ -88,13 +88,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        self._async_abort_entries_match(
-            {
-                CONF_USERNAME: user_input[CONF_USERNAME],
-                CONF_FOLDER: user_input[CONF_FOLDER],
-                CONF_SEARCH: user_input[CONF_SEARCH],
-            }
-        )
+        self._async_abort_entries_match({key: user_input[key] for key in KEY_OPTIONS})
 
         if not (errors := await validate_input(user_input)):
             title = user_input[CONF_USERNAME]
