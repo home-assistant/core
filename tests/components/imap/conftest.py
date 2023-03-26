@@ -1,11 +1,12 @@
 """Fixtures for imap tests."""
 
-
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aioimaplib import AUTH, SELECTED, STARTED, Response
+from aioimaplib import AUTH, LOGOUT, NONAUTH, SELECTED, STARTED, Response
 import pytest
+
+from .const import EMPTY_SEARCH_RESPONSE, TEST_FETCH_RESPONSE
 
 
 @pytest.fixture
@@ -23,9 +24,27 @@ def imap_capabilities() -> Generator[set[str], None]:
 
 
 @pytest.fixture
+def imap_login_state() -> Generator[str, None]:
+    """Fixture to set the imap state after login."""
+    return AUTH
+
+
+@pytest.fixture
+def imap_select_state() -> Generator[str, None]:
+    """Fixture to set the imap capabilities."""
+    return SELECTED
+
+
+@pytest.fixture
 def imap_search() -> Generator[tuple[str, list[bytes]], None]:
     """Fixture to set the imap search response."""
-    return ("OK", [b"", b"Search completed (0.0001 + 0.000 secs)."])
+    return EMPTY_SEARCH_RESPONSE
+
+
+@pytest.fixture
+def imap_fetch() -> Generator[tuple[str, list[bytes | bytearray]], None]:
+    """Fixture to set the imap fetch response."""
+    return TEST_FETCH_RESPONSE
 
 
 @pytest.fixture
@@ -37,8 +56,11 @@ def imap_pending_idle() -> Generator[bool, None]:
 @pytest.fixture
 async def mock_imap_protocol(
     imap_search: tuple[str, list[bytes]],
+    imap_fetch: tuple[str, list[bytes | bytearray]],
     imap_capabilities: set[str],
     imap_pending_idle: bool,
+    imap_login_state: str,
+    imap_select_state: str,
 ) -> Generator[MagicMock, None]:
     """Mock the aioimaplib IMAP protocol handler."""
 
@@ -57,15 +79,12 @@ async def mock_imap_protocol(
 
         def __init__(self, *args, **kwargs) -> None:
             self._state = STARTED
-            self.wait_hello_from_server = AsyncMock()
             self.wait_server_push = AsyncMock()
             self.noop = AsyncMock()
             self.has_pending_idle = MagicMock(return_value=imap_pending_idle)
             self.idle_start = AsyncMock()
             self.idle_done = MagicMock()
-            self.stop_wait_server_push = AsyncMock()
-            self.close = AsyncMock()
-            self.logout = AsyncMock()
+            self.stop_wait_server_push = AsyncMock(return_value=True)
             self.protocol = self.IMAP4ClientProtocolMock()
 
         def has_capability(self, capability: str) -> bool:
@@ -73,18 +92,40 @@ async def mock_imap_protocol(
             return capability in self.protocol.capabilities
 
         async def login(self, user: str, password: str) -> Response:
-            """Mock the login."""
-            self.protocol.state = AUTH
-            return ("OK", [])
+            """Mock imap login."""
+            self.protocol.state = imap_login_state
+            if imap_login_state != AUTH:
+                return Response("BAD", [])
+            return Response("OK", [b"CAPABILITY IMAP4rev1 ...", b"Logged in"])
+
+        async def close(self) -> Response:
+            """Mock imap close the selected folder."""
+            self.protocol.state = imap_login_state
+            return Response("OK", [])
+
+        async def logout(self) -> Response:
+            """Mock imap logout."""
+            self.protocol.state = LOGOUT
+            return Response("OK", [])
 
         async def select(self, mailbox: str = "INBOX") -> Response:
-            """Mock the folder select."""
-            self.protocol.state = SELECTED
-            return ("OK", [])
+            """Mock imap folder select."""
+            self.protocol.state = imap_select_state
+            if imap_login_state != SELECTED:
+                return Response("BAD", [])
+            return Response("OK", [])
 
         async def search(self, *criteria: str, charset: str = "utf-8") -> Response:
-            """Mock the imap search."""
-            return imap_search
+            """Mock imap search."""
+            return Response(*imap_search)
+
+        async def fetch(self, message_set: str, message_parts: str) -> Response:
+            """Mock imap fetch."""
+            return Response(*imap_fetch)
+
+        async def wait_hello_from_server(self) -> None:
+            """Mock wait for hello."""
+            self.protocol.state = NONAUTH
 
     with patch(
         "homeassistant.components.imap.coordinator.IMAP4_SSL",

@@ -18,7 +18,7 @@ from tests.common import MockConfigEntry
 async def test_entry_startup_and_unload(
     hass: HomeAssistant, mock_imap_protocol: dict[str, AsyncMock]
 ) -> None:
-    """Test imap entry startup with polling coordinator."""
+    """Test imap entry startup and unload with push and polling coordinator."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -39,7 +39,7 @@ async def test_entry_startup_fails(
     mock_imap_protocol: dict[str, AsyncMock],
     effect: Exception,
 ) -> None:
-    """Test imap entry startup with polling coordinator."""
+    """Test imap entry startup fails on invalid auth or folder."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
     config_entry.add_to_hass(hass)
 
