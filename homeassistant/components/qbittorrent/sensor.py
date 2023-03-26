@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from qbittorrent.client import LoginRequired
+from qbittorrent.client import Client, LoginRequired
 from requests.exceptions import RequestException
 import voluptuous as vol
 
@@ -101,13 +101,7 @@ async def async_setup_entry(
     """Set up qBittorrent sensor entries."""
     client = hass.data[DOMAIN][config_entry.entry_id]
     entities = [
-        QBittorrentSensor(
-            description,
-            client,
-            config_entry.title,
-            config_entry.entry_id,
-            LoginRequired,
-        )
+        QBittorrentSensor(description, client, config_entry, LoginRequired)
         for description in SENSOR_TYPES
     ]
     async_add_entites(entities, True)
@@ -125,9 +119,8 @@ class QBittorrentSensor(SensorEntity):
     def __init__(
         self,
         description: SensorEntityDescription,
-        qbittorrent_client,
-        client_name,
-        unique_id,
+        qbittorrent_client: Client,
+        config_entry: ConfigEntry,
         exception,
     ) -> None:
         """Initialize the qBittorrent sensor."""
@@ -135,9 +128,8 @@ class QBittorrentSensor(SensorEntity):
         self.client = qbittorrent_client
         self._exception = exception
 
-        self._attr_unique_id = f"{unique_id}-{description.key}"
-        self._attr_name = f"{client_name} {description.name}"
-        self._attr_icon = description.icon
+        self._attr_unique_id = f"{config_entry.entry_id}-{description.key}"
+        self._attr_name = f"{config_entry.title} {description.name}"
         self._attr_available = False
 
     def update(self) -> None:
