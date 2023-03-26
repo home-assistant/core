@@ -42,7 +42,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
-    CONF_CHARACTER_ENCODING,
+    CONF_ENCODING,
     COORDINATOR,
     DOMAIN,
     PLATFORM_IDX,
@@ -190,7 +190,7 @@ def create_rest_data_from_config(hass: HomeAssistant, config: ConfigType) -> Res
     headers: dict[str, str] | None = config.get(CONF_HEADERS)
     params: dict[str, str] | None = config.get(CONF_PARAMS)
     timeout: int = config[CONF_TIMEOUT]
-    encoding: str = config[CONF_CHARACTER_ENCODING]
+    encoding: str = config[CONF_ENCODING]
     if resource_template is not None:
         resource_template.hass = hass
         resource = resource_template.async_render(parse_result=False)

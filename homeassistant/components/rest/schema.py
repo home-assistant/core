@@ -33,10 +33,10 @@ from homeassistant.helpers.template_entity import (
 )
 
 from .const import (
-    CONF_CHARACTER_ENCODING,
+    CONF_ENCODING,
     CONF_JSON_ATTRS,
     CONF_JSON_ATTRS_PATH,
-    DEFAULT_CHARACTER_ENCODING,
+    DEFAULT_ENCODING,
     DEFAULT_FORCE_UPDATE,
     DEFAULT_METHOD,
     DEFAULT_VERIFY_SSL,
@@ -59,9 +59,7 @@ RESOURCE_SCHEMA = {
     vol.Optional(CONF_PAYLOAD): cv.string,
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    vol.Optional(
-        CONF_CHARACTER_ENCODING, default=DEFAULT_CHARACTER_ENCODING
-    ): cv.string,
+    vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
 }
 
 SENSOR_SCHEMA = {

@@ -24,10 +24,10 @@ from homeassistant.helpers.template_entity import TEMPLATE_SENSOR_BASE_SCHEMA
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    CONF_CHARACTER_ENCODING,
+    CONF_ENCODING,
     CONF_INDEX,
     CONF_SELECT,
-    DEFAULT_CHARACTER_ENCODING,
+    DEFAULT_ENCODING,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     PLATFORMS,
@@ -38,9 +38,7 @@ SENSOR_SCHEMA = vol.Schema(
     {
         **TEMPLATE_SENSOR_BASE_SCHEMA.schema,
         vol.Optional(CONF_ATTRIBUTE): cv.string,
-        vol.Optional(
-            CONF_CHARACTER_ENCODING, default=DEFAULT_CHARACTER_ENCODING
-        ): cv.string,
+        vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
         vol.Optional(CONF_INDEX, default=0): cv.positive_int,
         vol.Required(CONF_SELECT): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
