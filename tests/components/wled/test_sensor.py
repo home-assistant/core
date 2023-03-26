@@ -119,6 +119,7 @@ async def test_sensors(
     assert entry.unique_id == "aabbccddeeff_ip"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
+
 @pytest.mark.parametrize(
     "entity_id",
     (
