@@ -6,7 +6,6 @@ from flexit_bacnet import (
     VENTILATION_MODE_AWAY,
     VENTILATION_MODE_HOME,
     VENTILATION_MODE_STOP,
-    VENTILATION_MODES,
     FlexitBACnet,
 )
 from flexit_bacnet.bacnet import DecodingError
@@ -77,6 +76,7 @@ class FlexitClimateEntity(ClimateEntity):
             identifiers={
                 (DOMAIN, device.serial_number),
             },
+            name="Ventilation",
             manufacturer="Flexit",
             model="Nordic",
         )
@@ -88,7 +88,7 @@ class FlexitClimateEntity(ClimateEntity):
     @property
     def name(self) -> str:
         """Name of the entity."""
-        return "Ventilation"
+        return self._device.device_name
 
     @property
     def current_temperature(self) -> float:
@@ -98,7 +98,7 @@ class FlexitClimateEntity(ClimateEntity):
     @property
     def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
-        if self._device.ventilation_mode == VENTILATION_MODES[VENTILATION_MODE_AWAY]:
+        if self._device.ventilation_mode == VENTILATION_MODE_AWAY:
             return self._device.air_temp_setpoint_away
 
         return self._device.air_temp_setpoint_home
@@ -109,10 +109,7 @@ class FlexitClimateEntity(ClimateEntity):
             return
 
         try:
-            if (
-                self._device.ventilation_mode
-                == VENTILATION_MODES[VENTILATION_MODE_AWAY]
-            ):
+            if self._device.ventilation_mode == VENTILATION_MODE_AWAY:
                 await self._device.set_air_temp_setpoint_away(temperature)
             else:
                 await self._device.set_air_temp_setpoint_home(temperature)
@@ -139,7 +136,7 @@ class FlexitClimateEntity(ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
-        if self._device.ventilation_mode == VENTILATION_MODES[VENTILATION_MODE_STOP]:
+        if self._device.ventilation_mode == VENTILATION_MODE_STOP:
             return HVACMode.OFF
 
         return HVACMode.FAN_ONLY
