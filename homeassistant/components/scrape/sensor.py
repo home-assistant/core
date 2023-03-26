@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -39,8 +39,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Web scrape sensor."""
-    if TYPE_CHECKING:
-        assert discovery_info is not None
+    discovery_info = cast(DiscoveryInfoType, discovery_info)
     coordinator: ScrapeCoordinator = discovery_info["coordinator"]
     sensors_config: list[ConfigType] = discovery_info["configs"]
 
