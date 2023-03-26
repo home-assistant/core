@@ -7,7 +7,7 @@ import httpx
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import template
-from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.httpx_client import create_async_httpx_client
 
 DEFAULT_TIMEOUT = 10
 
@@ -53,15 +53,12 @@ class RestData:
     async def async_update(self, log_errors: bool = True) -> None:
         """Get the latest data from REST service with provided method."""
         if not self._async_client:
-            self._async_client = get_async_client(
-                self._hass, verify_ssl=self._verify_ssl
+            self._async_client = create_async_httpx_client(
+                self._hass, verify_ssl=self._verify_ssl, default_encoding=self._encoding
             )
 
         rendered_headers = template.render_complex(self._headers, parse_result=False)
         rendered_params = template.render_complex(self._params)
-        self._async_client._default_encoding = (  # pylint: disable=protected-access
-            self._encoding
-        )
 
         _LOGGER.debug("Updating from %s", self._resource)
         try:
