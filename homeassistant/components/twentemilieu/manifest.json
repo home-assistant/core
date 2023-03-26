@@ -8,5 +8,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["twentemilieu"],
   "quality_scale": "platinum",
-  "requirements": ["twentemilieu==0.6.1"]
+  "requirements": ["twentemilieu==1.0.0"]
 }

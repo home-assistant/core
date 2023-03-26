@@ -102,8 +102,9 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "enable_custom_integrations": "None",
     "enable_nightly_purge": "bool",
     "enable_statistics": "bool",
-    "enable_statistics_table_validation": "bool",
+    "enable_schema_validation": "bool",
     "entity_registry": "EntityRegistry",
+    "entity_registry_enabled_by_default": "None",
     "freezer": "FrozenDateTimeFactory",
     "hass_access_token": "str",
     "hass_admin_credential": "Credentials",
@@ -2003,7 +2004,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="async_browse_media",
                     arg_types={
-                        1: "str | None",
+                        1: "MediaType | str | None",
                         2: "str | None",
                     },
                     return_type="BrowseMedia",

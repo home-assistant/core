@@ -2,34 +2,28 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Sequence
 import contextlib
 import dataclasses
 from datetime import datetime, timedelta
 from functools import lru_cache, partial
 from itertools import chain, groupby
-import json
 import logging
 from operator import itemgetter
-import os
 import re
 from statistics import mean
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
 
 from sqlalchemy import Select, and_, bindparam, func, lambda_stmt, select, text
-from sqlalchemy.engine import Engine
 from sqlalchemy.engine.row import Row
-from sqlalchemy.exc import OperationalError, SQLAlchemyError, StatementError
+from sqlalchemy.exc import SQLAlchemyError, StatementError
 from sqlalchemy.orm.session import Session
-from sqlalchemy.sql.expression import literal_column
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 import voluptuous as vol
 
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.json import JSONEncoder
-from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
@@ -53,14 +47,15 @@ from .const import (
     DOMAIN,
     EVENT_RECORDER_5MIN_STATISTICS_GENERATED,
     EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,
-    SQLITE_MAX_BIND_VARS,
+    INTEGRATION_PLATFORM_COMPILE_STATISTICS,
+    INTEGRATION_PLATFORM_LIST_STATISTIC_IDS,
+    INTEGRATION_PLATFORM_VALIDATE_STATISTICS,
     SupportedDialect,
 )
 from .db_schema import (
     STATISTICS_TABLES,
     Statistics,
     StatisticsBase,
-    StatisticsMeta,
     StatisticsRuns,
     StatisticsShortTerm,
 )
@@ -73,7 +68,6 @@ from .models import (
     process_timestamp,
 )
 from .util import (
-    database_job_retry_wrapper,
     execute,
     execute_stmt_lambda_element,
     get_instance,
@@ -333,240 +327,6 @@ def get_start_time() -> datetime:
     return last_period
 
 
-def _find_duplicates(
-    session: Session, table: type[StatisticsBase]
-) -> tuple[list[int], list[dict]]:
-    """Find duplicated statistics."""
-    subquery = (
-        session.query(
-            table.start,
-            table.metadata_id,
-            literal_column("1").label("is_duplicate"),
-        )
-        .group_by(table.metadata_id, table.start)
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-        # pylint: disable-next=not-callable
-        .having(func.count() > 1)
-        .subquery()
-    )
-    query = (
-        session.query(
-            table.id,
-            table.metadata_id,
-            table.created,
-            table.start,
-            table.mean,
-            table.min,
-            table.max,
-            table.last_reset,
-            table.state,
-            table.sum,
-        )
-        .outerjoin(
-            subquery,
-            (subquery.c.metadata_id == table.metadata_id)
-            & (subquery.c.start == table.start),
-        )
-        .filter(subquery.c.is_duplicate == 1)
-        .order_by(table.metadata_id, table.start, table.id.desc())
-        .limit(1000 * SQLITE_MAX_BIND_VARS)
-    )
-    duplicates = execute(query)
-    original_as_dict = {}
-    start = None
-    metadata_id = None
-    duplicate_ids: list[int] = []
-    non_identical_duplicates_as_dict: list[dict] = []
-
-    if not duplicates:
-        return (duplicate_ids, non_identical_duplicates_as_dict)
-
-    def columns_to_dict(duplicate: Row) -> dict:
-        """Convert a SQLAlchemy row to dict."""
-        dict_ = {}
-        for key in (
-            "id",
-            "metadata_id",
-            "start",
-            "created",
-            "mean",
-            "min",
-            "max",
-            "last_reset",
-            "state",
-            "sum",
-        ):
-            dict_[key] = getattr(duplicate, key)
-        return dict_
-
-    def compare_statistic_rows(row1: dict, row2: dict) -> bool:
-        """Compare two statistics rows, ignoring id and created."""
-        ignore_keys = {"id", "created"}
-        keys1 = set(row1).difference(ignore_keys)
-        keys2 = set(row2).difference(ignore_keys)
-        return keys1 == keys2 and all(row1[k] == row2[k] for k in keys1)
-
-    for duplicate in duplicates:
-        if start != duplicate.start or metadata_id != duplicate.metadata_id:
-            original_as_dict = columns_to_dict(duplicate)
-            start = duplicate.start
-            metadata_id = duplicate.metadata_id
-            continue
-        duplicate_as_dict = columns_to_dict(duplicate)
-        duplicate_ids.append(duplicate.id)
-        if not compare_statistic_rows(original_as_dict, duplicate_as_dict):
-            non_identical_duplicates_as_dict.append(
-                {"duplicate": duplicate_as_dict, "original": original_as_dict}
-            )
-
-    return (duplicate_ids, non_identical_duplicates_as_dict)
-
-
-def _delete_duplicates_from_table(
-    session: Session, table: type[StatisticsBase]
-) -> tuple[int, list[dict]]:
-    """Identify and delete duplicated statistics from a specified table."""
-    all_non_identical_duplicates: list[dict] = []
-    total_deleted_rows = 0
-    while True:
-        duplicate_ids, non_identical_duplicates = _find_duplicates(session, table)
-        if not duplicate_ids:
-            break
-        all_non_identical_duplicates.extend(non_identical_duplicates)
-        for i in range(0, len(duplicate_ids), SQLITE_MAX_BIND_VARS):
-            deleted_rows = (
-                session.query(table)
-                .filter(table.id.in_(duplicate_ids[i : i + SQLITE_MAX_BIND_VARS]))
-                .delete(synchronize_session=False)
-            )
-            total_deleted_rows += deleted_rows
-    return (total_deleted_rows, all_non_identical_duplicates)
-
-
-@database_job_retry_wrapper("delete statistics duplicates", 3)
-def delete_statistics_duplicates(
-    instance: Recorder, hass: HomeAssistant, session: Session
-) -> None:
-    """Identify and delete duplicated statistics.
-
-    A backup will be made of duplicated statistics before it is deleted.
-    """
-    deleted_statistics_rows, non_identical_duplicates = _delete_duplicates_from_table(
-        session, Statistics
-    )
-    if deleted_statistics_rows:
-        _LOGGER.info("Deleted %s duplicated statistics rows", deleted_statistics_rows)
-
-    if non_identical_duplicates:
-        isotime = dt_util.utcnow().isoformat()
-        backup_file_name = f"deleted_statistics.{isotime}.json"
-        backup_path = hass.config.path(STORAGE_DIR, backup_file_name)
-
-        os.makedirs(os.path.dirname(backup_path), exist_ok=True)
-        with open(backup_path, "w", encoding="utf8") as backup_file:
-            json.dump(
-                non_identical_duplicates,
-                backup_file,
-                indent=4,
-                sort_keys=True,
-                cls=JSONEncoder,
-            )
-        _LOGGER.warning(
-            (
-                "Deleted %s non identical duplicated %s rows, a backup of the deleted"
-                " rows has been saved to %s"
-            ),
-            len(non_identical_duplicates),
-            Statistics.__tablename__,
-            backup_path,
-        )
-
-    deleted_short_term_statistics_rows, _ = _delete_duplicates_from_table(
-        session, StatisticsShortTerm
-    )
-    if deleted_short_term_statistics_rows:
-        _LOGGER.warning(
-            "Deleted duplicated short term statistic rows, please report at %s",
-            "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+recorder%22",
-        )
-
-
-def _find_statistics_meta_duplicates(session: Session) -> list[int]:
-    """Find duplicated statistics_meta."""
-    # When querying the database, be careful to only explicitly query for columns
-    # which were present in schema version 29. If querying the table, SQLAlchemy
-    # will refer to future columns.
-    subquery = (
-        session.query(
-            StatisticsMeta.statistic_id,
-            literal_column("1").label("is_duplicate"),
-        )
-        .group_by(StatisticsMeta.statistic_id)
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-        # pylint: disable-next=not-callable
-        .having(func.count() > 1)
-        .subquery()
-    )
-    query = (
-        session.query(StatisticsMeta.statistic_id, StatisticsMeta.id)
-        .outerjoin(
-            subquery,
-            (subquery.c.statistic_id == StatisticsMeta.statistic_id),
-        )
-        .filter(subquery.c.is_duplicate == 1)
-        .order_by(StatisticsMeta.statistic_id, StatisticsMeta.id.desc())
-        .limit(1000 * SQLITE_MAX_BIND_VARS)
-    )
-    duplicates = execute(query)
-    statistic_id = None
-    duplicate_ids: list[int] = []
-
-    if not duplicates:
-        return duplicate_ids
-
-    for duplicate in duplicates:
-        if statistic_id != duplicate.statistic_id:
-            statistic_id = duplicate.statistic_id
-            continue
-        duplicate_ids.append(duplicate.id)
-
-    return duplicate_ids
-
-
-def _delete_statistics_meta_duplicates(session: Session) -> int:
-    """Identify and delete duplicated statistics from a specified table."""
-    total_deleted_rows = 0
-    while True:
-        duplicate_ids = _find_statistics_meta_duplicates(session)
-        if not duplicate_ids:
-            break
-        for i in range(0, len(duplicate_ids), SQLITE_MAX_BIND_VARS):
-            deleted_rows = (
-                session.query(StatisticsMeta)
-                .filter(
-                    StatisticsMeta.id.in_(duplicate_ids[i : i + SQLITE_MAX_BIND_VARS])
-                )
-                .delete(synchronize_session=False)
-            )
-            total_deleted_rows += deleted_rows
-    return total_deleted_rows
-
-
-def delete_statistics_meta_duplicates(instance: Recorder, session: Session) -> None:
-    """Identify and delete duplicated statistics_meta.
-
-    This is used when migrating from schema version 28 to schema version 29.
-    """
-    deleted_statistics_rows = _delete_statistics_meta_duplicates(session)
-    if deleted_statistics_rows:
-        statistics_meta_manager = instance.statistics_meta_manager
-        statistics_meta_manager.reset()
-        statistics_meta_manager.load(session)
-        _LOGGER.info(
-            "Deleted %s duplicated statistics_meta rows", deleted_statistics_rows
-        )
-
-
 def _compile_hourly_statistics_summary_mean_stmt(
     start_time_ts: float, end_time_ts: float
 ) -> StatementLambdaElement:
@@ -745,9 +505,13 @@ def _compile_statistics(
     current_metadata: dict[str, tuple[int, StatisticMetaData]] = {}
     # Collect statistics from all platforms implementing support
     for domain, platform in instance.hass.data[DOMAIN].recorder_platforms.items():
-        if not hasattr(platform, "compile_statistics"):
+        if not (
+            platform_compile_statistics := getattr(
+                platform, INTEGRATION_PLATFORM_COMPILE_STATISTICS, None
+            )
+        ):
             continue
-        compiled: PlatformCompiledStatistics = platform.compile_statistics(
+        compiled: PlatformCompiledStatistics = platform_compile_statistics(
             instance.hass, start, end
         )
         _LOGGER.debug(
@@ -1026,9 +790,13 @@ def list_statistic_ids(
         #
         # Query all integrations with a registered recorder platform
         for platform in hass.data[DOMAIN].recorder_platforms.values():
-            if not hasattr(platform, "list_statistic_ids"):
+            if not (
+                platform_list_statistic_ids := getattr(
+                    platform, INTEGRATION_PLATFORM_LIST_STATISTIC_IDS, None
+                )
+            ):
                 continue
-            platform_statistic_ids = platform.list_statistic_ids(
+            platform_statistic_ids = platform_list_statistic_ids(
                 hass, statistic_ids=statistic_ids, statistic_type=statistic_type
             )
 
@@ -2174,9 +1942,10 @@ def validate_statistics(hass: HomeAssistant) -> dict[str, list[ValidationIssue]]
     """Validate statistics."""
     platform_validation: dict[str, list[ValidationIssue]] = {}
     for platform in hass.data[DOMAIN].recorder_platforms.values():
-        if not hasattr(platform, "validate_statistics"):
-            continue
-        platform_validation.update(platform.validate_statistics(hass))
+        if platform_validate_statistics := getattr(
+            platform, INTEGRATION_PLATFORM_VALIDATE_STATISTICS, None
+        ):
+            platform_validation.update(platform_validate_statistics(hass))
     return platform_validation
 
 
@@ -2476,271 +2245,6 @@ def async_change_statistics_unit(
         new_unit_of_measurement=new_unit_of_measurement,
         old_unit_of_measurement=old_unit_of_measurement,
     )
-
-
-def _validate_db_schema_utf8(
-    instance: Recorder, session_maker: Callable[[], Session]
-) -> set[str]:
-    """Do some basic checks for common schema errors caused by manual migration."""
-    schema_errors: set[str] = set()
-
-    # Lack of full utf8 support is only an issue for MySQL / MariaDB
-    if instance.dialect_name != SupportedDialect.MYSQL:
-        return schema_errors
-
-    # This name can't be represented unless 4-byte UTF-8 unicode is supported
-    utf8_name = "𓆚𓃗"
-    statistic_id = f"{DOMAIN}.db_test"
-
-    metadata: StatisticMetaData = {
-        "has_mean": True,
-        "has_sum": True,
-        "name": utf8_name,
-        "source": DOMAIN,
-        "statistic_id": statistic_id,
-        "unit_of_measurement": None,
-    }
-    statistics_meta_manager = instance.statistics_meta_manager
-
-    # Try inserting some metadata which needs utfmb4 support
-    try:
-        # Mark the session as read_only to ensure that the test data is not committed
-        # to the database and we always rollback when the scope is exited
-        with session_scope(session=session_maker(), read_only=True) as session:
-            old_metadata_dict = statistics_meta_manager.get_many(
-                session, statistic_ids={statistic_id}
-            )
-            try:
-                statistics_meta_manager.update_or_add(
-                    session, metadata, old_metadata_dict
-                )
-                statistics_meta_manager.delete(session, statistic_ids=[statistic_id])
-            except OperationalError as err:
-                if err.orig and err.orig.args[0] == 1366:
-                    _LOGGER.debug(
-                        "Database table statistics_meta does not support 4-byte UTF-8"
-                    )
-                    schema_errors.add("statistics_meta.4-byte UTF-8")
-                    session.rollback()
-                else:
-                    raise
-    except Exception as exc:  # pylint: disable=broad-except
-        _LOGGER.exception("Error when validating DB schema: %s", exc)
-    return schema_errors
-
-
-def _get_future_year() -> int:
-    """Get a year in the future."""
-    return datetime.now().year + 1
-
-
-def _validate_db_schema(
-    hass: HomeAssistant, instance: Recorder, session_maker: Callable[[], Session]
-) -> set[str]:
-    """Do some basic checks for common schema errors caused by manual migration."""
-    schema_errors: set[str] = set()
-    statistics_meta_manager = instance.statistics_meta_manager
-
-    # Wrong precision is only an issue for MySQL / MariaDB / PostgreSQL
-    if instance.dialect_name not in (
-        SupportedDialect.MYSQL,
-        SupportedDialect.POSTGRESQL,
-    ):
-        return schema_errors
-
-    # This number can't be accurately represented as a 32-bit float
-    precise_number = 1.000000000000001
-    # This time can't be accurately represented unless datetimes have µs precision
-    #
-    # We want to insert statistics for a time in the future, in case they
-    # have conflicting metadata_id's with existing statistics that were
-    # never cleaned up. By inserting in the future, we can be sure that
-    # that by selecting the last inserted row, we will get the one we
-    # just inserted.
-    #
-    future_year = _get_future_year()
-    precise_time = datetime(future_year, 10, 6, microsecond=1, tzinfo=dt_util.UTC)
-    start_time = datetime(future_year, 10, 6, tzinfo=dt_util.UTC)
-    statistic_id = f"{DOMAIN}.db_test"
-
-    metadata: StatisticMetaData = {
-        "has_mean": True,
-        "has_sum": True,
-        "name": None,
-        "source": DOMAIN,
-        "statistic_id": statistic_id,
-        "unit_of_measurement": None,
-    }
-    statistics: StatisticData = {
-        "last_reset": precise_time,
-        "max": precise_number,
-        "mean": precise_number,
-        "min": precise_number,
-        "start": precise_time,
-        "state": precise_number,
-        "sum": precise_number,
-    }
-
-    def check_columns(
-        schema_errors: set[str],
-        stored: Mapping,
-        expected: Mapping,
-        columns: tuple[str, ...],
-        table_name: str,
-        supports: str,
-    ) -> None:
-        for column in columns:
-            if stored[column] != expected[column]:
-                schema_errors.add(f"{table_name}.{supports}")
-                _LOGGER.error(
-                    "Column %s in database table %s does not support %s (stored=%s != expected=%s)",
-                    column,
-                    table_name,
-                    supports,
-                    stored[column],
-                    expected[column],
-                )
-
-    # Insert / adjust a test statistics row in each of the tables
-    tables: tuple[type[Statistics | StatisticsShortTerm], ...] = (
-        Statistics,
-        StatisticsShortTerm,
-    )
-    try:
-        # Mark the session as read_only to ensure that the test data is not committed
-        # to the database and we always rollback when the scope is exited
-        with session_scope(session=session_maker(), read_only=True) as session:
-            for table in tables:
-                _import_statistics_with_session(
-                    instance, session, metadata, (statistics,), table
-                )
-                stored_statistics = _statistics_during_period_with_session(
-                    hass,
-                    session,
-                    start_time,
-                    None,
-                    {statistic_id},
-                    "hour" if table == Statistics else "5minute",
-                    None,
-                    {"last_reset", "max", "mean", "min", "state", "sum"},
-                )
-                if not (stored_statistic := stored_statistics.get(statistic_id)):
-                    _LOGGER.warning(
-                        "Schema validation failed for table: %s", table.__tablename__
-                    )
-                    continue
-
-                # We want to look at the last inserted row to make sure there
-                # is not previous garbage data in the table that would cause
-                # the test to produce an incorrect result. To achieve this,
-                # we inserted a row in the future, and now we select the last
-                # inserted row back.
-                last_stored_statistic = stored_statistic[-1]
-                check_columns(
-                    schema_errors,
-                    last_stored_statistic,
-                    statistics,
-                    ("max", "mean", "min", "state", "sum"),
-                    table.__tablename__,
-                    "double precision",
-                )
-                assert statistics["last_reset"]
-                check_columns(
-                    schema_errors,
-                    last_stored_statistic,
-                    {
-                        "last_reset": datetime_to_timestamp_or_none(
-                            statistics["last_reset"]
-                        ),
-                        "start": datetime_to_timestamp_or_none(statistics["start"]),
-                    },
-                    ("start", "last_reset"),
-                    table.__tablename__,
-                    "µs precision",
-                )
-            statistics_meta_manager.delete(session, statistic_ids=[statistic_id])
-    except Exception as exc:  # pylint: disable=broad-except
-        _LOGGER.exception("Error when validating DB schema: %s", exc)
-
-    return schema_errors
-
-
-def validate_db_schema(
-    hass: HomeAssistant, instance: Recorder, session_maker: Callable[[], Session]
-) -> set[str]:
-    """Do some basic checks for common schema errors caused by manual migration."""
-    schema_errors: set[str] = set()
-    schema_errors |= _validate_db_schema_utf8(instance, session_maker)
-    schema_errors |= _validate_db_schema(hass, instance, session_maker)
-    if schema_errors:
-        _LOGGER.debug(
-            "Detected statistics schema errors: %s", ", ".join(sorted(schema_errors))
-        )
-    return schema_errors
-
-
-def correct_db_schema(
-    instance: Recorder,
-    engine: Engine,
-    session_maker: Callable[[], Session],
-    schema_errors: set[str],
-) -> None:
-    """Correct issues detected by validate_db_schema."""
-    from .migration import _modify_columns  # pylint: disable=import-outside-toplevel
-
-    if "statistics_meta.4-byte UTF-8" in schema_errors:
-        # Attempt to convert the table to utf8mb4
-        _LOGGER.warning(
-            (
-                "Updating character set and collation of table %s to utf8mb4. "
-                "Note: this can take several minutes on large databases and slow "
-                "computers. Please be patient!"
-            ),
-            "statistics_meta",
-        )
-        with contextlib.suppress(SQLAlchemyError), session_scope(
-            session=session_maker()
-        ) as session:
-            connection = session.connection()
-            connection.execute(
-                # Using LOCK=EXCLUSIVE to prevent the database from corrupting
-                # https://github.com/home-assistant/core/issues/56104
-                text(
-                    "ALTER TABLE statistics_meta CONVERT TO CHARACTER SET utf8mb4"
-                    " COLLATE utf8mb4_unicode_ci, LOCK=EXCLUSIVE"
-                )
-            )
-
-    tables: tuple[type[Statistics | StatisticsShortTerm], ...] = (
-        Statistics,
-        StatisticsShortTerm,
-    )
-    for table in tables:
-        if f"{table.__tablename__}.double precision" in schema_errors:
-            # Attempt to convert float columns to double precision
-            _modify_columns(
-                session_maker,
-                engine,
-                table.__tablename__,
-                [
-                    "mean DOUBLE PRECISION",
-                    "min DOUBLE PRECISION",
-                    "max DOUBLE PRECISION",
-                    "state DOUBLE PRECISION",
-                    "sum DOUBLE PRECISION",
-                ],
-            )
-        if f"{table.__tablename__}.µs precision" in schema_errors:
-            # Attempt to convert timestamp columns to µs precision
-            _modify_columns(
-                session_maker,
-                engine,
-                table.__tablename__,
-                [
-                    "last_reset_ts DOUBLE PRECISION",
-                    "start_ts DOUBLE PRECISION",
-                ],
-            )
 
 
 def cleanup_statistics_timestamp_migration(instance: Recorder) -> bool:

@@ -42,6 +42,7 @@ from .const import (
     EVENT_IN,
     EVENT_IN_DAYS,
     EVENT_IN_WEEKS,
+    EVENT_LOCATION,
     EVENT_RECURRENCE_ID,
     EVENT_RECURRENCE_RANGE,
     EVENT_RRULE,
@@ -176,6 +177,7 @@ CREATE_EVENT_SCHEMA = vol.All(
         {
             vol.Required(EVENT_SUMMARY): cv.string,
             vol.Optional(EVENT_DESCRIPTION, default=""): cv.string,
+            vol.Optional(EVENT_LOCATION): cv.string,
             vol.Inclusive(
                 EVENT_START_DATE, "dates", "Start and end dates must both be specified"
             ): cv.date,
@@ -213,6 +215,7 @@ WEBSOCKET_EVENT_SCHEMA = vol.Schema(
             vol.Required(EVENT_END): vol.Any(cv.date, cv.datetime),
             vol.Required(EVENT_SUMMARY): cv.string,
             vol.Optional(EVENT_DESCRIPTION): cv.string,
+            vol.Optional(EVENT_LOCATION): cv.string,
             vol.Optional(EVENT_RRULE): _validate_rrule,
         },
         _has_same_type(EVENT_START, EVENT_END),

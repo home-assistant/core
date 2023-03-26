@@ -954,25 +954,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
 
         Handler key is the domain of the component that we want to set up.
         """
-        try:
-            integration = await loader.async_get_integration(self.hass, handler_key)
-        except loader.IntegrationNotFound as err:
-            _LOGGER.error("Cannot find integration %s", handler_key)
-            raise data_entry_flow.UnknownHandler from err
-
-        # Make sure requirements and dependencies of component are resolved
-        await async_process_deps_reqs(self.hass, self._hass_config, integration)
-
-        try:
-            integration.get_platform("config_flow")
-        except ImportError as err:
-            _LOGGER.error(
-                "Error occurred loading configuration flow for integration %s: %s",
-                handler_key,
-                err,
-            )
-            raise data_entry_flow.UnknownHandler
-
+        await _load_integration(self.hass, handler_key, self._hass_config)
         if (handler := HANDLERS.get(handler_key)) is None:
             raise data_entry_flow.UnknownHandler
 
@@ -1842,6 +1824,8 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
         if entry is None:
             raise UnknownEntry(handler_key)
 
+        await _load_integration(self.hass, entry.domain, {})
+
         if entry.domain not in HANDLERS:
             raise data_entry_flow.UnknownHandler
 
@@ -2006,3 +1990,26 @@ async def support_remove_from_device(hass: HomeAssistant, domain: str) -> bool:
     integration = await loader.async_get_integration(hass, domain)
     component = integration.get_component()
     return hasattr(component, "async_remove_config_entry_device")
+
+
+async def _load_integration(
+    hass: HomeAssistant, domain: str, hass_config: ConfigType
+) -> None:
+    try:
+        integration = await loader.async_get_integration(hass, domain)
+    except loader.IntegrationNotFound as err:
+        _LOGGER.error("Cannot find integration %s", domain)
+        raise data_entry_flow.UnknownHandler from err
+
+    # Make sure requirements and dependencies of component are resolved
+    await async_process_deps_reqs(hass, hass_config, integration)
+
+    try:
+        integration.get_platform("config_flow")
+    except ImportError as err:
+        _LOGGER.error(
+            "Error occurred loading flow for integration %s: %s",
+            domain,
+            err,
+        )
+        raise data_entry_flow.UnknownHandler
