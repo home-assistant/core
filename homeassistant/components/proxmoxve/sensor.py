@@ -37,7 +37,6 @@ SENSOR_DESCRIPTIONS = [
             key="mem_gib",
             name="mem_gib",
             native_unit_of_measurement=DATA_GIBIBYTES,
-            icon=None,
             native_lambda=lambda data: round(int(data.mem) / BYTE_TO_GIBIBYTE, 2),
         )
     ),
