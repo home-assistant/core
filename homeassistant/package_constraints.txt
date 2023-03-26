@@ -10,7 +10,7 @@ atomicwrites-homeassistant==1.4.1
 attrs==22.2.0
 awesomeversion==22.9.0
 bcrypt==4.0.1
-bleak-retry-connector==3.0.1
+bleak-retry-connector==3.0.2
 bleak==0.20.0
 bluetooth-adapters==0.15.3
 bluetooth-auto-recovery==1.0.3
