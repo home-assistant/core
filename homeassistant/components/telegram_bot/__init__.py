@@ -1,6 +1,7 @@
 """Support to send and receive Telegram messages."""
 from __future__ import annotations
 
+import asyncio
 from functools import partial
 import importlib
 import io
@@ -21,10 +22,10 @@ from telegram import (
     Update,
     User,
 )
+from telegram.constants import ParseMode
 from telegram.error import TelegramError
-from telegram.ext import CallbackContext, Filters
-from telegram.parsemode import ParseMode
-from telegram.utils.request import Request
+from telegram.ext import CallbackContext, filters
+from telegram.request import HTTPXRequest
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -90,7 +91,6 @@ ATTR_ALLOWS_MULTIPLE_ANSWERS = "allows_multiple_answers"
 
 CONF_ALLOWED_CHAT_IDS = "allowed_chat_ids"
 CONF_PROXY_URL = "proxy_url"
-CONF_PROXY_PARAMS = "proxy_params"
 CONF_TRUSTED_NETWORKS = "trusted_networks"
 
 DOMAIN = "telegram_bot"
@@ -137,7 +137,6 @@ CONFIG_SCHEMA = vol.Schema(
                         ),
                         vol.Optional(ATTR_PARSER, default=PARSER_MD): cv.string,
                         vol.Optional(CONF_PROXY_URL): cv.string,
-                        vol.Optional(CONF_PROXY_PARAMS): dict,
                         # webhooks
                         vol.Optional(CONF_URL): cv.url,
                         vol.Optional(
@@ -451,14 +450,11 @@ def initialize_bot(p_config):
     """Initialize telegram bot with proxy support."""
     api_key = p_config.get(CONF_API_KEY)
     proxy_url = p_config.get(CONF_PROXY_URL)
-    proxy_params = p_config.get(CONF_PROXY_PARAMS)
 
     if proxy_url is not None:
-        request = Request(
-            con_pool_size=8, proxy_url=proxy_url, urllib3_proxy_kwargs=proxy_params
-        )
+        request = HTTPXRequest(connection_pool_size=8, proxy_url=proxy_url)
     else:
-        request = Request(con_pool_size=8)
+        request = HTTPXRequest(connection_pool_size=8)
     return Bot(token=api_key, request=request)
 
 
@@ -472,7 +468,7 @@ class TelegramNotificationService:
         self._last_message_id = {user: None for user in self.allowed_chat_ids}
         self._parsers = {PARSER_HTML: ParseMode.HTML, PARSER_MD: ParseMode.MARKDOWN}
         self._parse_mode = self._parsers.get(parser)
-        self.bot = bot
+        self.bot: Bot = bot
         self.hass = hass
 
     def _get_msg_ids(self, msg_data, chat_id):
@@ -597,7 +593,9 @@ class TelegramNotificationService:
     def _send_msg(self, func_send, msg_error, message_tag, *args_msg, **kwargs_msg):
         """Send one message."""
         try:
-            out = func_send(*args_msg, **kwargs_msg)
+            out = asyncio.run_coroutine_threadsafe(
+                func_send(*args_msg, **kwargs_msg), self.hass.loop
+            ).result()
             if not isinstance(out, bool) and hasattr(out, ATTR_MESSAGEID):
                 chat_id = out.chat_id
                 message_id = out[ATTR_MESSAGEID]
@@ -945,8 +943,8 @@ class BaseTelegramBotEntity:
         return True
 
     @staticmethod
-    def _get_command_event_data(command_text: str) -> dict[str, str | list]:
-        if not command_text.startswith("/"):
+    def _get_command_event_data(command_text: str | None) -> dict[str, str | list]:
+        if command_text is None or not command_text.startswith("/"):
             return {}
         command_parts = command_text.split()
         command = command_parts[0]
@@ -958,7 +956,7 @@ class BaseTelegramBotEntity:
             ATTR_MSGID: message.message_id,
             ATTR_CHAT_ID: message.chat.id,
         }
-        if Filters.command.filter(message):
+        if filters.CHAT.filter(message):
             # This is a command message - set event type to command and split data into command and args
             event_type = EVENT_TELEGRAM_COMMAND
             event_data.update(self._get_command_event_data(message.text))
