@@ -5,8 +5,12 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import DATA_GIBIBYTES
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.const import UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -34,10 +38,12 @@ class ProxmoxVESensorEntityDescription(
 SENSOR_DESCRIPTIONS = [
     (
         ProxmoxVESensorEntityDescription(
-            key="mem_gib",
-            name="mem_gib",
-            native_unit_of_measurement=DATA_GIBIBYTES,
-            native_lambda=lambda data: round(int(data.mem) / BYTE_TO_GIBIBYTE, 2),
+            key="mem",
+            name="mem",
+            device_class=SensorDeviceClass.DATA_SIZE,
+            native_unit_of_measurement=UnitOfInformation.BYTES,
+            suggested_unit_of_measurement=UnitOfInformation.GIGABITS,
+            native_lambda=lambda data: int(data.mem),
         )
     ),
 ]
@@ -106,6 +112,10 @@ class ProxmoxSensor(ProxmoxEntity, SensorEntity):
 
         self.native_lambda = description.native_lambda
         self._attr_native_unit_of_measurement = description.native_unit_of_measurement
+        self._attr_suggested_unit_of_measurement = (
+            description.suggested_unit_of_measurement
+        )
+        self._attr_device_class = description.device_class
         super().__init__(
             coordinator,
             unique_id=f"{node_name}_{vm_id}_{description.key}",
