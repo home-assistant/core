@@ -1,8 +1,0 @@
-{
-    "issues": {
-        "pending_removal": {
-            "description": "Magicseaweedi integratsioon on Home Assistantist eemaldamisel ja see ei ole enam saadaval alates Home Assistant 2023.3.\n\nProbleemi lahendamiseks eemalda YAML-konfiguratsioon failist configuration.yaml ja k\u00e4ivita Home Assistant uuesti.",
-            "title": "Magicseaweedi integratsioon eemaldatakse"
-        }
-    }
-}

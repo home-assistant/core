@@ -1,7 +1,7 @@
 """Support for the Tuya lights."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import json
 from typing import Any, cast
 
@@ -16,9 +16,9 @@ from homeassistant.components.light import (
     LightEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
@@ -59,7 +59,9 @@ class TuyaLightEntityDescription(LightEntityDescription):
     color_data: DPCode | tuple[DPCode, ...] | None = None
     color_mode: DPCode | None = None
     color_temp: DPCode | tuple[DPCode, ...] | None = None
-    default_color_type: ColorTypeData = DEFAULT_COLOR_TYPE_DATA
+    default_color_type: ColorTypeData = field(
+        default_factory=lambda: DEFAULT_COLOR_TYPE_DATA
+    )
 
 
 LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
@@ -219,7 +221,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
         ),
         TuyaLightEntityDescription(
             key=DPCode.BASIC_INDICATOR,
-            name="Indicator Light",
+            name="Indicator light",
             entity_category=EntityCategory.CONFIG,
         ),
     ),

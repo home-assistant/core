@@ -82,7 +82,7 @@ def com_port(device="/dev/ttyUSB1234"):
     return port
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_connect_zigpy_app() -> Generator[None, None, None]:
     """Mock the radio connection."""
 

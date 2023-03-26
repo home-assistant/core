@@ -62,10 +62,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry_data.pop(CONF_STATISTICS_ONLY)
         hass.config_entries.async_update_entry(entry, data=entry_data)
 
-    # start reauth to force api key is present
-    if CONF_API_KEY not in entry.data:
-        raise ConfigEntryAuthFailed
-
     _LOGGER.debug("Setting up %s integration with host %s", DOMAIN, host)
 
     session = async_get_clientsession(hass, verify_tls)

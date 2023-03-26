@@ -101,7 +101,11 @@ def ga_validator(value: Any) -> str | int:
     )
 
 
-ga_list_validator = vol.All(cv.ensure_list, [ga_validator])
+ga_list_validator = vol.All(
+    cv.ensure_list,
+    [ga_validator],
+    vol.IsTrue("value must be a group address or a list containing group addresses"),
+)
 
 ia_validator = vol.Any(
     vol.All(str, str.strip, cv.matches_regex(IndividualAddress.ADDRESS_RE.pattern)),
@@ -114,8 +118,7 @@ ia_validator = vol.Any(
 
 
 def ip_v4_validator(value: Any, multicast: bool | None = None) -> str:
-    """
-    Validate that value is parsable as IPv4 address.
+    """Validate that value is parsable as IPv4 address.
 
     Optionally check if address is in a reserved multicast block or is explicitly not.
     """

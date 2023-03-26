@@ -1,8 +1,6 @@
 """Support for RuuviTag sensors."""
 from __future__ import annotations
 
-from typing import Optional, Union
-
 from sensor_state_data import (
     DeviceKey,
     SensorDescription,
@@ -143,9 +141,7 @@ async def async_setup_entry(
 
 
 class RuuvitagBluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[
-        PassiveBluetoothDataProcessor[Optional[Union[float, int]]]
-    ],
+    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[float | int | None]],
     SensorEntity,
 ):
     """Representation of a Ruuvitag BLE sensor."""

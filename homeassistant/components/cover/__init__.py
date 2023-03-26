@@ -7,9 +7,8 @@ from datetime import timedelta
 from enum import IntFlag
 import functools as ft
 import logging
-from typing import Any, TypeVar, final
+from typing import Any, ParamSpec, TypeVar, final
 
-from typing_extensions import ParamSpec
 import voluptuous as vol
 
 from homeassistant.backports.enum import StrEnum

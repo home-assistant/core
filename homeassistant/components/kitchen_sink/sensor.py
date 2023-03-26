@@ -11,18 +11,17 @@ from homeassistant.const import ATTR_BATTERY_LEVEL, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.typing import StateType
 
 from . import DOMAIN
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Demo sensors."""
+    """Set up the Everything but the Kitchen Sink config entry."""
     async_add_entities(
         [
             DemoSensor(
@@ -54,15 +53,6 @@ async def async_setup_platform(
             ),
         ]
     )
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the Everything but the Kitchen Sink config entry."""
-    await async_setup_platform(hass, {}, async_add_entities)
 
 
 class DemoSensor(SensorEntity):

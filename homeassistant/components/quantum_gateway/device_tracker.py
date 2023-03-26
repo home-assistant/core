@@ -40,7 +40,7 @@ def get_scanner(
 
 
 class QuantumGatewayDeviceScanner(DeviceScanner):
-    """This class queries a Quantum Gateway."""
+    """Class which queries a Quantum Gateway."""
 
     def __init__(self, config):
         """Initialize the scanner."""

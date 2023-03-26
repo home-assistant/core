@@ -52,7 +52,7 @@ async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     if any(
         entry.data.get(attrib) != entry.options.get(attrib)
-        for attrib in (ATTR_TARIFF, ATTR_POWER, ATTR_POWER_P3)
+        for attrib in (ATTR_POWER, ATTR_POWER_P3)
     ):
         # update entry replacing data with new options
         hass.config_entries.async_update_entry(

@@ -96,8 +96,7 @@ async def see_device(
 
 
 async def get_tracking_devices(hass: HomeAssistant) -> tuple[set[str], set[str]]:
-    """
-    Load all known devices.
+    """Load all known devices.
 
     We just need the devices so set consider_home and home range to 0
     """

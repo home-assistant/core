@@ -14,6 +14,7 @@ from . import (
     TEST_ALREADY_FLOAT_SENSOR,
     TEST_ALREADY_INT_SENSOR,
     TEST_FLOAT_SENSOR,
+    TEST_MISSING_FIELD_DATA_SENSOR,
     TEST_NO_FIELD_SENSOR,
     TEST_NO_PERMISSION_SENSOR,
     TEST_SENSOR,
@@ -43,7 +44,9 @@ async def test_entities_added(hass: HomeAssistant) -> None:
     assert hass.states.get("sensor.test_temperature")
 
 
-async def test_sensor_permission(hass: HomeAssistant, caplog) -> None:
+async def test_sensor_permission(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test if it raises a warning when there is no permission to read the sensor."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)
@@ -62,7 +65,9 @@ async def test_sensor_permission(hass: HomeAssistant, caplog) -> None:
     assert "This account does not have permission to read Test" in caplog.text
 
 
-async def test_field_not_supported(hass: HomeAssistant, caplog) -> None:
+async def test_field_not_supported(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test if it raises a warning when the field is not supported."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)
@@ -83,7 +88,7 @@ async def test_field_not_supported(hass: HomeAssistant, caplog) -> None:
 
 
 @pytest.mark.parametrize(
-    "test_input,expected,entity_id",
+    ("test_input", "expected", "entity_id"),
     [
         (TEST_FLOAT_SENSOR, "2.3", "temperature"),
         (TEST_STRING_SENSOR, "dry", "wet_dry"),
@@ -113,7 +118,7 @@ async def test_field_types(
     assert hass.states.get(f"sensor.test_{entity_id}").state == expected
 
 
-async def test_no_field(hass: HomeAssistant, caplog: Any) -> None:
+async def test_no_field(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     """Test behavior when the expected field is not present."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)
@@ -131,3 +136,23 @@ async def test_no_field(hass: HomeAssistant, caplog: Any) -> None:
     assert len(entries) == 1
     assert entries[0].state == ConfigEntryState.LOADED
     assert hass.states.get("sensor.test_temperature").state == "unavailable"
+
+
+async def test_field_data_missing(hass: HomeAssistant) -> None:
+    """Test behavior when field data is missing."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
+    config_entry.add_to_hass(hass)
+
+    with patch("lacrosse_view.LaCrosse.login", return_value=True), patch(
+        "lacrosse_view.LaCrosse.get_sensors",
+        return_value=[TEST_MISSING_FIELD_DATA_SENSOR],
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.data[DOMAIN]
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert entries
+    assert len(entries) == 1
+    assert entries[0].state == ConfigEntryState.LOADED
+    assert hass.states.get("sensor.test_temperature").state == "unknown"

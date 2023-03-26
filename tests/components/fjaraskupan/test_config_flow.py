@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from pytest import fixture
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.fjaraskupan.const import DOMAIN
@@ -13,7 +13,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from . import COOKER_SERVICE_INFO
 
 
-@fixture(name="mock_setup_entry", autouse=True)
+@pytest.fixture(name="mock_setup_entry", autouse=True)
 async def fixture_mock_setup_entry(hass):
     """Fixture for config entry."""
 

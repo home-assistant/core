@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from homeassistant.components.sensor import DOMAIN as PLATFORM_DOMAIN, SensorDeviceClass
-from homeassistant.const import MASS_POUNDS, PERCENTAGE, STATE_UNKNOWN
+from homeassistant.const import PERCENTAGE, STATE_UNKNOWN, UnitOfMass
 from homeassistant.core import HomeAssistant
 
 from .conftest import setup_integration
@@ -92,7 +92,7 @@ async def test_litter_robot_sensor(
     assert sensor.attributes["unit_of_measurement"] == PERCENTAGE
     sensor = hass.states.get("sensor.test_pet_weight")
     assert sensor.state == "12.0"
-    assert sensor.attributes["unit_of_measurement"] == MASS_POUNDS
+    assert sensor.attributes["unit_of_measurement"] == UnitOfMass.POUNDS
 
 
 async def test_feeder_robot_sensor(

@@ -63,9 +63,7 @@ class KrakenOptionsFlowHandler(config_entries.OptionsFlow):
         tradable_asset_pairs = await self.hass.async_add_executor_job(
             get_tradable_asset_pairs, api
         )
-        tradable_asset_pairs_for_multi_select = {
-            v: v for v in tradable_asset_pairs.keys()
-        }
+        tradable_asset_pairs_for_multi_select = {v: v for v in tradable_asset_pairs}
         options = {
             vol.Optional(
                 CONF_SCAN_INTERVAL,

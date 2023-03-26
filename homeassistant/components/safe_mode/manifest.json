@@ -1,10 +1,10 @@
 {
   "domain": "safe_mode",
   "name": "Safe Mode",
-  "config_flow": false,
-  "documentation": "https://www.home-assistant.io/integrations/safe_mode",
-  "dependencies": ["frontend", "persistent_notification", "cloud"],
   "codeowners": ["@home-assistant/core"],
-  "quality_scale": "internal",
-  "integration_type": "system"
+  "config_flow": false,
+  "dependencies": ["frontend", "persistent_notification", "cloud"],
+  "documentation": "https://www.home-assistant.io/integrations/safe_mode",
+  "integration_type": "system",
+  "quality_scale": "internal"
 }

@@ -209,7 +209,6 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
     DSMRReaderSensorEntityDescription(
         key="dsmr/consumption/gas/currently_delivered",
         name="Current gas usage",
-        device_class=SensorDeviceClass.GAS,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),

@@ -84,8 +84,8 @@ class SwitchBeeCoordinator(DataUpdateCoordinator[Mapping[int, SwitchBeeBaseDevic
                 raise UpdateFailed(
                     f"Error communicating with API: {exp}"
                 ) from SwitchBeeError
-            else:
-                _LOGGER.debug("Loaded devices")
+
+            _LOGGER.debug("Loaded devices")
 
         # Get the state of the devices
         try:

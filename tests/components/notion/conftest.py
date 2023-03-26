@@ -1,4 +1,5 @@
 """Define fixtures for Notion tests."""
+from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -11,6 +12,15 @@ from tests.common import MockConfigEntry, load_fixture
 
 TEST_USERNAME = "user@host.com"
 TEST_PASSWORD = "password123"
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.notion.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 @pytest.fixture(name="client")
@@ -82,4 +92,3 @@ async def setup_config_entry_fixture(hass, config_entry, mock_aionotion):
     """Define a fixture to set up notion."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    yield

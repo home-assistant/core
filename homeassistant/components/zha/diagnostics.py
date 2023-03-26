@@ -2,18 +2,12 @@
 from __future__ import annotations
 
 import dataclasses
+from importlib.metadata import version
 from typing import Any
 
-import bellows
-import pkg_resources
-import zigpy
 from zigpy.config import CONF_NWK_EXTENDED_PAN_ID
 from zigpy.profiles import PROFILES
 from zigpy.zcl import Cluster
-import zigpy_deconz
-import zigpy_xbee
-import zigpy_zigate
-import zigpy_znp
 
 from homeassistant.components.diagnostics.util import async_redact_data
 from homeassistant.config_entries import ConfigEntry
@@ -79,13 +73,13 @@ async def async_get_config_entry_diagnostics(
             "config_entry": config_entry.as_dict(),
             "application_state": shallow_asdict(gateway.application_controller.state),
             "versions": {
-                "bellows": bellows.__version__,
-                "zigpy": zigpy.__version__,
-                "zigpy_deconz": zigpy_deconz.__version__,
-                "zigpy_xbee": zigpy_xbee.__version__,
-                "zigpy_znp": zigpy_znp.__version__,
-                "zigpy_zigate": zigpy_zigate.__version__,
-                "zhaquirks": pkg_resources.get_distribution("zha-quirks").version,
+                "bellows": version("bellows"),
+                "zigpy": version("zigpy"),
+                "zigpy_deconz": version("zigpy-deconz"),
+                "zigpy_xbee": version("zigpy-xbee"),
+                "zigpy_znp": version("zigpy_znp"),
+                "zigpy_zigate": version("zigpy-zigate"),
+                "zhaquirks": version("zha-quirks"),
             },
         },
         KEYS_TO_REDACT,

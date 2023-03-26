@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import OrderedDict
 from collections.abc import Callable
 import queue
-from ssl import PROTOCOL_TLS, SSLContext, SSLError
+from ssl import PROTOCOL_TLS_CLIENT, SSLContext, SSLError
 from types import MappingProxyType
 from typing import Any
 
@@ -28,7 +28,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.json import JSON_DECODE_EXCEPTIONS, json_dumps, json_loads
+from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.selector import (
     BooleanSelector,
     FileSelector,
@@ -44,6 +44,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 from .client import MqttClientSetup
 from .config_integration import CONFIG_SCHEMA_ENTRY
@@ -76,7 +77,6 @@ from .const import (
     DEFAULT_WS_PATH,
     DOMAIN,
     SUPPORTED_PROTOCOLS,
-    SUPPORTED_TRANSPORTS,
     TRANSPORT_TCP,
     TRANSPORT_WEBSOCKETS,
 )
@@ -119,6 +119,10 @@ PROTOCOL_SELECTOR = SelectSelector(
         mode=SelectSelectorMode.DROPDOWN,
     )
 )
+SUPPORTED_TRANSPORTS = [
+    SelectOptionDict(value=TRANSPORT_TCP, label="TCP"),
+    SelectOptionDict(value=TRANSPORT_WEBSOCKETS, label="WebSocket"),
+]
 TRANSPORT_SELECTOR = SelectSelector(
     SelectSelectorConfig(
         options=SUPPORTED_TRANSPORTS,
@@ -129,14 +133,15 @@ WS_HEADERS_SELECTOR = TextSelector(
     TextSelectorConfig(type=TextSelectorType.TEXT, multiline=True)
 )
 CA_VERIFICATION_MODES = [
-    SelectOptionDict(value="off", label="Off"),
-    SelectOptionDict(value="auto", label="Auto"),
-    SelectOptionDict(value="custom", label="Custom"),
+    "off",
+    "auto",
+    "custom",
 ]
 BROKER_VERIFICATION_SELECTOR = SelectSelector(
     SelectSelectorConfig(
         options=CA_VERIFICATION_MODES,
         mode=SelectSelectorMode.DROPDOWN,
+        translation_key=SET_CA_CERT,
     )
 )
 
@@ -155,7 +160,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _hassio_discovery = None
+    _hassio_discovery: dict[str, Any] | None = None
 
     @staticmethod
     @callback
@@ -784,7 +789,7 @@ def check_certicate_chain() -> str | None:
         except (TypeError, ValueError):
             return "bad_client_key"
     # Check the certificate chain
-    context = SSLContext(PROTOCOL_TLS)
+    context = SSLContext(PROTOCOL_TLS_CLIENT)
     if client_certificate and private_key:
         try:
             context.load_cert_chain(client_certificate, private_key)

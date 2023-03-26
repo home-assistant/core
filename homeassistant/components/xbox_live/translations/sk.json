@@ -1,8 +1,0 @@
-{
-    "issues": {
-        "pending_removal": {
-            "description": "Integr\u00e1cia Xbox Live \u010dak\u00e1 na odstr\u00e1nenie z Home Assistant a od Home Assistant 2023.2 u\u017e nebude k dispoz\u00edcii. \n\n Integr\u00e1cia sa odstra\u0148uje, preto\u017ee je u\u017eito\u010dn\u00e1 iba pre star\u0161ie zariadenie Xbox 360 a upstream API teraz vy\u017eaduje platen\u00e9 predplatn\u00e9. Nov\u0161ie konzoly s\u00fa podporovan\u00e9 integr\u00e1ciou Xbox zadarmo. \n\n Odstr\u00e1\u0148te konfigur\u00e1ciu Xbox Live YAML zo s\u00faboru configuration.yaml a re\u0161tartujte Home Assistant, aby ste tento probl\u00e9m vyrie\u0161ili.",
-            "title": "Integr\u00e1cia slu\u017eby Xbox Live sa odstra\u0148uje"
-        }
-    }
-}

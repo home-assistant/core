@@ -1,5 +1,5 @@
 """Fixtures for anthemav integration tests."""
-from typing import Callable
+from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest

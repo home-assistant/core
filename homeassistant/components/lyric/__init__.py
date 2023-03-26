@@ -69,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
     if not isinstance(implementation, LyricLocalOAuth2Implementation):
-        raise ValueError("Unexpected auth implementation; can't find oauth client id")
+        raise TypeError("Unexpected auth implementation; can't find oauth client id")
 
     session = aiohttp_client.async_get_clientsession(hass)
     oauth_session = OAuth2SessionLyric(hass, entry, implementation)

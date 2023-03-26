@@ -154,7 +154,7 @@ def player(hass, request):
     return request.param(hass)
 
 
-async def test_volume_up(player):
+async def test_volume_up(player) -> None:
     """Test the volume_up and set volume methods."""
     assert player.volume_level == 0
     await player.async_set_volume_level(0.5)
@@ -163,7 +163,7 @@ async def test_volume_up(player):
     assert player.volume_level == 0.6
 
 
-async def test_volume_down(player):
+async def test_volume_down(player) -> None:
     """Test the volume_down and set volume methods."""
     assert player.volume_level == 0
     await player.async_set_volume_level(0.5)
@@ -172,7 +172,7 @@ async def test_volume_down(player):
     assert player.volume_level == 0.4
 
 
-async def test_media_play_pause(player):
+async def test_media_play_pause(player) -> None:
     """Test the media_play_pause method."""
     assert player.state == STATE_OFF
     await player.async_media_play_pause()
@@ -181,7 +181,7 @@ async def test_media_play_pause(player):
     assert player.state == STATE_PAUSED
 
 
-async def test_turn_on_off(player):
+async def test_turn_on_off(player) -> None:
     """Test the turn on and turn off methods."""
     assert player.state == STATE_OFF
     await player.async_turn_on()
@@ -190,7 +190,7 @@ async def test_turn_on_off(player):
     assert player.state == STATE_OFF
 
 
-async def test_toggle(player):
+async def test_toggle(player) -> None:
     """Test the toggle method."""
     assert player.state == STATE_OFF
     await player.async_toggle()

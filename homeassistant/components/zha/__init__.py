@@ -1,5 +1,6 @@
 """Support for Zigbee Home Automation devices."""
 import asyncio
+import copy
 import logging
 import os
 
@@ -7,8 +8,8 @@ import voluptuous as vol
 from zhaquirks import setup as setup_quirks
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
-from homeassistant import const as ha_const
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_TYPE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
@@ -16,7 +17,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
-from . import api
+from . import websocket_api
 from .core import ZHAGateway
 from .core.const import (
     BAUD_RATES,
@@ -39,7 +40,7 @@ from .core.const import (
 )
 from .core.discovery import GROUP_PROBE
 
-DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({vol.Optional(ha_const.CONF_TYPE): cv.string})
+DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({vol.Optional(CONF_TYPE): cv.string})
 ZHA_CONFIG_SCHEMA = {
     vol.Optional(CONF_BAUDRATE): cv.positive_int,
     vol.Optional(CONF_DATABASE): cv.string,
@@ -90,6 +91,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     Will automatically load components to support devices found on the network.
     """
 
+    # Strip whitespace around `socket://` URIs, this is no longer accepted by zigpy
+    # This will be removed in 2023.7.0
+    path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+    data = copy.deepcopy(dict(config_entry.data))
+
+    if path.startswith("socket://") and path != path.strip():
+        data[CONF_DEVICE][CONF_DEVICE_PATH] = path.strip()
+        hass.config_entries.async_update_entry(config_entry, data=data)
+
     zha_data = hass.data.setdefault(DATA_ZHA, {})
     config = zha_data.get(DATA_ZHA_CONFIG, {})
 
@@ -97,9 +107,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         zha_data.setdefault(platform, [])
 
     if config.get(CONF_ENABLE_QUIRKS, True):
-        setup_quirks(config)
+        setup_quirks(custom_quirks_path=config.get(CONF_CUSTOM_QUIRKS_PATH))
 
-    # temporary code to remove the ZHA storage file from disk. this will be removed in 2022.10.0
+    # temporary code to remove the ZHA storage file from disk.
+    # this will be removed in 2022.10.0
     storage_path = hass.config.path(STORAGE_DIR, "zha.storage")
     if os.path.isfile(storage_path):
         _LOGGER.debug("removing ZHA storage file")
@@ -120,7 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         model=zha_gateway.radio_description,
     )
 
-    api.async_load_api(hass)
+    websocket_api.async_load_api(hass)
 
     async def async_zha_shutdown(event):
         """Handle shutdown tasks."""
@@ -128,7 +139,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         await zha_gateway.shutdown()
 
     zha_data[DATA_ZHA_SHUTDOWN_TASK] = hass.bus.async_listen_once(
-        ha_const.EVENT_HOMEASSISTANT_STOP, async_zha_shutdown
+        EVENT_HOMEASSISTANT_STOP, async_zha_shutdown
     )
 
     await zha_gateway.async_initialize_devices_and_entities()
@@ -139,11 +150,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload ZHA config entry."""
-    zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    zha_gateway: ZHAGateway = hass.data[DATA_ZHA].pop(DATA_ZHA_GATEWAY)
     await zha_gateway.shutdown()
 
     GROUP_PROBE.cleanup()
-    api.async_unload_api(hass)
+    websocket_api.async_unload_api(hass)
 
     # our components don't have unload methods so no need to look at return values
     await asyncio.gather(

@@ -32,8 +32,7 @@
         "addon_set_config_failed": "Failed to set Silicon Labs Multiprotocol configuration.",
         "addon_start_failed": "Failed to start the Silicon Labs Multiprotocol add-on.",
         "not_hassio": "The hardware options can only be configured on HassOS installations.",
-        "zha_migration_failed": "The ZHA migration did not succeed.",
-        "disabled_due_to_bug": "The hardware options are temporarily disabled while we fix a bug. [Learn more]({url})"
+        "zha_migration_failed": "The ZHA migration did not succeed."
       },
       "progress": {
         "install_addon": "Please wait while the Silicon Labs Multiprotocol add-on installation finishes. This can take several minutes.",

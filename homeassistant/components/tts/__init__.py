@@ -11,7 +11,7 @@ import mimetypes
 import os
 from pathlib import Path
 import re
-from typing import TYPE_CHECKING, Any, Optional, TypedDict, cast
+from typing import TYPE_CHECKING, Any, TypedDict, cast
 
 from aiohttp import web
 import mutagen
@@ -51,7 +51,7 @@ from .media_source import generate_media_source_id, media_source_id_to_kwargs
 
 _LOGGER = logging.getLogger(__name__)
 
-TtsAudioType = tuple[Optional[str], Optional[bytes]]
+TtsAudioType = tuple[str | None, bytes | None]
 
 ATTR_CACHE = "cache"
 ATTR_LANGUAGE = "language"
@@ -389,9 +389,7 @@ class SpeechManager:
         if options is not None:
             supported_options = provider.supported_options or []
             invalid_opts = [
-                opt_name
-                for opt_name in options.keys()
-                if opt_name not in supported_options
+                opt_name for opt_name in options if opt_name not in supported_options
             ]
             if invalid_opts:
                 raise HomeAssistantError(f"Invalid options found: {invalid_opts}")
@@ -504,7 +502,8 @@ class SpeechManager:
             )
 
         # Save to memory
-        data = self.write_tags(filename, data, provider, message, language, options)
+        if extension == "mp3":
+            data = self.write_tags(filename, data, provider, message, language, options)
         self._async_store_to_memcache(cache_key, filename, data)
 
         if cache:

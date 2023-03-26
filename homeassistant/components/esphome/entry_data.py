@@ -39,11 +39,12 @@ from homeassistant.helpers.storage import Store
 
 from .dashboard import async_get_dashboard
 
+_SENTINEL = object()
 SAVE_DELAY = 120
 _LOGGER = logging.getLogger(__name__)
 
 # Mapping from ESPHome info type to HA platform
-INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], str] = {
+INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
     BinarySensorInfo: Platform.BINARY_SENSOR,
     ButtonInfo: Platform.BUTTON,
     CameraInfo: Platform.CAMERA,
@@ -86,7 +87,7 @@ class RuntimeEntryData:
     state_subscriptions: dict[
         tuple[type[EntityState], int], Callable[[], None]
     ] = field(default_factory=dict)
-    loaded_platforms: set[str] = field(default_factory=set)
+    loaded_platforms: set[Platform] = field(default_factory=set)
     platform_load_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     _storage_contents: dict[str, Any] | None = None
     ble_connections_free: int = 0
@@ -99,6 +100,23 @@ class RuntimeEntryData:
     def name(self) -> str:
         """Return the name of the device."""
         return self.device_info.name if self.device_info else self.entry_id
+
+    @property
+    def friendly_name(self) -> str:
+        """Return the friendly name of the device."""
+        if self.device_info and self.device_info.friendly_name:
+            return self.device_info.friendly_name
+        return self.name
+
+    @property
+    def signal_device_updated(self) -> str:
+        """Return the signal to listen to for core device state update."""
+        return f"esphome_{self.entry_id}_on_device_update"
+
+    @property
+    def signal_static_info_updated(self) -> str:
+        """Return the signal to listen to for updates on static info."""
+        return f"esphome_{self.entry_id}_on_list"
 
     @callback
     def async_update_ble_connection_limits(self, free: int, limit: int) -> None:
@@ -113,10 +131,15 @@ class RuntimeEntryData:
         )
         self.ble_connections_free = free
         self.ble_connections_limit = limit
-        if free:
-            for fut in self._ble_connection_free_futures:
+        if not free:
+            return
+        for fut in self._ble_connection_free_futures:
+            # If wait_for_ble_connections_free gets cancelled, it will
+            # leave a future in the list. We need to check if it's done
+            # before setting the result.
+            if not fut.done():
                 fut.set_result(free)
-            self._ble_connection_free_futures.clear()
+        self._ble_connection_free_futures.clear()
 
     async def wait_for_ble_connections_free(self) -> int:
         """Wait until there are free BLE connections."""
@@ -135,7 +158,7 @@ class RuntimeEntryData:
         async_dispatcher_send(hass, signal)
 
     async def _ensure_platforms_loaded(
-        self, hass: HomeAssistant, entry: ConfigEntry, platforms: set[str]
+        self, hass: HomeAssistant, entry: ConfigEntry, platforms: set[Platform]
     ) -> None:
         async with self.platform_load_lock:
             needed = platforms - self.loaded_platforms
@@ -151,7 +174,7 @@ class RuntimeEntryData:
         needed_platforms = set()
 
         if async_get_dashboard(hass):
-            needed_platforms.add("update")
+            needed_platforms.add(Platform.UPDATE)
 
         for info in infos:
             for info_type, platform in INFO_TYPE_TO_PLATFORM.items():
@@ -161,8 +184,7 @@ class RuntimeEntryData:
         await self._ensure_platforms_loaded(hass, entry, needed_platforms)
 
         # Then send dispatcher event
-        signal = f"esphome_{self.entry_id}_on_list"
-        async_dispatcher_send(hass, signal, infos)
+        async_dispatcher_send(hass, self.signal_static_info_updated, infos)
 
     @callback
     def async_subscribe_state_update(
@@ -182,22 +204,33 @@ class RuntimeEntryData:
     @callback
     def async_update_state(self, state: EntityState) -> None:
         """Distribute an update of state information to the target."""
-        subscription_key = (type(state), state.key)
-        self.state[type(state)][state.key] = state
+        key = state.key
+        state_type = type(state)
+        current_state_by_type = self.state[state_type]
+        current_state = current_state_by_type.get(key, _SENTINEL)
+        if current_state == state:
+            _LOGGER.debug(
+                "%s: ignoring duplicate update with and key %s: %s",
+                self.name,
+                key,
+                state,
+            )
+            return
         _LOGGER.debug(
             "%s: dispatching update with key %s: %s",
             self.name,
-            subscription_key,
+            key,
             state,
         )
+        current_state_by_type[key] = state
+        subscription_key = (state_type, key)
         if subscription_key in self.state_subscriptions:
             self.state_subscriptions[subscription_key]()
 
     @callback
     def async_update_device_state(self, hass: HomeAssistant) -> None:
         """Distribute an update of a core device state like availability."""
-        signal = f"esphome_{self.entry_id}_on_device_update"
-        async_dispatcher_send(hass, signal)
+        async_dispatcher_send(hass, self.signal_device_updated)
 
     async def async_load_from_store(self) -> tuple[list[EntityInfo], list[UserService]]:
         """Load the retained data from store and return de-serialized data."""

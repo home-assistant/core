@@ -141,6 +141,7 @@ async def silent_ssdp_scanner(hass):
 @pytest.fixture
 async def ssdp_instant_discovery():
     """Instance discovery."""
+
     # Set up device discovery callback.
     async def register_callback(hass, callback, match_dict):
         """Immediately do callback."""
@@ -160,6 +161,7 @@ async def ssdp_instant_discovery():
 @pytest.fixture
 async def ssdp_no_discovery():
     """No discovery."""
+
     # Set up device discovery callback.
     async def register_callback(hass, callback, match_dict):
         """Don't do callback."""
@@ -206,4 +208,4 @@ async def mock_config_entry(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    yield entry
+    return entry

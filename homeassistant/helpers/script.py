@@ -11,7 +11,7 @@ from functools import partial
 import itertools
 import logging
 from types import MappingProxyType
-from typing import Any, TypedDict, Union, cast
+from typing import Any, TypedDict, cast
 
 import async_timeout
 import voluptuous as vol
@@ -66,6 +66,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     SERVICE_CALL_LIMIT,
     Context,
+    Event,
     HassJob,
     HomeAssistant,
     callback,
@@ -375,7 +376,7 @@ class _ScriptRun:
             self._script._changed()  # pylint: disable=protected-access
 
     async def _async_get_condition(self, config):
-        # pylint: disable=protected-access
+        # pylint: disable-next=protected-access
         return await self._script._async_get_condition(config)
 
     def _log(
@@ -757,7 +758,7 @@ class _ScriptRun:
                 with trace_path(condition_path):
                     for idx, cond in enumerate(conditions):
                         with trace_path(str(idx)):
-                            if not cond(hass, variables):
+                            if cond(hass, variables) is False:
                                 return False
             except exceptions.ConditionError as ex:
                 _LOGGER.warning("Error in '%s[%s]' evaluation: %s", name, idx, ex)
@@ -786,7 +787,7 @@ class _ScriptRun:
                 repeat_vars["item"] = item
             self._variables["repeat"] = repeat_vars
 
-        # pylint: disable=protected-access
+        # pylint: disable-next=protected-access
         script = self._script._get_repeat_script(self._step)
 
         async def async_run_sequence(iteration, extra_msg=""):
@@ -1074,7 +1075,17 @@ class _QueuedScriptRun(_ScriptRun):
         super()._finish()
 
 
-async def _async_stop_scripts_after_shutdown(hass, point_in_time):
+@callback
+def _schedule_stop_scripts_after_shutdown(hass: HomeAssistant) -> None:
+    """Stop running Script objects started after shutdown."""
+    async_call_later(
+        hass, _SHUTDOWN_MAX_WAIT, partial(_async_stop_scripts_after_shutdown, hass)
+    )
+
+
+async def _async_stop_scripts_after_shutdown(
+    hass: HomeAssistant, point_in_time: datetime
+) -> None:
     """Stop running Script objects started after shutdown."""
     hass.data[DATA_NEW_SCRIPT_RUNS_NOT_ALLOWED] = None
     running_scripts = [
@@ -1091,11 +1102,9 @@ async def _async_stop_scripts_after_shutdown(hass, point_in_time):
         )
 
 
-async def _async_stop_scripts_at_shutdown(hass, event):
+async def _async_stop_scripts_at_shutdown(hass: HomeAssistant, event: Event) -> None:
     """Stop running Script objects started before shutdown."""
-    async_call_later(
-        hass, _SHUTDOWN_MAX_WAIT, partial(_async_stop_scripts_after_shutdown, hass)
-    )
+    _schedule_stop_scripts_after_shutdown(hass)
 
     running_scripts = [
         script
@@ -1110,7 +1119,7 @@ async def _async_stop_scripts_at_shutdown(hass, event):
         )
 
 
-_VarsType = Union[dict[str, Any], MappingProxyType]
+_VarsType = dict[str, Any] | MappingProxyType
 
 
 def _referenced_extract_ids(data: Any, key: str, found: set[str]) -> None:

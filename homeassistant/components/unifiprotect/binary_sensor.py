@@ -1,4 +1,4 @@
-"""This component provides binary sensors for UniFi Protect."""
+"""Component providing binary sensors for UniFi Protect."""
 from __future__ import annotations
 
 from copy import copy
@@ -25,9 +25,9 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DISPATCH_ADOPT, DOMAIN
@@ -346,6 +346,7 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         name="Motion",
         device_class=BinarySensorDeviceClass.MOTION,
         ufp_value="is_motion_detected",
+        ufp_enabled="is_motion_detection_on",
         ufp_event_obj="last_motion_event",
     ),
     ProtectBinaryEventEntityDescription(

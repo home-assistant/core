@@ -43,9 +43,7 @@ from .const import (
     DOMAIN,
     HA_FAN_TO_ISY,
     HA_HVAC_TO_ISY,
-    ISY_DEVICES,
     ISY_HVAC_MODES,
-    ISY_NODES,
     UOM_FAN_MODES,
     UOM_HVAC_ACTIONS,
     UOM_HVAC_MODE_GENERIC,
@@ -65,9 +63,9 @@ async def async_setup_entry(
     """Set up the ISY thermostat platform."""
     entities = []
 
-    hass_isy_data = hass.data[DOMAIN][entry.entry_id]
-    devices: dict[str, DeviceInfo] = hass_isy_data[ISY_DEVICES]
-    for node in hass_isy_data[ISY_NODES][Platform.CLIMATE]:
+    isy_data = hass.data[DOMAIN][entry.entry_id]
+    devices: dict[str, DeviceInfo] = isy_data.devices
+    for node in isy_data.nodes[Platform.CLIMATE]:
         entities.append(ISYThermostatEntity(node, devices.get(node.primary_node)))
 
     async_add_entities(entities)

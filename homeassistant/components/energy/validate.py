@@ -23,6 +23,7 @@ ENERGY_USAGE_UNITS = {
     sensor.SensorDeviceClass.ENERGY: (
         UnitOfEnergy.GIGA_JOULE,
         UnitOfEnergy.KILO_WATT_HOUR,
+        UnitOfEnergy.MEGA_JOULE,
         UnitOfEnergy.MEGA_WATT_HOUR,
         UnitOfEnergy.WATT_HOUR,
     )
@@ -40,6 +41,7 @@ GAS_USAGE_UNITS = {
     sensor.SensorDeviceClass.ENERGY: (
         UnitOfEnergy.GIGA_JOULE,
         UnitOfEnergy.KILO_WATT_HOUR,
+        UnitOfEnergy.MEGA_JOULE,
         UnitOfEnergy.MEGA_WATT_HOUR,
         UnitOfEnergy.WATT_HOUR,
     ),
@@ -601,7 +603,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
             functools.partial(
                 recorder.statistics.get_metadata,
                 hass,
-                statistic_ids=list(wanted_statistics_metadata),
+                statistic_ids=set(wanted_statistics_metadata),
             )
         )
     )

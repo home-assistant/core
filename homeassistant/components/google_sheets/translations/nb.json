@@ -1,9 +1,0 @@
-{
-    "config": {
-        "abort": {
-            "already_configured": "Kontoen er allerede konfigurert",
-            "cannot_connect": "Tilkobling mislyktes",
-            "unknown": "Uventet feil"
-        }
-    }
-}

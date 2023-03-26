@@ -152,5 +152,5 @@ class AirzoneZoneEntity(AirzoneEntity):
             raise HomeAssistantError(
                 f"Failed to set zone {self.name}: {error}"
             ) from error
-        else:
-            self.coordinator.async_set_updated_data(self.coordinator.airzone.data())
+
+        self.coordinator.async_set_updated_data(self.coordinator.airzone.data())

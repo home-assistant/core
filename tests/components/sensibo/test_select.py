@@ -6,7 +6,6 @@ from unittest.mock import patch
 
 from pysensibo.model import SensiboData
 import pytest
-from pytest import MonkeyPatch
 
 from homeassistant.components.select import (
     ATTR_OPTION,
@@ -25,7 +24,7 @@ from tests.common import async_fire_time_changed
 async def test_select(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
 ) -> None:
     """Test the Sensibo select."""
@@ -54,7 +53,7 @@ async def test_select(
 async def test_select_set_option(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
 ) -> None:
     """Test the Sensibo select service."""
@@ -90,14 +89,15 @@ async def test_select_set_option(
     ), patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
         return_value={"result": {"status": "failed"}},
+    ), pytest.raises(
+        HomeAssistantError
     ):
-        with pytest.raises(HomeAssistantError):
-            await hass.services.async_call(
-                SELECT_DOMAIN,
-                SERVICE_SELECT_OPTION,
-                {ATTR_ENTITY_ID: state1.entity_id, ATTR_OPTION: "fixedleft"},
-                blocking=True,
-            )
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: state1.entity_id, ATTR_OPTION: "fixedleft"},
+            blocking=True,
+        )
     await hass.async_block_till_done()
 
     state2 = hass.states.get("select.hallway_horizontal_swing")
@@ -131,14 +131,15 @@ async def test_select_set_option(
     ), patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
         return_value={"result": {"status": "Failed", "failureReason": "No connection"}},
+    ), pytest.raises(
+        HomeAssistantError
     ):
-        with pytest.raises(HomeAssistantError):
-            await hass.services.async_call(
-                SELECT_DOMAIN,
-                SERVICE_SELECT_OPTION,
-                {ATTR_ENTITY_ID: state1.entity_id, ATTR_OPTION: "fixedleft"},
-                blocking=True,
-            )
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: state1.entity_id, ATTR_OPTION: "fixedleft"},
+            blocking=True,
+        )
     await hass.async_block_till_done()
 
     state2 = hass.states.get("select.hallway_horizontal_swing")

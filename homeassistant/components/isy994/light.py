@@ -10,21 +10,19 @@ from pyisy.nodes import Node
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import (
-    _LOGGER,
-    CONF_RESTORE_LIGHT_STATE,
-    DOMAIN,
-    ISY_DEVICES,
-    ISY_NODES,
-    UOM_PERCENTAGE,
-)
+from .const import _LOGGER, CONF_RESTORE_LIGHT_STATE, DOMAIN, UOM_PERCENTAGE
 from .entity import ISYNodeEntity
-from .services import async_setup_light_services
+from .services import (
+    SERVICE_SET_ON_LEVEL,
+    async_log_deprecated_service_call,
+    async_setup_light_services,
+)
 
 ATTR_LAST_BRIGHTNESS = "last_brightness"
 
@@ -33,13 +31,13 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the ISY light platform."""
-    hass_isy_data = hass.data[DOMAIN][entry.entry_id]
-    devices: dict[str, DeviceInfo] = hass_isy_data[ISY_DEVICES]
+    isy_data = hass.data[DOMAIN][entry.entry_id]
+    devices: dict[str, DeviceInfo] = isy_data.devices
     isy_options = entry.options
     restore_light_state = isy_options.get(CONF_RESTORE_LIGHT_STATE, False)
 
     entities = []
-    for node in hass_isy_data[ISY_NODES][Platform.LIGHT]:
+    for node in isy_data.nodes[Platform.LIGHT]:
         entities.append(
             ISYLightEntity(node, restore_light_state, devices.get(node.primary_node))
         )
@@ -132,8 +130,32 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
 
     async def async_set_on_level(self, value: int) -> None:
         """Set the ON Level for a device."""
+        entity_registry = er.async_get(self.hass)
+        async_log_deprecated_service_call(
+            self.hass,
+            call=ServiceCall(domain=DOMAIN, service=SERVICE_SET_ON_LEVEL),
+            alternate_service="number.set_value",
+            alternate_target=entity_registry.async_get_entity_id(
+                Platform.NUMBER,
+                DOMAIN,
+                f"{self._node.isy.uuid}_{self._node.address}_OL",
+            ),
+            breaks_in_ha_version="2023.5.0",
+        )
         await self._node.set_on_level(value)
 
     async def async_set_ramp_rate(self, value: int) -> None:
         """Set the Ramp Rate for a device."""
+        entity_registry = er.async_get(self.hass)
+        async_log_deprecated_service_call(
+            self.hass,
+            call=ServiceCall(domain=DOMAIN, service=SERVICE_SET_ON_LEVEL),
+            alternate_service="select.select_option",
+            alternate_target=entity_registry.async_get_entity_id(
+                Platform.NUMBER,
+                DOMAIN,
+                f"{self._node.isy.uuid}_{self._node.address}_RR",
+            ),
+            breaks_in_ha_version="2023.5.0",
+        )
         await self._node.set_ramp_rate(value)

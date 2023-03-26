@@ -1,7 +1,9 @@
 """The tests the History component."""
 from __future__ import annotations
 
-# pylint: disable=protected-access,invalid-name
+from collections.abc import Callable
+
+# pylint: disable=invalid-name
 from copy import copy
 from datetime import datetime, timedelta
 import importlib
@@ -17,11 +19,17 @@ from homeassistant.components import recorder
 from homeassistant.components.recorder import core, history, statistics
 from homeassistant.components.recorder.models import process_timestamp
 from homeassistant.components.recorder.util import session_scope
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.json import JSONEncoder
 import homeassistant.util.dt as dt_util
 
-from .common import wait_recording_done
+from .common import (
+    assert_dict_of_states_equal_without_context_and_last_changed,
+    assert_multiple_states_equal_without_context,
+    assert_multiple_states_equal_without_context_and_last_changed,
+    assert_states_equal_without_context,
+    wait_recording_done,
+)
 
 CREATE_ENGINE_TARGET = "homeassistant.components.recorder.core.create_engine"
 SCHEMA_MODULE = "tests.components.recorder.db_schema_30"
@@ -57,7 +65,11 @@ def db_schema_30():
 
     with patch.object(recorder, "db_schema", old_db_schema), patch.object(
         recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-    ), patch.object(core, "EventData", old_db_schema.EventData), patch.object(
+    ), patch.object(core, "StatesMeta", old_db_schema.StatesMeta), patch.object(
+        core, "EventTypes", old_db_schema.EventTypes
+    ), patch.object(
+        core, "EventData", old_db_schema.EventData
+    ), patch.object(
         core, "States", old_db_schema.States
     ), patch.object(
         core, "Events", old_db_schema.Events
@@ -69,12 +81,17 @@ def db_schema_30():
         yield
 
 
-def test_get_full_significant_states_with_session_entity_no_matches(hass_recorder):
+def test_get_full_significant_states_with_session_entity_no_matches(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
     """Test getting states at a specific point in time for entities that never have been recorded."""
     hass = hass_recorder()
     now = dt_util.utcnow()
     time_before_recorder_ran = now - timedelta(days=1000)
-    with session_scope(hass=hass) as session:
+    instance = recorder.get_instance(hass)
+    with session_scope(hass=hass) as session, patch.object(
+        instance.states_meta_manager, "active", False
+    ):
         assert (
             history.get_full_significant_states_with_session(
                 hass, session, time_before_recorder_ran, now, entity_ids=["demo.id"]
@@ -94,13 +111,16 @@ def test_get_full_significant_states_with_session_entity_no_matches(hass_recorde
 
 
 def test_significant_states_with_session_entity_minimal_response_no_matches(
-    hass_recorder,
-):
+    hass_recorder: Callable[..., HomeAssistant],
+) -> None:
     """Test getting states at a specific point in time for entities that never have been recorded."""
     hass = hass_recorder()
     now = dt_util.utcnow()
     time_before_recorder_ran = now - timedelta(days=1000)
-    with session_scope(hass=hass) as session:
+    instance = recorder.get_instance(hass)
+    with session_scope(hass=hass) as session, patch.object(
+        instance.states_meta_manager, "active", False
+    ):
         assert (
             history.get_significant_states_with_session(
                 hass,
@@ -126,7 +146,7 @@ def test_significant_states_with_session_entity_minimal_response_no_matches(
 
 
 @pytest.mark.parametrize(
-    "attributes, no_attributes, limit",
+    ("attributes", "no_attributes", "limit"),
     [
         ({"attr": True}, False, 5000),
         ({}, True, 5000),
@@ -134,145 +154,159 @@ def test_significant_states_with_session_entity_minimal_response_no_matches(
         ({}, True, 3),
     ],
 )
-def test_state_changes_during_period(hass_recorder, attributes, no_attributes, limit):
+def test_state_changes_during_period(
+    hass_recorder: Callable[..., HomeAssistant], attributes, no_attributes, limit
+) -> None:
     """Test state change during period."""
     hass = hass_recorder()
     entity_id = "media_player.test"
+    instance = recorder.get_instance(hass)
+    with patch.object(instance.states_meta_manager, "active", False):
 
-    def set_state(state):
-        """Set the state."""
-        hass.states.set(entity_id, state, attributes)
-        wait_recording_done(hass)
-        return hass.states.get(entity_id)
+        def set_state(state):
+            """Set the state."""
+            hass.states.set(entity_id, state, attributes)
+            wait_recording_done(hass)
+            return hass.states.get(entity_id)
 
-    start = dt_util.utcnow()
-    point = start + timedelta(seconds=1)
-    end = point + timedelta(seconds=1)
+        start = dt_util.utcnow()
+        point = start + timedelta(seconds=1)
+        end = point + timedelta(seconds=1)
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
-    ):
-        set_state("idle")
-        set_state("YouTube")
+        with patch(
+            "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
+        ):
+            set_state("idle")
+            set_state("YouTube")
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point
-    ):
-        states = [
-            set_state("idle"),
-            set_state("Netflix"),
-            set_state("Plex"),
-            set_state("YouTube"),
-        ]
+        with patch(
+            "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point
+        ):
+            states = [
+                set_state("idle"),
+                set_state("Netflix"),
+                set_state("Plex"),
+                set_state("YouTube"),
+            ]
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=end
-    ):
-        set_state("Netflix")
-        set_state("Plex")
+        with patch(
+            "homeassistant.components.recorder.core.dt_util.utcnow", return_value=end
+        ):
+            set_state("Netflix")
+            set_state("Plex")
 
-    hist = history.state_changes_during_period(
-        hass, start, end, entity_id, no_attributes, limit=limit
-    )
+        hist = history.state_changes_during_period(
+            hass, start, end, entity_id, no_attributes, limit=limit
+        )
 
-    assert states[:limit] == hist[entity_id]
+        assert_multiple_states_equal_without_context(states[:limit], hist[entity_id])
 
 
-def test_state_changes_during_period_descending(hass_recorder):
+def test_state_changes_during_period_descending(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
     """Test state change during period descending."""
     hass = hass_recorder()
     entity_id = "media_player.test"
+    instance = recorder.get_instance(hass)
+    with patch.object(instance.states_meta_manager, "active", False):
 
-    def set_state(state):
-        """Set the state."""
-        hass.states.set(entity_id, state, {"any": 1})
-        wait_recording_done(hass)
-        return hass.states.get(entity_id)
+        def set_state(state):
+            """Set the state."""
+            hass.states.set(entity_id, state, {"any": 1})
+            wait_recording_done(hass)
+            return hass.states.get(entity_id)
 
-    start = dt_util.utcnow()
-    point = start + timedelta(seconds=1)
-    point2 = start + timedelta(seconds=1, microseconds=2)
-    point3 = start + timedelta(seconds=1, microseconds=3)
-    point4 = start + timedelta(seconds=1, microseconds=4)
-    end = point + timedelta(seconds=1)
+        start = dt_util.utcnow()
+        point = start + timedelta(seconds=1)
+        point2 = start + timedelta(seconds=1, microseconds=2)
+        point3 = start + timedelta(seconds=1, microseconds=3)
+        point4 = start + timedelta(seconds=1, microseconds=4)
+        end = point + timedelta(seconds=1)
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
-    ):
-        set_state("idle")
-        set_state("YouTube")
+        with patch(
+            "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
+        ):
+            set_state("idle")
+            set_state("YouTube")
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point
-    ):
-        states = [set_state("idle")]
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point2
-    ):
-        states.append(set_state("Netflix"))
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point3
-    ):
-        states.append(set_state("Plex"))
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point4
-    ):
-        states.append(set_state("YouTube"))
+        with patch(
+            "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point
+        ):
+            states = [set_state("idle")]
+        with patch(
+            "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point2
+        ):
+            states.append(set_state("Netflix"))
+        with patch(
+            "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point3
+        ):
+            states.append(set_state("Plex"))
+        with patch(
+            "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point4
+        ):
+            states.append(set_state("YouTube"))
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=end
-    ):
-        set_state("Netflix")
-        set_state("Plex")
+        with patch(
+            "homeassistant.components.recorder.core.dt_util.utcnow", return_value=end
+        ):
+            set_state("Netflix")
+            set_state("Plex")
 
-    hist = history.state_changes_during_period(
-        hass, start, end, entity_id, no_attributes=False, descending=False
-    )
-    assert states == hist[entity_id]
+        hist = history.state_changes_during_period(
+            hass, start, end, entity_id, no_attributes=False, descending=False
+        )
+        assert_multiple_states_equal_without_context(states, hist[entity_id])
 
-    hist = history.state_changes_during_period(
-        hass, start, end, entity_id, no_attributes=False, descending=True
-    )
-    assert states == list(reversed(list(hist[entity_id])))
+        hist = history.state_changes_during_period(
+            hass, start, end, entity_id, no_attributes=False, descending=True
+        )
+        assert_multiple_states_equal_without_context(
+            states, list(reversed(list(hist[entity_id])))
+        )
 
 
-def test_get_last_state_changes(hass_recorder):
+def test_get_last_state_changes(hass_recorder: Callable[..., HomeAssistant]) -> None:
     """Test number of state changes."""
     hass = hass_recorder()
     entity_id = "sensor.test"
+    instance = recorder.get_instance(hass)
+    with patch.object(instance.states_meta_manager, "active", False):
 
-    def set_state(state):
-        """Set the state."""
-        hass.states.set(entity_id, state)
-        wait_recording_done(hass)
-        return hass.states.get(entity_id)
+        def set_state(state):
+            """Set the state."""
+            hass.states.set(entity_id, state)
+            wait_recording_done(hass)
+            return hass.states.get(entity_id)
 
-    start = dt_util.utcnow() - timedelta(minutes=2)
-    point = start + timedelta(minutes=1)
-    point2 = point + timedelta(minutes=1)
+        start = dt_util.utcnow() - timedelta(minutes=2)
+        point = start + timedelta(minutes=1)
+        point2 = point + timedelta(minutes=1, seconds=1)
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
-    ):
-        set_state("1")
+        with patch(
+            "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
+        ):
+            set_state("1")
 
-    states = []
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point
-    ):
-        states.append(set_state("2"))
+        states = []
+        with patch(
+            "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point
+        ):
+            states.append(set_state("2"))
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point2
-    ):
-        states.append(set_state("3"))
+        with patch(
+            "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point2
+        ):
+            states.append(set_state("3"))
 
-    hist = history.get_last_state_changes(hass, 2, entity_id)
+        hist = history.get_last_state_changes(hass, 2, entity_id)
 
-    assert states == hist[entity_id]
+        assert_multiple_states_equal_without_context(states, hist[entity_id])
 
 
-def test_ensure_state_can_be_copied(hass_recorder):
+def test_ensure_state_can_be_copied(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
     """Ensure a state can pass though copy().
 
     The filter integration uses copy() on states
@@ -280,33 +314,39 @@ def test_ensure_state_can_be_copied(hass_recorder):
     """
     hass = hass_recorder()
     entity_id = "sensor.test"
+    instance = recorder.get_instance(hass)
+    with patch.object(instance.states_meta_manager, "active", False):
 
-    def set_state(state):
-        """Set the state."""
-        hass.states.set(entity_id, state)
-        wait_recording_done(hass)
-        return hass.states.get(entity_id)
+        def set_state(state):
+            """Set the state."""
+            hass.states.set(entity_id, state)
+            wait_recording_done(hass)
+            return hass.states.get(entity_id)
 
-    start = dt_util.utcnow() - timedelta(minutes=2)
-    point = start + timedelta(minutes=1)
+        start = dt_util.utcnow() - timedelta(minutes=2)
+        point = start + timedelta(minutes=1)
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
-    ):
-        set_state("1")
+        with patch(
+            "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
+        ):
+            set_state("1")
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point
-    ):
-        set_state("2")
+        with patch(
+            "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point
+        ):
+            set_state("2")
 
-    hist = history.get_last_state_changes(hass, 2, entity_id)
+        hist = history.get_last_state_changes(hass, 2, entity_id)
 
-    assert copy(hist[entity_id][0]) == hist[entity_id][0]
-    assert copy(hist[entity_id][1]) == hist[entity_id][1]
+        assert_states_equal_without_context(
+            copy(hist[entity_id][0]), hist[entity_id][0]
+        )
+        assert_states_equal_without_context(
+            copy(hist[entity_id][1]), hist[entity_id][1]
+        )
 
 
-def test_get_significant_states(hass_recorder):
+def test_get_significant_states(hass_recorder: Callable[..., HomeAssistant]) -> None:
     """Test that only significant states are returned.
 
     We should get back every thermostat change that
@@ -314,12 +354,16 @@ def test_get_significant_states(hass_recorder):
     media player (attribute changes are not significant and not returned).
     """
     hass = hass_recorder()
-    zero, four, states = record_states(hass)
-    hist = history.get_significant_states(hass, zero, four)
-    assert states == hist
+    instance = recorder.get_instance(hass)
+    with patch.object(instance.states_meta_manager, "active", False):
+        zero, four, states = record_states(hass)
+        hist = history.get_significant_states(hass, zero, four)
+        assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
-def test_get_significant_states_minimal_response(hass_recorder):
+def test_get_significant_states_minimal_response(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
     """Test that only significant states are returned.
 
     When minimal responses is set only the first and
@@ -329,190 +373,268 @@ def test_get_significant_states_minimal_response(hass_recorder):
     media player (attribute changes are not significant and not returned).
     """
     hass = hass_recorder()
-    zero, four, states = record_states(hass)
-    hist = history.get_significant_states(hass, zero, four, minimal_response=True)
-    entites_with_reducable_states = [
-        "media_player.test",
-        "media_player.test3",
-    ]
+    instance = recorder.get_instance(hass)
+    with patch.object(instance.states_meta_manager, "active", False):
+        zero, four, states = record_states(hass)
+        hist = history.get_significant_states(hass, zero, four, minimal_response=True)
+        entites_with_reducable_states = [
+            "media_player.test",
+            "media_player.test3",
+        ]
 
-    # All states for media_player.test state are reduced
-    # down to last_changed and state when minimal_response
-    # is set except for the first state.
-    # is set.  We use JSONEncoder to make sure that are
-    # pre-encoded last_changed is always the same as what
-    # will happen with encoding a native state
-    for entity_id in entites_with_reducable_states:
-        entity_states = states[entity_id]
-        for state_idx in range(1, len(entity_states)):
-            input_state = entity_states[state_idx]
-            orig_last_changed = orig_last_changed = json.dumps(
-                process_timestamp(input_state.last_changed),
-                cls=JSONEncoder,
-            ).replace('"', "")
-            orig_state = input_state.state
-            entity_states[state_idx] = {
-                "last_changed": orig_last_changed,
-                "state": orig_state,
-            }
-    assert states == hist
+        # All states for media_player.test state are reduced
+        # down to last_changed and state when minimal_response
+        # is set except for the first state.
+        # is set.  We use JSONEncoder to make sure that are
+        # pre-encoded last_changed is always the same as what
+        # will happen with encoding a native state
+        for entity_id in entites_with_reducable_states:
+            entity_states = states[entity_id]
+            for state_idx in range(1, len(entity_states)):
+                input_state = entity_states[state_idx]
+                orig_last_changed = orig_last_changed = json.dumps(
+                    process_timestamp(input_state.last_changed),
+                    cls=JSONEncoder,
+                ).replace('"', "")
+                orig_state = input_state.state
+                entity_states[state_idx] = {
+                    "last_changed": orig_last_changed,
+                    "state": orig_state,
+                }
 
-
-def test_get_significant_states_with_initial(hass_recorder):
-    """Test that only significant states are returned.
-
-    We should get back every thermostat change that
-    includes an attribute change, but only the state updates for
-    media player (attribute changes are not significant and not returned).
-    """
-    hass = hass_recorder()
-    zero, four, states = record_states(hass)
-    one = zero + timedelta(seconds=1)
-    one_and_half = zero + timedelta(seconds=1.5)
-    for entity_id in states:
-        if entity_id == "media_player.test":
-            states[entity_id] = states[entity_id][1:]
-        for state in states[entity_id]:
-            if state.last_changed == one:
-                state.last_changed = one_and_half
-
-    hist = history.get_significant_states(
-        hass,
-        one_and_half,
-        four,
-        include_start_time_state=True,
-    )
-    assert states == hist
-
-
-def test_get_significant_states_without_initial(hass_recorder):
-    """Test that only significant states are returned.
-
-    We should get back every thermostat change that
-    includes an attribute change, but only the state updates for
-    media player (attribute changes are not significant and not returned).
-    """
-    hass = hass_recorder()
-    zero, four, states = record_states(hass)
-    one = zero + timedelta(seconds=1)
-    one_and_half = zero + timedelta(seconds=1.5)
-    for entity_id in states:
-        states[entity_id] = list(
-            filter(lambda s: s.last_changed != one, states[entity_id])
+        assert len(hist) == len(states)
+        assert_states_equal_without_context(
+            states["media_player.test"][0], hist["media_player.test"][0]
         )
-    del states["media_player.test2"]
+        assert states["media_player.test"][1] == hist["media_player.test"][1]
+        assert states["media_player.test"][2] == hist["media_player.test"][2]
 
-    hist = history.get_significant_states(
-        hass,
-        one_and_half,
-        four,
-        include_start_time_state=False,
-    )
-    assert states == hist
+        assert_multiple_states_equal_without_context(
+            states["media_player.test2"], hist["media_player.test2"]
+        )
+        assert_states_equal_without_context(
+            states["media_player.test3"][0], hist["media_player.test3"][0]
+        )
+        assert states["media_player.test3"][1] == hist["media_player.test3"][1]
+
+        assert_multiple_states_equal_without_context(
+            states["script.can_cancel_this_one"], hist["script.can_cancel_this_one"]
+        )
+        assert_multiple_states_equal_without_context_and_last_changed(
+            states["thermostat.test"], hist["thermostat.test"]
+        )
+        assert_multiple_states_equal_without_context_and_last_changed(
+            states["thermostat.test2"], hist["thermostat.test2"]
+        )
 
 
-def test_get_significant_states_entity_id(hass_recorder):
+def test_get_significant_states_with_initial(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
+    """Test that only significant states are returned.
+
+    We should get back every thermostat change that
+    includes an attribute change, but only the state updates for
+    media player (attribute changes are not significant and not returned).
+    """
+    hass = hass_recorder()
+    instance = recorder.get_instance(hass)
+    with patch.object(instance.states_meta_manager, "active", False):
+        zero, four, states = record_states(hass)
+        one = zero + timedelta(seconds=1)
+        one_with_microsecond = zero + timedelta(seconds=1, microseconds=1)
+        one_and_half = zero + timedelta(seconds=1.5)
+        for entity_id in states:
+            if entity_id == "media_player.test":
+                states[entity_id] = states[entity_id][1:]
+            for state in states[entity_id]:
+                if (
+                    state.last_changed == one
+                    or state.last_changed == one_with_microsecond
+                ):
+                    state.last_changed = one_and_half
+                    state.last_updated = one_and_half
+
+        hist = history.get_significant_states(
+            hass,
+            one_and_half,
+            four,
+            include_start_time_state=True,
+        )
+        assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
+
+
+def test_get_significant_states_without_initial(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
+    """Test that only significant states are returned.
+
+    We should get back every thermostat change that
+    includes an attribute change, but only the state updates for
+    media player (attribute changes are not significant and not returned).
+    """
+    hass = hass_recorder()
+    instance = recorder.get_instance(hass)
+    with patch.object(instance.states_meta_manager, "active", False):
+        zero, four, states = record_states(hass)
+        one = zero + timedelta(seconds=1)
+        one_with_microsecond = zero + timedelta(seconds=1, microseconds=1)
+        one_and_half = zero + timedelta(seconds=1.5)
+        for entity_id in states:
+            states[entity_id] = list(
+                filter(
+                    lambda s: s.last_changed != one
+                    and s.last_changed != one_with_microsecond,
+                    states[entity_id],
+                )
+            )
+        del states["media_player.test2"]
+
+        hist = history.get_significant_states(
+            hass,
+            one_and_half,
+            four,
+            include_start_time_state=False,
+        )
+        assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
+
+
+def test_get_significant_states_entity_id(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
     """Test that only significant states are returned for one entity."""
     hass = hass_recorder()
-    zero, four, states = record_states(hass)
-    del states["media_player.test2"]
-    del states["media_player.test3"]
-    del states["thermostat.test"]
-    del states["thermostat.test2"]
-    del states["script.can_cancel_this_one"]
+    instance = recorder.get_instance(hass)
+    with patch.object(instance.states_meta_manager, "active", False):
+        zero, four, states = record_states(hass)
+        del states["media_player.test2"]
+        del states["media_player.test3"]
+        del states["thermostat.test"]
+        del states["thermostat.test2"]
+        del states["script.can_cancel_this_one"]
 
-    hist = history.get_significant_states(hass, zero, four, ["media_player.test"])
-    assert states == hist
+        hist = history.get_significant_states(hass, zero, four, ["media_player.test"])
+        assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
-def test_get_significant_states_multiple_entity_ids(hass_recorder):
+def test_get_significant_states_multiple_entity_ids(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
     """Test that only significant states are returned for one entity."""
     hass = hass_recorder()
-    zero, four, states = record_states(hass)
-    del states["media_player.test2"]
-    del states["media_player.test3"]
-    del states["thermostat.test2"]
-    del states["script.can_cancel_this_one"]
+    instance = recorder.get_instance(hass)
+    with patch.object(instance.states_meta_manager, "active", False):
+        zero, four, states = record_states(hass)
+        del states["media_player.test2"]
+        del states["media_player.test3"]
+        del states["thermostat.test2"]
+        del states["script.can_cancel_this_one"]
 
-    hist = history.get_significant_states(
-        hass,
-        zero,
-        four,
-        ["media_player.test", "thermostat.test"],
-    )
-    assert states == hist
+        hist = history.get_significant_states(
+            hass,
+            zero,
+            four,
+            ["media_player.test", "thermostat.test"],
+        )
+        assert_multiple_states_equal_without_context_and_last_changed(
+            states["media_player.test"], hist["media_player.test"]
+        )
+        assert_multiple_states_equal_without_context_and_last_changed(
+            states["thermostat.test"], hist["thermostat.test"]
+        )
 
 
-def test_get_significant_states_are_ordered(hass_recorder):
+def test_get_significant_states_are_ordered(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
     """Test order of results from get_significant_states.
 
     When entity ids are given, the results should be returned with the data
     in the same order.
     """
     hass = hass_recorder()
-    zero, four, _states = record_states(hass)
-    entity_ids = ["media_player.test", "media_player.test2"]
-    hist = history.get_significant_states(hass, zero, four, entity_ids)
-    assert list(hist.keys()) == entity_ids
-    entity_ids = ["media_player.test2", "media_player.test"]
-    hist = history.get_significant_states(hass, zero, four, entity_ids)
-    assert list(hist.keys()) == entity_ids
+
+    instance = recorder.get_instance(hass)
+    with patch.object(instance.states_meta_manager, "active", False):
+        zero, four, _states = record_states(hass)
+        entity_ids = ["media_player.test", "media_player.test2"]
+        hist = history.get_significant_states(hass, zero, four, entity_ids)
+        assert list(hist.keys()) == entity_ids
+        entity_ids = ["media_player.test2", "media_player.test"]
+        hist = history.get_significant_states(hass, zero, four, entity_ids)
+        assert list(hist.keys()) == entity_ids
 
 
-def test_get_significant_states_only(hass_recorder):
+def test_get_significant_states_only(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
     """Test significant states when significant_states_only is set."""
     hass = hass_recorder()
     entity_id = "sensor.test"
+    instance = recorder.get_instance(hass)
+    with patch.object(instance.states_meta_manager, "active", False):
 
-    def set_state(state, **kwargs):
-        """Set the state."""
-        hass.states.set(entity_id, state, **kwargs)
-        wait_recording_done(hass)
-        return hass.states.get(entity_id)
+        def set_state(state, **kwargs):
+            """Set the state."""
+            hass.states.set(entity_id, state, **kwargs)
+            wait_recording_done(hass)
+            return hass.states.get(entity_id)
 
-    start = dt_util.utcnow() - timedelta(minutes=4)
-    points = []
-    for i in range(1, 4):
-        points.append(start + timedelta(minutes=i))
+        start = dt_util.utcnow() - timedelta(minutes=4)
+        points = []
+        for i in range(1, 4):
+            points.append(start + timedelta(minutes=i))
 
-    states = []
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
-    ):
-        set_state("123", attributes={"attribute": 10.64})
+        states = []
+        with patch(
+            "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
+        ):
+            set_state("123", attributes={"attribute": 10.64})
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow",
-        return_value=points[0],
-    ):
-        # Attributes are different, state not
-        states.append(set_state("123", attributes={"attribute": 21.42}))
+        with patch(
+            "homeassistant.components.recorder.core.dt_util.utcnow",
+            return_value=points[0],
+        ):
+            # Attributes are different, state not
+            states.append(set_state("123", attributes={"attribute": 21.42}))
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow",
-        return_value=points[1],
-    ):
-        # state is different, attributes not
-        states.append(set_state("32", attributes={"attribute": 21.42}))
+        with patch(
+            "homeassistant.components.recorder.core.dt_util.utcnow",
+            return_value=points[1],
+        ):
+            # state is different, attributes not
+            states.append(set_state("32", attributes={"attribute": 21.42}))
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow",
-        return_value=points[2],
-    ):
-        # everything is different
-        states.append(set_state("412", attributes={"attribute": 54.23}))
+        with patch(
+            "homeassistant.components.recorder.core.dt_util.utcnow",
+            return_value=points[2],
+        ):
+            # everything is different
+            states.append(set_state("412", attributes={"attribute": 54.23}))
 
-    hist = history.get_significant_states(hass, start, significant_changes_only=True)
+        hist = history.get_significant_states(
+            hass, start, significant_changes_only=True
+        )
 
-    assert len(hist[entity_id]) == 2
-    assert states[0] not in hist[entity_id]
-    assert states[1] in hist[entity_id]
-    assert states[2] in hist[entity_id]
+        assert len(hist[entity_id]) == 2
+        assert not any(
+            state.last_updated == states[0].last_updated for state in hist[entity_id]
+        )
+        assert any(
+            state.last_updated == states[1].last_updated for state in hist[entity_id]
+        )
+        assert any(
+            state.last_updated == states[2].last_updated for state in hist[entity_id]
+        )
 
-    hist = history.get_significant_states(hass, start, significant_changes_only=False)
+        hist = history.get_significant_states(
+            hass, start, significant_changes_only=False
+        )
 
-    assert len(hist[entity_id]) == 3
-    assert states == hist[entity_id]
+        assert len(hist[entity_id]) == 3
+        assert_multiple_states_equal_without_context_and_last_changed(
+            states, hist[entity_id]
+        )
 
 
 def record_states(hass) -> tuple[datetime, datetime, dict[str, list[State]]]:
@@ -548,9 +670,6 @@ def record_states(hass) -> tuple[datetime, datetime, dict[str, list[State]]]:
         states[mp].append(
             set_state(mp, "idle", attributes={"media_title": str(sentinel.mt1)})
         )
-        states[mp].append(
-            set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt2)})
-        )
         states[mp2].append(
             set_state(mp2, "YouTube", attributes={"media_title": str(sentinel.mt2)})
         )
@@ -559,6 +678,14 @@ def record_states(hass) -> tuple[datetime, datetime, dict[str, list[State]]]:
         )
         states[therm].append(
             set_state(therm, 20, attributes={"current_temperature": 19.5})
+        )
+
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow",
+        return_value=one + timedelta(microseconds=1),
+    ):
+        states[mp].append(
+            set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt2)})
         )
 
     with patch(
@@ -595,30 +722,34 @@ def record_states(hass) -> tuple[datetime, datetime, dict[str, list[State]]]:
     return zero, four, states
 
 
-def test_state_changes_during_period_multiple_entities_single_test(hass_recorder):
+def test_state_changes_during_period_multiple_entities_single_test(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
     """Test state change during period with multiple entities in the same test.
 
     This test ensures the sqlalchemy query cache does not
     generate incorrect results.
     """
     hass = hass_recorder()
-    start = dt_util.utcnow()
-    test_entites = {f"sensor.{i}": str(i) for i in range(30)}
-    for entity_id, value in test_entites.items():
-        hass.states.set(entity_id, value)
+    instance = recorder.get_instance(hass)
+    with patch.object(instance.states_meta_manager, "active", False):
+        start = dt_util.utcnow()
+        test_entites = {f"sensor.{i}": str(i) for i in range(30)}
+        for entity_id, value in test_entites.items():
+            hass.states.set(entity_id, value)
 
-    wait_recording_done(hass)
-    end = dt_util.utcnow()
+        wait_recording_done(hass)
+        end = dt_util.utcnow()
 
-    hist = history.state_changes_during_period(hass, start, end, None)
-    for entity_id, value in test_entites.items():
-        hist[entity_id][0].state == value
+        hist = history.state_changes_during_period(hass, start, end, None)
+        for entity_id, value in test_entites.items():
+            hist[entity_id][0].state == value
 
-    for entity_id, value in test_entites.items():
-        hist = history.state_changes_during_period(hass, start, end, entity_id)
-        assert len(hist) == 1
-        hist[entity_id][0].state == value
+        for entity_id, value in test_entites.items():
+            hist = history.state_changes_during_period(hass, start, end, entity_id)
+            assert len(hist) == 1
+            hist[entity_id][0].state == value
 
-    hist = history.state_changes_during_period(hass, start, end, None)
-    for entity_id, value in test_entites.items():
-        hist[entity_id][0].state == value
+        hist = history.state_changes_during_period(hass, start, end, None)
+        for entity_id, value in test_entites.items():
+            hist[entity_id][0].state == value

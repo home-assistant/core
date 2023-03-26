@@ -26,19 +26,41 @@
       "armed_vacation": "{entity_name} armed vacation"
     }
   },
-  "state": {
+  "entity_component": {
     "_": {
-      "armed": "Armed",
-      "disarmed": "Disarmed",
-      "armed_home": "Armed home",
-      "armed_away": "Armed away",
-      "armed_night": "Armed night",
-      "armed_vacation": "Armed vacation",
-      "armed_custom_bypass": "Armed custom bypass",
-      "pending": "Pending",
-      "arming": "Arming",
-      "disarming": "Disarming",
-      "triggered": "Triggered"
+      "name": "[%key:component::alarm_control_panel::title%]",
+      "state": {
+        "armed": "Armed",
+        "disarmed": "Disarmed",
+        "armed_home": "Armed home",
+        "armed_away": "Armed away",
+        "armed_night": "Armed night",
+        "armed_vacation": "Armed vacation",
+        "armed_custom_bypass": "Armed custom bypass",
+        "pending": "Pending",
+        "arming": "Arming",
+        "disarming": "Disarming",
+        "triggered": "Triggered"
+      },
+      "state_attributes": {
+        "code_format": {
+          "name": "Code format",
+          "state": {
+            "text": "Text",
+            "number": "Number"
+          }
+        },
+        "changed_by": {
+          "name": "Changed by"
+        },
+        "code_arm_required": {
+          "name": "Code for arming",
+          "state": {
+            "true": "Required",
+            "false": "Not required"
+          }
+        }
+      }
     }
   }
 }

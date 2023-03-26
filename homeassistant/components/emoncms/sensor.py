@@ -106,7 +106,6 @@ def setup_platform(
     sensors = []
 
     for elem in data.data:
-
         if exclude_feeds is not None and int(elem["id"]) in exclude_feeds:
             continue
 
@@ -285,15 +284,15 @@ class EmonCmsData:
         except requests.exceptions.RequestException as exception:
             _LOGGER.error(exception)
             return
+
+        if req.status_code == HTTPStatus.OK:
+            self.data = req.json()
         else:
-            if req.status_code == HTTPStatus.OK:
-                self.data = req.json()
-            else:
-                _LOGGER.error(
-                    (
-                        "Please verify if the specified configuration value "
-                        "'%s' is correct! (HTTP Status_code = %d)"
-                    ),
-                    CONF_URL,
-                    req.status_code,
-                )
+            _LOGGER.error(
+                (
+                    "Please verify if the specified configuration value "
+                    "'%s' is correct! (HTTP Status_code = %d)"
+                ),
+                CONF_URL,
+                req.status_code,
+            )

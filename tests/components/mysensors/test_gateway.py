@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 
 
 @pytest.mark.parametrize(
-    "port, expect_valid",
+    ("port", "expect_valid"),
     [
         ("COM5", True),
         ("asdf", False),

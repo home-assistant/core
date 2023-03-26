@@ -1,6 +1,6 @@
 """Fixtures for the Whirlpool Sixth Sense integration tests."""
 from unittest import mock
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 import whirlpool
@@ -49,6 +49,21 @@ def fixture_mock_appliances_manager_api():
         yield mock_appliances_manager
 
 
+@pytest.fixture(name="mock_appliances_manager_laundry_api")
+def fixture_mock_appliances_manager_laundry_api():
+    """Set up AppliancesManager fixture."""
+    with mock.patch(
+        "homeassistant.components.whirlpool.AppliancesManager"
+    ) as mock_appliances_manager:
+        mock_appliances_manager.return_value.fetch_appliances = AsyncMock()
+        mock_appliances_manager.return_value.aircons = None
+        mock_appliances_manager.return_value.washer_dryers = [
+            {"SAID": MOCK_SAID3, "NAME": "washer"},
+            {"SAID": MOCK_SAID4, "NAME": "dryer"},
+        ]
+        yield mock_appliances_manager
+
+
 @pytest.fixture(name="mock_backend_selector_api")
 def fixture_mock_backend_selector_api():
     """Set up BackendSelector fixture."""
@@ -63,7 +78,7 @@ def get_aircon_mock(said):
     mock_aircon = mock.Mock(said=said)
     mock_aircon.connect = AsyncMock()
     mock_aircon.disconnect = AsyncMock()
-    mock_aircon.register_attr_callback = AsyncMock()
+    mock_aircon.register_attr_callback = MagicMock()
     mock_aircon.get_online.return_value = True
     mock_aircon.get_power_on.return_value = True
     mock_aircon.get_mode.return_value = whirlpool.aircon.Mode.Cool
@@ -88,13 +103,13 @@ def get_aircon_mock(said):
 @pytest.fixture(name="mock_aircon1_api", autouse=False)
 def fixture_mock_aircon1_api(mock_auth_api, mock_appliances_manager_api):
     """Set up air conditioner API fixture."""
-    yield get_aircon_mock(MOCK_SAID1)
+    return get_aircon_mock(MOCK_SAID1)
 
 
 @pytest.fixture(name="mock_aircon2_api", autouse=False)
 def fixture_mock_aircon2_api(mock_auth_api, mock_appliances_manager_api):
     """Set up air conditioner API fixture."""
-    yield get_aircon_mock(MOCK_SAID2)
+    return get_aircon_mock(MOCK_SAID2)
 
 
 @pytest.fixture(name="mock_aircon_api_instances", autouse=False)
@@ -115,8 +130,6 @@ def side_effect_function(*args, **kwargs):
         return "0"
     if args[0] == "WashCavity_OpStatusBulkDispense1Level":
         return "3"
-    if args[0] == "Cavity_TimeStatusEstTimeRemaining":
-        return "4000"
 
 
 def get_sensor_mock(said):
@@ -124,7 +137,7 @@ def get_sensor_mock(said):
     mock_sensor = mock.Mock(said=said)
     mock_sensor.connect = AsyncMock()
     mock_sensor.disconnect = AsyncMock()
-    mock_sensor.register_attr_callback = AsyncMock()
+    mock_sensor.register_attr_callback = MagicMock()
     mock_sensor.get_online.return_value = True
     mock_sensor.get_machine_state.return_value = (
         whirlpool.washerdryer.MachineState.Standby
@@ -141,15 +154,15 @@ def get_sensor_mock(said):
 
 
 @pytest.fixture(name="mock_sensor1_api", autouse=False)
-def fixture_mock_sensor1_api(mock_auth_api, mock_appliances_manager_api):
+def fixture_mock_sensor1_api(mock_auth_api, mock_appliances_manager_laundry_api):
     """Set up sensor API fixture."""
-    yield get_sensor_mock(MOCK_SAID3)
+    return get_sensor_mock(MOCK_SAID3)
 
 
 @pytest.fixture(name="mock_sensor2_api", autouse=False)
-def fixture_mock_sensor2_api(mock_auth_api, mock_appliances_manager_api):
+def fixture_mock_sensor2_api(mock_auth_api, mock_appliances_manager_laundry_api):
     """Set up sensor API fixture."""
-    yield get_sensor_mock(MOCK_SAID4)
+    return get_sensor_mock(MOCK_SAID4)
 
 
 @pytest.fixture(name="mock_sensor_api_instances", autouse=False)
@@ -159,6 +172,8 @@ def fixture_mock_sensor_api_instances(mock_sensor1_api, mock_sensor2_api):
         "homeassistant.components.whirlpool.sensor.WasherDryer"
     ) as mock_sensor_api:
         mock_sensor_api.side_effect = [
+            mock_sensor1_api,
+            mock_sensor2_api,
             mock_sensor1_api,
             mock_sensor2_api,
         ]
