@@ -517,7 +517,7 @@ class ESPHomeClient(BaseBleakClient):
         self.domain_data.clear_gatt_mtu_cache(self._address_as_int)
         if self._connection_version < MIN_BLUETOOTH_PROXY_HAS_CLEAR_CACHE:
             _LOGGER.warning(
-                "On device cache clear is not available in ESPHome with version %s, "
+                "On device cache clear is not available with ESPHome Bluetooth version %s, "
                 "version %s is needed; Only memory cache will be cleared",
                 self._connection_version,
                 MIN_BLUETOOTH_PROXY_HAS_CLEAR_CACHE,
