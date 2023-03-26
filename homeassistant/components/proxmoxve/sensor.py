@@ -121,9 +121,6 @@ class ProxmoxSensor(ProxmoxEntity, SensorEntity):
             unique_id=f"{node_name}_{vm_id}_{description.key}",
             name=f"{node_name}_{vm_name}_{description.name}",
             icon=description.icon,
-            host_name=host_name,
-            node_name=node_name,
-            vm_id=vm_id,
         )
 
     @property

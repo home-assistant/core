@@ -264,9 +264,6 @@ class ProxmoxEntity(CoordinatorEntity):
         unique_id,
         name,
         icon,
-        host_name,
-        node_name,
-        vm_id=None,
     ) -> None:
         """Initialize the Proxmox entity."""
         super().__init__(coordinator)
@@ -274,11 +271,8 @@ class ProxmoxEntity(CoordinatorEntity):
         self.coordinator = coordinator
         self._unique_id = unique_id
         self._name = name
-        self._host_name = host_name
         self._icon = icon
         self._available = True
-        self._node_name = node_name
-        self._vm_id = vm_id
 
         self._state = None
 
