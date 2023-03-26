@@ -138,7 +138,6 @@ class SouthernCompanySensor(
         self._account = account
         self._attr_unique_id = f"{self._account.number}_{description.key}"
         self._attr_device_info = device
-        self._sensor_data = None
 
     @property
     def native_value(self) -> StateType:
