@@ -1092,9 +1092,6 @@ lxml==4.9.1
 # homeassistant.components.nmap_tracker
 mac-vendor-lookup==0.1.12
 
-# homeassistant.components.magicseaweed
-magicseaweed==1.0.3
-
 # homeassistant.components.matrix
 matrix-client==0.4.0
 
