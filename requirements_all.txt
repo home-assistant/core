@@ -431,10 +431,10 @@ bimmer_connected==0.13.0
 bizkaibus==0.1.1
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==3.0.1
+bleak-retry-connector==3.0.2
 
 # homeassistant.components.bluetooth
-bleak==0.20.0
+bleak==0.20.1
 
 # homeassistant.components.blebox
 blebox_uniapi==2.1.4
@@ -1091,9 +1091,6 @@ lxml==4.9.1
 
 # homeassistant.components.nmap_tracker
 mac-vendor-lookup==0.1.12
-
-# homeassistant.components.magicseaweed
-magicseaweed==1.0.3
 
 # homeassistant.components.matrix
 matrix-client==0.4.0
@@ -2671,7 +2668,7 @@ yalesmartalarmclient==0.3.9
 
 # homeassistant.components.august
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.1.4
+yalexs-ble==2.1.5
 
 # homeassistant.components.august
 yalexs==1.2.7
