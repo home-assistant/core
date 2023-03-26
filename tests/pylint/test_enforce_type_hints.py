@@ -724,6 +724,7 @@ def test_invalid_mapping_return_type(
         "-> Mapping[str, bool | int]",
         "-> dict[str, Any]",
         "-> dict[str, str]",
+        "-> CustomTypedDict",
     ],
 )
 def test_valid_mapping_return_type(
@@ -737,6 +738,11 @@ def test_valid_mapping_return_type(
 
     class_node = astroid.extract_node(
         f"""
+    from typing import TypedDict
+
+    class CustomTypedDict(TypedDict):
+        pass
+
     class Entity():
         pass
 
