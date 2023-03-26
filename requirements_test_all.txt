@@ -364,7 +364,7 @@ bimmer_connected==0.13.0
 bleak-retry-connector==3.0.2
 
 # homeassistant.components.bluetooth
-bleak==0.20.0
+bleak==0.20.1
 
 # homeassistant.components.blebox
 blebox_uniapi==2.1.4
