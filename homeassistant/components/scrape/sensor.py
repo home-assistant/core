@@ -39,12 +39,10 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Web scrape sensor."""
-    coordinator: ScrapeCoordinator
-    sensors_config: list[ConfigType]
     if TYPE_CHECKING:
         assert discovery_info is not None
-    coordinator = discovery_info["coordinator"]
-    sensors_config = discovery_info["configs"]
+    coordinator: ScrapeCoordinator = discovery_info["coordinator"]
+    sensors_config: list[ConfigType] = discovery_info["configs"]
 
     await coordinator.async_refresh()
     if coordinator.data is None:
