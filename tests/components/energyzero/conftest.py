@@ -3,8 +3,10 @@ from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from datetime import datetime, date
 from energyzero import Electricity, Gas
 import pytest
+from freezegun.api import FakeDate
 
 from homeassistant.components.energyzero.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -32,6 +34,18 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
+async def get_energy_prices(start_date: date, end_date: date) -> Electricity:
+    """Return one of the requested energy collections."""
+    if start_date == date(year=2022, month=12, day=7):
+        return Electricity.from_dict(
+            json.loads(load_fixture("today_energy.json", DOMAIN))
+        )
+
+    return Electricity.from_dict(
+        json.loads(load_fixture("tomorrow_energy.json", DOMAIN))
+    )
+
+
 @pytest.fixture
 def mock_energyzero() -> Generator[MagicMock, None, None]:
     """Return a mocked EnergyZero client."""
@@ -39,9 +53,7 @@ def mock_energyzero() -> Generator[MagicMock, None, None]:
         "homeassistant.components.energyzero.coordinator.EnergyZero", autospec=True
     ) as energyzero_mock:
         client = energyzero_mock.return_value
-        client.energy_prices.return_value = Electricity.from_dict(
-            json.loads(load_fixture("today_energy.json", DOMAIN))
-        )
+        client.energy_prices = AsyncMock(side_effect=get_energy_prices)
         client.gas_prices.return_value = Gas.from_dict(
             json.loads(load_fixture("today_gas.json", DOMAIN))
         )

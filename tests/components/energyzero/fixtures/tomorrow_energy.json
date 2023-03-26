@@ -1,0 +1,104 @@
+{
+    "Prices": [
+     {
+      "price": 0.32,
+      "readingDate": "2022-12-07T23:00:00Z"
+     },
+     {
+      "price": 0.31,
+      "readingDate": "2022-12-08T00:00:00Z"
+     },
+     {
+      "price": 0.29,
+      "readingDate": "2022-12-08T01:00:00Z"
+     },
+     {
+      "price": 0.29,
+      "readingDate": "2022-12-08T02:00:00Z"
+     },
+     {
+      "price": 0.31,
+      "readingDate": "2022-12-08T03:00:00Z"
+     },
+     {
+      "price": 0.33,
+      "readingDate": "2022-12-08T04:00:00Z"
+     },
+     {
+      "price": 0.34,
+      "readingDate": "2022-12-08T05:00:00Z"
+     },
+     {
+      "price": 0.39,
+      "readingDate": "2022-12-08T06:00:00Z"
+     },
+     {
+      "price": 0.46,
+      "readingDate": "2022-12-08T07:00:00Z"
+     },
+     {
+      "price": 0.5,
+      "readingDate": "2022-12-08T08:00:00Z"
+     },
+     {
+      "price": 0.46,
+      "readingDate": "2022-12-08T09:00:00Z"
+     },
+     {
+      "price": 0.44,
+      "readingDate": "2022-12-08T10:00:00Z"
+     },
+     {
+      "price": 0.4,
+      "readingDate": "2022-12-08T11:00:00Z"
+     },
+     {
+      "price": 0.43,
+      "readingDate": "2022-12-08T12:00:00Z"
+     },
+     {
+      "price": 0.49,
+      "readingDate": "2022-12-08T13:00:00Z"
+     },
+     {
+      "price": 0.5,
+      "readingDate": "2022-12-08T14:00:00Z"
+     },
+     {
+      "price": 0.5,
+      "readingDate": "2022-12-08T15:00:00Z"
+     },
+     {
+      "price": 0.55,
+      "readingDate": "2022-12-08T16:00:00Z"
+     },
+     {
+      "price": 0.44,
+      "readingDate": "2022-12-08T17:00:00Z"
+     },
+     {
+      "price": 0.43,
+      "readingDate": "2022-12-08T18:00:00Z"
+     },
+     {
+      "price": 0.44,
+      "readingDate": "2022-12-08T19:00:00Z"
+     },
+     {
+      "price": 0.37,
+      "readingDate": "2022-12-08T20:00:00Z"
+     },
+     {
+      "price": 0.36,
+      "readingDate": "2022-12-08T21:00:00Z"
+     },
+     {
+      "price": 0.33,
+      "readingDate": "2022-12-08T22:00:00Z"
+     }
+    ],
+    "intervalType": 4,
+    "average": 0.4,
+    "fromDate": "2022-12-07T23:00:00Z",
+    "tillDate": "2022-12-08T22:59:59.999Z"
+   }

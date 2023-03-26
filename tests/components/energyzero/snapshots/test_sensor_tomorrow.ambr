@@ -1,0 +1,193 @@
+# serializer version: 1
+# name: test_sensor[sensor.energyzero_tomorrow_energy_average_price-tomorrow_energy_average_price-tomorrow_energy]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by EnergyZero',
+      'friendly_name': 'Energy market price of tomorrow Average - tomorrow',
+      'unit_of_measurement': '€/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energyzero_tomorrow_energy_average_price',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.4',
+  })
+# ---
+# name: test_sensor[sensor.energyzero_tomorrow_energy_average_price-tomorrow_energy_average_price-tomorrow_energy].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energyzero_tomorrow_energy_average_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Average - tomorrow',
+    'platform': 'energyzero',
+    'supported_features': 0,
+    'translation_key': None,
+    'unit_of_measurement': '€/kWh',
+  })
+# ---
+# name: test_sensor[sensor.energyzero_tomorrow_energy_average_price-tomorrow_energy_average_price-tomorrow_energy].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+    'hw_version': None,
+    'id': <ANY>,
+    'is_new': False,
+    'manufacturer': 'EnergyZero',
+    'model': None,
+    'name': 'Energy market price of tomorrow',
+    'name_by_user': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_sensor[sensor.energyzero_tomorrow_energy_highest_price_time-tomorrow_energy_highest_price_time-tomorrow_energy]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by EnergyZero',
+      'device_class': 'timestamp',
+      'friendly_name': 'Energy market price of tomorrow Time of highest price - tomorrow',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energyzero_tomorrow_energy_highest_price_time',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2022-12-08T16:00:00+00:00',
+  })
+# ---
+# name: test_sensor[sensor.energyzero_tomorrow_energy_highest_price_time-tomorrow_energy_highest_price_time-tomorrow_energy].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energyzero_tomorrow_energy_highest_price_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Time of highest price - tomorrow',
+    'platform': 'energyzero',
+    'supported_features': 0,
+    'translation_key': None,
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.energyzero_tomorrow_energy_highest_price_time-tomorrow_energy_highest_price_time-tomorrow_energy].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+    'hw_version': None,
+    'id': <ANY>,
+    'is_new': False,
+    'manufacturer': 'EnergyZero',
+    'model': None,
+    'name': 'Energy market price of tomorrow',
+    'name_by_user': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_sensor[sensor.energyzero_tomorrow_energy_max_price-tomorrow_energy_max_price-tomorrow_energy]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by EnergyZero',
+      'friendly_name': 'Energy market price of tomorrow Highest price - tomorrow',
+      'unit_of_measurement': '€/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energyzero_tomorrow_energy_max_price',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.55',
+  })
+# ---
+# name: test_sensor[sensor.energyzero_tomorrow_energy_max_price-tomorrow_energy_max_price-tomorrow_energy].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energyzero_tomorrow_energy_max_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Highest price - tomorrow',
+    'platform': 'energyzero',
+    'supported_features': 0,
+    'translation_key': None,
+    'unit_of_measurement': '€/kWh',
+  })
+# ---
+# name: test_sensor[sensor.energyzero_tomorrow_energy_max_price-tomorrow_energy_max_price-tomorrow_energy].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+    'hw_version': None,
+    'id': <ANY>,
+    'is_new': False,
+    'manufacturer': 'EnergyZero',
+    'model': None,
+    'name': 'Energy market price of tomorrow',
+    'name_by_user': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---

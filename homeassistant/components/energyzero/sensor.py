@@ -118,36 +118,46 @@ SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
         name="Average - tomorrow",
         service_type="tomorrow_energy",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
-        value_fn=lambda data: data.energy_tomorrow.average_price if data.energy_tomorrow else None,
+        value_fn=lambda data: data.energy_tomorrow.average_price
+        if data.energy_tomorrow
+        else None,
     ),
     EnergyZeroSensorEntityDescription(
         key="max_price",
         name="Highest price - tomorrow",
         service_type="tomorrow_energy",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
-        value_fn=lambda data: data.energy_tomorrow.extreme_prices[1] if data.energy_tomorrow else None,
+        value_fn=lambda data: data.energy_tomorrow.extreme_prices[1]
+        if data.energy_tomorrow
+        else None,
     ),
     EnergyZeroSensorEntityDescription(
         key="min_price",
         name="Lowest price - tomorrow",
         service_type="tomorrow_energy",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
-        value_fn=lambda data: data.energy_tomorrow.extreme_prices[0] if data.energy_tomorrow else None,
+        value_fn=lambda data: data.energy_tomorrow.extreme_prices[0]
+        if data.energy_tomorrow
+        else None,
     ),
     EnergyZeroSensorEntityDescription(
         key="highest_price_time",
         name="Time of highest price - tomorrow",
         service_type="tomorrow_energy",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: data.energy_tomorrow.highest_price_time if data.energy_tomorrow else None,
+        value_fn=lambda data: data.energy_tomorrow.highest_price_time
+        if data.energy_tomorrow
+        else None,
     ),
     EnergyZeroSensorEntityDescription(
         key="lowest_price_time",
         name="Time of lowest price - tomorrow",
         service_type="tomorrow_energy",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: data.energy_tomorrow.lowest_price_time if data.energy_tomorrow else None,
-    )
+        value_fn=lambda data: data.energy_tomorrow.lowest_price_time
+        if data.energy_tomorrow
+        else None,
+    ),
 )
 
 
@@ -178,9 +188,18 @@ def get_next_energy_price(data: EnergyZeroData, hours: int) -> float | None:
     Returns:
         The next energy market price.
     """
-    price = data.energy_today.price_at_time(data.energy_today.utcnow() + timedelta(hours=hours))
+    price = data.energy_today.price_at_time(
+        data.energy_today.utcnow() + timedelta(hours=hours)
+    )
     if price is None and data.energy_tomorrow is not None:
-        return data.energy_tomorrow.price_at_time(data.energy_today.utcnow() + timedelta(hours=hours))
+        return data.energy_tomorrow.price_at_time(
+            data.energy_today.utcnow()
+            + timedelta(
+                hours=24 - (data.energy_today.utcnow().hour + hours)
+                if data.energy_today.utcnow().hour + hours >= 24
+                else hours
+            )
+        )
     return price
 
 
