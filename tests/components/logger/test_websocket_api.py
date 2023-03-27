@@ -92,7 +92,13 @@ async def test_custom_integration_log_level(
         hass,
         "custom_components.hue",
         None,
-        {"name": "Hue", "dependencies": [], "requirements": [], "domain": "hue"},
+        {
+            "name": "Hue",
+            "dependencies": [],
+            "requirements": [],
+            "domain": "hue",
+            "loggers": ["some_other_logger"],
+        },
     )
 
     with patch(
@@ -118,7 +124,8 @@ async def test_custom_integration_log_level(
         assert msg["success"]
 
         assert async_get_domain_config(hass).overrides == {
-            "custom_components.hue": logging.DEBUG
+            "custom_components.hue": logging.DEBUG,
+            "some_other_logger": logging.DEBUG,
         }
 
 
