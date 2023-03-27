@@ -398,6 +398,54 @@ async def test_setup_component_and_test_with_service_options_def(
         ).is_file()
 
 
+async def test_setup_component_and_test_with_service_options_def_2(
+    hass: HomeAssistant, empty_cache_dir
+) -> None:
+    """Set up a TTS platform and call service with default options.
+
+    This tests merging default and user provided options.
+    """
+    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+
+    config = {tts.DOMAIN: {"platform": "test"}}
+
+    class MockProviderWithDefaults(MockProvider):
+        @property
+        def default_options(self):
+            return {"voice": "alex"}
+
+    mock_integration(hass, MockModule(domain="test"))
+    mock_platform(hass, "test.tts", MockTTS(MockProviderWithDefaults))
+
+    with assert_setup_component(1, tts.DOMAIN):
+        assert await async_setup_component(hass, tts.DOMAIN, config)
+
+        await hass.services.async_call(
+            tts.DOMAIN,
+            "test_say",
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "There is someone at the door.",
+                tts.ATTR_LANGUAGE: "de",
+                tts.ATTR_OPTIONS: {"age": 5},
+            },
+            blocking=True,
+        )
+        opt_hash = tts._hash_options({"voice": "alex", "age": 5})
+
+        assert len(calls) == 1
+        assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
+        assert (
+            await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+            == f"/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{opt_hash}_test.mp3"
+        )
+        await hass.async_block_till_done()
+        assert (
+            empty_cache_dir
+            / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{opt_hash}_test.mp3"
+        ).is_file()
+
+
 async def test_setup_component_and_test_service_with_service_options_wrong(
     hass: HomeAssistant, empty_cache_dir, mock_tts
 ) -> None:
