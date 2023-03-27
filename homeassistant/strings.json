@@ -2,7 +2,7 @@
   "common": {
     "generic": {
       "model": "Model",
-      "ui_managed": "UI-managed"
+      "ui_managed": "Managed via UI"
     },
     "state": {
       "off": "Off",
