@@ -2323,7 +2323,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="async_process_audio_stream",
-                    arg_types={1: "SpeechMetadata", 2: "StreamReader"},
+                    arg_types={1: "SpeechMetadata", 2: "AsyncIterable[bytes]"},
                     return_type="SpeechResult",
                 ),
             ],
@@ -2974,9 +2974,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
         if class_matches := _CLASS_MATCH.get(module_platform):
             self._class_matchers.extend(class_matches)
 
-        if not self.linter.config.ignore_missing_annotations and (
-            property_matches := _INHERITANCE_MATCH.get(module_platform)
-        ):
+        if property_matches := _INHERITANCE_MATCH.get(module_platform):
             self._class_matchers.extend(property_matches)
 
         self._class_matchers.reverse()
