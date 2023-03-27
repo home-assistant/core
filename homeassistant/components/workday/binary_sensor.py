@@ -106,7 +106,7 @@ def setup_platform(
     try:
         obj_holidays.append(add_holidays)
     except ValueError as error:
-        LOGGER.error("Could not add custom holidays: %s", str(error))
+        LOGGER.error("Could not add custom holidays: %s", error)
 
     # Remove holidays
     for remove_holiday in remove_holidays:
