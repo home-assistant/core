@@ -12,7 +12,7 @@ from homeassistant.components.srp_energy import DOMAIN, PHOENIX_TIME_ZONE
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
-from . import ACCNT_ID, MOCK_USAGE, TEST_USER_INPUT
+from . import MOCK_USAGE, TEST_USER_INPUT
 
 from tests.common import MockConfigEntry
 
@@ -44,7 +44,6 @@ def fixture_mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data=TEST_USER_INPUT,
-        unique_id=ACCNT_ID,
     )
 
 

@@ -38,8 +38,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the SRP Energy Usage sensor."""
     # API object stored here by __init__.py
-    entry_name: str = DEFAULT_NAME
-    is_time_of_use: bool = False
     api = hass.data[DOMAIN][entry.entry_id]
     is_time_of_use = entry.data[CONF_IS_TOU]
 
@@ -97,28 +95,24 @@ async def async_setup_entry(
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()
 
-    async_add_entities([SrpEntity(coordinator, entry_name)])
+    async_add_entities([SrpEntity(coordinator)])
 
 
 class SrpEntity(SensorEntity):
     """Implementation of a Srp Energy Usage sensor."""
 
     _attr_has_entity_name = True
+    _attr_name = f"{DEFAULT_NAME} {SENSOR_NAME}"
     _attr_attribution = ATTRIBUTION
     _attr_should_poll = False
 
-    def __init__(self, coordinator, entry_name) -> None:
+    def __init__(self, coordinator) -> None:
         """Initialize the SrpEntity class."""
-        self._name = SENSOR_NAME
+        # self._name = SENSOR_NAME
         self.type = SENSOR_TYPE
         self.coordinator = coordinator
         self._unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
         self._state = None
-        self._entry_name = entry_name
-        unique_id = f"{entry_name}_energy_usage".lower()
-
-        LOGGER.debug("Setting entity unique_id %s", unique_id)
-        self._attr_unique_id = unique_id
 
         self._attr_native_value = self.coordinator.data
 
