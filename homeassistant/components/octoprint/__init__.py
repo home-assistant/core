@@ -163,14 +163,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data = {**entry.data, CONF_VERIFY_SSL: True}
         hass.config_entries.async_update_entry(entry, data=data)
 
-    verify_ssl = entry.data[CONF_VERIFY_SSL]
-    websession = async_get_clientsession(hass, verify_ssl=verify_ssl)
     client = OctoprintClient(
-        entry.data[CONF_HOST],
-        websession,
-        entry.data[CONF_PORT],
-        entry.data[CONF_SSL],
-        entry.data[CONF_PATH],
+        host=entry.data[CONF_HOST],
+        port=entry.data[CONF_PORT],
+        ssl=entry.data[CONF_SSL],
+        path=entry.data[CONF_PATH],
     )
 
     client.set_api_key(entry.data[CONF_API_KEY])
