@@ -28,7 +28,7 @@ from tests.common import MockConfigEntry
 @pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations):
     """Automatically enable loading custom integrations in all tests."""
-    yield
+    return
 
 
 # This fixture is used to prevent HomeAssistant from attempting to create and dismiss persistent
@@ -109,7 +109,6 @@ class ViCareServiceMock:
         """Read a property from a json dump."""
         entities = self.testData["data"]
         value = readFeature(entities, property_name)
-        print("Read: ", property_name, value)
         return value
 
     def setProperty(self, property_name, action, data):
