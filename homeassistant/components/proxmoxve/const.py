@@ -20,4 +20,4 @@ TYPE_VM = 0
 TYPE_CONTAINER = 1
 UPDATE_INTERVAL = 60
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__package__)
