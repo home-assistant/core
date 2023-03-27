@@ -11,6 +11,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import COORDINATORS, DOMAIN, PROXMOX_CLIENTS, ProxmoxEntity
+from .const import ProxmoxKeyAPIParse
 
 
 async def async_setup_platform(
@@ -42,7 +43,7 @@ async def async_setup_platform(
                 if (coordinator_data := coordinator.data) is None:
                     continue
 
-                name = coordinator_data["name"]
+                name = coordinator_data[ProxmoxKeyAPIParse.NAME]
                 sensor = create_binary_sensor(
                     coordinator, host_name, node_name, dev_id, name
                 )
@@ -96,7 +97,7 @@ class ProxmoxBinarySensor(ProxmoxEntity, BinarySensorEntity):
         if (data := self.coordinator.data) is None:
             return None
 
-        return data["status"] == "running"
+        return data[ProxmoxKeyAPIParse.STATUS] == "running"
 
     @property
     def available(self) -> bool:
