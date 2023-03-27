@@ -3,8 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from proxmoxer import ProxmoxAPI
-from proxmoxer.backends.https import AuthenticationError
+from proxmoxer import AuthenticationError, ProxmoxAPI
 from proxmoxer.core import ResourceException
 import requests.exceptions
 from requests.exceptions import ConnectTimeout, SSLError
