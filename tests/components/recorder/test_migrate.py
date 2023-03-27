@@ -15,6 +15,7 @@ from sqlalchemy.exc import (
     InternalError,
     OperationalError,
     ProgrammingError,
+    SQLAlchemyError,
 )
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
@@ -348,7 +349,7 @@ async def test_schema_migrate(
 
     def _mock_setup_run(self):
         self.run_info = RecorderRuns(
-            start=self.run_history.recording_start, created=dt_util.utcnow()
+            start=self.recorder_runs_manager.recording_start, created=dt_util.utcnow()
         )
 
     def _instrument_migrate_schema(*args):
@@ -492,7 +493,51 @@ def test_forgiving_add_index(recorder_db_url: str) -> None:
     with Session(engine) as session:
         instance = Mock()
         instance.get_session = Mock(return_value=session)
-        migration._create_index(instance.get_session, "states", "ix_states_context_id")
+        migration._create_index(
+            instance.get_session, "states", "ix_states_context_id_bin"
+        )
+    engine.dispose()
+
+
+def test_forgiving_drop_index(
+    recorder_db_url: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that drop index will continue if index drop fails."""
+    engine = create_engine(recorder_db_url, poolclass=StaticPool)
+    db_schema.Base.metadata.create_all(engine)
+    with Session(engine) as session:
+        instance = Mock()
+        instance.get_session = Mock(return_value=session)
+        migration._drop_index(
+            instance.get_session, "states", "ix_states_context_id_bin"
+        )
+        migration._drop_index(
+            instance.get_session, "states", "ix_states_context_id_bin"
+        )
+
+        with patch(
+            "homeassistant.components.recorder.migration.get_index_by_name",
+            return_value="ix_states_context_id_bin",
+        ), patch.object(
+            session, "connection", side_effect=SQLAlchemyError("connection failure")
+        ):
+            migration._drop_index(
+                instance.get_session, "states", "ix_states_context_id_bin"
+            )
+        assert "Failed to drop index" in caplog.text
+        assert "connection failure" in caplog.text
+        caplog.clear()
+        with patch(
+            "homeassistant.components.recorder.migration.get_index_by_name",
+            return_value="ix_states_context_id_bin",
+        ), patch.object(
+            session, "connection", side_effect=SQLAlchemyError("connection failure")
+        ):
+            migration._drop_index(
+                instance.get_session, "states", "ix_states_context_id_bin", quiet=True
+            )
+        assert "Failed to drop index" not in caplog.text
+        assert "connection failure" not in caplog.text
     engine.dispose()
 
 

@@ -10,7 +10,6 @@ from homeassistant.components import camera, mqtt
 from homeassistant.components.mqtt.camera import MQTT_CAMERA_ATTRIBUTES_BLOCKED
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .test_common import (
     help_test_availability_when_connection_lost,
@@ -56,20 +55,18 @@ def camera_platform_only():
         yield
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [{mqtt.DOMAIN: {camera.DOMAIN: {"topic": "test/camera", "name": "Test Camera"}}}],
+)
 async def test_run_camera_setup(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test that it fetches the given payload."""
     topic = "test/camera"
-    await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
-        {mqtt.DOMAIN: {camera.DOMAIN: {"topic": topic, "name": "Test Camera"}}},
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+    await mqtt_mock_entry_no_yaml_config()
 
     url = hass.states.get("camera.test_camera").attributes["entity_picture"]
 
@@ -82,28 +79,28 @@ async def test_run_camera_setup(
     assert body == "beer"
 
 
-async def test_run_camera_b64_encoded(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-) -> None:
-    """Test that it fetches the given encoded payload."""
-    topic = "test/camera"
-    await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 camera.DOMAIN: {
-                    "topic": topic,
+                    "topic": "test/camera",
                     "name": "Test Camera",
                     "image_encoding": "b64",
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_run_camera_b64_encoded(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+) -> None:
+    """Test that it fetches the given encoded payload."""
+    topic = "test/camera"
+    await mqtt_mock_entry_no_yaml_config()
 
     url = hass.states.get("camera.test_camera").attributes["entity_picture"]
 
@@ -116,31 +113,31 @@ async def test_run_camera_b64_encoded(
     assert body == "grass"
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                "camera": {
+                    "topic": "test/camera",
+                    "name": "Test Camera",
+                    "encoding": "utf-8",
+                    "image_encoding": "b64",
+                    "availability": {"topic": "test/camera_availability"},
+                }
+            }
+        }
+    ],
+)
 async def test_camera_b64_encoded_with_availability(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test availability works if b64 encoding is turned on."""
     topic = "test/camera"
     topic_availability = "test/camera_availability"
-    await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
-        {
-            mqtt.DOMAIN: {
-                "camera": {
-                    "topic": topic,
-                    "name": "Test Camera",
-                    "encoding": "utf-8",
-                    "image_encoding": "b64",
-                    "availability": {"topic": topic_availability},
-                }
-            }
-        },
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+    await mqtt_mock_entry_no_yaml_config()
 
     # Make sure we are available
     async_fire_mqtt_message(hass, topic_availability, "online")

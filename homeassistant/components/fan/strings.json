@@ -34,7 +34,7 @@
         "oscillating": {
           "name": "Oscillating",
           "state": {
-            "true": "[%key:common::state::yes%}",
+            "true": "[%key:common::state::yes%]",
             "false": "[%key:common::state::no%]"
           }
         },

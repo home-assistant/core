@@ -119,7 +119,16 @@ def _time_weighted_average(
         duration = end - old_start_time
         accumulated += old_fstate * duration.total_seconds()
 
-    return accumulated / (end - start).total_seconds()
+    period_seconds = (end - start).total_seconds()
+    if period_seconds == 0:
+        # If the only state changed that happened was at the exact moment
+        # at the end of the period, we can't calculate a meaningful average
+        # so we return 0.0 since it represents a time duration smaller than
+        # we can measure. This probably means the precision of statistics
+        # column schema in the database is incorrect but it is actually possible
+        # to happen if the state change event fired at the exact microsecond
+        return 0.0
+    return accumulated / period_seconds
 
 
 def _get_units(fstates: list[tuple[float, State]]) -> set[str | None]:
