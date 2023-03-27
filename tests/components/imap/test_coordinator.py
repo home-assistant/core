@@ -9,6 +9,7 @@ from homeassistant.components.imap import DOMAIN
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.util.dt import utcnow
 
+from .conftest import AUTH, NONAUTH, SELECTED
 from .const import TEST_FETCH_RESPONSE, TEST_SEARCH_RESPONSE
 from .test_config_flow import MOCK_CONFIG
 
@@ -48,3 +49,31 @@ async def test_receiving_message_successfully(
 
     # we should have received one event
     event_called.assert_called_once()
+
+
+@pytest.mark.parametrize("imap_capabilities", [{"IDLE"}, set()], ids=["push", "poll"])
+@pytest.mark.parametrize(
+    ("imap_login_state", "success"), [(AUTH, True), (NONAUTH, False)]
+)
+async def test_initial_authentication_error(
+    hass: HomeAssistant, mock_imap_protocol: dict[str, AsyncMock], success: bool
+) -> None:
+    """Test authentication error."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id) == success
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize("imap_capabilities", [{"IDLE"}, set()], ids=["push", "poll"])
+@pytest.mark.parametrize(
+    ("imap_select_state", "success"), [(AUTH, False), (SELECTED, True)]
+)
+async def test_initial_invalid_folder_error(
+    hass: HomeAssistant, mock_imap_protocol: dict[str, AsyncMock], success: bool
+) -> None:
+    """Test receiving a message successfully."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id) == success
+    await hass.async_block_till_done()
