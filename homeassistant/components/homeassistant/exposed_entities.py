@@ -89,7 +89,8 @@ class ExposedEntities:
     async def async_initialize(self) -> None:
         """Finish initializing."""
         websocket_api.async_register_command(self._hass, ws_expose_entity)
-        websocket_api.async_register_command(self._hass, ws_expose_new_entities)
+        websocket_api.async_register_command(self._hass, ws_expose_new_entities_get)
+        websocket_api.async_register_command(self._hass, ws_expose_new_entities_set)
         await self.async_load()
 
     @callback
@@ -124,7 +125,14 @@ class ExposedEntities:
             listener()
 
     @callback
-    def async_expose_new_entities(self, assistant: str, expose_new: bool) -> None:
+    def async_get_expose_new_entities(self, assistant: str) -> bool:
+        """Check if new entities are exposed to an assistant."""
+        if prefs := self._assistants.get(assistant):
+            return prefs.expose_new
+        return False
+
+    @callback
+    def async_set_expose_new_entities(self, assistant: str, expose_new: bool) -> None:
         """Enable an assistant to expose new entities."""
         self._assistants[assistant] = AssistantPreferences(expose_new=expose_new)
         self._async_schedule_save()
@@ -286,17 +294,34 @@ def ws_expose_entity(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "homeassistant/expose_new_entities",
+        vol.Required("type"): "homeassistant/expose_new_entities/get",
+        vol.Required("assistant"): vol.In(KNOWN_ASSISTANTS),
+    }
+)
+def ws_expose_new_entities_get(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Check if new entities are exposed to an assistatant."""
+    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
+    expose_new = exposed_entities.async_get_expose_new_entities(msg["assistant"])
+    connection.send_result(msg["id"], {"expose_new": expose_new})
+
+
+@callback
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "homeassistant/expose_new_entities/set",
         vol.Required("assistant"): vol.In(KNOWN_ASSISTANTS),
         vol.Required("expose_new"): bool,
     }
 )
-def ws_expose_new_entities(
+def ws_expose_new_entities_set(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Expose an entity to an assistatant."""
+    """Expose new entities to an assistatant."""
     exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
-    exposed_entities.async_expose_new_entities(msg["assistant"], msg["expose_new"])
+    exposed_entities.async_set_expose_new_entities(msg["assistant"], msg["expose_new"])
     connection.send_result(msg["id"])
 
 

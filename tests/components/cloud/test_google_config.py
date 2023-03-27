@@ -37,7 +37,7 @@ def mock_conf(hass, cloud_prefs):
 def expose_new(hass, expose_new):
     """Enable exposing new entities to Google."""
     exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
-    exposed_entities.async_expose_new_entities("cloud.google_assistant", expose_new)
+    exposed_entities.async_set_expose_new_entities("cloud.google_assistant", expose_new)
 
 
 def expose_entity(hass, entity_id, should_expose):

@@ -254,7 +254,7 @@ async def test_google_config_expose_entity(
 
     # Enable exposing new entities to Google
     exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
-    exposed_entities.async_expose_new_entities("cloud.google_assistant", True)
+    exposed_entities.async_set_expose_new_entities("cloud.google_assistant", True)
 
     # Register a light entity
     entity_entry = entity_registry.async_get_or_create(

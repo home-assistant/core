@@ -30,7 +30,7 @@ def cloud_stub():
 def expose_new(hass, expose_new):
     """Enable exposing new entities to Alexa."""
     exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
-    exposed_entities.async_expose_new_entities("cloud.alexa", expose_new)
+    exposed_entities.async_set_expose_new_entities("cloud.alexa", expose_new)
 
 
 def expose_entity(hass, entity_id, should_expose):

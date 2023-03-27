@@ -25,8 +25,8 @@ async def test_load_preferences(hass: HomeAssistant) -> None:
     exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
     assert exposed_entities._assistants == {}
 
-    exposed_entities.async_expose_new_entities("test1", True)
-    exposed_entities.async_expose_new_entities("test2", False)
+    exposed_entities.async_set_expose_new_entities("test1", True)
+    exposed_entities.async_set_expose_new_entities("test2", False)
 
     assert list(exposed_entities._assistants) == ["test1", "test2"]
 
@@ -167,19 +167,38 @@ async def test_expose_new_entities(
     entry1 = entity_registry.async_get_or_create("climate", "test", "unique1")
     entry2 = entity_registry.async_get_or_create("climate", "test", "unique2")
 
+    await ws_client.send_json_auto_id(
+        {
+            "type": "homeassistant/expose_new_entities/get",
+            "assistant": "cloud.alexa",
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"expose_new": False}
+
     # Check if exposed - should be False
     assert async_should_expose(hass, "cloud.alexa", entry1.entity_id) is False
 
     # Expose new entities to Alexa
     await ws_client.send_json_auto_id(
         {
-            "type": "homeassistant/expose_new_entities",
+            "type": "homeassistant/expose_new_entities/set",
             "assistant": "cloud.alexa",
             "expose_new": expose_new,
         }
     )
     response = await ws_client.receive_json()
     assert response["success"]
+    await ws_client.send_json_auto_id(
+        {
+            "type": "homeassistant/expose_new_entities/get",
+            "assistant": "cloud.alexa",
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"expose_new": expose_new}
 
     # Check again if exposed - should still be False
     assert async_should_expose(hass, "cloud.alexa", entry1.entity_id) is False
@@ -188,7 +207,7 @@ async def test_expose_new_entities(
     assert async_should_expose(hass, "cloud.alexa", entry2.entity_id) == expose_new
 
 
-async def test_listen_updated(
+async def test_listen_updates(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -259,7 +278,7 @@ async def test_should_expose(
     # Expose new entities to Alexa
     await ws_client.send_json_auto_id(
         {
-            "type": "homeassistant/expose_new_entities",
+            "type": "homeassistant/expose_new_entities/set",
             "assistant": "cloud.alexa",
             "expose_new": True,
         }
