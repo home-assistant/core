@@ -259,14 +259,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _get_octoprint_client(self, user_input: dict) -> OctoprintClient:
         """Build an octoprint client from the user_input."""
-        verify_ssl = user_input.get(CONF_VERIFY_SSL, True)
-        session = async_get_clientsession(self.hass, verify_ssl=verify_ssl)
         return OctoprintClient(
-            user_input[CONF_HOST],
-            session,
-            user_input[CONF_PORT],
-            user_input[CONF_SSL],
-            user_input[CONF_PATH],
+            host=user_input[CONF_HOST],
+            port=user_input[CONF_PORT],
+            ssl=user_input[CONF_SSL],
+            path=user_input[CONF_PATH],
         )
 
 
