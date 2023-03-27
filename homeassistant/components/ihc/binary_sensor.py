@@ -4,7 +4,6 @@ from __future__ import annotations
 from ihcsdk.ihccontroller import IHCController
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASSES,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
@@ -12,6 +11,7 @@ from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util.enum import try_parse_enum
 
 from .const import CONF_INVERTING, DOMAIN, IHC_CONTROLLER
 from .ihcdevice import IHCDevice
@@ -66,11 +66,7 @@ class IHCBinarySensor(IHCDevice, BinarySensorEntity):
     ) -> None:
         """Initialize the IHC binary sensor."""
         super().__init__(ihc_controller, controller_id, name, ihc_id, product)
-        self._attr_device_class = (
-            BinarySensorDeviceClass(sensor_type)
-            if sensor_type in DEVICE_CLASSES
-            else None
-        )
+        self._attr_device_class = try_parse_enum(BinarySensorDeviceClass, sensor_type)
         self._sensor_type = sensor_type
         self.inverting = inverting
 
