@@ -23,22 +23,13 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.template_entity import TEMPLATE_SENSOR_BASE_SCHEMA
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_ENCODING,
-    CONF_INDEX,
-    CONF_SELECT,
-    DEFAULT_ENCODING,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    PLATFORMS,
-)
+from .const import CONF_INDEX, CONF_SELECT, DEFAULT_SCAN_INTERVAL, DOMAIN, PLATFORMS
 from .coordinator import ScrapeCoordinator
 
 SENSOR_SCHEMA = vol.Schema(
     {
         **TEMPLATE_SENSOR_BASE_SCHEMA.schema,
         vol.Optional(CONF_ATTRIBUTE): cv.string,
-        vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
         vol.Optional(CONF_INDEX, default=0): cv.positive_int,
         vol.Required(CONF_SELECT): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
