@@ -1,4 +1,7 @@
 """Testing file for config flow ProxmoxVE."""
+from collections.abc import Generator
+from unittest.mock import AsyncMock
+
 import proxmoxer
 import pytest
 from requests.exceptions import ConnectTimeout, SSLError
@@ -121,6 +124,15 @@ MOCK_GET_RESPONSE = [
 
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.proxmoxve.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 async def test_flow_ok(hass: HomeAssistant) -> None:
