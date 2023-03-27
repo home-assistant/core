@@ -24,7 +24,7 @@ MOCK_DISCOVERY = ssdp.SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_udn="uuid:3dcc7100-f76c-11dd-87af-00226124ca30",
     ssdp_st="mock_st",
-    ssdp_location="http://1.1.1.1:80/device",
+    ssdp_location="http://1.1.1.1/device",
     upnp={"SPEAKER-NAME": "Speaker Name"},
 )
 

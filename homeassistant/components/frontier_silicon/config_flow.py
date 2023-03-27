@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 from typing import Any
+from urllib.parse import urlparse
 
 from afsapi import AFSAPI, ConnectionError as FSConnectionError, InvalidPinException
 import voluptuous as vol
@@ -38,6 +39,13 @@ STEP_DEVICE_CONFIG_DATA_SCHEMA = vol.Schema(
         ): str,
     }
 )
+
+
+def hostname_from_url(url: str | None) -> str | None:
+    """Return the hostname from a url."""
+    if url:
+        return str(urlparse(url).hostname)
+    return None
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -115,6 +123,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         device_url = discovery_info.ssdp_location
 
+        device_hostname = hostname_from_url(device_url)
+        for entry in self._async_current_entries():
+            if device_hostname == hostname_from_url(entry.data.get(CONF_WEBFSAPI_URL)):
+                return self.async_abort(reason="already_configured")
+
         speaker_name = discovery_info.ssdp_headers.get(SSDP_ATTR_SPEAKER_NAME)
         self.context["title_placeholders"] = {"name": speaker_name}
 
@@ -125,10 +138,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except Exception as exception:  # pylint: disable=broad-except
             _LOGGER.debug(exception)
             return self.async_abort(reason="unknown")
-
-        for entry in self._async_current_entries():
-            if self._webfsapi_url == entry.data.get(CONF_WEBFSAPI_URL):
-                return self.async_abort(reason="already_configured")
 
         try:
             # try to login with default pin
