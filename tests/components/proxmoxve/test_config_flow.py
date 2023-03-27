@@ -123,6 +123,9 @@ MOCK_GET_RESPONSE = [
 ]
 
 
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+
+
 async def test_flow_ok(hass: HomeAssistant):
     """Test flow ok."""
 
