@@ -24,7 +24,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.update_coordinator import (
@@ -146,13 +146,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass, DOMAIN, entry.title, entry.entry_id, handle_webhook, local_only=True
     )
 
-    @callback
-    def _stop_nuki(_: Event):
+    async def _stop_nuki(_: Event):
         """Stop and remove the Nuki webhook."""
         webhook.async_unregister(hass, entry.entry_id)
         try:
-            with async_timeout.timeout(10):
-                hass.async_add_executor_job(_remove_webhook, bridge, entry.entry_id)
+            async with async_timeout.timeout(10):
+                await hass.async_add_executor_job(
+                    _remove_webhook, bridge, entry.entry_id
+                )
         except InvalidCredentialsException as err:
             raise UpdateFailed(f"Invalid credentials for Bridge: {err}") from err
         except RequestException as err:
