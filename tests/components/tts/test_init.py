@@ -14,6 +14,7 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     MediaType,
 )
+from homeassistant.components.media_source import Unresolvable
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -766,6 +767,8 @@ async def test_setup_component_test_with_cache_dir(
 
 async def test_setup_component_test_with_error_on_get_tts(hass: HomeAssistant) -> None:
     """Set up a TTS platform with wrong get_tts_audio."""
+    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+
     config = {tts.DOMAIN: {"platform": "test"}}
 
     class MockProviderEmpty(MockProvider):
@@ -780,6 +783,19 @@ async def test_setup_component_test_with_error_on_get_tts(hass: HomeAssistant) -
 
     with assert_setup_component(1, tts.DOMAIN):
         assert await async_setup_component(hass, tts.DOMAIN, config)
+
+    await hass.services.async_call(
+        tts.DOMAIN,
+        "test_say",
+        {
+            "entity_id": "media_player.something",
+            tts.ATTR_MESSAGE: "There is someone at the door.",
+        },
+        blocking=True,
+    )
+    assert len(calls) == 1
+    with pytest.raises(Unresolvable):
+        await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
 
 
 async def test_setup_component_load_cache_retrieve_without_mem_cache(
