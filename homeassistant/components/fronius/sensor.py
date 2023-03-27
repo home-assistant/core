@@ -718,8 +718,7 @@ class _FroniusSensorEntity(CoordinatorEntity["FroniusCoordinatorBase"], SensorEn
         try:
             self._attr_native_value = self._get_entity_value()
         except KeyError:
-            if self.entity_description.default_value is None:
-                return
+            # sets state to `None` if no default_value is defined in entity description
             self._attr_native_value = self.entity_description.default_value
         self.async_write_ha_state()
 
