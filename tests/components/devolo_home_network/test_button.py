@@ -14,7 +14,7 @@ from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
 
 from . import configure_integration
@@ -41,19 +41,23 @@ async def test_button_setup(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.freeze_time("2023-01-13 12:00:00+00:00")
-async def test_identify_device(hass: HomeAssistant, mock_device: MockDevice) -> None:
+async def test_identify_device(
+    hass: HomeAssistant, mock_device: MockDevice, entity_registry: er.EntityRegistry
+) -> None:
     """Test start PLC pairing button."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
     state_key = f"{PLATFORM}.{device_name}_identify_device_with_a_blinking_led"
-    er = entity_registry.async_get(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)
     assert state is not None
     assert state.state == STATE_UNKNOWN
-    assert er.async_get(state_key).entity_category is EntityCategory.DIAGNOSTIC
+    assert (
+        entity_registry.async_get(state_key).entity_category
+        is EntityCategory.DIAGNOSTIC
+    )
 
     # Emulate button press
     await hass.services.async_call(
@@ -101,12 +105,13 @@ async def test_start_plc_pairing(hass: HomeAssistant, mock_device: MockDevice) -
 
 
 @pytest.mark.freeze_time("2023-01-13 12:00:00+00:00")
-async def test_restart(hass: HomeAssistant, mock_device: MockDevice) -> None:
+async def test_restart(
+    hass: HomeAssistant, mock_device: MockDevice, entity_registry: er.EntityRegistry
+) -> None:
     """Test restart button."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
     state_key = f"{PLATFORM}.{device_name}_restart_device"
-    er = entity_registry.async_get(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -114,7 +119,7 @@ async def test_restart(hass: HomeAssistant, mock_device: MockDevice) -> None:
     assert state is not None
     assert state.state == STATE_UNKNOWN
     assert state.attributes["device_class"] == ButtonDeviceClass.RESTART
-    assert er.async_get(state_key).entity_category is EntityCategory.CONFIG
+    assert entity_registry.async_get(state_key).entity_category is EntityCategory.CONFIG
 
     # Emulate button press
     await hass.services.async_call(
@@ -163,7 +168,7 @@ async def test_start_wps(hass: HomeAssistant, mock_device: MockDevice) -> None:
 
 
 @pytest.mark.parametrize(
-    "name, trigger_method",
+    ("name, trigger_method"),
     [
         ["identify_device_with_a_blinking_led", "async_identify_device_start"],
         ["start_plc_pairing", "async_pair_device"],
