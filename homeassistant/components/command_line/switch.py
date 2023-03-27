@@ -175,9 +175,11 @@ class CommandSwitch(SwitchEntity):
                 )
             if self._value_template:
                 payload = self._value_template.async_render_with_possible_json_value(
-                    payload
+                    payload, None
                 )
-            self._attr_is_on = payload.lower() == "true"
+            self._attr_is_on = None
+            if payload:
+                self._attr_is_on = payload.lower() == "true"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""

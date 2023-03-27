@@ -154,9 +154,11 @@ class CommandCover(CoverEntity):
             payload = str(await self.hass.async_add_executor_job(self._query_state))
             if self._value_template:
                 payload = self._value_template.async_render_with_possible_json_value(
-                    payload
+                    payload, None
                 )
-            self._state = int(payload)
+            self._state = None
+            if payload:
+                self._state = int(payload)
 
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""

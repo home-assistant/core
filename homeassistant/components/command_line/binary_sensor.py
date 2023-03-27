@@ -121,6 +121,7 @@ class CommandBinarySensor(BinarySensorEntity):
             value = self._value_template.async_render_with_possible_json_value(
                 value, None
             )
+        self._attr_is_on = None
         if value == self._payload_on:
             self._attr_is_on = True
         elif value == self._payload_off:
