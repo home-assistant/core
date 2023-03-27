@@ -68,12 +68,13 @@ def _chattiest_log_level(level1: int, level2: int) -> int:
 
 async def get_integration_loggers(hass: HomeAssistant, domain: str) -> list[str]:
     """Get loggers for an integration."""
-    loggers = [f"homeassistant.components.{domain}"]
+    loggers = {f"homeassistant.components.{domain}"}
     with contextlib.suppress(IntegrationNotFound):
         integration = await async_get_integration(hass, domain)
+        loggers.add(integration.pkg_path)
         if integration.loggers:
-            loggers.extend(integration.loggers)
-    return loggers
+            loggers.update(integration.loggers)
+    return list(loggers)
 
 
 @dataclass
