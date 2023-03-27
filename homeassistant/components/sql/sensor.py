@@ -6,7 +6,7 @@ import decimal
 import logging
 
 import sqlalchemy
-from sqlalchemy.engine import Engine, Result
+from sqlalchemy.engine import Result
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
 
@@ -137,16 +137,13 @@ async def async_setup_sensor(
 ) -> None:
     """Set up the SQL sensor."""
     instance = get_instance(hass)
+    sessmaker: scoped_session | None
     if use_database_executor := (db_url == instance.db_url):
-        async_add_executor_job = instance.async_add_executor_job
-        engine = instance.engine
-    else:
-        async_add_executor_job = hass.async_add_executor_job
-        engine = None
-
-    if not (
-        sessmaker := await async_add_executor_job(
-            _validate_and_get_session_maker_for_db_url, db_url, engine
+        assert instance.engine is not None
+        sessmaker = scoped_session(sessionmaker(bind=instance.engine, future=True))
+    elif not (
+        sessmaker := await hass.async_add_executor_job(
+            _validate_and_get_session_maker_for_db_url, db_url
         )
     ):
         return
@@ -178,16 +175,13 @@ async def async_setup_sensor(
     )
 
 
-def _validate_and_get_session_maker_for_db_url(
-    db_url: str, engine: Engine | None
-) -> scoped_session | None:
+def _validate_and_get_session_maker_for_db_url(db_url: str) -> scoped_session | None:
     """Validate the db_url and return a session maker.
 
     This does I/O and should be run in the executor.
     """
     try:
-        if not engine:
-            engine = sqlalchemy.create_engine(db_url, future=True)
+        engine = sqlalchemy.create_engine(db_url, future=True)
         sessmaker = scoped_session(sessionmaker(bind=engine, future=True))
         # Run a dummy query just to test the db_url
         sess: Session = sessmaker()
