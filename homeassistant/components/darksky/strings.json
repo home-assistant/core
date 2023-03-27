@@ -1,8 +1,0 @@
-{
-  "issues": {
-    "deprecated_integration": {
-      "title": "The Darksky integration is deprecated",
-      "description": "The Darksky API has shutdown as of MArch 31st, 2023.\n\nTherefore the Darksky integration is deprecated and should be removed from your configuration.\n\nPlease consult the integration page for other weather providers."
-    }
-  }
-}

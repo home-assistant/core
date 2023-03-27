@@ -1470,9 +1470,6 @@ python-bsblan==0.5.9
 # homeassistant.components.ecobee
 python-ecobee-api==0.2.14
 
-# homeassistant.components.darksky
-python-forecastio==1.4.0
-
 # homeassistant.components.fully_kiosk
 python-fullykiosk==0.0.12
 

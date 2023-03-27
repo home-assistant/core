@@ -2041,9 +2041,6 @@ python-etherscan-api==0.0.3
 # homeassistant.components.familyhub
 python-family-hub-local==0.0.2
 
-# homeassistant.components.darksky
-python-forecastio==1.4.0
-
 # homeassistant.components.fully_kiosk
 python-fullykiosk==0.0.12
 
