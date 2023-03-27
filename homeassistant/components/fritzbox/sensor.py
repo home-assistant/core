@@ -18,6 +18,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
+    EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -25,7 +26,6 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utc_from_timestamp
@@ -72,17 +72,6 @@ def suitable_nextchange_time(device: FritzhomeDevice) -> bool:
 def suitable_temperature(device: FritzhomeDevice) -> bool:
     """Check suitablity for temperature sensor."""
     return device.has_temperature_sensor and not device.has_thermostat
-
-
-def value_electric_current(device: FritzhomeDevice) -> float:
-    """Return native value for electric current sensor."""
-    if (
-        isinstance(device.power, int)
-        and isinstance(device.voltage, int)
-        and device.voltage > 0
-    ):
-        return round(device.power / device.voltage, 3)
-    return 0.0
 
 
 def value_nextchange_preset(device: FritzhomeDevice) -> str:
@@ -153,7 +142,7 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         suitable=lambda device: device.has_powermeter,  # type: ignore[no-any-return]
-        native_value=value_electric_current,
+        native_value=lambda device: round((device.current or 0.0) / 1000, 3),
     ),
     FritzSensorEntityDescription(
         key="total_energy",

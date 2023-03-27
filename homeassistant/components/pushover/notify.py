@@ -52,7 +52,6 @@ async def async_get_service(
 ) -> PushoverNotificationService | None:
     """Get the Pushover notification service."""
     if discovery_info is None:
-
         async_create_issue(
             hass,
             DOMAIN,
@@ -103,7 +102,7 @@ class PushoverNotificationService(BaseNotificationService):
             if self._hass.config.is_allowed_path(data[ATTR_ATTACHMENT]):
                 # try to open it as a normal file.
                 try:
-                    # pylint: disable=consider-using-with
+                    # pylint: disable-next=consider-using-with
                     file_handle = open(data[ATTR_ATTACHMENT], "rb")
                     # Replace the attachment identifier with file object.
                     image = file_handle

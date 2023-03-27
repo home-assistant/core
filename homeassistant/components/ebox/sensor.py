@@ -1,5 +1,4 @@
-"""
-Support for EBox.
+"""Support for EBox.
 
 Get data from 'My Usage Page' page: https://client.ebox.ca/myusage
 """
@@ -189,7 +188,7 @@ class EBoxSensor(SensorEntity):
         ebox_data,
         description: SensorEntityDescription,
         name,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self._attr_name = f"{name} {description.name}"

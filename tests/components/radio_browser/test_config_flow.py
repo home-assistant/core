@@ -16,7 +16,6 @@ async def test_full_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
     )
     assert result.get("type") == FlowResultType.FORM
     assert result.get("errors") is None
-    assert "flow_id" in result
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],

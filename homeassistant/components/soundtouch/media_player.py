@@ -18,6 +18,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
+    MediaType,
     async_process_play_media_url,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -282,7 +283,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         )
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
         if media_source.is_media_source_id(media_id):
@@ -295,7 +296,9 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
             partial(self.play_media, media_type, media_id, **kwargs)
         )
 
-    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
+    def play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play a piece of media."""
         _LOGGER.debug("Starting media with media_id: %s", media_id)
         if re.match(r"http?://", str(media_id)):
@@ -329,8 +332,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
             _LOGGER.warning("Source %s is not supported", source)
 
     def create_zone(self, slaves):
-        """
-        Create a zone (multi-room)  and play on selected devices.
+        """Create a zone (multi-room)  and play on selected devices.
 
         :param slaves: slaves on which to play
 
@@ -342,10 +344,9 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
             self._device.create_zone([slave.device for slave in slaves])
 
     def remove_zone_slave(self, slaves):
-        """
-        Remove slave(s) from and existing zone (multi-room).
+        """Remove slave(s) from and existing zone (multi-room).
 
-        Zone must already exist and slaves array can not be empty.
+        Zone must already exist and slaves array cannot be empty.
         Note: If removing last slave, the zone will be deleted and you'll have
         to create a new one. You will not be able to add a new slave anymore
 
@@ -367,10 +368,9 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
                     self._device.remove_zone_slave([slave.device])
 
     def add_zone_slave(self, slaves):
-        """
-        Add slave(s) to and existing zone (multi-room).
+        """Add slave(s) to and existing zone (multi-room).
 
-        Zone must already exist and slaves array can not be empty.
+        Zone must already exist and slaves array cannot be empty.
 
         :param slaves:slaves to add
 
@@ -398,7 +398,9 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         return attributes
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_source.async_browse_media(self.hass, media_content_id)
@@ -410,16 +412,19 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
             return None
 
         # Client devices do NOT return their siblings as part of the "slaves" list.
-        # Only the master has the full list of slaves. To compensate for this shortcoming
-        # we have to fetch the zone info from the master when the current device is a slave.
+        # Only the master has the full list of slaves. To compensate for this
+        # shortcoming we have to fetch the zone info from the master when the current
+        # device is a slave.
         # In addition to this shortcoming, libsoundtouch seems to report the "is_master"
-        # property wrong on some slaves, so the only reliable way to detect if the current
-        # devices is the master, is by comparing the master_id of the zone with the device_id.
+        # property wrong on some slaves, so the only reliable way to detect
+        # if the current devices is the master, is by comparing the master_id
+        # of the zone with the device_id.
         if zone_status.master_id == self._device.config.device_id:
             return self._build_zone_info(self.entity_id, zone_status.slaves)
 
-        # The master device has to be searched by it's ID and not IP since libsoundtouch / BOSE API
-        # do not return the IP of the master for some slave objects/responses
+        # The master device has to be searched by it's ID and not IP since
+        # libsoundtouch / BOSE API do not return the IP of the master
+        # for some slave objects/responses
         master_instance = self._get_instance_by_id(zone_status.master_id)
         if master_instance is not None:
             master_zone_status = master_instance.device.zone_status()
@@ -427,8 +432,9 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
                 master_instance.entity_id, master_zone_status.slaves
             )
 
-        # We should never end up here since this means we haven't found a master device to get the
-        # correct zone info from. In this case, assume current device is master
+        # We should never end up here since this means we haven't found a master
+        # device to get the correct zone info from. In this case,
+        # assume current device is master
         return self._build_zone_info(self.entity_id, zone_status.slaves)
 
     def _get_instance_by_ip(self, ip_address):

@@ -49,7 +49,7 @@ async def async_attach_trigger(
     trigger_data = trigger_info["trigger_data"]
     entities: dict[str, CALLBACK_TYPE] = {}
     removes = []
-    job = HassJob(action)
+    job = HassJob(action, f"time trigger {trigger_info}")
 
     @callback
     def time_automation_listener(description, now, *, entity_id=None):

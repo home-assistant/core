@@ -187,7 +187,7 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
             hass, await async_discover_devices(hass, DISCOVER_SCAN_TIMEOUT)
         )
 
-    asyncio.create_task(_async_discovery())
+    hass.async_create_background_task(_async_discovery(), "elkm1 setup discovery")
     async_track_time_interval(hass, _async_discovery, DISCOVERY_INTERVAL)
 
     if DOMAIN not in hass_config:

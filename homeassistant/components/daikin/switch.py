@@ -59,7 +59,7 @@ class DaikinZoneSwitch(SwitchEntity):
     _attr_icon = ZONE_ICON
     _attr_has_entity_name = True
 
-    def __init__(self, daikin_api: DaikinApi, zone_id):
+    def __init__(self, daikin_api: DaikinApi, zone_id) -> None:
         """Initialize the zone."""
         self._api = daikin_api
         self._zone_id = zone_id

@@ -148,6 +148,11 @@ def get_accessory(  # noqa: C901
             and features & CoverEntityFeature.SET_POSITION
         ):
             a_type = "Window"
+        elif (
+            device_class == CoverDeviceClass.DOOR
+            and features & CoverEntityFeature.SET_POSITION
+        ):
+            a_type = "Door"
         elif features & CoverEntityFeature.SET_POSITION:
             a_type = "WindowCovering"
         elif features & (CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE):
@@ -214,7 +219,7 @@ def get_accessory(  # noqa: C901
             a_type = "CarbonMonoxideSensor"
         elif device_class == SensorDeviceClass.CO2 or "co2" in state.entity_id:
             a_type = "CarbonDioxideSensor"
-        elif device_class == SensorDeviceClass.ILLUMINANCE or unit in ("lm", LIGHT_LUX):
+        elif device_class == SensorDeviceClass.ILLUMINANCE or unit == LIGHT_LUX:
             a_type = "LightSensor"
 
     elif state.domain == "switch":

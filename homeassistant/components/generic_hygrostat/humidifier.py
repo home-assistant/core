@@ -270,7 +270,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
             await self._async_device_turn_off()
         await self.async_update_ha_state()
 
-    async def async_set_humidity(self, humidity: int):
+    async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         if humidity is None:
             return
@@ -436,7 +436,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         data = {ATTR_ENTITY_ID: self._switch_entity_id}
         await self.hass.services.async_call(HA_DOMAIN, SERVICE_TURN_OFF, data)
 
-    async def async_set_mode(self, mode: str):
+    async def async_set_mode(self, mode: str) -> None:
         """Set new mode.
 
         This method must be run in the event loop and returns a coroutine.

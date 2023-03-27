@@ -44,7 +44,7 @@ def async_listen(
 
     Service can be a string or a list/tuple.
     """
-    job = core.HassJob(callback)
+    job = core.HassJob(callback, f"discovery listener {service}")
 
     async def discovery_event_listener(discovered: DiscoveryDict) -> None:
         """Listen for discovery events."""
@@ -103,7 +103,7 @@ def async_listen_platform(
     This method must be run in the event loop.
     """
     service = EVENT_LOAD_PLATFORM.format(component)
-    job = core.HassJob(callback)
+    job = core.HassJob(callback, f"platform loaded {component}")
 
     async def discovery_platform_listener(discovered: DiscoveryDict) -> None:
         """Listen for platform discovery events."""

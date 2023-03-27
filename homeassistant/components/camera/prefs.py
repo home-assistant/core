@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from typing import Final, Union, cast
+from typing import Final, cast
 
 from homeassistant.components.stream import Orientation
 from homeassistant.core import HomeAssistant
@@ -33,7 +33,7 @@ class CameraPreferences:
         self._hass = hass
         # The orientation prefs are stored in in the entity registry options
         # The preload_stream prefs are stored in this Store
-        self._store = Store[dict[str, dict[str, Union[bool, Orientation]]]](
+        self._store = Store[dict[str, dict[str, bool | Orientation]]](
             hass, STORAGE_VERSION, STORAGE_KEY
         )
         self._dynamic_stream_settings_by_entity_id: dict[

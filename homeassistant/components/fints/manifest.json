@@ -1,9 +1,9 @@
 {
   "domain": "fints",
   "name": "FinTS",
-  "documentation": "https://www.home-assistant.io/integrations/fints",
-  "requirements": ["fints==3.1.0"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/fints",
   "iot_class": "cloud_polling",
-  "loggers": ["fints", "mt_940", "sepaxml"]
+  "loggers": ["fints", "mt_940", "sepaxml"],
+  "requirements": ["fints==3.1.0"]
 }

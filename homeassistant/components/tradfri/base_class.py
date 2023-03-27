@@ -63,8 +63,7 @@ class TradfriBaseEntity(CoordinatorEntity[TradfriDeviceDataUpdateCoordinator]):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        """
-        Handle updated data from the coordinator.
+        """Handle updated data from the coordinator.
 
         Tests fails without this method.
         """

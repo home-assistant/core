@@ -17,7 +17,6 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
-    STATE_UNKNOWN,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
@@ -172,12 +171,12 @@ class GoogleWifiAPI:
         self.raw_data = None
         self.conditions = conditions
         self.data = {
-            ATTR_CURRENT_VERSION: STATE_UNKNOWN,
-            ATTR_NEW_VERSION: STATE_UNKNOWN,
-            ATTR_UPTIME: STATE_UNKNOWN,
-            ATTR_LAST_RESTART: STATE_UNKNOWN,
-            ATTR_LOCAL_IP: STATE_UNKNOWN,
-            ATTR_STATUS: STATE_UNKNOWN,
+            ATTR_CURRENT_VERSION: None,
+            ATTR_NEW_VERSION: None,
+            ATTR_UPTIME: None,
+            ATTR_LAST_RESTART: None,
+            ATTR_LOCAL_IP: None,
+            ATTR_STATUS: None,
         }
         self.available = True
         self.update()
@@ -223,7 +222,7 @@ class GoogleWifiAPI:
                     elif (
                         attr_key == ATTR_LOCAL_IP and not self.raw_data["wan"]["online"]
                     ):
-                        sensor_value = STATE_UNKNOWN
+                        sensor_value = None
 
                     self.data[attr_key] = sensor_value
             except KeyError:
@@ -235,4 +234,4 @@ class GoogleWifiAPI:
                     description.sensor_key,
                     attr_key,
                 )
-                self.data[attr_key] = STATE_UNKNOWN
+                self.data[attr_key] = None

@@ -2,16 +2,19 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, TypeVar
 
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .common import SynoApi
 from .const import ATTRIBUTION, DOMAIN
+from .coordinator import (
+    SynologyDSMCentralUpdateCoordinator,
+    SynologyDSMUpdateCoordinator,
+)
+
+_CoordinatorT = TypeVar("_CoordinatorT", bound=SynologyDSMUpdateCoordinator[Any])
 
 
 @dataclass
@@ -26,9 +29,7 @@ class SynologyDSMEntityDescription(EntityDescription, SynologyDSMRequiredKeysMix
     """Generic Synology DSM entity description."""
 
 
-class SynologyDSMBaseEntity(
-    CoordinatorEntity[DataUpdateCoordinator[dict[str, dict[str, Any]]]]
-):
+class SynologyDSMBaseEntity(CoordinatorEntity[_CoordinatorT]):
     """Representation of a Synology NAS entry."""
 
     entity_description: SynologyDSMEntityDescription
@@ -38,7 +39,7 @@ class SynologyDSMBaseEntity(
     def __init__(
         self,
         api: SynoApi,
-        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
+        coordinator: _CoordinatorT,
         description: SynologyDSMEntityDescription,
     ) -> None:
         """Initialize the Synology DSM entity."""
@@ -67,13 +68,15 @@ class SynologyDSMBaseEntity(
         await super().async_added_to_hass()
 
 
-class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
+class SynologyDSMDeviceEntity(
+    SynologyDSMBaseEntity[SynologyDSMCentralUpdateCoordinator]
+):
     """Representation of a Synology NAS disk or volume entry."""
 
     def __init__(
         self,
         api: SynoApi,
-        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
+        coordinator: SynologyDSMCentralUpdateCoordinator,
         description: SynologyDSMEntityDescription,
         device_id: str | None = None,
     ) -> None:

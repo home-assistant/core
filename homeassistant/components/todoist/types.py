@@ -19,7 +19,7 @@ class ProjectData(TypedDict):
     """Dict representing project data."""
 
     name: str
-    id: int | None
+    id: str | None
 
 
 class CustomProject(TypedDict):

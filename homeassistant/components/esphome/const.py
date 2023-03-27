@@ -1,0 +1,3 @@
+"""ESPHome constants."""
+
+DOMAIN = "esphome"

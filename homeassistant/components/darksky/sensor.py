@@ -651,7 +651,7 @@ class DarkSkySensor(SensorEntity):
         name,
         forecast_day=None,
         forecast_hour=None,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.forecast_data = forecast_data
@@ -747,8 +747,7 @@ class DarkSkySensor(SensorEntity):
             self._attr_native_value = self.get_state(currently)
 
     def get_state(self, data):
-        """
-        Return a new state based on the type.
+        """Return a new state based on the type.
 
         If the sensor type is unknown, the current state is returned.
         """
@@ -795,7 +794,7 @@ class DarkSkyAlertSensor(SensorEntity):
 
     def __init__(
         self, forecast_data, description: DarkskySensorEntityDescription, name
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.forecast_data = forecast_data
@@ -827,8 +826,7 @@ class DarkSkyAlertSensor(SensorEntity):
         self._attr_native_value = self.get_state(alerts)
 
     def get_state(self, data):
-        """
-        Return a new state based on the type.
+        """Return a new state based on the type.
 
         If the sensor type is unknown, the current state is returned.
         """
@@ -851,8 +849,7 @@ class DarkSkyAlertSensor(SensorEntity):
 
 
 def convert_to_camel(data):
-    """
-    Convert snake case (foo_bar_bat) to camel case (fooBarBat).
+    """Convert snake case (foo_bar_bat) to camel case (fooBarBat).
 
     This is not pythonic, but needed for certain situations.
     """
