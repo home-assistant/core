@@ -85,7 +85,7 @@ class ProxmoxBinarySensor(ProxmoxEntity, BinarySensorEntity):
         )
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         if (data := self.coordinator.data) is None:
             return None

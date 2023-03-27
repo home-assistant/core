@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from proxmoxer import ProxmoxAPI
 from proxmoxer.backends.https import AuthenticationError
@@ -188,7 +189,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 def create_coordinator_container_vm(
-    hass, proxmox, host_name, node_name, vm_id, vm_type
+    hass: HomeAssistant, proxmox, host_name, node_name, vm_id, vm_type
 ):
     """Create and return a DataUpdateCoordinator for a vm/container."""
 
@@ -219,7 +220,7 @@ def create_coordinator_container_vm(
     )
 
 
-def parse_api_container_vm(status):
+def parse_api_container_vm(status) -> dict[str, Any]:
     """Get the container or vm api data and return it formatted in a dictionary.
 
     It is implemented in this way to allow for more data to be added for sensors
@@ -295,7 +296,7 @@ class ProxmoxEntity(CoordinatorEntity):
 class ProxmoxClient:
     """A wrapper for the proxmoxer ProxmoxAPI client."""
 
-    def __init__(self, host, port, user, realm, password, verify_ssl):
+    def __init__(self, host, port, user, realm, password, verify_ssl) -> None:
         """Initialize the ProxmoxClient."""
 
         self._host = host
