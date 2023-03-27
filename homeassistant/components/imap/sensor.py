@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_USERNAME
+from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -41,10 +41,6 @@ class ImapSensor(
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        # To be removed when YAML import is removed
-        if CONF_NAME in coordinator.config_entry.data:
-            self._attr_name = coordinator.config_entry.data[CONF_NAME]
-            self._attr_has_entity_name = False
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
