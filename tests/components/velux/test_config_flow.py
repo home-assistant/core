@@ -61,17 +61,31 @@ async def test_user_connection_error(hass: HomeAssistant) -> None:
     """Test starting a flow by user but with an unexpected exception."""
 
     with patch(
-        PYVLX_CONNECT_FUNCTION_PATH, side_effect=PyVLXException("DUMMY")
-    ) as connect_mock:
-        result: dict[str, Any] = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=deepcopy(DUMMY_DATA)
-        )
+        "homeassistant.components.velux.config_flow.PyVLX", autospec=True
+    ) as client_mock:
+        client_mock.return_value.connect.side_effect = PyVLXException("DUMMY")
 
-        connect_mock.assert_called_once()
+        result: dict[str, Any] = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], DUMMY_DATA
+        )
 
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": "cannot_connect"}
+
+        client_mock.return_value.connect.assert_called_once()
+        client_mock.return_value.connect.side_effect = None
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], DUMMY_DATA
+        )
+
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
 async def test_user_unknown_error(hass: HomeAssistant) -> None:
@@ -91,16 +105,15 @@ async def test_user_unknown_error(hass: HomeAssistant) -> None:
 
 async def test_user_success(hass: HomeAssistant) -> None:
     """Test starting a flow by user with valid values."""
-    with patch("pyvlx.PyVLX.__init__", return_value=None) as init_mock, patch(
-        PYVLX_CONNECT_FUNCTION_PATH
-    ) as connect_mock, patch(PYVLX_DISCONNECT_FUNCTION_PATH) as disconnect_mock:
+    with patch(
+        "homeassistant.components.velux.config_flow.PyVLX", autospec=True
+    ) as client_mock:
         result: dict[str, Any] = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=deepcopy(DUMMY_DATA)
         )
 
-        connect_mock.assert_called_once()
-        disconnect_mock.assert_called_once()
-        init_mock.assert_called()
+        client_mock.return_value.disconnect.assert_called_once()
+        client_mock.return_value.connect.assert_called_once()
 
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == DUMMY_DATA[CONF_HOST]
