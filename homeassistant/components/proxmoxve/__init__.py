@@ -94,7 +94,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the platform."""
     hass.data.setdefault(DOMAIN, {})
 
-    def build_client() -> None:
+    def build_client() -> ProxmoxAPI:
         """Build the Proxmox client connection."""
         hass.data[PROXMOX_CLIENTS] = {}
 
