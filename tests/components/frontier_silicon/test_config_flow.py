@@ -362,13 +362,11 @@ async def test_ssdp_fail(
     assert result["reason"] == result_error
 
 
-async def test_ssdp_nondefault_pin(
-    hass: HomeAssistant, mock_setup_entry: MockConfigEntry
-) -> None:
+async def test_ssdp_nondefault_pin(hass: HomeAssistant) -> None:
     """Test a device being discovered."""
 
     with patch(
-        "afsapi.AFSAPI.get_friendly_name",
+        "afsapi.AFSAPI.get_radio_id",
         side_effect=InvalidPinException,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -377,71 +375,5 @@ async def test_ssdp_nondefault_pin(
             data=MOCK_DISCOVERY,
         )
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "device_config"
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_PIN: "4321"},
-    )
-
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Name of the device"
-    assert result2["data"] == {
-        CONF_WEBFSAPI_URL: "http://1.1.1.1:80/webfsapi",
-        CONF_PIN: "4321",
-    }
-    mock_setup_entry.assert_called_once()
-
-
-@pytest.mark.parametrize(
-    ("friendly_name_error", "result_error"),
-    [(ValueError, "unknown"), (ConnectionError, "cannot_connect")],
-)
-async def test_ssdp_nondefault_pin_fail(
-    hass: HomeAssistant,
-    friendly_name_error: Exception,
-    result_error: str,
-    mock_setup_entry: MockConfigEntry,
-) -> None:
-    """Test a device being discovered."""
-
-    with patch(
-        "afsapi.AFSAPI.get_friendly_name",
-        side_effect=InvalidPinException,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_SSDP},
-            data=MOCK_DISCOVERY,
-        )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "device_config"
-
-    with patch(
-        "afsapi.AFSAPI.get_friendly_name",
-        side_effect=friendly_name_error,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_PIN: "4321"},
-        )
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["step_id"] == "device_config"
-    assert result2["errors"] == {"base": result_error}
-
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
-        {CONF_PIN: "4321"},
-    )
-    await hass.async_block_till_done()
-
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "Name of the device"
-    assert result3["data"] == {
-        CONF_WEBFSAPI_URL: "http://1.1.1.1:80/webfsapi",
-        CONF_PIN: "4321",
-    }
-    mock_setup_entry.assert_called_once()
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "invalid_auth"

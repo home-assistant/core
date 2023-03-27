@@ -126,19 +126,24 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.debug(exception)
             return self.async_abort(reason="unknown")
 
-        # For manually added devices the unique_id is the radio_id,
-        # for devices discovered through SSDP it is the UDN
-        unique_id = discovery_info.ssdp_udn
+        try:
+            # try to login with default pin
+            afsapi = AFSAPI(self._webfsapi_url, DEFAULT_PIN)
+
+            unique_id = await afsapi.get_radio_id()
+        except InvalidPinException:
+            return self.async_abort(reason="invalid_auth")
+
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured(
             updates={CONF_WEBFSAPI_URL: self._webfsapi_url}, reload_on_update=True
         )
 
-        return await self._async_step_device_config_if_needed(show_confirm=True)
+        self._name = await afsapi.get_friendly_name()
 
-    async def _async_step_device_config_if_needed(
-        self, show_confirm=False
-    ) -> FlowResult:
+        return await self.async_step_confirm()
+
+    async def _async_step_device_config_if_needed(self) -> FlowResult:
         """Most users will not have changed the default PIN on their radio.
 
         We try to use this default PIN, and only if this fails ask for it via `async_step_device_config`
@@ -155,17 +160,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self.context["title_placeholders"] = {"name": self._name}
 
-        # unique_id will already be set when discovered through SSDP with the SSDP UDN,
-        # however, when adding a device manually, it will still be empty at this point.
-        # Now we have successfully logged in, we can use the radio_id of this device as
-        # an unique_id
-        if self.unique_id is None:
-            unique_id = await afsapi.get_radio_id()
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured()
-
-        if show_confirm:
-            return await self.async_step_confirm()
+        unique_id = await afsapi.get_radio_id()
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured()
 
         return await self._async_create_entry()
 
