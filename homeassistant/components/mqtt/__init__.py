@@ -186,6 +186,13 @@ async def _async_setup_discovery(
     await discovery.async_start(hass, conf[CONF_DISCOVERY_PREFIX], config_entry)
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the MQTT protocol service."""
+    websocket_api.async_register_command(hass, websocket_subscribe)
+    websocket_api.async_register_command(hass, websocket_mqtt_info)
+    return True
+
+
 def _filter_entry_config(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Remove unknown keys from config entry data.
 
@@ -274,9 +281,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if (conf := await async_fetch_config(hass, entry)) is None:
         # Bail out
         return False
-
-    websocket_api.async_register_command(hass, websocket_subscribe)
-    websocket_api.async_register_command(hass, websocket_mqtt_info)
 
     await async_create_certificate_temp_files(hass, dict(entry.data))
     mqtt_data.client = MQTT(hass, entry, conf)
