@@ -1,5 +1,6 @@
 """Voice Assistant Websocket API."""
 import asyncio
+import audioop
 from collections.abc import Callable
 import logging
 from typing import Any
@@ -12,6 +13,8 @@ from homeassistant.core import HomeAssistant, callback
 from .pipeline import (
     DEFAULT_TIMEOUT,
     PipelineError,
+    PipelineEvent,
+    PipelineEventType,
     PipelineInput,
     PipelineRun,
     PipelineStage,
@@ -20,11 +23,26 @@ from .pipeline import (
 
 _LOGGER = logging.getLogger(__name__)
 
+_VAD_ENERGY_THRESHOLD = 1000
+_VAD_SPEECH_FRAMES = 25
+_VAD_SILENCE_FRAMES = 25
+
 
 @callback
 def async_register_websocket_api(hass: HomeAssistant) -> None:
     """Register the websocket API."""
     websocket_api.async_register_command(hass, websocket_run)
+
+
+def _get_debiased_energy(audio_data: bytes, width: int = 2) -> float:
+    """Compute RMS of debiased audio."""
+    energy = -audioop.rms(audio_data, width)
+    energy_bytes = bytes([energy & 0xFF, (energy >> 8) & 0xFF])
+    debiased_energy = audioop.rms(
+        audioop.add(audio_data, energy_bytes * (len(audio_data) // width), width), width
+    )
+
+    return debiased_energy
 
 
 @websocket_api.websocket_command(
@@ -49,6 +67,11 @@ async def websocket_run(
 ) -> None:
     """Run a pipeline."""
     language = msg.get("language", hass.config.language)
+
+    # Temporary workaround for language codes
+    if language == "en":
+        language = "en-US"
+
     pipeline_id = msg.get("pipeline")
     pipeline = async_get_pipeline(
         hass,
@@ -79,8 +102,32 @@ async def websocket_run(
         audio_queue: "asyncio.Queue[bytes]" = asyncio.Queue()
 
         async def stt_stream():
+            state = None
+            speech_count = 0
+            in_voice_command = False
+
             # Yield until we receive an empty chunk
             while chunk := await audio_queue.get():
+                chunk, state = audioop.ratecv(chunk, 2, 1, 44100, 16000, state)
+                is_speech = _get_debiased_energy(chunk) > _VAD_ENERGY_THRESHOLD
+
+                if in_voice_command:
+                    if is_speech:
+                        speech_count += 1
+                    else:
+                        speech_count -= 1
+
+                    if speech_count <= -_VAD_SILENCE_FRAMES:
+                        _LOGGER.info("Voice command stopped")
+                        break
+                else:
+                    if is_speech:
+                        speech_count += 1
+
+                    if speech_count >= _VAD_SPEECH_FRAMES:
+                        in_voice_command = True
+                        _LOGGER.info("Voice command started")
+
                 yield chunk
 
         def handle_binary(_hass, _connection, data: bytes):
@@ -119,6 +166,9 @@ async def websocket_run(
                 event_callback=lambda event: connection.send_event(
                     msg["id"], event.as_dict()
                 ),
+                runner_data={
+                    "stt_binary_handler_id": handler_id,
+                },
             ),
             timeout=timeout,
         )
@@ -130,16 +180,20 @@ async def websocket_run(
     # Confirm subscription
     connection.send_result(msg["id"])
 
-    if handler_id is not None:
-        # Send handler id to client
-        connection.send_event(msg["id"], {"handler_id": handler_id})
-
     try:
         # Task contains a timeout
         await run_task
     except PipelineError as error:
         # Report more specific error when possible
         connection.send_error(msg["id"], error.code, error.message)
+    except asyncio.TimeoutError:
+        connection.send_event(
+            msg["id"],
+            PipelineEvent(
+                PipelineEventType.ERROR,
+                {"code": "timeout", "message": "Timeout running pipeline"},
+            ),
+        )
     finally:
         if unregister_handler is not None:
             # Unregister binary handler
