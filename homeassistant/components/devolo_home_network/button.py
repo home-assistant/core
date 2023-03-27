@@ -126,8 +126,11 @@ class DevoloButtonEntity(DevoloEntity, ButtonEntity):
         """Handle the button press."""
         try:
             await self.entity_description.press_func(self.device)
-        except DevicePasswordProtected:
+        except DevicePasswordProtected as ex:
             self.entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                f"Device {self.entry.title} is password protected"
+            ) from ex
         except DeviceUnavailable as ex:
             raise HomeAssistantError(
                 f"Device {self.entry.title} did not respond"

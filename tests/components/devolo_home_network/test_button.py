@@ -216,13 +216,14 @@ async def test_auth_failed(hass: HomeAssistant, mock_device: MockDevice) -> None
 
     mock_device.device.async_start_wps.side_effect = DevicePasswordProtected
 
-    await hass.services.async_call(
-        PLATFORM,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: state_key},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            PLATFORM,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: state_key},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
 
