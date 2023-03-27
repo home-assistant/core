@@ -5,15 +5,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import (  # noqa: F401
-    ATTRIBUTION,
-    CONF_IS_TOU,
-    DOMAIN,
-    ICON,
-    LOGGER,
-    PHOENIX_TIME_ZONE,
-    SENSOR_NAME,
-)
+from .const import DOMAIN, LOGGER
 
 PLATFORMS = [Platform.SENSOR]
 

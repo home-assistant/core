@@ -1,6 +1,6 @@
 """Tests for the SRP Energy integration."""
 
-from homeassistant.components.srp_energy import CONF_IS_TOU
+from homeassistant.components.srp_energy.const import CONF_IS_TOU
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 
 ACCNT_ID = "123456789"

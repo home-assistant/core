@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.srp_energy import DOMAIN, PHOENIX_TIME_ZONE
+from homeassistant.components.srp_energy.const import DOMAIN, PHOENIX_TIME_ZONE
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 

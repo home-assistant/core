@@ -2,7 +2,7 @@
 from unittest.mock import MagicMock, patch
 
 from homeassistant import config_entries
-from homeassistant.components.srp_energy import CONF_IS_TOU, DOMAIN
+from homeassistant.components.srp_energy.const import CONF_IS_TOU, DOMAIN
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_SOURCE, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
