@@ -21,21 +21,12 @@ class NextcloudEntity(CoordinatorEntity[NextcloudDataUpdateCoordinator]):
         """Initialize the Nextcloud sensor."""
         super().__init__(coordinator)
         self.item = item
-        self.entry = entry
         self._attr_name = item
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this sensor."""
-        return f"{self.coordinator.url}#{self.item}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device specific attributes."""
-        return DeviceInfo(
+        self._attr_unique_id = f"{coordinator.url}#{item}"
+        self._attr_device_info = DeviceInfo(
             name="Nextcloud",
-            identifiers={(DOMAIN, self.entry.entry_id)},
+            identifiers={(DOMAIN, entry.entry_id)},
             model="Nextcloud",
-            sw_version=self.coordinator.data.get("nextcloud_system_version"),
-            configuration_url=self.coordinator.url,
+            sw_version=coordinator.data.get("nextcloud_system_version"),
+            configuration_url=coordinator.url,
         )
