@@ -44,6 +44,7 @@ CCCD_INDICATE_BYTES = b"\x02\x00"
 
 MIN_BLUETOOTH_PROXY_VERSION_HAS_CACHE = 3
 MIN_BLUETOOTH_PROXY_HAS_PAIRING = 4
+MIN_BLUETOOTH_PROXY_HAS_CLEAR_CACHE = 5
 
 DEFAULT_MAX_WRITE_WITHOUT_RESPONSE = DEFAULT_MTU - GATT_HEADER_SIZE
 _LOGGER = logging.getLogger(__name__)
@@ -518,10 +519,28 @@ class ESPHomeClient(BaseBleakClient):
             raise BleakError(f"Characteristic {char_specifier} was not found!")
         return characteristic
 
-    async def clear_cache(self) -> None:
+    @api_error_as_bleak_error
+    async def clear_cache(self) -> bool:
         """Clear the GATT cache."""
         self.domain_data.clear_gatt_services_cache(self._address_as_int)
         self.domain_data.clear_gatt_mtu_cache(self._address_as_int)
+        if self._connection_version < MIN_BLUETOOTH_PROXY_HAS_CLEAR_CACHE:
+            _LOGGER.warning(
+                "On device cache clear is not available with ESPHome Bluetooth version %s, "
+                "version %s is needed; Only memory cache will be cleared",
+                self._connection_version,
+                MIN_BLUETOOTH_PROXY_HAS_CLEAR_CACHE,
+            )
+            return True
+        response = await self._client.bluetooth_device_clear_cache(self._address_as_int)
+        if response.success:
+            return True
+        _LOGGER.error(
+            "Clear cache failed with %s failed due to error: %s",
+            self.address,
+            response.error,
+        )
+        return False
 
     @verify_connected
     @api_error_as_bleak_error
