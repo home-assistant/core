@@ -2974,9 +2974,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
         if class_matches := _CLASS_MATCH.get(module_platform):
             self._class_matchers.extend(class_matches)
 
-        if not self.linter.config.ignore_missing_annotations and (
-            property_matches := _INHERITANCE_MATCH.get(module_platform)
-        ):
+        if property_matches := _INHERITANCE_MATCH.get(module_platform):
             self._class_matchers.extend(property_matches)
 
         self._class_matchers.reverse()
