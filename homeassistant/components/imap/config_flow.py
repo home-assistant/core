@@ -161,10 +161,7 @@ class OptionsFlow(config_entries.OptionsFlowWithConfigEntry):
             for entry in self.hass.config_entries.async_entries(DOMAIN)
             if entry is not self.config_entry
         ]:
-            if all(
-                item in entry.data.items()
-                for item in match_dict.items()
-            ):
+            if all(item in entry.data.items() for item in match_dict.items()):
                 errors["base"] = "already_configured"
                 break
         return errors
