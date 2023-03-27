@@ -136,24 +136,17 @@ async def async_setup_sensor(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the SQL sensor."""
-    try:
-        engine = sqlalchemy.create_engine(db_url, future=True)
-        sessmaker = scoped_session(sessionmaker(bind=engine, future=True))
-
-        # Run a dummy query just to test the db_url
-        sess: Session = sessmaker()
-        sess.execute(sqlalchemy.text("SELECT 1;"))
-
-    except SQLAlchemyError as err:
-        _LOGGER.error(
-            "Couldn't connect using %s DB_URL: %s",
-            redact_credentials(db_url),
-            redact_credentials(str(err)),
+    instance = get_instance(hass)
+    sessmaker: scoped_session | None
+    if use_database_executor := (db_url == instance.db_url):
+        assert instance.engine is not None
+        sessmaker = scoped_session(sessionmaker(bind=instance.engine, future=True))
+    elif not (
+        sessmaker := await hass.async_add_executor_job(
+            _validate_and_get_session_maker_for_db_url, db_url
         )
+    ):
         return
-    finally:
-        if sess:
-            sess.close()
 
     # MSSQL uses TOP and not LIMIT
     if not ("LIMIT" in query_str.upper() or "SELECT TOP" in query_str.upper()):
@@ -161,8 +154,6 @@ async def async_setup_sensor(
             query_str = query_str.upper().replace("SELECT", "SELECT TOP 1")
         else:
             query_str = query_str.replace(";", "") + " LIMIT 1;"
-
-    use_database_executor = db_url == get_instance(hass).db_url
 
     async_add_entities(
         [
@@ -182,6 +173,32 @@ async def async_setup_sensor(
         ],
         True,
     )
+
+
+def _validate_and_get_session_maker_for_db_url(db_url: str) -> scoped_session | None:
+    """Validate the db_url and return a session maker.
+
+    This does I/O and should be run in the executor.
+    """
+    try:
+        engine = sqlalchemy.create_engine(db_url, future=True)
+        sessmaker = scoped_session(sessionmaker(bind=engine, future=True))
+        # Run a dummy query just to test the db_url
+        sess: Session = sessmaker()
+        sess.execute(sqlalchemy.text("SELECT 1;"))
+
+    except SQLAlchemyError as err:
+        _LOGGER.error(
+            "Couldn't connect using %s DB_URL: %s",
+            redact_credentials(db_url),
+            redact_credentials(str(err)),
+        )
+        return None
+    else:
+        return sessmaker
+    finally:
+        if sess:
+            sess.close()
 
 
 class SQLSensor(SensorEntity):
