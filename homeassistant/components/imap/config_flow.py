@@ -164,7 +164,6 @@ class OptionsFlow(config_entries.OptionsFlowWithConfigEntry):
             if all(
                 item in entry.data.items()
                 for item in match_dict.items()
-                if item[0] in [CONF_USERNAME, CONF_SERVER, CONF_FOLDER, CONF_SEARCH]
             ):
                 errors["base"] = "already_configured"
                 break
