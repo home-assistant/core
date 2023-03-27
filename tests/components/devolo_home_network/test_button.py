@@ -168,7 +168,7 @@ async def test_start_wps(hass: HomeAssistant, mock_device: MockDevice) -> None:
 
 
 @pytest.mark.parametrize(
-    ("name, trigger_method"),
+    ("name", "trigger_method"),
     [
         ["identify_device_with_a_blinking_led", "async_identify_device_start"],
         ["start_plc_pairing", "async_pair_device"],
