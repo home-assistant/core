@@ -1,7 +1,6 @@
 """Testing file for config flow ProxmoxVE."""
-import logging
-
 import proxmoxer
+import pytest
 from requests.exceptions import ConnectTimeout, SSLError
 
 from homeassistant.components.proxmoxve.const import (
@@ -30,8 +29,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry, patch
-
-_LOGGER = logging.getLogger(__name__)
 
 USER_INPUT_OK = {
     CONF_HOST: "192.168.10.101",
@@ -126,7 +123,7 @@ MOCK_GET_RESPONSE = [
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-async def test_flow_ok(hass: HomeAssistant):
+async def test_flow_ok(hass: HomeAssistant) -> None:
     """Test flow ok."""
 
     result = await hass.config_entries.flow.async_init(
@@ -169,7 +166,7 @@ async def test_flow_ok(hass: HomeAssistant):
         assert result["data"][CONF_HOST] == USER_INPUT_USER_HOST[CONF_HOST]
 
 
-async def test_flow_port_small(hass: HomeAssistant):
+async def test_flow_port_small(hass: HomeAssistant) -> None:
     """Test if port number too small."""
 
     with patch(
@@ -183,7 +180,7 @@ async def test_flow_port_small(hass: HomeAssistant):
         assert result["errors"][CONF_PORT] == "invalid_port"
 
 
-async def test_flow_port_big(hass: HomeAssistant):
+async def test_flow_port_big(hass: HomeAssistant) -> None:
     """Test if port number too big."""
 
     with patch(
@@ -197,7 +194,7 @@ async def test_flow_port_big(hass: HomeAssistant):
         assert result["errors"][CONF_PORT] == "invalid_port"
 
 
-async def test_flow_auth_error(hass: HomeAssistant):
+async def test_flow_auth_error(hass: HomeAssistant) -> None:
     """Test errors in case username or password are incorrect."""
 
     with patch(
@@ -213,7 +210,7 @@ async def test_flow_auth_error(hass: HomeAssistant):
         assert result["errors"][CONF_USERNAME] == "auth_error"
 
 
-async def test_flow_cant_connect(hass: HomeAssistant):
+async def test_flow_cant_connect(hass: HomeAssistant) -> None:
     """Test errors in case the connection fails."""
 
     with patch(
@@ -229,7 +226,7 @@ async def test_flow_cant_connect(hass: HomeAssistant):
         assert result["errors"][CONF_HOST] == "cant_connect"
 
 
-async def test_flow_ssl_error(hass: HomeAssistant):
+async def test_flow_ssl_error(hass: HomeAssistant) -> None:
     """Test errors in case the SSL certificare is not present or is not valid or is expired."""
 
     with patch(
@@ -245,7 +242,7 @@ async def test_flow_ssl_error(hass: HomeAssistant):
         assert result["errors"][CONF_VERIFY_SSL] == "ssl_rejection"
 
 
-async def test_flow_unknown_exception(hass: HomeAssistant):
+async def test_flow_unknown_exception(hass: HomeAssistant) -> None:
     """Test errors in case of an unknown exception occurs."""
 
     with patch(
@@ -261,7 +258,7 @@ async def test_flow_unknown_exception(hass: HomeAssistant):
         assert result["errors"]["base"] == "general_error"
 
 
-async def test_flow_already_configured(hass: HomeAssistant):
+async def test_flow_already_configured(hass: HomeAssistant) -> None:
     """Test flow in case entry already configured."""
 
     entry = MockConfigEntry(
@@ -297,7 +294,7 @@ async def test_flow_already_configured(hass: HomeAssistant):
         assert result["reason"] == "already_configured"
 
 
-async def test_flow_import_ok(hass: HomeAssistant):
+async def test_flow_import_ok(hass: HomeAssistant) -> None:
     """Test import flow ok."""
 
     with patch("proxmoxer.ProxmoxResource.get", return_value=MOCK_GET_RESPONSE), patch(
@@ -316,7 +313,7 @@ async def test_flow_import_ok(hass: HomeAssistant):
         assert result["data"][CONF_HOST] == USER_INPUT_OK[CONF_HOST]
 
 
-async def test_flow_import_error_auth_error(hass: HomeAssistant):
+async def test_flow_import_error_auth_error(hass: HomeAssistant) -> None:
     """Test import errors in case username or password are incorrect."""
 
     with patch(
@@ -333,7 +330,7 @@ async def test_flow_import_error_auth_error(hass: HomeAssistant):
         assert result["reason"] == "import_failed"
 
 
-async def test_flow_import_error_ssl_rejection(hass: HomeAssistant):
+async def test_flow_import_error_ssl_rejection(hass: HomeAssistant) -> None:
     """Test import errors in case the SSL certificare is not present or is not valid or is expired."""
 
     with patch(
@@ -350,7 +347,7 @@ async def test_flow_import_error_ssl_rejection(hass: HomeAssistant):
         assert result["reason"] == "import_failed"
 
 
-async def test_flow_import_error_cant_connect(hass: HomeAssistant):
+async def test_flow_import_error_cant_connect(hass: HomeAssistant) -> None:
     """Test import errors in case the connection fails."""
 
     with patch(
@@ -367,7 +364,7 @@ async def test_flow_import_error_cant_connect(hass: HomeAssistant):
         assert result["reason"] == "import_failed"
 
 
-async def test_flow_import_error_general_error(hass: HomeAssistant):
+async def test_flow_import_error_general_error(hass: HomeAssistant) -> None:
     """Test import errors in case of an unknown exception occurs."""
 
     with patch(
@@ -384,7 +381,7 @@ async def test_flow_import_error_general_error(hass: HomeAssistant):
         assert result["reason"] == "import_failed"
 
 
-async def test_flow_import_error_node_not_exist(hass: HomeAssistant):
+async def test_flow_import_error_node_not_exist(hass: HomeAssistant) -> None:
     """Test import error in case node not exist in Proxmox."""
 
     with patch("proxmoxer.ProxmoxResource.get", return_value=MOCK_GET_RESPONSE), patch(
@@ -400,7 +397,7 @@ async def test_flow_import_error_node_not_exist(hass: HomeAssistant):
         assert result["reason"] == "import_failed"
 
 
-async def test_flow_import_error_already_configured(hass: HomeAssistant):
+async def test_flow_import_error_already_configured(hass: HomeAssistant) -> None:
     """Test import error in case entry already configured."""
 
     entry = MockConfigEntry(
@@ -542,7 +539,7 @@ async def test_step_reauth(hass: HomeAssistant) -> None:
         assert result_auth_ssl_rejectio["errors"][CONF_BASE] == "general_error"
 
 
-async def test_options_flow_v1(hass: HomeAssistant):
+async def test_options_flow_v1(hass: HomeAssistant) -> None:
     """Test options config flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
