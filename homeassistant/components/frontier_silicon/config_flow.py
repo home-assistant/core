@@ -219,7 +219,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         else:
             unique_id = await afsapi.get_radio_id()
-            await self.async_set_unique_id(unique_id)
+            await self.async_set_unique_id(unique_id, raise_on_progress=False)
             self._abort_if_unique_id_configured()
             return await self._async_create_entry(user_input[CONF_PIN])
 
