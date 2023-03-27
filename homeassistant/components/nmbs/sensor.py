@@ -167,6 +167,7 @@ class NMBSLiveBoard(SensorEntity):
             or liveboard.get("departures") is None
             or liveboard.get("departures").get("number") is None
             or liveboard.get("departures").get("number") == "0"
+            or liveboard.get("departures").get("departure") is None
         ):
             return
 
