@@ -122,7 +122,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
     ) -> None:
         """Initiate imap client."""
         self.imap_client = imap_client
-        self._last_mesgid: str | None = None
+        self._last_message_id: str | None = None
         super().__init__(
             hass,
             _LOGGER,
@@ -138,9 +138,9 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
         if self.imap_client is None:
             self.imap_client = await connect_to_server(self.config_entry.data)
 
-    async def _async_process_event(self, last_msgid: str) -> None:
+    async def _async_process_event(self, last_message_id: str) -> None:
         """Send a event for the last message if the last message was changed."""
-        response = await self.imap_client.fetch(last_msgid, "BODY.PEEK[]")
+        response = await self.imap_client.fetch(last_message_id, "BODY.PEEK[]")
         if response.result == "OK":
             message = ImapMessage(response.lines[1])
             data = {
@@ -173,14 +173,14 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                 f"Invalid response for search '{self.config_entry.data[CONF_SEARCH]}': {result} / {lines[0]}"
             )
         count: int = len(msgids := lines[0].split())
-        last_msgid = (
+        last_message_id = (
             str(msgids[-1:][0], encoding=self.config_entry.data[CONF_CHARSET])
             if count
             else None
         )
-        if count and last_msgid is not None:
-            self._last_mesgid = last_msgid
-            await self._async_process_event(last_msgid)
+        if count and last_message_id is not None:
+            self._last_message_id = last_message_id
+            await self._async_process_event(last_message_id)
 
         return count
 
