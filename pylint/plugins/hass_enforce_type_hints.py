@@ -2323,7 +2323,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="async_process_audio_stream",
-                    arg_types={1: "SpeechMetadata", 2: "StreamReader"},
+                    arg_types={1: "SpeechMetadata", 2: "AsyncIterable[bytes]"},
                     return_type="SpeechResult",
                 ),
             ],
