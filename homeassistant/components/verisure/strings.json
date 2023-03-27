@@ -56,5 +56,20 @@
     "error": {
       "code_format_mismatch": "The default PIN code does not match the required number of digits"
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "ethernet": {
+        "name": "Ethernet status"
+      }
+    },
+    "sensor": {
+      "humidity": {
+        "name": "[%key:component::sensor::entity_component::humidity::name%]"
+      },
+      "temperature": {
+        "name": "[%key:component::sensor::entity_component::temperature::name%]"
+      }
+    }
   }
 }
