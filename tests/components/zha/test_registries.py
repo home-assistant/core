@@ -1,4 +1,5 @@
 """Test ZHA registries."""
+import importlib
 import inspect
 from unittest import mock
 
@@ -440,24 +441,11 @@ def test_quirk_classes() -> None:
 
     def find_quirk_class(base_obj, quirk_mod, quirk_cls):
         """Find a specific quirk class."""
-        mods = dict(inspect.getmembers(base_obj, inspect.ismodule))
 
-        # Check if we have found the right module
-        if quirk_mod in mods:
-            # If so, look for the class
-            clss = dict(inspect.getmembers(mods[quirk_mod], inspect.isclass))
-            if quirk_cls in clss:
-                # Quirk class found
-                return True
-
-        else:
-            # Recurse into other modules
-            for mod in mods:
-                if not mods[mod].__name__.startswith("zhaquirks."):
-                    continue
-                if find_quirk_class(mods[mod], quirk_mod, quirk_cls):
-                    return True
-        return False
+        module = importlib.import_module(quirk_mod)
+        clss = dict(inspect.getmembers(module, inspect.isclass))
+        # Check quirk_cls in module classes
+        return quirk_cls in clss
 
     def quirk_class_validator(value):
         """Validate quirk classes during self test."""
@@ -471,9 +459,9 @@ def test_quirk_classes() -> None:
                 quirk_class_validator(v)
             return
 
-        quirk_tok = value.split(".")
+        quirk_tok = value.rsplit(".", 1)
         if len(quirk_tok) != 2:
-            # quirk_class is always __module__.__class__
+            # quirk_class is at least __module__.__class__
             raise ValueError(f"Invalid quirk class : '{value}'")
 
         if not find_quirk_class(zhaquirks, quirk_tok[0], quirk_tok[1]):
