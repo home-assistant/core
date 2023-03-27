@@ -72,6 +72,13 @@
         "state": {
           "off": "Off"
         }
+      },
+      "auto_track_method": {
+        "state": {
+          "digital": "Digital",
+          "digitalfirst": "Digital first",
+          "pantiltfirst": "Pan/tilt first"
+        }
       }
     }
   }
