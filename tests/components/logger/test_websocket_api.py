@@ -112,7 +112,7 @@ async def test_custom_integration_log_level(
             {
                 "id": 7,
                 "type": "logger/integration_log_level",
-                "integration": "foobar",
+                "integration": "hue",
                 "level": "DEBUG",
                 "persistence": "none",
             }
@@ -124,7 +124,7 @@ async def test_custom_integration_log_level(
         assert msg["success"]
 
         assert async_get_domain_config(hass).overrides == {
-            "homeassistant.components.foobar": logging.DEBUG,
+            "homeassistant.components.hue": logging.DEBUG,
             "custom_components.hue": logging.DEBUG,
             "some_other_logger": logging.DEBUG,
         }
