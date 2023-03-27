@@ -193,7 +193,7 @@ def create_coordinator_container_vm(
     proxmox: ProxmoxAPI,
     host_name: str,
     node_name: str,
-    vm_id: str,
+    vm_id: int,
     api_category: ProxmoxType,
 ) -> DataUpdateCoordinator:
     """Create and return a DataUpdateCoordinator for a vm/container."""
@@ -275,7 +275,7 @@ class ProxmoxEntity(CoordinatorEntity):
         icon: str,
         host_name: str,
         node_name: str,
-        vm_id: str | None = None,
+        vm_id: int | None = None,
     ) -> None:
         """Initialize the Proxmox entity."""
         super().__init__(coordinator)
