@@ -24,7 +24,7 @@ MOCK_DISCOVERY = ssdp.SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_udn="uuid:3dcc7100-f76c-11dd-87af-00226124ca30",
     ssdp_st="mock_st",
-    ssdp_location="http://1.1.1.1/device",
+    ssdp_location="http://1.1.1.1:80/device",
     upnp={"SPEAKER-NAME": "Speaker Name"},
 )
 
@@ -338,6 +338,23 @@ async def test_ssdp(hass: HomeAssistant, mock_setup_entry: MockConfigEntry) -> N
         CONF_PIN: DEFAULT_PIN,
     }
     mock_setup_entry.assert_called_once()
+
+
+async def test_ssdp_already_configured(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test an already known device being discovered."""
+
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=MOCK_DISCOVERY,
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(

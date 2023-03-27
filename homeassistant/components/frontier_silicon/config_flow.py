@@ -126,6 +126,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.debug(exception)
             return self.async_abort(reason="unknown")
 
+        for entry in self._async_current_entries():
+            if self._webfsapi_url == entry.data.get(CONF_WEBFSAPI_URL):
+                return self.async_abort(reason="already_configured")
+
         try:
             # try to login with default pin
             afsapi = AFSAPI(self._webfsapi_url, DEFAULT_PIN)
