@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Mapping
-import contextlib
 from dataclasses import asdict, dataclass
 import logging
 from typing import Any, cast
@@ -68,12 +67,14 @@ def _chattiest_log_level(level1: int, level2: int) -> int:
 
 async def get_integration_loggers(hass: HomeAssistant, domain: str) -> list[str]:
     """Get loggers for an integration."""
-    loggers = {f"homeassistant.components.{domain}"}
-    with contextlib.suppress(IntegrationNotFound):
+    loggers = set()
+    try:
         integration = await async_get_integration(hass, domain)
         loggers.add(integration.pkg_path)
         if integration.loggers:
             loggers.update(integration.loggers)
+    except IntegrationNotFound:
+        loggers.add(f"homeassistant.components.{domain}")
     return list(loggers)
 
 
