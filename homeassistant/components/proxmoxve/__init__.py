@@ -20,16 +20,17 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
+    UpdateFailed,
 )
 
 from .const import (
-    _LOGGER,
     CONF_CONTAINERS,
     CONF_NODE,
     CONF_NODES,
@@ -40,10 +41,11 @@ from .const import (
     DEFAULT_REALM,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
+    LOGGER,
     PROXMOX_CLIENTS,
-    TYPE_CONTAINER,
-    TYPE_VM,
     UPDATE_INTERVAL,
+    ProxmoxKeyAPIParse,
+    ProxmoxType,
 )
 
 PLATFORMS = [Platform.BINARY_SENSOR]
@@ -113,12 +115,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 )
                 proxmox_client.build_client()
             except AuthenticationError:
-                _LOGGER.warning(
+                LOGGER.warning(
                     "Invalid credentials for proxmox instance %s:%d", host, port
                 )
                 continue
             except SSLError:
-                _LOGGER.error(
+                LOGGER.error(
                     (
                         "Unable to verify proxmox server SSL. "
                         'Try using "verify_ssl: false" for proxmox instance %s:%d'
@@ -128,10 +130,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 )
                 continue
             except ConnectTimeout:
-                _LOGGER.warning("Connection to host %s timed out during setup", host)
+                LOGGER.warning("Connection to host %s timed out during setup", host)
                 continue
             except requests.exceptions.ConnectionError:
-                _LOGGER.warning("Host %s is not reachable", host)
+                LOGGER.warning("Host %s is not reachable", host)
                 continue
 
             hass.data[PROXMOX_CLIENTS][host] = proxmox_client
@@ -160,7 +162,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
             for vm_id in node_config["vms"]:
                 coordinator = create_coordinator_container_vm(
-                    hass, proxmox, host_name, node_name, vm_id, TYPE_VM
+                    hass, proxmox, host_name, node_name, vm_id, ProxmoxType.QEMU
                 )
 
                 # Fetch initial data
@@ -170,7 +172,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
             for container_id in node_config["containers"]:
                 coordinator = create_coordinator_container_vm(
-                    hass, proxmox, host_name, node_name, container_id, TYPE_CONTAINER
+                    hass, proxmox, host_name, node_name, container_id, ProxmoxType.LXC
                 )
 
                 # Fetch initial data
@@ -192,7 +194,7 @@ def create_coordinator_container_vm(
     host_name: str,
     node_name: str,
     vm_id: str,
-    vm_type: int,
+    api_category: ProxmoxType,
 ) -> DataUpdateCoordinator:
     """Create and return a DataUpdateCoordinator for a vm/container."""
 
@@ -201,56 +203,65 @@ def create_coordinator_container_vm(
 
         def poll_api() -> dict[str, Any] | None:
             """Call the api."""
-            vm_status = call_api_container_vm(proxmox, node_name, vm_id, vm_type)
-            return vm_status
+            api_status = {}
 
-        vm_status = await hass.async_add_executor_job(poll_api)
+            try:
+                if api_category == ProxmoxType.QEMU:
+                    api_status = (
+                        proxmox.nodes(node_name).qemu(vm_id).status.current.get()
+                    )
+                elif api_category == ProxmoxType.LXC:
+                    api_status = (
+                        proxmox.nodes(node_name).lxc(vm_id).status.current.get()
+                    )
+            except AuthenticationError as error:
+                raise ConfigEntryAuthFailed from error
+            except SSLError as error:
+                raise UpdateFailed from error
+            except ConnectTimeout as error:
+                raise UpdateFailed from error
+            except ResourceException as error:
+                raise UpdateFailed from error
 
-        if vm_status is None:
-            _LOGGER.warning(
+            LOGGER.debug("API Response: %s", api_status)
+            return api_status
+
+        api_status = await hass.async_add_executor_job(poll_api)
+
+        if api_status is None:
+            LOGGER.warning(
                 "Vm/Container %s unable to be found in node %s", vm_id, node_name
             )
             return None
 
-        return parse_api_container_vm(vm_status)
+        return parse_api_proxmox(api_status, api_category)
 
     return DataUpdateCoordinator(
         hass,
-        _LOGGER,
+        LOGGER,
         name=f"proxmox_coordinator_{host_name}_{node_name}_{vm_id}",
         update_method=async_update_data,
         update_interval=timedelta(seconds=UPDATE_INTERVAL),
     )
 
 
-def parse_api_container_vm(status: dict[str, Any]) -> dict[str, Any]:
-    """Get the container or vm api data and return it formatted in a dictionary.
+def parse_api_proxmox(
+    status: dict[str, Any],
+    api_category: ProxmoxType,
+) -> dict[str, Any] | None:
+    """Get api data and return it formatted in a dictionary.
 
     It is implemented in this way to allow for more data to be added for sensors
     in the future.
     """
 
-    return {"status": status["status"], "name": status["name"]}
+    if api_category in (ProxmoxType.QEMU, ProxmoxType.LXC):
+        return {
+            ProxmoxKeyAPIParse.STATUS: status["status"],
+            ProxmoxKeyAPIParse.NAME: status["name"],
+        }
 
-
-def call_api_container_vm(
-    proxmox: ProxmoxAPI,
-    node_name: str,
-    vm_id: str,
-    machine_type: int,
-) -> dict[str, Any] | None:
-    """Make proper api calls."""
-    status = None
-
-    try:
-        if machine_type == TYPE_VM:
-            status = proxmox.nodes(node_name).qemu(vm_id).status.current.get()
-        elif machine_type == TYPE_CONTAINER:
-            status = proxmox.nodes(node_name).lxc(vm_id).status.current.get()
-    except (ResourceException, requests.exceptions.ConnectionError):
-        return None
-
-    return status
+    return None
 
 
 class ProxmoxEntity(CoordinatorEntity):
@@ -264,7 +275,7 @@ class ProxmoxEntity(CoordinatorEntity):
         icon: str,
         host_name: str,
         node_name: str,
-        vm_id: int | None = None,
+        vm_id: str | None = None,
     ) -> None:
         """Initialize the Proxmox entity."""
         super().__init__(coordinator)

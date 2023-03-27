@@ -2,6 +2,8 @@
 
 import logging
 
+from homeassistant.backports.enum import StrEnum
+
 DOMAIN = "proxmoxve"
 PROXMOX_CLIENTS = "proxmox_clients"
 CONF_REALM = "realm"
@@ -19,4 +21,18 @@ TYPE_VM = 0
 TYPE_CONTAINER = 1
 UPDATE_INTERVAL = 60
 
-_LOGGER = logging.getLogger(__package__)
+LOGGER = logging.getLogger(__package__)
+
+
+class ProxmoxType(StrEnum):
+    """Proxmox type of information."""
+
+    QEMU = "qemu"
+    LXC = "lxc"
+
+
+class ProxmoxKeyAPIParse(StrEnum):
+    """Proxmox key of data API parse."""
+
+    STATUS = "status"
+    NAME = "name"
