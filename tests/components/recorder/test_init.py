@@ -10,6 +10,8 @@ import threading
 from typing import cast
 from unittest.mock import Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
+import py
 import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
 
@@ -100,7 +102,7 @@ def _default_recorder(hass):
         db_max_retries=10,
         db_retry_wait=3,
         entity_filter=CONFIG_SCHEMA({DOMAIN: {}}),
-        exclude_t=[],
+        exclude_event_types=set(),
         exclude_attributes_by_domain={},
     )
 
@@ -563,32 +565,6 @@ def _add_entities(hass, entity_ids):
         return states
 
 
-def _add_events(hass, events):
-    with session_scope(hass=hass) as session:
-        session.query(Events).delete(synchronize_session=False)
-    for event_type in events:
-        hass.bus.fire(event_type)
-    wait_recording_done(hass)
-
-    with session_scope(hass=hass) as session:
-        events = []
-        for event, event_data, event_types in (
-            session.query(Events, EventData, EventTypes)
-            .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
-            .outerjoin(EventData, Events.data_id == EventData.data_id)
-        ):
-            event = cast(Events, event)
-            event_data = cast(EventData, event_data)
-            event_types = cast(EventTypes, event_types)
-
-            native_event = event.to_native()
-            if event_data:
-                native_event.data = event_data.to_native()
-            native_event.event_type = event_types.event_type
-            events.append(native_event)
-        return events
-
-
 def _state_with_context(hass, entity_id):
     # We don't restore context unless we need it by joining the
     # events table on the event_id for state_changed events
@@ -645,25 +621,53 @@ def test_saving_state_incl_entities(
     assert _state_with_context(hass, "test2.recorder").as_dict() == states[0].as_dict()
 
 
-def test_saving_event_exclude_event_type(
-    hass_recorder: Callable[..., HomeAssistant]
+async def test_saving_event_exclude_event_type(
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
 ) -> None:
     """Test saving and restoring an event."""
-    hass = hass_recorder(
-        {
-            "exclude": {
-                "event_types": [
-                    "service_registered",
-                    "homeassistant_start",
-                    "component_loaded",
-                    "core_config_updated",
-                    "homeassistant_started",
-                    "test",
-                ]
-            }
+    config = {
+        "exclude": {
+            "event_types": [
+                "service_registered",
+                "homeassistant_start",
+                "component_loaded",
+                "core_config_updated",
+                "homeassistant_started",
+                "test",
+            ]
         }
-    )
-    events = _add_events(hass, ["test", "test2"])
+    }
+    instance = await async_setup_recorder_instance(hass, config)
+    events = ["test", "test2"]
+    for event_type in events:
+        hass.bus.async_fire(event_type)
+
+    await async_wait_recording_done(hass)
+
+    def _get_events(hass: HomeAssistant, event_types: list[str]) -> list[Event]:
+        with session_scope(hass=hass) as session:
+            events = []
+            for event, event_data, event_types in (
+                session.query(Events, EventData, EventTypes)
+                .outerjoin(
+                    EventTypes, (Events.event_type_id == EventTypes.event_type_id)
+                )
+                .outerjoin(EventData, Events.data_id == EventData.data_id)
+                .where(EventTypes.event_type.in_(event_types))
+            ):
+                event = cast(Events, event)
+                event_data = cast(EventData, event_data)
+                event_types = cast(EventTypes, event_types)
+
+                native_event = event.to_native()
+                if event_data:
+                    native_event.data = event_data.to_native()
+                native_event.event_type = event_types.event_type
+                events.append(native_event)
+            return events
+
+    events = await instance.async_add_executor_job(_get_events, hass, ["test", "test2"])
     assert len(events) == 1
     assert events[0].event_type == "test2"
 
@@ -1219,7 +1223,9 @@ def test_statistics_runs_initiated(hass_recorder: Callable[..., HomeAssistant]) 
 
 
 @pytest.mark.freeze_time("2022-09-13 09:00:00+02:00")
-def test_compile_missing_statistics(tmpdir, freezer) -> None:
+def test_compile_missing_statistics(
+    tmpdir: py.path.local, freezer: FrozenDateTimeFactory
+) -> None:
     """Test missing statistics are compiled on startup."""
     now = dt_util.utcnow().replace(minute=0, second=0, microsecond=0)
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
@@ -1479,7 +1485,7 @@ def test_service_disable_states_not_recording(
         )
 
 
-def test_service_disable_run_information_recorded(tmpdir) -> None:
+def test_service_disable_run_information_recorded(tmpdir: py.path.local) -> None:
     """Test that runs are still recorded when recorder is disabled."""
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
@@ -1528,7 +1534,7 @@ class CannotSerializeMe:
 
 
 async def test_database_corruption_while_running(
-    hass: HomeAssistant, tmpdir, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, tmpdir: py.path.local, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we can recover from sqlite3 db corruption."""
 
@@ -1545,7 +1551,7 @@ async def test_database_corruption_while_running(
     await hass.async_block_till_done()
     caplog.clear()
 
-    original_start_time = get_instance(hass).run_history.recording_start
+    original_start_time = get_instance(hass).recorder_runs_manager.recording_start
 
     hass.states.async_set("test.lost", "on", {})
 
@@ -1593,7 +1599,7 @@ async def test_database_corruption_while_running(
     assert state.entity_id == "test.two"
     assert state.state == "on"
 
-    new_start_time = get_instance(hass).run_history.recording_start
+    new_start_time = get_instance(hass).recorder_runs_manager.recording_start
     assert original_start_time < new_start_time
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
@@ -1872,9 +1878,11 @@ def test_deduplication_event_data_inside_commit_interval(
         assert all(event.data_id == first_data_id for event in events)
 
 
-# Patch STATE_ATTRIBUTES_ID_CACHE_SIZE since otherwise
+# Patch CACHE_SIZE since otherwise
 # the CI can fail because the test takes too long to run
-@patch("homeassistant.components.recorder.core.STATE_ATTRIBUTES_ID_CACHE_SIZE", 5)
+@patch(
+    "homeassistant.components.recorder.table_managers.state_attributes.CACHE_SIZE", 5
+)
 def test_deduplication_state_attributes_inside_commit_interval(
     hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -2104,10 +2112,15 @@ async def test_connect_args_priority(hass: HomeAssistant, config_url) -> None:
     assert connect_params[0]["charset"] == "utf8mb4"
 
 
+@pytest.mark.parametrize("core_state", [CoreState.starting, CoreState.running])
 async def test_excluding_attributes_by_integration(
-    recorder_mock: Recorder, hass: HomeAssistant, entity_registry: er.EntityRegistry
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    core_state: CoreState,
 ) -> None:
     """Test that an integration's recorder platform can exclude attributes."""
+    hass.state = core_state
     state = "restoring_from_db"
     attributes = {"test_attr": 5, "excluded": 10}
     mock_platform(
@@ -2123,6 +2136,7 @@ async def test_excluding_attributes_by_integration(
     platform = MockEntityPlatform(hass, platform_name="fake_integration")
     entity_platform = MockEntity(entity_id=entity_id, extra_state_attributes=attributes)
     await platform.async_add_entities([entity_platform])
+    await hass.async_block_till_done()
 
     await async_wait_recording_done(hass)
 
@@ -2159,4 +2173,8 @@ async def test_lru_increases_with_many_entities(
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
         await async_wait_recording_done(hass)
 
-    assert recorder_mock._state_attributes_ids.get_size() == mock_entity_count * 2
+    assert (
+        recorder_mock.state_attributes_manager._id_map.get_size()
+        == mock_entity_count * 2
+    )
+    assert recorder_mock.states_meta_manager._id_map.get_size() == mock_entity_count * 2

@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/netgear_lte",
   "iot_class": "local_polling",
   "loggers": ["eternalegypt"],
-  "requirements": ["eternalegypt==0.0.12"]
+  "requirements": ["eternalegypt==0.0.15"]
 }

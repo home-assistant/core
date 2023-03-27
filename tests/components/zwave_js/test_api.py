@@ -3201,6 +3201,7 @@ async def test_subscribe_log_updates(
             "multiline": False,
             "timestamp": "time",
             "label": "label",
+            "context": {"source": "config"},
         },
     )
     client.driver.receive_event(event)

@@ -1442,6 +1442,13 @@ def distance(hass, *args):
     )
 
 
+def is_hidden_entity(hass: HomeAssistant, entity_id: str) -> bool:
+    """Test if an entity is hidden."""
+    entity_reg = entity_registry.async_get(hass)
+    entry = entity_reg.async_get(entity_id)
+    return entry is not None and entry.hidden
+
+
 def is_state(hass: HomeAssistant, entity_id: str, state: str | list[str]) -> bool:
     """Test if a state is a specific value."""
     state_obj = _get_state(hass, entity_id)
@@ -2265,6 +2272,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         self.globals["area_devices"] = hassfunction(area_devices)
         self.filters["area_devices"] = pass_context(self.globals["area_devices"])
+
+        self.globals["is_hidden_entity"] = hassfunction(is_hidden_entity)
+        self.tests["is_hidden_entity"] = pass_context(self.globals["is_hidden_entity"])
 
         self.globals["integration_entities"] = hassfunction(integration_entities)
         self.filters["integration_entities"] = pass_context(

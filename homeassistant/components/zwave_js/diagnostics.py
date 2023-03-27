@@ -117,7 +117,8 @@ async def async_get_config_entry_diagnostics(
     handshake_msgs = msgs[:-1]
     network_state = msgs[-1]
     network_state["result"]["state"]["nodes"] = [
-        redact_node_state(node) for node in network_state["result"]["state"]["nodes"]
+        redact_node_state(async_redact_data(node, KEYS_TO_REDACT))
+        for node in network_state["result"]["state"]["nodes"]
     ]
     return {"messages": [*handshake_msgs, network_state]}
 
@@ -136,7 +137,6 @@ async def async_get_device_diagnostics(
     entities = get_device_entities(hass, node, device)
     assert client.version
     node_state = redact_node_state(async_redact_data(node.data, KEYS_TO_REDACT))
-    node_state["statistics"] = node.statistics.data
     return {
         "versionInfo": {
             "driverVersion": client.version.driver_version,

@@ -516,7 +516,7 @@ class HomeAssistant:
     def async_create_task(
         self, target: Coroutine[Any, Any, _R], name: str | None = None
     ) -> asyncio.Task[_R]:
-        """Create a task from within the eventloop.
+        """Create a task from within the event loop.
 
         This method must be run in the event loop. If you are using this in your
         integration, use the create task methods on the config entry instead.
@@ -534,7 +534,7 @@ class HomeAssistant:
         target: Coroutine[Any, Any, _R],
         name: str,
     ) -> asyncio.Task[_R]:
-        """Create a task from within the eventloop.
+        """Create a task from within the event loop.
 
         This is a background task which will not block startup and will be
         automatically cancelled on shutdown. If you are using this in your

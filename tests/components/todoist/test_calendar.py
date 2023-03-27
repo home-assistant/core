@@ -1,6 +1,8 @@
 """Unit tests for the Todoist calendar platform."""
-from datetime import datetime
+from datetime import datetime, timedelta
+from http import HTTPStatus
 from unittest.mock import AsyncMock, patch
+import urllib
 
 import pytest
 from todoist_api_python.models import Due, Label, Project, Task
@@ -11,6 +13,9 @@ from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.util import dt
+
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(name="task")
@@ -66,6 +71,11 @@ def mock_api(task) -> AsyncMock:
     api.get_collaborators.return_value = []
     api.get_tasks.return_value = [task]
     return api
+
+
+def get_events_url(entity: str, start: str, end: str) -> str:
+    """Create a url to get events during the specified time range."""
+    return f"/api/calendars/{entity}?start={urllib.parse.quote(start)}&end={urllib.parse.quote(end)}"
 
 
 @patch("homeassistant.components.todoist.calendar.TodoistAPIAsync")
@@ -139,3 +149,47 @@ async def test_calendar_custom_project_unique_id(
 
     state = hass.states.get("calendar.all_projects")
     assert state.state == "off"
+
+
+@patch("homeassistant.components.todoist.calendar.TodoistAPIAsync")
+async def test_all_day_event(
+    todoist_api, hass: HomeAssistant, hass_client: ClientSessionGenerator, api
+) -> None:
+    """Test for an all day calendar event."""
+    todoist_api.return_value = api
+    assert await setup.async_setup_component(
+        hass,
+        "calendar",
+        {
+            "calendar": {
+                "platform": DOMAIN,
+                CONF_TOKEN: "token",
+                "custom_projects": [{"name": "All projects", "labels": ["Label1"]}],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    await async_update_entity(hass, "calendar.all_projects")
+    client = await hass_client()
+    start = dt.now() - timedelta(days=1)
+    end = dt.now() + timedelta(days=1)
+    response = await client.get(
+        get_events_url("calendar.all_projects", start.isoformat(), end.isoformat())
+    )
+    assert response.status == HTTPStatus.OK
+    events = await response.json()
+
+    expected = [
+        {
+            "start": {"date": dt.now().strftime("%Y-%m-%d")},
+            "end": {"date": (dt.now() + timedelta(days=1)).strftime("%Y-%m-%d")},
+            "summary": "A task",
+            "description": None,
+            "location": None,
+            "uid": None,
+            "recurrence_id": None,
+            "rrule": None,
+        }
+    ]
+    assert events == expected
