@@ -6,7 +6,7 @@ import datetime
 from datetime import timedelta
 import logging
 from random import randrange
-from typing import Any
+from typing import Any, cast
 
 import aiohttp
 import tibber
@@ -41,6 +41,7 @@ from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_reg
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -426,9 +427,9 @@ class TibberDataSensor(TibberSensor, CoordinatorEntity["TibberDataCoordinator"])
         self._device_name = self._home_name
 
     @property
-    def native_value(self) -> Any:
+    def native_value(self) -> StateType:
         """Return the value of the sensor."""
-        return getattr(self._tibber_home, self.entity_description.key)
+        return getattr(self._tibber_home, self.entity_description.key)  # type: ignore[no-any-return]
 
 
 class TibberSensorRT(TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"]):
@@ -614,7 +615,7 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
                         5 * 365 * 24, production=is_production
                     )
 
-                    _sum = 0
+                    _sum = 0.0
                     last_stats_time = None
                 else:
                     # hourly_consumption/production_data contains the last 30 days
@@ -636,13 +637,14 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
                         self.hass,
                         start,
                         None,
-                        [statistic_id],
+                        {statistic_id},
                         "hour",
                         None,
                         {"sum"},
                     )
-                    _sum = stat[statistic_id][0]["sum"]
-                    last_stats_time = stat[statistic_id][0]["start"]
+                    first_stat = stat[statistic_id][0]
+                    _sum = cast(float, first_stat["sum"])
+                    last_stats_time = first_stat["start"]
 
                 statistics = []
 

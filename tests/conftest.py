@@ -9,9 +9,9 @@ import functools
 import gc
 import itertools
 import logging
+import os
 import sqlite3
 import ssl
-import sys
 import threading
 from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar, cast
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
@@ -32,7 +32,7 @@ import pytest_socket
 import requests_mock
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant import core as ha, loader, runner, util
+from homeassistant import core as ha, loader, runner
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant, legacy_api_password
@@ -107,11 +107,6 @@ logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
 asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
 # Disable fixtures overriding our beautiful policy
 asyncio.set_event_loop_policy = lambda policy: None
-
-if sys.version_info[:2] >= (3, 11):
-    from .asyncio_legacy import legacy_coroutine
-
-    setattr(asyncio, "coroutine", legacy_coroutine)
 
 
 def _utcnow() -> datetime.datetime:
@@ -234,7 +229,6 @@ def check_real(func: Callable[_P, Coroutine[Any, Any, _R]]):
 
 # Guard a few functions that would make network connections
 location.async_detect_location_info = check_real(location.async_detect_location_info)
-util.get_local_ip = lambda: "127.0.0.1"
 
 
 @pytest.fixture(name="caplog")
@@ -270,8 +264,53 @@ def expected_lingering_tasks() -> bool:
 
 
 @pytest.fixture(autouse=True)
+def expected_lingering_timers() -> bool:
+    """Temporary ability to bypass test failures.
+
+    Parametrize to True to bypass the pytest failure.
+    @pytest.mark.parametrize("expected_lingering_timers", [True])
+
+    This should be removed when all lingering timers have been cleaned up.
+    """
+    current_test = os.getenv("PYTEST_CURRENT_TEST")
+    if current_test and current_test.startswith("tests/components"):
+        # As a starting point, we ignore components
+        return True
+    return False
+
+
+@pytest.fixture
+def wait_for_stop_scripts_after_shutdown() -> bool:
+    """Add ability to bypass _schedule_stop_scripts_after_shutdown.
+
+    _schedule_stop_scripts_after_shutdown leaves a lingering timer.
+
+    Parametrize to True to bypass the pytest failure.
+    @pytest.mark.parametrize("wait_for_stop_scripts_at_shutdown", [True])
+    """
+    return False
+
+
+@pytest.fixture(autouse=True)
+def skip_stop_scripts(
+    wait_for_stop_scripts_after_shutdown: bool,
+) -> Generator[None, None, None]:
+    """Add ability to bypass _schedule_stop_scripts_after_shutdown."""
+    if wait_for_stop_scripts_after_shutdown:
+        yield
+        return
+    with patch(
+        "homeassistant.helpers.script._schedule_stop_scripts_after_shutdown",
+        AsyncMock(),
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
 def verify_cleanup(
-    event_loop: asyncio.AbstractEventLoop, expected_lingering_tasks: bool
+    event_loop: asyncio.AbstractEventLoop,
+    expected_lingering_tasks: bool,
+    expected_lingering_timers: bool,
 ) -> Generator[None, None, None]:
     """Verify that the test has cleaned up resources correctly."""
     threads_before = frozenset(threading.enumerate())
@@ -291,16 +330,19 @@ def verify_cleanup(
     tasks = asyncio.all_tasks(event_loop) - tasks_before
     for task in tasks:
         if expected_lingering_tasks:
-            _LOGGER.warning("Linger task after test %r", task)
+            _LOGGER.warning("Lingering task after test %r", task)
         else:
-            pytest.fail(f"Linger task after test {repr(task)}")
+            pytest.fail(f"Lingering task after test {repr(task)}")
         task.cancel()
     if tasks:
         event_loop.run_until_complete(asyncio.wait(tasks))
 
     for handle in event_loop._scheduled:  # type: ignore[attr-defined]
         if not handle.cancelled():
-            _LOGGER.warning("Lingering timer after test %r", handle)
+            if expected_lingering_timers:
+                _LOGGER.warning("Lingering timer after test %r", handle)
+            else:
+                pytest.fail(f"Lingering timer after test {repr(handle)}")
             handle.cancel()
 
     # Verify no threads where left behind.
@@ -1119,11 +1161,11 @@ def enable_statistics() -> bool:
 
 
 @pytest.fixture
-def enable_statistics_table_validation() -> bool:
+def enable_schema_validation() -> bool:
     """Fixture to control enabling of recorder's statistics table validation.
 
     To enable statistics table validation, tests can be marked with:
-    @pytest.mark.parametrize("enable_statistics_table_validation", [True])
+    @pytest.mark.parametrize("enable_schema_validation", [True])
     """
     return False
 
@@ -1154,6 +1196,16 @@ def enable_migrate_event_type_ids() -> bool:
 
     To enable context id migration, tests can be marked with:
     @pytest.mark.parametrize("enable_migrate_event_type_ids", [True])
+    """
+    return False
+
+
+@pytest.fixture
+def enable_migrate_entity_ids() -> bool:
+    """Fixture to control enabling of recorder's entity_id migration.
+
+    To enable context id migration, tests can be marked with:
+    @pytest.mark.parametrize("enable_migrate_entity_ids", [True])
     """
     return False
 
@@ -1220,22 +1272,46 @@ def hass_recorder(
     recorder_db_url: str,
     enable_nightly_purge: bool,
     enable_statistics: bool,
-    enable_statistics_table_validation: bool,
+    enable_schema_validation: bool,
+    enable_migrate_context_ids: bool,
+    enable_migrate_event_type_ids: bool,
+    enable_migrate_entity_ids: bool,
     hass_storage,
 ) -> Generator[Callable[..., HomeAssistant], None, None]:
     """Home Assistant fixture with in-memory recorder."""
     # pylint: disable-next=import-outside-toplevel
     from homeassistant.components import recorder
 
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant.components.recorder import migration
+
     original_tz = dt_util.DEFAULT_TIME_ZONE
 
     hass = get_test_home_assistant()
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
-    stats_validate = (
-        recorder.statistics.validate_db_schema
-        if enable_statistics_table_validation
+    schema_validate = (
+        migration._find_schema_errors
+        if enable_schema_validation
         else itertools.repeat(set())
+    )
+    migrate_states_context_ids = (
+        recorder.Recorder._migrate_states_context_ids
+        if enable_migrate_context_ids
+        else None
+    )
+    migrate_events_context_ids = (
+        recorder.Recorder._migrate_events_context_ids
+        if enable_migrate_context_ids
+        else None
+    )
+    migrate_event_type_ids = (
+        recorder.Recorder._migrate_event_type_ids
+        if enable_migrate_event_type_ids
+        else None
+    )
+    migrate_entity_ids = (
+        recorder.Recorder._migrate_entity_ids if enable_migrate_entity_ids else None
     )
     with patch(
         "homeassistant.components.recorder.Recorder.async_nightly_tasks",
@@ -1246,8 +1322,24 @@ def hass_recorder(
         side_effect=stats,
         autospec=True,
     ), patch(
-        "homeassistant.components.recorder.migration.statistics_validate_db_schema",
-        side_effect=stats_validate,
+        "homeassistant.components.recorder.migration._find_schema_errors",
+        side_effect=schema_validate,
+        autospec=True,
+    ), patch(
+        "homeassistant.components.recorder.Recorder._migrate_events_context_ids",
+        side_effect=migrate_events_context_ids,
+        autospec=True,
+    ), patch(
+        "homeassistant.components.recorder.Recorder._migrate_states_context_ids",
+        side_effect=migrate_states_context_ids,
+        autospec=True,
+    ), patch(
+        "homeassistant.components.recorder.Recorder._migrate_event_type_ids",
+        side_effect=migrate_event_type_ids,
+        autospec=True,
+    ), patch(
+        "homeassistant.components.recorder.Recorder._migrate_entity_ids",
+        side_effect=migrate_entity_ids,
         autospec=True,
     ):
 
@@ -1299,31 +1391,45 @@ async def async_setup_recorder_instance(
     recorder_db_url: str,
     enable_nightly_purge: bool,
     enable_statistics: bool,
-    enable_statistics_table_validation: bool,
+    enable_schema_validation: bool,
     enable_migrate_context_ids: bool,
     enable_migrate_event_type_ids: bool,
+    enable_migrate_entity_ids: bool,
 ) -> AsyncGenerator[RecorderInstanceGenerator, None]:
     """Yield callable to setup recorder instance."""
     # pylint: disable-next=import-outside-toplevel
     from homeassistant.components import recorder
 
     # pylint: disable-next=import-outside-toplevel
+    from homeassistant.components.recorder import migration
+
+    # pylint: disable-next=import-outside-toplevel
     from .components.recorder.common import async_recorder_block_till_done
 
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
-    stats_validate = (
-        recorder.statistics.validate_db_schema
-        if enable_statistics_table_validation
+    schema_validate = (
+        migration._find_schema_errors
+        if enable_schema_validation
         else itertools.repeat(set())
     )
-    migrate_context_ids = (
-        recorder.Recorder._migrate_context_ids if enable_migrate_context_ids else None
+    migrate_states_context_ids = (
+        recorder.Recorder._migrate_states_context_ids
+        if enable_migrate_context_ids
+        else None
+    )
+    migrate_events_context_ids = (
+        recorder.Recorder._migrate_events_context_ids
+        if enable_migrate_context_ids
+        else None
     )
     migrate_event_type_ids = (
         recorder.Recorder._migrate_event_type_ids
         if enable_migrate_event_type_ids
         else None
+    )
+    migrate_entity_ids = (
+        recorder.Recorder._migrate_entity_ids if enable_migrate_entity_ids else None
     )
     with patch(
         "homeassistant.components.recorder.Recorder.async_nightly_tasks",
@@ -1334,16 +1440,24 @@ async def async_setup_recorder_instance(
         side_effect=stats,
         autospec=True,
     ), patch(
-        "homeassistant.components.recorder.migration.statistics_validate_db_schema",
-        side_effect=stats_validate,
+        "homeassistant.components.recorder.migration._find_schema_errors",
+        side_effect=schema_validate,
         autospec=True,
     ), patch(
-        "homeassistant.components.recorder.Recorder._migrate_context_ids",
-        side_effect=migrate_context_ids,
+        "homeassistant.components.recorder.Recorder._migrate_events_context_ids",
+        side_effect=migrate_events_context_ids,
+        autospec=True,
+    ), patch(
+        "homeassistant.components.recorder.Recorder._migrate_states_context_ids",
+        side_effect=migrate_states_context_ids,
         autospec=True,
     ), patch(
         "homeassistant.components.recorder.Recorder._migrate_event_type_ids",
         side_effect=migrate_event_type_ids,
+        autospec=True,
+    ), patch(
+        "homeassistant.components.recorder.Recorder._migrate_entity_ids",
+        side_effect=migrate_entity_ids,
         autospec=True,
     ):
 

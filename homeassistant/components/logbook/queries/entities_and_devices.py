@@ -1,7 +1,7 @@
 """Entities and Devices queries for logbook."""
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Collection, Iterable
 
 from sqlalchemy import lambda_stmt, select, union_all
 from sqlalchemy.sql.elements import ColumnElement
@@ -13,6 +13,7 @@ from homeassistant.components.recorder.db_schema import (
     Events,
     EventTypes,
     States,
+    StatesMeta,
 )
 
 from .common import (
@@ -35,7 +36,7 @@ def _select_entities_device_id_context_ids_sub_query(
     start_day: float,
     end_day: float,
     event_types: tuple[str, ...],
-    entity_ids: list[str],
+    states_metadata_ids: Collection[int],
     json_quoted_entity_ids: list[str],
     json_quoted_device_ids: list[str],
 ) -> Select:
@@ -50,7 +51,7 @@ def _select_entities_device_id_context_ids_sub_query(
         .filter(
             (States.last_updated_ts > start_day) & (States.last_updated_ts < end_day)
         )
-        .where(States.entity_id.in_(entity_ids)),
+        .where(States.metadata_id.in_(states_metadata_ids)),
     ).subquery()
     return select(union.c.context_id_bin).group_by(union.c.context_id_bin)
 
@@ -60,7 +61,7 @@ def _apply_entities_devices_context_union(
     start_day: float,
     end_day: float,
     event_types: tuple[str, ...],
-    entity_ids: list[str],
+    states_metadata_ids: Collection[int],
     json_quoted_entity_ids: list[str],
     json_quoted_device_ids: list[str],
 ) -> CompoundSelect:
@@ -68,17 +69,17 @@ def _apply_entities_devices_context_union(
         start_day,
         end_day,
         event_types,
-        entity_ids,
+        states_metadata_ids,
         json_quoted_entity_ids,
         json_quoted_device_ids,
     ).cte()
     # We used to optimize this to exclude rows we already in the union with
-    # a States.entity_id.not_in(entity_ids) but that made the
+    # a States.metadata_id.not_in(states_metadata_ids) but that made the
     # query much slower on MySQL, and since we already filter them away
     # in the python code anyways since they will have context_only
     # set on them the impact is minimal.
     return sel.union_all(
-        states_select_for_entity_ids(start_day, end_day, entity_ids),
+        states_select_for_entity_ids(start_day, end_day, states_metadata_ids),
         apply_events_context_hints(
             select_events_context_only()
             .select_from(devices_entities_cte)
@@ -94,6 +95,7 @@ def _apply_entities_devices_context_union(
             .outerjoin(
                 States, devices_entities_cte.c.context_id_bin == States.context_id_bin
             )
+            .outerjoin(StatesMeta, (States.metadata_id == StatesMeta.metadata_id))
         ),
     )
 
@@ -102,7 +104,7 @@ def entities_devices_stmt(
     start_day: float,
     end_day: float,
     event_types: tuple[str, ...],
-    entity_ids: list[str],
+    states_metadata_ids: Collection[int],
     json_quoted_entity_ids: list[str],
     json_quoted_device_ids: list[str],
 ) -> StatementLambdaElement:
@@ -117,7 +119,7 @@ def entities_devices_stmt(
             start_day,
             end_day,
             event_types,
-            entity_ids,
+            states_metadata_ids,
             json_quoted_entity_ids,
             json_quoted_device_ids,
         ).order_by(Events.time_fired_ts)

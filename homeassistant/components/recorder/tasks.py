@@ -13,8 +13,8 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.core import Event
 from homeassistant.helpers.typing import UndefinedType
 
-from . import purge, statistics
-from .const import DOMAIN, EXCLUDE_ATTRIBUTES
+from . import entity_registry, purge, statistics
+from .const import DOMAIN
 from .db_schema import Statistics, StatisticsShortTerm
 from .models import StatisticData, StatisticMetaData
 from .util import periodic_db_cleanups
@@ -84,6 +84,22 @@ class UpdateStatisticsMetadataTask(RecorderTask):
 
 
 @dataclass
+class UpdateStatesMetadataTask(RecorderTask):
+    """Task to update states metadata."""
+
+    entity_id: str
+    new_entity_id: str
+
+    def run(self, instance: Recorder) -> None:
+        """Handle the task."""
+        entity_registry.update_states_metadata(
+            instance,
+            self.entity_id,
+            self.new_entity_id,
+        )
+
+
+@dataclass
 class PurgeTask(RecorderTask):
     """Object to store information about purge task."""
 
@@ -97,7 +113,7 @@ class PurgeTask(RecorderTask):
             instance, self.purge_before, self.repack, self.apply_filter
         ):
             with instance.get_session() as session:
-                instance.run_history.load_from_db(session)
+                instance.recorder_runs_manager.load_from_db(session)
             # We always need to do the db cleanups after a purge
             # is finished to ensure the WAL checkpoint and other
             # tasks happen after a vacuum.
@@ -114,13 +130,14 @@ class PurgeEntitiesTask(RecorderTask):
     """Object to store entity information about purge task."""
 
     entity_filter: Callable[[str], bool]
+    purge_before: datetime
 
     def run(self, instance: Recorder) -> None:
         """Purge entities from the database."""
-        if purge.purge_entity_data(instance, self.entity_filter):
+        if purge.purge_entity_data(instance, self.entity_filter, self.purge_before):
             return
         # Schedule a new purge task if this one didn't finish
-        instance.queue_task(PurgeEntitiesTask(self.entity_filter))
+        instance.queue_task(PurgeEntitiesTask(self.entity_filter, self.purge_before))
 
 
 @dataclass
@@ -148,6 +165,18 @@ class StatisticsTask(RecorderTask):
             return
         # Schedule a new statistics task if this one didn't finish
         instance.queue_task(StatisticsTask(self.start, self.fire_events))
+
+
+@dataclass
+class CompileMissingStatisticsTask(RecorderTask):
+    """An object to insert into the recorder queue to run a compile missing statistics."""
+
+    def run(self, instance: Recorder) -> None:
+        """Run statistics task to compile missing statistics."""
+        if statistics.compile_missing_statistics(instance):
+            return
+        # Schedule a new statistics task if this one didn't finish
+        instance.queue_task(CompileMissingStatisticsTask())
 
 
 @dataclass
@@ -288,11 +317,8 @@ class AddRecorderPlatformTask(RecorderTask):
         hass = instance.hass
         domain = self.domain
         platform = self.platform
-
         platforms: dict[str, Any] = hass.data[DOMAIN].recorder_platforms
         platforms[domain] = platform
-        if hasattr(self.platform, "exclude_attributes"):
-            hass.data[EXCLUDE_ATTRIBUTES][domain] = platform.exclude_attributes(hass)
 
 
 @dataclass
@@ -346,16 +372,33 @@ class AdjustLRUSizeTask(RecorderTask):
 
 
 @dataclass
-class ContextIDMigrationTask(RecorderTask):
-    """An object to insert into the recorder queue to migrate context ids."""
+class StatesContextIDMigrationTask(RecorderTask):
+    """An object to insert into the recorder queue to migrate states context ids."""
 
     commit_before = False
 
     def run(self, instance: Recorder) -> None:
         """Run context id migration task."""
-        if not instance._migrate_context_ids():  # pylint: disable=[protected-access]
+        if (
+            not instance._migrate_states_context_ids()  # pylint: disable=[protected-access]
+        ):
             # Schedule a new migration task if this one didn't finish
-            instance.queue_task(ContextIDMigrationTask())
+            instance.queue_task(StatesContextIDMigrationTask())
+
+
+@dataclass
+class EventsContextIDMigrationTask(RecorderTask):
+    """An object to insert into the recorder queue to migrate events context ids."""
+
+    commit_before = False
+
+    def run(self, instance: Recorder) -> None:
+        """Run context id migration task."""
+        if (
+            not instance._migrate_events_context_ids()  # pylint: disable=[protected-access]
+        ):
+            # Schedule a new migration task if this one didn't finish
+            instance.queue_task(EventsContextIDMigrationTask())
 
 
 @dataclass
@@ -372,3 +415,53 @@ class EventTypeIDMigrationTask(RecorderTask):
         if not instance._migrate_event_type_ids():  # pylint: disable=[protected-access]
             # Schedule a new migration task if this one didn't finish
             instance.queue_task(EventTypeIDMigrationTask())
+
+
+@dataclass
+class EntityIDMigrationTask(RecorderTask):
+    """An object to insert into the recorder queue to migrate entity_ids to StatesMeta."""
+
+    commit_before = True
+    # We have to commit before to make sure there are
+    # no new pending states_meta about to be added to
+    # the db since this happens live
+
+    def run(self, instance: Recorder) -> None:
+        """Run entity_id migration task."""
+        if not instance._migrate_entity_ids():  # pylint: disable=[protected-access]
+            # Schedule a new migration task if this one didn't finish
+            instance.queue_task(EntityIDMigrationTask())
+        else:
+            # The migration has finished, now we start the post migration
+            # to remove the old entity_id data from the states table
+            # at this point we can also start using the StatesMeta table
+            # so we set active to True
+            instance.states_meta_manager.active = True
+            instance.queue_task(EntityIDPostMigrationTask())
+
+
+@dataclass
+class EntityIDPostMigrationTask(RecorderTask):
+    """An object to insert into the recorder queue to cleanup after entity_ids migration."""
+
+    def run(self, instance: Recorder) -> None:
+        """Run entity_id post migration task."""
+        if (
+            not instance._post_migrate_entity_ids()  # pylint: disable=[protected-access]
+        ):
+            # Schedule a new migration task if this one didn't finish
+            instance.queue_task(EntityIDPostMigrationTask())
+
+
+@dataclass
+class EventIdMigrationTask(RecorderTask):
+    """An object to insert into the recorder queue to cleanup legacy event_ids in the states table.
+
+    This task should only be queued if the ix_states_event_id index exists
+    since it is used to scan the states table and it will be removed after this
+    task is run if its no longer needed.
+    """
+
+    def run(self, instance: Recorder) -> None:
+        """Clean up the legacy event_id index on states."""
+        instance._cleanup_legacy_states_event_ids()  # pylint: disable=[protected-access]

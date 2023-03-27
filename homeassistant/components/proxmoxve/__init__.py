@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
+
 from functools import partial
 from typing import Any
 
@@ -63,9 +64,7 @@ from .const import (
     ProxmoxType,
 )
 
-PLATFORMS = [
-    Platform.BINARY_SENSOR,
-]
+PLATFORMS = [Platform.BINARY_SENSOR]
 
 CONFIG_SCHEMA = vol.Schema(
     {

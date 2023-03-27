@@ -1,8 +1,13 @@
 {
   "common": {
+    "generic": {
+      "model": "Model"
+    },
     "state": {
       "off": "Off",
       "on": "On",
+      "yes": "Yes",
+      "no": "No",
       "open": "Open",
       "closed": "Closed",
       "connected": "Connected",
