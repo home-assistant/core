@@ -12,6 +12,7 @@ from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import HomeAssistant, callback, split_entity_id
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import get_device_class
 from homeassistant.helpers.storage import Store
@@ -108,7 +109,7 @@ class ExposedEntities:
         """
         entity_registry = er.async_get(self._hass)
         if not (registry_entry := entity_registry.async_get(entity_id)):
-            return
+            raise HomeAssistantError("Unknown entity")
 
         if (
             assistant_options := registry_entry.options.get(assistant, {})
@@ -243,11 +244,32 @@ def ws_expose_entity(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Expose an entity to an assistant."""
+    entity_registry = er.async_get(hass)
     entity_ids: str = msg["entity_ids"]
 
-    if any(entity_id in CLOUD_NEVER_EXPOSED_ENTITIES for entity_id in entity_ids):
+    if blocked := next(
+        (
+            entity_id
+            for entity_id in entity_ids
+            if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES
+        ),
+        None,
+    ):
         connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_ALLOWED, f"can't expose {entity_ids}"
+            msg["id"], websocket_api.const.ERR_NOT_ALLOWED, f"can't expose '{blocked}'"
+        )
+        return
+
+    if unknown := next(
+        (
+            entity_id
+            for entity_id in entity_ids
+            if entity_id not in entity_registry.entities
+        ),
+        None,
+    ):
+        connection.send_error(
+            msg["id"], websocket_api.const.ERR_NOT_FOUND, f"can't expose '{unknown}'"
         )
         return
 
