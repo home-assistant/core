@@ -1,8 +1,6 @@
 """Support for BTHome binary sensors."""
 from __future__ import annotations
 
-from typing import Optional
-
 from bthome_ble import (
     BinarySensorDeviceClass as BTHomeBinarySensorDeviceClass,
     SensorUpdate,
@@ -188,7 +186,7 @@ async def async_setup_entry(
 
 
 class BTHomeBluetoothBinarySensorEntity(
-    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[Optional[bool]]],
+    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[bool | None]],
     BinarySensorEntity,
 ):
     """Representation of a BTHome binary sensor."""

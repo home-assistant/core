@@ -16,7 +16,7 @@ class SmartTubEntity(CoordinatorEntity):
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, spa: smarttub.Spa, entity_name
-    ):
+    ) -> None:
         """Initialize the entity.
 
         Given a spa id and a short name for the entity, we provide basic device

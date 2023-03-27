@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine, Mapping
+from collections.abc import Mapping
 from copy import deepcopy
 from typing import Any
 
@@ -68,14 +68,16 @@ class GroupNotifyPlatform(BaseNotificationService):
         payload: dict[str, Any] = {ATTR_MESSAGE: message}
         payload.update({key: val for key, val in kwargs.items() if val})
 
-        tasks: list[Coroutine[Any, Any, bool | None]] = []
+        tasks: list[asyncio.Task[bool | None]] = []
         for entity in self.entities:
             sending_payload = deepcopy(payload.copy())
             if (data := entity.get(ATTR_DATA)) is not None:
                 update(sending_payload, data)
             tasks.append(
-                self.hass.services.async_call(
-                    DOMAIN, entity[ATTR_SERVICE], sending_payload
+                asyncio.create_task(
+                    self.hass.services.async_call(
+                        DOMAIN, entity[ATTR_SERVICE], sending_payload
+                    )
                 )
             )
 

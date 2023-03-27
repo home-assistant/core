@@ -26,11 +26,14 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
 )
+from homeassistant.core import HomeAssistant
 
 from . import trigger_update
 
 
-async def test_thermostat_update(spa, spa_state, setup_entry, hass):
+async def test_thermostat_update(
+    spa, spa_state, setup_entry, hass: HomeAssistant
+) -> None:
     """Test the thermostat entity."""
 
     entity_id = f"climate.{spa.brand}_{spa.model}_thermostat"

@@ -33,6 +33,7 @@ __all__ = (
     "patch_all_discovered_devices",
     "patch_discovered_devices",
     "generate_advertisement_data",
+    "generate_ble_device",
     "MockBleakClient",
 )
 
@@ -46,6 +47,12 @@ ADVERTISEMENT_DATA_DEFAULTS = {
     "tx_power": -127,
 }
 
+BLE_DEVICE_DEFAULTS = {
+    "name": None,
+    "rssi": -127,
+    "details": None,
+}
+
 
 def generate_advertisement_data(**kwargs: Any) -> AdvertisementData:
     """Generate advertisement data with defaults."""
@@ -53,6 +60,28 @@ def generate_advertisement_data(**kwargs: Any) -> AdvertisementData:
     for key, value in ADVERTISEMENT_DATA_DEFAULTS.items():
         new.setdefault(key, value)
     return AdvertisementData(**new)
+
+
+def generate_ble_device(
+    address: str | None = None,
+    name: str | None = None,
+    details: Any | None = None,
+    rssi: int | None = None,
+    **kwargs: Any,
+) -> BLEDevice:
+    """Generate a BLEDevice with defaults."""
+    new = kwargs.copy()
+    if address is not None:
+        new["address"] = address
+    if name is not None:
+        new["name"] = name
+    if details is not None:
+        new["details"] = details
+    if rssi is not None:
+        new["rssi"] = rssi
+    for key, value in BLE_DEVICE_DEFAULTS.items():
+        new.setdefault(key, value)
+    return BLEDevice(**new)
 
 
 def _get_manager() -> BluetoothManager:
@@ -126,7 +155,7 @@ def inject_bluetooth_service_info_bleak(
         service_uuids=info.service_uuids,
         rssi=info.rssi,
     )
-    device = BLEDevice(  # type: ignore[no-untyped-call]
+    device = generate_ble_device(  # type: ignore[no-untyped-call]
         address=info.address,
         name=info.name,
         details={},
@@ -152,7 +181,7 @@ def inject_bluetooth_service_info(
         service_uuids=info.service_uuids,
         rssi=info.rssi,
     )
-    device = BLEDevice(  # type: ignore[no-untyped-call]
+    device = generate_ble_device(  # type: ignore[no-untyped-call]
         address=info.address,
         name=info.name,
         details={},

@@ -10,9 +10,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_NAME
+from homeassistant.const import ATTR_NAME, EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AmbientWeatherEntity
@@ -168,28 +167,28 @@ BINARY_SENSOR_DESCRIPTIONS = (
         name="Leak detector battery 1",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        on_state=0,
+        on_state=1,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_BATT_LEAK2,
         name="Leak detector battery 2",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        on_state=0,
+        on_state=1,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_BATT_LEAK3,
         name="Leak detector battery 3",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        on_state=0,
+        on_state=1,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_BATT_LEAK4,
         name="Leak detector battery 4",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        on_state=0,
+        on_state=1,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_BATT_SM1,
@@ -273,7 +272,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
         name="Lightning detector battery",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        on_state=0,
+        on_state=1,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_LEAK1,

@@ -1,5 +1,4 @@
 """deCONZ switch platform tests."""
-
 from unittest.mock import patch
 
 from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
@@ -10,6 +9,7 @@ from homeassistant.components.switch import (
     SERVICE_TURN_ON,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .test_gateway import (
@@ -18,14 +18,20 @@ from .test_gateway import (
     setup_deconz_integration,
 )
 
+from tests.test_util.aiohttp import AiohttpClientMocker
 
-async def test_no_switches(hass, aioclient_mock):
+
+async def test_no_switches(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that no switch entities are created."""
     await setup_deconz_integration(hass, aioclient_mock)
     assert len(hass.states.async_all()) == 0
 
 
-async def test_power_plugs(hass, aioclient_mock, mock_deconz_websocket):
+async def test_power_plugs(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test that all supported switch entities are created."""
     data = {
         "lights": {
@@ -112,7 +118,9 @@ async def test_power_plugs(hass, aioclient_mock, mock_deconz_websocket):
     assert len(hass.states.async_all()) == 0
 
 
-async def test_remove_legacy_on_off_output_as_light(hass, aioclient_mock):
+async def test_remove_legacy_on_off_output_as_light(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that switch platform cleans up legacy light entities."""
     unique_id = "00:00:00:00:00:00:00:00-00"
 

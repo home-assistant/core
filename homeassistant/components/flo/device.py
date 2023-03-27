@@ -43,7 +43,7 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
                 await self.send_presence_ping()
                 await self._update_device()
                 await self._update_consumption_data()
-        except (RequestError) as error:
+        except RequestError as error:
             raise UpdateFailed(error) from error
 
     @property

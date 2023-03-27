@@ -172,7 +172,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if hass.data[DOMAIN][entry.entry_id][COORDINATOR_ALERT]:
-
         department = hass.data[DOMAIN][entry.entry_id][
             COORDINATOR_FORECAST
         ].data.position.get("dept")

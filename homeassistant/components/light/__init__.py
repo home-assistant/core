@@ -10,6 +10,7 @@ import logging
 import os
 from typing import Any, cast, final
 
+from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.backports.enum import StrEnum
@@ -275,7 +276,7 @@ LIGHT_TURN_ON_SCHEMA = {
     vol.Exclusive(ATTR_XY_COLOR, COLOR_GROUP): vol.All(
         vol.Coerce(tuple), vol.ExactSequence((cv.small_float, cv.small_float))
     ),
-    vol.Exclusive(ATTR_WHITE, COLOR_GROUP): VALID_BRIGHTNESS,
+    vol.Exclusive(ATTR_WHITE, COLOR_GROUP): vol.Any(True, VALID_BRIGHTNESS),
     ATTR_FLASH: VALID_FLASH,
     ATTR_EFFECT: cv.string,
 }
@@ -404,7 +405,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         base["params"] = data
         return base
 
-    async def async_handle_light_on_service(
+    async def async_handle_light_on_service(  # noqa: C901
         light: LightEntity, call: ServiceCall
     ) -> None:
         """Handle turning a light on.
@@ -434,9 +435,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         ):
             profiles.apply_default(light.entity_id, light.is_on, params)
 
-        legacy_supported_color_modes = (
-            light._light_internal_supported_color_modes  # pylint: disable=protected-access
-        )
+        # pylint: disable-next=protected-access
+        legacy_supported_color_modes = light._light_internal_supported_color_modes
         supported_color_modes = light.supported_color_modes
 
         # If a color temperature is specified, emulate it if not supported by the light
@@ -504,8 +504,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 params[ATTR_RGBW_COLOR] = color_util.color_rgb_to_rgbw(*rgb_color)
             elif ColorMode.RGBWW in supported_color_modes:
                 # https://github.com/python/mypy/issues/13673
-                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(  # type: ignore[call-arg]
-                    *rgb_color, light.min_color_temp_kelvin, light.max_color_temp_kelvin
+                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
+                    *rgb_color,  # type: ignore[call-arg]
+                    light.min_color_temp_kelvin,
+                    light.max_color_temp_kelvin,
                 )
             elif ColorMode.HS in supported_color_modes:
                 params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
@@ -554,6 +556,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
             elif ColorMode.XY in supported_color_modes:
                 params[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
+
+        # If white is set to True, set it to the light's brightness
+        # Add a warning in Home Assistant Core 2023.5 if the brightness is set to an
+        # integer.
+        if params.get(ATTR_WHITE) is True:
+            params[ATTR_WHITE] = light.brightness
 
         # If both white and brightness are specified, override white
         if (
@@ -678,7 +686,7 @@ class Profile:
         )
 
     @classmethod
-    def from_csv_row(cls, csv_row: list[str]) -> Profile:
+    def from_csv_row(cls, csv_row: list[str]) -> Self:
         """Create profile from a CSV row tuple."""
         return cls(*cls.SCHEMA(csv_row))
 

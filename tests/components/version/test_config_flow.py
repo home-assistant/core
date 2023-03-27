@@ -27,7 +27,7 @@ from .common import MOCK_VERSION, MOCK_VERSION_DATA, setup_version_integration
 from tests.common import async_fire_time_changed
 
 
-async def test_reload_config_entry(hass: HomeAssistant):
+async def test_reload_config_entry(hass: HomeAssistant) -> None:
     """Test reloading the config entry."""
     config_entry = await setup_version_integration(hass)
     assert config_entry.state == config_entries.ConfigEntryState.LOADED

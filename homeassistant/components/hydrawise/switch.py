@@ -81,7 +81,7 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
 
     def __init__(
         self, data, description: SwitchEntityDescription, default_watering_timer
-    ):
+    ) -> None:
         """Initialize a switch for Hydrawise device."""
         super().__init__(data, description)
         self._default_watering_timer = default_watering_timer

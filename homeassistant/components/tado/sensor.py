@@ -268,7 +268,7 @@ class TadoZoneSensor(TadoZoneEntity, SensorEntity):
     @property
     def state_class(self):
         """Return the state class."""
-        if self.zone_variable in ["ac", "heating", "humidity", "temperature"]:
+        if self.zone_variable in ["heating", "humidity", "temperature"]:
             return SensorStateClass.MEASUREMENT
         return None
 

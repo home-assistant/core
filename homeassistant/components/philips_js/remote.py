@@ -1,4 +1,6 @@
 """Remote control support for Apple TV."""
+from __future__ import annotations
+
 import asyncio
 from collections.abc import Iterable
 from typing import Any
@@ -68,7 +70,7 @@ class PhilipsTVRemote(CoordinatorEntity[PhilipsTVDataUpdateCoordinator], RemoteE
             )
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if device is on."""
         return bool(
             self._tv.on and (self._tv.powerstate == "On" or self._tv.powerstate is None)

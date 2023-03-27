@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import Router
-from .const import ATTR_UNIQUE_ID, DOMAIN
+from .const import ATTR_CONFIG_ENTRY_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ async def async_get_service(
     if discovery_info is None:
         return None
 
-    router = hass.data[DOMAIN].routers[discovery_info[ATTR_UNIQUE_ID]]
+    router = hass.data[DOMAIN].routers[discovery_info[ATTR_CONFIG_ENTRY_ID]]
     default_targets = discovery_info[CONF_RECIPIENT] or []
 
     return HuaweiLteSmsNotificationService(router, default_targets)

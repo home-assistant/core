@@ -9,7 +9,9 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, STATE_IDLE, UnitOfDataRate
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TransmissionClient
@@ -18,6 +20,9 @@ from .const import (
     CONF_ORDER,
     DOMAIN,
     STATE_ATTR_TORRENT_INFO,
+    STATE_DOWNLOADING,
+    STATE_SEEDING,
+    STATE_UP_DOWN,
     SUPPORTED_ORDER_MODES,
 )
 
@@ -58,6 +63,12 @@ class TransmissionSensor(SensorEntity):
         self._name = sensor_name
         self._sub_type = sub_type
         self._state = None
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, tm_client.config_entry.entry_id)},
+            manufacturer="Transmission",
+            name=client_name,
+        )
 
     @property
     def name(self):
@@ -115,17 +126,21 @@ class TransmissionSpeedSensor(TransmissionSensor):
 class TransmissionStatusSensor(TransmissionSensor):
     """Representation of a Transmission status sensor."""
 
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = [STATE_IDLE, STATE_UP_DOWN, STATE_SEEDING, STATE_DOWNLOADING]
+    _attr_translation_key = "transmission_status"
+
     def update(self) -> None:
         """Get the latest data from Transmission and updates the state."""
         if data := self._tm_client.api.data:
             upload = data.uploadSpeed
             download = data.downloadSpeed
             if upload > 0 and download > 0:
-                self._state = "Up/Down"
+                self._state = STATE_UP_DOWN
             elif upload > 0 and download == 0:
-                self._state = "Seeding"
+                self._state = STATE_SEEDING
             elif upload == 0 and download > 0:
-                self._state = "Downloading"
+                self._state = STATE_DOWNLOADING
             else:
                 self._state = STATE_IDLE
         else:

@@ -6,6 +6,7 @@ import logging
 from time import localtime, strftime, time
 from typing import Any
 
+from aiolyric import Lyric
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
 import voluptuous as vol
@@ -97,7 +98,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Honeywell Lyric climate platform based on a config entry."""
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: DataUpdateCoordinator[Lyric] = hass.data[DOMAIN][entry.entry_id]
 
     entities = []
 
@@ -130,12 +131,12 @@ async def async_setup_entry(
 class LyricClimate(LyricDeviceEntity, ClimateEntity):
     """Defines a Honeywell Lyric climate entity."""
 
-    coordinator: DataUpdateCoordinator
+    coordinator: DataUpdateCoordinator[Lyric]
     entity_description: ClimateEntityDescription
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[Lyric],
         description: ClimateEntityDescription,
         location: LyricLocation,
         device: LyricDevice,
@@ -313,10 +314,11 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         _LOGGER.debug("HVAC mode: %s", hvac_mode)
         try:
             if LYRIC_HVAC_MODES[hvac_mode] == LYRIC_HVAC_MODE_HEAT_COOL:
-                # If the system is off, turn it to Heat first then to Auto, otherwise it turns to
-                # Auto briefly and then reverts to Off (perhaps related to heatCoolMode). This is the
-                # behavior that happens with the native app as well, so likely a bug in the api itself
-
+                # If the system is off, turn it to Heat first then to Auto,
+                # otherwise it turns to.
+                # Auto briefly and then reverts to Off (perhaps related to
+                # heatCoolMode). This is the behavior that happens with the
+                # native app as well, so likely a bug in the api itself
                 if HVAC_MODES[self.device.changeableValues.mode] == HVACMode.OFF:
                     _LOGGER.debug(
                         "HVAC mode passed to lyric: %s",

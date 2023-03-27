@@ -47,6 +47,7 @@ async def verify_redirect_uri(
     if client_id == "https://home-assistant.io/android" and redirect_uri in (
         "homeassistant://auth-callback",
         "https://wear.googleapis.com/3p_auth/io.homeassistant.companion.android",
+        "https://wear.googleapis-cn.com/3p_auth/io.homeassistant.companion.android",
     ):
         return True
 

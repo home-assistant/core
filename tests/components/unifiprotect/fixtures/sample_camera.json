@@ -24,7 +24,7 @@
   "canAdopt": false,
   "isAttemptingToConnect": false,
   "lastMotion": 1640021213927,
-  "micVolume": 0,
+  "micVolume": 1,
   "isMicEnabled": true,
   "isRecording": false,
   "isWirelessUplinkEnabled": true,
@@ -121,7 +121,7 @@
     "aeMode": "auto",
     "irLedMode": "auto",
     "irLedLevel": 255,
-    "wdr": 0,
+    "wdr": 1,
     "icrSensitivity": 0,
     "brightness": 50,
     "contrast": 50,
@@ -145,7 +145,7 @@
     "focusPosition": 0,
     "touchFocusX": 1001,
     "touchFocusY": 1001,
-    "zoomPosition": 0,
+    "zoomPosition": 1,
     "mountPosition": "wall"
   },
   "talkbackSettings": {

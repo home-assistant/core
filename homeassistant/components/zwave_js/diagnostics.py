@@ -106,7 +106,7 @@ def get_device_entities(
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> list[dict]:
+) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     msgs: list[dict] = async_redact_data(
         await dump_msgs(
@@ -117,14 +117,15 @@ async def async_get_config_entry_diagnostics(
     handshake_msgs = msgs[:-1]
     network_state = msgs[-1]
     network_state["result"]["state"]["nodes"] = [
-        redact_node_state(node) for node in network_state["result"]["state"]["nodes"]
+        redact_node_state(async_redact_data(node, KEYS_TO_REDACT))
+        for node in network_state["result"]["state"]["nodes"]
     ]
-    return [*handshake_msgs, network_state]
+    return {"messages": [*handshake_msgs, network_state]}
 
 
 async def async_get_device_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry, device: dr.DeviceEntry
-) -> dict:
+) -> dict[str, Any]:
     """Return diagnostics for a device."""
     client: Client = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
     identifiers = get_home_and_node_id_from_device_entry(device)
@@ -136,7 +137,6 @@ async def async_get_device_diagnostics(
     entities = get_device_entities(hass, node, device)
     assert client.version
     node_state = redact_node_state(async_redact_data(node.data, KEYS_TO_REDACT))
-    node_state["statistics"] = node.statistics.data
     return {
         "versionInfo": {
             "driverVersion": client.version.driver_version,

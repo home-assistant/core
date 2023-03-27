@@ -1,7 +1,6 @@
 """Http views to control the config manager."""
 from __future__ import annotations
 
-import asyncio
 from http import HTTPStatus
 from typing import Any
 
@@ -26,6 +25,7 @@ from homeassistant.loader import (
     IntegrationNotFound,
     async_get_config_flows,
     async_get_integration,
+    async_get_integrations,
 )
 
 
@@ -493,14 +493,12 @@ async def async_matching_config_entries(
 
     integrations = {}
     # Fetch all the integrations so we can check their type
-    tasks = (
-        async_get_integration(hass, domain)
-        for domain in {entry.domain for entry in entries}
-    )
-    results = await asyncio.gather(*tasks, return_exceptions=True)
-    for integration_or_exc in results:
+    domains = {entry.domain for entry in entries}
+    for domain_key, integration_or_exc in (
+        await async_get_integrations(hass, domains)
+    ).items():
         if isinstance(integration_or_exc, Integration):
-            integrations[integration_or_exc.domain] = integration_or_exc
+            integrations[domain_key] = integration_or_exc
         elif not isinstance(integration_or_exc, IntegrationNotFound):
             raise integration_or_exc
 

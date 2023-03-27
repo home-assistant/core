@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, cast
 import uuid
 
 import voluptuous as vol
@@ -192,7 +192,7 @@ async def get_edit_sensor_suggested_values(
 ) -> dict[str, Any]:
     """Return suggested values for sensor editing."""
     idx: int = handler.flow_state["_idx"]
-    return handler.options[SENSOR_DOMAIN][idx]
+    return cast(dict[str, Any], handler.options[SENSOR_DOMAIN][idx])
 
 
 def __validate_enum_state(
@@ -326,4 +326,4 @@ class ScrapeConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
-        return options[CONF_RESOURCE]
+        return cast(str, options[CONF_RESOURCE])

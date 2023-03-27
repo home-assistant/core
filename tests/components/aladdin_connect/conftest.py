@@ -40,4 +40,4 @@ def fixture_mock_aladdinconnect_api():
         mock_opener.open_door = AsyncMock(return_value=True)
         mock_opener.close_door = AsyncMock(return_value=True)
 
-    yield mock_opener
+    return mock_opener

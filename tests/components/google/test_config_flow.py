@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import datetime
+from http import HTTPStatus
 from unittest.mock import Mock, patch
 
 from aiohttp.client_exceptions import ClientError
@@ -95,10 +96,17 @@ async def primary_calendar_error() -> ClientError | None:
     return None
 
 
+@pytest.fixture
+async def primary_calendar_status() -> HTTPStatus | None:
+    """Fixture for tests to inject an error during calendar lookup."""
+    return HTTPStatus.OK
+
+
 @pytest.fixture(autouse=True)
 async def primary_calendar(
     mock_calendar_get: Callable[[...], None],
     primary_calendar_error: ClientError | None,
+    primary_calendar_status: HTTPStatus | None,
     primary_calendar_email: str,
 ) -> None:
     """Fixture to return the primary calendar."""
@@ -106,6 +114,7 @@ async def primary_calendar(
         "primary",
         {"id": primary_calendar_email, "summary": "Personal", "accessRole": "owner"},
         exc=primary_calendar_error,
+        status=primary_calendar_status,
     )
 
 
@@ -515,11 +524,19 @@ async def test_reauth_flow(
     assert len(mock_setup.mock_calls) == 1
 
 
-@pytest.mark.parametrize("primary_calendar_error", [ClientError()])
+@pytest.mark.parametrize(
+    ("primary_calendar_error", "primary_calendar_status", "reason"),
+    [
+        (ClientError(), None, "cannot_connect"),
+        (None, HTTPStatus.FORBIDDEN, "api_disabled"),
+        (None, HTTPStatus.SERVICE_UNAVAILABLE, "cannot_connect"),
+    ],
+)
 async def test_calendar_lookup_failure(
     hass: HomeAssistant,
     mock_code_flow: Mock,
     mock_exchange: Mock,
+    reason: str,
 ) -> None:
     """Test successful config flow and title fetch fails gracefully."""
     await async_import_client_credential(
@@ -544,7 +561,7 @@ async def test_calendar_lookup_failure(
         )
 
     assert result.get("type") == "abort"
-    assert result.get("reason") == "cannot_connect"
+    assert result.get("reason") == reason
 
 
 async def test_options_flow_triggers_reauth(

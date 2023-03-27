@@ -52,6 +52,8 @@ class FritzEntityBaseMock(Mock):
     manufacturer = CONF_FAKE_MANUFACTURER
     name = CONF_FAKE_NAME
     productname = CONF_FAKE_PRODUCTNAME
+    rel_humidity = None
+    battery_level = None
 
 
 class FritzDeviceBinarySensorMock(FritzEntityBaseMock):
@@ -127,6 +129,7 @@ class FritzDeviceSwitchMock(FritzEntityBaseMock):
     device_lock = "fake_locked_device"
     energy = 1234
     voltage = 230000
+    current = 25
     fw_version = "1.2.3"
     has_alarm = False
     has_powermeter = True
@@ -149,6 +152,8 @@ class FritzDeviceLightMock(FritzEntityBaseMock):
     has_alarm = False
     has_powermeter = False
     has_lightbulb = True
+    has_color = True
+    has_level = True
     has_switch = False
     has_temperature_sensor = False
     has_thermostat = False

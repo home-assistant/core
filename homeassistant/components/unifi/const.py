@@ -14,7 +14,6 @@ PLATFORMS = [
     Platform.UPDATE,
 ]
 
-CONF_CONTROLLER = "controller"
 CONF_SITE_ID = "site"
 
 UNIFI_WIRELESS_CLIENTS = "unifi_wireless_clients"

@@ -26,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data.get(CONF_PASSWORD),
         )
         hass.data[SRP_ENERGY_DOMAIN] = srp_energy_client
-    except (Exception) as ex:
+    except Exception as ex:
         _LOGGER.error("Unable to connect to Srp Energy: %s", str(ex))
         raise ConfigEntryNotReady from ex
 
