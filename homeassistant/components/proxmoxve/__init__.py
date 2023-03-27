@@ -45,9 +45,7 @@ from .const import (
     UPDATE_INTERVAL,
 )
 
-PLATFORMS = [
-    Platform.BINARY_SENSOR,
-]
+PLATFORMS = [Platform.BINARY_SENSOR]
 
 CONFIG_SCHEMA = vol.Schema(
     {
