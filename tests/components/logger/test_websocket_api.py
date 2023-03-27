@@ -124,6 +124,7 @@ async def test_custom_integration_log_level(
         assert msg["success"]
 
         assert async_get_domain_config(hass).overrides == {
+            "homeassistant.components.foobar": logging.DEBUG,
             "custom_components.hue": logging.DEBUG,
             "some_other_logger": logging.DEBUG,
         }
