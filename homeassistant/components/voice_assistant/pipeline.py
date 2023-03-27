@@ -150,6 +150,7 @@ class PipelineRun:
     end_stage: PipelineStage
     event_callback: Callable[[PipelineEvent], None]
     language: str = None  # type: ignore[assignment]
+    runner_data: Any | None = None
 
     def __post_init__(self):
         """Set language for pipeline."""
@@ -163,15 +164,14 @@ class PipelineRun:
 
     def start(self):
         """Emit run start event."""
-        self.event_callback(
-            PipelineEvent(
-                PipelineEventType.RUN_START,
-                {
-                    "pipeline": self.pipeline.name,
-                    "language": self.language,
-                },
-            )
-        )
+        data = {
+            "pipeline": self.pipeline.name,
+            "language": self.language,
+        }
+        if self.runner_data is not None:
+            data["runner_data"] = self.runner_data
+
+        self.event_callback(PipelineEvent(PipelineEventType.RUN_START, data))
 
     def end(self):
         """Emit run end event."""
@@ -200,41 +200,45 @@ class PipelineRun:
 
         try:
             # Load provider
-            stt_provider = stt.async_get_provider(self.hass, self.pipeline.stt_engine)
+            stt_provider: stt.Provider = stt.async_get_provider(
+                self.hass, self.pipeline.stt_engine
+            )
             assert stt_provider is not None
         except Exception as src_error:
-            stt_error = SpeechToTextError(
+            _LOGGER.exception("No speech to text provider for %s", engine)
+            raise SpeechToTextError(
                 code="stt-provider-missing",
                 message=f"No speech to text provider for: {engine}",
+            ) from src_error
+
+        if not stt_provider.check_metadata(metadata):
+            raise SpeechToTextError(
+                code="stt-provider-unsupported-metadata",
+                message=f"Provider {engine} does not support input speech to text metadata",
             )
-            _LOGGER.exception(stt_error.message)
-            self.event_callback(
-                PipelineEvent(
-                    PipelineEventType.ERROR,
-                    {"code": stt_error.code, "message": stt_error.message},
-                )
-            )
-            raise stt_error from src_error
 
         try:
             # Transcribe audio stream
             result = await stt_provider.async_process_audio_stream(metadata, stream)
-            assert (result.text is not None) and (
-                result.result == stt.SpeechResultState.SUCCESS
-            )
         except Exception as src_error:
-            stt_error = SpeechToTextError(
+            _LOGGER.exception("Unexpected error during speech to text")
+            raise SpeechToTextError(
                 code="stt-stream-failed",
                 message="Unexpected error during speech to text",
+            ) from src_error
+
+        _LOGGER.debug("speech-to-text result %s", result)
+
+        if result.result != stt.SpeechResultState.SUCCESS:
+            raise SpeechToTextError(
+                code="stt-stream-failed",
+                message="Speech to text failed",
             )
-            _LOGGER.exception(stt_error.message)
-            self.event_callback(
-                PipelineEvent(
-                    PipelineEventType.ERROR,
-                    {"code": stt_error.code, "message": stt_error.message},
-                )
+
+        if not result.text:
+            raise SpeechToTextError(
+                code="stt-no-text-recognized", message="No text recognized"
             )
-            raise stt_error from src_error
 
         self.event_callback(
             PipelineEvent(
@@ -273,18 +277,13 @@ class PipelineRun:
                 agent_id=self.pipeline.conversation_engine,
             )
         except Exception as src_error:
-            intent_error = IntentRecognitionError(
+            _LOGGER.exception("Unexpected error during intent recognition")
+            raise IntentRecognitionError(
                 code="intent-failed",
                 message="Unexpected error during intent recognition",
-            )
-            _LOGGER.exception(intent_error.message)
-            self.event_callback(
-                PipelineEvent(
-                    PipelineEventType.ERROR,
-                    {"code": intent_error.code, "message": intent_error.message},
-                )
-            )
-            raise intent_error from src_error
+            ) from src_error
+
+        _LOGGER.debug("conversation result %s", conversation_result)
 
         self.event_callback(
             PipelineEvent(
@@ -320,18 +319,13 @@ class PipelineRun:
                 ),
             )
         except Exception as src_error:
-            tts_error = TextToSpeechError(
+            _LOGGER.exception("Unexpected error during text to speech")
+            raise TextToSpeechError(
                 code="tts-failed",
                 message="Unexpected error during text to speech",
-            )
-            _LOGGER.exception(tts_error.message)
-            self.event_callback(
-                PipelineEvent(
-                    PipelineEventType.ERROR,
-                    {"code": tts_error.code, "message": tts_error.message},
-                )
-            )
-            raise tts_error from src_error
+            ) from src_error
+
+        _LOGGER.debug("TTS result %s", tts_media)
 
         self.event_callback(
             PipelineEvent(
@@ -377,31 +371,41 @@ class PipelineInput:
         run.start()
         current_stage = run.start_stage
 
-        # Speech to text
-        intent_input = self.intent_input
-        if current_stage == PipelineStage.STT:
-            assert self.stt_metadata is not None
-            assert self.stt_stream is not None
-            intent_input = await run.speech_to_text(
-                self.stt_metadata,
-                self.stt_stream,
-            )
-            current_stage = PipelineStage.INTENT
-
-        if run.end_stage != PipelineStage.STT:
-            tts_input = self.tts_input
-
-            if current_stage == PipelineStage.INTENT:
-                assert intent_input is not None
-                tts_input = await run.recognize_intent(
-                    intent_input, self.conversation_id
+        try:
+            # Speech to text
+            intent_input = self.intent_input
+            if current_stage == PipelineStage.STT:
+                assert self.stt_metadata is not None
+                assert self.stt_stream is not None
+                intent_input = await run.speech_to_text(
+                    self.stt_metadata,
+                    self.stt_stream,
                 )
-                current_stage = PipelineStage.TTS
+                current_stage = PipelineStage.INTENT
 
-            if run.end_stage != PipelineStage.INTENT:
-                if current_stage == PipelineStage.TTS:
-                    assert tts_input is not None
-                    await run.text_to_speech(tts_input)
+            if run.end_stage != PipelineStage.STT:
+                tts_input = self.tts_input
+
+                if current_stage == PipelineStage.INTENT:
+                    assert intent_input is not None
+                    tts_input = await run.recognize_intent(
+                        intent_input, self.conversation_id
+                    )
+                    current_stage = PipelineStage.TTS
+
+                if run.end_stage != PipelineStage.INTENT:
+                    if current_stage == PipelineStage.TTS:
+                        assert tts_input is not None
+                        await run.text_to_speech(tts_input)
+
+        except PipelineError as err:
+            run.event_callback(
+                PipelineEvent(
+                    PipelineEventType.ERROR,
+                    {"code": err.code, "message": err.message},
+                )
+            )
+            return
 
         run.end()
 
