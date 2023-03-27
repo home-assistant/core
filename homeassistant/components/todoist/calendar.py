@@ -612,7 +612,7 @@ class TodoistProjectData:
                 event = CalendarEvent(
                     summary=task.content,
                     start=due_date_value,
-                    end=due_date_value,
+                    end=due_date_value + timedelta(days=1),
                 )
                 events.append(event)
         return events

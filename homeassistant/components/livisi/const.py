@@ -16,6 +16,8 @@ LIVISI_REACHABILITY_CHANGE: Final = "livisi_reachability_change"
 
 SWITCH_DEVICE_TYPES: Final = ["ISS", "ISS2", "PSS", "PSSO"]
 VRCC_DEVICE_TYPE: Final = "VRCC"
+WDS_DEVICE_TYPE: Final = "WDS"
+
 
 EVENT_BUTTON_PRESSED = "button_pressed"
 

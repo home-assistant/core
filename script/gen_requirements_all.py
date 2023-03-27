@@ -151,9 +151,9 @@ pandas==1.4.3;python_version<'3.11'
 # We need at least >=2.1.0 (tensorflow integration -> pycocotools)
 matplotlib==3.6.1
 
-# pyOpenSSL 23.0.0 or later required to avoid import errors when
-# cryptography 39.0.0 is installed with botocore
-pyOpenSSL>=23.0.0
+# pyOpenSSL 23.1.0 or later required to avoid import errors when
+# cryptography 40.0.1 is installed with botocore
+pyOpenSSL>=23.1.0
 
 # uamqp newer versions we currently can't build for armv7/armhf
 # Limit this to Python 3.10, to not block Python 3.11 dev for now

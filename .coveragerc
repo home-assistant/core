@@ -642,6 +642,7 @@ omit =
     homeassistant/components/linux_battery/sensor.py
     homeassistant/components/lirc/*
     homeassistant/components/livisi/__init__.py
+    homeassistant/components/livisi/binary_sensor.py
     homeassistant/components/livisi/climate.py
     homeassistant/components/livisi/coordinator.py
     homeassistant/components/livisi/entity.py
@@ -677,7 +678,6 @@ omit =
     homeassistant/components/lyric/api.py
     homeassistant/components/lyric/climate.py
     homeassistant/components/lyric/sensor.py
-    homeassistant/components/magicseaweed/sensor.py
     homeassistant/components/mailgun/notify.py
     homeassistant/components/map/*
     homeassistant/components/mastodon/notify.py
@@ -778,7 +778,11 @@ omit =
     homeassistant/components/nexia/climate.py
     homeassistant/components/nexia/entity.py
     homeassistant/components/nexia/switch.py
-    homeassistant/components/nextcloud/*
+    homeassistant/components/nextcloud/__init__.py
+    homeassistant/components/nextcloud/binary_sensor.py
+    homeassistant/components/nextcloud/coordinator.py
+    homeassistant/components/nextcloud/entity.py
+    homeassistant/components/nextcloud/sensor.py
     homeassistant/components/nfandroidtv/__init__.py
     homeassistant/components/nfandroidtv/notify.py
     homeassistant/components/nibe_heatpump/__init__.py

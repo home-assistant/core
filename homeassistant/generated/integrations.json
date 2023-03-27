@@ -3078,12 +3078,6 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "magicseaweed": {
-      "name": "Magicseaweed",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
-    },
     "mailgun": {
       "name": "Mailgun",
       "integration_type": "hub",
@@ -3622,7 +3616,7 @@
     "nextcloud": {
       "name": "Nextcloud",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "nextdns": {
@@ -4315,7 +4309,7 @@
     },
     "qbittorrent": {
       "name": "qBittorrent",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": false,
       "iot_class": "local_polling"
     },

@@ -10,14 +10,14 @@ atomicwrites-homeassistant==1.4.1
 attrs==22.2.0
 awesomeversion==22.9.0
 bcrypt==4.0.1
-bleak-retry-connector==3.0.1
-bleak==0.20.0
+bleak-retry-connector==3.0.2
+bleak==0.20.1
 bluetooth-adapters==0.15.3
 bluetooth-auto-recovery==1.0.3
 bluetooth-data-tools==0.3.1
 certifi>=2021.5.30
 ciso8601==2.3.0
-cryptography==39.0.1
+cryptography==40.0.1
 dbus-fast==1.84.2
 fnvhash==0.1.0
 hass-nabucasa==0.62.0
@@ -35,14 +35,14 @@ paho-mqtt==1.6.1
 pillow==9.4.0
 pip>=21.0,<23.1
 psutil-home-assistant==0.0.1
-pyOpenSSL==23.0.0
+pyOpenSSL==23.1.0
 pyserial==3.5
 python-slugify==4.0.1
 pyudev==0.23.2
 pyyaml==6.0
 requests==2.28.2
 scapy==2.5.0
-sqlalchemy==2.0.6
+sqlalchemy==2.0.7
 typing-extensions>=4.5.0,<5.0
 ulid-transform==0.5.1
 voluptuous-serialize==2.6.0
@@ -144,9 +144,9 @@ pandas==1.4.3;python_version<'3.11'
 # We need at least >=2.1.0 (tensorflow integration -> pycocotools)
 matplotlib==3.6.1
 
-# pyOpenSSL 23.0.0 or later required to avoid import errors when
-# cryptography 39.0.0 is installed with botocore
-pyOpenSSL>=23.0.0
+# pyOpenSSL 23.1.0 or later required to avoid import errors when
+# cryptography 40.0.1 is installed with botocore
+pyOpenSSL>=23.1.0
 
 # uamqp newer versions we currently can't build for armv7/armhf
 # Limit this to Python 3.10, to not block Python 3.11 dev for now

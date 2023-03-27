@@ -10,6 +10,7 @@ from aiolivisi.const import (
     EVENT_BUTTON_PRESSED as LIVISI_EVENT_BUTTON_PRESSED,
     EVENT_STATE_CHANGED as LIVISI_EVENT_STATE_CHANGED,
 )
+from aiolivisi.errors import TokenExpiredException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -60,15 +61,12 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
     async def _async_update_data(self) -> list[dict[str, Any]]:
         """Get device configuration from LIVISI."""
         try:
-            devices = await self.async_get_devices()
-            capability_mapping = {}
-            for device in devices:
-                for capability_id in device.get("capabilities", []):
-                    capability_mapping[capability_id] = device["id"]
-            self.capability_to_device = capability_mapping
-            return devices
+            return await self.async_get_devices()
+        except TokenExpiredException:
+            await self.aiolivisi.async_set_token(self.aiolivisi.livisi_connection_data)
+            return await self.async_get_devices()
         except ClientConnectorError as exc:
-            raise UpdateFailed("Failed to get LIVISI the devices") from exc
+            raise UpdateFailed("Failed to get livisi devices from controller") from exc
 
     def _async_dispatcher_send(self, event: str, source: str, data: Any) -> None:
         if data is not None:
@@ -97,7 +95,13 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
 
     async def async_get_devices(self) -> list[dict[str, Any]]:
         """Set the discovered devices list."""
-        return await self.aiolivisi.async_get_devices()
+        devices = await self.aiolivisi.async_get_devices()
+        capability_mapping = {}
+        for device in devices:
+            for capability_id in device.get("capabilities", []):
+                capability_mapping[capability_id] = device["id"]
+        self.capability_to_device = capability_mapping
+        return devices
 
     async def async_get_device_state(self, capability: str, key: str) -> Any | None:
         """Get state from livisi devices."""
@@ -134,6 +138,9 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
             )
             self._async_dispatcher_send(
                 LIVISI_STATE_CHANGE, event_data.source, event_data.vrccData
+            )
+            self._async_dispatcher_send(
+                LIVISI_STATE_CHANGE, event_data.source, event_data.isOpen
             )
             self._async_dispatcher_send(
                 LIVISI_REACHABILITY_CHANGE, event_data.source, event_data.isReachable
