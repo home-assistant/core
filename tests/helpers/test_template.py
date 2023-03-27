@@ -22,7 +22,6 @@ from homeassistant.const import (
     MASS_GRAMS,
     STATE_ON,
     STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
     TEMP_CELSIUS,
     VOLUME_LITERS,
     UnitOfPressure,
@@ -1611,10 +1610,9 @@ def test_states_function(hass: HomeAssistant) -> None:
 
 def test_has_value(hass):
     """Test has_value method."""
-    hass.states.async_set("test.value1", "value1")
+    hass.states.async_set("test.value1", "value1", {"attr": "value"})
     hass.states.async_set("test.value2", "value2")
     hass.states.async_set("test.unavailable", STATE_UNAVAILABLE)
-    hass.states.async_set("test.unknown", STATE_UNKNOWN)
 
     tpl = template.Template(
         """
@@ -1626,7 +1624,23 @@ def test_has_value(hass):
 
     tpl = template.Template(
         """
-{{ has_value(states.test.value1) }}
+{{ has_value("test.unavailable") }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is False
+
+    tpl = template.Template(
+        """
+{{ has_value("test.unknown") }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is False
+
+    tpl = template.Template(
+        """
+{{ has_value("test.value1", "attr") }}
         """,
         hass,
     )
@@ -1634,15 +1648,23 @@ def test_has_value(hass):
 
     tpl = template.Template(
         """
-{% if "test.value1" is has_value %}yes{% else %}no{% endif %}
+{{ has_value("test.value2", "attr") }}
         """,
         hass,
     )
-    assert tpl.async_render() == "yes"
+    assert tpl.async_render() is False
 
     tpl = template.Template(
         """
-{% if states.test.value1 is has_value %}yes{% else %}no{% endif %}
+{{ has_value("test.unknown", "attr") }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is False
+
+    tpl = template.Template(
+        """
+{% if "test.value1" is has_value %}yes{% else %}no{% endif %}
         """,
         hass,
     )
