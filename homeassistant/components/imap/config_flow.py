@@ -191,6 +191,9 @@ class OptionsFlow(config_entries.OptionsFlowWithConfigEntry):
                 self.hass.config_entries.async_update_entry(
                     self.config_entry, data=entry_data
                 )
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(self.config_entry.entry_id)
+                )
                 return self.async_create_entry(data={})
 
         schema = self.add_suggested_values_to_schema(OPTIONS_SCHEMA, entry_data)
