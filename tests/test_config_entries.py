@@ -1101,6 +1101,8 @@ async def test_entry_options(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
     """Test that we can set options on an entry."""
+    mock_integration(hass, MockModule("test"))
+    mock_entity_platform(hass, "config_flow.test", None)
     entry = MockConfigEntry(domain="test", data={"first": True}, options=None)
     entry.add_to_manager(manager)
 
@@ -1137,6 +1139,8 @@ async def test_entry_options_abort(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
     """Test that we can abort options flow."""
+    mock_integration(hass, MockModule("test"))
+    mock_entity_platform(hass, "config_flow.test", None)
     entry = MockConfigEntry(domain="test", data={"first": True}, options=None)
     entry.add_to_manager(manager)
 

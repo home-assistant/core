@@ -382,6 +382,42 @@ def test_get_last_state_changes(hass_recorder: Callable[..., HomeAssistant]) -> 
     assert_multiple_states_equal_without_context(states, hist[entity_id])
 
 
+def test_get_last_state_change(hass_recorder: Callable[..., HomeAssistant]) -> None:
+    """Test getting the last state change for an entity."""
+    hass = hass_recorder()
+    entity_id = "sensor.test"
+
+    def set_state(state):
+        """Set the state."""
+        hass.states.set(entity_id, state)
+        wait_recording_done(hass)
+        return hass.states.get(entity_id)
+
+    start = dt_util.utcnow() - timedelta(minutes=2)
+    point = start + timedelta(minutes=1)
+    point2 = point + timedelta(minutes=1, seconds=1)
+
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
+    ):
+        set_state("1")
+
+    states = []
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point
+    ):
+        set_state("2")
+
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point2
+    ):
+        states.append(set_state("3"))
+
+    hist = history.get_last_state_changes(hass, 1, entity_id)
+
+    assert_multiple_states_equal_without_context(states, hist[entity_id])
+
+
 def test_ensure_state_can_be_copied(
     hass_recorder: Callable[..., HomeAssistant]
 ) -> None:

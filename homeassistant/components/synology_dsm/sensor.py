@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any
 
 from synology_dsm.api.core.utilization import SynoCoreUtilization
 from synology_dsm.api.dsm.information import SynoDSMInformation
@@ -26,6 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
 from . import SynoApi
@@ -349,7 +349,7 @@ class SynoDSMUtilSensor(SynoDSMSensor):
     """Representation a Synology Utilisation sensor."""
 
     @property
-    def native_value(self) -> Any | None:
+    def native_value(self) -> StateType:
         """Return the state."""
         attr = getattr(self._api.utilisation, self.entity_description.key)
         if callable(attr):
@@ -357,19 +357,23 @@ class SynoDSMUtilSensor(SynoDSMSensor):
         if attr is None:
             return None
 
+        result: StateType = attr
         # Data (RAM)
         if self.native_unit_of_measurement == UnitOfInformation.MEGABYTES:
-            return round(attr / 1024.0**2, 1)
+            result = round(attr / 1024.0**2, 1)
+            return result
 
         # Network
         if self.native_unit_of_measurement == UnitOfDataRate.KILOBYTES_PER_SECOND:
-            return round(attr / 1024.0, 1)
+            result = round(attr / 1024.0, 1)
+            return result
 
         # CPU load average
         if self.native_unit_of_measurement == ENTITY_UNIT_LOAD:
-            return round(attr / 100, 2)
+            result = round(attr / 100, 2)
+            return result
 
-        return attr
+        return result
 
     @property
     def available(self) -> bool:
@@ -393,7 +397,7 @@ class SynoDSMStorageSensor(SynologyDSMDeviceEntity, SynoDSMSensor):
         super().__init__(api, coordinator, description, device_id)
 
     @property
-    def native_value(self) -> Any | None:
+    def native_value(self) -> StateType:
         """Return the state."""
         attr = getattr(self._api.storage, self.entity_description.key)(self._device_id)
         if attr is None:
@@ -401,9 +405,9 @@ class SynoDSMStorageSensor(SynologyDSMDeviceEntity, SynoDSMSensor):
 
         # Data (disk space)
         if self.native_unit_of_measurement == UnitOfInformation.TERABYTES:
-            return round(attr / 1024.0**4, 2)
+            return round(attr / 1024.0**4, 2)  # type: ignore[no-any-return]
 
-        return attr
+        return attr  # type: ignore[no-any-return]
 
 
 class SynoDSMInfoSensor(SynoDSMSensor):
@@ -421,7 +425,7 @@ class SynoDSMInfoSensor(SynoDSMSensor):
         self._last_boot: datetime | None = None
 
     @property
-    def native_value(self) -> Any | None:
+    def native_value(self) -> StateType | datetime:
         """Return the state."""
         attr = getattr(self._api.information, self.entity_description.key)
         if attr is None:
@@ -434,4 +438,4 @@ class SynoDSMInfoSensor(SynoDSMSensor):
 
             self._previous_uptime = attr
             return self._last_boot
-        return attr
+        return attr  # type: ignore[no-any-return]
