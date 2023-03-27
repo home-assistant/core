@@ -34,38 +34,63 @@ class GreeSwitchEntityDescription(SwitchEntityDescription, GreeRequiredKeysMixin
     """Describes Gree switch entity."""
 
 
+def _set_light(device: Device, value: bool) -> None:
+    """Typed helper to set device light property."""
+    device.light = value
+
+
+def _set_quiet(device: Device, value: bool) -> None:
+    """Typed helper to set device quiet property."""
+    device.quiet = value
+
+
+def _set_fresh_air(device: Device, value: bool) -> None:
+    """Typed helper to set device fresh_air property."""
+    device.fresh_air = value
+
+
+def _set_xfan(device: Device, value: bool) -> None:
+    """Typed helper to set device xfan property."""
+    device.xfan = value
+
+
+def _set_anion(device: Device, value: bool) -> None:
+    """Typed helper to set device anion property."""
+    device.anion = value
+
+
 GREE_SWITCHES: tuple[GreeSwitchEntityDescription, ...] = (
     GreeSwitchEntityDescription(
         icon="mdi:lightbulb",
         name="Panel Light",
         key="light",
         get_value_fn=lambda d: d.light,
-        set_value_fn=lambda d, v: setattr(d, "light", v),
+        set_value_fn=_set_light,
     ),
     GreeSwitchEntityDescription(
         name="Quiet",
         key="quiet",
         get_value_fn=lambda d: d.quiet,
-        set_value_fn=lambda d, v: setattr(d, "quiet", v),
+        set_value_fn=_set_quiet,
     ),
     GreeSwitchEntityDescription(
         name="Fresh Air",
         key="fresh_air",
         get_value_fn=lambda d: d.fresh_air,
-        set_value_fn=lambda d, v: setattr(d, "fresh_air", v),
+        set_value_fn=_set_fresh_air,
     ),
     GreeSwitchEntityDescription(
         name="XFan",
         key="xfan",
         get_value_fn=lambda d: d.xfan,
-        set_value_fn=lambda d, v: setattr(d, "xfan", v),
+        set_value_fn=_set_xfan,
     ),
     GreeSwitchEntityDescription(
         icon="mdi:pine-tree",
         name="Health mode",
         key="anion",
         get_value_fn=lambda d: d.anion,
-        set_value_fn=lambda d, v: setattr(d, "anion", v),
+        set_value_fn=_set_anion,
         entity_registry_enabled_default=False,
     ),
 )
