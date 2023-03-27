@@ -62,7 +62,7 @@ class IHCSwitch(IHCDevice, SwitchEntity):
         self._state = False
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if switch is on."""
         return self._state
 
