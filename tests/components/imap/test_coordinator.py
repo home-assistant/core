@@ -1,6 +1,7 @@
 """Test the imap coordinator."""
 import asyncio
 from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioimaplib import AUTH, NONAUTH, SELECTED, AioImapException
@@ -69,6 +70,14 @@ async def test_receiving_message_successfully(
 
     # we should have received one event
     event_called.assert_called_once()
+    data: dict[str, Any] = event_called.call_args[0][0].data
+    assert data["server"] == "imap.server.com"
+    assert data["username"] == "email@email.com"
+    assert data["search"] == "UnSeen UnDeleted"
+    assert data["folder"] == "INBOX"
+    assert data["sender"] == "john.doe@example.com"
+    assert data["subject"] == "Test subject"
+    assert data["text"]
 
 
 @pytest.mark.parametrize("imap_capabilities", [{"IDLE"}, set()], ids=["push", "poll"])

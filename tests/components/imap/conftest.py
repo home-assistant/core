@@ -18,6 +18,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
         yield mock_setup_entry
 
 
+@pytest.fixture
 def imap_capabilities() -> Generator[set[str], None]:
     """Fixture to set the imap capabilities."""
     return {"IDLE"}
