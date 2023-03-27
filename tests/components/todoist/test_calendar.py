@@ -128,7 +128,6 @@ async def test_update_entity_for_custom_project_with_labels_on(
 
     await async_update_entity(hass, "calendar.all_projects")
     state = hass.states.get("calendar.all_projects")
-    print(state)
     assert state.attributes["labels"] == ["Label1"]
     assert state.state == "on"
 
