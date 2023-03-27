@@ -6,6 +6,12 @@ import pytest
 
 from homeassistant.components.alexa import errors
 from homeassistant.components.cloud import ALEXA_SCHEMA, alexa_config
+from homeassistant.components.cloud.const import (
+    PREF_ALEXA_DEFAULT_EXPOSE,
+    PREF_ALEXA_ENTITY_CONFIGS,
+    PREF_SHOULD_EXPOSE,
+)
+from homeassistant.components.cloud.prefs import CloudPreferences
 from homeassistant.components.homeassistant.exposed_entities import (
     DATA_EXPOSED_ENTITIES,
     ExposedEntities,
@@ -529,3 +535,118 @@ async def test_alexa_handle_logout(
         await hass.async_block_till_done()
 
     assert len(mock_enable.return_value.mock_calls) == 1
+
+
+async def test_alexa_config_migrate_expose_entity_prefs(
+    hass: HomeAssistant,
+    cloud_prefs: CloudPreferences,
+    cloud_stub,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migrating Alexa entity config."""
+
+    assert await async_setup_component(hass, "homeassistant", {})
+    entity_exposed = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "light_exposed",
+        suggested_object_id="exposed",
+    )
+
+    entity_migrated = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "light_migrated",
+        suggested_object_id="migrated",
+    )
+
+    entity_config = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "light_config",
+        suggested_object_id="config",
+        entity_category=EntityCategory.CONFIG,
+    )
+
+    entity_default = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "light_default",
+        suggested_object_id="default",
+    )
+
+    entity_blocked = entity_registry.async_get_or_create(
+        "group",
+        "test",
+        "group_all_locks",
+        suggested_object_id="all_locks",
+    )
+    assert entity_blocked.entity_id == "group.all_locks"
+
+    await cloud_prefs.async_update(
+        alexa_enabled=True,
+        alexa_report_state=False,
+        alexa_settings_version=1,
+    )
+    expose_entity(hass, entity_migrated.entity_id, False)
+
+    cloud_prefs._prefs[PREF_ALEXA_ENTITY_CONFIGS]["light.unknown"] = {
+        PREF_SHOULD_EXPOSE: True
+    }
+    cloud_prefs._prefs[PREF_ALEXA_ENTITY_CONFIGS][entity_exposed.entity_id] = {
+        PREF_SHOULD_EXPOSE: True
+    }
+    cloud_prefs._prefs[PREF_ALEXA_ENTITY_CONFIGS][entity_migrated.entity_id] = {
+        PREF_SHOULD_EXPOSE: True
+    }
+    conf = alexa_config.CloudAlexaConfig(
+        hass, ALEXA_SCHEMA({}), "mock-user-id", cloud_prefs, cloud_stub
+    )
+    await conf.async_initialize()
+
+    entity_exposed = entity_registry.async_get(entity_exposed.entity_id)
+    assert entity_exposed.options == {"cloud.alexa": {"should_expose": True}}
+
+    entity_migrated = entity_registry.async_get(entity_migrated.entity_id)
+    assert entity_migrated.options == {"cloud.alexa": {"should_expose": False}}
+
+    entity_config = entity_registry.async_get(entity_config.entity_id)
+    assert entity_config.options == {"cloud.alexa": {"should_expose": False}}
+
+    entity_default = entity_registry.async_get(entity_default.entity_id)
+    assert entity_default.options == {"cloud.alexa": {"should_expose": True}}
+
+    entity_blocked = entity_registry.async_get(entity_blocked.entity_id)
+    assert entity_blocked.options == {"cloud.alexa": {"should_expose": False}}
+
+
+async def test_alexa_config_migrate_expose_entity_prefs_default_none(
+    hass: HomeAssistant,
+    cloud_prefs: CloudPreferences,
+    cloud_stub,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migrating Alexa entity config."""
+
+    assert await async_setup_component(hass, "homeassistant", {})
+    entity_default = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "light_default",
+        suggested_object_id="default",
+    )
+
+    await cloud_prefs.async_update(
+        alexa_enabled=True,
+        alexa_report_state=False,
+        alexa_settings_version=1,
+    )
+
+    cloud_prefs._prefs[PREF_ALEXA_DEFAULT_EXPOSE] = None
+    conf = alexa_config.CloudAlexaConfig(
+        hass, ALEXA_SCHEMA({}), "mock-user-id", cloud_prefs, cloud_stub
+    )
+    await conf.async_initialize()
+
+    entity_default = entity_registry.async_get(entity_default.entity_id)
+    assert entity_default.options == {"cloud.alexa": {"should_expose": True}}
