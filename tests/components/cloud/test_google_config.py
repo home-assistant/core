@@ -14,6 +14,7 @@ from homeassistant.components.homeassistant.exposed_entities import (
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EntityCategory
 from homeassistant.core import CoreState, HomeAssistant, State
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -377,7 +378,6 @@ async def test_google_config_expose_entity_prefs(
     )
 
     expose_new(hass, True)
-    expose_entity(hass, "light.kitchen", True)
     expose_entity(hass, entity_entry5.entity_id, False)
 
     state = State("light.kitchen", "on")
@@ -389,6 +389,8 @@ async def test_google_config_expose_entity_prefs(
     state_exposed_default = State(entity_entry6.entity_id, "on")
 
     # can't expose an entity which is not in the entity registry
+    with pytest.raises(HomeAssistantError):
+        expose_entity(hass, "light.kitchen", True)
     assert not mock_conf.should_expose(state)
     # categorized and hidden entities should not be exposed
     assert not mock_conf.should_expose(state_config)
