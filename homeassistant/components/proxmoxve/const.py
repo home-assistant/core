@@ -11,7 +11,6 @@ CONF_VMS = "vms"
 CONF_CONTAINERS = "containers"
 
 COORDINATORS = "coordinators"
-API_DATA = "api_data"
 
 DEFAULT_PORT = 8006
 DEFAULT_REALM = "pam"
