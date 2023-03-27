@@ -44,8 +44,6 @@ OPTIONS_SCHEMA = vol.Schema(
     }
 )
 
-KEY_OPTIONS = {CONF_USERNAME, CONF_SERVER, CONF_FOLDER, CONF_SEARCH}
-
 
 async def validate_input(user_input: dict[str, Any]) -> dict[str, str]:
     """Validate user input."""
@@ -88,7 +86,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        self._async_abort_entries_match({key: user_input[key] for key in KEY_OPTIONS})
+        self._async_abort_entries_match(
+            {
+                key: user_input[key]
+                for key in (CONF_USERNAME, CONF_SERVER, CONF_FOLDER, CONF_SEARCH)
+            }
+        )
 
         if not (errors := await validate_input(user_input)):
             title = user_input[CONF_USERNAME]
@@ -146,10 +149,10 @@ class OptionsFlow(config_entries.OptionsFlowWithConfigEntry):
     """Option flow handler."""
 
     def _async_abort_entries_match(
-        self, user_input: dict[str, Any] | None
+        self, match_dict: dict[str, Any] | None
     ) -> dict[str, str]:
         """Validate the user input against other config entries."""
-        if user_input is None:
+        if match_dict is None:
             return {}
 
         errors: dict[str, str] = {}
@@ -160,8 +163,8 @@ class OptionsFlow(config_entries.OptionsFlowWithConfigEntry):
         ]:
             if all(
                 item in entry.data.items()
-                for item in user_input.items()
-                if item[0] in KEY_OPTIONS
+                for item in match_dict.items()
+                if item[0] in [CONF_USERNAME, CONF_SERVER, CONF_FOLDER, CONF_SEARCH]
             ):
                 errors["base"] = "already_configured"
                 break
@@ -171,7 +174,16 @@ class OptionsFlow(config_entries.OptionsFlowWithConfigEntry):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the options."""
-        errors: dict[str, str] = self._async_abort_entries_match(user_input)
+        errors: dict[str, str] = self._async_abort_entries_match(
+            {
+                CONF_SERVER: self._config_entry.data[CONF_SERVER],
+                CONF_USERNAME: self._config_entry.data[CONF_USERNAME],
+                CONF_FOLDER: user_input[CONF_FOLDER],
+                CONF_SEARCH: user_input[CONF_SEARCH],
+            }
+            if user_input
+            else None
+        )
         entry_data: dict[str, Any] = dict(self._config_entry.data)
         if not errors and user_input is not None:
             entry_data.update(user_input)
