@@ -65,9 +65,9 @@ def _chattiest_log_level(level1: int, level2: int) -> int:
     return min(level1, level2)
 
 
-async def get_integration_loggers(hass: HomeAssistant, domain: str) -> list[str]:
+async def get_integration_loggers(hass: HomeAssistant, domain: str) -> set[str]:
     """Get loggers for an integration."""
-    loggers = set()
+    loggers: set[str] = set()
     try:
         integration = await async_get_integration(hass, domain)
         loggers.add(integration.pkg_path)
@@ -75,7 +75,7 @@ async def get_integration_loggers(hass: HomeAssistant, domain: str) -> list[str]
             loggers.update(integration.loggers)
     except IntegrationNotFound:
         loggers.add(f"homeassistant.components.{domain}")
-    return list(loggers)
+    return loggers
 
 
 @dataclass
@@ -190,7 +190,7 @@ class LoggerSettings:
         if settings.type == LogSettingsType.INTEGRATION:
             loggers = await get_integration_loggers(hass, domain)
         else:
-            loggers = [domain]
+            loggers = {domain}
 
         combined_logs = {logger: LOGSEVERITY[settings.level] for logger in loggers}
         # Don't override the log levels with the ones from YAML
@@ -205,7 +205,7 @@ class LoggerSettings:
             if settings.type == LogSettingsType.INTEGRATION:
                 loggers = await get_integration_loggers(hass, domain)
             else:
-                loggers = [domain]
+                loggers = {domain}
 
             for logger in loggers:
                 combined_logs[logger] = LOGSEVERITY[settings.level]
