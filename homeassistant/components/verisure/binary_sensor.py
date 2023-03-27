@@ -98,7 +98,7 @@ class VerisureEthernetStatus(
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_has_entity_name = True
-    _attr_name = "Ethernet status"
+    _attr_translation_key = "ethernet"
 
     @property
     def unique_id(self) -> str:
