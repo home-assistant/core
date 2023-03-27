@@ -1,16 +1,13 @@
 """Support for IHC sensors."""
 from __future__ import annotations
 
-from datetime import date, datetime
-from decimal import Decimal
-
 from ihcsdk.ihccontroller import IHCController
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.unit_system import TEMPERATURE_UNITS
 
 from .const import DOMAIN, IHC_CONTROLLER
@@ -54,29 +51,12 @@ class IHCSensor(IHCDevice, SensorEntity):
     ) -> None:
         """Initialize the IHC sensor."""
         super().__init__(ihc_controller, controller_id, name, ihc_id, product)
-        self._state = None
-        self._unit_of_measurement = unit
-
-    @property
-    def device_class(self) -> SensorDeviceClass | None:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return (
-            SensorDeviceClass.TEMPERATURE
-            if self._unit_of_measurement in TEMPERATURE_UNITS
-            else None
+        self._attr_native_unit_of_measurement = unit
+        self._attr_device_class = (
+            SensorDeviceClass.TEMPERATURE if unit in TEMPERATURE_UNITS else None
         )
-
-    @property
-    def native_value(self) -> StateType | date | datetime | Decimal:
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
 
     def on_ihc_change(self, ihc_id, value):
         """Handle IHC resource change."""
-        self._state = value
+        self._attr_native_value = value
         self.schedule_update_ha_state()
