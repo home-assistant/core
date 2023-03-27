@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aioimaplib import AUTH, LOGOUT, NONAUTH, SELECTED, STARTED, Response
 import pytest
 
-from .const import EMPTY_SEARCH_RESPONSE, TEST_FETCH_RESPONSE
+from .const import EMPTY_SEARCH_RESPONSE, TEST_FETCH_RESPONSE_TEXT_PLAIN
 
 
 @pytest.fixture
@@ -44,13 +44,25 @@ def imap_search() -> Generator[tuple[str, list[bytes]], None]:
 @pytest.fixture
 def imap_fetch() -> Generator[tuple[str, list[bytes | bytearray]], None]:
     """Fixture to set the imap fetch response."""
-    return TEST_FETCH_RESPONSE
+    return TEST_FETCH_RESPONSE_TEXT_PLAIN
 
 
 @pytest.fixture
 def imap_pending_idle() -> Generator[bool, None]:
     """Fixture to set the imap pending idle feature."""
     return True
+
+
+@pytest.fixture
+def imap_close() -> Generator[AsyncMock, None]:
+    """Fixture to mock a side_effect the imap client close method."""
+    return AsyncMock()
+
+
+@pytest.fixture
+def imap_wait_server_push() -> Generator[AsyncMock, None]:
+    """Fixture to mock the imap client wait_server_push method."""
+    return AsyncMock()
 
 
 @pytest.fixture
@@ -61,6 +73,8 @@ async def mock_imap_protocol(
     imap_pending_idle: bool,
     imap_login_state: str,
     imap_select_state: str,
+    imap_wait_server_push: AsyncMock,
+    imap_close: AsyncMock,
 ) -> Generator[MagicMock, None]:
     """Mock the aioimaplib IMAP protocol handler."""
 
@@ -79,12 +93,12 @@ async def mock_imap_protocol(
 
         def __init__(self, *args, **kwargs) -> None:
             self._state = STARTED
-            self.wait_server_push = AsyncMock()
+            self.wait_server_push = imap_wait_server_push
             self.noop = AsyncMock()
             self.has_pending_idle = MagicMock(return_value=imap_pending_idle)
             self.idle_start = AsyncMock()
             self.idle_done = MagicMock()
-            self.stop_wait_server_push = AsyncMock(return_value=True)
+            self.stop_wait_server_push = AsyncMock()
             self.protocol = self.IMAP4ClientProtocolMock()
 
         def has_capability(self, capability: str) -> bool:
@@ -100,6 +114,7 @@ async def mock_imap_protocol(
 
         async def close(self) -> Response:
             """Mock imap close the selected folder."""
+            await imap_close()
             self.protocol.state = imap_login_state
             return Response("OK", [])
 

@@ -1,7 +1,7 @@
 """Test the imap entry initialization."""
 
 import asyncio
-from unittest.mock import AsyncMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry
 
 @pytest.mark.parametrize("imap_capabilities", [{"IDLE"}, set()], ids=["push", "poll"])
 async def test_entry_startup_and_unload(
-    hass: HomeAssistant, mock_imap_protocol: dict[str, AsyncMock]
+    hass: HomeAssistant, mock_imap_protocol: MagicMock
 ) -> None:
     """Test imap entry startup and unload with push and polling coordinator."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
@@ -36,7 +36,7 @@ async def test_entry_startup_and_unload(
 )
 async def test_entry_startup_fails(
     hass: HomeAssistant,
-    mock_imap_protocol: dict[str, AsyncMock],
+    mock_imap_protocol: MagicMock,
     effect: Exception,
 ) -> None:
     """Test imap entry startup fails on invalid auth or folder."""

@@ -8,23 +8,55 @@ TEST_MESSAGE = (
     b"Received: from localhost (localhost [127.0.0.1])\r\n\t"
     b"by beta.example.com (Postfix) with ESMTP id D0FFA61425\r\n\t"
     b"for <notify@example.com>; Fri, 24 Mar 2023 13:52:01 +0100 (CET)\r\n"
-    b"Received: from beta.example.com ([192.168.200.137])\r\n\t"
-    b"by localhost (beta.example.com [127.0.0.1]) (amavisd-new, port 12345)\r\n\t"
-    b"with ESMTP id ycTJJEDpDgm0 for <notify@example.com>;\r\n\t"
-    b"Fri, 24 Mar 2023 13:52:01 +0100 (CET)\r\n"
-    b"Received: from [IPV6:2001:db8::ed28:3645:f874:395f] "
-    b"(demo [IPv6:2001:db8::ed28:3645:f874:395f])\r\n\t(using TLSv1.3 with cipher "
-    b"TLS_AES_256_GCM_SHA384 (256/256 bits)\r\n\t key-exchange ECDHE (P-384) "
-    b"server-signature RSA-PSS (2048 bits))\r\n\t(No client certificate requested)\r\n\t"
-    b"by beta.example.com (Postfix) with ESMTPSA id B942E609BE\r\n\t"
-    b"for <notify@example.com>; Fri, 24 Mar 2023 13:52:01 +0100 (CET)\r\n\t"
-    b"h=Message-ID:Date:MIME-Version:To:From:Subject:Content-Type:\r\n\t "
-    b"Message-ID: <48eca8bb-0551-446b-d8c5-02157f38cca7@example.com>\r\nDate: Fri, 24 Mar 2023 13:52:00 +0100\r\nMIME-Version: 1.0\r\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101\r\n Thunderbird/102.9.0\r\n"
+    b"Date: Fri, 24 Mar 2023 13:52:00 +0100\r\n"
+    b"MIME-Version: 1.0\r\n"
     b"To: notify@example.com\r\n"
     b"From: John Doe <john.doe@example.com>\r\n"
     b"Subject: Test subject\r\n"
+)
+
+TEST_CONTENT_TEXT_BARE = b"\r\n" b"Test body\r\n" b"\r\n"
+
+TEST_CONTENT_BINARY = (
+    b"Content-Type: application/binary\r\n"
+    b"Content-Transfer-Encoding: base64\r\n"
+    b"\r\n"
+    b"VGVzdCBib2R5\r\n"
+)
+
+TEST_CONTENT_TEXT_PLAIN = (
     b"Content-Type: text/plain; charset=UTF-8; format=flowed\r\n"
     b"Content-Transfer-Encoding: 7bit\r\n\r\nTest body\r\n\r\n"
+)
+
+TEST_CONTENT_TEXT_OTHER = (
+    b"Content-Type: text/other; charset=UTF-8\r\n"
+    b"Content-Transfer-Encoding: 7bit\r\n\r\nTest body\r\n\r\n"
+)
+
+TEST_CONTENT_HTML = (
+    b"Content-Type: text/html; charset=UTF-8\r\n"
+    b"Content-Transfer-Encoding: 7bit\r\n"
+    b"\r\n"
+    b"<html>\r\n"
+    b"  <head>\r\n"
+    b'    <meta http-equiv="content-type" content="text/html; charset=UTF-8">\r\n'
+    b"  </head>\r\n"
+    b"  <body>\r\n"
+    b"    <p>Test body<br>\r\n"
+    b"    </p>\r\n"
+    b"  </body>\r\n"
+    b"</html>\r\n"
+    b"\r\n"
+)
+
+TEST_CONTENT_MULTIPART = (
+    b"\r\nThis is a multi-part message in MIME format.\r\n"
+    + b"--------------McwBciN2C0o3rWeF1tmFo2oI\r\n"
+    + TEST_CONTENT_TEXT_PLAIN
+    + b"--------------McwBciN2C0o3rWeF1tmFo2oI\r\n"
+    + TEST_CONTENT_HTML
+    + b"--------------McwBciN2C0o3rWeF1tmFo2oI--\r\n"
 )
 
 EMPTY_SEARCH_RESPONSE = ("OK", [b"", b"Search completed (0.0001 + 0.000 secs)."])
@@ -32,11 +64,73 @@ BAD_SEARCH_RESPONSE = ("BAD", [b"", b"Unexpected error"])
 
 TEST_SEARCH_RESPONSE = ("OK", [b"1", b"Search completed (0.0001 + 0.000 secs)."])
 
-TEST_FETCH_RESPONSE = (
+TEST_FETCH_RESPONSE_TEXT_BARE = (
     "OK",
     [
-        b"1 FETCH (BODY[] {1518}",
-        bytearray(TEST_MESSAGE),
+        b"1 FETCH (BODY[] {"
+        + str(len(TEST_MESSAGE + TEST_CONTENT_TEXT_BARE)).encode("utf-8")
+        + b"}",
+        bytearray(TEST_MESSAGE + TEST_CONTENT_TEXT_BARE),
+        b")",
+        b"Fetch completed (0.0001 + 0.000 secs).",
+    ],
+)
+
+TEST_FETCH_RESPONSE_TEXT_PLAIN = (
+    "OK",
+    [
+        b"1 FETCH (BODY[] {"
+        + str(len(TEST_MESSAGE + TEST_CONTENT_TEXT_PLAIN)).encode("utf-8")
+        + b"}",
+        bytearray(TEST_MESSAGE + TEST_CONTENT_TEXT_PLAIN),
+        b")",
+        b"Fetch completed (0.0001 + 0.000 secs).",
+    ],
+)
+
+TEST_FETCH_RESPONSE_TEXT_OTHER = (
+    "OK",
+    [
+        b"1 FETCH (BODY[] {"
+        + str(len(TEST_MESSAGE + TEST_CONTENT_TEXT_OTHER)).encode("utf-8")
+        + b"}",
+        bytearray(TEST_MESSAGE + TEST_CONTENT_TEXT_OTHER),
+        b")",
+        b"Fetch completed (0.0001 + 0.000 secs).",
+    ],
+)
+
+TEST_FETCH_RESPONSE_BINARY = (
+    "OK",
+    [
+        b"1 FETCH (BODY[] {"
+        + str(len(TEST_MESSAGE + TEST_CONTENT_BINARY)).encode("utf-8")
+        + b"}",
+        bytearray(TEST_MESSAGE + TEST_CONTENT_BINARY),
+        b")",
+        b"Fetch completed (0.0001 + 0.000 secs).",
+    ],
+)
+
+TEST_FETCH_RESPONSE_HTML = (
+    "OK",
+    [
+        b"1 FETCH (BODY[] {"
+        + str(len(TEST_MESSAGE + TEST_CONTENT_HTML)).encode("utf-8")
+        + b"}",
+        bytearray(TEST_MESSAGE + TEST_CONTENT_HTML),
+        b")",
+        b"Fetch completed (0.0001 + 0.000 secs).",
+    ],
+)
+
+TEST_FETCH_RESPONSE_MULTIPART = (
+    "OK",
+    [
+        b"1 FETCH (BODY[] {"
+        + str(len(TEST_MESSAGE + TEST_CONTENT_MULTIPART)).encode("utf-8")
+        + b"}",
+        bytearray(TEST_MESSAGE + TEST_CONTENT_MULTIPART),
         b")",
         b"Fetch completed (0.0001 + 0.000 secs).",
     ],
