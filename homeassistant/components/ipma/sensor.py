@@ -11,13 +11,11 @@ from pyipma.location import Location
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle
 
-from .const import DATA_API, DATA_LOCATION, DOMAIN
-from .weather import MIN_TIME_BETWEEN_UPDATES
+from . import IPMADevice
+from .const import DATA_API, DATA_LOCATION, DOMAIN, MIN_TIME_BETWEEN_UPDATES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +35,7 @@ class IPMASensorEntityDescription(SensorEntityDescription, IPMARequiredKeysMixin
 SENSOR_TYPES: tuple[IPMASensorEntityDescription, ...] = (
     IPMASensorEntityDescription(
         key="rcm",
-        name="Fire Risk",
+        name="Fire risk",
         update_method="fire_risk",
     ),
 )
@@ -55,7 +53,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class IPMASensor(SensorEntity):
+class IPMASensor(SensorEntity, IPMADevice):
     """Representation of an IPMA sensor."""
 
     entity_description: IPMASensorEntityDescription
@@ -68,43 +66,17 @@ class IPMASensor(SensorEntity):
         description: IPMASensorEntityDescription,
     ) -> None:
         """Initialize the IPMA Sensor."""
-        super().__init__()
+        IPMADevice.__init__(self, location)
         self.entity_description = description
         self._api = api
-        self._location = location
-        self._value = None
-
-    @property
-    def unique_id(self):
-        """Return the unique_id."""
-        return f"{self._location.station_latitude}, {self._location.station_longitude}, {self.entity_description.key}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={
-                (
-                    DOMAIN,
-                    f"{self._location.station_latitude}, {self._location.station_longitude}",
-                )
-            },
-            manufacturer=DOMAIN,
-            name=self._location.name,
-        )
+        self._attr_unique_id = f"{self._location.station_latitude}, {self._location.station_longitude}, {self.entity_description.key}"
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
-        """Update Condition and Forecast."""
+        """Update Fire risk."""
         async with async_timeout.timeout(10):
             if self.entity_description.update_method == "fire_risk":
                 rcm = await self._location.fire_risk(self._api)
 
                 if rcm:
-                    self._value = rcm.rcm
-
-    @property
-    def native_value(self):
-        """Return the state."""
-        return self._value
+                    self._attr_native_value = rcm.rcm
