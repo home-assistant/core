@@ -152,8 +152,8 @@ def compile_char_zero(type_: TypeDecorator, compiler: Any, **kw: Any) -> str:
 @compiles(UnusedDateTime, "postgresql")  # type: ignore[misc,no-untyped-call]
 @compiles(Unused, "postgresql")  # type: ignore[misc,no-untyped-call]
 def compile_char_one(type_: TypeDecorator, compiler: Any, **kw: Any) -> str:
-    """Compile UnusedDateTime and Unused as BOOLEAN on postgresql."""
-    return "BOOLEAN"  # Uses 1 byte
+    """Compile UnusedDateTime and Unused as CHAR(1) on postgresql."""
+    return "CHAR(1)"  # Uses 1 byte
 
 
 class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):
