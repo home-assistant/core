@@ -7,6 +7,7 @@
         "description": "Groups allow you to create a new entity that represents multiple entities of the same type.",
         "menu_options": {
           "binary_sensor": "Binary sensor group",
+          "climate": "Climate group",
           "cover": "Cover group",
           "fan": "Fan group",
           "light": "Light group",
@@ -24,6 +25,14 @@
           "entities": "Members",
           "hide_members": "Hide members",
           "name": "Name"
+        }
+      },
+      "climate": {
+        "title": "[%key:component::group::config::step::user::title%]",
+        "data": {
+          "entities": "[%key:component::group::config::step::climate::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::climate::data::hide_members%]",
+          "name": "[%key:component::group::config::step::climate::data::name%]"
         }
       },
       "cover": {

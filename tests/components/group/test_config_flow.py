@@ -25,6 +25,7 @@ from tests.common import MockConfigEntry
     (
         ("binary_sensor", "on", "on", {}, {}, {"all": False}, {}),
         ("binary_sensor", "on", "on", {}, {"all": True}, {"all": True}, {}),
+        ("climate", "off", "off", {}, {}, {}, {}),
         ("cover", "open", "open", {}, {}, {}, {}),
         ("fan", "on", "on", {}, {}, {}, {}),
         ("light", "on", "on", {}, {}, {}, {}),
@@ -119,6 +120,7 @@ async def test_config_flow(
     ("group_type", "extra_input"),
     (
         ("binary_sensor", {"all": False}),
+        ("climate", {}),
         ("cover", {}),
         ("fan", {}),
         ("light", {}),
@@ -191,6 +193,7 @@ def get_suggested(schema, key):
     ("group_type", "member_state", "extra_options", "options_options"),
     (
         ("binary_sensor", "on", {"all": False}, {}),
+        ("climate", "off", {}, {}),
         ("cover", "open", {}, {}),
         ("fan", "on", {}, {}),
         ("light", "on", {"all": False}, {}),
@@ -374,6 +377,7 @@ async def test_all_options(
     ("group_type", "extra_input"),
     (
         ("binary_sensor", {"all": False}),
+        ("climate", {}),
         ("cover", {}),
         ("fan", {}),
         ("light", {}),
