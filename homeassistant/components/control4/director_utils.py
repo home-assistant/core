@@ -17,7 +17,7 @@ from .const import CONF_ACCOUNT, CONF_CONTROLLER_UNIQUE_ID, CONF_DIRECTOR, DOMAI
 _LOGGER = logging.getLogger(__name__)
 
 
-async def update_variables(
+async def _update_variables_for_config_entry(
     hass: HomeAssistant, entry: ConfigEntry, variable_names: Set[str]
 ) -> dict[int, dict[str, bool | int | str | dict]]:
     """Retrieve data from the Control4 director."""
@@ -38,16 +38,16 @@ async def update_variables(
     return dict(result_dict)
 
 
-async def update_variables_for_entity(
+async def update_variables_for_config_entry(
     hass: HomeAssistant, entry: ConfigEntry, variable_names: Set[str]
 ) -> dict[int, dict[str, bool | int | str | dict]]:
     """Try to Retrieve data from the Control4 director for update_coordinator."""
     try:
-        return await update_variables(hass, entry, variable_names)
+        return await _update_variables_for_config_entry(hass, entry, variable_names)
     except BadToken:
         _LOGGER.info("Updating Control4 director token")
         await refresh_tokens(hass, entry)
-        return await update_variables(hass, entry, variable_names)
+        return await _update_variables_for_config_entry(hass, entry, variable_names)
 
 
 async def refresh_tokens(hass: HomeAssistant, entry: ConfigEntry):
