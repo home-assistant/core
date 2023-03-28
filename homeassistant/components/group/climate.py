@@ -1,4 +1,4 @@
-"""This platform allows several climate devices to be grouped into one climate device."""
+"""Plaform for allowing several climate devices to be grouped into one climate device."""
 from __future__ import annotations
 
 import logging
@@ -303,11 +303,11 @@ class ClimateGroup(GroupEntity, ClimateEntity):
             await self.async_set_hvac_mode(kwargs[ATTR_HVAC_MODE])
 
         if ATTR_TEMPERATURE in kwargs:
-            data["target_temperature"] = kwargs[ATTR_TEMPERATURE]
+            data[ATTR_TEMPERATURE] = kwargs[ATTR_TEMPERATURE]
         if ATTR_TARGET_TEMP_LOW in kwargs:
-            data["target_temperature_low"] = kwargs[ATTR_TARGET_TEMP_LOW]
+            data[ATTR_TARGET_TEMP_LOW] = kwargs[ATTR_TARGET_TEMP_LOW]
         if ATTR_TARGET_TEMP_HIGH in kwargs:
-            data["target_temperature_high"] = kwargs[ATTR_TARGET_TEMP_HIGH]
+            data[ATTR_TARGET_TEMP_HIGH] = kwargs[ATTR_TARGET_TEMP_HIGH]
 
         _LOGGER.debug("Setting temperature: %s", data)
 
