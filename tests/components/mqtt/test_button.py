@@ -13,7 +13,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .test_common import (
     help_test_availability_when_connection_lost,
@@ -57,13 +56,9 @@ def button_platform_only():
 
 
 @pytest.mark.freeze_time("2021-11-08 13:31:44+00:00")
-async def test_sending_mqtt_commands(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
-) -> None:
-    """Test the sending MQTT commands."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 button.DOMAIN: {
@@ -74,10 +69,14 @@ async def test_sending_mqtt_commands(
                     "qos": "2",
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_sending_mqtt_commands(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
+    """Test the sending MQTT commands."""
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("button.test_button")
     assert state.state == STATE_UNKNOWN
@@ -98,13 +97,9 @@ async def test_sending_mqtt_commands(
     assert state.state == "2021-11-08T13:31:44+00:00"
 
 
-async def test_command_template(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
-) -> None:
-    """Test the sending of MQTT commands through a command template."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 button.DOMAIN: {
@@ -114,10 +109,14 @@ async def test_command_template(
                     "payload_press": "milky_way_press",
                 }
             }
-        },
-    )
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_command_template(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
+    """Test the sending of MQTT commands through a command template."""
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("button.test")
     assert state.state == STATE_UNKNOWN
@@ -436,11 +435,9 @@ async def test_entity_debug_info_message(
     )
 
 
-async def test_invalid_device_class(hass: HomeAssistant) -> None:
-    """Test device_class option with invalid value."""
-    assert not await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 button.DOMAIN: {
@@ -449,17 +446,20 @@ async def test_invalid_device_class(hass: HomeAssistant) -> None:
                     "device_class": "foobarnotreal",
                 }
             }
-        },
-    )
-
-
-async def test_valid_device_class(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+        }
+    ],
+)
+async def test_invalid_device_class(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
-    """Test device_class option with valid values."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+    """Test device_class option with invalid value."""
+    with pytest.raises(AssertionError):
+        await mqtt_mock_entry_no_yaml_config()
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 button.DOMAIN: [
@@ -479,10 +479,14 @@ async def test_valid_device_class(
                     },
                 ]
             }
-        },
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_valid_device_class(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
+    """Test device_class option with valid values."""
+    await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("button.test_1")
     assert state.attributes["device_class"] == button.ButtonDeviceClass.UPDATE
