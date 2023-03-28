@@ -37,7 +37,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     with patch("aioairq.AirQ.validate"), patch(
-        "aioairq.AirQ.fetch_device_info", return_value=TEST_DEVICE_INFO.copy()
+        "aioairq.AirQ.fetch_device_info", return_value=TEST_DEVICE_INFO
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -104,7 +104,7 @@ async def test_duplicate_error(hass: HomeAssistant) -> None:
     ).add_to_hass(hass)
 
     with patch("aioairq.AirQ.validate"), patch(
-        "aioairq.AirQ.fetch_device_info", return_value=TEST_DEVICE_INFO.copy()
+        "aioairq.AirQ.fetch_device_info", return_value=TEST_DEVICE_INFO
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=TEST_USER_DATA
