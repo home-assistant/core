@@ -119,6 +119,14 @@ class ZWaveNodePingButton(ButtonEntity):
             )
         )
 
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DOMAIN}_{self._base_unique_id}_remove_entity_on_ready_node",
+                self.async_remove,
+            )
+        )
+
     async def async_press(self) -> None:
         """Press the button."""
         self.hass.async_create_task(self.node.async_ping())

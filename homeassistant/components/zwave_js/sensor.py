@@ -644,5 +644,12 @@ class ZWaveNodeStatusSensor(SensorEntity):
                 self.async_remove,
             )
         )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DOMAIN}_{self._base_unique_id}_remove_entity_on_ready_node",
+                self.async_remove,
+            )
+        )
         self._attr_native_value: str = self.node.status.name.lower()
         self.async_write_ha_state()

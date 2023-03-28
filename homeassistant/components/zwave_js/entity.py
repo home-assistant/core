@@ -110,6 +110,17 @@ class ZWaveBaseEntity(Entity):
                 self.async_remove,
             )
         )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                (
+                    f"{DOMAIN}_"
+                    f"{get_valueless_base_unique_id(self.driver, self.info.node)}_"
+                    "remove_entity"
+                ),
+                self.async_remove,
+            )
+        )
 
         for status_event in (EVENT_ALIVE, EVENT_DEAD):
             self.async_on_remove(
