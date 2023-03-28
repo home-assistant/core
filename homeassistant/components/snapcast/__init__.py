@@ -1,28 +1,18 @@
 """Snapcast Integration."""
-from dataclasses import dataclass
 import logging
 import socket
 
 import snapcast.control
 
-from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN, PLATFORMS
+from .server import HomeAssistantSnapcast
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class HomeAssistantSnapcastData:
-    """Snapcast data stored in the Home Assistant data object."""
-
-    server: snapcast.control.Snapserver
-    clients: list[MediaPlayerEntity]
-    groups: list[MediaPlayerEntity]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -38,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Could not connect to Snapcast server at {host}:{port}"
         ) from ex
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = HomeAssistantSnapcastData(
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = HomeAssistantSnapcast(
         server, [], []
     )
 

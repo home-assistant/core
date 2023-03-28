@@ -1104,6 +1104,7 @@ omit =
     homeassistant/components/smtp/notify.py
     homeassistant/components/snapcast/__init__.py
     homeassistant/components/snapcast/media_player.py
+    homeassistant/components/snapcast/server.py
     homeassistant/components/snmp/device_tracker.py
     homeassistant/components/snmp/sensor.py
     homeassistant/components/snmp/switch.py

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from snapcast.control.server import CONTROL_PORT, Snapserver
+from snapcast.control.server import CONTROL_PORT
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -34,6 +34,7 @@ from .const import (
     SERVICE_SNAPSHOT,
     SERVICE_UNJOIN,
 )
+from .server import HomeAssistantSnapcast
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +66,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the snapcast config entry."""
-    snapcast_data: HomeAssistantSnapcastData = hass.data[DOMAIN][config_entry.entry_id]
+    snapcast_data: HomeAssistantSnapcast = hass.data[DOMAIN][config_entry.entry_id]
 
     register_services()
 
@@ -73,14 +74,14 @@ async def async_setup_entry(
     port = config_entry.data[CONF_PORT]
     hpid = f"{host}:{port}"
 
-    snapcast_data.groups: list[MediaPlayerEntity] = [
+    snapcast_data.groups = [
         SnapcastGroupDevice(group, hpid) for group in snapcast_data.server.groups
     ]
-    snapcast_data.clients: list[MediaPlayerEntity] = [
+    snapcast_data.clients = [
         SnapcastClientDevice(client, hpid, config_entry.entry_id)
         for client in snapcast_data.server.clients
     ]
-    async_add_entities(clients + groups)
+    async_add_entities(snapcast_data.clients + snapcast_data.groups)
 
 
 async def async_setup_platform(
