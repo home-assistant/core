@@ -158,11 +158,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         for lru in objgraph.by_type(_LRU_CACHE_WRAPPER_OBJECT):
             lru = cast(_lru_cache_wrapper, lru)
-            wrapped = lru.__wrapped__
             _LOGGER.critical(
                 "Cache stats for lru_cache %s at %s: %s",
-                wrapped,
-                _get_function_absfile(wrapped),
+                lru.__wrapped__,
+                _get_function_absfile(lru.__wrapped__),
                 lru.cache_info(),
             )
 
