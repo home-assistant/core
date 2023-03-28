@@ -8,6 +8,7 @@ import logging
 from typing import Any
 
 import voluptuous as vol
+import yarl
 
 from homeassistant import config_entries
 from homeassistant.components.hassio import (
@@ -72,6 +73,13 @@ def get_zigbee_socket() -> str:
     """
     hostname = hostname_from_addon_slug(SILABS_MULTIPROTOCOL_ADDON_SLUG)
     return f"socket://{hostname}:9999"
+
+
+def is_multiprotocol_url(url: str) -> bool:
+    """Return if the URL points at the Multiprotocol add-on."""
+    parsed = yarl.URL(url)
+    hostname = hostname_from_addon_slug(SILABS_MULTIPROTOCOL_ADDON_SLUG)
+    return parsed.host == hostname
 
 
 class BaseMultiPanFlow(FlowHandler, ABC):

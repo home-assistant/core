@@ -23,7 +23,7 @@ DISCOVERY_SCHEMAS: dict[Platform, list[MatterDiscoverySchema]] = {
     Platform.SENSOR: SENSOR_SCHEMAS,
     Platform.SWITCH: SWITCH_SCHEMAS,
 }
-SUPPORTED_PLATFORMS = tuple(DISCOVERY_SCHEMAS.keys())
+SUPPORTED_PLATFORMS = tuple(DISCOVERY_SCHEMAS)
 
 
 @callback
@@ -109,7 +109,6 @@ def async_discover_entities(
             attributes_to_watch=attributes_to_watch,
             entity_description=schema.entity_description,
             entity_class=schema.entity_class,
-            measurement_to_ha=schema.measurement_to_ha,
         )
 
         # prevent re-discovery of the same attributes
