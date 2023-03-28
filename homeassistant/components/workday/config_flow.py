@@ -12,7 +12,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     OptionsFlowWithConfigEntry,
 )
-from homeassistant.const import CONF_NAME, CONF_PLATFORM
+from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -154,10 +154,20 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Import a configuration from config.yaml."""
 
-        input_config = {
-            k: v for k, v in config.items() if k not in [CONF_NAME, CONF_PLATFORM]
+        abort_match = {
+            k: v
+            for k, v in config.items()
+            if k
+            in {
+                CONF_COUNTRY,
+                CONF_EXCLUDES,
+                CONF_OFFSET,
+                CONF_WORKDAYS,
+                CONF_ADD_HOLIDAYS,
+                CONF_REMOVE_HOLIDAYS,
+            }
         }
-        self._async_abort_entries_match(input_config)
+        self._async_abort_entries_match(abort_match)
         return await self.async_step_options(user_input=config)
 
     async def async_step_user(
@@ -179,9 +189,10 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle remaining flow."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            combined_input: dict[str, Any] = {**self.data, **user_input}
             try:
                 await self.hass.async_add_executor_job(
-                    validate_custom_dates, {**self.data, **user_input}
+                    validate_custom_dates, combined_input
                 )
             except AddDatesError:
                 errors["add_holidays"] = "add_holiday_error"
@@ -190,6 +201,20 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
             except NotImplementedError:
                 self.async_abort(reason="incorrect_province")
 
+            abort_match = {
+                k: v
+                for k, v in combined_input.items()
+                if k
+                in {
+                    CONF_COUNTRY,
+                    CONF_EXCLUDES,
+                    CONF_OFFSET,
+                    CONF_WORKDAYS,
+                    CONF_ADD_HOLIDAYS,
+                    CONF_REMOVE_HOLIDAYS,
+                }
+            }
+            self._async_abort_entries_match(abort_match)
             if not errors:
                 name = self.data.get(CONF_NAME, user_input.get(CONF_NAME))
                 return self.async_create_entry(
