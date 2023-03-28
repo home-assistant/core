@@ -12,7 +12,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     OptionsFlowWithConfigEntry,
 )
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -154,7 +154,10 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Import a configuration from config.yaml."""
 
-        self._async_abort_entries_match(config)
+        input_config = {
+            k: v for k, v in config.items() if k not in [CONF_NAME, CONF_PLATFORM]
+        }
+        self._async_abort_entries_match(input_config)
         return await self.async_step_options(user_input=config)
 
     async def async_step_user(
