@@ -795,3 +795,14 @@ async def test_option_flow_install_multi_pan_addon_zha_migration_fails_step_2(
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "zha_migration_failed"
+
+
+def test_is_multiprotocol_url() -> None:
+    """Test is_multiprotocol_url."""
+    assert silabs_multiprotocol_addon.is_multiprotocol_url(
+        "socket://core-silabs-multiprotocol:9999"
+    )
+    assert silabs_multiprotocol_addon.is_multiprotocol_url(
+        "http://core-silabs-multiprotocol:8081"
+    )
+    assert not silabs_multiprotocol_addon.is_multiprotocol_url("/dev/ttyAMA1")

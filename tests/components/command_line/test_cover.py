@@ -42,7 +42,7 @@ async def test_no_covers(caplog: pytest.LogCaptureFixture, hass: HomeAssistant) 
     """Test that the cover does not polls when there's no state command."""
 
     with patch(
-        "homeassistant.components.command_line.subprocess.check_output",
+        "homeassistant.components.command_line.utils.subprocess.check_output",
         return_value=b"50\n",
     ):
         await setup_test_entity(hass, {})
@@ -53,7 +53,7 @@ async def test_no_poll_when_cover_has_no_command_state(hass: HomeAssistant) -> N
     """Test that the cover does not polls when there's no state command."""
 
     with patch(
-        "homeassistant.components.command_line.subprocess.check_output",
+        "homeassistant.components.command_line.utils.subprocess.check_output",
         return_value=b"50\n",
     ) as check_output:
         await setup_test_entity(hass, {"test": {}})
@@ -66,7 +66,7 @@ async def test_poll_when_cover_has_command_state(hass: HomeAssistant) -> None:
     """Test that the cover polls when there's a state  command."""
 
     with patch(
-        "homeassistant.components.command_line.subprocess.check_output",
+        "homeassistant.components.command_line.utils.subprocess.check_output",
         return_value=b"50\n",
     ) as check_output:
         await setup_test_entity(hass, {"test": {"command_state": "echo state"}})

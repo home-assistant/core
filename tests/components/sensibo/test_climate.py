@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from pysensibo.model import SensiboData
 import pytest
@@ -720,7 +720,7 @@ async def test_climate_no_fan_no_swing(
 
 async def test_climate_set_timer(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: AsyncMock,
+    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
@@ -824,7 +824,7 @@ async def test_climate_set_timer(
 
 async def test_climate_pure_boost(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: AsyncMock,
+    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
@@ -928,7 +928,7 @@ async def test_climate_pure_boost(
 
 async def test_climate_climate_react(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: AsyncMock,
+    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
@@ -1091,7 +1091,7 @@ async def test_climate_climate_react(
 
 async def test_climate_climate_react_fahrenheit(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: AsyncMock,
+    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
@@ -1234,7 +1234,7 @@ async def test_climate_climate_react_fahrenheit(
 
 async def test_climate_full_ac_state(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: AsyncMock,
+    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
