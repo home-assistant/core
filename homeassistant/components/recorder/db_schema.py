@@ -30,7 +30,9 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects import mysql, oracle, postgresql, sqlite
 from sqlalchemy.engine.interfaces import Dialect
+from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import DeclarativeBase, Mapped, aliased, mapped_column, relationship
+from sqlalchemy.types import TypeDecorator
 from typing_extensions import Self
 
 from homeassistant.const import (
@@ -132,6 +134,27 @@ _DEFAULT_TABLE_ARGS = {
 }
 
 
+class DateTimeAsCharZero(DateTime):
+    """DateTime type that stores as a char(0) on mysql and mariadb."""
+
+
+class CharZero(mysql.CHAR):
+    """Char type that stores as a char(0) on mysql and mariadb."""
+
+
+@compiles(DateTimeAsCharZero, "mysql", "mariadb")  # type: ignore[misc,no-untyped-call]
+@compiles(CharZero, "mysql", "mariadb")  # type: ignore[misc,no-untyped-call]
+def compile_char_zero(type_: TypeDecorator, compiler: Any, **kw: Any) -> str:
+    """Compile DateTimeAsCharZero and CharZero as CHAR(0) on mysql and mariadb."""
+    return "CHAR(0)"
+
+
+@compiles(DateTimeAsCharZero, "sqlite", "postgresql")  # type: ignore[misc,no-untyped-call]
+def compile_char_one(type_: TypeDecorator, compiler: Any, **kw: Any) -> str:
+    """Compile DateTimeAsCharZero as CHAR(1) on sqlite and postgresql."""
+    return "CHAR(1)"
+
+
 class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):
     """Use ciso8601 to parse datetimes instead of sqlalchemy built-in regex."""
 
@@ -157,8 +180,8 @@ DOUBLE_TYPE = (
     .with_variant(oracle.DOUBLE_PRECISION(), "oracle")
     .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )
-UNUSED_LEGACY_COLUMN = CHAR(0).with_variant(mysql.CHAR(0), "mysql", "mariadb")  # type: ignore[no-untyped-call]
-UNUSED_LEGACY_DATETIME_COLUMN = DATETIME_TYPE
+UNUSED_LEGACY_COLUMN = CHAR(1).with_variant(CharZero, "mysql", "mariadb")
+UNUSED_LEGACY_DATETIME_COLUMN = DateTimeAsCharZero
 DOUBLE_PRECISION_TYPE_SQL = "DOUBLE PRECISION"
 
 TIMESTAMP_TYPE = DOUBLE_TYPE
