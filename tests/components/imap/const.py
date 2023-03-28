@@ -60,7 +60,7 @@ TEST_CONTENT_MULTIPART = (
 )
 
 EMPTY_SEARCH_RESPONSE = ("OK", [b"", b"Search completed (0.0001 + 0.000 secs)."])
-BAD_SEARCH_RESPONSE = ("BAD", [b"", b"Unexpected error"])
+BAD_RESPONSE = ("BAD", [b"", b"Unexpected error"])
 
 TEST_SEARCH_RESPONSE = ("OK", [b"1", b"Search completed (0.0001 + 0.000 secs)."])
 
@@ -136,4 +136,4 @@ TEST_FETCH_RESPONSE_MULTIPART = (
     ],
 )
 
-BAD_FETCH_RESPONSE = ("BAD", [])
+RESPONSE_BAD = ("BAD", [])
