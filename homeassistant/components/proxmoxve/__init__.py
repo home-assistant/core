@@ -304,6 +304,8 @@ class ProxmoxEntity(CoordinatorEntity):
 class ProxmoxClient:
     """A wrapper for the proxmoxer ProxmoxAPI client."""
 
+    _proxmox: ProxmoxAPI
+
     def __init__(
         self,
         host: str,
@@ -321,8 +323,6 @@ class ProxmoxClient:
         self._realm = realm
         self._password = password
         self._verify_ssl = verify_ssl
-
-        self._proxmox: ProxmoxAPI
 
     def build_client(self) -> None:
         """Construct the ProxmoxAPI client.
