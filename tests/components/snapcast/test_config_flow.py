@@ -35,7 +35,7 @@ async def test_form(
             result["flow_id"],
             TEST_CONNECTION,
         )
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_host"}
@@ -46,7 +46,7 @@ async def test_form(
             result["flow_id"],
             TEST_CONNECTION,
         )
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
@@ -77,7 +77,6 @@ async def test_abort(
     )
     entry.add_to_hass(hass)
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -89,7 +88,7 @@ async def test_abort(
             result["flow_id"],
             TEST_CONNECTION,
         )
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"

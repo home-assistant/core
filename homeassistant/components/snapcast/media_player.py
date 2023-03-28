@@ -65,7 +65,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the snapcast config entry."""
-    the_server: Snapserver = hass.data[DOMAIN][config_entry.entry_id].server
+    snapcast_data: HomeAssistantSnapcastData = hass.data[DOMAIN][config_entry.entry_id]
 
     register_services()
 
@@ -73,15 +73,13 @@ async def async_setup_entry(
     port = config_entry.data[CONF_PORT]
     hpid = f"{host}:{port}"
 
-    groups: list[MediaPlayerEntity] = [
-        SnapcastGroupDevice(group, hpid) for group in the_server.groups
+    snapcast_data.groups: list[MediaPlayerEntity] = [
+        SnapcastGroupDevice(group, hpid) for group in snapcast_data.server.groups
     ]
-    clients: list[MediaPlayerEntity] = [
+    snapcast_data.clients: list[MediaPlayerEntity] = [
         SnapcastClientDevice(client, hpid, config_entry.entry_id)
-        for client in the_server.clients
+        for client in snapcast_data.server.clients
     ]
-    hass.data[DOMAIN][config_entry.entry_id].clients = clients
-    hass.data[DOMAIN][config_entry.entry_id].groups = groups
     async_add_entities(clients + groups)
 
 
@@ -241,7 +239,7 @@ class SnapcastClientDevice(MediaPlayerEntity):
         """Initialize the Snapcast client device."""
         self._client = client
         self._uid = f"{CLIENT_PREFIX}{uid_part}_{self._client.identifier}"
-        self.entry_id = entry_id
+        self._entry_id = entry_id
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to client events."""
@@ -332,7 +330,7 @@ class SnapcastClientDevice(MediaPlayerEntity):
         """Join the group of the master player."""
         master_entity = next(
             entity
-            for entity in self.hass.data[DOMAIN][self.entry_id].clients
+            for entity in self.hass.data[DOMAIN][self._entry_id].clients
             if entity.entity_id == master
         )
         if not isinstance(master_entity, SnapcastClientDevice):
