@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import base64
-from email.message import EmailMessage
+from email.mime.text import MIMEText
 from typing import Any
 
 from googleapiclient.http import HttpRequest
@@ -43,8 +43,7 @@ class GMailNotificationService(BaseNotificationService):
         data: dict[str, Any] = kwargs.get(ATTR_DATA) or {}
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
 
-        email = EmailMessage()
-        email.set_content(message)
+        email = MIMEText(message, "html")
         if to_addrs := kwargs.get(ATTR_TARGET):
             email["To"] = ", ".join(to_addrs)
         email["From"] = data.get(ATTR_FROM, ATTR_ME)
