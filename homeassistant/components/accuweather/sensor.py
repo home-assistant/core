@@ -391,7 +391,6 @@ class AccuWeatherSensor(
             self._attr_unique_id = (
                 f"{coordinator.location_key}-{description.key}".lower()
             )
-        self._attr_native_unit_of_measurement = description.native_unit_of_measurement
         self._attr_device_info = coordinator.device_info
         if forecast_day is not None:
             self.forecast_day = forecast_day
