@@ -324,3 +324,11 @@ class IkeaAirPurifierChannel(ZigbeeChannel):
             self.async_send_signal(
                 f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", attrid, attr_name, value
             )
+
+
+@registries.CHANNEL_ONLY_CLUSTERS.register(0xFC80)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(0xFC80)
+class IkeaRemote(ZigbeeChannel):
+    """Ikea Matter remote channel."""
+
+    REPORT_CONFIG = ()
