@@ -30,9 +30,9 @@
       "climate": {
         "title": "[%key:component::group::config::step::user::title%]",
         "data": {
-          "entities": "[%key:component::group::config::step::climate::data::entities%]",
-          "hide_members": "[%key:component::group::config::step::climate::data::hide_members%]",
-          "name": "[%key:component::group::config::step::climate::data::name%]"
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
+          "name": "[%key:component::group::config::step::binary_sensor::data::name%]"
         }
       },
       "cover": {
