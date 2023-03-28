@@ -198,9 +198,10 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
                     options={**self.data, **user_input},
                 )
 
-        new_schema = await self.hass.async_add_executor_job(
+        schema = await self.hass.async_add_executor_job(
             add_province_to_schema, DATA_SCHEMA_OPT, self.data
         )
+        new_schema = self.add_suggested_values_to_schema(schema, user_input)
         return self.async_show_form(
             step_id="options",
             data_schema=new_schema,
@@ -266,15 +267,7 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
         schema: vol.Schema = await self.hass.async_add_executor_job(
             add_province_to_schema, DATA_SCHEMA_OPT, self.options
         )
-        new_schema = vol.Schema(
-            {
-                vol.Optional(
-                    key.schema,
-                    description={"suggested_value": self.options.get(key.schema)},
-                ): value
-                for key, value in schema.schema.items()
-            }
-        )
+        new_schema = self.add_suggested_values_to_schema(schema, user_input)
 
         return self.async_show_form(
             step_id="init",
