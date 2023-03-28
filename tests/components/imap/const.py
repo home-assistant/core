@@ -1,6 +1,11 @@
 """Constants for tests imap integration."""
 
-TEST_MESSAGE = (
+
+DATE_HEADER1 = b"Date: Fri, 24 Mar 2023 13:52:00 +0100\r\n"
+DATE_HEADER2 = b"Date: Fri, 24 Mar 2023 13:52:00 +0100 (CET)\r\n"
+DATE_HEADER_INVALID = b"2023-03-27T13:52:00 +0100\r\n"
+
+TEST_MESSAGE_HEADERS1 = (
     b"Return-Path: <john.doe@example.com>\r\nDelivered-To: notify@example.com\r\n"
     b"Received: from beta.example.com\r\n\tby beta with LMTP\r\n\t"
     b"id eLp2M/GcHWQTLxQAho4UZQ\r\n\t(envelope-from <john.doe@example.com>)\r\n\t"
@@ -8,12 +13,17 @@ TEST_MESSAGE = (
     b"Received: from localhost (localhost [127.0.0.1])\r\n\t"
     b"by beta.example.com (Postfix) with ESMTP id D0FFA61425\r\n\t"
     b"for <notify@example.com>; Fri, 24 Mar 2023 13:52:01 +0100 (CET)\r\n"
-    b"Date: Fri, 24 Mar 2023 13:52:00 +0100\r\n"
+)
+TEST_MESSAGE_HEADERS2 = (
     b"MIME-Version: 1.0\r\n"
     b"To: notify@example.com\r\n"
     b"From: John Doe <john.doe@example.com>\r\n"
     b"Subject: Test subject\r\n"
 )
+
+TEST_MESSAGE = TEST_MESSAGE_HEADERS1 + DATE_HEADER1 + TEST_MESSAGE_HEADERS2
+TEST_MESSAGE_ALT = TEST_MESSAGE_HEADERS1 + DATE_HEADER2 + TEST_MESSAGE_HEADERS2
+TEST_INVALID_DATE = TEST_MESSAGE_HEADERS1 + DATE_HEADER_INVALID + TEST_MESSAGE_HEADERS2
 
 TEST_CONTENT_TEXT_BARE = b"\r\n" b"Test body\r\n" b"\r\n"
 
@@ -87,6 +97,31 @@ TEST_FETCH_RESPONSE_TEXT_PLAIN = (
         b"Fetch completed (0.0001 + 0.000 secs).",
     ],
 )
+
+TEST_FETCH_RESPONSE_TEXT_PLAIN_ALT = (
+    "OK",
+    [
+        b"1 FETCH (BODY[] {"
+        + str(len(TEST_MESSAGE_ALT + TEST_CONTENT_TEXT_PLAIN)).encode("utf-8")
+        + b"}",
+        bytearray(TEST_MESSAGE_ALT + TEST_CONTENT_TEXT_PLAIN),
+        b")",
+        b"Fetch completed (0.0001 + 0.000 secs).",
+    ],
+)
+
+TEST_FETCH_RESPONSE_INVALID_DATE = (
+    "OK",
+    [
+        b"1 FETCH (BODY[] {"
+        + str(len(TEST_INVALID_DATE + TEST_CONTENT_TEXT_PLAIN)).encode("utf-8")
+        + b"}",
+        bytearray(TEST_INVALID_DATE + TEST_CONTENT_TEXT_PLAIN),
+        b")",
+        b"Fetch completed (0.0001 + 0.000 secs).",
+    ],
+)
+
 
 TEST_FETCH_RESPONSE_TEXT_OTHER = (
     "OK",
