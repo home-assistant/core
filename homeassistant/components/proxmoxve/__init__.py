@@ -8,7 +8,12 @@ from typing import Any
 
 from proxmoxer import AuthenticationError, ProxmoxAPI
 from proxmoxer.core import ResourceException
-from requests.exceptions import ConnectTimeout, SSLError
+from requests.exceptions import (
+    ConnectionError as connError,
+    ConnectTimeout,
+    RetryError,
+    SSLError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -198,6 +203,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     except ConnectTimeout as error:
         raise ConfigEntryNotReady(
             f"Connection to host {host} timed out during setup"
+        ) from error
+    except RetryError as error:
+        raise ConfigEntryNotReady(
+            f"Connection is unreachable to host {host}"
+        ) from error
+    except connError as error:
+        raise ConfigEntryNotReady(
+            f"Connection is unreachable to host {host}"
         ) from error
     except ResourceException as error:
         raise ConfigEntryNotReady from error
