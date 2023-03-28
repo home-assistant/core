@@ -103,11 +103,15 @@ async def test_duplicate_error(hass: HomeAssistant) -> None:
         unique_id=TEST_DEVICE_INFO["id"],
     ).add_to_hass(hass)
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
     with patch("aioairq.AirQ.validate"), patch(
         "aioairq.AirQ.fetch_device_info", return_value=TEST_DEVICE_INFO
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=TEST_USER_DATA
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_USER_DATA
         )
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"
