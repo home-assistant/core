@@ -1,6 +1,8 @@
 """Support for Matrix notifications."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -38,7 +40,7 @@ class MatrixNotificationService(BaseNotificationService):
         """Set up the Matrix notification service."""
         self._default_room = default_room
 
-    def send_message(self, message: str = "", **kwargs) -> None:  # type: ignore[no-untyped-def]
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send the message to the Matrix server."""
         target_rooms: list[RoomID] = kwargs.get(ATTR_TARGET) or [self._default_room]
         service_data = {ATTR_TARGET: target_rooms, ATTR_MESSAGE: message}
