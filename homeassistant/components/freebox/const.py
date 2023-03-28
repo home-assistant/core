@@ -56,17 +56,8 @@ DEVICE_ICONS = {
 }
 
 ATTR_DETECTION = "detection"
-ATTR_ACTIVATION = "activation"
-ATTR_QUALITY = "quality"
-ATTR_SENSITIVITY = "sensitivity"
-ATTR_THRESHOLD = "threshold"
 ATTR_FLIP = "flip"
-ATTR_TIMESTAMP = "timestamp"
-ATTR_VOLUME = "volume"
-ATTR_SOUND_DETECTION = "sound_detection"
-ATTR_SOUND_TRIGGER = "sound_trigger"
-ATTR_RTSP = "rtsp"
-ATTR_DISK = "disk"
+
 
 CATEGORY_TO_MODEL = {
     "pir": "F-HAPIR01A",
