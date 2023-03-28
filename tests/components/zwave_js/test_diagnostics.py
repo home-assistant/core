@@ -195,8 +195,8 @@ async def test_device_diagnostics_secret_value(
 ) -> None:
     """Test that secret value in device level diagnostics gets redacted."""
 
-    def _find_val(data: dict) -> dict:
-        """Find specific value in data."""
+    def _find_ultraviolet_val(data: dict) -> dict:
+        """Find ultraviolet property value in data."""
         return next(
             val
             for val in data["values"]
@@ -206,7 +206,7 @@ async def test_device_diagnostics_secret_value(
 
     node_state = copy.deepcopy(multisensor_6_state)
     # Force a value to be secret so we can check if it gets redacted
-    secret_value = _find_val(node_state)
+    secret_value = _find_ultraviolet_val(node_state)
     secret_value["metadata"]["secret"] = True
     node = Node(client, node_state)
     client.driver.controller.nodes[node.node_id] = node
@@ -219,5 +219,5 @@ async def test_device_diagnostics_secret_value(
     diagnostics_data = await get_diagnostics_for_device(
         hass, hass_client, integration, device
     )
-    test_value = _find_val(diagnostics_data["state"])
+    test_value = _find_ultraviolet_val(diagnostics_data["state"])
     assert test_value["value"] == REDACTED
