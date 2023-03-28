@@ -180,7 +180,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass,
             (
                 "LRU cache states have been dumped to the log. See [the"
-                " logs](/config/logs) to review the repr of the objects."
+                " logs](/config/logs) to review the stats."
             ),
             title="LRU stats completed",
             notification_id="profile_lru_stats",
