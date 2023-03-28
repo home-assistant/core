@@ -1368,6 +1368,7 @@ omit =
     homeassistant/components/velbus/entity.py
     homeassistant/components/velbus/light.py
     homeassistant/components/velbus/sensor.py
+    homeassistant/components/velbus/select.py
     homeassistant/components/velbus/switch.py
     homeassistant/components/velux/__init__.py
     homeassistant/components/velux/cover.py
