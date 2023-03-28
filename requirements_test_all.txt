@@ -1760,6 +1760,9 @@ tellduslive==0.10.11
 # homeassistant.components.lg_soundbar
 temescal==0.5
 
+# homeassistant.components.temper
+temperusb==1.6.0
+
 # homeassistant.components.powerwall
 tesla-powerwall==0.3.19
 
