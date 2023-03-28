@@ -810,19 +810,6 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    # number for Indicator CC for property keys 3-5
-    ZWaveDiscoverySchema(
-        platform=Platform.NUMBER,
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.INDICATOR},
-            type={ValueType.NUMBER},
-            property_key={3, 4, 5},
-            readable=True,
-            writeable=True,
-        ),
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
     # button for Indicator CC
     ZWaveDiscoverySchema(
         platform=Platform.BUTTON,

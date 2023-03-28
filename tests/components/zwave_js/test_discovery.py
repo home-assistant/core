@@ -163,18 +163,6 @@ async def test_zooz_zen72(
     """Test that Zooz ZEN72 Indicators are discovered as number entities."""
     ent_reg = er.async_get(hass)
     assert len(hass.states.async_entity_ids(NUMBER_DOMAIN)) == 1
-    assert (
-        len(
-            [
-                entry
-                for entry in er.async_entries_for_config_entry(
-                    ent_reg, integration.entry_id
-                )
-                if entry.disabled and entry.domain == NUMBER_DOMAIN
-            ]
-        )
-        == 3
-    )
     assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 2  # includes ping
     entity_id = "number.z_wave_plus_700_series_dimmer_switch_indicator_value"
     entry = ent_reg.async_get(entity_id)
