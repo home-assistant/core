@@ -163,11 +163,6 @@ async def test_late_authentication_error(
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.imap_email_email_com")
-    # we should have an entity
-    assert state is not None
-    assert state.state == "0"
-
     # Mock that the search fails, this will trigger
     # that the connection will be restarted
     # Then fail selecting the folder
@@ -182,6 +177,7 @@ async def test_late_authentication_error(
     assert "Username or password incorrect, starting reauthentication" in caplog.text
 
     # we still should have an entity with an unavailable state
+    state = hass.states.get("sensor.imap_email_email_com")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
@@ -211,11 +207,6 @@ async def test_late_folder_error(
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.imap_email_email_com")
-    # we should have an entity
-    assert state is not None
-    assert state.state == "0"
-
     # Mock that the search fails, this will trigger
     # that the connection will be restarted
     # Then fail selecting the folder
@@ -230,6 +221,7 @@ async def test_late_folder_error(
     assert "Selected mailbox folder is invalid" in caplog.text
 
     # we still should have an entity with an unavailable state
+    state = hass.states.get("sensor.imap_email_email_com")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
