@@ -12,8 +12,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import VeSyncBaseEntity, VeSyncDevice, VeSyncEntityDescriptionFactory
-from .const import DOMAIN, VS_DISCOVERY, VS_NUMBERS
+from .common import (
+    VeSyncBaseEntity,
+    VeSyncDevice,
+    VeSyncEntityDescriptionFactory,
+    get_domain_data,
+)
+from .const import VS_DISCOVERY, VS_NUMBERS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,6 +37,30 @@ class VeSyncNumberEntityDescription(
     """Describe VeSync number entity."""
 
     update_fn: Callable[[VeSyncBaseDevice, float], None] = lambda device, value: None
+
+
+class VeSyncNumberEntity(VeSyncBaseEntity, NumberEntity):
+    """Representation of a number for configuring a VeSync device."""
+
+    entity_description: VeSyncNumberEntityDescription
+
+    def __init__(
+        self, device: VeSyncDevice, description: VeSyncNumberEntityDescription
+    ) -> None:
+        """Initialize the VeSync number entity."""
+        super().__init__(device)
+        self.entity_description = description
+        self._attr_name = f"{super().name} {description.name}"
+        self._attr_unique_id = f"{super().unique_id}-{description.key}"
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the value of the number."""
+        return self.entity_description.value_fn(self.device)
+
+    def set_native_value(self, value: float) -> None:
+        """Set the value of the number."""
+        self.entity_description.update_fn(self.device, value)
 
 
 class MistLevelEntityDescriptionFactory(
@@ -53,12 +82,36 @@ class MistLevelEntityDescriptionFactory(
         )
 
     def supports(self, device: VeSyncBaseDevice) -> bool:
-        """Determine if this device supports a mist_virtual_level property."""
-        return "mist_virtual_level" in device.details
+        """Determine if this device supports a set_mist_level method."""
+        return hasattr(device, "set_mist_level") and callable(device.set_mist_level)
+
+
+class WarmMistLevelEntityDescriptionFactory(
+    VeSyncEntityDescriptionFactory[VeSyncNumberEntityDescription]
+):
+    """Create an entity description for a device that supports warm mist levels."""
+
+    def create(self, device: VeSyncBaseDevice) -> VeSyncNumberEntityDescription:
+        """Create a VeSyncNumberEntityDescription."""
+        return VeSyncNumberEntityDescription(
+            key="warm-mist-level",
+            name="Warm Mist Level",
+            entity_category=EntityCategory.CONFIG,
+            native_step=1,
+            value_fn=lambda device: device.details["warm_mist_level"],
+            update_fn=lambda device, value: device.set_warm_level(int(value)),
+            native_min_value=float(device.config_dict["warm_mist_levels"][0]),
+            native_max_value=float(device.config_dict["warm_mist_levels"][-1]),
+        )
+
+    def supports(self, device: VeSyncBaseDevice) -> bool:
+        """Determine if this device supports a warm mist method."""
+        return hasattr(device, "warm_mist_feature") and device.warm_mist_feature
 
 
 _FACTORIES: list[VeSyncEntityDescriptionFactory] = [
     MistLevelEntityDescriptionFactory(),
+    WarmMistLevelEntityDescriptionFactory(),
 ]
 
 
@@ -90,32 +143,8 @@ async def async_setup_entry(
 
         async_add_entities(entities, update_before_add=True)
 
-    discover(hass.data[DOMAIN][VS_NUMBERS])
+    discover(get_domain_data(hass, config_entry, VS_NUMBERS))
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_NUMBERS), discover)
     )
-
-
-class VeSyncNumberEntity(VeSyncBaseEntity, NumberEntity):
-    """Representation of a number for configuring a VeSync device."""
-
-    entity_description: VeSyncNumberEntityDescription
-
-    def __init__(
-        self, device: VeSyncDevice, description: VeSyncNumberEntityDescription
-    ) -> None:
-        """Initialize the VeSync humidifier device."""
-        super().__init__(device)
-        self.entity_description = description
-        self._attr_name = f"{super().name} {description.name}"
-        self._attr_unique_id = f"{super().unique_id}-{description.key}"
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the value of the number."""
-        return self.entity_description.value_fn(self.device)
-
-    def set_native_value(self, value: float) -> None:
-        """Set the value of the number."""
-        self.entity_description.update_fn(self.device, value)

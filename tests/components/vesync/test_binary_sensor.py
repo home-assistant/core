@@ -3,9 +3,8 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
+from homeassistant.components.vesync import DOMAIN, VS_BINARY_SENSORS
 from homeassistant.components.vesync.binary_sensor import (
-    DOMAIN,
-    VS_BINARY_SENSORS,
     EmptyWaterTankEntityDescriptionFactory,
     HighHumidityEntityDescriptionFactory,
     VeSyncBinarySensorEntity,
