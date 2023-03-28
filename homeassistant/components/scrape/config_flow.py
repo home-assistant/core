@@ -60,7 +60,15 @@ from homeassistant.helpers.selector import (
 )
 
 from . import COMBINED_SCHEMA
-from .const import CONF_INDEX, CONF_SELECT, DEFAULT_NAME, DEFAULT_VERIFY_SSL, DOMAIN
+from .const import (
+    CONF_ENCODING,
+    CONF_INDEX,
+    CONF_SELECT,
+    DEFAULT_ENCODING,
+    DEFAULT_NAME,
+    DEFAULT_VERIFY_SSL,
+    DOMAIN,
+)
 
 RESOURCE_SETUP = {
     vol.Required(CONF_RESOURCE): TextSelector(
@@ -84,6 +92,7 @@ RESOURCE_SETUP = {
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): NumberSelector(
         NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
     ),
+    vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): TextSelector(),
 }
 
 SENSOR_SETUP = {

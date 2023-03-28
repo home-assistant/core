@@ -283,8 +283,8 @@ class CalendarSyncUpdateCoordinator(DataUpdateCoordinator[Timeline]):
                 "Unable to get events: Sync from server has not completed"
             )
         return self.data.overlapping(
-            dt_util.as_local(start_date),
-            dt_util.as_local(end_date),
+            start_date,
+            end_date,
         )
 
     @property

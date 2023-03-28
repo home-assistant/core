@@ -10,6 +10,7 @@ import py
 import pytest
 
 from homeassistant.components.profiler import (
+    _LRU_CACHE_WRAPPER_OBJECT,
     CONF_SECONDS,
     SERVICE_DUMP_LOG_OBJECTS,
     SERVICE_LOG_EVENT_LOOP_SCHEDULED,
@@ -253,10 +254,15 @@ async def test_lru_stats(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) 
     domain_data = DomainData()
     assert hass.services.has_service(DOMAIN, SERVICE_LRU_STATS)
 
-    await hass.services.async_call(DOMAIN, SERVICE_LRU_STATS, blocking=True)
+    def _mock_by_type(type_):
+        if type_ == _LRU_CACHE_WRAPPER_OBJECT:
+            return [_dummy_test_lru_stats]
+        return [domain_data]
+
+    with patch("objgraph.by_type", side_effect=_mock_by_type):
+        await hass.services.async_call(DOMAIN, SERVICE_LRU_STATS, blocking=True)
 
     assert "DomainData" in caplog.text
     assert "(0, 0)" in caplog.text
     assert "_dummy_test_lru_stats" in caplog.text
     assert "CacheInfo" in caplog.text
-    del domain_data

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 
 from proxmoxer import AuthenticationError, ProxmoxAPI
 from proxmoxer.core import ResourceException
@@ -185,14 +186,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 def create_coordinator_container_vm(
-    hass, proxmox, host_name, node_name, vm_id, vm_type
-):
+    hass: HomeAssistant,
+    proxmox: ProxmoxAPI,
+    host_name: str,
+    node_name: str,
+    vm_id: int,
+    vm_type: int,
+) -> DataUpdateCoordinator[dict[str, Any] | None]:
     """Create and return a DataUpdateCoordinator for a vm/container."""
 
-    async def async_update_data():
+    async def async_update_data() -> dict[str, Any] | None:
         """Call the api and handle the response."""
 
-        def poll_api():
+        def poll_api() -> dict[str, Any] | None:
             """Call the api."""
             vm_status = call_api_container_vm(proxmox, node_name, vm_id, vm_type)
             return vm_status
@@ -216,7 +222,7 @@ def create_coordinator_container_vm(
     )
 
 
-def parse_api_container_vm(status):
+def parse_api_container_vm(status: dict[str, Any]) -> dict[str, Any]:
     """Get the container or vm api data and return it formatted in a dictionary.
 
     It is implemented in this way to allow for more data to be added for sensors
@@ -226,7 +232,12 @@ def parse_api_container_vm(status):
     return {"status": status["status"], "name": status["name"]}
 
 
-def call_api_container_vm(proxmox, node_name, vm_id, machine_type):
+def call_api_container_vm(
+    proxmox: ProxmoxAPI,
+    node_name: str,
+    vm_id: int,
+    machine_type: int,
+) -> dict[str, Any] | None:
     """Make proper api calls."""
     status = None
 
@@ -247,12 +258,12 @@ class ProxmoxEntity(CoordinatorEntity):
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
-        unique_id,
-        name,
-        icon,
-        host_name,
-        node_name,
-        vm_id=None,
+        unique_id: str,
+        name: str,
+        icon: str,
+        host_name: str,
+        node_name: str,
+        vm_id: int | None = None,
     ) -> None:
         """Initialize the Proxmox entity."""
         super().__init__(coordinator)
@@ -292,7 +303,17 @@ class ProxmoxEntity(CoordinatorEntity):
 class ProxmoxClient:
     """A wrapper for the proxmoxer ProxmoxAPI client."""
 
-    def __init__(self, host, port, user, realm, password, verify_ssl):
+    _proxmox: ProxmoxAPI
+
+    def __init__(
+        self,
+        host: str,
+        port: int,
+        user: str,
+        realm: str,
+        password: str,
+        verify_ssl: bool,
+    ) -> None:
         """Initialize the ProxmoxClient."""
 
         self._host = host
@@ -302,10 +323,7 @@ class ProxmoxClient:
         self._password = password
         self._verify_ssl = verify_ssl
 
-        self._proxmox = None
-        self._connection_start_time = None
-
-    def build_client(self):
+    def build_client(self) -> None:
         """Construct the ProxmoxAPI client.
 
         Allows inserting the realm within the `user` value.
@@ -324,6 +342,6 @@ class ProxmoxClient:
             verify_ssl=self._verify_ssl,
         )
 
-    def get_api_client(self):
+    def get_api_client(self) -> ProxmoxAPI:
         """Return the ProxmoxAPI client."""
         return self._proxmox
