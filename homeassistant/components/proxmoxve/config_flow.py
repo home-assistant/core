@@ -396,9 +396,6 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             return self.async_abort(reason="import_failed")
 
-        if CONF_REALM in import_config:
-            import_config[CONF_REALM] = "pam"
-
         proxmox_client = ProxmoxClient(
             host=import_config.get(CONF_HOST),
             port=import_config.get(CONF_PORT),
