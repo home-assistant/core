@@ -95,6 +95,15 @@
   },
   "options": {
     "step": {
+      "menu": {
+        "menu_options": {
+          "host": "Change host authentication information",
+          "add_node": "Add a new node",
+          "selection_qemu_lxc": "Add or remove VMs from an existing node",
+          "remove_node": "Remove a node",
+          "interval_update": "Configuration options"
+        }
+      },
       "host": {
         "title": "Proxmox VE host information",
         "description": "[%key:component::proxmoxve::config::step::host::description%]",
