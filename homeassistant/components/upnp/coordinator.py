@@ -1,7 +1,6 @@
 """UPnP/IGD coordinator."""
 
-from datetime import timedelta
-from typing import Any
+from datetime import datetime, timedelta
 
 from async_upnp_client.exceptions import UpnpCommunicationError
 
@@ -13,7 +12,9 @@ from .const import LOGGER
 from .device import Device
 
 
-class UpnpDataUpdateCoordinator(DataUpdateCoordinator):
+class UpnpDataUpdateCoordinator(
+    DataUpdateCoordinator[dict[str, str | datetime | int | float | None]]
+):
     """Define an object to update data from UPNP device."""
 
     def __init__(
@@ -34,7 +35,9 @@ class UpnpDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=update_interval,
         )
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(
+        self,
+    ) -> dict[str, str | datetime | int | float | None]:
         """Update data."""
         try:
             return await self.device.async_get_data()

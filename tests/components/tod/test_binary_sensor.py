@@ -1,7 +1,6 @@
 """Test Times of the Day Binary Sensor."""
 from datetime import datetime, timedelta
 
-from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -67,7 +66,7 @@ async def test_setup_no_sensors(hass: HomeAssistant) -> None:
         )
 
 
-@freeze_time("2019-01-10 18:43:00-08:00")
+@pytest.mark.freeze_time("2019-01-10 18:43:00-08:00")
 async def test_in_period_on_start(hass: HomeAssistant) -> None:
     """Test simple setting."""
     config = {
@@ -87,7 +86,7 @@ async def test_in_period_on_start(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
 
 
-@freeze_time("2019-01-10 22:30:00-08:00")
+@pytest.mark.freeze_time("2019-01-10 22:30:00-08:00")
 async def test_midnight_turnover_before_midnight_inside_period(
     hass: HomeAssistant,
 ) -> None:
@@ -131,7 +130,7 @@ async def test_midnight_turnover_after_midnight_inside_period(
     assert state.state == STATE_ON
 
 
-@freeze_time("2019-01-10 20:30:00-08:00")
+@pytest.mark.freeze_time("2019-01-10 20:30:00-08:00")
 async def test_midnight_turnover_before_midnight_outside_period(
     hass: HomeAssistant,
 ) -> None:
@@ -148,7 +147,7 @@ async def test_midnight_turnover_before_midnight_outside_period(
     assert state.state == STATE_OFF
 
 
-@freeze_time("2019-01-10 10:00:00-08:00")
+@pytest.mark.freeze_time("2019-01-10 10:00:00-08:00")
 async def test_after_happens_tomorrow(hass: HomeAssistant) -> None:
     """Test when both before and after are in the future, and after is later than before."""
     config = {
@@ -643,7 +642,7 @@ async def test_dst(
     assert state.state == STATE_OFF
 
 
-@freeze_time("2019-01-10 18:43:00")
+@pytest.mark.freeze_time("2019-01-10 18:43:00")
 @pytest.mark.parametrize("hass_time_zone", ("UTC",))
 async def test_simple_before_after_does_not_loop_utc_not_in_range(
     hass: HomeAssistant,
@@ -669,7 +668,7 @@ async def test_simple_before_after_does_not_loop_utc_not_in_range(
     assert state.attributes["next_update"] == "2019-01-10T22:00:00+00:00"
 
 
-@freeze_time("2019-01-10 22:43:00")
+@pytest.mark.freeze_time("2019-01-10 22:43:00")
 @pytest.mark.parametrize("hass_time_zone", ("UTC",))
 async def test_simple_before_after_does_not_loop_utc_in_range(
     hass: HomeAssistant,
@@ -695,7 +694,7 @@ async def test_simple_before_after_does_not_loop_utc_in_range(
     assert state.attributes["next_update"] == "2019-01-11T06:00:00+00:00"
 
 
-@freeze_time("2019-01-11 06:00:00")
+@pytest.mark.freeze_time("2019-01-11 06:00:00")
 @pytest.mark.parametrize("hass_time_zone", ("UTC",))
 async def test_simple_before_after_does_not_loop_utc_fire_at_before(
     hass: HomeAssistant,
@@ -721,7 +720,7 @@ async def test_simple_before_after_does_not_loop_utc_fire_at_before(
     assert state.attributes["next_update"] == "2019-01-11T22:00:00+00:00"
 
 
-@freeze_time("2019-01-10 22:00:00")
+@pytest.mark.freeze_time("2019-01-10 22:00:00")
 @pytest.mark.parametrize("hass_time_zone", ("UTC",))
 async def test_simple_before_after_does_not_loop_utc_fire_at_after(
     hass: HomeAssistant,
@@ -747,7 +746,7 @@ async def test_simple_before_after_does_not_loop_utc_fire_at_after(
     assert state.attributes["next_update"] == "2019-01-11T06:00:00+00:00"
 
 
-@freeze_time("2019-01-10 22:00:00")
+@pytest.mark.freeze_time("2019-01-10 22:00:00")
 @pytest.mark.parametrize("hass_time_zone", ("UTC",))
 async def test_simple_before_after_does_not_loop_utc_both_before_now(
     hass: HomeAssistant,
@@ -773,7 +772,7 @@ async def test_simple_before_after_does_not_loop_utc_both_before_now(
     assert state.attributes["next_update"] == "2019-01-11T00:00:00+00:00"
 
 
-@freeze_time("2019-01-10 17:43:00+01:00")
+@pytest.mark.freeze_time("2019-01-10 17:43:00+01:00")
 @pytest.mark.parametrize("hass_time_zone", ("Europe/Berlin",))
 async def test_simple_before_after_does_not_loop_berlin_not_in_range(
     hass: HomeAssistant,
@@ -799,7 +798,7 @@ async def test_simple_before_after_does_not_loop_berlin_not_in_range(
     assert state.attributes["next_update"] == "2019-01-11T00:00:00+01:00"
 
 
-@freeze_time("2019-01-11 00:43:00+01:00")
+@pytest.mark.freeze_time("2019-01-11 00:43:00+01:00")
 @pytest.mark.parametrize("hass_time_zone", ("Europe/Berlin",))
 async def test_simple_before_after_does_not_loop_berlin_in_range(
     hass: HomeAssistant,

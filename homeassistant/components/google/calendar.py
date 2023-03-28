@@ -24,6 +24,7 @@ from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
     EVENT_DESCRIPTION,
     EVENT_END,
+    EVENT_LOCATION,
     EVENT_RRULE,
     EVENT_START,
     EVENT_SUMMARY,
@@ -282,8 +283,8 @@ class CalendarSyncUpdateCoordinator(DataUpdateCoordinator[Timeline]):
                 "Unable to get events: Sync from server has not completed"
             )
         return self.data.overlapping(
-            dt_util.as_local(start_date),
-            dt_util.as_local(end_date),
+            start_date,
+            end_date,
         )
 
     @property
@@ -507,6 +508,7 @@ class GoogleCalendarEntity(
                 "start": start,
                 "end": end,
                 EVENT_DESCRIPTION: kwargs.get(EVENT_DESCRIPTION),
+                EVENT_LOCATION: kwargs.get(EVENT_LOCATION),
             }
         )
         if rrule := kwargs.get(EVENT_RRULE):
@@ -603,6 +605,7 @@ async def async_create_event(entity: GoogleCalendarEntity, call: ServiceCall) ->
             Event(
                 summary=call.data[EVENT_SUMMARY],
                 description=call.data[EVENT_DESCRIPTION],
+                location=call.data[EVENT_LOCATION],
                 start=start,
                 end=end,
             ),
