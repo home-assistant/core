@@ -33,7 +33,7 @@ YAML_IMPORT = {
 }
 
 
-async def test_flow_user(hass: HomeAssistant, mock_api) -> None:
+async def test_flow_user(hass: HomeAssistant, mock_api: requests_mock.Mocker) -> None:
     """Test the user flow."""
     # Open flow as USER with no input
     result = await hass.config_entries.flow.async_init(

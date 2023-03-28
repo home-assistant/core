@@ -99,7 +99,7 @@ async def async_setup_entry(
     async_add_entites: AddEntitiesCallback,
 ) -> None:
     """Set up qBittorrent sensor entries."""
-    client = hass.data[DOMAIN][config_entry.entry_id]
+    client: Client = hass.data[DOMAIN][config_entry.entry_id]
     entities = [
         QBittorrentSensor(description, client, config_entry, LoginRequired)
         for description in SENSOR_TYPES
