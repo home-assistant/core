@@ -145,7 +145,7 @@ class FreeboxCamera(FreeboxHomeEntity, FFmpegCamera):
         else:
             self._attr_is_streaming = False
 
-        # Parse all endpoints values & needed commands
+        # Parse all endpoints values
         self._attr_motion_detection_enabled = self.get_value("signal", ATTR_DETECTION)
         self._activation_with_alarm = self.get_value("signal", ATTR_ACTIVATION)
         self._high_quality_video = self.get_value("signal", ATTR_QUALITY)
