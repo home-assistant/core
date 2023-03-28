@@ -53,7 +53,7 @@ async def test_capped_setup(
         "</usage>"
     )
     aioclient_mock.get(
-        "https://www.start.ca/support/usage/api?key=NOTAKEY", text=result
+        "https://portal.start.ca/account/usage/api?key=NOTAKEY", text=result
     )
 
     await async_setup_component(hass, "sensor", {"sensor": config})
@@ -151,7 +151,7 @@ async def test_unlimited_setup(
         "</usage>"
     )
     aioclient_mock.get(
-        "https://www.start.ca/support/usage/api?key=NOTAKEY", text=result
+        "https://portal.start.ca/account/usage/api?key=NOTAKEY", text=result
     )
 
     await async_setup_component(hass, "sensor", {"sensor": config})
@@ -211,7 +211,7 @@ async def test_bad_return_code(
 ) -> None:
     """Test handling a return code that isn't HTTP OK."""
     aioclient_mock.get(
-        "https://www.start.ca/support/usage/api?key=NOTAKEY",
+        "https://portal.start.ca/account/usage/api?key=NOTAKEY",
         status=HTTPStatus.NOT_FOUND,
     )
 
@@ -226,7 +226,7 @@ async def test_bad_json_decode(
 ) -> None:
     """Test decoding invalid json result."""
     aioclient_mock.get(
-        "https://www.start.ca/support/usage/api?key=NOTAKEY", text="this is not xml"
+        "https://portal.start.ca/account/usage/api?key=NOTAKEY", text="this is not xml"
     )
 
     scd = StartcaData(hass.loop, async_get_clientsession(hass), "NOTAKEY", 400)
