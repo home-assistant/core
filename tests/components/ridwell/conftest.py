@@ -3,7 +3,6 @@ from datetime import date
 from unittest.mock import AsyncMock, Mock, patch
 
 from aioridwell.model import EventState, RidwellPickup, RidwellPickupEvent
-from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.ridwell.const import DOMAIN
@@ -80,8 +79,6 @@ async def mock_aioridwell_fixture(hass, client, config):
     ), patch(
         "homeassistant.components.ridwell.coordinator.async_get_client",
         return_value=client,
-    ), freeze_time(
-        "2022-01-01"
     ):
         yield
 
