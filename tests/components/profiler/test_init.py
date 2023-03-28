@@ -11,6 +11,7 @@ import pytest
 
 from homeassistant.components.profiler import (
     _LRU_CACHE_WRAPPER_OBJECT,
+    _SQLALCHEMY_LRU_OBJECT,
     CONF_SECONDS,
     SERVICE_DUMP_LOG_OBJECTS,
     SERVICE_LOG_EVENT_LOOP_SCHEDULED,
@@ -254,9 +255,17 @@ async def test_lru_stats(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) 
     domain_data = DomainData()
     assert hass.services.has_service(DOMAIN, SERVICE_LRU_STATS)
 
+    class LRUCache:
+        def __init__(self):
+            self._data = {"sqlalchemy_test": 1}
+
+    sqlalchemy_lru_cache = LRUCache()
+
     def _mock_by_type(type_):
         if type_ == _LRU_CACHE_WRAPPER_OBJECT:
             return [_dummy_test_lru_stats]
+        if type_ == _SQLALCHEMY_LRU_OBJECT:
+            return [sqlalchemy_lru_cache]
         return [domain_data]
 
     with patch("objgraph.by_type", side_effect=_mock_by_type):
@@ -266,3 +275,4 @@ async def test_lru_stats(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) 
     assert "(0, 0)" in caplog.text
     assert "_dummy_test_lru_stats" in caplog.text
     assert "CacheInfo" in caplog.text
+    assert "sqlalchemy_test" in caplog.text
