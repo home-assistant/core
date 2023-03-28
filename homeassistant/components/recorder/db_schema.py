@@ -134,24 +134,25 @@ _DEFAULT_TABLE_ARGS = {
 }
 
 
-class DateTimeAsCharZero(DateTime):
+class UnusedDateTime(DateTime):
     """DateTime type that stores as a char(0) on mysql and mariadb."""
 
 
-class CharZero(mysql.CHAR):
+class Unused(CHAR):
     """Char type that stores as a char(0) on mysql and mariadb."""
 
 
-@compiles(DateTimeAsCharZero, "mysql", "mariadb")  # type: ignore[misc,no-untyped-call]
-@compiles(CharZero, "mysql", "mariadb")  # type: ignore[misc,no-untyped-call]
+@compiles(UnusedDateTime, "mysql", "mariadb")  # type: ignore[misc,no-untyped-call]
+@compiles(Unused, "mysql", "mariadb")  # type: ignore[misc,no-untyped-call]
 def compile_char_zero(type_: TypeDecorator, compiler: Any, **kw: Any) -> str:
-    """Compile DateTimeAsCharZero and CharZero as CHAR(0) on mysql and mariadb."""
+    """Compile UnusedDateTime and Unused as CHAR(0) on mysql and mariadb."""
     return "CHAR(0)"
 
 
-@compiles(DateTimeAsCharZero, "sqlite", "postgresql")  # type: ignore[misc,no-untyped-call]
+@compiles(UnusedDateTime, "sqlite", "postgresql")  # type: ignore[misc,no-untyped-call]
+@compiles(Unused, "sqlite", "postgresql")  # type: ignore[misc,no-untyped-call]
 def compile_char_one(type_: TypeDecorator, compiler: Any, **kw: Any) -> str:
-    """Compile DateTimeAsCharZero as CHAR(1) on sqlite and postgresql."""
+    """Compile UnusedDateTime and Unused as CHAR(1) on sqlite and postgresql."""
     return "CHAR(1)"
 
 
@@ -180,8 +181,8 @@ DOUBLE_TYPE = (
     .with_variant(oracle.DOUBLE_PRECISION(), "oracle")
     .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )
-UNUSED_LEGACY_COLUMN = CHAR(1).with_variant(CharZero, "mysql", "mariadb")
-UNUSED_LEGACY_DATETIME_COLUMN = DateTimeAsCharZero
+UNUSED_LEGACY_COLUMN = Unused
+UNUSED_LEGACY_DATETIME_COLUMN = UnusedDateTime
 DOUBLE_PRECISION_TYPE_SQL = "DOUBLE PRECISION"
 
 TIMESTAMP_TYPE = DOUBLE_TYPE
