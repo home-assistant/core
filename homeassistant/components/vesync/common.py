@@ -6,11 +6,20 @@ from typing import Any
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.vesyncfan import humid_features
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, Entity, ToggleEntity
 
 from .const import DOMAIN, VS_FANS, VS_HUMIDIFIERS, VS_LIGHTS, VS_SENSORS, VS_SWITCHES
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def get_domain_data(hass: HomeAssistant, config_entry: ConfigEntry, key: str) -> Any:
+    """Get value of this domain's data."""
+    if DOMAIN in hass.data and key in hass.data[DOMAIN]:
+        return hass.data[DOMAIN][key]
+    return None
 
 
 class VeSyncDeviceHelper:

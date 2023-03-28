@@ -12,8 +12,8 @@ from homeassistant.components.humidifier import (
     HumidifierDeviceClass,
     HumidifierEntityFeature,
 )
+from homeassistant.components.vesync import DOMAIN
 from homeassistant.components.vesync.humidifier import (
-    DOMAIN,
     MAX_HUMIDITY,
     MIN_HUMIDITY,
     VS_HUMIDIFIERS,

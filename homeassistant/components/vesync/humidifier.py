@@ -20,8 +20,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import DEVICE_HELPER, VeSyncDevice
-from .const import DOMAIN, VS_DISCOVERY, VS_HUMIDIFIERS
+from .common import DEVICE_HELPER, VeSyncDevice, get_domain_data
+from .const import VS_DISCOVERY, VS_HUMIDIFIERS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +72,7 @@ async def async_setup_entry(
 
         async_add_entities(entities, update_before_add=True)
 
-    discover(hass.data[DOMAIN][VS_HUMIDIFIERS])
+    discover(get_domain_data(hass, config_entry, VS_HUMIDIFIERS))
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_HUMIDIFIERS), discover)
@@ -99,10 +99,12 @@ class VeSyncHumidifierHA(VeSyncDevice, HumidifierEntity):
         self._attr_min_humidity = MIN_HUMIDITY
         self._attr_max_humidity = MAX_HUMIDITY
 
-        if mode := MODE_MAP[humidifier.details["mode"]]:
+        if mode := MODE_MAP[DEVICE_HELPER.get_feature(humidifier, "details", "mode")]:
             self._attr_mode = mode
 
-        if mist_modes := humidifier.config_dict["mist_modes"]:
+        if mist_modes := DEVICE_HELPER.get_feature(
+            humidifier, "config_dict", "mist_modes"
+        ):
             self._attr_available_modes = [MODE_MAP[mmode] for mmode in mist_modes]
 
         self._attr_supported_features = HumidifierEntityFeature(0)
