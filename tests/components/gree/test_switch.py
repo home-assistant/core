@@ -1,12 +1,14 @@
 """Tests for gree component."""
+from unittest.mock import patch
+
 from greeclimate.exceptions import DeviceTimeoutError
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.gree.const import DOMAIN as GREE_DOMAIN
 from homeassistant.components.switch import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -26,21 +28,26 @@ ENTITY_ID_FRESH_AIR = f"{DOMAIN}.fake_device_1_fresh_air"
 ENTITY_ID_XFAN = f"{DOMAIN}.fake_device_1_xfan"
 
 
-async def async_setup_gree(hass):
+async def async_setup_gree(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the gree switch platform."""
-    MockConfigEntry(domain=GREE_DOMAIN).add_to_hass(hass)
+    entry = MockConfigEntry(domain=GREE_DOMAIN)
+    entry.add_to_hass(hass)
     await async_setup_component(hass, GREE_DOMAIN, {GREE_DOMAIN: {DOMAIN: {}}})
     await hass.async_block_till_done()
+    return entry
 
 
-async def test_health_mode_disabled_by_default(hass):
-    """Test for making sure health mode is disabled on first load."""
-    await async_setup_gree(hass)
+@patch("homeassistant.components.gree.PLATFORMS", [DOMAIN])
+async def test_registry_settings(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test for entity registry settings (disabled_by, unique_id)."""
+    entry = await async_setup_gree(hass)
 
-    assert (
-        er.async_get(hass).async_get(ENTITY_ID_HEALTH_MODE).disabled_by
-        == er.RegistryEntryDisabler.INTEGRATION
-    )
+    state = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    assert state == snapshot
 
 
 @pytest.mark.parametrize(
@@ -54,7 +61,7 @@ async def test_health_mode_disabled_by_default(hass):
     ],
 )
 async def test_send_switch_on(
-    hass: HomeAssistant, entity, entity_registry_enabled_by_default
+    hass: HomeAssistant, entity, entity_registry_enabled_by_default: None
 ) -> None:
     """Test for sending power on command to the device."""
     await async_setup_gree(hass)
@@ -82,7 +89,7 @@ async def test_send_switch_on(
     ],
 )
 async def test_send_switch_on_device_timeout(
-    hass: HomeAssistant, device, entity, entity_registry_enabled_by_default
+    hass: HomeAssistant, device, entity, entity_registry_enabled_by_default: None
 ) -> None:
     """Test for sending power on command to the device with a device timeout."""
     device().push_state_update.side_effect = DeviceTimeoutError
@@ -112,7 +119,7 @@ async def test_send_switch_on_device_timeout(
     ],
 )
 async def test_send_switch_off(
-    hass: HomeAssistant, entity, entity_registry_enabled_by_default
+    hass: HomeAssistant, entity, entity_registry_enabled_by_default: None
 ) -> None:
     """Test for sending power on command to the device."""
     await async_setup_gree(hass)
@@ -140,7 +147,7 @@ async def test_send_switch_off(
     ],
 )
 async def test_send_switch_toggle(
-    hass: HomeAssistant, entity, entity_registry_enabled_by_default
+    hass: HomeAssistant, entity, entity_registry_enabled_by_default: None
 ) -> None:
     """Test for sending power on command to the device."""
     await async_setup_gree(hass)
@@ -182,20 +189,14 @@ async def test_send_switch_toggle(
     assert state.state == STATE_ON
 
 
-@pytest.mark.parametrize(
-    ("entity", "name"),
-    [
-        (ENTITY_ID_LIGHT_PANEL, "Panel Light"),
-        (ENTITY_ID_HEALTH_MODE, "Health mode"),
-        (ENTITY_ID_QUIET, "Quiet"),
-        (ENTITY_ID_FRESH_AIR, "Fresh Air"),
-        (ENTITY_ID_XFAN, "XFan"),
-    ],
-)
-async def test_entity_name(
-    hass: HomeAssistant, entity, name, entity_registry_enabled_by_default
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_entity_state(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test for name property."""
+    """Test for entity registry settings (disabled_by, unique_id)."""
     await async_setup_gree(hass)
-    state = hass.states.get(entity)
-    assert state.attributes[ATTR_FRIENDLY_NAME] == f"fake-device-1 {name}"
+
+    state = hass.states.async_all(DOMAIN)
+    assert state == snapshot

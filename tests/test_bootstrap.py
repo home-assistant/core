@@ -806,3 +806,26 @@ async def test_warning_logged_on_wrap_up_timeout(
         await hass.async_block_till_done()
 
     assert "Setup timed out for bootstrap - moving forward" in caplog.text
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_bootstrap_is_cancellation_safe(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test cancellation during async_setup_component does not cancel bootstrap."""
+    with patch.object(
+        bootstrap, "async_setup_component", side_effect=asyncio.CancelledError
+    ):
+        await bootstrap._async_set_up_integrations(hass, {"cancel_integration": {}})
+        await hass.async_block_till_done()
+
+    assert "Error setting up integration cancel_integration" in caplog.text
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_bootstrap_empty_integrations(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test setting up an empty integrations does not raise."""
+    await bootstrap.async_setup_multi_components(hass, set(), {})
+    await hass.async_block_till_done()
