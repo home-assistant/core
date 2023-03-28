@@ -1610,7 +1610,7 @@ def test_states_function(hass: HomeAssistant) -> None:
 
 def test_has_value(hass):
     """Test has_value method."""
-    hass.states.async_set("test.value1", "value1", {"attr": "value"})
+    hass.states.async_set("test.value1", 1, {"attr": 1})
     hass.states.async_set("test.value2", "value2")
     hass.states.async_set("test.unavailable", STATE_UNAVAILABLE)
 
@@ -1624,7 +1624,7 @@ def test_has_value(hass):
 
     tpl = template.Template(
         """
-{{ has_value(states("test.value1") or "unknown"|string) }}
+{{ has_value(states("test.value1") or "unknown") }}
         """,
         hass,
     )
@@ -1640,7 +1640,7 @@ def test_has_value(hass):
 
     tpl = template.Template(
         """
-{{ has_value(states("test.unavailable") or "unknown"|string) }}
+{{ has_value(states("test.unavailable") or "unknown") }}
         """,
         hass,
     )
@@ -1656,7 +1656,7 @@ def test_has_value(hass):
 
     tpl = template.Template(
         """
-{{ has_value(states("test.unknown") or "unknown"|string) }}
+{{ has_value(states("test.unknown") or "unknown") }}
         """,
         hass,
     )
@@ -1664,7 +1664,7 @@ def test_has_value(hass):
 
     tpl = template.Template(
         """
-{{ has_value(state_attr("test.value1", "attr") or "unknown"|string) }}
+{{ has_value((state_attr("test.value1", "attr") or "unknown")|string) }}
         """,
         hass,
     )
@@ -1672,7 +1672,7 @@ def test_has_value(hass):
 
     tpl = template.Template(
         """
-{{ has_value(state_attr("test.value2", "attr") or "unknown"|string) }}
+{{ has_value((state_attr("test.value2", "attr") or "unknown")|string) }}
         """,
         hass,
     )
@@ -1680,7 +1680,7 @@ def test_has_value(hass):
 
     tpl = template.Template(
         """
-{{ has_value(state_attr("test.unknown", "attr") or "unknown"|string) }}
+{{ has_value((state_attr("test.unknown", "attr") or "unknown")|string) }}
         """,
         hass,
     )
@@ -1696,7 +1696,15 @@ def test_has_value(hass):
 
     tpl = template.Template(
         """
-{% if (states("test.unknown") or "unknown"|string) is has_value %}yes{% else %}no{% endif %}
+{% if (states("test.unknown") or "unknown") is has_value %}yes{% else %}no{% endif %}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "no"
+
+    tpl = template.Template(
+        """
+{% if states("test.unknown") is has_value %}yes{% else %}no{% endif %}
         """,
         hass,
     )
