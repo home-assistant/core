@@ -14,6 +14,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -40,9 +41,8 @@ async def async_setup_entry(
     device_type = info["type"]
 
     if device_type in [101, 106, 107]:
-        plug_name = entry.data[CONF_NAME]
         device = hass.data[DOMAIN][entry.entry_id]["device"]
-        async_add_entities([MyStromSwitch(device, plug_name)])
+        async_add_entities([MyStromSwitch(device)])
 
 
 async def async_setup_platform(
@@ -52,7 +52,6 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the myStrom switch/plug integration."""
-    name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
 
     try:
@@ -62,15 +61,14 @@ async def async_setup_platform(
         _LOGGER.error("No route to myStrom plug: %s", host)
         raise PlatformNotReady() from err
 
-    async_add_entities([MyStromSwitch(plug, name)])
+    async_add_entities([MyStromSwitch(plug)])
 
 
 class MyStromSwitch(SwitchEntity):
     """Representation of a myStrom switch/plug."""
 
-    def __init__(self, plug, name):
+    def __init__(self, plug):
         """Initialize the myStrom switch/plug."""
-        self._name = name
         self.plug = plug
         self._available = True
         self.relay = None
@@ -78,7 +76,7 @@ class MyStromSwitch(SwitchEntity):
     @property
     def name(self):
         """Return the name of the switch."""
-        return self._name
+        return self.plug.mac
 
     @property
     def is_on(self):
@@ -88,7 +86,7 @@ class MyStromSwitch(SwitchEntity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self.plug._mac  # pylint: disable=protected-access
+        return format_mac(self.plug.mac)
 
     @property
     def available(self):
@@ -124,8 +122,8 @@ class MyStromSwitch(SwitchEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device info for the light entity."""
         return DeviceInfo(
-            identifiers={(DOMAIN, self._name)},
-            name=self._name,
+            identifiers={(DOMAIN, format_mac(self.plug.mac))},
+            name=self.name,
             manufacturer=ATTR_MANUFACTURER,
             sw_version=self.plug.firmware,
         )

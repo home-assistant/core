@@ -22,6 +22,7 @@ from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -50,13 +51,12 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the myStrom entities."""
-    device_name = entry.data[CONF_NAME]
     info = hass.data[DOMAIN][entry.entry_id]["info"]
     device_type = info["type"]
 
     if device_type == 102:
         device = hass.data[DOMAIN][entry.entry_id]["device"]
-        async_add_entities([MyStromLight(device, device_name, info["mac"])])
+        async_add_entities([MyStromLight(device, info["mac"])])
 
 
 async def async_setup_platform(
@@ -68,7 +68,6 @@ async def async_setup_platform(
     """Set up the myStrom light integration."""
     host = config.get(CONF_HOST)
     mac = config.get(CONF_MAC)
-    name = config.get(CONF_NAME)
 
     bulb = MyStromBulb(host, mac)
     try:
@@ -82,7 +81,7 @@ async def async_setup_platform(
         _LOGGER.warning("No route to myStrom bulb: %s", host)
         raise PlatformNotReady() from err
 
-    async_add_entities([MyStromLight(bulb, name, mac)], True)
+    async_add_entities([MyStromLight(bulb, mac)], True)
 
 
 class MyStromLight(LightEntity):
@@ -92,10 +91,9 @@ class MyStromLight(LightEntity):
     _attr_supported_color_modes = {ColorMode.HS}
     _attr_supported_features = LightEntityFeature.EFFECT | LightEntityFeature.FLASH
 
-    def __init__(self, bulb, name, mac):
+    def __init__(self, bulb, mac):
         """Initialize the light."""
         self._bulb = bulb
-        self._name = name
         self._state = None
         self._available = False
         self._brightness = 0
@@ -106,12 +104,12 @@ class MyStromLight(LightEntity):
     @property
     def name(self):
         """Return the display name of this light."""
-        return self._name
+        return self._mac
 
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._mac
+        return format_mac(self._mac)
 
     @property
     def brightness(self):
@@ -142,8 +140,8 @@ class MyStromLight(LightEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device info for the light entity."""
         return DeviceInfo(
-            identifiers={(DOMAIN, self._name)},
-            name=self._name,
+            identifiers={(DOMAIN, format_mac(self._mac))},
+            name=self.name,
             manufacturer=ATTR_MANUFACTURER,
             sw_version=self._bulb.firmware,
         )

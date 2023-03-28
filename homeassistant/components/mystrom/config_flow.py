@@ -6,22 +6,23 @@ import logging
 import re
 from typing import Any
 
+from pymystrom.exceptions import MyStromConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DEFAULT_NAME, DOMAIN
+from . import get_device_info
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-        vol.Required("host"): str,
+        vol.Required(CONF_HOST): str,
     }
 )
 
@@ -44,8 +45,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     if not host_valid(data[CONF_HOST]):
         raise CannotConnect()
+    try:
+        info = await get_device_info(data[CONF_HOST])
+    except MyStromConnectionError as error:
+        raise CannotConnect() from error
 
-    return {"title": data[CONF_NAME]}
+    return {"mac": info.get("mac")}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -69,11 +74,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             else:
-                return self.async_create_entry(title=info["title"], data=user_input)
+                await self.async_set_unique_id(info["mac"])
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(title=info["mac"], data=user_input)
 
-        return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
-        )
+        schema = self.add_suggested_values_to_schema(STEP_USER_DATA_SCHEMA, user_input)
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
 
 class CannotConnect(HomeAssistantError):
