@@ -135,11 +135,11 @@ _DEFAULT_TABLE_ARGS = {
 
 
 class UnusedDateTime(DateTime):
-    """DateTime type that stores as a char(0) on mysql and mariadb."""
+    """An unused column type that behaves like a datetime."""
 
 
 class Unused(CHAR):
-    """Char type that stores as a char(0) on mysql and mariadb."""
+    """An unused column type that behaves like a string."""
 
 
 @compiles(UnusedDateTime, "mysql", "mariadb", "sqlite")  # type: ignore[misc,no-untyped-call]
