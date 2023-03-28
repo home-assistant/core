@@ -283,7 +283,7 @@ async def async_setup_platform(
     )
 
 
-class TodoistProjectEntity(CoordinatorEntity, CalendarEntity):
+class TodoistProjectEntity(CoordinatorEntity[TodoistCoordinator], CalendarEntity):
     """A device for getting the next Task from a Todoist Project."""
 
     def __init__(
