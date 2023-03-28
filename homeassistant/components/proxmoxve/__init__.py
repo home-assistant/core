@@ -215,11 +215,7 @@ def create_coordinator_container_vm(
                     )
             except AuthenticationError as error:
                 raise ConfigEntryAuthFailed from error
-            except SSLError as error:
-                raise UpdateFailed from error
-            except ConnectTimeout as error:
-                raise UpdateFailed from error
-            except ResourceException as error:
+            except (AuthenticationError, SSLError, ConnectTimeout, ResourceException) as error:
                 raise UpdateFailed from error
 
             LOGGER.debug("API Response: %s", api_status)
