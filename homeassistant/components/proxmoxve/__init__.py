@@ -193,7 +193,7 @@ def create_coordinator_container_vm(
     node_name: str,
     vm_id: int,
     vm_type: int,
-) -> DataUpdateCoordinator:
+) -> DataUpdateCoordinator[dict[str, Any] | None]:
     """Create and return a DataUpdateCoordinator for a vm/container."""
 
     async def async_update_data() -> dict[str, Any] | None:
