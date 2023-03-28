@@ -691,7 +691,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
     async def async_get_browse_image(
         self,
-        media_content_type: str,
+        media_content_type: MediaType | str,
         media_content_id: str,
         media_image_id: str | None = None,
     ) -> tuple[bytes | None, str | None]:
@@ -712,7 +712,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         return (None, None)
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_browser.async_browse_media(

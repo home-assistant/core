@@ -43,6 +43,7 @@ from .const import (
     EVENT_IN,
     EVENT_IN_DAYS,
     EVENT_IN_WEEKS,
+    EVENT_LOCATION,
     EVENT_START_DATE,
     EVENT_START_DATETIME,
     EVENT_SUMMARY,
@@ -116,6 +117,7 @@ ADD_EVENT_SERVICE_SCHEMA = vol.All(
         vol.Required(EVENT_CALENDAR_ID): cv.string,
         vol.Required(EVENT_SUMMARY): cv.string,
         vol.Optional(EVENT_DESCRIPTION, default=""): cv.string,
+        vol.Optional(EVENT_LOCATION, default=""): cv.string,
         vol.Inclusive(
             EVENT_START_DATE, "dates", "Start and end dates must both be specified"
         ): cv.date,
@@ -290,6 +292,7 @@ async def async_setup_add_event_service(
                 Event(
                     summary=call.data[EVENT_SUMMARY],
                     description=call.data[EVENT_DESCRIPTION],
+                    location=call.data[EVENT_LOCATION],
                     start=start,
                     end=end,
                 ),

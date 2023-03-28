@@ -199,7 +199,6 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                 self.async_set_update_error(UpdateFailed("Lost connection"))
                 await self._cleanup()
                 await asyncio.sleep(BACKOFF_TIME)
-                continue
 
     async def shutdown(self, *_) -> None:
         """Close resources."""

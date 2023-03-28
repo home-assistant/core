@@ -1,9 +1,7 @@
 """Support for Todoist task management (https://todoist.com)."""
 from __future__ import annotations
 
-import asyncio
 from datetime import date, datetime, timedelta
-from itertools import chain
 import logging
 from typing import Any
 import uuid
@@ -117,17 +115,12 @@ async def async_setup_platform(
 
     # Look up IDs based on (lowercase) names.
     project_id_lookup = {}
-    label_id_lookup = {}
-    collaborator_id_lookup = {}
 
     api = TodoistAPIAsync(token)
 
     # Setup devices:
     # Grab all projects.
     projects = await api.get_projects()
-
-    collaborator_tasks = (api.get_collaborators(project.id) for project in projects)
-    collaborators = list(chain.from_iterable(await asyncio.gather(*collaborator_tasks)))
 
     # Grab all labels
     labels = await api.get_labels()
@@ -141,13 +134,6 @@ async def async_setup_platform(
         project_devices.append(TodoistProjectEntity(project_data, labels, api))
         # Cache the names so we can easily look up name->ID.
         project_id_lookup[project.name.lower()] = project.id
-
-    # Cache all label names
-    label_id_lookup = {label.name.lower(): label.id for label in labels}
-
-    collaborator_id_lookup = {
-        collab.name.lower(): collab.id for collab in collaborators
-    }
 
     # Check config for more projects.
     extra_projects: list[CustomProject] = config[CONF_EXTRA_PROJECTS]
@@ -194,14 +180,16 @@ async def async_setup_platform(
         data: dict[str, Any] = {"project_id": project_id}
 
         if task_labels := call.data.get(LABELS):
-            data["label_ids"] = [
-                label_id_lookup[label.lower()] for label in task_labels
-            ]
+            data["labels"] = task_labels
 
         if ASSIGNEE in call.data:
+            collaborators = await api.get_collaborators(project_id)
+            collaborator_id_lookup = {
+                collab.name.lower(): collab.id for collab in collaborators
+            }
             task_assignee = call.data[ASSIGNEE].lower()
             if task_assignee in collaborator_id_lookup:
-                data["assignee"] = collaborator_id_lookup[task_assignee]
+                data["assignee_id"] = collaborator_id_lookup[task_assignee]
             else:
                 raise ValueError(
                     f"User is not part of the shared project. user: {task_assignee}"
@@ -612,7 +600,7 @@ class TodoistProjectData:
                 event = CalendarEvent(
                     summary=task.content,
                     start=due_date_value,
-                    end=due_date_value,
+                    end=due_date_value + timedelta(days=1),
                 )
                 events.append(event)
         return events
