@@ -1,7 +1,7 @@
 """Connect to a MySensors gateway via pymysensors API."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 import logging
 
 from mysensors import BaseAsyncGateway
@@ -22,7 +22,7 @@ from .const import (
     DiscoveryInfo,
     SensorType,
 )
-from .device import MySensorsDevice, get_mysensors_devices
+from .device import MySensorsEntity, get_mysensors_devices
 from .gateway import finish_setup, gw_stop, setup_gateway
 
 _LOGGER = logging.getLogger(__name__)
@@ -99,12 +99,12 @@ def setup_mysensors_platform(
     hass: HomeAssistant,
     domain: Platform,  # hass platform name
     discovery_info: DiscoveryInfo,
-    device_class: type[MySensorsDevice] | dict[SensorType, type[MySensorsDevice]],
+    device_class: type[MySensorsEntity] | Mapping[SensorType, type[MySensorsEntity]],
     device_args: (
         None | tuple
     ) = None,  # extra arguments that will be given to the entity constructor
     async_add_entities: Callable | None = None,
-) -> list[MySensorsDevice] | None:
+) -> list[MySensorsEntity] | None:
     """Set up a MySensors platform.
 
     Sets up a bunch of instances of a single platform that is supported by this
@@ -118,10 +118,10 @@ def setup_mysensors_platform(
     """
     if device_args is None:
         device_args = ()
-    new_devices: list[MySensorsDevice] = []
+    new_devices: list[MySensorsEntity] = []
     new_dev_ids: list[DevId] = discovery_info[ATTR_DEVICES]
     for dev_id in new_dev_ids:
-        devices: dict[DevId, MySensorsDevice] = get_mysensors_devices(hass, domain)
+        devices: dict[DevId, MySensorsEntity] = get_mysensors_devices(hass, domain)
         if dev_id in devices:
             _LOGGER.debug(
                 "Skipping setup of %s for platform %s as it already exists",
