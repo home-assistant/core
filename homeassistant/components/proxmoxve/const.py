@@ -24,7 +24,7 @@ UPDATE_INTERVAL = 60
 LOGGER = logging.getLogger(__package__)
 
 
-class ProxmoxType(StrEnum):
+class ProxmoxType(Enum):
     """Proxmox type of information."""
 
     QEMU = "qemu"
