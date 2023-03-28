@@ -1696,6 +1696,11 @@ def test_today_at(
     with pytest.raises(TemplateError):
         template.Template("{{ today_at('bad') }}", hass).async_render()
 
+    info = template.Template(
+        "{{ today_at('10:00').isoformat() }}", hass
+    ).async_render_to_info()
+    assert info.has_time is True
+
     freezer.stop()
 
 
@@ -1707,9 +1712,12 @@ def test_relative_time(mock_is_safe, hass: HomeAssistant) -> None:
     """Test relative_time method."""
     hass.config.set_time_zone("UTC")
     now = datetime.strptime("2000-01-01 10:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
+    relative_time_template = (
+        '{{relative_time(strptime("2000-01-01 09:00:00", "%Y-%m-%d %H:%M:%S"))}}'
+    )
     with patch("homeassistant.util.dt.now", return_value=now):
         result = template.Template(
-            '{{relative_time(strptime("2000-01-01 09:00:00", "%Y-%m-%d %H:%M:%S"))}}',
+            relative_time_template,
             hass,
         ).async_render()
         assert result == "1 hour"
@@ -1767,6 +1775,9 @@ def test_relative_time(mock_is_safe, hass: HomeAssistant) -> None:
             hass,
         ).async_render()
         assert result == "string"
+
+        info = template.Template(relative_time_template, hass).async_render_to_info()
+        assert info.has_time is True
 
 
 @patch(
