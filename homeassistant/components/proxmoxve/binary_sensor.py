@@ -72,7 +72,7 @@ async def async_setup_entry(
 
 def create_binary_sensor(
     coordinator,
-    vm_id,
+    vm_id: int,
     key,
     name,
     config_entry,
@@ -102,7 +102,7 @@ class ProxmoxBinarySensor(ProxmoxEntity, BinarySensorEntity):
         name,
         icon,
         device_class,
-        vm_id,
+        vm_id: int,
         info_device,
     ) -> None:
         """Create the binary sensor for vms or containers."""

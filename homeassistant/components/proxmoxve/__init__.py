@@ -268,7 +268,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     for api_category, update_interval in coordinator_interval_update_map.items():
         if api_category in (ProxmoxType.QEMU, ProxmoxType.LXC):
             for vm_id in config_entry.data[api_category]:
-                if vm_id in [
+                if str(vm_id) in [
                     *{
                         str(qemu[ID])
                         for qemu in await hass.async_add_executor_job(
@@ -381,11 +381,17 @@ def get_data_node(proxmox, node):
     api_status = proxmox.nodes(node).status.get()
     if nodes_api := proxmox.nodes.get():
         for node_api in nodes_api:
-            if node_api["node"] == node:
-                api_status["status"] = node_api["status"]
-                api_status["cpu_node"] = node_api["cpu"]
-                api_status["maxdisk"] = node_api["maxdisk"]
-                api_status["disk"] = node_api["disk"]
+            if node_api[CONF_NODE] == node:
+                api_status[ProxmoxKeyAPIParse.STATUS] = node_api[
+                    ProxmoxKeyAPIParse.STATUS
+                ]
+                api_status[ProxmoxKeyAPIParse.CPU_NODE] = node_api[
+                    ProxmoxKeyAPIParse.CPU
+                ]
+                api_status[ProxmoxKeyAPIParse.MAX_DISK] = node_api[
+                    ProxmoxKeyAPIParse.MAX_DISK
+                ]
+                api_status[ProxmoxKeyAPIParse.DISK] = node_api[ProxmoxKeyAPIParse.DISK]
                 break
     return api_status
 
@@ -403,47 +409,61 @@ def parse_api_proxmox(status, api_category):
 
     if api_category == ProxmoxType.Proxmox:
         return {
-            ProxmoxKeyAPIParse.VERSION: status["version"],
+            ProxmoxKeyAPIParse.VERSION: status[ProxmoxKeyAPIParse.VERSION],
         }
 
     if api_category is ProxmoxType.Node:
         return {
-            ProxmoxKeyAPIParse.STATUS: status["status"],
-            ProxmoxKeyAPIParse.UPTIME: status["uptime"],
-            ProxmoxKeyAPIParse.MODEL: status["cpuinfo"]["model"],
-            ProxmoxKeyAPIParse.CPU: status["cpu_node"],
-            ProxmoxKeyAPIParse.MEMORY_USED: status["memory"]["used"],
-            ProxmoxKeyAPIParse.MEMORY_TOTAL: status["memory"]["total"],
-            ProxmoxKeyAPIParse.MEMORY_FREE: status["memory"]["free"],
-            ProxmoxKeyAPIParse.SWAP_TOTAL: status["swap"]["total"],
-            ProxmoxKeyAPIParse.SWAP_FREE: status["swap"]["free"],
-            ProxmoxKeyAPIParse.DISK_USED: status["disk"],
-            ProxmoxKeyAPIParse.DISK_TOTAL: status["maxdisk"],
+            ProxmoxKeyAPIParse.STATUS: status[ProxmoxKeyAPIParse.STATUS],
+            ProxmoxKeyAPIParse.UPTIME: status[ProxmoxKeyAPIParse.UPTIME],
+            ProxmoxKeyAPIParse.MODEL: status[ProxmoxKeyAPIParse.CPU_INFO][
+                ProxmoxKeyAPIParse.MODEL
+            ],
+            ProxmoxKeyAPIParse.CPU: status[ProxmoxKeyAPIParse.CPU],
+            ProxmoxKeyAPIParse.MEMORY_USED: status[ProxmoxKeyAPIParse.MEMORY][
+                ProxmoxKeyAPIParse.USED
+            ],
+            ProxmoxKeyAPIParse.MEMORY_TOTAL: status[ProxmoxKeyAPIParse.MEMORY][
+                ProxmoxKeyAPIParse.TOTAL
+            ],
+            ProxmoxKeyAPIParse.MEMORY_FREE: status[ProxmoxKeyAPIParse.MEMORY][
+                ProxmoxKeyAPIParse.FREE
+            ],
+            ProxmoxKeyAPIParse.SWAP_TOTAL: status[ProxmoxKeyAPIParse.SWAP][
+                ProxmoxKeyAPIParse.TOTAL
+            ],
+            ProxmoxKeyAPIParse.SWAP_FREE: status[ProxmoxKeyAPIParse.SWAP][
+                ProxmoxKeyAPIParse.FREE
+            ],
+            ProxmoxKeyAPIParse.DISK_USED: status[ProxmoxKeyAPIParse.DISK],
+            ProxmoxKeyAPIParse.DISK_TOTAL: status[ProxmoxKeyAPIParse.MAX_DISK],
         }
 
     if api_category in (ProxmoxType.QEMU, ProxmoxType.LXC):
-        if "freemem" in status:
-            memory_free = status["freemem"]
+        if ProxmoxKeyAPIParse.FREE_MEM in status:
+            memory_free = status[ProxmoxKeyAPIParse.FREE_MEM]
         else:
-            memory_free = status["maxmem"] - status["mem"]
+            memory_free = (
+                status[ProxmoxKeyAPIParse.MAX_MEM] - status[ProxmoxKeyAPIParse.MEM]
+            )
 
         health = None
-        if "qmpstatus" in status:
-            health = status["qmpstatus"]
+        if ProxmoxKeyAPIParse.QMP_STATUS in status:
+            health = status[ProxmoxKeyAPIParse.QMP_STATUS]
 
         return {
-            ProxmoxKeyAPIParse.STATUS: status["status"],
+            ProxmoxKeyAPIParse.STATUS: status[ProxmoxKeyAPIParse.STATUS],
             ProxmoxKeyAPIParse.HEALTH: health,
-            ProxmoxKeyAPIParse.UPTIME: status["uptime"],
-            ProxmoxKeyAPIParse.NAME: status["name"],
-            ProxmoxKeyAPIParse.CPU: status["cpu"],
-            ProxmoxKeyAPIParse.MEMORY_TOTAL: status["maxmem"],
-            ProxmoxKeyAPIParse.MEMORY_USED: status["mem"],
+            ProxmoxKeyAPIParse.UPTIME: status[ProxmoxKeyAPIParse.UPTIME],
+            ProxmoxKeyAPIParse.NAME: status[ProxmoxKeyAPIParse.NAME],
+            ProxmoxKeyAPIParse.CPU: status[ProxmoxKeyAPIParse.CPU],
+            ProxmoxKeyAPIParse.MEMORY_TOTAL: status[ProxmoxKeyAPIParse.MAX_MEM],
+            ProxmoxKeyAPIParse.MEMORY_USED: status[ProxmoxKeyAPIParse.MEM],
             ProxmoxKeyAPIParse.MEMORY_FREE: memory_free,
-            ProxmoxKeyAPIParse.NETWORK_IN: status["netin"],
-            ProxmoxKeyAPIParse.NETWORK_OUT: status["netout"],
-            ProxmoxKeyAPIParse.DISK_TOTAL: status["maxdisk"],
-            ProxmoxKeyAPIParse.DISK_USED: status["disk"],
+            ProxmoxKeyAPIParse.NETWORK_IN: status[ProxmoxKeyAPIParse.NET_IN],
+            ProxmoxKeyAPIParse.NETWORK_OUT: status[ProxmoxKeyAPIParse.NET_OUT],
+            ProxmoxKeyAPIParse.DISK_TOTAL: status[ProxmoxKeyAPIParse.MAX_DISK],
+            ProxmoxKeyAPIParse.DISK_USED: status[ProxmoxKeyAPIParse.DISK],
         }
 
 

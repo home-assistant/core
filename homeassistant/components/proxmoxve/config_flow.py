@@ -41,6 +41,7 @@ from .const import (
     INTEGRATION_NAME,
     LOGGER,
     UPDATE_INTERVAL_DEFAULT,
+    ProxmoxKeyAPIParse,
 )
 
 
@@ -190,7 +191,7 @@ class ProxmoxOptionsFlowHandler(config_entries.OptionsFlow):
                                 **{
                                     str(
                                         qemu[ID]
-                                    ): f"{qemu[ID]} {qemu['name'] if 'name' in qemu else None}"
+                                    ): f"{qemu[ID]} {qemu[ProxmoxKeyAPIParse.NAME] if ProxmoxKeyAPIParse.NAME in qemu else None}"
                                     for qemu in await self.hass.async_add_executor_job(
                                         proxmox.nodes(node).qemu.get
                                     )
@@ -203,7 +204,7 @@ class ProxmoxOptionsFlowHandler(config_entries.OptionsFlow):
                                 **{
                                     str(
                                         lxc[ID]
-                                    ): f"{lxc[ID]} {lxc['name'] if 'name' in lxc else None}"
+                                    ): f"{lxc[ID]} {lxc[ProxmoxKeyAPIParse.NAME] if ProxmoxKeyAPIParse.NAME in lxc else None}"
                                     for lxc in await self.hass.async_add_executor_job(
                                         proxmox.nodes(node).lxc.get
                                     )
@@ -760,7 +761,7 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
                 for node in proxmox_nodes:
-                    nodes.append(node["node"])
+                    nodes.append(node[CONF_NODE])
 
         return self.async_show_form(
             step_id="node",
@@ -792,7 +793,7 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             {
                                 str(qemu[ID]): (
                                     f"{qemu[ID]} "
-                                    f"{qemu['name'] if 'name' in qemu else None}"
+                                    f"{qemu[ProxmoxKeyAPIParse.NAME] if ProxmoxKeyAPIParse.NAME in qemu else None}"
                                 )
                                 for qemu in await self.hass.async_add_executor_job(
                                     proxmox.nodes(node).qemu.get
@@ -803,7 +804,7 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             {
                                 str(
                                     lxc[ID]
-                                ): f"{lxc[ID]} {lxc['name'] if 'name' in lxc else None}"
+                                ): f"{lxc[ID]} {lxc[ProxmoxKeyAPIParse.NAME] if ProxmoxKeyAPIParse.NAME in lxc else None}"
                                 for lxc in await self.hass.async_add_executor_job(
                                     proxmox.nodes(node).lxc.get
                                 )
