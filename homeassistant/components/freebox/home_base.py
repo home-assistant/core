@@ -74,8 +74,6 @@ class FreeboxHomeEntity(Entity):
 
     async def set_home_endpoint_value(self, command_id: Any, value=None) -> None:
         """Set Home endpoint value."""
-        if value is None:
-            value = {"value": None}
         if command_id is None:
             _LOGGER.error("Unable to SET a value through the API. Command is None")
             return
