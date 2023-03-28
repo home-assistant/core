@@ -177,6 +177,7 @@ class SonosDiscoveryManager:
         self.entry = entry
         self.data = data
         self.hosts = set(hosts)
+        self.hosts_in_error: dict[str, bool] = {}
         self.discovery_lock = asyncio.Lock()
         self.creation_lock = asyncio.Lock()
         self._known_invisible: set[SoCo] = set()
@@ -353,10 +354,19 @@ class SonosDiscoveryManager:
                     soco,
                 )
             except (OSError, SoCoException, Timeout) as ex:
-                _LOGGER.warning(
-                    "Could not get visible Sonos devices from %s: %s", ip_addr, ex
-                )
+                if not self.hosts_in_error.get(ip_addr):
+                    _LOGGER.warning(
+                        "Could not get visible Sonos devices from %s: %s", ip_addr, ex
+                    )
+                    self.hosts_in_error[ip_addr] = True
+                else:
+                    _LOGGER.debug(
+                        "Could not get visible Sonos devices from %s: %s", ip_addr, ex
+                    )
+
             else:
+                if self.hosts_in_error.pop(ip_addr, None):
+                    _LOGGER.info("Connection restablished to Sonos device %s", ip_addr)
                 if new_hosts := {
                     x.ip_address
                     for x in visible_zones
@@ -392,7 +402,7 @@ class SonosDiscoveryManager:
                 )
             elif not known_speaker.available:
                 try:
-                    known_speaker.ping()
+                    await self.hass.async_add_executor_job(known_speaker.ping)
                 except SonosUpdateError:
                     _LOGGER.debug(
                         "Manual poll to %s failed, keeping unavailable", ip_addr

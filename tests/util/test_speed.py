@@ -85,7 +85,7 @@ def test_convert_nonnumeric_value() -> None:
         (5, UnitOfSpeed.FEET_PER_SECOND, 1.524, UnitOfSpeed.METERS_PER_SECOND),
     ],
 )
-def test_convert_different_units(from_value, from_unit, expected, to_unit):
+def test_convert_different_units(from_value, from_unit, expected, to_unit) -> None:
     """Test conversion between units."""
     assert speed_util.convert(from_value, from_unit, to_unit) == pytest.approx(
         expected, rel=1e-4

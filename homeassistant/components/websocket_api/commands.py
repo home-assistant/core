@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from contextlib import suppress
 import datetime as dt
+from functools import lru_cache
 import json
 from typing import Any, cast
 
@@ -398,9 +399,9 @@ async def handle_manifest_get(
         connection.send_error(msg["id"], const.ERR_NOT_FOUND, "Integration not found")
 
 
+@callback
 @decorators.websocket_command({vol.Required("type"): "integration/setup_info"})
-@decorators.async_response
-async def handle_integration_setup_info(
+def handle_integration_setup_info(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle integrations command."""
@@ -424,6 +425,12 @@ def handle_ping(
     connection.send_message(pong_message(msg["id"]))
 
 
+@lru_cache
+def _cached_template(template_str: str, hass: HomeAssistant) -> template.Template:
+    """Return a cached template."""
+    return template.Template(template_str, hass)
+
+
 @decorators.websocket_command(
     {
         vol.Required("type"): "render_template",
@@ -440,7 +447,7 @@ async def handle_render_template(
 ) -> None:
     """Handle render_template command."""
     template_str = msg["template"]
-    template_obj = template.Template(template_str, hass)
+    template_obj = _cached_template(template_str, hass)
     variables = msg.get("variables")
     timeout = msg.get("timeout")
     info = None
@@ -641,6 +648,7 @@ async def handle_execute_script(
     connection.send_result(msg["id"], {"context": context})
 
 
+@callback
 @decorators.websocket_command(
     {
         vol.Required("type"): "fire_event",
@@ -649,8 +657,7 @@ async def handle_execute_script(
     }
 )
 @decorators.require_admin
-@decorators.async_response
-async def handle_fire_event(
+def handle_fire_event(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle fire event command."""

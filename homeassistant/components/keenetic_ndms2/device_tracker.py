@@ -12,7 +12,7 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
@@ -40,7 +40,7 @@ async def async_setup_entry(
 
     update_from_router()
 
-    registry = entity_registry.async_get(hass)
+    registry = er.async_get(hass)
     # Restore devices that are not a part of active clients list.
     restored = []
     for entity_entry in registry.entities.values():

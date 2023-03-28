@@ -592,7 +592,10 @@ async def test_reauth_fixed_via_dashboard_add_encryption_remove_password(
 
 
 async def test_reauth_fixed_via_remove_password(
-    hass: HomeAssistant, mock_client, mock_config_entry
+    hass: HomeAssistant,
+    mock_client,
+    mock_config_entry,
+    mock_dashboard,
 ) -> None:
     """Test reauth fixed automatically by seeing password removed."""
     mock_client.device_info.return_value = DeviceInfo(uses_password=False, name="test")
@@ -799,7 +802,7 @@ async def test_discovery_dhcp_no_changes(hass: HomeAssistant, mock_client) -> No
     assert entry.data[CONF_HOST] == "192.168.43.183"
 
 
-async def test_discovery_hassio(hass: HomeAssistant) -> None:
+async def test_discovery_hassio(hass: HomeAssistant, mock_dashboard) -> None:
     """Test dashboard discovery."""
     result = await hass.config_entries.flow.async_init(
         "esphome",

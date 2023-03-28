@@ -46,9 +46,14 @@ from homeassistant.const import (
     PERCENTAGE,
     SERVICE_RELOAD,
     STATE_ON,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant, HomeAssistantError, State
-from homeassistant.helpers import device_registry, entity_registry as er, instance_id
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    instance_id,
+)
 from homeassistant.helpers.entityfilter import (
     CONF_EXCLUDE_DOMAINS,
     CONF_EXCLUDE_ENTITIES,
@@ -503,15 +508,12 @@ async def test_homekit_entity_glob_filter(
 
 
 async def test_homekit_entity_glob_filter_with_config_entities(
-    hass: HomeAssistant, mock_async_zeroconf: None, entity_reg
+    hass: HomeAssistant, mock_async_zeroconf: None, entity_registry: er.EntityRegistry
 ) -> None:
     """Test the entity filter with configuration entities."""
     entry = await async_init_integration(hass)
 
-    from homeassistant.const import EntityCategory
-    from homeassistant.helpers.entity_registry import RegistryEntry
-
-    select_config_entity: RegistryEntry = entity_reg.async_get_or_create(
+    select_config_entity = entity_registry.async_get_or_create(
         "select",
         "any",
         "any",
@@ -520,7 +522,7 @@ async def test_homekit_entity_glob_filter_with_config_entities(
     )
     hass.states.async_set(select_config_entity.entity_id, "off")
 
-    switch_config_entity: RegistryEntry = entity_reg.async_get_or_create(
+    switch_config_entity = entity_registry.async_get_or_create(
         "switch",
         "any",
         "any",
@@ -559,14 +561,12 @@ async def test_homekit_entity_glob_filter_with_config_entities(
 
 
 async def test_homekit_entity_glob_filter_with_hidden_entities(
-    hass: HomeAssistant, mock_async_zeroconf: None, entity_reg
+    hass: HomeAssistant, mock_async_zeroconf: None, entity_registry: er.EntityRegistry
 ) -> None:
     """Test the entity filter with hidden entities."""
     entry = await async_init_integration(hass)
 
-    from homeassistant.helpers.entity_registry import RegistryEntry
-
-    select_config_entity: RegistryEntry = entity_reg.async_get_or_create(
+    select_config_entity = entity_registry.async_get_or_create(
         "select",
         "any",
         "any",
@@ -575,7 +575,7 @@ async def test_homekit_entity_glob_filter_with_hidden_entities(
     )
     hass.states.async_set(select_config_entity.entity_id, "off")
 
-    switch_config_entity: RegistryEntry = entity_reg.async_get_or_create(
+    switch_config_entity = entity_registry.async_get_or_create(
         "switch",
         "any",
         "any",
@@ -614,7 +614,10 @@ async def test_homekit_entity_glob_filter_with_hidden_entities(
 
 
 async def test_homekit_start(
-    hass: HomeAssistant, hk_driver, mock_async_zeroconf: None, device_reg
+    hass: HomeAssistant,
+    hk_driver,
+    mock_async_zeroconf: None,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test HomeKit start method."""
     entry = await async_init_integration(hass)
@@ -627,8 +630,8 @@ async def test_homekit_start(
     acc = Accessory(hk_driver, "any")
     homekit.driver.accessory = acc
 
-    connection = (device_registry.CONNECTION_NETWORK_MAC, "AA:BB:CC:DD:EE:FF")
-    bridge_with_wrong_mac = device_reg.async_get_or_create(
+    connection = (dr.CONNECTION_NETWORK_MAC, "AA:BB:CC:DD:EE:FF")
+    bridge_with_wrong_mac = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={connection},
         manufacturer="Any",
@@ -661,14 +664,14 @@ async def test_homekit_start(
     await hass.async_block_till_done()
     assert not hk_driver_start.called
 
-    assert device_reg.async_get(bridge_with_wrong_mac.id) is None
+    assert device_registry.async_get(bridge_with_wrong_mac.id) is None
 
-    device = device_reg.async_get_device(
+    device = device_registry.async_get_device(
         {(DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER)}
     )
     assert device
-    formatted_mac = device_registry.format_mac(homekit.driver.state.mac)
-    assert (device_registry.CONNECTION_NETWORK_MAC, formatted_mac) in device.connections
+    formatted_mac = dr.format_mac(homekit.driver.state.mac)
+    assert (dr.CONNECTION_NETWORK_MAC, formatted_mac) in device.connections
 
     # Start again to make sure the registry entry is kept
     homekit.status = STATUS_READY
@@ -679,14 +682,14 @@ async def test_homekit_start(
     ) as hk_driver_start:
         await homekit.async_start()
 
-    device = device_reg.async_get_device(
+    device = device_registry.async_get_device(
         {(DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER)}
     )
     assert device
-    formatted_mac = device_registry.format_mac(homekit.driver.state.mac)
-    assert (device_registry.CONNECTION_NETWORK_MAC, formatted_mac) in device.connections
+    formatted_mac = dr.format_mac(homekit.driver.state.mac)
+    assert (dr.CONNECTION_NETWORK_MAC, formatted_mac) in device.connections
 
-    assert len(device_reg.devices) == 1
+    assert len(device_registry.devices) == 1
     assert homekit.driver.state.config_version == 1
 
 
@@ -736,8 +739,8 @@ async def test_homekit_start_with_a_device(
     hk_driver,
     mock_async_zeroconf: None,
     demo_cleanup,
-    device_reg,
-    entity_reg,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test HomeKit start method with a device."""
 
@@ -747,7 +750,7 @@ async def test_homekit_start_with_a_device(
     assert await async_setup_component(hass, "demo", {"demo": {}})
     await hass.async_block_till_done()
 
-    reg_entry = entity_reg.async_get("light.ceiling_lights")
+    reg_entry = entity_registry.async_get("light.ceiling_lights")
     assert reg_entry is not None
     device_id = reg_entry.device_id
     await async_init_entry(hass, entry)
@@ -841,7 +844,7 @@ async def test_homekit_reset_accessories(
 
 
 async def test_homekit_unpair(
-    hass: HomeAssistant, device_reg, mock_async_zeroconf: None
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, mock_async_zeroconf: None
 ) -> None:
     """Test unpairing HomeKit accessories."""
 
@@ -873,9 +876,9 @@ async def test_homekit_unpair(
         state.add_paired_client("client4", "any", b"0")
         state.add_paired_client("client5", "any", b"0")
 
-        formatted_mac = device_registry.format_mac(state.mac)
-        hk_bridge_dev = device_reg.async_get_device(
-            {}, {(device_registry.CONNECTION_NETWORK_MAC, formatted_mac)}
+        formatted_mac = dr.format_mac(state.mac)
+        hk_bridge_dev = device_registry.async_get_device(
+            {}, {(dr.CONNECTION_NETWORK_MAC, formatted_mac)}
         )
 
         await hass.services.async_call(
@@ -890,7 +893,7 @@ async def test_homekit_unpair(
 
 
 async def test_homekit_unpair_missing_device_id(
-    hass: HomeAssistant, device_reg, mock_async_zeroconf: None
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, mock_async_zeroconf: None
 ) -> None:
     """Test unpairing HomeKit accessories with invalid device id."""
 
@@ -930,7 +933,7 @@ async def test_homekit_unpair_missing_device_id(
 
 
 async def test_homekit_unpair_not_homekit_device(
-    hass: HomeAssistant, device_reg, mock_async_zeroconf: None
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, mock_async_zeroconf: None
 ) -> None:
     """Test unpairing HomeKit accessories with a non-homekit device id."""
 
@@ -957,12 +960,12 @@ async def test_homekit_unpair_not_homekit_device(
         homekit.bridge.accessories = {aid: acc_mock}
         homekit.status = STATUS_RUNNING
 
-        device_entry = device_reg.async_get_or_create(
+        device_entry = device_registry.async_get_or_create(
             config_entry_id=not_homekit_entry.entry_id,
             sw_version="0.16.0",
             model="Powerwall 2",
             manufacturer="Tesla",
-            connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+            connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         )
 
         state = homekit.driver.state
@@ -1299,7 +1302,11 @@ async def test_homekit_too_many_accessories(
 
 
 async def test_homekit_finds_linked_batteries(
-    hass: HomeAssistant, hk_driver, device_reg, entity_reg, mock_async_zeroconf: None
+    hass: HomeAssistant,
+    hk_driver,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_async_zeroconf: None,
 ) -> None:
     """Test HomeKit start method."""
     entry = await async_init_integration(hass)
@@ -1311,30 +1318,30 @@ async def test_homekit_finds_linked_batteries(
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         sw_version="0.16.0",
         hw_version="2.34",
         model="Powerwall 2",
         manufacturer="Tesla",
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
 
-    binary_charging_sensor = entity_reg.async_get_or_create(
+    binary_charging_sensor = entity_registry.async_get_or_create(
         "binary_sensor",
         "powerwall",
         "battery_charging",
         device_id=device_entry.id,
         original_device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
     )
-    battery_sensor = entity_reg.async_get_or_create(
+    battery_sensor = entity_registry.async_get_or_create(
         "sensor",
         "powerwall",
         "battery",
         device_id=device_entry.id,
         original_device_class=SensorDeviceClass.BATTERY,
     )
-    light = entity_reg.async_get_or_create(
+    light = entity_registry.async_get_or_create(
         "light", "powerwall", "demo", device_id=device_entry.id
     )
 
@@ -1372,7 +1379,11 @@ async def test_homekit_finds_linked_batteries(
 
 
 async def test_homekit_async_get_integration_fails(
-    hass: HomeAssistant, hk_driver, device_reg, entity_reg, mock_async_zeroconf: None
+    hass: HomeAssistant,
+    hk_driver,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_async_zeroconf: None,
 ) -> None:
     """Test that we continue if async_get_integration fails."""
     entry = await async_init_integration(hass)
@@ -1383,28 +1394,28 @@ async def test_homekit_async_get_integration_fails(
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         sw_version="0.16.0",
         model="Powerwall 2",
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
 
-    binary_charging_sensor = entity_reg.async_get_or_create(
+    binary_charging_sensor = entity_registry.async_get_or_create(
         "binary_sensor",
         "invalid_integration_does_not_exist",
         "battery_charging",
         device_id=device_entry.id,
         original_device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
     )
-    battery_sensor = entity_reg.async_get_or_create(
+    battery_sensor = entity_registry.async_get_or_create(
         "sensor",
         "invalid_integration_does_not_exist",
         "battery",
         device_id=device_entry.id,
         original_device_class=SensorDeviceClass.BATTERY,
     )
-    light = entity_reg.async_get_or_create(
+    light = entity_registry.async_get_or_create(
         "light", "invalid_integration_does_not_exist", "demo", device_id=device_entry.id
     )
 
@@ -1594,7 +1605,11 @@ async def test_homekit_uses_system_zeroconf(
 
 
 async def test_homekit_ignored_missing_devices(
-    hass: HomeAssistant, hk_driver, device_reg, entity_reg, mock_async_zeroconf: None
+    hass: HomeAssistant,
+    hk_driver,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_async_zeroconf: None,
 ) -> None:
     """Test HomeKit handles a device in the entity registry but missing from the device registry."""
 
@@ -1606,40 +1621,40 @@ async def test_homekit_ignored_missing_devices(
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         sw_version="0.16.0",
         model="Powerwall 2",
         manufacturer="Tesla",
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
 
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         "binary_sensor",
         "powerwall",
         "battery_charging",
         device_id=device_entry.id,
         original_device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         "sensor",
         "powerwall",
         "battery",
         device_id=device_entry.id,
         original_device_class=SensorDeviceClass.BATTERY,
     )
-    light = entity_reg.async_get_or_create(
+    light = entity_registry.async_get_or_create(
         "light", "powerwall", "demo", device_id=device_entry.id
     )
-    before_removal = entity_reg.entities.copy()
+    before_removal = entity_registry.entities.copy()
     # Delete the device to make sure we fallback
     # to using the platform
-    device_reg.async_remove_device(device_entry.id)
+    device_registry.async_remove_device(device_entry.id)
     # Wait for the entities to be removed
     await asyncio.sleep(0)
     await asyncio.sleep(0)
     # Restore the registry
-    entity_reg.entities = before_removal
+    entity_registry.entities = before_removal
 
     hass.states.async_set(light.entity_id, STATE_ON)
     hass.states.async_set("light.two", STATE_ON)
@@ -1664,7 +1679,11 @@ async def test_homekit_ignored_missing_devices(
 
 
 async def test_homekit_finds_linked_motion_sensors(
-    hass: HomeAssistant, hk_driver, device_reg, entity_reg, mock_async_zeroconf: None
+    hass: HomeAssistant,
+    hk_driver,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_async_zeroconf: None,
 ) -> None:
     """Test HomeKit start method."""
     entry = await async_init_integration(hass)
@@ -1676,22 +1695,22 @@ async def test_homekit_finds_linked_motion_sensors(
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         sw_version="0.16.0",
         model="Camera Server",
         manufacturer="Ubq",
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
 
-    binary_motion_sensor = entity_reg.async_get_or_create(
+    binary_motion_sensor = entity_registry.async_get_or_create(
         "binary_sensor",
         "camera",
         "motion_sensor",
         device_id=device_entry.id,
         original_device_class=BinarySensorDeviceClass.MOTION,
     )
-    camera = entity_reg.async_get_or_create(
+    camera = entity_registry.async_get_or_create(
         "camera", "camera", "demo", device_id=device_entry.id
     )
 
@@ -1726,7 +1745,11 @@ async def test_homekit_finds_linked_motion_sensors(
 
 
 async def test_homekit_finds_linked_humidity_sensors(
-    hass: HomeAssistant, hk_driver, device_reg, entity_reg, mock_async_zeroconf: None
+    hass: HomeAssistant,
+    hk_driver,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_async_zeroconf: None,
 ) -> None:
     """Test HomeKit start method."""
     entry = await async_init_integration(hass)
@@ -1738,22 +1761,22 @@ async def test_homekit_finds_linked_humidity_sensors(
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         sw_version="0.16.1",
         model="Smart Brainy Clever Humidifier",
         manufacturer="Home Assistant",
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
 
-    humidity_sensor = entity_reg.async_get_or_create(
+    humidity_sensor = entity_registry.async_get_or_create(
         "sensor",
         "humidifier",
         "humidity_sensor",
         device_id=device_entry.id,
         original_device_class=SensorDeviceClass.HUMIDITY,
     )
-    humidifier = entity_reg.async_get_or_create(
+    humidifier = entity_registry.async_get_or_create(
         "humidifier", "humidifier", "demo", device_id=device_entry.id
     )
 
@@ -1862,7 +1885,10 @@ async def test_reload(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
 
 
 async def test_homekit_start_in_accessory_mode(
-    hass: HomeAssistant, hk_driver, mock_async_zeroconf: None, device_reg
+    hass: HomeAssistant,
+    hk_driver,
+    mock_async_zeroconf: None,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test HomeKit start method in accessory mode."""
     entry = await async_init_integration(hass)
@@ -1896,7 +1922,7 @@ async def test_homekit_start_in_accessory_mode_unsupported_entity(
     hass: HomeAssistant,
     hk_driver,
     mock_async_zeroconf: None,
-    device_reg,
+    device_registry: dr.DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test HomeKit start method in accessory mode with an unsupported entity."""
@@ -1930,7 +1956,7 @@ async def test_homekit_start_in_accessory_mode_missing_entity(
     hass: HomeAssistant,
     hk_driver,
     mock_async_zeroconf: None,
-    device_reg,
+    device_registry: dr.DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test HomeKit start method in accessory mode when entity is not available."""
