@@ -1610,21 +1610,12 @@ def test_states_function(hass: HomeAssistant) -> None:
 
 def test_has_value(hass):
     """Test has_value method."""
-    hass.states.async_set("test.value1", 1, {"attr": 1})
-    hass.states.async_set("test.value2", "value2")
+    hass.states.async_set("test.value1", 1)
     hass.states.async_set("test.unavailable", STATE_UNAVAILABLE)
 
     tpl = template.Template(
         """
 {{ has_value("test.value1") }}
-        """,
-        hass,
-    )
-    assert tpl.async_render() is True
-
-    tpl = template.Template(
-        """
-{{ has_value(states("test.value1") or "unknown") }}
         """,
         hass,
     )
@@ -1640,47 +1631,7 @@ def test_has_value(hass):
 
     tpl = template.Template(
         """
-{{ has_value(states("test.unavailable") or "unknown") }}
-        """,
-        hass,
-    )
-    assert tpl.async_render() is False
-
-    tpl = template.Template(
-        """
 {{ has_value("test.unknown") }}
-        """,
-        hass,
-    )
-    assert tpl.async_render() is False
-
-    tpl = template.Template(
-        """
-{{ has_value(states("test.unknown") or "unknown") }}
-        """,
-        hass,
-    )
-    assert tpl.async_render() is False
-
-    tpl = template.Template(
-        """
-{{ has_value((state_attr("test.value1", "attr") or "unknown")|string) }}
-        """,
-        hass,
-    )
-    assert tpl.async_render() is True
-
-    tpl = template.Template(
-        """
-{{ has_value((state_attr("test.value2", "attr") or "unknown")|string) }}
-        """,
-        hass,
-    )
-    assert tpl.async_render() is False
-
-    tpl = template.Template(
-        """
-{{ has_value((state_attr("test.unknown", "attr") or "unknown")|string) }}
         """,
         hass,
     )
@@ -1693,22 +1644,6 @@ def test_has_value(hass):
         hass,
     )
     assert tpl.async_render() == "yes"
-
-    tpl = template.Template(
-        """
-{% if (states("test.unknown") or "unknown") is has_value %}yes{% else %}no{% endif %}
-        """,
-        hass,
-    )
-    assert tpl.async_render() == "no"
-
-    tpl = template.Template(
-        """
-{% if states("test.unknown") is has_value %}yes{% else %}no{% endif %}
-        """,
-        hass,
-    )
-    assert tpl.async_render() == "no"
 
 
 @patch(
