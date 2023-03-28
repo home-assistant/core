@@ -146,6 +146,8 @@ class ZWaveValueDiscoverySchema(DataclassMustHaveAtLeastOne):
     property_name: set[str] | None = None
     # [optional] the value's property key must match ANY of these values
     property_key: set[str | int | None] | None = None
+    # [optional] the value's property key must not match ANY of these values
+    exclude_property_key: set[str | int | None] | None = None
     # [optional] the value's property key name must match ANY of these values
     property_key_name: set[str | None] | None = None
     # [optional] the value's metadata_type must match ANY of these values
@@ -796,15 +798,29 @@ DISCOVERY_SCHEMAS = [
         ],
         entity_registry_enabled_default=False,
     ),
-    # number for Indicator CC
+    # number for Indicator CC (exclude property keys 3-5)
     ZWaveDiscoverySchema(
         platform=Platform.NUMBER,
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.INDICATOR},
             type={ValueType.NUMBER},
+            exclude_property_key={3, 4, 5},
             readable=True,
             writeable=True,
         ),
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    # number for Indicator CC for property keys 3-5
+    ZWaveDiscoverySchema(
+        platform=Platform.NUMBER,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.INDICATOR},
+            type={ValueType.NUMBER},
+            property_key={3, 4, 5},
+            readable=True,
+            writeable=True,
+        ),
+        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # button for Indicator CC
@@ -1107,6 +1123,12 @@ def check_value(value: ZwaveValue, schema: ZWaveValueDiscoverySchema) -> bool:
     if (
         schema.property_key is not None
         and value.property_key not in schema.property_key
+    ):
+        return False
+    # check excluded property keys
+    if (
+        schema.exclude_property_key is not None
+        and value.property_key in schema.exclude_property_key
     ):
         return False
     # check property_key_name
