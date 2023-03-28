@@ -1,5 +1,6 @@
 """Constants for ProxmoxVE."""
 
+from enum import Enum
 import logging
 
 from homeassistant.backports.enum import StrEnum

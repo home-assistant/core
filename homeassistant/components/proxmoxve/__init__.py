@@ -19,7 +19,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
@@ -213,9 +212,12 @@ def create_coordinator_container_vm(
                     api_status = (
                         proxmox.nodes(node_name).lxc(vm_id).status.current.get()
                     )
-            except AuthenticationError as error:
-                raise ConfigEntryAuthFailed from error
-            except (AuthenticationError, SSLError, ConnectTimeout, ResourceException) as error:
+            except (
+                AuthenticationError,
+                SSLError,
+                ConnectTimeout,
+                ResourceException,
+            ) as error:
                 raise UpdateFailed from error
 
             LOGGER.debug("API Response: %s", api_status)
