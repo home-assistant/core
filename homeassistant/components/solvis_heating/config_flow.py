@@ -3,15 +3,11 @@ from __future__ import annotations
 
 import logging
 from typing import Any
-from urllib.parse import ParseResult, urlparse
 
-import defusedxml
-import requests
-from requests.auth import HTTPDigestAuth
-from requests.exceptions import HTTPError, Timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -22,79 +18,11 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("host"): str,
-        vol.Required("username"): str,
-        vol.Required("password"): str,
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
     }
 )
-
-
-class PlaceholderHub:
-    """Placeholder class to make tests pass.
-
-    TODO Remove this placeholder class and replace with things from your PyPI package.
-    """
-
-    def __init__(self, host: str) -> None:
-        """Initialize."""
-        self.host = host
-        self.url = ""
-
-    async def validate_host(self) -> bool:
-        """Test if given host responses to http get request in any way."""
-        url = urlparse(self.host, "http")
-        netloc = url.netloc or url.path
-        path = url.path if url.netloc else ""
-        self.url = ParseResult("http", netloc, path, *url[3:]).geturl()
-
-        try:
-            response = requests.get(self.url, timeout=10)
-            if response.status_code in (401, 200):  # OK, this is expected
-                return True
-        except Timeout as err:
-            _LOGGER.debug("""GET Request: Timeout Exception -- %s""", err)
-        except HTTPError as err:
-            _LOGGER.debug("""GET Request: HTTP Exception -- %s""", err)
-
-        return False
-
-    async def authenticate(self, username: str, password: str) -> bool:
-        """Test if we can authenticate with the host."""
-        try:
-            basic = HTTPDigestAuth(username, password)
-            response = requests.get(self.url, stream=True, auth=basic, timeout=10)
-            if response.status_code == 200:  # OK, got something
-                return True
-        except Timeout as err:
-            _LOGGER.debug("""GET Request: Timeout Exception -- %s""", err)
-        except HTTPError as err:
-            _LOGGER.debug("""GET Request: HTTP Exception -- %s""", err)
-
-        return False
-
-    async def validate_uri(self, username: str, password: str) -> bool:
-        """Test if we can read from solvis remote the sc2_val.xml file."""
-        uri = """{self.url}/sc2_val.xml"""
-        try:
-            basic = HTTPDigestAuth(username, password)
-            response = requests.get(uri, stream=True, auth=basic, timeout=10)
-        except Timeout as err:
-            _LOGGER.debug("""GET Request: Timeout Exception -- %s""", err)
-            return False
-        except HTTPError as err:
-            _LOGGER.debug("""GET Request: HTTP Exception -- %s""", err)
-            return False
-
-        if response.status_code == 200:  # OK, got something
-            response.raw.decode_content = True
-
-            sc2_data = defusedxml.ElementTree.parse(response.raw)
-            root = sc2_data.getroot()
-            payload_data = root.find("data")
-            if payload_data is not None:
-                return True
-
-        return False
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
@@ -102,19 +30,29 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    hub = PlaceholderHub(data["host"])
+    # hub = await hass.async_add_executor_job(SC2XMLReaderValidator, data[CONF_HOST])
 
-    if not await hub.validate_host():
-        raise CannotConnect
+    # result = await hass.async_add_executor_job(hub.validate_host())
+    # if not result:
+    #    raise CannotConnect
 
-    if not await hub.authenticate(data["username"], data["password"]):
-        raise InvalidAuth
+    # if not await hub.authenticate(data[CONF_USERNAME], data[CONF_PASSWORD]):
+    #    raise InvalidAuth
 
-    if not await hub.validate_uri(data["username"], data["password"]):
-        raise CannotConnect
+    # if not await hub.validate_uri(data[CONF_USERNAME], data[CONF_PASSWORD]):
+    #    raise CannotConnect
 
-    # Return info that you want to store in the config entry.
-    return {"title": "Solvis Remote"}
+    the_title = "Solvis Remote"
+
+    # try:
+    #    the_device = await hass.async_add_executor_job(
+    #        SC2XMLReader, hub.url, data[CONF_USERNAME], data[CONF_PASSWORD]
+    #    )
+    #    the_model = the_device.getModel()
+    # except:
+    #    raise CannotConnect
+
+    return {"title": the_title}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

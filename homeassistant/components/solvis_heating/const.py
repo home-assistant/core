@@ -2,6 +2,5 @@
 
 DOMAIN = "solvis_heating"
 
-# Default config for Solvis Remote.
-DEFAULT_USERNAME = "solvis"
-DEFAULT_PASSWORD = "solvis"
+DEFAULT_MANUFACTURER = "Solvis"
+DEFAULT_MODEL = "Solvis Max"

@@ -17,5 +17,15 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "solvis_remote_solar_power": {
+        "name": "Solar Leistung 3"
+      },
+      "solar_power": {
+        "name": "Solar Leistung 4"
+      }
+    }
   }
 }

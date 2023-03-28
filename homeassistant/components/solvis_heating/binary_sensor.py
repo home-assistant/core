@@ -13,13 +13,13 @@ from .binary_sensor_description import (
     SolvisMaxBinarySensorEntityDescription,
 )
 from .const import DOMAIN
-from .solvis_remote_data import SolvisRemoteData
+from .coordinator import SolvisRemoteCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Add SolvisMax entry."""
+    """Add binary sensor entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         SolvisMaxBinarySensor(coordinator, description)
@@ -27,14 +27,16 @@ async def async_setup_entry(
     )
 
 
-class SolvisMaxBinarySensor(CoordinatorEntity[SolvisRemoteData], BinarySensorEntity):
+class SolvisMaxBinarySensor(
+    CoordinatorEntity[SolvisRemoteCoordinator], BinarySensorEntity
+):
     """Representation of a Sensor."""
 
     entity_description: SolvisMaxBinarySensorEntityDescription
 
     def __init__(
         self,
-        coordinator: SolvisRemoteData,
+        coordinator: SolvisRemoteCoordinator,
         description: SolvisMaxBinarySensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
@@ -44,23 +46,25 @@ class SolvisMaxBinarySensor(CoordinatorEntity[SolvisRemoteData], BinarySensorEnt
         self._attr_unique_id = f"{coordinator.unique_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.unique_id)},
-            manufacturer="Solvis",
+            manufacturer=coordinator.manufacturer,
+            model=coordinator.model,
             name=coordinator.name,
-            configuration_url=coordinator.host,
+            configuration_url=coordinator.target_url,
         )
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return the native sensor value."""
 
-        raw_attr = self.coordinator.data.data[self.entity_description.key]
+        if self.entity_description.key in self.coordinator.data.data:
+            the_data_point = self.coordinator.data.data[self.entity_description.key]
 
-        if raw_attr is None:
-            return False
+            if the_data_point is None:
+                return None
+            if the_data_point["Key"] == "NA":
+                return None
 
-        the_value = raw_attr["Value"]
-        # if self.entity_description.value:
-        #    converted_val = self.entity_description.value(the_value)
-        #    return converted_val
+            the_value = the_data_point["Value"]
+            return the_value
 
-        return the_value
+        return None

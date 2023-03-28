@@ -1,4 +1,4 @@
-"""Binary sensor descriptions for Solvis Max binary sensor data."""
+"""Binary sensor descriptions for binary sensor data."""
 from dataclasses import dataclass
 
 from homeassistant.components.binary_sensor import (
@@ -14,70 +14,74 @@ class SolvisMaxBinarySensorEntityDescription(BinarySensorEntityDescription):
 
 BINARY_SENSOR_TYPES: tuple[SolvisMaxBinarySensorEntityDescription, ...] = (
     SolvisMaxBinarySensorEntityDescription(
-        key="A1", name="solar pump", device_class=BinarySensorDeviceClass.HEAT
+        key="solar_pump",
+        translation_key="solar_pump",
+        name="solar pump",
+        device_class=BinarySensorDeviceClass.RUNNING,
     ),
     SolvisMaxBinarySensorEntityDescription(
-        key="A2",
+        key="warm_water_station_pump",
         name="warm water station pump",
         device_class=BinarySensorDeviceClass.RUNNING,
     ),
     SolvisMaxBinarySensorEntityDescription(
-        key="A3",
+        key="heating_circuit_1_pump",
         name="heating circuit 1 pump",
-        device_class=BinarySensorDeviceClass.HEAT,
+        device_class=BinarySensorDeviceClass.RUNNING,
     ),
     SolvisMaxBinarySensorEntityDescription(
-        key="A4",
+        key="heating_circuit_2_pump",
         name="heating circuit 2 pump",
-        device_class=BinarySensorDeviceClass.HEAT,
+        device_class=BinarySensorDeviceClass.RUNNING,
     ),
     SolvisMaxBinarySensorEntityDescription(
-        key="A5",
+        key="circulation_pump",
         name="circulation pump",
         device_class=BinarySensorDeviceClass.RUNNING,
     ),
     SolvisMaxBinarySensorEntityDescription(
-        key="A6",
+        key="heating_circuit_3_pump",
         name="heating circuit 3 pump",
-        device_class=BinarySensorDeviceClass.HEAT,
-    ),
-    SolvisMaxBinarySensorEntityDescription(
-        key="A7",
-        name="solar 2 pump",
         device_class=BinarySensorDeviceClass.RUNNING,
     ),
     SolvisMaxBinarySensorEntityDescription(
-        key="A8",
+        key="A7",
+        name="solar_valve_2",
+        device_class=BinarySensorDeviceClass.RUNNING,
+    ),
+    SolvisMaxBinarySensorEntityDescription(
+        key="heating_circuit_1_mixer_open",
         name="heating circuit 1 mixer open",
-        device_class=BinarySensorDeviceClass.HEAT,
+        device_class=BinarySensorDeviceClass.RUNNING,
     ),
     SolvisMaxBinarySensorEntityDescription(
-        key="A9",
+        key="heating_circuit_1_mixer_close",
         name="heating circuit 1 mixer close",
-        device_class=BinarySensorDeviceClass.COLD,
+        device_class=BinarySensorDeviceClass.RUNNING,
     ),
     SolvisMaxBinarySensorEntityDescription(
-        key="A10",
+        key="heating_circuit_2_mixer_open",
         name="heating circuit 2 mixer open",
-        device_class=BinarySensorDeviceClass.HEAT,
+        device_class=BinarySensorDeviceClass.RUNNING,
     ),
     SolvisMaxBinarySensorEntityDescription(
-        key="A11",
+        key="heating_circuit_2_mixer_close",
         name="heating circuit 2 mixer close",
-        device_class=BinarySensorDeviceClass.COLD,
+        device_class=BinarySensorDeviceClass.RUNNING,
     ),
     SolvisMaxBinarySensorEntityDescription(
-        key="A12",
+        key="burner",
+        translation_key="burner",
         name="burner",
-        device_class=BinarySensorDeviceClass.HEAT,
+        device_class=BinarySensorDeviceClass.RUNNING,
     ),
     SolvisMaxBinarySensorEntityDescription(
-        key="A13",
+        key="burner_s2",
         name="burner s2",
         device_class=BinarySensorDeviceClass.RUNNING,
     ),
     SolvisMaxBinarySensorEntityDescription(
-        key="A14",
+        key="recovery",
         name="recovery",
         device_class=BinarySensorDeviceClass.RUNNING,
     ),
