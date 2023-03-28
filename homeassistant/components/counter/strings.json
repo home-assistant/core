@@ -5,7 +5,7 @@
       "name": "[%key:component::counter::title%]",
       "state_attributes": {
         "editable": {
-          "name": "UI-managed",
+          "name": "[%key:common::generic::ui_managed%]",
           "state": {
             "true": "[%key:common::state::yes%]",
             "false": "[%key:common::state::no%]"
