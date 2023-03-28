@@ -41,11 +41,9 @@ STEP_DEVICE_CONFIG_DATA_SCHEMA = vol.Schema(
 )
 
 
-def hostname_from_url(url: str | None) -> str | None:
+def hostname_from_url(url: str) -> str:
     """Return the hostname from a url."""
-    if url:
-        return str(urlparse(url).hostname)
-    return None
+    return str(urlparse(url).hostname)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -122,6 +120,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Process entity discovered via SSDP."""
 
         device_url = discovery_info.ssdp_location
+        if device_url is None:
+            return self.async_abort(reason="cannot_connect")
 
         device_hostname = hostname_from_url(device_url)
         for entry in self._async_current_entries(include_ignore=False):

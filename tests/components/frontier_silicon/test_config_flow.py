@@ -6,7 +6,6 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
-from homeassistant.components.frontier_silicon.config_flow import hostname_from_url
 from homeassistant.components.frontier_silicon.const import (
     CONF_WEBFSAPI_URL,
     DEFAULT_PIN,
@@ -26,6 +25,14 @@ MOCK_DISCOVERY = ssdp.SsdpServiceInfo(
     ssdp_udn="uuid:3dcc7100-f76c-11dd-87af-00226124ca30",
     ssdp_st="mock_st",
     ssdp_location="http://1.1.1.1/device",
+    upnp={"SPEAKER-NAME": "Speaker Name"},
+)
+
+INVALID_MOCK_DISCOVERY = ssdp.SsdpServiceInfo(
+    ssdp_usn="mock_usn",
+    ssdp_udn="uuid:3dcc7100-f76c-11dd-87af-00226124ca30",
+    ssdp_st="mock_st",
+    ssdp_location=None,
     upnp={"SPEAKER-NAME": "Speaker Name"},
 )
 
@@ -341,6 +348,19 @@ async def test_ssdp(hass: HomeAssistant, mock_setup_entry: MockConfigEntry) -> N
     mock_setup_entry.assert_called_once()
 
 
+async def test_ssdp_invalid_location(hass: HomeAssistant) -> None:
+    """Test a device being discovered."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=INVALID_MOCK_DISCOVERY,
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
 async def test_ssdp_already_configured(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
@@ -395,10 +415,3 @@ async def test_ssdp_nondefault_pin(hass: HomeAssistant) -> None:
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "invalid_auth"
-
-
-def test_hostname_from_url() -> None:
-    """Test hostname_from_url function."""
-
-    assert hostname_from_url("http://1.1.1.1:80/device") == "1.1.1.1"
-    assert hostname_from_url(None) is None
