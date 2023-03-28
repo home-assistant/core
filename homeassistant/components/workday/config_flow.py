@@ -174,7 +174,7 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle remaining flow."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             try:
                 await self.hass.async_add_executor_job(
@@ -208,11 +208,29 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
 class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
     """Handle Workday options."""
 
+    def _async_abort_entries_match(
+        self, match_dict: dict[str, Any] | None
+    ) -> dict[str, str]:
+        """Validate the user input against other config entries."""
+        if match_dict is None:
+            return {}
+
+        errors: dict[str, str] = {}
+        for entry in [
+            entry
+            for entry in self.hass.config_entries.async_entries(DOMAIN)
+            if entry is not self.config_entry
+        ]:
+            if all(item in entry.options.items() for item in match_dict.items()):
+                errors["base"] = "already_configured"
+                break
+        return errors
+
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage Workday options."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             try:
@@ -224,13 +242,24 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
             except RemoveDatesError:
                 errors["remove_holidays"] = "remove_holiday_error"
             else:
-                return self.async_create_entry(
-                    title="",
-                    data={
-                        **self.options,
-                        **user_input,
-                    },
+                errors = self._async_abort_entries_match(
+                    {
+                        CONF_COUNTRY: self._config_entry.options[CONF_COUNTRY],
+                        CONF_EXCLUDES: user_input[CONF_EXCLUDES],
+                        CONF_OFFSET: user_input[CONF_OFFSET],
+                        CONF_WORKDAYS: user_input[CONF_WORKDAYS],
+                        CONF_ADD_HOLIDAYS: user_input[CONF_ADD_HOLIDAYS],
+                        CONF_REMOVE_HOLIDAYS: user_input[CONF_REMOVE_HOLIDAYS],
+                    }
                 )
+                if not errors:
+                    return self.async_create_entry(
+                        title="",
+                        data={
+                            **self.options,
+                            **user_input,
+                        },
+                    )
         schema: vol.Schema = await self.hass.async_add_executor_job(
             add_province_to_schema, DATA_SCHEMA_OPT, self.options
         )
