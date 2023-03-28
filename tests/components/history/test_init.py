@@ -545,16 +545,15 @@ def test_get_significant_states_only(hass_history) -> None:
 
 def check_significant_states(hass, zero, four, states, config):
     """Check if significant states are retrieved."""
-    filters = history.Filters()
-    exclude = config[history.DOMAIN].get(CONF_EXCLUDE)
-    if exclude:
-        filters.excluded_entities = exclude.get(CONF_ENTITIES, [])
-        filters.excluded_domains = exclude.get(CONF_DOMAINS, [])
-    include = config[history.DOMAIN].get(CONF_INCLUDE)
-    if include:
-        filters.included_entities = include.get(CONF_ENTITIES, [])
-        filters.included_domains = include.get(CONF_DOMAINS, [])
-
+    domain_config = config[history.DOMAIN]
+    exclude = domain_config.get(CONF_EXCLUDE, {})
+    include = domain_config.get(CONF_INCLUDE, {})
+    filters = history.Filters(
+        excluded_entities=exclude.get(CONF_ENTITIES, []),
+        excluded_domains=exclude.get(CONF_DOMAINS, []),
+        included_entities=include.get(CONF_ENTITIES, []),
+        included_domains=include.get(CONF_DOMAINS, []),
+    )
     hist = get_significant_states(hass, zero, four, filters=filters)
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 

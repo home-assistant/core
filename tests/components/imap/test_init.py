@@ -1,6 +1,6 @@
 """Test the imap entry initialization."""
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -17,10 +17,12 @@ from .const import (
     BAD_RESPONSE,
     TEST_FETCH_RESPONSE_BINARY,
     TEST_FETCH_RESPONSE_HTML,
+    TEST_FETCH_RESPONSE_INVALID_DATE,
     TEST_FETCH_RESPONSE_MULTIPART,
     TEST_FETCH_RESPONSE_TEXT_BARE,
     TEST_FETCH_RESPONSE_TEXT_OTHER,
     TEST_FETCH_RESPONSE_TEXT_PLAIN,
+    TEST_FETCH_RESPONSE_TEXT_PLAIN_ALT,
     TEST_SEARCH_RESPONSE,
 )
 from .test_config_flow import MOCK_CONFIG
@@ -66,20 +68,31 @@ async def test_entry_startup_fails(
 
 @pytest.mark.parametrize("imap_search", [TEST_SEARCH_RESPONSE])
 @pytest.mark.parametrize(
-    "imap_fetch",
+    ("imap_fetch", "valid_date"),
     [
-        TEST_FETCH_RESPONSE_TEXT_BARE,
-        TEST_FETCH_RESPONSE_TEXT_PLAIN,
-        TEST_FETCH_RESPONSE_TEXT_OTHER,
-        TEST_FETCH_RESPONSE_HTML,
-        TEST_FETCH_RESPONSE_MULTIPART,
-        TEST_FETCH_RESPONSE_BINARY,
+        (TEST_FETCH_RESPONSE_TEXT_BARE, True),
+        (TEST_FETCH_RESPONSE_TEXT_PLAIN, True),
+        (TEST_FETCH_RESPONSE_TEXT_PLAIN_ALT, True),
+        (TEST_FETCH_RESPONSE_INVALID_DATE, False),
+        (TEST_FETCH_RESPONSE_TEXT_OTHER, True),
+        (TEST_FETCH_RESPONSE_HTML, True),
+        (TEST_FETCH_RESPONSE_MULTIPART, True),
+        (TEST_FETCH_RESPONSE_BINARY, True),
     ],
-    ids=["bare", "plain", "other", "html", "multipart", "binary"],
+    ids=[
+        "bare",
+        "plain",
+        "plain_alt",
+        "invalid_date",
+        "other",
+        "html",
+        "multipart",
+        "binary",
+    ],
 )
 @pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
 async def test_receiving_message_successfully(
-    hass: HomeAssistant, mock_imap_protocol: MagicMock
+    hass: HomeAssistant, mock_imap_protocol: MagicMock, valid_date: bool
 ) -> None:
     """Test receiving a message successfully."""
     event_called = async_capture_events(hass, "imap_content")
@@ -106,6 +119,12 @@ async def test_receiving_message_successfully(
     assert data["sender"] == "john.doe@example.com"
     assert data["subject"] == "Test subject"
     assert data["text"]
+    assert (
+        valid_date
+        and isinstance(data["date"], datetime)
+        or not valid_date
+        and data["date"] is None
+    )
 
 
 @pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
