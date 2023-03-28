@@ -3404,6 +3404,7 @@ async def test__async_abort_entries_match(
         ),
         ({"vendor": "zoo"}, "already_configured"),
         ({"ip": "9.9.9.9"}, "already_configured"),
+        ({"ip": "7.7.7.7"}, "no_match"),  # ignored
         ({"vendor": "data"}, "no_match"),
         (
             {"vendor": "options"},
