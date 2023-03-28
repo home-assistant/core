@@ -77,6 +77,7 @@ HEAT_METER_SENSOR_TYPES = (
         icon="mdi:fire",
         name="Heat previous year GJ",
         native_unit_of_measurement=UnitOfEnergy.GIGA_JOULE,
+        device_class=SensorDeviceClass.ENERGY,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda res: getattr(res, "heat_previous_year_gj", None),
     ),

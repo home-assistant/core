@@ -28,13 +28,13 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import DEFAULT_NAME
+
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPE_CURRENT_STATUS = "current_status"
 SENSOR_TYPE_DOWNLOAD_SPEED = "download_speed"
 SENSOR_TYPE_UPLOAD_SPEED = "upload_speed"
-
-DEFAULT_NAME = "qBittorrent"
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -44,6 +44,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=SENSOR_TYPE_DOWNLOAD_SPEED,
         name="Down Speed",
+        icon="mdi:cloud-download",
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.KIBIBYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
@@ -51,6 +52,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=SENSOR_TYPE_UPLOAD_SPEED,
         name="Up Speed",
+        icon="mdi:cloud-upload",
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.KIBIBYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
@@ -88,8 +90,7 @@ def setup_platform(
     name = config.get(CONF_NAME)
 
     entities = [
-        QBittorrentSensor(description, client, name, LoginRequired)
-        for description in SENSOR_TYPES
+        QBittorrentSensor(description, client, name) for description in SENSOR_TYPES
     ]
 
     add_entities(entities, True)
@@ -109,12 +110,10 @@ class QBittorrentSensor(SensorEntity):
         description: SensorEntityDescription,
         qbittorrent_client,
         client_name,
-        exception,
     ) -> None:
         """Initialize the qBittorrent sensor."""
         self.entity_description = description
         self.client = qbittorrent_client
-        self._exception = exception
 
         self._attr_name = f"{client_name} {description.name}"
         self._attr_available = False
@@ -128,7 +127,7 @@ class QBittorrentSensor(SensorEntity):
             _LOGGER.error("Connection lost")
             self._attr_available = False
             return
-        except self._exception:
+        except LoginRequired:
             _LOGGER.error("Invalid authentication")
             return
 

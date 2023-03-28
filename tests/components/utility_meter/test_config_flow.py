@@ -47,6 +47,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
         "name": "Electricity meter",
         "net_consumption": False,
         "offset": 0,
+        "periodically_resetting": True,
         "source": input_sensor_entity_id,
         "tariffs": [],
     }
@@ -60,6 +61,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
         "name": "Electricity meter",
         "net_consumption": False,
         "offset": 0,
+        "periodically_resetting": True,
         "source": input_sensor_entity_id,
         "tariffs": [],
     }
@@ -96,6 +98,7 @@ async def test_tariffs(hass: HomeAssistant) -> None:
         "delta_values": False,
         "name": "Electricity meter",
         "net_consumption": False,
+        "periodically_resetting": True,
         "offset": 0,
         "source": input_sensor_entity_id,
         "tariffs": ["cat", "dog", "horse", "cow"],
@@ -109,6 +112,7 @@ async def test_tariffs(hass: HomeAssistant) -> None:
         "name": "Electricity meter",
         "net_consumption": False,
         "offset": 0,
+        "periodically_resetting": True,
         "source": input_sensor_entity_id,
         "tariffs": ["cat", "dog", "horse", "cow"],
     }
@@ -134,6 +138,57 @@ async def test_tariffs(hass: HomeAssistant) -> None:
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"]["base"] == "tariffs_not_unique"
+
+
+async def test_non_periodically_resetting(hass: HomeAssistant) -> None:
+    """Test periodically resetting."""
+    input_sensor_entity_id = "sensor.input"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] is None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "cycle": "monthly",
+            "name": "Electricity meter",
+            "offset": 0,
+            "periodically_resetting": False,
+            "source": input_sensor_entity_id,
+            "tariffs": [],
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Electricity meter"
+    assert result["data"] == {}
+    assert result["options"] == {
+        "cycle": "monthly",
+        "delta_values": False,
+        "name": "Electricity meter",
+        "net_consumption": False,
+        "periodically_resetting": False,
+        "offset": 0,
+        "source": input_sensor_entity_id,
+        "tariffs": [],
+    }
+
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert config_entry.data == {}
+    assert config_entry.options == {
+        "cycle": "monthly",
+        "delta_values": False,
+        "name": "Electricity meter",
+        "net_consumption": False,
+        "offset": 0,
+        "periodically_resetting": False,
+        "source": input_sensor_entity_id,
+        "tariffs": [],
+    }
 
 
 def get_suggested(schema, key):
@@ -162,6 +217,7 @@ async def test_options(hass: HomeAssistant) -> None:
             "name": "Electricity meter",
             "net_consumption": False,
             "offset": 0,
+            "periodically_resetting": True,
             "source": input_sensor1_entity_id,
             "tariffs": "",
         },
@@ -176,10 +232,11 @@ async def test_options(hass: HomeAssistant) -> None:
     assert result["step_id"] == "init"
     schema = result["data_schema"].schema
     assert get_suggested(schema, "source") == input_sensor1_entity_id
+    assert get_suggested(schema, "periodically_resetting") is True
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"source": input_sensor2_entity_id},
+        user_input={"source": input_sensor2_entity_id, "periodically_resetting": False},
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
@@ -188,6 +245,7 @@ async def test_options(hass: HomeAssistant) -> None:
         "name": "Electricity meter",
         "net_consumption": False,
         "offset": 0,
+        "periodically_resetting": False,
         "source": input_sensor2_entity_id,
         "tariffs": "",
     }
@@ -198,6 +256,7 @@ async def test_options(hass: HomeAssistant) -> None:
         "name": "Electricity meter",
         "net_consumption": False,
         "offset": 0,
+        "periodically_resetting": False,
         "source": input_sensor2_entity_id,
         "tariffs": "",
     }

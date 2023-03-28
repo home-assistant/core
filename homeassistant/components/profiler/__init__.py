@@ -1,6 +1,8 @@
 """The profiler integration."""
 import asyncio
+from contextlib import suppress
 from datetime import timedelta
+from functools import _lru_cache_wrapper
 import logging
 import reprlib
 import sys
@@ -9,6 +11,7 @@ import time
 import traceback
 from typing import Any, cast
 
+from lru import LRU  # pylint: disable=no-name-in-module
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
@@ -27,9 +30,21 @@ SERVICE_MEMORY = "memory"
 SERVICE_START_LOG_OBJECTS = "start_log_objects"
 SERVICE_STOP_LOG_OBJECTS = "stop_log_objects"
 SERVICE_DUMP_LOG_OBJECTS = "dump_log_objects"
+SERVICE_LRU_STATS = "lru_stats"
 SERVICE_LOG_THREAD_FRAMES = "log_thread_frames"
 SERVICE_LOG_EVENT_LOOP_SCHEDULED = "log_event_loop_scheduled"
 
+_LRU_CACHE_WRAPPER_OBJECT = _lru_cache_wrapper.__name__
+
+_KNOWN_LRU_CLASSES = (
+    "EventDataManager",
+    "EventTypeManager",
+    "StatesMetaManager",
+    "StateAttributesManager",
+    "StatisticsMetaManager",
+    "DomainData",
+    "IntegrationMatcher",
+)
 
 SERVICES = (
     SERVICE_START,
@@ -37,6 +52,7 @@ SERVICES = (
     SERVICE_START_LOG_OBJECTS,
     SERVICE_STOP_LOG_OBJECTS,
     SERVICE_DUMP_LOG_OBJECTS,
+    SERVICE_LRU_STATS,
     SERVICE_LOG_THREAD_FRAMES,
     SERVICE_LOG_EVENT_LOOP_SCHEDULED,
 )
@@ -46,6 +62,7 @@ DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 CONF_SECONDS = "seconds"
 
 LOG_INTERVAL_SUB = "log_interval_subscription"
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -121,6 +138,52 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ),
             title="Object dump completed",
             notification_id="profile_object_dump",
+        )
+
+    def _get_function_absfile(func: Any) -> str:
+        """Get the absolute file path of a function."""
+        import inspect  # pylint: disable=import-outside-toplevel
+
+        abs_file = "unknown"
+        with suppress(Exception):
+            abs_file = inspect.getabsfile(func)
+        return abs_file
+
+    def _lru_stats(call: ServiceCall) -> None:
+        """Log the stats of all lru caches."""
+        # Imports deferred to avoid loading modules
+        # in memory since usually only one part of this
+        # integration is used at a time
+        import objgraph  # pylint: disable=import-outside-toplevel
+
+        for lru in objgraph.by_type(_LRU_CACHE_WRAPPER_OBJECT):
+            lru = cast(_lru_cache_wrapper, lru)
+            _LOGGER.critical(
+                "Cache stats for lru_cache %s at %s: %s",
+                lru.__wrapped__,
+                _get_function_absfile(lru.__wrapped__),
+                lru.cache_info(),
+            )
+
+        for _class in _KNOWN_LRU_CLASSES:
+            for class_with_lru_attr in objgraph.by_type(_class):
+                for maybe_lru in class_with_lru_attr.__dict__.values():
+                    if isinstance(maybe_lru, LRU):
+                        _LOGGER.critical(
+                            "Cache stats for LRU %s at %s: %s",
+                            type(class_with_lru_attr),
+                            _get_function_absfile(class_with_lru_attr),
+                            maybe_lru.get_stats(),
+                        )
+
+        persistent_notification.create(
+            hass,
+            (
+                "LRU cache states have been dumped to the log. See [the"
+                " logs](/config/logs) to review the stats."
+            ),
+            title="LRU stats completed",
+            notification_id="profile_lru_stats",
         )
 
     async def _async_dump_thread_frames(call: ServiceCall) -> None:
@@ -200,6 +263,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         SERVICE_DUMP_LOG_OBJECTS,
         _dump_log_objects,
         schema=vol.Schema({vol.Required(CONF_TYPE): str}),
+    )
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_LRU_STATS,
+        _lru_stats,
     )
 
     async_register_admin_service(
@@ -323,4 +393,4 @@ def _log_objects(*_):
     # integration is used at a time
     import objgraph  # pylint: disable=import-outside-toplevel
 
-    _LOGGER.critical("Memory Growth: %s", objgraph.growth(limit=100))
+    _LOGGER.critical("Memory Growth: %s", objgraph.growth(limit=1000))
