@@ -812,43 +812,11 @@ async def test_warning_logged_on_wrap_up_timeout(
 async def test_bootstrap_is_cancellation_safe(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test async_setup being canceled does not cancel bootstrap."""
+    """Test cancellation during async_setup_component does not cancel bootstrap."""
+    with patch.object(
+        bootstrap, "async_setup_component", side_effect=asyncio.CancelledError
+    ):
+        await bootstrap._async_set_up_integrations(hass, {"cancel_integration": {}})
+        await hass.async_block_till_done()
 
-    def gen_domain_setup(domain):
-        async def async_setup(hass, config):
-            raise asyncio.CancelledError()
-
-        return async_setup
-
-    mock_integration(
-        hass,
-        MockModule(
-            domain="cancel_integration",
-            async_setup=gen_domain_setup("cancel_integration"),
-            partial_manifest={},
-        ),
-    )
-
-    def gen_domain_setup(domain):
-        async def async_setup(hass, config):
-            return True
-
-        return async_setup
-
-    mock_integration(
-        hass,
-        MockModule(
-            domain="normal_integration",
-            async_setup=gen_domain_setup("normal_integration"),
-            partial_manifest={},
-        ),
-    )
-
-    await bootstrap._async_set_up_integrations(
-        hass, {"cancel_integration": {}, "normal_integration": {}}
-    )
-    await hass.async_block_till_done()
-
-    assert "cancel_integration" not in hass.config.components
-    assert "normal_integration" in hass.config.components
-    assert "Error during setup of component cancel_integration" in caplog.text
+    assert "Error setting up integration cancel_integration" in caplog.text

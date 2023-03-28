@@ -518,7 +518,7 @@ async def async_setup_multi_components(
     results = await asyncio.gather(*futures.values(), return_exceptions=True)
     for idx, domain in enumerate(futures):
         result = results[idx]
-        if isinstance(result, Exception):
+        if isinstance(result, BaseException):
             _LOGGER.error(
                 "Error setting up integration %s - received exception",
                 domain,
