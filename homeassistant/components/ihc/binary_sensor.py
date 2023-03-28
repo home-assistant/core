@@ -67,7 +67,6 @@ class IHCBinarySensor(IHCDevice, BinarySensorEntity):
         """Initialize the IHC binary sensor."""
         super().__init__(ihc_controller, controller_id, name, ihc_id, product)
         self._attr_device_class = try_parse_enum(BinarySensorDeviceClass, sensor_type)
-        self._sensor_type = sensor_type
         self.inverting = inverting
 
     def on_ihc_change(self, ihc_id, value):
