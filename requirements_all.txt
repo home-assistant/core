@@ -1269,7 +1269,7 @@ open-garage==0.2.0
 open-meteo==0.2.1
 
 # homeassistant.components.openai_conversation
-openai==0.26.2
+openai==0.27.2
 
 # homeassistant.components.opencv
 # opencv-python-headless==4.6.0.66
