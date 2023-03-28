@@ -1858,6 +1858,35 @@ class OptionsFlow(data_entry_flow.FlowHandler):
 
     handler: str
 
+    @callback
+    def _async_abort_entries_match(
+        self, match_dict: dict[str, Any] | None = None
+    ) -> dict[str, str]:
+        """Validate the user input against other config entries."""
+        if match_dict is None:
+            match_dict = {}  # Match any entry
+
+        config_entry = cast(
+            ConfigEntry, self.hass.config_entries.async_get_entry(self.handler)
+        )
+        errors: dict[str, str] = {}
+        for entry in [
+            entry
+            for entry in self.hass.config_entries.async_entries(config_entry.domain)
+            if entry is not config_entry and entry.source != SOURCE_IGNORE
+        ]:
+            if all(
+                item
+                in ChainMap(
+                    entry.options,  # type: ignore[arg-type]
+                    entry.data,  # type: ignore[arg-type]
+                ).items()
+                for item in match_dict.items()
+            ):
+                errors["base"] = "already_configured"
+                break
+        return errors
+
 
 class OptionsFlowWithConfigEntry(OptionsFlow):
     """Base class for options flows with config entry and options."""
@@ -1876,34 +1905,6 @@ class OptionsFlowWithConfigEntry(OptionsFlow):
     def options(self) -> dict[str, Any]:
         """Return a mutable copy of the config entry options."""
         return self._options
-
-    @callback
-    def _async_abort_entries_match(
-        self, match_dict: dict[str, Any] | None = None
-    ) -> dict[str, str]:
-        """Validate the user input against other config entries."""
-        if match_dict is None:
-            match_dict = {}  # Match any entry
-
-        errors: dict[str, str] = {}
-        for entry in [
-            entry
-            for entry in self.hass.config_entries.async_entries(
-                self.config_entry.domain
-            )
-            if entry is not self.config_entry and entry.source != SOURCE_IGNORE
-        ]:
-            if all(
-                item
-                in ChainMap(
-                    entry.options,  # type: ignore[arg-type]
-                    entry.data,  # type: ignore[arg-type]
-                ).items()
-                for item in match_dict.items()
-            ):
-                errors["base"] = "already_configured"
-                break
-        return errors
 
 
 class EntityRegistryDisabledHandler:
