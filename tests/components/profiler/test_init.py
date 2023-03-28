@@ -1,9 +1,11 @@
 """Test the Profiler config flow."""
 from datetime import timedelta
+from functools import lru_cache
 import os
 import sys
 from unittest.mock import patch
 
+from lru import LRU  # pylint: disable=no-name-in-module
 import py
 import pytest
 
@@ -12,6 +14,7 @@ from homeassistant.components.profiler import (
     SERVICE_DUMP_LOG_OBJECTS,
     SERVICE_LOG_EVENT_LOOP_SCHEDULED,
     SERVICE_LOG_THREAD_FRAMES,
+    SERVICE_LRU_STATS,
     SERVICE_MEMORY,
     SERVICE_START,
     SERVICE_START_LOG_OBJECTS,
@@ -228,3 +231,31 @@ async def test_log_scheduled(
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_lru_stats(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
+    """Test logging lru stats."""
+
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    @lru_cache(maxsize=1)
+    def _dummy_test_lru_stats():
+        return 1
+
+    class DomainData:
+        def __init__(self):
+            self._data = LRU(1)
+
+    DomainData()
+    assert hass.services.has_service(DOMAIN, SERVICE_LRU_STATS)
+
+    await hass.services.async_call(DOMAIN, SERVICE_LRU_STATS, blocking=True)
+
+    assert "DomainData" in caplog.text
+    assert "(0, 0)" in caplog.text
+    assert "_dummy_test_lru_stats" in caplog.text
+    assert "CacheInfo" in caplog.text
