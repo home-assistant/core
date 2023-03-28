@@ -39,6 +39,9 @@ CLASS_MAPPING = {
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.BINARY_SENSOR)
 MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.BINARY_SENSOR)
+CONFIG_DIAGNOSTIC_MATCH = functools.partial(
+    ZHA_ENTITIES.config_diagnostic_match, Platform.BINARY_SENSOR
+)
 
 
 async def async_setup_entry(
@@ -221,7 +224,7 @@ class AqaraThermostatValveAlarm(BinarySensor, id_suffix="valve_alarm"):
     _attr_name: str = "Valve alarm"
 
 
-@MULTI_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
 class AqaraThermostatCalibrated(BinarySensor, id_suffix="calibrated"):
     """ZHA Aqara thermostat calibrated binary sensor."""
 
@@ -230,7 +233,7 @@ class AqaraThermostatCalibrated(BinarySensor, id_suffix="calibrated"):
     _attr_name: str = "Calibrated"
 
 
-@MULTI_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
 class AqaraThermostatExternalSensor(BinarySensor, id_suffix="sensor"):
     """ZHA Aqara thermostat external sensor binary sensor."""
 
