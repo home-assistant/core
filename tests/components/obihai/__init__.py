@@ -14,3 +14,12 @@ DHCP_SERVICE_INFO = dhcp.DhcpServiceInfo(
     ip="192.168.1.100",
     macaddress="9CADEF000000",
 )
+
+
+class MockPyObihai:
+    """Mock PyObihai: Returns simulated PyObihai data."""
+
+    def get_device_mac(self):
+        """Mock PyObihai.get_device_mac, return simulated MAC address."""
+
+        return DHCP_SERVICE_INFO.macaddress
