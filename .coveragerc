@@ -518,9 +518,6 @@ omit =
     homeassistant/components/ifttt/alarm_control_panel.py
     homeassistant/components/iglo/light.py
     homeassistant/components/ihc/*
-    homeassistant/components/imap/__init__.py
-    homeassistant/components/imap/coordinator.py
-    homeassistant/components/imap/sensor.py
     homeassistant/components/imap_email_content/sensor.py
     homeassistant/components/incomfort/*
     homeassistant/components/insteon/binary_sensor.py
