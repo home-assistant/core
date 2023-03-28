@@ -104,13 +104,13 @@ SENSOR_SETUP = {
     vol.Optional(CONF_VALUE_TEMPLATE): TemplateSelector(),
     vol.Optional(CONF_DEVICE_CLASS): SelectSelector(
         SelectSelectorConfig(
-            options=[cls.value for cls in SensorDeviceClass],
+            options=[""] + [cls.value for cls in SensorDeviceClass],
             mode=SelectSelectorMode.DROPDOWN,
         )
     ),
     vol.Optional(CONF_STATE_CLASS): SelectSelector(
         SelectSelectorConfig(
-            options=[cls.value for cls in SensorStateClass],
+            options=[""] + [cls.value for cls in SensorStateClass],
             mode=SelectSelectorMode.DROPDOWN,
         )
     ),
@@ -193,7 +193,15 @@ async def validate_sensor_edit(
     # Standard behavior is to merge the result with the options.
     # In this case, we want to add a sub-item so we update the options directly.
     idx: int = handler.flow_state["_idx"]
-    handler.options[SENSOR_DOMAIN][idx].update(user_input)
+    sensor_options: dict[str, Any] = handler.options[SENSOR_DOMAIN][idx]
+    sensor_options.update(user_input)
+
+    # These keys are optional, and absent from user_input when unset in UI
+    # we need to remove them manually from the previous options.
+    for key in (CONF_DEVICE_CLASS, CONF_STATE_CLASS, CONF_UNIT_OF_MEASUREMENT):
+        if key not in user_input:
+            sensor_options.pop(key, None)
+
     return {}
 
 
