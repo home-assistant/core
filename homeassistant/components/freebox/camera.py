@@ -18,22 +18,7 @@ from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    ATTR_ACTIVATION,
-    ATTR_DETECTION,
-    ATTR_DISK,
-    ATTR_FLIP,
-    ATTR_QUALITY,
-    ATTR_RTSP,
-    ATTR_SENSITIVITY,
-    ATTR_SOUND_DETECTION,
-    ATTR_SOUND_TRIGGER,
-    ATTR_THRESHOLD,
-    ATTR_TIMESTAMP,
-    ATTR_VOLUME,
-    DOMAIN,
-    SERVICE_FLIP,
-)
+from .const import ATTR_DETECTION, ATTR_FLIP, DOMAIN, SERVICE_FLIP
 from .home_base import FreeboxHomeEntity
 from .router import FreeboxRouter
 
@@ -104,7 +89,6 @@ class FreeboxCamera(FreeboxHomeEntity, FFmpegCamera):
             node["type"]["endpoints"], ATTR_DETECTION
         )
         self._command_flip = self.get_command_id(node["show_endpoints"], ATTR_FLIP)
-
         self.update_node(node)
 
     @property
@@ -145,16 +129,5 @@ class FreeboxCamera(FreeboxHomeEntity, FFmpegCamera):
         else:
             self._attr_is_streaming = False
 
-        # Parse all endpoints values
+        # Get motion detection status
         self._attr_motion_detection_enabled = self.get_value("signal", ATTR_DETECTION)
-        self._activation_with_alarm = self.get_value("signal", ATTR_ACTIVATION)
-        self._high_quality_video = self.get_value("signal", ATTR_QUALITY)
-        self._motion_sensitivity = self.get_value("signal", ATTR_SENSITIVITY)
-        self._motion_threshold = self.get_value("signal", ATTR_THRESHOLD)
-        self._flip = self.get_value("signal", ATTR_FLIP)
-        self._timestamp = self.get_value("signal", ATTR_TIMESTAMP)
-        self._mic_volume = self.get_value("signal", ATTR_VOLUME)
-        self._sound_detection = self.get_value("signal", ATTR_SOUND_DETECTION)
-        self._sound_trigger = self.get_value("signal", ATTR_SOUND_TRIGGER)
-        self._rtsp = self.get_value("signal", ATTR_RTSP)
-        self._disk = self.get_value("signal", ATTR_DISK)
