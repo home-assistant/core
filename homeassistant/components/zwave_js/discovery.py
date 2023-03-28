@@ -146,8 +146,8 @@ class ZWaveValueDiscoverySchema(DataclassMustHaveAtLeastOne):
     property_name: set[str] | None = None
     # [optional] the value's property key must match ANY of these values
     property_key: set[str | int | None] | None = None
-    # [optional] the value's property key must not match ANY of these values
-    exclude_property_key: set[str | int | None] | None = None
+    # [optional] the value's property key must NOT match ANY of these values
+    not_property_key: set[str | int | None] | None = None
     # [optional] the value's property key name must match ANY of these values
     property_key_name: set[str | None] | None = None
     # [optional] the value's metadata_type must match ANY of these values
@@ -804,7 +804,7 @@ DISCOVERY_SCHEMAS = [
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.INDICATOR},
             type={ValueType.NUMBER},
-            exclude_property_key={3, 4, 5},
+            not_property_key={3, 4, 5},
             readable=True,
             writeable=True,
         ),
@@ -1127,8 +1127,8 @@ def check_value(value: ZwaveValue, schema: ZWaveValueDiscoverySchema) -> bool:
         return False
     # check excluded property keys
     if (
-        schema.exclude_property_key is not None
-        and value.property_key in schema.exclude_property_key
+        schema.not_property_key is not None
+        and value.property_key in schema.not_property_key
     ):
         return False
     # check property_key_name
