@@ -44,20 +44,20 @@ from .const import (
 )
 
 
-def get_providence_to_schema(
+def add_province_to_schema(
     schema: vol.Schema,
     options: dict[str, Any],
 ) -> vol.Schema:
-    """Update schema with providence from country."""
+    """Update schema with province from country."""
     year: int = dt.now().year
     obj_holidays: HolidayBase = getattr(holidays, options[CONF_COUNTRY])(years=year)
     new_schema = schema
 
     if hasattr(obj_holidays, "subdivisions"):
         div_list = obj_holidays.subdivisions
-        div_list.insert(0, "None")
+        div_list.insert(0, "")
         add_schema = {
-            vol.Optional(CONF_PROVINCE, default="None"): SelectSelector(
+            vol.Optional(CONF_PROVINCE): SelectSelector(
                 SelectSelectorConfig(
                     options=div_list,
                     mode=SelectSelectorMode.DROPDOWN,
@@ -151,7 +151,7 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return WorkdayOptionsFlowHandler(config_entry)
 
-    async def async_step_import(self, config: dict[str, Any] | None) -> FlowResult:
+    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Import a configuration from config.yaml."""
 
         self._async_abort_entries_match(config)
@@ -196,7 +196,7 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         new_schema = await self.hass.async_add_executor_job(
-            get_providence_to_schema, DATA_SCHEMA_OPT, self.data
+            add_province_to_schema, DATA_SCHEMA_OPT, self.data
         )
         return self.async_show_form(
             step_id="options",
@@ -232,7 +232,7 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
                     },
                 )
         schema: vol.Schema = await self.hass.async_add_executor_job(
-            get_providence_to_schema, DATA_SCHEMA_OPT, self.options
+            add_province_to_schema, DATA_SCHEMA_OPT, self.options
         )
         new_schema = vol.Schema(
             {
