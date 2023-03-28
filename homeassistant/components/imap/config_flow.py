@@ -148,24 +148,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class OptionsFlow(config_entries.OptionsFlowWithConfigEntry):
     """Option flow handler."""
 
-    def _async_abort_entries_match(
-        self, match_dict: dict[str, Any] | None
-    ) -> dict[str, str]:
-        """Validate the user input against other config entries."""
-        if match_dict is None:
-            return {}
-
-        errors: dict[str, str] = {}
-        for entry in [
-            entry
-            for entry in self.hass.config_entries.async_entries(DOMAIN)
-            if entry is not self.config_entry
-        ]:
-            if all(item in entry.data.items() for item in match_dict.items()):
-                errors["base"] = "already_configured"
-                break
-        return errors
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
