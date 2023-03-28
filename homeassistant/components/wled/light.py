@@ -118,8 +118,9 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
 
         # Segment 0 uses a simpler name, which is more natural for when using
         # a single segment / using WLED with one big LED strip.
-        if segment != 0:
-            self._attr_name = f"Segment {segment}"
+        self._attr_name = self.coordinator.data.state.segments[
+            segment
+        ].name.capitalize()
 
         self._attr_unique_id = (
             f"{self.coordinator.data.info.mac_address}_{self._segment}"
