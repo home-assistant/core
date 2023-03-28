@@ -9,6 +9,7 @@ import pytest
 
 from homeassistant.components.imap import DOMAIN
 from homeassistant.components.imap.errors import InvalidAuth, InvalidFolder
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
@@ -120,6 +121,9 @@ async def test_initial_authentication_error(
     assert await hass.config_entries.async_setup(config_entry.entry_id) == success
     await hass.async_block_till_done()
 
+    state = hass.states.get("sensor.imap_email_email_com")
+    assert (state is not None) == success
+
 
 @pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
 @pytest.mark.parametrize(
@@ -133,6 +137,9 @@ async def test_initial_invalid_folder_error(
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id) == success
     await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.imap_email_email_com")
+    assert (state is not None) == success
 
 
 @pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
@@ -156,6 +163,11 @@ async def test_late_authentication_error(
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
     await hass.async_block_till_done()
 
+    state = hass.states.get("sensor.imap_email_email_com")
+    # we should have an entity
+    assert state is not None
+    assert state.state == "0"
+
     # Mock that the search fails, this will trigger
     # that the connection will be restarted
     # Then fail selecting the folder
@@ -168,6 +180,10 @@ async def test_late_authentication_error(
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
     await hass.async_block_till_done()
     assert "Username or password incorrect, starting reauthentication" in caplog.text
+
+    # we still should have an entity with an unavailable state
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
@@ -195,6 +211,11 @@ async def test_late_folder_error(
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
     await hass.async_block_till_done()
 
+    state = hass.states.get("sensor.imap_email_email_com")
+    # we should have an entity
+    assert state is not None
+    assert state.state == "0"
+
     # Mock that the search fails, this will trigger
     # that the connection will be restarted
     # Then fail selecting the folder
@@ -207,6 +228,10 @@ async def test_late_folder_error(
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
     await hass.async_block_till_done()
     assert "Selected mailbox folder is invalid" in caplog.text
+
+    # we still should have an entity with an unavailable state
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
@@ -233,12 +258,23 @@ async def test_handle_cleanup_exception(
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
     await hass.async_block_till_done()
 
+    state = hass.states.get("sensor.imap_email_email_com")
+    # we should have an entity
+    assert state is not None
+    assert state.state == "0"
+
     # Fail cleaning up
     mock_imap_protocol.close.side_effect = imap_close
 
     assert await config_entry.async_unload(hass)
     await hass.async_block_till_done()
     assert "Error while cleaning up imap connection" in caplog.text
+
+    state = hass.states.get("sensor.imap_email_email_com")
+
+    # we should have an entity with an unavailable state
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize("imap_has_capability", [True], ids=["push"])
@@ -265,6 +301,11 @@ async def test_lost_connection_with_imap_push(
     await hass.async_block_till_done()
     assert "Lost imap.server.com (will attempt to reconnect after 10 s)" in caplog.text
 
+    state = hass.states.get("sensor.imap_email_email_com")
+    # we should have an entity with an unavailable state
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
 
 @pytest.mark.parametrize("imap_has_capability", [True], ids=["push"])
 async def test_fetch_number_of_messages(
@@ -283,3 +324,8 @@ async def test_fetch_number_of_messages(
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
     assert "Invalid response for search" in caplog.text
+
+    state = hass.states.get("sensor.imap_email_email_com")
+    # we should have an entity with an unavailable state
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
