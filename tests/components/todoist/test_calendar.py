@@ -133,6 +133,30 @@ async def test_update_entity_for_custom_project_with_labels_on(
 
 
 @patch("homeassistant.components.todoist.calendar.TodoistAPIAsync")
+async def test_failed_coordinator_update(todoist_api, hass: HomeAssistant, api) -> None:
+    """Test a failed data coordinator update is handled correctly."""
+    api.get_tasks.side_effect = Exception("API error")
+    todoist_api.return_value = api
+
+    assert await setup.async_setup_component(
+        hass,
+        "calendar",
+        {
+            "calendar": {
+                "platform": DOMAIN,
+                CONF_TOKEN: "token",
+                "custom_projects": [{"name": "All projects", "labels": ["Label1"]}],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    await async_update_entity(hass, "calendar.all_projects")
+    state = hass.states.get("calendar.all_projects")
+    assert state is None
+
+
+@patch("homeassistant.components.todoist.calendar.TodoistAPIAsync")
 async def test_calendar_custom_project_unique_id(
     todoist_api, hass: HomeAssistant, api, entity_registry: er.EntityRegistry
 ) -> None:
