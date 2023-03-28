@@ -125,7 +125,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         device_hostname = hostname_from_url(device_url)
         for entry in self._async_current_entries():
-            if device_hostname == hostname_from_url(entry.data.get(CONF_WEBFSAPI_URL)):
+            if device_hostname == hostname_from_url(entry.data[CONF_WEBFSAPI_URL]):
                 return self.async_abort(reason="already_configured")
 
         speaker_name = discovery_info.ssdp_headers.get(SSDP_ATTR_SPEAKER_NAME)

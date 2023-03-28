@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
+from homeassistant.components.frontier_silicon.config_flow import hostname_from_url
 from homeassistant.components.frontier_silicon.const import (
     CONF_WEBFSAPI_URL,
     DEFAULT_PIN,
@@ -394,3 +395,10 @@ async def test_ssdp_nondefault_pin(hass: HomeAssistant) -> None:
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "invalid_auth"
+
+
+def test_hostname_from_url() -> None:
+    """Test hostname_from_url function."""
+
+    assert hostname_from_url("http://1.1.1.1:80/device") == "1.1.1.1"
+    assert hostname_from_url(None) is None
