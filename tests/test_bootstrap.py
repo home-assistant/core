@@ -820,3 +820,12 @@ async def test_bootstrap_is_cancellation_safe(
         await hass.async_block_till_done()
 
     assert "Error setting up integration cancel_integration" in caplog.text
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_bootstrap_empty_integrations(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test setting up an empty integrations does not raise."""
+    await bootstrap.async_setup_multi_components(hass, set(), {})
+    await hass.async_block_till_done()
