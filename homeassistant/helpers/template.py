@@ -1471,11 +1471,13 @@ def state_attr(hass: HomeAssistant, entity_id: str, name: str) -> Any:
     return None
 
 
-def has_value(hass: HomeAssistant, entity_id: str, name: str | None = None) -> bool:
+def has_value(hass: HomeAssistant, entity_id: str) -> bool:
     """Test if an entity has a valid value."""
     value: str | None = None
     if (state_obj := _get_state(hass, entity_id)) is not None:
-        value = state_obj.state if name is None else state_obj.attributes.get(name)
+        value = state_obj.state
+    else:
+        value = None if valid_entity_id(entity_id) else entity_id
 
     return value is not None and value not in [STATE_UNAVAILABLE, STATE_UNKNOWN]
 

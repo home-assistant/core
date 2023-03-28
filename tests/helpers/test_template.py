@@ -1624,7 +1624,23 @@ def test_has_value(hass):
 
     tpl = template.Template(
         """
+{{ has_value(states("test.value1") or "unknown"|string) }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is True
+
+    tpl = template.Template(
+        """
 {{ has_value("test.unavailable") }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is False
+
+    tpl = template.Template(
+        """
+{{ has_value(states("test.unavailable") or "unknown"|string) }}
         """,
         hass,
     )
@@ -1640,15 +1656,7 @@ def test_has_value(hass):
 
     tpl = template.Template(
         """
-{{ has_value("test.value1", "attr") }}
-        """,
-        hass,
-    )
-    assert tpl.async_render() is True
-
-    tpl = template.Template(
-        """
-{{ has_value("test.value2", "attr") }}
+{{ has_value(states("test.unknown") or "unknown"|string) }}
         """,
         hass,
     )
@@ -1656,7 +1664,23 @@ def test_has_value(hass):
 
     tpl = template.Template(
         """
-{{ has_value("test.unknown", "attr") }}
+{{ has_value(state_attr("test.value1", "attr") or "unknown"|string) }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is True
+
+    tpl = template.Template(
+        """
+{{ has_value(state_attr("test.value2", "attr") or "unknown"|string) }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is False
+
+    tpl = template.Template(
+        """
+{{ has_value(state_attr("test.unknown", "attr") or "unknown"|string) }}
         """,
         hass,
     )
@@ -1669,6 +1693,14 @@ def test_has_value(hass):
         hass,
     )
     assert tpl.async_render() == "yes"
+
+    tpl = template.Template(
+        """
+{% if (states("test.unknown") or "unknown"|string) is has_value %}yes{% else %}no{% endif %}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "no"
 
 
 @patch(
