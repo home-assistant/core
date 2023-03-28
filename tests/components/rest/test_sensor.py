@@ -108,7 +108,7 @@ async def test_setup_minimum(hass: HomeAssistant) -> None:
 
 @respx.mock
 async def test_setup_encoding(hass: HomeAssistant) -> None:
-    """Test setup with latin_1 encoding."""
+    """Test setup with non-utf8 encoding."""
     respx.get("http://localhost").respond(
         status_code=HTTPStatus.OK,
         stream=httpx.ByteStream("tack själv".encode(encoding="iso-8859-1")),
