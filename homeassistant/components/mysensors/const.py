@@ -132,7 +132,6 @@ SWITCH_TYPES: dict[SensorType, set[ValueType]] = {
     "S_SOUND": {"V_ARMED"},
     "S_VIBRATION": {"V_ARMED"},
     "S_MOISTURE": {"V_ARMED"},
-    "S_IR": {"V_IR_SEND"},
     "S_LOCK": {"V_LOCK_STATUS"},
     "S_WATER_QUALITY": {"V_STATUS"},
 }
