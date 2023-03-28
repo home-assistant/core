@@ -1,4 +1,4 @@
-"""Plaform for allowing several climate devices to be grouped into one climate device."""
+"""Platform for allowing several climate devices to be grouped into one climate device."""
 from __future__ import annotations
 
 import logging
