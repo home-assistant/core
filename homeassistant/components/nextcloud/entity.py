@@ -26,7 +26,6 @@ class NextcloudEntity(CoordinatorEntity[NextcloudDataUpdateCoordinator]):
         self._attr_device_info = DeviceInfo(
             name="Nextcloud",
             identifiers={(DOMAIN, entry.entry_id)},
-            model="Nextcloud",
             sw_version=coordinator.data.get("nextcloud_system_version"),
             configuration_url=coordinator.url,
         )
