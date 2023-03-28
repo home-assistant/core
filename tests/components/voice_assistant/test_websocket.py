@@ -1,15 +1,18 @@
 """Websocket tests for Voice Assistant integration."""
 import asyncio
 from collections.abc import AsyncIterable
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import stt
+from homeassistant.components import stt, tts
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockModule, mock_integration, mock_platform
 from tests.components.tts.conftest import (  # noqa: F401, pylint: disable=unused-import
     mock_get_cache_files,
     mock_init_cache_dir,
@@ -64,6 +67,61 @@ class MockSttProvider(stt.Provider):
         return stt.SpeechResult(self.text, stt.SpeechResultState.SUCCESS)
 
 
+class MockSTT:
+    """A mock STT platform."""
+
+    async def async_get_engine(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> tts.Provider:
+        """Set up a mock speech component."""
+        return MockSttProvider(hass, _TRANSCRIPT)
+
+
+class MockTTSProvider(tts.Provider):
+    """Mock TTS provider."""
+
+    name = "Test"
+
+    @property
+    def default_language(self) -> str:
+        """Return the default language."""
+        return "en"
+
+    @property
+    def supported_languages(self) -> list[str]:
+        """Return list of supported languages."""
+        return ["en"]
+
+    @property
+    def supported_options(self) -> list[str]:
+        """Return list of supported options like voice, emotions."""
+        return ["voice", "age"]
+
+    def get_tts_audio(
+        self, message: str, language: str, options: dict[str, Any] | None = None
+    ) -> tts.TtsAudioType:
+        """Load TTS dat."""
+        return ("mp3", b"")
+
+
+class MockTTS:
+    """A mock TTS platform."""
+
+    PLATFORM_SCHEMA = tts.PLATFORM_SCHEMA
+
+    async def async_get_engine(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> tts.Provider:
+        """Set up a mock speech component."""
+        return MockTTSProvider()
+
+
 @pytest.fixture(autouse=True)
 async def init_components(
     hass: HomeAssistant,
@@ -71,28 +129,14 @@ async def init_components(
     mock_init_cache_dir,  # noqa: F811
 ):
     """Initialize relevant components with empty configs."""
+    mock_integration(hass, MockModule(domain="test"))
+    mock_platform(hass, "test.tts", MockTTS())
+    mock_platform(hass, "test.stt", MockSTT())
+
+    assert await async_setup_component(hass, tts.DOMAIN, {"tts": {"platform": "test"}})
+    assert await async_setup_component(hass, stt.DOMAIN, {"stt": {"platform": "test"}})
     assert await async_setup_component(hass, "media_source", {})
-    assert await async_setup_component(
-        hass,
-        "tts",
-        {
-            "tts": {
-                "platform": "demo",
-            }
-        },
-    )
-    assert await async_setup_component(hass, "stt", {})
-
-    # mock_platform fails because it can't import
-    hass.data[stt.DOMAIN] = {"test": MockSttProvider(hass, _TRANSCRIPT)}
-
     assert await async_setup_component(hass, "voice_assistant", {})
-
-    with patch(
-        "homeassistant.components.demo.tts.DemoProvider.get_tts_audio",
-        return_value=("mp3", b""),
-    ) as mock_get_tts:
-        yield mock_get_tts
 
 
 async def test_text_only_pipeline(

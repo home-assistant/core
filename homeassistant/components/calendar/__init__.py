@@ -523,7 +523,7 @@ class CalendarEventView(http.HomeAssistantView):
 
         try:
             calendar_event_list = await entity.async_get_events(
-                request.app["hass"], start_date, end_date
+                request.app["hass"], dt.as_local(start_date), dt.as_local(end_date)
             )
         except HomeAssistantError as err:
             _LOGGER.debug("Error reading events: %s", err)

@@ -28,6 +28,7 @@ async def system_health_info(hass):
     if cloud.is_logged_in:
         data["subscription_expiration"] = cloud.expiration_date
         data["relayer_connected"] = cloud.is_connected
+        data["relayer_region"] = client.relayer_region
         data["remote_enabled"] = client.prefs.remote_enabled
         data["remote_connected"] = cloud.remote.is_connected
         data["alexa_enabled"] = client.prefs.alexa_enabled
