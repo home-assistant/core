@@ -4,8 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
-from proxmoxer import ProxmoxAPI
-from proxmoxer.backends.https import AuthenticationError
+from proxmoxer import AuthenticationError, ProxmoxAPI
 from proxmoxer.core import ResourceException
 import requests.exceptions
 from requests.exceptions import ConnectTimeout, SSLError
@@ -195,7 +194,7 @@ def create_coordinator_container_vm(
     node_name: str,
     vm_id: int,
     api_category: ProxmoxType,
-) -> DataUpdateCoordinator:
+) -> DataUpdateCoordinator[dict[str, Any] | None]:
     """Create and return a DataUpdateCoordinator for a vm/container."""
 
     async def async_update_data() -> dict[str, Any] | None:
@@ -315,6 +314,8 @@ class ProxmoxEntity(CoordinatorEntity):
 class ProxmoxClient:
     """A wrapper for the proxmoxer ProxmoxAPI client."""
 
+    _proxmox: ProxmoxAPI
+
     def __init__(
         self,
         host: str,
@@ -332,9 +333,6 @@ class ProxmoxClient:
         self._realm = realm
         self._password = password
         self._verify_ssl = verify_ssl
-
-        self._proxmox = None
-        self._connection_start_time = None
 
     def build_client(self) -> None:
         """Construct the ProxmoxAPI client.
