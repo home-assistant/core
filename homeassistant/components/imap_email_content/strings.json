@@ -1,0 +1,8 @@
+{
+  "issues": {
+    "deprecation": {
+      "title": "The IMAP email content integration is deprecated",
+      "description": "Please setup an entry for the [imap integration](https://my.home-assistant.io/redirect/config_flow_start?domain=imap) use a `imap` custom event with a template sensor instead and remove the `imap_email_plaform` sensor configuration from your `configuration.yaml`. A sample configuration is shown below (note that only the first of allowed sender is shown):\n\n```yaml\n{yaml_example}```\n"
+    }
+  }
+}
