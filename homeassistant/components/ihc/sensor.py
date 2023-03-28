@@ -52,9 +52,8 @@ class IHCSensor(IHCDevice, SensorEntity):
         """Initialize the IHC sensor."""
         super().__init__(ihc_controller, controller_id, name, ihc_id, product)
         self._attr_native_unit_of_measurement = unit
-        self._attr_device_class = (
-            SensorDeviceClass.TEMPERATURE if unit in TEMPERATURE_UNITS else None
-        )
+        if unit in TEMPERATURE_UNITS:
+            self._attr_device_class = SensorDeviceClass.TEMPERATURE
 
     def on_ihc_change(self, ihc_id, value):
         """Handle IHC resource change."""
