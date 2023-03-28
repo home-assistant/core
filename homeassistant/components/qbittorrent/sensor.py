@@ -90,8 +90,7 @@ def setup_platform(
     name = config.get(CONF_NAME)
 
     entities = [
-        QBittorrentSensor(description, client, name, LoginRequired)
-        for description in SENSOR_TYPES
+        QBittorrentSensor(description, client, name) for description in SENSOR_TYPES
     ]
 
     add_entities(entities, True)
@@ -111,12 +110,10 @@ class QBittorrentSensor(SensorEntity):
         description: SensorEntityDescription,
         qbittorrent_client,
         client_name,
-        exception,
     ) -> None:
         """Initialize the qBittorrent sensor."""
         self.entity_description = description
         self.client = qbittorrent_client
-        self._exception = exception
 
         self._attr_name = f"{client_name} {description.name}"
         self._attr_available = False
@@ -130,7 +127,7 @@ class QBittorrentSensor(SensorEntity):
             _LOGGER.error("Connection lost")
             self._attr_available = False
             return
-        except self._exception:
+        except LoginRequired:
             _LOGGER.error("Invalid authentication")
             return
 

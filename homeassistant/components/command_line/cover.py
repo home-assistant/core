@@ -22,14 +22,10 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.template_entity import (
-    TEMPLATE_ENTITY_BASE_SCHEMA,
-    TemplateEntity,
-)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import call_shell_with_timeout, check_output_or_log
 from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
+from .utils import call_shell_with_timeout, check_output_or_log
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,14 +65,8 @@ async def async_setup_platform(
         if value_template is not None:
             value_template.hass = hass
 
-        cover_config = vol.Schema(
-            TEMPLATE_ENTITY_BASE_SCHEMA.schema, extra=vol.REMOVE_EXTRA
-        )(device_config)
-
         covers.append(
             CommandCover(
-                hass,
-                cover_config,
                 device_config.get(CONF_FRIENDLY_NAME, device_name),
                 device_config[CONF_COMMAND_OPEN],
                 device_config[CONF_COMMAND_CLOSE],
@@ -95,13 +85,11 @@ async def async_setup_platform(
     async_add_entities(covers)
 
 
-class CommandCover(TemplateEntity, CoverEntity):
+class CommandCover(CoverEntity):
     """Representation a command line cover."""
 
     def __init__(
         self,
-        hass: HomeAssistant,
-        config: ConfigType,
         name: str,
         command_open: str,
         command_close: str,
@@ -112,13 +100,7 @@ class CommandCover(TemplateEntity, CoverEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the cover."""
-        TemplateEntity.__init__(
-            self,
-            hass,
-            config=config,
-            fallback_name=name,
-            unique_id=unique_id,
-        )
+        self._attr_name = name
         self._state: int | None = None
         self._command_open = command_open
         self._command_close = command_close
@@ -126,6 +108,7 @@ class CommandCover(TemplateEntity, CoverEntity):
         self._command_state = command_state
         self._value_template = value_template
         self._timeout = timeout
+        self._attr_unique_id = unique_id
         self._attr_should_poll = bool(command_state)
 
     def _move_cover(self, command: str) -> bool:
@@ -170,10 +153,12 @@ class CommandCover(TemplateEntity, CoverEntity):
         if self._command_state:
             payload = str(await self.hass.async_add_executor_job(self._query_state))
             if self._value_template:
-                payload = await self.hass.async_add_executor_job(
-                    self._value_template.render_with_possible_json_value, payload
+                payload = self._value_template.async_render_with_possible_json_value(
+                    payload, None
                 )
-            self._state = int(payload)
+            self._state = None
+            if payload:
+                self._state = int(payload)
 
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
