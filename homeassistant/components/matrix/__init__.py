@@ -303,7 +303,7 @@ class MatrixBot:
         )
 
     async def _login(self) -> None:
-        """Login to the Matrix homeserver.
+        """Log in to the Matrix homeserver.
 
         Attempts to use the stored authentication token.
         If that fails, then tries using the password.
