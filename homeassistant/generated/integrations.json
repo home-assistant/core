@@ -2305,6 +2305,12 @@
         }
       }
     },
+    "homeseer": {
+      "name": "HomeSeer",
+      "iot_standards": [
+        "zwave"
+      ]
+    },
     "homewizard": {
       "name": "HomeWizard Energy",
       "integration_type": "hub",
@@ -6502,7 +6508,6 @@
       "config_flow": false
     },
     "input_button": {
-      "name": "Input Button",
       "integration_type": "helper",
       "config_flow": false
     },
@@ -6578,6 +6583,7 @@
     "growatt_server",
     "homekit_controller",
     "input_boolean",
+    "input_button",
     "input_datetime",
     "input_number",
     "input_select",

@@ -1947,8 +1947,11 @@ def random_every_time(context, values):
     return random.choice(values)
 
 
-def today_at(time_str: str = "") -> datetime:
+def today_at(hass: HomeAssistant, time_str: str = "") -> datetime:
     """Record fetching now where the time has been replaced with value."""
+    if (render_info := hass.data.get(_RENDER_INFO)) is not None:
+        render_info.has_time = True
+
     today = dt_util.start_of_local_day()
     if not time_str:
         return today
@@ -1961,7 +1964,7 @@ def today_at(time_str: str = "") -> datetime:
     return datetime.combine(today, time_today, today.tzinfo)
 
 
-def relative_time(value):
+def relative_time(hass: HomeAssistant, value: Any) -> Any:
     """Take a datetime and return its "age" as a string.
 
     The age can be in second, minute, hour, day, month or year. Only the
@@ -1971,6 +1974,9 @@ def relative_time(value):
 
     If the input are not a datetime object the input will be returned unmodified.
     """
+    if (render_info := hass.data.get(_RENDER_INFO)) is not None:
+        render_info.has_time = True
+
     if not isinstance(value, datetime):
         return value
     if not value.tzinfo:
@@ -2152,7 +2158,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["as_datetime"] = as_datetime
         self.filters["as_timedelta"] = as_timedelta
         self.filters["as_timestamp"] = forgiving_as_timestamp
-        self.filters["today_at"] = today_at
         self.filters["as_local"] = dt_util.as_local
         self.filters["timestamp_custom"] = timestamp_custom
         self.filters["timestamp_local"] = timestamp_local
@@ -2178,7 +2183,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["is_number"] = is_number
         self.filters["float"] = forgiving_float_filter
         self.filters["int"] = forgiving_int_filter
-        self.filters["relative_time"] = relative_time
         self.filters["slugify"] = slugify
         self.filters["iif"] = iif
         self.filters["bool"] = forgiving_boolean
@@ -2201,8 +2205,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["as_local"] = dt_util.as_local
         self.globals["as_timedelta"] = as_timedelta
         self.globals["as_timestamp"] = forgiving_as_timestamp
-        self.globals["today_at"] = today_at
-        self.globals["relative_time"] = relative_time
         self.globals["timedelta"] = timedelta
         self.globals["strptime"] = strptime
         self.globals["urlencode"] = urlencode
@@ -2307,6 +2309,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "device_id",
                 "area_id",
                 "area_name",
+                "relative_time",
+                "today_at",
             ]
             hass_filters = ["closest", "expand", "device_id", "area_id", "area_name"]
             for glob in hass_globals:
@@ -2330,6 +2334,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["states"] = self.globals["states"]
         self.globals["utcnow"] = hassfunction(utcnow)
         self.globals["now"] = hassfunction(now)
+        self.globals["relative_time"] = hassfunction(relative_time)
+        self.filters["relative_time"] = self.globals["relative_time"]
+        self.globals["today_at"] = hassfunction(today_at)
+        self.filters["today_at"] = self.globals["today_at"]
 
     def is_safe_callable(self, obj):
         """Test if callback is safe."""

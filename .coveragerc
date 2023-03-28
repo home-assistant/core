@@ -36,6 +36,7 @@ omit =
     homeassistant/components/airnow/__init__.py
     homeassistant/components/airnow/sensor.py
     homeassistant/components/airq/__init__.py
+    homeassistant/components/airq/coordinator.py
     homeassistant/components/airq/sensor.py
     homeassistant/components/airthings/__init__.py
     homeassistant/components/airthings/sensor.py
@@ -197,7 +198,6 @@ omit =
     homeassistant/components/denonavr/__init__.py
     homeassistant/components/denonavr/media_player.py
     homeassistant/components/denonavr/receiver.py
-    homeassistant/components/devolo_home_control/switch.py
     homeassistant/components/digital_ocean/*
     homeassistant/components/discogs/sensor.py
     homeassistant/components/discord/__init__.py
@@ -629,9 +629,6 @@ omit =
     homeassistant/components/lg_netcast/media_player.py
     homeassistant/components/lg_soundbar/__init__.py
     homeassistant/components/lg_soundbar/media_player.py
-    homeassistant/components/lidarr/__init__.py
-    homeassistant/components/lidarr/coordinator.py
-    homeassistant/components/lidarr/sensor.py
     homeassistant/components/life360/__init__.py
     homeassistant/components/life360/coordinator.py
     homeassistant/components/life360/device_tracker.py
@@ -780,7 +777,6 @@ omit =
     homeassistant/components/nexia/switch.py
     homeassistant/components/nextcloud/__init__.py
     homeassistant/components/nextcloud/binary_sensor.py
-    homeassistant/components/nextcloud/const.py
     homeassistant/components/nextcloud/coordinator.py
     homeassistant/components/nextcloud/entity.py
     homeassistant/components/nextcloud/sensor.py
@@ -998,6 +994,7 @@ omit =
     homeassistant/components/rest/notify.py
     homeassistant/components/rest/switch.py
     homeassistant/components/ridwell/__init__.py
+    homeassistant/components/ridwell/calendar.py
     homeassistant/components/ridwell/coordinator.py
     homeassistant/components/ridwell/switch.py
     homeassistant/components/ring/camera.py
@@ -1368,6 +1365,7 @@ omit =
     homeassistant/components/velbus/entity.py
     homeassistant/components/velbus/light.py
     homeassistant/components/velbus/sensor.py
+    homeassistant/components/velbus/select.py
     homeassistant/components/velbus/switch.py
     homeassistant/components/velux/__init__.py
     homeassistant/components/velux/cover.py

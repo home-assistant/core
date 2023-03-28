@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterable
+import logging
 
 from hass_nabucasa import Cloud
 from hass_nabucasa.voice import VoiceError
@@ -19,6 +20,8 @@ from homeassistant.components.stt import (
 )
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_LANGUAGES = [
     "da-DK",
@@ -102,7 +105,8 @@ class CloudProvider(Provider):
             result = await self.cloud.voice.process_stt(
                 stream, content, metadata.language
             )
-        except VoiceError:
+        except VoiceError as err:
+            _LOGGER.debug("Voice error: %s", err)
             return SpeechResult(None, SpeechResultState.ERROR)
 
         # Return Speech as Text

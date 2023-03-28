@@ -107,6 +107,31 @@ async def test_setup_minimum(hass: HomeAssistant) -> None:
 
 
 @respx.mock
+async def test_setup_encoding(hass: HomeAssistant) -> None:
+    """Test setup with non-utf8 encoding."""
+    respx.get("http://localhost").respond(
+        status_code=HTTPStatus.OK,
+        stream=httpx.ByteStream("tack själv".encode(encoding="iso-8859-1")),
+    )
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "sensor": {
+                "name": "mysensor",
+                "encoding": "iso-8859-1",
+                "platform": "rest",
+                "resource": "http://localhost",
+                "method": "GET",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all("sensor")) == 1
+    assert hass.states.get("sensor.mysensor").state == "tack själv"
+
+
+@respx.mock
 async def test_manual_update(hass: HomeAssistant) -> None:
     """Test setup with minimum configuration."""
     await async_setup_component(hass, "homeassistant", {})
