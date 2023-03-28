@@ -111,7 +111,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     nws_data = SimpleNWS(latitude, longitude, api_key, client_session)
     await nws_data.set_station(station)
 
-    async def update_observation():
+    async def update_observation() -> None:
         """Retrieve recent observations."""
         await nws_data.update_observation(start_time=utcnow() - UPDATE_TIME_PERIOD)
 
