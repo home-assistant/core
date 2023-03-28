@@ -813,7 +813,7 @@ lxml==4.9.1
 mac-vendor-lookup==0.1.12
 
 # homeassistant.components.matrix
-matrix-nio==0.20.1
+matrix-nio==0.20.2
 
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
