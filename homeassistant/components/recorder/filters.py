@@ -125,8 +125,8 @@ class Filters:
 
     def _generate_filter_for_columns(
         self, columns: Iterable[Column], encoder: Callable[[Any], Any]
-    ) -> ColumnElement | None:
-        """Generate a filter from pre-comuted sets and pattern lists.
+    ) -> ColumnElement:
+        """Generate a filter from pre-computed sets and pattern lists.
 
         This must match exactly how homeassistant.helpers.entityfilter works.
         """
@@ -146,7 +146,9 @@ class Filters:
         # Case 1 - No filter
         # - All entities included
         if not have_include and not have_exclude:
-            return None
+            raise RuntimeError(
+                "No filter configuration provided, check has_config before calling this method."
+            )
 
         # Case 2 - Only includes
         # - Entity listed in entities include: include
@@ -193,7 +195,7 @@ class Filters:
         # - Otherwise: exclude
         return i_entities
 
-    def states_entity_filter(self) -> ColumnElement | None:
+    def states_entity_filter(self) -> ColumnElement:
         """Generate the States.entity_id filter query.
 
         This is no longer used except by the legacy queries.
@@ -206,7 +208,7 @@ class Filters:
         # The type annotation should be improved so the type ignore can be removed
         return self._generate_filter_for_columns((States.entity_id,), _encoder)  # type: ignore[arg-type]
 
-    def states_metadata_entity_filter(self) -> ColumnElement | None:
+    def states_metadata_entity_filter(self) -> ColumnElement:
         """Generate the StatesMeta.entity_id filter query."""
 
         def _encoder(data: Any) -> Any:
@@ -232,7 +234,7 @@ class Filters:
                 (OLD_ENTITY_ID_IN_EVENT == JSON_NULL) | OLD_ENTITY_ID_IN_EVENT.is_(None)
             ),
             # Needs https://github.com/bdraco/home-assistant/commit/bba91945006a46f3a01870008eb048e4f9cbb1ef
-            self._generate_filter_for_columns(  # type: ignore[union-attr]
+            self._generate_filter_for_columns(
                 (ENTITY_ID_IN_EVENT, OLD_ENTITY_ID_IN_EVENT), _encoder  # type: ignore[arg-type]
             ).self_group(),
         )
