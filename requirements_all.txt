@@ -40,7 +40,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.37.4
+PySwitchbot==0.37.5
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -137,7 +137,7 @@ aiobafi6==0.8.0
 aiobotocore==2.1.0
 
 # homeassistant.components.dhcp
-aiodiscover==1.4.14
+aiodiscover==1.4.15
 
 # homeassistant.components.dnsip
 # homeassistant.components.minecraft_server
@@ -156,7 +156,7 @@ aioecowitt==2023.01.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==13.5.1
+aioesphomeapi==13.6.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -196,10 +196,10 @@ aiokef==0.2.16
 aiolifx==0.8.9
 
 # homeassistant.components.lifx
-aiolifx_effects==0.3.1
+aiolifx_effects==0.3.2
 
 # homeassistant.components.lifx
-aiolifx_themes==0.4.0
+aiolifx_themes==0.4.5
 
 # homeassistant.components.livisi
 aiolivisi==0.0.19
@@ -679,7 +679,7 @@ epsonprinter==0.0.9
 esphome-dashboard-api==1.2.3
 
 # homeassistant.components.netgear_lte
-eternalegypt==0.0.12
+eternalegypt==0.0.15
 
 # homeassistant.components.eufylife_ble
 eufylife_ble_client==0.1.7
@@ -725,7 +725,7 @@ fjaraskupan==2.2.0
 flipr-api==1.5.0
 
 # homeassistant.components.flux_led
-flux_led==0.28.35
+flux_led==0.28.36
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
@@ -904,7 +904,7 @@ hlk-sw16==0.0.9
 hole==0.8.0
 
 # homeassistant.components.workday
-holidays==0.18.0
+holidays==0.21.13
 
 # homeassistant.components.frontend
 home-assistant-frontend==20230309.1
@@ -952,7 +952,7 @@ ibm-watson==5.2.2
 ibmiotf==0.3.4
 
 # homeassistant.components.local_calendar
-ical==4.5.0
+ical==4.5.1
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -964,7 +964,7 @@ ifaddr==0.1.7
 iglo==1.2.7
 
 # homeassistant.components.ihc
-ihcsdk==2.7.6
+ihcsdk==2.8.5
 
 # homeassistant.components.incomfort
 incomfort-client==0.5.0
@@ -1189,7 +1189,7 @@ neurio==0.3.1
 nexia==2.0.6
 
 # homeassistant.components.nextcloud
-nextcloudmonitor==1.1.0
+nextcloudmonitor==1.4.0
 
 # homeassistant.components.discord
 nextcord==2.0.0a8
@@ -1397,7 +1397,7 @@ proliphix==0.4.1
 prometheus_client==0.7.1
 
 # homeassistant.components.proxmoxve
-proxmoxer==1.3.1
+proxmoxer==2.0.1
 
 # homeassistant.components.hardware
 psutil-home-assistant==0.0.1
@@ -1540,7 +1540,7 @@ pycfdns==2.0.1
 pychannels==1.2.3
 
 # homeassistant.components.cast
-pychromecast==13.0.4
+pychromecast==13.0.6
 
 # homeassistant.components.pocketcasts
 pycketcasts==1.0.1
@@ -2234,7 +2234,7 @@ regenmaschine==2022.11.0
 renault-api==0.1.12
 
 # homeassistant.components.reolink
-reolink-aio==0.5.6
+reolink-aio==0.5.7
 
 # homeassistant.components.python_script
 restrictedpython==6.0
@@ -2589,7 +2589,7 @@ volkszaehler==0.4.0
 volvooncall==0.10.2
 
 # homeassistant.components.verisure
-vsure==1.8.1
+vsure==2.6.1
 
 # homeassistant.components.vasttrafik
 vtjp==0.1.14
@@ -2668,7 +2668,7 @@ yalesmartalarmclient==0.3.9
 
 # homeassistant.components.august
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.1.6
+yalexs-ble==2.1.12
 
 # homeassistant.components.august
 yalexs==1.2.7
@@ -2728,7 +2728,7 @@ zigpy==0.53.2
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.46.0
+zwave-js-server-python==0.47.0
 
 # homeassistant.components.zwave_me
 zwave_me_ws==0.3.1

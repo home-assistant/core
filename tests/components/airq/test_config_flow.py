@@ -24,9 +24,6 @@ TEST_DEVICE_INFO = DeviceInfo(
     sw_version="sw",
     hw_version="hw",
 )
-TEST_DATA_OUT = TEST_USER_DATA | {
-    "device_info": {k: v for k, v in TEST_DEVICE_INFO.items() if k != "id"}
-}
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -48,7 +45,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == TEST_DEVICE_INFO["name"]
-    assert result2["data"] == TEST_DATA_OUT
+    assert result2["data"] == TEST_USER_DATA
 
 
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
