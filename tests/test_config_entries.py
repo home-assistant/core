@@ -3388,6 +3388,97 @@ async def test__async_abort_entries_match(
     assert result["reason"] == reason
 
 
+@pytest.mark.parametrize(
+    ("matchers", "reason"),
+    [
+        ({}, "already_configured"),
+        ({"host": "3.3.3.3"}, "no_match"),
+        ({"vendor": "no_match"}, "no_match"),
+        ({"host": "3.4.5.6"}, "already_configured"),
+        ({"host": "3.4.5.6", "ip": "3.4.5.6"}, "no_match"),
+        ({"host": "3.4.5.6", "ip": "1.2.3.4"}, "already_configured"),
+        ({"host": "3.4.5.6", "ip": "1.2.3.4", "port": 23}, "already_configured"),
+        (
+            {"host": "9.9.9.9", "ip": "6.6.6.6", "port": 12, "vendor": "zoo"},
+            "already_configured",
+        ),
+        ({"vendor": "zoo"}, "already_configured"),
+        ({"ip": "9.9.9.9"}, "already_configured"),
+        ({"vendor": "data"}, "no_match"),
+        (
+            {"vendor": "options"},
+            "already_configured",
+        ),  # ensure options takes precedence over data
+    ],
+)
+async def test__async_abort_entries_match_options_flow(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    matchers: dict[str, str],
+    reason: str,
+) -> None:
+    """Test aborting if matching config entries exist."""
+    MockConfigEntry(
+        domain="comp", data={"ip": "1.2.3.4", "host": "4.5.6.7", "port": 23}
+    ).add_to_hass(hass)
+    MockConfigEntry(
+        domain="comp", data={"ip": "9.9.9.9", "host": "4.5.6.7", "port": 23}
+    ).add_to_hass(hass)
+    MockConfigEntry(
+        domain="comp", data={"ip": "1.2.3.4", "host": "3.4.5.6", "port": 23}
+    ).add_to_hass(hass)
+    MockConfigEntry(
+        domain="comp",
+        source=config_entries.SOURCE_IGNORE,
+        data={"ip": "7.7.7.7", "host": "4.5.6.7", "port": 23},
+    ).add_to_hass(hass)
+    MockConfigEntry(
+        domain="comp",
+        data={"ip": "6.6.6.6", "host": "9.9.9.9", "port": 12},
+        options={"vendor": "zoo"},
+    ).add_to_hass(hass)
+    MockConfigEntry(
+        domain="comp",
+        data={"vendor": "data"},
+        options={"vendor": "options"},
+    ).add_to_hass(hass)
+
+    original_entry = MockConfigEntry(domain="comp", data={})
+    original_entry.add_to_hass(hass)
+
+    mock_setup_entry = AsyncMock(return_value=True)
+
+    mock_integration(hass, MockModule("comp", async_setup_entry=mock_setup_entry))
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        @staticmethod
+        @callback
+        def async_get_options_flow(config_entry):
+            """Test options flow."""
+
+            class _OptionsFlow(config_entries.OptionsFlowWithConfigEntry):
+                """Test flow."""
+
+                async def async_step_init(self, user_input=None):
+                    """Test user step."""
+                    if errors := self._async_abort_entries_match(user_input):
+                        return self.async_abort(reason=errors["base"])
+                    return self.async_abort(reason="no_match")
+
+            return _OptionsFlow(config_entry)
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow, "beer": 5}):
+        result = await hass.config_entries.options.async_init(
+            original_entry.entry_id, data=matchers
+        )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == reason
+
+
 async def test_loading_old_data(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
