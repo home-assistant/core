@@ -1125,7 +1125,7 @@ def check_value(value: ZwaveValue, schema: ZWaveValueDiscoverySchema) -> bool:
         and value.property_key not in schema.property_key
     ):
         return False
-    # check excluded property keys
+    # check property_key against not_property_key set
     if (
         schema.not_property_key is not None
         and value.property_key in schema.not_property_key
