@@ -3460,7 +3460,7 @@ async def test__async_abort_entries_match_options_flow(
         def async_get_options_flow(config_entry):
             """Test options flow."""
 
-            class _OptionsFlow(config_entries.OptionsFlowWithConfigEntry):
+            class _OptionsFlow(config_entries.OptionsFlow):
                 """Test flow."""
 
                 async def async_step_init(self, user_input=None):
@@ -3469,7 +3469,7 @@ async def test__async_abort_entries_match_options_flow(
                         return self.async_abort(reason=errors["base"])
                     return self.async_abort(reason="no_match")
 
-            return _OptionsFlow(config_entry)
+            return _OptionsFlow()
 
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow, "beer": 5}):
         result = await hass.config_entries.options.async_init(
