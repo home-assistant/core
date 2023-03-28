@@ -142,18 +142,18 @@ class Unused(CHAR):
     """Char type that stores as a char(0) on mysql and mariadb."""
 
 
-@compiles(UnusedDateTime, "mysql", "mariadb")  # type: ignore[misc,no-untyped-call]
-@compiles(Unused, "mysql", "mariadb")  # type: ignore[misc,no-untyped-call]
+@compiles(UnusedDateTime, "mysql", "mariadb", "sqlite")  # type: ignore[misc,no-untyped-call]
+@compiles(Unused, "mysql", "mariadb", "sqlite")  # type: ignore[misc,no-untyped-call]
 def compile_char_zero(type_: TypeDecorator, compiler: Any, **kw: Any) -> str:
-    """Compile UnusedDateTime and Unused as CHAR(0) on mysql and mariadb."""
-    return "CHAR(0)"
+    """Compile UnusedDateTime and Unused as CHAR(0) on mysql, mariadb, and sqlite."""
+    return "CHAR(0)"  # Uses 1 byte on MySQL (no change on sqlite)
 
 
-@compiles(UnusedDateTime, "sqlite", "postgresql")  # type: ignore[misc,no-untyped-call]
-@compiles(Unused, "sqlite", "postgresql")  # type: ignore[misc,no-untyped-call]
+@compiles(UnusedDateTime, "postgresql")  # type: ignore[misc,no-untyped-call]
+@compiles(Unused, "postgresql")  # type: ignore[misc,no-untyped-call]
 def compile_char_one(type_: TypeDecorator, compiler: Any, **kw: Any) -> str:
-    """Compile UnusedDateTime and Unused as CHAR(1) on sqlite and postgresql."""
-    return "CHAR(1)"
+    """Compile UnusedDateTime and Unused as BOOLEAN on postgresql."""
+    return "BOOLEAN"  # Uses 1 byte
 
 
 class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):
