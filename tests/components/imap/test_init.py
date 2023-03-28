@@ -135,7 +135,7 @@ async def test_initial_invalid_folder_error(
     await hass.async_block_till_done()
 
 
-@pytest.mark.parametrize("imap_capabilities", [{"IDLE"}, set()], ids=["push", "poll"])
+@pytest.mark.parametrize("imap_capabilities", [{"IDLE"}], ids=["push"])
 @pytest.mark.parametrize("imap_search", [BAD_SEARCH_RESPONSE])
 @pytest.mark.parametrize(
     ("exception", "error_message"),
@@ -144,7 +144,7 @@ async def test_initial_invalid_folder_error(
         (InvalidFolder, "Selected mailbox folder is invalid"),
     ],
 )
-async def test_late_authentication_or_invalid_folder_error(
+async def test_late_authentication_or_invalid_folder_error_push(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     mock_imap_protocol: MagicMock,
@@ -152,18 +152,56 @@ async def test_late_authentication_or_invalid_folder_error(
     exception: InvalidAuth | InvalidFolder,
     error_message: str,
 ) -> None:
-    """Test authentication and invalid folder error after search was failed."""
+    """Test authentication and invalid folder error after search was failed.
+
+    Asserting the IMAP push coordinator.
+    """
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
     config_entry.add_to_hass(hass)
 
-    if imap_capabilities == set():
-        # Avoid first refresh when polling to avoid a failing entry setup
-        with patch(
-            "homeassistant.helpers.update_coordinator.DataUpdateCoordinator.async_config_entry_first_refresh"
-        ):
-            assert await hass.config_entries.async_setup(config_entry.entry_id)
-            await hass.async_block_till_done()
-    else:
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    # Make sure we have had at least one update (when polling)
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
+    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.imap.coordinator.connect_to_server",
+        side_effect=exception,
+    ):
+        # Make sure we have had at least one update (when polling)
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
+        await hass.async_block_till_done()
+        assert error_message in caplog.text
+
+
+@pytest.mark.parametrize("imap_capabilities", [set()], ids=["poll"])
+@pytest.mark.parametrize("imap_search", [BAD_SEARCH_RESPONSE])
+@pytest.mark.parametrize(
+    ("exception", "error_message"),
+    [
+        (InvalidAuth, "Username or password incorrect, starting reauthentication"),
+        (InvalidFolder, "Selected mailbox folder is invalid"),
+    ],
+)
+async def test_late_authentication_or_invalid_folder_error_poll(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_imap_protocol: MagicMock,
+    imap_capabilities: set[str],
+    exception: InvalidAuth | InvalidFolder,
+    error_message: str,
+) -> None:
+    """Test authentication and invalid folder error after search was failed.
+
+    Asserting the IMAP poll coordinator.
+    """
+    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    config_entry.add_to_hass(hass)
+
+    # Avoid first refresh when polling to avoid a failing entry setup
+    with patch(
+        "homeassistant.helpers.update_coordinator.DataUpdateCoordinator.async_config_entry_first_refresh"
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
     # Make sure we have had at least one update (when polling)
