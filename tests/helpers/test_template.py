@@ -21,6 +21,7 @@ from homeassistant.const import (
     LENGTH_MILLIMETERS,
     MASS_GRAMS,
     STATE_ON,
+    STATE_UNAVAILABLE,
     TEMP_CELSIUS,
     VOLUME_LITERS,
     UnitOfPressure,
@@ -1605,6 +1606,44 @@ def test_states_function(hass: HomeAssistant) -> None:
         hass,
     )
     assert tpl.async_render() == "available"
+
+
+def test_has_value(hass):
+    """Test has_value method."""
+    hass.states.async_set("test.value1", 1)
+    hass.states.async_set("test.unavailable", STATE_UNAVAILABLE)
+
+    tpl = template.Template(
+        """
+{{ has_value("test.value1") }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is True
+
+    tpl = template.Template(
+        """
+{{ has_value("test.unavailable") }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is False
+
+    tpl = template.Template(
+        """
+{{ has_value("test.unknown") }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is False
+
+    tpl = template.Template(
+        """
+{% if "test.value1" is has_value %}yes{% else %}no{% endif %}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "yes"
 
 
 @patch(

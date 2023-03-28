@@ -49,6 +49,7 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     ATTR_PERSONS,
     ATTR_UNIT_OF_MEASUREMENT,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfLength,
 )
@@ -1470,6 +1471,15 @@ def state_attr(hass: HomeAssistant, entity_id: str, name: str) -> Any:
     return None
 
 
+def has_value(hass: HomeAssistant, entity_id: str) -> bool:
+    """Test if an entity has a valid value."""
+    state_obj = _get_state(hass, entity_id)
+
+    return state_obj is not None and (
+        state_obj.state not in [STATE_UNAVAILABLE, STATE_UNKNOWN]
+    )
+
+
 def now(hass: HomeAssistant) -> datetime:
     """Record fetching now."""
     if (render_info := hass.data.get(_RENDER_INFO)) is not None:
@@ -2302,6 +2312,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "is_state_attr",
                 "state_attr",
                 "states",
+                "has_value",
                 "utcnow",
                 "now",
                 "device_attr",
@@ -2312,11 +2323,21 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "relative_time",
                 "today_at",
             ]
-            hass_filters = ["closest", "expand", "device_id", "area_id", "area_name"]
+            hass_filters = [
+                "closest",
+                "expand",
+                "device_id",
+                "area_id",
+                "area_name",
+                "has_value",
+            ]
+            hass_tests = ["has_value"]
             for glob in hass_globals:
                 self.globals[glob] = unsupported(glob)
             for filt in hass_filters:
                 self.filters[filt] = unsupported(filt)
+            for test in hass_tests:
+                self.filters[test] = unsupported(test)
             return
 
         self.globals["expand"] = hassfunction(expand)
@@ -2332,6 +2353,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["state_attr"] = self.globals["state_attr"]
         self.globals["states"] = AllStates(hass)
         self.filters["states"] = self.globals["states"]
+        self.globals["has_value"] = hassfunction(has_value)
+        self.filters["has_value"] = pass_context(self.globals["has_value"])
+        self.tests["has_value"] = pass_eval_context(self.globals["has_value"])
         self.globals["utcnow"] = hassfunction(utcnow)
         self.globals["now"] = hassfunction(now)
         self.globals["relative_time"] = hassfunction(relative_time)
