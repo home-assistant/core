@@ -73,11 +73,11 @@ async def async_setup_entry(
 def create_binary_sensor(
     coordinator,
     vm_id: int,
-    key,
-    name,
+    key: str,
+    name: str,
     config_entry,
     info_device,
-):
+) -> ProxmoxBinarySensor:
     """Create a binary sensor based on the given data."""
     return ProxmoxBinarySensor(
         coordinator=coordinator,
@@ -98,9 +98,9 @@ class ProxmoxBinarySensor(ProxmoxEntity, BinarySensorEntity):
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
-        unique_id,
-        name,
-        icon,
+        unique_id: str,
+        name: str,
+        icon: str,
         device_class,
         vm_id: int,
         info_device,
@@ -112,7 +112,7 @@ class ProxmoxBinarySensor(ProxmoxEntity, BinarySensorEntity):
         self._attr_device_info = info_device
 
     @property
-    def is_on(self) -> None:
+    def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         if (data := self.coordinator.data) is None:
             return None

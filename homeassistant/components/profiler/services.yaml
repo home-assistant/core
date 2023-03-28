@@ -51,6 +51,9 @@ dump_log_objects:
       example: State
       selector:
         text:
+lru_stats:
+  name: Log LRU stats
+  description: Log the stats of all lru caches.
 log_thread_frames:
   name: Log thread frames
   description: Log the current frames for all threads.

@@ -409,7 +409,10 @@ def get_data_node(proxmox, node):
     return api_status
 
 
-def parse_api_proxmox(status, api_category):
+def parse_api_proxmox(
+    status: dict[str, Any],
+    api_category: ProxmoxType,
+) -> dict[str, Any] | None:
     """Get the container or vm api data and return it formatted in a dictionary.
 
     It is implemented in this way to allow for more data to be added for sensors
@@ -422,7 +425,8 @@ def parse_api_proxmox(status, api_category):
 
     if api_category == ProxmoxType.Proxmox:
         return {
-            ProxmoxKeyAPIParse.VERSION: status[ProxmoxKeyAPIParse.VERSION],
+            ProxmoxKeyAPIParse.STATUS: status[ProxmoxKeyAPIParse.STATUS],
+            ProxmoxKeyAPIParse.NAME: status[ProxmoxKeyAPIParse.NAME],
         }
 
     if api_category is ProxmoxType.Node:
@@ -479,7 +483,8 @@ def parse_api_proxmox(status, api_category):
             ProxmoxKeyAPIParse.DISK_USED: status[ProxmoxKeyAPIParse.DISK],
         }
 
-
+    status = None
+    
 def device_info(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -562,9 +567,12 @@ class ProxmoxEntity(CoordinatorEntity):
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
-        unique_id,
-        name,
-        icon,
+        unique_id: str,
+        name: str,
+        icon: str,
+        host_name: str,
+        node_name: str,
+        vm_id: int | None = None,
     ) -> None:
         """Initialize the Proxmox entity."""
         super().__init__(coordinator)
@@ -601,7 +609,17 @@ class ProxmoxEntity(CoordinatorEntity):
 class ProxmoxClient:
     """A wrapper for the proxmoxer ProxmoxAPI client."""
 
-    def __init__(self, host, port, user, realm, password, verify_ssl) -> None:
+    _proxmox: ProxmoxAPI
+
+    def __init__(
+        self,
+        host: str,
+        port: int,
+        user: str,
+        realm: str,
+        password: str,
+        verify_ssl: bool,
+    ) -> None:
         """Initialize the ProxmoxClient."""
 
         self._host = host
@@ -611,10 +629,7 @@ class ProxmoxClient:
         self._password = password
         self._verify_ssl = verify_ssl
 
-        self._proxmox = None
-        self._connection_start_time = None
-
-    def build_client(self):
+    def build_client(self) -> None:
         """Construct the ProxmoxAPI client.
 
         Allows inserting the realm within the `user` value.
@@ -633,6 +648,6 @@ class ProxmoxClient:
             verify_ssl=self._verify_ssl,
         )
 
-    def get_api_client(self):
+    def get_api_client(self) -> ProxmoxAPI:
         """Return the ProxmoxAPI client."""
         return self._proxmox
