@@ -33,6 +33,8 @@ from .store import LocalCalendarStore
 
 _LOGGER = logging.getLogger(__name__)
 
+PRODID = "-//homeassistant.io//local_calendar 1.0//EN"
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -43,6 +45,7 @@ async def async_setup_entry(
     store = hass.data[DOMAIN][config_entry.entry_id]
     ics = await store.async_load()
     calendar = IcsCalendarStream.calendar_from_ics(ics)
+    calendar.prodid = PRODID
 
     name = config_entry.data[CONF_CALENDAR_NAME]
     entity = LocalCalendarEntity(store, calendar, name, unique_id=config_entry.entry_id)
@@ -196,4 +199,5 @@ def _get_calendar_event(event: Event) -> CalendarEvent:
         uid=event.uid,
         rrule=event.rrule.as_rrule_str() if event.rrule else None,
         recurrence_id=event.recurrence_id,
+        location=event.location,
     )

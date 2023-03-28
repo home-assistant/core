@@ -4,6 +4,7 @@ from collections.abc import AsyncIterable
 from unittest.mock import MagicMock, patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import stt
 from homeassistant.core import HomeAssistant
@@ -29,7 +30,7 @@ class MockSttProvider(stt.Provider):
     @property
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
-        return [self.hass.config.language]
+        return ["en-US"]
 
     @property
     def supported_formats(self) -> list[stt.AudioFormats]:
@@ -64,7 +65,11 @@ class MockSttProvider(stt.Provider):
 
 
 @pytest.fixture(autouse=True)
-async def init_components(hass):
+async def init_components(
+    hass: HomeAssistant,
+    mock_get_cache_files,  # noqa: F811
+    mock_init_cache_dir,  # noqa: F811
+):
     """Initialize relevant components with empty configs."""
     assert await async_setup_component(hass, "media_source", {})
     assert await async_setup_component(
@@ -93,6 +98,7 @@ async def init_components(hass):
 async def test_text_only_pipeline(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test events from a pipeline run with text input (no STT/TTS)."""
     client = await hass_ws_client(hass)
@@ -114,38 +120,16 @@ async def test_text_only_pipeline(
     # run start
     msg = await client.receive_json()
     assert msg["event"]["type"] == "run-start"
-    assert msg["event"]["data"] == {
-        "pipeline": hass.config.language,
-        "language": hass.config.language,
-    }
+    assert msg["event"]["data"] == snapshot
 
     # intent
     msg = await client.receive_json()
     assert msg["event"]["type"] == "intent-start"
-    assert msg["event"]["data"] == {
-        "engine": "default",
-        "intent_input": "Are the lights on?",
-    }
+    assert msg["event"]["data"] == snapshot
 
     msg = await client.receive_json()
     assert msg["event"]["type"] == "intent-end"
-    assert msg["event"]["data"] == {
-        "intent_output": {
-            "response": {
-                "speech": {
-                    "plain": {
-                        "speech": "Sorry, I couldn't understand that",
-                        "extra_data": None,
-                    }
-                },
-                "card": {},
-                "language": "en",
-                "response_type": "error",
-                "data": {"code": "no_intent_match"},
-            },
-            "conversation_id": None,
-        }
-    }
+    assert msg["event"]["data"] == snapshot
 
     # run end
     msg = await client.receive_json()
@@ -154,8 +138,7 @@ async def test_text_only_pipeline(
 
 
 async def test_audio_pipeline(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, snapshot: SnapshotAssertion
 ) -> None:
     """Test events from a pipeline run with audio input/output."""
     client = await hass_ws_client(hass)
@@ -173,86 +156,40 @@ async def test_audio_pipeline(
     msg = await client.receive_json()
     assert msg["success"]
 
-    # handler id
-    msg = await client.receive_json()
-    assert msg["event"]["handler_id"] == 1
-
     # run start
     msg = await client.receive_json()
     assert msg["event"]["type"] == "run-start"
-    assert msg["event"]["data"] == {
-        "pipeline": hass.config.language,
-        "language": hass.config.language,
-    }
+    assert msg["event"]["data"] == snapshot
 
     # stt
     msg = await client.receive_json()
     assert msg["event"]["type"] == "stt-start"
-    assert msg["event"]["data"] == {
-        "engine": "default",
-        "metadata": {
-            "bit_rate": 16,
-            "channel": 1,
-            "codec": "pcm",
-            "format": "wav",
-            "language": "en",
-            "sample_rate": 16000,
-        },
-    }
+    assert msg["event"]["data"] == snapshot
 
     # End of audio stream (handler id + empty payload)
     await client.send_bytes(b"1")
 
     msg = await client.receive_json()
     assert msg["event"]["type"] == "stt-end"
-    assert msg["event"]["data"] == {
-        "stt_output": {"text": _TRANSCRIPT},
-    }
+    assert msg["event"]["data"] == snapshot
 
     # intent
     msg = await client.receive_json()
     assert msg["event"]["type"] == "intent-start"
-    assert msg["event"]["data"] == {
-        "engine": "default",
-        "intent_input": _TRANSCRIPT,
-    }
+    assert msg["event"]["data"] == snapshot
 
     msg = await client.receive_json()
     assert msg["event"]["type"] == "intent-end"
-    assert msg["event"]["data"] == {
-        "intent_output": {
-            "response": {
-                "speech": {
-                    "plain": {
-                        "speech": "Sorry, I couldn't understand that",
-                        "extra_data": None,
-                    }
-                },
-                "card": {},
-                "language": "en",
-                "response_type": "error",
-                "data": {"code": "no_intent_match"},
-            },
-            "conversation_id": None,
-        }
-    }
+    assert msg["event"]["data"] == snapshot
 
     # text to speech
     msg = await client.receive_json()
     assert msg["event"]["type"] == "tts-start"
-    assert msg["event"]["data"] == {
-        "engine": "default",
-        "tts_input": "Sorry, I couldn't understand that",
-    }
+    assert msg["event"]["data"] == snapshot
 
     msg = await client.receive_json()
     assert msg["event"]["type"] == "tts-end"
-    assert msg["event"]["data"] == {
-        "tts_output": {
-            "url": f"/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_{hass.config.language}_-_demo.mp3",
-            "mime_type": "audio/mpeg",
-        },
-    }
+    assert msg["event"]["data"] == snapshot
 
     # run end
     msg = await client.receive_json()
@@ -261,7 +198,10 @@ async def test_audio_pipeline(
 
 
 async def test_intent_timeout(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, init_components
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    init_components,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test partial pipeline run with conversation agent timeout."""
     client = await hass_ws_client(hass)
@@ -291,27 +231,24 @@ async def test_intent_timeout(
         # run start
         msg = await client.receive_json()
         assert msg["event"]["type"] == "run-start"
-        assert msg["event"]["data"] == {
-            "pipeline": hass.config.language,
-            "language": hass.config.language,
-        }
+        assert msg["event"]["data"] == snapshot
 
         # intent
         msg = await client.receive_json()
         assert msg["event"]["type"] == "intent-start"
-        assert msg["event"]["data"] == {
-            "engine": "default",
-            "intent_input": "Are the lights on?",
-        }
+        assert msg["event"]["data"] == snapshot
 
         # timeout error
         msg = await client.receive_json()
-        assert not msg["success"]
-        assert msg["error"]["code"] == "timeout"
+        assert msg["event"]["type"] == "error"
+        assert msg["event"]["data"] == snapshot
 
 
 async def test_text_pipeline_timeout(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, init_components
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    init_components,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test text-only pipeline run with immediate timeout."""
     client = await hass_ws_client(hass)
@@ -340,12 +277,15 @@ async def test_text_pipeline_timeout(
 
         # timeout error
         msg = await client.receive_json()
-        assert not msg["success"]
-        assert msg["error"]["code"] == "timeout"
+        assert msg["event"]["type"] == "error"
+        assert msg["event"]["data"] == snapshot
 
 
 async def test_intent_failed(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, init_components
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    init_components,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test text-only pipeline run with conversation agent error."""
     client = await hass_ws_client(hass)
@@ -371,18 +311,12 @@ async def test_intent_failed(
         # run start
         msg = await client.receive_json()
         assert msg["event"]["type"] == "run-start"
-        assert msg["event"]["data"] == {
-            "pipeline": hass.config.language,
-            "language": hass.config.language,
-        }
+        assert msg["event"]["data"] == snapshot
 
         # intent start
         msg = await client.receive_json()
         assert msg["event"]["type"] == "intent-start"
-        assert msg["event"]["data"] == {
-            "engine": "default",
-            "intent_input": "Are the lights on?",
-        }
+        assert msg["event"]["data"] == snapshot
 
         # intent error
         msg = await client.receive_json()
@@ -391,7 +325,10 @@ async def test_intent_failed(
 
 
 async def test_audio_pipeline_timeout(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, init_components
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    init_components,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test audio pipeline run with immediate timeout."""
     client = await hass_ws_client(hass)
@@ -417,19 +354,16 @@ async def test_audio_pipeline_timeout(
         msg = await client.receive_json()
         assert msg["success"]
 
-        # handler id
-        msg = await client.receive_json()
-        assert msg["event"]["handler_id"] == 1
-
         # timeout error
         msg = await client.receive_json()
-        assert not msg["success"]
-        assert msg["error"]["code"] == "timeout"
+        assert msg["event"]["type"] == "error"
+        assert msg["event"]["data"]["code"] == "timeout"
 
 
 async def test_stt_provider_missing(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test events from a pipeline run with a non-existent STT provider."""
     with patch(
@@ -451,32 +385,15 @@ async def test_stt_provider_missing(
         msg = await client.receive_json()
         assert msg["success"]
 
-        # handler id
-        msg = await client.receive_json()
-        assert msg["event"]["handler_id"] == 1
-
         # run start
         msg = await client.receive_json()
         assert msg["event"]["type"] == "run-start"
-        assert msg["event"]["data"] == {
-            "pipeline": hass.config.language,
-            "language": hass.config.language,
-        }
+        assert msg["event"]["data"] == snapshot
 
         # stt
         msg = await client.receive_json()
         assert msg["event"]["type"] == "stt-start"
-        assert msg["event"]["data"] == {
-            "engine": "default",
-            "metadata": {
-                "bit_rate": 16,
-                "channel": 1,
-                "codec": "pcm",
-                "format": "wav",
-                "language": "en",
-                "sample_rate": 16000,
-            },
-        }
+        assert msg["event"]["data"] == snapshot
 
         # End of audio stream (handler id + empty payload)
         await client.send_bytes(b"1")
@@ -490,6 +407,7 @@ async def test_stt_provider_missing(
 async def test_stt_stream_failed(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test events from a pipeline run with a non-existent STT provider."""
     with patch(
@@ -511,32 +429,15 @@ async def test_stt_stream_failed(
         msg = await client.receive_json()
         assert msg["success"]
 
-        # handler id
-        msg = await client.receive_json()
-        assert msg["event"]["handler_id"] == 1
-
         # run start
         msg = await client.receive_json()
         assert msg["event"]["type"] == "run-start"
-        assert msg["event"]["data"] == {
-            "pipeline": hass.config.language,
-            "language": hass.config.language,
-        }
+        assert msg["event"]["data"] == snapshot
 
         # stt
         msg = await client.receive_json()
         assert msg["event"]["type"] == "stt-start"
-        assert msg["event"]["data"] == {
-            "engine": "default",
-            "metadata": {
-                "bit_rate": 16,
-                "channel": 1,
-                "codec": "pcm",
-                "format": "wav",
-                "language": "en",
-                "sample_rate": 16000,
-            },
-        }
+        assert msg["event"]["data"] == snapshot
 
         # End of audio stream (handler id + empty payload)
         await client.send_bytes(b"1")
@@ -548,7 +449,10 @@ async def test_stt_stream_failed(
 
 
 async def test_tts_failed(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, init_components
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    init_components,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test pipeline run with text to speech error."""
     client = await hass_ws_client(hass)
@@ -574,18 +478,12 @@ async def test_tts_failed(
         # run start
         msg = await client.receive_json()
         assert msg["event"]["type"] == "run-start"
-        assert msg["event"]["data"] == {
-            "pipeline": hass.config.language,
-            "language": hass.config.language,
-        }
+        assert msg["event"]["data"] == snapshot
 
         # tts start
         msg = await client.receive_json()
         assert msg["event"]["type"] == "tts-start"
-        assert msg["event"]["data"] == {
-            "engine": "default",
-            "tts_input": "Lights are on.",
-        }
+        assert msg["event"]["data"] == snapshot
 
         # tts error
         msg = await client.receive_json()
