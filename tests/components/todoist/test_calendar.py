@@ -1,5 +1,5 @@
 """Unit tests for the Todoist calendar platform."""
-from datetime import datetime, timedelta
+from datetime import timedelta
 from http import HTTPStatus
 from unittest.mock import AsyncMock, patch
 import urllib
@@ -30,9 +30,7 @@ def mock_task() -> Task:
         created_at="2021-10-01T00:00:00",
         creator_id="1",
         description="A task",
-        due=Due(
-            is_recurring=False, date=datetime.now().strftime("%Y-%m-%d"), string="today"
-        ),
+        due=Due(is_recurring=False, date=dt.now().strftime("%Y-%m-%d"), string="today"),
         id="1",
         labels=["Label1"],
         order=1,
