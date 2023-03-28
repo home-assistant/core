@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from sc2xmlreader.sc2xmlreader_validator import SC2XMLReaderValidator
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -25,36 +26,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-    # hub = await hass.async_add_executor_job(SC2XMLReaderValidator, data[CONF_HOST])
-
-    # result = await hass.async_add_executor_job(hub.validate_host())
-    # if not result:
-    #    raise CannotConnect
-
-    # if not await hub.authenticate(data[CONF_USERNAME], data[CONF_PASSWORD]):
-    #    raise InvalidAuth
-
-    # if not await hub.validate_uri(data[CONF_USERNAME], data[CONF_PASSWORD]):
-    #    raise CannotConnect
-
-    the_title = "Solvis Remote"
-
-    # try:
-    #    the_device = await hass.async_add_executor_job(
-    #        SC2XMLReader, hub.url, data[CONF_USERNAME], data[CONF_PASSWORD]
-    #    )
-    #    the_model = the_device.getModel()
-    # except:
-    #    raise CannotConnect
-
-    return {"title": the_title}
-
-
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Solvis Heating."""
 
@@ -67,7 +38,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                info = await validate_input(self.hass, user_input)
+                info = await self.validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -81,6 +52,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
+
+    async def validate_input(
+        self, hass: HomeAssistant, data: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Validate the user input allows us to connect."""
+
+        hub = await self.hass.async_add_executor_job(
+            SC2XMLReaderValidator, data[CONF_HOST]
+        )
+
+        if not await self.hass.async_add_executor_job(hub.validate_host):
+            raise CannotConnect
+
+        if not await self.hass.async_add_executor_job(
+            hub.authenticate, data[CONF_USERNAME], data[CONF_PASSWORD]
+        ):
+            raise InvalidAuth
+
+        return {"title": "Solvis Remote"}
 
 
 class CannotConnect(HomeAssistantError):
