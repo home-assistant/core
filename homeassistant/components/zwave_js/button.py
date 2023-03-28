@@ -5,7 +5,7 @@ from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node as ZwaveNode
 
-from homeassistant.components.button import DOMAIN as NUMBER_DOMAIN, ButtonEntity
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
@@ -53,7 +53,7 @@ async def async_setup_entry(
     config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,
-            f"{DOMAIN}_{config_entry.entry_id}_add_{NUMBER_DOMAIN}",
+            f"{DOMAIN}_{config_entry.entry_id}_add_{BUTTON_DOMAIN}",
             async_add_button,
         )
     )
