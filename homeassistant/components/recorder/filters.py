@@ -63,42 +63,53 @@ def merge_include_exclude_filters(
 
 def sqlalchemy_filter_from_include_exclude_conf(conf: ConfigType) -> Filters | None:
     """Build a sql filter from config."""
-    filters = Filters()
-    if exclude := conf.get(CONF_EXCLUDE):
-        filters.excluded_entities = exclude.get(CONF_ENTITIES, [])
-        filters.excluded_domains = exclude.get(CONF_DOMAINS, [])
-        filters.excluded_entity_globs = exclude.get(CONF_ENTITY_GLOBS, [])
-    if include := conf.get(CONF_INCLUDE):
-        filters.included_entities = include.get(CONF_ENTITIES, [])
-        filters.included_domains = include.get(CONF_DOMAINS, [])
-        filters.included_entity_globs = include.get(CONF_ENTITY_GLOBS, [])
-
+    exclude = conf.get(CONF_EXCLUDE, {})
+    include = conf.get(CONF_INCLUDE, {})
+    filters = Filters(
+        excluded_entities=exclude.get(CONF_ENTITIES, []),
+        excluded_domains=exclude.get(CONF_DOMAINS, []),
+        excluded_entity_globs=exclude.get(CONF_ENTITY_GLOBS, []),
+        included_entities=include.get(CONF_ENTITIES, []),
+        included_domains=include.get(CONF_DOMAINS, []),
+        included_entity_globs=include.get(CONF_ENTITY_GLOBS, []),
+    )
     return filters if filters.has_config else None
 
 
 class Filters:
-    """Container for the configured include and exclude filters."""
+    """Container for the configured include and exclude filters.
 
-    def __init__(self) -> None:
+    A filter must never change after it is created since it is used in a
+    cache key.
+    """
+
+    def __init__(
+        self,
+        excluded_entities: Collection[str] | None = None,
+        excluded_domains: Collection[str] | None = None,
+        excluded_entity_globs: Collection[str] | None = None,
+        included_entities: Collection[str] | None = None,
+        included_domains: Collection[str] | None = None,
+        included_entity_globs: Collection[str] | None = None,
+    ) -> None:
         """Initialise the include and exclude filters."""
-        self.excluded_entities: Collection[str] = []
-        self.excluded_domains: Collection[str] = []
-        self.excluded_entity_globs: Collection[str] = []
-
-        self.included_entities: Collection[str] = []
-        self.included_domains: Collection[str] = []
-        self.included_entity_globs: Collection[str] = []
+        self._excluded_entities = excluded_entities or []
+        self._excluded_domains = excluded_domains or []
+        self._excluded_entity_globs = excluded_entity_globs or []
+        self._included_entities = included_entities or []
+        self._included_domains = included_domains or []
+        self._included_entity_globs = included_entity_globs or []
 
     def __repr__(self) -> str:
         """Return human readable excludes/includes."""
         return (
             "<Filters"
-            f" excluded_entities={self.excluded_entities}"
-            f" excluded_domains={self.excluded_domains}"
-            f" excluded_entity_globs={self.excluded_entity_globs}"
-            f" included_entities={self.included_entities}"
-            f" included_domains={self.included_domains}"
-            f" included_entity_globs={self.included_entity_globs}"
+            f" excluded_entities={self._excluded_entities}"
+            f" excluded_domains={self._excluded_domains}"
+            f" excluded_entity_globs={self._excluded_entity_globs}"
+            f" included_entities={self._included_entities}"
+            f" included_domains={self._included_domains}"
+            f" included_entity_globs={self._included_entity_globs}"
             ">"
         )
 
@@ -110,17 +121,17 @@ class Filters:
     @property
     def _have_exclude(self) -> bool:
         return bool(
-            self.excluded_entities
-            or self.excluded_domains
-            or self.excluded_entity_globs
+            self._excluded_entities
+            or self._excluded_domains
+            or self._excluded_entity_globs
         )
 
     @property
     def _have_include(self) -> bool:
         return bool(
-            self.included_entities
-            or self.included_domains
-            or self.included_entity_globs
+            self._included_entities
+            or self._included_domains
+            or self._included_entity_globs
         )
 
     def _generate_filter_for_columns(
@@ -130,14 +141,14 @@ class Filters:
 
         This must match exactly how homeassistant.helpers.entityfilter works.
         """
-        i_domains = _domain_matcher(self.included_domains, columns, encoder)
-        i_entities = _entity_matcher(self.included_entities, columns, encoder)
-        i_entity_globs = _globs_to_like(self.included_entity_globs, columns, encoder)
+        i_domains = _domain_matcher(self._included_domains, columns, encoder)
+        i_entities = _entity_matcher(self._included_entities, columns, encoder)
+        i_entity_globs = _globs_to_like(self._included_entity_globs, columns, encoder)
         includes = [i_domains, i_entities, i_entity_globs]
 
-        e_domains = _domain_matcher(self.excluded_domains, columns, encoder)
-        e_entities = _entity_matcher(self.excluded_entities, columns, encoder)
-        e_entity_globs = _globs_to_like(self.excluded_entity_globs, columns, encoder)
+        e_domains = _domain_matcher(self._excluded_domains, columns, encoder)
+        e_entities = _entity_matcher(self._excluded_entities, columns, encoder)
+        e_entity_globs = _globs_to_like(self._excluded_entity_globs, columns, encoder)
         excludes = [e_domains, e_entities, e_entity_globs]
 
         have_exclude = self._have_exclude
@@ -173,7 +184,7 @@ class Filters:
         # - Otherwise, entity matches glob exclude: exclude
         # - Otherwise, entity matches domain include: include
         # - Otherwise: exclude
-        if self.included_domains or self.included_entity_globs:
+        if self._included_domains or self._included_entity_globs:
             return or_(
                 i_entities,
                 # https://github.com/sqlalchemy/sqlalchemy/issues/9190
@@ -187,7 +198,7 @@ class Filters:
         # - Otherwise, entity matches glob exclude: exclude
         # - Otherwise, entity matches domain exclude: exclude
         # - Otherwise: include
-        if self.excluded_domains or self.excluded_entity_globs:
+        if self._excluded_domains or self._excluded_entity_globs:
             return (not_(or_(*excludes)) | i_entities).self_group()  # type: ignore[no-any-return, no-untyped-call]
 
         # Case 6 - No Domain and/or glob includes or excludes
