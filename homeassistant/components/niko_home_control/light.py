@@ -68,7 +68,7 @@ class NikoHomeControlLight(LightEntity):
         self._attr_supported_color_modes = {ColorMode.ONOFF}
         if light._state["type"] == 2:
             self._attr_color_mode = ColorMode.BRIGHTNESS
-            self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
+            self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
