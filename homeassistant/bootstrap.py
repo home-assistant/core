@@ -515,16 +515,15 @@ async def async_setup_multi_components(
         )
         for domain in domains
     }
-    await asyncio.wait(futures.values())
-    errors = [domain for domain in domains if futures[domain].exception()]
-    for domain in errors:
-        exception = futures[domain].exception()
-        assert exception is not None
-        _LOGGER.error(
-            "Error setting up integration %s - received exception",
-            domain,
-            exc_info=(type(exception), exception, exception.__traceback__),
-        )
+    results = await asyncio.gather(*futures.values(), return_exceptions=True)
+    for idx, domain in enumerate(futures):
+        result = results[idx]
+        if isinstance(result, BaseException):
+            _LOGGER.error(
+                "Error setting up integration %s - received exception",
+                domain,
+                exc_info=(type(result), result, result.__traceback__),
+            )
 
 
 async def _async_set_up_integrations(
