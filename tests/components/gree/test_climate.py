@@ -5,6 +5,7 @@ from unittest.mock import DEFAULT as DEFAULT_MOCK, AsyncMock, patch
 from greeclimate.device import HorizontalSwing, VerticalSwing
 from greeclimate.exceptions import DeviceNotBoundError, DeviceTimeoutError
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
@@ -31,15 +32,12 @@ from homeassistant.components.climate import (
     SWING_HORIZONTAL,
     SWING_OFF,
     SWING_VERTICAL,
-    ClimateEntityFeature,
     HVACMode,
 )
 from homeassistant.components.gree.climate import FAN_MODES_REVERSE, HVAC_MODES_REVERSE
 from homeassistant.components.gree.const import FAN_MEDIUM_HIGH, FAN_MEDIUM_LOW
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
-    ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -47,6 +45,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
 from .common import async_setup_gree, build_device_mock
@@ -797,22 +796,20 @@ async def test_update_swing_mode(
     assert state.attributes.get(ATTR_SWING_MODE) == swing_mode
 
 
-async def test_name(hass: HomeAssistant, discovery, device) -> None:
-    """Test for name property."""
-    await async_setup_gree(hass)
-    state = hass.states.get(ENTITY_ID)
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "fake-device-1"
-
-
-async def test_supported_features_with_turnon(
-    hass: HomeAssistant, discovery, device
+@patch("homeassistant.components.gree.PLATFORMS", [DOMAIN])
+async def test_registry_settings(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
 ) -> None:
-    """Test for supported_features property."""
+    """Test for entity registry settings (unique_id)."""
+    entry = await async_setup_gree(hass)
+
+    entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    assert entries == snapshot
+
+
+@patch("homeassistant.components.gree.PLATFORMS", [DOMAIN])
+async def test_entity_states(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
+    """Test for entity registry settings (unique_id)."""
     await async_setup_gree(hass)
-    state = hass.states.get(ENTITY_ID)
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == (
-        ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.FAN_MODE
-        | ClimateEntityFeature.PRESET_MODE
-        | ClimateEntityFeature.SWING_MODE
-    )
+    states = hass.states.async_all()
+    assert states == snapshot

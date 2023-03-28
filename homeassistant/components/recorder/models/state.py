@@ -24,6 +24,17 @@ from .time import process_timestamp
 _LOGGER = logging.getLogger(__name__)
 
 
+def extract_metadata_ids(
+    entity_id_to_metadata_id: dict[str, int | None],
+) -> list[int]:
+    """Extract metadata ids from entity_id_to_metadata_id."""
+    return [
+        metadata_id
+        for metadata_id in entity_id_to_metadata_id.values()
+        if metadata_id is not None
+    ]
+
+
 class LazyState(State):
     """A lazy version of core State after schema 31."""
 

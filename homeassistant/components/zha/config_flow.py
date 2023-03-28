@@ -101,7 +101,7 @@ async def list_serial_ports(hass: HomeAssistant) -> list[ListPortInfo]:
 
     if addon_info is not None and addon_info.state != AddonState.NOT_INSTALLED:
         addon_port = ListPortInfo(
-            device=silabs_multiprotocol_addon.get_zigbee_socket(hass, addon_info),
+            device=silabs_multiprotocol_addon.get_zigbee_socket(),
             skip_link_detection=True,
         )
 
