@@ -80,7 +80,6 @@ async def async_setup_entry(
     anova_data: AnovaData = hass.data[DOMAIN][entry.entry_id]
     sensors: list[AnovaSensor] = []
     for coordinator in anova_data.coordinators:
-        await coordinator.async_config_entry_first_refresh()
         sensors.extend(
             [
                 AnovaSensor(coordinator, description)
