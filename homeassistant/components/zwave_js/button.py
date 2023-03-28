@@ -71,8 +71,8 @@ class ZwaveBooleanNodeButton(ZWaveBaseEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        self.hass.async_create_task(
-            self.info.primary_value.node.async_set_value(self.info.primary_value, True)
+        await self.info.primary_value.node.async_set_value(
+            self.info.primary_value, True
         )
 
 
