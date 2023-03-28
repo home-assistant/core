@@ -181,8 +181,8 @@ DOUBLE_TYPE = (
     .with_variant(oracle.DOUBLE_PRECISION(), "oracle")
     .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )
-UNUSED_LEGACY_COLUMN = Unused
-UNUSED_LEGACY_DATETIME_COLUMN = UnusedDateTime
+UNUSED_LEGACY_COLUMN = Unused(0)
+UNUSED_LEGACY_DATETIME_COLUMN = UnusedDateTime(timezone=True)
 DOUBLE_PRECISION_TYPE_SQL = "DOUBLE PRECISION"
 
 TIMESTAMP_TYPE = DOUBLE_TYPE
