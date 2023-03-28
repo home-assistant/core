@@ -157,7 +157,7 @@ class ZWaveMeEntity(Entity):
         )
 
     @callback
-    def get_new_data(self, new_data: ZWaveMeData):
+    def get_new_data(self, new_data: ZWaveMeData) -> None:
         """Update info in the HAss."""
         self.device = new_data
         self._attr_available = not new_data.isFailed
