@@ -12,10 +12,10 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import DOMAIN
-from .api import SERVICE_WARNING_DEVICE_SQUAWK, SERVICE_WARNING_DEVICE_WARN
 from .core.channels.manufacturerspecific import AllLEDEffectType, SingleLEDEffectType
 from .core.const import CHANNEL_IAS_WD, CHANNEL_INOVELLI
 from .core.helpers import async_get_zha_device
+from .websocket_api import SERVICE_WARNING_DEVICE_SQUAWK, SERVICE_WARNING_DEVICE_WARN
 
 # mypy: disallow-any-generics
 

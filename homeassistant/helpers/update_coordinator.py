@@ -148,6 +148,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
             self._unsub_refresh()
             self._unsub_refresh = None
 
+        self._debounced_refresh.async_cancel()
+
     def async_contexts(self) -> Generator[Any, None, None]:
         """Return all registered contexts."""
         yield from (
@@ -163,6 +165,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
         if self.config_entry and self.config_entry.pref_disable_polling:
             return
 
+        # We do not cancel the debouncer here. If the refresh interval is shorter
+        # than the debouncer cooldown, this would cause the debounce to never be called
         if self._unsub_refresh:
             self._unsub_refresh()
             self._unsub_refresh = None

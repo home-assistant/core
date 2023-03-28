@@ -401,6 +401,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/frontend/ @home-assistant/frontend
 /tests/components/frontend/ @home-assistant/frontend
 /homeassistant/components/frontier_silicon/ @wlcrs
+/tests/components/frontier_silicon/ @wlcrs
 /homeassistant/components/fully_kiosk/ @cgarwood
 /tests/components/fully_kiosk/ @cgarwood
 /homeassistant/components/garages_amsterdam/ @klaasnicolaas
@@ -784,7 +785,8 @@ build.json @home-assistant/supervisor
 /tests/components/nexia/ @bdraco
 /homeassistant/components/nextbus/ @vividboarder
 /tests/components/nextbus/ @vividboarder
-/homeassistant/components/nextcloud/ @meichthys
+/homeassistant/components/nextcloud/ @mib1185
+/tests/components/nextcloud/ @mib1185
 /homeassistant/components/nextdns/ @bieniu
 /tests/components/nextdns/ @bieniu
 /homeassistant/components/nfandroidtv/ @tkdrob
@@ -1056,8 +1058,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/seven_segments/ @fabaff
 /homeassistant/components/sfr_box/ @epenet
 /tests/components/sfr_box/ @epenet
-/homeassistant/components/sharkiq/ @JeffResc @funkybunch @AritroSaha10
-/tests/components/sharkiq/ @JeffResc @funkybunch @AritroSaha10
+/homeassistant/components/sharkiq/ @JeffResc @funkybunch
+/tests/components/sharkiq/ @JeffResc @funkybunch
 /homeassistant/components/shell_command/ @home-assistant/core
 /tests/components/shell_command/ @home-assistant/core
 /homeassistant/components/shelly/ @balloob @bieniu @thecode @chemelli74 @bdraco
@@ -1101,6 +1103,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/smhi/ @gjohansson-ST
 /tests/components/smhi/ @gjohansson-ST
 /homeassistant/components/sms/ @ocalvo
+/homeassistant/components/snapcast/ @luar123
 /homeassistant/components/snooz/ @AustinBrunkhorst
 /tests/components/snooz/ @AustinBrunkhorst
 /homeassistant/components/solaredge/ @frenck
@@ -1291,8 +1294,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/velux/ @Julius2342
 /homeassistant/components/venstar/ @garbled1
 /tests/components/venstar/ @garbled1
-/homeassistant/components/verisure/ @frenck
-/tests/components/verisure/ @frenck
+/homeassistant/components/verisure/ @frenck @niro1987
+/tests/components/verisure/ @frenck @niro1987
 /homeassistant/components/versasense/ @flamm3blemuff1n
 /homeassistant/components/version/ @ludeeus
 /tests/components/version/ @ludeeus
@@ -1307,6 +1310,8 @@ build.json @home-assistant/supervisor
 /tests/components/vizio/ @raman325
 /homeassistant/components/vlc_telnet/ @rodripf @MartinHjelmare
 /tests/components/vlc_telnet/ @rodripf @MartinHjelmare
+/homeassistant/components/voice_assistant/ @balloob @synesthesiam
+/tests/components/voice_assistant/ @balloob @synesthesiam
 /homeassistant/components/volumio/ @OnFreund
 /tests/components/volumio/ @OnFreund
 /homeassistant/components/volvooncall/ @molobrakos
@@ -1352,8 +1357,8 @@ build.json @home-assistant/supervisor
 /tests/components/wled/ @frenck
 /homeassistant/components/wolflink/ @adamkrol93
 /tests/components/wolflink/ @adamkrol93
-/homeassistant/components/workday/ @fabaff
-/tests/components/workday/ @fabaff
+/homeassistant/components/workday/ @fabaff @gjohansson-ST
+/tests/components/workday/ @fabaff @gjohansson-ST
 /homeassistant/components/worldclock/ @fabaff
 /tests/components/worldclock/ @fabaff
 /homeassistant/components/ws66i/ @ssaenger

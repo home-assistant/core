@@ -24,7 +24,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
 from .const import DOMAIN
-from .entity import ReolinkCoordinatorEntity
+from .entity import ReolinkChannelCoordinatorEntity
 
 
 @dataclass
@@ -113,7 +113,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ReolinkBinarySensorEntity(ReolinkCoordinatorEntity, BinarySensorEntity):
+class ReolinkBinarySensorEntity(ReolinkChannelCoordinatorEntity, BinarySensorEntity):
     """Base binary-sensor class for Reolink IP camera motion sensors."""
 
     entity_description: ReolinkBinarySensorEntityDescription

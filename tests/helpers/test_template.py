@@ -21,6 +21,7 @@ from homeassistant.const import (
     LENGTH_MILLIMETERS,
     MASS_GRAMS,
     STATE_ON,
+    STATE_UNAVAILABLE,
     TEMP_CELSIUS,
     VOLUME_LITERS,
     UnitOfPressure,
@@ -241,6 +242,67 @@ def test_iterating_domain_states(hass: HomeAssistant) -> None:
         entities=[],
         domains=["sensor"],
     )
+
+
+async def test_import(hass: HomeAssistant) -> None:
+    """Test that imports work from the config/custom_jinja folder."""
+    await template.async_load_custom_jinja(hass)
+    assert "test.jinja" in template._get_hass_loader(hass).sources
+    assert "inner/inner_test.jinja" in template._get_hass_loader(hass).sources
+    assert (
+        template.Template(
+            """
+            {% import 'test.jinja' as t %}
+            {{ t.test_macro() }} {{ t.test_variable }}
+            """,
+            hass,
+        ).async_render()
+        == "macro variable"
+    )
+
+    assert (
+        template.Template(
+            """
+            {% import 'inner/inner_test.jinja' as t %}
+            {{ t.test_macro() }} {{ t.test_variable }}
+            """,
+            hass,
+        ).async_render()
+        == "inner macro inner variable"
+    )
+
+    with pytest.raises(TemplateError):
+        template.Template(
+            """
+            {% import 'notfound.jinja' as t %}
+            {{ t.test_macro() }} {{ t.test_variable }}
+            """,
+            hass,
+        ).async_render()
+
+
+async def test_import_change(hass: HomeAssistant) -> None:
+    """Test that a change in HassLoader results in updated imports."""
+    await template.async_load_custom_jinja(hass)
+    to_test = template.Template(
+        """
+        {% import 'test.jinja' as t %}
+        {{ t.test_macro() }} {{ t.test_variable }}
+        """,
+        hass,
+    )
+    assert to_test.async_render() == "macro variable"
+
+    template._get_hass_loader(hass).sources = {
+        "test.jinja": """
+            {% macro test_macro() -%}
+            macro2
+            {%- endmacro %}
+
+            {% set test_variable = "variable2" %}
+            """
+    }
+    assert to_test.async_render() == "macro2 variable2"
 
 
 def test_loop_controls(hass: HomeAssistant) -> None:
@@ -1382,6 +1444,26 @@ def test_if_state_exists(hass: HomeAssistant) -> None:
     assert tpl.async_render() == "exists"
 
 
+def test_is_hidden_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test is_hidden_entity method."""
+    hidden_entity = entity_registry.async_get_or_create(
+        "sensor", "mock", "hidden", hidden_by=er.RegistryEntryHider.USER
+    )
+    visible_entity = entity_registry.async_get_or_create("sensor", "mock", "visible")
+    assert template.Template(
+        f"{{{{ is_hidden_entity('{hidden_entity.entity_id}') }}}}",
+        hass,
+    ).async_render()
+
+    assert not template.Template(
+        f"{{{{ is_hidden_entity('{visible_entity.entity_id}') }}}}",
+        hass,
+    ).async_render()
+
+
 def test_is_state(hass: HomeAssistant) -> None:
     """Test is_state method."""
     hass.states.async_set("test.object", "available")
@@ -1526,6 +1608,44 @@ def test_states_function(hass: HomeAssistant) -> None:
     assert tpl.async_render() == "available"
 
 
+def test_has_value(hass):
+    """Test has_value method."""
+    hass.states.async_set("test.value1", 1)
+    hass.states.async_set("test.unavailable", STATE_UNAVAILABLE)
+
+    tpl = template.Template(
+        """
+{{ has_value("test.value1") }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is True
+
+    tpl = template.Template(
+        """
+{{ has_value("test.unavailable") }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is False
+
+    tpl = template.Template(
+        """
+{{ has_value("test.unknown") }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is False
+
+    tpl = template.Template(
+        """
+{% if "test.value1" is has_value %}yes{% else %}no{% endif %}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "yes"
+
+
 @patch(
     "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
     return_value=True,
@@ -1615,6 +1735,11 @@ def test_today_at(
     with pytest.raises(TemplateError):
         template.Template("{{ today_at('bad') }}", hass).async_render()
 
+    info = template.Template(
+        "{{ today_at('10:00').isoformat() }}", hass
+    ).async_render_to_info()
+    assert info.has_time is True
+
     freezer.stop()
 
 
@@ -1626,9 +1751,12 @@ def test_relative_time(mock_is_safe, hass: HomeAssistant) -> None:
     """Test relative_time method."""
     hass.config.set_time_zone("UTC")
     now = datetime.strptime("2000-01-01 10:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
+    relative_time_template = (
+        '{{relative_time(strptime("2000-01-01 09:00:00", "%Y-%m-%d %H:%M:%S"))}}'
+    )
     with patch("homeassistant.util.dt.now", return_value=now):
         result = template.Template(
-            '{{relative_time(strptime("2000-01-01 09:00:00", "%Y-%m-%d %H:%M:%S"))}}',
+            relative_time_template,
             hass,
         ).async_render()
         assert result == "1 hour"
@@ -1686,6 +1814,9 @@ def test_relative_time(mock_is_safe, hass: HomeAssistant) -> None:
             hass,
         ).async_render()
         assert result == "string"
+
+        info = template.Template(relative_time_template, hass).async_render_to_info()
+        assert info.has_time is True
 
 
 @patch(
@@ -2848,6 +2979,26 @@ async def test_device_attr(
         ),
     )
     assert_result_info(info, [device_entry.id])
+    assert info.rate_limit is None
+
+
+async def test_areas(hass: HomeAssistant, area_registry: ar.AreaRegistry) -> None:
+    """Test areas function."""
+    # Test no areas
+    info = render_to_info(hass, "{{ areas() }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    # Test one area
+    area1 = area_registry.async_get_or_create("area1")
+    info = render_to_info(hass, "{{ areas() }}")
+    assert_result_info(info, [area1.id])
+    assert info.rate_limit is None
+
+    # Test multiple areas
+    area2 = area_registry.async_get_or_create("area2")
+    info = render_to_info(hass, "{{ areas() }}")
+    assert_result_info(info, [area1.id, area2.id])
     assert info.rate_limit is None
 
 
@@ -4323,3 +4474,14 @@ def test_contains(hass: HomeAssistant, seq, value, expected) -> None:
         )
         == expected
     )
+
+
+async def test_render_to_info_with_exception(hass: HomeAssistant) -> None:
+    """Test info is still available if the template has an exception."""
+    hass.states.async_set("test_domain.object", "dog")
+    info = render_to_info(hass, '{{ states("test_domain.object") | float }}')
+    with pytest.raises(TemplateError, match="no default was specified"):
+        info.result()
+
+    assert info.all_states is False
+    assert info.entities == {"test_domain.object"}

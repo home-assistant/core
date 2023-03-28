@@ -737,7 +737,7 @@ class SensorEntity(Entity):
             or "suggested_display_precision" not in self.registry_entry.options
         ):
             return
-        sensor_options = self.registry_entry.options.get(DOMAIN, {})
+        sensor_options: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN, {})
         if (
             "suggested_display_precision" in sensor_options
             and sensor_options["suggested_display_precision"] == display_precision
