@@ -551,8 +551,8 @@ def check_significant_states(hass, zero, four, states, config):
     filters = history.Filters(
         excluded_entities=exclude.get(CONF_ENTITIES, []),
         excluded_domains=exclude.get(CONF_DOMAINS, []),
-        included_entities=include.get(CONF_ENTITIES, []) if include else None,
-        included_domains=include.get(CONF_DOMAINS, []) if include else None,
+        included_entities=include.get(CONF_ENTITIES, []),
+        included_domains=include.get(CONF_DOMAINS, []),
     )
     hist = get_significant_states(hass, zero, four, filters=filters)
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
