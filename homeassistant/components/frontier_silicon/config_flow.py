@@ -124,7 +124,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         device_url = discovery_info.ssdp_location
 
         device_hostname = hostname_from_url(device_url)
-        for entry in self._async_current_entries():
+        for entry in self._async_current_entries(include_ignore=False):
             if device_hostname == hostname_from_url(entry.data[CONF_WEBFSAPI_URL]):
                 return self.async_abort(reason="already_configured")
 
