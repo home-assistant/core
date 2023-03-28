@@ -276,7 +276,10 @@ class MatrixBot:
 
     async def _join_rooms(self) -> None:
         """Join the Matrix rooms that we listen for commands in."""
-        rooms = {asyncio.create_task(self._join_room(room_id)) for room_id in self._listening_rooms}
+        rooms = {
+            asyncio.create_task(self._join_room(room_id))
+            for room_id in self._listening_rooms
+        }
         await asyncio.wait(rooms)
 
     async def _get_auth_tokens(self) -> JsonObjectType:
