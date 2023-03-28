@@ -250,7 +250,7 @@ async def test_lru_stats(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) 
         def __init__(self):
             self._data = LRU(1)
 
-    DomainData()
+    domain_data = DomainData()
     assert hass.services.has_service(DOMAIN, SERVICE_LRU_STATS)
 
     await hass.services.async_call(DOMAIN, SERVICE_LRU_STATS, blocking=True)
@@ -259,3 +259,4 @@ async def test_lru_stats(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) 
     assert "(0, 0)" in caplog.text
     assert "_dummy_test_lru_stats" in caplog.text
     assert "CacheInfo" in caplog.text
+    del domain_data
