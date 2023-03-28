@@ -49,9 +49,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
                 _LOGGER.info("XXX abort")
                 return self.async_abort(reason="invalid_auth")
-            else:
-                _LOGGER.info("XXX else")
-                return self.async_create_entry(title=VICARE_NAME, data=user_input)
+            _LOGGER.info("XXX else")
+            return self.async_create_entry(title=VICARE_NAME, data=user_input)
 
         return self.async_show_form(
             step_id="user",
