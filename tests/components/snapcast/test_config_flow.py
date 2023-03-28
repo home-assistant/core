@@ -27,6 +27,7 @@ async def test_form(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
     assert not result["errors"]
 
     # test invalid host error
@@ -38,6 +39,7 @@ async def test_form(
         await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_host"}
 
     # test connection error
@@ -49,6 +51,7 @@ async def test_form(
         await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
     # test success
@@ -81,6 +84,7 @@ async def test_abort(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
     assert not result["errors"]
 
     with patch("snapcast.control.create_server", side_effect=socket.gaierror):
@@ -94,7 +98,7 @@ async def test_abort(
     assert result["reason"] == "already_configured"
 
 
-async def test_import(hass: HomeAssistant, mock_create_server: AsyncMock) -> None:
+async def test_import(hass: HomeAssistant) -> None:
     """Test successful import."""
 
     result = await hass.config_entries.flow.async_init(
@@ -109,4 +113,3 @@ async def test_import(hass: HomeAssistant, mock_create_server: AsyncMock) -> Non
         result["title"] == f"{TEST_CONNECTION[CONF_HOST]}:{TEST_CONNECTION[CONF_PORT]}"
     )
     assert result["data"] == TEST_CONNECTION
-    assert len(mock_create_server.mock_calls) == 1

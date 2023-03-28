@@ -54,4 +54,10 @@ class SnapcastConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config: dict[str, str]) -> FlowResult:
         """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_config)
+        self._async_abort_entries_match(
+            {
+                CONF_HOST: (host := import_config[CONF_HOST]),
+                CONF_PORT: (port := import_config[CONF_PORT]),
+            }
+        )
+        return self.async_create_entry(title=f"{host}:{port}", data=import_config)

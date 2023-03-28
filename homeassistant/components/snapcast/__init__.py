@@ -1,6 +1,5 @@
 """Snapcast Integration."""
 import logging
-import socket
 
 import snapcast.control
 
@@ -23,7 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         server = await snapcast.control.create_server(
             hass.loop, host, port, reconnect=True
         )
-    except socket.gaierror as ex:
+    except OSError as ex:
         raise ConfigEntryNotReady(
             f"Could not connect to Snapcast server at {host}:{port}"
         ) from ex
