@@ -10,11 +10,27 @@ from homeassistant.components.vesync.common import (
     VeSyncDevice,
     VeSyncDeviceHelper,
     async_process_devices,
+    get_domain_data,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 
 from .common import FAN_MODEL, HUMIDIFIER_MODEL
+
+
+async def test_get_domain_data(
+    hass: HomeAssistant,
+    config_entry,
+) -> None:
+    """Test helper get_domain_data."""
+    assert not hasattr(hass.data, DOMAIN)
+    assert get_domain_data(hass, config_entry, "domain") is None
+
+    hass.data[DOMAIN] = {}
+    assert get_domain_data(hass, config_entry, "domain") is None
+
+    hass.data[DOMAIN] = {"domain": "value"}
+    assert get_domain_data(hass, config_entry, "domain") == "value"
 
 
 async def test_vesyncdevicehelper__get_feature() -> None:

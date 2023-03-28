@@ -218,6 +218,8 @@ def humidifier_fixture() -> VeSyncHumid200300S:
     mock_fixture.is_on = True
     mock_fixture.night_light = False
     mock_fixture.set_auto_mode = Mock()
+    mock_fixture.set_automatic_stop = Mock()
+    mock_fixture.set_display = Mock()
     mock_fixture.set_humidity_mode = Mock()
     mock_fixture.set_manual_mode = Mock()
     mock_fixture.sub_device_no = 1
@@ -234,9 +236,11 @@ def humidifier_fixture() -> VeSyncHumid200300S:
     config_dict = {}
     config_dict["mist_modes"] = ["manual"]
     config_dict["mist_levels"] = ["1", "2", "3"]
+    config_dict["warm_mist_levels"] = ["1", "2", "3"]
     mock_fixture.config_dict = config_dict
 
     details = {}
+    details["humidity"] = 50
     details["humidity_high"] = True
     details["mode"] = "manual"
     details["mist_virtual_level"] = 1
@@ -248,12 +252,51 @@ def humidifier_fixture() -> VeSyncHumid200300S:
 
 
 @pytest.fixture(name="humidifier_nightlight")
-def humidifier_with_nightlight_fixture(
-    humidifier: VeSyncHumid200300S,
-) -> VeSyncHumid200300S:
+def humidifier_with_nightlight_fixture() -> VeSyncHumid200300S:
     """Create a mock VeSync humidifier fixture with night light."""
-    humidifier.night_light = True
-    return humidifier
+    mock_fixture = Mock(VeSyncHumid200300S)
+    mock_fixture.auto_humidity = 50
+    mock_fixture.cid = "cid"
+    mock_fixture.connection_status = "online"
+    mock_fixture.current_firm_version = 0
+    mock_fixture.device_image = "device image"
+    mock_fixture.device_name = "device name"
+    mock_fixture.device_status = "on"
+    mock_fixture.device_type = HUMIDIFIER_MODEL
+    mock_fixture.is_on = True
+    mock_fixture.night_light = True
+    mock_fixture.set_auto_mode = Mock()
+    mock_fixture.set_automatic_stop = Mock()
+    mock_fixture.set_display = Mock()
+    mock_fixture.set_humidity_mode = Mock()
+    mock_fixture.set_manual_mode = Mock()
+    mock_fixture.sub_device_no = 1
+    mock_fixture.turn_on = Mock()
+    mock_fixture.turn_off = Mock()
+    mock_fixture.update = Mock()
+    mock_fixture.uuid = "uuid"
+    mock_fixture.warm_mist_feature = True
+
+    config = {}
+    #    config["auto_target_humidity"] = ["50"]
+    mock_fixture.config = config
+
+    config_dict = {}
+    config_dict["mist_modes"] = ["manual"]
+    config_dict["mist_levels"] = ["1", "2", "3"]
+    config_dict["warm_mist_levels"] = ["1", "2", "3"]
+    mock_fixture.config_dict = config_dict
+
+    details = {}
+    details["humidity"] = 50
+    details["humidity_high"] = True
+    details["mode"] = "manual"
+    details["mist_virtual_level"] = 1
+    details["water_lacks"] = True
+    details["water_tank_lifted"] = True
+    mock_fixture.details = details
+
+    return mock_fixture
 
 
 @pytest.fixture(name="switch")
