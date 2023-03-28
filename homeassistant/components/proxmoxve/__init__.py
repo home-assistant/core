@@ -257,8 +257,8 @@ def parse_api_proxmox(
 
     if api_category in (ProxmoxType.QEMU, ProxmoxType.LXC):
         return {
-            ProxmoxKeyAPIParse.STATUS: status["status"],
-            ProxmoxKeyAPIParse.NAME: status["name"],
+            ProxmoxKeyAPIParse.STATUS: status[ProxmoxKeyAPIParse.STATUS],
+            ProxmoxKeyAPIParse.NAME: status[ProxmoxKeyAPIParse.NAME],
         }
 
     return None
