@@ -14,13 +14,13 @@ DEFAULT_NAME = "World"
 def setup(hass, config):
     """Set up is called when Home Assistant is loading our component."""
 
-    def handle_hello(call):
+    def handle_s2(call):
         """Handle the service call."""
         name = call.data.get(ATTR_NAME, DEFAULT_NAME)
 
         hass.states.set("hello_service.hello", name)
 
-    hass.services.register(DOMAIN, "hello", handle_hello)
+    hass.services.register(DOMAIN, "s2", handle_s2)
 
     # Return boolean to indicate that initialization was successful.
     return True
