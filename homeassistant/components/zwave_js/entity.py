@@ -116,7 +116,7 @@ class ZWaveBaseEntity(Entity):
                 (
                     f"{DOMAIN}_"
                     f"{get_valueless_base_unique_id(self.driver, self.info.node)}_"
-                    "remove_entity_on_ready_node"
+                    "remove_entity_on_interview_started"
                 ),
                 self.async_remove,
             )
