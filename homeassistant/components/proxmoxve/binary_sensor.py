@@ -10,8 +10,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import COORDINATORS, DOMAIN, PROXMOX_CLIENTS, ProxmoxEntity
-from .const import ProxmoxKeyAPIParse
+from .const import COORDINATORS, DOMAIN, PROXMOX_CLIENTS, ProxmoxKeyAPIParse
+from .entity import ProxmoxEntity
 
 
 async def async_setup_platform(
