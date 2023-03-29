@@ -420,6 +420,7 @@ async def test_ssdp_nondefault_pin(hass: HomeAssistant) -> None:
 async def test_reauth_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Test reauth flow."""
     config_entry.add_to_hass(hass)
+    assert config_entry.data[CONF_PIN] == "1234"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -458,6 +459,7 @@ async def test_reauth_flow_friendly_name_error(
 ) -> None:
     """Test reauth flow with failures."""
     config_entry.add_to_hass(hass)
+    assert config_entry.data[CONF_PIN] == "1234"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

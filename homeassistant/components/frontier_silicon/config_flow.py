@@ -236,10 +236,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if self._reauth_entry:
                 self.hass.config_entries.async_update_entry(
                     self._reauth_entry,
-                    data={
-                        CONF_WEBFSAPI_URL: self._webfsapi_url,
-                        CONF_PIN: user_input[CONF_PIN],
-                    },
+                    data={CONF_PIN: user_input[CONF_PIN]},
                 )
                 await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
