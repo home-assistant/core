@@ -2084,14 +2084,14 @@ class LoggingUndefined(jinja2.Undefined):
         return super().__bool__()
 
 
-async def async_load_custom_template(hass: HomeAssistant) -> None:
+async def async_load_custom_templates(hass: HomeAssistant) -> None:
     """Load all custom jinja files under 5MiB into memory."""
-    return await hass.async_add_executor_job(_load_custom_template, hass)
+    return await hass.async_add_executor_job(_load_custom_templates, hass)
 
 
-def _load_custom_template(hass: HomeAssistant) -> None:
+def _load_custom_templates(hass: HomeAssistant) -> None:
     result = {}
-    jinja_path = hass.config.path("custom_template")
+    jinja_path = hass.config.path("custom_templates")
     all_files = [
         item
         for item in pathlib.Path(jinja_path).rglob("*.jinja")
