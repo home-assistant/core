@@ -1861,7 +1861,7 @@ class OptionsFlow(data_entry_flow.FlowHandler):
     @callback
     def _async_abort_entries_match(
         self, match_dict: dict[str, Any] | None = None
-    ) -> dict[str, str]:
+    ) -> None:
         """Validate the user input against other config entries."""
         if match_dict is None:
             match_dict = {}  # Match any entry
@@ -1869,7 +1869,6 @@ class OptionsFlow(data_entry_flow.FlowHandler):
         config_entry = cast(
             ConfigEntry, self.hass.config_entries.async_get_entry(self.handler)
         )
-        errors: dict[str, str] = {}
         for entry in [
             entry
             for entry in self.hass.config_entries.async_entries(config_entry.domain)
@@ -1883,9 +1882,7 @@ class OptionsFlow(data_entry_flow.FlowHandler):
                 ).items()
                 for item in match_dict.items()
             ):
-                errors["base"] = "already_configured"
-                break
-        return errors
+                raise data_entry_flow.AbortFlow("already_configured")
 
 
 class OptionsFlowWithConfigEntry(OptionsFlow):

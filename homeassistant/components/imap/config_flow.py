@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -152,28 +152,35 @@ class OptionsFlow(config_entries.OptionsFlowWithConfigEntry):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the options."""
-        errors: dict[str, str] = self._async_abort_entries_match(
-            {
-                CONF_SERVER: self._config_entry.data[CONF_SERVER],
-                CONF_USERNAME: self._config_entry.data[CONF_USERNAME],
-                CONF_FOLDER: user_input[CONF_FOLDER],
-                CONF_SEARCH: user_input[CONF_SEARCH],
-            }
-            if user_input
-            else None
-        )
+        errors: dict[str, str] | None = None
         entry_data: dict[str, Any] = dict(self._config_entry.data)
-        if not errors and user_input is not None:
-            entry_data.update(user_input)
-            errors = await validate_input(entry_data)
-            if not errors:
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry, data=entry_data
+        if user_input is not None:
+            try:
+                self._async_abort_entries_match(
+                    {
+                        CONF_SERVER: self._config_entry.data[CONF_SERVER],
+                        CONF_USERNAME: self._config_entry.data[CONF_USERNAME],
+                        CONF_FOLDER: user_input[CONF_FOLDER],
+                        CONF_SEARCH: user_input[CONF_SEARCH],
+                    }
+                    if user_input
+                    else None
                 )
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(self.config_entry.entry_id)
-                )
-                return self.async_create_entry(data={})
+            except AbortFlow as err:
+                errors = {"base": err.reason}
+            else:
+                entry_data.update(user_input)
+                errors = await validate_input(entry_data)
+                if not errors:
+                    self.hass.config_entries.async_update_entry(
+                        self.config_entry, data=entry_data
+                    )
+                    self.hass.async_create_task(
+                        self.hass.config_entries.async_reload(
+                            self.config_entry.entry_id
+                        )
+                    )
+                    return self.async_create_entry(data={})
 
         schema = self.add_suggested_values_to_schema(OPTIONS_SCHEMA, entry_data)
 
