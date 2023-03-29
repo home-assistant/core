@@ -258,54 +258,28 @@ async def test_options_flow_departure_time(hass: HomeAssistant, mock_config) -> 
 
 
 @pytest.mark.parametrize(
-    ("data", "options", "time"),
+    ("data", "options"),
     [
         (
             MOCK_CONFIG,
             {
                 CONF_MODE: "driving",
-                CONF_LANGUAGE: "en",
-                CONF_AVOID: "tolls",
                 CONF_UNITS: UNITS_IMPERIAL,
                 CONF_DEPARTURE_TIME: "test",
-                CONF_TRAFFIC_MODEL: "best_guess",
-                CONF_TRANSIT_MODE: "train",
-                CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
             },
-            "",
         ),
         (
             MOCK_CONFIG,
             {
                 CONF_MODE: "driving",
-                CONF_LANGUAGE: "en",
-                CONF_AVOID: "tolls",
-                CONF_UNITS: UNITS_IMPERIAL,
-                CONF_DEPARTURE_TIME: "test",
-                CONF_TRAFFIC_MODEL: "best_guess",
-                CONF_TRANSIT_MODE: "train",
-                CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
-            },
-            None,
-        ),
-        (
-            MOCK_CONFIG,
-            {
-                CONF_MODE: "driving",
-                CONF_LANGUAGE: "en",
-                CONF_AVOID: "tolls",
                 CONF_UNITS: UNITS_IMPERIAL,
                 CONF_ARRIVAL_TIME: "test",
-                CONF_TRAFFIC_MODEL: "best_guess",
-                CONF_TRANSIT_MODE: "train",
-                CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
             },
-            None,
         ),
     ],
 )
 @pytest.mark.usefixtures("validate_config_entry")
-async def test_reset_departure_time(hass: HomeAssistant, mock_config, time) -> None:
+async def test_reset_departure_time(hass: HomeAssistant, mock_config) -> None:
     """Test resetting departure time."""
     result = await hass.config_entries.options.async_init(
         mock_config.entry_id, data=None
@@ -318,77 +292,40 @@ async def test_reset_departure_time(hass: HomeAssistant, mock_config, time) -> N
         result["flow_id"],
         user_input={
             CONF_MODE: "driving",
-            CONF_LANGUAGE: "en",
-            CONF_AVOID: "tolls",
             CONF_UNITS: UNITS_IMPERIAL,
             CONF_TIME_TYPE: DEPARTURE_TIME,
-            CONF_TIME: time,
-            CONF_TRAFFIC_MODEL: "best_guess",
-            CONF_TRANSIT_MODE: "train",
-            CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
         },
     )
 
     assert mock_config.options == {
         CONF_MODE: "driving",
-        CONF_LANGUAGE: "en",
-        CONF_AVOID: "tolls",
         CONF_UNITS: UNITS_IMPERIAL,
-        CONF_TRAFFIC_MODEL: "best_guess",
-        CONF_TRANSIT_MODE: "train",
-        CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
     }
 
 
 @pytest.mark.parametrize(
-    ("data", "options", "time"),
+    ("data", "options"),
     [
         (
             MOCK_CONFIG,
             {
                 CONF_MODE: "driving",
-                CONF_LANGUAGE: "en",
-                CONF_AVOID: "tolls",
                 CONF_UNITS: UNITS_IMPERIAL,
                 CONF_ARRIVAL_TIME: "test",
-                CONF_TRAFFIC_MODEL: "best_guess",
-                CONF_TRANSIT_MODE: "train",
-                CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
             },
-            "",
         ),
         (
             MOCK_CONFIG,
             {
                 CONF_MODE: "driving",
-                CONF_LANGUAGE: "en",
-                CONF_AVOID: "tolls",
-                CONF_UNITS: UNITS_IMPERIAL,
-                CONF_ARRIVAL_TIME: "test",
-                CONF_TRAFFIC_MODEL: "best_guess",
-                CONF_TRANSIT_MODE: "train",
-                CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
-            },
-            None,
-        ),
-        (
-            MOCK_CONFIG,
-            {
-                CONF_MODE: "driving",
-                CONF_LANGUAGE: "en",
-                CONF_AVOID: "tolls",
                 CONF_UNITS: UNITS_IMPERIAL,
                 CONF_DEPARTURE_TIME: "test",
-                CONF_TRAFFIC_MODEL: "best_guess",
-                CONF_TRANSIT_MODE: "train",
-                CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
             },
-            None,
         ),
     ],
 )
 @pytest.mark.usefixtures("validate_config_entry")
-async def test_reset_arrival_time(hass: HomeAssistant, mock_config, time) -> None:
+async def test_reset_arrival_time(hass: HomeAssistant, mock_config) -> None:
     """Test resetting arrival time."""
     result = await hass.config_entries.options.async_init(
         mock_config.entry_id, data=None
@@ -401,25 +338,14 @@ async def test_reset_arrival_time(hass: HomeAssistant, mock_config, time) -> Non
         result["flow_id"],
         user_input={
             CONF_MODE: "driving",
-            CONF_LANGUAGE: "en",
-            CONF_AVOID: "tolls",
             CONF_UNITS: UNITS_IMPERIAL,
             CONF_TIME_TYPE: ARRIVAL_TIME,
-            CONF_TIME: time,
-            CONF_TRAFFIC_MODEL: "best_guess",
-            CONF_TRANSIT_MODE: "train",
-            CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
         },
     )
 
     assert mock_config.options == {
         CONF_MODE: "driving",
-        CONF_LANGUAGE: "en",
-        CONF_AVOID: "tolls",
         CONF_UNITS: UNITS_IMPERIAL,
-        CONF_TRAFFIC_MODEL: "best_guess",
-        CONF_TRANSIT_MODE: "train",
-        CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
     }
 
 
