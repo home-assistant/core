@@ -161,7 +161,7 @@
       "name": "Stored energy"
     },
     "enum": {
-      "name": "Enumerator"
+      "name": "Enumeration"
     },
     "frequency": {
       "name": "Frequency"
