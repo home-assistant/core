@@ -119,9 +119,9 @@ SENSOR_SETUP = {
         )
     ),
     # Note: we set default to ensure that frontend does not omit the result
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=""): SelectSelector(
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=NONE_SENTINEL): SelectSelector(
         SelectSelectorConfig(
-            options=[cls.value for cls in UnitOfTemperature],
+            options=[NONE_SENTINEL] + [cls.value for cls in UnitOfTemperature],
             custom_value=True,
             mode=SelectSelectorMode.DROPDOWN,
         )
@@ -130,8 +130,8 @@ SENSOR_SETUP = {
 
 
 def _strip_sentinel(options: dict[str, Any]) -> None:
-    """Convert empty string sentinel to None."""
-    for key in (CONF_DEVICE_CLASS, CONF_STATE_CLASS):
+    """Convert sentinel to None."""
+    for key in (CONF_DEVICE_CLASS, CONF_STATE_CLASS, CONF_UNIT_OF_MEASUREMENT):
         if options.get(key) == NONE_SENTINEL:
             options.pop(key, None)
 
@@ -195,7 +195,7 @@ async def get_edit_sensor_suggested_values(
     """Return suggested values for sensor editing."""
     idx: int = handler.flow_state["_idx"]
     suggested_values: dict[str, Any] = dict(handler.options[SENSOR_DOMAIN][idx])
-    for key in (CONF_DEVICE_CLASS, CONF_STATE_CLASS):
+    for key in (CONF_DEVICE_CLASS, CONF_STATE_CLASS, CONF_UNIT_OF_MEASUREMENT):
         if not suggested_values.get(key):
             suggested_values[key] = NONE_SENTINEL
     return cast(dict[str, Any], handler.options[SENSOR_DOMAIN][idx])

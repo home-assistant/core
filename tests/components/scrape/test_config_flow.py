@@ -88,7 +88,6 @@ async def test_form(
                 CONF_SELECT: ".current-version h1",
                 CONF_INDEX: 0.0,
                 CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120002",
-                CONF_UNIT_OF_MEASUREMENT: "",
             }
         ],
     }
@@ -179,7 +178,6 @@ async def test_flow_fails(
                 CONF_SELECT: ".current-version h1",
                 CONF_INDEX: 0.0,
                 CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120002",
-                CONF_UNIT_OF_MEASUREMENT: "",
             }
         ],
     }
@@ -306,7 +304,6 @@ async def test_options_add_remove_sensor_flow(
                 CONF_SELECT: "template",
                 CONF_INDEX: 0,
                 CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120003",
-                CONF_UNIT_OF_MEASUREMENT: "",
             },
         ],
     }
@@ -361,7 +358,6 @@ async def test_options_add_remove_sensor_flow(
                 CONF_SELECT: "template",
                 CONF_INDEX: 0,
                 CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120003",
-                CONF_UNIT_OF_MEASUREMENT: "",
             },
         ],
     }
@@ -429,7 +425,6 @@ async def test_options_edit_sensor_flow(
                 CONF_SELECT: "template",
                 CONF_INDEX: 0,
                 CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120002",
-                CONF_UNIT_OF_MEASUREMENT: "",
             },
         ],
     }
@@ -578,7 +573,7 @@ async def test_sensor_options_remove_device_class(
             CONF_VALUE_TEMPLATE: "{{ value.split(':')[1] }}",
             CONF_DEVICE_CLASS: NONE_SENTINEL,
             CONF_STATE_CLASS: NONE_SENTINEL,
-            CONF_UNIT_OF_MEASUREMENT: "",
+            CONF_UNIT_OF_MEASUREMENT: NONE_SENTINEL,
         },
     )
     await hass.async_block_till_done()
@@ -595,7 +590,6 @@ async def test_sensor_options_remove_device_class(
                 CONF_NAME: "Current Temp",
                 CONF_SELECT: ".current-temp h3",
                 CONF_VALUE_TEMPLATE: "{{ value.split(':')[1] }}",
-                CONF_UNIT_OF_MEASUREMENT: "",
                 CONF_INDEX: 0,
                 CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120002",
             },
