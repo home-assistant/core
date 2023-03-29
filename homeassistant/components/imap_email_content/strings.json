@@ -2,7 +2,22 @@
   "issues": {
     "deprecation": {
       "title": "The IMAP email content integration is deprecated",
-      "description": "Please setup an entry for the [imap integration](https://my.home-assistant.io/redirect/config_flow_start?domain=imap) use a `imap` custom event with a template sensor instead and remove the `imap_email_plaform` sensor configuration from your `configuration.yaml`. A sample configuration is shown below (note that only the first of allowed sender is shown):\n\n```yaml\n{yaml_example}```\n"
+      "fix_flow": {
+        "step": {
+          "start": {
+            "title": "Migrate your IMAP email configuration",
+            "description": "The IMAP email content integration is deprecated. You IMAP configuration can be migrated automatically to the [imap integration](https://my.home-assistant.io/redirect/config_flow_start?domain=imap), this will enable using an `imap` custom event. To achieve a sensor that has an IMAP content state, set up a template sensor remove the `imap_email_plaform` sensor configuration from your `configuration.yaml`. To set up the template sensor you can copy the configuration below and place this in your `configuration.yaml`. Note that only the first of allowed sender, as only one is shown, customize this if needed:\n\n```yaml\n{yaml_example}```\n\nSubmit to start migration of your IMAP server configuration to the `imap` integration."
+          },
+          "deprecation": {
+            "title": "Remove your IMAP email content configuration",
+            "description": "The IMAP email content integration is deprecated. Your IMAP configuration was migrated for you to the [imap integration](https://my.home-assistant.io/redirect/config_flow_start?domain=imap), this enabled using an `imap` custom event. You still need to remove your `imap_email_content` sensor configuration from your configuration.yaml. To achieve a sensor that has an IMAP content state, set up a template sensor remove the `imap_email_plaform` sensor configuration from your `configuration.yaml`. To set up the template sensor you can copy the configuration below and place this in your `configuration.yaml`. Note that only the first of allowed sender, as only one is shown, customize this if needed:\n\n```yaml\n{yaml_example}```\n\nYou can skip this step if you have already set up a template sensor.\n\nSubmit to finish."
+          },
+          "confirm": {
+            "title": "Your IMAP server settings will be migrated",
+            "description": "An `imap` config entry will be set up with configuration:\n\n```text\nServer\t{server}\nPort\t{port}\nUsername\t{username}\nPassword\t*****\nFolder\t{folder}\n```\n\nSee also: (https://www.home-assistant.io/integrations/imap/)\n\nFitering configuration on `sender` is part of the template sensor config that can be placed in `configuration.yaml.\n\n```yaml\n{yaml_example}```\nDo not forget to cleanup the your `configuration.yaml`.\n\nSubmit to migrate the entry."
+          }
+        }
+      }
     }
   }
 }

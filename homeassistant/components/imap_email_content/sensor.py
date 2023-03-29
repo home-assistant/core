@@ -8,7 +8,6 @@ import imaplib
 import logging
 
 import voluptuous as vol
-import yaml
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
@@ -22,25 +21,23 @@ from homeassistant.const import (
     CONTENT_TYPE_TEXT_PLAIN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.ssl import client_context
 
+from .const import (
+    ATTR_BODY,
+    ATTR_FROM,
+    ATTR_SUBJECT,
+    CONF_FOLDER,
+    CONF_SENDERS,
+    CONF_SERVER,
+    DEFAULT_PORT,
+)
+from .repairs import process_issue
+
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "imap_email_content"
-
-CONF_SERVER = "server"
-CONF_SENDERS = "senders"
-CONF_FOLDER = "folder"
-
-ATTR_FROM = "from"
-ATTR_BODY = "body"
-ATTR_SUBJECT = "subject"
-
-DEFAULT_PORT = 993
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -55,60 +52,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     }
 )
-
-
-def register_issue(hass: HomeAssistant, config: ConfigType) -> None:
-    """Register an issue and suggest new config."""
-
-    name: str = config.get(CONF_NAME) or config[CONF_USERNAME]
-
-    issue_id = (
-        f"{name}_{config[CONF_USERNAME]}_{config[CONF_SERVER]}_{config[CONF_FOLDER]}"
-    )
-
-    if CONF_VALUE_TEMPLATE in config:
-        template: str = config[CONF_VALUE_TEMPLATE].template
-        template = template.replace("subject", 'trigger.event.data["subject"]')
-        template = template.replace("from", 'trigger.event.data["sender"]')
-        template = template.replace("date", 'trigger.event.data["date"]')
-        template = template.replace("body", 'trigger.event.data["text"]')
-    else:
-        template = '{{ trigger.event.data["subject"] }}'
-
-    template_sensor_config: ConfigType = {
-        "template": [
-            {
-                "trigger": [
-                    {
-                        "id": "custom_event",
-                        "platform": "event",
-                        "event_type": "imap_content",
-                        "event_data": {"sender": config[CONF_SENDERS][0]},
-                    }
-                ],
-                "sensor": [
-                    {
-                        "state": template,
-                        "name": name,
-                    }
-                ],
-            }
-        ]
-    }
-
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        issue_id,
-        breaks_in_ha_version="2023.10.0",
-        is_fixable=False,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecation",
-        translation_placeholders={
-            "yaml_example": yaml.dump(template_sensor_config),
-        },
-        learn_more_url="https://www.home-assistant.io/integrations/imap/#using-events",
-    )
 
 
 async def async_setup_platform(
@@ -137,7 +80,7 @@ async def async_setup_platform(
         value_template,
     )
 
-    register_issue(hass, config)
+    process_issue(hass, config)
 
     if sensor.connected:
         add_entities([sensor], True)
