@@ -6,6 +6,7 @@ import logging
 import os
 import threading
 from typing import Any
+import pytz
 
 import pygtfs
 from sqlalchemy.sql import text
@@ -359,8 +360,8 @@ def get_next_departure(
     yesterday_start = today_start = tomorrow_start = None
     yesterday_last = today_last = ""
 
-    for row_cursor in result:
-        row = row_cursor._asdict()
+    for rowin in result:
+        row = rowin._asdict()
         if row["yesterday"] == 1 and yesterday_date >= row["start_date"]:
             extras = {"day": "yesterday", "first": None, "last": False}
             if yesterday_start is None:
@@ -568,7 +569,7 @@ class GTFSDepartureSensor(SensorEntity):
         return self._available
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
         return self._attributes
 
@@ -610,14 +611,6 @@ class GTFSDepartureSensor(SensorEntity):
                 self._include_tomorrow,
             )
 
-            # Define the state as a UTC timestamp with ISO 8601 format
-            if not self._departure:
-                self._state = None
-            else:
-                self._state = self._departure["departure_time"].replace(
-                    tzinfo=dt_util.UTC
-                )
-
             # Fetch trip and route details once, unless updated
             if not self._departure:
                 self._trip = None
@@ -648,6 +641,15 @@ class GTFSDepartureSensor(SensorEntity):
                     )
                     self._agency = False
 
+            # Define the state as a UTC timestamp with ISO 8601 format
+            if not self._departure:
+                self._state = None
+            else:
+                if self._agency.agency_timezone:
+                   self._state = self._departure["departure_time"].astimezone(pytz.timezone(self._agency.agency_timezone))
+                else:
+                   self._state = self._departure["departure_time"].replace(tzinfo=dt_util.UTC)
+
             # Assign attributes, icon and name
             self.update_attributes()
 
@@ -673,9 +675,10 @@ class GTFSDepartureSensor(SensorEntity):
         """Update state attributes."""
         # Add departure information
         if self._departure:
-            self._attributes[ATTR_ARRIVAL] = dt_util.as_utc(
-                self._departure["arrival_time"]
-            ).isoformat()
+            if self._agency.agency_timezone:
+                self._attributes[ATTR_ARRIVAL] = dt_util.as_utc(self._departure["arrival_time"]).astimezone(pytz.timezone(self._agency.agency_timezone))
+            else:
+                self._attributes[ATTR_ARRIVAL] = dt_util.as_utc(self._departure["arrival_time"]).isoformat()
 
             self._attributes[ATTR_DAY] = self._departure["day"]
 
