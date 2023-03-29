@@ -45,6 +45,7 @@ from homeassistant.const import (
     CONF_TEMPERATURE_UNIT,
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -228,26 +229,29 @@ class ClimateGroup(GroupEntity, ClimateEntity):
             # Merge all effects from all effect_lists with a union merge.
             self._attr_hvac_modes = list(set().union(*all_hvac_modes))
 
-        current_hvac_modes = [x.state for x in states if x.state != HVACMode.OFF]
-        # return the most common hvac mode (what the thermostat is set to do) except OFF
+        current_hvac_modes = [
+            x.state
+            for x in states
+            if x.state not in [HVACMode.OFF, STATE_UNAVAILABLE, STATE_UNKNOWN]
+        ]
+        # return the most common hvac mode (what the thermostat is set to do) except OFF, UNKNOWN and UNAVAILABE
         if current_hvac_modes:
             self._attr_hvac_mode = max(
-                set(current_hvac_modes), key=current_hvac_modes.count
+                sorted(set(current_hvac_modes)), key=current_hvac_modes.count
             )
-        # return off if all are off
-        elif all(x.state == HVACMode.OFF for x in states):
-            self._attr_preset_mode = HVACMode.OFF
+        # return off if any is off
+        elif any(x.state == HVACMode.OFF for x in states):
+            self._attr_hvac_mode = HVACMode.OFF
         # else it's none
         else:
             self._attr_hvac_mode = None
-
         # return the most common action if it is not off
         hvac_actions = list(find_state_attributes(states, ATTR_HVAC_ACTION))
         current_hvac_actions = [a for a in hvac_actions if a != HVACAction.OFF]
         # return the most common action if it is not off
         if current_hvac_actions:
             self._attr_hvac_action = max(
-                set(current_hvac_actions), key=current_hvac_actions.count
+                sorted(set(current_hvac_actions)), key=current_hvac_actions.count
             )
         # return action off if all are off
         elif all(a == HVACAction.OFF for a in hvac_actions):

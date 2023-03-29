@@ -350,18 +350,23 @@ async def test_nested_group(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    state = hass.states.get("climate.bedroom_group")
-    assert state is not None
-    assert state.state == HVACMode.COOL
-    assert state.attributes.get(ATTR_ENTITY_ID) == [
+    state_hvav = hass.states.get("climate.hvac")
+    assert state_hvav.state == HVACMode.COOL
+    state_ecobee = hass.states.get("climate.ecobee")
+    assert state_ecobee.state == HVACMode.HEAT_COOL
+    state_group = hass.states.get("climate.bedroom_group")
+
+    assert state_group is not None
+    assert state_group.state == HVACMode.COOL
+    assert state_group.attributes.get(ATTR_ENTITY_ID) == [
         "climate.hvac",
         "climate.ecobee",
     ]
 
-    state = hass.states.get("climate.nested_group")
-    assert state is not None
-    assert state.state == HVACMode.COOL
-    assert state.attributes.get(ATTR_ENTITY_ID) == ["climate.bedroom_group"]
+    state_nested = hass.states.get("climate.nested_group")
+    assert state_nested is not None
+    assert state_nested.state == HVACMode.COOL
+    assert state_nested.attributes.get(ATTR_ENTITY_ID) == ["climate.bedroom_group"]
 
     # Test controlling the nested group
     async with async_timeout.timeout(0.5):

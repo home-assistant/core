@@ -18,6 +18,8 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -239,8 +241,10 @@ class ClimateEntity(Entity):
     @property
     def state(self) -> str | None:
         """Return the current state."""
-        if self.hvac_mode is None:
+        if self.hvac_mode is None or self.hvac_mode == STATE_UNKNOWN:
             return None
+        if self.hvac_mode == STATE_UNAVAILABLE:
+            return STATE_UNAVAILABLE
         if not isinstance(self.hvac_mode, HVACMode):
             return HVACMode(self.hvac_mode).value
         return self.hvac_mode.value
