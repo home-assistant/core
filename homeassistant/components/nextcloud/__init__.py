@@ -1,7 +1,12 @@
 """The Nextcloud integration."""
 import logging
 
-from nextcloudmonitor import NextcloudMonitor, NextcloudMonitorError
+from nextcloudmonitor import (
+    NextcloudMonitor,
+    NextcloudMonitorAuthorizationError,
+    NextcloudMonitorConnectionError,
+    NextcloudMonitorRequestError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -14,6 +19,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
@@ -82,9 +88,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         ncm = await hass.async_add_executor_job(_connect_nc)
-    except NextcloudMonitorError:
-        _LOGGER.error("Nextcloud setup failed - Check configuration")
-        return False
+    except NextcloudMonitorAuthorizationError as ex:
+        raise ConfigEntryAuthFailed from ex
+    except (NextcloudMonitorConnectionError, NextcloudMonitorRequestError) as ex:
+        raise ConfigEntryNotReady from ex
 
     coordinator = NextcloudDataUpdateCoordinator(
         hass,
