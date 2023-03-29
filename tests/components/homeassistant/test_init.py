@@ -14,7 +14,7 @@ from homeassistant.components.homeassistant import (
     SERVICE_CHECK_CONFIG,
     SERVICE_RELOAD_ALL,
     SERVICE_RELOAD_CORE_CONFIG,
-    SERVICE_RELOAD_CUSTOM_JINJA,
+    SERVICE_RELOAD_CUSTOM_TEMPLATE,
     SERVICE_SET_LOCATION,
 )
 from homeassistant.const import (
@@ -576,19 +576,19 @@ async def test_save_persistent_states(hass: HomeAssistant) -> None:
         assert mock_save.called
 
 
-async def test_reload_custom_jinja(hass: HomeAssistant) -> None:
-    """Test we can call reload_custom_jinja."""
+async def test_reload_custom_template(hass: HomeAssistant) -> None:
+    """Test we can call reload_custom_template."""
     await async_setup_component(hass, "homeassistant", {})
     with patch(
-        "homeassistant.components.homeassistant.async_load_custom_jinja",
+        "homeassistant.components.homeassistant.async_load_custom_template",
         return_value=None,
-    ) as mock_load_custom_jinja:
+    ) as mock_load_custom_template:
         await hass.services.async_call(
             "homeassistant",
-            SERVICE_RELOAD_CUSTOM_JINJA,
+            SERVICE_RELOAD_CUSTOM_TEMPLATE,
             blocking=True,
         )
-        assert mock_load_custom_jinja.called
+        assert mock_load_custom_template.called
 
 
 async def test_reload_all(
@@ -602,7 +602,7 @@ async def test_reload_all(
     notify = async_mock_service(hass, "notify", "reload")
     core_config = async_mock_service(hass, "homeassistant", "reload_core_config")
     themes = async_mock_service(hass, "frontend", "reload_themes")
-    jinja = async_mock_service(hass, "homeassistant", "reload_custom_jinja")
+    jinja = async_mock_service(hass, "homeassistant", "reload_custom_template")
 
     with patch(
         "homeassistant.config.async_check_ha_config_file",

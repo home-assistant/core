@@ -124,7 +124,7 @@ template_cv: ContextVar[tuple[str, str] | None] = ContextVar(
 CACHED_TEMPLATE_STATES = 512
 EVAL_CACHE_SIZE = 512
 
-MAX_CUSTOM_JINJA_SIZE = 5 * 1024 * 1024
+MAX_CUSTOM_TEMPLATE_SIZE = 5 * 1024 * 1024
 
 
 @bind_hass
@@ -2084,18 +2084,18 @@ class LoggingUndefined(jinja2.Undefined):
         return super().__bool__()
 
 
-async def async_load_custom_jinja(hass: HomeAssistant) -> None:
+async def async_load_custom_template(hass: HomeAssistant) -> None:
     """Load all custom jinja files under 5MiB into memory."""
-    return await hass.async_add_executor_job(_load_custom_jinja, hass)
+    return await hass.async_add_executor_job(_load_custom_template, hass)
 
 
-def _load_custom_jinja(hass: HomeAssistant) -> None:
+def _load_custom_template(hass: HomeAssistant) -> None:
     result = {}
-    jinja_path = hass.config.path("custom_jinja")
+    jinja_path = hass.config.path("custom_template")
     all_files = [
         item
         for item in pathlib.Path(jinja_path).rglob("*.jinja")
-        if item.is_file() and item.stat().st_size <= MAX_CUSTOM_JINJA_SIZE
+        if item.is_file() and item.stat().st_size <= MAX_CUSTOM_TEMPLATE_SIZE
     ]
     for file in all_files:
         content = file.read_text()
