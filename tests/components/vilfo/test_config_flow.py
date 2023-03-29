@@ -34,8 +34,7 @@ async def test_form(hass: HomeAssistant) -> None:
             {CONF_HOST: "testadmin.vilfo.com", CONF_ACCESS_TOKEN: "test-token"},
         )
         await hass.async_block_till_done()
-    print("out")
-    print(result2)
+
     assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == "testadmin.vilfo.com"
     assert result2["data"] == {
