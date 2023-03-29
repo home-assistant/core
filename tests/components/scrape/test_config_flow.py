@@ -8,6 +8,7 @@ from homeassistant import config_entries
 from homeassistant.components.rest.data import DEFAULT_TIMEOUT
 from homeassistant.components.rest.schema import DEFAULT_METHOD
 from homeassistant.components.scrape import DOMAIN
+from homeassistant.components.scrape.config_flow import NONE_SENTINEL
 from homeassistant.components.scrape.const import (
     CONF_ENCODING,
     CONF_INDEX,
@@ -87,8 +88,6 @@ async def test_form(
                 CONF_SELECT: ".current-version h1",
                 CONF_INDEX: 0.0,
                 CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120002",
-                CONF_DEVICE_CLASS: "",
-                CONF_STATE_CLASS: "",
                 CONF_UNIT_OF_MEASUREMENT: "",
             }
         ],
@@ -180,8 +179,6 @@ async def test_flow_fails(
                 CONF_SELECT: ".current-version h1",
                 CONF_INDEX: 0.0,
                 CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120002",
-                CONF_DEVICE_CLASS: "",
-                CONF_STATE_CLASS: "",
                 CONF_UNIT_OF_MEASUREMENT: "",
             }
         ],
@@ -309,8 +306,6 @@ async def test_options_add_remove_sensor_flow(
                 CONF_SELECT: "template",
                 CONF_INDEX: 0,
                 CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120003",
-                CONF_DEVICE_CLASS: "",
-                CONF_STATE_CLASS: "",
                 CONF_UNIT_OF_MEASUREMENT: "",
             },
         ],
@@ -366,8 +361,6 @@ async def test_options_add_remove_sensor_flow(
                 CONF_SELECT: "template",
                 CONF_INDEX: 0,
                 CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120003",
-                CONF_DEVICE_CLASS: "",
-                CONF_STATE_CLASS: "",
                 CONF_UNIT_OF_MEASUREMENT: "",
             },
         ],
@@ -436,8 +429,6 @@ async def test_options_edit_sensor_flow(
                 CONF_SELECT: "template",
                 CONF_INDEX: 0,
                 CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120002",
-                CONF_DEVICE_CLASS: "",
-                CONF_STATE_CLASS: "",
                 CONF_UNIT_OF_MEASUREMENT: "",
             },
         ],
@@ -585,8 +576,8 @@ async def test_sensor_options_remove_device_class(
             CONF_SELECT: ".current-temp h3",
             CONF_INDEX: 0.0,
             CONF_VALUE_TEMPLATE: "{{ value.split(':')[1] }}",
-            CONF_DEVICE_CLASS: "",
-            CONF_STATE_CLASS: "",
+            CONF_DEVICE_CLASS: NONE_SENTINEL,
+            CONF_STATE_CLASS: NONE_SENTINEL,
             CONF_UNIT_OF_MEASUREMENT: "",
         },
     )
@@ -604,8 +595,6 @@ async def test_sensor_options_remove_device_class(
                 CONF_NAME: "Current Temp",
                 CONF_SELECT: ".current-temp h3",
                 CONF_VALUE_TEMPLATE: "{{ value.split(':')[1] }}",
-                CONF_DEVICE_CLASS: "",
-                CONF_STATE_CLASS: "",
                 CONF_UNIT_OF_MEASUREMENT: "",
                 CONF_INDEX: 0,
                 CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120002",

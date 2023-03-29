@@ -95,6 +95,8 @@ RESOURCE_SETUP = {
     vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): TextSelector(),
 }
 
+NONE_SENTINEL = "none"
+
 SENSOR_SETUP = {
     vol.Required(CONF_SELECT): TextSelector(),
     vol.Optional(CONF_INDEX, default=0): NumberSelector(
@@ -103,16 +105,16 @@ SENSOR_SETUP = {
     vol.Optional(CONF_ATTRIBUTE): TextSelector(),
     vol.Optional(CONF_VALUE_TEMPLATE): TemplateSelector(),
     # Note: we set default to ensure that frontend does not omit the result
-    vol.Optional(CONF_DEVICE_CLASS, default=None): SelectSelector(
+    vol.Optional(CONF_DEVICE_CLASS, default=NONE_SENTINEL): SelectSelector(
         SelectSelectorConfig(
-            options=[""] + [cls.value for cls in SensorDeviceClass],
+            options=[NONE_SENTINEL] + [cls.value for cls in SensorDeviceClass],
             mode=SelectSelectorMode.DROPDOWN,
         )
     ),
     # Note: we set default to ensure that frontend does not omit the result
-    vol.Optional(CONF_STATE_CLASS, default=None): SelectSelector(
+    vol.Optional(CONF_STATE_CLASS, default=NONE_SENTINEL): SelectSelector(
         SelectSelectorConfig(
-            options=[""] + [cls.value for cls in SensorStateClass],
+            options=[NONE_SENTINEL] + [cls.value for cls in SensorStateClass],
             mode=SelectSelectorMode.DROPDOWN,
         )
     ),
@@ -125,6 +127,13 @@ SENSOR_SETUP = {
         )
     ),
 }
+
+
+def _strip_sentinel(options: dict[str, Any]) -> None:
+    """Convert empty string sentinel to None."""
+    for key in (CONF_DEVICE_CLASS, CONF_STATE_CLASS):
+        if options.get(key) == NONE_SENTINEL:
+            options.pop(key, None)
 
 
 async def validate_rest_setup(
@@ -153,6 +162,7 @@ async def validate_sensor_setup(
     # Standard behavior is to merge the result with the options.
     # In this case, we want to add a sub-item so we update the options directly.
     sensors: list[dict[str, Any]] = handler.options.setdefault(SENSOR_DOMAIN, [])
+    _strip_sentinel(user_input)
     sensors.append(user_input)
     return {}
 
@@ -184,6 +194,10 @@ async def get_edit_sensor_suggested_values(
 ) -> dict[str, Any]:
     """Return suggested values for sensor editing."""
     idx: int = handler.flow_state["_idx"]
+    suggested_values: dict[str, Any] = dict(handler.options[SENSOR_DOMAIN][idx])
+    for key in (CONF_DEVICE_CLASS, CONF_STATE_CLASS):
+        if not suggested_values.get(key):
+            suggested_values[key] = NONE_SENTINEL
     return cast(dict[str, Any], handler.options[SENSOR_DOMAIN][idx])
 
 
@@ -197,6 +211,7 @@ async def validate_sensor_edit(
     # In this case, we want to add a sub-item so we update the options directly.
     idx: int = handler.flow_state["_idx"]
     handler.options[SENSOR_DOMAIN][idx].update(user_input)
+    _strip_sentinel(handler.options[SENSOR_DOMAIN][idx])
     return {}
 
 
