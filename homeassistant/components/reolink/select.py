@@ -5,7 +5,13 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from reolink_aio.api import DayNightEnum, Host, SpotlightModeEnum, StatusLedEnum, TrackMethodEnum
+from reolink_aio.api import (
+    DayNightEnum,
+    Host,
+    SpotlightModeEnum,
+    StatusLedEnum,
+    TrackMethodEnum,
+)
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
