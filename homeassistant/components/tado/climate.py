@@ -83,13 +83,6 @@ CLIMATE_TEMP_OFFSET_SCHEMA = {
     vol.Required(ATTR_OFFSET, default=0): vol.Coerce(float),
 }
 
-SERVICE_SET_PRESET_MODE = "set_presence"
-ATTR_PRESENCE = "preset_mode"
-
-CLIMATE_PRESET_MODE_SCHEMA = {
-    vol.Required(ATTR_PRESENCE): vol.Coerce(str),
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -111,12 +104,6 @@ async def async_setup_entry(
         SERVICE_TEMP_OFFSET,
         CLIMATE_TEMP_OFFSET_SCHEMA,
         "set_temp_offset",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_SET_PRESET_MODE,
-        CLIMATE_PRESET_MODE_SCHEMA,
-        "set_preset_mode",
     )
 
     async_add_entities(entities, True)
