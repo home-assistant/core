@@ -6,7 +6,6 @@ import socket
 from homeassistant.const import Platform
 
 DOMAIN = "freebox"
-SERVICE_FLIP = "flip"
 SERVICE_REBOOT = "reboot"
 
 APP_DESC = {

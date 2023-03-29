@@ -18,7 +18,7 @@ from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_DETECTION, ATTR_FLIP, DOMAIN, SERVICE_FLIP
+from .const import ATTR_DETECTION, DOMAIN
 from .home_base import FreeboxHomeEntity
 from .router import FreeboxRouter
 
@@ -41,12 +41,7 @@ async def async_setup_entry(
     )
     update_callback()
 
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_FLIP,
-        {},
-        "async_flip",
-    )
+    entity_platform.async_get_current_platform()
 
 
 @callback
@@ -73,7 +68,6 @@ class FreeboxCamera(FreeboxHomeEntity, FFmpegCamera):
         """Initialize a camera."""
 
         super().__init__(hass, router, node)
-        self._flip: Any
         device_info = {
             CONF_NAME: node["label"].strip(),
             CONF_INPUT: node["props"]["Stream"],
@@ -88,24 +82,8 @@ class FreeboxCamera(FreeboxHomeEntity, FFmpegCamera):
         self._command_motion_detection = self.get_command_id(
             node["type"]["endpoints"], ATTR_DETECTION
         )
-        self._command_flip = self.get_command_id(node["show_endpoints"], ATTR_FLIP)
         self._attr_extra_state_attributes = {}
         self.update_node(node)
-
-    @property
-    def command_flip(self) -> Any | str:
-        """Return command_flip."""
-        return self._command_flip
-
-    @property
-    def flip(self) -> bool:
-        """Return flip."""
-        return self._flip
-
-    async def async_flip(self, entity: FreeboxCamera) -> None:
-        """Flip the camera stream."""
-        self._flip = not entity.flip
-        await entity.set_home_endpoint_value(entity.command_flip, entity.flip)
 
     async def async_enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""
@@ -142,4 +120,3 @@ class FreeboxCamera(FreeboxHomeEntity, FFmpegCamera):
         self._attr_motion_detection_enabled = self._attr_extra_state_attributes[
             ATTR_DETECTION
         ]
-        self._flip = self._attr_extra_state_attributes[ATTR_FLIP]
