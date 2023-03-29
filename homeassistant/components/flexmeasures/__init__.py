@@ -14,12 +14,19 @@ DEFAULT_NAME = "World"
 def setup(hass, config):
     """Set up is called when Home Assistant is loading our component."""
 
-    def handle_s2(call):
-        """Handle the service call."""
+    def handle_api(call):
+        """Handle the service call to the FlexMeasures REST API."""
         name = call.data.get(ATTR_NAME, DEFAULT_NAME)
 
-        hass.states.set("hello_service.hello", name)
+        hass.states.set("flexmeasures_api.schedule", name)
 
+    def handle_s2(call):
+        """Handle the service call to the FlexMeasures S2 websockets implementation."""
+        name = call.data.get(ATTR_NAME, DEFAULT_NAME)
+
+        hass.states.set("flexmeasures_s2.message", name)
+
+    hass.services.register(DOMAIN, "api", handle_api)
     hass.services.register(DOMAIN, "s2", handle_s2)
 
     # Return boolean to indicate that initialization was successful.
