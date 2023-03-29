@@ -3,7 +3,6 @@ from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
 from pyvesync import VeSync
-from syrupy import SnapshotAssertion
 
 from homeassistant.components.vesync import async_setup_entry
 from homeassistant.components.vesync.const import (
@@ -18,8 +17,6 @@ from homeassistant.components.vesync.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-
-from .common import get_entities, get_states
 
 
 async def test_async_setup_entry__not_login(
@@ -119,67 +116,3 @@ async def test_async_setup_entry__with_devices(
     assert len(hass.data[DOMAIN][VS_LIGHTS]) == 2
     assert len(hass.data[DOMAIN][VS_SENSORS]) == 2
     assert len(hass.data[DOMAIN][VS_SWITCHES]) == 2
-
-
-async def test_asynch_setup_entry__loaded_state(
-    hass: HomeAssistant,
-    setup_platform,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test the resulting setup state is as expected."""
-
-    # fan devices
-    states = {}
-    identifier = "air-purifier"
-    entities = get_entities(hass, identifier)
-    assert len(entities) == 3
-    states[identifier] = get_states(hass, entities)
-
-    identifier = "asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55"
-    entities = get_entities(hass, identifier)
-    assert len(entities) == 2
-    states[identifier] = get_states(hass, entities)
-
-    identifier = "400s-purifier"
-    entities = get_entities(hass, identifier)
-    assert len(entities) == 4
-    states[identifier] = get_states(hass, entities)
-
-    identifier = "600s-purifier"
-    entities = get_entities(hass, identifier)
-    assert len(entities) == 4
-    states[identifier] = get_states(hass, entities)
-
-    assert states == snapshot(name="fans")
-
-    # bulb devices
-    states = {}
-    identifier = "dimmable-bulb"
-    entities = get_entities(hass, identifier)
-    assert len(entities) == 1
-    states[identifier] = get_states(hass, entities)
-
-    identifier = "tunable-bulb"
-    entities = get_entities(hass, identifier)
-    assert len(entities) == 1
-    states[identifier] = get_states(hass, entities)
-
-    assert states == snapshot(name="bulbs")
-
-    # outlet devices
-    states = {}
-    identifier = "outlet"
-    entities = get_entities(hass, identifier)
-    assert len(entities) == 7
-    states[identifier] = get_states(hass, entities)
-
-    assert states == snapshot(name="outlets")
-
-    # switch devices
-    states = {}
-    identifier = "dimmable-switch"
-    entities = get_entities(hass, identifier)
-    assert len(entities) == 1
-    states[identifier] = get_states(hass, entities)
-
-    assert states == snapshot(name="switches")

@@ -1,0 +1,50 @@
+# serializer version: 1
+# name: test_async_setup_entry__loaded_lights
+  dict({
+    'dimmable-bulb': list([
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Dimmable Light',
+          'supported_color_modes': list([
+            <ColorMode.BRIGHTNESS: 'brightness'>,
+          ]),
+          'supported_features': <LightEntityFeature: 0>,
+        }),
+        'entity_id': 'light.dimmable_light',
+        'state': 'unavailable',
+      }),
+    ]),
+    'dimmable-switch': list([
+      dict({
+        'attributes': ReadOnlyDict({
+          'brightness': 128,
+          'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
+          'friendly_name': 'Dimmer Switch',
+          'supported_color_modes': list([
+            <ColorMode.BRIGHTNESS: 'brightness'>,
+          ]),
+          'supported_features': <LightEntityFeature: 0>,
+        }),
+        'entity_id': 'light.dimmer_switch',
+        'state': 'on',
+      }),
+    ]),
+    'tunable-bulb': list([
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Temperature Light',
+          'max_color_temp_kelvin': 6493,
+          'max_mireds': 370,
+          'min_color_temp_kelvin': 2702,
+          'min_mireds': 154,
+          'supported_color_modes': list([
+            <ColorMode.COLOR_TEMP: 'color_temp'>,
+          ]),
+          'supported_features': <LightEntityFeature: 0>,
+        }),
+        'entity_id': 'light.temperature_light',
+        'state': 'off',
+      }),
+    ]),
+  })
+# ---

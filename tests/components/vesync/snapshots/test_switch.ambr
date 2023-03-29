@@ -1,0 +1,83 @@
+# serializer version: 1
+# name: test_async_setup_entry__loaded_switches
+  dict({
+    'outlet': list([
+      dict({
+        'attributes': ReadOnlyDict({
+          'device_class': 'power',
+          'friendly_name': 'Outlet current power',
+          'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+          'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+        }),
+        'entity_id': 'sensor.outlet_current_power',
+        'state': '25.0',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'device_class': 'voltage',
+          'friendly_name': 'Outlet current voltage',
+          'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+          'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+        }),
+        'entity_id': 'sensor.outlet_current_voltage',
+        'state': '120.0',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'device_class': 'energy',
+          'friendly_name': 'Outlet energy use monthly',
+          'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+          'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        }),
+        'entity_id': 'sensor.outlet_energy_use_monthly',
+        'state': '0',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'device_class': 'energy',
+          'friendly_name': 'Outlet energy use today',
+          'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+          'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        }),
+        'entity_id': 'sensor.outlet_energy_use_today',
+        'state': '100',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'device_class': 'energy',
+          'friendly_name': 'Outlet energy use weekly',
+          'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+          'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        }),
+        'entity_id': 'sensor.outlet_energy_use_weekly',
+        'state': '0',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'device_class': 'energy',
+          'friendly_name': 'Outlet energy use yearly',
+          'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+          'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        }),
+        'entity_id': 'sensor.outlet_energy_use_yearly',
+        'state': '0',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Outlet',
+        }),
+        'entity_id': 'switch.outlet',
+        'state': 'on',
+      }),
+    ]),
+    'switch': list([
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Wall Switch',
+        }),
+        'entity_id': 'switch.wall_switch',
+        'state': 'on',
+      }),
+    ]),
+  })
+# ---

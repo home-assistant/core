@@ -84,6 +84,14 @@
         "connectionStatus": "online"
       },
       {
+        "cid": "switch",
+        "deviceType": "ESWL01",
+        "deviceName": "Wall Switch",
+        "subDeviceNo": null,
+        "deviceStatus": "on",
+        "connectionStatus": "online"
+      },
+      {
         "cid": "dimmable-switch",
         "deviceType": "ESWD16",
         "deviceName": "Dimmer Switch",

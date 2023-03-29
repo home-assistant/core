@@ -1,0 +1,158 @@
+# serializer version: 1
+# name: test_async_setup_entry__loaded_fans
+  dict({
+    '400s-purifier': list([
+      dict({
+        'attributes': ReadOnlyDict({
+          'child_lock': False,
+          'friendly_name': 'Air Purifier 400s',
+          'mode': 'manual',
+          'night_light': 'off',
+          'percentage': 25,
+          'percentage_step': 25.0,
+          'preset_mode': None,
+          'preset_modes': list([
+            'auto',
+            'sleep',
+          ]),
+          'screen_status': True,
+          'supported_features': <FanEntityFeature: 1>,
+        }),
+        'entity_id': 'fan.air_purifier_400s',
+        'state': 'on',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Air Purifier 400s Air Quality',
+        }),
+        'entity_id': 'sensor.air_purifier_400s_air_quality',
+        'state': '5',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Air Purifier 400s Filter Life',
+          'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+          'unit_of_measurement': '%',
+        }),
+        'entity_id': 'sensor.air_purifier_400s_filter_life',
+        'state': '99',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'device_class': 'pm25',
+          'friendly_name': 'Air Purifier 400s PM2.5',
+          'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+          'unit_of_measurement': 'µg/m³',
+        }),
+        'entity_id': 'sensor.air_purifier_400s_pm2_5',
+        'state': '1',
+      }),
+    ]),
+    '600s-purifier': list([
+      dict({
+        'attributes': ReadOnlyDict({
+          'child_lock': False,
+          'friendly_name': 'Air Purifier 600s',
+          'mode': 'manual',
+          'night_light': 'off',
+          'percentage': 25,
+          'percentage_step': 25.0,
+          'preset_mode': None,
+          'preset_modes': list([
+            'auto',
+            'sleep',
+          ]),
+          'screen_status': True,
+          'supported_features': <FanEntityFeature: 1>,
+        }),
+        'entity_id': 'fan.air_purifier_600s',
+        'state': 'on',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Air Purifier 600s Air Quality',
+        }),
+        'entity_id': 'sensor.air_purifier_600s_air_quality',
+        'state': '5',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Air Purifier 600s Filter Life',
+          'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+          'unit_of_measurement': '%',
+        }),
+        'entity_id': 'sensor.air_purifier_600s_filter_life',
+        'state': '99',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'device_class': 'pm25',
+          'friendly_name': 'Air Purifier 600s PM2.5',
+          'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+          'unit_of_measurement': 'µg/m³',
+        }),
+        'entity_id': 'sensor.air_purifier_600s_pm2_5',
+        'state': '1',
+      }),
+    ]),
+    'air-purifier': list([
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Air Purifier 131s',
+          'preset_modes': list([
+            'auto',
+            'sleep',
+          ]),
+          'supported_features': <FanEntityFeature: 1>,
+        }),
+        'entity_id': 'fan.air_purifier_131s',
+        'state': 'unavailable',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Air Purifier 131s Air Quality',
+        }),
+        'entity_id': 'sensor.air_purifier_131s_air_quality',
+        'state': 'unavailable',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Air Purifier 131s Filter Life',
+          'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+          'unit_of_measurement': '%',
+        }),
+        'entity_id': 'sensor.air_purifier_131s_filter_life',
+        'state': 'unavailable',
+      }),
+    ]),
+    'asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55': list([
+      dict({
+        'attributes': ReadOnlyDict({
+          'child_lock': False,
+          'friendly_name': 'Air Purifier 200s',
+          'mode': 'manual',
+          'night_light': 'off',
+          'percentage': 33,
+          'percentage_step': 33.333333333333336,
+          'preset_mode': None,
+          'preset_modes': list([
+            'sleep',
+          ]),
+          'screen_status': True,
+          'supported_features': <FanEntityFeature: 1>,
+        }),
+        'entity_id': 'fan.air_purifier_200s',
+        'state': 'on',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Air Purifier 200s Filter Life',
+          'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+          'unit_of_measurement': '%',
+        }),
+        'entity_id': 'sensor.air_purifier_200s_filter_life',
+        'state': '99',
+      }),
+    ]),
+  })
+# ---
