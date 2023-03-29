@@ -125,5 +125,22 @@
         }
       }
     }
+  },
+  "selector": {
+    "device_class": {
+      "options": {
+        "none": "No device class"
+      }
+    },
+    "state_class": {
+      "options": {
+        "none": "No state class"
+      }
+    },
+    "unit_of_measurement": {
+      "options": {
+        "none": "No unit of measurement"
+      }
+    }
   }
 }
