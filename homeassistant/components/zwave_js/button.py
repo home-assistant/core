@@ -67,13 +67,12 @@ class ZwaveBooleanNodeButton(ZWaveBaseEntity, ButtonEntity):
     ) -> None:
         """Initialize entity."""
         super().__init__(config_entry, driver, info)
+        self.node = self.info.primary_value.node
         self._attr_name = self.generate_name(include_value_name=True)
 
     async def async_press(self) -> None:
         """Press the button."""
-        await self.info.primary_value.node.async_set_value(
-            self.info.primary_value, True
-        )
+        await self.node.async_set_value(self.info.primary_value, True)
 
 
 class ZWaveNodePingButton(ButtonEntity):
