@@ -232,7 +232,7 @@
         "name": "State of charge"
       },
       "temperature_cell": {
-        "name": "Temperature cell"
+        "name": "[%key:component::sensor::entity_component::temperature::name%]"
       }
     }
   }

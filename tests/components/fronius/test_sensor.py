@@ -366,7 +366,7 @@ async def test_gen24_storage(
     assert_state("sensor.byd_battery_box_premium_hv_current_dc", 0.0)
     assert_state("sensor.byd_battery_box_premium_hv_state_of_charge", 4.6)
     assert_state("sensor.byd_battery_box_premium_hv_capacity_maximum", 16588)
-    assert_state("sensor.byd_battery_box_premium_hv_temperature_cell", 21.5)
+    assert_state("sensor.byd_battery_box_premium_hv_temperature", 21.5)
     assert_state("sensor.byd_battery_box_premium_hv_capacity_designed", 16588)
     assert_state("sensor.byd_battery_box_premium_hv_voltage_dc", 0.0)
 
