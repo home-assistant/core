@@ -137,6 +137,16 @@
         "kind": "build",
         "isDefault": true
       }
+    },
+    {
+      "label": "(GIT) Rebase Upstream",
+      "detail": "Rebase home-assistant/core dev branch onto current branch",
+      "type": "shell",
+      "command": "git remote get-url upstream || git remote add upstream https://github.com/home-assistant/core.git; git fetch upstream dev; git rebase upstream/dev",
+      "group": {
+        "kind": "none"
+      },
+      "problemMatcher": []
     }
   ],
   "inputs": [
