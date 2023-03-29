@@ -51,8 +51,12 @@ TEMPLATE_ENTITY_BASE_SCHEMA = vol.Schema(
 
 TEMPLATE_SENSOR_BASE_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_DEVICE_CLASS): vol.Any(None, "", DEVICE_CLASSES_SCHEMA),
-        vol.Optional(CONF_STATE_CLASS): vol.Any(None, "", STATE_CLASSES_SCHEMA),
+        vol.Optional(CONF_DEVICE_CLASS): vol.All(
+            cv.empty_string_to_none, vol.Any(None, DEVICE_CLASSES_SCHEMA)
+        ),
+        vol.Optional(CONF_STATE_CLASS): vol.All(
+            cv.empty_string_to_none, vol.Any(None, STATE_CLASSES_SCHEMA)
+        ),
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
 ).extend(TEMPLATE_ENTITY_BASE_SCHEMA.schema)
