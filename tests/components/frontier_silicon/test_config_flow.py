@@ -472,7 +472,7 @@ async def test_reauth_flow_friendly_name_error(
     assert result["step_id"] == "device_config"
 
     with patch(
-        "afsapi.AFSAPI.get_friendly_name",
+        "homeassistant.components.frontier_silicon.config_flow.AFSAPI.get_friendly_name",
         side_effect=friendly_name_error,
     ):
         result2 = await hass.config_entries.flow.async_configure(
