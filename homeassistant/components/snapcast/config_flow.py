@@ -13,7 +13,7 @@ from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DOMAIN
+from .const import DEFAULT_TITLE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ class SnapcastConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 await client.stop()
-                return self.async_create_entry(title=f"{host}:{port}", data=user_input)
+                return self.async_create_entry(title=DEFAULT_TITLE, data=user_input)
         return self.async_show_form(
             step_id="user", data_schema=SNAPCAST_SCHEMA, errors=errors
         )
@@ -56,8 +56,8 @@ class SnapcastConfigFlow(ConfigFlow, domain=DOMAIN):
         """Import a config entry from configuration.yaml."""
         self._async_abort_entries_match(
             {
-                CONF_HOST: (host := import_config[CONF_HOST]),
-                CONF_PORT: (port := import_config[CONF_PORT]),
+                CONF_HOST: (import_config[CONF_HOST]),
+                CONF_PORT: (import_config[CONF_PORT]),
             }
         )
-        return self.async_create_entry(title=f"{host}:{port}", data=import_config)
+        return self.async_create_entry(title=DEFAULT_TITLE, data=import_config)

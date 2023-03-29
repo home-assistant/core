@@ -61,7 +61,7 @@ async def test_form(
     await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "snapserver.test:1705"
+    assert result["title"] == "Snapcast"
     assert result["data"] == {CONF_HOST: "snapserver.test", CONF_PORT: 1705}
     assert len(mock_create_server.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -106,5 +106,5 @@ async def test_import(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "snapserver.test:1705"
+    assert result["title"] == "Snapcast"
     assert result["data"] == {CONF_HOST: "snapserver.test", CONF_PORT: 1705}

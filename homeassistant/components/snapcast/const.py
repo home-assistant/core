@@ -18,3 +18,4 @@ ATTR_MASTER = "master"
 ATTR_LATENCY = "latency"
 
 DOMAIN = "snapcast"
+DEFAULT_TITLE = "Snapcast"
