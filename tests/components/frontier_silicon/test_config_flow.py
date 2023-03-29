@@ -444,7 +444,7 @@ async def test_reauth_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -
 
 
 @pytest.mark.parametrize(
-    ("friendly_name_error", "result_error"),
+    ("exception", "reason"),
     [
         (ConnectionError, "cannot_connect"),
         (InvalidPinException, "invalid_auth"),
@@ -453,8 +453,8 @@ async def test_reauth_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -
 )
 async def test_reauth_flow_friendly_name_error(
     hass: HomeAssistant,
-    friendly_name_error: Exception,
-    result_error: str,
+    exception: Exception,
+    reason: str,
     config_entry: MockConfigEntry,
 ) -> None:
     """Test reauth flow with failures."""
@@ -475,7 +475,7 @@ async def test_reauth_flow_friendly_name_error(
 
     with patch(
         "homeassistant.components.frontier_silicon.config_flow.AFSAPI.get_friendly_name",
-        side_effect=friendly_name_error,
+        side_effect=exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -485,7 +485,7 @@ async def test_reauth_flow_friendly_name_error(
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "device_config"
-    assert result2["errors"] == {"base": result_error}
+    assert result2["errors"] == {"base": reason}
 
     result3 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
