@@ -102,19 +102,19 @@ SENSOR_SETUP = {
     ),
     vol.Optional(CONF_ATTRIBUTE): TextSelector(),
     vol.Optional(CONF_VALUE_TEMPLATE): TemplateSelector(),
-    vol.Optional(CONF_DEVICE_CLASS): SelectSelector(
+    vol.Optional(CONF_DEVICE_CLASS, default=""): SelectSelector(
         SelectSelectorConfig(
             options=[""] + [cls.value for cls in SensorDeviceClass],
             mode=SelectSelectorMode.DROPDOWN,
         )
     ),
-    vol.Optional(CONF_STATE_CLASS): SelectSelector(
+    vol.Optional(CONF_STATE_CLASS, default=""): SelectSelector(
         SelectSelectorConfig(
             options=[""] + [cls.value for cls in SensorStateClass],
             mode=SelectSelectorMode.DROPDOWN,
         )
     ),
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): SelectSelector(
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=""): SelectSelector(
         SelectSelectorConfig(
             options=[cls.value for cls in UnitOfTemperature],
             custom_value=True,
@@ -150,6 +150,7 @@ async def validate_sensor_setup(
     # Standard behavior is to merge the result with the options.
     # In this case, we want to add a sub-item so we update the options directly.
     sensors: list[dict[str, Any]] = handler.options.setdefault(SENSOR_DOMAIN, [])
+    _strip_empty_options(user_input)
     sensors.append(user_input)
     return {}
 
@@ -195,14 +196,20 @@ async def validate_sensor_edit(
     idx: int = handler.flow_state["_idx"]
     sensor_options: dict[str, Any] = handler.options[SENSOR_DOMAIN][idx]
     sensor_options.update(user_input)
-
-    # These keys are optional, and absent from user_input when unset in UI
-    # we need to remove them manually from the previous options.
-    for key in (CONF_DEVICE_CLASS, CONF_STATE_CLASS, CONF_UNIT_OF_MEASUREMENT):
-        if key not in user_input:
-            sensor_options.pop(key, None)
+    _strip_empty_options(sensor_options)
 
     return {}
+
+
+def _strip_empty_options(sensor_options: dict[str, Any]) -> None:
+    """Ensure `device_class` and `state_class` are not empty string.
+
+    Having these two keys as None or empty string will fail schema validation
+    for TEMPLATE_SENSOR_BASE_SCHEMA schema validation.
+    """
+    for key in (CONF_DEVICE_CLASS, CONF_STATE_CLASS):
+        if sensor_options[key] == "":
+            del sensor_options[key]
 
 
 async def get_remove_sensor_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
