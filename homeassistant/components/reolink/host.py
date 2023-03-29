@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import async_timeout
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -23,6 +24,7 @@ from .const import CONF_PROTOCOL, CONF_USE_HTTPS, DOMAIN
 from .exceptions import ReolinkSetupException, ReolinkWebhookException, UserNotAdmin
 
 DEFAULT_TIMEOUT = 60
+FIRST_ONVIF_TIMEOUT = 15
 SUBSCRIPTION_RENEW_THRESHOLD = 300
 
 _LOGGER = logging.getLogger(__name__)
@@ -146,11 +148,13 @@ class ReolinkHost:
             "Waiting for initial ONVIF state on webhook '%s'", self._webhook_url
         )
         try:
-            await asyncio.wait_for(self._webhook_reachable.wait(), timeout=15)
+            async with async_timeout.timeout(FIRST_ONVIF_TIMEOUT):
+                await self._webhook_reachable.wait()
         except asyncio.TimeoutError:
             _LOGGER.debug(
-                "Did not receive initial ONVIF state on webhook '%s' after 15 seconds",
+                "Did not receive initial ONVIF state on webhook '%s' after %i seconds",
                 self._webhook_url,
+                FIRST_ONVIF_TIMEOUT,
             )
             ir.async_create_issue(
                 self._hass,
