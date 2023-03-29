@@ -748,7 +748,7 @@ async def test_sensor_imperial_units(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.home_wind")
     assert state
-    assert state.state == "9.009882"
+    assert state.state == "9.0"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfSpeed.MILES_PER_HOUR
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT

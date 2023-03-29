@@ -26,6 +26,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import AccuWeatherDataUpdateCoordinator
 from .const import (
@@ -406,6 +407,21 @@ class AccuWeatherSensor(
             return self.entity_description.attr_fn(self._sensor_data)
 
         return self.entity_description.attr_fn(self.coordinator.data)
+
+    @property
+    def suggested_unit_of_measurement(self) -> str | None:
+        """Return the unit which should be used for the sensor's state.
+
+        Entity units with device_class WIND_SPEED are not automatically converted for
+        the US CUSTOMARY unit system, so we return the suggested unit for them.
+        """
+        if (
+            self.entity_description.device_class == SensorDeviceClass.WIND_SPEED
+            and self.hass.config.units == US_CUSTOMARY_SYSTEM
+        ):
+            return UnitOfSpeed.MILES_PER_HOUR
+
+        return None
 
     @callback
     def _handle_coordinator_update(self) -> None:
