@@ -43,11 +43,7 @@ class NextcloudConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize flow."""
-        self._entry: ConfigEntry | None = None
-        self._url: str | None = None
-        self._username: str | None = None
+    _entry: ConfigEntry | None = None
 
     def _try_connect_nc(self, user_input: dict) -> NextcloudMonitor:
         """Try to connect to nextcloud server."""
@@ -105,8 +101,6 @@ class NextcloudConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle flow upon an API authentication error."""
         self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        self._url = entry_data[CONF_URL]
-        self._username = entry_data[CONF_USERNAME]
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -114,9 +108,9 @@ class NextcloudConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle reauthorization flow."""
         errors = {}
+        assert self._entry is not None
 
         if user_input is not None:
-            assert self._entry is not None
             try:
                 await self.hass.async_add_executor_job(
                     self._try_connect_nc, {**self._entry.data, **user_input}
@@ -134,12 +128,19 @@ class NextcloudConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="reauth_successful")
 
         data_schema = self.add_suggested_values_to_schema(
-            DATA_SCHEMA_REAUTH,
+            vol.Schema(
+                {
+                    vol.Required(
+                        CONF_USERNAME, default=self._entry.data[CONF_USERNAME]
+                    ): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
             user_input,
         )
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=data_schema,
-            description_placeholders={"url": self._url},
+            description_placeholders={"url": self._entry.data[CONF_URL]},
             errors=errors,
         )
