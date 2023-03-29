@@ -98,8 +98,6 @@ class AnovaSensor(AnovaEntity, SensorEntity):
         """Set up an Anova Sensor Entity."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._sensor_update_key = description.key
-        self._sensor_data = None
         self._attr_unique_id = f"{coordinator._device_unique_id}_{description.key}"
         self._attr_device_info = coordinator.device_info
         self._attr_has_entity_name = True
@@ -107,4 +105,4 @@ class AnovaSensor(AnovaEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state."""
-        return self.coordinator.data["sensors"][self._sensor_update_key]
+        return self.coordinator.data["sensors"][self.entity_description.key]
