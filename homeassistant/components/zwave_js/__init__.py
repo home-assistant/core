@@ -320,6 +320,19 @@ class ControllerEvents:
 
     async def async_on_node_added(self, node: ZwaveNode) -> None:
         """Handle node added event."""
+        # Remove stale entities that may exist from a previous interview when an
+        # interview is started.
+        base_unique_id = get_valueless_base_unique_id(self.driver_events.driver, node)
+        self.config_entry.async_on_unload(
+            node.on(
+                "interview started",
+                lambda _: async_dispatcher_send(
+                    self.hass,
+                    f"{DOMAIN}_{base_unique_id}_remove_entity_on_interview_started",
+                ),
+            )
+        )
+
         # No need for a ping button or node status sensor for controller nodes
         if not node.is_controller_node:
             # Create a node status sensor for each device
@@ -339,19 +352,6 @@ class ControllerEvents:
             )
 
         LOGGER.debug("Node added: %s", node.node_id)
-
-        # Remove stale entities that may exist from a previous interview when an
-        # interview is started.
-        base_unique_id = get_valueless_base_unique_id(self.driver_events.driver, node)
-        self.config_entry.async_on_unload(
-            node.on(
-                "interview started",
-                lambda _: async_dispatcher_send(
-                    self.hass,
-                    f"{DOMAIN}_{base_unique_id}_remove_entity_on_interview_started",
-                ),
-            )
-        )
 
         # Listen for ready node events, both new and re-interview.
         self.config_entry.async_on_unload(
