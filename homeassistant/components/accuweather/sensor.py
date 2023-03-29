@@ -352,7 +352,7 @@ async def async_setup_entry(
         # Some air quality/allergy sensors are only available for certain
         # locations.
         sensors.extend(
-            AccuWeatherForecastSensor(coordinator, description, forecast_day=day)
+            AccuWeatherSensor(coordinator, description, forecast_day=day)
             for day in range(MAX_FORECAST_DAYS + 1)
             for description in FORECAST_SENSOR_TYPES
             if description.key in coordinator.data[ATTR_FORECAST][0]
@@ -402,6 +402,9 @@ class AccuWeatherSensor(
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
+        if self.forecast_day is not None:
+            return self.entity_description.attr_fn(self._sensor_data)
+
         return self.entity_description.attr_fn(self.coordinator.data)
 
     @callback
@@ -426,12 +429,3 @@ def _get_sensor_data(
         return sensors["PrecipitationSummary"]["PastHour"]
 
     return sensors[kind]
-
-
-class AccuWeatherForecastSensor(AccuWeatherSensor):
-    """Define an AccuWeather forecast entity."""
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes."""
-        return self.entity_description.attr_fn(self._sensor_data)
