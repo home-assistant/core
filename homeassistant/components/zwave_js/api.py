@@ -1842,7 +1842,7 @@ async def websocket_get_log_config(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/async_update_data_collection_preference",
+        vol.Required(TYPE): "zwave_js/update_data_collection_preference",
         vol.Required(ENTRY_ID): str,
         vol.Required(OPTED_IN): bool,
     },
