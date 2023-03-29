@@ -562,11 +562,6 @@ def slugify(value: Any) -> str:
     raise vol.Invalid(f"Unable to slugify {value}")
 
 
-def empty_string_to_None(value: Any) -> Any:
-    """Coerce empty string to None."""
-    return None if value == "" else value
-
-
 def string(value: Any) -> str:
     """Coerce value to string, except for None."""
     if value is None:
