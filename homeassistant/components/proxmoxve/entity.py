@@ -26,7 +26,7 @@ class ProxmoxEntity(CoordinatorEntity):
         self._attr_unique_id = unique_id
         self._attr_name = name
         self._host_name = host_name
-        self._icon = icon
+        self._attr_icon = icon
         self._available = True
         self._node_name = node_name
         self._vm_id = vm_id
