@@ -4,6 +4,7 @@
     'password': 'nc_pass',
     'url': 'nc_url',
     'username': 'nc_user',
+    'verify_ssl': True,
   })
 # ---
 # name: test_user_create_entry
@@ -11,5 +12,6 @@
     'password': 'nc_pass',
     'url': 'nc_url',
     'username': 'nc_user',
+    'verify_ssl': True,
   })
 # ---
