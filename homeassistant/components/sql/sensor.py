@@ -6,9 +6,12 @@ import decimal
 import logging
 
 import sqlalchemy
+from sqlalchemy import TextClause, lambda_stmt
 from sqlalchemy.engine import Result
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
+from sqlalchemy.sql.lambdas import StatementLambdaElement
+from sqlalchemy.util import LRUCache
 
 from homeassistant.components.recorder import CONF_DB_URL, get_instance
 from homeassistant.components.sensor import (
@@ -37,6 +40,8 @@ from .const import CONF_COLUMN_NAME, CONF_QUERY, DB_URL_RE, DOMAIN
 from .util import resolve_db_url
 
 _LOGGER = logging.getLogger(__name__)
+
+_SQL_LAMBDA_CACHE: LRUCache = LRUCache(1000)
 
 
 def redact_credentials(data: str) -> str:
@@ -201,6 +206,11 @@ def _validate_and_get_session_maker_for_db_url(db_url: str) -> scoped_session | 
             sess.close()
 
 
+def _generate_lambda_stmt(text: TextClause) -> StatementLambdaElement:
+    """Generate the lambda statement."""
+    return lambda_stmt(lambda: text, lambda_cache=_SQL_LAMBDA_CACHE)
+
+
 class SQLSensor(SensorEntity):
     """Representation of an SQL sensor."""
 
@@ -233,6 +243,7 @@ class SQLSensor(SensorEntity):
         self._attr_extra_state_attributes = {}
         self._attr_unique_id = unique_id
         self._use_database_executor = use_database_executor
+        self._lambda_stmt = _generate_lambda_stmt(sqlalchemy.text(query))
         if not yaml and unique_id:
             self._attr_device_info = DeviceInfo(
                 entry_type=DeviceEntryType.SERVICE,
@@ -254,7 +265,7 @@ class SQLSensor(SensorEntity):
         self._attr_extra_state_attributes = {}
         sess: scoped_session = self.sessionmaker()
         try:
-            result: Result = sess.execute(sqlalchemy.text(self._query))
+            result: Result = sess.execute(self._lambda_stmt)
         except SQLAlchemyError as err:
             _LOGGER.error(
                 "Error executing query %s: %s",
