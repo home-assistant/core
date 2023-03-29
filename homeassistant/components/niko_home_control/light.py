@@ -8,12 +8,12 @@ from typing import Any
 import nikohomecontrol
 import voluptuous as vol
 
-# Import the device class from the component that you want to support
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
+    brightness_supported,
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -85,9 +85,8 @@ class NikoHomeControlLight(LightEntity):
         await self._data.async_update()
         state = self._data.get_state(self._light.id)
         self._attr_is_on = state != 0
-        if self.supported_color_modes is not None:
-            if ColorMode.BRIGHTNESS in self.supported_color_modes:
-                self._attr_brightness = state * 2.55
+        if brightness_supported(self.supported_color_modes):
+            self._attr_brightness = state * 2.55
 
 
 class NikoHomeControlData:
