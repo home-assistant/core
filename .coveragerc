@@ -385,10 +385,10 @@ omit =
     homeassistant/components/foscam/camera.py
     homeassistant/components/foursquare/*
     homeassistant/components/free_mobile/notify.py
+    homeassistant/components/freebox/camera.py
     homeassistant/components/freebox/device_tracker.py
     homeassistant/components/freebox/sensor.py
     homeassistant/components/freebox/switch.py
-    homeassistant/components/freebox/camera.py
     homeassistant/components/fritz/common.py
     homeassistant/components/fritz/device_tracker.py
     homeassistant/components/fritz/services.py
