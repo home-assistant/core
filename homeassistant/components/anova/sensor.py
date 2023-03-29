@@ -17,7 +17,7 @@ from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
 from .coordinator import AnovaCoordinator
-from .entity import AnovaEntity
+from .entity import AnovaDescriptionEntity
 from .models import AnovaData
 
 SENSOR_DESCRIPTIONS: list[SensorEntityDescription] = [
@@ -89,16 +89,14 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class AnovaSensor(AnovaEntity, SensorEntity):
+class AnovaSensor(AnovaDescriptionEntity, SensorEntity):
     """A sensor using anova coordinator."""
 
     def __init__(
         self, coordinator: AnovaCoordinator, description: SensorEntityDescription
     ) -> None:
         """Set up an Anova Sensor Entity."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{coordinator._device_unique_id}_{description.key}"
+        super().__init__(coordinator, description)
 
     @property
     def native_value(self) -> StateType:
