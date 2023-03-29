@@ -1034,7 +1034,6 @@ def _generate_statistics_during_period_stmt(
     end_time: datetime | None,
     metadata_ids: list[int] | None,
     table: type[StatisticsBase],
-    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> StatementLambdaElement:
     """Prepare a database query for statistics during a given period.
 
@@ -1535,7 +1534,7 @@ def _statistics_during_period_with_session(
     if "sum" in types:
         columns = columns.add_columns(table.sum)
     stmt = _generate_statistics_during_period_stmt(
-        columns, start_time, end_time, metadata_ids, table, types
+        columns, start_time, end_time, metadata_ids, table
     )
     stats = cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
 
