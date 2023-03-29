@@ -23,6 +23,7 @@ from .const import (
     CONF_BASE_PATH,
     CONF_UPCOMING_DAYS,
     CONF_WANTED_MAX_ITEMS,
+    DEFAULT_PORT,
     DEFAULT_UPCOMING_DAYS,
     DEFAULT_WANTED_MAX_ITEMS,
     DOMAIN,
@@ -59,10 +60,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         api_token=entry.data[CONF_API_KEY],
         url=entry.data[CONF_URL],
         verify_ssl=entry.data[CONF_VERIFY_SSL],
+        port=entry.data.get(CONF_PORT, DEFAULT_PORT),
     )
     sonarr = SonarrClient(
         host_configuration=host_configuration,
         session=async_get_clientsession(hass),
+        port=entry.data.get(CONF_PORT, DEFAULT_PORT),
     )
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     coordinators: dict[str, SonarrDataUpdateCoordinator[Any]] = {

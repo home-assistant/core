@@ -12,7 +12,7 @@ import voluptuous as vol
 import yarl
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
-from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.const import CONF_API_KEY, CONF_PORT, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -20,6 +20,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import (
     CONF_UPCOMING_DAYS,
     CONF_WANTED_MAX_ITEMS,
+    DEFAULT_PORT,
     DEFAULT_UPCOMING_DAYS,
     DEFAULT_VERIFY_SSL,
     DEFAULT_WANTED_MAX_ITEMS,
@@ -37,12 +38,14 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     host_configuration = PyArrHostConfiguration(
         api_token=data[CONF_API_KEY],
         url=data[CONF_URL],
+        port=data[CONF_PORT],
         verify_ssl=data[CONF_VERIFY_SSL],
     )
 
     sonarr = SonarrClient(
         host_configuration=host_configuration,
         session=async_get_clientsession(hass),
+        port=data[CONF_PORT],
     )
 
     await sonarr.async_get_system_status()
@@ -137,6 +140,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
         data_schema: dict[vol.Marker, type] = {
             vol.Required(CONF_URL): str,
+            vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
             vol.Required(CONF_API_KEY): str,
         }
 
