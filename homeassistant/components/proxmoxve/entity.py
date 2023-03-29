@@ -34,21 +34,6 @@ class ProxmoxEntity(CoordinatorEntity):
         self._state = None
 
     @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this sensor."""
-        return self._unique_id
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    def icon(self) -> str:
-        """Return the mdi icon of the entity."""
-        return self._icon
-
-    @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.coordinator.last_update_success and self._available
