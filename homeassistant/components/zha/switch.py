@@ -477,3 +477,32 @@ class TuyaChildLockSwitch(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
     _zcl_attribute: str = "child_lock"
     _attr_name = "Child lock"
     _attr_icon: str = "mdi:account-lock"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
+class AqaraThermostatWindowDetection(
+    ZHASwitchConfigurationEntity, id_suffix="window_detection"
+):
+    """Representation of an Aqara thermostat window detection configuration entity."""
+
+    _zcl_attribute: str = "window_detection"
+    _attr_name = "Window detection"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
+class AqaraThermostatValveDetection(
+    ZHASwitchConfigurationEntity, id_suffix="valve_detection"
+):
+    """Representation of an Aqara thermostat valve detection configuration entity."""
+
+    _zcl_attribute: str = "valve_detection"
+    _attr_name = "Valve detection"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
+class AqaraThermostatChildLock(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
+    """Representation of an Aqara thermostat child lock configuration entity."""
+
+    _zcl_attribute: str = "child_lock"
+    _attr_name = "Child lock"
+    _attr_icon: str = "mdi:account-lock"
