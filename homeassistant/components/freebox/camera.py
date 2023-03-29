@@ -89,6 +89,7 @@ class FreeboxCamera(FreeboxHomeEntity, FFmpegCamera):
             node["type"]["endpoints"], ATTR_DETECTION
         )
         self._command_flip = self.get_command_id(node["show_endpoints"], ATTR_FLIP)
+        self._attr_extra_state_attributes = {}
         self.update_node(node)
 
     @property
@@ -118,6 +119,7 @@ class FreeboxCamera(FreeboxHomeEntity, FFmpegCamera):
     async def async_update_signal(self) -> None:
         """Update the camera node."""
         self.update_node(self._router.home_devices[self._id])
+        self.async_write_ha_state()
 
     def update_node(self, node):
         """Update params."""
@@ -129,5 +131,13 @@ class FreeboxCamera(FreeboxHomeEntity, FFmpegCamera):
         else:
             self._attr_is_streaming = False
 
+        # Parse all endpoints values
+        for endpoint in filter(
+            lambda x: (x["ep_type"] == "signal"), node["show_endpoints"]
+        ):
+            self._attr_extra_state_attributes[endpoint["name"]] = endpoint["value"]
+
         # Get motion detection status
-        self._attr_motion_detection_enabled = self.get_value("signal", ATTR_DETECTION)
+        self._attr_motion_detection_enabled = self._attr_extra_state_attributes[
+            ATTR_DETECTION
+        ]
