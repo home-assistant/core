@@ -8,7 +8,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ON, Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -39,6 +39,9 @@ CLASS_MAPPING = {
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.BINARY_SENSOR)
 MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.BINARY_SENSOR)
+CONFIG_DIAGNOSTIC_MATCH = functools.partial(
+    ZHA_ENTITIES.config_diagnostic_match, Platform.BINARY_SENSOR
+)
 
 
 async def async_setup_entry(
@@ -76,34 +79,23 @@ class BinarySensor(ZhaEntity, BinarySensorEntity):
             self._channel, SIGNAL_ATTR_UPDATED, self.async_set_state
         )
 
-    @callback
-    def async_restore_last_state(self, last_state):
-        """Restore previous state."""
-        super().async_restore_last_state(last_state)
-        self._state = last_state.state == STATE_ON
-
     @property
     def is_on(self) -> bool:
         """Return True if the switch is on based on the state machine."""
-        if self._state is None:
+        raw_state = self._channel.cluster.get(self.SENSOR_ATTR)
+        if raw_state is None:
             return False
-        return self._state
+        return self.parse(raw_state)
 
     @callback
     def async_set_state(self, attr_id, attr_name, value):
         """Set the state."""
-        if self.SENSOR_ATTR is None or attr_name != self.SENSOR_ATTR:
-            return
-        self._state = bool(value)
         self.async_write_ha_state()
 
-    async def async_update(self) -> None:
-        """Attempt to retrieve on off state from the binary sensor."""
-        await super().async_update()
-        attribute = getattr(self._channel, "value_attribute", "on_off")
-        attr_value = await self._channel.get_attribute_value(attribute)
-        if attr_value is not None:
-            self._state = attr_value
+    @staticmethod
+    def parse(value: bool | int) -> bool:
+        """Parse the raw attribute into a bool state."""
+        return bool(value)
 
 
 @MULTI_MATCH(channel_names=CHANNEL_ACCELEROMETER)
@@ -167,12 +159,10 @@ class IASZone(BinarySensor):
         """Return device class from component DEVICE_CLASSES."""
         return CLASS_MAPPING.get(self._channel.cluster.get("zone_type"))
 
-    async def async_update(self) -> None:
-        """Attempt to retrieve on off state from the binary sensor."""
-        await super().async_update()
-        value = await self._channel.get_attribute_value("zone_status")
-        if value is not None:
-            self._state = value & 3
+    @staticmethod
+    def parse(value: bool | int) -> bool:
+        """Parse the raw attribute into a bool state."""
+        return BinarySensor.parse(value & 3)  # use only bit 0 and 1 for alarm state
 
 
 @MULTI_MATCH(
@@ -214,3 +204,48 @@ class XiaomiPlugConsumerConnected(BinarySensor, id_suffix="consumer_connected"):
     SENSOR_ATTR = "consumer_connected"
     _attr_name: str = "Consumer connected"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PLUG
+
+
+@MULTI_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
+class AqaraThermostatWindowOpen(BinarySensor, id_suffix="window_open"):
+    """ZHA Aqara thermostat window open binary sensor."""
+
+    SENSOR_ATTR = "window_open"
+    _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.WINDOW
+    _attr_name: str = "Window open"
+
+
+@MULTI_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
+class AqaraThermostatValveAlarm(BinarySensor, id_suffix="valve_alarm"):
+    """ZHA Aqara thermostat valve alarm binary sensor."""
+
+    SENSOR_ATTR = "valve_alarm"
+    _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PROBLEM
+    _attr_name: str = "Valve alarm"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
+class AqaraThermostatCalibrated(BinarySensor, id_suffix="calibrated"):
+    """ZHA Aqara thermostat calibrated binary sensor."""
+
+    SENSOR_ATTR = "calibrated"
+    _attr_entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
+    _attr_name: str = "Calibrated"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
+class AqaraThermostatExternalSensor(BinarySensor, id_suffix="sensor"):
+    """ZHA Aqara thermostat external sensor binary sensor."""
+
+    SENSOR_ATTR = "sensor"
+    _attr_entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
+    _attr_name: str = "External sensor"
+
+
+@MULTI_MATCH(channel_names="opple_cluster", models={"lumi.sensor_smoke.acn03"})
+class AqaraLinkageAlarmState(BinarySensor, id_suffix="linkage_alarm_state"):
+    """ZHA Aqara linkage alarm state binary sensor."""
+
+    SENSOR_ATTR = "linkage_alarm_state"
+    _attr_name: str = "Linkage alarm state"
+    _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.SMOKE

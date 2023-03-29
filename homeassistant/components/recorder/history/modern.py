@@ -192,9 +192,9 @@ def _significant_states_stmt(
     else:
         stmt += _ignore_domains_filter
         if filters and filters.has_config:
-            entity_filter = filters.states_metadata_entity_filter()
             stmt = stmt.add_criteria(
-                lambda q: q.filter(entity_filter), track_on=[filters]
+                lambda q: q.filter(filters.states_metadata_entity_filter()),  # type: ignore[union-attr]
+                track_on=[filters],
             )
         join_states_meta = True
 
@@ -406,16 +406,38 @@ def _get_last_state_changes_stmt(
     stmt, join_attributes = _lambda_stmt_and_join_attributes(
         False, include_last_changed=False
     )
-    stmt += lambda q: q.where(
-        States.state_id
-        == (
-            select(States.state_id)
-            .filter(States.metadata_id == metadata_id)
-            .order_by(States.last_updated_ts.desc())
-            .limit(number_of_states)
-            .subquery()
-        ).c.state_id
-    )
+    if number_of_states == 1:
+        stmt += lambda q: q.join(
+            (
+                lastest_state_for_metadata_id := (
+                    select(
+                        States.metadata_id.label("max_metadata_id"),
+                        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+                        # pylint: disable-next=not-callable
+                        func.max(States.last_updated_ts).label("max_last_updated"),
+                    )
+                    .filter(States.metadata_id == metadata_id)
+                    .group_by(States.metadata_id)
+                    .subquery()
+                )
+            ),
+            and_(
+                States.metadata_id == lastest_state_for_metadata_id.c.max_metadata_id,
+                States.last_updated_ts
+                == lastest_state_for_metadata_id.c.max_last_updated,
+            ),
+        )
+    else:
+        stmt += lambda q: q.where(
+            States.state_id
+            == (
+                select(States.state_id)
+                .filter(States.metadata_id == metadata_id)
+                .order_by(States.last_updated_ts.desc())
+                .limit(number_of_states)
+                .subquery()
+            ).c.state_id
+        )
     if join_attributes:
         stmt += lambda q: q.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
@@ -431,6 +453,10 @@ def get_last_state_changes(
     """Return the last number_of_states."""
     entity_id_lower = entity_id.lower()
     entity_ids = [entity_id_lower]
+
+    # Calling this function with number_of_states > 1 can cause instability
+    # because it has to scan the table to find the last number_of_states states
+    # because the metadata_id_last_updated_ts index is in ascending order.
 
     with session_scope(hass=hass, read_only=True) as session:
         instance = recorder.get_instance(hass)
@@ -541,8 +567,10 @@ def _get_states_for_all_stmt(
     )
     stmt += _ignore_domains_filter
     if filters and filters.has_config:
-        entity_filter = filters.states_metadata_entity_filter()
-        stmt = stmt.add_criteria(lambda q: q.filter(entity_filter), track_on=[filters])
+        stmt = stmt.add_criteria(
+            lambda q: q.filter(filters.states_metadata_entity_filter()),  # type: ignore[union-attr]
+            track_on=[filters],
+        )
     if join_attributes:
         stmt += lambda q: q.outerjoin(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)

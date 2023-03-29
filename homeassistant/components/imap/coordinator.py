@@ -3,7 +3,8 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
-from datetime import timedelta
+from datetime import datetime, timedelta
+import email
 import logging
 from typing import Any
 
@@ -11,7 +12,12 @@ from aioimaplib import AUTH, IMAP4_SSL, SELECTED, AioImapException
 import async_timeout
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    CONTENT_TYPE_TEXT_PLAIN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -22,6 +28,8 @@ from .errors import InvalidAuth, InvalidFolder
 _LOGGER = logging.getLogger(__name__)
 
 BACKOFF_TIME = 10
+
+EVENT_IMAP = "imap_content"
 
 
 async def connect_to_server(data: Mapping[str, Any]) -> IMAP4_SSL:
@@ -37,6 +45,83 @@ async def connect_to_server(data: Mapping[str, Any]) -> IMAP4_SSL:
     return client
 
 
+class ImapMessage:
+    """Class to parse an RFC822 email message."""
+
+    def __init__(self, raw_message: bytes) -> None:
+        """Initialize IMAP message."""
+        self.email_message = email.message_from_bytes(raw_message)
+
+    @property
+    def headers(self) -> dict[str, tuple[str,]]:
+        """Get the email headers."""
+        header_base: dict[str, tuple[str,]] = {}
+        for key, value in self.email_message.items():
+            header: tuple[str,] = (str(value),)
+            if header_base.setdefault(key, header) != header:
+                header_base[key] += header  # type: ignore[assignment]
+        return header_base
+
+    @property
+    def date(self) -> datetime | None:
+        """Get the date the email was sent."""
+        # See https://www.rfc-editor.org/rfc/rfc2822#section-3.3
+        date_str: str | None
+        if (date_str := self.email_message["Date"]) is None:
+            return None
+        # In some cases a timezone or comment is added in parenthesis after the date
+        # We want to strip that part to avoid parsing errors
+        return datetime.strptime(
+            date_str.split("(")[0].strip(), "%a, %d %b %Y %H:%M:%S %z"
+        )
+
+    @property
+    def sender(self) -> str:
+        """Get the parsed message sender from the email."""
+        return str(email.utils.parseaddr(self.email_message["From"])[1])
+
+    @property
+    def subject(self) -> str:
+        """Decode the message subject."""
+        decoded_header = email.header.decode_header(self.email_message["Subject"])
+        header = email.header.make_header(decoded_header)
+        return str(header)
+
+    @property
+    def text(self) -> str:
+        """Get the message text from the email.
+
+        Will look for text/plain or use text/html if not found.
+        """
+        message_text = None
+        message_html = None
+        message_untyped_text = None
+
+        for part in self.email_message.walk():
+            if part.get_content_type() == CONTENT_TYPE_TEXT_PLAIN:
+                if message_text is None:
+                    message_text = part.get_payload()
+            elif part.get_content_type() == "text/html":
+                if message_html is None:
+                    message_html = part.get_payload()
+            elif (
+                part.get_content_type().startswith("text")
+                and message_untyped_text is None
+            ):
+                message_untyped_text = part.get_payload()
+
+        if message_text is not None:
+            return message_text
+
+        if message_html is not None:
+            return message_html
+
+        if message_untyped_text is not None:
+            return message_untyped_text
+
+        return self.email_message.get_payload()
+
+
 class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
     """Base class for imap client."""
 
@@ -50,6 +135,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
     ) -> None:
         """Initiate imap client."""
         self.imap_client = imap_client
+        self._last_message_id: str | None = None
         super().__init__(
             hass,
             _LOGGER,
@@ -65,8 +151,31 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
         if self.imap_client is None:
             self.imap_client = await connect_to_server(self.config_entry.data)
 
+    async def _async_process_event(self, last_message_id: str) -> None:
+        """Send a event for the last message if the last message was changed."""
+        response = await self.imap_client.fetch(last_message_id, "BODY.PEEK[]")
+        if response.result == "OK":
+            message = ImapMessage(response.lines[1])
+            data = {
+                "server": self.config_entry.data[CONF_SERVER],
+                "username": self.config_entry.data[CONF_USERNAME],
+                "search": self.config_entry.data[CONF_SEARCH],
+                "folder": self.config_entry.data[CONF_FOLDER],
+                "date": message.date,
+                "text": message.text,
+                "sender": message.sender,
+                "subject": message.subject,
+                "headers": message.headers,
+            }
+            self.hass.bus.fire(EVENT_IMAP, data)
+            _LOGGER.debug(
+                "Message processed, sender: %s, subject: %s",
+                message.sender,
+                message.subject,
+            )
+
     async def _async_fetch_number_of_messages(self) -> int | None:
-        """Fetch number of messages."""
+        """Fetch last message and messages count."""
         await self._async_reconnect_if_needed()
         await self.imap_client.noop()
         result, lines = await self.imap_client.search(
@@ -77,7 +186,17 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
             raise UpdateFailed(
                 f"Invalid response for search '{self.config_entry.data[CONF_SEARCH]}': {result} / {lines[0]}"
             )
-        return len(lines[0].split())
+        count: int = len(message_ids := lines[0].split())
+        last_message_id = (
+            str(message_ids[-1:][0], encoding=self.config_entry.data[CONF_CHARSET])
+            if count
+            else None
+        )
+        if count and last_message_id is not None:
+            self._last_message_id = last_message_id
+            await self._async_process_event(last_message_id)
+
+        return count
 
     async def _cleanup(self, log_error: bool = False) -> None:
         """Close resources."""
@@ -199,7 +318,6 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                 self.async_set_update_error(UpdateFailed("Lost connection"))
                 await self._cleanup()
                 await asyncio.sleep(BACKOFF_TIME)
-                continue
 
     async def shutdown(self, *_) -> None:
         """Close resources."""

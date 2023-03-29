@@ -1397,6 +1397,7 @@ def async_track_time_interval(
     hass: HomeAssistant,
     action: Callable[[datetime], Coroutine[Any, Any, None] | None],
     interval: timedelta,
+    name: str | None = None,
 ) -> CALLBACK_TYPE:
     """Add a listener that fires repetitively at every timedelta interval."""
     remove: CALLBACK_TYPE
@@ -1419,9 +1420,12 @@ def async_track_time_interval(
         )
         hass.async_run_hass_job(job, now)
 
-    interval_listener_job = HassJob(
-        interval_listener, f"track time interval listener {interval}"
-    )
+    if name:
+        job_name = f"{name}: track time interval {interval}"
+    else:
+        job_name = f"track time interval {interval}"
+
+    interval_listener_job = HassJob(interval_listener, job_name)
     remove = async_track_point_in_utc_time(hass, interval_listener_job, next_interval())
 
     def remove_listener() -> None:

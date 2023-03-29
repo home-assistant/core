@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
 from .coordinator import NextcloudDataUpdateCoordinator
@@ -57,24 +58,17 @@ SENSORS = (
 )
 
 
-def setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Nextcloud sensors."""
-    if discovery_info is None:
-        return
-    coordinator: NextcloudDataUpdateCoordinator = hass.data[DOMAIN]
-
-    add_entities(
+    coordinator: NextcloudDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities(
         [
-            NextcloudSensor(coordinator, name)
+            NextcloudSensor(coordinator, name, entry)
             for name in coordinator.data
             if name in SENSORS
-        ],
-        True,
+        ]
     )
 
 

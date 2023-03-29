@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any
 from zigpy.exceptions import ZigbeeException
 import zigpy.zcl
 from zigpy.zcl.clusters import security
-from zigpy.zcl.clusters.security import IasAce as AceCluster
+from zigpy.zcl.clusters.security import IasAce as AceCluster, IasZone
 
 from homeassistant.core import callback
 
@@ -332,21 +332,22 @@ class IasWd(ZigbeeChannel):
         )
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(security.IasZone.cluster_id)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(IasZone.cluster_id)
 class IASZoneChannel(ZigbeeChannel):
     """Channel for the IASZone Zigbee cluster."""
 
-    ZCL_INIT_ATTRS = {"zone_status": True, "zone_state": False, "zone_type": True}
+    ZCL_INIT_ATTRS = {"zone_status": False, "zone_state": True, "zone_type": True}
 
     @callback
     def cluster_command(self, tsn, command_id, args):
         """Handle commands received to this cluster."""
         if command_id == 0:
-            state = args[0] & 3
-            self.async_send_signal(
-                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", 2, "zone_status", state
+            zone_status = args[0]
+            # update attribute cache with new zone status
+            self.cluster.update_attribute(
+                IasZone.attributes_by_name["zone_status"].id, zone_status
             )
-            self.debug("Updated alarm state: %s", state)
+            self.debug("Updated alarm state: %s", zone_status)
         elif command_id == 1:
             self.debug("Enroll requested")
             res = self._cluster.enroll_response(0, 0)
@@ -389,11 +390,10 @@ class IASZoneChannel(ZigbeeChannel):
     @callback
     def attribute_updated(self, attrid, value):
         """Handle attribute updates on this cluster."""
-        if attrid == 2:
-            value = value & 3
+        if attrid == IasZone.attributes_by_name["zone_status"].id:
             self.async_send_signal(
                 f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
                 attrid,
-                self.cluster.attributes.get(attrid, [attrid])[0],
+                "zone_status",
                 value,
             )

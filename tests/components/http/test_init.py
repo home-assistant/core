@@ -1,10 +1,12 @@
 """The tests for the Home Assistant HTTP component."""
+import asyncio
 from datetime import timedelta
 from http import HTTPStatus
 from ipaddress import ip_network
 import logging
 import pathlib
-from unittest.mock import Mock, patch
+import time
+from unittest.mock import MagicMock, Mock, patch
 
 import py
 import pytest
@@ -20,6 +22,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.ssl import server_context_intermediate, server_context_modern
 
 from tests.common import async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMockResponse
 from tests.typing import ClientSessionGenerator
 
 
@@ -463,3 +466,58 @@ async def test_storing_config(
     restored["trusted_proxies"][0] = ip_network(restored["trusted_proxies"][0])
 
     assert restored == http.HTTP_SCHEMA(config)
+
+
+async def test_logging(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Testing the access log works."""
+    await asyncio.gather(
+        *(
+            async_setup_component(hass, component, {})
+            for component in ("http", "logger", "api")
+        )
+    )
+    hass.states.async_set("logging.entity", "hello")
+    await hass.services.async_call(
+        "logger",
+        "set_level",
+        {"aiohttp.access": "info"},
+        blocking=True,
+    )
+    client = await hass_client()
+    response = await client.get("/api/states/logging.entity")
+    assert response.status == HTTPStatus.OK
+
+    assert "GET /api/states/logging.entity" in caplog.text
+    caplog.clear()
+    await hass.services.async_call(
+        "logger",
+        "set_level",
+        {"aiohttp.access": "warning"},
+        blocking=True,
+    )
+    response = await client.get("/api/states/logging.entity")
+    assert response.status == HTTPStatus.OK
+    assert "GET /api/states/logging.entity" not in caplog.text
+
+
+async def test_hass_access_logger_at_info_level(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that logging happens at info level."""
+    test_logger = logging.getLogger("test.aiohttp.logger")
+    logger = http.HomeAssistantAccessLogger(test_logger)
+    mock_request = MagicMock()
+    response = AiohttpClientMockResponse(
+        "POST", "http://127.0.0.1", status=HTTPStatus.OK
+    )
+    setattr(response, "body_length", 42)
+    logger.log(mock_request, response, time.time())
+    assert "42" in caplog.text
+    caplog.clear()
+    test_logger.setLevel(logging.WARNING)
+    logger.log(mock_request, response, time.time())
+    assert "42" not in caplog.text

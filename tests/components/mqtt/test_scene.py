@@ -7,7 +7,6 @@ import pytest
 from homeassistant.components import mqtt, scene
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
-from homeassistant.setup import async_setup_component
 
 from .test_common import (
     help_test_availability_when_connection_lost,
@@ -44,16 +43,9 @@ def scene_platform_only():
         yield
 
 
-async def test_sending_mqtt_commands(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
-) -> None:
-    """Test the sending MQTT commands."""
-    fake_state = State("scene.test", STATE_UNKNOWN)
-    mock_restore_cache(hass, (fake_state,))
-
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
+@pytest.mark.parametrize(
+    "hass_config",
+    [
         {
             mqtt.DOMAIN: {
                 scene.DOMAIN: {
@@ -62,10 +54,17 @@ async def test_sending_mqtt_commands(
                     "payload_on": "beer on",
                 },
             }
-        },
-    )
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+        }
+    ],
+)
+async def test_sending_mqtt_commands(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
+    """Test the sending MQTT commands."""
+    fake_state = State("scene.test", STATE_UNKNOWN)
+    mock_restore_cache(hass, (fake_state,))
+
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
 
     state = hass.states.get("scene.test")
     assert state.state == STATE_UNKNOWN

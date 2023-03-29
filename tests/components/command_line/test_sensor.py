@@ -88,7 +88,7 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
     """Ensure command with templates and quotes get rendered properly."""
 
     with patch(
-        "homeassistant.components.command_line.subprocess.check_output",
+        "homeassistant.components.command_line.utils.subprocess.check_output",
         return_value=b"Works\n",
     ) as check_output:
         await setup_test_entities(

@@ -3438,6 +3438,28 @@ async def test_track_time_interval(hass: HomeAssistant) -> None:
     assert len(specific_runs) == 2
 
 
+async def test_track_time_interval_name(hass: HomeAssistant) -> None:
+    """Test tracking time interval name.
+
+    This test is to ensure that when a name is passed to async_track_time_interval,
+    that the name can be found in the TimerHandle when stringified.
+    """
+    specific_runs = []
+    unique_string = "xZ13"
+    unsub = async_track_time_interval(
+        hass,
+        callback(lambda x: specific_runs.append(x)),
+        timedelta(seconds=10),
+        unique_string,
+    )
+    scheduled = getattr(hass.loop, "_scheduled")
+    assert any(handle for handle in scheduled if unique_string in str(handle))
+    unsub()
+
+    assert all(handle for handle in scheduled if unique_string not in str(handle))
+    await hass.async_block_till_done()
+
+
 async def test_track_sunrise(hass: HomeAssistant) -> None:
     """Test track the sunrise."""
     latitude = 32.87336
