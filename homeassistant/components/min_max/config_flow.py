@@ -6,13 +6,10 @@ from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.components import websocket_api
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_TYPE
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
@@ -20,7 +17,6 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 
 from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
-from .sensor import MinMaxSensor
 
 _STATISTIC_MEASURES = [
     "min",
@@ -61,11 +57,11 @@ CONFIG_SCHEMA = vol.Schema(
 ).extend(OPTIONS_SCHEMA.schema)
 
 CONFIG_FLOW = {
-    "user": SchemaFlowFormStep(CONFIG_SCHEMA, preview="min_max_preview"),
+    "user": SchemaFlowFormStep(CONFIG_SCHEMA),
 }
 
 OPTIONS_FLOW = {
-    "init": SchemaFlowFormStep(OPTIONS_SCHEMA, preview="min_max_preview"),
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
 }
 
 
@@ -78,45 +74,3 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return cast(str, options["name"]) if "name" in options else ""
-
-    @callback
-    @staticmethod
-    def async_setup_preview(hass: HomeAssistant) -> None:
-        """Set up preview WS API."""
-        websocket_api.async_register_command(hass, ws_preview_min_max)
-
-
-@callback
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "min_max/preview",
-        vol.Required("flow_id"): str,
-        vol.Required("flow_type"): vol.Any("config_flow", "options_flow"),
-        vol.Required("user_input"): dict,
-    }
-)
-def ws_preview_min_max(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
-) -> None:
-    """Generate a preview."""
-    if msg["flow_type"] == "config_flow":
-        validated = CONFIG_SCHEMA(msg["user_input"])
-        name = validated["name"]
-    else:
-        validated = OPTIONS_SCHEMA(msg["user_input"])
-        flow_status = hass.config_entries.options.async_get(msg["flow_id"])
-        config_entry = hass.config_entries.async_get_entry(flow_status["handler"])
-        if not config_entry:
-            raise HomeAssistantError
-        name = config_entry.options["name"]
-    sensor = MinMaxSensor(
-        validated[CONF_ENTITY_IDS],
-        name,
-        validated[CONF_TYPE],
-        int(validated[CONF_ROUND_DIGITS]),
-        None,
-    )
-    sensor.hass = hass
-    state, attr = sensor.async_preview()
-
-    connection.send_result(msg["id"], {"state": state, "attributes": attr})
