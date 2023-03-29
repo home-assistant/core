@@ -1,10 +1,9 @@
 """Support for getting data from websites with scraping."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any, cast
-
-import voluptuous as vol
 
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.sensor.helpers import async_parse_date_datetime
@@ -19,10 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.template_entity import (
-    TEMPLATE_SENSOR_BASE_SCHEMA,
-    TemplateSensor,
-)
+from homeassistant.helpers.template_entity import TemplateSensor
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -77,12 +73,7 @@ async def async_setup_entry(
     entities: list = []
 
     coordinator: ScrapeCoordinator = hass.data[DOMAIN][entry.entry_id]
-    config = dict(entry.options)
-    for sensor in config["sensor"]:
-        sensor_config: ConfigType = vol.Schema(
-            TEMPLATE_SENSOR_BASE_SCHEMA.schema, extra=vol.ALLOW_EXTRA
-        )(sensor)
-
+    for sensor_config in entry.options["sensor"]:
         name: str = sensor_config[CONF_NAME]
         select: str = sensor_config[CONF_SELECT]
         attr: str | None = sensor_config.get(CONF_ATTRIBUTE)
@@ -117,7 +108,7 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], TemplateSensor):
         self,
         hass: HomeAssistant,
         coordinator: ScrapeCoordinator,
-        config: ConfigType,
+        config: Mapping[str, Any],
         name: str,
         unique_id: str | None,
         select: str,
