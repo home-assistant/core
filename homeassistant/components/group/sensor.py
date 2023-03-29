@@ -1,7 +1,7 @@
 """Platform allowing several sensors to be grouped into one sensor to provide numeric combinations."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import datetime
 import logging
 import statistics
@@ -302,6 +302,12 @@ class SensorGroup(GroupEntity, SensorEntity):
         ] = CALC_TYPES[self._sensor_type]
         self._state_incorrect: set[str] = set()
         self._extra_state_attribute: dict[str, Any] = {}
+
+    @callback
+    def async_preview(self) -> tuple[str, Mapping[str, Any]]:
+        """Render a preview."""
+        self.async_update_group_state()
+        return self._async_generate_attributes()
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

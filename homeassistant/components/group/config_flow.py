@@ -7,8 +7,10 @@ from typing import Any, cast
 
 import voluptuous as vol
 
+from homeassistant.components import websocket_api
 from homeassistant.const import CONF_ENTITIES, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -22,6 +24,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 from . import DOMAIN
 from .binary_sensor import CONF_ALL
 from .const import CONF_HIDE_MEMBERS, CONF_IGNORE_NON_NUMERIC
+from .sensor import SensorGroup
 
 _STATISTIC_MEASURES = [
     "min",
@@ -36,15 +39,22 @@ _STATISTIC_MEASURES = [
 
 
 async def basic_group_options_schema(
-    domain: str | list[str], handler: SchemaCommonFlowHandler
+    domain: str | list[str], handler: SchemaCommonFlowHandler | None
 ) -> vol.Schema:
     """Generate options schema."""
+    if handler is None:
+        entity_selector = selector.selector(
+            {"entity": {"domain": domain, "multiple": True}}
+        )
+    else:
+        entity_selector = entity_selector_without_own_entities(
+            cast(SchemaOptionsFlowHandler, handler.parent_handler),
+            selector.EntitySelectorConfig(domain=domain, multiple=True),
+        )
+
     return vol.Schema(
         {
-            vol.Required(CONF_ENTITIES): entity_selector_without_own_entities(
-                cast(SchemaOptionsFlowHandler, handler.parent_handler),
-                selector.EntitySelectorConfig(domain=domain, multiple=True),
-            ),
+            vol.Required(CONF_ENTITIES): entity_selector,
             vol.Required(CONF_HIDE_MEMBERS, default=False): selector.BooleanSelector(),
         }
     )
@@ -96,7 +106,7 @@ SENSOR_OPTIONS = {
 
 
 async def sensor_options_schema(
-    domain: str, handler: SchemaCommonFlowHandler
+    domain: str, handler: SchemaCommonFlowHandler | None
 ) -> vol.Schema:
     """Generate options schema."""
     return (
@@ -184,6 +194,7 @@ CONFIG_FLOW = {
     "sensor": SchemaFlowFormStep(
         SENSOR_CONFIG_SCHEMA,
         validate_user_input=set_group_type("sensor"),
+        preview="sensor_group_preview",
     ),
     "switch": SchemaFlowFormStep(
         basic_group_config_schema("switch"),
@@ -202,7 +213,10 @@ OPTIONS_FLOW = {
     "media_player": SchemaFlowFormStep(
         partial(basic_group_options_schema, "media_player")
     ),
-    "sensor": SchemaFlowFormStep(partial(sensor_options_schema, "sensor")),
+    "sensor": SchemaFlowFormStep(
+        partial(sensor_options_schema, "sensor"),
+        preview="sensor_group_preview",
+    ),
     "switch": SchemaFlowFormStep(partial(light_switch_options_schema, "switch")),
 }
 
@@ -241,6 +255,12 @@ class GroupConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
         )
         _async_hide_members(hass, options[CONF_ENTITIES], hidden_by)
 
+    @callback
+    @staticmethod
+    def async_setup_preview(hass: HomeAssistant) -> None:
+        """Set up preview WS API."""
+        websocket_api.async_register_command(hass, ws_preview_sensor)
+
 
 def _async_hide_members(
     hass: HomeAssistant, members: list[str], hidden_by: er.RegistryEntryHider | None
@@ -253,3 +273,44 @@ def _async_hide_members(
         if entity_id not in registry.entities:
             continue
         registry.async_update_entity(entity_id, hidden_by=hidden_by)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "group/sensor/preview",
+        vol.Required("flow_id"): str,
+        vol.Required("flow_type"): vol.Any("config_flow", "options_flow"),
+        vol.Required("user_input"): dict,
+    }
+)
+@websocket_api.async_response
+async def ws_preview_sensor(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Generate a preview."""
+    if msg["flow_type"] == "config_flow":
+        validated = SENSOR_CONFIG_SCHEMA(msg["user_input"])
+        ignore_non_numeric = False
+        name = validated["name"]
+    else:
+        validated = (await sensor_options_schema("sensor", None))(msg["user_input"])
+        flow_status = hass.config_entries.options.async_get(msg["flow_id"])
+        config_entry = hass.config_entries.async_get_entry(flow_status["handler"])
+        if not config_entry:
+            raise HomeAssistantError
+        ignore_non_numeric = validated[CONF_IGNORE_NON_NUMERIC]
+        name = config_entry.options["name"]
+    sensor = SensorGroup(
+        None,
+        name,
+        validated[CONF_ENTITIES],
+        ignore_non_numeric,
+        validated[CONF_TYPE],
+        None,
+        None,
+        None,
+    )
+    sensor.hass = hass
+    state, attr = sensor.async_preview()
+
+    connection.send_result(msg["id"], {"state": state, "attributes": attr})
