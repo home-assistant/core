@@ -28,7 +28,6 @@ from .models import SynologyDSMData
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     """Set up Synology media source."""
-    # Synology photos support only a single config entry
     entries = hass.config_entries.async_entries(DOMAIN)
     hass.http.register_view(SynologyDsmMediaView(hass))
     return SynologyPhotosMediaSource(hass, entries)
