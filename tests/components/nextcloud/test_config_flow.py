@@ -7,7 +7,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nextcloud import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -15,7 +15,12 @@ from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
-VALID_CONFIG = {CONF_URL: "nc_url", CONF_USERNAME: "nc_user", CONF_PASSWORD: "nc_pass"}
+VALID_CONFIG = {
+    CONF_URL: "nc_url",
+    CONF_USERNAME: "nc_user",
+    CONF_PASSWORD: "nc_pass",
+    CONF_VERIFY_SSL: True,
+}
 
 
 async def test_user_create_entry(
