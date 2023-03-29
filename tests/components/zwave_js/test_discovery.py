@@ -167,7 +167,7 @@ async def test_zooz_zen72(
     entity_id = "number.z_wave_plus_700_series_dimmer_switch_indicator_value"
     entry = ent_reg.async_get(entity_id)
     assert entry
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry.entity_category == EntityCategory.CONFIG
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_UNKNOWN
@@ -196,7 +196,7 @@ async def test_zooz_zen72(
     entity_id = "button.z_wave_plus_700_series_dimmer_switch_identify"
     entry = ent_reg.async_get(entity_id)
     assert entry
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry.entity_category == EntityCategory.CONFIG
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
@@ -252,7 +252,7 @@ async def test_indicator_test(
     entity_id = "switch.this_is_a_fake_device_switch"
     entry = ent_reg.async_get(entity_id)
     assert entry
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry.entity_category == EntityCategory.CONFIG
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OFF

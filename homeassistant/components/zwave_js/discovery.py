@@ -808,7 +808,7 @@ DISCOVERY_SCHEMAS = [
             readable=True,
             writeable=True,
         ),
-        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_category=EntityCategory.CONFIG,
     ),
     # button for Indicator CC
     ZWaveDiscoverySchema(
@@ -819,7 +819,7 @@ DISCOVERY_SCHEMAS = [
             readable=False,
             writeable=True,
         ),
-        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_category=EntityCategory.CONFIG,
     ),
     # binary switches
     ZWaveDiscoverySchema(
@@ -836,7 +836,7 @@ DISCOVERY_SCHEMAS = [
             readable=True,
             writeable=True,
         ),
-        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_category=EntityCategory.CONFIG,
     ),
     # binary switch
     # barrier operator signaling states
