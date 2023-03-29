@@ -186,6 +186,18 @@ class AqaraPetFeederFeedButton(ZHAAttributeButton, id_suffix="feeding"):
     _attribute_value = 1
 
 
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="opple_cluster", models={"lumi.sensor_smoke.acn03"}
+)
+class AqaraSelfTestButton(ZHAAttributeButton, id_suffix="self_test"):
+    """Defines a ZHA self-test button for Aqara smoke sensors."""
+
+    _attribute_name = "self_test"
+    _attr_name = "Self-test"
+    _attribute_value = 1
+    _attr_entity_category = EntityCategory.CONFIG
+
+
 @MULTI_MATCH(quirk_classes={"zhaquirks.tuya.ts0601_garage.TuyaGarageSwitchTO"})
 class GarageButton(ZHAAttributeButton, id_suffix="button"):
     """Defines a ZHA garage button."""

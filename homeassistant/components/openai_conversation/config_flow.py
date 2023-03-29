@@ -22,13 +22,13 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
-    CONF_MODEL,
     CONF_PROMPT,
     CONF_TEMPERATURE,
     CONF_TOP_P,
+    DEFAULT_CHAT_MODEL,
     DEFAULT_MAX_TOKENS,
-    DEFAULT_MODEL,
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_P,
@@ -46,7 +46,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 DEFAULT_OPTIONS = types.MappingProxyType(
     {
         CONF_PROMPT: DEFAULT_PROMPT,
-        CONF_MODEL: DEFAULT_MODEL,
+        CONF_CHAT_MODEL: DEFAULT_CHAT_MODEL,
         CONF_MAX_TOKENS: DEFAULT_MAX_TOKENS,
         CONF_TOP_P: DEFAULT_TOP_P,
         CONF_TEMPERATURE: DEFAULT_TEMPERATURE,
@@ -131,13 +131,32 @@ def openai_config_option_schema(options: MappingProxyType[str, Any]) -> dict:
     if not options:
         options = DEFAULT_OPTIONS
     return {
-        vol.Required(CONF_PROMPT, default=options.get(CONF_PROMPT)): TemplateSelector(),
-        vol.Required(CONF_MODEL, default=options.get(CONF_MODEL)): str,
-        vol.Required(CONF_MAX_TOKENS, default=options.get(CONF_MAX_TOKENS)): int,
-        vol.Required(CONF_TOP_P, default=options.get(CONF_TOP_P)): NumberSelector(
-            NumberSelectorConfig(min=0, max=1, step=0.05)
-        ),
-        vol.Required(
-            CONF_TEMPERATURE, default=options.get(CONF_TEMPERATURE)
+        vol.Optional(
+            CONF_PROMPT,
+            description={"suggested_value": options[CONF_PROMPT]},
+            default=DEFAULT_PROMPT,
+        ): TemplateSelector(),
+        vol.Optional(
+            CONF_CHAT_MODEL,
+            description={
+                # New key in HA 2023.4
+                "suggested_value": options.get(CONF_CHAT_MODEL, DEFAULT_CHAT_MODEL)
+            },
+            default=DEFAULT_CHAT_MODEL,
+        ): str,
+        vol.Optional(
+            CONF_MAX_TOKENS,
+            description={"suggested_value": options[CONF_MAX_TOKENS]},
+            default=DEFAULT_MAX_TOKENS,
+        ): int,
+        vol.Optional(
+            CONF_TOP_P,
+            description={"suggested_value": options[CONF_TOP_P]},
+            default=DEFAULT_TOP_P,
+        ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+        vol.Optional(
+            CONF_TEMPERATURE,
+            description={"suggested_value": options[CONF_TEMPERATURE]},
+            default=DEFAULT_TEMPERATURE,
         ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
     }
