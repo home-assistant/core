@@ -10,6 +10,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_URL,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -73,7 +74,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     def _connect_nc():
         return NextcloudMonitor(
-            entry.data[CONF_URL], entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
+            entry.data[CONF_URL],
+            entry.data[CONF_USERNAME],
+            entry.data[CONF_PASSWORD],
+            entry.data[CONF_VERIFY_SSL],
         )
 
     try:
