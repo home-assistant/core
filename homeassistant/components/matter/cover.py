@@ -1,5 +1,6 @@
 """Matter cover."""
 from __future__ import annotations
+from enum import IntFlag
 
 from typing import Any
 
@@ -23,31 +24,39 @@ from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
 
+# The MASK used for extracting bits 0 to 1 of the byte.
+OPERATIONAL_STATUS_MASK = 0b11
+
+
+class OperationalStatus(IntFlag):
+    """Currently ongoing operations enumeration for coverings, as defined in the Matter spec."""
+
+    coveringIsCurrentlyNotMoving = 0b00
+    coveringIsCurrentlyOpening = 0b01
+    coveringIsCurrentlyClosing = 0b10
+    reserved = 0b11
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Matter cover from Config Entry."""
+    """Set up Matter Cover from Config Entry."""
     matter = get_matter(hass)
     matter.register_platform_handler(Platform.COVER, async_add_entities)
 
 
 class MatterCover(MatterEntity, CoverEntity):
-    """Representation of a Matter cover."""
+    """Representation of a Matter Cover."""
 
     entity_description: CoverEntityDescription
-
-    @property
-    def supported_features(self) -> CoverEntityFeature:
-        """Flag supported features."""
-        features = (
-            CoverEntityFeature.OPEN
-            | CoverEntityFeature.CLOSE
-            | CoverEntityFeature.STOP
-            | CoverEntityFeature.SET_POSITION
-        )
-        return features
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.STOP
+        | CoverEntityFeature.SET_POSITION
+    )
 
     @property
     def current_cover_position(self) -> int:
@@ -61,48 +70,12 @@ class MatterCover(MatterEntity, CoverEntity):
 
         assert current_position is not None
 
-        LOGGER.info(
-            "Got current position %s for %s",
-            current_position,
-            self.entity_id,
-        )
-
         return current_position
 
     @property
     def is_closed(self) -> bool:
         """Return true if cover is closed, else False."""
         return self.current_cover_position == 0
-
-    @property
-    def is_closing(self) -> bool:
-        """Return if the cover is closing or not."""
-        operational_status = self.get_matter_attribute_value(
-            clusters.WindowCovering.Attributes.OperationalStatus
-        )
-
-        assert operational_status is not None
-
-        LOGGER.debug(
-            "GOT OPERATIONAL STATUS %s for %s", operational_status, self.entity_id
-        )
-        state = operational_status & 0b11
-        return state == 0b10
-
-    @property
-    def is_opening(self) -> bool:
-        """Return if the cover is opening or not."""
-        operational_status = self.get_matter_attribute_value(
-            clusters.WindowCovering.Attributes.OperationalStatus
-        )
-
-        assert operational_status is not None
-
-        LOGGER.debug(
-            "GOT OPERATIONAL STATUS %s for %s", operational_status, self.entity_id
-        )
-        state = operational_status & 0b11
-        return state == 0b01
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover movement."""
@@ -120,7 +93,7 @@ class MatterCover(MatterEntity, CoverEntity):
         """Set the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
         await self.send_device_command(
-            clusters.WindowCovering.Commands.GoToLiftPercentage(position)
+            clusters.WindowCovering.Commands.GoToLiftValue(position)
         )
 
     async def send_device_command(self, command: Any) -> None:
@@ -134,10 +107,34 @@ class MatterCover(MatterEntity, CoverEntity):
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
+        operational_status = self.get_matter_attribute_value(
+            clusters.WindowCovering.Attributes.OperationalStatus
+        )
+
+        assert operational_status is not None
+
+        LOGGER.debug("Operational status %b for %s", operational_status, self.entity_id)
+
+        state = operational_status & OPERATIONAL_STATUS_MASK
+        match state:
+            case OperationalStatus.coveringIsCurrentlyOpening:
+                self._attr_is_opening = True
+                self._attr_is_closing = False
+            case OperationalStatus.coveringIsCurrentlyClosing:
+                self._attr_is_closing = True
+                self._attr_is_opening = False
+            case _:
+                self._attr_is_opening = False
+                self._attr_is_closing = False
+
         self._attr_current_cover_position = self.get_matter_attribute_value(
             clusters.WindowCovering.Attributes.CurrentPositionLiftPercentage
         )
-        LOGGER.info("GOT CURRENT POSITION %s", self._attr_current_cover_position)
+        LOGGER.debug(
+            "Current position: %s for %s",
+            self._attr_current_cover_position,
+            self.entity_id,
+        )
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
@@ -147,11 +144,9 @@ DISCOVERY_SCHEMAS = [
         entity_description=CoverEntityDescription(key="MatterCover"),
         entity_class=MatterCover,
         required_attributes=(
-            clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths,
+            clusters.WindowCovering.Attributes.CurrentPositionLiftPercentage,
             clusters.WindowCovering.Attributes.OperationalStatus,
         ),
         optional_attributes=(),
-        # restrict device type to prevent discovery in switch platform
-        not_device_type=(device_types.OnOffPlugInUnit,),
     ),
 ]
