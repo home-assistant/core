@@ -142,3 +142,4 @@ class FreeboxCamera(FreeboxHomeEntity, FFmpegCamera):
         self._attr_motion_detection_enabled = self._attr_extra_state_attributes[
             ATTR_DETECTION
         ]
+        self._flip = self._attr_extra_state_attributes[ATTR_FLIP]
