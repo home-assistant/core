@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine
+from collections.abc import Coroutine, Mapping
 import contextlib
 from datetime import timedelta
 import logging
@@ -178,7 +178,9 @@ def _rest_coordinator(
     )
 
 
-def create_rest_data_from_config(hass: HomeAssistant, config: ConfigType) -> RestData:
+def create_rest_data_from_config(
+    hass: HomeAssistant, config: Mapping[str, Any]
+) -> RestData:
     """Create RestData from config."""
     resource: str | None = config.get(CONF_RESOURCE)
     resource_template: template.Template | None = config.get(CONF_RESOURCE_TEMPLATE)

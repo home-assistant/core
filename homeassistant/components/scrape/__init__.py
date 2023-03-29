@@ -87,8 +87,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Scrape from a config entry."""
 
-    rest_config: dict[str, Any] = COMBINED_SCHEMA(dict(entry.options))
-    rest = create_rest_data_from_config(hass, rest_config)
+    rest = create_rest_data_from_config(hass, entry.options)
 
     coordinator = ScrapeCoordinator(
         hass,
