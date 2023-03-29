@@ -4153,7 +4153,7 @@
     },
     "plant": {
       "integration_type": "hub",
-      "config_flow": false
+      "config_flow": true
     },
     "plex": {
       "name": "Plex Media Server",

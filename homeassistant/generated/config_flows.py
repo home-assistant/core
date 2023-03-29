@@ -322,6 +322,7 @@ FLOWS = {
         "pi_hole",
         "picnic",
         "plaato",
+        "plant",
         "plex",
         "plugwise",
         "plum_lightpad",

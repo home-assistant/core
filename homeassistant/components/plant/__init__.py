@@ -29,6 +29,8 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "plant"
@@ -103,8 +105,6 @@ PLANT_SCHEMA = vol.Schema(
         vol.Optional(CONF_CHECK_DAYS, default=DEFAULT_CHECK_DAYS): cv.positive_int,
     }
 )
-
-DOMAIN = "plant"
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: {cv.string: PLANT_SCHEMA}}, extra=vol.ALLOW_EXTRA)
 
