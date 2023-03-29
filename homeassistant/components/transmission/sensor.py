@@ -109,18 +109,19 @@ class TransmissionSpeedSensor(TransmissionSensor):
     """Representation of a Transmission speed sensor."""
 
     _attr_device_class = SensorDeviceClass.DATA_RATE
-    _attr_native_unit_of_measurement = UnitOfDataRate.MEGABYTES_PER_SECOND
+    _attr_native_unit_of_measurement = UnitOfDataRate.BYTES_PER_SECOND
+    _attr_suggested_display_precision = 2
+    _attr_suggested_unit_of_measurement = UnitOfDataRate.MEGABYTES_PER_SECOND
 
     def update(self) -> None:
         """Get the latest data from Transmission and updates the state."""
         if data := self._tm_client.api.data:
-            mb_spd = (
+            b_spd = (
                 float(data.downloadSpeed)
                 if self._sub_type == "download"
                 else float(data.uploadSpeed)
             )
-            mb_spd = mb_spd / 1024 / 1024
-            self._state = round(mb_spd, 2 if mb_spd < 0.1 else 1)
+            self._state = b_spd
 
 
 class TransmissionStatusSensor(TransmissionSensor):

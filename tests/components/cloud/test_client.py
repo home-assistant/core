@@ -312,3 +312,22 @@ async def test_login_recovers_bad_internet(
     await hass.async_block_till_done()
 
     assert len(client._alexa_config.async_enable_proactive_mode.mock_calls) == 2
+
+
+async def test_system_msg(hass: HomeAssistant) -> None:
+    """Test system msg."""
+    with patch("hass_nabucasa.Cloud.initialize"):
+        setup = await async_setup_component(hass, "cloud", {"cloud": {}})
+        assert setup
+    cloud = hass.data["cloud"]
+
+    assert cloud.client.relayer_region is None
+
+    response = await cloud.client.async_system_message(
+        {
+            "region": "xx-earth-616",
+        }
+    )
+
+    assert response is None
+    assert cloud.client.relayer_region == "xx-earth-616"

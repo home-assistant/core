@@ -66,7 +66,7 @@
   dict({
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
-      'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en_-_demo.mp3',
+      'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en_-_test.mp3',
     }),
   })
 # ---
