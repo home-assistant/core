@@ -62,7 +62,7 @@ def register_issue(hass: HomeAssistant, config: ConfigType) -> None:
 
     name: str = config.get(CONF_NAME) or config[CONF_USERNAME]
 
-    unique_id = (
+    issue_id = (
         f"{name}_{config[CONF_USERNAME]}_{config[CONF_SERVER]}_{config[CONF_FOLDER]}"
     )
 
@@ -99,7 +99,7 @@ def register_issue(hass: HomeAssistant, config: ConfigType) -> None:
     ir.async_create_issue(
         hass,
         DOMAIN,
-        unique_id,
+        issue_id,
         breaks_in_ha_version="2023.10.0",
         is_fixable=False,
         severity=ir.IssueSeverity.WARNING,
