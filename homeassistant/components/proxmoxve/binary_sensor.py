@@ -40,7 +40,7 @@ async def async_setup_platform(
                 coordinator = host_name_coordinators[node_name][dev_id]
 
                 # unfound case
-                if (coordinator_data := coordinator.result) is None:
+                if (coordinator_data := coordinator.data["result"]) is None:
                     continue
 
                 name = coordinator_data.name
@@ -94,7 +94,7 @@ class ProxmoxBinarySensor(ProxmoxEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
-        if (data := self.coordinator.data.result) is None:
+        if (data := self.coordinator.data["result"]) is None:
             return None
 
         return data.status == "running"
