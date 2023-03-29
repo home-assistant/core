@@ -6,6 +6,7 @@
         "data": {
           "url": "[%key:common::config_flow::data::url%]",
           "api_key": "[%key:common::config_flow::data::api_key%]",
+          "port": "[%key:common::config_flow::data::port%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }
       },
