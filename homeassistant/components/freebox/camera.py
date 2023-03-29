@@ -97,6 +97,7 @@ class FreeboxCamera(FreeboxHomeEntity, FFmpegCamera):
         """Return command_flip."""
         return self._command_flip
 
+    @property
     def flip(self) -> bool:
         """Return flip."""
         return self._flip
