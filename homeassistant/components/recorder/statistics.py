@@ -480,6 +480,11 @@ def compile_statistics(instance: Recorder, start: datetime, fire_events: bool) -
     return True
 
 
+def _get_first_id_stmt(start: datetime) -> StatementLambdaElement:
+    """Return a statement that returns the first run_id at start."""
+    return lambda_stmt(lambda: select(StatisticsRuns.run_id).filter_by(start=start))
+
+
 def _compile_statistics(
     instance: Recorder, session: Session, start: datetime, fire_events: bool
 ) -> set[str]:
@@ -496,7 +501,7 @@ def _compile_statistics(
     modified_statistic_ids: set[str] = set()
 
     # Return if we already have 5-minute statistics for the requested period
-    if session.query(StatisticsRuns.run_id).filter_by(start=start).first():
+    if execute_stmt_lambda_element(session, _get_first_id_stmt(start)):
         _LOGGER.debug("Statistics already compiled for %s-%s", start, end)
         return modified_statistic_ids
 
