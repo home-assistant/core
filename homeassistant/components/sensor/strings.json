@@ -161,7 +161,7 @@
       "name": "Stored energy"
     },
     "enum": {
-      "name": "Enumeration"
+      "name": "[%key:component::sensor::title%]"
     },
     "frequency": {
       "name": "Frequency"
