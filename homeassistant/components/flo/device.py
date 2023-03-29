@@ -7,6 +7,7 @@ from typing import Any
 from aioflo.api import API
 from aioflo.errors import RequestError
 from async_timeout import timeout
+from requests.exceptions import JSONDecodeError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -43,7 +44,7 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
                 await self.send_presence_ping()
                 await self._update_device()
                 await self._update_consumption_data()
-        except RequestError as error:
+        except (RequestError, JSONDecodeError) as error:
             raise UpdateFailed(error) from error
 
     @property
