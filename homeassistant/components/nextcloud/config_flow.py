@@ -8,16 +8,17 @@ from nextcloudmonitor import NextcloudMonitor, NextcloudMonitorError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DOMAIN
+from .const import DEFAULT_VERIFY_SSL, DOMAIN
 
 DATA_SCHEMA_USER = vol.Schema(
     {
         vol.Required(CONF_URL): str,
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
     }
 )
 _LOGGER = logging.getLogger(__name__)
@@ -34,6 +35,7 @@ class NextcloudConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input[CONF_URL],
             user_input[CONF_USERNAME],
             user_input[CONF_PASSWORD],
+            user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
         )
 
     async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
@@ -51,6 +53,7 @@ class NextcloudConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_URL: user_input[CONF_URL],
                 CONF_PASSWORD: user_input[CONF_PASSWORD],
                 CONF_USERNAME: user_input[CONF_USERNAME],
+                CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
             }
         )
 
