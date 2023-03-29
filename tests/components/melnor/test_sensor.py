@@ -6,7 +6,7 @@ from freezegun import freeze_time
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
 from .conftest import (
@@ -72,7 +72,9 @@ async def test_minutes_remaining_sensor(hass: HomeAssistant) -> None:
         assert minutes_remaining_sensor.state == end_time.isoformat(timespec="seconds")
 
 
-async def test_rssi_sensor(hass: HomeAssistant) -> None:
+async def test_rssi_sensor(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test the rssi sensor."""
 
     entry = mock_config_entry(hass)
@@ -88,15 +90,14 @@ async def test_rssi_sensor(hass: HomeAssistant) -> None:
         entity_id = f"sensor.{device.name}_rssi"
 
         # Ensure the entity is disabled by default by checking the registry
-        ent_registry = entity_registry.async_get(hass)
 
-        rssi_registry_entry = ent_registry.async_get(entity_id)
+        rssi_registry_entry = entity_registry.async_get(entity_id)
 
         assert rssi_registry_entry is not None
         assert rssi_registry_entry.disabled_by is not None
 
         # Enable the entity and assert everything else is working as expected
-        ent_registry.async_update_entity(entity_id, disabled_by=None)
+        entity_registry.async_update_entity(entity_id, disabled_by=None)
 
         await hass.config_entries.async_reload(entry.entry_id)
         await hass.async_block_till_done()

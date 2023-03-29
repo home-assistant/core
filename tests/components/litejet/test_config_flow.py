@@ -21,7 +21,7 @@ async def test_show_config_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
-async def test_create_entry(hass, mock_litejet):
+async def test_create_entry(hass: HomeAssistant, mock_litejet) -> None:
     """Test create entry from user input."""
     test_data = {CONF_PORT: "/dev/test"}
 

@@ -180,7 +180,7 @@ async def test_options_not_loaded(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("reversed", [True, False])
-async def test_options_with_targets(hass, reversed):
+async def test_options_with_targets(hass: HomeAssistant, reversed) -> None:
     """Test we can configure reverse for a target."""
 
     config_entry = MockConfigEntry(

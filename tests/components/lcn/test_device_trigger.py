@@ -9,6 +9,7 @@ from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.lcn import device_trigger
 from homeassistant.components.lcn.const import DOMAIN, KEY_ACTIONS, SENDKEYS
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.setup import async_setup_component
 
@@ -17,7 +18,9 @@ from .conftest import get_device
 from tests.common import assert_lists_same, async_get_device_automations
 
 
-async def test_get_triggers_module_device(hass, entry, lcn_connection):
+async def test_get_triggers_module_device(
+    hass: HomeAssistant, entry, lcn_connection
+) -> None:
     """Test we get the expected triggers from a LCN module device."""
     device = get_device(hass, entry, (0, 7, False))
 
@@ -44,7 +47,9 @@ async def test_get_triggers_module_device(hass, entry, lcn_connection):
     assert_lists_same(triggers, expected_triggers)
 
 
-async def test_get_triggers_non_module_device(hass, entry, lcn_connection):
+async def test_get_triggers_non_module_device(
+    hass: HomeAssistant, entry, lcn_connection
+) -> None:
     """Test we get the expected triggers from a LCN non-module device."""
     not_included_types = ("transmitter", "transponder", "fingerprint", "send_keys")
 
@@ -63,7 +68,9 @@ async def test_get_triggers_non_module_device(hass, entry, lcn_connection):
             assert trigger[CONF_TYPE] not in not_included_types
 
 
-async def test_if_fires_on_transponder_event(hass, calls, entry, lcn_connection):
+async def test_if_fires_on_transponder_event(
+    hass: HomeAssistant, calls, entry, lcn_connection
+) -> None:
     """Test for transponder event triggers firing."""
     address = (0, 7, False)
     device = get_device(hass, entry, address)
@@ -108,7 +115,9 @@ async def test_if_fires_on_transponder_event(hass, calls, entry, lcn_connection)
     }
 
 
-async def test_if_fires_on_fingerprint_event(hass, calls, entry, lcn_connection):
+async def test_if_fires_on_fingerprint_event(
+    hass: HomeAssistant, calls, entry, lcn_connection
+) -> None:
     """Test for fingerprint event triggers firing."""
     address = (0, 7, False)
     device = get_device(hass, entry, address)
@@ -153,7 +162,9 @@ async def test_if_fires_on_fingerprint_event(hass, calls, entry, lcn_connection)
     }
 
 
-async def test_if_fires_on_codelock_event(hass, calls, entry, lcn_connection):
+async def test_if_fires_on_codelock_event(
+    hass: HomeAssistant, calls, entry, lcn_connection
+) -> None:
     """Test for codelock event triggers firing."""
     address = (0, 7, False)
     device = get_device(hass, entry, address)
@@ -198,7 +209,9 @@ async def test_if_fires_on_codelock_event(hass, calls, entry, lcn_connection):
     }
 
 
-async def test_if_fires_on_transmitter_event(hass, calls, entry, lcn_connection):
+async def test_if_fires_on_transmitter_event(
+    hass: HomeAssistant, calls, entry, lcn_connection
+) -> None:
     """Test for transmitter event triggers firing."""
     address = (0, 7, False)
     device = get_device(hass, entry, address)
@@ -252,7 +265,9 @@ async def test_if_fires_on_transmitter_event(hass, calls, entry, lcn_connection)
     }
 
 
-async def test_if_fires_on_send_keys_event(hass, calls, entry, lcn_connection):
+async def test_if_fires_on_send_keys_event(
+    hass: HomeAssistant, calls, entry, lcn_connection
+) -> None:
     """Test for send_keys event triggers firing."""
     address = (0, 7, False)
     device = get_device(hass, entry, address)
@@ -299,7 +314,9 @@ async def test_if_fires_on_send_keys_event(hass, calls, entry, lcn_connection):
     }
 
 
-async def test_get_transponder_trigger_capabilities(hass, entry, lcn_connection):
+async def test_get_transponder_trigger_capabilities(
+    hass: HomeAssistant, entry, lcn_connection
+) -> None:
     """Test we get the expected capabilities from a transponder device trigger."""
     address = (0, 7, False)
     device = get_device(hass, entry, address)
@@ -320,7 +337,9 @@ async def test_get_transponder_trigger_capabilities(hass, entry, lcn_connection)
     ) == [{"name": "code", "optional": True, "type": "string", "lower": True}]
 
 
-async def test_get_fingerprint_trigger_capabilities(hass, entry, lcn_connection):
+async def test_get_fingerprint_trigger_capabilities(
+    hass: HomeAssistant, entry, lcn_connection
+) -> None:
     """Test we get the expected capabilities from a fingerprint device trigger."""
     address = (0, 7, False)
     device = get_device(hass, entry, address)
@@ -341,7 +360,9 @@ async def test_get_fingerprint_trigger_capabilities(hass, entry, lcn_connection)
     ) == [{"name": "code", "optional": True, "type": "string", "lower": True}]
 
 
-async def test_get_transmitter_trigger_capabilities(hass, entry, lcn_connection):
+async def test_get_transmitter_trigger_capabilities(
+    hass: HomeAssistant, entry, lcn_connection
+) -> None:
     """Test we get the expected capabilities from a transmitter device trigger."""
     address = (0, 7, False)
     device = get_device(hass, entry, address)
@@ -372,7 +393,9 @@ async def test_get_transmitter_trigger_capabilities(hass, entry, lcn_connection)
     ]
 
 
-async def test_get_send_keys_trigger_capabilities(hass, entry, lcn_connection):
+async def test_get_send_keys_trigger_capabilities(
+    hass: HomeAssistant, entry, lcn_connection
+) -> None:
     """Test we get the expected capabilities from a send_keys device trigger."""
     address = (0, 7, False)
     device = get_device(hass, entry, address)
@@ -408,7 +431,9 @@ async def test_get_send_keys_trigger_capabilities(hass, entry, lcn_connection):
     ]
 
 
-async def test_unknown_trigger_capabilities(hass, entry, lcn_connection):
+async def test_unknown_trigger_capabilities(
+    hass: HomeAssistant, entry, lcn_connection
+) -> None:
     """Test we get empty capabilities if trigger is unknown."""
     address = (0, 7, False)
     device = get_device(hass, entry, address)

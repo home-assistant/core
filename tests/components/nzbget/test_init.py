@@ -12,7 +12,7 @@ from . import ENTRY_CONFIG, _patch_version, init_integration
 from tests.common import MockConfigEntry
 
 
-async def test_unload_entry(hass, nzbget_api):
+async def test_unload_entry(hass: HomeAssistant, nzbget_api) -> None:
     """Test successful unload of entry."""
     entry = await init_integration(hass)
 

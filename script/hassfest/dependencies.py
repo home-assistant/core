@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import ast
+from collections import deque
 from pathlib import Path
 
 from homeassistant.const import Platform
@@ -118,6 +119,7 @@ ALLOWED_USED_COMPONENTS = {
     "input_text",
     "media_source",
     "onboarding",
+    "panel_custom",
     "persistent_notification",
     "person",
     "script",
@@ -138,20 +140,19 @@ IGNORE_VIOLATIONS = {
     # Has same requirement, gets defaults.
     ("sql", "recorder"),
     # Sharing a base class
-    ("openalpr_cloud", "openalpr_local"),
     ("lutron_caseta", "lutron"),
     ("ffmpeg_noise", "ffmpeg_motion"),
     # Demo
     ("demo", "manual"),
-    ("demo", "openalpr_local"),
     # This would be a circular dep
     ("http", "network"),
+    # This would be a circular dep
+    ("zha", "homeassistant_hardware"),
+    ("zha", "homeassistant_yellow"),
     # This should become a helper method that integrations can submit data to
     ("websocket_api", "lovelace"),
     ("websocket_api", "shopping_list"),
     "logbook",
-    # Migration wizard from zwave to zwave_js.
-    "zwave_js",
 }
 
 
@@ -229,6 +230,7 @@ def find_non_referenced_integrations(
 def validate_dependencies(
     integrations: dict[str, Integration],
     integration: Integration,
+    check_dependencies: bool,
 ) -> None:
     """Validate all dependencies."""
     # Some integrations are allowed to have violations.
@@ -250,12 +252,60 @@ def validate_dependencies(
             "or 'after_dependencies'",
         )
 
+    if check_dependencies:
+        _check_circular_deps(
+            integrations, integration.domain, integration, set(), deque()
+        )
+
+
+def _check_circular_deps(
+    integrations: dict[str, Integration],
+    start_domain: str,
+    integration: Integration,
+    checked: set[str],
+    checking: deque[str],
+) -> None:
+    """Check for circular dependencies pointing at starting_domain."""
+    if integration.domain in checked or integration.domain in checking:
+        return
+
+    checking.append(integration.domain)
+    for domain in integration.manifest.get("dependencies", []):
+        if domain == start_domain:
+            integrations[start_domain].add_error(
+                "dependencies",
+                f"Found a circular dependency with {integration.domain} ({', '.join(checking)})",
+            )
+            break
+
+        _check_circular_deps(
+            integrations, start_domain, integrations[domain], checked, checking
+        )
+    else:
+        for domain in integration.manifest.get("after_dependencies", []):
+            if domain == start_domain:
+                integrations[start_domain].add_error(
+                    "dependencies",
+                    f"Found a circular dependency with after dependencies of {integration.domain} ({', '.join(checking)})",
+                )
+                break
+
+            _check_circular_deps(
+                integrations, start_domain, integrations[domain], checked, checking
+            )
+    checked.add(integration.domain)
+    checking.remove(integration.domain)
+
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Handle dependencies for integrations."""
     # check for non-existing dependencies
     for integration in integrations.values():
-        validate_dependencies(integrations, integration)
+        validate_dependencies(
+            integrations,
+            integration,
+            check_dependencies=not config.specific_integrations,
+        )
 
         if config.specific_integrations:
             continue

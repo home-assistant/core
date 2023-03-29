@@ -59,7 +59,9 @@ def mock_venv():
     not sys.platform.startswith("linux"),
     reason="Only works on linux",
 )
-async def test_observer_discovery(hass, hass_ws_client, venv):
+async def test_observer_discovery(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, venv
+) -> None:
     """Test that observer can discover a device without raising an exception."""
     new_usb = [{"domain": "test1", "vid": "3039"}]
 
@@ -113,7 +115,9 @@ async def test_observer_discovery(hass, hass_ws_client, venv):
     not sys.platform.startswith("linux"),
     reason="Only works on linux",
 )
-async def test_removal_by_observer_before_started(hass, operating_system):
+async def test_removal_by_observer_before_started(
+    hass: HomeAssistant, operating_system
+) -> None:
     """Test a device is removed by the observer before started."""
 
     async def _mock_monitor_observer_callback(callback):
@@ -198,8 +202,8 @@ async def test_discovered_by_websocket_scan(
 
 
 async def test_discovered_by_websocket_scan_limited_by_description_matcher(
-    hass, hass_ws_client
-):
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test a device is discovered from websocket scan is limited by the description matcher."""
     new_usb = [
         {"domain": "test1", "vid": "3039", "pid": "3039", "description": "*2652*"}
@@ -279,8 +283,8 @@ async def test_most_targeted_matcher_wins(
 
 
 async def test_discovered_by_websocket_scan_rejected_by_description_matcher(
-    hass, hass_ws_client
-):
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test a device is discovered from websocket scan rejected by the description matcher."""
     new_usb = [
         {"domain": "test1", "vid": "3039", "pid": "3039", "description": "*not_it*"}
@@ -318,8 +322,8 @@ async def test_discovered_by_websocket_scan_rejected_by_description_matcher(
 
 
 async def test_discovered_by_websocket_scan_limited_by_serial_number_matcher(
-    hass, hass_ws_client
-):
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test a device is discovered from websocket scan is limited by the serial_number matcher."""
     new_usb = [
         {
@@ -363,8 +367,8 @@ async def test_discovered_by_websocket_scan_limited_by_serial_number_matcher(
 
 
 async def test_discovered_by_websocket_scan_rejected_by_serial_number_matcher(
-    hass, hass_ws_client
-):
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test a device is discovered from websocket scan is rejected by the serial_number matcher."""
     new_usb = [
         {"domain": "test1", "vid": "3039", "pid": "3039", "serial_number": "123*"}
@@ -402,8 +406,8 @@ async def test_discovered_by_websocket_scan_rejected_by_serial_number_matcher(
 
 
 async def test_discovered_by_websocket_scan_limited_by_manufacturer_matcher(
-    hass, hass_ws_client
-):
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test a device is discovered from websocket scan is limited by the manufacturer matcher."""
     new_usb = [
         {
@@ -447,8 +451,8 @@ async def test_discovered_by_websocket_scan_limited_by_manufacturer_matcher(
 
 
 async def test_discovered_by_websocket_scan_rejected_by_manufacturer_matcher(
-    hass, hass_ws_client
-):
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test a device is discovered from websocket scan is rejected by the manufacturer matcher."""
     new_usb = [
         {
@@ -491,8 +495,8 @@ async def test_discovered_by_websocket_scan_rejected_by_manufacturer_matcher(
 
 
 async def test_discovered_by_websocket_rejected_with_empty_serial_number_only(
-    hass, hass_ws_client
-):
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test a device is discovered from websocket is rejected with empty serial number."""
     new_usb = [
         {"domain": "test1", "vid": "3039", "pid": "3039", "serial_number": "123*"}
@@ -643,8 +647,8 @@ async def test_discovered_by_websocket_no_vid_pid(
 
 @pytest.mark.parametrize("exception_type", [ImportError, OSError])
 async def test_non_matching_discovered_by_scanner_after_started(
-    hass, exception_type, hass_ws_client
-):
+    hass: HomeAssistant, exception_type, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test a websocket scan that does not match."""
     new_usb = [{"domain": "test1", "vid": "4444", "pid": "4444"}]
 
@@ -684,8 +688,8 @@ async def test_non_matching_discovered_by_scanner_after_started(
     reason="Only works on linux",
 )
 async def test_observer_on_wsl_fallback_without_throwing_exception(
-    hass, hass_ws_client, venv
-):
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, venv
+) -> None:
     """Test that observer on WSL failure results in fallback to scanning without raising an exception."""
     new_usb = [{"domain": "test1", "vid": "3039"}]
 
@@ -725,7 +729,9 @@ async def test_observer_on_wsl_fallback_without_throwing_exception(
     not sys.platform.startswith("linux"),
     reason="Only works on linux",
 )
-async def test_not_discovered_by_observer_before_started_on_docker(hass, docker):
+async def test_not_discovered_by_observer_before_started_on_docker(
+    hass: HomeAssistant, docker
+) -> None:
     """Test a device is not discovered since observer is not running on bare docker."""
 
     async def _mock_monitor_observer_callback(callback):
@@ -902,7 +908,9 @@ async def test_async_is_plugged_in(
         {"description": "A description"},
     ],
 )
-async def test_async_is_plugged_in_case_enforcement(hass, matcher):
+async def test_async_is_plugged_in_case_enforcement(
+    hass: HomeAssistant, matcher
+) -> None:
     """Test `async_is_plugged_in` throws an error when incorrect cases are used."""
 
     new_usb = [{"domain": "test1", "vid": "ABCD"}]

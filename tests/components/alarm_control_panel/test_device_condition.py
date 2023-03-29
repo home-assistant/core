@@ -37,7 +37,7 @@ def calls(hass: HomeAssistant) -> list[ServiceCall]:
 
 
 @pytest.mark.parametrize(
-    "set_state,features_reg,features_state,expected_condition_types",
+    ("set_state", "features_reg", "features_state", "expected_condition_types"),
     [
         (False, 0, 0, []),
         (False, AlarmControlPanelEntityFeature.ARM_AWAY, 0, ["is_armed_away"]),
@@ -133,7 +133,7 @@ async def test_get_conditions(
 
 
 @pytest.mark.parametrize(
-    "hidden_by,entity_category",
+    ("hidden_by", "entity_category"),
     (
         (er.RegistryEntryHider.INTEGRATION, None),
         (er.RegistryEntryHider.USER, None),

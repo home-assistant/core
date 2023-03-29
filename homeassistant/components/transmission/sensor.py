@@ -20,6 +20,9 @@ from .const import (
     CONF_ORDER,
     DOMAIN,
     STATE_ATTR_TORRENT_INFO,
+    STATE_DOWNLOADING,
+    STATE_SEEDING,
+    STATE_UP_DOWN,
     SUPPORTED_ORDER_MODES,
 )
 
@@ -106,22 +109,27 @@ class TransmissionSpeedSensor(TransmissionSensor):
     """Representation of a Transmission speed sensor."""
 
     _attr_device_class = SensorDeviceClass.DATA_RATE
-    _attr_native_unit_of_measurement = UnitOfDataRate.MEGABYTES_PER_SECOND
+    _attr_native_unit_of_measurement = UnitOfDataRate.BYTES_PER_SECOND
+    _attr_suggested_display_precision = 2
+    _attr_suggested_unit_of_measurement = UnitOfDataRate.MEGABYTES_PER_SECOND
 
     def update(self) -> None:
         """Get the latest data from Transmission and updates the state."""
         if data := self._tm_client.api.data:
-            mb_spd = (
+            b_spd = (
                 float(data.downloadSpeed)
                 if self._sub_type == "download"
                 else float(data.uploadSpeed)
             )
-            mb_spd = mb_spd / 1024 / 1024
-            self._state = round(mb_spd, 2 if mb_spd < 0.1 else 1)
+            self._state = b_spd
 
 
 class TransmissionStatusSensor(TransmissionSensor):
     """Representation of a Transmission status sensor."""
+
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = [STATE_IDLE, STATE_UP_DOWN, STATE_SEEDING, STATE_DOWNLOADING]
+    _attr_translation_key = "transmission_status"
 
     def update(self) -> None:
         """Get the latest data from Transmission and updates the state."""
@@ -129,11 +137,11 @@ class TransmissionStatusSensor(TransmissionSensor):
             upload = data.uploadSpeed
             download = data.downloadSpeed
             if upload > 0 and download > 0:
-                self._state = "Up/Down"
+                self._state = STATE_UP_DOWN
             elif upload > 0 and download == 0:
-                self._state = "Seeding"
+                self._state = STATE_SEEDING
             elif upload == 0 and download > 0:
-                self._state = "Downloading"
+                self._state = STATE_DOWNLOADING
             else:
                 self._state = STATE_IDLE
         else:

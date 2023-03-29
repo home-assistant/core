@@ -69,7 +69,7 @@ async def test_subscribing_config_topic(
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
 @pytest.mark.parametrize(
-    "topic, log",
+    ("topic", "log"),
     [
         ("homeassistant/binary_sensor/bla/not_config", False),
         ("homeassistant/binary_sensor/rörkrökare/config", True),
@@ -239,7 +239,7 @@ async def test_discover_alarm_control_panel(
 
 
 @pytest.mark.parametrize(
-    "topic, config, entity_id, name, domain",
+    ("topic", "config", "entity_id", "name", "domain"),
     [
         (
             "homeassistant/alarm_control_panel/object/bla/config",
@@ -1266,7 +1266,6 @@ ABBREVIATIONS_WHITE_LIST = [
     "CONF_EMBEDDED",
     "CONF_KEEPALIVE",
     "CONF_TLS_INSECURE",
-    "CONF_TLS_VERSION",
     "CONF_TRANSPORT",
     "CONF_WILL_MESSAGE",
     "CONF_WS_PATH",
@@ -1375,6 +1374,8 @@ async def test_complex_discovery_topic_prefix(
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [])
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
 async def test_mqtt_integration_discovery_subscribe_unsubscribe(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
@@ -1392,6 +1393,7 @@ async def test_mqtt_integration_discovery_subscribe_unsubscribe(
         return_value={"comp": ["comp/discovery/#"]},
     ):
         await async_start(hass, "homeassistant", entry)
+        await hass.async_block_till_done()
         await hass.async_block_till_done()
 
     mqtt_client_mock.subscribe.assert_any_call("comp/discovery/#", 0)
@@ -1419,6 +1421,8 @@ async def test_mqtt_integration_discovery_subscribe_unsubscribe(
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [])
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
 async def test_mqtt_discovery_unsubscribe_once(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
@@ -1436,6 +1440,7 @@ async def test_mqtt_discovery_unsubscribe_once(
         return_value={"comp": ["comp/discovery/#"]},
     ):
         await async_start(hass, "homeassistant", entry)
+        await hass.async_block_till_done()
         await hass.async_block_till_done()
 
     mqtt_client_mock.subscribe.assert_any_call("comp/discovery/#", 0)
@@ -1583,7 +1588,7 @@ async def test_clean_up_registry_monitoring(
 
     # Enload the entry
     # The monitoring should be cleared
-    await help_test_unload_config_entry(hass, tmp_path, {})
+    await help_test_unload_config_entry(hass)
     assert len(hooks) == 0
 
 

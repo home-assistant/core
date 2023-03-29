@@ -90,7 +90,7 @@ def validate_requirements_format(integration: Integration) -> bool:
         if not version:
             continue
 
-        for part in version.split(","):
+        for part in version.split(";", 1)[0].split(","):
             version_part = PIP_VERSION_RANGE_SEPARATOR.match(part)
             if (
                 version_part

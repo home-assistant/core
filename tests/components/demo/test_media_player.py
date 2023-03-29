@@ -380,7 +380,7 @@ async def test_play_media(hass: HomeAssistant) -> None:
     assert state.attributes.get(mp.ATTR_MEDIA_CONTENT_ID) == "some_id"
 
 
-async def test_seek(hass, mock_media_seek):
+async def test_seek(hass: HomeAssistant, mock_media_seek) -> None:
     """Test seek."""
     assert await async_setup_component(
         hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}

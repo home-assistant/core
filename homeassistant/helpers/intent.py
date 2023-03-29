@@ -335,6 +335,10 @@ class ServiceIntentHandler(IntentHandler):
         vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
     }
 
+    # We use a small timeout in service calls to (hopefully) pass validation
+    # checks, but not try to wait for the call to fully complete.
+    service_timeout: float = 0.2
+
     def __init__(
         self, intent_type: str, domain: str, service: str, speech: str | None = None
     ) -> None:
@@ -402,7 +406,8 @@ class ServiceIntentHandler(IntentHandler):
         area: area_registry.AreaEntry | None = None,
     ) -> IntentResponse:
         """Complete action on matched entity states."""
-        assert states
+        assert states, "No states"
+        hass = intent_obj.hass
         success_results: list[IntentResponseTarget] = []
         response = intent_obj.create_response()
 
@@ -419,21 +424,36 @@ class ServiceIntentHandler(IntentHandler):
         service_coros = []
         for state in states:
             service_coros.append(self.async_call_service(intent_obj, state))
-            success_results.append(
-                IntentResponseTarget(
-                    type=IntentResponseTargetType.ENTITY,
-                    name=state.name,
-                    id=state.entity_id,
-                ),
+
+        # Handle service calls in parallel, noting failures as they occur.
+        failed_results: list[IntentResponseTarget] = []
+        for state, service_coro in zip(states, asyncio.as_completed(service_coros)):
+            target = IntentResponseTarget(
+                type=IntentResponseTargetType.ENTITY,
+                name=state.name,
+                id=state.entity_id,
             )
 
-        # Handle service calls in parallel.
-        # We will need to handle partial failures here.
-        await asyncio.gather(*service_coros)
+            try:
+                await service_coro
+                success_results.append(target)
+            except Exception:  # pylint: disable=broad-except
+                failed_results.append(target)
+                _LOGGER.exception("Service call failed for %s", state.entity_id)
+
+        if not success_results:
+            # If no entities succeeded, raise an error.
+            failed_entity_ids = [target.id for target in failed_results]
+            raise IntentHandleError(
+                f"Failed to call {self.service} for: {failed_entity_ids}"
+            )
 
         response.async_set_results(
-            success_results=success_results,
+            success_results=success_results, failed_results=failed_results
         )
+
+        # Update all states
+        states = [hass.states.get(state.entity_id) or state for state in states]
         response.async_set_states(states)
 
         if self.speech is not None:
@@ -449,6 +469,8 @@ class ServiceIntentHandler(IntentHandler):
             self.service,
             {ATTR_ENTITY_ID: state.entity_id},
             context=intent_obj.context,
+            blocking=True,
+            limit=self.service_timeout,
         )
 
 

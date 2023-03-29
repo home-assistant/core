@@ -162,6 +162,34 @@ async def test_button_start_charge(
 
 @pytest.mark.usefixtures("fixtures_with_data")
 @pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
+async def test_button_stop_charge(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
+    """Test that button invokes renault_api with correct data."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    data = {
+        ATTR_ENTITY_ID: "button.reg_number_stop_charge",
+    }
+
+    with patch(
+        "renault_api.renault_vehicle.RenaultVehicle.set_charge_stop",
+        return_value=(
+            schemas.KamereonVehicleChargingStartActionDataSchema.loads(
+                load_fixture("renault/action.set_charge_stop.json")
+            )
+        ),
+    ) as mock_action:
+        await hass.services.async_call(
+            BUTTON_DOMAIN, SERVICE_PRESS, service_data=data, blocking=True
+        )
+    assert len(mock_action.mock_calls) == 1
+    assert mock_action.mock_calls[0][1] == ()
+
+
+@pytest.mark.usefixtures("fixtures_with_data")
+@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
 async def test_button_start_air_conditioner(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> None:

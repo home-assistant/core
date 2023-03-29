@@ -8,6 +8,7 @@ import logging
 import re
 from typing import Any
 
+import async_timeout
 from icmplib import NameLookupError, async_ping
 import voluptuous as vol
 
@@ -227,11 +228,11 @@ class PingDataSubProcess(PingData):
             stdin=None,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
+            close_fds=False,  # required for posix_spawn
         )
         try:
-            out_data, out_error = await asyncio.wait_for(
-                pinger.communicate(), self._count + PING_TIMEOUT
-            )
+            async with async_timeout.timeout(self._count + PING_TIMEOUT):
+                out_data, out_error = await pinger.communicate()
 
             if out_data:
                 _LOGGER.debug(

@@ -66,7 +66,7 @@ async def test_async_fanentity(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "attribute_name, attribute_value",
+    ("attribute_name", "attribute_value"),
     [
         ("current_direction", "forward"),
         ("oscillating", True),
@@ -77,7 +77,7 @@ async def test_async_fanentity(hass: HomeAssistant) -> None:
         ("supported_features", 1),
     ],
 )
-def test_fanentity_attributes(attribute_name, attribute_value):
+def test_fanentity_attributes(attribute_name, attribute_value) -> None:
     """Test fan entity attribute shorthand."""
     fan = BaseFan()
     setattr(fan, f"_attr_{attribute_name}", attribute_value)

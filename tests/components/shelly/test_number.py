@@ -12,7 +12,7 @@ from homeassistant.components.number import (
 from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 
 from . import init_integration, register_device, register_entity
@@ -22,7 +22,9 @@ from tests.common import mock_restore_cache
 DEVICE_BLOCK_ID = 4
 
 
-async def test_block_number_update(hass, mock_block_device, monkeypatch):
+async def test_block_number_update(
+    hass: HomeAssistant, mock_block_device, monkeypatch
+) -> None:
     """Test block device number update."""
     await init_integration(hass, 1, sleep_period=1000)
 
@@ -40,7 +42,9 @@ async def test_block_number_update(hass, mock_block_device, monkeypatch):
     assert hass.states.get("number.test_name_valve_position").state == "30"
 
 
-async def test_block_restored_number(hass, mock_block_device, device_reg, monkeypatch):
+async def test_block_restored_number(
+    hass: HomeAssistant, mock_block_device, device_reg, monkeypatch
+) -> None:
     """Test block restored number."""
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
     register_device(device_reg, entry)
@@ -75,8 +79,8 @@ async def test_block_restored_number(hass, mock_block_device, device_reg, monkey
 
 
 async def test_block_restored_number_no_last_state(
-    hass, mock_block_device, device_reg, monkeypatch
-):
+    hass: HomeAssistant, mock_block_device, device_reg, monkeypatch
+) -> None:
     """Test block restored number missing last state."""
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
     register_device(device_reg, entry)
@@ -108,7 +112,7 @@ async def test_block_restored_number_no_last_state(
     assert hass.states.get(entity_id).state == "50"
 
 
-async def test_block_number_set_value(hass, mock_block_device):
+async def test_block_number_set_value(hass: HomeAssistant, mock_block_device) -> None:
     """Test block device number set value."""
     await init_integration(hass, 1, sleep_period=1000)
 
@@ -128,7 +132,9 @@ async def test_block_number_set_value(hass, mock_block_device):
     )
 
 
-async def test_block_set_value_connection_error(hass, mock_block_device, monkeypatch):
+async def test_block_set_value_connection_error(
+    hass: HomeAssistant, mock_block_device, monkeypatch
+) -> None:
     """Test block device set value connection error."""
     monkeypatch.setattr(
         mock_block_device,
@@ -150,7 +156,9 @@ async def test_block_set_value_connection_error(hass, mock_block_device, monkeyp
         )
 
 
-async def test_block_set_value_auth_error(hass, mock_block_device, monkeypatch):
+async def test_block_set_value_auth_error(
+    hass: HomeAssistant, mock_block_device, monkeypatch
+) -> None:
     """Test block device set value authentication error."""
     monkeypatch.setattr(
         mock_block_device,

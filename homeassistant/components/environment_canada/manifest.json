@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/environment_canada",
   "iot_class": "cloud_polling",
   "loggers": ["env_canada"],
-  "requirements": ["env_canada==0.5.28"]
+  "requirements": ["env_canada==0.5.29"]
 }

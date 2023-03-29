@@ -7,10 +7,11 @@ from homeassistant.components.homeassistant_yellow.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
+from tests.typing import WebSocketGenerator
 
 
 async def test_hardware_info(
-    hass: HomeAssistant, hass_ws_client, addon_store_info
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, addon_store_info
 ) -> None:
     """Test we can get the board info."""
     mock_integration(hass, MockModule("hassio"))
@@ -61,7 +62,7 @@ async def test_hardware_info(
 
 @pytest.mark.parametrize("os_info", [None, {"board": None}, {"board": "other"}])
 async def test_hardware_info_fail(
-    hass: HomeAssistant, hass_ws_client, os_info, addon_store_info
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, os_info, addon_store_info
 ) -> None:
     """Test async_info raises if os_info is not as expected."""
     mock_integration(hass, MockModule("hassio"))

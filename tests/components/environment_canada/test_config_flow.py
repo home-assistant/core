@@ -104,7 +104,7 @@ async def test_create_same_entry_twice(hass: HomeAssistant) -> None:
         (ValueError, "unknown"),
     ],
 )
-async def test_exception_handling(hass, error):
+async def test_exception_handling(hass: HomeAssistant, error) -> None:
     """Test exception handling."""
     exc, base_error = error
     with patch(

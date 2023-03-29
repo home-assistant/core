@@ -396,8 +396,8 @@ async def test_form_user_with_secure_elk_with_discovery_pick_manual(
 
 
 async def test_form_user_with_secure_elk_with_discovery_pick_manual_direct_discovery(
-    hass,
-):
+    hass: HomeAssistant,
+) -> None:
     """Test we can setup a secure elk with discovery but user picks manual and directed discovery succeeds."""
 
     with _patch_discovery():
@@ -976,15 +976,15 @@ async def test_form_import_existing(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
         (config_entries.SOURCE_INTEGRATION_DISCOVERY, ELK_DISCOVERY_INFO),
     ],
 )
 async def test_discovered_by_dhcp_or_discovery_mac_address_mismatch_host_already_configured(
-    hass, source, data
-):
+    hass: HomeAssistant, source, data
+) -> None:
     """Test we abort if the host is already configured but the mac does not match."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -1006,15 +1006,15 @@ async def test_discovered_by_dhcp_or_discovery_mac_address_mismatch_host_already
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
         (config_entries.SOURCE_INTEGRATION_DISCOVERY, ELK_DISCOVERY_INFO),
     ],
 )
 async def test_discovered_by_dhcp_or_discovery_adds_missing_unique_id(
-    hass, source, data
-):
+    hass: HomeAssistant, source, data
+) -> None:
     """Test we add a missing unique id to the config entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

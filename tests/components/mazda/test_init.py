@@ -46,7 +46,7 @@ async def test_config_entry_not_ready(hass: HomeAssistant) -> None:
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_init_auth_failure(hass: HomeAssistant):
+async def test_init_auth_failure(hass: HomeAssistant) -> None:
     """Test auth failure during setup."""
     with patch(
         "homeassistant.components.mazda.MazdaAPI.validate_credentials",
@@ -67,7 +67,7 @@ async def test_init_auth_failure(hass: HomeAssistant):
     assert flows[0]["step_id"] == "user"
 
 
-async def test_update_auth_failure(hass: HomeAssistant):
+async def test_update_auth_failure(hass: HomeAssistant) -> None:
     """Test auth failure during data update."""
     get_vehicles_fixture = json.loads(load_fixture("mazda/get_vehicles.json"))
     get_vehicle_status_fixture = json.loads(
@@ -106,7 +106,7 @@ async def test_update_auth_failure(hass: HomeAssistant):
     assert flows[0]["step_id"] == "user"
 
 
-async def test_update_general_failure(hass: HomeAssistant):
+async def test_update_general_failure(hass: HomeAssistant) -> None:
     """Test general failure during data update."""
     get_vehicles_fixture = json.loads(load_fixture("mazda/get_vehicles.json"))
     get_vehicle_status_fixture = json.loads(
@@ -201,7 +201,7 @@ async def test_device_no_nickname(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "service, service_data, expected_args",
+    ("service", "service_data", "expected_args"),
     [
         (
             "send_poi",
@@ -210,7 +210,9 @@ async def test_device_no_nickname(hass: HomeAssistant) -> None:
         ),
     ],
 )
-async def test_services(hass, service, service_data, expected_args):
+async def test_services(
+    hass: HomeAssistant, service, service_data, expected_args
+) -> None:
     """Test service calls."""
     client_mock = await init_integration(hass)
 

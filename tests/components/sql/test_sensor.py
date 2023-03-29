@@ -2,12 +2,15 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, patch
+from typing import Any
+from unittest.mock import patch
 
 import pytest
 from sqlalchemy import text as sql_text
 from sqlalchemy.exc import SQLAlchemyError
 
+from homeassistant.components.recorder import Recorder
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.sql.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import STATE_UNKNOWN
@@ -15,12 +18,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
-from . import YAML_CONFIG, init_integration
+from . import YAML_CONFIG, YAML_CONFIG_BINARY, init_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_query(recorder_mock: AsyncMock, hass: HomeAssistant) -> None:
+async def test_query(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test the SQL sensor."""
     config = {
         "db_url": "sqlite://",
@@ -36,7 +39,7 @@ async def test_query(recorder_mock: AsyncMock, hass: HomeAssistant) -> None:
 
 
 async def test_query_value_template(
-    recorder_mock: AsyncMock, hass: HomeAssistant
+    recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
     """Test the SQL sensor."""
     config = {
@@ -53,7 +56,7 @@ async def test_query_value_template(
 
 
 async def test_query_value_template_invalid(
-    recorder_mock: AsyncMock, hass: HomeAssistant
+    recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
     """Test the SQL sensor."""
     config = {
@@ -69,7 +72,7 @@ async def test_query_value_template_invalid(
     assert state.state == "5.01"
 
 
-async def test_query_limit(recorder_mock: AsyncMock, hass: HomeAssistant) -> None:
+async def test_query_limit(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test the SQL sensor with a query containing 'LIMIT' in lowercase."""
     config = {
         "db_url": "sqlite://",
@@ -85,7 +88,7 @@ async def test_query_limit(recorder_mock: AsyncMock, hass: HomeAssistant) -> Non
 
 
 async def test_query_no_value(
-    recorder_mock: AsyncMock, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    recorder_mock: Recorder, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test the SQL sensor with a query that returns no value."""
     config = {
@@ -104,7 +107,7 @@ async def test_query_no_value(
 
 
 async def test_query_mssql_no_result(
-    recorder_mock: AsyncMock, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    recorder_mock: Recorder, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test the SQL sensor with a query that returns no value."""
     config = {
@@ -127,7 +130,7 @@ async def test_query_mssql_no_result(
 
 
 @pytest.mark.parametrize(
-    "url,expected_patterns,not_expected_patterns",
+    ("url", "expected_patterns", "not_expected_patterns"),
     [
         (
             "sqlite://homeassistant:hunter2@homeassistant.local",
@@ -142,13 +145,13 @@ async def test_query_mssql_no_result(
     ],
 )
 async def test_invalid_url_setup(
-    recorder_mock: AsyncMock,
+    recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     url: str,
     expected_patterns: str,
     not_expected_patterns: str,
-):
+) -> None:
     """Test invalid db url with redacted credentials."""
     config = {
         "db_url": url,
@@ -180,9 +183,10 @@ async def test_invalid_url_setup(
 
 
 async def test_invalid_url_on_update(
+    recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-):
+) -> None:
     """Test invalid db url with redacted credentials on retry."""
     config = {
         "db_url": "sqlite://",
@@ -190,38 +194,29 @@ async def test_invalid_url_on_update(
         "column": "value",
         "name": "count_tables",
     }
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        source=SOURCE_USER,
-        data={},
-        options=config,
-        entry_id="1",
-    )
 
-    entry.add_to_hass(hass)
+    class MockSession:
+        """Mock session."""
 
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+        def execute(self, query: Any) -> None:
+            """Execute the query."""
+            raise SQLAlchemyError("sqlite://homeassistant:hunter2@homeassistant.local")
 
     with patch(
-        "homeassistant.components.recorder",
-    ), patch(
-        "homeassistant.components.sql.sensor.sqlalchemy.engine.cursor.CursorResult",
-        side_effect=SQLAlchemyError(
-            "sqlite://homeassistant:hunter2@homeassistant.local"
-        ),
+        "homeassistant.components.sql.sensor.scoped_session",
+        return_value=MockSession,
     ):
+        await init_integration(hass, config)
         async_fire_time_changed(
             hass,
             dt.utcnow() + timedelta(minutes=1),
         )
         await hass.async_block_till_done()
 
-    assert "sqlite://homeassistant:hunter2@homeassistant.local" not in caplog.text
     assert "sqlite://****:****@homeassistant.local" in caplog.text
 
 
-async def test_query_from_yaml(recorder_mock: AsyncMock, hass: HomeAssistant) -> None:
+async def test_query_from_yaml(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test the SQL sensor from yaml config."""
 
     assert await async_setup_component(hass, DOMAIN, YAML_CONFIG)
@@ -232,7 +227,7 @@ async def test_query_from_yaml(recorder_mock: AsyncMock, hass: HomeAssistant) ->
 
 
 async def test_config_from_old_yaml(
-    recorder_mock: AsyncMock, hass: HomeAssistant
+    recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
     """Test the SQL sensor from old yaml config does not create any entity."""
     config = {
@@ -256,7 +251,7 @@ async def test_config_from_old_yaml(
 
 
 @pytest.mark.parametrize(
-    "url,expected_patterns,not_expected_patterns",
+    ("url", "expected_patterns", "not_expected_patterns"),
     [
         (
             "sqlite://homeassistant:hunter2@homeassistant.local",
@@ -271,13 +266,13 @@ async def test_config_from_old_yaml(
     ],
 )
 async def test_invalid_url_setup_from_yaml(
-    recorder_mock: AsyncMock,
+    recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     url: str,
     expected_patterns: str,
     not_expected_patterns: str,
-):
+) -> None:
     """Test invalid db url with redacted credentials from yaml setup."""
     config = {
         "sql": {
@@ -299,3 +294,31 @@ async def test_invalid_url_setup_from_yaml(
         assert pattern not in caplog.text
     for pattern in expected_patterns:
         assert pattern in caplog.text
+
+
+async def test_attributes_from_yaml_setup(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test attributes from yaml config."""
+
+    assert await async_setup_component(hass, DOMAIN, YAML_CONFIG)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.get_value")
+
+    assert state.state == "5"
+    assert state.attributes["device_class"] == SensorDeviceClass.DATA_RATE
+    assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
+    assert state.attributes["unit_of_measurement"] == "MiB"
+
+
+async def test_binary_data_from_yaml_setup(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test binary data from yaml config."""
+
+    assert await async_setup_component(hass, DOMAIN, YAML_CONFIG_BINARY)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.get_binary_value")
+    assert state.state == "0xd34324324230392032"
+    assert state.attributes["test_attr"] == "0xd343aa"

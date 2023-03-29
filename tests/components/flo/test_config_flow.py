@@ -14,7 +14,7 @@ from .common import TEST_EMAIL_ADDRESS, TEST_PASSWORD, TEST_TOKEN, TEST_USER_ID
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_form(hass, aioclient_mock_fixture):
+async def test_form(hass: HomeAssistant, aioclient_mock_fixture) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(

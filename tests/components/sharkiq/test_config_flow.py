@@ -3,13 +3,13 @@ from unittest.mock import patch
 
 import aiohttp
 import pytest
-from sharkiq import AylaApi, SharkIqAuthError
+from sharkiq import AylaApi, SharkIqAuthError, SharkIqError
 
 from homeassistant import config_entries
 from homeassistant.components.sharkiq.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from .const import CONFIG, TEST_PASSWORD, TEST_USERNAME, UNIQUE_ID
+from .const import CONFIG, TEST_PASSWORD, TEST_REGION, TEST_USERNAME, UNIQUE_ID
 
 from tests.common import MockConfigEntry
 
@@ -37,20 +37,22 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         "username": TEST_USERNAME,
         "password": TEST_PASSWORD,
+        "region": TEST_REGION,
     }
     await hass.async_block_till_done()
     mock_setup_entry.assert_called_once()
 
 
 @pytest.mark.parametrize(
-    "exc,base_error",
+    ("exc", "base_error"),
     [
         (SharkIqAuthError, "invalid_auth"),
         (aiohttp.ClientError, "cannot_connect"),
-        (TypeError, "unknown"),
+        (TypeError, "cannot_connect"),
+        (SharkIqError, "unknown"),
     ],
 )
-async def test_form_error(hass: HomeAssistant, exc: Exception, base_error: str):
+async def test_form_error(hass: HomeAssistant, exc: Exception, base_error: str) -> None:
     """Test form errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -66,7 +68,7 @@ async def test_form_error(hass: HomeAssistant, exc: Exception, base_error: str):
     assert result2["errors"].get("base") == base_error
 
 
-async def test_reauth_success(hass: HomeAssistant):
+async def test_reauth_success(hass: HomeAssistant) -> None:
     """Test reauth flow."""
     with patch("sharkiq.AylaApi.async_sign_in", return_value=True):
         mock_config = MockConfigEntry(domain=DOMAIN, unique_id=UNIQUE_ID, data=CONFIG)
@@ -83,11 +85,12 @@ async def test_reauth_success(hass: HomeAssistant):
 
 
 @pytest.mark.parametrize(
-    "side_effect,result_type,msg_field,msg",
+    ("side_effect", "result_type", "msg_field", "msg"),
     [
         (SharkIqAuthError, "form", "errors", "invalid_auth"),
         (aiohttp.ClientError, "abort", "reason", "cannot_connect"),
-        (TypeError, "abort", "reason", "unknown"),
+        (TypeError, "abort", "reason", "cannot_connect"),
+        (SharkIqError, "abort", "reason", "unknown"),
     ],
 )
 async def test_reauth(
@@ -96,7 +99,7 @@ async def test_reauth(
     result_type: str,
     msg_field: str,
     msg: str,
-):
+) -> None:
     """Test reauth failures."""
     with patch("sharkiq.AylaApi.async_sign_in", side_effect=side_effect):
         result = await hass.config_entries.flow.async_init(

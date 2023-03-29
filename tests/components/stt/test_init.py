@@ -1,5 +1,5 @@
 """Test STT component setup."""
-from asyncio import StreamReader
+from collections.abc import AsyncIterable
 from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock
 
@@ -64,7 +64,7 @@ class MockProvider(Provider):
         return [AudioChannels.CHANNEL_MONO]
 
     async def async_process_audio_stream(
-        self, metadata: SpeechMetadata, stream: StreamReader
+        self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> SpeechResult:
         """Process an audio stream."""
         self.calls.append((metadata, stream))
@@ -134,7 +134,7 @@ async def test_stream_audio(
 
 
 @pytest.mark.parametrize(
-    "header,status,error",
+    ("header", "status", "error"),
     (
         (None, 400, "Missing X-Speech-Content header"),
         (

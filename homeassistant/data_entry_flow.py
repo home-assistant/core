@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import abc
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 import copy
 from dataclasses import dataclass
 import logging
@@ -138,6 +138,7 @@ class FlowManager(abc.ABC):
         self.hass = hass
         self._progress: dict[str, FlowHandler] = {}
         self._handler_progress_index: dict[str, set[str]] = {}
+        self._init_data_process_index: dict[type, set[str]] = {}
 
     @abc.abstractmethod
     async def async_create_flow(
@@ -196,6 +197,23 @@ class FlowManager(abc.ABC):
         """Return the flows in progress by handler as a partial FlowResult."""
         return _async_flow_handler_to_flow_result(
             self._async_progress_by_handler(handler), include_uninitialized
+        )
+
+    @callback
+    def async_progress_by_init_data_type(
+        self,
+        init_data_type: type,
+        matcher: Callable[[Any], bool],
+        include_uninitialized: bool = False,
+    ) -> list[FlowResult]:
+        """Return flows in progress init matching by data type as a partial FlowResult."""
+        return _async_flow_handler_to_flow_result(
+            (
+                self._progress[flow_id]
+                for flow_id in self._init_data_process_index.get(init_data_type, {})
+                if matcher(self._progress[flow_id].init_data)
+            ),
+            include_uninitialized,
         )
 
     @callback
@@ -301,19 +319,33 @@ class FlowManager(abc.ABC):
     @callback
     def _async_add_flow_progress(self, flow: FlowHandler) -> None:
         """Add a flow to in progress."""
+        if flow.init_data is not None:
+            init_data_type = type(flow.init_data)
+            self._init_data_process_index.setdefault(init_data_type, set()).add(
+                flow.flow_id
+            )
         self._progress[flow.flow_id] = flow
         self._handler_progress_index.setdefault(flow.handler, set()).add(flow.flow_id)
+
+    @callback
+    def _async_remove_flow_from_index(self, flow: FlowHandler) -> None:
+        """Remove a flow from in progress."""
+        if flow.init_data is not None:
+            init_data_type = type(flow.init_data)
+            self._init_data_process_index[init_data_type].remove(flow.flow_id)
+            if not self._init_data_process_index[init_data_type]:
+                del self._init_data_process_index[init_data_type]
+        handler = flow.handler
+        self._handler_progress_index[handler].remove(flow.flow_id)
+        if not self._handler_progress_index[handler]:
+            del self._handler_progress_index[handler]
 
     @callback
     def _async_remove_flow_progress(self, flow_id: str) -> None:
         """Remove a flow from in progress."""
         if (flow := self._progress.pop(flow_id, None)) is None:
             raise UnknownFlow
-        handler = flow.handler
-        self._handler_progress_index[handler].remove(flow.flow_id)
-        if not self._handler_progress_index[handler]:
-            del self._handler_progress_index[handler]
-
+        self._async_remove_flow_from_index(flow)
         try:
             flow.async_remove()
         except Exception as err:  # pylint: disable=broad-except

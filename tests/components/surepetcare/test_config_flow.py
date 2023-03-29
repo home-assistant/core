@@ -115,7 +115,7 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
 
 
 async def test_flow_entry_already_exists(
-    hass, surepetcare: NonCallableMagicMock
+    hass: HomeAssistant, surepetcare: NonCallableMagicMock
 ) -> None:
     """Test user input for config_entry that already exists."""
     first_entry = MockConfigEntry(

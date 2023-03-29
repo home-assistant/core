@@ -55,7 +55,9 @@ async def setup_notify(hass):
     await hass.async_block_till_done()
 
 
-async def test_no_notify_service(hass, mock_demo_notify, caplog):
+async def test_no_notify_service(
+    hass: HomeAssistant, mock_demo_notify, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test missing platform notify service instance."""
     caplog.set_level(logging.ERROR)
     mock_demo_notify.return_value = None
@@ -65,7 +67,7 @@ async def test_no_notify_service(hass, mock_demo_notify, caplog):
     assert "Failed to initialize notification service demo" in caplog.text
 
 
-async def test_discover_notify(hass, mock_demo_notify):
+async def test_discover_notify(hass: HomeAssistant, mock_demo_notify) -> None:
     """Test discovery of notify demo platform."""
     assert notify.DOMAIN not in hass.config.components
     mock_demo_notify.return_value = None
@@ -82,7 +84,7 @@ async def test_discover_notify(hass, mock_demo_notify):
     )
 
 
-async def test_sending_none_message(hass, events):
+async def test_sending_none_message(hass: HomeAssistant, events) -> None:
     """Test send with None as message."""
     await setup_notify(hass)
     with pytest.raises(vol.Invalid):
@@ -93,7 +95,7 @@ async def test_sending_none_message(hass, events):
     assert len(events) == 0
 
 
-async def test_sending_templated_message(hass, events):
+async def test_sending_templated_message(hass: HomeAssistant, events) -> None:
     """Send a templated message."""
     await setup_notify(hass)
     hass.states.async_set("sensor.temperature", 10)
@@ -108,7 +110,7 @@ async def test_sending_templated_message(hass, events):
     assert last_event.data[notify.ATTR_MESSAGE] == "10"
 
 
-async def test_method_forwards_correct_data(hass, events):
+async def test_method_forwards_correct_data(hass: HomeAssistant, events) -> None:
     """Test that all data from the service gets forwarded to service."""
     await setup_notify(hass)
     data = {
@@ -127,7 +129,9 @@ async def test_method_forwards_correct_data(hass, events):
     } == data
 
 
-async def test_calling_notify_from_script_loaded_from_yaml_without_title(hass, events):
+async def test_calling_notify_from_script_loaded_from_yaml_without_title(
+    hass: HomeAssistant, events
+) -> None:
     """Test if we can call a notify from a script."""
     await setup_notify(hass)
     step = {
@@ -149,7 +153,9 @@ async def test_calling_notify_from_script_loaded_from_yaml_without_title(hass, e
     } == events[0].data
 
 
-async def test_calling_notify_from_script_loaded_from_yaml_with_title(hass, events):
+async def test_calling_notify_from_script_loaded_from_yaml_with_title(
+    hass: HomeAssistant, events
+) -> None:
     """Test if we can call a notify from a script."""
     await setup_notify(hass)
     step = {
@@ -180,7 +186,9 @@ async def test_targets_are_services(hass: HomeAssistant) -> None:
     assert hass.services.has_service("notify", service) is not None
 
 
-async def test_messages_to_targets_route(hass, calls, record_calls):
+async def test_messages_to_targets_route(
+    hass: HomeAssistant, calls, record_calls
+) -> None:
     """Test message routing to specific target services."""
     await setup_notify(hass)
     hass.bus.async_listen_once("notify", record_calls)

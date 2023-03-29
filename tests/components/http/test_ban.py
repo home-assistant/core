@@ -76,8 +76,10 @@ async def test_access_from_banned_ip(
 
 
 async def test_access_from_banned_ip_with_partially_broken_yaml_file(
-    hass, aiohttp_client, caplog
-):
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test accessing to server from banned IP. Both trusted and not.
 
     We inject some garbage into the yaml file to make sure it can
@@ -150,7 +152,11 @@ async def test_failure_loading_ip_bans_file(
     assert resp.status == HTTPStatus.NOT_FOUND
 
 
-async def test_ip_ban_manager_never_started(hass, aiohttp_client, caplog):
+async def test_ip_ban_manager_never_started(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test we handle the ip ban manager not being started."""
     app = web.Application()
     app["hass"] = hass
@@ -173,7 +179,7 @@ async def test_ip_ban_manager_never_started(hass, aiohttp_client, caplog):
 
 
 @pytest.mark.parametrize(
-    "remote_addr, bans, status",
+    ("remote_addr", "bans", "status"),
     list(
         zip(
             BANNED_IPS_WITH_SUPERVISOR,
@@ -183,8 +189,13 @@ async def test_ip_ban_manager_never_started(hass, aiohttp_client, caplog):
     ),
 )
 async def test_access_from_supervisor_ip(
-    remote_addr, bans, status, hass, aiohttp_client, hassio_env
-):
+    remote_addr,
+    bans,
+    status,
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    hassio_env,
+) -> None:
     """Test accessing to server from supervisor IP."""
     app = web.Application()
     app["hass"] = hass
@@ -251,7 +262,11 @@ async def test_ban_middleware_loaded_by_default(hass: HomeAssistant) -> None:
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_ip_bans_file_creation(hass, aiohttp_client, caplog):
+async def test_ip_bans_file_creation(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Testing if banned IP file created."""
     app = web.Application()
     app["hass"] = hass

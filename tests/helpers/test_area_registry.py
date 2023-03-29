@@ -1,7 +1,9 @@
 """Tests for the Area Registry."""
+from typing import Any
+
 import pytest
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import area_registry as ar
 
 from tests.common import ANY, flush_store
@@ -21,7 +23,7 @@ def update_events(hass):
     return events
 
 
-async def test_list_areas(area_registry):
+async def test_list_areas(area_registry: ar.AreaRegistry) -> None:
     """Make sure that we can read areas."""
     area_registry.async_create("mock")
 
@@ -30,7 +32,9 @@ async def test_list_areas(area_registry):
     assert len(areas) == len(area_registry.areas)
 
 
-async def test_create_area(hass, area_registry, update_events):
+async def test_create_area(
+    hass: HomeAssistant, area_registry: ar.AreaRegistry, update_events
+) -> None:
     """Make sure that we can create an area."""
     # Create area with only mandatory parameters
     area = area_registry.async_create("mock")
@@ -67,7 +71,9 @@ async def test_create_area(hass, area_registry, update_events):
     assert update_events[-1]["area_id"] == area.id
 
 
-async def test_create_area_with_name_already_in_use(hass, area_registry, update_events):
+async def test_create_area_with_name_already_in_use(
+    hass: HomeAssistant, area_registry: ar.AreaRegistry, update_events
+) -> None:
     """Make sure that we can't create an area with a name already in use."""
     area1 = area_registry.async_create("mock")
 
@@ -82,7 +88,9 @@ async def test_create_area_with_name_already_in_use(hass, area_registry, update_
     assert len(update_events) == 1
 
 
-async def test_create_area_with_id_already_in_use(area_registry):
+async def test_create_area_with_id_already_in_use(
+    area_registry: ar.AreaRegistry,
+) -> None:
     """Make sure that we can't create an area with a name already in use."""
     area1 = area_registry.async_create("mock")
 
@@ -93,7 +101,9 @@ async def test_create_area_with_id_already_in_use(area_registry):
     assert area2.id == "mock_2"
 
 
-async def test_delete_area(hass, area_registry, update_events):
+async def test_delete_area(
+    hass: HomeAssistant, area_registry: ar.AreaRegistry, update_events
+) -> None:
     """Make sure that we can delete an area."""
     area = area_registry.async_create("mock")
 
@@ -110,7 +120,7 @@ async def test_delete_area(hass, area_registry, update_events):
     assert update_events[1]["area_id"] == area.id
 
 
-async def test_delete_non_existing_area(area_registry):
+async def test_delete_non_existing_area(area_registry: ar.AreaRegistry) -> None:
     """Make sure that we can't delete an area that doesn't exist."""
     area_registry.async_create("mock")
 
@@ -120,7 +130,9 @@ async def test_delete_non_existing_area(area_registry):
     assert len(area_registry.areas) == 1
 
 
-async def test_update_area(hass, area_registry, update_events):
+async def test_update_area(
+    hass: HomeAssistant, area_registry: ar.AreaRegistry, update_events
+) -> None:
     """Make sure that we can read areas."""
     area = area_registry.async_create("mock")
 
@@ -150,7 +162,7 @@ async def test_update_area(hass, area_registry, update_events):
     assert update_events[1]["area_id"] == area.id
 
 
-async def test_update_area_with_same_name(area_registry):
+async def test_update_area_with_same_name(area_registry: ar.AreaRegistry) -> None:
     """Make sure that we can reapply the same name to the area."""
     area = area_registry.async_create("mock")
 
@@ -160,7 +172,9 @@ async def test_update_area_with_same_name(area_registry):
     assert len(area_registry.areas) == 1
 
 
-async def test_update_area_with_same_name_change_case(area_registry):
+async def test_update_area_with_same_name_change_case(
+    area_registry: ar.AreaRegistry,
+) -> None:
     """Make sure that we can reapply the same name with a different case to the area."""
     area = area_registry.async_create("mock")
 
@@ -172,7 +186,9 @@ async def test_update_area_with_same_name_change_case(area_registry):
     assert len(area_registry.areas) == 1
 
 
-async def test_update_area_with_name_already_in_use(area_registry):
+async def test_update_area_with_name_already_in_use(
+    area_registry: ar.AreaRegistry,
+) -> None:
     """Make sure that we can't update an area with a name already in use."""
     area1 = area_registry.async_create("mock1")
     area2 = area_registry.async_create("mock2")
@@ -186,7 +202,9 @@ async def test_update_area_with_name_already_in_use(area_registry):
     assert len(area_registry.areas) == 2
 
 
-async def test_update_area_with_normalized_name_already_in_use(area_registry):
+async def test_update_area_with_normalized_name_already_in_use(
+    area_registry: ar.AreaRegistry,
+) -> None:
     """Make sure that we can't update an area with a normalized name already in use."""
     area1 = area_registry.async_create("mock1")
     area2 = area_registry.async_create("Moc k2")
@@ -200,7 +218,7 @@ async def test_update_area_with_normalized_name_already_in_use(area_registry):
     assert len(area_registry.areas) == 2
 
 
-async def test_load_area(hass, area_registry):
+async def test_load_area(hass: HomeAssistant, area_registry: ar.AreaRegistry) -> None:
     """Make sure that we can load/save data correctly."""
     area1 = area_registry.async_create("mock1")
     area2 = area_registry.async_create("mock2")
@@ -220,7 +238,9 @@ async def test_load_area(hass, area_registry):
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_loading_area_from_storage(hass, hass_storage):
+async def test_loading_area_from_storage(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test loading stored areas on start."""
     hass_storage[ar.STORAGE_KEY] = {
         "version": ar.STORAGE_VERSION_MAJOR,
@@ -244,7 +264,9 @@ async def test_loading_area_from_storage(hass, hass_storage):
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_migration_from_1_1(hass, hass_storage):
+async def test_migration_from_1_1(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test migration from version 1.1."""
     hass_storage[ar.STORAGE_KEY] = {
         "version": 1,
@@ -270,7 +292,7 @@ async def test_migration_from_1_1(hass, hass_storage):
     }
 
 
-async def test_async_get_or_create(area_registry):
+async def test_async_get_or_create(area_registry: ar.AreaRegistry) -> None:
     """Make sure we can get the area by name."""
     area = area_registry.async_get_or_create("Mock1")
     area2 = area_registry.async_get_or_create("mock1")
@@ -281,7 +303,7 @@ async def test_async_get_or_create(area_registry):
     assert area2 == area3
 
 
-async def test_async_get_area_by_name(area_registry):
+async def test_async_get_area_by_name(area_registry: ar.AreaRegistry) -> None:
     """Make sure we can get the area by name."""
     area_registry.async_create("Mock1")
 
@@ -290,7 +312,7 @@ async def test_async_get_area_by_name(area_registry):
     assert area_registry.async_get_area_by_name("M o c k 1").normalized_name == "mock1"
 
 
-async def test_async_get_area_by_name_not_found(area_registry):
+async def test_async_get_area_by_name_not_found(area_registry: ar.AreaRegistry) -> None:
     """Make sure we return None for non-existent areas."""
     area_registry.async_create("Mock1")
 
@@ -299,7 +321,7 @@ async def test_async_get_area_by_name_not_found(area_registry):
     assert area_registry.async_get_area_by_name("non_exist") is None
 
 
-async def test_async_get_area(area_registry):
+async def test_async_get_area(area_registry: ar.AreaRegistry) -> None:
     """Make sure we can get the area by id."""
     area = area_registry.async_create("Mock1")
 
