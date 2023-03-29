@@ -79,6 +79,7 @@ async def async_setup_entry(
     coordinator: ScrapeCoordinator = hass.data[DOMAIN][entry.entry_id]
     config = dict(entry.options)
     for sensor in config["sensor"]:
+        # We need to ensure templates are correctly initialised
         sensor_config: ConfigType = vol.Schema(
             TEMPLATE_ENTITY_BASE_SCHEMA.schema, extra=vol.ALLOW_EXTRA
         )(sensor)
