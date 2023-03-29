@@ -88,7 +88,7 @@ class ZWaveSwitch(ZWaveBaseEntity, SwitchEntity):
 
 
 class ZWaveIndicatorSwitch(ZWaveSwitch):
-    """Represenstation of a Z-Wave Indicator CC switch."""
+    """Representation of a Z-Wave Indicator CC switch."""
 
     def __init__(
         self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
