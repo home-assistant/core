@@ -105,7 +105,7 @@ SELECT_ENTITIES = (
         get_options=[state.name for state in StatusLedEnum],
         supported=lambda api, ch: api.supported(ch, "doorbell_led"),
         value=lambda api, ch: StatusLedEnum(api.doorbell_led(ch)).name,
-        method=lambda api, ch, name: api.set_status_led(ch, name),
+        method=lambda api, ch, name: api.set_status_led(ch, StatusLedEnum[name].value),
     ),
 )
 
