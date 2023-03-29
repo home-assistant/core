@@ -107,7 +107,7 @@ SENSOR_SETUP = {
     # Note: we set default to ensure that frontend does not omit the result
     vol.Optional(CONF_DEVICE_CLASS, default=NONE_SENTINEL): SelectSelector(
         SelectSelectorConfig(
-            options=[NONE_SENTINEL] + [cls.value for cls in SensorDeviceClass],
+            options=[NONE_SENTINEL] + sorted([cls.value for cls in SensorDeviceClass]),
             mode=SelectSelectorMode.DROPDOWN,
             translation_key="device_class",
         )
@@ -115,7 +115,7 @@ SENSOR_SETUP = {
     # Note: we set default to ensure that frontend does not omit the result
     vol.Optional(CONF_STATE_CLASS, default=NONE_SENTINEL): SelectSelector(
         SelectSelectorConfig(
-            options=[NONE_SENTINEL] + [cls.value for cls in SensorStateClass],
+            options=[NONE_SENTINEL] + sorted([cls.value for cls in SensorStateClass]),
             mode=SelectSelectorMode.DROPDOWN,
             translation_key="state_class",
         )
@@ -123,7 +123,7 @@ SENSOR_SETUP = {
     # Note: we set default to ensure that frontend does not omit the result
     vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=NONE_SENTINEL): SelectSelector(
         SelectSelectorConfig(
-            options=[NONE_SENTINEL] + [cls.value for cls in UnitOfTemperature],
+            options=[NONE_SENTINEL] + sorted([cls.value for cls in UnitOfTemperature]),
             custom_value=True,
             mode=SelectSelectorMode.DROPDOWN,
             translation_key="unit_of_measurement",
