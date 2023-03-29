@@ -350,7 +350,7 @@ async def test_gen24_storage(
     # ohmpilot
     assert_state("sensor.ohmpilot_energy_consumed", 1233295.0)
     assert_state("sensor.ohmpilot_power", 0.0)
-    assert_state("sensor.ohmpilot_temperature_channel_1", 38.9)
+    assert_state("sensor.ohmpilot_temperature", 38.9)
     assert_state("sensor.ohmpilot_state_code", 0.0)
     assert_state("sensor.ohmpilot_state_message", "Up and running")
     # power_flow
