@@ -21,5 +21,219 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "invalid_host": "[%key:common::config_flow::error::invalid_host%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "energy_day": {
+        "name": "[%key:component::sensor::entity_component::energy::name%] day"
+      },
+      "energy_year": {
+        "name": "[%key:component::sensor::entity_component::energy::name%] year"
+      },
+      "energy_total": {
+        "name": "[%key:component::sensor::entity_component::energy::name%] total"
+      },
+      "frequency_ac": {
+        "name": "[%key:component::sensor::entity_component::frequency::name%] AC"
+      },
+      "current_ac": {
+        "name": "[%key:component::sensor::entity_component::current::name%] AC"
+      },
+      "current_dc": {
+        "name": "[%key:component::sensor::entity_component::current::name%] DC"
+      },
+      "current_dc_2": {
+        "name": "[%key:component::fronius::entity::sensor::current_dc::name%] 2"
+      },
+      "power_ac": {
+        "name": "[%key:component::sensor::entity_component::power::name%] AC"
+      },
+      "voltage_ac": {
+        "name": "[%key:component::sensor::entity_component::voltage::name%] AC"
+      },
+      "voltage_dc": {
+        "name": "[%key:component::sensor::entity_component::voltage::name%] DC"
+      },
+      "voltage_dc_2": {
+        "name": "[%key:component::fronius::entity::sensor::voltage_dc::name%] 2"
+      },
+      "inverter_state": {
+        "name": "Inverter state"
+      },
+      "error_code": {
+        "name": "Error code"
+      },
+      "status_code": {
+        "name": "Status code"
+      },
+      "led_state": {
+        "name": "LED state"
+      },
+      "led_color": {
+        "name": "LED color"
+      },
+      "co2_factor": {
+        "name": "CO₂ factor"
+      },
+      "cash_factor": {
+        "name": "Grid export tariff"
+      },
+      "delivery_factor": {
+        "name": "Grid import tariff"
+      },
+      "current_ac_phase_1": {
+        "name": "[%key:component::fronius::entity::sensor::current_ac::name%] phase 1"
+      },
+      "current_ac_phase_2": {
+        "name": "[%key:component::fronius::entity::sensor::current_ac::name%] phase 2"
+      },
+      "current_ac_phase_3": {
+        "name": "[%key:component::fronius::entity::sensor::current_ac::name%] phase 3"
+      },
+      "energy_reactive_ac_consumed": {
+        "name": "Energy reactive AC consumed"
+      },
+      "energy_reactive_ac_produced": {
+        "name": "Energy reactive AC produced"
+      },
+      "energy_real_ac_minus": {
+        "name": "[%key:component::sensor::entity_component::energy::name%] real AC minus"
+      },
+      "energy_real_ac_plus": {
+        "name": "[%key:component::sensor::entity_component::energy::name%] real AC plus"
+      },
+      "energy_real_consumed": {
+        "name": "[%key:component::sensor::entity_component::energy::name%] real consumed"
+      },
+      "energy_real_produced": {
+        "name": "[%key:component::sensor::entity_component::energy::name%] real produced"
+      },
+      "frequency_phase_average": {
+        "name": "[%key:component::sensor::entity_component::frequency::name%] phase average"
+      },
+      "meter_location": {
+        "name": "Meter location"
+      },
+      "power_apparent_phase_1": {
+        "name": "[%key:component::sensor::entity_component::apparent_power::name%] phase 1"
+      },
+      "power_apparent_phase_2": {
+        "name": "[%key:component::sensor::entity_component::apparent_power::name%] phase 2"
+      },
+      "power_apparent_phase_3": {
+        "name": "[%key:component::sensor::entity_component::apparent_power::name%] phase 3"
+      },
+      "power_apparent": {
+        "name": "[%key:component::sensor::entity_component::apparent_power::name%]"
+      },
+      "power_factor_phase_1": {
+        "name": "[%key:component::sensor::entity_component::power_factor::name%] phase 1"
+      },
+      "power_factor_phase_2": {
+        "name": "[%key:component::sensor::entity_component::power_factor::name%] phase 2"
+      },
+      "power_factor_phase_3": {
+        "name": "[%key:component::sensor::entity_component::power_factor::name%] phase 3"
+      },
+      "power_factor": {
+        "name": "[%key:component::sensor::entity_component::power_factor::name%]"
+      },
+      "power_reactive_phase_1": {
+        "name": "[%key:component::sensor::entity_component::power::name%] reactive phase 1"
+      },
+      "power_reactive_phase_2": {
+        "name": "[%key:component::sensor::entity_component::power::name%] reactive phase 2"
+      },
+      "power_reactive_phase_3": {
+        "name": "[%key:component::sensor::entity_component::power::name%] reactive phase 3"
+      },
+      "power_reactive": {
+        "name": "[%key:component::sensor::entity_component::power::name%] reactive"
+      },
+      "power_real_phase_1": {
+        "name": "[%key:component::sensor::entity_component::power::name%] real phase 1"
+      },
+      "power_real_phase_2": {
+        "name": "[%key:component::sensor::entity_component::power::name%] real phase 2"
+      },
+      "power_real_phase_3": {
+        "name": "[%key:component::sensor::entity_component::power::name%] real phase 3"
+      },
+      "power_real": {
+        "name": "[%key:component::sensor::entity_component::power::name%] real"
+      },
+      "voltage_ac_phase_1": {
+        "name": "[%key:component::fronius::entity::sensor::voltage_ac::name%] phase 1"
+      },
+      "voltage_ac_phase_2": {
+        "name": "[%key:component::fronius::entity::sensor::voltage_ac::name%] phase 2"
+      },
+      "voltage_ac_phase_3": {
+        "name": "[%key:component::fronius::entity::sensor::voltage_ac::name%] phase 3"
+      },
+      "voltage_ac_phase_to_phase_12": {
+        "name": "[%key:component::fronius::entity::sensor::voltage_ac::name%] phase 1-2"
+      },
+      "voltage_ac_phase_to_phase_23": {
+        "name": "[%key:component::fronius::entity::sensor::voltage_ac::name%] phase 2-3"
+      },
+      "voltage_ac_phase_to_phase_31": {
+        "name": "[%key:component::fronius::entity::sensor::voltage_ac::name%] phase 3-1"
+      },
+      "energy_real_ac_consumed": {
+        "name": "[%key:component::sensor::entity_component::energy::name%] consumed"
+      },
+      "power_real_ac": {
+        "name": "[%key:component::sensor::entity_component::power::name%]"
+      },
+      "temperature_channel_1": {
+        "name": "[%key:component::sensor::entity_component::temperature::name%] channel 1"
+      },
+      "state_code": {
+        "name": "State code"
+      },
+      "state_message": {
+        "name": "State message"
+      },
+      "meter_mode": {
+        "name": "Meter mode"
+      },
+      "power_battery": {
+        "name": "[%key:component::sensor::entity_component::power::name%] battery"
+      },
+      "power_grid": {
+        "name": "[%key:component::sensor::entity_component::power::name%] grid"
+      },
+      "power_load": {
+        "name": "[%key:component::sensor::entity_component::power::name%] load"
+      },
+      "power_photovoltaics": {
+        "name": "[%key:component::sensor::entity_component::power::name%] photovoltaics"
+      },
+      "relative_autonomy": {
+        "name": "Relative autonomy"
+      },
+      "relative_self_consumption": {
+        "name": "Relative self consumption"
+      },
+      "capacity_maximum": {
+        "name": "Capacity maximum"
+      },
+      "capacity_designed": {
+        "name": "Capacity designed"
+      },
+      "voltage_dc_maximum_cell": {
+        "name": "[%key:component::fronius::entity::sensor::voltage_dc::name%] maximum cell"
+      },
+      "voltage_dc_minimum_cell": {
+        "name": "[%key:component::fronius::entity::sensor::voltage_dc::name%] minimum cell"
+      },
+      "state_of_charge": {
+        "name": "State of charge"
+      },
+      "temperature_cell": {
+        "name": "[%key:component::sensor::entity_component::temperature::name%] cell"
+      }
+    }
   }
 }
