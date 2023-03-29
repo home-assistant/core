@@ -40,7 +40,7 @@ class GoodweNumberEntityDescription(
 
 
 def _get_setting_unit(inverter: Inverter, setting: str) -> str:
-    """Answer unit of an inverter setting of specified name."""
+    """Return the unit of an inverter setting."""
     return next((s.unit for s in inverter.settings() if s.id_ == setting), "")
 
 
