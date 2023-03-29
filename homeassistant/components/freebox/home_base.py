@@ -54,10 +54,14 @@ class FreeboxHomeEntity(Entity):
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._id)},
-            name=self._device_name,
             manufacturer=self._manufacturer,
             model=self._model,
+            name=self._device_name,
             sw_version=self._firmware,
+            via_device=(
+                DOMAIN,
+                router.mac,
+            ),
         )
 
     async def async_update_signal(self):

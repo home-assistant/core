@@ -193,16 +193,18 @@ class FreeboxDiskSensor(FreeboxSensor):
         self._disk = disk
         self._partition = partition
         self._attr_name = f"{partition['label']} {description.name}"
-        self._attr_unique_id = f"{self._router.mac} {description.key} {self._disk['id']} {self._partition['id']}"
+        self._attr_unique_id = (
+            f"{router.mac} {description.key} {disk['id']} {partition['id']}"
+        )
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._disk["id"])},
-            model=self._disk["model"],
-            name=f"Disk {self._disk['id']}",
-            sw_version=self._disk["firmware"],
+            identifiers={(DOMAIN, disk["id"])},
+            model=disk["model"],
+            name=f"Disk {disk['id']}",
+            sw_version=disk["firmware"],
             via_device=(
                 DOMAIN,
-                self._router.mac,
+                router.mac,
             ),
         )
 
