@@ -6,7 +6,7 @@ import decimal
 import logging
 
 import sqlalchemy
-from sqlalchemy import TextClause, lambda_stmt
+from sqlalchemy import lambda_stmt
 from sqlalchemy.engine import Result
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
@@ -206,8 +206,9 @@ def _validate_and_get_session_maker_for_db_url(db_url: str) -> scoped_session | 
             sess.close()
 
 
-def _generate_lambda_stmt(text: TextClause) -> StatementLambdaElement:
+def _generate_lambda_stmt(query: str) -> StatementLambdaElement:
     """Generate the lambda statement."""
+    text = sqlalchemy.text(query)
     return lambda_stmt(lambda: text, lambda_cache=_SQL_LAMBDA_CACHE)
 
 
@@ -243,7 +244,7 @@ class SQLSensor(SensorEntity):
         self._attr_extra_state_attributes = {}
         self._attr_unique_id = unique_id
         self._use_database_executor = use_database_executor
-        self._lambda_stmt = _generate_lambda_stmt(sqlalchemy.text(query))
+        self._lambda_stmt = _generate_lambda_stmt(query)
         if not yaml and unique_id:
             self._attr_device_info = DeviceInfo(
                 entry_type=DeviceEntryType.SERVICE,
