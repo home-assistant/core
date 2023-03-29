@@ -7,7 +7,10 @@ import yaml
 
 from homeassistant import data_entry_flow
 from homeassistant.components.imap import DOMAIN as IMAP_DOMAIN
-from homeassistant.components.imap.config_flow import STEP_USER_DATA_SCHEMA
+from homeassistant.components.imap.config_flow import (
+    STEP_USER_DATA_SCHEMA,
+    ConfigFlow as ImapConfigFlow,
+)
 from homeassistant.components.repairs import RepairsFlow
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -42,9 +45,6 @@ def process_issue(hass: HomeAssistant, config: ConfigType) -> None:
         template = template.replace("body", 'trigger.event.data["text"]')
     else:
         template = '{{ trigger.event.data["subject"] }}'
-    data = config.copy()
-    data[CONF_VALUE_TEMPLATE] = template
-    data[CONF_NAME] = name
 
     template_sensor_config: ConfigType = {
         "template": [
@@ -67,15 +67,30 @@ def process_issue(hass: HomeAssistant, config: ConfigType) -> None:
         ]
     }
 
-    hass.data.setdefault(
-        DOMAIN,
+    # Make sure we use the correct config schema
+    data = STEP_USER_DATA_SCHEMA(
         {
-            "unique_id": issue_id,
-            "config": config,
-            "yaml_example": yaml.dump(template_sensor_config),
-        },
+            CONF_SERVER: config[CONF_SERVER],
+            CONF_PORT: config[CONF_PORT],
+            CONF_USERNAME: config[CONF_USERNAME],
+            CONF_PASSWORD: config[CONF_PASSWORD],
+            CONF_FOLDER: config[CONF_FOLDER],
+        }
     )
+    try:
+        config_flow = ImapConfigFlow()
+        config_flow.hass = hass
+        config_flow._async_abort_entries_match(data)  # pylint: disable=protected-access
+        # Entry can be migrated
+        translation_key = "migration"
+        is_fixable = True
+    except data_entry_flow.AbortFlow:
+        # Entry already exists, only deprecation issue
+        translation_key = "deprecation"
+        is_fixable = False
 
+    data[CONF_VALUE_TEMPLATE] = template
+    data[CONF_NAME] = name
     placeholders = {"yaml_example": yaml.dump(template_sensor_config)}
     placeholders.update(data)
 
@@ -84,9 +99,9 @@ def process_issue(hass: HomeAssistant, config: ConfigType) -> None:
         DOMAIN,
         issue_id,
         breaks_in_ha_version="2023.10.0",
-        is_fixable=True,
+        is_fixable=is_fixable,
         severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecation",
+        translation_key=translation_key,
         translation_placeholders=placeholders,
         learn_more_url="https://www.home-assistant.io/integrations/imap/#using-events",
         data=data,
@@ -99,15 +114,7 @@ class DeprecationRepairFlow(RepairsFlow):
     def __init__(self, issue_id: str, config: ConfigType) -> None:
         """Create flow."""
         self._name: str = config[CONF_NAME]
-        self._config: dict[str, Any] = STEP_USER_DATA_SCHEMA(
-            {
-                CONF_SERVER: config[CONF_SERVER],
-                CONF_PORT: config[CONF_PORT],
-                CONF_USERNAME: config[CONF_USERNAME],
-                CONF_PASSWORD: config[CONF_PASSWORD],
-                CONF_FOLDER: config[CONF_FOLDER],
-            }
-        )
+        self._config: dict[str, Any] = config
         self._issue_id = issue_id
         super().__init__()
 
@@ -115,8 +122,6 @@ class DeprecationRepairFlow(RepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle the first step of a fix flow."""
-        if self._async_abort_entries_match(self._config):
-            return await self.async_step_deprecation()
         return await self.async_step_start()
 
     @callback
@@ -127,20 +132,6 @@ class DeprecationRepairFlow(RepairsFlow):
             description_placeholders = issue.translation_placeholders
 
         return description_placeholders
-
-    def _async_abort_entries_match(
-        self, match_dict: dict[str, Any] | None
-    ) -> dict[str, str]:
-        """Validate the user input against other config entries."""
-        if match_dict is None:
-            return {}
-
-        errors: dict[str, str] = {}
-        for entry in list(self.hass.config_entries.async_entries(IMAP_DOMAIN)):
-            if all(item in entry.data.items() for item in match_dict.items()):
-                errors["base"] = "already_configured"
-                break
-        return errors
 
     async def async_step_start(
         self, user_input: dict[str, str] | None = None
@@ -182,23 +173,6 @@ class DeprecationRepairFlow(RepairsFlow):
             step_id="confirm",
             data_schema=vol.Schema({}),
             description_placeholders=self._config,
-        )
-
-    async def async_step_deprecation(
-        self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
-        """Show deprecation warning."""
-        placeholders = self._async_get_placeholders()
-        if user_input is None:
-            return self.async_show_form(
-                step_id="deprecation",
-                data_schema=vol.Schema({}),
-                description_placeholders=placeholders,
-            )
-
-        return self.async_create_entry(
-            title="",
-            data={},
         )
 
 
