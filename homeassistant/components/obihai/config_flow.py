@@ -20,11 +20,11 @@ from .const import DEFAULT_PASSWORD, DEFAULT_USERNAME, DOMAIN
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Optional(
+        vol.Required(
             CONF_USERNAME,
             default=DEFAULT_USERNAME,
         ): str,
-        vol.Optional(
+        vol.Required(
             CONF_PASSWORD,
             default=DEFAULT_PASSWORD,
         ): str,
@@ -48,13 +48,14 @@ async def async_validate_creds(
 class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for Obihai."""
 
-    VERSION = 1
-    _host: str | None = None
+    VERSION = 2
+    discovery_schema: vol.Schema | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
+
         errors: dict[str, str] = {}
         ip: str | None = None
 
@@ -78,8 +79,9 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
                     )
                 errors["base"] = "invalid_auth"
 
-        user_input = {CONF_HOST: self._host if self._host else ""}
-        data_schema = self.add_suggested_values_to_schema(DATA_SCHEMA, user_input)
+        data_schema = self.discovery_schema or self.add_suggested_values_to_schema(
+            DATA_SCHEMA, user_input
+        )
         return self.async_show_form(
             step_id="user",
             errors=errors,
@@ -89,31 +91,33 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Prepare configuration for a DHCP discovered Obihai."""
 
-        errors: dict[str, str] = {}
-        self._host = discovery_info.ip
+        return await self.async_step_dhcp_confirm(discovery_info)
+
+    async def async_step_dhcp_confirm(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> FlowResult:
+        """Attempt to confirm."""
 
         await self.async_set_unique_id(discovery_info.macaddress)
         self._abort_if_unique_id_configured()
 
         user_input = {
-            CONF_HOST: self._host,
+            CONF_HOST: discovery_info.ip,
             CONF_PASSWORD: DEFAULT_PASSWORD,
             CONF_USERNAME: DEFAULT_USERNAME,
         }
 
         if await async_validate_creds(self.hass, user_input):
-            return self.async_create_entry(
-                title=user_input[CONF_HOST],
-                data=user_input,
+            self.discovery_schema = self.add_suggested_values_to_schema(
+                DATA_SCHEMA, user_input
             )
-        errors["base"] = "invalid_auth"
+        else:
+            self.discovery_schema = self.add_suggested_values_to_schema(
+                DATA_SCHEMA,
+                {CONF_HOST: discovery_info.ip, CONF_USERNAME: "", CONF_PASSWORD: ""},
+            )
 
-        data_schema = self.add_suggested_values_to_schema(DATA_SCHEMA, user_input)
-        return self.async_show_form(
-            step_id="user",
-            errors=errors,
-            data_schema=data_schema,
-        )
+        return await self.async_step_user()
 
     # DEPRECATED
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:

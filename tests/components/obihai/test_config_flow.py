@@ -8,7 +8,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.obihai.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, FlowResultType
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import DHCP_SERVICE_INFO, USER_INPUT, MockPyObihai
 
@@ -138,8 +138,10 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
         )
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["data"]["host"] == DHCP_SERVICE_INFO.ip
+    flows = hass.config_entries.flow.async_progress()
+    assert result["type"] == FlowResultType.FORM
+    assert len(flows) == 1
+    assert flows[0].get("context", {}).get("source") == config_entries.SOURCE_DHCP
 
 
 async def test_dhcp_flow_auth_failure(hass: HomeAssistant) -> None:
@@ -154,6 +156,8 @@ async def test_dhcp_flow_auth_failure(hass: HomeAssistant) -> None:
             data=DHCP_SERVICE_INFO,
             context={"source": config_entries.SOURCE_DHCP},
         )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=USER_INPUT
+        )
 
-    assert result["type"] == FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_auth"
