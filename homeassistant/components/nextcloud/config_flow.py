@@ -128,15 +128,8 @@ class NextcloudConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="reauth_successful")
 
         data_schema = self.add_suggested_values_to_schema(
-            vol.Schema(
-                {
-                    vol.Required(
-                        CONF_USERNAME, default=self._entry.data[CONF_USERNAME]
-                    ): str,
-                    vol.Required(CONF_PASSWORD): str,
-                }
-            ),
-            user_input,
+            DATA_SCHEMA_REAUTH,
+            {CONF_USERNAME: self._entry.data[CONF_USERNAME], **(user_input or {})},
         )
         return self.async_show_form(
             step_id="reauth_confirm",
