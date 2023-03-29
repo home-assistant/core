@@ -40,7 +40,7 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Optional(
             CONF_EXCL_FILTER,
             default="",
-        ): vol.Maybe(cv.string),
+        ): cv.string,
         vol.Optional(
             CONF_REALTIME,
         ): cv.boolean,
