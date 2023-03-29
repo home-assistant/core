@@ -129,12 +129,61 @@
   "selector": {
     "device_class": {
       "options": {
-        "none": "No device class"
+        "none": "No device class",
+        "date": "Date",
+        "duration": "Duration",
+        "apparent_power": "Apparent power",
+        "aqi": "Air quality index",
+        "atmospheric_pressure": "Atmospheric pressure",
+        "battery": "Battery",
+        "carbon_monoxide": "Carbon monoxide",
+        "carbon_dioxide": "Carbon dioxide",
+        "current": "Current",
+        "data_rate": "Data rate",
+        "data_size": "Data size",
+        "distance": "Distance",
+        "energy": "Energy",
+        "energy_storage": "Stored energy",
+        "frequency": "Frequency",
+        "gas": "Gas",
+        "humidity": "Humidity",
+        "illuminance": "Illuminance",
+        "irradiance": "Irradiance",
+        "moisture": "Moisture",
+        "monetary": "Balance",
+        "nitrogen_dioxide": "Nitrogen dioxide",
+        "nitrogen_monoxide": "Nitrogen monoxide",
+        "nitrous_oxide": "Nitrous oxide",
+        "ozone": "Ozone",
+        "pm1": "Particulate matter 0.1 μm",
+        "pm10": "Particulate matter 10 μm",
+        "pm25": "Particulate matter 2.5 μm",
+        "power_factor": "Power factor",
+        "power": "Power",
+        "precipitation": "Precipitation",
+        "precipitation_intensity": "Precipitation intensity",
+        "pressure": "Pressure",
+        "reactive_power": "Reactive power",
+        "signal_strength": "Signal strength",
+        "sound_pressure": "Sound pressure",
+        "speed": "Speed",
+        "sulphur_dioxide": "Sulphur dioxide",
+        "temperature": "Temperature",
+        "volatile_organic_compounds": "VOCs",
+        "voltage": "Voltage",
+        "volume": "Volume",
+        "volume_storage": "Stored volume",
+        "water": "Water",
+        "weight": "Weight",
+        "wind_speed": "Wind speed"
       }
     },
     "state_class": {
       "options": {
-        "none": "No state class"
+        "none": "No state class",
+        "measurement": "Measurement",
+        "total": "Total",
+        "total_increasing": "Total increasing"
       }
     },
     "unit_of_measurement": {
