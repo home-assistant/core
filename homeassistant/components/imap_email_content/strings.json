@@ -2,7 +2,7 @@
   "issues": {
     "deprecation": {
       "title": "The IMAP email content integration is deprecated",
-      "description": "The IMAP email content integration is deprecated. Your IMAP server configuration was already migrated to to the [imap integration](https://my.home-assistant.io/redirect/config_flow_start?domain=imap). To set up a sensor for the IMAP email content, set up a template sensor with the config:\n\n```yaml\n{yaml_example}```\n\n Remove the deprecated `imap_email_plaform` sensor configuration from your `configuration.yaml`. Note that the event filter only filters on the the first of allowed sender, customize the filter if needed\n\nYou can skip this step if you have already set up a template sensor.\n\nSubmit to finish."
+      "description": "The IMAP email content integration is deprecated. Your IMAP server configuration was already migrated to to the [imap integration](https://my.home-assistant.io/redirect/config_flow_start?domain=imap). To set up a sensor for the IMAP email content, set up a template sensor with the config:\n\n```yaml\n{yaml_example}```\n\nPlease remove the deprecated `imap_email_plaform` sensor configuration from your `configuration.yaml`.\n\nNote that the event filter only filters on the the first of the configured allowed senders, customize the filter if needed.\n\nYou can skip this part if you have already set up a template sensor."
     },
     "migration": {
       "title": "The IMAP email content integration needs attention",
@@ -14,7 +14,7 @@
           },
           "confirm": {
             "title": "Your IMAP server settings will be migrated",
-            "description": "In this step an `imap` config entry will be set up with the following configuration:\n\n```text\nServer\t{server}\nPort\t{port}\nUsername\t{username}\nPassword\t*****\nFolder\t{folder}\n```\n\nSee also: (https://www.home-assistant.io/integrations/imap/)\n\nFitering configuration on allowed `sender` is part of the template sensor config that can copied and placed in your `configuration.yaml.\n\nNote that the event filter only filters on the the first of allowed sender, customize the filter if needed\n\n```yaml\n{yaml_example}```\nDo not forget to cleanup the your `configuration.yaml` after migration.\n\nSubmit to migrate your IMAP server configuration to an `imap` configuration entry."
+            "description": "In this step an `imap` config entry will be set up with the following configuration:\n\n```text\nServer\t{server}\nPort\t{port}\nUsername\t{username}\nPassword\t*****\nFolder\t{folder}\n```\n\nSee also: (https://www.home-assistant.io/integrations/imap/)\n\nFitering configuration on allowed `sender` is part of the template sensor config that can copied and placed in your `configuration.yaml.\n\nNote that the event filter only filters on the the first of the configured allowed senders, customize the filter if needed.\n\n```yaml\n{yaml_example}```\nDo not forget to cleanup the your `configuration.yaml` after migration.\n\nSubmit to migrate your IMAP server configuration to an `imap` configuration entry."
           }
         }
       }
