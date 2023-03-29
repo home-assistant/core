@@ -180,11 +180,12 @@ def _validate_and_get_session_maker_for_db_url(db_url: str) -> scoped_session | 
 
     This does I/O and should be run in the executor.
     """
+    sess: Session | None = None
     try:
         engine = sqlalchemy.create_engine(db_url, future=True)
         sessmaker = scoped_session(sessionmaker(bind=engine, future=True))
         # Run a dummy query just to test the db_url
-        sess: Session = sessmaker()
+        sess = sessmaker()
         sess.execute(sqlalchemy.text("SELECT 1;"))
 
     except SQLAlchemyError as err:
