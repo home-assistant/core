@@ -103,14 +103,14 @@ SENSOR_SETUP = {
     vol.Optional(CONF_ATTRIBUTE): TextSelector(),
     vol.Optional(CONF_VALUE_TEMPLATE): TemplateSelector(),
     # Note: we set default to ensure that frontend does not omit the result
-    vol.Optional(CONF_DEVICE_CLASS, default=""): SelectSelector(
+    vol.Optional(CONF_DEVICE_CLASS, default=None): SelectSelector(
         SelectSelectorConfig(
             options=[""] + [cls.value for cls in SensorDeviceClass],
             mode=SelectSelectorMode.DROPDOWN,
         )
     ),
     # Note: we set default to ensure that frontend does not omit the result
-    vol.Optional(CONF_STATE_CLASS, default=""): SelectSelector(
+    vol.Optional(CONF_STATE_CLASS, default=None): SelectSelector(
         SelectSelectorConfig(
             options=[""] + [cls.value for cls in SensorStateClass],
             mode=SelectSelectorMode.DROPDOWN,
