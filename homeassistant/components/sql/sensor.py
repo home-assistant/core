@@ -244,6 +244,7 @@ class SQLSensor(SensorEntity):
         self._attr_extra_state_attributes = {}
         self._attr_unique_id = unique_id
         self._use_database_executor = use_database_executor
+        self._lambda_stmt = _generate_lambda_stmt(query)
         if not yaml and unique_id:
             self._attr_device_info = DeviceInfo(
                 entry_type=DeviceEntryType.SERVICE,
@@ -265,7 +266,7 @@ class SQLSensor(SensorEntity):
         self._attr_extra_state_attributes = {}
         sess: scoped_session = self.sessionmaker()
         try:
-            result: Result = sess.execute(_generate_lambda_stmt(self._query))
+            result: Result = sess.execute(self._lambda_stmt)
         except SQLAlchemyError as err:
             _LOGGER.error(
                 "Error executing query %s: %s",
