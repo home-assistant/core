@@ -40,6 +40,7 @@ from .common import (
     MockModule,
     MockPlatform,
     async_fire_time_changed,
+    mock_config_flow,
     mock_coro,
     mock_entity_platform,
     mock_integration,
@@ -3420,37 +3421,37 @@ async def test__async_abort_entries_match_options_flow(
 ) -> None:
     """Test aborting if matching config entries exist."""
     MockConfigEntry(
-        domain="comp", data={"ip": "1.2.3.4", "host": "4.5.6.7", "port": 23}
+        domain="test_abort", data={"ip": "1.2.3.4", "host": "4.5.6.7", "port": 23}
     ).add_to_hass(hass)
     MockConfigEntry(
-        domain="comp", data={"ip": "9.9.9.9", "host": "4.5.6.7", "port": 23}
+        domain="test_abort", data={"ip": "9.9.9.9", "host": "4.5.6.7", "port": 23}
     ).add_to_hass(hass)
     MockConfigEntry(
-        domain="comp", data={"ip": "1.2.3.4", "host": "3.4.5.6", "port": 23}
+        domain="test_abort", data={"ip": "1.2.3.4", "host": "3.4.5.6", "port": 23}
     ).add_to_hass(hass)
     MockConfigEntry(
-        domain="comp",
+        domain="test_abort",
         source=config_entries.SOURCE_IGNORE,
         data={"ip": "7.7.7.7", "host": "4.5.6.7", "port": 23},
     ).add_to_hass(hass)
     MockConfigEntry(
-        domain="comp",
+        domain="test_abort",
         data={"ip": "6.6.6.6", "host": "9.9.9.9", "port": 12},
         options={"vendor": "zoo"},
     ).add_to_hass(hass)
     MockConfigEntry(
-        domain="comp",
+        domain="test_abort",
         data={"vendor": "data"},
         options={"vendor": "options"},
     ).add_to_hass(hass)
 
-    original_entry = MockConfigEntry(domain="comp", data={})
+    original_entry = MockConfigEntry(domain="test_abort", data={})
     original_entry.add_to_hass(hass)
 
     mock_setup_entry = AsyncMock(return_value=True)
 
-    mock_integration(hass, MockModule("comp", async_setup_entry=mock_setup_entry))
-    mock_entity_platform(hass, "config_flow.comp", None)
+    mock_integration(hass, MockModule("test_abort", async_setup_entry=mock_setup_entry))
+    mock_entity_platform(hass, "config_flow.test_abort", None)
 
     class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
@@ -3471,7 +3472,7 @@ async def test__async_abort_entries_match_options_flow(
 
             return _OptionsFlow()
 
-    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow, "beer": 5}):
+    with mock_config_flow("test_abort", TestFlow):
         result = await hass.config_entries.options.async_init(
             original_entry.entry_id, data=matchers
         )
