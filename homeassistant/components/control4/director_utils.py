@@ -2,6 +2,7 @@
 from collections import defaultdict
 from collections.abc import Set
 import logging
+from typing import Any
 
 from pyControl4.account import C4Account
 from pyControl4.director import C4Director
@@ -19,28 +20,19 @@ _LOGGER = logging.getLogger(__name__)
 
 async def _update_variables_for_config_entry(
     hass: HomeAssistant, entry: ConfigEntry, variable_names: Set[str]
-) -> dict[int, dict[str, bool | int | str | dict]]:
+) -> dict[int, dict[str, Any]]:
     """Retrieve data from the Control4 director."""
     director = hass.data[DOMAIN][entry.entry_id][CONF_DIRECTOR]
     data = await director.getAllItemVariableValue(variable_names)
-    result_dict: defaultdict[int, dict[str, bool | int | str | dict]] = defaultdict(
-        dict
-    )
+    result_dict: defaultdict[int, dict[str, Any]] = defaultdict(dict)
     for item in data:
-        typ = item.get("type", None)
-        value = item["value"]
-        if typ == "Boolean":
-            value = bool(int(value))
-        elif typ == "Number":
-            value = float(value)
-
-        result_dict[int(item["id"])][item["varName"]] = value
+        result_dict[int(item["id"])][item["varName"]] = item["value"]
     return dict(result_dict)
 
 
 async def update_variables_for_config_entry(
     hass: HomeAssistant, entry: ConfigEntry, variable_names: Set[str]
-) -> dict[int, dict[str, bool | int | str | dict]]:
+) -> dict[int, dict[str, Any]]:
     """Try to Retrieve data from the Control4 director for update_coordinator."""
     try:
         return await _update_variables_for_config_entry(hass, entry, variable_names)
