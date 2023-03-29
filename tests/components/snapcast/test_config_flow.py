@@ -61,10 +61,8 @@ async def test_form(
     await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert (
-        result["title"] == f"{TEST_CONNECTION[CONF_HOST]}:{TEST_CONNECTION[CONF_PORT]}"
-    )
-    assert result["data"] == TEST_CONNECTION
+    assert result["title"] == "snapserver.test:1705"
+    assert result["data"] == {CONF_HOST: "snapserver.test", CONF_PORT: 1705}
     assert len(mock_create_server.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -75,7 +73,6 @@ async def test_abort(
     """Test config flow abort if device is already configured."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        title=f"{TEST_CONNECTION[CONF_HOST]}:{TEST_CONNECTION[CONF_PORT]}",
         data=TEST_CONNECTION,
     )
     entry.add_to_hass(hass)
@@ -109,7 +106,5 @@ async def test_import(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert (
-        result["title"] == f"{TEST_CONNECTION[CONF_HOST]}:{TEST_CONNECTION[CONF_PORT]}"
-    )
-    assert result["data"] == TEST_CONNECTION
+    assert result["title"] == "snapserver.test:1705"
+    assert result["data"] == {CONF_HOST: "snapserver.test", CONF_PORT: 1705}

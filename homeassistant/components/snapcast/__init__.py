@@ -27,9 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Could not connect to Snapcast server at {host}:{port}"
         ) from ex
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = HomeAssistantSnapcast(
-        server, [], []
-    )
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = HomeAssistantSnapcast(server)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
