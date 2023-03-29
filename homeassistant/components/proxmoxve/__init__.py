@@ -38,9 +38,9 @@ from .const import (
     LOGGER,
     PROXMOX_CLIENTS,
     UPDATE_INTERVAL,
-    ProxmoxKeyAPIParse,
     ProxmoxType,
 )
+from .models import ProxmoxVMData
 
 PLATFORMS = [Platform.BINARY_SENSOR]
 
@@ -192,7 +192,7 @@ def create_coordinator_container_vm(
 ) -> DataUpdateCoordinator[dict[str, Any] | None]:
     """Create and return a DataUpdateCoordinator for a vm/container."""
 
-    async def async_update_data() -> dict[str, Any] | None:
+    async def async_update_data() -> dict[str, ProxmoxVMData] | None:
         """Call the api and handle the response."""
 
         def poll_api() -> dict[str, Any] | None:
@@ -227,7 +227,12 @@ def create_coordinator_container_vm(
             )
             return None
 
-        return parse_api_proxmox(api_status, api_category)
+        api_result = {}
+        api_result["result"] = ProxmoxVMData(
+            status=api_status["status"],
+            name=api_status["name"],
+        )
+        return api_result
 
     return DataUpdateCoordinator(
         hass,
@@ -236,25 +241,6 @@ def create_coordinator_container_vm(
         update_method=async_update_data,
         update_interval=timedelta(seconds=UPDATE_INTERVAL),
     )
-
-
-def parse_api_proxmox(
-    status: dict[str, Any],
-    api_category: ProxmoxType,
-) -> dict[str, Any] | None:
-    """Get api data and return it formatted in a dictionary.
-
-    It is implemented in this way to allow for more data to be added for sensors
-    in the future.
-    """
-
-    if api_category in (ProxmoxType.QEMU, ProxmoxType.LXC):
-        return {
-            ProxmoxKeyAPIParse.STATUS: status[ProxmoxKeyAPIParse.STATUS],
-            ProxmoxKeyAPIParse.NAME: status[ProxmoxKeyAPIParse.NAME],
-        }
-
-    return None
 
 
 class ProxmoxClient:

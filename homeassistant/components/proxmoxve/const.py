@@ -3,8 +3,6 @@
 from enum import Enum
 import logging
 
-from homeassistant.backports.enum import StrEnum
-
 DOMAIN = "proxmoxve"
 PROXMOX_CLIENTS = "proxmox_clients"
 CONF_REALM = "realm"
@@ -30,10 +28,3 @@ class ProxmoxType(Enum):
 
     QEMU = "qemu"
     LXC = "lxc"
-
-
-class ProxmoxKeyAPIParse(StrEnum):
-    """Proxmox key of data API parse."""
-
-    STATUS = "status"
-    NAME = "name"
