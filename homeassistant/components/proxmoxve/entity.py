@@ -23,7 +23,7 @@ class ProxmoxEntity(CoordinatorEntity):
         super().__init__(coordinator)
 
         self.coordinator = coordinator
-        self._unique_id = unique_id
+        self._attr_unique_id = unique_id
         self._name = name
         self._host_name = host_name
         self._icon = icon
