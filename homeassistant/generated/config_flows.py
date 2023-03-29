@@ -339,6 +339,7 @@ FLOWS = {
         "pushover",
         "pvoutput",
         "pvpc_hourly_pricing",
+        "qbittorrent",
         "qingping",
         "qnap_qsw",
         "rachio",
