@@ -392,8 +392,7 @@ class AccuWeatherSensor(
                 f"{coordinator.location_key}-{description.key}".lower()
             )
         self._attr_device_info = coordinator.device_info
-        if forecast_day is not None:
-            self.forecast_day = forecast_day
+        self.forecast_day = forecast_day
 
     @property
     def native_value(self) -> StateType:
@@ -409,7 +408,7 @@ class AccuWeatherSensor(
     def _handle_coordinator_update(self) -> None:
         """Handle data update."""
         self._sensor_data = _get_sensor_data(
-            self.coordinator.data, self.entity_description.key
+            self.coordinator.data, self.entity_description.key, self.forecast_day
         )
         self.async_write_ha_state()
 
@@ -436,11 +435,3 @@ class AccuWeatherForecastSensor(AccuWeatherSensor):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self.entity_description.attr_fn(self._sensor_data)
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle data update."""
-        self._sensor_data = _get_sensor_data(
-            self.coordinator.data, self.entity_description.key, self.forecast_day
-        )
-        self.async_write_ha_state()
