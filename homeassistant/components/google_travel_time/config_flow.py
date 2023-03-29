@@ -40,6 +40,20 @@ from .const import (
 )
 from .helpers import InvalidApiKeyException, UnknownException, validate_config_entry
 
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_MODE): vol.In(TRAVEL_MODE),
+        vol.Optional(CONF_LANGUAGE): vol.In([None, *ALL_LANGUAGES]),
+        vol.Optional(CONF_AVOID): vol.In([None, *AVOID]),
+        vol.Optional(CONF_UNITS): vol.In(UNITS),
+        vol.Optional(CONF_TIME_TYPE): vol.In(TIME_TYPES),
+        vol.Optional(CONF_TIME): cv.string,
+        vol.Optional(CONF_TRAFFIC_MODEL): vol.In([None, *TRAVEL_MODEL]),
+        vol.Optional(CONF_TRANSIT_MODE): vol.In([None, *TRANSPORT_TYPE]),
+        vol.Optional(CONF_TRANSIT_ROUTING_PREFERENCE): vol.In([None, *TRANSIT_PREFS]),
+    }
+)
+
 
 def default_options(hass: HomeAssistant) -> dict[str, str | None]:
     """Get the default options."""
@@ -72,50 +86,17 @@ class GoogleOptionsFlow(config_entries.OptionsFlow):
                 data=user_input,
             )
 
+        options = self.config_entry.options.copy()
         if CONF_ARRIVAL_TIME in self.config_entry.options:
-            default_time_type = ARRIVAL_TIME
-            default_time = self.config_entry.options[CONF_ARRIVAL_TIME]
+            options[CONF_TIME_TYPE] = ARRIVAL_TIME
+            options[CONF_TIME] = self.config_entry.options[CONF_ARRIVAL_TIME]
         else:
-            default_time_type = DEPARTURE_TIME
-            default_time = self.config_entry.options.get(CONF_DEPARTURE_TIME, "")
+            options[CONF_TIME_TYPE] = DEPARTURE_TIME
+            options[CONF_TIME] = self.config_entry.options.get(CONF_DEPARTURE_TIME, "")
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_MODE, default=self.config_entry.options[CONF_MODE]
-                    ): vol.In(TRAVEL_MODE),
-                    vol.Optional(
-                        CONF_LANGUAGE,
-                        default=self.config_entry.options.get(CONF_LANGUAGE),
-                    ): vol.In([None, *ALL_LANGUAGES]),
-                    vol.Optional(
-                        CONF_AVOID, default=self.config_entry.options.get(CONF_AVOID)
-                    ): vol.In([None, *AVOID]),
-                    vol.Optional(
-                        CONF_UNITS, default=self.config_entry.options[CONF_UNITS]
-                    ): vol.In(UNITS),
-                    vol.Optional(CONF_TIME_TYPE, default=default_time_type): vol.In(
-                        TIME_TYPES
-                    ),
-                    vol.Optional(CONF_TIME, default=default_time): vol.Maybe(cv.string),
-                    vol.Optional(
-                        CONF_TRAFFIC_MODEL,
-                        default=self.config_entry.options.get(CONF_TRAFFIC_MODEL),
-                    ): vol.In([None, *TRAVEL_MODEL]),
-                    vol.Optional(
-                        CONF_TRANSIT_MODE,
-                        default=self.config_entry.options.get(CONF_TRANSIT_MODE),
-                    ): vol.In([None, *TRANSPORT_TYPE]),
-                    vol.Optional(
-                        CONF_TRANSIT_ROUTING_PREFERENCE,
-                        default=self.config_entry.options.get(
-                            CONF_TRANSIT_ROUTING_PREFERENCE
-                        ),
-                    ): vol.In([None, *TRANSIT_PREFS]),
-                }
-            ),
+            data_schema=self.add_suggested_values_to_schema(OPTIONS_SCHEMA, options),
         )
 
 
