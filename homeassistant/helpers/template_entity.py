@@ -1,7 +1,7 @@
 """TemplateEntity utility class."""
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 import contextlib
 import logging
 from typing import Any
@@ -32,6 +32,7 @@ from .entity import Entity
 from .event import TrackTemplate, TrackTemplateResult, async_track_template_result
 from .script import Script, _VarsType
 from .template import Template, TemplateStateFromEntityId, result_as_boolean
+from .typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -167,7 +168,7 @@ class TemplateEntity(Entity):
         icon_template: Template | None = None,
         entity_picture_template: Template | None = None,
         attribute_templates: dict[str, Template] | None = None,
-        config: Mapping[str, Any] | None = None,
+        config: ConfigType | None = None,
         fallback_name: str | None = None,
         unique_id: str | None = None,
     ) -> None:
@@ -427,7 +428,7 @@ class TemplateSensor(TemplateEntity, SensorEntity):
         self,
         hass: HomeAssistant,
         *,
-        config: Mapping[str, Any],
+        config: dict[str, Any],
         fallback_name: str | None,
         unique_id: str | None,
     ) -> None:
