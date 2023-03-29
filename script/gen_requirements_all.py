@@ -183,6 +183,10 @@ pysnmp==1000000000.0.0
 # pyminiaudio 1.58 is missing files in the package
 # https://github.com/irmen/pyminiaudio/issues/67
 miniaudio==1.57
+
+# The get-mac package has been replaced with getmac. Installing get-mac alongside getmac
+# breaks getmac due to them both sharing the same python package name inside 'getmac'.
+get-mac==1000000000.0.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
