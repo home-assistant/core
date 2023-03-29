@@ -33,32 +33,14 @@ from .helpers import is_valid_config_entry
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Optional(
-            CONF_INCL_FILTER,
-            default="",
-        ): cv.string,
-        vol.Optional(
-            CONF_EXCL_FILTER,
-            default="",
-        ): cv.string,
-        vol.Optional(
-            CONF_REALTIME,
-        ): cv.boolean,
-        vol.Optional(
-            CONF_VEHICLE_TYPE,
-        ): vol.In(VEHICLE_TYPES),
-        vol.Optional(
-            CONF_UNITS,
-        ): vol.In(UNITS),
-        vol.Optional(
-            CONF_AVOID_TOLL_ROADS,
-        ): cv.boolean,
-        vol.Optional(
-            CONF_AVOID_SUBSCRIPTION_ROADS,
-        ): cv.boolean,
-        vol.Optional(
-            CONF_AVOID_FERRIES,
-        ): cv.boolean,
+        vol.Optional(CONF_INCL_FILTER, default=""): cv.string,
+        vol.Optional(CONF_EXCL_FILTER, default=""): cv.string,
+        vol.Optional(CONF_REALTIME): cv.boolean,
+        vol.Optional(CONF_VEHICLE_TYPE): vol.In(VEHICLE_TYPES),
+        vol.Optional(CONF_UNITS): vol.In(UNITS),
+        vol.Optional(CONF_AVOID_TOLL_ROADS): cv.boolean,
+        vol.Optional(CONF_AVOID_SUBSCRIPTION_ROADS): cv.boolean,
+        vol.Optional(CONF_AVOID_FERRIES): cv.boolean,
     }
 )
 
