@@ -200,9 +200,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.context["entry_id"]
         )
 
-        assert self._reauth_entry
-
-        self.context["title_placeholders"] = {"name": self._reauth_entry.title}
         return await self.async_step_device_config()
 
     async def async_step_device_config(
