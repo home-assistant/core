@@ -196,9 +196,7 @@ async def validate_sensor_edit(
     # Standard behavior is to merge the result with the options.
     # In this case, we want to add a sub-item so we update the options directly.
     idx: int = handler.flow_state["_idx"]
-    sensor_options: dict[str, Any] = handler.options[SENSOR_DOMAIN][idx]
-    sensor_options.update(user_input)
-
+    handler.options[SENSOR_DOMAIN][idx].update(user_input)
     return {}
 
 

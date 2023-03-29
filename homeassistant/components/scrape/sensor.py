@@ -20,7 +20,7 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.template_entity import (
-    TEMPLATE_ENTITY_BASE_SCHEMA,
+    TEMPLATE_SENSOR_BASE_SCHEMA,
     TemplateSensor,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -79,9 +79,8 @@ async def async_setup_entry(
     coordinator: ScrapeCoordinator = hass.data[DOMAIN][entry.entry_id]
     config = dict(entry.options)
     for sensor in config["sensor"]:
-        # We need to ensure templates are correctly initialised
         sensor_config: ConfigType = vol.Schema(
-            TEMPLATE_ENTITY_BASE_SCHEMA.schema, extra=vol.ALLOW_EXTRA
+            TEMPLATE_SENSOR_BASE_SCHEMA.schema, extra=vol.ALLOW_EXTRA
         )(sensor)
 
         name: str = sensor_config[CONF_NAME]
