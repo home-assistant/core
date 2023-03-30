@@ -30,7 +30,7 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from .const import DATA_CLIENT, DOMAIN
+from .const import DATA_CLIENT, DOMAIN, SWITCH_MULTILEVEL_SET_TO_PREVIOUS_VALUE
 from .discovery import ZwaveDiscoveryInfo
 from .discovery_data_template import FanValueMapping, FanValueMappingDataTemplate
 from .entity import ZWaveBaseEntity
@@ -87,18 +87,7 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
         super().__init__(config_entry, driver, info)
         self._target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
 
-        self._set_attr_is_on()
-
-    def _set_attr_is_on(self) -> None:
-        """Set _attr_is_on."""
-        if self.info.primary_value.value is None:
-            self._attr_is_on = None
-        else:
-            self._attr_is_on = bool(self.info.primary_value.value > 0)
-
-    def on_value_update(self) -> None:
-        """Call when one of the watched values change."""
-        self._set_attr_is_on()
+        self._use_optimistic_state: bool = False
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
@@ -127,31 +116,26 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
         else:
             if (target_value := self._target_value) is None:
                 raise HomeAssistantError("Missing target value on device.")
-            # Value 255 tells device to return to previous value
-            await self.info.node.async_set_value(target_value, 255)
-
-        # Percentage has to be a non zero value, preset_mode has to be a valid string,
-        # or neither percentage or preset mode are to be provided if the fan is being
-        # turned on. If the user passes percentage = 0 for example, that would turn off
-        # the fan
-        self._attr_is_on = bool(
-            percentage or preset_mode or (percentage is None and preset_mode is None)
-        )
-        self.async_write_ha_state()
+            # If this is a Multilevel Switch CC value, we do an optimistic state update
+            await self.info.node.async_set_value(
+                target_value, SWITCH_MULTILEVEL_SET_TO_PREVIOUS_VALUE
+            )
+            if self.info.primary_value.command_class == CommandClass.SWITCH_MULTILEVEL:
+                self._use_optimistic_state = True
+                self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if (target_value := self._target_value) is None:
             raise HomeAssistantError("Missing target value on device.")
         await self.info.node.async_set_value(target_value, 0)
-        self._attr_is_on = False
-        self.async_write_ha_state()
 
     @property
     def is_on(self) -> bool | None:
         """Return true if device is on (speed above 0)."""
-        if self.info.primary_value.command_class == CommandClass.SWITCH_MULTILEVEL:
-            return self._attr_is_on
+        if self._use_optimistic_state:
+            self._use_optimistic_state = False
+            return True
         if self.info.primary_value.value is None:
             # guard missing value
             return None

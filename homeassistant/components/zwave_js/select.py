@@ -159,27 +159,19 @@ class ZwaveMultilevelSwitchSelectEntity(ZWaveBaseEntity, SelectEntity):
         # Entity class attributes
         self._attr_options = list(self._lookup_map.values())
 
-        self._set_attr_current_option()
-
-    def _set_attr_current_option(self) -> None:
-        """Set _attr_current_option."""
+    @property
+    def current_option(self) -> str | None:
+        """Return the selected entity option to represent the entity state."""
         if self.info.primary_value.value is None:
-            self._attr_current_option = None
-        else:
-            self._attr_current_option = str(
-                self._lookup_map.get(
-                    int(self.info.primary_value.value), self.info.primary_value.value
-                )
+            return None
+        return str(
+            self._lookup_map.get(
+                int(self.info.primary_value.value), self.info.primary_value.value
             )
-
-    def on_value_update(self) -> None:
-        """Call when one of the watched values change."""
-        self._set_attr_current_option()
+        )
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         assert self._target_value is not None
         key = next(key for key, val in self._lookup_map.items() if val == option)
         await self.info.node.async_set_value(self._target_value, int(key))
-        self._attr_current_option = option
-        self.async_write_ha_state()
