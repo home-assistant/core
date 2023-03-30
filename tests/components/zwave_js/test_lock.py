@@ -155,7 +155,7 @@ async def test_door_lock(
 
     state = hass.states.get(SCHLAGE_BE469_LOCK_ENTITY)
     assert state
-    assert not state.attributes[ATTR_ASSUMED_STATE]
+    assert ATTR_ASSUMED_STATE not in state.attributes
 
     event = Event(
         type="dead",
