@@ -2,7 +2,7 @@
 import asyncio
 from datetime import date, datetime
 import logging
-from typing import Any, Dict
+from typing import Any
 
 import async_timeout
 import pyotgw
@@ -399,7 +399,7 @@ class OpenThermGatewayDevice:
         self.name = config_entry.data[CONF_NAME]
         self.climate_config = config_entry.options
         self.config_entry_id = config_entry.entry_id
-        self.status: Dict[str, Any] = {}
+        self.status: dict[str, Any] = {}
         self.update_signal = f"{DATA_OPENTHERM_GW}_{self.gw_id}_update"
         self.options_update_signal = f"{DATA_OPENTHERM_GW}_{self.gw_id}_options_update"
         self.gateway = pyotgw.OpenThermGateway()
