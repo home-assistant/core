@@ -671,6 +671,19 @@ async def test_migrate_events_context_ids(
                         context_parent_id=None,
                         context_parent_id_bin=None,
                     ),
+                    Events(
+                        event_type="garbage_context_id_event",
+                        event_data=None,
+                        origin_idx=0,
+                        time_fired=None,
+                        time_fired_ts=1677721632.552529,
+                        context_id="adapt_lgt:b'5Cf*':interval:b'0R'",
+                        context_id_bin=None,
+                        context_user_id=None,
+                        context_user_id_bin=None,
+                        context_parent_id=None,
+                        context_parent_id_bin=None,
+                    ),
                 )
             )
 
@@ -695,12 +708,13 @@ async def test_migrate_events_context_ids(
                             "empty_context_id_event",
                             "ulid_context_id_event",
                             "invalid_context_id_event",
+                            "garbage_context_id_event",
                         ]
                     )
                 )
                 .all()
             )
-            assert len(events) == 4
+            assert len(events) == 5
             return {event.event_type: _object_as_dict(event) for event in events}
 
     events_by_type = await instance.async_add_executor_job(_fetch_migrated_events)
@@ -745,6 +759,14 @@ async def test_migrate_events_context_ids(
     assert invalid_context_id_event["context_id_bin"] == b"\x00" * 16
     assert invalid_context_id_event["context_user_id_bin"] is None
     assert invalid_context_id_event["context_parent_id_bin"] is None
+
+    garbage_context_id_event = events_by_type["garbage_context_id_event"]
+    assert garbage_context_id_event["context_id"] is None
+    assert garbage_context_id_event["context_user_id"] is None
+    assert garbage_context_id_event["context_parent_id"] is None
+    assert garbage_context_id_event["context_id_bin"] == b"\x00" * 16
+    assert garbage_context_id_event["context_user_id_bin"] is None
+    assert garbage_context_id_event["context_parent_id_bin"] is None
 
 
 @pytest.mark.parametrize("enable_migrate_context_ids", [True])
@@ -803,6 +825,16 @@ async def test_migrate_states_context_ids(
                         context_parent_id=None,
                         context_parent_id_bin=None,
                     ),
+                    States(
+                        entity_id="state.garbage_context_id",
+                        last_updated_ts=1677721632.552529,
+                        context_id="adapt_lgt:b'5Cf*':interval:b'0R'",
+                        context_id_bin=None,
+                        context_user_id=None,
+                        context_user_id_bin=None,
+                        context_parent_id=None,
+                        context_parent_id_bin=None,
+                    ),
                 )
             )
 
@@ -827,12 +859,13 @@ async def test_migrate_states_context_ids(
                             "state.empty_context_id",
                             "state.ulid_context_id",
                             "state.invalid_context_id",
+                            "state.garbage_context_id",
                         ]
                     )
                 )
                 .all()
             )
-            assert len(events) == 4
+            assert len(events) == 5
             return {state.entity_id: _object_as_dict(state) for state in events}
 
     states_by_entity_id = await instance.async_add_executor_job(_fetch_migrated_states)
@@ -876,6 +909,14 @@ async def test_migrate_states_context_ids(
     assert invalid_context_id["context_id_bin"] == b"\x00" * 16
     assert invalid_context_id["context_user_id_bin"] is None
     assert invalid_context_id["context_parent_id_bin"] is None
+
+    garbage_context_id = states_by_entity_id["state.garbage_context_id"]
+    assert garbage_context_id["context_id"] is None
+    assert garbage_context_id["context_user_id"] is None
+    assert garbage_context_id["context_parent_id"] is None
+    assert garbage_context_id["context_id_bin"] == b"\x00" * 16
+    assert garbage_context_id["context_user_id_bin"] is None
+    assert garbage_context_id["context_parent_id_bin"] is None
 
 
 @pytest.mark.parametrize("enable_migrate_event_type_ids", [True])

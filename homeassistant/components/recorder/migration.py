@@ -1355,10 +1355,16 @@ def _context_id_to_bytes(context_id: str | None) -> bytes | None:
     """Convert a context_id to bytes."""
     if context_id is None:
         return None
-    if len(context_id) == 32:
-        return UUID(context_id).bytes
-    if len(context_id) == 26:
-        return ulid_to_bytes(context_id)
+    with contextlib.suppress(ValueError):
+        # There may be garbage in the context_id field
+        # from custom integrations that are not UUIDs or ULIDs
+        # that simply filled the field to the max length
+        # so we need to catch the ValueError
+        # and return None if it happens
+        if len(context_id) == 32:
+            return UUID(context_id).bytes
+        if len(context_id) == 26:
+            return ulid_to_bytes(context_id)
     return None
 
 
