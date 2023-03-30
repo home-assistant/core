@@ -360,8 +360,8 @@ def get_next_departure(
     yesterday_start = today_start = tomorrow_start = None
     yesterday_last = today_last = ""
 
-    for rowin in result:
-        row = rowin._asdict()
+    for row_cursor in result:
+        row = row_cursor._asdict()
         if row["yesterday"] == 1 and yesterday_date >= row["start_date"]:
             extras = {"day": "yesterday", "first": None, "last": False}
             if yesterday_start is None:
@@ -569,7 +569,7 @@ class GTFSDepartureSensor(SensorEntity):
         return self._available
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self._attributes
 
