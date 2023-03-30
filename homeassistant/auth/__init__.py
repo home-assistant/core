@@ -5,7 +5,7 @@ import asyncio
 from collections import OrderedDict
 from collections.abc import Mapping
 from datetime import timedelta
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 import jwt
 
@@ -14,7 +14,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.util import dt as dt_util
 
-from . import auth_store, models
+from . import auth_store, jwt_wrapper, models
 from .const import ACCESS_TOKEN_EXPIRATION, GROUP_ID_ADMIN
 from .mfa_modules import MultiFactorAuthModule, auth_mfa_module_from_config
 from .providers import AuthProvider, LoginFlow, auth_provider_from_config
@@ -24,7 +24,7 @@ EVENT_USER_UPDATED = "user_updated"
 EVENT_USER_REMOVED = "user_removed"
 
 _MfaModuleDict = dict[str, MultiFactorAuthModule]
-_ProviderKey = tuple[str, Optional[str]]
+_ProviderKey = tuple[str, str | None]
 _ProviderDict = dict[_ProviderKey, AuthProvider]
 
 
@@ -87,7 +87,7 @@ class AuthManagerFlowManager(data_entry_flow.FlowManager):
 
     async def async_create_flow(
         self,
-        handler_key: Any,
+        handler_key: str,
         *,
         context: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
@@ -356,8 +356,7 @@ class AuthManager:
         provider = self._async_get_auth_provider(credentials)
 
         if provider is not None and hasattr(provider, "async_will_remove_credentials"):
-            # https://github.com/python/mypy/issues/1424
-            await provider.async_will_remove_credentials(credentials)  # type: ignore[attr-defined]
+            await provider.async_will_remove_credentials(credentials)
 
         await self._store.async_remove_credentials(credentials)
 
@@ -535,7 +534,8 @@ class AuthManager:
         )
         if provider is None:
             raise InvalidProvider(
-                f"Auth provider {refresh_token.credential.auth_provider_type}, {refresh_token.credential.auth_provider_id} not available"
+                f"Auth provider {refresh_token.credential.auth_provider_type},"
+                f" {refresh_token.credential.auth_provider_id} not available"
             )
         return provider
 
@@ -555,9 +555,7 @@ class AuthManager:
     ) -> models.RefreshToken | None:
         """Return refresh token if an access token is valid."""
         try:
-            unverif_claims = jwt.decode(
-                token, algorithms=["HS256"], options={"verify_signature": False}
-            )
+            unverif_claims = jwt_wrapper.unverified_hs256_token_decode(token)
         except jwt.InvalidTokenError:
             return None
 
@@ -573,7 +571,9 @@ class AuthManager:
             issuer = refresh_token.id
 
         try:
-            jwt.decode(token, jwt_key, leeway=10, issuer=issuer, algorithms=["HS256"])
+            jwt_wrapper.verify_and_decode(
+                token, jwt_key, leeway=10, issuer=issuer, algorithms=["HS256"]
+            )
         except jwt.InvalidTokenError:
             return None
 

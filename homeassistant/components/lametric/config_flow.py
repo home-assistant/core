@@ -1,6 +1,7 @@
 """Config flow to configure the LaMetric integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from ipaddress import ip_address
 import logging
 from typing import Any
@@ -27,6 +28,7 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_SERIAL,
     SsdpServiceInfo,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_DEVICE, CONF_HOST, CONF_MAC
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -56,6 +58,7 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     discovered_host: str
     discovered_serial: str
     discovered: bool = False
+    reauth_entry: ConfigEntry | None = None
 
     @property
     def logger(self) -> logging.Logger:
@@ -103,10 +106,20 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self.discovered_serial = serial
         return await self.async_step_choice_enter_manual_or_fetch_cloud()
 
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Handle initiation of re-authentication with LaMetric."""
+        self.reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        return await self.async_step_choice_enter_manual_or_fetch_cloud()
+
     async def async_step_choice_enter_manual_or_fetch_cloud(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle the user's choice of entering the manual credentials or fetching the cloud credentials."""
+        """Handle the user's choice.
+
+        Either enter the manual credentials or fetch the cloud credentials.
+        """
         return self.async_show_menu(
             step_id="choice_enter_manual_or_fetch_cloud",
             menu_options=["pick_implementation", "manual_entry"],
@@ -120,6 +133,8 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         if user_input is not None:
             if self.discovered:
                 host = self.discovered_host
+            elif self.reauth_entry:
+                host = self.reauth_entry.data[CONF_HOST]
             else:
                 host = user_input[CONF_HOST]
 
@@ -142,7 +157,7 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 TextSelectorConfig(type=TextSelectorType.PASSWORD)
             )
         }
-        if not self.discovered:
+        if not self.discovered and not self.reauth_entry:
             schema = {vol.Required(CONF_HOST): TextSelector()} | schema
 
         return self.async_show_form(
@@ -173,6 +188,10 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Handle device selection from devices offered by the cloud."""
         if self.discovered:
             user_input = {CONF_DEVICE: self.discovered_serial}
+        elif self.reauth_entry:
+            if self.reauth_entry.unique_id not in self.devices:
+                return self.async_abort(reason="reauth_device_not_found")
+            user_input = {CONF_DEVICE: self.reauth_entry.unique_id}
         elif len(self.devices) == 1:
             user_input = {CONF_DEVICE: list(self.devices.values())[0].serial_number}
 
@@ -223,10 +242,11 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         device = await lametric.device()
 
-        await self.async_set_unique_id(device.serial_number)
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: lametric.host, CONF_API_KEY: lametric.api_key}
-        )
+        if not self.reauth_entry:
+            await self.async_set_unique_id(device.serial_number)
+            self._abort_if_unique_id_configured(
+                updates={CONF_HOST: lametric.host, CONF_API_KEY: lametric.api_key}
+            )
 
         await lametric.notify(
             notification=Notification(
@@ -235,10 +255,24 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 model=Model(
                     cycles=2,
                     frames=[Simple(text="Connected to Home Assistant!", icon=7956)],
-                    sound=Sound(id=NotificationSound.WIN),
+                    sound=Sound(sound=NotificationSound.WIN),
                 ),
             )
         )
+
+        if self.reauth_entry:
+            self.hass.config_entries.async_update_entry(
+                self.reauth_entry,
+                data={
+                    **self.reauth_entry.data,
+                    CONF_HOST: lametric.host,
+                    CONF_API_KEY: lametric.api_key,
+                },
+            )
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
+            )
+            return self.async_abort(reason="reauth_successful")
 
         return self.async_create_entry(
             title=device.name,

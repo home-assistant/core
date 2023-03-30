@@ -7,6 +7,7 @@ from functools import partial
 import logging
 from typing import Any
 
+from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -138,8 +139,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 @callback
 def _async_create_template_tracking_entities(
-    async_add_entities, hass, definitions: list[dict], unique_id_prefix: str | None
-):
+    async_add_entities: AddEntitiesCallback,
+    hass: HomeAssistant,
+    definitions: list[dict],
+    unique_id_prefix: str | None,
+) -> None:
     """Create the template binary sensors."""
     sensors = []
 
@@ -470,7 +474,7 @@ class AutoOffExtraStoredData(ExtraStoredData):
         }
 
     @classmethod
-    def from_dict(cls, restored: dict[str, Any]) -> AutoOffExtraStoredData | None:
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
         """Initialize a stored binary sensor state from a dict."""
         try:
             auto_off_time = restored["auto_off_time"]

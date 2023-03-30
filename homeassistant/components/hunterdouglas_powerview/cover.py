@@ -118,7 +118,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
     """Representation of a powerview shade."""
 
     _attr_device_class = CoverDeviceClass.SHADE
-    _attr_supported_features = 0
+    _attr_supported_features = CoverEntityFeature(0)
 
     def __init__(
         self,
@@ -731,7 +731,7 @@ class PowerViewShadeTDBUTop(PowerViewShadeDualRailBase):
 
 
 class PowerViewShadeDualOverlappedBase(PowerViewShade):
-    """Represent a shade that has a front sheer and rear blackout panel.
+    """Represent a shade that has a front sheer and rear opaque panel.
 
     This equates to two shades being controlled by one motor
     """
@@ -744,7 +744,7 @@ class PowerViewShadeDualOverlappedBase(PowerViewShade):
         # 51 - 100 is equiv to 1-100 on other shades - one motor, two shades
         primary = (hd_position_to_hass(self.positions.primary, MAX_POSITION) / 2) + 50
         # poskind 2 represents the shade first half of the shade in hass
-        # rear (blackout) must be fully open before front can move
+        # rear (opaque) must be fully open before front can move
         # 51 - 100 is equiv to 1-100 on other shades - one motor, two shades
         secondary = hd_position_to_hass(self.positions.secondary, MAX_POSITION) / 2
         return ceil(primary + secondary)
@@ -773,7 +773,7 @@ class PowerViewShadeDualOverlappedBase(PowerViewShade):
 
 
 class PowerViewShadeDualOverlappedCombined(PowerViewShadeDualOverlappedBase):
-    """Represent a shade that has a front sheer and rear blackout panel.
+    """Represent a shade that has a front sheer and rear opaque panel.
 
     This equates to two shades being controlled by one motor.
     The front shade must be completely down before the rear shade will move.
@@ -817,8 +817,8 @@ class PowerViewShadeDualOverlappedCombined(PowerViewShadeDualOverlappedBase):
     @callback
     def _get_shade_move(self, target_hass_position: int) -> PowerviewShadeMove:
         position_shade = hass_position_to_hd(target_hass_position, MAX_POSITION)
-        # note we set POS_KIND_VANE: MIN_POSITION here even with shades without tilt so no additional
-        # override is required for differences between type 8/9/10
+        # note we set POS_KIND_VANE: MIN_POSITION here even with shades without
+        # tilt so no additional override is required for differences between type 8/9/10
         # this just stores the value in the coordinator for future reference
         if target_hass_position <= 50:
             target_hass_position = target_hass_position * 2
@@ -842,15 +842,18 @@ class PowerViewShadeDualOverlappedCombined(PowerViewShadeDualOverlappedBase):
 
 
 class PowerViewShadeDualOverlappedFront(PowerViewShadeDualOverlappedBase):
-    """Represent the shade front panel - These have a blackout panel too.
+    """Represent the shade front panel - These have a opaque panel too.
 
     This equates to two shades being controlled by one motor.
     The front shade must be completely down before the rear shade will move.
-    Sibling Class: PowerViewShadeDualOverlappedCombined, PowerViewShadeDualOverlappedRear
-    API Class: ShadeDualOverlapped + ShadeDualOverlappedTilt90 + ShadeDualOverlappedTilt180
+    Sibling Class:
+        PowerViewShadeDualOverlappedCombined, PowerViewShadeDualOverlappedRear
+    API Class:
+        ShadeDualOverlapped + ShadeDualOverlappedTilt90 + ShadeDualOverlappedTilt180
 
     Type 8 - Duolite (front and rear shades)
-    Type 9 - Duolite with 90° Tilt (front bottom up shade that also tilts plus a rear blackout (non-tilting) shade)
+    Type 9 - Duolite with 90° Tilt (front bottom up shade that also tilts
+             plus a rear opaque (non-tilting) shade)
     Type 10 - Duolite with 180° Tilt
     """
 
@@ -903,15 +906,18 @@ class PowerViewShadeDualOverlappedFront(PowerViewShadeDualOverlappedBase):
 
 
 class PowerViewShadeDualOverlappedRear(PowerViewShadeDualOverlappedBase):
-    """Represent the shade front panel - These have a blackout panel too.
+    """Represent the shade front panel - These have a opaque panel too.
 
     This equates to two shades being controlled by one motor.
     The front shade must be completely down before the rear shade will move.
-    Sibling Class: PowerViewShadeDualOverlappedCombined, PowerViewShadeDualOverlappedFront
-    API Class: ShadeDualOverlapped + ShadeDualOverlappedTilt90 + ShadeDualOverlappedTilt180
+    Sibling Class:
+        PowerViewShadeDualOverlappedCombined, PowerViewShadeDualOverlappedFront
+    API Class:
+        ShadeDualOverlapped + ShadeDualOverlappedTilt90 + ShadeDualOverlappedTilt180
 
     Type 8 - Duolite (front and rear shades)
-    Type 9 - Duolite with 90° Tilt (front bottom up shade that also tilts plus a rear blackout (non-tilting) shade)
+    Type 9 - Duolite with 90° Tilt (front bottom up shade that also tilts plus
+             a rear opaque (non-tilting) shade)
     Type 10 - Duolite with 180° Tilt
     """
 
@@ -975,7 +981,7 @@ class PowerViewShadeDualOverlappedRear(PowerViewShadeDualOverlappedBase):
 
 
 class PowerViewShadeDualOverlappedCombinedTilt(PowerViewShadeDualOverlappedCombined):
-    """Represent a shade that has a front sheer and rear blackout panel.
+    """Represent a shade that has a front sheer and rear opaque panel.
 
     This equates to two shades being controlled by one motor.
     The front shade must be completely down before the rear shade will move.
@@ -984,7 +990,7 @@ class PowerViewShadeDualOverlappedCombinedTilt(PowerViewShadeDualOverlappedCombi
     Sibling Class: PowerViewShadeDualOverlappedFront, PowerViewShadeDualOverlappedRear
     API Class: ShadeDualOverlappedTilt90 + ShadeDualOverlappedTilt180
 
-    Type 9 - Duolite with 90° Tilt (front bottom up shade that also tilts plus a rear blackout (non-tilting) shade)
+    Type 9 - Duolite with 90° Tilt (front bottom up shade that also tilts plus a rear opaque (non-tilting) shade)
     Type 10 - Duolite with 180° Tilt
     """
 
@@ -1016,7 +1022,7 @@ class PowerViewShadeDualOverlappedCombinedTilt(PowerViewShadeDualOverlappedCombi
         # 51 - 100 is equiv to 1-100 on other shades - one motor, two shades
         primary = (hd_position_to_hass(self.positions.primary, MAX_POSITION) / 2) + 50
         # poskind 2 represents the shade first half of the shade in hass
-        # rear (blackout) must be fully open before front can move
+        # rear (opaque) must be fully open before front can move
         # 51 - 100 is equiv to 1-100 on other shades - one motor, two shades
         secondary = hd_position_to_hass(self.positions.secondary, MAX_POSITION) / 2
         vane = hd_position_to_hass(self.positions.vane, self._max_tilt)

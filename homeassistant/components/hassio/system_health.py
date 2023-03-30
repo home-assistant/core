@@ -22,12 +22,12 @@ def async_register(
 
 async def system_health_info(hass: HomeAssistant):
     """Get info for the info page."""
-    info = get_info(hass)
-    host_info = get_host_info(hass)
+    info = get_info(hass) or {}
+    host_info = get_host_info(hass) or {}
     supervisor_info = get_supervisor_info(hass)
 
     healthy: bool | dict[str, str]
-    if supervisor_info.get("healthy"):
+    if supervisor_info is not None and supervisor_info.get("healthy"):
         healthy = True
     else:
         healthy = {
@@ -36,7 +36,7 @@ async def system_health_info(hass: HomeAssistant):
         }
 
     supported: bool | dict[str, str]
-    if supervisor_info.get("supported"):
+    if supervisor_info is not None and supervisor_info.get("supported"):
         supported = True
     else:
         supported = {
@@ -57,7 +57,7 @@ async def system_health_info(hass: HomeAssistant):
     }
 
     if info.get("hassos") is not None:
-        os_info = get_os_info(hass)
+        os_info = get_os_info(hass) or {}
         information["board"] = os_info.get("board")
 
     information["supervisor_api"] = system_health.async_check_can_reach_url(
@@ -70,7 +70,7 @@ async def system_health_info(hass: HomeAssistant):
 
     information["installed_addons"] = ", ".join(
         f"{addon['name']} ({addon['version']})"
-        for addon in supervisor_info.get("addons", [])
+        for addon in (supervisor_info or {}).get("addons", [])
     )
 
     return information

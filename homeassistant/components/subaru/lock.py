@@ -53,8 +53,7 @@ async def async_setup_entry(
 
 
 class SubaruLock(LockEntity):
-    """
-    Representation of a Subaru door lock.
+    """Representation of a Subaru door lock.
 
     Note that the Subaru API currently does not support returning the status of the locks. Lock status is always unknown.
     """

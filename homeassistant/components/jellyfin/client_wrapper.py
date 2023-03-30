@@ -15,7 +15,7 @@ from homeassistant import exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .const import CLIENT_VERSION, USER_AGENT, USER_APP_NAME
+from .const import CLIENT_VERSION, ITEM_KEY_IMAGE_TAGS, USER_AGENT, USER_APP_NAME
 
 
 async def validate_input(
@@ -90,6 +90,25 @@ def _get_user_id(api: API) -> str:
     settings: dict[str, Any] = api.get_user_settings()
     userid: str = settings["Id"]
     return userid
+
+
+def get_artwork_url(
+    client: JellyfinClient, item: dict[str, Any], max_width: int = 600
+) -> str | None:
+    """Find a suitable thumbnail for an item."""
+    artwork_id: str = item["Id"]
+    artwork_type = "Primary"
+    parent_backdrop_id: str | None = item.get("ParentBackdropItemId")
+
+    if "Backdrop" in item[ITEM_KEY_IMAGE_TAGS]:
+        artwork_type = "Backdrop"
+    elif parent_backdrop_id:
+        artwork_type = "Backdrop"
+        artwork_id = parent_backdrop_id
+    elif "Primary" not in item[ITEM_KEY_IMAGE_TAGS]:
+        return None
+
+    return str(client.jellyfin.artwork(artwork_id, artwork_type, max_width))
 
 
 class CannotConnect(exceptions.HomeAssistantError):

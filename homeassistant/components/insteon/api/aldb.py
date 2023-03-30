@@ -1,13 +1,9 @@
 """Web socket API for Insteon devices."""
 
+from typing import Any
+
 from pyinsteon import devices
 from pyinsteon.constants import ALDBStatus
-from pyinsteon.topics import (
-    ALDB_STATUS_CHANGED,
-    DEVICE_LINK_CONTROLLER_CREATED,
-    DEVICE_LINK_RESPONDER_CREATED,
-)
-from pyinsteon.utils import subscribe_topic, unsubscribe_topic
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -71,7 +67,7 @@ async def async_reload_and_save_aldb(hass, device):
 async def websocket_get_aldb(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Get the All-Link Database for an Insteon device."""
     if not (device := devices[msg[DEVICE_ADDRESS]]):
@@ -107,7 +103,7 @@ async def websocket_get_aldb(
 async def websocket_change_aldb_record(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Change an All-Link Database record for an Insteon device."""
     if not (device := devices[msg[DEVICE_ADDRESS]]):
@@ -140,7 +136,7 @@ async def websocket_change_aldb_record(
 async def websocket_create_aldb_record(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Create an All-Link Database record for an Insteon device."""
     if not (device := devices[msg[DEVICE_ADDRESS]]):
@@ -170,7 +166,7 @@ async def websocket_create_aldb_record(
 async def websocket_write_aldb(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Create an All-Link Database record for an Insteon device."""
     if not (device := devices[msg[DEVICE_ADDRESS]]):
@@ -193,7 +189,7 @@ async def websocket_write_aldb(
 async def websocket_load_aldb(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Create an All-Link Database record for an Insteon device."""
     if not (device := devices[msg[DEVICE_ADDRESS]]):
@@ -215,7 +211,7 @@ async def websocket_load_aldb(
 async def websocket_reset_aldb(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Create an All-Link Database record for an Insteon device."""
     if not (device := devices[msg[DEVICE_ADDRESS]]):
@@ -237,7 +233,7 @@ async def websocket_reset_aldb(
 async def websocket_add_default_links(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Add the default All-Link Database records for an Insteon device."""
     if not (device := devices[msg[DEVICE_ADDRESS]]):
@@ -261,7 +257,7 @@ async def websocket_add_default_links(
 async def websocket_notify_on_aldb_status(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Tell Insteon a new ALDB record was added."""
     if not (device := devices[msg[DEVICE_ADDRESS]]):
@@ -269,33 +265,31 @@ async def websocket_notify_on_aldb_status(
         return
 
     @callback
-    def record_added(controller, responder, group):
+    def record_added(record, sender, deleted):
         """Forward ALDB events to websocket."""
         forward_data = {"type": "record_loaded"}
         connection.send_message(websocket_api.event_message(msg["id"], forward_data))
 
     @callback
-    def aldb_loaded():
+    def aldb_loaded(status):
         """Forward ALDB loaded event to websocket."""
         forward_data = {
             "type": "status_changed",
-            "is_loading": device.aldb.status == ALDBStatus.LOADING,
+            "is_loading": status == ALDBStatus.LOADING,
         }
         connection.send_message(websocket_api.event_message(msg["id"], forward_data))
 
     @callback
     def async_cleanup() -> None:
         """Remove signal listeners."""
-        unsubscribe_topic(record_added, f"{DEVICE_LINK_CONTROLLER_CREATED}.{device.id}")
-        unsubscribe_topic(record_added, f"{DEVICE_LINK_RESPONDER_CREATED}.{device.id}")
-        unsubscribe_topic(aldb_loaded, f"{device.id}.{ALDB_STATUS_CHANGED}")
+        device.aldb.unsubscribe_record_changed(record_added)
+        device.aldb.unsubscribe_status_changed(aldb_loaded)
 
         forward_data = {"type": "unsubscribed"}
         connection.send_message(websocket_api.event_message(msg["id"], forward_data))
 
     connection.subscriptions[msg["id"]] = async_cleanup
-    subscribe_topic(record_added, f"{DEVICE_LINK_CONTROLLER_CREATED}.{device.id}")
-    subscribe_topic(record_added, f"{DEVICE_LINK_RESPONDER_CREATED}.{device.id}")
-    subscribe_topic(aldb_loaded, f"{device.id}.{ALDB_STATUS_CHANGED}")
+    device.aldb.subscribe_record_changed(record_added)
+    device.aldb.subscribe_status_changed(aldb_loaded)
 
     connection.send_result(msg[ID])

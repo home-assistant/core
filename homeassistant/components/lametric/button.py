@@ -9,8 +9,8 @@ from demetriek import LaMetricDevice
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -47,6 +47,20 @@ BUTTONS = [
         icon="mdi:arrow-left-bold",
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda api: api.app_previous(),
+    ),
+    LaMetricButtonEntityDescription(
+        key="dismiss_current",
+        name="Dismiss current notification",
+        icon="mdi:bell-cancel",
+        entity_category=EntityCategory.CONFIG,
+        press_fn=lambda api: api.dismiss_current_notification(),
+    ),
+    LaMetricButtonEntityDescription(
+        key="dismiss_all",
+        name="Dismiss all notifications",
+        icon="mdi:bell-cancel",
+        entity_category=EntityCategory.CONFIG,
+        press_fn=lambda api: api.dismiss_all_notifications(),
     ),
 ]
 

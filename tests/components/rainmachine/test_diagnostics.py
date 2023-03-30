@@ -2,11 +2,18 @@
 from regenmaschine.errors import RainMachineError
 
 from homeassistant.components.diagnostics import REDACTED
+from homeassistant.core import HomeAssistant
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
-async def test_entry_diagnostics(hass, config_entry, hass_client, setup_rainmachine):
+async def test_entry_diagnostics(
+    hass: HomeAssistant,
+    config_entry,
+    hass_client: ClientSessionGenerator,
+    setup_rainmachine,
+) -> None:
     """Test config entry diagnostics."""
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "entry": {
@@ -20,7 +27,7 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_rainmach
                 "port": 8080,
                 "ssl": True,
             },
-            "options": {},
+            "options": {"use_app_run_times": False},
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "source": "user",
@@ -626,8 +633,12 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_rainmach
 
 
 async def test_entry_diagnostics_failed_controller_diagnostics(
-    hass, config_entry, controller, hass_client, setup_rainmachine
-):
+    hass: HomeAssistant,
+    config_entry,
+    controller,
+    hass_client: ClientSessionGenerator,
+    setup_rainmachine,
+) -> None:
     """Test config entry diagnostics when the controller diagnostics API call fails."""
     controller.diagnostics.current.side_effect = RainMachineError
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
@@ -642,7 +653,7 @@ async def test_entry_diagnostics_failed_controller_diagnostics(
                 "port": 8080,
                 "ssl": True,
             },
-            "options": {},
+            "options": {"use_app_run_times": False},
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "source": "user",

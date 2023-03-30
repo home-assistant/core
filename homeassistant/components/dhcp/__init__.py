@@ -1,7 +1,7 @@
 """The dhcp integration."""
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import Callable, Iterable
 import contextlib
@@ -115,7 +115,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class WatcherBase:
+class WatcherBase(ABC):
     """Base class for dhcp and device tracker watching."""
 
     def __init__(
@@ -260,7 +260,7 @@ class NetworkWatcher(WatcherBase):
         """Start scanning for new devices on the network."""
         self._discover_hosts = DiscoverHosts()
         self._unsub = async_track_time_interval(
-            self.hass, self.async_start_discover, SCAN_INTERVAL
+            self.hass, self.async_start_discover, SCAN_INTERVAL, "DHCP network watcher"
         )
         self.async_start_discover()
 

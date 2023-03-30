@@ -12,5 +12,6 @@ from .coordinator import JellyfinDataUpdateCoordinator
 class JellyfinData:
     """Data for the Jellyfin integration."""
 
+    client_device_id: str
     jellyfin_client: JellyfinClient
     coordinators: dict[str, JellyfinDataUpdateCoordinator]

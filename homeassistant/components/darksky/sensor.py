@@ -25,26 +25,21 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     DEGREE,
-    LENGTH_CENTIMETERS,
-    LENGTH_INCHES,
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
     PERCENTAGE,
-    PRECIPITATION_INCHES,
-    PRECIPITATION_MILLIMETERS_PER_HOUR,
-    PRESSURE_MBAR,
-    SPEED_KILOMETERS_PER_HOUR,
-    SPEED_METERS_PER_SECOND,
-    SPEED_MILES_PER_HOUR,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
     UV_INDEX,
+    UnitOfLength,
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -117,11 +112,11 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "nearest_storm_distance": DarkskySensorEntityDescription(
         key="nearest_storm_distance",
         name="Nearest Storm Distance",
-        si_unit=LENGTH_KILOMETERS,
-        us_unit=LENGTH_MILES,
-        ca_unit=LENGTH_KILOMETERS,
-        uk_unit=LENGTH_KILOMETERS,
-        uk2_unit=LENGTH_MILES,
+        si_unit=UnitOfLength.KILOMETERS,
+        us_unit=UnitOfLength.MILES,
+        ca_unit=UnitOfLength.KILOMETERS,
+        uk_unit=UnitOfLength.KILOMETERS,
+        uk2_unit=UnitOfLength.MILES,
         icon="mdi:weather-lightning",
         forecast_mode=["currently"],
     ),
@@ -145,11 +140,11 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "precip_intensity": DarkskySensorEntityDescription(
         key="precip_intensity",
         name="Precip Intensity",
-        si_unit=PRECIPITATION_MILLIMETERS_PER_HOUR,
-        us_unit=PRECIPITATION_INCHES,
-        ca_unit=PRECIPITATION_MILLIMETERS_PER_HOUR,
-        uk_unit=PRECIPITATION_MILLIMETERS_PER_HOUR,
-        uk2_unit=PRECIPITATION_MILLIMETERS_PER_HOUR,
+        si_unit=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        us_unit=UnitOfVolumetricFlux.INCHES_PER_HOUR,
+        ca_unit=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        uk_unit=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        uk2_unit=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
         icon="mdi:weather-rainy",
         forecast_mode=["currently", "minutely", "hourly", "daily"],
     ),
@@ -167,11 +162,12 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "precip_accumulation": DarkskySensorEntityDescription(
         key="precip_accumulation",
         name="Precip Accumulation",
-        si_unit=LENGTH_CENTIMETERS,
-        us_unit=LENGTH_INCHES,
-        ca_unit=LENGTH_CENTIMETERS,
-        uk_unit=LENGTH_CENTIMETERS,
-        uk2_unit=LENGTH_CENTIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
+        si_unit=UnitOfPrecipitationDepth.CENTIMETERS,
+        us_unit=UnitOfPrecipitationDepth.INCHES,
+        ca_unit=UnitOfPrecipitationDepth.CENTIMETERS,
+        uk_unit=UnitOfPrecipitationDepth.CENTIMETERS,
+        uk2_unit=UnitOfPrecipitationDepth.CENTIMETERS,
         icon="mdi:weather-snowy",
         forecast_mode=["hourly", "daily"],
     ),
@@ -180,11 +176,11 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
         name="Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        si_unit=TEMP_CELSIUS,
-        us_unit=TEMP_FAHRENHEIT,
-        ca_unit=TEMP_CELSIUS,
-        uk_unit=TEMP_CELSIUS,
-        uk2_unit=TEMP_CELSIUS,
+        si_unit=UnitOfTemperature.CELSIUS,
+        us_unit=UnitOfTemperature.FAHRENHEIT,
+        ca_unit=UnitOfTemperature.CELSIUS,
+        uk_unit=UnitOfTemperature.CELSIUS,
+        uk2_unit=UnitOfTemperature.CELSIUS,
         forecast_mode=["currently", "hourly"],
     ),
     "apparent_temperature": DarkskySensorEntityDescription(
@@ -192,11 +188,11 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
         name="Apparent Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        si_unit=TEMP_CELSIUS,
-        us_unit=TEMP_FAHRENHEIT,
-        ca_unit=TEMP_CELSIUS,
-        uk_unit=TEMP_CELSIUS,
-        uk2_unit=TEMP_CELSIUS,
+        si_unit=UnitOfTemperature.CELSIUS,
+        us_unit=UnitOfTemperature.FAHRENHEIT,
+        ca_unit=UnitOfTemperature.CELSIUS,
+        uk_unit=UnitOfTemperature.CELSIUS,
+        uk2_unit=UnitOfTemperature.CELSIUS,
         forecast_mode=["currently", "hourly"],
     ),
     "dew_point": DarkskySensorEntityDescription(
@@ -204,22 +200,22 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
         name="Dew Point",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        si_unit=TEMP_CELSIUS,
-        us_unit=TEMP_FAHRENHEIT,
-        ca_unit=TEMP_CELSIUS,
-        uk_unit=TEMP_CELSIUS,
-        uk2_unit=TEMP_CELSIUS,
+        si_unit=UnitOfTemperature.CELSIUS,
+        us_unit=UnitOfTemperature.FAHRENHEIT,
+        ca_unit=UnitOfTemperature.CELSIUS,
+        uk_unit=UnitOfTemperature.CELSIUS,
+        uk2_unit=UnitOfTemperature.CELSIUS,
         forecast_mode=["currently", "hourly", "daily"],
     ),
     "wind_speed": DarkskySensorEntityDescription(
         key="wind_speed",
         name="Wind Speed",
-        si_unit=SPEED_METERS_PER_SECOND,
-        us_unit=SPEED_MILES_PER_HOUR,
-        ca_unit=SPEED_KILOMETERS_PER_HOUR,
-        uk_unit=SPEED_MILES_PER_HOUR,
-        uk2_unit=SPEED_MILES_PER_HOUR,
-        icon="mdi:weather-windy",
+        device_class=SensorDeviceClass.WIND_SPEED,
+        si_unit=UnitOfSpeed.METERS_PER_SECOND,
+        us_unit=UnitOfSpeed.MILES_PER_HOUR,
+        ca_unit=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        uk_unit=UnitOfSpeed.MILES_PER_HOUR,
+        uk2_unit=UnitOfSpeed.MILES_PER_HOUR,
         forecast_mode=["currently", "hourly", "daily"],
     ),
     "wind_bearing": DarkskySensorEntityDescription(
@@ -236,11 +232,12 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "wind_gust": DarkskySensorEntityDescription(
         key="wind_gust",
         name="Wind Gust",
-        si_unit=SPEED_METERS_PER_SECOND,
-        us_unit=SPEED_MILES_PER_HOUR,
-        ca_unit=SPEED_KILOMETERS_PER_HOUR,
-        uk_unit=SPEED_MILES_PER_HOUR,
-        uk2_unit=SPEED_MILES_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
+        si_unit=UnitOfSpeed.METERS_PER_SECOND,
+        us_unit=UnitOfSpeed.MILES_PER_HOUR,
+        ca_unit=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        uk_unit=UnitOfSpeed.MILES_PER_HOUR,
+        uk2_unit=UnitOfSpeed.MILES_PER_HOUR,
         icon="mdi:weather-windy-variant",
         forecast_mode=["currently", "hourly", "daily"],
     ),
@@ -271,21 +268,21 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
         key="pressure",
         name="Pressure",
         device_class=SensorDeviceClass.PRESSURE,
-        si_unit=PRESSURE_MBAR,
-        us_unit=PRESSURE_MBAR,
-        ca_unit=PRESSURE_MBAR,
-        uk_unit=PRESSURE_MBAR,
-        uk2_unit=PRESSURE_MBAR,
+        si_unit=UnitOfPressure.MBAR,
+        us_unit=UnitOfPressure.MBAR,
+        ca_unit=UnitOfPressure.MBAR,
+        uk_unit=UnitOfPressure.MBAR,
+        uk2_unit=UnitOfPressure.MBAR,
         forecast_mode=["currently", "hourly", "daily"],
     ),
     "visibility": DarkskySensorEntityDescription(
         key="visibility",
         name="Visibility",
-        si_unit=LENGTH_KILOMETERS,
-        us_unit=LENGTH_MILES,
-        ca_unit=LENGTH_KILOMETERS,
-        uk_unit=LENGTH_KILOMETERS,
-        uk2_unit=LENGTH_MILES,
+        si_unit=UnitOfLength.KILOMETERS,
+        us_unit=UnitOfLength.MILES,
+        ca_unit=UnitOfLength.KILOMETERS,
+        uk_unit=UnitOfLength.KILOMETERS,
+        uk2_unit=UnitOfLength.MILES,
         icon="mdi:eye",
         forecast_mode=["currently", "hourly", "daily"],
     ),
@@ -304,98 +301,98 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
         key="apparent_temperature_max",
         name="Daily High Apparent Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        si_unit=TEMP_CELSIUS,
-        us_unit=TEMP_FAHRENHEIT,
-        ca_unit=TEMP_CELSIUS,
-        uk_unit=TEMP_CELSIUS,
-        uk2_unit=TEMP_CELSIUS,
+        si_unit=UnitOfTemperature.CELSIUS,
+        us_unit=UnitOfTemperature.FAHRENHEIT,
+        ca_unit=UnitOfTemperature.CELSIUS,
+        uk_unit=UnitOfTemperature.CELSIUS,
+        uk2_unit=UnitOfTemperature.CELSIUS,
         forecast_mode=["daily"],
     ),
     "apparent_temperature_high": DarkskySensorEntityDescription(
         key="apparent_temperature_high",
         name="Daytime High Apparent Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        si_unit=TEMP_CELSIUS,
-        us_unit=TEMP_FAHRENHEIT,
-        ca_unit=TEMP_CELSIUS,
-        uk_unit=TEMP_CELSIUS,
-        uk2_unit=TEMP_CELSIUS,
+        si_unit=UnitOfTemperature.CELSIUS,
+        us_unit=UnitOfTemperature.FAHRENHEIT,
+        ca_unit=UnitOfTemperature.CELSIUS,
+        uk_unit=UnitOfTemperature.CELSIUS,
+        uk2_unit=UnitOfTemperature.CELSIUS,
         forecast_mode=["daily"],
     ),
     "apparent_temperature_min": DarkskySensorEntityDescription(
         key="apparent_temperature_min",
         name="Daily Low Apparent Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        si_unit=TEMP_CELSIUS,
-        us_unit=TEMP_FAHRENHEIT,
-        ca_unit=TEMP_CELSIUS,
-        uk_unit=TEMP_CELSIUS,
-        uk2_unit=TEMP_CELSIUS,
+        si_unit=UnitOfTemperature.CELSIUS,
+        us_unit=UnitOfTemperature.FAHRENHEIT,
+        ca_unit=UnitOfTemperature.CELSIUS,
+        uk_unit=UnitOfTemperature.CELSIUS,
+        uk2_unit=UnitOfTemperature.CELSIUS,
         forecast_mode=["daily"],
     ),
     "apparent_temperature_low": DarkskySensorEntityDescription(
         key="apparent_temperature_low",
         name="Overnight Low Apparent Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        si_unit=TEMP_CELSIUS,
-        us_unit=TEMP_FAHRENHEIT,
-        ca_unit=TEMP_CELSIUS,
-        uk_unit=TEMP_CELSIUS,
-        uk2_unit=TEMP_CELSIUS,
+        si_unit=UnitOfTemperature.CELSIUS,
+        us_unit=UnitOfTemperature.FAHRENHEIT,
+        ca_unit=UnitOfTemperature.CELSIUS,
+        uk_unit=UnitOfTemperature.CELSIUS,
+        uk2_unit=UnitOfTemperature.CELSIUS,
         forecast_mode=["daily"],
     ),
     "temperature_max": DarkskySensorEntityDescription(
         key="temperature_max",
         name="Daily High Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        si_unit=TEMP_CELSIUS,
-        us_unit=TEMP_FAHRENHEIT,
-        ca_unit=TEMP_CELSIUS,
-        uk_unit=TEMP_CELSIUS,
-        uk2_unit=TEMP_CELSIUS,
+        si_unit=UnitOfTemperature.CELSIUS,
+        us_unit=UnitOfTemperature.FAHRENHEIT,
+        ca_unit=UnitOfTemperature.CELSIUS,
+        uk_unit=UnitOfTemperature.CELSIUS,
+        uk2_unit=UnitOfTemperature.CELSIUS,
         forecast_mode=["daily"],
     ),
     "temperature_high": DarkskySensorEntityDescription(
         key="temperature_high",
         name="Daytime High Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        si_unit=TEMP_CELSIUS,
-        us_unit=TEMP_FAHRENHEIT,
-        ca_unit=TEMP_CELSIUS,
-        uk_unit=TEMP_CELSIUS,
-        uk2_unit=TEMP_CELSIUS,
+        si_unit=UnitOfTemperature.CELSIUS,
+        us_unit=UnitOfTemperature.FAHRENHEIT,
+        ca_unit=UnitOfTemperature.CELSIUS,
+        uk_unit=UnitOfTemperature.CELSIUS,
+        uk2_unit=UnitOfTemperature.CELSIUS,
         forecast_mode=["daily"],
     ),
     "temperature_min": DarkskySensorEntityDescription(
         key="temperature_min",
         name="Daily Low Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        si_unit=TEMP_CELSIUS,
-        us_unit=TEMP_FAHRENHEIT,
-        ca_unit=TEMP_CELSIUS,
-        uk_unit=TEMP_CELSIUS,
-        uk2_unit=TEMP_CELSIUS,
+        si_unit=UnitOfTemperature.CELSIUS,
+        us_unit=UnitOfTemperature.FAHRENHEIT,
+        ca_unit=UnitOfTemperature.CELSIUS,
+        uk_unit=UnitOfTemperature.CELSIUS,
+        uk2_unit=UnitOfTemperature.CELSIUS,
         forecast_mode=["daily"],
     ),
     "temperature_low": DarkskySensorEntityDescription(
         key="temperature_low",
         name="Overnight Low Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        si_unit=TEMP_CELSIUS,
-        us_unit=TEMP_FAHRENHEIT,
-        ca_unit=TEMP_CELSIUS,
-        uk_unit=TEMP_CELSIUS,
-        uk2_unit=TEMP_CELSIUS,
+        si_unit=UnitOfTemperature.CELSIUS,
+        us_unit=UnitOfTemperature.FAHRENHEIT,
+        ca_unit=UnitOfTemperature.CELSIUS,
+        uk_unit=UnitOfTemperature.CELSIUS,
+        uk2_unit=UnitOfTemperature.CELSIUS,
         forecast_mode=["daily"],
     ),
     "precip_intensity_max": DarkskySensorEntityDescription(
         key="precip_intensity_max",
         name="Daily Max Precip Intensity",
-        si_unit=PRECIPITATION_MILLIMETERS_PER_HOUR,
-        us_unit=PRECIPITATION_INCHES,
-        ca_unit=PRECIPITATION_MILLIMETERS_PER_HOUR,
-        uk_unit=PRECIPITATION_MILLIMETERS_PER_HOUR,
-        uk2_unit=PRECIPITATION_MILLIMETERS_PER_HOUR,
+        si_unit=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        us_unit=UnitOfVolumetricFlux.INCHES_PER_HOUR,
+        ca_unit=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        uk_unit=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        uk2_unit=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
         icon="mdi:thermometer",
         forecast_mode=["daily"],
     ),
@@ -584,7 +581,7 @@ def setup_platform(
 
     if CONF_UNITS in config:
         units = config[CONF_UNITS]
-    elif hass.config.units.is_metric:
+    elif hass.config.units is METRIC_SYSTEM:
         units = "si"
     else:
         units = "us"
@@ -654,7 +651,7 @@ class DarkSkySensor(SensorEntity):
         name,
         forecast_day=None,
         forecast_hour=None,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.forecast_data = forecast_data
@@ -750,8 +747,7 @@ class DarkSkySensor(SensorEntity):
             self._attr_native_value = self.get_state(currently)
 
     def get_state(self, data):
-        """
-        Return a new state based on the type.
+        """Return a new state based on the type.
 
         If the sensor type is unknown, the current state is returned.
         """
@@ -798,7 +794,7 @@ class DarkSkyAlertSensor(SensorEntity):
 
     def __init__(
         self, forecast_data, description: DarkskySensorEntityDescription, name
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.forecast_data = forecast_data
@@ -830,8 +826,7 @@ class DarkSkyAlertSensor(SensorEntity):
         self._attr_native_value = self.get_state(alerts)
 
     def get_state(self, data):
-        """
-        Return a new state based on the type.
+        """Return a new state based on the type.
 
         If the sensor type is unknown, the current state is returned.
         """
@@ -854,8 +849,7 @@ class DarkSkyAlertSensor(SensorEntity):
 
 
 def convert_to_camel(data):
-    """
-    Convert snake case (foo_bar_bat) to camel case (fooBarBat).
+    """Convert snake case (foo_bar_bat) to camel case (fooBarBat).
 
     This is not pythonic, but needed for certain situations.
     """

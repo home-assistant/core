@@ -1,12 +1,13 @@
 """Tests for the Airthings BLE integration."""
-from typing import Union
+from __future__ import annotations
+
 from unittest.mock import patch
 
 from airthings_ble import AirthingsBluetoothDeviceData, AirthingsDevice
-from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import AdvertisementData
 
 from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
+
+from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 
 def patch_async_setup_entry(return_value=True):
@@ -17,9 +18,7 @@ def patch_async_setup_entry(return_value=True):
     )
 
 
-def patch_async_ble_device_from_address(
-    return_value: Union[BluetoothServiceInfoBleak, None]
-):
+def patch_async_ble_device_from_address(return_value: BluetoothServiceInfoBleak | None):
     """Patch async ble device from address to return a given value."""
     return patch(
         "homeassistant.components.bluetooth.async_ble_device_from_address",
@@ -45,11 +44,11 @@ WAVE_SERVICE_INFO = BluetoothServiceInfoBleak(
     service_data={},
     service_uuids=["b42e1c08-ade7-11e4-89d3-123b93f75cba"],
     source="local",
-    device=BLEDevice(
+    device=generate_ble_device(
         "cc:cc:cc:cc:cc:cc",
         "cc-cc-cc-cc-cc-cc",
     ),
-    advertisement=AdvertisementData(
+    advertisement=generate_advertisement_data(
         manufacturer_data={820: b"\xe4/\xa5\xae\t\x00"},
         service_uuids=["b42e1c08-ade7-11e4-89d3-123b93f75cba"],
     ),
@@ -65,11 +64,11 @@ UNKNOWN_SERVICE_INFO = BluetoothServiceInfoBleak(
     service_data={},
     service_uuids=[],
     source="local",
-    device=BLEDevice(
+    device=generate_ble_device(
         "cc:cc:cc:cc:cc:cc",
         "unknown",
     ),
-    advertisement=AdvertisementData(
+    advertisement=generate_advertisement_data(
         manufacturer_data={},
         service_uuids=[],
     ),

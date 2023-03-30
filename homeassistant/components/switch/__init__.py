@@ -93,17 +93,17 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class SwitchEntityDescription(ToggleEntityDescription):
     """A class that describes switch entities."""
 
-    device_class: SwitchDeviceClass | str | None = None
+    device_class: SwitchDeviceClass | None = None
 
 
 class SwitchEntity(ToggleEntity):
     """Base class for switch entities."""
 
     entity_description: SwitchEntityDescription
-    _attr_device_class: SwitchDeviceClass | str | None
+    _attr_device_class: SwitchDeviceClass | None
 
     @property
-    def device_class(self) -> SwitchDeviceClass | str | None:
+    def device_class(self) -> SwitchDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
             return self._attr_device_class

@@ -43,7 +43,7 @@ async def async_setup_entry(
     )
 
 
-class Device(CoordinatorEntity, BinarySensorEntity):
+class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], BinarySensorEntity):
     """Representation of an Freedompro binary_sensor."""
 
     def __init__(

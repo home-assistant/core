@@ -46,7 +46,6 @@ DEVICE_CLASS_MAP = {
     "Motion": BinarySensorDeviceClass.MOTION,
     "Line Crossing": BinarySensorDeviceClass.MOTION,
     "Field Detection": BinarySensorDeviceClass.MOTION,
-    "Video Loss": None,
     "Tamper Detection": BinarySensorDeviceClass.MOTION,
     "Shelter Alarm": None,
     "Disk Full": None,

@@ -181,7 +181,8 @@ class ValueMappingZwaveFan(ZwaveFan):
                 return
 
         raise NotValidPresetModeError(
-            f"The preset_mode {preset_mode} is not a valid preset_mode: {self.preset_modes}"
+            f"The preset_mode {preset_mode} is not a valid preset_mode:"
+            f" {self.preset_modes}"
         )
 
     @property
@@ -250,9 +251,9 @@ class ValueMappingZwaveFan(ZwaveFan):
         return len(self.fan_value_mapping.speeds)
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> FanEntityFeature:
         """Flag supported features."""
-        flags: int = FanEntityFeature.SET_SPEED
+        flags = FanEntityFeature.SET_SPEED
         if self.has_fan_value_mapping and self.fan_value_mapping.presets:
             flags |= FanEntityFeature.PRESET_MODE
 
@@ -284,8 +285,7 @@ class ValueMappingZwaveFan(ZwaveFan):
         return last_max_speed
 
     def zwave_speed_to_percentage(self, zwave_speed: int) -> int | None:
-        """
-        Convert a Zwave speed to a percentage.
+        """Convert a Zwave speed to a percentage.
 
         This method may return None if the device's value mapping doesn't cover
         the specified Z-Wave speed.
@@ -387,7 +387,7 @@ class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
         return list(self._fan_mode.metadata.states.values())
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> FanEntityFeature:
         """Flag supported features."""
         return FanEntityFeature.PRESET_MODE
 

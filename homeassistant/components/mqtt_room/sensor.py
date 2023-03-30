@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_NAME,
     CONF_TIMEOUT,
+    CONF_UNIQUE_ID,
     STATE_NOT_HOME,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -42,6 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_AWAY_TIMEOUT, default=DEFAULT_AWAY_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 ).extend(mqtt.config.MQTT_RO_SCHEMA.schema)
 
@@ -70,10 +72,11 @@ async def async_setup_platform(
         [
             MQTTRoomSensor(
                 config.get(CONF_NAME),
-                config.get(CONF_STATE_TOPIC),
-                config.get(CONF_DEVICE_ID),
-                config.get(CONF_TIMEOUT),
-                config.get(CONF_AWAY_TIMEOUT),
+                config[CONF_STATE_TOPIC],
+                config[CONF_DEVICE_ID],
+                config[CONF_TIMEOUT],
+                config[CONF_AWAY_TIMEOUT],
+                config.get(CONF_UNIQUE_ID),
             )
         ]
     )
@@ -82,8 +85,18 @@ async def async_setup_platform(
 class MQTTRoomSensor(SensorEntity):
     """Representation of a room sensor that is updated via MQTT."""
 
-    def __init__(self, name, state_topic, device_id, timeout, consider_home):
+    def __init__(
+        self,
+        name: str | None,
+        state_topic: str,
+        device_id: str,
+        timeout: int,
+        consider_home: int,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the sensor."""
+        self._attr_unique_id = unique_id
+
         self._state = STATE_NOT_HOME
         self._name = name
         self._state_topic = f"{state_topic}/+"

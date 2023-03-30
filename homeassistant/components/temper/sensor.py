@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_OFFSET,
     DEVICE_DEFAULT_NAME,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -33,7 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-TEMPER_SENSORS = []
+TEMPER_SENSORS: list[TemperSensor] = []
 
 
 def get_temper_devices():
@@ -60,8 +60,7 @@ def setup_platform(
 
 
 def reset_devices():
-    """
-    Re-scan for underlying Temper sensors and assign them to our devices.
+    """Re-scan for underlying Temper sensors and assign them to our devices.
 
     This assumes the same sensor devices are present in the same order.
     """
@@ -74,7 +73,7 @@ class TemperSensor(SensorEntity):
     """Representation of a Temper temperature sensor."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_native_unit_of_measurement = TEMP_CELSIUS
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     def __init__(self, temper_device, name, scaling):
         """Initialize the sensor."""

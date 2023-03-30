@@ -1,12 +1,16 @@
 """Tests for 1-Wire sensors."""
+from collections.abc import Generator
+from copy import deepcopy
 import logging
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, _patch_dict, patch
 
+from pyownet.protocol import OwnetError
 import pytest
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.config_validation import ensure_list
 
 from . import (
@@ -15,13 +19,16 @@ from . import (
     check_entities,
     setup_owproxy_mock_devices,
 )
-from .const import ATTR_DEVICE_INFO, ATTR_UNKNOWN_DEVICE, MOCK_OWPROXY_DEVICES
-
-from tests.common import mock_device_registry, mock_registry
+from .const import (
+    ATTR_DEVICE_INFO,
+    ATTR_INJECT_READS,
+    ATTR_UNKNOWN_DEVICE,
+    MOCK_OWPROXY_DEVICES,
+)
 
 
 @pytest.fixture(autouse=True)
-def override_platforms():
+def override_platforms() -> Generator[None, None, None]:
     """Override PLATFORMS."""
     with patch("homeassistant.components.onewire.PLATFORMS", [Platform.SENSOR]):
         yield
@@ -33,14 +40,13 @@ async def test_sensors(
     owproxy: MagicMock,
     device_id: str,
     caplog: pytest.LogCaptureFixture,
-):
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test for 1-Wire device.
 
     As they would be on a clean setup: all binary-sensors and switches disabled.
     """
-    device_registry = mock_device_registry(hass)
-    entity_registry = mock_registry(hass)
-
     mock_device = MOCK_OWPROXY_DEVICES[device_id]
     expected_entities = mock_device.get(Platform.SENSOR, [])
     if "branches" in mock_device:
@@ -67,3 +73,34 @@ async def test_sensors(
     await hass.async_block_till_done()
 
     check_entities(hass, entity_registry, expected_entities)
+
+
+@pytest.mark.parametrize("device_id", ["12.111111111111"])
+async def test_tai8570_sensors(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    owproxy: MagicMock,
+    device_id: str,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """The DS2602 is often used without TAI8570.
+
+    The sensors should be ignored.
+    """
+
+    mock_devices = deepcopy(MOCK_OWPROXY_DEVICES)
+    mock_device = mock_devices[device_id]
+    mock_device[ATTR_INJECT_READS].append(OwnetError)
+    mock_device[ATTR_INJECT_READS].append(OwnetError)
+
+    with _patch_dict(MOCK_OWPROXY_DEVICES, mock_devices):
+        setup_owproxy_mock_devices(owproxy, Platform.SENSOR, [device_id])
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    expected_entities = mock_device[Platform.SENSOR]
+    for expected_entity in expected_entities:
+        entity_id = expected_entity[ATTR_ENTITY_ID]
+        registry_entry = entity_registry.entities.get(entity_id)
+        assert registry_entry is None

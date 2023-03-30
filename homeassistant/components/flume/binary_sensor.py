@@ -9,8 +9,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -122,15 +122,15 @@ async def async_setup_entry(
             ]
         )
 
-    if flume_entity_list:
-        async_add_entities(flume_entity_list)
+    async_add_entities(flume_entity_list)
 
 
-class FlumeNotificationBinarySensor(FlumeEntity, BinarySensorEntity):
+class FlumeNotificationBinarySensor(
+    FlumeEntity[FlumeNotificationDataUpdateCoordinator], BinarySensorEntity
+):
     """Binary sensor class."""
 
     entity_description: FlumeBinarySensorEntityDescription
-    coordinator: FlumeNotificationDataUpdateCoordinator
 
     @property
     def is_on(self) -> bool:
@@ -145,11 +145,12 @@ class FlumeNotificationBinarySensor(FlumeEntity, BinarySensorEntity):
         )
 
 
-class FlumeConnectionBinarySensor(FlumeEntity, BinarySensorEntity):
+class FlumeConnectionBinarySensor(
+    FlumeEntity[FlumeDeviceConnectionUpdateCoordinator], BinarySensorEntity
+):
     """Binary Sensor class for WIFI Connection status."""
 
     entity_description: FlumeBinarySensorEntityDescription
-    coordinator: FlumeDeviceConnectionUpdateCoordinator
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
 

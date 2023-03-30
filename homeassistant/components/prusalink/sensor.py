@@ -15,7 +15,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -59,12 +59,14 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
                 if flags["printing"]
                 else "idle"
             ),
-            device_class="prusalink__printer_state",
+            device_class=SensorDeviceClass.ENUM,
+            options=["cancelling", "idle", "paused", "pausing", "printing"],
+            translation_key="printer_state",
         ),
         PrusaLinkSensorEntityDescription[PrinterInfo](
             key="printer.telemetry.temp-bed",
             name="Heatbed",
-            native_unit_of_measurement=TEMP_CELSIUS,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
             value_fn=lambda data: cast(float, data["telemetry"]["temp-bed"]),
@@ -73,7 +75,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
         PrusaLinkSensorEntityDescription[PrinterInfo](
             key="printer.telemetry.temp-nozzle",
             name="Nozzle Temperature",
-            native_unit_of_measurement=TEMP_CELSIUS,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
             value_fn=lambda data: cast(float, data["telemetry"]["temp-nozzle"]),
@@ -84,6 +86,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
         PrusaLinkSensorEntityDescription[JobInfo](
             key="job.progress",
             name="Progress",
+            icon="mdi:progress-clock",
             native_unit_of_measurement=PERCENTAGE,
             value_fn=lambda data: cast(float, data["progress"]["completion"]) * 100,
             available_fn=lambda data: data.get("progress") is not None,
@@ -99,6 +102,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             key="job.start",
             name="Print Start",
             device_class=SensorDeviceClass.TIMESTAMP,
+            icon="mdi:clock-start",
             value_fn=ignore_variance(
                 lambda data: (
                     utcnow() - timedelta(seconds=data["progress"]["printTime"])
@@ -110,6 +114,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
         PrusaLinkSensorEntityDescription[JobInfo](
             key="job.finish",
             name="Print Finish",
+            icon="mdi:clock-end",
             device_class=SensorDeviceClass.TIMESTAMP,
             value_fn=ignore_variance(
                 lambda data: (

@@ -75,7 +75,7 @@ class BlockShellyCover(ShellyBlockEntity, CoverEntity):
         """Initialize block cover."""
         super().__init__(coordinator, block)
         self.control_result: dict[str, Any] | None = None
-        self._attr_supported_features: int = (
+        self._attr_supported_features = (
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
         )
         if self.coordinator.device.settings["rollers"][0]["positioning"]:
@@ -151,7 +151,7 @@ class RpcShellyCover(ShellyRpcEntity, CoverEntity):
         """Initialize rpc cover."""
         super().__init__(coordinator, f"cover:{id_}")
         self._id = id_
-        self._attr_supported_features: int = (
+        self._attr_supported_features = (
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
         )
         if self.status["pos_control"]:

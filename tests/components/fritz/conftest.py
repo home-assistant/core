@@ -57,7 +57,6 @@ class FritzConnectionMock:  # pylint: disable=too-few-public-methods
             service = service + "1"
 
         if kwargs:
-
             if (index := kwargs.get("NewIndex")) is None:
                 index = next(iter(kwargs.values()))
 
@@ -79,7 +78,7 @@ def fc_data_mock():
     return MOCK_FB_SERVICES
 
 
-@pytest.fixture()
+@pytest.fixture
 def fc_class_mock(fc_data):
     """Fixture that sets up a mocked FritzConnection class."""
     with patch(
@@ -89,7 +88,7 @@ def fc_class_mock(fc_data):
         yield result
 
 
-@pytest.fixture()
+@pytest.fixture
 def fh_class_mock():
     """Fixture that sets up a mocked FritzHosts class."""
     with patch(

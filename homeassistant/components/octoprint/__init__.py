@@ -56,7 +56,7 @@ def ensure_valid_path(value):
     return value
 
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.CAMERA, Platform.SENSOR]
 DEFAULT_NAME = "OctoPrint"
 CONF_NUMBER_OF_TOOLS = "number_of_tools"
 CONF_BED = "bed"
@@ -106,8 +106,8 @@ CONFIG_SCHEMA = vol.Schema(
                             vol.Optional(CONF_SSL, default=False): cv.boolean,
                             vol.Optional(CONF_PORT, default=80): cv.port,
                             vol.Optional(CONF_PATH, default="/"): ensure_valid_path,
-                            # Following values are not longer used in the configuration of the integration
-                            # and are here for historical purposes
+                            # Following values are not longer used in the configuration
+                            # of the integration and are here for historical purposes
                             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                             vol.Optional(
                                 CONF_NUMBER_OF_TOOLS, default=0

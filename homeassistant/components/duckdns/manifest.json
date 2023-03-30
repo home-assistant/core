@@ -1,7 +1,7 @@
 {
   "domain": "duckdns",
   "name": "Duck DNS",
-  "documentation": "https://www.home-assistant.io/integrations/duckdns",
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/duckdns",
   "iot_class": "cloud_polling"
 }

@@ -71,7 +71,9 @@ async def async_setup_entry(
     )
 
 
-class RDWBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
+class RDWBinarySensorEntity(
+    CoordinatorEntity[DataUpdateCoordinator[Vehicle]], BinarySensorEntity
+):
     """Defines an RDW binary sensor."""
 
     entity_description: RDWBinarySensorEntityDescription
@@ -80,7 +82,7 @@ class RDWBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
     def __init__(
         self,
         *,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[Vehicle],
         description: RDWBinarySensorEntityDescription,
     ) -> None:
         """Initialize RDW binary sensor."""

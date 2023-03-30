@@ -124,6 +124,10 @@ class HomeKitLock(HomeKitEntity, LockEntity):
         await self.async_put_characteristics(
             {CharacteristicsTypes.LOCK_MECHANISM_TARGET_STATE: TARGET_STATE_MAP[state]}
         )
+        # Some locks need to be polled to update the current state
+        # after a target state change.
+        # https://github.com/home-assistant/core/issues/81887
+        await self._accessory.async_request_update()
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

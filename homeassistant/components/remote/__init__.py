@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import timedelta
-from enum import IntEnum
+from enum import IntFlag
 import functools as ft
 import logging
 from typing import Any, final
@@ -61,7 +61,7 @@ DEFAULT_DELAY_SECS = 0.4
 DEFAULT_HOLD_SECS = 0
 
 
-class RemoteEntityFeature(IntEnum):
+class RemoteEntityFeature(IntFlag):
     """Supported features of the remote entity."""
 
     LEARN_COMMAND = 1
@@ -166,10 +166,10 @@ class RemoteEntity(ToggleEntity):
     entity_description: RemoteEntityDescription
     _attr_activity_list: list[str] | None = None
     _attr_current_activity: str | None = None
-    _attr_supported_features: int = 0
+    _attr_supported_features: RemoteEntityFeature = RemoteEntityFeature(0)
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> RemoteEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features
 

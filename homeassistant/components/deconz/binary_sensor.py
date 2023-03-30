@@ -24,15 +24,15 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE
+from homeassistant.const import ATTR_TEMPERATURE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.helpers.entity_registry as er
 
 from .const import ATTR_DARK, ATTR_ON, DOMAIN as DECONZ_DOMAIN
 from .deconz_device import DeconzDevice
 from .gateway import DeconzGateway, get_gateway_from_config_entry
+from .util import serial_from_unique_id
 
 _SensorDeviceT = TypeVar("_SensorDeviceT", bound=PydeconzSensorBase)
 
@@ -187,7 +187,9 @@ def async_update_unique_id(
         return
 
     if description.old_unique_id_suffix:
-        unique_id = f'{unique_id.split("-", 1)[0]}-{description.old_unique_id_suffix}'
+        unique_id = (
+            f"{serial_from_unique_id(unique_id)}-{description.old_unique_id_suffix}"
+        )
 
     if entity_id := ent_reg.async_get_entity_id(DOMAIN, DECONZ_DOMAIN, unique_id):
         ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
@@ -268,7 +270,6 @@ class DeconzBinarySensor(DeconzDevice[SensorResources], BinarySensorEntity):
             attr[ATTR_TEMPERATURE] = self._device.internal_temperature
 
         if isinstance(self._device, Presence):
-
             if self._device.dark is not None:
                 attr[ATTR_DARK] = self._device.dark
 

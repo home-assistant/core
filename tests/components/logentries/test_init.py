@@ -1,15 +1,15 @@
 """The tests for the Logentries component."""
-
 from unittest.mock import MagicMock, call, patch
 
 import pytest
 
 import homeassistant.components.logentries as logentries
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
-async def test_setup_config_full(hass):
+async def test_setup_config_full(hass: HomeAssistant) -> None:
     """Test setup with all data."""
     config = {"logentries": {"token": "secret"}}
     hass.bus.listen = MagicMock()
@@ -18,7 +18,7 @@ async def test_setup_config_full(hass):
     assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
 
 
-async def test_setup_config_defaults(hass):
+async def test_setup_config_defaults(hass: HomeAssistant) -> None:
     """Test setup with defaults."""
     config = {"logentries": {"token": "token"}}
     hass.bus.listen = MagicMock()
@@ -41,7 +41,7 @@ def mock_requests():
         yield mock_requests
 
 
-async def test_event_listener(hass, mock_dump, mock_requests):
+async def test_event_listener(hass: HomeAssistant, mock_dump, mock_requests) -> None:
     """Test event listener."""
     mock_dump.side_effect = lambda x: x
     mock_post = mock_requests.post

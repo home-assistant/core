@@ -11,8 +11,8 @@ from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
 from homeassistant import runner
 from homeassistant.components.wemo import CONF_DISCOVERY, CONF_STATIC, wemo_device
 from homeassistant.components.wemo.const import DOMAIN, WEMO_SUBSCRIPTION_EVENT
-from homeassistant.core import callback
-from homeassistant.helpers import device_registry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -30,7 +30,9 @@ def pywemo_model():
     return "LightSwitchLongPress"
 
 
-async def test_async_register_device_longpress_fails(hass, pywemo_device):
+async def test_async_register_device_longpress_fails(
+    hass: HomeAssistant, pywemo_device, device_registry: dr.DeviceRegistry
+) -> None:
     """Device is still registered if ensure_long_press_virtual_device fails."""
     with patch.object(pywemo_device, "ensure_long_press_virtual_device") as elp:
         elp.side_effect = PyWeMoException
@@ -45,14 +47,15 @@ async def test_async_register_device_longpress_fails(hass, pywemo_device):
             },
         )
         await hass.async_block_till_done()
-    dr = device_registry.async_get(hass)
-    device_entries = list(dr.devices.values())
+    device_entries = list(device_registry.devices.values())
     assert len(device_entries) == 1
     device = wemo_device.async_get_coordinator(hass, device_entries[0].id)
     assert device.supports_long_press is False
 
 
-async def test_long_press_event(hass, pywemo_registry, wemo_entity):
+async def test_long_press_event(
+    hass: HomeAssistant, pywemo_registry, wemo_entity
+) -> None:
     """Device fires a long press event."""
     device = wemo_device.async_get_coordinator(hass, wemo_entity.device_id)
     got_event = asyncio.Event()
@@ -85,7 +88,9 @@ async def test_long_press_event(hass, pywemo_registry, wemo_entity):
     }
 
 
-async def test_subscription_callback(hass, pywemo_registry, wemo_entity):
+async def test_subscription_callback(
+    hass: HomeAssistant, pywemo_registry, wemo_entity
+) -> None:
     """Device processes a registry subscription callback."""
     device = wemo_device.async_get_coordinator(hass, wemo_entity.device_id)
     device.last_update_success = False
@@ -107,7 +112,9 @@ async def test_subscription_callback(hass, pywemo_registry, wemo_entity):
     assert device.last_update_success
 
 
-async def test_subscription_update_action_exception(hass, pywemo_device, wemo_entity):
+async def test_subscription_update_action_exception(
+    hass: HomeAssistant, pywemo_device, wemo_entity
+) -> None:
     """Device handles ActionException on get_state properly."""
     device = wemo_device.async_get_coordinator(hass, wemo_entity.device_id)
     device.last_update_success = True
@@ -125,7 +132,9 @@ async def test_subscription_update_action_exception(hass, pywemo_device, wemo_en
     assert isinstance(device.last_exception, UpdateFailed)
 
 
-async def test_subscription_update_exception(hass, pywemo_device, wemo_entity):
+async def test_subscription_update_exception(
+    hass: HomeAssistant, pywemo_device, wemo_entity
+) -> None:
     """Device handles Exception on get_state properly."""
     device = wemo_device.async_get_coordinator(hass, wemo_entity.device_id)
     device.last_update_success = True
@@ -144,8 +153,8 @@ async def test_subscription_update_exception(hass, pywemo_device, wemo_entity):
 
 
 async def test_async_update_data_subscribed(
-    hass, pywemo_registry, pywemo_device, wemo_entity
-):
+    hass: HomeAssistant, pywemo_registry, pywemo_device, wemo_entity
+) -> None:
     """No update happens when the device is subscribed."""
     device = wemo_device.async_get_coordinator(hass, wemo_entity.device_id)
     pywemo_registry.is_subscribed.return_value = True
@@ -154,10 +163,11 @@ async def test_async_update_data_subscribed(
     pywemo_device.get_state.assert_not_called()
 
 
-async def test_device_info(hass, wemo_entity):
+async def test_device_info(
+    hass: HomeAssistant, wemo_entity, device_registry: dr.DeviceRegistry
+) -> None:
     """Verify the DeviceInfo data is set properly."""
-    dr = device_registry.async_get(hass)
-    device_entries = list(dr.devices.values())
+    device_entries = list(device_registry.devices.values())
 
     assert len(device_entries) == 1
     assert device_entries[0].connections == {
@@ -168,10 +178,11 @@ async def test_device_info(hass, wemo_entity):
     assert device_entries[0].sw_version == MOCK_FIRMWARE_VERSION
 
 
-async def test_dli_device_info(hass, wemo_dli_entity):
+async def test_dli_device_info(
+    hass: HomeAssistant, wemo_dli_entity, device_registry: dr.DeviceRegistry
+) -> None:
     """Verify the DeviceInfo data for Digital Loggers emulated wemo device."""
-    dr = device_registry.async_get(hass)
-    device_entries = list(dr.devices.values())
+    device_entries = list(device_registry.devices.values())
 
     assert device_entries[0].configuration_url == "http://127.0.0.1"
     assert device_entries[0].identifiers == {(DOMAIN, "123456789")}
@@ -197,10 +208,10 @@ class TestInsight:
             "ontotal": 0,
             "powerthreshold": 0,
         }
-        yield pywemo_device
+        return pywemo_device
 
     @pytest.mark.parametrize(
-        "subscribed,state,expected_calls",
+        ("subscribed", "state", "expected_calls"),
         [
             (False, 0, [call(), call(True), call(), call()]),
             (False, 1, [call(), call(True), call(), call()]),

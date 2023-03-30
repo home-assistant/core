@@ -3,22 +3,24 @@ from __future__ import annotations
 
 import functools
 import logging
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any
 
+from typing_extensions import Self
 import zigpy.exceptions
 from zigpy.zcl.foundation import Status
 
-from homeassistant.components.number import NumberEntity
+from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import EntityCategory, Platform, UnitOfMass, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
 from .core.const import (
     CHANNEL_ANALOG_OUTPUT,
+    CHANNEL_BASIC,
+    CHANNEL_COLOR,
     CHANNEL_INOVELLI,
     CHANNEL_LEVEL,
     DATA_ZHA,
@@ -33,10 +35,6 @@ if TYPE_CHECKING:
     from .core.device import ZHADevice
 
 _LOGGER = logging.getLogger(__name__)
-
-_ZHANumberConfigurationEntitySelfT = TypeVar(
-    "_ZHANumberConfigurationEntitySelfT", bound="ZHANumberConfigurationEntity"
-)
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.NUMBER)
 CONFIG_DIAGNOSTIC_MATCH = functools.partial(
@@ -377,16 +375,17 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
 
     _attr_entity_category = EntityCategory.CONFIG
     _attr_native_step: float = 1.0
+    _attr_multiplier: float = 1
     _zcl_attribute: str
 
     @classmethod
     def create_entity(
-        cls: type[_ZHANumberConfigurationEntitySelfT],
+        cls,
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
         **kwargs: Any,
-    ) -> _ZHANumberConfigurationEntitySelfT | None:
+    ) -> Self | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
@@ -419,13 +418,13 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
     @property
     def native_value(self) -> float:
         """Return the current value."""
-        return self._channel.cluster.get(self._zcl_attribute)
+        return self._channel.cluster.get(self._zcl_attribute) * self._attr_multiplier
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value from HA."""
         try:
             res = await self._channel.cluster.write_attributes(
-                {self._zcl_attribute: int(value)}
+                {self._zcl_attribute: int(value / self._attr_multiplier)}
             )
         except zigpy.exceptions.ZigbeeException as ex:
             self.error("Could not set value: %s", ex)
@@ -446,11 +445,13 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
             _LOGGER.debug("read value=%s", value)
 
 
-@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.motion.ac02"})
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="opple_cluster", models={"lumi.motion.ac02", "lumi.motion.agl04"}
+)
 class AqaraMotionDetectionInterval(
     ZHANumberConfigurationEntity, id_suffix="detection_interval"
 ):
-    """Representation of a ZHA on off transition time configuration entity."""
+    """Representation of a ZHA motion detection interval configuration entity."""
 
     _attr_native_min_value: float = 2
     _attr_native_max_value: float = 65535
@@ -528,6 +529,31 @@ class StartUpCurrentLevelConfigurationEntity(
     _attr_name = "Start-up current level"
 
 
+@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_COLOR)
+class StartUpColorTemperatureConfigurationEntity(
+    ZHANumberConfigurationEntity, id_suffix="start_up_color_temperature"
+):
+    """Representation of a ZHA startup color temperature configuration entity."""
+
+    _attr_native_min_value: float = 153
+    _attr_native_max_value: float = 500
+    _zcl_attribute: str = "start_up_color_temperature"
+    _attr_name = "Start-up color temperature"
+
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
+        **kwargs: Any,
+    ) -> None:
+        """Init this ZHA startup color temperature entity."""
+        super().__init__(unique_id, zha_device, channels, **kwargs)
+        if self._channel:
+            self._attr_native_min_value: float = self._channel.min_mireds
+            self._attr_native_max_value: float = self._channel.max_mireds
+
+
 @CONFIG_DIAGNOSTIC_MATCH(
     channel_names="tuya_manufacturer",
     manufacturers={
@@ -548,7 +574,7 @@ class TimerDurationMinutes(ZHANumberConfigurationEntity, id_suffix="timer_durati
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names="ikea_airpurifier")
 class FilterLifeTime(ZHANumberConfigurationEntity, id_suffix="filter_life_time"):
-    """Representation of a ZHA timer duration configuration entity."""
+    """Representation of a ZHA filter lifetime configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon: str = ICONS[14]
@@ -557,6 +583,20 @@ class FilterLifeTime(ZHANumberConfigurationEntity, id_suffix="filter_life_time")
     _attr_native_unit_of_measurement: str | None = UNITS[72]
     _zcl_attribute: str = "filter_life_time"
     _attr_name = "Filter life time"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_BASIC,
+    manufacturers={"TexasInstruments"},
+    models={"ti.router"},
+)
+class TiRouterTransmitPower(ZHANumberConfigurationEntity, id_suffix="transmit_power"):
+    """Representation of a ZHA TI transmit power configuration entity."""
+
+    _attr_native_min_value: float = -20
+    _attr_native_max_value: float = 20
+    _zcl_attribute: str = "transmit_power"
+    _attr_name = "Transmit power"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_INOVELLI)
@@ -793,3 +833,49 @@ class InovelliDefaultAllLEDOffIntensity(
     _attr_native_max_value: float = 100
     _zcl_attribute: str = "led_intensity_when_off"
     _attr_name: str = "Default all LED off intensity"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederServingSize(ZHANumberConfigurationEntity, id_suffix="serving_size"):
+    """Aqara pet feeder serving size configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_native_min_value: float = 1
+    _attr_native_max_value: float = 10
+    _zcl_attribute: str = "serving_size"
+    _attr_name: str = "Serving to dispense"
+    _attr_mode: NumberMode = NumberMode.BOX
+    _attr_icon: str = "mdi:counter"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederPortionWeight(
+    ZHANumberConfigurationEntity, id_suffix="portion_weight"
+):
+    """Aqara pet feeder portion weight configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_native_min_value: float = 1
+    _attr_native_max_value: float = 100
+    _zcl_attribute: str = "portion_weight"
+    _attr_name: str = "Portion weight"
+    _attr_mode: NumberMode = NumberMode.BOX
+    _attr_native_unit_of_measurement: str = UnitOfMass.GRAMS
+    _attr_icon: str = "mdi:weight-gram"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
+class AqaraThermostatAwayTemp(
+    ZHANumberConfigurationEntity, id_suffix="away_preset_temperature"
+):
+    """Aqara away preset temperature configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_native_min_value: float = 5
+    _attr_native_max_value: float = 30
+    _attr_multiplier: float = 0.01
+    _zcl_attribute: str = "away_preset_temperature"
+    _attr_name: str = "Away preset temperature"
+    _attr_mode: NumberMode = NumberMode.SLIDER
+    _attr_native_unit_of_measurement: str = UnitOfTemperature.CELSIUS
+    _attr_icon: str = ICONS[0]

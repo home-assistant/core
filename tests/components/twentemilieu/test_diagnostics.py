@@ -1,24 +1,21 @@
 """Tests for the diagnostics data provided by the TwenteMilieu integration."""
-from aiohttp import ClientSession
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(
     hass: HomeAssistant,
-    hass_client: ClientSession,
+    hass_client: ClientSessionGenerator,
     init_integration: MockConfigEntry,
-):
+    snapshot: SnapshotAssertion,
+) -> None:
     """Test diagnostics."""
-    assert await get_diagnostics_for_config_entry(
-        hass, hass_client, init_integration
-    ) == {
-        "0": ["2021-11-01", "2021-12-01"],
-        "1": ["2021-11-02"],
-        "2": [],
-        "6": ["2022-01-06"],
-        "10": ["2021-11-03"],
-    }
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
+        == snapshot
+    )

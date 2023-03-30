@@ -10,9 +10,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -21,7 +20,6 @@ from .devolo_device import DevoloDeviceEntity
 DEVICE_CLASS_MAPPING = {
     "battery": SensorDeviceClass.BATTERY,
     "temperature": SensorDeviceClass.TEMPERATURE,
-    "light": SensorDeviceClass.ILLUMINANCE,
     "humidity": SensorDeviceClass.HUMIDITY,
     "current": SensorDeviceClass.POWER,
     "total": SensorDeviceClass.ENERGY,
@@ -115,11 +113,8 @@ class DevoloGenericMultiLevelDeviceEntity(DevoloMultiLevelDeviceEntity):
             self._multi_level_sensor_property.sensor_type
         )
         self._attr_native_unit_of_measurement = self._multi_level_sensor_property.unit
-
+        self._attr_name = self._multi_level_sensor_property.sensor_type.capitalize()
         self._value = self._multi_level_sensor_property.value
-
-        if self._attr_device_class is None:
-            self._attr_name += f" {self._multi_level_sensor_property.sensor_type}"
 
         if element_uid.startswith("devolo.VoltageMultiLevelSensor:"):
             self._attr_entity_registry_enabled_default = False
@@ -143,7 +138,7 @@ class DevoloBatteryEntity(DevoloMultiLevelDeviceEntity):
         self._attr_state_class = STATE_CLASS_MAPPING.get("battery")
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
         self._attr_native_unit_of_measurement = PERCENTAGE
-
+        self._attr_name = "Battery level"
         self._value = device_instance.battery_level
 
 
@@ -172,14 +167,11 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
             device_instance.consumption_property[element_uid], f"{consumption}_unit"
         )
 
-        if consumption == "total":
-            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-
         self._value = getattr(
             device_instance.consumption_property[element_uid], consumption
         )
 
-        self._attr_name += f" {consumption}"
+        self._attr_name = f"{consumption.capitalize()} consumption"
 
     @property
     def unique_id(self) -> str:

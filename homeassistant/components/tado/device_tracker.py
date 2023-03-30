@@ -48,7 +48,7 @@ Device = namedtuple("Device", ["mac", "name"])
 
 
 class TadoDeviceScanner(DeviceScanner):
-    """This class gets geofenced devices from Tado."""
+    """Scanner for geofenced devices from Tado."""
 
     def __init__(self, hass, config):
         """Initialize the scanner."""
@@ -95,8 +95,7 @@ class TadoDeviceScanner(DeviceScanner):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     async def _async_update_info(self):
-        """
-        Query Tado for device marked as at home.
+        """Query Tado for device marked as at home.
 
         Returns boolean if scanning successful.
         """

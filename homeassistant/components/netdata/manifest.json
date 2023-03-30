@@ -1,9 +1,9 @@
 {
   "domain": "netdata",
   "name": "Netdata",
-  "documentation": "https://www.home-assistant.io/integrations/netdata",
-  "requirements": ["netdata==1.0.1"],
   "codeowners": ["@fabaff"],
+  "documentation": "https://www.home-assistant.io/integrations/netdata",
   "iot_class": "local_polling",
-  "loggers": ["netdata"]
+  "loggers": ["netdata"],
+  "requirements": ["netdata==1.0.1"]
 }

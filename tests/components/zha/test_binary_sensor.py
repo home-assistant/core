@@ -1,4 +1,4 @@
-"""Test zha binary sensor."""
+"""Test ZHA binary sensor."""
 from unittest.mock import patch
 
 import pytest
@@ -7,6 +7,7 @@ import zigpy.zcl.clusters.measurement as measurement
 import zigpy.zcl.clusters.security as security
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
+from homeassistant.core import HomeAssistant
 
 from .common import (
     async_enable_traffic,
@@ -38,7 +39,7 @@ DEVICE_OCCUPANCY = {
 
 @pytest.fixture(autouse=True)
 def binary_sensor_platform_only():
-    """Only setup the binary_sensor and required base platforms to speed up tests."""
+    """Only set up the binary_sensor and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (
@@ -74,23 +75,28 @@ async def async_test_iaszone_on_off(hass, cluster, entity_id):
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_OFF
 
+    # check that binary sensor remains off when non-alarm bits change
+    cluster.listener_event("cluster_command", 1, 0, [0b1111111100])
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_OFF
+
 
 @pytest.mark.parametrize(
-    "device, on_off_test, cluster_name, reporting",
+    ("device", "on_off_test", "cluster_name", "reporting"),
     [
         (DEVICE_IAS, async_test_iaszone_on_off, "ias_zone", (0,)),
-        # (DEVICE_OCCUPANCY, async_test_binary_sensor_on_off, "occupancy", (1,)),
+        (DEVICE_OCCUPANCY, async_test_binary_sensor_on_off, "occupancy", (1,)),
     ],
 )
 async def test_binary_sensor(
-    hass,
+    hass: HomeAssistant,
     zigpy_device_mock,
     zha_device_joined_restored,
     device,
     on_off_test,
     cluster_name,
     reporting,
-):
+) -> None:
     """Test ZHA binary_sensor platform."""
     zigpy_device = zigpy_device_mock(device)
     zha_device = await zha_device_joined_restored(zigpy_device)

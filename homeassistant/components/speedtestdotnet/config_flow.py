@@ -6,16 +6,13 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
-    CONF_MANUAL,
     CONF_SERVER_ID,
     CONF_SERVER_NAME,
     DEFAULT_NAME,
-    DEFAULT_SCAN_INTERVAL,
     DEFAULT_SERVER,
     DOMAIN,
 )
@@ -30,7 +27,7 @@ class SpeedTestFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
+    ) -> SpeedTestOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SpeedTestOptionsFlowHandler(config_entry)
 
@@ -78,15 +75,6 @@ class SpeedTestOptionsFlowHandler(config_entries.OptionsFlow):
                 CONF_SERVER_NAME,
                 default=self.config_entry.options.get(CONF_SERVER_NAME, DEFAULT_SERVER),
             ): vol.In(self._servers.keys()),
-            vol.Optional(
-                CONF_SCAN_INTERVAL,
-                default=self.config_entry.options.get(
-                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                ),
-            ): int,
-            vol.Optional(
-                CONF_MANUAL, default=self.config_entry.options.get(CONF_MANUAL, False)
-            ): bool,
         }
 
         return self.async_show_form(
