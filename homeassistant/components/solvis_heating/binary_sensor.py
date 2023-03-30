@@ -9,10 +9,20 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .binary_sensor_description import (
-    BINARY_SENSOR_TYPES,
+    BINARY_SENSOR_TYPES_BASE,
+    BINARY_SENSOR_TYPES_OVEN,
+    BINARY_SENSOR_TYPES_SOLAR,
+    BINARY_SENSOR_TYPES_SOLAR_EAST_WEST,
+    BINARY_SENSOR_TYPES_WARMWATER,
     SolvisMaxBinarySensorEntityDescription,
 )
-from .const import DOMAIN
+from .const import (
+    CONF_OPTION_OVEN,
+    CONF_OPTION_SOLAR,
+    CONF_OPTION_SOLAR_EAST_WEST,
+    CONF_OPTION_WARMWATER_STATION,
+    DOMAIN,
+)
 from .coordinator import SolvisRemoteCoordinator
 
 
@@ -23,8 +33,26 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         SolvisMaxBinarySensor(coordinator, description)
-        for description in BINARY_SENSOR_TYPES
+        for description in BINARY_SENSOR_TYPES_BASE
     )
+    if entry.data.get(CONF_OPTION_WARMWATER_STATION):
+        async_add_entities(
+            SolvisMaxBinarySensor(coordinator, description)
+            for description in BINARY_SENSOR_TYPES_WARMWATER
+        )
+    if entry.data.get(CONF_OPTION_SOLAR):
+        async_add_entities(
+            [SolvisMaxBinarySensor(coordinator, BINARY_SENSOR_TYPES_SOLAR)]
+        )
+    if entry.data.get(CONF_OPTION_SOLAR_EAST_WEST):
+        async_add_entities(
+            SolvisMaxBinarySensor(coordinator, description)
+            for description in BINARY_SENSOR_TYPES_SOLAR_EAST_WEST
+        )
+    if entry.data.get(CONF_OPTION_OVEN):
+        async_add_entities(
+            [SolvisMaxBinarySensor(coordinator, BINARY_SENSOR_TYPES_OVEN)]
+        )
 
 
 class SolvisMaxBinarySensor(

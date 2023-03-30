@@ -4,24 +4,39 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from sc2xmlreader.const import DEFAULT_PASSWORD, DEFAULT_USERNAME
 from sc2xmlreader.sc2xmlreader_validator import SC2XMLReaderValidator
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN
+from .const import (
+    CONF_OPTION_OVEN,
+    CONF_OPTION_SOLAR,
+    CONF_OPTION_SOLAR_EAST_WEST,
+    CONF_OPTION_TITEL,
+    CONF_OPTION_WARMWATER_STATION,
+    CONF_UPDATE_TIMESPAN,
+    DOMAIN,
+)
+from .options_flow import OptionsFlowHandler
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
+        vol.Required(CONF_PASSWORD, default=DEFAULT_PASSWORD): str,
+        vol.Required(CONF_OPTION_WARMWATER_STATION, default=True): bool,
+        vol.Required(CONF_OPTION_SOLAR, default=True): bool,
+        vol.Required(CONF_OPTION_SOLAR_EAST_WEST, default=False): bool,
+        vol.Required(CONF_OPTION_OVEN, default=False): bool,
+        vol.Required(CONF_UPDATE_TIMESPAN, default=10): int,
     }
 )
 
@@ -70,7 +85,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         ):
             raise InvalidAuth
 
-        return {"title": "Solvis Remote"}
+        if not await self.hass.async_add_executor_job(
+            hub.validate_uri, data[CONF_USERNAME], data[CONF_PASSWORD]
+        ):
+            raise CannotConnect
+
+        return {"title": CONF_OPTION_TITEL}
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> config_entries.OptionsFlow:
+        """Create the options flow."""
+        return OptionsFlowHandler(config_entry)
 
 
 class CannotConnect(HomeAssistantError):

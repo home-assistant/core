@@ -5,5 +5,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/solvis_heating",
   "iot_class": "local_polling",
-  "requirements": ["sc2xmlreader==0.0.7"]
+  "requirements": ["sc2xmlreader==0.0.8"]
 }

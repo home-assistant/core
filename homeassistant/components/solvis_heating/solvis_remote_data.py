@@ -4,13 +4,12 @@ import logging
 from urllib.parse import ParseResult, urlparse
 
 from requests.exceptions import HTTPError, Timeout
+from sc2xmlreader.sc2xmlreader import SC2XMLReader
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import update_coordinator
-
-from .sc2xmlreader import SolvisSC2XMLReader
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,13 +39,10 @@ class SolvisRemoteData(update_coordinator.DataUpdateCoordinator):
         """Update the data from the SolvisRemote device."""
         try:
             data = await self.hass.async_add_executor_job(
-                SolvisSC2XMLReader, self.host, self.username, self.password
+                SC2XMLReader, self.host, self.username, self.password
             )
         except (OSError, Timeout, HTTPError) as err:
             raise update_coordinator.UpdateFailed(err)
-
-        # if data.time.year == 1999:
-        #    raise update_coordinator.UpdateFailed("Invalid data returned.")
 
         self.logger.debug(
             "Connection to SolvisRemote successful. Retrieving latest SolvisRemote data"

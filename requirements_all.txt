@@ -2236,9 +2236,6 @@ renault-api==0.1.12
 # homeassistant.components.reolink
 reolink-aio==0.5.7
 
-# homeassistant.components.solvis_heating
-requests==2.28.2
-
 # homeassistant.components.python_script
 restrictedpython==6.0
 
@@ -2300,7 +2297,7 @@ samsungtvws[async,encrypted]==2.5.0
 satel_integra==0.3.7
 
 # homeassistant.components.solvis_heating
-sc2xmlreader==0.0.7
+sc2xmlreader==0.0.8
 
 # homeassistant.components.dhcp
 scapy==2.5.0

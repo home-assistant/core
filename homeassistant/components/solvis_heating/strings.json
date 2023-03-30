@@ -2,10 +2,17 @@
   "config": {
     "step": {
       "user": {
+        "title": "Connectiondata of Solvis Remote and Options",
+        "description": "Provide the credentials (IP-Adresse oder FQDN) of Solvis Remote and the options of your solvis heating device.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "warmwater_station": "System has a Warm-Water Station",
+          "solar": "System has Solar Panels attached",
+          "east_west": " System has East-West-Solar Panels attached",
+          "oven": "A solid fuel oven is attached to the heating",
+          "update_interval": "Updatetime in seconds to read data from Solvis Remote"
         }
       }
     },
@@ -18,13 +25,30 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "System Configuration",
+        "data": {
+          "warmwater_station": "Warmwater Station: System has a Warm-Water Station",
+          "solar": "Solar: System has Solar Panels attached",
+          "east_west": "East-West-Solar: The System has East-West-Solar Panels attached",
+          "oven": "Oven: An solid fuel oven is attached to the heating",
+          "update_interval": "Updatetime: Time in seconds to read data from Solvis Remote"
+        },
+        "description": ""
+      }
+    },
+    "error": {
+      "invalid_east_west": "Without Solar, East-West option is invalid.",
+      "update_too_fast": "Updateinterval below 10 Seconds produces too much data.",
+      "update_too_slow": "More than 60 Seconds Update-Interval dies not produce meaningfulldata for warmwater option."
+    }
+  },
   "entity": {
     "sensor": {
-      "solvis_remote_solar_power": {
-        "name": "Solar Leistung 3"
-      },
       "solar_power": {
-        "name": "Solar Leistung 4"
+        "name": "Solar Power"
       }
     }
   }

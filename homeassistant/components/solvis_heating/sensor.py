@@ -10,9 +10,22 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import (
+    CONF_OPTION_OVEN,
+    CONF_OPTION_SOLAR,
+    CONF_OPTION_SOLAR_EAST_WEST,
+    CONF_OPTION_WARMWATER_STATION,
+    DOMAIN,
+)
 from .coordinator import SolvisRemoteCoordinator
-from .sensor_description import SENSOR_TYPES, SolvisMaxSensorEntityDescription
+from .sensor_description import (
+    SENSOR_TYPES_BASE,
+    SENSOR_TYPES_OVEN,
+    SENSOR_TYPES_SOLAR,
+    SENSOR_TYPES_SOLAR_EAST_WEST,
+    SENSOR_TYPES_WARMWATER,
+    SolvisMaxSensorEntityDescription,
+)
 
 
 async def async_setup_entry(
@@ -21,8 +34,23 @@ async def async_setup_entry(
     """Add sensor entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        SolvisMaxSensor(coordinator, description) for description in SENSOR_TYPES
+        SolvisMaxSensor(coordinator, description) for description in SENSOR_TYPES_BASE
     )
+    if entry.data.get(CONF_OPTION_WARMWATER_STATION):
+        async_add_entities(
+            SolvisMaxSensor(coordinator, description)
+            for description in SENSOR_TYPES_WARMWATER
+        )
+    if entry.data.get(CONF_OPTION_SOLAR):
+        async_add_entities(
+            SolvisMaxSensor(coordinator, description)
+            for description in SENSOR_TYPES_SOLAR
+        )
+    if entry.data.get(CONF_OPTION_SOLAR_EAST_WEST):
+        description = SENSOR_TYPES_SOLAR_EAST_WEST
+        async_add_entities([SolvisMaxSensor(coordinator, description)])
+    if entry.data.get(CONF_OPTION_OVEN):
+        async_add_entities([SolvisMaxSensor(coordinator, SENSOR_TYPES_OVEN)])
 
 
 class SolvisMaxSensor(CoordinatorEntity[SolvisRemoteCoordinator], SensorEntity):
