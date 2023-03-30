@@ -130,12 +130,14 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
             # Value 255 tells device to return to previous value
             await self.info.node.async_set_value(target_value, 255)
 
-        if percentage or preset_mode or (percentage is None and preset_mode is None):
-            self._attr_is_on = True
-            self.async_write_ha_state()
-        else:
-            self._attr_is_on = False
-            self.async_write_ha_state()
+        # Percentage has to be a non zero value, preset_mode has to be a valid string,
+        # or neither percentage or preset mode are to be provided if the fan is being
+        # turned on. If the user passes percentage = 0 for example, that would turn off
+        # the fan
+        self._attr_is_on = bool(
+            percentage or preset_mode or (percentage is None and preset_mode is None)
+        )
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
