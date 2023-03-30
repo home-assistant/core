@@ -7,12 +7,8 @@ import yaml
 
 from homeassistant import data_entry_flow
 from homeassistant.components.imap import DOMAIN as IMAP_DOMAIN
-from homeassistant.components.imap.config_flow import (
-    STEP_USER_DATA_SCHEMA,
-    ConfigFlow as ImapConfigFlow,
-)
 from homeassistant.components.repairs import RepairsFlow
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -21,14 +17,14 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_FOLDER, CONF_SENDERS, CONF_SERVER, DOMAIN
 
 
-@callback
-def process_issue(hass: HomeAssistant, config: ConfigType) -> None:
+async def async_process_issue(hass: HomeAssistant, config: ConfigType) -> None:
     """Register an issue and suggest new config."""
 
     name: str = config.get(CONF_NAME) or config[CONF_USERNAME]
@@ -67,28 +63,13 @@ def process_issue(hass: HomeAssistant, config: ConfigType) -> None:
         ]
     }
 
-    # Make sure we use the correct config schema
-    data = STEP_USER_DATA_SCHEMA(
-        {
-            CONF_SERVER: config[CONF_SERVER],
-            CONF_PORT: config[CONF_PORT],
-            CONF_USERNAME: config[CONF_USERNAME],
-            CONF_PASSWORD: config[CONF_PASSWORD],
-            CONF_FOLDER: config[CONF_FOLDER],
-        }
-    )
-    try:
-        config_flow = ImapConfigFlow()
-        config_flow.hass = hass
-        config_flow._async_abort_entries_match(data)  # pylint: disable=protected-access
-        # Entry can be migrated
-        translation_key = "migration"
-        is_fixable = True
-    except data_entry_flow.AbortFlow:
-        # Entry already exists, only deprecation issue
-        translation_key = "deprecation"
-        is_fixable = False
-
+    data = {
+        CONF_SERVER: config[CONF_SERVER],
+        CONF_PORT: config[CONF_PORT],
+        CONF_USERNAME: config[CONF_USERNAME],
+        CONF_PASSWORD: config[CONF_PASSWORD],
+        CONF_FOLDER: config[CONF_FOLDER],
+    }
     data[CONF_VALUE_TEMPLATE] = template
     data[CONF_NAME] = name
     placeholders = {"yaml_example": yaml.dump(template_sensor_config)}
@@ -99,11 +80,10 @@ def process_issue(hass: HomeAssistant, config: ConfigType) -> None:
         DOMAIN,
         issue_id,
         breaks_in_ha_version="2023.10.0",
-        is_fixable=is_fixable,
+        is_fixable=True,
         severity=ir.IssueSeverity.WARNING,
-        translation_key=translation_key,
+        translation_key="migration",
         translation_placeholders=placeholders,
-        learn_more_url="https://www.home-assistant.io/integrations/imap/#using-events",
         data=data,
     )
 
@@ -156,14 +136,26 @@ class DeprecationRepairFlow(RepairsFlow):
     ) -> data_entry_flow.FlowResult:
         """Handle the confirm step of a fix flow."""
         if user_input is not None:
-            entry = ConfigEntry(
-                version=1,
-                domain=IMAP_DOMAIN,
-                title=self._name,
-                data=self._config,
-                source=SOURCE_IMPORT,
+            placeholders = self._async_get_placeholders()
+            user_input[CONF_NAME] = self._name
+            result = await self.hass.config_entries.flow.async_init(
+                IMAP_DOMAIN, context={"source": SOURCE_IMPORT}, data=self._config
             )
-            await self.hass.config_entries.async_add(entry)
+            if result["type"] == FlowResultType.ABORT:
+                ir.async_delete_issue(self.hass, DOMAIN, self._issue_id)
+                ir.async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    self._issue_id,
+                    breaks_in_ha_version="2023.10.0",
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="deprecation",
+                    translation_placeholders=placeholders,
+                    data=self._config,
+                    learn_more_url="https://www.home-assistant.io/integrations/imap/#using-events",
+                )
+                return self.async_abort(reason=result["reason"])
             return self.async_create_entry(
                 title="",
                 data={},

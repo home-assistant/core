@@ -9,7 +9,7 @@ from aioimaplib import AioImapException
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import config_validation as cv
@@ -76,6 +76,31 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     _reauth_entry: config_entries.ConfigEntry | None
+
+    async def async_step_import(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the import from imap_email_content integration."""
+        assert user_input is not None
+        data = STEP_USER_DATA_SCHEMA(
+            {
+                CONF_SERVER: user_input[CONF_SERVER],
+                CONF_PORT: user_input[CONF_PORT],
+                CONF_USERNAME: user_input[CONF_USERNAME],
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+                CONF_FOLDER: user_input[CONF_FOLDER],
+            }
+        )
+        self._async_abort_entries_match(
+            {
+                key: data[key]
+                for key in (CONF_USERNAME, CONF_SERVER, CONF_FOLDER, CONF_SEARCH)
+            }
+        )
+        title = user_input[CONF_NAME]
+        if await validate_input(user_input):
+            raise AbortFlow("cannot_connect")
+        return self.async_create_entry(title=title, data=data)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

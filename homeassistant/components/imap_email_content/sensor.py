@@ -35,7 +35,7 @@ from .const import (
     CONF_SERVER,
     DEFAULT_PORT,
 )
-from .repairs import process_issue
+from .repairs import async_process_issue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(
+def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
@@ -80,7 +80,7 @@ async def async_setup_platform(
         value_template,
     )
 
-    process_issue(hass, config)
+    hass.add_job(async_process_issue, hass, config)
 
     if sensor.connected:
         add_entities([sensor], True)

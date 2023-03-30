@@ -14,8 +14,12 @@
           },
           "confirm": {
             "title": "Your IMAP server settings will be migrated",
-            "description": "In this step an `imap` config entry will be set up with the following configuration:\n\n```text\nServer\t{server}\nPort\t{port}\nUsername\t{username}\nPassword\t*****\nFolder\t{folder}\n```\n\nSee also: (https://www.home-assistant.io/integrations/imap/)\n\nFitering configuration on allowed `sender` is part of the template sensor config that can copied and placed in your `configuration.yaml.\n\nNote that the event filter only filters on the the first of the configured allowed senders, customize the filter if needed.\n\n```yaml\n{yaml_example}```\nDo not forget to cleanup the your `configuration.yaml` after migration.\n\nSubmit to migrate your IMAP server configuration to an `imap` configuration entry."
+            "description": "In this step an `imap` config entry will be set up with the following configuration:\n\n```text\nServer\t{server}\nPort\t{port}\nUsername\t{username}\nPassword\t*****\nFolder\t{folder}\n```\n\nSee also: (https://www.home-assistant.io/integrations/imap/)\n\nFitering configuration on allowed `sender` is part of the template sensor config that can copied and placed in your `configuration.yaml.\n\nNote that the event filter only filters on the first of the configured allowed senders, customize the filter if needed.\n\n```yaml\n{yaml_example}```\nDo not forget to cleanup the your `configuration.yaml` after migration.\n\nSubmit to migrate your IMAP server configuration to an `imap` configuration entry."
           }
+        },
+        "abort": {
+          "already_configured": "The IMAP server config was already migrated to the imap integration. Remove the `imap_email_plaform` sensor configuration from your `configuration.yaml`.",
+          "cannot_connect": "Migration failed. Failed to connect to the IMAP server. Perform a manual migration."
         }
       }
     }
