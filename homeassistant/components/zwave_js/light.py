@@ -58,6 +58,7 @@ MULTI_COLOR_MAP = {
     ColorComponent.CYAN: COLOR_SWITCH_COMBINED_CYAN,
     ColorComponent.PURPLE: COLOR_SWITCH_COMBINED_PURPLE,
 }
+SET_TO_PREVIOUS_VALUE = 255
 
 
 async def async_setup_entry(
@@ -295,7 +296,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
         # set brightness
         await self._async_set_brightness(kwargs.get(ATTR_BRIGHTNESS), transition)
-        self._attr_is_on = kwargs.get(ATTR_BRIGHTNESS, 255) > 0
+        self._attr_is_on = kwargs.get(ATTR_BRIGHTNESS, SET_TO_PREVIOUS_VALUE) > 0
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -344,8 +345,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         if not self._target_brightness:
             return
         if brightness is None:
-            # Level 255 means to set it to previous value.
-            zwave_brightness = 255
+            zwave_brightness = SET_TO_PREVIOUS_VALUE
         else:
             # Zwave multilevel switches use a range of [0, 99] to control brightness.
             zwave_brightness = byte_to_zwave_brightness(brightness)
