@@ -42,7 +42,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
-from .const import DATA_CLIENT, DOMAIN
+from .const import DATA_CLIENT, DOMAIN, SWITCH_MULTILEVEL_SET_TO_PREVIOUS_VALUE
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 
@@ -58,7 +58,6 @@ MULTI_COLOR_MAP = {
     ColorComponent.CYAN: COLOR_SWITCH_COMBINED_CYAN,
     ColorComponent.PURPLE: COLOR_SWITCH_COMBINED_PURPLE,
 }
-SET_TO_PREVIOUS_VALUE = 255
 
 
 async def async_setup_entry(
@@ -336,7 +335,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         if not self._target_brightness:
             return
         if brightness is None:
-            zwave_brightness = SET_TO_PREVIOUS_VALUE
+            zwave_brightness = SWITCH_MULTILEVEL_SET_TO_PREVIOUS_VALUE
         else:
             # Zwave multilevel switches use a range of [0, 99] to control brightness.
             zwave_brightness = byte_to_zwave_brightness(brightness)
@@ -354,7 +353,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             self._target_brightness, zwave_brightness, zwave_transition
         )
         if (
-            zwave_brightness == SET_TO_PREVIOUS_VALUE
+            zwave_brightness == SWITCH_MULTILEVEL_SET_TO_PREVIOUS_VALUE
             and self.info.primary_value.command_class == CommandClass.SWITCH_MULTILEVEL
         ):
             self._set_optimistic_state = True
