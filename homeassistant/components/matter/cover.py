@@ -111,7 +111,7 @@ class MatterCover(MatterEntity, CoverEntity):
 
         assert operational_status is not None
 
-        LOGGER.info(
+        LOGGER.debug(
             "Operational status %s for %s",
             f"{operational_status:#010b}",
             self.entity_id,
