@@ -26,7 +26,6 @@ from homeassistant.const import Platform
 
 DOMAIN = "meteoclimatic"
 PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
-ATTRIBUTION = "Data provided by Meteoclimatic"
 MODEL = "Meteoclimatic RSS feed"
 MANUFACTURER = "Meteoclimatic"
 

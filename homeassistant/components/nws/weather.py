@@ -36,7 +36,6 @@ from . import base_unique_id, device_info
 from .const import (
     ATTR_FORECAST_DAYTIME,
     ATTR_FORECAST_DETAILED_DESCRIPTION,
-    ATTRIBUTION,
     CONDITION_CLASSES,
     COORDINATOR_FORECAST,
     COORDINATOR_FORECAST_HOURLY,
@@ -108,6 +107,7 @@ if TYPE_CHECKING:
 class NWSWeather(WeatherEntity):
     """Representation of a weather condition."""
 
+    _attr_attribution = "Data from National Weather Service/NOAA"
     _attr_should_poll = False
 
     def __init__(
@@ -153,11 +153,6 @@ class NWSWeather(WeatherEntity):
             self._forecast = self.nws.forecast_hourly
 
         self.async_write_ha_state()
-
-    @property
-    def attribution(self) -> str:
-        """Return the attribution."""
-        return ATTRIBUTION
 
     @property
     def name(self) -> str:
