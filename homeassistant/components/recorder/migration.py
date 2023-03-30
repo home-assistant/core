@@ -1439,44 +1439,33 @@ def migrate_event_type_ids(instance: Recorder) -> bool:
     with session_scope(session=session_maker()) as session:
         if events := session.execute(find_event_type_to_migrate()).all():
             event_types = {event_type for _, event_type in events}
+            if None in event_types:
+                # event_type should never be None but we need to be defensive
+                # so we don't fail the migration because of a bad state
+                event_types.remove(None)
+                event_types.add(_EMPTY_EVENT_TYPE)
+
             event_type_to_id = event_type_manager.get_many(event_types, session)
             if missing_event_types := {
-                # We should never see see None for the event_type in the events table
-                # but we need to be defensive so we don't fail the migration
-                # because of a bad event
-                _EMPTY_EVENT_TYPE if event_type is None else event_type
+                event_type
                 for event_type, event_id in event_type_to_id.items()
                 if event_id is None
             }:
-                # If we are missing the empty event type, try to look it up
-                # and add it to the event_type_to_id dict. We do not do this
-                # in the initial lookup because its likely a cache miss on
-                # most systems and we don't want to hit the database if its
-                # not needed
-                if _EMPTY_EVENT_TYPE in missing_event_types and (
-                    empty_event_type_id := event_type_manager.get(
-                        _EMPTY_EVENT_TYPE, session
-                    )
-                ):
-                    event_type_to_id[_EMPTY_EVENT_TYPE] = empty_event_type_id
-                    missing_event_types.remove(_EMPTY_EVENT_TYPE)
-
-                if missing_event_types:
-                    missing_db_event_types = [
-                        EventTypes(event_type=event_type)
-                        for event_type in missing_event_types
-                    ]
-                    session.add_all(missing_db_event_types)
-                    session.flush()  # Assign ids
-                    for db_event_type in missing_db_event_types:
-                        # We cannot add the assigned ids to the event_type_manager
-                        # because the commit could get rolled back
-                        assert (
-                            db_event_type.event_type is not None
-                        ), "event_type should never be None"
-                        event_type_to_id[
-                            db_event_type.event_type
-                        ] = db_event_type.event_type_id
+                missing_db_event_types = [
+                    EventTypes(event_type=event_type)
+                    for event_type in missing_event_types
+                ]
+                session.add_all(missing_db_event_types)
+                session.flush()  # Assign ids
+                for db_event_type in missing_db_event_types:
+                    # We cannot add the assigned ids to the event_type_manager
+                    # because the commit could get rolled back
+                    assert (
+                        db_event_type.event_type is not None
+                    ), "event_type should never be None"
+                    event_type_to_id[
+                        db_event_type.event_type
+                    ] = db_event_type.event_type_id
 
             session.execute(
                 update(Events),
@@ -1484,7 +1473,9 @@ def migrate_event_type_ids(instance: Recorder) -> bool:
                     {
                         "event_id": event_id,
                         "event_type": None,
-                        "event_type_id": event_type_to_id[event_type],
+                        "event_type_id": event_type_to_id[
+                            _EMPTY_EVENT_TYPE if event_type is None else event_type
+                        ],
                     }
                     for event_id, event_type in events
                 ],
@@ -1516,48 +1507,34 @@ def migrate_entity_ids(instance: Recorder) -> bool:
     with session_scope(session=instance.get_session()) as session:
         if states := session.execute(find_entity_ids_to_migrate()).all():
             entity_ids = {entity_id for _, entity_id in states}
+            if None in entity_ids:
+                # entity_id should never be None but we need to be defensive
+                # so we don't fail the migration because of a bad state
+                entity_ids.remove(None)
+                entity_ids.add(_EMPTY_ENTITY_ID)
+
             entity_id_to_metadata_id = states_meta_manager.get_many(
                 entity_ids, session, True
             )
             if missing_entity_ids := {
-                # We should never see _EMPTY_ENTITY_ID in the states table
-                # but we need to be defensive so we don't fail the migration
-                # because of a bad state
-                _EMPTY_ENTITY_ID if entity_id is None else entity_id
+                entity_id
                 for entity_id, metadata_id in entity_id_to_metadata_id.items()
                 if metadata_id is None
             }:
-                # If we are missing the empty entity_id, try to look it up
-                # and add it to the entity_id_to_metadata_id dict. We do not do this
-                # in the initial lookup because its likely a cache miss on
-                # most systems and we don't want to hit the database if its
-                # not needed
-                if _EMPTY_ENTITY_ID in missing_entity_ids and (
-                    empty_entity_id_metadata_id := states_meta_manager.get(
-                        _EMPTY_ENTITY_ID, session, True
-                    )
-                ):
+                missing_states_metadata = [
+                    StatesMeta(entity_id=entity_id) for entity_id in missing_entity_ids
+                ]
+                session.add_all(missing_states_metadata)
+                session.flush()  # Assign ids
+                for db_states_metadata in missing_states_metadata:
+                    # We cannot add the assigned ids to the event_type_manager
+                    # because the commit could get rolled back
+                    assert (
+                        db_states_metadata.entity_id is not None
+                    ), "entity_id should never be None"
                     entity_id_to_metadata_id[
-                        _EMPTY_ENTITY_ID
-                    ] = empty_entity_id_metadata_id
-                    missing_entity_ids.remove(_EMPTY_ENTITY_ID)
-
-                if missing_entity_ids:
-                    missing_states_metadata = [
-                        StatesMeta(entity_id=entity_id)
-                        for entity_id in missing_entity_ids
-                    ]
-                    session.add_all(missing_states_metadata)
-                    session.flush()  # Assign ids
-                    for db_states_metadata in missing_states_metadata:
-                        # We cannot add the assigned ids to the event_type_manager
-                        # because the commit could get rolled back
-                        assert (
-                            db_states_metadata.entity_id is not None
-                        ), "entity_id should never be None"
-                        entity_id_to_metadata_id[
-                            db_states_metadata.entity_id
-                        ] = db_states_metadata.metadata_id
+                        db_states_metadata.entity_id
+                    ] = db_states_metadata.metadata_id
 
             session.execute(
                 update(States),
@@ -1568,7 +1545,9 @@ def migrate_entity_ids(instance: Recorder) -> bool:
                         # the history queries still need to work while the
                         # migration is in progress and we will do this in
                         # post_migrate_entity_ids
-                        "metadata_id": entity_id_to_metadata_id[entity_id],
+                        "metadata_id": entity_id_to_metadata_id[
+                            _EMPTY_ENTITY_ID if entity_id is None else entity_id
+                        ],
                     }
                     for state_id, entity_id in states
                 ],
