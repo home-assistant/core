@@ -143,7 +143,11 @@ def raise_if_exception_missing_str(ex: Exception, match_substrs: Iterable[str]) 
 
 def _get_schema_version(session: Session) -> int | None:
     """Get the schema version."""
-    res = session.query(SchemaChanges).order_by(SchemaChanges.change_id.desc()).first()
+    res = (
+        session.query(SchemaChanges.schema_version)
+        .order_by(SchemaChanges.change_id.desc())
+        .first()
+    )
     return getattr(res, "schema_version", None)
 
 

@@ -170,6 +170,7 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
                 "config_entry_id": ANY,
                 "device_id": ANY,
                 "id": ANY,
+                "options": data.options.as_dict(),
             }
         )
         serialized.pop("_partial_repr")
