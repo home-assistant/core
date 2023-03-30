@@ -1,5 +1,4 @@
 """Test the Reolink init."""
-import asyncio
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
