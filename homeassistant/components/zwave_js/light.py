@@ -164,10 +164,18 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         if self.supports_brightness_transition or self.supports_color_transition:
             self._attr_supported_features |= LightEntityFeature.TRANSITION
 
+        self._set_attr_is_on()
+
+    def _set_attr_is_on(self) -> None:
+        """Set _attr_is_on."""
+        brightness = self.brightness
+        self._attr_is_on = brightness > 0 if brightness is not None else None
+
     @callback
     def on_value_update(self) -> None:
         """Call when a watched value is added or updated."""
         self._calculate_color_values()
+        self._set_attr_is_on()
 
     @property
     def brightness(self) -> int | None:
@@ -187,10 +195,10 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if device is on (brightness above 0)."""
+        if self.info.primary_value.command_class == CommandClass.SWITCH_MULTILEVEL:
+            return self._attr_is_on
         brightness = self.brightness
-        if brightness is None:
-            return None
-        return brightness > 0
+        return brightness > 0 if brightness is not None else None
 
     @property
     def hs_color(self) -> tuple[float, float] | None:
@@ -287,10 +295,14 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
         # set brightness
         await self._async_set_brightness(kwargs.get(ATTR_BRIGHTNESS), transition)
+        self._attr_is_on = kwargs.get(ATTR_BRIGHTNESS, 255) > 0
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._async_set_brightness(0, kwargs.get(ATTR_TRANSITION))
+        self._attr_is_on = False
+        self.async_write_ha_state()
 
     async def _async_set_colors(
         self, colors: dict[ColorComponent, int], transition: float | None = None

@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import cast
 
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import TARGET_VALUE_PROPERTY
+from zwave_js_server.const import TARGET_VALUE_PROPERTY, CommandClass
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value
 
@@ -68,6 +68,17 @@ class ZwaveNumberEntity(ZWaveBaseEntity, NumberEntity):
         # Entity class attributes
         self._attr_name = self.generate_name(alternate_value_name=info.platform_hint)
 
+        self._set_attr_native_value()
+
+    def _set_attr_native_value(self) -> None:
+        """Set _attr_native_value."""
+        value = self.info.primary_value.value
+        self._attr_native_value = None if value is None else float(value)
+
+    def on_value_update(self) -> None:
+        """Call when one of the watched values change."""
+        self._set_attr_native_value()
+
     @property
     def native_min_value(self) -> float:
         """Return the minimum value."""
@@ -83,6 +94,8 @@ class ZwaveNumberEntity(ZWaveBaseEntity, NumberEntity):
     @property
     def native_value(self) -> float | None:
         """Return the entity value."""
+        if self.info.primary_value.command_class == CommandClass.SWITCH_MULTILEVEL:
+            return self._attr_native_value
         value = self.info.primary_value.value
         return None if value is None else float(value)
 
@@ -97,6 +110,8 @@ class ZwaveNumberEntity(ZWaveBaseEntity, NumberEntity):
         if (target_value := self._target_value) is None:
             raise HomeAssistantError("Missing target value on device.")
         await self.info.node.async_set_value(target_value, value)
+        self._attr_native_value = value
+        self.async_write_ha_state()
 
 
 class ZwaveVolumeNumberEntity(ZWaveBaseEntity, NumberEntity):

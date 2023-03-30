@@ -87,6 +87,19 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
         super().__init__(config_entry, driver, info)
         self._target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
 
+        self._set_attr_is_on()
+
+    def _set_attr_is_on(self) -> None:
+        """Set _attr_is_on."""
+        if self.info.primary_value.value is None:
+            self._attr_is_on = None
+        else:
+            self._attr_is_on = bool(self.info.primary_value.value > 0)
+
+    def on_value_update(self) -> None:
+        """Call when one of the watched values change."""
+        self._set_attr_is_on()
+
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         if percentage == 0:
@@ -117,15 +130,26 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
             # Value 255 tells device to return to previous value
             await self.info.node.async_set_value(target_value, 255)
 
+        if percentage or preset_mode or (percentage is None and preset_mode is None):
+            self._attr_is_on = True
+            self.async_write_ha_state()
+        else:
+            self._attr_is_on = False
+            self.async_write_ha_state()
+
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if (target_value := self._target_value) is None:
             raise HomeAssistantError("Missing target value on device.")
         await self.info.node.async_set_value(target_value, 0)
+        self._attr_is_on = False
+        self.async_write_ha_state()
 
     @property
     def is_on(self) -> bool | None:
         """Return true if device is on (speed above 0)."""
+        if self.info.primary_value.command_class == CommandClass.SWITCH_MULTILEVEL:
+            return self._attr_is_on
         if self.info.primary_value.value is None:
             # guard missing value
             return None
