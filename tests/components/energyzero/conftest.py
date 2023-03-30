@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime, date
 from energyzero import Electricity, Gas
 import pytest
-from freezegun.api import FakeDate
 
 from homeassistant.components.energyzero.const import DOMAIN
 from homeassistant.core import HomeAssistant

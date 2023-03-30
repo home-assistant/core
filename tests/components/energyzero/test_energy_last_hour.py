@@ -27,7 +27,7 @@ async def test_last_hour_price(hass: HomeAssistant, mock_energyzero: MagicMock) 
     await hass.services.async_call(
         "homeassistant",
         SERVICE_UPDATE_ENTITY,
-        {ATTR_ENTITY_ID: ["sensor.energyzero_today_gas_current_hour_price"]},
+        {ATTR_ENTITY_ID: ["sensor.energyzero_today_energy_next_hour_price"]},
         blocking=True,
     )
     await hass.async_block_till_done()
