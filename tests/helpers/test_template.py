@@ -1463,6 +1463,11 @@ def test_is_hidden_entity(
         hass,
     ).async_render()
 
+    assert not template.Template(
+        f"{{{{ ['{visible_entity.entity_id}'] | select('is_hidden_entity') | first }}}}",
+        hass,
+    ).async_render()
+
 
 def test_is_state(hass: HomeAssistant) -> None:
     """Test is_state method."""
