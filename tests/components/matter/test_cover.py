@@ -5,13 +5,6 @@ from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
 import pytest
 
-from homeassistant.components.cover import (
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
-)
-from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from .common import (
@@ -53,7 +46,6 @@ async def test_cover(
         node_id=window_covering.node_id,
         endpoint_id=1,
         command=clusters.WindowCovering.Commands.DownOrClose(),
-        timed_request_timeout_ms=1000,
     )
     matter_client.send_device_command.reset_mock()
 
@@ -71,7 +63,6 @@ async def test_cover(
         node_id=window_covering.node_id,
         endpoint_id=1,
         command=clusters.WindowCovering.Commands.StopMotion(),
-        timed_request_timeout_ms=1000,
     )
     matter_client.send_device_command.reset_mock()
 
@@ -89,38 +80,30 @@ async def test_cover(
         node_id=window_covering.node_id,
         endpoint_id=1,
         command=clusters.WindowCovering.Commands.UpOrOpen(),
-        timed_request_timeout_ms=1000,
     )
     matter_client.send_device_command.reset_mock()
 
-    state = hass.states.get("cover.longan_link_wncv_da01")
-    assert state
-    assert state.state == STATE_OPEN
+    await hass.services.async_call(
+        "cover",
+        "set_cover_position",
+        {
+            "entity_id": "cover.longan_link_wncv_da01",
+            "position": 50,
+        },
+        blocking=True,
+    )
 
-    set_node_attribute(window_covering, 1, 258, 8, 50)
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=window_covering.node_id,
+        endpoint_id=1,
+        command=clusters.WindowCovering.Commands.GoToLiftValue(50),
+    )
+    matter_client.send_device_command.reset_mock()
+
+    set_node_attribute(window_covering, 1, 258, 8, 60)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("cover.longan_link_wncv_da01")
     assert state
-    assert state.state == STATE_CLOSING
-
-    set_node_attribute(window_covering, 1, 258, 8, 0)
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get("cover.longan_link_wncv_da01")
-    assert state
-    assert state.state == STATE_CLOSED
-
-    set_node_attribute(window_covering, 1, 258, 8, 50)
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get("cover.longan_link_wncv_da01")
-    assert state
-    assert state.state == STATE_OPENING
-
-    set_node_attribute(window_covering, 1, 258, 8, None)
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get("cover.longan_link_wncv_da01")
-    assert state
-    assert state.state == STATE_UNKNOWN
+    assert state.attributes["current_position"] == 60
