@@ -2256,34 +2256,29 @@ async def test_mqtt_subscribes_topics_on_connect(
     mqtt_client_mock.subscribe.assert_any_call("still/pending", 1)
 
 
-async def test_update_incomplete_entry(
+async def test_default_entry_setting_are_applied(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     mqtt_client_mock: MqttMockPahoClient,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test if the MQTT component loads when config entry data is incomplete."""
+    """Test if the MQTT component loads when config entry data not has all default settings."""
     data = (
         '{ "device":{"identifiers":["0AFFD2"]},'
         '  "state_topic": "foobar/sensor",'
         '  "unique_id": "unique" }'
     )
 
-    # Config entry data is incomplete
+    # Config entry data is incomplete but valid according the schema
     entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     entry.data = {"broker": "test-broker", "port": 1234}
     await mqtt_mock_entry_no_yaml_config()
     await hass.async_block_till_done()
 
-    # Config entry data should now be updated
-    assert dict(entry.data) == {
-        "broker": "test-broker",
-        "port": 1234,
-        "discovery_prefix": "homeassistant",
-    }
-
     # Discover a device to verify the entry was setup correctly
+    # The discovery prefix should be the default
+    # And that the default settings were merged
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
     await hass.async_block_till_done()
 
@@ -2297,12 +2292,15 @@ async def test_fail_no_broker(
     mqtt_client_mock: MqttMockPahoClient,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test if the MQTT component loads when broker configuration is missing."""
+    """Test the MQTT entry setup when broker configuration is missing."""
     # Config entry data is incomplete
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={})
     entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(entry.entry_id)
-    assert "MQTT broker is not configured, please configure it" in caplog.text
+    assert (
+        "The MQTT config entry is invalid, please correct it: required key not provided @ data['broker']"
+        in caplog.text
+    )
 
 
 @pytest.mark.no_fail_on_log_exception
@@ -3312,7 +3310,7 @@ async def test_setup_manual_items_with_unique_ids(
     assert bool("Platform mqtt does not generate unique IDs." in caplog.text) != unique
 
 
-async def test_remove_unknown_conf_entry_options(
+async def test_fail_with_unknown_conf_entry_options(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
     caplog: pytest.LogCaptureFixture,
@@ -3331,14 +3329,9 @@ async def test_remove_unknown_conf_entry_options(
     )
 
     entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id) is False
 
-    assert mqtt.client.CONF_PROTOCOL not in entry.data
-    assert (
-        "The following unsupported configuration options were removed from the "
-        "MQTT config entry: {'old_option'}"
-    ) in caplog.text
+    assert ("extra keys not allowed @ data['old_option']") in caplog.text
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])

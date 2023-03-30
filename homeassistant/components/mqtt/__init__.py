@@ -24,7 +24,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import TemplateError, Unauthorized
+from homeassistant.exceptions import ConfigEntryError, TemplateError, Unauthorized
 from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -45,7 +45,7 @@ from .client import (  # noqa: F401
     publish,
     subscribe,
 )
-from .config_integration import DEFAULT_VALUES, PLATFORM_CONFIG_SCHEMA_BASE
+from .config_integration import CONFIG_SCHEMA_ENTRY, PLATFORM_CONFIG_SCHEMA_BASE
 from .const import (  # noqa: F401
     ATTR_PAYLOAD,
     ATTR_QOS,
@@ -97,8 +97,6 @@ _LOGGER = logging.getLogger(__name__)
 
 SERVICE_PUBLISH = "publish"
 SERVICE_DUMP = "dump"
-
-MANDATORY_DEFAULT_VALUES = (CONF_PORT, CONF_DISCOVERY_PREFIX)
 
 ATTR_TOPIC_TEMPLATE = "topic_template"
 ATTR_PAYLOAD_TEMPLATE = "payload_template"
@@ -189,43 +187,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-def _filter_entry_config(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Remove unknown keys from config entry data.
-
-    Extra keys may have been added when importing MQTT yaml configuration.
-    """
-    filtered_data = {
-        k: entry.data[k] for k in CONFIG_ENTRY_CONFIG_KEYS if k in entry.data
-    }
-    if entry.data.keys() != filtered_data.keys():
-        _LOGGER.warning(
-            (
-                "The following unsupported configuration options were removed from the "
-                "MQTT config entry: %s"
-            ),
-            entry.data.keys() - filtered_data.keys(),
-        )
-        hass.config_entries.async_update_entry(entry, data=filtered_data)
-
-
-async def _async_auto_mend_config(
-    hass: HomeAssistant, entry: ConfigEntry, yaml_config: dict[str, Any]
-) -> None:
-    """Mends config fetched from config entry and adds missing values.
-
-    This mends incomplete migration from old version of HA Core.
-    """
-    entry_updated = False
-    entry_config = {**entry.data}
-    for key in MANDATORY_DEFAULT_VALUES:
-        if key not in entry_config:
-            entry_config[key] = DEFAULT_VALUES[key]
-            entry_updated = True
-
-    if entry_updated:
-        hass.config_entries.async_update_entry(entry, data=entry_config)
-
-
 async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle signals of config entry being updated.
 
@@ -234,26 +195,18 @@ async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_fetch_config(
-    hass: HomeAssistant, entry: ConfigEntry
-) -> dict[str, Any] | None:
+async def async_fetch_config(hass: HomeAssistant, entry: ConfigEntry) -> dict[str, Any]:
     """Fetch fresh MQTT yaml config from the hass config."""
     mqtt_data = get_mqtt_data(hass)
     hass_config = await conf_util.async_hass_config_yaml(hass)
     mqtt_data.config = PLATFORM_CONFIG_SCHEMA_BASE(hass_config.get(DOMAIN, {}))
+    try:
+        entry_config = CONFIG_SCHEMA_ENTRY(dict(entry.data))
+    except vol.MultipleInvalid as ex:
+        raise ConfigEntryError(
+            f"The MQTT config entry is invalid, please correct it: {ex}"
+        ) from ex
 
-    # Remove unknown keys from config entry data
-    _filter_entry_config(hass, entry)
-
-    # Add missing defaults to migrate older config entries
-    await _async_auto_mend_config(hass, entry, mqtt_data.config)
-    # Bail out if broker setting is missing
-    if CONF_BROKER not in entry.data:
-        _LOGGER.error("MQTT broker is not configured, please configure it")
-        return None
-
-    # Merge default values for advanced options
-    entry_config = {**DEFAULT_VALUES, **entry.data}
     # Merge yaml config for manual MQTT items with entry data
     return {**mqtt_data.config, **entry_config}
 
@@ -262,10 +215,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
     mqtt_data = get_mqtt_data(hass, True)
 
-    # Fetch configuration and add missing defaults for basic options
-    if (conf := await async_fetch_config(hass, entry)) is None:
-        # Bail out
-        return False
+    # Fetch configuration and add default values
+    conf = await async_fetch_config(hass, entry)
 
     await async_create_certificate_temp_files(hass, dict(entry.data))
     mqtt_data.client = MQTT(hass, entry, conf)
