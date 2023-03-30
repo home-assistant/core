@@ -116,13 +116,16 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
         else:
             if (target_value := self._target_value) is None:
                 raise HomeAssistantError("Missing target value on device.")
+            if self.info.primary_value.command_class != CommandClass.SWITCH_MULTILEVEL:
+                raise HomeAssistantError(
+                    "`percentage` or `preset_mode` must be provided"
+                )
             # If this is a Multilevel Switch CC value, we do an optimistic state update
             await self.info.node.async_set_value(
                 target_value, SWITCH_MULTILEVEL_SET_TO_PREVIOUS_VALUE
             )
-            if self.info.primary_value.command_class == CommandClass.SWITCH_MULTILEVEL:
-                self._use_optimistic_state = True
-                self.async_write_ha_state()
+            self._use_optimistic_state = True
+            self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
