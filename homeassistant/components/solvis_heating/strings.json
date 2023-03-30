@@ -24,32 +24,5 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "title": "System Configuration",
-        "data": {
-          "warmwater_station": "Warmwater Station: System has a Warm-Water Station",
-          "solar": "Solar: System has Solar Panels attached",
-          "east_west": "East-West-Solar: The System has East-West-Solar Panels attached",
-          "oven": "Oven: An solid fuel oven is attached to the heating",
-          "update_interval": "Updatetime: Time in seconds to read data from Solvis Remote"
-        },
-        "description": ""
-      }
-    },
-    "error": {
-      "invalid_east_west": "Without Solar, East-West option is invalid.",
-      "update_too_fast": "Updateinterval below 10 Seconds produces too much data.",
-      "update_too_slow": "More than 60 Seconds Update-Interval dies not produce meaningfulldata for warmwater option."
-    }
-  },
-  "entity": {
-    "sensor": {
-      "solar_power": {
-        "name": "Solar Power"
-      }
-    }
   }
 }

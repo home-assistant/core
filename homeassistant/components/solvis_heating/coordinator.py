@@ -17,7 +17,6 @@ from .const import (
     CONF_UPDATE_TIMESPAN,
     DEFAULT_MANUFACTURER,
     DEFAULT_MODEL,
-    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,7 +34,6 @@ class SolvisRemoteCoordinator(update_coordinator.DataUpdateCoordinator):
             update_interval=timedelta(seconds=10),
         )
 
-        entry.async_on_unload(entry.add_update_listener(update_listener))
         host_entry = entry.data[CONF_HOST]
         self.username = entry.data[CONF_USERNAME]
         self.password = entry.data[CONF_PASSWORD]
@@ -72,12 +70,3 @@ class SolvisRemoteCoordinator(update_coordinator.DataUpdateCoordinator):
             raise update_coordinator.UpdateFailed(err)
 
         return data
-
-
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
-    """Handle options update."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-
-    update_ = entry.data[CONF_UPDATE_TIMESPAN]
-    if 10 >= update_ <= 300:
-        coordinator.update_interval = timedelta(seconds=update_)
