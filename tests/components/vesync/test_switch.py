@@ -4,10 +4,8 @@ import requests_mock
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.vesync import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.setup import async_setup_component
 
 from .common import ALL_DEVICE_NAMES, mock_devices_response
 
@@ -31,7 +29,7 @@ async def test_switch_state(
     )
     mock_devices_response(requests_mock, device_name)
 
-    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert (
