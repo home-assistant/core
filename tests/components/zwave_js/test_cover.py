@@ -182,6 +182,29 @@ async def test_window_cover(
     state = hass.states.get(WINDOW_COVER_ENTITY)
     assert state.state == STATE_CLOSING
 
+    # Test that nothing changes when we send the exact same value
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 6,
+            "args": {
+                "commandClassName": "Multilevel Switch",
+                "commandClass": 38,
+                "endpoint": 0,
+                "property": "currentValue",
+                "newValue": 25,
+                "prevValue": 25,
+                "propertyName": "currentValue",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state.state == STATE_CLOSING
+
     # Test position update from value updated event
     event = Event(
         type="value updated",
