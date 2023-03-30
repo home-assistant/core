@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
-from datetime import timedelta
+from datetime import datetime, timedelta
 import email
 import logging
 from typing import Any
@@ -61,6 +61,19 @@ class ImapMessage:
             if header_base.setdefault(key, header) != header:
                 header_base[key] += header  # type: ignore[assignment]
         return header_base
+
+    @property
+    def date(self) -> datetime | None:
+        """Get the date the email was sent."""
+        # See https://www.rfc-editor.org/rfc/rfc2822#section-3.3
+        date_str: str | None
+        if (date_str := self.email_message["Date"]) is None:
+            return None
+        # In some cases a timezone or comment is added in parenthesis after the date
+        # We want to strip that part to avoid parsing errors
+        return datetime.strptime(
+            date_str.split("(")[0].strip(), "%a, %d %b %Y %H:%M:%S %z"
+        )
 
     @property
     def sender(self) -> str:
@@ -148,6 +161,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                 "username": self.config_entry.data[CONF_USERNAME],
                 "search": self.config_entry.data[CONF_SEARCH],
                 "folder": self.config_entry.data[CONF_FOLDER],
+                "date": message.date,
                 "text": message.text,
                 "sender": message.sender,
                 "subject": message.subject,

@@ -8,7 +8,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -39,6 +39,9 @@ CLASS_MAPPING = {
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.BINARY_SENSOR)
 MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.BINARY_SENSOR)
+CONFIG_DIAGNOSTIC_MATCH = functools.partial(
+    ZHA_ENTITIES.config_diagnostic_match, Platform.BINARY_SENSOR
+)
 
 
 async def async_setup_entry(
@@ -201,3 +204,48 @@ class XiaomiPlugConsumerConnected(BinarySensor, id_suffix="consumer_connected"):
     SENSOR_ATTR = "consumer_connected"
     _attr_name: str = "Consumer connected"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PLUG
+
+
+@MULTI_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
+class AqaraThermostatWindowOpen(BinarySensor, id_suffix="window_open"):
+    """ZHA Aqara thermostat window open binary sensor."""
+
+    SENSOR_ATTR = "window_open"
+    _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.WINDOW
+    _attr_name: str = "Window open"
+
+
+@MULTI_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
+class AqaraThermostatValveAlarm(BinarySensor, id_suffix="valve_alarm"):
+    """ZHA Aqara thermostat valve alarm binary sensor."""
+
+    SENSOR_ATTR = "valve_alarm"
+    _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PROBLEM
+    _attr_name: str = "Valve alarm"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
+class AqaraThermostatCalibrated(BinarySensor, id_suffix="calibrated"):
+    """ZHA Aqara thermostat calibrated binary sensor."""
+
+    SENSOR_ATTR = "calibrated"
+    _attr_entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
+    _attr_name: str = "Calibrated"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
+class AqaraThermostatExternalSensor(BinarySensor, id_suffix="sensor"):
+    """ZHA Aqara thermostat external sensor binary sensor."""
+
+    SENSOR_ATTR = "sensor"
+    _attr_entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
+    _attr_name: str = "External sensor"
+
+
+@MULTI_MATCH(channel_names="opple_cluster", models={"lumi.sensor_smoke.acn03"})
+class AqaraLinkageAlarmState(BinarySensor, id_suffix="linkage_alarm_state"):
+    """ZHA Aqara linkage alarm state binary sensor."""
+
+    SENSOR_ATTR = "linkage_alarm_state"
+    _attr_name: str = "Linkage alarm state"
+    _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.SMOKE
