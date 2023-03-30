@@ -119,7 +119,7 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
             # If the current value is less than the previous value, the cover is
             # closing, otherwise it is opening.
             self._attr_is_closing = (new_value - self._prev_value) < 0
-            self._attr_is_opening = (new_value - self._prev_value) > 0
+            self._attr_is_opening = not self._attr_is_closing
 
         self._prev_value = new_value
 
