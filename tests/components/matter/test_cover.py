@@ -1,4 +1,4 @@
-"""Test Matter locks."""
+"""Test Matter covers."""
 from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters
@@ -22,7 +22,7 @@ from .common import (
 
 
 @pytest.fixture(name="window_covering")
-async def door_lock_fixture(
+async def window_covering_fixture(
     hass: HomeAssistant, matter_client: MagicMock
 ) -> MatterNode:
     """Fixture for a window covering node."""
@@ -33,7 +33,7 @@ async def door_lock_fixture(
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
-async def test_lock(
+async def test_cover(
     hass: HomeAssistant,
     matter_client: MagicMock,
     window_covering: MatterNode,
