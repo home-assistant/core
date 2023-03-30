@@ -25,6 +25,7 @@ __all__ = [
     "async_converse",
     "async_get_agent_info",
     "async_set_agent",
+    "async_unset_agent",
     "async_setup",
 ]
 
