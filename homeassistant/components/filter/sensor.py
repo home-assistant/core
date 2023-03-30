@@ -385,7 +385,7 @@ class FilterState:
 
     def set_precision(self, precision: int | None) -> None:
         """Set precision of Number based states."""
-        if isinstance(self.state, Number) and precision is not None:
+        if precision is not None and isinstance(self.state, Number):
             value = round(float(self.state), precision)
             self.state = int(value) if precision == 0 else value
 
