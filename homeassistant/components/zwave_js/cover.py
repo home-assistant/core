@@ -104,10 +104,12 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
         """Handle primary value update."""
         new_value = self.info.primary_value.value
         # If the cover is fully closed or opened, or if we don't know either the
-        # previous value or current value, we can't determine whether the cover
-        # is opening or closing
+        # previous value or current value, or if they are the same value we can't
+        # make any determination whether the cover is opening or closing so we set
+        # them to None.
         if (
             new_value in (self._fully_closed_value, self._fully_open_value)
+            or new_value == self._prev_value
             or self._prev_value is None
             or new_value is None
         ):
@@ -117,7 +119,7 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
             # If the current value is less than the previous value, the cover is
             # closing, otherwise it is opening.
             self._attr_is_closing = (new_value - self._prev_value) < 0
-            self._attr_is_opening = not self._attr_is_closing
+            self._attr_is_opening = (new_value - self._prev_value) > 0
 
         self._prev_value = new_value
 
