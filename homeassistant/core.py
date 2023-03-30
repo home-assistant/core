@@ -1950,7 +1950,11 @@ class Config:
         )
 
     def is_allowed_path(self, path: str) -> bool:
-        """Check if the path is valid for access from outside."""
+        """Check if the path is valid for access from outside.
+
+        This function does blocking I/O and should not be called from the event loop.
+        Use hass.async_add_executor_job to schedule it on the executor.
+        """
         assert path is not None
 
         thepath = pathlib.Path(path)
