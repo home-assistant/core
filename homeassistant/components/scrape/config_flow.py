@@ -104,24 +104,21 @@ SENSOR_SETUP = {
     ),
     vol.Optional(CONF_ATTRIBUTE): TextSelector(),
     vol.Optional(CONF_VALUE_TEMPLATE): TemplateSelector(),
-    # Note: we set default to ensure that frontend does not omit the result
-    vol.Optional(CONF_DEVICE_CLASS, default=NONE_SENTINEL): SelectSelector(
+    vol.Required(CONF_DEVICE_CLASS): SelectSelector(
         SelectSelectorConfig(
             options=[NONE_SENTINEL] + sorted([cls.value for cls in SensorDeviceClass]),
             mode=SelectSelectorMode.DROPDOWN,
             translation_key="device_class",
         )
     ),
-    # Note: we set default to ensure that frontend does not omit the result
-    vol.Optional(CONF_STATE_CLASS, default=NONE_SENTINEL): SelectSelector(
+    vol.Required(CONF_STATE_CLASS): SelectSelector(
         SelectSelectorConfig(
             options=[NONE_SENTINEL] + sorted([cls.value for cls in SensorStateClass]),
             mode=SelectSelectorMode.DROPDOWN,
             translation_key="state_class",
         )
     ),
-    # Note: we set default to ensure that frontend does not omit the result
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=NONE_SENTINEL): SelectSelector(
+    vol.Required(CONF_UNIT_OF_MEASUREMENT): SelectSelector(
         SelectSelectorConfig(
             options=[NONE_SENTINEL] + sorted([cls.value for cls in UnitOfTemperature]),
             custom_value=True,
@@ -201,7 +198,7 @@ async def get_edit_sensor_suggested_values(
     for key in (CONF_DEVICE_CLASS, CONF_STATE_CLASS, CONF_UNIT_OF_MEASUREMENT):
         if not suggested_values.get(key):
             suggested_values[key] = NONE_SENTINEL
-    return cast(dict[str, Any], handler.options[SENSOR_DOMAIN][idx])
+    return suggested_values
 
 
 async def validate_sensor_edit(
