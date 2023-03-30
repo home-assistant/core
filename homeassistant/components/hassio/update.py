@@ -18,6 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import (
     ADDONS_COORDINATOR,
+    HassioDataUpdateCoordinator,
     async_update_addon,
     async_update_core,
     async_update_os,
@@ -88,6 +89,8 @@ async def async_setup_entry(
 
 class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
     """Update entity to handle updates for the Supervisor add-ons."""
+
+    coordinator: HassioDataUpdateCoordinator
 
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL

@@ -718,7 +718,7 @@ def async_register_supervisor_in_dev_reg(
     params = DeviceInfo(
         identifiers={(DOMAIN, "supervisor")},
         manufacturer="Home Assistant",
-        model=SupervisorEntityModel.SUPERVIOSR,
+        model=SupervisorEntityModel.SUPERVISOR,
         sw_version=supervisor_dict[ATTR_VERSION],
         name="Home Assistant Supervisor",
         entry_type=dr.DeviceEntryType.SERVICE,
@@ -765,7 +765,6 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         new_data: dict[str, Any] = {}
         supervisor_info = get_supervisor_info(self.hass) or {}
         addons_info = get_addons_info(self.hass)
-        addons_stats = get_addons_stats(self.hass)
         addons_changelogs = get_addons_changelogs(self.hass)
         store_data = get_store(self.hass) or {}
 
@@ -777,7 +776,6 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         new_data[DATA_KEY_ADDONS] = {
             addon[ATTR_SLUG]: {
                 **addon,
-                **((addons_stats or {}).get(addon[ATTR_SLUG]) or {}),
                 ATTR_AUTO_UPDATE: (addons_info.get(addon[ATTR_SLUG]) or {}).get(
                     ATTR_AUTO_UPDATE, False
                 ),
@@ -793,11 +791,9 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
 
         new_data[DATA_KEY_CORE] = {
             **(get_core_info(self.hass) or {}),
-            **get_core_stats(self.hass),
         }
         new_data[DATA_KEY_SUPERVISOR] = {
             **supervisor_info,
-            **get_supervisor_stats(self.hass),
         }
         new_data[DATA_KEY_HOST] = get_host_info(self.hass) or {}
 
@@ -857,16 +853,12 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         (
             self.hass.data[DATA_INFO],
             self.hass.data[DATA_CORE_INFO],
-            self.hass.data[DATA_CORE_STATS],
             self.hass.data[DATA_SUPERVISOR_INFO],
-            self.hass.data[DATA_SUPERVISOR_STATS],
             self.hass.data[DATA_OS_INFO],
         ) = await asyncio.gather(
             self.hassio.get_info(),
             self.hassio.get_core_info(),
-            self.hassio.get_core_stats(),
             self.hassio.get_supervisor_info(),
-            self.hassio.get_supervisor_stats(),
             self.hassio.get_os_info(),
         )
 
@@ -875,10 +867,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             for addon in self.hass.data[DATA_SUPERVISOR_INFO].get("addons", [])
             if addon[ATTR_STATE] == ATTR_STARTED
         ]
-        stats_data = await asyncio.gather(
-            *[self._update_addon_stats(addon[ATTR_SLUG]) for addon in addons]
-        )
-        self.hass.data[DATA_ADDONS_STATS] = dict(stats_data)
+
         self.hass.data[DATA_ADDONS_CHANGELOGS] = dict(
             await asyncio.gather(
                 *[self._update_addon_changelog(addon[ATTR_SLUG]) for addon in addons]
@@ -889,15 +878,6 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
                 *[self._update_addon_info(addon[ATTR_SLUG]) for addon in addons]
             )
         )
-
-    async def _update_addon_stats(self, slug):
-        """Update single addon stats."""
-        try:
-            stats = await self.hassio.get_addon_stats(slug)
-            return (slug, stats)
-        except HassioAPIError as err:
-            _LOGGER.warning("Could not fetch stats for %s: %s", slug, err)
-        return (slug, None)
 
     async def _update_addon_changelog(self, slug):
         """Return the changelog for an add-on."""
@@ -934,3 +914,41 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         await super()._async_refresh(
             log_failures, raise_on_auth_failed, scheduled, raise_on_entry_error
         )
+
+
+class HassioStatsDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Custom coordinator for Hass.io stats."""
+
+    config_entry: ConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        model: SupervisorEntityModel,
+        *,
+        addon_slug: str | None = None,
+    ) -> None:
+        """Initialize coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name="_".join([x for x in (DOMAIN, model, addon_slug) if x]),
+            update_interval=HASSIO_UPDATE_INTERVAL,
+        )
+        self.hassio: HassIO = hass.data[DOMAIN]
+        self.model = model
+        self.addon_slug = addon_slug
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Fetch the latest data from the source."""
+        try:
+            if self.model == SupervisorEntityModel.ADDON:
+                return await self.hassio.get_addon_stats(self.addon_slug)
+
+            if self.model == SupervisorEntityModel.SUPERVISOR:
+                return await self.hassio.get_supervisor_stats()
+
+            # SupervisorEntityModel.CORE
+            return await self.hassio.get_core_stats()
+        except HassioAPIError as err:
+            raise UpdateFailed(f"Error communicating with Supervisor: {err}") from err

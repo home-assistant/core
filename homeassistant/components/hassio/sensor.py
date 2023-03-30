@@ -12,10 +12,11 @@ from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ADDONS_COORDINATOR
+from . import ADDONS_COORDINATOR, HassioStatsDataUpdateCoordinator
 from .const import (
     ATTR_CPU_PERCENT,
     ATTR_MEMORY_PERCENT,
+    ATTR_SLUG,
     ATTR_VERSION,
     ATTR_VERSION_LATEST,
     DATA_KEY_ADDONS,
@@ -23,6 +24,7 @@ from .const import (
     DATA_KEY_HOST,
     DATA_KEY_OS,
     DATA_KEY_SUPERVISOR,
+    SupervisorEntityModel,
 )
 from .entity import (
     HassioAddonEntity,
@@ -64,10 +66,8 @@ STATS_ENTITY_DESCRIPTIONS = (
     ),
 )
 
-ADDON_ENTITY_DESCRIPTIONS = COMMON_ENTITY_DESCRIPTIONS + STATS_ENTITY_DESCRIPTIONS
-CORE_ENTITY_DESCRIPTIONS = STATS_ENTITY_DESCRIPTIONS
+ADDON_ENTITY_DESCRIPTIONS = COMMON_ENTITY_DESCRIPTIONS
 OS_ENTITY_DESCRIPTIONS = COMMON_ENTITY_DESCRIPTIONS
-SUPERVISOR_ENTITY_DESCRIPTIONS = STATS_ENTITY_DESCRIPTIONS
 
 HOST_ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
@@ -120,6 +120,9 @@ async def async_setup_entry(
     entities: list[
         HassioOSSensor | HassioAddonSensor | CoreSensor | SupervisorSensor | HostSensor
     ] = []
+    stats_entities: list[
+        AddonStatsSensor | CoreStatsSensor | SupervisorStatsSensor
+    ] = []
 
     for addon in coordinator.data[DATA_KEY_ADDONS].values():
         for entity_description in ADDON_ENTITY_DESCRIPTIONS:
@@ -130,19 +133,35 @@ async def async_setup_entry(
                     entity_description=entity_description,
                 )
             )
+        for entity_description in STATS_ENTITY_DESCRIPTIONS:
+            stats_entities.append(
+                AddonStatsSensor(
+                    addon=addon,
+                    coordinator=HassioStatsDataUpdateCoordinator(
+                        hass=hass,
+                        model=SupervisorEntityModel.ADDON,
+                        addon_slug=addon[ATTR_SLUG],
+                    ),
+                    entity_description=entity_description,
+                )
+            )
 
-    for entity_description in CORE_ENTITY_DESCRIPTIONS:
-        entities.append(
-            CoreSensor(
-                coordinator=coordinator,
+    for entity_description in STATS_ENTITY_DESCRIPTIONS:
+        stats_entities.append(
+            CoreStatsSensor(
+                coordinator=HassioStatsDataUpdateCoordinator(
+                    hass=hass,
+                    model=SupervisorEntityModel.CORE,
+                ),
                 entity_description=entity_description,
             )
         )
-
-    for entity_description in SUPERVISOR_ENTITY_DESCRIPTIONS:
-        entities.append(
-            SupervisorSensor(
-                coordinator=coordinator,
+        stats_entities.append(
+            SupervisorStatsSensor(
+                coordinator=HassioStatsDataUpdateCoordinator(
+                    hass=hass,
+                    model=SupervisorEntityModel.SUPERVISOR,
+                ),
                 entity_description=entity_description,
             )
         )
@@ -165,6 +184,7 @@ async def async_setup_entry(
             )
 
     async_add_entities(entities)
+    async_add_entities(stats_entities, True)
 
 
 class HassioAddonSensor(HassioAddonEntity, SensorEntity):
@@ -212,3 +232,63 @@ class HostSensor(HassioHostEntity, SensorEntity):
     def native_value(self) -> str:
         """Return native value of entity."""
         return self.coordinator.data[DATA_KEY_HOST][self.entity_description.key]
+
+
+class AddonStatsSensor(HassioAddonEntity, SensorEntity):
+    """Sensor to track a Hass.io add-on stats attribute."""
+
+    coordinator: HassioStatsDataUpdateCoordinator
+
+    @property
+    def native_value(self) -> str:
+        """Return native value of entity."""
+        return self.coordinator.data[self.entity_description.key]
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return (
+            self.coordinator.last_update_success
+            and self.coordinator.data is not None
+            and self.entity_description.key in self.coordinator.data
+        )
+
+
+class CoreStatsSensor(HassioCoreEntity, SensorEntity):
+    """Sensor to track a Hass.io core stats attribute."""
+
+    coordinator: HassioStatsDataUpdateCoordinator
+
+    @property
+    def native_value(self) -> str:
+        """Return native value of entity."""
+        return self.coordinator.data[self.entity_description.key]
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return (
+            self.coordinator.last_update_success
+            and self.coordinator.data is not None
+            and self.entity_description.key in self.coordinator.data
+        )
+
+
+class SupervisorStatsSensor(HassioSupervisorEntity, SensorEntity):
+    """Sensor to track a Hass.io supervisor stats attribute."""
+
+    coordinator: HassioStatsDataUpdateCoordinator
+
+    @property
+    def native_value(self) -> str:
+        """Return native value of entity."""
+        return self.coordinator.data[self.entity_description.key]
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return (
+            self.coordinator.last_update_success
+            and self.coordinator.data is not None
+            and self.entity_description.key in self.coordinator.data
+        )

@@ -77,5 +77,5 @@ class SupervisorEntityModel(str, Enum):
     ADDON = "Home Assistant Add-on"
     OS = "Home Assistant Operating System"
     CORE = "Home Assistant Core"
-    SUPERVIOSR = "Home Assistant Supervisor"
+    SUPERVISOR = "Home Assistant Supervisor"
     HOST = "Home Assistant Host"
