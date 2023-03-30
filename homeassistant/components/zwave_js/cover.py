@@ -90,7 +90,7 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
         self._prev_value: int | None = self.info.primary_value.value
 
     def percent_to_zwave_position(self, value: int) -> int:
-        """Convert position in 0-100 scale to closed_value-opened_value scale.
+        """Convert position in 0-100 scale to closed_value-open_value scale.
 
         `value` -- (int) Position byte value from 0-100.
         """
@@ -105,7 +105,7 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
         # previous value or current value, we can't determine whether the cover
         # is opening or closing
         if (
-            new_value in (self._closed_value, self._opened_value)
+            new_value in (self._closed_value, self._open_value)
             or self._prev_value is None
             or new_value is None
         ):
@@ -120,7 +120,7 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
         self._prev_value = new_value
 
     @property
-    def _opened_value(self) -> int:
+    def _open_value(self) -> int:
         """Return fully opened value."""
         max_ = self.info.primary_value.metadata.max
         return 99 if max_ is None else max_
@@ -134,7 +134,7 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
     @property
     def _cover_range(self) -> int:
         """Return range between fully opened and fully closed."""
-        return self._opened_value - self._closed_value
+        return self._open_value - self._closed_value
 
     @property
     def is_closed(self) -> bool | None:
@@ -170,7 +170,7 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
         """Open the cover."""
         target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
         assert target_value is not None
-        await self.info.node.async_set_value(target_value, self._opened_value)
+        await self.info.node.async_set_value(target_value, self._open_value)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
@@ -216,7 +216,7 @@ class ZWaveTiltCover(ZWaveCover):
         )
 
     def percent_to_zwave_tilt(self, value: int) -> int:
-        """Convert position in 0-100 scale to closed_value-opened_value scale.
+        """Convert position in 0-100 scale to closed_value-open_value scale.
 
         `value` -- (int) Position byte value from 0-100.
         """
@@ -225,9 +225,9 @@ class ZWaveTiltCover(ZWaveCover):
         return self._closed_value
 
     def zwave_tilt_to_percent(self, value: int) -> int:
-        """Convert closed_value-opened_value scale to position in 0-100 scale.
+        """Convert closed_value-open_value scale to position in 0-100 scale.
 
-        `value` -- (int) Position byte value from closed_value-opened_value.
+        `value` -- (int) Position byte value from closed_value-open_value.
         """
         if value > self._closed_value:
             return round(((value - self._closed_value) / self._cover_range) * 100)
