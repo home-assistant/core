@@ -45,11 +45,7 @@ from .client import (  # noqa: F401
     publish,
     subscribe,
 )
-from .config_integration import (
-    CONFIG_SCHEMA_ENTRY,
-    DEFAULT_VALUES,
-    PLATFORM_CONFIG_SCHEMA_BASE,
-)
+from .config_integration import DEFAULT_VALUES, PLATFORM_CONFIG_SCHEMA_BASE
 from .const import (  # noqa: F401
     ATTR_PAYLOAD,
     ATTR_QOS,
@@ -230,13 +226,6 @@ async def _async_auto_mend_config(
         hass.config_entries.async_update_entry(entry, data=entry_config)
 
 
-def _merge_extended_config(entry: ConfigEntry, conf: ConfigType) -> dict[str, Any]:
-    """Merge advanced options in configuration.yaml config with config entry."""
-    # Add default values
-    conf = {**DEFAULT_VALUES, **conf}
-    return {**conf, **entry.data}
-
-
 async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle signals of config entry being updated.
 
@@ -257,20 +246,16 @@ async def async_fetch_config(
     _filter_entry_config(hass, entry)
 
     # Add missing defaults to migrate older config entries
-    await _async_auto_mend_config(hass, entry, mqtt_data.config or {})
+    await _async_auto_mend_config(hass, entry, mqtt_data.config)
     # Bail out if broker setting is missing
     if CONF_BROKER not in entry.data:
         _LOGGER.error("MQTT broker is not configured, please configure it")
         return None
 
-    # If user doesn't have configuration.yaml config, generate default values
-    # for options not in config entry data
-    if (conf := mqtt_data.config) is None:
-        conf = CONFIG_SCHEMA_ENTRY(dict(entry.data))
-
-    # Merge advanced configuration values from configuration.yaml
-    conf = _merge_extended_config(entry, conf)
-    return conf
+    # Merge default values for advanced options
+    entry_config = {**DEFAULT_VALUES, **entry.data}
+    # Merge yaml config for manual MQTT items with entry data
+    return {**mqtt_data.config, **entry_config}
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

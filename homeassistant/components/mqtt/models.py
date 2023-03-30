@@ -289,7 +289,7 @@ class MqttData:
     """Keep the MQTT entry data."""
 
     client: MQTT | None = None
-    config: ConfigType | None = None
+    config: ConfigType = field(default_factory=dict)
     debug_info_entities: dict[str, EntityDebugInfo] = field(default_factory=dict)
     debug_info_triggers: dict[tuple[str, str], TriggerDebugInfo] = field(
         default_factory=dict
