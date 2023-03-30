@@ -108,7 +108,9 @@ def get_events_fixture(hass_client: ClientSessionGenerator) -> GetEventsFn:
 def event_fields(data: dict[str, str]) -> dict[str, str]:
     """Filter event API response to minimum fields."""
     return {
-        k: data[k] for k in ["summary", "start", "end", "recurrence_id"] if data.get(k)
+        k: data[k]
+        for k in ["summary", "start", "end", "recurrence_id", "location"]
+        if data.get(k)
     }
 
 

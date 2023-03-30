@@ -59,10 +59,10 @@ update_entity:
   target:
     entity: {}
 
-reload_custom_jinja:
+reload_custom_templates:
   name: Reload custom Jinja2 templates
   description: >-
-    Reload Jinja2 templates found in the custom_jinja folder in your config.
+    Reload Jinja2 templates found in the custom_templates folder in your config.
     New values will be applied on the next render of the template.
 
 reload_config_entry:

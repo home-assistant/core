@@ -1,6 +1,7 @@
 """Test the Reolink init."""
+import asyncio
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, Mock
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from reolink_aio.exceptions import ReolinkError
@@ -99,6 +100,7 @@ async def test_no_repair_issue(
 
     issue_registry = ir.async_get(hass)
     assert (const.DOMAIN, "https_webhook") not in issue_registry.issues
+    assert (const.DOMAIN, "webhook_url") not in issue_registry.issues
     assert (const.DOMAIN, "enable_port") not in issue_registry.issues
     assert (const.DOMAIN, "firmware_update") not in issue_registry.issues
 
@@ -136,6 +138,21 @@ async def test_port_repair_issue(
 
     issue_registry = ir.async_get(hass)
     assert (const.DOMAIN, "enable_port") in issue_registry.issues
+
+
+async def test_webhook_repair_issue(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test repairs issue is raised when the webhook url is unreachable."""
+    with patch(
+        "homeassistant.components.reolink.host.asyncio.Event.wait",
+        AsyncMock(side_effect=asyncio.TimeoutError()),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue_registry = ir.async_get(hass)
+    assert (const.DOMAIN, "webhook_url") in issue_registry.issues
 
 
 async def test_firmware_repair_issue(

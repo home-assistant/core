@@ -2112,10 +2112,15 @@ async def test_connect_args_priority(hass: HomeAssistant, config_url) -> None:
     assert connect_params[0]["charset"] == "utf8mb4"
 
 
+@pytest.mark.parametrize("core_state", [CoreState.starting, CoreState.running])
 async def test_excluding_attributes_by_integration(
-    recorder_mock: Recorder, hass: HomeAssistant, entity_registry: er.EntityRegistry
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    core_state: CoreState,
 ) -> None:
     """Test that an integration's recorder platform can exclude attributes."""
+    hass.state = core_state
     state = "restoring_from_db"
     attributes = {"test_attr": 5, "excluded": 10}
     mock_platform(
@@ -2131,6 +2136,7 @@ async def test_excluding_attributes_by_integration(
     platform = MockEntityPlatform(hass, platform_name="fake_integration")
     entity_platform = MockEntity(entity_id=entity_id, extra_state_attributes=attributes)
     await platform.async_add_entities([entity_platform])
+    await hass.async_block_till_done()
 
     await async_wait_recording_done(hass)
 

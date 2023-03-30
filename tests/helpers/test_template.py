@@ -21,6 +21,7 @@ from homeassistant.const import (
     LENGTH_MILLIMETERS,
     MASS_GRAMS,
     STATE_ON,
+    STATE_UNAVAILABLE,
     TEMP_CELSIUS,
     VOLUME_LITERS,
     UnitOfPressure,
@@ -244,8 +245,8 @@ def test_iterating_domain_states(hass: HomeAssistant) -> None:
 
 
 async def test_import(hass: HomeAssistant) -> None:
-    """Test that imports work from the config/custom_jinja folder."""
-    await template.async_load_custom_jinja(hass)
+    """Test that imports work from the config/custom_templates folder."""
+    await template.async_load_custom_templates(hass)
     assert "test.jinja" in template._get_hass_loader(hass).sources
     assert "inner/inner_test.jinja" in template._get_hass_loader(hass).sources
     assert (
@@ -282,7 +283,7 @@ async def test_import(hass: HomeAssistant) -> None:
 
 async def test_import_change(hass: HomeAssistant) -> None:
     """Test that a change in HassLoader results in updated imports."""
-    await template.async_load_custom_jinja(hass)
+    await template.async_load_custom_templates(hass)
     to_test = template.Template(
         """
         {% import 'test.jinja' as t %}
@@ -1607,6 +1608,44 @@ def test_states_function(hass: HomeAssistant) -> None:
     assert tpl.async_render() == "available"
 
 
+def test_has_value(hass):
+    """Test has_value method."""
+    hass.states.async_set("test.value1", 1)
+    hass.states.async_set("test.unavailable", STATE_UNAVAILABLE)
+
+    tpl = template.Template(
+        """
+{{ has_value("test.value1") }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is True
+
+    tpl = template.Template(
+        """
+{{ has_value("test.unavailable") }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is False
+
+    tpl = template.Template(
+        """
+{{ has_value("test.unknown") }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is False
+
+    tpl = template.Template(
+        """
+{% if "test.value1" is has_value %}yes{% else %}no{% endif %}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "yes"
+
+
 @patch(
     "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
     return_value=True,
@@ -1696,6 +1735,11 @@ def test_today_at(
     with pytest.raises(TemplateError):
         template.Template("{{ today_at('bad') }}", hass).async_render()
 
+    info = template.Template(
+        "{{ today_at('10:00').isoformat() }}", hass
+    ).async_render_to_info()
+    assert info.has_time is True
+
     freezer.stop()
 
 
@@ -1707,9 +1751,12 @@ def test_relative_time(mock_is_safe, hass: HomeAssistant) -> None:
     """Test relative_time method."""
     hass.config.set_time_zone("UTC")
     now = datetime.strptime("2000-01-01 10:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
+    relative_time_template = (
+        '{{relative_time(strptime("2000-01-01 09:00:00", "%Y-%m-%d %H:%M:%S"))}}'
+    )
     with patch("homeassistant.util.dt.now", return_value=now):
         result = template.Template(
-            '{{relative_time(strptime("2000-01-01 09:00:00", "%Y-%m-%d %H:%M:%S"))}}',
+            relative_time_template,
             hass,
         ).async_render()
         assert result == "1 hour"
@@ -1767,6 +1814,9 @@ def test_relative_time(mock_is_safe, hass: HomeAssistant) -> None:
             hass,
         ).async_render()
         assert result == "string"
+
+        info = template.Template(relative_time_template, hass).async_render_to_info()
+        assert info.has_time is True
 
 
 @patch(

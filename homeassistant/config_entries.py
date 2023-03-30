@@ -1468,6 +1468,28 @@ async def _old_conf_migrator(old_config: dict[str, Any]) -> dict[str, Any]:
     return {"entries": old_config}
 
 
+@callback
+def _async_abort_entries_match(
+    other_entries: list[ConfigEntry], match_dict: dict[str, Any] | None = None
+) -> None:
+    """Abort if current entries match all data.
+
+    Requires `already_configured` in strings.json in user visible flows.
+    """
+    if match_dict is None:
+        match_dict = {}  # Match any entry
+    for entry in other_entries:
+        if all(
+            item
+            in ChainMap(
+                entry.options,  # type: ignore[arg-type]
+                entry.data,  # type: ignore[arg-type]
+            ).items()
+            for item in match_dict.items()
+        ):
+            raise data_entry_flow.AbortFlow("already_configured")
+
+
 class ConfigFlow(data_entry_flow.FlowHandler):
     """Base class for config flows with some helpers."""
 
@@ -1505,18 +1527,9 @@ class ConfigFlow(data_entry_flow.FlowHandler):
 
         Requires `already_configured` in strings.json in user visible flows.
         """
-        if match_dict is None:
-            match_dict = {}  # Match any entry
-        for entry in self._async_current_entries(include_ignore=False):
-            if all(
-                item
-                in ChainMap(
-                    entry.options,  # type: ignore[arg-type]
-                    entry.data,  # type: ignore[arg-type]
-                ).items()
-                for item in match_dict.items()
-            ):
-                raise data_entry_flow.AbortFlow("already_configured")
+        _async_abort_entries_match(
+            self._async_current_entries(include_ignore=False), match_dict
+        )
 
     @callback
     def _abort_if_unique_id_configured(
@@ -1857,6 +1870,27 @@ class OptionsFlow(data_entry_flow.FlowHandler):
     """Base class for config options flows."""
 
     handler: str
+
+    @callback
+    def _async_abort_entries_match(
+        self, match_dict: dict[str, Any] | None = None
+    ) -> None:
+        """Abort if another current entry matches all data.
+
+        Requires `already_configured` in strings.json in user visible flows.
+        """
+
+        config_entry = cast(
+            ConfigEntry, self.hass.config_entries.async_get_entry(self.handler)
+        )
+        _async_abort_entries_match(
+            [
+                entry
+                for entry in self.hass.config_entries.async_entries(config_entry.domain)
+                if entry is not config_entry and entry.source != SOURCE_IGNORE
+            ],
+            match_dict,
+        )
 
 
 class OptionsFlowWithConfigEntry(OptionsFlow):
