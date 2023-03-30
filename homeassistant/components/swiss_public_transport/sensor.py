@@ -1,7 +1,7 @@
 """Support for transport.opendata.ch."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import timedelta, datetime
 import logging
 
 from opendata_transport import OpendataTransport
@@ -29,6 +29,7 @@ ATTR_TARGET = "destination"
 ATTR_TRAIN_NUMBER = "train_number"
 ATTR_TRANSFERS = "transfers"
 ATTR_DELAY = "delay"
+ATTR_POLLING_COUNT = "polling_count"
 
 CONF_DESTINATION = "to"
 CONF_START = "from"
@@ -87,6 +88,7 @@ class SwissPublicTransportSensor(SensorEntity):
         self._from = start
         self._to = destination
         self._remaining_time = ""
+        self._polls = []
 
     @property
     def name(self):
@@ -123,6 +125,7 @@ class SwissPublicTransportSensor(SensorEntity):
             ATTR_TARGET: self._opendata.to_name,
             ATTR_REMAINING_TIME: f"{self._remaining_time}",
             ATTR_DELAY: self._opendata.connections[0]["delay"],
+            ATTR_POLLING_COUNT: len(self._polls)
         }
 
     @property
@@ -134,7 +137,10 @@ class SwissPublicTransportSensor(SensorEntity):
         """Get the latest data from opendata.ch and update the states."""
 
         try:
+            now = datetime.now()
             if self._remaining_time.total_seconds() < 0:
                 await self._opendata.async_get_data()
+                self._polls += [ now ]
+            self._polls = [p for p in self._polls if p >= now - timedelta(hours=24)]
         except OpendataTransportError:
             _LOGGER.error("Unable to retrieve data from transport.opendata.ch")
