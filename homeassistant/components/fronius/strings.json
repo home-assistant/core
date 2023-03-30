@@ -31,31 +31,31 @@
         "name": "Energy year"
       },
       "energy_total": {
-        "name": "Energy total"
+        "name": "Total energy"
       },
       "frequency_ac": {
-        "name": "Frequency AC"
+        "name": "[%key:component::sensor::entity_component::frequency::name%]"
       },
       "current_ac": {
-        "name": "Current AC"
+        "name": "AC current"
       },
       "current_dc": {
-        "name": "Current DC"
+        "name": "DC current"
       },
       "current_dc_2": {
-        "name": "Current DC 2"
+        "name": "DC current 2"
       },
       "power_ac": {
-        "name": "Power AC"
+        "name": "AC power"
       },
       "voltage_ac": {
-        "name": "Voltage AC"
+        "name": "AC voltage"
       },
       "voltage_dc": {
-        "name": "Voltage DC"
+        "name": "DC voltage"
       },
       "voltage_dc_2": {
-        "name": "Voltage DC 2"
+        "name": "DC voltage 2"
       },
       "inverter_state": {
         "name": "Inverter state"
@@ -82,31 +82,31 @@
         "name": "Grid import tariff"
       },
       "current_ac_phase_1": {
-        "name": "Current AC phase 1"
+        "name": "Current phase 1"
       },
       "current_ac_phase_2": {
-        "name": "Current AC phase 2"
+        "name": "Current phase 2"
       },
       "current_ac_phase_3": {
-        "name": "Current AC phase 3"
+        "name": "Current phase 3"
       },
       "energy_reactive_ac_consumed": {
-        "name": "Energy reactive AC consumed"
+        "name": "Reactive energy consumed"
       },
       "energy_reactive_ac_produced": {
-        "name": "Energy reactive AC produced"
+        "name": "Reactive energy produced"
       },
       "energy_real_ac_minus": {
-        "name": "Energy real AC minus"
+        "name": "Real energy minus"
       },
       "energy_real_ac_plus": {
-        "name": "Energy real AC plus"
+        "name": "Real energy plus"
       },
       "energy_real_consumed": {
-        "name": "Energy real consumed"
+        "name": "Real energy consumed"
       },
       "energy_real_produced": {
-        "name": "Energy real produced"
+        "name": "Real energy produced"
       },
       "frequency_phase_average": {
         "name": "Frequency phase average"
@@ -139,46 +139,46 @@
         "name": "[%key:component::sensor::entity_component::power_factor::name%]"
       },
       "power_reactive_phase_1": {
-        "name": "Power reactive phase 1"
+        "name": "Reactive power phase 1"
       },
       "power_reactive_phase_2": {
-        "name": "Power reactive phase 2"
+        "name": "Reactive power phase 2"
       },
       "power_reactive_phase_3": {
-        "name": "Power reactive phase 3"
+        "name": "Reactive power phase 3"
       },
       "power_reactive": {
-        "name": "Power reactive"
+        "name": "Reactive power"
       },
       "power_real_phase_1": {
-        "name": "Power real phase 1"
+        "name": "Real power phase 1"
       },
       "power_real_phase_2": {
-        "name": "Power real phase 2"
+        "name": "Real power phase 2"
       },
       "power_real_phase_3": {
-        "name": "Power real phase 3"
+        "name": "Real power phase 3"
       },
       "power_real": {
-        "name": "Power real"
+        "name": "Real power"
       },
       "voltage_ac_phase_1": {
-        "name": "Voltage AC phase 1"
+        "name": "Voltage phase 1"
       },
       "voltage_ac_phase_2": {
-        "name": "Voltage AC phase 2"
+        "name": "Voltage phase 2"
       },
       "voltage_ac_phase_3": {
-        "name": "Voltage AC phase 3"
+        "name": "Voltage phase 3"
       },
       "voltage_ac_phase_to_phase_12": {
-        "name": "Voltage AC phase 1-2"
+        "name": "Voltage phase 1-2"
       },
       "voltage_ac_phase_to_phase_23": {
-        "name": "Voltage AC phase 2-3"
+        "name": "Voltage phase 2-3"
       },
       "voltage_ac_phase_to_phase_31": {
-        "name": "Voltage AC phase 3-1"
+        "name": "Voltage phase 3-1"
       },
       "energy_real_ac_consumed": {
         "name": "Energy consumed"
@@ -217,16 +217,16 @@
         "name": "Relative self consumption"
       },
       "capacity_maximum": {
-        "name": "Capacity maximum"
+        "name": "Maximum capacity "
       },
       "capacity_designed": {
-        "name": "Capacity designed"
+        "name": "Designed capacity"
       },
       "voltage_dc_maximum_cell": {
-        "name": "Voltage DC maximum cell"
+        "name": "Maximum cell voltage"
       },
       "voltage_dc_minimum_cell": {
-        "name": "Voltage DC minimum cell"
+        "name": "Minimum cell voltage"
       },
       "state_of_charge": {
         "name": "State of charge"
