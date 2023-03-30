@@ -5,12 +5,16 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    OptionsFlowWithConfigEntry,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.device_registry import DeviceRegistry
+from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import (
     DEFAULT_HOST,
@@ -23,7 +27,6 @@ from .const import (
     OPTION_ENTRY_SENSOR_PRECISION,
     PRECISION_MAPPING_FAMILY_28,
 )
-from .model import OWDeviceDescription
 from .onewirehub import CannotConnect, OneWireHub
 
 DATA_SCHEMA = vol.Schema(
@@ -96,37 +99,44 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(config_entry: ConfigEntry) -> OnewireOptionsFlowHandler:
         """Get the options flow for this handler."""
         return OnewireOptionsFlowHandler(config_entry)
 
 
-class OnewireOptionsFlowHandler(OptionsFlow):
+class OnewireOptionsFlowHandler(OptionsFlowWithConfigEntry):
     """Handle OneWire Config options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize OneWire Network options flow."""
-        self.entry_id = config_entry.entry_id
-        self.options = dict(config_entry.options)
-        self.configurable_devices: dict[str, OWDeviceDescription] = {}
-        self.devices_to_configure: dict[str, OWDeviceDescription] = {}
-        self.current_device: str = ""
+    configurable_devices: dict[str, str]
+    """Mapping of the configurable devices.
+
+        `key`: friendly name
+        `value`: onewire id
+    """
+    devices_to_configure: dict[str, str]
+    """Mapping of the devices selected for configuration.
+
+        `key`: friendly name
+        `value`: onewire id
+    """
+    current_device: str
+    """Friendly name of the currently selected device."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the options."""
-        controller: OneWireHub = self.hass.data[DOMAIN][self.entry_id]
-        all_devices: list[OWDeviceDescription] = controller.devices  # type: ignore[assignment]
-        if not all_devices:
-            return self.async_abort(reason="No configurable devices found.")
-
         device_registry = dr.async_get(self.hass)
         self.configurable_devices = {
-            self._get_device_long_name(device_registry, device.id): device
-            for device in all_devices
-            if device.family in DEVICE_SUPPORT_OPTIONS
+            self._get_device_friendly_name(device, device.name): device.name
+            for device in dr.async_entries_for_config_entry(
+                device_registry, self.config_entry.entry_id
+            )
+            if device.name and device.name[0:2] in DEVICE_SUPPORT_OPTIONS
         }
+
+        if not self.configurable_devices:
+            return self.async_abort(reason="No configurable devices found.")
 
         return await self.async_step_device_selection(user_input=None)
 
@@ -138,16 +148,15 @@ class OnewireOptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             if user_input.get(INPUT_ENTRY_CLEAR_OPTIONS):
                 # Reset all options
-                self.options = {}
-                return self._async_update_options()
+                return self.async_create_entry(data={})
 
             selected_devices: list[str] = (
                 user_input.get(INPUT_ENTRY_DEVICE_SELECTION) or []
             )
             if selected_devices:
                 self.devices_to_configure = {
-                    device_name: self.configurable_devices[device_name]
-                    for device_name in selected_devices
+                    friendly_name: self.configurable_devices[friendly_name]
+                    for friendly_name in selected_devices
                 }
 
                 return await self.async_step_configure_device(user_input=None)
@@ -166,7 +175,10 @@ class OnewireOptionsFlowHandler(OptionsFlow):
                         default=self._get_current_configured_sensors(),
                         description="Multiselect with list of devices to choose from",
                     ): cv.multi_select(
-                        {device: False for device in self.configurable_devices}
+                        {
+                            friendly_name: False
+                            for friendly_name in self.configurable_devices
+                        }
                     ),
                 }
             ),
@@ -181,15 +193,15 @@ class OnewireOptionsFlowHandler(OptionsFlow):
             self._update_device_options(user_input)
             if self.devices_to_configure:
                 return await self.async_step_configure_device(user_input=None)
-            return self._async_update_options()
+            return self.async_create_entry(data=self.options)
 
-        self.current_device, description = self.devices_to_configure.popitem()
+        self.current_device, onewire_id = self.devices_to_configure.popitem()
         data_schema = vol.Schema(
             {
                 vol.Required(
                     OPTION_ENTRY_SENSOR_PRECISION,
                     default=self._get_current_setting(
-                        description.id, OPTION_ENTRY_SENSOR_PRECISION, "temperature"
+                        onewire_id, OPTION_ENTRY_SENSOR_PRECISION, "temperature"
                     ),
                 ): vol.In(PRECISION_MAPPING_FAMILY_28),
             }
@@ -201,19 +213,11 @@ class OnewireOptionsFlowHandler(OptionsFlow):
             description_placeholders={"sensor_id": self.current_device},
         )
 
-    @callback
-    def _async_update_options(self) -> FlowResult:
-        """Update config entry options."""
-        return self.async_create_entry(title="", data=self.options)
-
     @staticmethod
-    def _get_device_long_name(
-        device_registry: DeviceRegistry, current_device: str
-    ) -> str:
-        device = device_registry.async_get_device({(DOMAIN, current_device)})
-        if device and device.name_by_user:
-            return f"{device.name_by_user} ({current_device})"
-        return current_device
+    def _get_device_friendly_name(entry: DeviceEntry, onewire_id: str) -> str:
+        if entry.name_by_user:
+            return f"{entry.name_by_user} ({onewire_id})"
+        return onewire_id
 
     def _get_current_configured_sensors(self) -> list[str]:
         """Get current list of sensors that are configured."""
@@ -221,9 +225,9 @@ class OnewireOptionsFlowHandler(OptionsFlow):
         if not configured_sensors:
             return []
         return [
-            device_name
-            for device_name, description in self.configurable_devices.items()
-            if description.id in configured_sensors
+            friendly_name
+            for friendly_name, onewire_id in self.configurable_devices.items()
+            if onewire_id in configured_sensors
         ]
 
     def _get_current_setting(self, device_id: str, setting: str, default: Any) -> Any:
@@ -239,9 +243,9 @@ class OnewireOptionsFlowHandler(OptionsFlow):
             OPTION_ENTRY_DEVICE_OPTIONS, {}
         )
 
-        description = self.configurable_devices[self.current_device]
-        device_options: dict[str, Any] = options.setdefault(description.id, {})
-        if description.family == "28":
+        onewire_id = self.configurable_devices[self.current_device]
+        device_options: dict[str, Any] = options.setdefault(onewire_id, {})
+        if onewire_id[0:2] == "28":
             device_options[OPTION_ENTRY_SENSOR_PRECISION] = user_input[
                 OPTION_ENTRY_SENSOR_PRECISION
             ]

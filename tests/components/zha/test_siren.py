@@ -20,6 +20,7 @@ from homeassistant.components.zha.core.const import (
     WARNING_DEVICE_SOUND_MEDIUM,
 )
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
+from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
 from .common import async_enable_traffic, find_entity_id
@@ -30,7 +31,7 @@ from tests.common import async_fire_time_changed, mock_coro
 
 @pytest.fixture(autouse=True)
 def siren_platform_only():
-    """Only setup the siren and required base platforms to speed up tests."""
+    """Only set up the siren and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (
@@ -63,7 +64,7 @@ async def siren(hass, zigpy_device_mock, zha_device_joined_restored):
     return zha_device, zigpy_device.endpoints[1].ias_wd
 
 
-async def test_siren(hass, siren):
+async def test_siren(hass: HomeAssistant, siren) -> None:
     """Test zha siren platform."""
 
     zha_device, cluster = siren

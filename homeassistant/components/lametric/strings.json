@@ -44,12 +44,6 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
-  "issues": {
-    "manual_migration": {
-      "title": "Manual migration required for LaMetric",
-      "description": "The LaMetric integration has been modernized: It is now configured and set up via the user interface and the communcations are now local.\n\nUnfortunately, there is no automatic migration path possible and thus requires you to re-set up your LaMetric with Home Assistant. Please consult the Home Assistant LaMetric integration documentation on how to set it up.\n\nRemove the old LaMetric YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
-    }
-  },
   "entity": {
     "select": {
       "brightness_mode": {

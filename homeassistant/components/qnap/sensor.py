@@ -24,9 +24,9 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
     PERCENTAGE,
-    TEMP_CELSIUS,
     UnitOfDataRate,
     UnitOfInformation,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
@@ -74,7 +74,7 @@ _SYSTEM_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="system_temp",
         name="System Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
 )
@@ -82,7 +82,7 @@ _CPU_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="cpu_temp",
         name="CPU Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
@@ -144,7 +144,7 @@ _DRIVE_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="drive_temp",
         name="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
 )
@@ -319,7 +319,9 @@ class QNAPStatsAPI:
 class QNAPSensor(SensorEntity):
     """Base class for a QNAP sensor."""
 
-    def __init__(self, api, description: SensorEntityDescription, monitor_device=None):
+    def __init__(
+        self, api, description: SensorEntityDescription, monitor_device=None
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.monitor_device = monitor_device
@@ -462,7 +464,10 @@ class QNAPDriveSensor(QNAPSensor):
         """Return the name of the sensor, if any."""
         server_name = self._api.data["system_stats"]["system"]["name"]
 
-        return f"{server_name} {self.entity_description.name} (Drive {self.monitor_device})"
+        return (
+            f"{server_name} {self.entity_description.name} (Drive"
+            f" {self.monitor_device})"
+        )
 
     @property
     def extra_state_attributes(self):
@@ -506,5 +511,7 @@ class QNAPVolumeSensor(QNAPSensor):
             total_gb = int(data["total_size"]) / 1024 / 1024 / 1024
 
             return {
-                ATTR_VOLUME_SIZE: f"{round_nicely(total_gb)} {UnitOfInformation.GIBIBYTES}"
+                ATTR_VOLUME_SIZE: (
+                    f"{round_nicely(total_gb)} {UnitOfInformation.GIBIBYTES}"
+                )
             }

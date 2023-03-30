@@ -63,7 +63,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add cert-expiry entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: CertExpiryDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     sensors = [
         SSLCertificateTimestamp(coordinator),
@@ -72,7 +72,7 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-class CertExpiryEntity(CoordinatorEntity):
+class CertExpiryEntity(CoordinatorEntity[CertExpiryDataUpdateCoordinator]):
     """Defines a base Cert Expiry entity."""
 
     _attr_icon = "mdi:certificate"

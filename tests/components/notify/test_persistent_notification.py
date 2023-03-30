@@ -5,7 +5,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
-async def test_async_send_message(hass: HomeAssistant):
+async def test_async_send_message(hass: HomeAssistant) -> None:
     """Test sending a message to notify.persistent_notification service."""
     await async_setup_component(hass, pn.DOMAIN, {"core": {}})
     await async_setup_component(hass, notify.DOMAIN, {})

@@ -9,8 +9,10 @@ from homeassistant.components.rest.data import DEFAULT_TIMEOUT
 from homeassistant.components.rest.schema import DEFAULT_METHOD
 from homeassistant.components.scrape import DOMAIN
 from homeassistant.components.scrape.const import (
+    CONF_ENCODING,
     CONF_INDEX,
     CONF_SELECT,
+    DEFAULT_ENCODING,
     DEFAULT_VERIFY_SSL,
 )
 from homeassistant.const import (
@@ -75,6 +77,7 @@ async def test_form(hass: HomeAssistant, get_data: MockRestData) -> None:
         CONF_METHOD: "GET",
         CONF_VERIFY_SSL: True,
         CONF_TIMEOUT: 10.0,
+        CONF_ENCODING: "UTF-8",
         "sensor": [
             {
                 CONF_NAME: "Current version",
@@ -131,7 +134,10 @@ async def test_flow_fails(hass: HomeAssistant, get_data: MockRestData) -> None:
 
     assert result2["errors"] == {"base": "resource_error"}
 
-    with patch("homeassistant.components.rest.RestData", return_value=get_data,), patch(
+    with patch(
+        "homeassistant.components.rest.RestData",
+        return_value=get_data,
+    ), patch(
         "homeassistant.components.scrape.async_setup_entry",
         return_value=True,
     ):
@@ -162,6 +168,7 @@ async def test_flow_fails(hass: HomeAssistant, get_data: MockRestData) -> None:
         CONF_METHOD: "GET",
         CONF_VERIFY_SSL: True,
         CONF_TIMEOUT: 10.0,
+        CONF_ENCODING: "UTF-8",
         "sensor": [
             {
                 CONF_NAME: "Current version",
@@ -203,6 +210,7 @@ async def test_options_resource_flow(
                 CONF_METHOD: DEFAULT_METHOD,
                 CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
                 CONF_TIMEOUT: DEFAULT_TIMEOUT,
+                CONF_ENCODING: DEFAULT_ENCODING,
                 CONF_USERNAME: "secret_username",
                 CONF_PASSWORD: "secret_password",
             },
@@ -215,6 +223,7 @@ async def test_options_resource_flow(
         CONF_METHOD: "GET",
         CONF_VERIFY_SSL: True,
         CONF_TIMEOUT: 10.0,
+        CONF_ENCODING: "UTF-8",
         CONF_USERNAME: "secret_username",
         CONF_PASSWORD: "secret_password",
         "sensor": [
@@ -279,6 +288,7 @@ async def test_options_add_remove_sensor_flow(
         CONF_METHOD: "GET",
         CONF_VERIFY_SSL: True,
         CONF_TIMEOUT: 10,
+        CONF_ENCODING: "UTF-8",
         "sensor": [
             {
                 CONF_NAME: "Current version",
@@ -338,6 +348,7 @@ async def test_options_add_remove_sensor_flow(
         CONF_METHOD: "GET",
         CONF_VERIFY_SSL: True,
         CONF_TIMEOUT: 10,
+        CONF_ENCODING: "UTF-8",
         "sensor": [
             {
                 CONF_NAME: "Template",
@@ -404,6 +415,7 @@ async def test_options_edit_sensor_flow(
         CONF_METHOD: "GET",
         CONF_VERIFY_SSL: True,
         CONF_TIMEOUT: 10,
+        CONF_ENCODING: "UTF-8",
         "sensor": [
             {
                 CONF_NAME: "Current version",

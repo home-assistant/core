@@ -21,7 +21,10 @@ async def async_subscription_info(cloud: Cloud) -> dict[str, Any] | None:
             return await cloud_api.async_subscription_info(cloud)
     except asyncio.TimeoutError:
         _LOGGER.error(
-            "A timeout of %s was reached while trying to fetch subscription information",
+            (
+                "A timeout of %s was reached while trying to fetch subscription"
+                " information"
+            ),
             REQUEST_TIMEOUT,
         )
     except ClientError:

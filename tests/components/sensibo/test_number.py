@@ -2,11 +2,10 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from pysensibo.model import SensiboData
 import pytest
-from pytest import MonkeyPatch
 
 from homeassistant.components.number import (
     ATTR_VALUE,
@@ -24,9 +23,9 @@ from tests.common import async_fire_time_changed
 
 async def test_number(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: AsyncMock,
+    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
-    monkeypatch: MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
 ) -> None:
     """Test the Sensibo number."""
@@ -54,7 +53,7 @@ async def test_number(
 
 async def test_number_set_value(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: AsyncMock,
+    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     get_data: SensiboData,
 ) -> None:

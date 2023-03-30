@@ -19,7 +19,7 @@ from homeassistant.util.color import rgb_hex_to_rgb_list
 
 from .. import mysensors
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo, SensorType
-from .device import MySensorsDevice
+from .device import MySensorsEntity
 from .helpers import on_unload
 
 
@@ -29,7 +29,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up this platform for a specific ConfigEntry(==Gateway)."""
-    device_class_map: dict[SensorType, type[MySensorsDevice]] = {
+    device_class_map: dict[SensorType, type[MySensorsEntity]] = {
         "S_DIMMER": MySensorsLightDimmer,
         "S_RGB_LIGHT": MySensorsLightRGB,
         "S_RGBW_LIGHT": MySensorsLightRGBW,
@@ -144,9 +144,10 @@ class MySensorsLightDimmer(MySensorsLight):
         if self.assumed_state:
             self.async_write_ha_state()
 
-    async def async_update(self) -> None:
+    @callback
+    def _async_update(self) -> None:
         """Update the controller with the latest value from a sensor."""
-        await super().async_update()
+        super()._async_update()
         self._async_update_light()
         self._async_update_dimmer()
 
@@ -181,9 +182,10 @@ class MySensorsLightRGB(MySensorsLight):
             self._attr_rgb_color = new_rgb
             self._values[self.value_type] = hex_color
 
-    async def async_update(self) -> None:
+    @callback
+    def _async_update(self) -> None:
         """Update the controller with the latest value from a sensor."""
-        await super().async_update()
+        super()._async_update()
         self._async_update_light()
         self._async_update_dimmer()
         self._async_update_rgb_or_w()

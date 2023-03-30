@@ -4,17 +4,17 @@ from __future__ import annotations
 import abc
 import functools
 import logging
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any
 
+from typing_extensions import Self
 import zigpy.exceptions
 from zigpy.zcl.foundation import Status
 
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
@@ -26,8 +26,6 @@ if TYPE_CHECKING:
     from .core.channels.base import ZigbeeChannel
     from .core.device import ZHADevice
 
-
-_ZHAIdentifyButtonSelfT = TypeVar("_ZHAIdentifyButtonSelfT", bound="ZHAIdentifyButton")
 
 MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.BUTTON)
 CONFIG_DIAGNOSTIC_MATCH = functools.partial(
@@ -91,12 +89,12 @@ class ZHAIdentifyButton(ZHAButton):
 
     @classmethod
     def create_entity(
-        cls: type[_ZHAIdentifyButtonSelfT],
+        cls,
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
         **kwargs: Any,
-    ) -> _ZHAIdentifyButtonSelfT | None:
+    ) -> Self | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
@@ -186,3 +184,15 @@ class AqaraPetFeederFeedButton(ZHAAttributeButton, id_suffix="feeding"):
     _attribute_name = "feeding"
     _attr_name = "Feed"
     _attribute_value = 1
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="opple_cluster", models={"lumi.sensor_smoke.acn03"}
+)
+class AqaraSelfTestButton(ZHAAttributeButton, id_suffix="self_test"):
+    """Defines a ZHA self-test button for Aqara smoke sensors."""
+
+    _attribute_name = "self_test"
+    _attr_name = "Self-test"
+    _attribute_value = 1
+    _attr_entity_category = EntityCategory.CONFIG

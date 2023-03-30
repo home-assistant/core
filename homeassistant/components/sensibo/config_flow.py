@@ -82,7 +82,6 @@ class SensiboConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input:
-
             api_key = user_input[CONF_API_KEY]
             try:
                 username = await async_validate_api(self.hass, api_key)

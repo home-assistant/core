@@ -97,9 +97,11 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         await controller.remove_pairing(hkid)
     except aiohomekit.AccessoryDisconnectedError:
         _LOGGER.warning(
-            "Accessory %s was removed from HomeAssistant but was not reachable "
-            "to properly unpair. It may need resetting before you can use it with "
-            "HomeKit again",
+            (
+                "Accessory %s was removed from HomeAssistant but was not reachable "
+                "to properly unpair. It may need resetting before you can use it with "
+                "HomeKit again"
+            ),
             entry.title,
         )
 

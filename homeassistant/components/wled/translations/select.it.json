@@ -1,9 +1,0 @@
-{
-    "state": {
-        "wled__live_override": {
-            "0": "Spento",
-            "1": "Acceso",
-            "2": "Fino al riavvio del dispositivo"
-        }
-    }
-}

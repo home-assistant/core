@@ -1,8 +1,8 @@
 {
   "domain": "eliqonline",
   "name": "Eliqonline",
-  "documentation": "https://www.home-assistant.io/integrations/eliqonline",
-  "requirements": ["eliqonline==1.2.2"],
   "codeowners": [],
-  "iot_class": "cloud_polling"
+  "documentation": "https://www.home-assistant.io/integrations/eliqonline",
+  "iot_class": "cloud_polling",
+  "requirements": ["eliqonline==1.2.2"]
 }

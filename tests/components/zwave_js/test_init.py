@@ -35,7 +35,7 @@ def connect_timeout_fixture():
         yield timeout
 
 
-async def test_entry_setup_unload(hass, client, integration):
+async def test_entry_setup_unload(hass: HomeAssistant, client, integration) -> None:
     """Test the integration set up and unload."""
     entry = integration
 
@@ -48,14 +48,16 @@ async def test_entry_setup_unload(hass, client, integration):
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_home_assistant_stop(hass, client, integration):
+async def test_home_assistant_stop(hass: HomeAssistant, client, integration) -> None:
     """Test we clean up on home assistant stop."""
     await hass.async_stop()
 
     assert client.disconnect.call_count == 1
 
 
-async def test_initialized_timeout(hass, client, connect_timeout):
+async def test_initialized_timeout(
+    hass: HomeAssistant, client, connect_timeout
+) -> None:
     """Test we handle a timeout during client initialization."""
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
@@ -66,7 +68,7 @@ async def test_initialized_timeout(hass, client, connect_timeout):
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_enabled_statistics(hass, client):
+async def test_enabled_statistics(hass: HomeAssistant, client) -> None:
     """Test that we enabled statistics if the entry is opted in."""
     entry = MockConfigEntry(
         domain="zwave_js",
@@ -82,7 +84,7 @@ async def test_enabled_statistics(hass, client):
         assert mock_cmd.called
 
 
-async def test_disabled_statistics(hass, client):
+async def test_disabled_statistics(hass: HomeAssistant, client) -> None:
     """Test that we diisabled statistics if the entry is opted out."""
     entry = MockConfigEntry(
         domain="zwave_js",
@@ -98,7 +100,7 @@ async def test_disabled_statistics(hass, client):
         assert mock_cmd.called
 
 
-async def test_noop_statistics(hass, client):
+async def test_noop_statistics(hass: HomeAssistant, client) -> None:
     """Test that we don't make any statistics calls if user hasn't provided preference."""
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
@@ -115,7 +117,7 @@ async def test_noop_statistics(hass, client):
 
 
 @pytest.mark.parametrize("error", [BaseZwaveJSServerError("Boom"), Exception("Boom")])
-async def test_listen_failure(hass, client, error):
+async def test_listen_failure(hass: HomeAssistant, client, error) -> None:
     """Test we handle errors during client listen."""
 
     async def listen(driver_ready):
@@ -134,7 +136,9 @@ async def test_listen_failure(hass, client, error):
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_new_entity_on_value_added(hass, multisensor_6, client, integration):
+async def test_new_entity_on_value_added(
+    hass: HomeAssistant, multisensor_6, client, integration
+) -> None:
     """Test we create a new entity if a value is added after the fact."""
     node: Node = multisensor_6
 
@@ -167,7 +171,9 @@ async def test_new_entity_on_value_added(hass, multisensor_6, client, integratio
     assert hass.states.get("sensor.multisensor_6_ultraviolet_10") is not None
 
 
-async def test_on_node_added_ready(hass, multisensor_6_state, client, integration):
+async def test_on_node_added_ready(
+    hass: HomeAssistant, multisensor_6_state, client, integration
+) -> None:
     """Test we handle a node added event with a ready node."""
     dev_reg = dr.async_get(hass)
     node = Node(client, deepcopy(multisensor_6_state))
@@ -192,8 +198,8 @@ async def test_on_node_added_ready(hass, multisensor_6_state, client, integratio
 
 
 async def test_on_node_added_not_ready(
-    hass, zp3111_not_ready_state, client, integration
-):
+    hass: HomeAssistant, zp3111_not_ready_state, client, integration
+) -> None:
     """Test we handle a node added event with a non-ready node."""
     dev_reg = dr.async_get(hass)
     device_id = f"{client.driver.controller.home_id}-{zp3111_not_ready_state['nodeId']}"
@@ -225,7 +231,9 @@ async def test_on_node_added_not_ready(
     assert len(device.identifiers) == 1
 
 
-async def test_existing_node_ready(hass, client, multisensor_6, integration):
+async def test_existing_node_ready(
+    hass: HomeAssistant, client, multisensor_6, integration
+) -> None:
     """Test we handle a ready node that exists during integration setup."""
     dev_reg = dr.async_get(hass)
     node = multisensor_6
@@ -302,7 +310,9 @@ async def test_existing_node_reinterview(
     assert device.sw_version == "1.13"
 
 
-async def test_existing_node_not_ready(hass, zp3111_not_ready, client, integration):
+async def test_existing_node_not_ready(
+    hass: HomeAssistant, zp3111_not_ready, client, integration
+) -> None:
     """Test we handle a non-ready node that exists during integration setup."""
     dev_reg = dr.async_get(hass)
     node = zp3111_not_ready
@@ -324,8 +334,13 @@ async def test_existing_node_not_ready(hass, zp3111_not_ready, client, integrati
 
 
 async def test_existing_node_not_replaced_when_not_ready(
-    hass, zp3111, zp3111_not_ready_state, zp3111_state, client, integration
-):
+    hass: HomeAssistant,
+    zp3111,
+    zp3111_not_ready_state,
+    zp3111_state,
+    client,
+    integration,
+) -> None:
     """Test when a node added event with a non-ready node is received.
 
     The existing node should not be replaced, and no customization should be lost.
@@ -442,15 +457,22 @@ async def test_existing_node_not_replaced_when_not_ready(
     assert state.name == "Custom Entity Name"
 
 
-async def test_null_name(hass, client, null_name_check, integration):
+async def test_null_name(
+    hass: HomeAssistant, client, null_name_check, integration
+) -> None:
     """Test that node without a name gets a generic node name."""
     node = null_name_check
     assert hass.states.get(f"switch.node_{node.node_id}")
 
 
 async def test_start_addon(
-    hass, addon_installed, install_addon, addon_options, set_addon_options, start_addon
-):
+    hass: HomeAssistant,
+    addon_installed,
+    install_addon,
+    addon_options,
+    set_addon_options,
+    start_addon,
+) -> None:
     """Test start the Z-Wave JS add-on during entry setup."""
     device = "/test"
     s0_legacy_key = "s0_legacy"
@@ -492,13 +514,13 @@ async def test_start_addon(
 
 
 async def test_install_addon(
-    hass,
+    hass: HomeAssistant,
     addon_not_installed,
     install_addon,
     addon_options,
     set_addon_options,
     start_addon,
-):
+) -> None:
     """Test install and start the Z-Wave JS add-on during entry setup."""
     device = "/test"
     s0_legacy_key = "s0_legacy"
@@ -542,13 +564,13 @@ async def test_install_addon(
 
 @pytest.mark.parametrize("addon_info_side_effect", [HassioAPIError("Boom")])
 async def test_addon_info_failure(
-    hass,
+    hass: HomeAssistant,
     addon_installed,
     install_addon,
     addon_options,
     set_addon_options,
     start_addon,
-):
+) -> None:
     """Test failure to get add-on info for Z-Wave JS add-on during entry setup."""
     device = "/test"
     network_key = "abc123"
@@ -569,11 +591,16 @@ async def test_addon_info_failure(
 
 @pytest.mark.parametrize(
     (
-        "old_device, new_device, "
-        "old_s0_legacy_key, new_s0_legacy_key, "
-        "old_s2_access_control_key, new_s2_access_control_key, "
-        "old_s2_authenticated_key, new_s2_authenticated_key, "
-        "old_s2_unauthenticated_key, new_s2_unauthenticated_key"
+        "old_device",
+        "new_device",
+        "old_s0_legacy_key",
+        "new_s0_legacy_key",
+        "old_s2_access_control_key",
+        "new_s2_access_control_key",
+        "old_s2_authenticated_key",
+        "new_s2_authenticated_key",
+        "old_s2_unauthenticated_key",
+        "new_s2_unauthenticated_key",
     ),
     [
         (
@@ -591,7 +618,7 @@ async def test_addon_info_failure(
     ],
 )
 async def test_addon_options_changed(
-    hass,
+    hass: HomeAssistant,
     client,
     addon_installed,
     addon_running,
@@ -608,7 +635,7 @@ async def test_addon_options_changed(
     new_s2_authenticated_key,
     old_s2_unauthenticated_key,
     new_s2_unauthenticated_key,
-):
+) -> None:
     """Test update config entry data on entry setup if add-on options changed."""
     addon_options["device"] = new_device
     addon_options["s0_legacy_key"] = new_s0_legacy_key
@@ -644,8 +671,14 @@ async def test_addon_options_changed(
 
 
 @pytest.mark.parametrize(
-    "addon_version, update_available, update_calls, backup_calls, "
-    "update_addon_side_effect, create_backup_side_effect",
+    (
+        "addon_version",
+        "update_available",
+        "update_calls",
+        "backup_calls",
+        "update_addon_side_effect",
+        "create_backup_side_effect",
+    ),
     [
         ("1.0.0", True, 1, 1, None, None),
         ("1.0.0", False, 0, 0, None, None),
@@ -654,7 +687,7 @@ async def test_addon_options_changed(
     ],
 )
 async def test_update_addon(
-    hass,
+    hass: HomeAssistant,
     client,
     addon_info,
     addon_installed,
@@ -669,7 +702,7 @@ async def test_update_addon(
     update_addon_side_effect,
     create_backup_side_effect,
     version_state,
-):
+) -> None:
     """Test update the Z-Wave JS add-on during entry setup."""
     device = "/test"
     network_key = "abc123"
@@ -702,7 +735,7 @@ async def test_update_addon(
     assert update_addon.call_count == update_calls
 
 
-async def test_issue_registry(hass, client, version_state):
+async def test_issue_registry(hass: HomeAssistant, client, version_state) -> None:
     """Test issue registry."""
     device = "/test"
     network_key = "abc123"
@@ -744,14 +777,14 @@ async def test_issue_registry(hass, client, version_state):
 
 
 @pytest.mark.parametrize(
-    "stop_addon_side_effect, entry_state",
+    ("stop_addon_side_effect", "entry_state"),
     [
         (None, ConfigEntryState.NOT_LOADED),
         (HassioAPIError("Boom"), ConfigEntryState.LOADED),
     ],
 )
 async def test_stop_addon(
-    hass,
+    hass: HomeAssistant,
     client,
     addon_installed,
     addon_running,
@@ -759,7 +792,7 @@ async def test_stop_addon(
     stop_addon,
     stop_addon_side_effect,
     entry_state,
-):
+) -> None:
     """Test stop the Z-Wave JS add-on on entry unload if entry is disabled."""
     stop_addon.side_effect = stop_addon_side_effect
     device = "/test"
@@ -794,8 +827,13 @@ async def test_stop_addon(
 
 
 async def test_remove_entry(
-    hass, addon_installed, stop_addon, create_backup, uninstall_addon, caplog
-):
+    hass: HomeAssistant,
+    addon_installed,
+    stop_addon,
+    create_backup,
+    uninstall_addon,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test remove the config entry."""
     # test successful remove without created add-on
     entry = MockConfigEntry(
@@ -905,8 +943,12 @@ async def test_remove_entry(
 
 
 async def test_removed_device(
-    hass, client, climate_radio_thermostat_ct100_plus, lock_schlage_be469, integration
-):
+    hass: HomeAssistant,
+    client,
+    climate_radio_thermostat_ct100_plus,
+    lock_schlage_be469,
+    integration,
+) -> None:
     """Test that the device registry gets updated when a device gets removed."""
     driver = client.driver
     assert driver
@@ -937,7 +979,7 @@ async def test_removed_device(
     assert dev_reg.async_get_device({get_device_id(driver, old_node)}) is None
 
 
-async def test_suggested_area(hass, client, eaton_rf9640_dimmer):
+async def test_suggested_area(hass: HomeAssistant, client, eaton_rf9640_dimmer) -> None:
     """Test that suggested area works."""
     dev_reg = dr.async_get(hass)
     ent_reg = er.async_get(hass)
@@ -951,7 +993,9 @@ async def test_suggested_area(hass, client, eaton_rf9640_dimmer):
     assert dev_reg.async_get(entity.device_id).area_id is not None
 
 
-async def test_node_removed(hass, multisensor_6_state, client, integration):
+async def test_node_removed(
+    hass: HomeAssistant, multisensor_6_state, client, integration
+) -> None:
     """Test that device gets removed when node gets removed."""
     dev_reg = dr.async_get(hass)
     node = Node(client, deepcopy(multisensor_6_state))
@@ -977,8 +1021,8 @@ async def test_node_removed(hass, multisensor_6_state, client, integration):
 
 
 async def test_replace_same_node(
-    hass, multisensor_6, multisensor_6_state, client, integration
-):
+    hass: HomeAssistant, multisensor_6, multisensor_6_state, client, integration
+) -> None:
     """Test when a node is replaced with itself that the device remains."""
     dev_reg = dr.async_get(hass)
     node_id = multisensor_6.node_id
@@ -1083,13 +1127,13 @@ async def test_replace_same_node(
 
 
 async def test_replace_different_node(
-    hass,
+    hass: HomeAssistant,
     multisensor_6,
     multisensor_6_state,
     hank_binary_switch_state,
     client,
     integration,
-):
+) -> None:
     """Test when a node is replaced with a different node."""
     dev_reg = dr.async_get(hass)
     node_id = multisensor_6.node_id
@@ -1201,7 +1245,9 @@ async def test_replace_different_node(
     assert hass.states.get("switch.smart_plug_with_two_usb_ports")
 
 
-async def test_node_model_change(hass, zp3111, client, integration):
+async def test_node_model_change(
+    hass: HomeAssistant, zp3111, client, integration
+) -> None:
     """Test when a node's model is changed due to an updated device config file.
 
     The device and entities should not be removed.
@@ -1284,8 +1330,8 @@ async def test_node_model_change(hass, zp3111, client, integration):
 
 
 async def test_disabled_node_status_entity_on_node_replaced(
-    hass, zp3111_state, zp3111, client, integration
-):
+    hass: HomeAssistant, zp3111_state, zp3111, client, integration
+) -> None:
     """Test that when a node replacement event is received the node status sensor is removed."""
     node_status_entity = "sensor.4_in_1_sensor_node_status"
     state = hass.states.get(node_status_entity)
@@ -1309,7 +1355,9 @@ async def test_disabled_node_status_entity_on_node_replaced(
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_disabled_entity_on_value_removed(hass, zp3111, client, integration):
+async def test_disabled_entity_on_value_removed(
+    hass: HomeAssistant, zp3111, client, integration
+) -> None:
     """Test that when entity primary values are removed the entity is removed."""
     er_reg = er.async_get(hass)
 

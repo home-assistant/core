@@ -59,7 +59,7 @@ CONF_EXPIRE_AFTER = "expire_after"
 
 PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
     {
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
         vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
         vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -69,7 +69,8 @@ PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-# Configuring MQTT Binary sensors under the binary_sensor platform key was deprecated in HA Core 2022.6
+# Configuring MQTT Binary sensors under the binary_sensor platform key was deprecated in
+# HA Core 2022.6
 # Setup for the legacy YAML format was removed in HA Core 2022.12
 PLATFORM_SCHEMA = vol.All(
     warn_for_legacy_schema(binary_sensor.DOMAIN),
@@ -83,7 +84,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT binary sensor through configuration.yaml and dynamically through MQTT discovery."""
+    """Set up MQTT binary sensor through YAML and through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -145,7 +146,10 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
                 self.hass, self._value_is_expired, expiration_at
             )
             _LOGGER.debug(
-                "State recovered after reload for %s, remaining time before expiring %s",
+                (
+                    "State recovered after reload for %s, remaining time before"
+                    " expiring %s"
+                ),
                 self.entity_id,
                 expiration_at - time_now,
             )
@@ -196,7 +200,6 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
             """Handle a new received MQTT state message."""
             # auto-expire enabled?
             if self._expire_after:
-
                 # When expire_after is set, and we receive a message, assume device is
                 # not expired since it has to be to receive the message
                 self._expired = False
@@ -215,7 +218,10 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
             payload = self._value_template(msg.payload)
             if not payload.strip():  # No output from template, ignore
                 _LOGGER.debug(
-                    "Empty template output for entity: %s with state topic: %s. Payload: '%s', with value template '%s'",
+                    (
+                        "Empty template output for entity: %s with state topic: %s."
+                        " Payload: '%s', with value template '%s'"
+                    ),
                     self._config[CONF_NAME],
                     self._config[CONF_STATE_TOPIC],
                     msg.payload,
@@ -232,9 +238,15 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
             else:  # Payload is not for this entity
                 template_info = ""
                 if self._config.get(CONF_VALUE_TEMPLATE) is not None:
-                    template_info = f", template output: '{str(payload)}', with value template '{str(self._config.get(CONF_VALUE_TEMPLATE))}'"
+                    template_info = (
+                        f", template output: '{str(payload)}', with value template"
+                        f" '{str(self._config.get(CONF_VALUE_TEMPLATE))}'"
+                    )
                 _LOGGER.info(
-                    "No matching payload found for entity: %s with state topic: %s. Payload: '%s'%s",
+                    (
+                        "No matching payload found for entity: %s with state topic: %s."
+                        " Payload: '%s'%s"
+                    ),
                     self._config[CONF_NAME],
                     self._config[CONF_STATE_TOPIC],
                     msg.payload,

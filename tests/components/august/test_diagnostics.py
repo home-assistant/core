@@ -1,4 +1,5 @@
 """Test august diagnostics."""
+from homeassistant.core import HomeAssistant
 
 from .mocks import (
     _create_august_api_with_devices,
@@ -7,9 +8,12 @@ from .mocks import (
 )
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
-async def test_diagnostics(hass, hass_client):
+async def test_diagnostics(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test generating diagnostics for a config entry."""
     lock_one = await _mock_lock_from_fixture(
         hass, "get_lock.online_with_doorsense.json"
@@ -75,7 +79,7 @@ async def test_diagnostics(hass, hass_client):
                     "doorbell_low_battery": False,
                     "ip_addr": "10.0.1.11",
                     "link_quality": 54,
-                    "load_average": "0.50 0.47 0.35 " "1/154 9345",
+                    "load_average": "0.50 0.47 0.35 1/154 9345",
                     "signal_level": -56,
                     "steady_ac_in": 22.196405,
                     "temperature": 28.25,

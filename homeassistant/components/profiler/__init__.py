@@ -1,6 +1,8 @@
 """The profiler integration."""
 import asyncio
+from contextlib import suppress
 from datetime import timedelta
+from functools import _lru_cache_wrapper
 import logging
 import reprlib
 import sys
@@ -9,12 +11,14 @@ import time
 import traceback
 from typing import Any, cast
 
+from lru import LRU  # pylint: disable=no-name-in-module
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TYPE
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import async_register_admin_service
@@ -26,9 +30,22 @@ SERVICE_MEMORY = "memory"
 SERVICE_START_LOG_OBJECTS = "start_log_objects"
 SERVICE_STOP_LOG_OBJECTS = "stop_log_objects"
 SERVICE_DUMP_LOG_OBJECTS = "dump_log_objects"
+SERVICE_LRU_STATS = "lru_stats"
 SERVICE_LOG_THREAD_FRAMES = "log_thread_frames"
 SERVICE_LOG_EVENT_LOOP_SCHEDULED = "log_event_loop_scheduled"
 
+_LRU_CACHE_WRAPPER_OBJECT = _lru_cache_wrapper.__name__
+_SQLALCHEMY_LRU_OBJECT = "LRUCache"
+
+_KNOWN_LRU_CLASSES = (
+    "EventDataManager",
+    "EventTypeManager",
+    "StatesMetaManager",
+    "StateAttributesManager",
+    "StatisticsMetaManager",
+    "DomainData",
+    "IntegrationMatcher",
+)
 
 SERVICES = (
     SERVICE_START,
@@ -36,6 +53,7 @@ SERVICES = (
     SERVICE_START_LOG_OBJECTS,
     SERVICE_STOP_LOG_OBJECTS,
     SERVICE_DUMP_LOG_OBJECTS,
+    SERVICE_LRU_STATS,
     SERVICE_LOG_THREAD_FRAMES,
     SERVICE_LOG_EVENT_LOOP_SCHEDULED,
 )
@@ -46,10 +64,13 @@ CONF_SECONDS = "seconds"
 
 LOG_INTERVAL_SUB = "log_interval_subscription"
 
+
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(  # noqa: C901
+    hass: HomeAssistant, entry: ConfigEntry
+) -> bool:
     """Set up Profiler from a config entry."""
     lock = asyncio.Lock()
     domain_data = hass.data[DOMAIN] = {}
@@ -68,7 +89,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         persistent_notification.async_create(
             hass,
-            "Object growth logging has started. See [the logs](/config/logs) to track the growth of new objects.",
+            (
+                "Object growth logging has started. See [the logs](/config/logs) to"
+                " track the growth of new objects."
+            ),
             title="Object growth logging started",
             notification_id="profile_object_logging",
         )
@@ -111,9 +135,65 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         persistent_notification.create(
             hass,
-            f"Objects with type {obj_type} have been dumped to the log. See [the logs](/config/logs) to review the repr of the objects.",
+            (
+                f"Objects with type {obj_type} have been dumped to the log. See [the"
+                " logs](/config/logs) to review the repr of the objects."
+            ),
             title="Object dump completed",
             notification_id="profile_object_dump",
+        )
+
+    def _get_function_absfile(func: Any) -> str:
+        """Get the absolute file path of a function."""
+        import inspect  # pylint: disable=import-outside-toplevel
+
+        abs_file = "unknown"
+        with suppress(Exception):
+            abs_file = inspect.getabsfile(func)
+        return abs_file
+
+    def _lru_stats(call: ServiceCall) -> None:
+        """Log the stats of all lru caches."""
+        # Imports deferred to avoid loading modules
+        # in memory since usually only one part of this
+        # integration is used at a time
+        import objgraph  # pylint: disable=import-outside-toplevel
+
+        for lru in objgraph.by_type(_LRU_CACHE_WRAPPER_OBJECT):
+            lru = cast(_lru_cache_wrapper, lru)
+            _LOGGER.critical(
+                "Cache stats for lru_cache %s at %s: %s",
+                lru.__wrapped__,
+                _get_function_absfile(lru.__wrapped__),
+                lru.cache_info(),
+            )
+
+        for _class in _KNOWN_LRU_CLASSES:
+            for class_with_lru_attr in objgraph.by_type(_class):
+                for maybe_lru in class_with_lru_attr.__dict__.values():
+                    if isinstance(maybe_lru, LRU):
+                        _LOGGER.critical(
+                            "Cache stats for LRU %s at %s: %s",
+                            type(class_with_lru_attr),
+                            _get_function_absfile(class_with_lru_attr),
+                            maybe_lru.get_stats(),
+                        )
+
+        for lru in objgraph.by_type(_SQLALCHEMY_LRU_OBJECT):
+            if (data := getattr(lru, "_data", None)) and isinstance(data, dict):
+                for key, value in dict(data).items():
+                    _LOGGER.critical(
+                        "Cache data for sqlalchemy LRUCache %s: %s: %s", lru, key, value
+                    )
+
+        persistent_notification.create(
+            hass,
+            (
+                "LRU cache states have been dumped to the log. See [the"
+                " logs](/config/logs) to review the stats."
+            ),
+            title="LRU stats completed",
+            notification_id="profile_lru_stats",
         )
 
     async def _async_dump_thread_frames(call: ServiceCall) -> None:
@@ -198,6 +278,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async_register_admin_service(
         hass,
         DOMAIN,
+        SERVICE_LRU_STATS,
+        _lru_stats,
+    )
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
         SERVICE_LOG_THREAD_FRAMES,
         _async_dump_thread_frames,
     )
@@ -231,7 +318,10 @@ async def _async_generate_profile(hass: HomeAssistant, call: ServiceCall):
     start_time = int(time.time() * 1000000)
     persistent_notification.async_create(
         hass,
-        "The profile has started. This notification will be updated when it is complete.",
+        (
+            "The profile has started. This notification will be updated when it is"
+            " complete."
+        ),
         title="Profile Started",
         notification_id=f"profiler_{start_time}",
     )
@@ -247,7 +337,10 @@ async def _async_generate_profile(hass: HomeAssistant, call: ServiceCall):
     )
     persistent_notification.async_create(
         hass,
-        f"Wrote cProfile data to {cprofile_path} and callgrind data to {callgrind_path}",
+        (
+            f"Wrote cProfile data to {cprofile_path} and callgrind data to"
+            f" {callgrind_path}"
+        ),
         title="Profile Complete",
         notification_id=f"profiler_{start_time}",
     )
@@ -257,12 +350,20 @@ async def _async_generate_memory_profile(hass: HomeAssistant, call: ServiceCall)
     # Imports deferred to avoid loading modules
     # in memory since usually only one part of this
     # integration is used at a time
+    if sys.version_info >= (3, 11):
+        raise HomeAssistantError(
+            "Memory profiling is not supported on Python 3.11. Please use Python 3.10."
+        )
+
     from guppy import hpy  # pylint: disable=import-outside-toplevel
 
     start_time = int(time.time() * 1000000)
     persistent_notification.async_create(
         hass,
-        "The memory profile has started. This notification will be updated when it is complete.",
+        (
+            "The memory profile has started. This notification will be updated when it"
+            " is complete."
+        ),
         title="Profile Started",
         notification_id=f"memory_profiler_{start_time}",
     )
@@ -302,4 +403,4 @@ def _log_objects(*_):
     # integration is used at a time
     import objgraph  # pylint: disable=import-outside-toplevel
 
-    _LOGGER.critical("Memory Growth: %s", objgraph.growth(limit=100))
+    _LOGGER.critical("Memory Growth: %s", objgraph.growth(limit=1000))

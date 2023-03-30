@@ -11,9 +11,9 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
     STATE_UNAVAILABLE,
+    UnitOfEnergy,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -28,7 +28,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 async def test_sensor_readings(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-):
+) -> None:
     """Test for successfully setting up the Efergy platform."""
     for description in SENSOR_TYPES:
         description.entity_registry_enabled_default = True
@@ -38,7 +38,7 @@ async def test_sensor_readings(
     state = hass.states.get("sensor.power_usage")
     assert state.state == "1580"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     state = hass.states.get("sensor.energy_budget")
     assert state.state == "ok"
@@ -48,22 +48,22 @@ async def test_sensor_readings(
     state = hass.states.get("sensor.daily_consumption")
     assert state.state == "38.21"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
     state = hass.states.get("sensor.weekly_consumption")
     assert state.state == "267.47"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
     state = hass.states.get("sensor.monthly_consumption")
     assert state.state == "1069.88"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
     state = hass.states.get("sensor.yearly_consumption")
     assert state.state == "13373.50"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
     state = hass.states.get("sensor.daily_energy_cost")
     assert state.state == "5.27"
@@ -93,13 +93,13 @@ async def test_sensor_readings(
     state = hass.states.get("sensor.power_usage_728386")
     assert state.state == "1628"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
 
 async def test_multi_sensor_readings(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-):
+) -> None:
     """Test for multiple sensors in one household."""
     for description in SENSOR_TYPES:
         description.entity_registry_enabled_default = True
@@ -107,23 +107,23 @@ async def test_multi_sensor_readings(
     state = hass.states.get("sensor.power_usage_728386")
     assert state.state == "218"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     state = hass.states.get("sensor.power_usage_0")
     assert state.state == "1808"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     state = hass.states.get("sensor.power_usage_728387")
     assert state.state == "312"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
 
 async def test_failed_update_and_reconnection(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-):
+) -> None:
     """Test failed update and reconnection."""
     await setup_platform(hass, aioclient_mock, SENSOR_DOMAIN)
     assert hass.states.get("sensor.power_usage").state == "1580"

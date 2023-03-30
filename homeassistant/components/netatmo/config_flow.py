@@ -10,7 +10,7 @@ from pyatmo.const import ALL_SCOPES
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_SHOW_ON_MAP
+from homeassistant.const import CONF_SHOW_ON_MAP, CONF_UUID
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
@@ -23,7 +23,6 @@ from .const import (
     CONF_LON_SW,
     CONF_NEW_AREA,
     CONF_PUBLIC_MODE,
-    CONF_UUID,
     CONF_WEATHER_AREAS,
     DOMAIN,
 )

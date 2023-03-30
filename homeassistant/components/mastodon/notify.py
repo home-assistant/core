@@ -1,5 +1,7 @@
 """Mastodon platform for notify component."""
-import logging
+from __future__ import annotations
+
+from typing import Any
 
 from mastodon import Mastodon
 from mastodon.Mastodon import MastodonAPIError, MastodonUnauthorizedError
@@ -7,13 +9,11 @@ import voluptuous as vol
 
 from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-_LOGGER = logging.getLogger(__name__)
-
-CONF_BASE_URL = "base_url"
-
-DEFAULT_URL = "https://mastodon.social"
+from .const import CONF_BASE_URL, DEFAULT_URL, LOGGER
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -25,7 +25,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> MastodonNotificationService | None:
     """Get the Mastodon notification service."""
     client_id = config.get(CONF_CLIENT_ID)
     client_secret = config.get(CONF_CLIENT_SECRET)
@@ -41,7 +45,7 @@ def get_service(hass, config, discovery_info=None):
         )
         mastodon.account_verify_credentials()
     except MastodonUnauthorizedError:
-        _LOGGER.warning("Authentication failed")
+        LOGGER.warning("Authentication failed")
         return None
 
     return MastodonNotificationService(mastodon)
@@ -50,13 +54,13 @@ def get_service(hass, config, discovery_info=None):
 class MastodonNotificationService(BaseNotificationService):
     """Implement the notification service for Mastodon."""
 
-    def __init__(self, api):
+    def __init__(self, api: Mastodon) -> None:
         """Initialize the service."""
         self._api = api
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
         try:
             self._api.toot(message)
         except MastodonAPIError:
-            _LOGGER.error("Unable to send message")
+            LOGGER.error("Unable to send message")
