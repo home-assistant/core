@@ -278,6 +278,20 @@ async def test_all_day_event(
     assert await response.json() == expected_response
 
 
+async def test_create_task_service_call(hass: HomeAssistant, api: AsyncMock) -> None:
+    """Test api is called correctly after a new task service call."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_NEW_TASK,
+        {ASSIGNEE: "user", CONTENT: "task", LABELS: ["Label1"], PROJECT_NAME: "Name"},
+    )
+    await hass.async_block_till_done()
+
+    api.add_task.assert_called_with(
+        "task", project_id="12345", labels=["Label1"], assignee_id="1"
+    )
+
+
 @pytest.mark.parametrize(
     ("due"),
     [
@@ -373,17 +387,3 @@ async def test_task_due_datetime(
     )
     assert response.status == HTTPStatus.OK
     assert await response.json() == []
-
-
-async def test_create_task_service_call(hass: HomeAssistant, api: AsyncMock) -> None:
-    """Test api is called correctly after a new task service call."""
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_NEW_TASK,
-        {ASSIGNEE: "user", CONTENT: "task", LABELS: ["Label1"], PROJECT_NAME: "Name"},
-    )
-    await hass.async_block_till_done()
-
-    api.add_task.assert_called_with(
-        "task", project_id="12345", labels=["Label1"], assignee_id="1"
-    )
