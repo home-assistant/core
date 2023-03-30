@@ -19,6 +19,10 @@
     "insecure_thread_network": {
       "title": "Insecure Thread network settings detected",
       "description": "Your Thread network is using a default network key or pass phrase.\n\nThis is a security risk, please create a new Thread network."
+    },
+    "otbr_zha_channel_collision": {
+      "title": "OTBR and ZHA are sharing radio but attempting to use different channels",
+      "description": "When OTBR and ZHA are sharing the radio, they must connect to networks on the same channel.\n\nOTBR is configured with a Thread network on channel {otbr_channel}, ZHA is configured with a Zigbee network on channel {zha_channel}."
     }
   }
 }

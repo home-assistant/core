@@ -22,6 +22,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import websocket_api
 from .const import DOMAIN
+from .util import get_allowed_channel
 
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
@@ -95,6 +96,52 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+async def _warn_on_channel_collision(
+    hass: HomeAssistant, entry: ConfigEntry, dataset_tlvs: bytes, otbrdata: OTBRData
+) -> None:
+    """Warn user if OTBR and ZHA attempt to use different channels."""
+
+    def delete_issue() -> None:
+        ir.async_delete_issue(
+            hass,
+            DOMAIN,
+            f"otbr_zha_channel_collision_{entry.entry_id}",
+        )
+
+    if (allowed_channel := await get_allowed_channel(hass, otbrdata.url)) is None:
+        delete_issue()
+        return
+
+    dataset = tlv_parser.parse_tlv(dataset_tlvs.hex())
+
+    if (channel_s := dataset.get(tlv_parser.MeshcopTLVType.CHANNEL)) is None:
+        delete_issue()
+        return
+    try:
+        channel = int(channel_s, 16)
+    except ValueError:
+        delete_issue()
+        return
+
+    if channel == allowed_channel:
+        delete_issue()
+        return
+
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"otbr_zha_channel_collision_{entry.entry_id}",
+        is_fixable=False,
+        is_persistent=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="otbr_zha_channel_collision",
+        translation_placeholders={
+            "otbr_channel": str(channel),
+            "zha_channel": str(allowed_channel),
+        },
+    )
+
+
 def _warn_on_default_network_settings(
     hass: HomeAssistant, entry: ConfigEntry, dataset_tlvs: bytes
 ) -> None:
@@ -152,6 +199,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ) as err:
         raise ConfigEntryNotReady("Unable to connect") from err
     if dataset_tlvs:
+        await _warn_on_channel_collision(hass, entry, dataset_tlvs, otbrdata)
         _warn_on_default_network_settings(hass, entry, dataset_tlvs)
         await async_add_dataset(hass, DOMAIN, dataset_tlvs.hex())
 
