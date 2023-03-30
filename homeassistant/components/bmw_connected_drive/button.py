@@ -64,13 +64,17 @@ BUTTON_TYPES: tuple[BMWButtonEntityDescription, ...] = (
         key="toggle_immediate_charging_profile",
         icon="mdi:car-electric",
         name="Toggle immediate charging profile",
-        remote_function=lambda vehicle: vehicle.remote_services.trigger_charging_profile_update(ChargingMode.IMMEDIATE_CHARGING),
+        remote_function=lambda vehicle: vehicle.remote_services.trigger_charging_profile_update(
+            ChargingMode.IMMEDIATE_CHARGING
+        ),
     ),
     BMWButtonEntityDescription(
         key="toggle_delayed_charging_charging_profile",
         icon="mdi:car-clock",
         name="Toggle delayed charging profile",
-        remote_function=lambda vehicle: vehicle.remote_services.trigger_charging_profile_update(ChargingMode.DELAYED_CHARGING),
+        remote_function=lambda vehicle: vehicle.remote_services.trigger_charging_profile_update(
+            ChargingMode.DELAYED_CHARGING
+        ),
     ),
     BMWButtonEntityDescription(
         key="find_vehicle",
