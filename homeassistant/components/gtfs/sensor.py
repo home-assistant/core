@@ -8,6 +8,7 @@ import threading
 from typing import Any
 
 import pygtfs
+import pytz
 from sqlalchemy.sql import text
 import voluptuous as vol
 
@@ -610,14 +611,6 @@ class GTFSDepartureSensor(SensorEntity):
                 self._include_tomorrow,
             )
 
-            # Define the state as a UTC timestamp with ISO 8601 format
-            if not self._departure:
-                self._state = None
-            else:
-                self._state = self._departure["departure_time"].replace(
-                    tzinfo=dt_util.UTC
-                )
-
             # Fetch trip and route details once, unless updated
             if not self._departure:
                 self._trip = None
@@ -648,6 +641,19 @@ class GTFSDepartureSensor(SensorEntity):
                     )
                     self._agency = False
 
+            # Define the state as a UTC timestamp with ISO 8601 format
+            if not self._departure:
+                self._state = None
+            else:
+                if self._agency:
+                    self._state = self._departure["departure_time"].astimezone(
+                        pytz.timezone(self._agency.agency_timezone)
+                    )
+                else:
+                    self._state = self._departure["departure_time"].replace(
+                        tzinfo=dt_util.UTC
+                    )
+
             # Assign attributes, icon and name
             self.update_attributes()
 
@@ -673,9 +679,14 @@ class GTFSDepartureSensor(SensorEntity):
         """Update state attributes."""
         # Add departure information
         if self._departure:
-            self._attributes[ATTR_ARRIVAL] = dt_util.as_utc(
-                self._departure["arrival_time"]
-            ).isoformat()
+            if self._agency:
+                self._attributes[ATTR_ARRIVAL] = dt_util.as_utc(
+                    self._departure["arrival_time"]
+                ).astimezone(pytz.timezone(self._agency.agency_timezone))
+            else:
+                self._attributes[ATTR_ARRIVAL] = dt_util.as_utc(
+                    self._departure["arrival_time"]
+                ).isoformat()
 
             self._attributes[ATTR_DAY] = self._departure["day"]
 
