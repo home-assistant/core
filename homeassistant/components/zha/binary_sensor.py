@@ -2,13 +2,16 @@
 from __future__ import annotations
 
 import functools
+from typing import Any
+
+from zigpy.zcl.clusters.security import IasZone
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import STATE_ON, EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -39,6 +42,9 @@ CLASS_MAPPING = {
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.BINARY_SENSOR)
 MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.BINARY_SENSOR)
+CONFIG_DIAGNOSTIC_MATCH = functools.partial(
+    ZHA_ENTITIES.config_diagnostic_match, Platform.BINARY_SENSOR
+)
 
 
 async def async_setup_entry(
@@ -161,6 +167,36 @@ class IASZone(BinarySensor):
         """Parse the raw attribute into a bool state."""
         return BinarySensor.parse(value & 3)  # use only bit 0 and 1 for alarm state
 
+    # temporary code to migrate old IasZone sensors to update attribute cache state once
+    # remove in 2024.4.0
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return state attributes."""
+        return {"migrated_to_cache": True}  # writing new state means we're migrated
+
+    # temporary migration code
+    @callback
+    def async_restore_last_state(self, last_state):
+        """Restore previous state."""
+        # trigger migration if extra state attribute is not present
+        if "migrated_to_cache" not in last_state.attributes:
+            self.migrate_to_zigpy_cache(last_state)
+
+    # temporary migration code
+    @callback
+    def migrate_to_zigpy_cache(self, last_state):
+        """Save old IasZone sensor state to attribute cache."""
+        # previous HA versions did not update the attribute cache for IasZone sensors, so do it once here
+        # a HA state write is triggered shortly afterwards and writes the "migrated_to_cache" extra state attribute
+        if last_state.state == STATE_ON:
+            migrated_state = IasZone.ZoneStatus.Alarm_1
+        else:
+            migrated_state = IasZone.ZoneStatus(0)
+
+        self._channel.cluster.update_attribute(
+            IasZone.attributes_by_name[self.SENSOR_ATTR].id, migrated_state
+        )
+
 
 @MULTI_MATCH(
     channel_names="tuya_manufacturer",
@@ -201,3 +237,48 @@ class XiaomiPlugConsumerConnected(BinarySensor, id_suffix="consumer_connected"):
     SENSOR_ATTR = "consumer_connected"
     _attr_name: str = "Consumer connected"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PLUG
+
+
+@MULTI_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
+class AqaraThermostatWindowOpen(BinarySensor, id_suffix="window_open"):
+    """ZHA Aqara thermostat window open binary sensor."""
+
+    SENSOR_ATTR = "window_open"
+    _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.WINDOW
+    _attr_name: str = "Window open"
+
+
+@MULTI_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
+class AqaraThermostatValveAlarm(BinarySensor, id_suffix="valve_alarm"):
+    """ZHA Aqara thermostat valve alarm binary sensor."""
+
+    SENSOR_ATTR = "valve_alarm"
+    _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PROBLEM
+    _attr_name: str = "Valve alarm"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
+class AqaraThermostatCalibrated(BinarySensor, id_suffix="calibrated"):
+    """ZHA Aqara thermostat calibrated binary sensor."""
+
+    SENSOR_ATTR = "calibrated"
+    _attr_entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
+    _attr_name: str = "Calibrated"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
+class AqaraThermostatExternalSensor(BinarySensor, id_suffix="sensor"):
+    """ZHA Aqara thermostat external sensor binary sensor."""
+
+    SENSOR_ATTR = "sensor"
+    _attr_entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
+    _attr_name: str = "External sensor"
+
+
+@MULTI_MATCH(channel_names="opple_cluster", models={"lumi.sensor_smoke.acn03"})
+class AqaraLinkageAlarmState(BinarySensor, id_suffix="linkage_alarm_state"):
+    """ZHA Aqara linkage alarm state binary sensor."""
+
+    SENSOR_ATTR = "linkage_alarm_state"
+    _attr_name: str = "Linkage alarm state"
+    _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.SMOKE

@@ -938,6 +938,7 @@ omit =
     homeassistant/components/pushover/notify.py
     homeassistant/components/pushsafer/notify.py
     homeassistant/components/pyload/sensor.py
+    homeassistant/components/qbittorrent/__init__.py
     homeassistant/components/qbittorrent/sensor.py
     homeassistant/components/qnap/sensor.py
     homeassistant/components/qrcode/image_processing.py
@@ -1100,7 +1101,9 @@ omit =
     homeassistant/components/sms/notify.py
     homeassistant/components/sms/sensor.py
     homeassistant/components/smtp/notify.py
-    homeassistant/components/snapcast/*
+    homeassistant/components/snapcast/__init__.py
+    homeassistant/components/snapcast/media_player.py
+    homeassistant/components/snapcast/server.py
     homeassistant/components/snmp/device_tracker.py
     homeassistant/components/snmp/sensor.py
     homeassistant/components/snmp/switch.py

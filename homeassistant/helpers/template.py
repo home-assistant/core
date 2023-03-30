@@ -124,7 +124,7 @@ template_cv: ContextVar[tuple[str, str] | None] = ContextVar(
 CACHED_TEMPLATE_STATES = 512
 EVAL_CACHE_SIZE = 512
 
-MAX_CUSTOM_JINJA_SIZE = 5 * 1024 * 1024
+MAX_CUSTOM_TEMPLATE_SIZE = 5 * 1024 * 1024
 
 
 @bind_hass
@@ -2084,18 +2084,18 @@ class LoggingUndefined(jinja2.Undefined):
         return super().__bool__()
 
 
-async def async_load_custom_jinja(hass: HomeAssistant) -> None:
+async def async_load_custom_templates(hass: HomeAssistant) -> None:
     """Load all custom jinja files under 5MiB into memory."""
-    return await hass.async_add_executor_job(_load_custom_jinja, hass)
+    return await hass.async_add_executor_job(_load_custom_templates, hass)
 
 
-def _load_custom_jinja(hass: HomeAssistant) -> None:
+def _load_custom_templates(hass: HomeAssistant) -> None:
     result = {}
-    jinja_path = hass.config.path("custom_jinja")
+    jinja_path = hass.config.path("custom_templates")
     all_files = [
         item
         for item in pathlib.Path(jinja_path).rglob("*.jinja")
-        if item.is_file() and item.stat().st_size <= MAX_CUSTOM_JINJA_SIZE
+        if item.is_file() and item.stat().st_size <= MAX_CUSTOM_TEMPLATE_SIZE
     ]
     for file in all_files:
         content = file.read_text()
@@ -2285,9 +2285,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["area_devices"] = hassfunction(area_devices)
         self.filters["area_devices"] = pass_context(self.globals["area_devices"])
 
-        self.globals["is_hidden_entity"] = hassfunction(is_hidden_entity)
-        self.tests["is_hidden_entity"] = pass_context(self.globals["is_hidden_entity"])
-
         self.globals["integration_entities"] = hassfunction(integration_entities)
         self.filters["integration_entities"] = pass_context(
             self.globals["integration_entities"]
@@ -2308,6 +2305,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "closest",
                 "distance",
                 "expand",
+                "is_hidden_entity",
                 "is_state",
                 "is_state_attr",
                 "state_attr",
@@ -2331,7 +2329,12 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "area_name",
                 "has_value",
             ]
-            hass_tests = ["has_value"]
+            hass_tests = [
+                "has_value",
+                "is_hidden_entity",
+                "is_state",
+                "is_state_attr",
+            ]
             for glob in hass_globals:
                 self.globals[glob] = unsupported(glob)
             for filt in hass_filters:
@@ -2345,6 +2348,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["closest"] = hassfunction(closest)
         self.filters["closest"] = pass_context(hassfunction(closest_filter))
         self.globals["distance"] = hassfunction(distance)
+        self.globals["is_hidden_entity"] = hassfunction(is_hidden_entity)
+        self.tests["is_hidden_entity"] = pass_eval_context(
+            self.globals["is_hidden_entity"]
+        )
         self.globals["is_state"] = hassfunction(is_state)
         self.tests["is_state"] = pass_eval_context(self.globals["is_state"])
         self.globals["is_state_attr"] = hassfunction(is_state_attr)

@@ -15,6 +15,8 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEGREE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -125,6 +127,12 @@ class SunSensor(SensorEntity):
         self.entity_id = ENTITY_ID_SENSOR_FORMAT.format(entity_description.key)
         self._attr_unique_id = f"{entry_id}-{entity_description.key}"
         self.sun = sun
+
+        self._attr_device_info = DeviceInfo(
+            name="Sun",
+            identifiers={(DOMAIN, entry_id)},
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
     @property
     def native_value(self) -> StateType | datetime:
