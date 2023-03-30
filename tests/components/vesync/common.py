@@ -1,7 +1,28 @@
 """Common methods used across tests for VeSync."""
 import json
 
-from tests.common import load_fixture
+import requests_mock
+
+from tests.common import load_fixture, load_json_object_fixture
+
+ALL_DEVICES = load_json_object_fixture("vesync/vesync_api_call__devices.json")
+ALL_DEVICE_NAMES: list[str] = [
+    dev["deviceName"] for dev in ALL_DEVICES["result"]["list"]
+]
+
+
+def mock_devices_response(
+    requests_mock: requests_mock.Mocker, device_name: str
+) -> None:
+    """Build a response for the Helpers.call_api method."""
+    device_list = []
+    for device in ALL_DEVICES["result"]["list"]:
+        if device["deviceName"] == device_name:
+            device_list.append(device)
+    requests_mock.post(
+        "https://smartapi.vesync.com/cloud/v1/deviceManaged/devices",
+        json={"code": 0, "result": {"list": device_list}},
+    )
 
 
 def call_api_side_effect__no_devices(*args, **kwargs):
