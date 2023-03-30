@@ -36,6 +36,7 @@ from . import base_unique_id, device_info
 from .const import (
     ATTR_FORECAST_DAYTIME,
     ATTR_FORECAST_DETAILED_DESCRIPTION,
+    ATTRIBUTION,
     CONDITION_CLASSES,
     COORDINATOR_FORECAST,
     COORDINATOR_FORECAST_HOURLY,
@@ -107,7 +108,7 @@ if TYPE_CHECKING:
 class NWSWeather(WeatherEntity):
     """Representation of a weather condition."""
 
-    _attr_attribution = "Data from National Weather Service/NOAA"
+    _attr_attribution = ATTRIBUTION
     _attr_should_poll = False
 
     def __init__(
