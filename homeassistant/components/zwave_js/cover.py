@@ -119,8 +119,8 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
                 self._fully_open_value,
                 target_value.value,
             )
-            or self._curr_value is None
             or new_value is None
+            or self._curr_value is None
         ):
             self._attr_is_closing = None
             self._attr_is_opening = None
