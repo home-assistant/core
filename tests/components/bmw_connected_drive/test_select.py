@@ -1,6 +1,7 @@
 """Test BMW selects."""
 from bimmer_connected.vehicle.remote_services import RemoteServices
 import pytest
+import respx
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
