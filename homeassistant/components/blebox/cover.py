@@ -8,6 +8,7 @@ import blebox_uniapi.cover
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
@@ -67,6 +68,10 @@ class BleBoxCoverEntity(BleBoxEntity[blebox_uniapi.cover.Cover], CoverEntity):
         self._attr_supported_features = (
             position | stop | CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
         )
+        if feature.has_tilt:
+            self._attr_supported_features = (
+                self._attr_supported_features | CoverEntityFeature.SET_TILT_POSITION
+            )
 
     @property
     def current_cover_position(self) -> int | None:
@@ -75,6 +80,12 @@ class BleBoxCoverEntity(BleBoxEntity[blebox_uniapi.cover.Cover], CoverEntity):
         if position == -1:  # possible for shutterBox
             return None
 
+        return None if position is None else 100 - position
+
+    @property
+    def current_cover_tilt_position(self) -> int | None:
+        """Return the current tilt of shutter."""
+        position = self._feature.tilt_current
         return None if position is None else 100 - position
 
     @property
@@ -109,6 +120,12 @@ class BleBoxCoverEntity(BleBoxEntity[blebox_uniapi.cover.Cover], CoverEntity):
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self._feature.async_stop()
+
+    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
+        """Set the tilt position."""
+
+        position = kwargs[ATTR_TILT_POSITION]
+        await self._feature.async_set_tilt_position(100 - position)
 
     def _is_state(self, state_name) -> bool | None:
         value = BLEBOX_TO_HASS_COVER_STATES[self._feature.state]

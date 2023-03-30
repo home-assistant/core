@@ -2305,6 +2305,12 @@
         }
       }
     },
+    "homeseer": {
+      "name": "HomeSeer",
+      "iot_standards": [
+        "zwave"
+      ]
+    },
     "homewizard": {
       "name": "HomeWizard Energy",
       "integration_type": "hub",
@@ -4310,7 +4316,7 @@
     "qbittorrent": {
       "name": "qBittorrent",
       "integration_type": "service",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "qingping": {
