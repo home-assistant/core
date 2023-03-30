@@ -33,6 +33,7 @@ from homeassistant.helpers.update_coordinator import (
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    ATTRIBUTION,
     CONDITION_CLASSES,
     COORDINATOR_FORECAST,
     DOMAIN,
@@ -82,7 +83,7 @@ class MeteoFranceWeather(
 ):
     """Representation of a weather condition."""
 
-    _attr_attribution = "Data provided by Météo-France"
+    _attr_attribution = ATTRIBUTION
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
     _attr_native_pressure_unit = UnitOfPressure.HPA
