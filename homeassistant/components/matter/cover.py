@@ -1,11 +1,10 @@
 """Matter cover."""
 from __future__ import annotations
-from enum import IntFlag
 
+from enum import IntFlag
 from typing import Any
 
 from chip.clusters import Objects as clusters
-from matter_server.client.models import device_types
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -22,7 +21,6 @@ from .const import LOGGER
 from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
-
 
 # The MASK used for extracting bits 0 to 1 of the byte.
 OPERATIONAL_STATUS_MASK = 0b11
@@ -113,7 +111,11 @@ class MatterCover(MatterEntity, CoverEntity):
 
         assert operational_status is not None
 
-        LOGGER.debug("Operational status %b for %s", operational_status, self.entity_id)
+        LOGGER.info(
+            "Operational status %s for %s",
+            f"{operational_status:#010b}",
+            self.entity_id,
+        )
 
         state = operational_status & OPERATIONAL_STATUS_MASK
         match state:

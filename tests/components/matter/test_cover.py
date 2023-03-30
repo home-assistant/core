@@ -6,10 +6,10 @@ from matter_server.client.models.node import MatterNode
 import pytest
 
 from homeassistant.components.cover import (
+    STATE_CLOSED,
+    STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
-    STATE_CLOSING,
-    STATE_CLOSED,
 )
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
