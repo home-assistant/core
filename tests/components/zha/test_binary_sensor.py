@@ -160,8 +160,8 @@ def core_rs(hass_storage):
 @pytest.mark.parametrize(
     "restored_state",
     [
-        (STATE_ON,),
-        (STATE_OFF,),
+        STATE_ON,
+        STATE_OFF,
     ],
 )
 async def test_binary_sensor_migration_not_migrated(
