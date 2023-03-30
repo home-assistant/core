@@ -31,9 +31,9 @@ OPERATIONAL_STATUS_MASK = 0b11
 class OperationalStatus(IntFlag):
     """Currently ongoing operations enumeration for coverings, as defined in the Matter spec."""
 
-    coveringIsCurrentlyNotMoving = 0b00
-    coveringIsCurrentlyOpening = 0b01
-    coveringIsCurrentlyClosing = 0b10
+    covering_is_currently_not_moving = 0b00
+    covering_is_currently_opening = 0b01
+    covering_is_currently_closing = 0b10
     reserved = 0b11
 
 
@@ -117,12 +117,12 @@ class MatterCover(MatterEntity, CoverEntity):
 
         state = operational_status & OPERATIONAL_STATUS_MASK
         match state:
-            case OperationalStatus.coveringIsCurrentlyOpening:
+            case OperationalStatus.covering_is_currently_opening:
                 self._attr_is_opening = True
                 self._attr_is_closing = False
-            case OperationalStatus.coveringIsCurrentlyClosing:
-                self._attr_is_closing = True
+            case OperationalStatus.covering_is_currently_closing:
                 self._attr_is_opening = False
+                self._attr_is_closing = True
             case _:
                 self._attr_is_opening = False
                 self._attr_is_closing = False
