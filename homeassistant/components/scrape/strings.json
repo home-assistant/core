@@ -144,7 +144,6 @@
         "distance": "[%key:component::sensor::entity_component::distance::name%]",
         "energy": "[%key:component::sensor::entity_component::energy::name%]",
         "energy_storage": "[%key:component::sensor::entity_component::energy_storage::name%]",
-        "enum": "[%key:component::sensor::entity_component::enum::name%]",
         "frequency": "[%key:component::sensor::entity_component::frequency::name%]",
         "gas": "[%key:component::sensor::entity_component::gas::name%]",
         "humidity": "[%key:component::sensor::entity_component::humidity::name%]",

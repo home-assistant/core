@@ -106,7 +106,14 @@ SENSOR_SETUP = {
     vol.Optional(CONF_VALUE_TEMPLATE): TemplateSelector(),
     vol.Required(CONF_DEVICE_CLASS): SelectSelector(
         SelectSelectorConfig(
-            options=[NONE_SENTINEL] + sorted([cls.value for cls in SensorDeviceClass]),
+            options=[NONE_SENTINEL]
+            + sorted(
+                [
+                    cls.value
+                    for cls in SensorDeviceClass
+                    if cls != SensorDeviceClass.ENUM
+                ]
+            ),
             mode=SelectSelectorMode.DROPDOWN,
             translation_key="device_class",
         )
