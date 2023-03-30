@@ -281,7 +281,7 @@ METRIC_SYSTEM = UnitSystem(
         **{
             ("wind_speed", unit): UnitOfSpeed.KILOMETERS_PER_HOUR
             for unit in UnitOfSpeed
-            if unit != UnitOfSpeed.KNOTS
+            if unit not in (UnitOfSpeed.KILOMETERS_PER_HOUR, UnitOfSpeed.KNOTS)
         },
     },
     length=UnitOfLength.KILOMETERS,
@@ -347,11 +347,11 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
         # Convert non-USCS volumes of water meters
         ("water", UnitOfVolume.CUBIC_METERS): UnitOfVolume.CUBIC_FEET,
         ("water", UnitOfVolume.LITERS): UnitOfVolume.GALLONS,
-        # Convert wind speeds except knots to km/h
+        # Convert wind speeds except knots to mph
         **{
             ("wind_speed", unit): UnitOfSpeed.MILES_PER_HOUR
             for unit in UnitOfSpeed
-            if unit != UnitOfSpeed.KNOTS
+            if unit not in (UnitOfSpeed.KNOTS, UnitOfSpeed.MILES_PER_HOUR)
         },
     },
     length=UnitOfLength.MILES,
