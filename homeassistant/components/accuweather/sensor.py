@@ -394,6 +394,9 @@ class AccuWeatherSensor(
             )
         self._attr_device_info = coordinator.device_info
         self.forecast_day = forecast_day
+        self._attr_suggested_unit_of_measurement = self._get_suggested_unit(
+            description.device_class
+        )
 
     @property
     def native_value(self) -> StateType:
@@ -408,21 +411,6 @@ class AccuWeatherSensor(
 
         return self.entity_description.attr_fn(self.coordinator.data)
 
-    @property
-    def suggested_unit_of_measurement(self) -> str | None:
-        """Return the unit which should be used for the sensor's state.
-
-        Entity units with device_class WIND_SPEED are not automatically converted for
-        the US CUSTOMARY unit system, so we return the suggested unit for them.
-        """
-        if (
-            self.entity_description.device_class == SensorDeviceClass.WIND_SPEED
-            and self.hass.config.units == US_CUSTOMARY_SYSTEM
-        ):
-            return UnitOfSpeed.MILES_PER_HOUR
-
-        return None
-
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle data update."""
@@ -430,6 +418,20 @@ class AccuWeatherSensor(
             self.coordinator.data, self.entity_description.key, self.forecast_day
         )
         self.async_write_ha_state()
+
+    def _get_suggested_unit(self, device_class: str | None) -> str | None:
+        """Return the unit which should be used for the sensor's state.
+
+        Entity units with device_class WIND_SPEED are not automatically converted for
+        the US CUSTOMARY unit system, so we return the suggested unit for them.
+        """
+        if (
+            device_class == SensorDeviceClass.WIND_SPEED
+            and self.coordinator.hass.config.units == US_CUSTOMARY_SYSTEM
+        ):
+            return UnitOfSpeed.MILES_PER_HOUR
+
+        return None
 
 
 def _get_sensor_data(
