@@ -419,7 +419,7 @@ class Filter:
         self,
         name: str,
         window_size: int | timedelta,
-        precision: int,
+        precision: int | None,
         entity: str,
     ) -> None:
         """Initialize common attributes.
