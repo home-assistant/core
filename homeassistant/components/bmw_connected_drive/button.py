@@ -7,6 +7,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from bimmer_connected.vehicle import MyBMWVehicle
+from bimmer_connected.vehicle.charging_profile import ChargingMode
 from bimmer_connected.vehicle.remote_services import RemoteServiceStatus
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
@@ -58,6 +59,18 @@ BUTTON_TYPES: tuple[BMWButtonEntityDescription, ...] = (
         icon="mdi:hvac-off",
         name="Deactivate air conditioning",
         remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_air_conditioning_stop(),
+    ),
+    BMWButtonEntityDescription(
+        key="toggle_immediate_charging_profile",
+        icon="mdi:car-electric",
+        name="Toggle immediate charging profile",
+        remote_function=lambda vehicle: vehicle.remote_services.trigger_charging_profile_update(ChargingMode.IMMEDIATE_CHARGING),
+    ),
+    BMWButtonEntityDescription(
+        key="toggle_delayed_charging_charging_profile",
+        icon="mdi:car-clock",
+        name="Toggle delayed charging profile",
+        remote_function=lambda vehicle: vehicle.remote_services.trigger_charging_profile_update(ChargingMode.DELAYED_CHARGING),
     ),
     BMWButtonEntityDescription(
         key="find_vehicle",

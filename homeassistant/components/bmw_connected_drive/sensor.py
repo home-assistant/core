@@ -66,6 +66,13 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
         key_class="fuel_and_battery",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
+    "charging_mode": BMWSensorEntityDescription(
+        key="charging_mode",
+        name="Charging mode",
+        key_class="charging_profile",
+        icon="mdi:ev-station",
+        value=lambda x, y: x.value,
+    ),
     "charging_status": BMWSensorEntityDescription(
         key="charging_status",
         name="Charging status",
