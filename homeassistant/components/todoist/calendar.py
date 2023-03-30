@@ -588,10 +588,10 @@ class TodoistProjectData:
 
         events = []
         for task in project_task_data:
-            if not task.due:
+            if task.due is None:
                 continue
             start = get_start(task.due)
-            if not start:
+            if start is None:
                 continue
             event = CalendarEvent(
                 summary=task.content,
