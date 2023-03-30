@@ -2,13 +2,13 @@
 from __future__ import annotations
 
 import asyncio
-import async_timeout
 from collections.abc import Mapping
 import logging
 from typing import Any
 
 import aiohttp
 from aiohttp.web import Request
+import async_timeout
 from reolink_aio.api import Host
 from reolink_aio.exceptions import ReolinkError, SubscriptionError
 
