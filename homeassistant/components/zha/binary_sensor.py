@@ -187,10 +187,14 @@ class IASZone(BinarySensor):
     def migrate_to_zigpy_cache(self, last_state):
         """Save old IasZone sensor state to attribute cache."""
         # previous HA versions did not update the attribute cache for IasZone sensors, so do it once here
-        # this triggers a HA state update and writes the "migrated_to_cache" extra state attribute
+        # a HA state write is triggered shortly afterwards and writes the "migrated_to_cache" extra state attribute
+        if last_state.state == STATE_ON:
+            migrated_state = IasZone.ZoneStatus.Alarm_1
+        else:
+            migrated_state = IasZone.ZoneStatus(0)
+
         self._channel.cluster.update_attribute(
-            IasZone.attributes_by_name[self.SENSOR_ATTR].id,
-            last_state.state == STATE_ON,
+            IasZone.attributes_by_name[self.SENSOR_ATTR].id, migrated_state
         )
 
 
