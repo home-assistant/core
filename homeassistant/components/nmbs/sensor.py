@@ -164,6 +164,7 @@ class NMBSLiveBoard(SensorEntity):
 
         if (
             liveboard is None
+            or liveboard == -1
             or liveboard.get("departures") is None
             or liveboard.get("departures").get("number") is None
             or liveboard.get("departures").get("number") == "0"
@@ -290,7 +291,11 @@ class NMBSSensor(SensorEntity):
             self._station_from, self._station_to
         )
 
-        if connections is None or not connections.get("connection"):
+        if (
+            connections is None
+            or connections == -1
+            or connections.get("connection") is None
+        ):
             return
 
         if int(connections["connection"][0]["departure"]["left"]) > 0:
