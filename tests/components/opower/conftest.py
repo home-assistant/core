@@ -15,7 +15,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         title="Pacific Gas & Electric (test-username)",
         domain=DOMAIN,
         data={
-            "utility": "Pacific Gas & Electric",
+            "utility": "Pacific Gas and Electric Company (PG&E)",
             "username": "test-username",
             "password": "test-password",
         },

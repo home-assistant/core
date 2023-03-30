@@ -49,7 +49,7 @@ async def test_form(
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "utility": "Pacific Gas & Electric",
+                "utility": "Pacific Gas and Electric Company (PG&E)",
                 "username": "test-username",
                 "password": "test-password",
             },
@@ -57,9 +57,9 @@ async def test_form(
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Pacific Gas & Electric (test-username)"
+    assert result2["title"] == "Pacific Gas and Electric Company (PG&E) (test-username)"
     assert result2["data"] == {
-        "utility": "Pacific Gas & Electric",
+        "utility": "Pacific Gas and Electric Company (PG&E)",
         "username": "test-username",
         "password": "test-password",
     }
@@ -90,7 +90,7 @@ async def test_form_exceptions(
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "utility": "Pacific Gas & Electric",
+                "utility": "Pacific Gas and Electric Company (PG&E)",
                 "username": "test-username",
                 "password": "test-password",
             },
@@ -117,7 +117,7 @@ async def test_form_already_configured(
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "utility": "Pacific Gas & Electric",
+                "utility": "Pacific Gas and Electric Company (PG&E)",
                 "username": "test-username",
                 "password": "test-password",
             },
@@ -145,7 +145,7 @@ async def test_form_not_already_configured(
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "utility": "Pacific Gas & Electric",
+                "utility": "Pacific Gas and Electric Company (PG&E)",
                 "username": "test-username2",
                 "password": "test-password",
             },
@@ -153,9 +153,11 @@ async def test_form_not_already_configured(
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Pacific Gas & Electric (test-username2)"
+    assert (
+        result2["title"] == "Pacific Gas and Electric Company (PG&E) (test-username2)"
+    )
     assert result2["data"] == {
-        "utility": "Pacific Gas & Electric",
+        "utility": "Pacific Gas and Electric Company (PG&E)",
         "username": "test-username2",
         "password": "test-password",
     }
@@ -193,7 +195,7 @@ async def test_form_valid_reauth(
 
     await hass.async_block_till_done()
     assert hass.config_entries.async_entries(DOMAIN)[0].data == {
-        "utility": "Pacific Gas & Electric",
+        "utility": "Pacific Gas and Electric Company (PG&E)",
         "username": "test-username",
         "password": "test-password2",
     }
