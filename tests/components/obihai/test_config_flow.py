@@ -7,10 +7,11 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.obihai.const import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import DHCP_SERVICE_INFO, USER_INPUT, MockPyObihai
+from . import DHCP_SERVICE_INFO, USER_INPUT, MockPyObihai, get_schema_suggestion
 
 VALIDATE_AUTH_PATCH = "homeassistant.components.obihai.config_flow.validate_auth"
 
@@ -138,10 +139,30 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
         )
 
-    flows = hass.config_entries.flow.async_progress()
-    assert result["type"] == FlowResultType.FORM
-    assert len(flows) == 1
-    assert flows[0].get("context", {}).get("source") == config_entries.SOURCE_DHCP
+        flows = hass.config_entries.flow.async_progress()
+        assert result["type"] == FlowResultType.FORM
+        assert len(flows) == 1
+        assert (
+            get_schema_suggestion(result["data_schema"].schema, CONF_USERNAME)
+            == USER_INPUT[CONF_USERNAME]
+        )
+        assert (
+            get_schema_suggestion(result["data_schema"].schema, CONF_PASSWORD)
+            == USER_INPUT[CONF_PASSWORD]
+        )
+        assert (
+            get_schema_suggestion(result["data_schema"].schema, CONF_HOST)
+            == DHCP_SERVICE_INFO.ip
+        )
+        assert flows[0].get("context", {}).get("source") == config_entries.SOURCE_DHCP
+
+        # Verify we get dropped into the normal user flow with non-default credentials
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=USER_INPUT
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
 
 
 async def test_dhcp_flow_auth_failure(hass: HomeAssistant) -> None:
@@ -156,8 +177,24 @@ async def test_dhcp_flow_auth_failure(hass: HomeAssistant) -> None:
             data=DHCP_SERVICE_INFO,
             context={"source": config_entries.SOURCE_DHCP},
         )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=USER_INPUT
+
+        assert result["step_id"] == "dhcp_confirm"
+        assert get_schema_suggestion(result["data_schema"].schema, CONF_USERNAME) == ""
+        assert get_schema_suggestion(result["data_schema"].schema, CONF_PASSWORD) == ""
+        assert (
+            get_schema_suggestion(result["data_schema"].schema, CONF_HOST)
+            == DHCP_SERVICE_INFO.ip
         )
 
+    # Verify we get dropped into the normal user flow with non-default credentials
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: DHCP_SERVICE_INFO.ip,
+            CONF_USERNAME: "",
+            CONF_PASSWORD: "",
+        },
+    )
+
     assert result["errors"]["base"] == "invalid_auth"
+    assert result["step_id"] == "user"

@@ -23,3 +23,12 @@ class MockPyObihai:
         """Mock PyObihai.get_device_mac, return simulated MAC address."""
 
         return DHCP_SERVICE_INFO.macaddress
+
+
+def get_schema_suggestion(schema, key):
+    """Get suggested value for key in voluptuous schema."""
+    for k in schema:
+        if k == key:
+            if k.description is None or "suggested_value" not in k.description:
+                return None
+            return k.description["suggested_value"]

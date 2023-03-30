@@ -7,6 +7,14 @@
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
         }
+      },
+      "dhcp_confirm": {
+        "description": "Do you want to set up {host}?",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        }
       }
     },
     "error": {

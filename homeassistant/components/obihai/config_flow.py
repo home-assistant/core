@@ -37,12 +37,16 @@ async def async_validate_creds(
 ) -> PyObihai | None:
     """Manage Obihai options."""
 
-    return await hass.async_add_executor_job(
-        validate_auth,
-        user_input[CONF_HOST],
-        user_input[CONF_USERNAME],
-        user_input[CONF_PASSWORD],
-    )
+    if user_input[CONF_USERNAME] and user_input[CONF_PASSWORD]:
+        return await hass.async_add_executor_job(
+            validate_auth,
+            user_input[CONF_HOST],
+            user_input[CONF_USERNAME],
+            user_input[CONF_PASSWORD],
+        )
+
+    # Don't bother authenticating if we've already determined the credentials are invalid
+    return None
 
 
 class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -50,6 +54,7 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
     discovery_schema: vol.Schema | None = None
+    _dhcp_discovery_info: dhcp.DhcpServiceInfo | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -79,45 +84,56 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
                     )
                 errors["base"] = "invalid_auth"
 
-        data_schema = self.discovery_schema or self.add_suggested_values_to_schema(
-            DATA_SCHEMA, user_input
-        )
+        data_schema = self.discovery_schema or DATA_SCHEMA
         return self.async_show_form(
             step_id="user",
             errors=errors,
-            data_schema=data_schema,
+            data_schema=self.add_suggested_values_to_schema(data_schema, user_input),
         )
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Prepare configuration for a DHCP discovered Obihai."""
 
-        return await self.async_step_dhcp_confirm(discovery_info)
+        self._dhcp_discovery_info = discovery_info
+        return await self.async_step_dhcp_confirm()
 
     async def async_step_dhcp_confirm(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Attempt to confirm."""
 
-        await self.async_set_unique_id(discovery_info.macaddress)
-        self._abort_if_unique_id_configured()
+        if self._dhcp_discovery_info:
+            await self.async_set_unique_id(self._dhcp_discovery_info.macaddress)
+            self._abort_if_unique_id_configured()
 
-        user_input = {
-            CONF_HOST: discovery_info.ip,
-            CONF_PASSWORD: DEFAULT_PASSWORD,
-            CONF_USERNAME: DEFAULT_USERNAME,
-        }
+            if user_input is None:
+                credentials = {
+                    CONF_HOST: self._dhcp_discovery_info.ip,
+                    CONF_PASSWORD: DEFAULT_PASSWORD,
+                    CONF_USERNAME: DEFAULT_USERNAME,
+                }
+                if await async_validate_creds(self.hass, credentials):
+                    self.discovery_schema = self.add_suggested_values_to_schema(
+                        DATA_SCHEMA, credentials
+                    )
+                else:
+                    self.discovery_schema = self.add_suggested_values_to_schema(
+                        DATA_SCHEMA,
+                        {
+                            CONF_HOST: self._dhcp_discovery_info.ip,
+                            CONF_USERNAME: "",
+                            CONF_PASSWORD: "",
+                        },
+                    )
 
-        if await async_validate_creds(self.hass, user_input):
-            self.discovery_schema = self.add_suggested_values_to_schema(
-                DATA_SCHEMA, user_input
-            )
-        else:
-            self.discovery_schema = self.add_suggested_values_to_schema(
-                DATA_SCHEMA,
-                {CONF_HOST: discovery_info.ip, CONF_USERNAME: "", CONF_PASSWORD: ""},
-            )
+                # Show the confirmation dialog
+                return self.async_show_form(
+                    step_id="dhcp_confirm",
+                    data_schema=self.discovery_schema,
+                    description_placeholders={CONF_HOST: self._dhcp_discovery_info.ip},
+                )
 
-        return await self.async_step_user()
+        return await self.async_step_user(user_input=user_input)
 
     # DEPRECATED
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:

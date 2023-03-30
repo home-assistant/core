@@ -33,8 +33,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             requester.pyobihai.get_device_mac
         )
         if entry.unique_id != new_unique_id:
-            entry.version = 2
             hass.config_entries.async_update_entry(entry, unique_id=new_unique_id)
+
+        entry.version = 2
 
     LOGGER.info("Migration to version %s successful", entry.version)
 
