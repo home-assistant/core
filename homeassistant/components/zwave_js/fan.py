@@ -33,7 +33,7 @@ from .discovery import ZwaveDiscoveryInfo
 from .discovery_data_template import FanValueMapping, FanValueMappingDataTemplate
 from .entity import ZWaveBaseEntity
 from .helpers import get_value_of_zwave_value
-from .models import ZwaveJSConfigEntry
+from .model import ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
 

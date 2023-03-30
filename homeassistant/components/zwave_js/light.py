@@ -45,7 +45,7 @@ from homeassistant.util import color as color_util
 from .const import DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
-from .models import ZwaveJSConfigEntry
+from .model import ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
 

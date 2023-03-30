@@ -54,20 +54,10 @@ from .const import (
     LIB_LOGGER,
     LOGGER,
 )
-from .models import ZwaveJSConfigEntry
+from .model import ZwaveJSConfigEntry
 
 DRIVER_READY_EVENT_TIMEOUT = 60
 SERVER_VERSION_TIMEOUT = 10
-
-
-@dataclass
-class ZwaveValueID:
-    """Class to represent a value ID."""
-
-    property_: str | int
-    command_class: int
-    endpoint: int | None = None
-    property_key: str | int | None = None
 
 
 @dataclass

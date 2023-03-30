@@ -91,7 +91,7 @@ from .discovery_data_template import (
 from .entity import ZWaveBaseEntity
 from .helpers import get_device_info, get_valueless_base_unique_id
 from .migrate import async_migrate_statistics_sensors
-from .models import ZwaveJSConfigEntry
+from .model import ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
 

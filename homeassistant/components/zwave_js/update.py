@@ -37,7 +37,7 @@ from homeassistant.helpers.restore_state import ExtraStoredData
 
 from .const import API_KEY_FIRMWARE_UPDATE_SERVICE, DOMAIN, LOGGER
 from .helpers import get_device_info, get_valueless_base_unique_id
-from .models import ZwaveJSConfigEntry
+from .model import ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 1
 

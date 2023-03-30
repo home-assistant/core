@@ -15,7 +15,7 @@ from .const import DOMAIN, LOGGER
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 from .helpers import get_device_info, get_valueless_base_unique_id
-from .models import ZwaveJSConfigEntry
+from .model import ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
 
