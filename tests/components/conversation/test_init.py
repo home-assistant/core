@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components import conversation
@@ -929,7 +930,11 @@ async def test_agent_id_validator_invalid_agent(hass: HomeAssistant) -> None:
 
 
 async def test_get_agent_list(
-    hass: HomeAssistant, init_components, mock_agent, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    init_components,
+    mock_agent,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test getting agent info."""
     client = await hass_ws_client(hass)
@@ -940,10 +945,17 @@ async def test_get_agent_list(
     assert msg["id"] == 5
     assert msg["type"] == "result"
     assert msg["success"]
-    assert msg["result"] == {
-        "agents": [
-            {"id": "homeassistant", "name": "Home Assistant"},
-            {"id": "mock-entry", "name": "Mock Title"},
-        ],
-        "default_agent": "mock-entry",
-    }
+    assert msg["result"] == snapshot
+
+
+async def test_get_agent_info(
+    hass: HomeAssistant, init_components, mock_agent, snapshot: SnapshotAssertion
+) -> None:
+    """Test get agent info."""
+    agent_info = conversation.async_get_agent_info(hass)
+    # Test it's the default
+    assert agent_info["id"] == mock_agent.agent_id
+    assert agent_info == snapshot
+    assert conversation.async_get_agent_info(hass, "homeassistant") == snapshot
+    assert conversation.async_get_agent_info(hass, mock_agent.agent_id) == snapshot
+    assert conversation.async_get_agent_info(hass, "not exist") is None
