@@ -8,7 +8,6 @@ import threading
 from typing import Any
 
 import pygtfs
-import pytz
 from sqlalchemy.sql import text
 import voluptuous as vol
 
@@ -647,7 +646,7 @@ class GTFSDepartureSensor(SensorEntity):
             else:
                 if self._agency:
                     self._state = self._departure["departure_time"].astimezone(
-                        pytz.timezone(self._agency.agency_timezone)
+                        dt_util.get_time_zone(self._agency.agency_timezone)
                     )
                 else:
                     self._state = self._departure["departure_time"].replace(
@@ -679,14 +678,9 @@ class GTFSDepartureSensor(SensorEntity):
         """Update state attributes."""
         # Add departure information
         if self._departure:
-            if self._agency:
-                self._attributes[ATTR_ARRIVAL] = dt_util.as_utc(
-                    self._departure["arrival_time"]
-                ).astimezone(pytz.timezone(self._agency.agency_timezone))
-            else:
-                self._attributes[ATTR_ARRIVAL] = dt_util.as_utc(
-                    self._departure["arrival_time"]
-                ).isoformat()
+            self._attributes[ATTR_ARRIVAL] = dt_util.as_utc(
+                self._departure["arrival_time"]
+            ).isoformat()
 
             self._attributes[ATTR_DAY] = self._departure["day"]
 
