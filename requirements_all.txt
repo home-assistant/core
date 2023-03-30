@@ -798,7 +798,7 @@ glances_api==0.4.1
 goalzero==0.2.1
 
 # homeassistant.components.goodwe
-goodwe==0.2.25
+goodwe==0.2.29
 
 # homeassistant.components.google_mail
 google-api-python-client==2.71.0
@@ -907,10 +907,10 @@ hole==0.8.0
 holidays==0.21.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230309.1
+home-assistant-frontend==20230329.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2023.2.28
+home-assistant-intents==2023.3.29
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -2081,7 +2081,7 @@ python-kasa==0.5.1
 # python-lirc==1.2.3
 
 # homeassistant.components.matter
-python-matter-server==3.1.0
+python-matter-server==3.2.0
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -2237,7 +2237,7 @@ regenmaschine==2022.11.0
 renault-api==0.1.12
 
 # homeassistant.components.reolink
-reolink-aio==0.5.7
+reolink-aio==0.5.8
 
 # homeassistant.components.python_script
 restrictedpython==6.0
@@ -2671,7 +2671,7 @@ yalesmartalarmclient==0.3.9
 
 # homeassistant.components.august
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.1.13
+yalexs-ble==2.1.14
 
 # homeassistant.components.august
 yalexs==1.2.7
@@ -2731,7 +2731,7 @@ zigpy==0.53.2
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.47.0
+zwave-js-server-python==0.47.1
 
 # homeassistant.components.zwave_me
 zwave_me_ws==0.3.6
