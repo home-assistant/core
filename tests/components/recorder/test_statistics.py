@@ -20,6 +20,7 @@ from homeassistant.components.recorder.statistics import (
     _generate_max_mean_min_statistic_in_sub_period_stmt,
     _generate_statistics_at_time_stmt,
     _generate_statistics_during_period_stmt,
+    _select_columns_for_types,
     async_add_external_statistics,
     async_import_statistics,
     get_last_short_term_statistics,
@@ -1244,21 +1245,18 @@ def test_monthly_statistics(
 
 def test_cache_key_for_generate_statistics_during_period_stmt() -> None:
     """Test cache key for _generate_statistics_during_period_stmt."""
-    columns = select(StatisticsShortTerm.metadata_id, StatisticsShortTerm.start_ts)
+    columns, track_on = _select_columns_for_types(StatisticsShortTerm, set())
     stmt = _generate_statistics_during_period_stmt(
-        columns, dt_util.utcnow(), dt_util.utcnow(), [0], StatisticsShortTerm
+        columns, dt_util.utcnow(), dt_util.utcnow(), [0], StatisticsShortTerm, track_on
     )
     cache_key_1 = stmt._generate_cache_key()
     stmt2 = _generate_statistics_during_period_stmt(
-        columns, dt_util.utcnow(), dt_util.utcnow(), [0], StatisticsShortTerm
+        columns, dt_util.utcnow(), dt_util.utcnow(), [0], StatisticsShortTerm, track_on
     )
     cache_key_2 = stmt2._generate_cache_key()
     assert cache_key_1 == cache_key_2
-    columns2 = select(
-        StatisticsShortTerm.metadata_id,
-        StatisticsShortTerm.start_ts,
-        StatisticsShortTerm.sum,
-        StatisticsShortTerm.mean,
+    columns2, track_on2 = _select_columns_for_types(
+        StatisticsShortTerm, {"sum", "mean"}
     )
     stmt3 = _generate_statistics_during_period_stmt(
         columns2,
@@ -1266,6 +1264,7 @@ def test_cache_key_for_generate_statistics_during_period_stmt() -> None:
         dt_util.utcnow(),
         [0],
         StatisticsShortTerm,
+        track_on2,
     )
     cache_key_3 = stmt3._generate_cache_key()
     assert cache_key_1 != cache_key_3
@@ -1321,18 +1320,21 @@ def test_cache_key_for_generate_max_mean_min_statistic_in_sub_period_stmt() -> N
 
 def test_cache_key_for_generate_statistics_at_time_stmt() -> None:
     """Test cache key for _generate_statistics_at_time_stmt."""
-    columns = select(StatisticsShortTerm.metadata_id, StatisticsShortTerm.start_ts)
-    stmt = _generate_statistics_at_time_stmt(columns, StatisticsShortTerm, {0}, 0.0)
+    columns, track_on = _select_columns_for_types(StatisticsShortTerm, set())
+    stmt = _generate_statistics_at_time_stmt(
+        columns, StatisticsShortTerm, {0}, 0.0, track_on
+    )
     cache_key_1 = stmt._generate_cache_key()
-    stmt2 = _generate_statistics_at_time_stmt(columns, StatisticsShortTerm, {0}, 0.0)
+    stmt2 = _generate_statistics_at_time_stmt(
+        columns, StatisticsShortTerm, {0}, 0.0, track_on
+    )
     cache_key_2 = stmt2._generate_cache_key()
     assert cache_key_1 == cache_key_2
-    columns2 = select(
-        StatisticsShortTerm.metadata_id,
-        StatisticsShortTerm.start_ts,
-        StatisticsShortTerm.sum,
-        StatisticsShortTerm.mean,
+    columns2, track_on2 = _select_columns_for_types(
+        StatisticsShortTerm, {"sum", "mean"}
     )
-    stmt3 = _generate_statistics_at_time_stmt(columns2, StatisticsShortTerm, {0}, 0.0)
+    stmt3 = _generate_statistics_at_time_stmt(
+        columns2, StatisticsShortTerm, {0}, 0.0, track_on2
+    )
     cache_key_3 = stmt3._generate_cache_key()
     assert cache_key_1 != cache_key_3

@@ -1039,13 +1039,16 @@ def _generate_statistics_during_period_stmt(
     end_time: datetime | None,
     metadata_ids: list[int] | None,
     table: type[StatisticsBase],
+    track_on: list[str | None],
 ) -> StatementLambdaElement:
     """Prepare a database query for statistics during a given period.
 
     This prepares a lambda_stmt query, so we don't insert the parameters yet.
     """
     start_time_ts = start_time.timestamp()
-    stmt = lambda_stmt(lambda: columns.filter(table.start_ts >= start_time_ts))
+    stmt = lambda_stmt(
+        lambda: columns.filter(table.start_ts >= start_time_ts), track_on=track_on
+    )
     if end_time is not None:
         end_time_ts = end_time.timestamp()
         stmt += lambda q: q.filter(table.start_ts < end_time_ts)
@@ -1491,24 +1494,31 @@ def statistic_during_period(
     return {key: convert(value) if convert else value for key, value in result.items()}
 
 
+_type_column_mapping = {
+    "last_reset": "last_reset_ts",
+    "max": "max",
+    "mean": "mean",
+    "min": "min",
+    "state": "state",
+    "sum": "sum",
+}
+
+
 def _select_columns_for_types(
     table: type[Statistics | StatisticsShortTerm],
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-) -> Select:
+) -> tuple[Select, list[str | None]]:
     columns = select(table.metadata_id, table.start_ts)  # type: ignore[call-overload]
-    if "last_reset" in types:
-        columns = columns.add_columns(table.last_reset_ts)
-    if "max" in types:
-        columns = columns.add_columns(table.max)
-    if "mean" in types:
-        columns = columns.add_columns(table.mean)
-    if "min" in types:
-        columns = columns.add_columns(table.min)
-    if "state" in types:
-        columns = columns.add_columns(table.state)
-    if "sum" in types:
-        columns = columns.add_columns(table.sum)
-    return columns  # type: ignore[no-any-return]
+    track_on: list[str | None] = [
+        table.__tablename__,
+    ]
+    for key, column in _type_column_mapping.items():
+        if key in types:
+            columns = columns.add_columns(getattr(table, column))
+            track_on.append(column)
+        else:
+            track_on.append(None)
+    return columns, track_on
 
 
 def _statistics_during_period_with_session(
@@ -1545,9 +1555,9 @@ def _statistics_during_period_with_session(
     table: type[Statistics | StatisticsShortTerm] = (
         Statistics if period != "5minute" else StatisticsShortTerm
     )
-    columns = _select_columns_for_types(table, types)
+    columns, track_on = _select_columns_for_types(table, types)
     stmt = _generate_statistics_during_period_stmt(
-        columns, start_time, end_time, metadata_ids, table
+        columns, start_time, end_time, metadata_ids, table, track_on
     )
     stats = cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
 
@@ -1783,6 +1793,7 @@ def _generate_statistics_at_time_stmt(
     table: type[StatisticsBase],
     metadata_ids: set[int],
     start_time_ts: float,
+    track_on: list[str | None],
 ) -> StatementLambdaElement:
     """Create the statement for finding the statistics for a given time."""
     return lambda_stmt(
@@ -1805,7 +1816,8 @@ def _generate_statistics_at_time_stmt(
                 table.start_ts == most_recent_statistic_ids.c.max_start_ts,
                 table.metadata_id == most_recent_statistic_ids.c.max_metadata_id,
             ),
-        )
+        ),
+        track_on=track_on,
     )
 
 
@@ -1817,10 +1829,10 @@ def _statistics_at_time(
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> Sequence[Row] | None:
     """Return last known statistics, earlier than start_time, for the metadata_ids."""
-    columns = _select_columns_for_types(table, types)
+    columns, track_on = _select_columns_for_types(table, types)
     start_time_ts = start_time.timestamp()
     stmt = _generate_statistics_at_time_stmt(
-        columns, table, metadata_ids, start_time_ts
+        columns, table, metadata_ids, start_time_ts, track_on
     )
     return cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
 
