@@ -24,19 +24,19 @@ _LOGGER = logging.getLogger(__name__)
 class BMWRequiredKeysMixin:
     """Mixin for required keys."""
 
-    current_option: Callable[[MyBMWVehicle], Any]
-    remote_service: Callable[[MyBMWVehicle, Any], Any]
+    current_option: Callable[[MyBMWVehicle], str]
+    remote_service: Callable[[MyBMWVehicle, str], Coroutine[Any, Any, Any]]
 
 
 @dataclass
 class BMWSelectEntityDescription(SelectEntityDescription, BMWRequiredKeysMixin):
     """Describes BMW sensor entity."""
 
-    is_available: Callable = lambda x: False
-    dynamic_options: Callable | None = None
+    is_available: Callable[[MyBMWVehicle], bool] = lambda _: False
+    dynamic_options: Callable[[MyBMWVehicle], list[str]] | None = None
 
 
-NUMBER_TYPES: dict[str, BMWSelectEntityDescription] = {
+SELECT_TYPES: dict[str, BMWSelectEntityDescription] = {
     # --- Generic ---
     "target_soc": BMWSelectEntityDescription(
         key="target_soc",
@@ -115,9 +115,8 @@ class BMWSelect(BMWBaseEntity, SelectEntity):
         super().__init__(coordinator, vehicle)
         self.entity_description = description
         self._attr_unique_id = f"{vehicle.vin}-{description.key}"
-        self._attr_options = description.options or (
-            description.dynamic_options(vehicle) if description.dynamic_options else []
-        )
+        if description.dynamic_options:
+            self._attr_options = description.dynamic_options(vehicle)
         self._attr_current_option = description.current_option(vehicle)
 
     @callback

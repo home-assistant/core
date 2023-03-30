@@ -10,7 +10,7 @@ from . import setup_mocked_integration
 
 async def test_entity_state_attrs(
     hass: HomeAssistant,
-    bmw_fixture,
+    bmw_fixture: respx.Router,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test select options and values.."""
@@ -35,7 +35,7 @@ async def test_update_triggers_success(
     hass: HomeAssistant,
     entity_id: str,
     value: str,
-    bmw_fixture,
+    bmw_fixture: respx.Router,
 ) -> None:
     """Test allowed values for select inputs."""
 
@@ -64,7 +64,7 @@ async def test_update_triggers_fail(
     hass: HomeAssistant,
     entity_id: str,
     value: str,
-    bmw_fixture,
+    bmw_fixture: respx.Router,
 ) -> None:
     """Test not allowed values for select inputs."""
 
