@@ -94,9 +94,11 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
 
         `value` -- (int) Position byte value from 0-100.
         """
-        if value > self._closed_value:
-            return max(1, round((value / 100) * self._cover_range) + self._closed_value)
-        return self._closed_value
+        if value > self._fully_closed_value:
+            return max(
+                1, round((value / 100) * self._cover_range) + self._fully_closed_value
+            )
+        return self._fully_closed_value
 
     def on_value_update(self) -> None:
         """Handle primary value update."""
@@ -105,7 +107,7 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
         # previous value or current value, we can't determine whether the cover
         # is opening or closing
         if (
-            new_value in (self._closed_value, self._open_value)
+            new_value in (self._fully_closed_value, self._fully_open_value)
             or self._prev_value is None
             or new_value is None
         ):
@@ -120,21 +122,21 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
         self._prev_value = new_value
 
     @property
-    def _open_value(self) -> int:
-        """Return fully opened value."""
+    def _fully_open_value(self) -> int:
+        """Return value that represents fully opened."""
         max_ = self.info.primary_value.metadata.max
         return 99 if max_ is None else max_
 
     @property
-    def _closed_value(self) -> int:
-        """Return fully closed value."""
+    def _fully_closed_value(self) -> int:
+        """Return value that represents fully closed."""
         min_ = self.info.primary_value.metadata.min
         return 0 if min_ is None else min_
 
     @property
     def _cover_range(self) -> int:
         """Return range between fully opened and fully closed."""
-        return self._open_value - self._closed_value
+        return self._fully_open_value - self._fully_closed_value
 
     @property
     def is_closed(self) -> bool | None:
@@ -152,7 +154,7 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
             return None
         return round(
             (
-                (cast(int, self.info.primary_value.value) - self._closed_value)
+                (cast(int, self.info.primary_value.value) - self._fully_closed_value)
                 / self._cover_range
             )
             * 100
@@ -170,13 +172,13 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
         """Open the cover."""
         target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
         assert target_value is not None
-        await self.info.node.async_set_value(target_value, self._open_value)
+        await self.info.node.async_set_value(target_value, self._fully_open_value)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
         assert target_value is not None
-        await self.info.node.async_set_value(target_value, self._closed_value)
+        await self.info.node.async_set_value(target_value, self._fully_closed_value)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop cover."""
@@ -220,18 +222,18 @@ class ZWaveTiltCover(ZWaveCover):
 
         `value` -- (int) Position byte value from 0-100.
         """
-        if value > self._closed_value:
-            return round((value / 100) * self._cover_range) + self._closed_value
-        return self._closed_value
+        if value > self._fully_closed_value:
+            return round((value / 100) * self._cover_range) + self._fully_closed_value
+        return self._fully_closed_value
 
     def zwave_tilt_to_percent(self, value: int) -> int:
         """Convert closed_value-open_value scale to position in 0-100 scale.
 
         `value` -- (int) Position byte value from closed_value-open_value.
         """
-        if value > self._closed_value:
-            return round(((value - self._closed_value) / self._cover_range) * 100)
-        return self._closed_value
+        if value > self._fully_closed_value:
+            return round(((value - self._fully_closed_value) / self._cover_range) * 100)
+        return self._fully_closed_value
 
     @property
     def current_cover_tilt_position(self) -> int | None:
