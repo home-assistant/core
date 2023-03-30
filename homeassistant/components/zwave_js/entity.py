@@ -163,13 +163,15 @@ class ZWaveBaseEntity(Entity):
         return name
 
     @property
-    def available(self) -> bool:
-        """Return entity availability."""
-        return (
+    def assumed_state(self) -> bool:
+        """Return True if unable to access real state of the entity."""
+        if (
             self.driver.client.connected
             and bool(self.info.node.ready)
             and self.info.node.status != NodeStatus.DEAD
-        )
+        ):
+            return self._attr_assumed_state
+        return True
 
     @callback
     def _node_status_alive_or_dead(self, event_data: dict) -> None:

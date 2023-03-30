@@ -20,9 +20,9 @@ from homeassistant.components.zwave_js.lock import (
     SERVICE_SET_LOCK_USERCODE,
 )
 from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
     STATE_LOCKED,
-    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     STATE_UNLOCKED,
 )
@@ -153,6 +153,10 @@ async def test_door_lock(
     }
     assert args["value"] == 0
 
+    state = hass.states.get(SCHLAGE_BE469_LOCK_ENTITY)
+    assert state
+    assert not state.attributes[ATTR_ASSUMED_STATE]
+
     event = Event(
         type="dead",
         data={
@@ -164,7 +168,9 @@ async def test_door_lock(
     node.receive_event(event)
 
     assert node.status == NodeStatus.DEAD
-    assert hass.states.get(SCHLAGE_BE469_LOCK_ENTITY).state == STATE_UNAVAILABLE
+    state = hass.states.get(SCHLAGE_BE469_LOCK_ENTITY)
+    assert state
+    assert state.attributes[ATTR_ASSUMED_STATE]
 
 
 async def test_only_one_lock(
