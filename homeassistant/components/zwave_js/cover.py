@@ -85,9 +85,9 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
         if self.info.platform_hint == "window_blind":
             self._attr_device_class = CoverDeviceClass.BLIND
 
-        # Set the previous value to the current value so that if there's an update, we
-        # can determine whether the cover is opening or closing.
-        self._prev_value: int | None = self.info.primary_value.value
+        # Store the current value so that if there's an update, we can determine
+        # whether the cover is opening or closing.
+        self._curr_value: int | None = self.info.primary_value.value
 
     def percent_to_zwave_position(self, value: int) -> int:
         """Convert position in 0-100 scale to closed_value-open_value scale.
@@ -104,14 +104,22 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
         """Handle primary value update."""
         new_value = self.info.primary_value.value
         # If the value update doesn't change anything, there is nothing to update.
-        if new_value == self._prev_value:
+        if new_value == self._curr_value:
             return
-        # If the cover is fully closed or opened, or if we don't know either the
-        # previous value or current value, we can't make any determination whether the
+        target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
+        assert target_value is not None
+        # If the cover is fully closed or opened or at the target value, or if we don't
+        # know either the previous value or current value, either the cover is neither
+        # opening or closing anymore or we can't make any determination whether the
         # cover is opening or closing so we set them to None.
         if (
-            new_value in (self._fully_closed_value, self._fully_open_value)
-            or self._prev_value is None
+            new_value
+            in (
+                self._fully_closed_value,
+                self._fully_open_value,
+                target_value.value,
+            )
+            or self._curr_value is None
             or new_value is None
         ):
             self._attr_is_closing = None
@@ -119,10 +127,10 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
         # If the current value is less than the previous value, the cover is
         # closing, otherwise it is opening.
         else:
-            self._attr_is_closing = (new_value - self._prev_value) < 0
+            self._attr_is_closing = (new_value - self._curr_value) < 0
             self._attr_is_opening = not self._attr_is_closing
 
-        self._prev_value = new_value
+        self._curr_value = new_value
 
     @property
     def _fully_open_value(self) -> int:
@@ -147,7 +155,7 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
         if self.info.primary_value.value is None:
             # guard missing value
             return None
-        return bool(self.info.primary_value.value == 0)
+        return bool(self.info.primary_value.value == self._fully_closed_value)
 
     @property
     def current_cover_position(self) -> int | None:
