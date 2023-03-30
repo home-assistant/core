@@ -323,14 +323,14 @@ def _validate_circular_dependencies(integrations: dict[str, Integration]) -> Non
         )
 
 
-def _validate_dependencies_exist(
+def _validate_dependencies(
     integrations: dict[str, Integration],
 ) -> None:
+    """Check that all referenced dependencies exist and are not duplicated."""
     for integration in integrations.values():
         if not integration.manifest:
             continue
 
-        # check that all referenced dependencies exist
         after_deps = integration.manifest.get("after_dependencies", [])
         for dep in integration.manifest.get("dependencies", []):
             if dep in after_deps:
@@ -353,5 +353,5 @@ def validate(
     _validate_dependency_imports(integrations)
 
     if not config.specific_integrations:
-        _validate_dependencies_exist(integrations)
+        _validate_dependencies(integrations)
         _validate_circular_dependencies(integrations)
