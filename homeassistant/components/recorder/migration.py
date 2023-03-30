@@ -1357,10 +1357,10 @@ def _context_id_to_bytes(context_id: str | None) -> bytes | None:
         return None
     with contextlib.suppress(ValueError):
         # There may be garbage in the context_id column
-        # from custom integrations that are not UUIDs or 
+        # from custom integrations that are not UUIDs or
         # ULIDs that filled the column to the max length
-	# so we need to catch the ValueError and return 
-	# None if it happens
+        # so we need to catch the ValueError and return
+        # None if it happens
         if len(context_id) == 32:
             return UUID(context_id).bytes
         if len(context_id) == 26:
