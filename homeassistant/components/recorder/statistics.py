@@ -1491,6 +1491,26 @@ def statistic_during_period(
     return {key: convert(value) if convert else value for key, value in result.items()}
 
 
+def _select_columns_for_types(
+    table: type[Statistics | StatisticsShortTerm],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+) -> Select:
+    columns = select(table.metadata_id, table.start_ts)  # type: ignore[call-overload]
+    if "last_reset" in types:
+        columns = columns.add_columns(table.last_reset_ts)
+    if "max" in types:
+        columns = columns.add_columns(table.max)
+    if "mean" in types:
+        columns = columns.add_columns(table.mean)
+    if "min" in types:
+        columns = columns.add_columns(table.min)
+    if "state" in types:
+        columns = columns.add_columns(table.state)
+    if "sum" in types:
+        columns = columns.add_columns(table.sum)
+    return columns  # type: ignore[no-any-return]
+
+
 def _statistics_during_period_with_session(
     hass: HomeAssistant,
     session: Session,
@@ -1525,19 +1545,7 @@ def _statistics_during_period_with_session(
     table: type[Statistics | StatisticsShortTerm] = (
         Statistics if period != "5minute" else StatisticsShortTerm
     )
-    columns = select(table.metadata_id, table.start_ts)  # type: ignore[call-overload]
-    if "last_reset" in types:
-        columns = columns.add_columns(table.last_reset_ts)
-    if "max" in types:
-        columns = columns.add_columns(table.max)
-    if "mean" in types:
-        columns = columns.add_columns(table.mean)
-    if "min" in types:
-        columns = columns.add_columns(table.min)
-    if "state" in types:
-        columns = columns.add_columns(table.state)
-    if "sum" in types:
-        columns = columns.add_columns(table.sum)
+    columns = _select_columns_for_types(table, types)
     stmt = _generate_statistics_during_period_stmt(
         columns, start_time, end_time, metadata_ids, table
     )
@@ -1643,7 +1651,7 @@ def _get_last_statistics(
     number_of_stats: int,
     statistic_id: str,
     convert_units: bool,
-    table: type[StatisticsBase],
+    table: type[Statistics | StatisticsShortTerm],
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[StatisticsRow]]:
     """Return the last number_of_stats statistics for a given statistic_id."""
@@ -1804,24 +1812,12 @@ def _generate_statistics_at_time_stmt(
 def _statistics_at_time(
     session: Session,
     metadata_ids: set[int],
-    table: type[StatisticsBase],
+    table: type[Statistics | StatisticsShortTerm],
     start_time: datetime,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> Sequence[Row] | None:
     """Return last known statistics, earlier than start_time, for the metadata_ids."""
-    columns = select(table.metadata_id, table.start_ts)
-    if "last_reset" in types:
-        columns = columns.add_columns(table.last_reset_ts)
-    if "max" in types:
-        columns = columns.add_columns(table.max)
-    if "mean" in types:
-        columns = columns.add_columns(table.mean)
-    if "min" in types:
-        columns = columns.add_columns(table.min)
-    if "state" in types:
-        columns = columns.add_columns(table.state)
-    if "sum" in types:
-        columns = columns.add_columns(table.sum)
+    columns = _select_columns_for_types(table, types)
     start_time_ts = start_time.timestamp()
     stmt = _generate_statistics_at_time_stmt(
         columns, table, metadata_ids, start_time_ts
@@ -1836,7 +1832,7 @@ def _sorted_statistics_to_dict(
     statistic_ids: set[str] | None,
     _metadata: dict[str, tuple[int, StatisticMetaData]],
     convert_units: bool,
-    table: type[StatisticsBase],
+    table: type[Statistics | StatisticsShortTerm],
     start_time: datetime | None,
     units: dict[str, str] | None,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
