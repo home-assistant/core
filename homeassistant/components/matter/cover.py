@@ -1,7 +1,7 @@
 """Matter cover."""
 from __future__ import annotations
 
-from enum import IntFlag
+from enum import Enum
 from typing import Any
 
 from chip.clusters import Objects as clusters
@@ -26,7 +26,7 @@ from .models import MatterDiscoverySchema
 OPERATIONAL_STATUS_MASK = 0b11
 
 
-class OperationalStatus(IntFlag):
+class OperationalStatus(Enum):
     """Currently ongoing operations enumeration for coverings, as defined in the Matter spec."""
 
     covering_is_currently_not_moving = 0b00
@@ -119,10 +119,10 @@ class MatterCover(MatterEntity, CoverEntity):
 
         state = operational_status & OPERATIONAL_STATUS_MASK
         match state:
-            case OperationalStatus.covering_is_currently_opening:
+            case OperationalStatus.covering_is_currently_opening.value:
                 self._attr_is_opening = True
                 self._attr_is_closing = False
-            case OperationalStatus.covering_is_currently_closing:
+            case OperationalStatus.covering_is_currently_closing.value:
                 self._attr_is_opening = False
                 self._attr_is_closing = True
             case _:
