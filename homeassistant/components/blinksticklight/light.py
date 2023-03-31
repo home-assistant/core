@@ -61,7 +61,7 @@ class BlinkStickLight(LightEntity):
 
     def update(self) -> None:
         """Read back the device state."""
-        rgb_color = self._stick.get_color()
+        rgb_color = self._stick._get_color_rgb()
         hsv = color_util.color_RGB_to_hsv(*rgb_color)
         self._attr_hs_color = hsv[:2]
         self._attr_brightness = int(hsv[2])
