@@ -101,37 +101,36 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Attempt to confirm."""
+        assert self._dhcp_discovery_info
+        await self.async_set_unique_id(self._dhcp_discovery_info.macaddress)
+        self._abort_if_unique_id_configured()
 
-        if self._dhcp_discovery_info:
-            await self.async_set_unique_id(self._dhcp_discovery_info.macaddress)
-            self._abort_if_unique_id_configured()
-
-            if user_input is None:
-                credentials = {
-                    CONF_HOST: self._dhcp_discovery_info.ip,
-                    CONF_PASSWORD: DEFAULT_PASSWORD,
-                    CONF_USERNAME: DEFAULT_USERNAME,
-                }
-                if await async_validate_creds(self.hass, credentials):
-                    self.discovery_schema = self.add_suggested_values_to_schema(
-                        DATA_SCHEMA, credentials
-                    )
-                else:
-                    self.discovery_schema = self.add_suggested_values_to_schema(
-                        DATA_SCHEMA,
-                        {
-                            CONF_HOST: self._dhcp_discovery_info.ip,
-                            CONF_USERNAME: "",
-                            CONF_PASSWORD: "",
-                        },
-                    )
-
-                # Show the confirmation dialog
-                return self.async_show_form(
-                    step_id="dhcp_confirm",
-                    data_schema=self.discovery_schema,
-                    description_placeholders={CONF_HOST: self._dhcp_discovery_info.ip},
+        if user_input is None:
+            credentials = {
+                CONF_HOST: self._dhcp_discovery_info.ip,
+                CONF_PASSWORD: DEFAULT_PASSWORD,
+                CONF_USERNAME: DEFAULT_USERNAME,
+            }
+            if await async_validate_creds(self.hass, credentials):
+                self.discovery_schema = self.add_suggested_values_to_schema(
+                    DATA_SCHEMA, credentials
                 )
+            else:
+                self.discovery_schema = self.add_suggested_values_to_schema(
+                    DATA_SCHEMA,
+                    {
+                        CONF_HOST: self._dhcp_discovery_info.ip,
+                        CONF_USERNAME: "",
+                        CONF_PASSWORD: "",
+                    },
+                )
+
+            # Show the confirmation dialog
+            return self.async_show_form(
+                step_id="dhcp_confirm",
+                data_schema=self.discovery_schema,
+                description_placeholders={CONF_HOST: self._dhcp_discovery_info.ip},
+            )
 
         return await self.async_step_user(user_input=user_input)
 
