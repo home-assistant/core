@@ -139,8 +139,8 @@ SENSOR_SETUP = {
 def _strip_sentinel(options: dict[str, Any]) -> None:
     """Convert sentinel to None."""
     for key in (CONF_DEVICE_CLASS, CONF_STATE_CLASS, CONF_UNIT_OF_MEASUREMENT):
-        if options.get(key) == NONE_SENTINEL:
-            options.pop(key, None)
+        if options[key] == NONE_SENTINEL:
+            options.pop(key)
 
 
 async def validate_rest_setup(
