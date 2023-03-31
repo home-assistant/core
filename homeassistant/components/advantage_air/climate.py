@@ -76,7 +76,7 @@ async def async_setup_entry(
             entities.append(AdvantageAirAC(instance, ac_key))
             for zone_key, zone in ac_device["zones"].items():
                 # Only add zone climate control when zone is in temperature control
-                if zone["type"] != 0:
+                if zone["type"] > 0:
                     entities.append(AdvantageAirZone(instance, ac_key, zone_key))
     async_add_entities(entities)
 
@@ -96,7 +96,36 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
         self._attr_unique_id = f'{self.coordinator.data["system"]["rid"]}-{ac_key}'
 
         self._attr_preset_modes = [ADVANTAGE_AIR_MYZONE]
-        self._attr_supported_features = ClimateEntityFeature.FAN_MODE
+
+        # Set supported features and HVAC modes based on current operating mode
+        if self.preset_mode == ADVANTAGE_AIR_MYZONE:
+            self._attr_supported_features = (
+                ClimateEntityFeature.FAN_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
+            )
+            self._attr_hvac_modes = [
+                HVACMode.OFF,
+                HVACMode.COOL,
+                HVACMode.HEAT,
+                HVACMode.FAN_ONLY,
+                HVACMode.DRY,
+            ]
+        elif self.preset_mode == ADVANTAGE_AIR_MYTEMP:
+            self._attr_supported_features = ClimateEntityFeature.FAN_MODE
+            self._attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT]
+        elif self.preset_mode == ADVANTAGE_AIR_MYAUTO:
+            self._attr_supported_features = (
+                ClimateEntityFeature.FAN_MODE
+                | ClimateEntityFeature.TARGET_TEMPERATURE
+                | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            )
+            self._attr_hvac_modes = [
+                HVACMode.OFF,
+                HVACMode.COOL,
+                HVACMode.HEAT,
+                HVACMode.FAN_ONLY,
+                HVACMode.DRY,
+                HVACMode.HEAT_COOL,
+            ]
 
         # Add "MyTemp" preset if available
         if ADVANTAGE_AIR_MYTEMP_ENABLED in self._ac:
@@ -107,6 +136,10 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
         if ADVANTAGE_AIR_MYAUTO_ENABLED in self._ac:
             self._attr_preset_modes += [ADVANTAGE_AIR_MYAUTO]
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
+
+        # Add "ezfan" mode if supported
+        if self._ac.get(ADVANTAGE_AIR_AUTOFAN):
+            self._attr_fan_modes += [FAN_AUTO]
 
     @property
     def target_temperature(self) -> float | None:
@@ -121,42 +154,9 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
         return HVACMode.OFF
 
     @property
-    def hvac_modes(self) -> list[HVACMode]:
-        """Return the available HVAC modes."""
-        # MyTemp only supports cooling and heating
-        if self._ac.get(ADVANTAGE_AIR_MYTEMP_ENABLED):
-            return [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT]
-        # MyAuto adds support for Auto
-        if self._ac.get(ADVANTAGE_AIR_MYAUTO_ENABLED):
-            return [
-                HVACMode.OFF,
-                HVACMode.COOL,
-                HVACMode.HEAT,
-                HVACMode.FAN_ONLY,
-                HVACMode.DRY,
-                HVACMode.HEAT_COOL,
-            ]
-        # MyZone does not support auto
-        return [
-            HVACMode.OFF,
-            HVACMode.COOL,
-            HVACMode.HEAT,
-            HVACMode.FAN_ONLY,
-            HVACMode.DRY,
-        ]
-
-    @property
     def fan_mode(self) -> str | None:
         """Return the current fan modes."""
         return ADVANTAGE_AIR_FAN_MODES.get(self._ac["fan"])
-
-    @property
-    def fan_modes(self) -> list[str] | None:
-        """Return the list of available fan modes."""
-        # Auto is only available when AutoFan is enabled
-        if self._ac.get(ADVANTAGE_AIR_AUTOFAN):
-            return self._attr_fan_modes + [FAN_AUTO]
-        return self._attr_fan_modes
 
     @property
     def preset_mode(self) -> str:
@@ -168,31 +168,14 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
         return ADVANTAGE_AIR_MYZONE
 
     @property
-    def supported_features(self) -> ClimateEntityFeature:
-        """Return the list of supported features."""
-        # MyTemp does not support setting a temperature of any kind
-        if self.preset_mode == ADVANTAGE_AIR_MYTEMP:
-            return self._attr_supported_features
-
-        # MyAuto in Heat/Cool supports setting a temperature range
-        if self.hvac_mode == HVACMode.HEAT_COOL:
-            return (
-                self._attr_supported_features
-                | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-            )
-
-        # MyAuto and MyZone in any other mode supports a setting a target temperature
-        return self._attr_supported_features | ClimateEntityFeature.TARGET_TEMPERATURE
-
-    @property
     def target_temperature_high(self) -> float | None:
         """Return the temperature cool mode is enabled."""
-        return self._ac.get(ADVANTAGE_AIR_COOL_TARGET, 24)
+        return self._ac.get(ADVANTAGE_AIR_COOL_TARGET)
 
     @property
     def target_temperature_low(self) -> float | None:
         """Return the temperature heat mode is enabled."""
-        return self._ac.get(ADVANTAGE_AIR_HEAT_TARGET, 20)
+        return self._ac.get(ADVANTAGE_AIR_HEAT_TARGET)
 
     async def async_turn_on(self) -> None:
         """Set the HVAC State to on."""
@@ -331,7 +314,6 @@ class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
             await self.async_turn_off()
         else:
             await self.async_turn_on()
-
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the Temperature."""
