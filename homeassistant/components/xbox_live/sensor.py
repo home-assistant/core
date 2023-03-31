@@ -20,7 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_XUID = "xuid"
 
-ICON = "mdi:microsoft-xbox"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -98,6 +97,7 @@ def get_user_gamercard(api, xuid):
 class XboxSensor(SensorEntity):
     """A class for the Xbox account."""
 
+    _attr_icon = "mdi:microsoft-xbox"
     _attr_should_poll = False
 
     def __init__(self, api, xuid, gamercard, interval):
@@ -137,11 +137,6 @@ class XboxSensor(SensorEntity):
     def entity_picture(self):
         """Avatar of the account."""
         return self._picture
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return ICON
 
     async def async_added_to_hass(self) -> None:
         """Start custom polling."""
