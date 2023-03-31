@@ -32,11 +32,11 @@ async def test_switch_state(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (
-        dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
-        == snapshot
-    )
+    # Check device registry
+    devices = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
+    assert devices == snapshot
 
+    # Check entity registry
     entities = [
         entity
         for entity in er.async_entries_for_config_entry(
@@ -46,5 +46,6 @@ async def test_switch_state(
     ]
     assert entities == snapshot
 
+    # Check states
     for entity in entities:
         assert hass.states.get(entity.entity_id) == snapshot(name=entity.entity_id)
