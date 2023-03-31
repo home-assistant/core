@@ -43,7 +43,7 @@ async def _validate_login(
         login_data[CONF_USERNAME],
         login_data[CONF_PASSWORD],
     )
-    errors = {}
+    errors: dict[str, str] = {}
     try:
         await api.async_login()
     except ClientResponseError as err:
