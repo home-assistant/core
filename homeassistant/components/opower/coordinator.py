@@ -38,6 +38,8 @@ class OpowerCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name="Opower",
+            # Data is updated daily on Opower.
+            # Refresh every 12h to be at most 12h behind.
             update_interval=timedelta(hours=12),
         )
         self.api = Opower(
@@ -52,6 +54,9 @@ class OpowerCoordinator(DataUpdateCoordinator):
     ) -> dict[str, Forecast]:
         """Fetch data from API endpoint."""
         try:
+            # Login expires after a few minutes.
+            # Given the infrequent updating (every 12h)
+            # assume previous sessions have expired and re-login.
             await self.api.async_login()
         except ClientResponseError as err:
             if err.status in (401, 403):
@@ -66,8 +71,6 @@ class OpowerCoordinator(DataUpdateCoordinator):
 
     async def _insert_statistics(self, accounts: list[Account]) -> None:
         """Insert Opower statistics."""
-        if "recorder" not in self.hass.config.components:
-            return
         for account in accounts:
             id_prefix = "_".join(
                 (
