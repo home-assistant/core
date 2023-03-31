@@ -13,7 +13,7 @@ from functools import cache, lru_cache, partial, wraps
 import json
 import logging
 import math
-from operator import attrgetter, contains
+from operator import contains
 import pathlib
 import random
 import re
@@ -983,7 +983,7 @@ def _state_generator(
     hass: HomeAssistant, domain: str | None
 ) -> Generator[TemplateState, None, None]:
     """State generator for a domain or all states."""
-    for state in sorted(hass.states.async_all(domain), key=attrgetter("entity_id")):
+    for state in hass.states.async_all(domain):
         yield _template_state_no_collect(hass, state)
 
 
@@ -1097,7 +1097,7 @@ def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
             _collect_state(hass, entity_id)
             found[entity_id] = entity
 
-    return sorted(found.values(), key=lambda a: a.entity_id)
+    return list(found.values())
 
 
 def device_entities(hass: HomeAssistant, _device_id: str) -> Iterable[str]:
