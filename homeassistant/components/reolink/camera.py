@@ -33,7 +33,9 @@ async def async_setup_entry(
             streams.append("ext")
 
         if host.api.supported(channel, "autotrack_stream"):
-            streams.extend(["autotrack_sub", "autotrack_snapshots_sub", "autotrack_snapshots_main"])
+            streams.extend(
+                ["autotrack_sub", "autotrack_snapshots_sub", "autotrack_snapshots_main"]
+            )
 
         for stream in streams:
             stream_url = await host.api.get_stream_source(channel, stream)
