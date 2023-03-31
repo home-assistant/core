@@ -45,6 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         hass.states.set("flexmeasures_s2.message", name)
 
+    # Register services
     hass.services.async_register(DOMAIN, "api", handle_api)
     hass.services.async_register(DOMAIN, "s2", handle_s2)
 
@@ -55,6 +56,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+
+    # Remove services
+    hass.services.async_remove(DOMAIN, "api")
+    hass.services.async_remove(DOMAIN, "s2")
+
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
 
