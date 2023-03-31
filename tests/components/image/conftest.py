@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
-from homeassistant.util import datetime as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockModule, mock_integration, mock_platform
 
