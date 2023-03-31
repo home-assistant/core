@@ -37,7 +37,7 @@ async def async_setup_entry(
 
         for stream in streams:
             stream_url = await host.api.get_stream_source(channel, stream)
-            if stream_url is None and stream != "snapshots":
+            if stream_url is None and "snapshots" not in stream:
                 continue
             cameras.append(ReolinkCamera(reolink_data, channel, stream))
 
