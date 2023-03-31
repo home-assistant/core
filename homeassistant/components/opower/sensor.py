@@ -35,6 +35,7 @@ class OpowerEntityDescriptionMixin:
 class OpowerEntityDescription(SensorEntityDescription, OpowerEntityDescriptionMixin):
     """Class describing Opower sensors entities."""
 
+
 # suggested_display_precision=0 for all sensors since
 # Opower provides 0 decimal points for all these.
 # (for the statistics in the energy dashboard Opower does provide decimal points)
