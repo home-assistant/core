@@ -42,4 +42,6 @@ class RensonEntity(CoordinatorEntity):
 
         self.api = api
 
-        self._attr_unique_id = f"{name}"
+        self._attr_unique_id = (
+            api.get_field_value(coordinator.data, MAC_ADDRESS.name) + f"{name}"
+        )
