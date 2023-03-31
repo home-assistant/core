@@ -433,8 +433,8 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
 async def test_import_flow_connection_error(hass: HomeAssistant) -> None:
     """Test a successful import of yaml."""
     with patch(
-        "homeassistant.components.imap.config_flow.validate_input",
-        return_value={"base": "cannot_connect"},
+        "homeassistant.components.imap.config_flow.connect_to_server",
+        side_effect=AioImapException("Unexpected error"),
     ), patch(
         "homeassistant.components.imap.async_setup_entry",
         return_value=True,
