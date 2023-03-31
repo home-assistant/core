@@ -80,9 +80,7 @@ DEFAULT_FILTER_TIME_CONSTANT = 10
 NAME_TEMPLATE = "{} filter"
 ICON = "mdi:chart-line-variant"
 
-FILTER_SCHEMA = vol.Schema(
-    {vol.Optional(CONF_FILTER_PRECISION, default=None): vol.Any(None, vol.Coerce(int))}
-)
+FILTER_SCHEMA = vol.Schema({vol.Optional(CONF_FILTER_PRECISION): vol.Coerce(int)})
 
 FILTER_OUTLIER_SCHEMA = FILTER_SCHEMA.extend(
     {
@@ -418,7 +416,7 @@ class Filter:
         name: str,
         window_size: int | timedelta,
         entity: str,
-        precision: int | None = DEFAULT_PRECISION,
+        precision: int | None,
     ) -> None:
         """Initialize common attributes.
 
@@ -466,7 +464,8 @@ class Filter:
             raise ValueError(f"State <{fstate.state}> is not a Number")
 
         filtered = self._filter_state(fstate)
-        filtered.set_precision(self.filter_precision)
+        if self.filter_precision is not None:
+            filtered.set_precision(self.filter_precision)
         if self._store_raw:
             self.states.append(copy(FilterState(new_state)))
         else:
@@ -486,7 +485,7 @@ class RangeFilter(Filter, SensorEntity):
     def __init__(
         self,
         entity: str,
-        precision: int,
+        precision: int | None = None,
         lower_bound: float | None = None,
         upper_bound: float | None = None,
     ) -> None:
@@ -545,7 +544,7 @@ class OutlierFilter(Filter, SensorEntity):
         window_size: int,
         entity: str,
         radius: float,
-        precision: int = DEFAULT_PRECISION,
+        precision: int | None = None,
     ) -> None:
         """Initialize Filter.
 
@@ -676,9 +675,7 @@ class ThrottleFilter(Filter, SensorEntity):
     One sample per window.
     """
 
-    def __init__(
-        self, window_size: int, entity: str, precision: int | None = None
-    ) -> None:
+    def __init__(self, window_size: int, entity: str, precision: None = None) -> None:
         """Initialize Filter."""
         super().__init__(
             FILTER_NAME_THROTTLE, window_size, precision=precision, entity=entity
@@ -704,7 +701,7 @@ class TimeThrottleFilter(Filter, SensorEntity):
     """
 
     def __init__(
-        self, window_size: timedelta, entity: str, precision: int = DEFAULT_PRECISION
+        self, window_size: timedelta, entity: str, precision: int | None = None
     ) -> None:
         """Initialize Filter."""
         super().__init__(
