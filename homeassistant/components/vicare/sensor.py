@@ -659,7 +659,7 @@ class ViCareSensor(SensorEntity):
 
     def __init__(
         self, name, api, device_config, description: ViCareSensorEntityDescription
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self._attr_name = name

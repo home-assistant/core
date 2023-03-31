@@ -12,6 +12,7 @@ from typing import Any, cast
 
 import attr
 import av
+from typing_extensions import Self
 
 from homeassistant.core import HomeAssistant
 
@@ -399,7 +400,7 @@ class PeekIterator(Iterator):
         # A pointer to either _iterator or _buffer
         self._next = self._iterator.__next__
 
-    def __iter__(self) -> Iterator:
+    def __iter__(self) -> Self:
         """Return an iterator."""
         return self
 

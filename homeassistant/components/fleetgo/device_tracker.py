@@ -53,7 +53,7 @@ def setup_scanner(
 class FleetGoDeviceScanner:
     """Define a scanner for the FleetGO platform."""
 
-    def __init__(self, config, see: SeeCallback):
+    def __init__(self, config, see: SeeCallback) -> None:
         """Initialize FleetGoDeviceScanner."""
         self._include = config.get(CONF_INCLUDE)
         self._see = see

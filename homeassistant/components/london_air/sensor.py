@@ -81,7 +81,7 @@ def setup_platform(
 class APIData:
     """Get the latest data for all authorities."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the AirData object."""
         self.data = None
 

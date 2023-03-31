@@ -13,6 +13,7 @@ from homeassistant.components.homekit_controller.sensor import (
     thread_status_to_str,
 )
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import TEST_DEVICE_SERVICE_INFO, Helper, setup_test_component
@@ -68,7 +69,7 @@ def create_battery_level_sensor(accessory):
     return service
 
 
-async def test_temperature_sensor_read_state(hass, utcnow):
+async def test_temperature_sensor_read_state(hass: HomeAssistant, utcnow) -> None:
     """Test reading the state of a HomeKit temperature sensor accessory."""
     helper = await setup_test_component(
         hass, create_temperature_sensor_service, suffix="temperature"
@@ -94,7 +95,7 @@ async def test_temperature_sensor_read_state(hass, utcnow):
     assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
 
 
-async def test_temperature_sensor_not_added_twice(hass, utcnow):
+async def test_temperature_sensor_not_added_twice(hass: HomeAssistant, utcnow) -> None:
     """A standalone temperature sensor should not get a characteristic AND a service entity."""
     helper = await setup_test_component(
         hass, create_temperature_sensor_service, suffix="temperature"
@@ -108,7 +109,7 @@ async def test_temperature_sensor_not_added_twice(hass, utcnow):
     assert created_sensors == {helper.entity_id}
 
 
-async def test_humidity_sensor_read_state(hass, utcnow):
+async def test_humidity_sensor_read_state(hass: HomeAssistant, utcnow) -> None:
     """Test reading the state of a HomeKit humidity sensor accessory."""
     helper = await setup_test_component(
         hass, create_humidity_sensor_service, suffix="humidity"
@@ -133,7 +134,7 @@ async def test_humidity_sensor_read_state(hass, utcnow):
     assert state.attributes["device_class"] == SensorDeviceClass.HUMIDITY
 
 
-async def test_light_level_sensor_read_state(hass, utcnow):
+async def test_light_level_sensor_read_state(hass: HomeAssistant, utcnow) -> None:
     """Test reading the state of a HomeKit temperature sensor accessory."""
     helper = await setup_test_component(
         hass, create_light_level_sensor_service, suffix="light_level"
@@ -158,7 +159,9 @@ async def test_light_level_sensor_read_state(hass, utcnow):
     assert state.attributes["device_class"] == SensorDeviceClass.ILLUMINANCE
 
 
-async def test_carbon_dioxide_level_sensor_read_state(hass, utcnow):
+async def test_carbon_dioxide_level_sensor_read_state(
+    hass: HomeAssistant, utcnow
+) -> None:
     """Test reading the state of a HomeKit carbon dioxide sensor accessory."""
     helper = await setup_test_component(
         hass, create_carbon_dioxide_level_sensor_service, suffix="carbon_dioxide"
@@ -181,7 +184,7 @@ async def test_carbon_dioxide_level_sensor_read_state(hass, utcnow):
     assert state.state == "20"
 
 
-async def test_battery_level_sensor(hass, utcnow):
+async def test_battery_level_sensor(hass: HomeAssistant, utcnow) -> None:
     """Test reading the state of a HomeKit battery level sensor."""
     helper = await setup_test_component(
         hass, create_battery_level_sensor, suffix="battery"
@@ -208,7 +211,7 @@ async def test_battery_level_sensor(hass, utcnow):
     assert state.attributes["device_class"] == SensorDeviceClass.BATTERY
 
 
-async def test_battery_charging(hass, utcnow):
+async def test_battery_charging(hass: HomeAssistant, utcnow) -> None:
     """Test reading the state of a HomeKit battery's charging state."""
     helper = await setup_test_component(
         hass, create_battery_level_sensor, suffix="battery"
@@ -232,7 +235,7 @@ async def test_battery_charging(hass, utcnow):
     assert state.attributes["icon"] == "mdi:battery-charging-20"
 
 
-async def test_battery_low(hass, utcnow):
+async def test_battery_low(hass: HomeAssistant, utcnow) -> None:
     """Test reading the state of a HomeKit battery's low state."""
     helper = await setup_test_component(
         hass, create_battery_level_sensor, suffix="battery"
@@ -274,7 +277,7 @@ def create_switch_with_sensor(accessory):
     return service
 
 
-async def test_switch_with_sensor(hass, utcnow):
+async def test_switch_with_sensor(hass: HomeAssistant, utcnow) -> None:
     """Test a switch service that has a sensor characteristic is correctly handled."""
     helper = await setup_test_component(hass, create_switch_with_sensor)
 
@@ -304,7 +307,7 @@ async def test_switch_with_sensor(hass, utcnow):
     assert state.state == "50"
 
 
-async def test_sensor_unavailable(hass, utcnow):
+async def test_sensor_unavailable(hass: HomeAssistant, utcnow) -> None:
     """Test a sensor becoming unavailable."""
     helper = await setup_test_component(hass, create_switch_with_sensor)
 
@@ -331,7 +334,7 @@ async def test_sensor_unavailable(hass, utcnow):
     assert state.state == "unavailable"
 
 
-def test_thread_node_caps_to_str():
+def test_thread_node_caps_to_str() -> None:
     """Test all values of this enum get a translatable string."""
     assert (
         thread_node_capability_to_str(ThreadNodeCapabilities.BORDER_ROUTER_CAPABLE)
@@ -347,7 +350,7 @@ def test_thread_node_caps_to_str():
     assert thread_node_capability_to_str(ThreadNodeCapabilities(128)) == "none"
 
 
-def test_thread_status_to_str():
+def test_thread_status_to_str() -> None:
     """Test all values of this enum get a translatable string."""
     assert thread_status_to_str(ThreadStatus.BORDER_ROUTER) == "border_router"
     assert thread_status_to_str(ThreadStatus.LEADER) == "leader"
@@ -359,8 +362,11 @@ def test_thread_status_to_str():
 
 
 async def test_rssi_sensor(
-    hass, utcnow, entity_registry_enabled_by_default, enable_bluetooth
-):
+    hass: HomeAssistant,
+    utcnow,
+    entity_registry_enabled_by_default: None,
+    enable_bluetooth: None,
+) -> None:
     """Test an rssi sensor."""
     inject_bluetooth_service_info(hass, TEST_DEVICE_SERVICE_INFO)
 
@@ -381,8 +387,11 @@ async def test_rssi_sensor(
 
 
 async def test_migrate_rssi_sensor_unique_id(
-    hass, utcnow, entity_registry_enabled_by_default, enable_bluetooth
-):
+    hass: HomeAssistant,
+    utcnow,
+    entity_registry_enabled_by_default: None,
+    enable_bluetooth: None,
+) -> None:
     """Test an rssi sensor unique id migration."""
     entity_registry = er.async_get(hass)
     rssi_sensor = entity_registry.async_get_or_create(

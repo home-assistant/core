@@ -1,11 +1,12 @@
 """Test the Met Éireann integration init."""
 from homeassistant.components.met_eireann.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 
 from . import init_integration
 
 
-async def test_unload_entry(hass):
+async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test successful unload of entry."""
     entry = await init_integration(hass)
 

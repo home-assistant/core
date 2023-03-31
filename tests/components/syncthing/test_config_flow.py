@@ -1,5 +1,4 @@
 """Tests for syncthing config flow."""
-
 from unittest.mock import patch
 
 from aiosyncthing.exceptions import UnauthorizedError
@@ -7,6 +6,7 @@ from aiosyncthing.exceptions import UnauthorizedError
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.syncthing.const import DOMAIN
 from homeassistant.const import CONF_NAME, CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -23,7 +23,7 @@ MOCK_ENTRY = {
 }
 
 
-async def test_show_setup_form(hass):
+async def test_show_setup_form(hass: HomeAssistant) -> None:
     """Test that the setup form is served."""
 
     result = await hass.config_entries.flow.async_init(
@@ -34,7 +34,7 @@ async def test_show_setup_form(hass):
     assert result["step_id"] == "user"
 
 
-async def test_flow_successful(hass):
+async def test_flow_successful(hass: HomeAssistant) -> None:
     """Test with required fields only."""
     with patch(
         "aiosyncthing.system.System.status", return_value={"myID": "server-id"}
@@ -61,7 +61,7 @@ async def test_flow_successful(hass):
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_flow_already_configured(hass):
+async def test_flow_already_configured(hass: HomeAssistant) -> None:
     """Test name is already configured."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY, unique_id="server-id")
@@ -78,7 +78,7 @@ async def test_flow_already_configured(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_flow_invalid_auth(hass):
+async def test_flow_invalid_auth(hass: HomeAssistant) -> None:
     """Test invalid auth."""
 
     with patch("aiosyncthing.system.System.status", side_effect=UnauthorizedError):
@@ -92,7 +92,7 @@ async def test_flow_invalid_auth(hass):
         assert result["errors"]["token"] == "invalid_auth"
 
 
-async def test_flow_cannot_connect(hass):
+async def test_flow_cannot_connect(hass: HomeAssistant) -> None:
     """Test cannot connect."""
 
     with patch("aiosyncthing.system.System.status", side_effect=Exception):

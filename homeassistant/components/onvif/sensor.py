@@ -55,7 +55,9 @@ class ONVIFSensor(ONVIFBaseEntity, RestoreSensor):
 
     _attr_should_poll = False
 
-    def __init__(self, uid, device: ONVIFDevice, entry: er.RegistryEntry | None = None):
+    def __init__(
+        self, uid, device: ONVIFDevice, entry: er.RegistryEntry | None = None
+    ) -> None:
         """Initialize the ONVIF binary sensor."""
         self._attr_unique_id = uid
         if entry is not None:

@@ -25,7 +25,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "moon_value,native_value,icon",
+    ("moon_value", "native_value", "icon"),
     [
         (0, STATE_NEW_MOON, MOON_ICONS[STATE_NEW_MOON]),
         (5, STATE_WAXING_CRESCENT, MOON_ICONS[STATE_WAXING_CRESCENT]),

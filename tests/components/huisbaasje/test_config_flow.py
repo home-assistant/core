@@ -9,11 +9,12 @@ from energyflip import (
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.huisbaasje.const import DOMAIN
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -55,7 +56,7 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass):
+async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -77,7 +78,7 @@ async def test_form_invalid_auth(hass):
     assert form_result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_authenticate_cannot_connect(hass):
+async def test_form_authenticate_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error in authenticate."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -99,7 +100,7 @@ async def test_form_authenticate_cannot_connect(hass):
     assert form_result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_authenticate_unknown_error(hass):
+async def test_form_authenticate_unknown_error(hass: HomeAssistant) -> None:
     """Test we handle an unknown error in authenticate."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -121,7 +122,7 @@ async def test_form_authenticate_unknown_error(hass):
     assert form_result["errors"] == {"base": "unknown"}
 
 
-async def test_form_customer_overview_cannot_connect(hass):
+async def test_form_customer_overview_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error in customer_overview."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -143,7 +144,7 @@ async def test_form_customer_overview_cannot_connect(hass):
     assert form_result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_customer_overview_authentication_error(hass):
+async def test_form_customer_overview_authentication_error(hass: HomeAssistant) -> None:
     """Test we handle an unknown error in customer_overview."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -165,7 +166,7 @@ async def test_form_customer_overview_authentication_error(hass):
     assert form_result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_customer_overview_unknown_error(hass):
+async def test_form_customer_overview_unknown_error(hass: HomeAssistant) -> None:
     """Test we handle an unknown error in customer_overview."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -187,7 +188,7 @@ async def test_form_customer_overview_unknown_error(hass):
     assert form_result["errors"] == {"base": "unknown"}
 
 
-async def test_form_entry_exists(hass):
+async def test_form_entry_exists(hass: HomeAssistant) -> None:
     """Test we handle an already existing entry."""
     MockConfigEntry(
         unique_id="test-id",

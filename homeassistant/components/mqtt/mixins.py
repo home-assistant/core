@@ -51,8 +51,8 @@ from homeassistant.helpers.entity import (
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.json import json_loads
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util.json import json_loads
 
 from . import debug_info, subscription
 from .client import async_publish
@@ -247,7 +247,7 @@ def warn_for_legacy_schema(domain: str) -> Callable[[ConfigType], ConfigType]:
             (
                 "Manually configured MQTT %s(s) found under platform key '%s', "
                 "please move to the mqtt integration key, see "
-                "https://www.home-assistant.io/integrations/%s.mqtt/#new_format"
+                "https://www.home-assistant.io/integrations/%s.mqtt/"
             ),
             domain,
             domain,

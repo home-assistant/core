@@ -43,7 +43,7 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> UnifiDeviceScanner |
 
 
 class UnifiDeviceScanner(DeviceScanner):
-    """This class queries Unifi wireless access point."""
+    """Class which queries Unifi wireless access point."""
 
     def __init__(self, config):
         """Initialize the scanner."""

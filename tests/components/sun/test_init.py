@@ -5,16 +5,16 @@ from unittest.mock import patch
 from freezegun import freeze_time
 import pytest
 
-import homeassistant.components.sun as sun
+from homeassistant.components import sun
 from homeassistant.const import EVENT_STATE_CHANGED
-import homeassistant.core as ha
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_setting_rising(hass):
+async def test_setting_rising(hass: HomeAssistant) -> None:
     """Test retrieving sun setting and rising."""
     utc_now = datetime(2016, 11, 1, 8, 0, 0, tzinfo=dt_util.UTC)
     with freeze_time(utc_now):
@@ -106,7 +106,9 @@ async def test_setting_rising(hass):
     )
 
 
-async def test_state_change(hass, caplog):
+async def test_state_change(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test if the state changes at next setting/rising."""
     now = datetime(2016, 6, 1, 8, 0, 0, tzinfo=dt_util.UTC)
     with freeze_time(now):
@@ -155,7 +157,7 @@ async def test_state_change(hass, caplog):
     assert hass.states.get(sun.ENTITY_ID).state == sun.STATE_BELOW_HORIZON
 
 
-async def test_norway_in_june(hass):
+async def test_norway_in_june(hass: HomeAssistant) -> None:
     """Test location in Norway where the sun doesn't set in summer."""
     hass.config.latitude = 69.6
     hass.config.longitude = 18.8
@@ -179,7 +181,7 @@ async def test_norway_in_june(hass):
 
 
 @pytest.mark.skip
-async def test_state_change_count(hass):
+async def test_state_change_count(hass: HomeAssistant) -> None:
     """Count the number of state change events in a location."""
     # Skipped because it's a bit slow. Has been validated with
     # multiple lattitudes and dates
@@ -193,7 +195,7 @@ async def test_state_change_count(hass):
 
     events = []
 
-    @ha.callback
+    @callback
     def state_change_listener(event):
         if event.data.get("entity_id") == "sun.sun":
             events.append(event)
@@ -209,7 +211,7 @@ async def test_state_change_count(hass):
     assert len(events) < 721
 
 
-async def test_setup_and_remove_config_entry(hass: ha.HomeAssistant) -> None:
+async def test_setup_and_remove_config_entry(hass: HomeAssistant) -> None:
     """Test setting up and removing a config entry."""
     # Setup the config entry
     config_entry = MockConfigEntry(domain=sun.DOMAIN)

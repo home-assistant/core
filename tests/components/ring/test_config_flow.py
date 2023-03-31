@@ -4,9 +4,10 @@ from unittest.mock import Mock, patch
 from homeassistant import config_entries
 from homeassistant.components.ring import DOMAIN
 from homeassistant.components.ring.config_flow import InvalidAuth
+from homeassistant.core import HomeAssistant
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -42,7 +43,7 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass):
+async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

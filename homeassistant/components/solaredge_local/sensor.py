@@ -278,7 +278,7 @@ class SolarEdgeSensor(SensorEntity):
         platform_name,
         data,
         description: SolarEdgeLocalSensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self._platform_name = platform_name

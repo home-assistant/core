@@ -33,7 +33,7 @@ def setup_sensor_platform_only():
         yield
 
 
-async def test_sensors_no_job(hass: HomeAssistant, mock_config_entry, mock_api):
+async def test_sensors_no_job(hass: HomeAssistant, mock_config_entry, mock_api) -> None:
     """Test sensors while no job active."""
     assert await async_setup_component(hass, "prusalink", {})
 
@@ -89,7 +89,7 @@ async def test_sensors_active_job(
     mock_api,
     mock_printer_api,
     mock_job_api_printing,
-):
+) -> None:
     """Test sensors while active job."""
     with patch(
         "homeassistant.components.prusalink.sensor.utcnow",

@@ -13,6 +13,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import async_setup_entity, mock_feature
@@ -55,7 +56,7 @@ def tempsensor_fixture():
     return (feature, "sensor.tempsensor_0_temperature")
 
 
-async def test_init(tempsensor, hass):
+async def test_init(tempsensor, hass: HomeAssistant) -> None:
     """Test sensor default state."""
 
     _, entity_id = tempsensor
@@ -79,7 +80,7 @@ async def test_init(tempsensor, hass):
     assert device.sw_version == "1.23"
 
 
-async def test_update(tempsensor, hass):
+async def test_update(tempsensor, hass: HomeAssistant) -> None:
     """Test sensor update."""
 
     feature_mock, entity_id = tempsensor
@@ -95,7 +96,9 @@ async def test_update(tempsensor, hass):
     assert state.state == "25.18"
 
 
-async def test_update_failure(tempsensor, hass, caplog):
+async def test_update_failure(
+    tempsensor, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that update failures are logged."""
 
     caplog.set_level(logging.ERROR)
@@ -107,7 +110,7 @@ async def test_update_failure(tempsensor, hass, caplog):
     assert f"Updating '{feature_mock.full_name}' failed: " in caplog.text
 
 
-async def test_airsensor_init(airsensor, hass):
+async def test_airsensor_init(airsensor, hass: HomeAssistant) -> None:
     """Test airSensor default state."""
 
     _, entity_id = airsensor
@@ -130,7 +133,7 @@ async def test_airsensor_init(airsensor, hass):
     assert device.sw_version == "1.23"
 
 
-async def test_airsensor_update(airsensor, hass):
+async def test_airsensor_update(airsensor, hass: HomeAssistant) -> None:
     """Test air quality sensor state after update."""
 
     feature_mock, entity_id = airsensor

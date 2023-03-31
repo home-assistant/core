@@ -55,7 +55,10 @@ class HostSubProcess:
     def ping(self):
         """Send an ICMP echo request and return True if success."""
         with subprocess.Popen(
-            self._ping_cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
+            self._ping_cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            close_fds=False,  # required for posix_spawn
         ) as pinger:
             try:
                 pinger.communicate(timeout=1 + PING_TIMEOUT)
