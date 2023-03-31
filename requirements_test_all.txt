@@ -1645,7 +1645,7 @@ scapy==2.5.0
 screenlogicpy==0.8.2
 
 # homeassistant.components.backup
-securetar==2022.2.0
+securetar==2023.3.0
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
