@@ -35,6 +35,7 @@ SERVICE_LOG_THREAD_FRAMES = "log_thread_frames"
 SERVICE_LOG_EVENT_LOOP_SCHEDULED = "log_event_loop_scheduled"
 
 _LRU_CACHE_WRAPPER_OBJECT = _lru_cache_wrapper.__name__
+_SQLALCHEMY_LRU_OBJECT = "LRUCache"
 
 _KNOWN_LRU_CLASSES = (
     "EventDataManager",
@@ -67,7 +68,9 @@ LOG_INTERVAL_SUB = "log_interval_subscription"
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(  # noqa: C901
+    hass: HomeAssistant, entry: ConfigEntry
+) -> bool:
     """Set up Profiler from a config entry."""
     lock = asyncio.Lock()
     domain_data = hass.data[DOMAIN] = {}
@@ -175,6 +178,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                             _get_function_absfile(class_with_lru_attr),
                             maybe_lru.get_stats(),
                         )
+
+        for lru in objgraph.by_type(_SQLALCHEMY_LRU_OBJECT):
+            if (data := getattr(lru, "_data", None)) and isinstance(data, dict):
+                for key, value in dict(data).items():
+                    _LOGGER.critical(
+                        "Cache data for sqlalchemy LRUCache %s: %s: %s", lru, key, value
+                    )
 
         persistent_notification.create(
             hass,

@@ -245,8 +245,8 @@ def test_iterating_domain_states(hass: HomeAssistant) -> None:
 
 
 async def test_import(hass: HomeAssistant) -> None:
-    """Test that imports work from the config/custom_jinja folder."""
-    await template.async_load_custom_jinja(hass)
+    """Test that imports work from the config/custom_templates folder."""
+    await template.async_load_custom_templates(hass)
     assert "test.jinja" in template._get_hass_loader(hass).sources
     assert "inner/inner_test.jinja" in template._get_hass_loader(hass).sources
     assert (
@@ -283,7 +283,7 @@ async def test_import(hass: HomeAssistant) -> None:
 
 async def test_import_change(hass: HomeAssistant) -> None:
     """Test that a change in HassLoader results in updated imports."""
-    await template.async_load_custom_jinja(hass)
+    await template.async_load_custom_templates(hass)
     to_test = template.Template(
         """
         {% import 'test.jinja' as t %}
@@ -1460,6 +1460,11 @@ def test_is_hidden_entity(
 
     assert not template.Template(
         f"{{{{ is_hidden_entity('{visible_entity.entity_id}') }}}}",
+        hass,
+    ).async_render()
+
+    assert not template.Template(
+        f"{{{{ ['{visible_entity.entity_id}'] | select('is_hidden_entity') | first }}}}",
         hass,
     ).async_render()
 
