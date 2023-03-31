@@ -362,7 +362,9 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
 
     def _async_validate_code(self, code, state):
         """Validate given code."""
-        if not self.code_arm_required or self._code is None:
+        if (
+            state != STATE_ALARM_DISARMED and not self.code_arm_required
+        ) or self._code is None:
             return
 
         if isinstance(self._code, str):
