@@ -105,7 +105,9 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         key="CURRENT_LEVEL_FIELD",
         name="Ventilation level",
         field=CURRENT_LEVEL_FIELD,
-        raw_format=True,
+        raw_format=False,
+        device_class=SensorDeviceClass.ENUM,
+        options=["Off", "Level1", "Level2", "Level3", "Level4", "Breeze", "Holiday"],
     ),
     RensonSensorEntityDescription(
         key="CURRENT_AIRFLOW_EXTRACT_FIELD",
