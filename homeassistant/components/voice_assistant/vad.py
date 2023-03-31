@@ -72,13 +72,21 @@ class VoiceCommandSegmenter:
         self._audio_buffer += samples
 
         # Process in 10, 20, or 30 ms chunks.
-        while len(self._audio_buffer) >= self._bytes_per_chunk:
-            chunk = self._audio_buffer[: self._bytes_per_chunk]
+        num_chunks = len(self._audio_buffer) // self._bytes_per_chunk
+        for chunk_idx in range(num_chunks):
+            chunk_offset = chunk_idx * self._bytes_per_chunk
+            chunk = self._audio_buffer[
+                chunk_offset : chunk_offset + self._bytes_per_chunk
+            ]
             if not self._process_chunk(chunk):
                 self.reset()
                 return False
 
-            self._audio_buffer = self._audio_buffer[self._bytes_per_chunk :]
+        if num_chunks > 0:
+            # Remove from buffer
+            self._audio_buffer = self._audio_buffer[
+                num_chunks * self._bytes_per_chunk :
+            ]
 
         return True
 

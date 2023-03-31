@@ -75,7 +75,7 @@ class MockSTT:
         hass: HomeAssistant,
         config: ConfigType,
         discovery_info: DiscoveryInfoType | None = None,
-    ) -> tts.Provider:
+    ) -> stt.Provider:
         """Set up a mock speech component."""
         return MockSttProvider(hass, _TRANSCRIPT)
 
