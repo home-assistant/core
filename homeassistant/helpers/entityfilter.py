@@ -134,11 +134,6 @@ INCLUDE_EXCLUDE_FILTER_SCHEMA = vol.All(
 )
 
 
-def _glob_to_re(glob: str) -> re.Pattern[str]:
-    """Translate and compile glob string into pattern."""
-    return re.compile(fnmatch.translate(glob))
-
-
 def _convert_globs_to_pattern(globs: list[str] | None) -> re.Pattern[str] | None:
     """Convert a list of globs to a re pattern list."""
     if globs is None:
