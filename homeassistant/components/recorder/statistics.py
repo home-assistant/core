@@ -1658,7 +1658,7 @@ def _get_last_statistics(
     number_of_stats: int,
     statistic_id: str,
     convert_units: bool,
-    table: type[Statistics | StatisticsShortTerm],
+    table: type[StatisticsBase],
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[StatisticsRow]]:
     """Return the last number_of_stats statistics for a given statistic_id."""
