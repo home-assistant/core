@@ -2,9 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-import json
-import os
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareService import (
@@ -19,24 +17,13 @@ from homeassistant.core import HomeAssistant
 
 from . import ENTRY_CONFIG, MODULE
 
-from tests.common import MockConfigEntry
-
-
-def readJson(fileName):
-    """Read filte to json."""
-    test_filename = os.path.join(os.path.dirname(__file__), fileName)
-    with open(test_filename, mode="rb") as json_file:
-        return json.load(json_file)
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 class MockPyViCare:
     """Mocked PyVicare class based on a json dump."""
 
-    def setCacheDuration(self, cache_duration):
-        """Set cache duration to limit # of requests."""
-        self.cacheDuration = int(cache_duration)
-
-    def __init__(self, fixtures) -> None:
+    def __init__(self, fixtures: list[str]) -> None:
         """Init a single device from json dump."""
         self.devices = []
         for idx, fixture in enumerate(fixtures):
@@ -55,32 +42,36 @@ class MockPyViCare:
                 )
             )
 
+    def setCacheDuration(self, cache_duration: int):
+        """Set cache duration to limit # of requests."""
+        self.cacheDuration = int(cache_duration)
+
     def initWithCredentials(
         self, username: str, password: str, client_id: str, token_file: str
-    ):
+    ) -> None:
         """Stub oauth login."""
-        None
 
 
 class ViCareServiceMock:
     """PyVicareService mock using a json dump."""
 
-    def __init__(self, fixture, inst_id, serial, device_id, roles):
+    def __init__(
+        self, fixture: str, inst_id: int, serial: str, device_id: str, roles: list[str]
+    ):
         """Initialize the mock from a json dump."""
-        testData = readJson(fixture)
-        self.testData = testData
+        self.__testData = load_json_object_fixture(fixture)
 
         self.accessor = ViCareDeviceAccessor(inst_id, serial, device_id)
         self.setPropertyData = []
         self.roles = roles
 
-    def getProperty(self, property_name):
+    def getProperty(self, property_name: str):
         """Read a property from a json dump."""
-        entities = self.testData["data"]
+        entities = self.__testData["data"]
         value = readFeature(entities, property_name)
         return value
 
-    def setProperty(self, property_name, action, data):
+    def setProperty(self, property_name: str, action: str, data: str):
         """Set a property to its internal data structure."""
         self.setPropertyData.append(
             {
@@ -91,7 +82,7 @@ class ViCareServiceMock:
             }
         )
 
-    def hasRoles(self, requested_roles) -> bool:
+    def hasRoles(self, requested_roles: list[str]) -> bool:
         """Return true if requested roles are supported."""
         return len(requested_roles) > 0 and set(requested_roles).issubset(
             set(self.roles)
@@ -99,7 +90,7 @@ class ViCareServiceMock:
 
     def fetch_all_features(self) -> str:
         """Return the full json dump."""
-        return self.testData
+        return self.__testData
 
 
 @pytest.fixture
@@ -108,6 +99,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         unique_id="ViCare",
+        entry_id="1234",
         data=ENTRY_CONFIG,
     )
 
@@ -117,7 +109,7 @@ async def mock_vicare_gas_boiler(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> Generator[MagicMock, None, None]:
     """Return a mocked ViCare API representing a single gas boiler device."""
-    fixtures = ["fixtures/Vitodens300W.json"]
+    fixtures = ["vicare/Vitodens300W.json"]
     with patch(
         f"{MODULE}.vicare_login",
         return_value=MockPyViCare(fixtures),
@@ -131,7 +123,7 @@ async def mock_vicare_gas_boiler(
 
 
 @pytest.fixture
-async def mock_setup_entry() -> bool:
-    """Return a mocked ViCare API representing a gas boiler device."""
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+    """Mock setting up a config entry."""
     with patch(f"{MODULE}.async_setup_entry", return_value=True) as mock_setup_entry:
         yield mock_setup_entry

@@ -1,4 +1,4 @@
-"""Test ViCare sensors."""
+"""Test ViCare diagnostics."""
 
 from unittest.mock import MagicMock
 
@@ -21,5 +21,4 @@ async def test_diagnostics(
         hass, hass_client, mock_vicare_gas_boiler
     )
 
-    diag["entry"].pop("entry_id")
     assert diag == snapshot

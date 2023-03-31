@@ -4702,6 +4702,7 @@
       }),
       'disabled_by': None,
       'domain': 'vicare',
+      'entry_id': '1234',
       'options': dict({
       }),
       'pref_disable_new_entities': False,
