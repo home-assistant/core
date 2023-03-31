@@ -49,6 +49,10 @@ _LOGGER = logging.getLogger(__name__)
 SERVICE_SET_VICARE_MODE = "set_vicare_mode"
 SERVICE_SET_VICARE_MODE_ATTR_MODE = "vicare_mode"
 
+SERVICE_SET_HEATING_CURVE = "set_heating_curve"
+SERVICE_SET_HEATING_CURVE_ATTR_SLOPE = "slope"
+SERVICE_SET_HEATING_CURVE_ATTR_SHIFT = "shift"
+
 VICARE_MODE_DHW = "dhw"
 VICARE_MODE_HEATING = "heating"
 VICARE_MODE_DHWANDHEATING = "dhwAndHeating"
@@ -72,6 +76,12 @@ VICARE_HOLD_MODE_OFF = "off"
 
 VICARE_TEMP_HEATING_MIN = 3
 VICARE_TEMP_HEATING_MAX = 37
+
+VICARE_HEATING_CURVE_SLOPE_MIN = 0.3
+VICARE_HEATING_CURVE_SLOPE_MAX = 3.5
+
+VICARE_HEATING_CURVE_SHIFT_MIN = -13
+VICARE_HEATING_CURVE_SHIFT_MAX = 40
 
 VICARE_TO_HA_HVAC_HEATING = {
     VICARE_MODE_FORCEDREDUCED: HVACMode.OFF,
@@ -136,6 +146,27 @@ async def async_setup_entry(
         SERVICE_SET_VICARE_MODE,
         {vol.Required(SERVICE_SET_VICARE_MODE_ATTR_MODE): cv.string},
         "set_vicare_mode",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_SET_HEATING_CURVE,
+        {
+            vol.Required(SERVICE_SET_HEATING_CURVE_ATTR_SHIFT): vol.All(
+                vol.Coerce(int),
+                vol.Clamp(
+                    min=VICARE_HEATING_CURVE_SHIFT_MIN,
+                    max=VICARE_HEATING_CURVE_SHIFT_MAX,
+                ),
+            ),
+            vol.Required(SERVICE_SET_HEATING_CURVE_ATTR_SLOPE): vol.All(
+                vol.Coerce(float),
+                vol.Clamp(
+                    min=VICARE_HEATING_CURVE_SLOPE_MIN,
+                    max=VICARE_HEATING_CURVE_SLOPE_MAX,
+                ),
+            ),
+        },
+        "set_heating_curve",
     )
 
     async_add_entities(entities)
@@ -374,3 +405,7 @@ class ViCareClimate(ClimateEntity):
             raise ValueError(f"Cannot set invalid vicare mode: {vicare_mode}.")
 
         self._circuit.setMode(vicare_mode)
+
+    def set_heating_curve(self, shift, slope):
+        """Service function to set vicare heating curve directly."""
+        self._circuit.setHeatingCurve(int(shift), round(float(slope), 1))

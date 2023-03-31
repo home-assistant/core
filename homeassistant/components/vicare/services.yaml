@@ -20,3 +20,27 @@ set_vicare_mode:
             - "forcedReduced"
             - "heating"
             - "standby"
+set_heating_curve:
+  name: Set heating curve
+  description: Set heating curve shift and slope.
+  target:
+    entity:
+      integration: vicare
+      domain: climate
+  fields:
+    shift:
+      name: shift
+      description: Shift of heating curve.
+      default: 7
+      selector:
+        number:
+          min: -13
+          max: 40
+    slope:
+      name: slope
+      description: Slope of heating curve.
+      default: 1.1
+      selector:
+        number:
+          min: 0.3
+          max: 3.5
