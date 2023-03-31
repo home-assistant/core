@@ -58,15 +58,19 @@ class AttrReportConfig(TypedDict, total=True):
 
 def parse_and_log_command(channel, tsn, command_id, args):
     """Parse and log a zigbee cluster command."""
-    cmd = channel.cluster.server_commands.get(command_id, [command_id])[0]
+    try:
+        name = channel.cluster.server_commands[command_id].name
+    except KeyError:
+        name = f"0x{command_id:02X}"
+
     channel.debug(
         "received '%s' command with %s args on cluster_id '%s' tsn '%s'",
-        cmd,
+        name,
         args,
         channel.cluster.cluster_id,
         tsn,
     )
-    return cmd
+    return name
 
 
 def decorate_command(channel, command):
