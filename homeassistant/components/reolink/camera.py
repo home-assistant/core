@@ -66,7 +66,10 @@ class ReolinkCamera(ReolinkChannelCoordinatorEntity, Camera):
             self._attr_name = f"{stream_name} lens {self._channel}"
         else:
             self._attr_name = stream_name
-        self._attr_unique_id = f"{self._host.unique_id}_{self._channel}_{self._stream}"
+        stream_id = self._stream
+        if stream_id == "snapshots_main":
+            stream_id = "snapshots"
+        self._attr_unique_id = f"{self._host.unique_id}_{self._channel}_{stream_id}"
         self._attr_entity_registry_enabled_default = stream in ["sub", "autotrack_sub"]
 
     async def stream_source(self) -> str | None:
