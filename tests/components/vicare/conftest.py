@@ -10,7 +10,7 @@ from . import MODULE
 
 
 @pytest.fixture
-async def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     """Mock setting up a config entry."""
     with patch(f"{MODULE}.async_setup_entry", return_value=True) as mock_setup_entry:
         yield mock_setup_entry
