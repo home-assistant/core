@@ -7,6 +7,7 @@ from typing import Any
 
 from zigpy.config import CONF_NWK_EXTENDED_PAN_ID
 from zigpy.profiles import PROFILES
+from zigpy.types import Channels
 from zigpy.zcl import Cluster
 
 from homeassistant.components.diagnostics.util import async_redact_data
@@ -67,11 +68,19 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     config: dict = hass.data[DATA_ZHA].get(DATA_ZHA_CONFIG, {})
     gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+
+    energy_scan = await gateway.application_controller.energy_scan(
+        channels=Channels.ALL_CHANNELS, duration_exp=4, count=1
+    )
+
     return async_redact_data(
         {
             "config": config,
             "config_entry": config_entry.as_dict(),
             "application_state": shallow_asdict(gateway.application_controller.state),
+            "energy_scan": {
+                channel: 100 * energy / 255 for channel, energy in energy_scan.items()
+            },
             "versions": {
                 "bellows": version("bellows"),
                 "zigpy": version("zigpy"),
