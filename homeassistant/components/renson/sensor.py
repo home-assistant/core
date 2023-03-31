@@ -18,7 +18,6 @@ from renson_endura_delta.field_enum import (
     CURRENT_LEVEL_FIELD,
     DAY_POLLUTION_FIELD,
     DAYTIME_FIELD,
-    FILTER_PRESET_FIELD,
     FILTER_REMAIN_FIELD,
     HUMIDITY_FIELD,
     INDOOR_TEMP_FIELD,
@@ -261,14 +260,6 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
-    ),
-    RensonSensorEntityDescription(
-        key="FILTER_PRESET_FIELD",
-        name="Filter preset time",
-        field=FILTER_PRESET_FIELD,
-        raw_format=False,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfTime.DAYS,
     ),
 )
 
