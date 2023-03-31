@@ -61,10 +61,11 @@ class ReolinkCamera(ReolinkChannelCoordinatorEntity, Camera):
 
         self._stream = stream
 
+        stream_name = self._stream.replace("_", " ")
         if self._host.api.model in DUAL_LENS_MODELS:
-            self._attr_name = f"{self._stream} lens {self._channel}"
+            self._attr_name = f"{stream_name} lens {self._channel}"
         else:
-            self._attr_name = self._stream
+            self._attr_name = stream_name
         self._attr_unique_id = f"{self._host.unique_id}_{self._channel}_{self._stream}"
         self._attr_entity_registry_enabled_default = stream in ["sub", "autotrack_sub"]
 
