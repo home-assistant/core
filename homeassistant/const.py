@@ -37,6 +37,7 @@ class Platform(StrEnum):
     FAN = "fan"
     GEO_LOCATION = "geo_location"
     HUMIDIFIER = "humidifier"
+    IMAGE = "image"
     IMAGE_PROCESSING = "image_processing"
     LIGHT = "light"
     LOCK = "lock"
