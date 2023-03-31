@@ -5,13 +5,13 @@ from collections.abc import Callable
 import logging
 from typing import Any
 
+import async_timeout
 import voluptuous as vol
 
 from homeassistant.components import stt, websocket_api
 from homeassistant.core import HomeAssistant, callback
 
 from .pipeline import (
-    DEFAULT_TIMEOUT,
     PipelineError,
     PipelineEvent,
     PipelineEventType,
@@ -20,6 +20,8 @@ from .pipeline import (
     PipelineStage,
     async_get_pipeline,
 )
+
+DEFAULT_TIMEOUT = 30
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -155,37 +157,40 @@ async def websocket_run(
         # Input to text to speech system
         input_args["tts_input"] = msg["input"]["text"]
 
-    run_task = hass.async_create_task(
-        PipelineInput(**input_args).execute(
-            PipelineRun(
-                hass,
-                context=connection.context(msg),
-                pipeline=pipeline,
-                start_stage=start_stage,
-                end_stage=end_stage,
-                event_callback=lambda event: connection.send_event(
-                    msg["id"], event.as_dict()
-                ),
-                runner_data={
-                    "stt_binary_handler_id": handler_id,
-                },
-            ),
-            timeout=timeout,
-        )
+    input_args["run"] = PipelineRun(
+        hass,
+        context=connection.context(msg),
+        pipeline=pipeline,
+        start_stage=start_stage,
+        end_stage=end_stage,
+        event_callback=lambda event: connection.send_event(msg["id"], event.as_dict()),
+        runner_data={
+            "stt_binary_handler_id": handler_id,
+            "timeout": timeout,
+        },
     )
 
-    # Cancel pipeline if user unsubscribes
-    connection.subscriptions[msg["id"]] = run_task.cancel
+    pipeline_input = PipelineInput(**input_args)
+
+    try:
+        await pipeline_input.validate()
+    except PipelineError as error:
+        # Report more specific error when possible
+        connection.send_error(msg["id"], error.code, error.message)
+        return
 
     # Confirm subscription
     connection.send_result(msg["id"])
 
+    run_task = hass.async_create_task(pipeline_input.execute())
+
+    # Cancel pipeline if user unsubscribes
+    connection.subscriptions[msg["id"]] = run_task.cancel
+
     try:
         # Task contains a timeout
-        await run_task
-    except PipelineError as error:
-        # Report more specific error when possible
-        connection.send_error(msg["id"], error.code, error.message)
+        async with async_timeout.timeout(timeout):
+            await run_task
     except asyncio.TimeoutError:
         connection.send_event(
             msg["id"],
