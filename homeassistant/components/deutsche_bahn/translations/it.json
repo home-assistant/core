@@ -1,8 +1,0 @@
-{
-    "issues": {
-        "pending_removal": {
-            "description": "L'integrazione Deutsce Bahn \u00e8 in attesa di rimozione da Home Assistant e non sar\u00e0 pi\u00f9 disponibile a partire da Home Assistant 2022.11. \n\nL'integrazione sar\u00e0 rimossa, perch\u00e9 si basa sul webscraping, che non \u00e8 consentito. \n\nRimuovi la configurazione YAML di Deutsce Bahn dal file configuration.yaml e riavvia Home Assistant per risolvere questo problema.",
-            "title": "L'integrazione Deutsche Bahn sar\u00e0 rimossa"
-        }
-    }
-}

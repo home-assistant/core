@@ -11,8 +11,9 @@ from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_USE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from .conftest import mock_api_connection_error
+
 from tests.common import MockConfigEntry
-from tests.components.intellifire.conftest import mock_api_connection_error
 
 
 @patch.multiple(
@@ -143,7 +144,6 @@ async def test_manual_entry(
         "homeassistant.components.intellifire.config_flow.AsyncUDPFireplaceFinder.search_fireplace",
         return_value=["192.168.1.69", "192.168.1.33", "192.168.169"],
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -189,7 +189,6 @@ async def test_multi_discovery_cannot_connect(
         "homeassistant.components.intellifire.config_flow.AsyncUDPFireplaceFinder.search_fireplace",
         return_value=["192.168.1.69", "192.168.1.33", "192.168.169"],
     ):
-
         mock_intellifire_config_flow.poll.side_effect = ConnectionError
 
         result = await hass.config_entries.flow.async_init(

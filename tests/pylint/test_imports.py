@@ -1,5 +1,5 @@
 """Tests for pylint hass_imports plugin."""
-# pylint:disable=protected-access
+
 from __future__ import annotations
 
 import astroid
@@ -35,6 +35,7 @@ from . import assert_adds_messages, assert_no_messages
         ("homeassistant.components.pylint_test.api.hub", "..const", "CONSTANT"),
         ("homeassistant.components.pylint_test.api.hub", "..", "CONSTANT"),
         ("homeassistant.components.pylint_test.api.hub", "...", "pylint_test"),
+        ("tests.components.pylint_test.api.hub", "..const", "CONSTANT"),
     ],
 )
 def test_good_import(
@@ -101,6 +102,18 @@ def test_good_import(
             "CONSTANT",
             "hass-relative-import",
         ),
+        (
+            "tests.components.pylint_test.api.hub",
+            "tests.components.pylint_test.const",
+            "CONSTANT",
+            "hass-relative-import",
+        ),
+        (
+            "tests.components.pylint_test.api.hub",
+            "...const",
+            "CONSTANT",
+            "hass-absolute-import",
+        ),
     ],
 )
 def test_bad_import(
@@ -135,22 +148,41 @@ def test_bad_import(
 
 
 @pytest.mark.parametrize(
-    "import_node",
+    ("import_node", "module_name"),
     [
-        "from homeassistant.components import climate",
-        "from homeassistant.components.climate import ClimateEntityFeature",
+        (
+            "from homeassistant.components import climate",
+            "homeassistant.components.pylint_test.climate",
+        ),
+        (
+            "from homeassistant.components.climate import ClimateEntityFeature",
+            "homeassistant.components.pylint_test.climate",
+        ),
+        (
+            "from homeassistant.components.pylint_test import const",
+            "tests.components.pylint_test.climate",
+        ),
+        (
+            "from homeassistant.components.pylint_test.const import CONSTANT",
+            "tests.components.pylint_test.climate",
+        ),
+        (
+            "import homeassistant.components.pylint_test.const as climate",
+            "tests.components.pylint_test.climate",
+        ),
     ],
 )
 def test_good_root_import(
     linter: UnittestLinter,
     imports_checker: BaseChecker,
     import_node: str,
+    module_name: str,
 ) -> None:
     """Ensure bad root imports are rejected."""
 
     node = astroid.extract_node(
         f"{import_node} #@",
-        "homeassistant.components.pylint_test.climate",
+        module_name,
     )
     imports_checker.visit_module(node.parent)
 
@@ -162,23 +194,45 @@ def test_good_root_import(
 
 
 @pytest.mark.parametrize(
-    "import_node",
+    ("import_node", "module_name"),
     [
-        "import homeassistant.components.climate.const as climate",
-        "from homeassistant.components.climate import const",
-        "from homeassistant.components.climate.const import ClimateEntityFeature",
+        (
+            "import homeassistant.components.climate.const as climate",
+            "homeassistant.components.pylint_test.climate",
+        ),
+        (
+            "from homeassistant.components.climate import const",
+            "homeassistant.components.pylint_test.climate",
+        ),
+        (
+            "from homeassistant.components.climate.const import ClimateEntityFeature",
+            "homeassistant.components.pylint_test.climate",
+        ),
+        (
+            "from homeassistant.components.climate import const",
+            "tests.components.pylint_test.climate",
+        ),
+        (
+            "from homeassistant.components.climate.const import CONSTANT",
+            "tests.components.pylint_test.climate",
+        ),
+        (
+            "import homeassistant.components.climate.const as climate",
+            "tests.components.pylint_test.climate",
+        ),
     ],
 )
 def test_bad_root_import(
     linter: UnittestLinter,
     imports_checker: BaseChecker,
     import_node: str,
+    module_name: str,
 ) -> None:
     """Ensure bad root imports are rejected."""
 
     node = astroid.extract_node(
         f"{import_node} #@",
-        "homeassistant.components.pylint_test.climate",
+        module_name,
     )
     imports_checker.visit_module(node.parent)
 

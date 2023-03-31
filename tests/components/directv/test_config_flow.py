@@ -11,7 +11,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.components.directv import (
+from . import (
     HOST,
     MOCK_SSDP_DISCOVERY_INFO,
     MOCK_USER_INPUT,
@@ -20,6 +20,7 @@ from tests.components.directv import (
     mock_connection,
     setup_integration,
 )
+
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 

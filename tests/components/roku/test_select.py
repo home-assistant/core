@@ -12,8 +12,11 @@ from rokuecp import (
 
 from homeassistant.components.roku.const import DOMAIN
 from homeassistant.components.roku.coordinator import SCAN_INTERVAL
-from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
-from homeassistant.components.select.const import ATTR_OPTION, ATTR_OPTIONS
+from homeassistant.components.select import (
+    ATTR_OPTION,
+    ATTR_OPTIONS,
+    DOMAIN as SELECT_DOMAIN,
+)
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_ICON, SERVICE_SELECT_OPTION
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -110,7 +113,7 @@ async def test_application_state(
 
 
 @pytest.mark.parametrize(
-    "error, error_string",
+    ("error", "error_string"),
     [
         (RokuConnectionError, "Error communicating with Roku API"),
         (RokuConnectionTimeoutError, "Timeout communicating with Roku API"),

@@ -9,9 +9,8 @@ from plugwise import Smile
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ON
+from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -24,8 +23,8 @@ class PlugwiseSelectDescriptionMixin:
     """Mixin values for Plugwise Select entities."""
 
     command: Callable[[Smile, str, str], Awaitable[Any]]
-    current_option: str
-    options: str
+    current_option_key: str
+    options_key: str
 
 
 @dataclass
@@ -41,17 +40,28 @@ SELECT_TYPES = (
         name="Thermostat schedule",
         icon="mdi:calendar-clock",
         command=lambda api, loc, opt: api.set_schedule_state(loc, opt, STATE_ON),
-        current_option="selected_schedule",
-        options="available_schedules",
+        current_option_key="selected_schedule",
+        options_key="available_schedules",
     ),
     PlugwiseSelectEntityDescription(
         key="select_regulation_mode",
         name="Regulation mode",
         icon="mdi:hvac",
         entity_category=EntityCategory.CONFIG,
+        translation_key="regulation_mode",
         command=lambda api, loc, opt: api.set_regulation_mode(opt),
-        current_option="regulation_mode",
-        options="regulation_modes",
+        current_option_key="regulation_mode",
+        options_key="regulation_modes",
+    ),
+    PlugwiseSelectEntityDescription(
+        key="select_dhw_mode",
+        name="DHW mode",
+        icon="mdi:shower",
+        entity_category=EntityCategory.CONFIG,
+        translation_key="dhw_mode",
+        command=lambda api, loc, opt: api.set_dhw_mode(opt),
+        current_option_key="dhw_mode",
+        options_key="dhw_modes",
     ),
 )
 
@@ -69,7 +79,10 @@ async def async_setup_entry(
     entities: list[PlugwiseSelectEntity] = []
     for device_id, device in coordinator.data.devices.items():
         for description in SELECT_TYPES:
-            if description.options in device and len(device[description.options]) > 1:
+            if (
+                description.options_key in device
+                and len(device[description.options_key]) > 1
+            ):
                 entities.append(
                     PlugwiseSelectEntity(coordinator, device_id, description)
                 )
@@ -96,12 +109,12 @@ class PlugwiseSelectEntity(PlugwiseEntity, SelectEntity):
     @property
     def current_option(self) -> str:
         """Return the selected entity option to represent the entity state."""
-        return self.device[self.entity_description.current_option]
+        return self.device[self.entity_description.current_option_key]
 
     @property
     def options(self) -> list[str]:
         """Return the selectable entity options."""
-        return self.device[self.entity_description.options]
+        return self.device[self.entity_description.options_key]
 
     async def async_select_option(self, option: str) -> None:
         """Change to the selected entity option."""

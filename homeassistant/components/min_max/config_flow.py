@@ -6,32 +6,41 @@ from typing import Any, cast
 
 import voluptuous as vol
 
+from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_TYPE
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
     SchemaFlowFormStep,
-    SchemaFlowMenuStep,
 )
 
 from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
 
 _STATISTIC_MEASURES = [
-    selector.SelectOptionDict(value="min", label="Minimum"),
-    selector.SelectOptionDict(value="max", label="Maximum"),
-    selector.SelectOptionDict(value="mean", label="Arithmetic mean"),
-    selector.SelectOptionDict(value="median", label="Median"),
-    selector.SelectOptionDict(value="last", label="Most recently updated"),
+    "min",
+    "max",
+    "mean",
+    "median",
+    "last",
+    "range",
+    "sum",
 ]
 
 
 OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ENTITY_IDS): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain="sensor", multiple=True),
+            selector.EntitySelectorConfig(
+                domain=[SENSOR_DOMAIN, NUMBER_DOMAIN, INPUT_NUMBER_DOMAIN],
+                multiple=True,
+            ),
         ),
         vol.Required(CONF_TYPE): selector.SelectSelector(
-            selector.SelectSelectorConfig(options=_STATISTIC_MEASURES),
+            selector.SelectSelectorConfig(
+                options=_STATISTIC_MEASURES, translation_key=CONF_TYPE
+            ),
         ),
         vol.Required(CONF_ROUND_DIGITS, default=2): selector.NumberSelector(
             selector.NumberSelectorConfig(
@@ -47,12 +56,12 @@ CONFIG_SCHEMA = vol.Schema(
     }
 ).extend(OPTIONS_SCHEMA.schema)
 
-CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
-    "user": SchemaFlowFormStep(CONFIG_SCHEMA)
+CONFIG_FLOW = {
+    "user": SchemaFlowFormStep(CONFIG_SCHEMA),
 }
 
-OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
-    "init": SchemaFlowFormStep(OPTIONS_SCHEMA)
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
 }
 
 

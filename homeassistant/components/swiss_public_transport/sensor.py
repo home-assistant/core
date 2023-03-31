@@ -9,7 +9,7 @@ from opendata_transport.exceptions import OpendataTransportError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -30,14 +30,11 @@ ATTR_TRAIN_NUMBER = "train_number"
 ATTR_TRANSFERS = "transfers"
 ATTR_DELAY = "delay"
 
-ATTRIBUTION = "Data provided by transport.opendata.ch"
-
 CONF_DESTINATION = "to"
 CONF_START = "from"
 
 DEFAULT_NAME = "Next Departure"
 
-ICON = "mdi:bus"
 
 SCAN_INTERVAL = timedelta(seconds=90)
 
@@ -79,6 +76,9 @@ async def async_setup_platform(
 
 class SwissPublicTransportSensor(SensorEntity):
     """Implementation of an Swiss public transport sensor."""
+
+    _attr_attribution = "Data provided by transport.opendata.ch"
+    _attr_icon = "mdi:bus"
 
     def __init__(self, opendata, start, destination, name):
         """Initialize the sensor."""
@@ -122,14 +122,8 @@ class SwissPublicTransportSensor(SensorEntity):
             ATTR_START: self._opendata.from_name,
             ATTR_TARGET: self._opendata.to_name,
             ATTR_REMAINING_TIME: f"{self._remaining_time}",
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_DELAY: self._opendata.connections[0]["delay"],
         }
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
 
     async def async_update(self) -> None:
         """Get the latest data from opendata.ch and update the states."""

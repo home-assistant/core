@@ -20,16 +20,15 @@ from zigpy.zcl.clusters.manufacturer_specific import ManufacturerSpecificCluster
 import zigpy.zcl.clusters.security as security
 import zigpy.zcl.foundation as zcl_f
 
-from homeassistant.components.button import DOMAIN, ButtonDeviceClass
-from homeassistant.components.button.const import SERVICE_PRESS
+from homeassistant.components.button import DOMAIN, SERVICE_PRESS, ButtonDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
-    ENTITY_CATEGORY_CONFIG,
-    ENTITY_CATEGORY_DIAGNOSTIC,
     STATE_UNKNOWN,
+    EntityCategory,
     Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import find_entity_id
@@ -40,7 +39,7 @@ from tests.common import mock_coro
 
 @pytest.fixture(autouse=True)
 def button_platform_only():
-    """Only setup the button and required base platforms to speed up tests."""
+    """Only set up the button and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (
@@ -122,8 +121,8 @@ async def tuya_water_valve(hass, zigpy_device_mock, zha_device_joined_restored):
 
 
 @freeze_time("2021-11-04 17:37:00", tz_offset=-1)
-async def test_button(hass, contact_sensor):
-    """Test zha button platform."""
+async def test_button(hass: HomeAssistant, contact_sensor) -> None:
+    """Test ZHA button platform."""
 
     entity_registry = er.async_get(hass)
     zha_device, cluster = contact_sensor
@@ -138,7 +137,7 @@ async def test_button(hass, contact_sensor):
 
     entry = entity_registry.async_get(entity_id)
     assert entry
-    assert entry.entity_category == ENTITY_CATEGORY_DIAGNOSTIC
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
 
     with patch(
         "zigpy.zcl.Cluster.request",
@@ -162,8 +161,8 @@ async def test_button(hass, contact_sensor):
     assert state.attributes[ATTR_DEVICE_CLASS] == ButtonDeviceClass.UPDATE
 
 
-async def test_frost_unlock(hass, tuya_water_valve):
-    """Test custom frost unlock zha button."""
+async def test_frost_unlock(hass: HomeAssistant, tuya_water_valve) -> None:
+    """Test custom frost unlock ZHA button."""
 
     entity_registry = er.async_get(hass)
     zha_device, cluster = tuya_water_valve
@@ -178,7 +177,7 @@ async def test_frost_unlock(hass, tuya_water_valve):
 
     entry = entity_registry.async_get(entity_id)
     assert entry
-    assert entry.entity_category == ENTITY_CATEGORY_CONFIG
+    assert entry.entity_category == EntityCategory.CONFIG
 
     with patch(
         "zigpy.zcl.Cluster.request",

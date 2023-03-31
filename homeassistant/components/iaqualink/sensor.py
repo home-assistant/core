@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from homeassistant.components.sensor import DOMAIN, SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -38,8 +38,8 @@ class HassAqualinkSensor(AqualinkEntity, SensorEntity):
         """Return the measurement unit for the sensor."""
         if self.dev.name.endswith("_temp"):
             if self.dev.system.temp_unit == "F":
-                return TEMP_FAHRENHEIT
-            return TEMP_CELSIUS
+                return UnitOfTemperature.FAHRENHEIT
+            return UnitOfTemperature.CELSIUS
         return None
 
     @property
@@ -54,7 +54,7 @@ class HassAqualinkSensor(AqualinkEntity, SensorEntity):
             return float(self.dev.state)
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> SensorDeviceClass | None:
         """Return the class of the sensor."""
         if self.dev.name.endswith("_temp"):
             return SensorDeviceClass.TEMPERATURE

@@ -13,6 +13,7 @@ from librouteros.login import plain as login_plain, token as login_token
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -30,9 +31,11 @@ from .const import (
     IDENTITY,
     INFO,
     IS_CAPSMAN,
+    IS_WIFIWAVE2,
     IS_WIRELESS,
     MIKROTIK_SERVICES,
     NAME,
+    WIFIWAVE2,
     WIRELESS,
 )
 from .device import Device
@@ -56,6 +59,7 @@ class MikrotikData:
         self.devices: dict[str, Device] = {}
         self.support_capsman: bool = False
         self.support_wireless: bool = False
+        self.support_wifiwave2: bool = False
         self.hostname: str = ""
         self.model: str = ""
         self.firmware: str = ""
@@ -96,6 +100,7 @@ class MikrotikData:
         self.serial_number = self.get_info(ATTR_SERIAL_NUMBER)
         self.support_capsman = bool(self.command(MIKROTIK_SERVICES[IS_CAPSMAN]))
         self.support_wireless = bool(self.command(MIKROTIK_SERVICES[IS_WIRELESS]))
+        self.support_wifiwave2 = bool(self.command(MIKROTIK_SERVICES[IS_WIFIWAVE2]))
 
     def get_list_from_interface(self, interface: str) -> dict[str, dict[str, Any]]:
         """Get devices from interface."""
@@ -120,6 +125,9 @@ class MikrotikData:
             elif self.support_wireless:
                 _LOGGER.debug("Hub supports wireless Interface")
                 device_list = wireless_devices = self.get_list_from_interface(WIRELESS)
+            elif self.support_wifiwave2:
+                _LOGGER.debug("Hub supports wifiwave2 Interface")
+                device_list = wireless_devices = self.get_list_from_interface(WIFIWAVE2)
 
             if not device_list or self.force_dhcp:
                 device_list = self.all_devices
@@ -132,8 +140,10 @@ class MikrotikData:
             # get new hub firmware version if updated
             self.firmware = self.get_info(ATTR_FIRMWARE)
 
-        except (CannotConnect, LoginError) as err:
+        except CannotConnect as err:
             raise UpdateFailed from err
+        except LoginError as err:
+            raise ConfigEntryAuthFailed from err
 
         if not device_list:
             return

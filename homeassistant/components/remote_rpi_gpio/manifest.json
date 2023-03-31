@@ -1,9 +1,9 @@
 {
   "domain": "remote_rpi_gpio",
-  "name": "remote_rpi_gpio",
-  "documentation": "https://www.home-assistant.io/integrations/remote_rpi_gpio",
-  "requirements": ["gpiozero==1.6.2", "pigpio==1.78"],
+  "name": "Raspberry Pi Remote GPIO",
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/remote_rpi_gpio",
   "iot_class": "local_push",
-  "loggers": ["gpiozero", "pigpio"]
+  "loggers": ["gpiozero", "pigpio"],
+  "requirements": ["gpiozero==1.6.2", "pigpio==1.78"]
 }

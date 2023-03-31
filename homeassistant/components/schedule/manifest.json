@@ -1,8 +1,8 @@
 {
   "domain": "schedule",
-  "integration_type": "helper",
   "name": "Schedule",
-  "documentation": "https://www.home-assistant.io/integrations/schedule",
   "codeowners": ["@home-assistant/core"],
+  "documentation": "https://www.home-assistant.io/integrations/schedule",
+  "integration_type": "helper",
   "quality_scale": "internal"
 }

@@ -3,11 +3,14 @@ from datetime import datetime, timedelta
 from http import HTTPStatus
 from unittest.mock import patch
 
+import pytest
 import requests.exceptions
+import requests_mock
 
 from homeassistant.components.plex.const import PLEX_UPDATE_LIBRARY_SIGNAL
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import dt
@@ -69,17 +72,17 @@ class MockPlexTVEpisode(MockPlexMedia):
 
 
 async def test_library_sensor_values(
-    hass,
-    caplog,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
     setup_plex_server,
     mock_websocket,
-    requests_mock,
+    requests_mock: requests_mock.Mocker,
     library_movies_size,
     library_music_size,
     library_tvshows_size,
     library_tvshows_size_episodes,
     library_tvshows_size_seasons,
-):
+) -> None:
     """Test the library sensors."""
     requests_mock.get(
         "/library/sections/1/all?includeCollections=0",

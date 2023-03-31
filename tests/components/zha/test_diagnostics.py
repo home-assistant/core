@@ -1,13 +1,11 @@
 """Tests for the diagnostics data provided by the ESPHome integration."""
-
-
 from unittest.mock import patch
 
 import pytest
 import zigpy.profiles.zha as zha
 import zigpy.zcl.clusters.security as security
 
-from homeassistant.components.diagnostics.const import REDACTED
+from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.zha.core.device import ZHADevice
 from homeassistant.components.zha.diagnostics import KEYS_TO_REDACT
 from homeassistant.const import Platform
@@ -20,6 +18,7 @@ from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
 )
+from tests.typing import ClientSessionGenerator
 
 CONFIG_ENTRY_DIAGNOSTICS_KEYS = [
     "config",
@@ -31,7 +30,7 @@ CONFIG_ENTRY_DIAGNOSTICS_KEYS = [
 
 @pytest.fixture(autouse=True)
 def required_platforms_only():
-    """Only setup the required platform and required base platforms to speed up tests."""
+    """Only set up the required platform and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS", (Platform.ALARM_CONTROL_PANEL,)
     ):
@@ -56,11 +55,11 @@ def zigpy_device(zigpy_device_mock):
 
 async def test_diagnostics_for_config_entry(
     hass: HomeAssistant,
-    hass_client,
+    hass_client: ClientSessionGenerator,
     config_entry,
     zha_device_joined,
     zigpy_device,
-):
+) -> None:
     """Test diagnostics for config entry."""
     await zha_device_joined(zigpy_device)
     diagnostics_data = await get_diagnostics_for_config_entry(
@@ -74,11 +73,11 @@ async def test_diagnostics_for_config_entry(
 
 async def test_diagnostics_for_device(
     hass: HomeAssistant,
-    hass_client,
+    hass_client: ClientSessionGenerator,
     config_entry,
     zha_device_joined,
     zigpy_device,
-):
+) -> None:
     """Test diagnostics for device."""
 
     zha_device: ZHADevice = await zha_device_joined(zigpy_device)
@@ -90,7 +89,7 @@ async def test_diagnostics_for_device(
     )
     assert diagnostics_data
     device_info: dict = zha_device.zha_device_info
-    for key, value in device_info.items():
+    for key in device_info:
         assert key in diagnostics_data
         if key not in KEYS_TO_REDACT:
             assert key in diagnostics_data

@@ -19,7 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.components.wilight import (
+from . import (
     HOST,
     UPNP_MAC_ADDRESS,
     UPNP_MODEL_NAME_COLOR,

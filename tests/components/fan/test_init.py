@@ -1,8 +1,8 @@
 """Tests for fan platforms."""
-
 import pytest
 
 from homeassistant.components.fan import FanEntity
+from homeassistant.core import HomeAssistant
 
 
 class BaseFan(FanEntity):
@@ -12,7 +12,7 @@ class BaseFan(FanEntity):
         """Initialize the fan."""
 
 
-def test_fanentity():
+def test_fanentity() -> None:
     """Test fan entity methods."""
     fan = BaseFan()
     assert fan.state == "off"
@@ -36,7 +36,7 @@ def test_fanentity():
         fan.turn_off()
 
 
-async def test_async_fanentity(hass):
+async def test_async_fanentity(hass: HomeAssistant) -> None:
     """Test async fan entity methods."""
     fan = BaseFan()
     fan.hass = hass
@@ -66,7 +66,7 @@ async def test_async_fanentity(hass):
 
 
 @pytest.mark.parametrize(
-    "attribute_name, attribute_value",
+    ("attribute_name", "attribute_value"),
     [
         ("current_direction", "forward"),
         ("oscillating", True),
@@ -77,7 +77,7 @@ async def test_async_fanentity(hass):
         ("supported_features", 1),
     ],
 )
-def test_fanentity_attributes(attribute_name, attribute_value):
+def test_fanentity_attributes(attribute_name, attribute_value) -> None:
     """Test fan entity attribute shorthand."""
     fan = BaseFan()
     setattr(fan, f"_attr_{attribute_name}", attribute_value)

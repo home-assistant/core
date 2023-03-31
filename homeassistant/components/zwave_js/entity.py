@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from zwave_js_server.const import NodeStatus
 from zwave_js_server.model.driver import Driver
-from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
+from zwave_js_server.model.value import Value as ZwaveValue, get_value_id_str
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
@@ -173,8 +173,7 @@ class ZWaveBaseEntity(Entity):
 
     @callback
     def _node_status_alive_or_dead(self, event_data: dict) -> None:
-        """
-        Call when node status changes to alive or dead.
+        """Call when node status changes to alive or dead.
 
         Should not be overridden by subclasses.
         """
@@ -242,7 +241,7 @@ class ZWaveBaseEntity(Entity):
             endpoint = self.info.primary_value.endpoint
 
         # lookup value by value_id
-        value_id = get_value_id(
+        value_id = get_value_id_str(
             self.info.node,
             command_class,
             value_property,
@@ -256,7 +255,7 @@ class ZWaveBaseEntity(Entity):
         if return_value is None and check_all_endpoints:
             for endpoint_idx in self.info.node.endpoints:
                 if endpoint_idx != self.info.primary_value.endpoint:
-                    value_id = get_value_id(
+                    value_id = get_value_id_str(
                         self.info.node,
                         command_class,
                         value_property,

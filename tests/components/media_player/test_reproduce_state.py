@@ -1,8 +1,7 @@
 """The tests for reproduction of state."""
-
 import pytest
 
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
@@ -32,7 +31,7 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
-from homeassistant.core import Context, State
+from homeassistant.core import Context, HomeAssistant, State
 
 from tests.common import async_mock_service
 
@@ -41,7 +40,7 @@ ENTITY_2 = "media_player.test2"
 
 
 @pytest.mark.parametrize(
-    "service,state,supported_feature",
+    ("service", "state", "supported_feature"),
     [
         (SERVICE_TURN_ON, STATE_ON, MediaPlayerEntityFeature.TURN_ON),
         (SERVICE_TURN_OFF, STATE_OFF, MediaPlayerEntityFeature.TURN_OFF),
@@ -51,7 +50,7 @@ ENTITY_2 = "media_player.test2"
         (SERVICE_MEDIA_PAUSE, STATE_PAUSED, MediaPlayerEntityFeature.PAUSE),
     ],
 )
-async def test_state(hass, service, state, supported_feature):
+async def test_state(hass: HomeAssistant, service, state, supported_feature) -> None:
     """Test that we can turn a state into a service call."""
     calls_1 = async_mock_service(hass, DOMAIN, service)
     if service != SERVICE_TURN_ON:
@@ -72,7 +71,7 @@ async def test_state(hass, service, state, supported_feature):
     assert calls_1[0].data == {"entity_id": ENTITY_1}
 
 
-async def test_turn_on_with_mode(hass):
+async def test_turn_on_with_mode(hass: HomeAssistant) -> None:
     """Test that state with additional attributes call multiple services."""
     hass.states.async_set(
         ENTITY_1,
@@ -99,7 +98,7 @@ async def test_turn_on_with_mode(hass):
     assert calls_2[0].data == {"entity_id": ENTITY_1, ATTR_SOUND_MODE: "dummy"}
 
 
-async def test_multiple_same_state(hass):
+async def test_multiple_same_state(hass: HomeAssistant) -> None:
     """Test that multiple states with same state gets calls."""
     for entity in ENTITY_1, ENTITY_2:
         hass.states.async_set(
@@ -120,7 +119,7 @@ async def test_multiple_same_state(hass):
     assert any(call.data == {"entity_id": "media_player.test2"} for call in calls_1)
 
 
-async def test_multiple_different_state(hass):
+async def test_multiple_different_state(hass: HomeAssistant) -> None:
     """Test that multiple states with different state gets calls."""
     for entity in ENTITY_1, ENTITY_2:
         hass.states.async_set(
@@ -145,7 +144,7 @@ async def test_multiple_different_state(hass):
     assert calls_2[0].data == {"entity_id": "media_player.test2"}
 
 
-async def test_state_with_context(hass):
+async def test_state_with_context(hass: HomeAssistant) -> None:
     """Test that context is forwarded."""
     hass.states.async_set(
         ENTITY_1,
@@ -166,7 +165,7 @@ async def test_state_with_context(hass):
     assert calls[0].context == context
 
 
-async def test_attribute_no_state(hass):
+async def test_attribute_no_state(hass: HomeAssistant) -> None:
     """Test that no state service call is made with none state."""
     hass.states.async_set(
         ENTITY_1,
@@ -197,7 +196,7 @@ async def test_attribute_no_state(hass):
 
 
 @pytest.mark.parametrize(
-    "service,attribute,supported_feature",
+    ("service", "attribute", "supported_feature"),
     [
         (
             SERVICE_VOLUME_SET,
@@ -221,7 +220,9 @@ async def test_attribute_no_state(hass):
         ),
     ],
 )
-async def test_attribute(hass, service, attribute, supported_feature):
+async def test_attribute(
+    hass: HomeAssistant, service, attribute, supported_feature
+) -> None:
     """Test that service call is made for each attribute."""
     hass.states.async_set(
         ENTITY_1,
@@ -241,7 +242,7 @@ async def test_attribute(hass, service, attribute, supported_feature):
     assert calls_1[0].data == {"entity_id": ENTITY_1, attribute: value}
 
 
-async def test_play_media(hass):
+async def test_play_media(hass: HomeAssistant) -> None:
     """Test playing media."""
     hass.states.async_set(
         ENTITY_1,

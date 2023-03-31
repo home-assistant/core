@@ -13,7 +13,7 @@ from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 
-async def test_sensors(hass: HomeAssistant):
+async def test_sensors(hass: HomeAssistant) -> None:
     """Test setting up creates the sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -27,7 +27,9 @@ async def test_sensors(hass: HomeAssistant):
     assert len(hass.states.async_all()) == 0
     inject_bluetooth_service_info(hass, TILT_GREEN_SERVICE_INFO)
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 2
+    assert (
+        len(hass.states.async_all()) >= 2
+    )  # may trigger ibeacon integration as well since tilt uses ibeacon
 
     temp_sensor = hass.states.get("sensor.tilt_green_temperature")
     assert temp_sensor is not None

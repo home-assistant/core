@@ -1,5 +1,4 @@
 """Test different accessory types: Remotes."""
-
 import pytest
 
 from homeassistant.components.homekit.const import (
@@ -16,7 +15,7 @@ from homeassistant.components.remote import (
     ATTR_ACTIVITY_LIST,
     ATTR_CURRENT_ACTIVITY,
     DOMAIN,
-    SUPPORT_ACTIVITY,
+    RemoteEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -25,18 +24,21 @@ from homeassistant.const import (
     STATE_ON,
     STATE_STANDBY,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import async_mock_service
 
 
-async def test_activity_remote(hass, hk_driver, events, caplog):
+async def test_activity_remote(
+    hass: HomeAssistant, hk_driver, events, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test if remote accessory and HA are updated accordingly."""
     entity_id = "remote.harmony"
     hass.states.async_set(
         entity_id,
         None,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_ACTIVITY,
+            ATTR_SUPPORTED_FEATURES: RemoteEntityFeature.ACTIVITY,
             ATTR_CURRENT_ACTIVITY: "Apple TV",
             ATTR_ACTIVITY_LIST: ["TV", "Apple TV"],
         },
@@ -57,7 +59,7 @@ async def test_activity_remote(hass, hk_driver, events, caplog):
         entity_id,
         STATE_ON,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_ACTIVITY,
+            ATTR_SUPPORTED_FEATURES: RemoteEntityFeature.ACTIVITY,
             ATTR_CURRENT_ACTIVITY: "Apple TV",
             ATTR_ACTIVITY_LIST: ["TV", "Apple TV"],
         },
@@ -81,7 +83,7 @@ async def test_activity_remote(hass, hk_driver, events, caplog):
         entity_id,
         STATE_ON,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_ACTIVITY,
+            ATTR_SUPPORTED_FEATURES: RemoteEntityFeature.ACTIVITY,
             ATTR_CURRENT_ACTIVITY: "TV",
             ATTR_ACTIVITY_LIST: ["TV", "Apple TV"],
         },
@@ -93,7 +95,7 @@ async def test_activity_remote(hass, hk_driver, events, caplog):
         entity_id,
         STATE_ON,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_ACTIVITY,
+            ATTR_SUPPORTED_FEATURES: RemoteEntityFeature.ACTIVITY,
             ATTR_CURRENT_ACTIVITY: "Apple TV",
             ATTR_ACTIVITY_LIST: ["TV", "Apple TV"],
         },
@@ -160,7 +162,7 @@ async def test_activity_remote(hass, hk_driver, events, caplog):
         entity_id,
         STATE_ON,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_ACTIVITY,
+            ATTR_SUPPORTED_FEATURES: RemoteEntityFeature.ACTIVITY,
             ATTR_CURRENT_ACTIVITY: "Amazon TV",
             ATTR_ACTIVITY_LIST: ["TV", "Apple TV", "Amazon TV"],
         },
@@ -169,14 +171,16 @@ async def test_activity_remote(hass, hk_driver, events, caplog):
     assert call_reset_accessory[0].data[ATTR_ENTITY_ID] == entity_id
 
 
-async def test_activity_remote_bad_names(hass, hk_driver, events, caplog):
+async def test_activity_remote_bad_names(
+    hass: HomeAssistant, hk_driver, events, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test if remote accessory with invalid names works as expected."""
     entity_id = "remote.harmony"
     hass.states.async_set(
         entity_id,
         None,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_ACTIVITY,
+            ATTR_SUPPORTED_FEATURES: RemoteEntityFeature.ACTIVITY,
             ATTR_CURRENT_ACTIVITY: "Apple TV",
             ATTR_ACTIVITY_LIST: ["TV", "Apple TV", "[[[--Special--]]]", "Super"],
         },
@@ -197,7 +201,7 @@ async def test_activity_remote_bad_names(hass, hk_driver, events, caplog):
         entity_id,
         STATE_ON,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_ACTIVITY,
+            ATTR_SUPPORTED_FEATURES: RemoteEntityFeature.ACTIVITY,
             ATTR_CURRENT_ACTIVITY: "[[[--Special--]]]",
             ATTR_ACTIVITY_LIST: ["TV", "Apple TV", "[[[--Special--]]]", "Super"],
         },

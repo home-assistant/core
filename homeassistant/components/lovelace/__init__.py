@@ -113,7 +113,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         if yaml_resources is not None:
             _LOGGER.warning(
-                "Lovelace is running in storage mode. Define resources via user interface"
+                "Lovelace is running in storage mode. Define resources via user"
+                " interface"
             )
 
         resource_collection = resources.ResourceStorageCollection(hass, default_config)
@@ -156,7 +157,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             return
 
         if change_type == collection.CHANGE_ADDED:
-
             existing = hass.data[DOMAIN]["dashboards"].get(url_path)
 
             if existing:
@@ -220,7 +220,8 @@ async def create_yaml_resource_col(hass, yaml_resources):
         else:
             if CONF_RESOURCES in ll_conf:
                 _LOGGER.warning(
-                    "Resources need to be specified in your configuration.yaml. Please see the docs"
+                    "Resources need to be specified in your configuration.yaml. Please"
+                    " see the docs"
                 )
                 yaml_resources = ll_conf[CONF_RESOURCES]
 

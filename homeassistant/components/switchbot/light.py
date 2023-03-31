@@ -22,14 +22,14 @@ from homeassistant.util.color import (
 
 from .const import DOMAIN
 from .coordinator import SwitchbotDataUpdateCoordinator
-from .entity import SwitchbotSubscribeEntity
+from .entity import SwitchbotEntity
 
 SWITCHBOT_COLOR_MODE_TO_HASS = {
     SwitchBotColorMode.RGB: ColorMode.RGB,
     SwitchBotColorMode.COLOR_TEMP: ColorMode.COLOR_TEMP,
 }
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -42,7 +42,7 @@ async def async_setup_entry(
     async_add_entities([SwitchbotLightEntity(coordinator)])
 
 
-class SwitchbotLightEntity(SwitchbotSubscribeEntity, LightEntity):
+class SwitchbotLightEntity(SwitchbotEntity, LightEntity):
     """Representation of switchbot light bulb."""
 
     _device: SwitchbotBaseLight

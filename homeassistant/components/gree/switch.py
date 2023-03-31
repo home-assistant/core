@@ -1,9 +1,17 @@
 """Support for interface with a Gree climate systems."""
 from __future__ import annotations
 
-from typing import Any
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any, cast
 
-from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
+from greeclimate.device import Device
+
+from homeassistant.components.switch import (
+    SwitchDeviceClass,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -11,6 +19,81 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import COORDINATORS, DISPATCH_DEVICE_DISCOVERED, DISPATCHERS, DOMAIN
 from .entity import GreeEntity
+
+
+@dataclass
+class GreeRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    get_value_fn: Callable[[Device], bool]
+    set_value_fn: Callable[[Device, bool], None]
+
+
+@dataclass
+class GreeSwitchEntityDescription(SwitchEntityDescription, GreeRequiredKeysMixin):
+    """Describes Gree switch entity."""
+
+
+def _set_light(device: Device, value: bool) -> None:
+    """Typed helper to set device light property."""
+    device.light = value
+
+
+def _set_quiet(device: Device, value: bool) -> None:
+    """Typed helper to set device quiet property."""
+    device.quiet = value
+
+
+def _set_fresh_air(device: Device, value: bool) -> None:
+    """Typed helper to set device fresh_air property."""
+    device.fresh_air = value
+
+
+def _set_xfan(device: Device, value: bool) -> None:
+    """Typed helper to set device xfan property."""
+    device.xfan = value
+
+
+def _set_anion(device: Device, value: bool) -> None:
+    """Typed helper to set device anion property."""
+    device.anion = value
+
+
+GREE_SWITCHES: tuple[GreeSwitchEntityDescription, ...] = (
+    GreeSwitchEntityDescription(
+        icon="mdi:lightbulb",
+        name="Panel Light",
+        key="light",
+        get_value_fn=lambda d: d.light,
+        set_value_fn=_set_light,
+    ),
+    GreeSwitchEntityDescription(
+        name="Quiet",
+        key="quiet",
+        get_value_fn=lambda d: d.quiet,
+        set_value_fn=_set_quiet,
+    ),
+    GreeSwitchEntityDescription(
+        name="Fresh Air",
+        key="fresh_air",
+        get_value_fn=lambda d: d.fresh_air,
+        set_value_fn=_set_fresh_air,
+    ),
+    GreeSwitchEntityDescription(
+        name="XFan",
+        key="xfan",
+        get_value_fn=lambda d: d.xfan,
+        set_value_fn=_set_xfan,
+    ),
+    GreeSwitchEntityDescription(
+        icon="mdi:pine-tree",
+        name="Health mode",
+        key="anion",
+        get_value_fn=lambda d: d.anion,
+        set_value_fn=_set_anion,
+        entity_registry_enabled_default=False,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -23,13 +106,10 @@ async def async_setup_entry(
     @callback
     def init_device(coordinator):
         """Register the device."""
+
         async_add_entities(
-            [
-                GreePanelLightSwitchEntity(coordinator),
-                GreeQuietModeSwitchEntity(coordinator),
-                GreeFreshAirSwitchEntity(coordinator),
-                GreeXFanSwitchEntity(coordinator),
-            ]
+            GreeSwitch(coordinator=coordinator, description=description)
+            for description in GREE_SWITCHES
         )
 
     for coordinator in hass.data[DOMAIN][COORDINATORS]:
@@ -40,126 +120,31 @@ async def async_setup_entry(
     )
 
 
-class GreePanelLightSwitchEntity(GreeEntity, SwitchEntity):
-    """Representation of the front panel light on the device."""
+class GreeSwitch(GreeEntity, SwitchEntity):
+    """Generic Gree switch entity."""
 
-    def __init__(self, coordinator):
+    _attr_device_class = SwitchDeviceClass.SWITCH
+    entity_description: GreeSwitchEntityDescription
+
+    def __init__(self, coordinator, description: GreeSwitchEntityDescription) -> None:
         """Initialize the Gree device."""
-        super().__init__(coordinator, "Panel Light")
+        self.entity_description = description
 
-    @property
-    def icon(self) -> str | None:
-        """Return the icon for the device."""
-        return "mdi:lightbulb"
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return SwitchDeviceClass.SWITCH
-
-    @property
-    def is_on(self) -> bool:
-        """Return if the light is turned on."""
-        return self.coordinator.device.light
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the entity on."""
-        self.coordinator.device.light = True
-        await self.coordinator.push_state_update()
-        self.async_write_ha_state()
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the entity off."""
-        self.coordinator.device.light = False
-        await self.coordinator.push_state_update()
-        self.async_write_ha_state()
-
-
-class GreeQuietModeSwitchEntity(GreeEntity, SwitchEntity):
-    """Representation of the quiet mode state of the device."""
-
-    def __init__(self, coordinator):
-        """Initialize the Gree device."""
-        super().__init__(coordinator, "Quiet")
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return SwitchDeviceClass.SWITCH
+        super().__init__(coordinator, cast(str, description.name))
 
     @property
     def is_on(self) -> bool:
         """Return if the state is turned on."""
-        return self.coordinator.device.quiet
+        return self.entity_description.get_value_fn(self.coordinator.device)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        self.coordinator.device.quiet = True
+        self.entity_description.set_value_fn(self.coordinator.device, True)
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        self.coordinator.device.quiet = False
-        await self.coordinator.push_state_update()
-        self.async_write_ha_state()
-
-
-class GreeFreshAirSwitchEntity(GreeEntity, SwitchEntity):
-    """Representation of the fresh air mode state of the device."""
-
-    def __init__(self, coordinator):
-        """Initialize the Gree device."""
-        super().__init__(coordinator, "Fresh Air")
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return SwitchDeviceClass.SWITCH
-
-    @property
-    def is_on(self) -> bool:
-        """Return if the state is turned on."""
-        return self.coordinator.device.fresh_air
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the entity on."""
-        self.coordinator.device.fresh_air = True
-        await self.coordinator.push_state_update()
-        self.async_write_ha_state()
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the entity off."""
-        self.coordinator.device.fresh_air = False
-        await self.coordinator.push_state_update()
-        self.async_write_ha_state()
-
-
-class GreeXFanSwitchEntity(GreeEntity, SwitchEntity):
-    """Representation of the extra fan mode state of the device."""
-
-    def __init__(self, coordinator):
-        """Initialize the Gree device."""
-        super().__init__(coordinator, "XFan")
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return SwitchDeviceClass.SWITCH
-
-    @property
-    def is_on(self) -> bool:
-        """Return if the state is turned on."""
-        return self.coordinator.device.xfan
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the entity on."""
-        self.coordinator.device.xfan = True
-        await self.coordinator.push_state_update()
-        self.async_write_ha_state()
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the entity off."""
-        self.coordinator.device.xfan = False
+        self.entity_description.set_value_fn(self.coordinator.device, False)
         await self.coordinator.push_state_update()
         self.async_write_ha_state()

@@ -66,11 +66,13 @@ class IPPSensor(IPPEntity, SensorEntity):
         key: str,
         name: str,
         unit_of_measurement: str | None = None,
+        translation_key: str | None = None,
     ) -> None:
         """Initialize IPP sensor."""
         self._key = key
         self._attr_unique_id = f"{unique_id}_{key}"
         self._attr_native_unit_of_measurement = unit_of_measurement
+        self._attr_translation_key = translation_key
 
         super().__init__(
             entry_id=entry_id,
@@ -101,7 +103,9 @@ class IPPMarkerSensor(IPPSensor):
             unique_id=unique_id,
             icon="mdi:water",
             key=f"marker_{marker_index}",
-            name=f"{coordinator.data.info.name} {coordinator.data.markers[marker_index].name}",
+            name=(
+                f"{coordinator.data.info.name} {coordinator.data.markers[marker_index].name}"
+            ),
             unit_of_measurement=PERCENTAGE,
         )
 
@@ -134,6 +138,9 @@ class IPPMarkerSensor(IPPSensor):
 class IPPPrinterSensor(IPPSensor):
     """Defines an IPP printer sensor."""
 
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = ["idle", "printing", "stopped"]
+
     def __init__(
         self, entry_id: str, unique_id: str, coordinator: IPPDataUpdateCoordinator
     ) -> None:
@@ -146,6 +153,7 @@ class IPPPrinterSensor(IPPSensor):
             key="printer",
             name=coordinator.data.info.name,
             unit_of_measurement=None,
+            translation_key="printer",
         )
 
     @property

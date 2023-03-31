@@ -9,12 +9,23 @@ import voluptuous as vol
 from volvooncall import Connection
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_REGION,
+    CONF_UNIT_SYSTEM,
+    CONF_USERNAME,
+)
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import VolvoData
-from .const import CONF_MUTABLE, CONF_SCANDINAVIAN_MILES, DOMAIN
+from .const import (
+    CONF_MUTABLE,
+    DOMAIN,
+    UNIT_SYSTEM_IMPERIAL,
+    UNIT_SYSTEM_METRIC,
+    UNIT_SYSTEM_SCANDINAVIAN_MILES,
+)
 from .errors import InvalidAuth
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,7 +47,7 @@ class VolvoOnCallConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_PASSWORD: "",
             CONF_REGION: None,
             CONF_MUTABLE: True,
-            CONF_SCANDINAVIAN_MILES: False,
+            CONF_UNIT_SYSTEM: UNIT_SYSTEM_METRIC,
         }
 
         if user_input is not None:
@@ -76,20 +87,24 @@ class VolvoOnCallConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_REGION, default=defaults[CONF_REGION]): vol.In(
                     {"na": "North America", "cn": "China", None: "Rest of world"}
                 ),
-                vol.Optional(CONF_MUTABLE, default=defaults[CONF_MUTABLE]): bool,
                 vol.Optional(
-                    CONF_SCANDINAVIAN_MILES, default=defaults[CONF_SCANDINAVIAN_MILES]
-                ): bool,
+                    CONF_UNIT_SYSTEM, default=defaults[CONF_UNIT_SYSTEM]
+                ): vol.In(
+                    {
+                        UNIT_SYSTEM_METRIC: "Metric",
+                        UNIT_SYSTEM_SCANDINAVIAN_MILES: (
+                            "Metric with Scandinavian Miles"
+                        ),
+                        UNIT_SYSTEM_IMPERIAL: "Imperial",
+                    }
+                ),
+                vol.Optional(CONF_MUTABLE, default=defaults[CONF_MUTABLE]): bool,
             },
         )
 
         return self.async_show_form(
             step_id="user", data_schema=user_schema, errors=errors
         )
-
-    async def async_step_import(self, import_data) -> FlowResult:
-        """Import volvooncall config from configuration.yaml."""
-        return await self.async_step_user(import_data)
 
     async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""

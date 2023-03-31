@@ -11,19 +11,15 @@ from homeassistant.const import (
     CONF_DEVICES,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_ZONE,
-    LENGTH_FEET,
-    LENGTH_KILOMETERS,
-    LENGTH_METERS,
-    LENGTH_MILES,
-    LENGTH_YARD,
+    UnitOfLength,
 )
 from homeassistant.core import HomeAssistant, State
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_state_change
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.distance import convert
 from homeassistant.util.location import distance
+from homeassistant.util.unit_conversion import DistanceConverter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,11 +38,11 @@ DEFAULT_TOLERANCE = 1
 DOMAIN = "proximity"
 
 UNITS = [
-    LENGTH_METERS,
-    LENGTH_KILOMETERS,
-    LENGTH_FEET,
-    LENGTH_YARD,
-    LENGTH_MILES,
+    UnitOfLength.METERS,
+    UnitOfLength.KILOMETERS,
+    UnitOfLength.FEET,
+    UnitOfLength.YARDS,
+    UnitOfLength.MILES,
 ]
 
 ZONE_SCHEMA = vol.Schema(
@@ -157,9 +153,12 @@ class Proximity(Entity):
         return {ATTR_DIR_OF_TRAVEL: self.dir_of_travel, ATTR_NEAREST: self.nearest}
 
     def check_proximity_state_change(
-        self, entity: str, old_state: State | None, new_state: State
+        self, entity: str, old_state: State | None, new_state: State | None
     ) -> None:
         """Perform the proximity checking."""
+        if new_state is None:
+            return
+
         entity_name = new_state.name
         devices_to_calculate = False
         devices_in_zone = ""
@@ -232,7 +231,10 @@ class Proximity(Entity):
             if not proximity:
                 continue
             distances_to_zone[device] = round(
-                convert(proximity, LENGTH_METERS, self.unit_of_measurement), 1
+                DistanceConverter.convert(
+                    proximity, UnitOfLength.METERS, self.unit_of_measurement
+                ),
+                1,
             )
 
         # Loop through each of the distances collected and work out the

@@ -1,4 +1,4 @@
-"""Support for Ezviz binary sensors."""
+"""Support for EZVIZ binary sensors."""
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
@@ -35,7 +35,7 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up Ezviz sensors based on a config entry."""
+    """Set up EZVIZ sensors based on a config entry."""
     coordinator: EzvizDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         DATA_COORDINATOR
     ]
@@ -52,7 +52,7 @@ async def async_setup_entry(
 
 
 class EzvizBinarySensor(EzvizEntity, BinarySensorEntity):
-    """Representation of a Ezviz sensor."""
+    """Representation of a EZVIZ sensor."""
 
     def __init__(
         self,

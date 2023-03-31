@@ -1,17 +1,25 @@
 """Support for SMS notification services."""
+from __future__ import annotations
+
 import logging
 
 import gammu  # pylint: disable=import-error
 
-from homeassistant.components.notify import BaseNotificationService
+from homeassistant.components.notify import ATTR_DATA, BaseNotificationService
 from homeassistant.const import CONF_TARGET
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_UNICODE, DOMAIN, GATEWAY, SMS_GATEWAY
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_get_service(hass, config, discovery_info=None):
+async def async_get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> SMSNotificationService | None:
     """Get the SMS notification service."""
 
     if discovery_info is None:
@@ -42,7 +50,14 @@ class SMSNotificationService(BaseNotificationService):
             _LOGGER.error("No target number specified, cannot send message")
             return
 
-        is_unicode = kwargs.get(CONF_UNICODE, True)
+        extended_data = kwargs.get(ATTR_DATA)
+        _LOGGER.debug("Extended data:%s", extended_data)
+
+        if extended_data is None:
+            is_unicode = True
+        else:
+            is_unicode = extended_data.get(CONF_UNICODE, True)
+
         smsinfo = {
             "Class": -1,
             "Unicode": is_unicode,

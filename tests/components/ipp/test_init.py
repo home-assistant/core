@@ -3,7 +3,8 @@ from homeassistant.components.ipp.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from tests.components.ipp import init_integration
+from . import init_integration
+
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 

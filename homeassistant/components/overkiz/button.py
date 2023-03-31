@@ -3,12 +3,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from pyoverkiz.enums import OverkizCommand
 from pyoverkiz.types import StateType as OverkizStateType
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantOverkizData
@@ -27,20 +28,20 @@ BUTTON_DESCRIPTIONS: list[OverkizButtonDescription] = [
     # My Position (cover, light)
     OverkizButtonDescription(
         key="my",
-        name="My Position",
+        name="My position",
         icon="mdi:star",
     ),
     # Identify
     OverkizButtonDescription(
         key="identify",  # startIdentify and identify are reversed... Swap this when fixed in API.
-        name="Start Identify",
+        name="Start identify",
         icon="mdi:human-greeting-variant",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     OverkizButtonDescription(
         key="stopIdentify",
-        name="Stop Identify",
+        name="Stop identify",
         icon="mdi:human-greeting-variant",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -52,10 +53,10 @@ BUTTON_DESCRIPTIONS: list[OverkizButtonDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # RTDIndoorSiren / RTDOutdoorSiren
-    OverkizButtonDescription(key="dingDong", name="Ding Dong", icon="mdi:bell-ring"),
+    OverkizButtonDescription(key="dingDong", name="Ding dong", icon="mdi:bell-ring"),
     OverkizButtonDescription(key="bip", name="Bip", icon="mdi:bell-ring"),
     OverkizButtonDescription(
-        key="fastBipSequence", name="Fast Bip Sequence", icon="mdi:bell-ring"
+        key="fastBipSequence", name="Fast bip sequence", icon="mdi:bell-ring"
     ),
     OverkizButtonDescription(key="ring", name="Ring", icon="mdi:bell-ring"),
     # DynamicScreen (ogp:blind) uses goToAlias (id 1: favorite1) instead of 'my'
@@ -64,6 +65,11 @@ BUTTON_DESCRIPTIONS: list[OverkizButtonDescription] = [
         press_args="1",
         name="My position",
         icon="mdi:star",
+    ),
+    OverkizButtonDescription(
+        key=OverkizCommand.CYCLE,
+        name="Toggle",
+        icon="mdi:sync",
     ),
 ]
 

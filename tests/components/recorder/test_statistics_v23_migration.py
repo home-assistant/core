@@ -3,12 +3,13 @@
 The v23 schema used for these tests has been slightly modified to add the
 EventData table to allow the recorder to startup successfully.
 """
-# pylint: disable=protected-access,invalid-name
+# pylint: disable=invalid-name
 import importlib
 import json
 import sys
 from unittest.mock import patch
 
+import py
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
@@ -20,8 +21,9 @@ from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
+from .common import wait_recording_done
+
 from tests.common import get_test_home_assistant
-from tests.components.recorder.common import wait_recording_done
 
 ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
 
@@ -51,7 +53,9 @@ def _create_engine_test(*args, **kwargs):
     return engine
 
 
-def test_delete_duplicates(caplog, tmpdir):
+def test_delete_duplicates(
+    caplog: pytest.LogCaptureFixture, tmpdir: py.path.local
+) -> None:
     """Test removal of duplicated statistics."""
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
@@ -221,7 +225,9 @@ def test_delete_duplicates(caplog, tmpdir):
     assert "Found duplicated" not in caplog.text
 
 
-def test_delete_duplicates_many(caplog, tmpdir):
+def test_delete_duplicates_many(
+    caplog: pytest.LogCaptureFixture, tmpdir: py.path.local
+) -> None:
     """Test removal of duplicated statistics."""
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
@@ -398,7 +404,9 @@ def test_delete_duplicates_many(caplog, tmpdir):
 
 
 @pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
-def test_delete_duplicates_non_identical(caplog, tmpdir):
+def test_delete_duplicates_non_identical(
+    caplog: pytest.LogCaptureFixture, tmpdir: py.path.local
+) -> None:
     """Test removal of duplicated statistics."""
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
@@ -569,7 +577,9 @@ def test_delete_duplicates_non_identical(caplog, tmpdir):
     ]
 
 
-def test_delete_duplicates_short_term(caplog, tmpdir):
+def test_delete_duplicates_short_term(
+    caplog: pytest.LogCaptureFixture, tmpdir: py.path.local
+) -> None:
     """Test removal of duplicated statistics."""
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"

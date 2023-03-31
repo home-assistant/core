@@ -1,9 +1,9 @@
 """Test Wallbox Switch component."""
-from homeassistant.const import CONF_ICON, CONF_UNIT_OF_MEASUREMENT, POWER_KILO_WATT
+from homeassistant.const import CONF_ICON, CONF_UNIT_OF_MEASUREMENT, UnitOfPower
 from homeassistant.core import HomeAssistant
 
-from tests.components.wallbox import entry, setup_integration
-from tests.components.wallbox.const import (
+from . import entry, setup_integration
+from .const import (
     MOCK_SENSOR_CHARGING_POWER_ID,
     MOCK_SENSOR_CHARGING_SPEED_ID,
     MOCK_SENSOR_MAX_AVAILABLE_POWER,
@@ -16,7 +16,7 @@ async def test_wallbox_sensor_class(hass: HomeAssistant) -> None:
     await setup_integration(hass)
 
     state = hass.states.get(MOCK_SENSOR_CHARGING_POWER_ID)
-    assert state.attributes[CONF_UNIT_OF_MEASUREMENT] == POWER_KILO_WATT
+    assert state.attributes[CONF_UNIT_OF_MEASUREMENT] == UnitOfPower.KILO_WATT
     assert state.name == "Mock Title Charging Power"
 
     state = hass.states.get(MOCK_SENSOR_CHARGING_SPEED_ID)

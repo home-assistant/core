@@ -1,13 +1,17 @@
 """Support for ONVIF binary sensors."""
 from __future__ import annotations
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.util.enum import try_parse_enum
 
 from .base import ONVIFBaseEntity
 from .const import DOMAIN
@@ -61,13 +65,17 @@ class ONVIFBinarySensor(ONVIFBaseEntity, RestoreEntity, BinarySensorEntity):
         """Initialize the ONVIF binary sensor."""
         self._attr_unique_id = uid
         if entry is not None:
-            self._attr_device_class = entry.original_device_class
+            self._attr_device_class = try_parse_enum(
+                BinarySensorDeviceClass, entry.original_device_class
+            )
             self._attr_entity_category = entry.entity_category
             self._attr_name = entry.name
         else:
             event = device.events.get_uid(uid)
             assert event
-            self._attr_device_class = event.device_class
+            self._attr_device_class = try_parse_enum(
+                BinarySensorDeviceClass, event.device_class
+            )
             self._attr_entity_category = event.entity_category
             self._attr_entity_registry_enabled_default = event.entity_enabled
             self._attr_name = f"{device.name} {event.name}"

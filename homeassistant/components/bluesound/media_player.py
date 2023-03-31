@@ -38,6 +38,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -210,7 +211,6 @@ class BluesoundPlayer(MediaPlayerEntity):
         self._polling_task = None  # The actual polling task.
         self._name = name
         self._id = None
-        self._icon = None
         self._capture_items = []
         self._services_items = []
         self._preset_items = []
@@ -258,8 +258,6 @@ class BluesoundPlayer(MediaPlayerEntity):
             self._id = self._sync_status.get("@id", None)
         if not self._bluesound_device_name:
             self._bluesound_device_name = self._sync_status.get("@name", self.host)
-        if not self._icon:
-            self._icon = self._sync_status.get("@icon", self.host)
 
         if (master := self._sync_status.get("master")) is not None:
             self._is_master = False
@@ -398,7 +396,6 @@ class BluesoundPlayer(MediaPlayerEntity):
         _LOGGER.debug("Calling URL: %s", url)
 
         try:
-
             async with async_timeout.timeout(125):
                 response = await self._polling_session.get(
                     url, headers={CONNECTION: KEEP_ALIVE}
@@ -448,6 +445,11 @@ class BluesoundPlayer(MediaPlayerEntity):
             self.async_write_ha_state()
             _LOGGER.info("Client connection error, marking %s as offline", self._name)
             raise
+
+    @property
+    def unique_id(self):
+        """Return an unique ID."""
+        return f"{format_mac(self._sync_status['@mac'])}-{self.port}"
 
     async def async_trigger_sync_on_all(self):
         """Trigger sync status update on all devices."""
@@ -679,11 +681,6 @@ class BluesoundPlayer(MediaPlayerEntity):
         return self._bluesound_device_name
 
     @property
-    def icon(self):
-        """Return the icon of the device."""
-        return self._icon
-
-    @property
     def source_list(self):
         """List of available input sources."""
         if self._status is None or (self.is_grouped and not self.is_master):
@@ -777,10 +774,10 @@ class BluesoundPlayer(MediaPlayerEntity):
         return None
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag of media commands that are supported."""
         if self._status is None:
-            return 0
+            return MediaPlayerEntityFeature(0)
 
         if self.is_grouped and not self.is_master:
             return (

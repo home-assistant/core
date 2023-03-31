@@ -6,7 +6,7 @@ from unittest.mock import patch
 from pysensibo.model import SensiboData
 import pytest
 
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_FAN_MODE,
@@ -75,14 +75,13 @@ async def test_entity_failed_service_calls(
     with patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
         side_effect=p_error,
-    ):
-        with pytest.raises(HomeAssistantError):
-            await hass.services.async_call(
-                CLIMATE_DOMAIN,
-                SERVICE_SET_FAN_MODE,
-                {ATTR_ENTITY_ID: state.entity_id, ATTR_FAN_MODE: "low"},
-                blocking=True,
-            )
+    ), pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {ATTR_ENTITY_ID: state.entity_id, ATTR_FAN_MODE: "low"},
+            blocking=True,
+        )
 
     state = hass.states.get("climate.hallway")
     assert state.attributes["fan_mode"] == "low"

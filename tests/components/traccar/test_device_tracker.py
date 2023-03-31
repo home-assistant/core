@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from pytraccar import ReportsEventeModel
 
-from homeassistant.components.device_tracker.const import DOMAIN
+from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.components.traccar.device_tracker import (
     PLATFORM_SCHEMA as TRACCAR_PLATFORM_SCHEMA,
 )
@@ -15,12 +15,13 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_capture_events
 
 
-async def test_import_events_catch_all(hass):
+async def test_import_events_catch_all(hass: HomeAssistant) -> None:
     """Test importing all events and firing them in HA using their event types."""
     conf_dict = {
         DOMAIN: TRACCAR_PLATFORM_SCHEMA(

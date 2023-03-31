@@ -13,13 +13,13 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_XUID = "xuid"
 
-ICON = "mdi:microsoft-xbox"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -36,6 +36,19 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Xbox platform."""
+    create_issue(
+        hass,
+        "xbox_live",
+        "pending_removal",
+        breaks_in_ha_version="2023.2.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="pending_removal",
+    )
+    _LOGGER.warning(
+        "The Xbox Live integration is deprecated "
+        "and will be removed in Home Assistant 2023.2"
+    )
     api = Client(api_key=config[CONF_API_KEY])
     entities = []
 
@@ -43,8 +56,10 @@ def setup_platform(
     response = api.api_get("profile")
     if not response.ok:
         _LOGGER.error(
-            "Can't setup X API connection. Check your account or "
-            "api key on xapi.us. Code: %s Description: %s ",
+            (
+                "Can't setup X API connection. Check your account or "
+                "api key on xapi.us. Code: %s Description: %s "
+            ),
             response.status_code,
             response.reason,
         )
@@ -60,8 +75,7 @@ def setup_platform(
             continue
         entities.append(XboxSensor(api, xuid, gamercard, interval))
 
-    if entities:
-        add_entities(entities, True)
+    add_entities(entities, True)
 
 
 def get_user_gamercard(api, xuid):
@@ -83,6 +97,7 @@ def get_user_gamercard(api, xuid):
 class XboxSensor(SensorEntity):
     """A class for the Xbox account."""
 
+    _attr_icon = "mdi:microsoft-xbox"
     _attr_should_poll = False
 
     def __init__(self, api, xuid, gamercard, interval):
@@ -122,11 +137,6 @@ class XboxSensor(SensorEntity):
     def entity_picture(self):
         """Avatar of the account."""
         return self._picture
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return ICON
 
     async def async_added_to_hass(self) -> None:
         """Start custom polling."""

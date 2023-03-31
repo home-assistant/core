@@ -6,6 +6,8 @@ import pytest
 from homeassistant.components import stt
 from homeassistant.setup import async_setup_component
 
+from tests.typing import ClientSessionGenerator
+
 
 @pytest.fixture(autouse=True)
 async def setup_comp(hass):
@@ -14,7 +16,7 @@ async def setup_comp(hass):
     await hass.async_block_till_done()
 
 
-async def test_demo_settings(hass_client):
+async def test_demo_settings(hass_client: ClientSessionGenerator) -> None:
     """Test retrieve settings from demo provider."""
     client = await hass_client()
 
@@ -32,7 +34,7 @@ async def test_demo_settings(hass_client):
     }
 
 
-async def test_demo_speech_no_metadata(hass_client):
+async def test_demo_speech_no_metadata(hass_client: ClientSessionGenerator) -> None:
     """Test retrieve settings from demo provider."""
     client = await hass_client()
 
@@ -40,28 +42,34 @@ async def test_demo_speech_no_metadata(hass_client):
     assert response.status == HTTPStatus.BAD_REQUEST
 
 
-async def test_demo_speech_wrong_metadata(hass_client):
+async def test_demo_speech_wrong_metadata(hass_client: ClientSessionGenerator) -> None:
     """Test retrieve settings from demo provider."""
     client = await hass_client()
 
     response = await client.post(
         "/api/stt/demo",
         headers={
-            "X-Speech-Content": "format=wav; codec=pcm; sample_rate=8000; bit_rate=16; channel=1; language=de"
+            "X-Speech-Content": (
+                "format=wav; codec=pcm; sample_rate=8000; bit_rate=16; channel=1;"
+                " language=de"
+            )
         },
         data=b"Test",
     )
     assert response.status == HTTPStatus.UNSUPPORTED_MEDIA_TYPE
 
 
-async def test_demo_speech(hass_client):
+async def test_demo_speech(hass_client: ClientSessionGenerator) -> None:
     """Test retrieve settings from demo provider."""
     client = await hass_client()
 
     response = await client.post(
         "/api/stt/demo",
         headers={
-            "X-Speech-Content": "format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=2; language=de"
+            "X-Speech-Content": (
+                "format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=2;"
+                " language=de"
+            )
         },
         data=b"Test",
     )

@@ -10,8 +10,8 @@ from homeassistant.components.wallbox.const import CHARGER_STATUS_ID_KEY
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
-from tests.components.wallbox import authorisation_response, entry, setup_integration
-from tests.components.wallbox.const import MOCK_SWITCH_ENTITY_ID
+from . import authorisation_response, entry, setup_integration
+from .const import MOCK_SWITCH_ENTITY_ID
 
 
 async def test_wallbox_switch_class(hass: HomeAssistant) -> None:

@@ -1,15 +1,16 @@
 {
   "domain": "tilt_ble",
   "name": "Tilt Hydrometer BLE",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/tilt_ble",
   "bluetooth": [
     {
-      "manufacturer_id": 76
+      "manufacturer_id": 76,
+      "manufacturer_data_start": [2, 21, 164, 149, 187]
     }
   ],
-  "requirements": ["tilt-ble==0.2.3"],
-  "dependencies": ["bluetooth"],
   "codeowners": ["@apt-itude"],
-  "iot_class": "local_push"
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/tilt_ble",
+  "iot_class": "local_push",
+  "requirements": ["tilt-ble==0.2.3"]
 }

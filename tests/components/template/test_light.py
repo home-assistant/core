@@ -1,5 +1,4 @@
 """The tests for the  Template light platform."""
-
 import pytest
 
 import homeassistant.components.light as light
@@ -9,7 +8,6 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
-    SUPPORT_TRANSITION,
     ColorMode,
     LightEntityFeature,
 )
@@ -21,6 +19,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component
@@ -111,7 +110,7 @@ async def setup_light(hass, count, light_config):
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "supported_features,supported_color_modes",
+    ("supported_features", "supported_color_modes"),
     [(0, [ColorMode.BRIGHTNESS])],
 )
 @pytest.mark.parametrize(
@@ -126,8 +125,8 @@ async def setup_light(hass, count, light_config):
     ],
 )
 async def test_template_state_invalid(
-    hass, supported_features, supported_color_modes, setup_light
-):
+    hass: HomeAssistant, supported_features, supported_color_modes, setup_light
+) -> None:
     """Test template state with render error."""
     state = hass.states.get("light.test_template_light")
     assert state.state == STATE_OFF
@@ -148,7 +147,7 @@ async def test_template_state_invalid(
         },
     ],
 )
-async def test_template_state_text(hass, setup_light):
+async def test_template_state_text(hass: HomeAssistant, setup_light) -> None:
     """Test the state text of a template."""
     set_state = STATE_ON
     hass.states.async_set("light.test_state", set_state)
@@ -171,7 +170,7 @@ async def test_template_state_text(hass, setup_light):
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "value_template,expected_state,expected_color_mode",
+    ("value_template", "expected_state", "expected_color_mode"),
     [
         (
             "{{ 1 == 1 }}",
@@ -186,12 +185,12 @@ async def test_template_state_text(hass, setup_light):
     ],
 )
 async def test_templatex_state_boolean(
-    hass,
+    hass: HomeAssistant,
     expected_color_mode,
     expected_state,
     count,
     value_template,
-):
+) -> None:
     """Test the setting of the state with boolean on."""
     light_config = {
         "test_template_light": {
@@ -226,13 +225,13 @@ async def test_templatex_state_boolean(
         {"test_template_light": "Invalid"},
     ],
 )
-async def test_template_syntax_error(hass, setup_light):
+async def test_template_syntax_error(hass: HomeAssistant, setup_light) -> None:
     """Test templating syntax error."""
     assert hass.states.async_all("light") == []
 
 
 @pytest.mark.parametrize(
-    "light_config, count",
+    ("light_config", "count"),
     [
         (
             {
@@ -255,7 +254,7 @@ async def test_template_syntax_error(hass, setup_light):
         ),
     ],
 )
-async def test_missing_key(hass, count, setup_light):
+async def test_missing_key(hass: HomeAssistant, count, setup_light) -> None:
     """Test missing template."""
     if count:
         assert hass.states.async_all("light") != []
@@ -275,7 +274,7 @@ async def test_missing_key(hass, count, setup_light):
         },
     ],
 )
-async def test_on_action(hass, setup_light, calls):
+async def test_on_action(hass: HomeAssistant, setup_light, calls) -> None:
     """Test on action."""
     hass.states.async_set("light.test_state", STATE_OFF)
     await hass.async_block_till_done()
@@ -333,7 +332,9 @@ async def test_on_action(hass, setup_light, calls):
         },
     ],
 )
-async def test_on_action_with_transition(hass, setup_light, calls):
+async def test_on_action_with_transition(
+    hass: HomeAssistant, setup_light, calls
+) -> None:
     """Test on action with transition."""
     hass.states.async_set("light.test_state", STATE_OFF)
     await hass.async_block_till_done()
@@ -342,7 +343,7 @@ async def test_on_action_with_transition(hass, setup_light, calls):
     assert state.state == STATE_OFF
     assert "color_mode" not in state.attributes
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
-    assert state.attributes["supported_features"] == SUPPORT_TRANSITION
+    assert state.attributes["supported_features"] == LightEntityFeature.TRANSITION
 
     await hass.services.async_call(
         light.DOMAIN,
@@ -357,7 +358,7 @@ async def test_on_action_with_transition(hass, setup_light, calls):
     assert state.state == STATE_OFF
     assert "color_mode" not in state.attributes
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
-    assert state.attributes["supported_features"] == SUPPORT_TRANSITION
+    assert state.attributes["supported_features"] == LightEntityFeature.TRANSITION
 
 
 @pytest.mark.parametrize("count", [1])
@@ -372,10 +373,10 @@ async def test_on_action_with_transition(hass, setup_light, calls):
     ],
 )
 async def test_on_action_optimistic(
-    hass,
+    hass: HomeAssistant,
     setup_light,
     calls,
-):
+) -> None:
     """Test on action with optimistic state."""
     hass.states.async_set("light.test_state", STATE_OFF)
     await hass.async_block_till_done()
@@ -432,7 +433,7 @@ async def test_on_action_optimistic(
         },
     ],
 )
-async def test_off_action(hass, setup_light, calls):
+async def test_off_action(hass: HomeAssistant, setup_light, calls) -> None:
     """Test off action."""
     hass.states.async_set("light.test_state", STATE_ON)
     await hass.async_block_till_done()
@@ -489,7 +490,9 @@ async def test_off_action(hass, setup_light, calls):
         },
     ],
 )
-async def test_off_action_with_transition(hass, setup_light, calls):
+async def test_off_action_with_transition(
+    hass: HomeAssistant, setup_light, calls
+) -> None:
     """Test off action with transition."""
     hass.states.async_set("light.test_state", STATE_ON)
     await hass.async_block_till_done()
@@ -498,7 +501,7 @@ async def test_off_action_with_transition(hass, setup_light, calls):
     assert state.state == STATE_ON
     assert state.attributes["color_mode"] == ColorMode.BRIGHTNESS
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
-    assert state.attributes["supported_features"] == SUPPORT_TRANSITION
+    assert state.attributes["supported_features"] == LightEntityFeature.TRANSITION
 
     await hass.services.async_call(
         light.DOMAIN,
@@ -512,7 +515,7 @@ async def test_off_action_with_transition(hass, setup_light, calls):
     assert state.state == STATE_ON
     assert state.attributes["color_mode"] == ColorMode.BRIGHTNESS
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
-    assert state.attributes["supported_features"] == SUPPORT_TRANSITION
+    assert state.attributes["supported_features"] == LightEntityFeature.TRANSITION
 
 
 @pytest.mark.parametrize("count", [1])
@@ -526,7 +529,7 @@ async def test_off_action_with_transition(hass, setup_light, calls):
         },
     ],
 )
-async def test_off_action_optimistic(hass, setup_light, calls):
+async def test_off_action_optimistic(hass: HomeAssistant, setup_light, calls) -> None:
     """Test off action with optimistic state."""
     state = hass.states.get("light.test_template_light")
     assert state.state == STATE_OFF
@@ -562,10 +565,10 @@ async def test_off_action_optimistic(hass, setup_light, calls):
     ],
 )
 async def test_level_action_no_template(
-    hass,
+    hass: HomeAssistant,
     setup_light,
     calls,
-):
+) -> None:
     """Test setting brightness with optimistic template."""
     state = hass.states.get("light.test_template_light")
     assert state.attributes.get("brightness") is None
@@ -592,7 +595,7 @@ async def test_level_action_no_template(
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "expected_level,level_template,expected_color_mode",
+    ("expected_level", "level_template", "expected_color_mode"),
     [
         (255, "{{255}}", ColorMode.BRIGHTNESS),
         (None, "{{256}}", ColorMode.BRIGHTNESS),
@@ -607,12 +610,12 @@ async def test_level_action_no_template(
     ],
 )
 async def test_level_template(
-    hass,
+    hass: HomeAssistant,
     expected_level,
     expected_color_mode,
     count,
     level_template,
-):
+) -> None:
     """Test the template for the level."""
     light_config = {
         "test_template_light": {
@@ -632,7 +635,7 @@ async def test_level_template(
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "expected_temp,temperature_template,expected_color_mode",
+    ("expected_temp", "temperature_template", "expected_color_mode"),
     [
         (500, "{{500}}", ColorMode.COLOR_TEMP),
         (None, "{{501}}", ColorMode.COLOR_TEMP),
@@ -643,12 +646,12 @@ async def test_level_template(
     ],
 )
 async def test_temperature_template(
-    hass,
+    hass: HomeAssistant,
     expected_temp,
     expected_color_mode,
     count,
     temperature_template,
-):
+) -> None:
     """Test the template for the temperature."""
     light_config = {
         "test_template_light": {
@@ -679,10 +682,10 @@ async def test_temperature_template(
     ],
 )
 async def test_temperature_action_no_template(
-    hass,
+    hass: HomeAssistant,
     setup_light,
     calls,
-):
+) -> None:
     """Test setting temperature with optimistic template."""
     state = hass.states.get("light.test_template_light")
     assert state.attributes.get("color_template") is None
@@ -721,7 +724,7 @@ async def test_temperature_action_no_template(
         },
     ],
 )
-async def test_friendly_name(hass, setup_light):
+async def test_friendly_name(hass: HomeAssistant, setup_light) -> None:
     """Test the accessibility of the friendly_name attribute."""
 
     state = hass.states.get("light.test_template_light")
@@ -739,14 +742,14 @@ async def test_friendly_name(hass, setup_light):
                 **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
                 "friendly_name": "Template light",
                 "value_template": "{{ 1 == 1 }}",
-                "icon_template": "{% if states.light.test_state.state %}"
-                "mdi:check"
-                "{% endif %}",
+                "icon_template": (
+                    "{% if states.light.test_state.state %}mdi:check{% endif %}"
+                ),
             }
         },
     ],
 )
-async def test_icon_template(hass, setup_light):
+async def test_icon_template(hass: HomeAssistant, setup_light) -> None:
     """Test icon template."""
     state = hass.states.get("light.test_template_light")
     assert state.attributes.get("icon") == ""
@@ -768,14 +771,14 @@ async def test_icon_template(hass, setup_light):
                 **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
                 "friendly_name": "Template light",
                 "value_template": "{{ 1 == 1 }}",
-                "entity_picture_template": "{% if states.light.test_state.state %}"
-                "/local/light.png"
-                "{% endif %}",
+                "entity_picture_template": (
+                    "{% if states.light.test_state.state %}/local/light.png{% endif %}"
+                ),
             }
         },
     ],
 )
-async def test_entity_picture_template(hass, setup_light):
+async def test_entity_picture_template(hass: HomeAssistant, setup_light) -> None:
     """Test entity_picture template."""
     state = hass.states.get("light.test_template_light")
     assert state.attributes.get("entity_picture") == ""
@@ -801,10 +804,10 @@ async def test_entity_picture_template(hass, setup_light):
     ],
 )
 async def test_color_action_no_template(
-    hass,
+    hass: HomeAssistant,
     setup_light,
     calls,
-):
+) -> None:
     """Test setting color with optimistic template."""
     state = hass.states.get("light.test_template_light")
     assert state.attributes.get("hs_color") is None
@@ -832,7 +835,7 @@ async def test_color_action_no_template(
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "expected_hs,color_template,expected_color_mode",
+    ("expected_hs", "color_template", "expected_color_mode"),
     [
         ((360, 100), "{{(360, 100)}}", ColorMode.HS),
         ((359.9, 99.9), "{{(359.9, 99.9)}}", ColorMode.HS),
@@ -845,12 +848,12 @@ async def test_color_action_no_template(
     ],
 )
 async def test_color_template(
-    hass,
+    hass: HomeAssistant,
     expected_hs,
     expected_color_mode,
     count,
     color_template,
-):
+) -> None:
     """Test the template for the color."""
     light_config = {
         "test_template_light": {
@@ -897,7 +900,9 @@ async def test_color_template(
         },
     ],
 )
-async def test_color_and_temperature_actions_no_template(hass, setup_light, calls):
+async def test_color_and_temperature_actions_no_template(
+    hass: HomeAssistant, setup_light, calls
+) -> None:
     """Test setting color and color temperature with optimistic template."""
     state = hass.states.get("light.test_template_light")
     assert state.attributes.get("hs_color") is None
@@ -1012,7 +1017,9 @@ async def test_color_and_temperature_actions_no_template(hass, setup_light, call
         },
     ],
 )
-async def test_effect_action_valid_effect(hass, setup_light, calls):
+async def test_effect_action_valid_effect(
+    hass: HomeAssistant, setup_light, calls
+) -> None:
     """Test setting valid effect with template."""
     state = hass.states.get("light.test_template_light")
     assert state is not None
@@ -1055,7 +1062,9 @@ async def test_effect_action_valid_effect(hass, setup_light, calls):
         },
     ],
 )
-async def test_effect_action_invalid_effect(hass, setup_light, calls):
+async def test_effect_action_invalid_effect(
+    hass: HomeAssistant, setup_light, calls
+) -> None:
     """Test setting invalid effect with template."""
     state = hass.states.get("light.test_template_light")
     assert state is not None
@@ -1077,7 +1086,7 @@ async def test_effect_action_invalid_effect(hass, setup_light, calls):
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "expected_effect_list,effect_list_template",
+    ("expected_effect_list", "effect_list_template"),
     [
         (
             ["Strobe color", "Police", "Christmas", "RGB", "Random Loop"],
@@ -1096,8 +1105,8 @@ async def test_effect_action_invalid_effect(hass, setup_light, calls):
     ],
 )
 async def test_effect_list_template(
-    hass, expected_effect_list, count, effect_list_template
-):
+    hass: HomeAssistant, expected_effect_list, count, effect_list_template
+) -> None:
     """Test the template for the effect list."""
     light_config = {
         "test_template_light": {
@@ -1122,7 +1131,7 @@ async def test_effect_list_template(
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "expected_effect,effect_template",
+    ("expected_effect", "effect_template"),
     [
         (None, "Disco"),
         (None, "None"),
@@ -1131,7 +1140,9 @@ async def test_effect_list_template(
         ("Strobe color", "{{ 'Strobe color' }}"),
     ],
 )
-async def test_effect_template(hass, expected_effect, count, effect_template):
+async def test_effect_template(
+    hass: HomeAssistant, expected_effect, count, effect_template
+) -> None:
     """Test the template for the effect."""
     light_config = {
         "test_template_light": {
@@ -1144,7 +1155,9 @@ async def test_effect_template(hass, expected_effect, count, effect_template):
                     "effect": "{{effect}}",
                 },
             },
-            "effect_list_template": "{{ ['Strobe color', 'Police', 'Christmas', 'RGB', 'Random Loop'] }}",
+            "effect_list_template": (
+                "{{ ['Strobe color', 'Police', 'Christmas', 'RGB', 'Random Loop'] }}"
+            ),
             "effect_template": effect_template,
         }
     }
@@ -1156,7 +1169,7 @@ async def test_effect_template(hass, expected_effect, count, effect_template):
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "expected_min_mireds,min_mireds_template",
+    ("expected_min_mireds", "min_mireds_template"),
     [
         (118, "{{118}}"),
         (153, "{{x - 12}}"),
@@ -1167,8 +1180,8 @@ async def test_effect_template(hass, expected_effect, count, effect_template):
     ],
 )
 async def test_min_mireds_template(
-    hass, expected_min_mireds, count, min_mireds_template
-):
+    hass: HomeAssistant, expected_min_mireds, count, min_mireds_template
+) -> None:
     """Test the template for the min mireds."""
     light_config = {
         "test_template_light": {
@@ -1193,7 +1206,7 @@ async def test_min_mireds_template(
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "expected_max_mireds,max_mireds_template",
+    ("expected_max_mireds", "max_mireds_template"),
     [
         (488, "{{488}}"),
         (500, "{{x - 12}}"),
@@ -1204,8 +1217,8 @@ async def test_min_mireds_template(
     ],
 )
 async def test_max_mireds_template(
-    hass, expected_max_mireds, count, max_mireds_template
-):
+    hass: HomeAssistant, expected_max_mireds, count, max_mireds_template
+) -> None:
     """Test the template for the max mireds."""
     light_config = {
         "test_template_light": {
@@ -1230,7 +1243,7 @@ async def test_max_mireds_template(
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "expected_supports_transition,supports_transition_template",
+    ("expected_supports_transition", "supports_transition_template"),
     [
         (True, "{{true}}"),
         (True, "{{1 == 1}}"),
@@ -1241,8 +1254,11 @@ async def test_max_mireds_template(
     ],
 )
 async def test_supports_transition_template(
-    hass, expected_supports_transition, count, supports_transition_template
-):
+    hass: HomeAssistant,
+    expected_supports_transition,
+    count,
+    supports_transition_template,
+) -> None:
     """Test the template for the supports transition."""
     light_config = {
         "test_template_light": {
@@ -1280,12 +1296,16 @@ async def test_supports_transition_template(
         {
             "test_template_light": {
                 **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
-                "availability_template": "{{ is_state('availability_boolean.state', 'on') }}",
+                "availability_template": (
+                    "{{ is_state('availability_boolean.state', 'on') }}"
+                ),
             }
         },
     ],
 )
-async def test_available_template_with_entities(hass, setup_light):
+async def test_available_template_with_entities(
+    hass: HomeAssistant, setup_light
+) -> None:
     """Test availability templates with values from other entities."""
     # When template returns true..
     hass.states.async_set(_STATE_AVAILABILITY_BOOLEAN, STATE_ON)
@@ -1315,11 +1335,11 @@ async def test_available_template_with_entities(hass, setup_light):
     ],
 )
 async def test_invalid_availability_template_keeps_component_available(
-    hass, setup_light, caplog_setup_text
-):
+    hass: HomeAssistant, setup_light, caplog_setup_text
+) -> None:
     """Test that an invalid availability keeps the device available."""
     assert hass.states.get("light.test_template_light").state != STATE_UNAVAILABLE
-    assert ("UndefinedError: 'x' is undefined") in caplog_setup_text
+    assert "UndefinedError: 'x' is undefined" in caplog_setup_text
 
 
 @pytest.mark.parametrize("count", [1])
@@ -1338,6 +1358,6 @@ async def test_invalid_availability_template_keeps_component_available(
         },
     ],
 )
-async def test_unique_id(hass, setup_light):
+async def test_unique_id(hass: HomeAssistant, setup_light) -> None:
     """Test unique_id option only creates one light per id."""
     assert len(hass.states.async_all("light")) == 1

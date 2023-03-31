@@ -9,6 +9,7 @@ import homeassistant.components.persistent_notification as pn
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (  # noqa: F401
@@ -58,11 +59,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def persistent_notification(service: ServiceCall) -> None:
         """Send notification via the built-in persistent_notify integration."""
-        message = service.data[ATTR_MESSAGE]
+        message: Template = service.data[ATTR_MESSAGE]
         message.hass = hass
         check_templates_warn(hass, message)
 
         title = None
+        title_tpl: Template | None
         if title_tpl := service.data.get(ATTR_TITLE):
             check_templates_warn(hass, title_tpl)
             title_tpl.hass = hass

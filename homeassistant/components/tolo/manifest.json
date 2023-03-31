@@ -1,11 +1,15 @@
 {
   "domain": "tolo",
   "name": "TOLO Sauna",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/tolo",
-  "requirements": ["tololib==0.1.0b3"],
   "codeowners": ["@MatthiasLohr"],
+  "config_flow": true,
+  "dhcp": [
+    {
+      "hostname": "usr-tcp232-ed2"
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/tolo",
   "iot_class": "local_polling",
-  "dhcp": [{ "hostname": "usr-tcp232-ed2" }],
-  "loggers": ["tololib"]
+  "loggers": ["tololib"],
+  "requirements": ["tololib==0.1.0b4"]
 }

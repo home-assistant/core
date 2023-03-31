@@ -9,10 +9,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import KNOWN_DEVICES
+from .connection import HKDevice
 from .entity import HomeKitEntity
 
 
@@ -106,6 +108,29 @@ class HomeKitLeakSensor(HomeKitEntity, BinarySensorEntity):
         return self.service.value(CharacteristicsTypes.LEAK_DETECTED) == 1
 
 
+class HomeKitBatteryLowSensor(HomeKitEntity, BinarySensorEntity):
+    """Representation of a Homekit battery low sensor."""
+
+    _attr_device_class = BinarySensorDeviceClass.BATTERY
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def get_characteristic_types(self) -> list[str]:
+        """Define the homekit characteristics the entity is tracking."""
+        return [CharacteristicsTypes.STATUS_LO_BATT]
+
+    @property
+    def name(self) -> str:
+        """Return the name of the sensor."""
+        if name := self.accessory.name:
+            return f"{name} Low Battery"
+        return "Low Battery"
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if low battery is detected from the binary sensor."""
+        return self.service.value(CharacteristicsTypes.STATUS_LO_BATT) == 1
+
+
 ENTITY_TYPES = {
     ServicesTypes.MOTION_SENSOR: HomeKitMotionSensor,
     ServicesTypes.CONTACT_SENSOR: HomeKitContactSensor,
@@ -113,6 +138,17 @@ ENTITY_TYPES = {
     ServicesTypes.CARBON_MONOXIDE_SENSOR: HomeKitCarbonMonoxideSensor,
     ServicesTypes.OCCUPANCY_SENSOR: HomeKitOccupancySensor,
     ServicesTypes.LEAK_SENSOR: HomeKitLeakSensor,
+    ServicesTypes.BATTERY_SERVICE: HomeKitBatteryLowSensor,
+}
+
+# Only create the entity if it has the required characteristic
+REQUIRED_CHAR_BY_TYPE = {
+    ServicesTypes.BATTERY_SERVICE: CharacteristicsTypes.STATUS_LO_BATT,
+}
+# Reject the service as another platform can represent it better
+# if it has a specific characteristic
+REJECT_CHAR_BY_TYPE = {
+    ServicesTypes.BATTERY_SERVICE: CharacteristicsTypes.BATTERY_LEVEL,
 }
 
 
@@ -122,15 +158,27 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Homekit lighting."""
-    hkid = config_entry.data["AccessoryPairingID"]
-    conn = hass.data[KNOWN_DEVICES][hkid]
+    hkid: str = config_entry.data["AccessoryPairingID"]
+    conn: HKDevice = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
     def async_add_service(service: Service) -> bool:
         if not (entity_class := ENTITY_TYPES.get(service.type)):
             return False
+        if (
+            required_char := REQUIRED_CHAR_BY_TYPE.get(service.type)
+        ) and not service.has(required_char):
+            return False
+        if (reject_char := REJECT_CHAR_BY_TYPE.get(service.type)) and service.has(
+            reject_char
+        ):
+            return False
         info = {"aid": service.accessory.aid, "iid": service.iid}
-        async_add_entities([entity_class(conn, info)], True)
+        entity: HomeKitEntity = entity_class(conn, info)
+        conn.async_migrate_unique_id(
+            entity.old_unique_id, entity.unique_id, Platform.BINARY_SENSOR
+        )
+        async_add_entities([entity])
         return True
 
     conn.add_listener(async_add_service)

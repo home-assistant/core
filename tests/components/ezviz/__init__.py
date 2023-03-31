@@ -1,10 +1,13 @@
-"""Tests for the Ezviz integration."""
+"""Tests for the EZVIZ integration."""
 from unittest.mock import patch
 
 from homeassistant.components.ezviz.const import (
     ATTR_SERIAL,
+    ATTR_TYPE_CAMERA,
     ATTR_TYPE_CLOUD,
     CONF_FFMPEG_ARGUMENTS,
+    CONF_RFSESSION_ID,
+    CONF_SESSION_ID,
     DEFAULT_FFMPEG_ARGUMENTS,
     DEFAULT_TIMEOUT,
     DOMAIN,
@@ -22,8 +25,8 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 ENTRY_CONFIG = {
-    CONF_USERNAME: "test-username",
-    CONF_PASSWORD: "test-password",
+    CONF_SESSION_ID: "test-username",
+    CONF_RFSESSION_ID: "test-password",
     CONF_URL: "apiieu.ezvizlife.com",
     CONF_TYPE: ATTR_TYPE_CLOUD,
 }
@@ -46,6 +49,18 @@ USER_INPUT = {
     CONF_TYPE: ATTR_TYPE_CLOUD,
 }
 
+USER_INPUT_CAMERA_VALIDATE = {
+    ATTR_SERIAL: "C666666",
+    CONF_PASSWORD: "test-password",
+    CONF_USERNAME: "test-username",
+}
+
+USER_INPUT_CAMERA = {
+    CONF_PASSWORD: "test-password",
+    CONF_USERNAME: "test-username",
+    CONF_TYPE: ATTR_TYPE_CAMERA,
+}
+
 DISCOVERY_INFO = {
     ATTR_SERIAL: "C666666",
     CONF_USERNAME: None,
@@ -57,6 +72,13 @@ TEST = {
     CONF_USERNAME: None,
     CONF_PASSWORD: None,
     CONF_IP_ADDRESS: "127.0.0.1",
+}
+
+API_LOGIN_RETURN_VALIDATE = {
+    CONF_SESSION_ID: "fake_token",
+    CONF_RFSESSION_ID: "fake_rf_token",
+    CONF_URL: "apiieu.ezvizlife.com",
+    CONF_TYPE: ATTR_TYPE_CLOUD,
 }
 
 
@@ -74,7 +96,7 @@ async def init_integration(
     options: dict = ENTRY_OPTIONS,
     skip_entry_setup: bool = False,
 ) -> MockConfigEntry:
-    """Set up the Ezviz integration in Home Assistant."""
+    """Set up the EZVIZ integration in Home Assistant."""
     entry = MockConfigEntry(domain=DOMAIN, data=data, options=options)
     entry.add_to_hass(hass)
 

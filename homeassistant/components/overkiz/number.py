@@ -14,9 +14,8 @@ from homeassistant.components.number import (
     NumberEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantOverkizData
@@ -80,7 +79,7 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
     # Cover: My Position (0 - 100)
     OverkizNumberDescription(
         key=OverkizState.CORE_MEMORIZED_1_POSITION,
-        name="My Position",
+        name="My position",
         icon="mdi:content-save-cog",
         command=OverkizCommand.SET_MEMORIZED_1_POSITION,
         native_min_value=0,
@@ -90,7 +89,7 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
     # WaterHeater: Expected Number Of Shower (2 - 4)
     OverkizNumberDescription(
         key=OverkizState.CORE_EXPECTED_NUMBER_OF_SHOWER,
-        name="Expected Number Of Shower",
+        name="Expected number of shower",
         icon="mdi:shower-head",
         command=OverkizCommand.SET_EXPECTED_NUMBER_OF_SHOWER,
         native_min_value=2,
@@ -100,35 +99,35 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
     # SomfyHeatingTemperatureInterface
     OverkizNumberDescription(
         key=OverkizState.CORE_ECO_ROOM_TEMPERATURE,
-        name="Eco Room Temperature",
+        name="Eco room temperature",
         icon="mdi:thermometer",
         command=OverkizCommand.SET_ECO_TEMPERATURE,
         device_class=NumberDeviceClass.TEMPERATURE,
         native_min_value=6,
         native_max_value=29,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_category=EntityCategory.CONFIG,
     ),
     OverkizNumberDescription(
         key=OverkizState.CORE_COMFORT_ROOM_TEMPERATURE,
-        name="Comfort Room Temperature",
+        name="Comfort room temperature",
         icon="mdi:home-thermometer-outline",
         command=OverkizCommand.SET_COMFORT_TEMPERATURE,
         device_class=NumberDeviceClass.TEMPERATURE,
         native_min_value=7,
         native_max_value=30,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_category=EntityCategory.CONFIG,
     ),
     OverkizNumberDescription(
         key=OverkizState.CORE_SECURED_POSITION_TEMPERATURE,
-        name="Freeze Protection Temperature",
+        name="Freeze protection temperature",
         icon="mdi:sun-thermometer-outline",
         command=OverkizCommand.SET_SECURED_POSITION_TEMPERATURE,
         device_class=NumberDeviceClass.TEMPERATURE,
         native_min_value=5,
         native_max_value=15,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_category=EntityCategory.CONFIG,
     ),
     # DimmerExteriorHeating (Somfy Terrace Heater) (0 - 100)

@@ -1,24 +1,23 @@
 {
   "domain": "hunterdouglas_powerview",
   "name": "Hunter Douglas PowerView",
-  "documentation": "https://www.home-assistant.io/integrations/hunterdouglas_powerview",
-  "requirements": ["aiopvapi==2.0.1"],
   "codeowners": ["@bdraco", "@kingy444", "@trullock"],
   "config_flow": true,
-  "homekit": {
-    "models": ["PowerView"]
-  },
   "dhcp": [
-    { "registered_devices": true },
+    {
+      "registered_devices": true
+    },
     {
       "hostname": "hunter*",
       "macaddress": "002674*"
     }
   ],
-  "zeroconf": ["_powerview._tcp.local."],
+  "documentation": "https://www.home-assistant.io/integrations/hunterdouglas_powerview",
+  "homekit": {
+    "models": ["PowerView"]
+  },
   "iot_class": "local_polling",
   "loggers": ["aiopvapi"],
-  "supported_brands": {
-    "luxaflex": "Luxaflex"
-  }
+  "requirements": ["aiopvapi==2.0.4"],
+  "zeroconf": ["_powerview._tcp.local."]
 }

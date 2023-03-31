@@ -21,7 +21,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
+from .const import CONF_ACCOUNT, DATA_CLIENT, DATA_COORDINATOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +35,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         authenticated = await client.authenticate(
-            entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
+            entry.data[CONF_USERNAME],
+            entry.data[CONF_PASSWORD],
+            entry.data[CONF_ACCOUNT],
         )
     except aiohttp.ClientError as exception:
         _LOGGER.warning(exception)
@@ -49,7 +51,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async with async_timeout.timeout(10):
             try:
                 authenticated = await client.authenticate(
-                    entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
+                    entry.data[CONF_USERNAME],
+                    entry.data[CONF_PASSWORD],
+                    entry.data[CONF_ACCOUNT],
                 )
             except aiohttp.ClientError as exception:
                 raise UpdateFailed(exception) from exception
@@ -57,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 raise ConfigEntryAuthFailed("Not authenticated with OVO Energy")
             return await client.get_daily_usage(datetime.utcnow().strftime("%Y-%m"))
 
-    coordinator = DataUpdateCoordinator(
+    coordinator = DataUpdateCoordinator[OVODailyUsage](
         hass,
         _LOGGER,
         # Name of the data. For logging purposes.
@@ -92,12 +96,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class OVOEnergyEntity(CoordinatorEntity):
+class OVOEnergyEntity(CoordinatorEntity[DataUpdateCoordinator[OVODailyUsage]]):
     """Defines a base OVO Energy entity."""
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[OVODailyUsage],
         client: OVOEnergy,
     ) -> None:
         """Initialize the OVO Energy entity."""

@@ -1,17 +1,16 @@
 """Test the Fully Kiosk Browser media player."""
 from unittest.mock import MagicMock, Mock, patch
 
-from aiohttp import ClientSession
-
 from homeassistant.components.fully_kiosk.const import DOMAIN, MEDIA_SUPPORT_FULLYKIOSK
 import homeassistant.components.media_player as media_player
-from homeassistant.components.media_source.const import DOMAIN as MS_DOMAIN
+from homeassistant.components.media_source import DOMAIN as MS_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 
 async def test_media_player(
@@ -100,7 +99,7 @@ async def test_media_player(
 
 async def test_browse_media(
     hass: HomeAssistant,
-    hass_ws_client: ClientSession,
+    hass_ws_client: WebSocketGenerator,
     mock_fully_kiosk: MagicMock,
     init_integration: MockConfigEntry,
 ) -> None:

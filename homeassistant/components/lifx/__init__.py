@@ -57,7 +57,13 @@ CONFIG_SCHEMA = vol.All(
 )
 
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.LIGHT, Platform.SELECT]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.LIGHT,
+    Platform.SELECT,
+    Platform.SENSOR,
+]
 DISCOVERY_INTERVAL = timedelta(minutes=15)
 MIGRATION_INTERVAL = timedelta(minutes=5)
 
@@ -136,7 +142,10 @@ class LIFXDiscoveryManager:
                 if migration_complete and migrating_was_in_progress:
                     self.migrating = False
                     _LOGGER.debug(
-                        "LIFX migration complete, switching to normal discovery interval: %s",
+                        (
+                            "LIFX migration complete, switching to normal discovery"
+                            " interval: %s"
+                        ),
                         DISCOVERY_INTERVAL,
                     )
                     self.async_setup_discovery_interval()
@@ -157,7 +166,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         We do not want the discovery task to block startup.
         """
-        asyncio.create_task(discovery_manager.async_discovery())
+        hass.async_create_background_task(
+            discovery_manager.async_discovery(), "lifx-discovery"
+        )
 
     # Let the system settle a bit before starting discovery
     # to reduce the risk we miss devices because the event
@@ -199,6 +210,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator.async_setup()
     try:
         await coordinator.async_config_entry_first_refresh()
+        await coordinator.sensor_coordinator.async_config_entry_first_refresh()
     except ConfigEntryNotReady:
         connection.async_stop()
         raise

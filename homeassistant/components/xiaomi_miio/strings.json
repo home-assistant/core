@@ -4,13 +4,14 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "incomplete_info": "Incomplete information to setup device, no host or token supplied.",
-      "not_xiaomi_miio": "Device is not (yet) supported by Xiaomi Miio."
+      "incomplete_info": "Incomplete information to set up device, no host or token supplied.",
+      "not_xiaomi_miio": "Device is not (yet) supported by Xiaomi Miio.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "wrong_token": "Checksum error, wrong token",
-      "unknown_device": "The device model is not known, not able to setup the device using config flow.",
+      "unknown_device": "The device model is not known, not able to set up the device using config flow.",
       "cloud_no_devices": "No devices found in this Xiaomi Miio cloud account.",
       "cloud_credentials_incomplete": "Cloud credentials incomplete, please fill in username, password and country",
       "cloud_login_error": "Could not login to Xiaomi Miio Cloud, check the credentials."
@@ -34,7 +35,7 @@
         "data": {
           "select_device": "Miio device"
         },
-        "description": "Select the Xiaomi Miio device to setup."
+        "description": "Select the Xiaomi Miio device to set up."
       },
       "manual": {
         "data": {
@@ -58,6 +59,38 @@
       "init": {
         "data": {
           "cloud_subdevices": "Use cloud to get connected subdevices"
+        }
+      }
+    }
+  },
+  "entity": {
+    "select": {
+      "led_brightness": {
+        "state": {
+          "bright": "Bright",
+          "dim": "Dim",
+          "off": "Off"
+        }
+      },
+      "display_orientation": {
+        "state": {
+          "forward": "Forward",
+          "left": "Left",
+          "right": "Right"
+        }
+      },
+      "airpurifier_mode": {
+        "state": {
+          "silent": "Silent",
+          "auto": "Auto",
+          "favorite": "Favorite"
+        }
+      },
+      "ptc_level": {
+        "state": {
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
         }
       }
     }

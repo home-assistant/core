@@ -4,11 +4,10 @@ from __future__ import annotations
 from collections.abc import Callable
 from functools import wraps
 import logging
-from typing import Any, TypeVar
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 import plexapi.exceptions
 import requests.exceptions
-from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
@@ -35,15 +34,15 @@ from .const import (
     COMMON_PLAYERS,
     CONF_SERVER_IDENTIFIER,
     DISPATCHERS,
-    DOMAIN as PLEX_DOMAIN,
+    DOMAIN,
     NAME_FORMAT,
     PLEX_NEW_MP_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SESSION_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
     PLEX_UPDATE_SENSOR_SIGNAL,
-    SERVERS,
     TRANSIENT_DEVICE_MODELS,
 )
+from .helpers import get_plex_data, get_plex_server
 from .media_browser import browse_media
 from .services import process_plex_payload
 
@@ -86,7 +85,7 @@ async def async_setup_entry(
     unsub = async_dispatcher_connect(
         hass, PLEX_NEW_MP_SIGNAL.format(server_id), async_new_media_players
     )
-    hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
+    get_plex_data(hass)[DISPATCHERS][server_id].append(unsub)
     _LOGGER.debug("New entity listener created")
 
 
@@ -95,14 +94,14 @@ def _async_add_entities(hass, registry, async_add_entities, server_id, new_entit
     """Set up Plex media_player entities."""
     _LOGGER.debug("New entities: %s", new_entities)
     entities = []
-    plexserver = hass.data[PLEX_DOMAIN][SERVERS][server_id]
+    plexserver = get_plex_server(hass, server_id)
     for entity_params in new_entities:
         plex_mp = PlexMediaPlayer(plexserver, **entity_params)
         entities.append(plex_mp)
 
         # Migration to per-server unique_ids
         old_entity_id = registry.async_get_entity_id(
-            MP_DOMAIN, PLEX_DOMAIN, plex_mp.machine_identifier
+            MP_DOMAIN, DOMAIN, plex_mp.machine_identifier
         )
         if old_entity_id is not None:
             new_unique_id = f"{server_id}:{plex_mp.machine_identifier}"
@@ -249,7 +248,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
         else:
             self._attr_state = MediaPlayerState.IDLE
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def username(self):
         """Return the username of the client owner."""
@@ -280,116 +279,116 @@ class PlexMediaPlayer(MediaPlayerEntity):
 
         return "video"
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def session_key(self):
         """Return current session key."""
         return self.session.sessionKey
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_library_title(self):
         """Return the library name of playing media."""
         return self.session.media_library_title
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_content_id(self):
         """Return the content ID of current playing media."""
         return self.session.media_content_id
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_content_type(self):
         """Return the content type of current playing media."""
         return self.session.media_content_type
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_content_rating(self):
         """Return the content rating of current playing media."""
         return self.session.media_content_rating
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_artist(self):
         """Return the artist of current playing media, music track only."""
         return self.session.media_artist
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_album_name(self):
         """Return the album name of current playing media, music track only."""
         return self.session.media_album_name
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_album_artist(self):
         """Return the album artist of current playing media, music only."""
         return self.session.media_album_artist
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_track(self):
         """Return the track number of current playing media, music only."""
         return self.session.media_track
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_duration(self):
         """Return the duration of current playing media in seconds."""
         return self.session.media_duration
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_position(self):
         """Return the duration of current playing media in seconds."""
         return self.session.media_position
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_position_updated_at(self):
         """When was the position of the current playing media valid."""
         return self.session.media_position_updated_at
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_image_url(self):
         """Return the image URL of current playing media."""
         return self.session.media_image_url
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_summary(self):
         """Return the summary of current playing media."""
         return self.session.media_summary
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_title(self):
         """Return the title of current playing media."""
         return self.session.media_title
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_season(self):
         """Return the season of current playing media (TV Show only)."""
         return self.session.media_season
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_series_title(self):
         """Return the title of the series of current playing media."""
         return self.session.media_series_title
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_episode(self):
         """Return the episode of current playing media (TV Show only)."""
         return self.session.media_episode
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         if self.device and "playback" in self._device_protocol_capabilities:
             return (
@@ -480,7 +479,9 @@ class PlexMediaPlayer(MediaPlayerEntity):
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.skipPrevious(self._active_media_plexapi_type)
 
-    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
+    def play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play a piece of media."""
         if not (self.device and "playback" in self._device_protocol_capabilities):
             raise HomeAssistantError(
@@ -523,7 +524,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
 
         if self.device_product in TRANSIENT_DEVICE_MODELS:
             return DeviceInfo(
-                identifiers={(PLEX_DOMAIN, "plex.tv-clients")},
+                identifiers={(DOMAIN, "plex.tv-clients")},
                 name="Plex Client Service",
                 manufacturer="Plex",
                 model="Plex Clients",
@@ -531,16 +532,18 @@ class PlexMediaPlayer(MediaPlayerEntity):
             )
 
         return DeviceInfo(
-            identifiers={(PLEX_DOMAIN, self.machine_identifier)},
+            identifiers={(DOMAIN, self.machine_identifier)},
             manufacturer=self.device_platform or "Plex",
             model=self.device_product or self.device_make,
             name=self.name,
             sw_version=self.device_version,
-            via_device=(PLEX_DOMAIN, self.plex_server.machine_identifier),
+            via_device=(DOMAIN, self.plex_server.machine_identifier),
         )
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         is_internal = is_internal_request(self.hass)

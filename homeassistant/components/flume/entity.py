@@ -1,14 +1,29 @@
 """Platform for shared base classes for sensors."""
 from __future__ import annotations
 
+from typing import TypeVar
+
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import FlumeDeviceDataUpdateCoordinator
+from .coordinator import (
+    FlumeDeviceConnectionUpdateCoordinator,
+    FlumeDeviceDataUpdateCoordinator,
+    FlumeNotificationDataUpdateCoordinator,
+)
+
+_FlumeCoordinatorT = TypeVar(
+    "_FlumeCoordinatorT",
+    bound=(
+        FlumeDeviceDataUpdateCoordinator
+        | FlumeDeviceConnectionUpdateCoordinator
+        | FlumeNotificationDataUpdateCoordinator
+    ),
+)
 
 
-class FlumeEntity(CoordinatorEntity[FlumeDeviceDataUpdateCoordinator]):
+class FlumeEntity(CoordinatorEntity[_FlumeCoordinatorT]):
     """Base entity class."""
 
     _attr_attribution = "Data provided by Flume API"
@@ -16,20 +31,29 @@ class FlumeEntity(CoordinatorEntity[FlumeDeviceDataUpdateCoordinator]):
 
     def __init__(
         self,
-        coordinator: FlumeDeviceDataUpdateCoordinator,
+        coordinator: _FlumeCoordinatorT,
         description: EntityDescription,
         device_id: str,
+        location_name: str,
+        is_bridge: bool = False,
     ) -> None:
         """Class initializer."""
         super().__init__(coordinator)
         self.entity_description = description
         self.device_id = device_id
+
+        if is_bridge:
+            name = "Flume Bridge"
+        else:
+            name = "Flume Sensor"
+
         self._attr_unique_id = f"{description.key}_{device_id}"
+
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
             manufacturer="Flume, Inc.",
             model="Flume Smart Water Monitor",
-            name=f"Flume {device_id}",
+            name=f"{name} {location_name}",
             configuration_url="https://portal.flumewater.com",
         )
 

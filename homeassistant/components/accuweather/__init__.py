@@ -115,11 +115,7 @@ class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             async with timeout(10):
                 current = await self.accuweather.async_get_current_conditions()
                 forecast = (
-                    await self.accuweather.async_get_forecast(
-                        metric=self.hass.config.units.is_metric
-                    )
-                    if self.forecast
-                    else {}
+                    await self.accuweather.async_get_forecast() if self.forecast else {}
                 )
         except (
             ApiError,

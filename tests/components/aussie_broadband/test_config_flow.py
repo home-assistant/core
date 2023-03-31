@@ -187,7 +187,6 @@ async def test_reauth(hass: HomeAssistant) -> None:
     with patch("aussiebb.asyncio.AussieBB.__init__", return_value=None), patch(
         "aussiebb.asyncio.AussieBB.login", side_effect=AuthenticationException()
     ), patch("aussiebb.asyncio.AussieBB.get_services", return_value=[FAKE_SERVICES[0]]):
-
         result6 = await hass.config_entries.flow.async_configure(
             result5["flow_id"],
             {
@@ -202,7 +201,6 @@ async def test_reauth(hass: HomeAssistant) -> None:
     with patch("aussiebb.asyncio.AussieBB.__init__", return_value=None), patch(
         "aussiebb.asyncio.AussieBB.login", return_value=True
     ), patch("aussiebb.asyncio.AussieBB.get_services", return_value=[FAKE_SERVICES[0]]):
-
         result7 = await hass.config_entries.flow.async_configure(
             result6["flow_id"],
             {

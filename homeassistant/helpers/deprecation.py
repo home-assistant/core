@@ -5,9 +5,7 @@ from collections.abc import Callable
 import functools
 import inspect
 import logging
-from typing import Any, TypeVar
-
-from typing_extensions import ParamSpec
+from typing import Any, ParamSpec, TypeVar
 
 from ..helpers.frame import MissingIntegrationFrame, get_integration_frame
 
@@ -40,8 +38,10 @@ def deprecated_substitute(
                 if not warnings.get(module_name):
                     logger = logging.getLogger(module_name)
                     logger.warning(
-                        "'%s' is deprecated. Please rename '%s' to "
-                        "'%s' in '%s' to ensure future support.",
+                        (
+                            "'%s' is deprecated. Please rename '%s' to "
+                            "'%s' in '%s' to ensure future support."
+                        ),
                         substitute_name,
                         substitute_name,
                         func.__name__,
@@ -79,8 +79,10 @@ def get_deprecated(
 
         logger = logging.getLogger(module_name)
         logger.warning(
-            "'%s' is deprecated. Please rename '%s' to '%s' in your "
-            "configuration file.",
+            (
+                "'%s' is deprecated. Please rename '%s' to '%s' in your "
+                "configuration file."
+            ),
             old_name,
             old_name,
             new_name,
@@ -111,7 +113,7 @@ def deprecated_class(
 def deprecated_function(
     replacement: str,
 ) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:
-    """Mark function as deprecated and provide a replacement function to be used instead."""
+    """Mark function as deprecated and provide a replacement to be used instead."""
 
     def deprecated_decorator(func: Callable[_P, _R]) -> Callable[_P, _R]:
         """Decorate function as deprecated."""
@@ -133,7 +135,10 @@ def _print_deprecation_warning(obj: Any, replacement: str, description: str) -> 
         _, integration, path = get_integration_frame()
         if path == "custom_components/":
             logger.warning(
-                "%s was called from %s, this is a deprecated %s. Use %s instead, please report this to the maintainer of %s",
+                (
+                    "%s was called from %s, this is a deprecated %s. Use %s instead,"
+                    " please report this to the maintainer of %s"
+                ),
                 obj.__name__,
                 integration,
                 description,

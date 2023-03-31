@@ -1,4 +1,6 @@
 """Select platform for Advantage Air integration."""
+from typing import Any
+
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -19,9 +21,10 @@ async def async_setup_entry(
 
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
-    entities = []
-    for ac_key in instance["coordinator"].data["aircons"]:
-        entities.append(AdvantageAirMyZone(instance, ac_key))
+    entities: list[SelectEntity] = []
+    if aircons := instance["coordinator"].data.get("aircons"):
+        for ac_key in aircons:
+            entities.append(AdvantageAirMyZone(instance, ac_key))
     async_add_entities(entities)
 
 
@@ -31,7 +34,7 @@ class AdvantageAirMyZone(AdvantageAirAcEntity, SelectEntity):
     _attr_icon = "mdi:home-thermometer"
     _attr_name = "MyZone"
 
-    def __init__(self, instance, ac_key):
+    def __init__(self, instance: dict[str, Any], ac_key: str) -> None:
         """Initialize an Advantage Air MyZone control."""
         super().__init__(instance, ac_key)
         self._attr_unique_id += "-myzone"
@@ -52,6 +55,6 @@ class AdvantageAirMyZone(AdvantageAirAcEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Set the MyZone."""
-        await self.async_change(
+        await self.aircon(
             {self.ac_key: {"info": {"myZone": self._name_to_number[option]}}}
         )

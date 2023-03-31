@@ -14,11 +14,11 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed
-from tests.components.august.mocks import (
+from .mocks import (
     _create_august_with_devices,
     _mock_activities_from_fixture,
     _mock_doorbell_from_fixture,
@@ -26,12 +26,14 @@ from tests.components.august.mocks import (
     _mock_lock_from_fixture,
 )
 
+from tests.common import async_fire_time_changed
+
 
 def _timetoken():
     return str(time.time_ns())[:-2]
 
 
-async def test_doorsense(hass):
+async def test_doorsense(hass: HomeAssistant) -> None:
     """Test creation of a lock with doorsense and bridge."""
     lock_one = await _mock_lock_from_fixture(
         hass, "get_lock.online_with_doorsense.json"
@@ -65,7 +67,7 @@ async def test_doorsense(hass):
     assert binary_sensor_online_with_doorsense_name.state == STATE_OFF
 
 
-async def test_lock_bridge_offline(hass):
+async def test_lock_bridge_offline(hass: HomeAssistant) -> None:
     """Test creation of a lock with doorsense and bridge that goes offline."""
     lock_one = await _mock_lock_from_fixture(
         hass, "get_lock.online_with_doorsense.json"
@@ -81,7 +83,7 @@ async def test_lock_bridge_offline(hass):
     assert binary_sensor_online_with_doorsense_name.state == STATE_UNAVAILABLE
 
 
-async def test_create_doorbell(hass):
+async def test_create_doorbell(hass: HomeAssistant) -> None:
     """Test creation of a doorbell."""
     doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.json")
     await _create_august_with_devices(hass, [doorbell_one])
@@ -112,7 +114,7 @@ async def test_create_doorbell(hass):
     assert binary_sensor_k98gidt45gul_name_image_capture.state == STATE_OFF
 
 
-async def test_create_doorbell_offline(hass):
+async def test_create_doorbell_offline(hass: HomeAssistant) -> None:
     """Test creation of a doorbell that is offline."""
     doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.offline.json")
     await _create_august_with_devices(hass, [doorbell_one])
@@ -129,7 +131,7 @@ async def test_create_doorbell_offline(hass):
     assert binary_sensor_tmt100_name_ding.state == STATE_UNAVAILABLE
 
 
-async def test_create_doorbell_with_motion(hass):
+async def test_create_doorbell_with_motion(hass: HomeAssistant) -> None:
     """Test creation of a doorbell."""
     doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.json")
     activities = await _mock_activities_from_fixture(
@@ -163,7 +165,7 @@ async def test_create_doorbell_with_motion(hass):
     assert binary_sensor_k98gidt45gul_name_motion.state == STATE_OFF
 
 
-async def test_doorbell_update_via_pubnub(hass):
+async def test_doorbell_update_via_pubnub(hass: HomeAssistant) -> None:
     """Test creation of a doorbell that can be updated via pubnub."""
     doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.json")
     pubnub = AugustPubNub()
@@ -190,7 +192,9 @@ async def test_doorbell_update_via_pubnub(hass):
                 "data": {
                     "result": {
                         "created_at": "2021-03-16T01:07:08.817Z",
-                        "secure_url": "https://dyu7azbnaoi74.cloudfront.net/zip/images/zip.jpeg",
+                        "secure_url": (
+                            "https://dyu7azbnaoi74.cloudfront.net/zip/images/zip.jpeg"
+                        ),
                     },
                 },
             },
@@ -219,7 +223,9 @@ async def test_doorbell_update_via_pubnub(hass):
                         "format": "jpg",
                         "created_at": "2021-03-16T02:36:26.886Z",
                         "bytes": 14061,
-                        "secure_url": "https://dyu7azbnaoi74.cloudfront.net/images/1f8.jpeg",
+                        "secure_url": (
+                            "https://dyu7azbnaoi74.cloudfront.net/images/1f8.jpeg"
+                        ),
                         "url": "https://dyu7azbnaoi74.cloudfront.net/images/1f8.jpeg",
                         "etag": "09e839331c4ea59eef28081f2caa0e90",
                     },
@@ -289,7 +295,7 @@ async def test_doorbell_update_via_pubnub(hass):
     assert binary_sensor_k98gidt45gul_name_ding.state == STATE_OFF
 
 
-async def test_doorbell_device_registry(hass):
+async def test_doorbell_device_registry(hass: HomeAssistant) -> None:
     """Test creation of a lock with doorsense and bridge ands up in the registry."""
     doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.offline.json")
     await _create_august_with_devices(hass, [doorbell_one])
@@ -303,7 +309,7 @@ async def test_doorbell_device_registry(hass):
     assert reg_device.sw_version == "3.1.0-HYDRC75+201909251139"
 
 
-async def test_door_sense_update_via_pubnub(hass):
+async def test_door_sense_update_via_pubnub(hass: HomeAssistant) -> None:
     """Test creation of a lock with doorsense and bridge."""
     lock_one = await _mock_doorsense_enabled_august_lock_detail(hass)
     assert lock_one.pubsub_channel == "pubsub"

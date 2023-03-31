@@ -1,8 +1,10 @@
 {
   "domain": "hardware",
   "name": "Hardware",
+  "codeowners": ["@home-assistant/core"],
   "config_flow": false,
   "documentation": "https://www.home-assistant.io/integrations/hardware",
-  "codeowners": ["@home-assistant/core"],
+  "integration_type": "system",
+  "quality_scale": "internal",
   "requirements": ["psutil-home-assistant==0.0.1"]
 }

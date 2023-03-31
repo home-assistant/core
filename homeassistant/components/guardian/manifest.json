@@ -1,12 +1,8 @@
 {
   "domain": "guardian",
   "name": "Elexa Guardian",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/guardian",
-  "requirements": ["aioguardian==2022.07.0"],
-  "zeroconf": ["_api._udp.local."],
   "codeowners": ["@bachya"],
-  "iot_class": "local_polling",
+  "config_flow": true,
   "dhcp": [
     {
       "hostname": "gvc*",
@@ -21,5 +17,10 @@
       "macaddress": "30AEA4*"
     }
   ],
-  "loggers": ["aioguardian"]
+  "documentation": "https://www.home-assistant.io/integrations/guardian",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["aioguardian"],
+  "requirements": ["aioguardian==2022.07.0"],
+  "zeroconf": ["_api._udp.local."]
 }

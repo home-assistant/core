@@ -16,9 +16,8 @@ from .conftest import KNXTestKit
 from tests.common import async_capture_events, async_fire_time_changed
 
 
-async def test_button_simple(hass: HomeAssistant, knx: KNXTestKit):
+async def test_button_simple(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX button with default payload."""
-    events = async_capture_events(hass, "state_changed")
     await knx.setup_integration(
         {
             ButtonSchema.PLATFORM: {
@@ -27,9 +26,7 @@ async def test_button_simple(hass: HomeAssistant, knx: KNXTestKit):
             }
         }
     )
-    assert len(hass.states.async_all()) == 1
-    assert len(events) == 1
-    events.pop()
+    events = async_capture_events(hass, "state_changed")
 
     # press button
     await hass.services.async_call(
@@ -53,7 +50,7 @@ async def test_button_simple(hass: HomeAssistant, knx: KNXTestKit):
     await knx.assert_telegram_count(0)
 
 
-async def test_button_raw(hass: HomeAssistant, knx: KNXTestKit):
+async def test_button_raw(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX button with raw payload."""
     await knx.setup_integration(
         {
@@ -72,7 +69,7 @@ async def test_button_raw(hass: HomeAssistant, knx: KNXTestKit):
     await knx.assert_write("1/2/3", False)
 
 
-async def test_button_type(hass: HomeAssistant, knx: KNXTestKit):
+async def test_button_type(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX button with encoded payload."""
     await knx.setup_integration(
         {

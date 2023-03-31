@@ -46,7 +46,7 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> LuciDeviceScanner | 
 
 
 class LuciDeviceScanner(DeviceScanner):
-    """This class scans for devices connected to an OpenWrt router."""
+    """Scanner for devices connected to an OpenWrt router."""
 
     def __init__(self, config):
         """Initialize the scanner."""
@@ -77,8 +77,7 @@ class LuciDeviceScanner(DeviceScanner):
         return name
 
     def get_extra_attributes(self, device):
-        """
-        Get extra attributes of a device.
+        """Get extra attributes of a device.
 
         Some known extra attributes that may be returned in the device tuple
         include MAC address (mac), network device (dev), IP address

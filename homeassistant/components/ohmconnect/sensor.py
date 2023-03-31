@@ -51,6 +51,7 @@ class OhmconnectSensor(SensorEntity):
         self._name = name
         self._ohmid = ohmid
         self._data = {}
+        self._attr_unique_id = ohmid
 
     @property
     def name(self):

@@ -6,13 +6,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_SUGGESTED_AREA
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN as CASETA_DOMAIN, LutronCasetaDevice, _area_and_name_from_name
-from .const import CONFIG_URL, MANUFACTURER
+from . import DOMAIN as CASETA_DOMAIN, LutronCasetaDevice, _area_name_from_id
+from .const import CONFIG_URL, MANUFACTURER, UNASSIGNED_AREA
 from .models import LutronCasetaData
 
 
@@ -28,10 +29,9 @@ async def async_setup_entry(
     """
     data: LutronCasetaData = hass.data[CASETA_DOMAIN][config_entry.entry_id]
     bridge = data.bridge
-    bridge_device = data.bridge_device
     occupancy_groups = bridge.occupancy_groups
     async_add_entities(
-        LutronOccupancySensor(occupancy_group, bridge, bridge_device)
+        LutronOccupancySensor(occupancy_group, data)
         for occupancy_group in occupancy_groups.values()
     )
 
@@ -41,10 +41,11 @@ class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
 
-    def __init__(self, device, bridge, bridge_device):
+    def __init__(self, device, data):
         """Init an occupancy sensor."""
-        super().__init__(device, bridge, bridge_device)
-        _, name = _area_and_name_from_name(device["name"])
+        super().__init__(device, data)
+        area = _area_name_from_id(self._smartbridge.areas, device["area"])
+        name = f"{area} {device['device_name']}"
         self._attr_name = name
         self._attr_device_info = DeviceInfo(
             identifiers={(CASETA_DOMAIN, self.unique_id)},
@@ -55,6 +56,8 @@ class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
             configuration_url=CONFIG_URL,
             entry_type=DeviceEntryType.SERVICE,
         )
+        if area != UNASSIGNED_AREA:
+            self._attr_device_info[ATTR_SUGGESTED_AREA] = area
 
     @property
     def is_on(self):

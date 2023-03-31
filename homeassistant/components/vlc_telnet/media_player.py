@@ -4,11 +4,10 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable, Coroutine
 from datetime import datetime
 from functools import wraps
-from typing import Any, TypeVar
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from aiovlc.client import Client
 from aiovlc.exceptions import AuthError, CommandError, ConnectError
-from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -22,7 +21,6 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -260,7 +258,12 @@ class VlcDevice(MediaPlayerEntity):
     @catch_vlc_errors
     async def async_media_play(self) -> None:
         """Send play command."""
-        await self._vlc.play()
+        status = await self._vlc.status()
+        if status.state == "paused":
+            # If already paused, play by toggling pause.
+            await self._vlc.pause()
+        else:
+            await self._vlc.play()
         self._attr_state = MediaPlayerState.PLAYING
 
     @catch_vlc_errors
@@ -268,8 +271,7 @@ class VlcDevice(MediaPlayerEntity):
         """Send pause command."""
         status = await self._vlc.status()
         if status.state != "paused":
-            # Make sure we're not already paused since VLCTelnet.pause() toggles
-            # pause.
+            # Make sure we're not already paused as pausing again will unpause.
             await self._vlc.pause()
 
         self._attr_state = MediaPlayerState.PAUSED
@@ -290,13 +292,7 @@ class VlcDevice(MediaPlayerEntity):
             sourced_media = await media_source.async_resolve_media(
                 self.hass, media_id, self.entity_id
             )
-            media_type = sourced_media.mime_type
             media_id = sourced_media.url
-
-        if media_type != MediaType.MUSIC and not media_type.startswith("audio/"):
-            raise HomeAssistantError(
-                f"Invalid media type {media_type}. Only {MediaType.MUSIC} is supported"
-            )
 
         # If media ID is a relative URL, we serve it from HA.
         media_id = async_process_play_media_url(
@@ -333,8 +329,4 @@ class VlcDevice(MediaPlayerEntity):
         media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
-        return await media_source.async_browse_media(
-            self.hass,
-            media_content_id,
-            content_filter=lambda item: item.media_content_type.startswith("audio/"),
-        )
+        return await media_source.async_browse_media(self.hass, media_content_id)

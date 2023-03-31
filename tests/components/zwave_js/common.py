@@ -1,4 +1,16 @@
 """Provide common test tools for Z-Wave JS."""
+from __future__ import annotations
+
+from copy import deepcopy
+from typing import Any
+
+from zwave_js_server.model.node.data_model import NodeDataType
+
+from homeassistant.components.zwave_js.helpers import (
+    ZwaveValueMatcher,
+    value_matches_matcher,
+)
+
 AIR_TEMPERATURE_SENSOR = "sensor.multisensor_6_air_temperature"
 BATTERY_SENSOR = "sensor.multisensor_6_battery_level"
 TAMPER_SENSOR = "binary_sensor.multisensor_6_tampering_product_cover_removed"
@@ -37,3 +49,16 @@ HUMIDIFIER_ADC_T3000_ENTITY = "humidifier.adc_t3000_humidifier"
 DEHUMIDIFIER_ADC_T3000_ENTITY = "humidifier.adc_t3000_dehumidifier"
 
 PROPERTY_ULTRAVIOLET = "Ultraviolet"
+
+
+def replace_value_of_zwave_value(
+    node_data: NodeDataType, matchers: list[ZwaveValueMatcher], new_value: Any
+) -> NodeDataType:
+    """Replace the value of a zwave value that matches the input matchers."""
+    new_node_data = deepcopy(node_data)
+    for value_data in new_node_data["values"]:
+        for matcher in matchers:
+            if value_matches_matcher(matcher, value_data):
+                value_data["value"] = new_value
+
+    return new_node_data

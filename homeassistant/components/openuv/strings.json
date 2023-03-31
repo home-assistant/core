@@ -1,6 +1,13 @@
 {
   "config": {
     "step": {
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "Please re-enter the API key for {latitude}, {longitude}.",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      },
       "user": {
         "title": "Fill in your information",
         "data": {
@@ -15,7 +22,8 @@
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "options": {
@@ -27,6 +35,16 @@
           "to_window": "Ending UV index for the protection window"
         }
       }
+    }
+  },
+  "issues": {
+    "deprecated_service_multiple_alternate_targets": {
+      "title": "The {deprecated_service} service is being removed",
+      "description": "Update any automations or scripts that use this service to instead use the `{alternate_service}` service with one of these entity IDs as the target: `{alternate_targets}`."
+    },
+    "deprecated_service_single_alternate_target": {
+      "title": "The {deprecated_service} service is being removed",
+      "description": "Update any automations or scripts that use this service to instead use the `{alternate_service}` service with `{alternate_targets}` as the target."
     }
   }
 }

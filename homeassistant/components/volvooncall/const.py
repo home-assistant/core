@@ -10,6 +10,10 @@ CONF_SERVICE_URL = "service_url"
 CONF_SCANDINAVIAN_MILES = "scandinavian_miles"
 CONF_MUTABLE = "mutable"
 
+UNIT_SYSTEM_SCANDINAVIAN_MILES = "scandinavian_miles"
+UNIT_SYSTEM_METRIC = "metric"
+UNIT_SYSTEM_IMPERIAL = "imperial"
+
 PLATFORMS = {
     "sensor": "sensor",
     "binary_sensor": "binary_sensor",

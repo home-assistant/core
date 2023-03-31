@@ -1,5 +1,6 @@
 [
   {
+    "id": "dark_sky",
     "title": "Dark Sky API closed for new users",
     "created": "2020-03-31T14:40:00.000Z",
     "integrations": [
@@ -16,6 +17,7 @@
     "alert_url": "https://alerts.home-assistant.io/#dark_sky.markdown"
   },
   {
+    "id": "hikvision",
     "title": "Hikvision Security Vulnerability",
     "created": "2021-09-20T22:08:00.000Z",
     "integrations": [
@@ -33,6 +35,7 @@
     }
   },
   {
+    "id": "hive_us",
     "title": "Hive shutting down North American Servers",
     "created": "2021-11-13T13:58:00.000Z",
     "integrations": [
@@ -48,6 +51,7 @@
     "alert_url": "https://alerts.home-assistant.io/#hive_us.markdown"
   },
   {
+    "id": "homematicip_cloud",
     "title": "HomematicIP (EQ-3) blocks public IP addresses, if access to the Cloud is too frequent.",
     "created": "2020-12-20T12:00:00.000Z",
     "integrations": [
@@ -68,6 +72,7 @@
     "alert_url": "https://alerts.home-assistant.io/#homematicip_cloud.markdown"
   },
   {
+    "id": "logi_circle",
     "title": "Logitech no longer accepting API applications",
     "created": "2022-05-16T12:00:00.000Z",
     "integrations": [
@@ -84,6 +89,7 @@
     "alert_url": "https://alerts.home-assistant.io/#logi_circle.markdown"
   },
   {
+    "id": "neato",
     "title": "New Neato Botvacs Do Not Support Existing API",
     "created": "2021-12-20T13:27:00.000Z",
     "integrations": [
@@ -99,6 +105,7 @@
     "alert_url": "https://alerts.home-assistant.io/#neato.markdown"
   },
   {
+    "id": "nest",
     "title": "Nest Desktop Auth Deprecation",
     "created": "2022-05-12T14:04:00.000Z",
     "integrations": [
@@ -114,6 +121,7 @@
     }
   },
   {
+    "id": "senseme",
     "title": "Haiku Firmware Update Protocol Change",
     "created": "2022-04-05T00:00:00.000Z",
     "integrations": [
@@ -128,6 +136,7 @@
     }
   },
   {
+    "id": "sochain",
     "title": "The SoChain integration is disabled due to a dependency conflict",
     "created": "2022-02-01T00:00:00.000Z",
     "integrations": [
@@ -142,6 +151,7 @@
     }
   },
   {
+    "id": "yeelight",
     "title": "Yeelight-manufactured Xiaomi-branded devices removed Local Control",
     "created": "2021-03-29T06:00:00.000Z",
     "integrations": [

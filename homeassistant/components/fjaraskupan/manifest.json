@@ -1,18 +1,18 @@
 {
   "domain": "fjaraskupan",
   "name": "Fj\u00e4r\u00e5skupan",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/fjaraskupan",
-  "requirements": ["fjaraskupan==2.0.0"],
-  "codeowners": ["@elupus"],
-  "iot_class": "local_polling",
-  "loggers": ["bleak", "fjaraskupan"],
-  "dependencies": ["bluetooth"],
   "bluetooth": [
     {
       "connectable": false,
       "manufacturer_id": 20296,
       "manufacturer_data_start": [79, 68, 70, 74, 65, 82]
     }
-  ]
+  ],
+  "codeowners": ["@elupus"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/fjaraskupan",
+  "iot_class": "local_polling",
+  "loggers": ["bleak", "fjaraskupan"],
+  "requirements": ["fjaraskupan==2.2.0"]
 }

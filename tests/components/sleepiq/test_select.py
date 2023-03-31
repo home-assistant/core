@@ -11,7 +11,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.components.sleepiq.conftest import (
+from .conftest import (
     BED_ID,
     BED_NAME,
     BED_NAME_LOWER,

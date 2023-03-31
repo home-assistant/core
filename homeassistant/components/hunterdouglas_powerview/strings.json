@@ -9,7 +9,7 @@
       },
       "link": {
         "title": "Connect to the PowerView Hub",
-        "description": "Do you want to setup {name} ({host})?"
+        "description": "Do you want to set up {name} ({host})?"
       }
     },
     "flow_title": "{name} ({host})",

@@ -49,13 +49,13 @@ from .const import (
     DOMAIN,
     MANUAL_SETUP_STRING,
     PLEX_SERVER_CONFIG,
-    SERVERS,
     X_PLEX_DEVICE_NAME,
     X_PLEX_PLATFORM,
     X_PLEX_PRODUCT,
     X_PLEX_VERSION,
 )
 from .errors import NoServersFound, ServerNotSpecified
+from .helpers import get_plex_server
 from .server import PlexServer
 
 HEADER_FRONTEND_BASE = "HA-Frontend-Base"
@@ -106,6 +106,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.token = None
         self.client_id = None
         self._manual = False
+        self._reauth_config = None
 
     async def async_step_user(self, user_input=None, errors=None):
         """Handle a flow initialized by the user."""
@@ -178,6 +179,9 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_server_validate(self, server_config):
         """Validate a provided configuration."""
+        if self._reauth_config:
+            server_config = {**self._reauth_config, **server_config}
+
         errors = {}
         self.current_login = server_config
 
@@ -336,7 +340,9 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle a reauthorization flow request."""
-        self.current_login = dict(entry_data)
+        self._reauth_config = {
+            CONF_SERVER_IDENTIFIER: entry_data[CONF_SERVER_IDENTIFIER]
+        }
         return await self.async_step_user()
 
 
@@ -354,7 +360,7 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_plex_mp_settings(self, user_input=None):
         """Manage the Plex media_player options."""
-        plex_server = self.hass.data[DOMAIN][SERVERS][self.server_id]
+        plex_server = get_plex_server(self.hass, self.server_id)
 
         if user_input is not None:
             self.options[MP_DOMAIN][CONF_USE_EPISODE_ART] = user_input[
