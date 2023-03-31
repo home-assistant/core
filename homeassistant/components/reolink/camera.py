@@ -32,6 +32,9 @@ async def async_setup_entry(
         if host.api.protocol in ["rtmp", "flv"]:
             streams.append("ext")
 
+        if host.api.supported(channel, "autotrack_stream"):
+            streams.append("autotrack_sub")
+
         for stream in streams:
             stream_url = await host.api.get_stream_source(channel, stream)
             if stream_url is None and stream != "snapshots":
