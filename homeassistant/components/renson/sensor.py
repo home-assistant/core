@@ -73,12 +73,16 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         name="CO2 quality category",
         field=CO2_QUALITY_FIELD,
         raw_format=False,
+        device_class=SensorDeviceClass.ENUM,
+        options=["good", "bad", "poor"],
     ),
     RensonSensorEntityDescription(
         key="AIR_QUALITY_FIELD",
         name="Air quality category",
         field=AIR_QUALITY_FIELD,
         raw_format=False,
+        device_class=SensorDeviceClass.ENUM,
+        options=["good", "bad", "poor"],
     ),
     RensonSensorEntityDescription(
         key="CO2_FIELD",

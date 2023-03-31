@@ -5,6 +5,7 @@ from renson_endura_delta.field_enum import (
     DEVICE_NAME_FIELD,
     FIRMWARE_VERSION_FIELD,
     HARDWARE_VERSION_FIELD,
+    MAC_ADDRESS,
 )
 from renson_endura_delta.renson import RensonVentilation
 
@@ -25,7 +26,9 @@ class RensonEntity(CoordinatorEntity):
         super().__init__(coordinator)
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, "Renson Endura Delta")},
+            identifiers={
+                (DOMAIN, api.get_field_value(coordinator.data, MAC_ADDRESS.name))
+            },
             manufacturer="Renson",
             model=api.get_field_value(coordinator.data, DEVICE_NAME_FIELD.name),
             name="Ventilation",
