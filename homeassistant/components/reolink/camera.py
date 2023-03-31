@@ -28,12 +28,12 @@ async def async_setup_entry(
 
     cameras = []
     for channel in host.api.stream_channels:
-        streams = ["sub", "main", "snapshots"]
+        streams = ["sub", "main", "snapshots_sub", "snapshots_main"]
         if host.api.protocol in ["rtmp", "flv"]:
             streams.append("ext")
 
         if host.api.supported(channel, "autotrack_stream"):
-            streams.append("autotrack_sub")
+            streams.extend(["autotrack_sub", "autotrack_snapshots_sub", "autotrack_snapshots_main"])
 
         for stream in streams:
             stream_url = await host.api.get_stream_source(channel, stream)
@@ -76,4 +76,4 @@ class ReolinkCamera(ReolinkChannelCoordinatorEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
-        return await self._host.api.get_snapshot(self._channel)
+        return await self._host.api.get_snapshot(self._channel, self._stream)
