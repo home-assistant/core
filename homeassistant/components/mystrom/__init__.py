@@ -24,9 +24,11 @@ _LOGGER = logging.getLogger(__name__)
 async def get_device_info(host: str) -> dict[str, Any]:
     """Get the device info of a myStrom device."""
     async with aiohttp.ClientSession() as session:
-        async with session.get(f"http://{ host}/api/v1/info") as response:
+        async with session.get(f"http://{host}/api/v1/info") as response:
             if response.status != 200:
-                raise MyStromConnectionError()
+                async with session.get(f"http://{host}/info.json") as response:
+                    if response.status != 200:
+                        raise MyStromConnectionError()
             content_type = response.headers.get("Content-Type", "")
             if "application/json" in content_type:
                 return await response.json()
