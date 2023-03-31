@@ -44,7 +44,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="light",
         name="Light",
-        device_class=SensorDeviceClass.ILLUMINANCE,
     ),
     SensorEntityDescription(
         key="noise",
@@ -115,7 +114,7 @@ class BroadlinkSensor(BroadlinkEntity, SensorEntity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, device, description: SensorEntityDescription):
+    def __init__(self, device, description: SensorEntityDescription) -> None:
         """Initialize the sensor."""
         super().__init__(device)
         self.entity_description = description

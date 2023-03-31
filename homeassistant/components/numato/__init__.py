@@ -209,8 +209,12 @@ class NumatoAPI:
                 f"Port {port} is not set up for numato device {device_id}."
             )
         msg = {
-            gpio.OUT: f"Trying to write to device {device_id} port {port} set up as input.",
-            gpio.IN: f"Trying to read from device {device_id} port {port} set up as output.",
+            gpio.OUT: (
+                f"Trying to write to device {device_id} port {port} set up as input."
+            ),
+            gpio.IN: (
+                f"Trying to read from device {device_id} port {port} set up as output."
+            ),
         }
         if self.ports_registered[(device_id, port)] != direction:
             raise gpio.NumatoGpioError(msg[direction])

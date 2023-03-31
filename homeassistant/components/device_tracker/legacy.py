@@ -379,8 +379,10 @@ def async_setup_scanner_platform(
         """Handle interval matches."""
         if update_lock.locked():
             LOGGER.warning(
-                "Updating device list from %s took longer than the scheduled "
-                "scan interval %s",
+                (
+                    "Updating device list from %s took longer than the scheduled "
+                    "scan interval %s"
+                ),
                 platform,
                 interval,
             )
@@ -421,7 +423,12 @@ def async_setup_scanner_platform(
 
             hass.async_create_task(async_see_device(**kwargs))
 
-    async_track_time_interval(hass, async_device_tracker_scan, interval)
+    async_track_time_interval(
+        hass,
+        async_device_tracker_scan,
+        interval,
+        f"device_tracker {platform} legacy scan",
+    )
     hass.async_create_task(async_device_tracker_scan(None))
 
 
@@ -954,6 +961,6 @@ def get_gravatar_for_email(email: str) -> str:
     """
 
     return (
-        f"https://www.gravatar.com/avatar/"
+        "https://www.gravatar.com/avatar/"
         f"{hashlib.md5(email.encode('utf-8').lower()).hexdigest()}.jpg?s=80&d=wavatar"
     )

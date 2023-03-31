@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
-    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
@@ -51,7 +50,6 @@ SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_CURRENT_OZONE_LEVEL,
         name="Current ozone level",
-        device_class=SensorDeviceClass.OZONE,
         native_unit_of_measurement="du",
         state_class=SensorStateClass.MEASUREMENT,
     ),

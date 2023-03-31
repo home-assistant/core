@@ -10,18 +10,17 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
     CONF_NAME,
-    CONF_PATH,
     CONF_PORT,
     CONF_SSL,
     CONF_URL,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 VALID_CONFIG = {
     CONF_NAME: "Sabnzbd",
     CONF_API_KEY: "edc3eee7330e4fdda04489e3fbc283d0",
     CONF_URL: "http://localhost:8080",
-    CONF_PATH: "",
 }
 
 VALID_CONFIG_OLD = {
@@ -29,12 +28,11 @@ VALID_CONFIG_OLD = {
     CONF_API_KEY: "edc3eee7330e4fdda04489e3fbc283d0",
     CONF_HOST: "localhost",
     CONF_PORT: 8080,
-    CONF_PATH: "",
     CONF_SSL: False,
 }
 
 
-async def test_create_entry(hass):
+async def test_create_entry(hass: HomeAssistant) -> None:
     """Test that the user step works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -60,13 +58,12 @@ async def test_create_entry(hass):
         assert result2["data"] == {
             CONF_API_KEY: "edc3eee7330e4fdda04489e3fbc283d0",
             CONF_NAME: "Sabnzbd",
-            CONF_PATH: "",
             CONF_URL: "http://localhost:8080",
         }
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_auth_error(hass):
+async def test_auth_error(hass: HomeAssistant) -> None:
     """Test that the user step fails."""
     with patch(
         "homeassistant.components.sabnzbd.sab.SabnzbdApi.check_available",
@@ -81,7 +78,7 @@ async def test_auth_error(hass):
         assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_import_flow(hass) -> None:
+async def test_import_flow(hass: HomeAssistant) -> None:
     """Test the import configuration flow."""
     with patch(
         "homeassistant.components.sabnzbd.sab.SabnzbdApi.check_available",
@@ -99,5 +96,4 @@ async def test_import_flow(hass) -> None:
         assert result["data"][CONF_API_KEY] == "edc3eee7330e4fdda04489e3fbc283d0"
         assert result["data"][CONF_HOST] == "localhost"
         assert result["data"][CONF_PORT] == 8080
-        assert result["data"][CONF_PATH] == ""
         assert result["data"][CONF_SSL] is False

@@ -386,8 +386,10 @@ async def websocket_update_prefs(
             connection.send_error(
                 msg["id"],
                 "alexa_relink",
-                "Please go to the Alexa app and re-link the Home Assistant "
-                "skill and then try to enable state reporting.",
+                (
+                    "Please go to the Alexa app and re-link the Home Assistant "
+                    "skill and then try to enable state reporting."
+                ),
             )
             await alexa_config.set_authorized(False)
             return
@@ -557,8 +559,6 @@ async def google_assistant_list(
         "type": "cloud/google_assistant/entities/update",
         "entity_id": str,
         vol.Optional("should_expose"): vol.Any(None, bool),
-        vol.Optional("override_name"): str,
-        vol.Optional("aliases"): [str],
         vol.Optional("disable_2fa"): bool,
     }
 )

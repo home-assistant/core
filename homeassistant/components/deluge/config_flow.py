@@ -99,6 +99,6 @@ class DelugeFlowHandler(ConfigFlow, domain=DOMAIN):
             return "cannot_connect"
         except Exception as ex:  # pylint:disable=broad-except
             if type(ex).__name__ == "BadLoginError":
-                return "invalid_auth"  # pragma: no cover
+                return "invalid_auth"
             return "unknown"
         return None

@@ -29,8 +29,6 @@ OVERKIZ_TO_OPERATION_MODE: dict[str, str] = {
     OverkizCommandParam.BOOST: STATE_PERFORMANCE,
 }
 
-OPERATION_MODE_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_OPERATION_MODE.items()}
-
 DHWP_AWAY_MODES = [
     OverkizCommandParam.ABSENCE,
     OverkizCommandParam.AWAY,
@@ -49,7 +47,6 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
         WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.OPERATION_MODE
     )
-    _attr_operation_list = [*OPERATION_MODE_TO_OVERKIZ]
 
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator
@@ -58,17 +55,21 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
         super().__init__(device_url, coordinator)
 
         # Init operation mode to set for this specific device
-        self.overkiz_to_operation_mode: dict[str, str] = {}
+        self.operation_mode_to_overkiz: dict[str, str] = {}
+        self._attr_operation_list = []
         state_mode_definition = self.executor.select_definition_state(
             OverkizState.IO_DHW_MODE, OverkizState.MODBUSLINK_DHW_MODE
         )
-        if state_mode_definition and state_mode_definition.values:
+        for param, mode in OVERKIZ_TO_OPERATION_MODE.items():
             # Filter only for mode allowed by this device
-            for param, mode in OVERKIZ_TO_OPERATION_MODE.items():
-                if param in state_mode_definition.values:
-                    self.overkiz_to_operation_mode[param] = mode
-        else:
-            self.overkiz_to_operation_mode = OVERKIZ_TO_OPERATION_MODE
+            # or allow all if no mode definition found
+            if (
+                not state_mode_definition
+                or state_mode_definition.values
+                and param in state_mode_definition.values
+            ):
+                self.operation_mode_to_overkiz[mode] = param
+                self._attr_operation_list.append(param)
 
     @property
     def _is_boost_mode_on(self) -> bool:
@@ -323,7 +324,7 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
                     )
 
         await self.executor.async_execute_command(
-            OverkizCommand.SET_DHW_MODE, self.overkiz_to_operation_mode[operation_mode]
+            OverkizCommand.SET_DHW_MODE, self.operation_mode_to_overkiz[operation_mode]
         )
 
         if self.executor.has_command(OverkizCommand.REFRESH_BOOST_MODE_DURATION):

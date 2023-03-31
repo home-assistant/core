@@ -17,9 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    ATTRIBUTION,
     DEFAULT_NAME,
-    ICON,
     MIN_TIME_BETWEEN_UPDATES,
     SENSOR_NAME,
     SENSOR_TYPE,
@@ -61,7 +59,7 @@ async def async_setup_entry(
                 for _, _, _, kwh, _ in hourly_usage:
                     previous_daily_usage += float(kwh)
                 return previous_daily_usage
-        except (TimeoutError) as timeout_err:
+        except TimeoutError as timeout_err:
             raise UpdateFailed("Timeout communicating with API") from timeout_err
         except (ConnectError, HTTPError, Timeout, ValueError, TypeError) as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
@@ -83,7 +81,8 @@ async def async_setup_entry(
 class SrpEntity(SensorEntity):
     """Implementation of a Srp Energy Usage sensor."""
 
-    _attr_attribution = ATTRIBUTION
+    _attr_attribution = "Powered by SRP Energy"
+    _attr_icon = "mdi:flash"
     _attr_should_poll = False
 
     def __init__(self, coordinator):
@@ -115,11 +114,6 @@ class SrpEntity(SensorEntity):
     def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Return icon."""
-        return ICON
 
     @property
     def usage(self):

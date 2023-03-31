@@ -1,4 +1,6 @@
 """SendGrid notification service."""
+from __future__ import annotations
+
 from http import HTTPStatus
 import logging
 
@@ -17,7 +19,9 @@ from homeassistant.const import (
     CONF_SENDER,
     CONTENT_TYPE_TEXT_PLAIN,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +40,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> SendgridNotificationService:
     """Get the SendGrid notification service."""
     return SendgridNotificationService(config)
 

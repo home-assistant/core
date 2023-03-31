@@ -1,4 +1,4 @@
-"""Constants for zamg the Austrian "Zentralanstalt für Meteorologie und Geodynamik" integration."""
+"""Constants for the zamg integration."""
 
 from datetime import timedelta
 import logging

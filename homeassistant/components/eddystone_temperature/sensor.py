@@ -1,5 +1,4 @@
-"""
-Read temperature information from Eddystone beacons.
+"""Read temperature information from Eddystone beacons.
 
 Your beacons must be configured to transmit UID (for identification) and TLM
 (for temperature) frames.
@@ -101,8 +100,10 @@ def get_from_conf(config: dict[str, str], config_key: str, length: int) -> str |
     string = config[config_key]
     if len(string) != length:
         _LOGGER.error(
-            "Error in configuration parameter %s: Must be exactly %d "
-            "bytes. Device will not be added",
+            (
+                "Error in configuration parameter %s: Must be exactly %d "
+                "bytes. Device will not be added"
+            ),
             config_key,
             length / 2,
         )

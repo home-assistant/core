@@ -21,7 +21,6 @@ set_climate_timer:
       description: Choose this or Overlay. Set the time period for the change if you want to be specific. Alternatively use Overlay
       required: false
       example: "01:30:00"
-      default: "01:00:00"
       selector:
         text:
     requested_overlay:
@@ -29,7 +28,6 @@ set_climate_timer:
       description: Choose this or Time Period. Allows you to choose an overlay. MANUAL:=Overlay until user removes; NEXT_TIME_BLOCK:=Overlay until next timeblock; TADO_DEFAULT:=Overlay based on tado app setting
       required: false
       example: "MANUAL"
-      default: "TADO_DEFAULT"
       selector:
         select:
           options:

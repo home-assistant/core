@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import Container, Iterable, MutableMapping
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 import attr
 
@@ -20,7 +20,7 @@ DATA_REGISTRY = "area_registry"
 EVENT_AREA_REGISTRY_UPDATED = "area_registry_updated"
 STORAGE_KEY = "core.area_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 2
+STORAGE_VERSION_MINOR = 3
 SAVE_DELAY = 10
 
 
@@ -30,8 +30,11 @@ class AreaEntry:
 
     name: str = attr.ib()
     normalized_name: str = attr.ib()
-    picture: str | None = attr.ib(default=None)
+    aliases: set[str] = attr.ib(
+        converter=attr.converters.default_if_none(factory=set)  # type: ignore[misc]
+    )
     id: str | None = attr.ib(default=None)
+    picture: str | None = attr.ib(default=None)
 
     def generate_id(self, existing_ids: Container[str]) -> None:
         """Initialize ID."""
@@ -43,14 +46,14 @@ class AreaEntry:
         object.__setattr__(self, "id", suggestion)
 
 
-class AreaRegistryStore(Store[dict[str, list[dict[str, Optional[str]]]]]):
+class AreaRegistryStore(Store[dict[str, list[dict[str, Any]]]]):
     """Store area registry data."""
 
     async def _async_migrate_func(
         self,
         old_major_version: int,
         old_minor_version: int,
-        old_data: dict[str, list[dict[str, str | None]]],
+        old_data: dict[str, list[dict[str, Any]]],
     ) -> dict[str, Any]:
         """Migrate to the new version."""
         if old_major_version < 2:
@@ -59,6 +62,11 @@ class AreaRegistryStore(Store[dict[str, list[dict[str, Optional[str]]]]]):
                 for area in old_data["areas"]:
                     # Populate keys which were introduced before version 1.2
                     area.setdefault("picture", None)
+
+            if old_minor_version < 3:
+                # Version 1.3 adds aliases
+                for area in old_data["areas"]:
+                    area["aliases"] = []
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -107,14 +115,22 @@ class AreaRegistry:
         return self.async_create(name)
 
     @callback
-    def async_create(self, name: str, picture: str | None = None) -> AreaEntry:
+    def async_create(
+        self,
+        name: str,
+        *,
+        aliases: set[str] | None = None,
+        picture: str | None = None,
+    ) -> AreaEntry:
         """Create a new area."""
         normalized_name = normalize_area_name(name)
 
         if self.async_get_area_by_name(name):
             raise ValueError(f"The name {name} ({normalized_name}) is already in use")
 
-        area = AreaEntry(name=name, normalized_name=normalized_name, picture=picture)
+        area = AreaEntry(
+            aliases=aliases, name=name, normalized_name=normalized_name, picture=picture
+        )
         area.generate_id(self.areas)
         assert area.id is not None
         self.areas[area.id] = area
@@ -147,11 +163,15 @@ class AreaRegistry:
     def async_update(
         self,
         area_id: str,
+        *,
+        aliases: set[str] | UndefinedType = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
         picture: str | None | UndefinedType = UNDEFINED,
     ) -> AreaEntry:
         """Update name of area."""
-        updated = self._async_update(area_id, name=name, picture=picture)
+        updated = self._async_update(
+            area_id, aliases=aliases, name=name, picture=picture
+        )
         self.hass.bus.async_fire(
             EVENT_AREA_REGISTRY_UPDATED, {"action": "update", "area_id": area_id}
         )
@@ -161,16 +181,22 @@ class AreaRegistry:
     def _async_update(
         self,
         area_id: str,
+        *,
+        aliases: set[str] | UndefinedType = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
         picture: str | None | UndefinedType = UNDEFINED,
     ) -> AreaEntry:
         """Update name of area."""
         old = self.areas[area_id]
 
-        changes = {}
+        new_values = {}
 
-        if picture is not UNDEFINED:
-            changes["picture"] = picture
+        for attr_name, value in (
+            ("aliases", aliases),
+            ("picture", picture),
+        ):
+            if value is not UNDEFINED and value != getattr(old, attr_name):
+                new_values[attr_name] = value
 
         normalized_name = None
 
@@ -184,13 +210,13 @@ class AreaRegistry:
                     f"The name {name} ({normalized_name}) is already in use"
                 )
 
-            changes["name"] = name
-            changes["normalized_name"] = normalized_name
+            new_values["name"] = name
+            new_values["normalized_name"] = normalized_name
 
-        if not changes:
+        if not new_values:
             return old
 
-        new = self.areas[area_id] = attr.evolve(old, **changes)
+        new = self.areas[area_id] = attr.evolve(old, **new_values)
         if normalized_name is not None:
             self._normalized_name_area_idx[
                 normalized_name
@@ -210,6 +236,7 @@ class AreaRegistry:
                 assert area["name"] is not None and area["id"] is not None
                 normalized_name = normalize_area_name(area["name"])
                 areas[area["id"]] = AreaEntry(
+                    aliases=set(area["aliases"]),
                     id=area["id"],
                     name=area["name"],
                     normalized_name=normalized_name,
@@ -225,12 +252,17 @@ class AreaRegistry:
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
     @callback
-    def _data_to_save(self) -> dict[str, list[dict[str, str | None]]]:
+    def _data_to_save(self) -> dict[str, list[dict[str, Any]]]:
         """Return data of area registry to store in a file."""
         data = {}
 
         data["areas"] = [
-            {"name": entry.name, "id": entry.id, "picture": entry.picture}
+            {
+                "aliases": list(entry.aliases),
+                "name": entry.name,
+                "id": entry.id,
+                "picture": entry.picture,
+            }
             for entry in self.areas.values()
         ]
 
@@ -257,7 +289,8 @@ async def async_get_registry(hass: HomeAssistant) -> AreaRegistry:
     This is deprecated and will be removed in the future. Use async_get instead.
     """
     report(
-        "uses deprecated `async_get_registry` to access area registry, use async_get instead"
+        "uses deprecated `async_get_registry` to access area registry, use async_get"
+        " instead"
     )
     return async_get(hass)
 

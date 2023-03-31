@@ -1,0 +1,37 @@
+{
+  "traceId": "0000000000",
+  "code": 0,
+  "msg": "request success",
+  "result": {
+    "total": 1,
+    "pageSize": 100,
+    "pageNo": 1,
+    "list": [
+      {
+        "deviceRegion": "US",
+        "isOwner": true,
+        "authKey": null,
+        "deviceName": "Fan",
+        "deviceImg": "",
+        "cid": "abcdefghabcdefghabcdefghabcdefgh",
+        "deviceStatus": "off",
+        "connectionStatus": "online",
+        "connectionType": "WiFi+BTOnboarding+BTNotify",
+        "deviceType": "LV-PUR131S",
+        "type": "wifi-air",
+        "uuid": "00000000-1111-2222-3333-444444444444",
+        "configModule": "WFON_AHM_LV-PUR131S_US",
+        "macID": "00:00:00:00:00:00",
+        "mode": null,
+        "speed": null,
+        "currentFirmVersion": null,
+        "subDeviceNo": null,
+        "subDeviceType": null,
+        "deviceFirstSetupTime": "Jan 24, 2022 12:09:01 AM",
+        "subDeviceList": null,
+        "extension": null,
+        "deviceProp": null
+      }
+    ]
+  }
+}

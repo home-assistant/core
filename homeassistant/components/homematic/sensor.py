@@ -308,7 +308,10 @@ def setup_platform(
         if (entity_desc := SENSOR_DESCRIPTIONS.get(state)) is None:
             name = conf.get(ATTR_NAME)
             _LOGGER.warning(
-                "Sensor (%s) entity description is missing. Sensor state (%s) needs to be maintained",
+                (
+                    "Sensor (%s) entity description is missing. Sensor state (%s) needs"
+                    " to be maintained"
+                ),
                 name,
                 state,
             )

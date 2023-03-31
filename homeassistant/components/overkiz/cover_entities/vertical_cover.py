@@ -75,8 +75,7 @@ class VerticalCover(OverkizGenericCover):
 
     @property
     def current_cover_position(self) -> int | None:
-        """
-        Return current position of cover.
+        """Return current position of cover.
 
         None is unknown, 0 is closed, 100 is fully open.
         """

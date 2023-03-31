@@ -21,11 +21,10 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
+    POWER_VOLT_AMPERE_REACTIVE,
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    SPEED_KILOMETERS_PER_HOUR,
-    SPEED_METERS_PER_SECOND,
-    SPEED_MILES_PER_HOUR,
+    EntityCategory,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -35,11 +34,11 @@ from homeassistant.const import (
     UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfSpeed,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_REMOVE_DISCOVER_COMPONENT
@@ -208,7 +207,9 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
 }
 
 SENSOR_UNIT_MAP = {
-    hc.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    hc.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    ),
     hc.CONCENTRATION_PARTS_PER_BILLION: CONCENTRATION_PARTS_PER_BILLION,
     hc.CONCENTRATION_PARTS_PER_MILLION: CONCENTRATION_PARTS_PER_MILLION,
     hc.ELECTRICAL_CURRENT_AMPERE: UnitOfElectricCurrent.AMPERE,
@@ -219,13 +220,15 @@ SENSOR_UNIT_MAP = {
     hc.LIGHT_LUX: LIGHT_LUX,
     hc.MASS_KILOGRAMS: UnitOfMass.KILOGRAMS,
     hc.PERCENTAGE: PERCENTAGE,
+    hc.POWER_FACTOR: None,
     hc.POWER_WATT: UnitOfPower.WATT,
     hc.PRESSURE_HPA: UnitOfPressure.HPA,
+    hc.REACTIVE_POWER: POWER_VOLT_AMPERE_REACTIVE,
     hc.SIGNAL_STRENGTH_DECIBELS: SIGNAL_STRENGTH_DECIBELS,
     hc.SIGNAL_STRENGTH_DECIBELS_MILLIWATT: SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    hc.SPEED_KILOMETERS_PER_HOUR: SPEED_KILOMETERS_PER_HOUR,
-    hc.SPEED_METERS_PER_SECOND: SPEED_METERS_PER_SECOND,
-    hc.SPEED_MILES_PER_HOUR: SPEED_MILES_PER_HOUR,
+    hc.SPEED_KILOMETERS_PER_HOUR: UnitOfSpeed.KILOMETERS_PER_HOUR,
+    hc.SPEED_METERS_PER_SECOND: UnitOfSpeed.METERS_PER_SECOND,
+    hc.SPEED_MILES_PER_HOUR: UnitOfSpeed.MILES_PER_HOUR,
     hc.TEMP_CELSIUS: UnitOfTemperature.CELSIUS,
     hc.TEMP_FAHRENHEIT: UnitOfTemperature.FAHRENHEIT,
     hc.TEMP_KELVIN: UnitOfTemperature.KELVIN,
@@ -265,7 +268,6 @@ async def async_setup_entry(
 class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
     """Representation of a Tasmota sensor."""
 
-    _attr_force_update = True
     _tasmota_entity: tasmota_sensor.TasmotaSensor
 
     def __init__(self, **kwds: Any) -> None:

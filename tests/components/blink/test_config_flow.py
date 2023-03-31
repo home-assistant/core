@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -49,7 +49,7 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_2fa(hass):
+async def test_form_2fa(hass: HomeAssistant) -> None:
     """Test we get the 2fa form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -91,7 +91,7 @@ async def test_form_2fa(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_2fa_connect_error(hass):
+async def test_form_2fa_connect_error(hass: HomeAssistant) -> None:
     """Test we report a connect error during 2fa setup."""
 
     result = await hass.config_entries.flow.async_init(
@@ -130,7 +130,7 @@ async def test_form_2fa_connect_error(hass):
     assert result3["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_2fa_invalid_key(hass):
+async def test_form_2fa_invalid_key(hass: HomeAssistant) -> None:
     """Test we report an error if key is invalid."""
 
     result = await hass.config_entries.flow.async_init(
@@ -149,7 +149,9 @@ async def test_form_2fa_invalid_key(hass):
     assert result2["type"] == "form"
     assert result2["step_id"] == "2fa"
 
-    with patch("homeassistant.components.blink.config_flow.Auth.startup",), patch(
+    with patch(
+        "homeassistant.components.blink.config_flow.Auth.startup",
+    ), patch(
         "homeassistant.components.blink.config_flow.Auth.check_key_required",
         return_value=False,
     ), patch(
@@ -169,7 +171,7 @@ async def test_form_2fa_invalid_key(hass):
     assert result3["errors"] == {"base": "invalid_access_token"}
 
 
-async def test_form_2fa_unknown_error(hass):
+async def test_form_2fa_unknown_error(hass: HomeAssistant) -> None:
     """Test we report an unknown error during 2fa setup."""
 
     result = await hass.config_entries.flow.async_init(
@@ -208,7 +210,7 @@ async def test_form_2fa_unknown_error(hass):
     assert result3["errors"] == {"base": "unknown"}
 
 
-async def test_form_invalid_auth(hass):
+async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -226,7 +228,7 @@ async def test_form_invalid_auth(hass):
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_unknown_error(hass):
+async def test_form_unknown_error(hass: HomeAssistant) -> None:
     """Test we handle unknown error at startup."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -244,7 +246,7 @@ async def test_form_unknown_error(hass):
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_reauth_shows_user_step(hass):
+async def test_reauth_shows_user_step(hass: HomeAssistant) -> None:
     """Test reauth shows the user form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
