@@ -678,6 +678,18 @@ class PPBVOCLevel(Sensor):
     _attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_BILLION
 
 
+@MULTI_MATCH(channel_names="voc_index", stop_on_match_group="voc_index")
+class VOCIndex(Sensor):
+    """VOC Index sensor."""
+
+    SENSOR_ATTR = "measured_value"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_name: str = "VOC index"
+    _decimals = 0
+    _multiplier = 1
+
+
 @MULTI_MATCH(channel_names="pm25")
 class PM25(Sensor):
     """Particulate Matter 2.5 microns or less sensor."""
