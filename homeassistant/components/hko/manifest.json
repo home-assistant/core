@@ -1,0 +1,13 @@
+{
+  "domain": "hko",
+  "name": "Hong Kong Observatory",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/hko",
+  "requirements": ["hko==0.3.2"],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": ["@MisterCommand"],
+  "iot_class": "cloud_polling"
+}

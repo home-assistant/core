@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "The integrations has already been configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_location": "Invalid location"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "location": "Location"
+                },
+                "description": "HKO",
+                "title": "Hong Kong Observatory"
+            }
+        }
+    }
+}

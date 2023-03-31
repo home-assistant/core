@@ -190,6 +190,7 @@ FLOWS = {
         "here_travel_time",
         "hisense_aehw4a1",
         "hive",
+        "hko",
         "hlk_sw16",
         "home_connect",
         "home_plus_control",

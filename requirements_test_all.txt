@@ -761,6 +761,9 @@ here-routing==0.2.0
 # homeassistant.components.here_travel_time
 here-transit==1.2.0
 
+# homeassistant.components.hko
+hko==0.3.2
+
 # homeassistant.components.hlk_sw16
 hlk-sw16==0.0.9
 

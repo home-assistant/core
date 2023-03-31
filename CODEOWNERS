@@ -515,6 +515,8 @@ build.json @home-assistant/supervisor
 /tests/components/history/ @home-assistant/core
 /homeassistant/components/hive/ @Rendili @KJonline
 /tests/components/hive/ @Rendili @KJonline
+/homeassistant/components/hko/ @MisterCommand
+/tests/components/hko/ @MisterCommand
 /homeassistant/components/hlk_sw16/ @jameshilliard
 /tests/components/hlk_sw16/ @jameshilliard
 /homeassistant/components/home_connect/ @DavidMStraub
