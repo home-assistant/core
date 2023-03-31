@@ -60,7 +60,7 @@ class OpowerCoordinator(DataUpdateCoordinator):
             await self.api.async_login()
         except ClientResponseError as err:
             if err.status in (401, 403):
-                # Cancel future updates and start config flow config async_step_reauth
+                # Cancel future updates and start reauth config flow
                 raise ConfigEntryAuthFailed from err
             # Let DataUpdateCoordinator handle ClientError retries
             raise err
@@ -197,7 +197,10 @@ class OpowerCoordinator(DataUpdateCoordinator):
         return cost_reads
 
     async def _async_get_recent_cost_reads(self, account: Account) -> list[CostRead]:
-        """Get cost reads within the past 30 days."""
+        """Get cost reads within the past 30 days to allow corrections in date from utilities.
+
+        Hourly for electricity, daily for gas.
+        """
         return await self.api.async_get_cost_reads(
             account,
             AggregateType.HOUR
