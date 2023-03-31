@@ -202,6 +202,14 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="bool",
         ),
+        TypeHintMatch(
+            function_name="async_reset_platform",
+            arg_types={
+                0: "HomeAssistant",
+                1: "str",
+            },
+            return_type=None,
+        ),
     ],
     "__any_platform__": [
         TypeHintMatch(
