@@ -1,13 +1,14 @@
 """Test the Scrape config flow."""
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 import uuid
 
 from homeassistant import config_entries
 from homeassistant.components.rest.data import DEFAULT_TIMEOUT
 from homeassistant.components.rest.schema import DEFAULT_METHOD
 from homeassistant.components.scrape import DOMAIN
+from homeassistant.components.scrape.config_flow import NONE_SENTINEL
 from homeassistant.components.scrape.const import (
     CONF_ENCODING,
     CONF_INDEX,
@@ -15,14 +16,18 @@ from homeassistant.components.scrape.const import (
     DEFAULT_ENCODING,
     DEFAULT_VERIFY_SSL,
 )
+from homeassistant.components.sensor import CONF_STATE_CLASS
 from homeassistant.const import (
+    CONF_DEVICE_CLASS,
     CONF_METHOD,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_RESOURCE,
     CONF_TIMEOUT,
     CONF_UNIQUE_ID,
+    CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
+    CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
@@ -34,7 +39,9 @@ from . import MockRestData
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant, get_data: MockRestData) -> None:
+async def test_form(
+    hass: HomeAssistant, get_data: MockRestData, mock_setup_entry: AsyncMock
+) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -46,10 +53,7 @@ async def test_form(hass: HomeAssistant, get_data: MockRestData) -> None:
     with patch(
         "homeassistant.components.rest.RestData",
         return_value=get_data,
-    ) as mock_data, patch(
-        "homeassistant.components.scrape.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    ) as mock_data:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -66,6 +70,9 @@ async def test_form(hass: HomeAssistant, get_data: MockRestData) -> None:
                 CONF_NAME: "Current version",
                 CONF_SELECT: ".current-version h1",
                 CONF_INDEX: 0.0,
+                CONF_DEVICE_CLASS: NONE_SENTINEL,
+                CONF_STATE_CLASS: NONE_SENTINEL,
+                CONF_UNIT_OF_MEASUREMENT: NONE_SENTINEL,
             },
         )
         await hass.async_block_till_done()
@@ -92,7 +99,9 @@ async def test_form(hass: HomeAssistant, get_data: MockRestData) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_flow_fails(hass: HomeAssistant, get_data: MockRestData) -> None:
+async def test_flow_fails(
+    hass: HomeAssistant, get_data: MockRestData, mock_setup_entry: AsyncMock
+) -> None:
     """Test config flow error."""
 
     result = await hass.config_entries.flow.async_init(
@@ -137,9 +146,6 @@ async def test_flow_fails(hass: HomeAssistant, get_data: MockRestData) -> None:
     with patch(
         "homeassistant.components.rest.RestData",
         return_value=get_data,
-    ), patch(
-        "homeassistant.components.scrape.async_setup_entry",
-        return_value=True,
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -157,6 +163,9 @@ async def test_flow_fails(hass: HomeAssistant, get_data: MockRestData) -> None:
                 CONF_NAME: "Current version",
                 CONF_SELECT: ".current-version h1",
                 CONF_INDEX: 0.0,
+                CONF_DEVICE_CLASS: NONE_SENTINEL,
+                CONF_STATE_CLASS: NONE_SENTINEL,
+                CONF_UNIT_OF_MEASUREMENT: NONE_SENTINEL,
             },
         )
         await hass.async_block_till_done()
@@ -278,6 +287,9 @@ async def test_options_add_remove_sensor_flow(
                 CONF_NAME: "Template",
                 CONF_SELECT: "template",
                 CONF_INDEX: 0.0,
+                CONF_DEVICE_CLASS: NONE_SENTINEL,
+                CONF_STATE_CLASS: NONE_SENTINEL,
+                CONF_UNIT_OF_MEASUREMENT: NONE_SENTINEL,
             },
         )
         await hass.async_block_till_done()
@@ -405,6 +417,9 @@ async def test_options_edit_sensor_flow(
             user_input={
                 CONF_SELECT: "template",
                 CONF_INDEX: 0.0,
+                CONF_DEVICE_CLASS: NONE_SENTINEL,
+                CONF_STATE_CLASS: NONE_SENTINEL,
+                CONF_UNIT_OF_MEASUREMENT: NONE_SENTINEL,
             },
         )
         await hass.async_block_till_done()
@@ -434,3 +449,161 @@ async def test_options_edit_sensor_flow(
     # Check the state of the entity has changed as expected
     state = hass.states.get("sensor.current_version")
     assert state.state == "Trying to get"
+
+
+async def test_sensor_options_add_device_class(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test options flow to edit a sensor."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={
+            CONF_RESOURCE: "https://www.home-assistant.io",
+            CONF_METHOD: DEFAULT_METHOD,
+            CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
+            CONF_TIMEOUT: DEFAULT_TIMEOUT,
+            CONF_ENCODING: DEFAULT_ENCODING,
+            "sensor": [
+                {
+                    CONF_NAME: "Current Temp",
+                    CONF_SELECT: ".current-temp h3",
+                    CONF_INDEX: 0,
+                    CONF_VALUE_TEMPLATE: "{{ value.split(':')[1] }}",
+                    CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120002",
+                }
+            ],
+        },
+        entry_id="1",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] == FlowResultType.MENU
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "select_edit_sensor"},
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "select_edit_sensor"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"index": "0"},
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "edit_sensor"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_SELECT: ".current-temp h3",
+            CONF_INDEX: 0.0,
+            CONF_VALUE_TEMPLATE: "{{ value.split(':')[1] }}",
+            CONF_DEVICE_CLASS: "temperature",
+            CONF_STATE_CLASS: "measurement",
+            CONF_UNIT_OF_MEASUREMENT: "°C",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_RESOURCE: "https://www.home-assistant.io",
+        CONF_METHOD: "GET",
+        CONF_VERIFY_SSL: True,
+        CONF_TIMEOUT: 10,
+        CONF_ENCODING: "UTF-8",
+        "sensor": [
+            {
+                CONF_NAME: "Current Temp",
+                CONF_SELECT: ".current-temp h3",
+                CONF_VALUE_TEMPLATE: "{{ value.split(':')[1] }}",
+                CONF_INDEX: 0,
+                CONF_DEVICE_CLASS: "temperature",
+                CONF_STATE_CLASS: "measurement",
+                CONF_UNIT_OF_MEASUREMENT: "°C",
+                CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120002",
+            },
+        ],
+    }
+
+
+async def test_sensor_options_remove_device_class(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test options flow to edit a sensor."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={
+            CONF_RESOURCE: "https://www.home-assistant.io",
+            CONF_METHOD: DEFAULT_METHOD,
+            CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
+            CONF_TIMEOUT: DEFAULT_TIMEOUT,
+            CONF_ENCODING: DEFAULT_ENCODING,
+            "sensor": [
+                {
+                    CONF_NAME: "Current Temp",
+                    CONF_SELECT: ".current-temp h3",
+                    CONF_INDEX: 0,
+                    CONF_VALUE_TEMPLATE: "{{ value.split(':')[1] }}",
+                    CONF_DEVICE_CLASS: "temperature",
+                    CONF_STATE_CLASS: "measurement",
+                    CONF_UNIT_OF_MEASUREMENT: "°C",
+                    CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120002",
+                }
+            ],
+        },
+        entry_id="1",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] == FlowResultType.MENU
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "select_edit_sensor"},
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "select_edit_sensor"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"index": "0"},
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "edit_sensor"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_SELECT: ".current-temp h3",
+            CONF_INDEX: 0.0,
+            CONF_VALUE_TEMPLATE: "{{ value.split(':')[1] }}",
+            CONF_DEVICE_CLASS: NONE_SENTINEL,
+            CONF_STATE_CLASS: NONE_SENTINEL,
+            CONF_UNIT_OF_MEASUREMENT: NONE_SENTINEL,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_RESOURCE: "https://www.home-assistant.io",
+        CONF_METHOD: "GET",
+        CONF_VERIFY_SSL: True,
+        CONF_TIMEOUT: 10,
+        CONF_ENCODING: "UTF-8",
+        "sensor": [
+            {
+                CONF_NAME: "Current Temp",
+                CONF_SELECT: ".current-temp h3",
+                CONF_VALUE_TEMPLATE: "{{ value.split(':')[1] }}",
+                CONF_INDEX: 0,
+                CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120002",
+            },
+        ],
+    }

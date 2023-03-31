@@ -50,7 +50,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.6.7
 
 # homeassistant.components.vicare
-PyViCare==2.21.0
+PyViCare==2.25.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -422,7 +422,7 @@ beautifulsoup4==4.11.1
 # beewi_smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.34.10
+bellows==0.35.0
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.13.0
@@ -907,7 +907,7 @@ hole==0.8.0
 holidays==0.21.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230330.0
+home-assistant-frontend==20230331.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.3.29
@@ -2234,7 +2234,7 @@ regenmaschine==2022.11.0
 renault-api==0.1.12
 
 # homeassistant.components.reolink
-reolink-aio==0.5.8
+reolink-aio==0.5.9
 
 # homeassistant.components.python_script
 restrictedpython==6.0
@@ -2325,7 +2325,7 @@ sensorpro-ble==0.5.3
 sensorpush-ble==1.5.5
 
 # homeassistant.components.sentry
-sentry-sdk==1.16.0
+sentry-sdk==1.18.0
 
 # homeassistant.components.sfr_box
 sfrbox-api==0.0.6
@@ -2643,9 +2643,6 @@ wolf_smartset==0.1.11
 # homeassistant.components.xbox
 xbox-webapi==2.0.11
 
-# homeassistant.components.xbox_live
-xboxapi==2.0.1
-
 # homeassistant.components.xiaomi_ble
 xiaomi-ble==0.16.4
 
@@ -2710,19 +2707,19 @@ zhong_hong_hvac==1.0.9
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zha
-zigpy-deconz==0.19.2
+zigpy-deconz==0.20.0
 
 # homeassistant.components.zha
-zigpy-xbee==0.16.2
+zigpy-xbee==0.17.0
 
 # homeassistant.components.zha
 zigpy-zigate==0.10.3
 
 # homeassistant.components.zha
-zigpy-znp==0.9.3
+zigpy-znp==0.10.0
 
 # homeassistant.components.zha
-zigpy==0.53.2
+zigpy==0.54.0
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2
