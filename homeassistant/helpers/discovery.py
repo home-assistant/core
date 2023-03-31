@@ -47,7 +47,7 @@ def async_listen(
     job = core.HassJob(callback, f"discovery listener {service}")
 
     @core.callback
-    async def _async_discovery_event_listener(discovered: DiscoveryDict) -> None:
+    def _async_discovery_event_listener(discovered: DiscoveryDict) -> None:
         """Listen for discovery events."""
         hass.async_run_hass_job(job, discovered["service"], discovered["discovered"])
 
