@@ -249,7 +249,7 @@ def _generate_filter_from_sets_and_pattern_lists(
                     bool(include_eg and include_eg.match(entity_id))
                     or (
                         split_entity_id(entity_id)[0] in include_d
-                        and not (bool(exclude_eg and exclude_eg.match(entity_id)))
+                        and not (exclude_eg and exclude_eg.match(entity_id))
                     )
                 )
             )
@@ -267,9 +267,7 @@ def _generate_filter_from_sets_and_pattern_lists(
         def entity_filter_4b(entity_id: str) -> bool:
             """Return filter function for case 4b."""
             domain = split_entity_id(entity_id)[0]
-            if domain in exclude_d or (
-                bool(exclude_eg and exclude_eg.match(entity_id))
-            ):
+            if domain in exclude_d or bool(exclude_eg and exclude_eg.match(entity_id)):
                 return entity_id in include_e
             return entity_id not in exclude_e
 
