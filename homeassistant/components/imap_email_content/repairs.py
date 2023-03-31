@@ -132,39 +132,32 @@ class DeprecationRepairFlow(RepairsFlow):
         )
 
     async def async_step_confirm(
-        self, user_input: dict[str, str] | None = None
+        self, user_input: dict[str, str]
     ) -> data_entry_flow.FlowResult:
         """Handle the confirm step of a fix flow."""
-        if user_input is not None:
-            placeholders = self._async_get_placeholders()
-            user_input[CONF_NAME] = self._name
-            result = await self.hass.config_entries.flow.async_init(
-                IMAP_DOMAIN, context={"source": SOURCE_IMPORT}, data=self._config
+        placeholders = self._async_get_placeholders()
+        user_input[CONF_NAME] = self._name
+        result = await self.hass.config_entries.flow.async_init(
+            IMAP_DOMAIN, context={"source": SOURCE_IMPORT}, data=self._config
+        )
+        if result["type"] == FlowResultType.ABORT:
+            ir.async_delete_issue(self.hass, DOMAIN, self._issue_id)
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                self._issue_id,
+                breaks_in_ha_version="2023.10.0",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="deprecation",
+                translation_placeholders=placeholders,
+                data=self._config,
+                learn_more_url="https://www.home-assistant.io/integrations/imap/#using-events",
             )
-            if result["type"] == FlowResultType.ABORT:
-                ir.async_delete_issue(self.hass, DOMAIN, self._issue_id)
-                ir.async_create_issue(
-                    self.hass,
-                    DOMAIN,
-                    self._issue_id,
-                    breaks_in_ha_version="2023.10.0",
-                    is_fixable=False,
-                    severity=ir.IssueSeverity.WARNING,
-                    translation_key="deprecation",
-                    translation_placeholders=placeholders,
-                    data=self._config,
-                    learn_more_url="https://www.home-assistant.io/integrations/imap/#using-events",
-                )
-                return self.async_abort(reason=result["reason"])
-            return self.async_create_entry(
-                title="",
-                data={},
-            )
-
-        return self.async_show_form(
-            step_id="confirm",
-            data_schema=vol.Schema({}),
-            description_placeholders=self._config,
+            return self.async_abort(reason=result["reason"])
+        return self.async_create_entry(
+            title="",
+            data={},
         )
 
 
