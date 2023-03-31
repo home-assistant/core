@@ -27,7 +27,7 @@ async def test_sensor_states(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "object_id,old_unique_id,new_unique_id",
+    ("object_id", "old_unique_id", "new_unique_id"),
     [
         (
             "glances_ssl_used_percent",
