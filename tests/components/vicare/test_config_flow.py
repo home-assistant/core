@@ -104,9 +104,7 @@ async def test_form_dhcp(
     mock_setup_entry.assert_called_once()
 
 
-async def test_dhcp_single_instance_allowed(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+async def test_dhcp_single_instance_allowed(hass: HomeAssistant) -> None:
     """Test that configuring more than one instance is rejected."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -123,9 +121,7 @@ async def test_dhcp_single_instance_allowed(
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_user_input_single_instance_allowed(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+async def test_user_input_single_instance_allowed(hass: HomeAssistant) -> None:
     """Test that configuring more than one instance is rejected."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
