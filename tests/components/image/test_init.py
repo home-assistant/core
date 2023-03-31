@@ -14,7 +14,7 @@ async def test_state(
 ) -> None:
     """Test image state."""
     state = hass.states.get("image.test")
-    assert state.state == "2023-04-01T00:00:00"
+    assert state.state == "2023-04-01T00:00:00+00:00"
     access_token = state.attributes["access_token"]
     assert state.attributes == {
         "access_token": access_token,
