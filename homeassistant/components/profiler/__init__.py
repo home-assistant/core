@@ -127,18 +127,26 @@ async def async_setup_entry(  # noqa: C901
             notification_id="profile_object_source_logging",
         )
 
+        last_ids: set[int] = set()
+        last_stats: dict[str, int] = {}
+
         async def _log_object_sources_with_max(*_: Any) -> None:
-            last_ids: set[int] = set()
-            last_stats: dict[str, int] = {}
             await hass.async_add_executor_job(
                 _log_object_sources, call.data[CONF_MAX_OBJECTS], last_ids, last_stats
             )
 
         await _log_object_sources_with_max()
-
-        domain_data[LOG_INTERVAL_SUB] = async_track_time_interval(
+        cancel_track = async_track_time_interval(
             hass, _log_object_sources_with_max, call.data[CONF_SCAN_INTERVAL]
         )
+
+        @callback
+        def _cancel():
+            cancel_track()
+            last_ids.clear()
+            last_stats.clear()
+
+        domain_data[LOG_INTERVAL_SUB] = _cancel
 
     @callback
     def _async_stop_object_sources(call: ServiceCall) -> None:
@@ -514,6 +522,9 @@ def _log_object_sources(
                 or objgraph.find_backref_chain(_object, lambda _: True),
                 _safe_repr(_object),
             )
+
+        for object_type, count in last_stats.items():
+            new_stats[object_type] = max(new_stats.get(object_type, 0), count)
     finally:
         # Break reference cycles
         del objects
