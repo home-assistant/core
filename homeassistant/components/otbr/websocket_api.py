@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DEFAULT_CHANNEL, DOMAIN
+from .util import get_allowed_channel
 
 if TYPE_CHECKING:
     from . import OTBRData
@@ -72,11 +73,8 @@ async def websocket_create_network(
         connection.send_error(msg["id"], "not_loaded", "No OTBR API loaded")
         return
 
-    # We currently have no way to know which channel zha is using, assume it's
-    # the default
-    zha_channel = DEFAULT_CHANNEL
-
     data: OTBRData = hass.data[DOMAIN]
+    channel = await get_allowed_channel(hass, data.url) or DEFAULT_CHANNEL
 
     try:
         await data.set_enabled(False)
@@ -87,7 +85,7 @@ async def websocket_create_network(
     try:
         await data.create_active_dataset(
             python_otbr_api.OperationalDataSet(
-                channel=zha_channel, network_name="home-assistant"
+                channel=channel, network_name="home-assistant"
             )
         )
     except HomeAssistantError as exc:
@@ -139,20 +137,17 @@ async def websocket_set_network(
     if channel_str := dataset.get(tlv_parser.MeshcopTLVType.CHANNEL):
         thread_dataset_channel = int(channel_str, base=16)
 
-    # We currently have no way to know which channel zha is using, assume it's
-    # the default
-    zha_channel = DEFAULT_CHANNEL
+    data: OTBRData = hass.data[DOMAIN]
+    allowed_channel = await get_allowed_channel(hass, data.url)
 
-    if thread_dataset_channel != zha_channel:
+    if allowed_channel and thread_dataset_channel != allowed_channel:
         connection.send_error(
             msg["id"],
             "channel_conflict",
             f"Can't connect to network on channel {thread_dataset_channel}, ZHA is "
-            f"using channel {zha_channel}",
+            f"using channel {allowed_channel}",
         )
         return
-
-    data: OTBRData = hass.data[DOMAIN]
 
     try:
         await data.set_enabled(False)

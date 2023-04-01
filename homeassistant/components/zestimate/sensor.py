@@ -24,7 +24,6 @@ DEFAULT_NAME = "Zestimate"
 NAME = "zestimate"
 ZESTIMATE = f"{DEFAULT_NAME}:{NAME}"
 
-ICON = "mdi:home-variant"
 
 ATTR_AMOUNT = "amount"
 ATTR_CHANGE = "amount_change_30_days"
@@ -67,6 +66,7 @@ class ZestimateDataSensor(SensorEntity):
     """Implementation of a Zestimate sensor."""
 
     _attr_attribution = "Data provided by Zillow.com"
+    _attr_icon = "mdi:home-variant"
 
     def __init__(self, name, params):
         """Initialize the sensor."""
@@ -102,11 +102,6 @@ class ZestimateDataSensor(SensorEntity):
             attributes = self.data
         attributes["address"] = self.address
         return attributes
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
 
     def update(self):
         """Get the latest data and update the states."""

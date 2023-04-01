@@ -20,8 +20,6 @@ from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
 )
 
-ATTRIBUTION = "Data provided by Met Éireann"
-
 DEFAULT_NAME = "Met Éireann"
 
 DOMAIN = "met_eireann"
