@@ -67,11 +67,11 @@ start_log_object_sources:
     max_objects:
       name: Maximum objects
       description: The maximum number of objects to log.
-      default: 30
+      default: 5
       selector:
         number:
           min: 1
-          max: 1024
+          max: 30
           unit_of_measurement: objects
 stop_log_object_sources:
   name: Stop logging object sources

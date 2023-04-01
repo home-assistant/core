@@ -62,7 +62,7 @@ SERVICES = (
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
-DEFAULT_MAX_OBJECTS = 30
+DEFAULT_MAX_OBJECTS = 5
 
 CONF_SECONDS = "seconds"
 CONF_MAX_OBJECTS = "max_objects"
