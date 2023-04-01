@@ -17,7 +17,7 @@ import voluptuous as vol
 from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TYPE
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
@@ -29,6 +29,8 @@ SERVICE_START = "start"
 SERVICE_MEMORY = "memory"
 SERVICE_START_LOG_OBJECTS = "start_log_objects"
 SERVICE_STOP_LOG_OBJECTS = "stop_log_objects"
+SERVICE_START_LOG_OBJECT_SOURCES = "start_log_object_sources"
+SERVICE_STOP_LOG_OBJECT_SOURCES = "stop_log_object_sources"
 SERVICE_DUMP_LOG_OBJECTS = "dump_log_objects"
 SERVICE_LRU_STATS = "lru_stats"
 SERVICE_LOG_THREAD_FRAMES = "log_thread_frames"
@@ -60,7 +62,10 @@ SERVICES = (
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
+DEFAULT_MAX_OBJECTS = 60
+
 CONF_SECONDS = "seconds"
+CONF_MAX_OBJECTS = "max_objects"
 
 LOG_INTERVAL_SUB = "log_interval_subscription"
 
@@ -106,6 +111,37 @@ async def async_setup_entry(  # noqa: C901
             return
 
         persistent_notification.async_dismiss(hass, "profile_object_logging")
+        domain_data.pop(LOG_INTERVAL_SUB)()
+
+    async def _async_start_object_sources(call: ServiceCall) -> None:
+        if LOG_INTERVAL_SUB in domain_data:
+            domain_data[LOG_INTERVAL_SUB]()
+
+        persistent_notification.async_create(
+            hass,
+            (
+                "Object source logging has started. See [the logs](/config/logs) to"
+                " track the growth of new objects."
+            ),
+            title="Object source logging started",
+            notification_id="profile_object_source_logging",
+        )
+
+        async def _log_object_sources_with_max(*_: Any) -> None:
+            await hass.async_add_executor_job(
+                _log_object_sources, call.data[CONF_MAX_OBJECTS]
+            )
+
+        domain_data[LOG_INTERVAL_SUB] = async_track_time_interval(
+            hass, _log_object_sources_with_max, call.data[CONF_SCAN_INTERVAL]
+        )
+
+    @callback
+    def _async_stop_object_sources(call: ServiceCall) -> None:
+        if LOG_INTERVAL_SUB not in domain_data:
+            return
+
+        persistent_notification.async_dismiss(hass, "profile_object_source_logging")
         domain_data.pop(LOG_INTERVAL_SUB)()
 
     def _safe_repr(obj: Any) -> str:
@@ -270,6 +306,30 @@ async def async_setup_entry(  # noqa: C901
     async_register_admin_service(
         hass,
         DOMAIN,
+        SERVICE_START_LOG_OBJECT_SOURCES,
+        _async_start_object_sources,
+        schema=vol.Schema(
+            {
+                vol.Optional(
+                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+                ): cv.time_period,
+                vol.Optional(CONF_MAX_OBJECTS, default=DEFAULT_MAX_OBJECTS): vol.Range(
+                    min=1, max=1024
+                ),
+            }
+        ),
+    )
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_STOP_LOG_OBJECT_SOURCES,
+        _async_stop_object_sources,
+    )
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
         SERVICE_DUMP_LOG_OBJECTS,
         _dump_log_objects,
         schema=vol.Schema({vol.Required(CONF_TYPE): str}),
@@ -404,3 +464,45 @@ def _log_objects(*_):
     import objgraph  # pylint: disable=import-outside-toplevel
 
     _LOGGER.critical("Memory Growth: %s", objgraph.growth(limit=1000))
+
+
+_LAST_IDS: set[int] = set()
+
+
+def _log_object_sources(max_objects: int) -> None:
+    # Imports deferred to avoid loading modules
+    # in memory since usually only one part of this
+    # integration is used at a time
+    import gc  # pylint: disable=import-outside-toplevel
+    import inspect  # pylint: disable=import-outside-toplevel
+
+    gc.collect()
+
+    objects = gc.get_objects()
+    last_ids = _LAST_IDS
+    new_objects: list[object] = []
+    new_objects_overflow = 0
+    current_ids = set()
+    try:
+        for _object in objects:
+            id_ = id(_object)
+            current_ids.add(id_)
+            if id_ not in last_ids:
+                if len(new_objects) < max_objects:
+                    new_objects.append(_object)
+                else:
+                    new_objects_overflow += 1
+        for _object in new_objects:
+            _LOGGER.critical(
+                "New object %s at %s: %s",
+                type(_object).__name__,
+                inspect.getabsfile(_object),
+                _object,
+            )
+    finally:
+        del objects
+        del new_objects
+        last_ids = current_ids
+
+    if new_objects_overflow:
+        _LOGGER.critical("New objects overflowed by %s", new_objects_overflow)
