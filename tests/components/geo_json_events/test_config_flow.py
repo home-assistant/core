@@ -70,7 +70,9 @@ async def test_step_import(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "http://geo.json.local/geo_json_events.json, -41.2, 174.7"
+    assert (
+        result["title"] == "http://geo.json.local/geo_json_events.json (-41.2, 174.7)"
+    )
     assert result["data"] == {
         CONF_URL: URL,
         CONF_LATITUDE: -41.2,
@@ -103,7 +105,9 @@ async def test_step_user(hass: HomeAssistant) -> None:
         result["flow_id"], user_input=conf
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "http://geo.json.local/geo_json_events.json, -41.2, 174.7"
+    assert (
+        result["title"] == "http://geo.json.local/geo_json_events.json (-41.2, 174.7)"
+    )
     assert result["data"] == {
         CONF_URL: URL,
         CONF_LATITUDE: -41.2,
