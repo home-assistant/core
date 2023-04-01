@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
@@ -177,36 +177,42 @@ def outlet_fixture():
 
 @pytest.fixture(autouse=True)
 def requests_mock_fixture(requests_mock):
-    """Fixture to provide a requests mocker."""
+    """Fixture to build the various responses for the Helpers.call_api method."""
+    # This fixture provides a variety of handlers for the various vesync API calls
+    # However, the "https://smartapi.vesync.com/cloud/v1/deviceManaged/devices" URL
+    # must be explicitly added by the test case to ensure that the correct devices
+    # are loaded.
+    #
+    # For example:
+    # requests_mock.post(
+    #     "https://smartapi.vesync.com/cloud/v1/deviceManaged/devices",
+    #     json=load_json_object_fixture("vesync-devices.json", DOMAIN),
+    # )
     requests_mock.post(
         "https://smartapi.vesync.com/cloud/v1/user/login",
-        text=load_fixture("vesync/vesync-login.json"),
-    )
-    requests_mock.post(
-        "https://smartapi.vesync.com/cloud/v1/deviceManaged/devices",
-        text=load_fixture("vesync/vesync-devices.json"),
+        json=load_json_object_fixture("vesync-login.json", DOMAIN),
     )
     requests_mock.get(
         "https://smartapi.vesync.com/v1/device/outlet/detail",
-        text=load_fixture("vesync/outlet-detail.json"),
+        json=load_json_object_fixture("outlet-detail.json", DOMAIN),
     )
     requests_mock.post(
         "https://smartapi.vesync.com/dimmer/v1/device/devicedetail",
-        text=load_fixture("vesync/dimmer-detail.json"),
+        json=load_json_object_fixture("dimmer-detail.json", DOMAIN),
     )
     requests_mock.post(
         "https://smartapi.vesync.com/SmartBulb/v1/device/devicedetail",
-        text=load_fixture("vesync/device-detail.json"),
+        json=load_json_object_fixture("device-detail.json", DOMAIN),
     )
     requests_mock.post(
         "https://smartapi.vesync.com/cloud/v1/deviceManaged/bypass",
-        text=load_fixture("vesync/device-detail.json"),
+        json=load_json_object_fixture("device-detail.json", DOMAIN),
     )
     requests_mock.post(
         "https://smartapi.vesync.com/cloud/v2/deviceManaged/bypassV2",
-        text=load_fixture("vesync/device-detail.json"),
+        json=load_json_object_fixture("device-detail.json", DOMAIN),
     )
     requests_mock.post(
         "https://smartapi.vesync.com/131airPurifier/v1/device/deviceDetail",
-        text=load_fixture("vesync/purifier-detail.json"),
+        json=load_json_object_fixture("purifier-detail.json", DOMAIN),
     )

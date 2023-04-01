@@ -1,9 +1,9 @@
-"""Tests for the fan module."""
+"""Tests for the sensor module."""
 import pytest
 import requests_mock
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -13,7 +13,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize("device_name", ALL_DEVICE_NAMES)
-async def test_fan_state(
+async def test_sensor_state(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     config_entry: MockConfigEntry,
@@ -41,7 +41,7 @@ async def test_fan_state(
         for entity in er.async_entries_for_config_entry(
             entity_registry, config_entry.entry_id
         )
-        if entity.domain == FAN_DOMAIN
+        if entity.domain == SENSOR_DOMAIN
     ]
     assert entities == snapshot(name="entities")
 
