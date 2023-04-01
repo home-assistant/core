@@ -107,7 +107,10 @@ def _safe_get_message(record: logging.LogRecord) -> str:
     try:
         return record.getMessage()
     except Exception:  # pylint: disable=broad-except
-        return f"Bad logger message: {record.msg} ({record.args})"
+        try:
+            return f"Bad logger message: {record.msg} ({record.args})"
+        except Exception:  # pylint: disable=broad-except
+            return "Bad logger message: <unprintable>"
 
 
 class LogEntry:
