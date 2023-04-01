@@ -99,8 +99,7 @@ async def async_setup_platform(
             "Add http:// or https:// to your URL"
         )
     except (asyncio.TimeoutError, aiohttp.ClientError) as exc:
-        _LOGGER.error("No route to resource/endpoint: %s", resource)
-        raise PlatformNotReady() from exc
+        raise PlatformNotReady(f"No route to resource/endpoint: {resource}") from exc
 
 
 class RestSwitch(TemplateEntity, SwitchEntity):
