@@ -7,6 +7,7 @@ from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_DEVICE_CLASS,
@@ -27,21 +28,30 @@ from homeassistant.const import (
     HTTP_DIGEST_AUTHENTICATION,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
 from homeassistant.helpers.template_entity import (
     TEMPLATE_ENTITY_BASE_SCHEMA,
     TEMPLATE_SENSOR_BASE_SCHEMA,
 )
 
 from .const import (
+    CONF_BODY_OFF,
+    CONF_BODY_ON,
     CONF_ENCODING,
+    CONF_IS_ON_TEMPLATE,
     CONF_JSON_ATTRS,
     CONF_JSON_ATTRS_PATH,
+    CONF_STATE_RESOURCE,
+    DEFAULT_BODY_OFF,
+    DEFAULT_BODY_ON,
     DEFAULT_ENCODING,
     DEFAULT_FORCE_UPDATE,
     DEFAULT_METHOD,
+    DEFAULT_METHOD_SWITCH,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     METHODS,
+    SUPPORT_REST_METHODS,
 )
 from .data import DEFAULT_TIMEOUT
 
@@ -77,6 +87,19 @@ BINARY_SENSOR_SCHEMA = {
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
 }
 
+SWITCH_SCHEMA = {
+    **TEMPLATE_ENTITY_BASE_SCHEMA.schema,
+    vol.Optional(CONF_STATE_RESOURCE): cv.url,
+    vol.Optional(CONF_BODY_OFF, default=DEFAULT_BODY_OFF): cv.template,
+    vol.Optional(CONF_BODY_ON, default=DEFAULT_BODY_ON): cv.template,
+    vol.Optional(CONF_IS_ON_TEMPLATE): cv.template,
+    vol.Optional(CONF_METHOD, default=DEFAULT_METHOD_SWITCH): vol.All(
+        vol.Lower, vol.In(SUPPORT_REST_METHODS)
+    ),
+    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+    vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): cv.time_period,
+}
 
 COMBINED_SCHEMA = vol.Schema(
     {

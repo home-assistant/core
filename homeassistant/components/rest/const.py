@@ -3,6 +3,7 @@
 DOMAIN = "rest"
 
 DEFAULT_METHOD = "GET"
+DEFAULT_METHOD_SWITCH = "post"
 DEFAULT_VERIFY_SSL = True
 DEFAULT_FORCE_UPDATE = False
 DEFAULT_ENCODING = "UTF-8"
@@ -22,3 +23,11 @@ REST = "rest"
 REST_DATA = "rest_data"
 
 METHODS = ["POST", "GET"]
+
+CONF_STATE_RESOURCE = "state_resource"
+DEFAULT_BODY_OFF = "OFF"
+DEFAULT_BODY_ON = "ON"
+CONF_BODY_OFF = "body_off"
+CONF_BODY_ON = "body_on"
+CONF_IS_ON_TEMPLATE = "is_on_template"
+SUPPORT_REST_METHODS = ["post", "put", "patch"]
