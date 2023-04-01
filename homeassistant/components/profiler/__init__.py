@@ -62,7 +62,7 @@ SERVICES = (
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
-DEFAULT_MAX_OBJECTS = 60
+DEFAULT_MAX_OBJECTS = 30
 
 CONF_SECONDS = "seconds"
 CONF_MAX_OBJECTS = "max_objects"
@@ -128,9 +128,13 @@ async def async_setup_entry(  # noqa: C901
         )
 
         async def _log_object_sources_with_max(*_: Any) -> None:
+            last_ids: set[int] = set()
+            last_stats: dict[str, int] = {}
             await hass.async_add_executor_job(
-                _log_object_sources, call.data[CONF_MAX_OBJECTS]
+                _log_object_sources, call.data[CONF_MAX_OBJECTS], last_ids, last_stats
             )
+
+        await _log_object_sources_with_max()
 
         domain_data[LOG_INTERVAL_SUB] = async_track_time_interval(
             hass, _log_object_sources_with_max, call.data[CONF_SCAN_INTERVAL]
@@ -143,17 +147,6 @@ async def async_setup_entry(  # noqa: C901
 
         persistent_notification.async_dismiss(hass, "profile_object_source_logging")
         domain_data.pop(LOG_INTERVAL_SUB)()
-
-    def _safe_repr(obj: Any) -> str:
-        """Get the repr of an object but keep going if there is an exception.
-
-        We wrap repr to ensure if one object cannot be serialized, we can
-        still get the rest.
-        """
-        try:
-            return repr(obj)
-        except Exception:  # pylint: disable=broad-except
-            return f"Failed to serialize {type(obj)}"
 
     def _dump_log_objects(call: ServiceCall) -> None:
         # Imports deferred to avoid loading modules
@@ -179,15 +172,6 @@ async def async_setup_entry(  # noqa: C901
             notification_id="profile_object_dump",
         )
 
-    def _get_function_absfile(func: Any) -> str:
-        """Get the absolute file path of a function."""
-        import inspect  # pylint: disable=import-outside-toplevel
-
-        abs_file = "unknown"
-        with suppress(Exception):
-            abs_file = inspect.getabsfile(func)
-        return abs_file
-
     def _lru_stats(call: ServiceCall) -> None:
         """Log the stats of all lru caches."""
         # Imports deferred to avoid loading modules
@@ -200,7 +184,7 @@ async def async_setup_entry(  # noqa: C901
             _LOGGER.critical(
                 "Cache stats for lru_cache %s at %s: %s",
                 lru.__wrapped__,
-                _get_function_absfile(lru.__wrapped__),
+                _get_function_absfile(lru.__wrapped__) or "unknown",
                 lru.cache_info(),
             )
 
@@ -211,7 +195,7 @@ async def async_setup_entry(  # noqa: C901
                         _LOGGER.critical(
                             "Cache stats for LRU %s at %s: %s",
                             type(class_with_lru_attr),
-                            _get_function_absfile(class_with_lru_attr),
+                            _get_function_absfile(class_with_lru_attr) or "unknown",
                             maybe_lru.get_stats(),
                         )
 
@@ -466,43 +450,80 @@ def _log_objects(*_):
     _LOGGER.critical("Memory Growth: %s", objgraph.growth(limit=1000))
 
 
-_LAST_IDS: set[int] = set()
+def _get_function_absfile(func: Any) -> str | None:
+    """Get the absolute file path of a function."""
+    import inspect  # pylint: disable=import-outside-toplevel
+
+    abs_file: str | None = None
+    with suppress(Exception):
+        abs_file = inspect.getabsfile(func)
+    return abs_file
 
 
-def _log_object_sources(max_objects: int) -> None:
+def _safe_repr(obj: Any) -> str:
+    """Get the repr of an object but keep going if there is an exception.
+
+    We wrap repr to ensure if one object cannot be serialized, we can
+    still get the rest.
+    """
+    try:
+        return repr(obj)
+    except Exception:  # pylint: disable=broad-except
+        return f"Failed to serialize {type(obj)}"
+
+
+def _log_object_sources(
+    max_objects: int, last_ids: set[int], last_stats: dict[str, int]
+) -> None:
     # Imports deferred to avoid loading modules
     # in memory since usually only one part of this
     # integration is used at a time
     import gc  # pylint: disable=import-outside-toplevel
-    import inspect  # pylint: disable=import-outside-toplevel
+
+    import objgraph  # pylint: disable=import-outside-toplevel
 
     gc.collect()
 
     objects = gc.get_objects()
-    last_ids = _LAST_IDS
     new_objects: list[object] = []
     new_objects_overflow = 0
     current_ids = set()
+    new_stats: dict[str, int] = {}
     try:
+        for _object in objects:
+            object_type = type(_object).__name__
+            new_stats[object_type] = new_stats.get(object_type, 0) + 1
+
         for _object in objects:
             id_ = id(_object)
             current_ids.add(id_)
-            if id_ not in last_ids:
+            if id_ in last_ids:
+                continue
+            object_type = type(_object).__name__
+            if last_stats.get(object_type, 0) < new_stats[object_type]:
                 if len(new_objects) < max_objects:
                     new_objects.append(_object)
                 else:
                     new_objects_overflow += 1
+
         for _object in new_objects:
             _LOGGER.critical(
                 "New object %s at %s: %s",
                 type(_object).__name__,
-                inspect.getabsfile(_object),
-                _object,
+                _get_function_absfile(_object)
+                or objgraph.find_backref_chain(_object, lambda _: True),
+                _safe_repr(_object),
             )
     finally:
+        # Break reference cycles
         del objects
         del new_objects
-        last_ids = current_ids
+        last_ids.clear()
+        last_ids.update(current_ids)
+        last_stats.clear()
+        last_stats.update(new_stats)
+        del new_stats
+        del current_ids
 
     if new_objects_overflow:
         _LOGGER.critical("New objects overflowed by %s", new_objects_overflow)
