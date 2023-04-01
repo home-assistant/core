@@ -480,6 +480,12 @@ def _safe_repr(obj: Any) -> str:
         return f"Failed to serialize {type(obj)}"
 
 
+def _find_backrefs_not_to_self(_object: Any) -> Any:
+    import objgraph  # pylint: disable=import-outside-toplevel
+
+    return objgraph.find_backref_chain(_object, lambda obj: obj is not _object)
+
+
 def _log_object_sources(
     max_objects: int, last_ids: set[int], last_stats: dict[str, int]
 ) -> None:
@@ -487,8 +493,6 @@ def _log_object_sources(
     # in memory since usually only one part of this
     # integration is used at a time
     import gc  # pylint: disable=import-outside-toplevel
-
-    import objgraph  # pylint: disable=import-outside-toplevel
 
     gc.collect()
 
@@ -523,8 +527,7 @@ def _log_object_sources(
                 object_type,
                 last_stats.get(object_type, 0),
                 new_stats[object_type],
-                _get_function_absfile(_object)
-                or objgraph.find_backref_chain(_object, lambda _: True),
+                _get_function_absfile(_object) or _find_backrefs_not_to_self(_object),
                 _safe_repr(_object),
             )
 
