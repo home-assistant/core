@@ -37,19 +37,17 @@ class GeoJsonFeedEntityManager:
         """Initialize the GeoJSON Feed Manager."""
         self._hass: HomeAssistant = hass
         self._config_entry: ConfigEntry = config_entry
-        coordinates: tuple[float, float] = (
-            config_entry.data[CONF_LATITUDE],
-            config_entry.data[CONF_LONGITUDE],
-        )
-        self._url: str = config_entry.data[CONF_URL]
         websession = aiohttp_client.async_get_clientsession(hass)
         self._feed_manager: GenericFeedManager = GenericFeedManager(
             websession,
             self._generate_entity,
             self._update_entity,
             self._remove_entity,
-            coordinates,
-            self._url,
+            (
+                config_entry.data[CONF_LATITUDE],
+                config_entry.data[CONF_LONGITUDE],
+            ),
+            config_entry.data[CONF_URL],
             filter_radius=config_entry.data[CONF_RADIUS],
         )
         self._config_entry_id: str = config_entry.entry_id
