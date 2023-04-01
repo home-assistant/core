@@ -515,9 +515,12 @@ def _log_object_sources(
                     new_objects_overflow += 1
 
         for _object in new_objects:
+            object_type = type(_object).__name__
             _LOGGER.critical(
-                "New object %s at %s: %s",
-                type(_object).__name__,
+                "New object %s (%s/%s) at %s: %s",
+                object_type,
+                last_stats.get(object_type, 0),
+                new_stats[object_type],
                 _get_function_absfile(_object)
                 or objgraph.find_backref_chain(_object, lambda _: True),
                 _safe_repr(_object),
