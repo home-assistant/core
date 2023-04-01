@@ -6,7 +6,14 @@ from collections.abc import Awaitable, Callable, Coroutine
 from contextlib import suppress
 from datetime import datetime
 from http import HTTPStatus
-from ipaddress import IPv4Address, IPv6Address, ip_address
+from ipaddress import (
+    IPv4Address,
+    IPv4Network,
+    IPv6Address,
+    IPv6Network,
+    ip_address,
+    ip_network,
+)
 import logging
 from socket import gethostbyaddr, herror
 from typing import Any, Concatenate, Final, ParamSpec, TypeVar
@@ -39,18 +46,26 @@ NOTIFICATION_ID_LOGIN: Final = "http-login"
 IP_BANS_FILE: Final = "ip_bans.yaml"
 ATTR_BANNED_AT: Final = "banned_at"
 
+KEY_IP_ALLOWLIST: Final = "ip_ban_allowlist"
+
 SCHEMA_IP_BAN_ENTRY: Final = vol.Schema(
     {vol.Optional("banned_at"): vol.Any(None, cv.datetime)}
 )
 
 
 @callback
-def setup_bans(hass: HomeAssistant, app: Application, login_threshold: int) -> None:
+def setup_bans(
+    hass: HomeAssistant,
+    app: Application,
+    login_threshold: int,
+    ip_ban_allowlist: list[IPv4Network | IPv6Network],
+) -> None:
     """Create IP Ban middleware for the app."""
     app.middlewares.append(ban_middleware)
     app[KEY_FAILED_LOGIN_ATTEMPTS] = defaultdict(int)
     app[KEY_LOGIN_THRESHOLD] = login_threshold
     app[KEY_BAN_MANAGER] = IpBanManager(hass)
+    app[KEY_IP_ALLOWLIST] = ip_ban_allowlist
 
     async def ban_startup(app: Application) -> None:
         """Initialize bans when app starts up."""
@@ -145,6 +160,24 @@ async def process_wrong_login(request: Request) -> None:
 
         if hassio.get_supervisor_ip() == str(remote_addr):
             return
+
+    # If the IP matches allowlist it should not be banned.
+    if KEY_IP_ALLOWLIST in request.app and len(request.app[KEY_IP_ALLOWLIST]) > 0:
+        for ip in request.app[KEY_IP_ALLOWLIST]:
+            try:
+                if ip_address(remote_addr) in ip_network(ip):
+                    _LOGGER.info(
+                        "Failed login from %s (%s) matched allowlist entry %s (failcount:%s)",
+                        str(remote_addr),
+                        str(remote_host),
+                        str(ip),
+                        str(request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr]),
+                    )
+                    return
+            except HomeAssistantError:
+                _LOGGER.error(
+                    "Failure processing entry %s from %s", str(ip), KEY_IP_ALLOWLIST
+                )
 
     if (
         request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr]
