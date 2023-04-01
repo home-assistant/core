@@ -68,7 +68,7 @@ class GeoJsonEventsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
         return self.async_create_entry(
-            title=f"{url}, {latitude}, {longitude}",
+            title=f"{url} ({latitude}, {longitude})",
             data={
                 CONF_URL: url,
                 CONF_LATITUDE: latitude,
@@ -111,7 +111,7 @@ class GeoJsonEventsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
         return self.async_create_entry(
-            title=f"{url}, {latitude}, {longitude}",
+            title=f"{url} ({latitude}, {longitude})",
             data={
                 CONF_URL: url,
                 CONF_LATITUDE: latitude,
