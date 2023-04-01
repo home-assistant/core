@@ -1,4 +1,5 @@
 """Tests for the Sonos config flow."""
+import asyncio
 import logging
 from unittest.mock import AsyncMock, patch
 
@@ -84,7 +85,9 @@ async def test_async_poll_manual_hosts_warnings(
     manager.hosts.add("10.10.10.10")
     with caplog.at_level(logging.DEBUG), patch.object(
         manager, "_async_handle_discovery_message"
-    ), patch("homeassistant.components.sonos.async_call_later"), patch(
+    ), patch(
+        "homeassistant.components.sonos.async_call_later"
+    ) as mock_async_call_later, patch(
         "homeassistant.components.sonos.async_dispatcher_send"
     ), patch.object(
         hass, "async_add_executor_job", new=AsyncMock()
@@ -103,6 +106,7 @@ async def test_async_poll_manual_hosts_warnings(
         record = caplog.records[0]
         assert record.levelname == "WARNING"
         assert "Could not get visible Sonos devices from" in record.message
+        assert mock_async_call_later.call_count == 1
 
         # Second call fails again, it should be logged as a DEBUG message
         caplog.clear()
@@ -111,6 +115,7 @@ async def test_async_poll_manual_hosts_warnings(
         record = caplog.records[0]
         assert record.levelname == "DEBUG"
         assert "Could not get visible Sonos devices from" in record.message
+        assert mock_async_call_later.call_count == 2
 
         # Third call succeeds, it should log an info message
         caplog.clear()
@@ -119,11 +124,13 @@ async def test_async_poll_manual_hosts_warnings(
         record = caplog.records[0]
         assert record.levelname == "INFO"
         assert "Connection restablished to Sonos device" in record.message
+        assert mock_async_call_later.call_count == 3
 
         # Fourth call succeeds again, no need to log
         caplog.clear()
         await manager.async_poll_manual_hosts()
         assert len(caplog.messages) == 0
+        assert mock_async_call_later.call_count == 4
 
         # Fifth call fail again again, should be logged as a WARNING message
         caplog.clear()
@@ -132,3 +139,39 @@ async def test_async_poll_manual_hosts_warnings(
         record = caplog.records[0]
         assert record.levelname == "WARNING"
         assert "Could not get visible Sonos devices from" in record.message
+        assert mock_async_call_later.call_count == 5
+
+
+async def test_async_poll_manual_hosts_ping_failure(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that a failure to ping device is handled properly."""
+    await async_setup_component(
+        hass,
+        sonos.DOMAIN,
+        {"sonos": {"media_player": {"interface_addr": "127.0.0.1"}}},
+    )
+    await hass.async_block_till_done()
+    manager: SonosDiscoveryManager = hass.data[DATA_SONOS_DISCOVERY_MANAGER]
+    manager.hosts.add("10.10.10.10")
+
+    with caplog.at_level(logging.DEBUG), patch.object(
+        manager, "_async_handle_discovery_message", new=AsyncMock()
+    ) as mock_discovery_message, patch(
+        "homeassistant.components.sonos.async_call_later"
+    ) as mock_async_call_later, patch(
+        "homeassistant.components.sonos.async_dispatcher_send"
+    ), patch.object(
+        hass, "async_add_executor_job", new=AsyncMock()
+    ) as mock_async_add_executor_job:
+        mock_async_add_executor_job.return_value = []
+        caplog.clear()
+
+        mock_discovery_message.side_effect = asyncio.TimeoutError("TimeoutError")
+        await manager.async_poll_manual_hosts()
+        assert len(caplog.messages) == 1
+        record = caplog.records[0]
+        assert record.levelname == "WARNING"
+        assert "Discovery message failed" in record.message
+        assert "TimeoutError" in record.message
+        mock_async_call_later.assert_called_once()

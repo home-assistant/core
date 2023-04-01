@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urlparse
 
 from aiohttp import ClientError
-from requests.exceptions import Timeout
+from requests.exceptions import RequestException, Timeout
 from soco import events_asyncio, zonegroupstate
 import soco.config as soco_config
 from soco.core import SoCo
@@ -353,7 +353,13 @@ class SonosDiscoveryManager:
                     get_sync_attributes,
                     soco,
                 )
-            except (OSError, SoCoException, Timeout) as ex:
+            except (
+                OSError,
+                SoCoException,
+                Timeout,
+                asyncio.TimeoutError,
+                RequestException,
+            ) as ex:
                 if not self.hosts_in_error.get(ip_addr):
                     _LOGGER.warning(
                         "Could not get visible Sonos devices from %s: %s", ip_addr, ex
@@ -363,7 +369,6 @@ class SonosDiscoveryManager:
                     _LOGGER.debug(
                         "Could not get visible Sonos devices from %s: %s", ip_addr, ex
                     )
-
             else:
                 if self.hosts_in_error.pop(ip_addr, None):
                     _LOGGER.info("Connection restablished to Sonos device %s", ip_addr)
@@ -383,30 +388,46 @@ class SonosDiscoveryManager:
 
         for host in self.hosts.copy():
             ip_addr = socket.gethostbyname(host)
-            if self.is_device_invisible(ip_addr):
-                _LOGGER.debug("Discarding %s from manual hosts", ip_addr)
-                self.hosts.discard(ip_addr)
-                continue
+            # If getting the sync attributes failed in the prior loop, then skip this
+            # as soco.uid will invoke a blocking call in the event loop.
+            if not self.hosts_in_error.get(ip_addr):
+                if self.is_device_invisible(ip_addr):
+                    _LOGGER.debug("Discarding %s from manual hosts", ip_addr)
+                    self.hosts.discard(ip_addr)
+                    continue
 
-            known_speaker = next(
-                (
-                    speaker
-                    for speaker in self.data.discovered.values()
-                    if speaker.soco.ip_address == ip_addr
-                ),
-                None,
-            )
-            if not known_speaker:
-                await self._async_handle_discovery_message(
-                    soco.uid, ip_addr, "manual zone scan"
+                known_speaker = next(
+                    (
+                        speaker
+                        for speaker in self.data.discovered.values()
+                        if speaker.soco.ip_address == ip_addr
+                    ),
+                    None,
                 )
-            elif not known_speaker.available:
-                try:
-                    await self.hass.async_add_executor_job(known_speaker.ping)
-                except SonosUpdateError:
-                    _LOGGER.debug(
-                        "Manual poll to %s failed, keeping unavailable", ip_addr
-                    )
+                if not known_speaker:
+                    try:
+                        await self._async_handle_discovery_message(
+                            soco.uid,
+                            ip_addr,
+                            "manual zone scan",
+                        )
+                    except (
+                        OSError,
+                        SoCoException,
+                        Timeout,
+                        asyncio.TimeoutError,
+                        RequestException,
+                    ) as ex:
+                        _LOGGER.warning(
+                            "Discovery message failed to %s : %s", ip_addr, ex
+                        )
+                elif not known_speaker.available:
+                    try:
+                        await self.hass.async_add_executor_job(known_speaker.ping)
+                    except SonosUpdateError:
+                        _LOGGER.debug(
+                            "Manual poll to %s failed, keeping unavailable", ip_addr
+                        )
 
         self.data.hosts_heartbeat = async_call_later(
             self.hass, DISCOVERY_INTERVAL.total_seconds(), self.async_poll_manual_hosts
