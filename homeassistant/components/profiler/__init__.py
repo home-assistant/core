@@ -480,10 +480,15 @@ def _safe_repr(obj: Any) -> str:
         return f"Failed to serialize {type(obj)}"
 
 
-def _find_backrefs_not_to_self(_object: Any) -> Any:
+def _find_backrefs_not_to_self(_object: Any) -> list[str]:
     import objgraph  # pylint: disable=import-outside-toplevel
 
-    return objgraph.find_backref_chain(_object, lambda obj: obj is not _object)
+    return [
+        _safe_repr(backref)
+        for backref in objgraph.find_backref_chain(
+            _object, lambda obj: obj is not _object
+        )
+    ]
 
 
 def _log_object_sources(
