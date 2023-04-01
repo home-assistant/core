@@ -480,6 +480,11 @@ def compile_statistics(instance: Recorder, start: datetime, fire_events: bool) -
     return True
 
 
+def _get_first_id_stmt(start: datetime) -> StatementLambdaElement:
+    """Return a statement that returns the first run_id at start."""
+    return lambda_stmt(lambda: select(StatisticsRuns.run_id).filter_by(start=start))
+
+
 def _compile_statistics(
     instance: Recorder, session: Session, start: datetime, fire_events: bool
 ) -> set[str]:
@@ -496,7 +501,7 @@ def _compile_statistics(
     modified_statistic_ids: set[str] = set()
 
     # Return if we already have 5-minute statistics for the requested period
-    if session.query(StatisticsRuns).filter_by(start=start).first():
+    if execute_stmt_lambda_element(session, _get_first_id_stmt(start)):
         _LOGGER.debug("Statistics already compiled for %s-%s", start, end)
         return modified_statistic_ids
 
@@ -1034,7 +1039,6 @@ def _generate_statistics_during_period_stmt(
     end_time: datetime | None,
     metadata_ids: list[int] | None,
     table: type[StatisticsBase],
-    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> StatementLambdaElement:
     """Prepare a database query for statistics during a given period.
 
@@ -1535,7 +1539,7 @@ def _statistics_during_period_with_session(
     if "sum" in types:
         columns = columns.add_columns(table.sum)
     stmt = _generate_statistics_during_period_stmt(
-        columns, start_time, end_time, metadata_ids, table, types
+        columns, start_time, end_time, metadata_ids, table
     )
     stats = cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
 

@@ -1246,11 +1246,11 @@ def test_cache_key_for_generate_statistics_during_period_stmt() -> None:
     """Test cache key for _generate_statistics_during_period_stmt."""
     columns = select(StatisticsShortTerm.metadata_id, StatisticsShortTerm.start_ts)
     stmt = _generate_statistics_during_period_stmt(
-        columns, dt_util.utcnow(), dt_util.utcnow(), [0], StatisticsShortTerm, {}
+        columns, dt_util.utcnow(), dt_util.utcnow(), [0], StatisticsShortTerm
     )
     cache_key_1 = stmt._generate_cache_key()
     stmt2 = _generate_statistics_during_period_stmt(
-        columns, dt_util.utcnow(), dt_util.utcnow(), [0], StatisticsShortTerm, {}
+        columns, dt_util.utcnow(), dt_util.utcnow(), [0], StatisticsShortTerm
     )
     cache_key_2 = stmt2._generate_cache_key()
     assert cache_key_1 == cache_key_2
@@ -1266,7 +1266,6 @@ def test_cache_key_for_generate_statistics_during_period_stmt() -> None:
         dt_util.utcnow(),
         [0],
         StatisticsShortTerm,
-        {"max", "mean"},
     )
     cache_key_3 = stmt3._generate_cache_key()
     assert cache_key_1 != cache_key_3

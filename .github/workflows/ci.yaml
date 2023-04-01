@@ -31,7 +31,7 @@ env:
   CACHE_VERSION: 5
   PIP_CACHE_VERSION: 4
   MYPY_CACHE_VERSION: 4
-  HA_SHORT_VERSION: 2023.4
+  HA_SHORT_VERSION: 2023.5
   DEFAULT_PYTHON: "3.10"
   ALL_PYTHON_VERSIONS: "['3.10', '3.11']"
   # 10.3 is the oldest supported version
@@ -1091,6 +1091,7 @@ jobs:
     needs:
       - info
       - pytest
+    timeout-minutes: 10
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.5.0
@@ -1100,7 +1101,10 @@ jobs:
         if: needs.info.outputs.test_full_suite == 'true'
         uses: codecov/codecov-action@v3.1.1
         with:
+          fail_ci_if_error: true
           flags: full-suite
       - name: Upload coverage to Codecov (partial coverage)
         if: needs.info.outputs.test_full_suite == 'false'
         uses: codecov/codecov-action@v3.1.1
+        with:
+          fail_ci_if_error: true

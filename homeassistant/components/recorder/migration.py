@@ -143,7 +143,11 @@ def raise_if_exception_missing_str(ex: Exception, match_substrs: Iterable[str]) 
 
 def _get_schema_version(session: Session) -> int | None:
     """Get the schema version."""
-    res = session.query(SchemaChanges).order_by(SchemaChanges.change_id.desc()).first()
+    res = (
+        session.query(SchemaChanges.schema_version)
+        .order_by(SchemaChanges.change_id.desc())
+        .first()
+    )
     return getattr(res, "schema_version", None)
 
 
@@ -1351,10 +1355,16 @@ def _context_id_to_bytes(context_id: str | None) -> bytes | None:
     """Convert a context_id to bytes."""
     if context_id is None:
         return None
-    if len(context_id) == 32:
-        return UUID(context_id).bytes
-    if len(context_id) == 26:
-        return ulid_to_bytes(context_id)
+    with contextlib.suppress(ValueError):
+        # There may be garbage in the context_id column
+        # from custom integrations that are not UUIDs or
+        # ULIDs that filled the column to the max length
+        # so we need to catch the ValueError and return
+        # None if it happens
+        if len(context_id) == 32:
+            return UUID(context_id).bytes
+        if len(context_id) == 26:
+            return ulid_to_bytes(context_id)
     return None
 
 
@@ -1435,12 +1445,15 @@ def migrate_event_type_ids(instance: Recorder) -> bool:
     with session_scope(session=session_maker()) as session:
         if events := session.execute(find_event_type_to_migrate()).all():
             event_types = {event_type for _, event_type in events}
+            if None in event_types:
+                # event_type should never be None but we need to be defensive
+                # so we don't fail the migration because of a bad state
+                event_types.remove(None)
+                event_types.add(_EMPTY_EVENT_TYPE)
+
             event_type_to_id = event_type_manager.get_many(event_types, session)
             if missing_event_types := {
-                # We should never see see None for the event_Type in the events table
-                # but we need to be defensive so we don't fail the migration
-                # because of a bad event
-                _EMPTY_EVENT_TYPE if event_type is None else event_type
+                event_type
                 for event_type, event_id in event_type_to_id.items()
                 if event_id is None
             }:
@@ -1466,7 +1479,9 @@ def migrate_event_type_ids(instance: Recorder) -> bool:
                     {
                         "event_id": event_id,
                         "event_type": None,
-                        "event_type_id": event_type_to_id[event_type],
+                        "event_type_id": event_type_to_id[
+                            _EMPTY_EVENT_TYPE if event_type is None else event_type
+                        ],
                     }
                     for event_id, event_type in events
                 ],
@@ -1498,14 +1513,17 @@ def migrate_entity_ids(instance: Recorder) -> bool:
     with session_scope(session=instance.get_session()) as session:
         if states := session.execute(find_entity_ids_to_migrate()).all():
             entity_ids = {entity_id for _, entity_id in states}
+            if None in entity_ids:
+                # entity_id should never be None but we need to be defensive
+                # so we don't fail the migration because of a bad state
+                entity_ids.remove(None)
+                entity_ids.add(_EMPTY_ENTITY_ID)
+
             entity_id_to_metadata_id = states_meta_manager.get_many(
                 entity_ids, session, True
             )
             if missing_entity_ids := {
-                # We should never see _EMPTY_ENTITY_ID in the states table
-                # but we need to be defensive so we don't fail the migration
-                # because of a bad state
-                _EMPTY_ENTITY_ID if entity_id is None else entity_id
+                entity_id
                 for entity_id, metadata_id in entity_id_to_metadata_id.items()
                 if metadata_id is None
             }:
@@ -1533,7 +1551,9 @@ def migrate_entity_ids(instance: Recorder) -> bool:
                         # the history queries still need to work while the
                         # migration is in progress and we will do this in
                         # post_migrate_entity_ids
-                        "metadata_id": entity_id_to_metadata_id[entity_id],
+                        "metadata_id": entity_id_to_metadata_id[
+                            _EMPTY_ENTITY_ID if entity_id is None else entity_id
+                        ],
                     }
                     for state_id, entity_id in states
                 ],

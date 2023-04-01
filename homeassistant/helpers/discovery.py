@@ -46,16 +46,15 @@ def async_listen(
     """
     job = core.HassJob(callback, f"discovery listener {service}")
 
-    async def discovery_event_listener(discovered: DiscoveryDict) -> None:
+    @core.callback
+    def _async_discovery_event_listener(discovered: DiscoveryDict) -> None:
         """Listen for discovery events."""
-        task = hass.async_run_hass_job(
-            job, discovered["service"], discovered["discovered"]
-        )
-        if task:
-            await task
+        hass.async_run_hass_job(job, discovered["service"], discovered["discovered"])
 
     async_dispatcher_connect(
-        hass, SIGNAL_PLATFORM_DISCOVERED.format(service), discovery_event_listener
+        hass,
+        SIGNAL_PLATFORM_DISCOVERED.format(service),
+        _async_discovery_event_listener,
     )
 
 
@@ -105,17 +104,17 @@ def async_listen_platform(
     service = EVENT_LOAD_PLATFORM.format(component)
     job = core.HassJob(callback, f"platform loaded {component}")
 
-    async def discovery_platform_listener(discovered: DiscoveryDict) -> None:
+    @core.callback
+    def _async_discovery_platform_listener(discovered: DiscoveryDict) -> None:
         """Listen for platform discovery events."""
         if not (platform := discovered["platform"]):
             return
-
-        task = hass.async_run_hass_job(job, platform, discovered.get("discovered"))
-        if task:
-            await task
+        hass.async_run_hass_job(job, platform, discovered.get("discovered"))
 
     return async_dispatcher_connect(
-        hass, SIGNAL_PLATFORM_DISCOVERED.format(service), discovery_platform_listener
+        hass,
+        SIGNAL_PLATFORM_DISCOVERED.format(service),
+        _async_discovery_platform_listener,
     )
 
 
