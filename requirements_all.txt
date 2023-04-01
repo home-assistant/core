@@ -2306,7 +2306,7 @@ screenlogicpy==0.8.2
 scsgate==0.1.0
 
 # homeassistant.components.backup
-securetar==2022.2.0
+securetar==2023.3.0
 
 # homeassistant.components.sendgrid
 sendgrid==6.8.2
