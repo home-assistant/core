@@ -17,8 +17,9 @@ from homeassistant.components.climate import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_state_change_event
 
 from .const import (
     ADVANTAGE_AIR_STATE_CLOSE,
@@ -89,13 +90,13 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_max_temp = 32
     _attr_min_temp = 16
+    _attr_preset_modes = [ADVANTAGE_AIR_MYZONE]
 
     def __init__(self, instance: dict[str, Any], ac_key: str) -> None:
         """Initialize an AdvantageAir AC unit."""
         super().__init__(instance, ac_key)
         self._attr_unique_id = f'{self.coordinator.data["system"]["rid"]}-{ac_key}'
-
-        self._attr_preset_modes = [ADVANTAGE_AIR_MYZONE]
+        self._initial_preset_mode = self.preset_mode
 
         # Set supported features and HVAC modes based on current operating mode
         if self.preset_mode == ADVANTAGE_AIR_MYZONE:
@@ -253,6 +254,33 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
         if ADVANTAGE_AIR_MYAUTO_ENABLED in self._ac:
             change[ADVANTAGE_AIR_MYAUTO_ENABLED] = preset_mode == ADVANTAGE_AIR_MYAUTO
         await self.aircon({self.ac_key: {"info": change}})
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to state changes if required."""
+        # If presets are supported
+        if self._attr_supported_features & ClimateEntityFeature.PRESET_MODE:
+            # Track state changes, as preset changes require a reload
+            self.async_on_remove(
+                async_track_state_change_event(
+                    self.hass, self.entity_id, self.async_updated
+                )
+            )
+
+    @callback
+    async def async_updated(self, event: Event) -> None:
+        """Determine if the entity needs to be reloaded based on state change."""
+        if (new_state := event.data.get("new_state")) is None:
+            return
+        if (old_state := event.data.get("old_state")) is None:
+            return
+        if new_state.attributes.get("preset_mode") != old_state.attributes.get(
+            "preset_mode"
+        ):
+            return
+            # self.hass.async_create_task(
+            #    self.hass.config_entries.async_reload(entry.entry_id),
+            #    f"config entry reload {entry.title} {entry.domain} {entry.entry_id}",
+            # )
 
 
 class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
