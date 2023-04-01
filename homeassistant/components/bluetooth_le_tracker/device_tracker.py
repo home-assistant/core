@@ -70,6 +70,7 @@ async def async_setup_scanner(  # noqa: C901
     yaml_path = hass.config.path(YAML_DEVICES)
     devs_to_track: set[str] = set()
     devs_no_track: set[str] = set()
+    devs_times: dict = {}
     devs_track_battery = {}
     interval: timedelta = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     # if track new devices is true discover new devices
@@ -178,6 +179,9 @@ async def async_setup_scanner(  # noqa: C901
         """Update from a ble callback."""
         mac = service_info.address
         if mac in devs_to_track:
+            if mac in devs_times and service_info.time == devs_times[mac]:
+                return
+            devs_times[mac] = service_info.time
             now = dt_util.utcnow()
             hass.async_create_task(async_see_device(mac, service_info.name))
             if (
