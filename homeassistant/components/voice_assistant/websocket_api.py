@@ -20,31 +20,17 @@ from .pipeline import (
     PipelineStage,
     async_get_pipeline,
 )
+from .vad import VoiceCommandSegmenter
 
 DEFAULT_TIMEOUT = 30
 
 _LOGGER = logging.getLogger(__name__)
-
-_VAD_ENERGY_THRESHOLD = 1000
-_VAD_SPEECH_FRAMES = 25
-_VAD_SILENCE_FRAMES = 25
 
 
 @callback
 def async_register_websocket_api(hass: HomeAssistant) -> None:
     """Register the websocket API."""
     websocket_api.async_register_command(hass, websocket_run)
-
-
-def _get_debiased_energy(audio_data: bytes, width: int = 2) -> float:
-    """Compute RMS of debiased audio."""
-    energy = -audioop.rms(audio_data, width)
-    energy_bytes = bytes([energy & 0xFF, (energy >> 8) & 0xFF])
-    debiased_energy = audioop.rms(
-        audioop.add(audio_data, energy_bytes * (len(audio_data) // width), width), width
-    )
-
-    return debiased_energy
 
 
 @websocket_api.websocket_command(
@@ -105,30 +91,14 @@ async def websocket_run(
 
         async def stt_stream():
             state = None
-            speech_count = 0
-            in_voice_command = False
+            segmenter = VoiceCommandSegmenter()
 
             # Yield until we receive an empty chunk
             while chunk := await audio_queue.get():
                 chunk, state = audioop.ratecv(chunk, 2, 1, 44100, 16000, state)
-                is_speech = _get_debiased_energy(chunk) > _VAD_ENERGY_THRESHOLD
-
-                if in_voice_command:
-                    if is_speech:
-                        speech_count += 1
-                    else:
-                        speech_count -= 1
-
-                    if speech_count <= -_VAD_SILENCE_FRAMES:
-                        _LOGGER.info("Voice command stopped")
-                        break
-                else:
-                    if is_speech:
-                        speech_count += 1
-
-                    if speech_count >= _VAD_SPEECH_FRAMES:
-                        in_voice_command = True
-                        _LOGGER.info("Voice command started")
+                if not segmenter.process(chunk):
+                    # Voice command is finished
+                    break
 
                 yield chunk
 

@@ -1877,6 +1877,9 @@ wallbox==0.4.12
 # homeassistant.components.folder_watcher
 watchdog==2.3.1
 
+# homeassistant.components.voice_assistant
+webrtcvad==2.0.10
+
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.2
 
