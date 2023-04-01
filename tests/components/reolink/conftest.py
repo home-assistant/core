@@ -64,7 +64,7 @@ def reolink_connect(mock_get_source_ip: None) -> Generator[MagicMock, None, None
 
 
 @pytest.fixture
-def reolink_ONVIF_wait(mock_get_source_ip: None) -> Generator[None, None, None]:
+def reolink_ONVIF_wait() -> Generator[None, None, None]:
     """Mock reolink connection."""
     with patch("homeassistant.components.reolink.host.asyncio.Event.wait", AsyncMock()):
         yield
