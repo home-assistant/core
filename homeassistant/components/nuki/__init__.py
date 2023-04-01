@@ -25,6 +25,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.update_coordinator import (
@@ -146,23 +147,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass, DOMAIN, entry.title, entry.entry_id, handle_webhook, local_only=True
     )
 
-    async def _stop_nuki(_: Event):
-        """Stop and remove the Nuki webhook."""
-        webhook.async_unregister(hass, entry.entry_id)
-        try:
-            async with async_timeout.timeout(10):
-                await hass.async_add_executor_job(
-                    _remove_webhook, bridge, entry.entry_id
-                )
-        except InvalidCredentialsException as err:
-            raise UpdateFailed(f"Invalid credentials for Bridge: {err}") from err
-        except RequestException as err:
-            raise UpdateFailed(f"Error communicating with Bridge: {err}") from err
-
-    entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_nuki)
-    )
-
     webhook_url = webhook.async_generate_path(entry.entry_id)
     hass_url = get_url(
         hass, allow_cloud=False, allow_external=False, allow_ip=True, require_ssl=False
@@ -174,9 +158,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 _register_webhook, bridge, entry.entry_id, url
             )
     except InvalidCredentialsException as err:
-        raise UpdateFailed(f"Invalid credentials for Bridge: {err}") from err
+        webhook.async_unregister(hass, entry.entry_id)
+        raise ConfigEntryNotReady(f"Invalid credentials for Bridge: {err}") from err
     except RequestException as err:
-        raise UpdateFailed(f"Error communicating with Bridge: {err}") from err
+        webhook.async_unregister(hass, entry.entry_id)
+        raise ConfigEntryNotReady(f"Error communicating with Bridge: {err}") from err
+
+    async def _stop_nuki(_: Event):
+        """Stop and remove the Nuki webhook."""
+        webhook.async_unregister(hass, entry.entry_id)
+        try:
+            async with async_timeout.timeout(10):
+                await hass.async_add_executor_job(
+                    _remove_webhook, bridge, entry.entry_id
+                )
+        except InvalidCredentialsException as err:
+            _LOGGER.error(
+                "Error unregistering webhook, invalid credentials for bridge: %s", err
+            )
+        except RequestException as err:
+            _LOGGER.error("Error communicating with bridge: %s", err)
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_nuki)
+    )
 
     coordinator = NukiCoordinator(hass, bridge, locks, openers)
 

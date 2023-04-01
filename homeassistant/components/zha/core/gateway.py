@@ -41,6 +41,8 @@ from .const import (
     ATTR_TYPE,
     CONF_DATABASE,
     CONF_DEVICE_PATH,
+    CONF_NWK,
+    CONF_NWK_CHANNEL,
     CONF_RADIO_TYPE,
     CONF_USE_THREAD,
     CONF_ZIGPY,
@@ -171,6 +173,20 @@ class ZHAGateway:
             and app_config[CONF_DEVICE][CONF_DEVICE_PATH].startswith("socket://")
         ):
             app_config[CONF_USE_THREAD] = False
+
+        # Local import to avoid circular dependencies
+        # pylint: disable-next=import-outside-toplevel
+        from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
+            is_multiprotocol_url,
+        )
+
+        # Until we have a way to coordinate channels with the Thread half of multi-PAN,
+        # stick to the old zigpy default of channel 15 instead of dynamically scanning
+        if (
+            is_multiprotocol_url(app_config[CONF_DEVICE][CONF_DEVICE_PATH])
+            and app_config.get(CONF_NWK, {}).get(CONF_NWK_CHANNEL) is None
+        ):
+            app_config.setdefault(CONF_NWK, {})[CONF_NWK_CHANNEL] = 15
 
         return app_controller_cls, app_controller_cls.SCHEMA(app_config)
 

@@ -55,6 +55,15 @@ class HeatMeterSensorEntityDescription(
 
 HEAT_METER_SENSOR_TYPES = (
     HeatMeterSensorEntityDescription(
+        key="heat_usage_mwh",
+        icon="mdi:fire",
+        name="Heat usage MWh",
+        native_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
+        value_fn=lambda res: getattr(res, "heat_usage_mwh", None),
+    ),
+    HeatMeterSensorEntityDescription(
         key="volume_usage_m3",
         icon="mdi:fire",
         name="Volume usage",
@@ -71,6 +80,15 @@ HEAT_METER_SENSOR_TYPES = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda res: getattr(res, "heat_usage_gj", None),
+    ),
+    HeatMeterSensorEntityDescription(
+        key="heat_previous_year_mwh",
+        icon="mdi:fire",
+        name="Heat previous year MWh",
+        native_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda res: getattr(res, "heat_previous_year_mwh", None),
     ),
     HeatMeterSensorEntityDescription(
         key="heat_previous_year_gj",
@@ -277,7 +295,6 @@ async def async_setup_entry(
     )
 
     sensors = []
-
     for description in HEAT_METER_SENSOR_TYPES:
         sensors.append(HeatMeterSensor(coordinator, description, device))
 
@@ -305,6 +322,14 @@ class HeatMeterSensor(
         self._attr_name = f"Heat Meter {description.name}"
         self.entity_description = description
         self._attr_device_info = device
+
+        if (
+            description.native_unit_of_measurement
+            in {UnitOfEnergy.GIGA_JOULE, UnitOfEnergy.MEGA_WATT_HOUR}
+            and self.native_value is None
+        ):
+            # Some meters will return MWh, others will return GJ.
+            self._attr_entity_registry_enabled_default = False
 
     @property
     def native_value(self) -> StateType | datetime:
