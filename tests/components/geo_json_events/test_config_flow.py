@@ -5,6 +5,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.geo_json_events import DOMAIN
 from homeassistant.const import (
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
@@ -18,7 +19,30 @@ from tests.components.geo_json_events.conftest import URL
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-async def test_duplicate_error(
+async def test_duplicate_error_user(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test that errors are shown when duplicates are added."""
+    conf = {
+        CONF_URL: URL,
+        CONF_LOCATION: {CONF_LATITUDE: -41.2, CONF_LONGITUDE: 174.7, CONF_RADIUS: 25.0},
+    }
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["step_id"] == config_entries.SOURCE_USER
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=conf
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_duplicate_error_import(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test that errors are shown when duplicates are added."""
@@ -26,7 +50,7 @@ async def test_duplicate_error(
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=conf
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
@@ -60,15 +84,23 @@ async def test_step_user(hass: HomeAssistant) -> None:
     """Test that the user step works."""
     hass.config.latitude = -41.2
     hass.config.longitude = 174.7
-    conf = {CONF_URL: URL, CONF_RADIUS: 25}
+    conf = {
+        CONF_URL: URL,
+        CONF_LOCATION: {
+            CONF_LATITUDE: -41.2,
+            CONF_LONGITUDE: 174.7,
+            CONF_RADIUS: 25000.0,
+        },
+    }
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    assert result["step_id"] == config_entries.SOURCE_USER
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=conf
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=conf
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "http://geo.json.local/geo_json_events.json, -41.2, 174.7"
@@ -76,6 +108,6 @@ async def test_step_user(hass: HomeAssistant) -> None:
         CONF_URL: URL,
         CONF_LATITUDE: -41.2,
         CONF_LONGITUDE: 174.7,
-        CONF_RADIUS: 25,
-        CONF_SCAN_INTERVAL: 300.0,
+        CONF_RADIUS: 25.0,
+        CONF_SCAN_INTERVAL: 300,
     }

@@ -9,19 +9,19 @@ from aio_geojson_generic_client import GenericFeedManager
 from aio_geojson_generic_client.feed_entry import GenericFeedEntry
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS, CONF_URL
+from homeassistant.const import (
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_RADIUS,
+    CONF_SCAN_INTERVAL,
+    CONF_URL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import (
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    PLATFORMS,
-    SIGNAL_DELETE_ENTITY,
-    SIGNAL_UPDATE_ENTITY,
-)
+from .const import DOMAIN, PLATFORMS, SIGNAL_DELETE_ENTITY, SIGNAL_UPDATE_ENTITY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,29 +35,32 @@ class GeoJsonFeedEntityManager:
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize the GeoJSON Feed Manager."""
-        self._hass = hass
-        self._config_entry = config_entry
+        self._hass: HomeAssistant = hass
+        self._config_entry: ConfigEntry = config_entry
         coordinates: tuple[float, float] = (
-            config_entry.data.get(CONF_LATITUDE, hass.config.latitude),
-            config_entry.data.get(CONF_LONGITUDE, hass.config.longitude),
+            config_entry.data[CONF_LATITUDE],
+            config_entry.data[CONF_LONGITUDE],
         )
-        self._url = config_entry.data[CONF_URL]
-        radius_in_km = config_entry.data[CONF_RADIUS]
+        self._url: str = config_entry.data[CONF_URL]
         websession = aiohttp_client.async_get_clientsession(hass)
-        self._feed_manager = GenericFeedManager(
+        self._feed_manager: GenericFeedManager = GenericFeedManager(
             websession,
             self._generate_entity,
             self._update_entity,
             self._remove_entity,
             coordinates,
             self._url,
-            filter_radius=radius_in_km,
+            filter_radius=config_entry.data[CONF_RADIUS],
         )
-        self._config_entry_id = config_entry.entry_id
-        self._scan_interval = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
+        self._config_entry_id: str = config_entry.entry_id
+        self._scan_interval: timedelta = timedelta(
+            seconds=config_entry.data[CONF_SCAN_INTERVAL]
+        )
         self._track_time_remove_callback: Callable[[], None] | None = None
         self.listeners: list[Callable[[], None]] = []
-        self.signal_new_entity = f"{DOMAIN}_new_geolocation_{self._config_entry_id}"
+        self.signal_new_entity: str = (
+            f"{DOMAIN}_new_geolocation_{self._config_entry_id}"
+        )
 
     async def async_init(self) -> None:
         """Schedule initial and regular updates based on configured time interval."""

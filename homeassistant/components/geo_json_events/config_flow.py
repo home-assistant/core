@@ -11,22 +11,30 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
     CONF_URL,
+    UnitOfLength,
 )
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.util.unit_conversion import DistanceConverter
 
-from .const import DEFAULT_RADIUS_IN_KM, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import (
+    DEFAULT_RADIUS_IN_KM,
+    DEFAULT_RADIUS_IN_M,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
 
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_URL): cv.string,
-        vol.Optional(CONF_LATITUDE): cv.latitude,
-        vol.Optional(CONF_LONGITUDE): cv.longitude,
-        vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): vol.Coerce(float),
+        vol.Optional(CONF_LOCATION): selector.LocationSelector(
+            selector.LocationSelectorConfig(radius=True, icon="")
+        ),
         vol.Required(
             CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
         ): cv.positive_int,
@@ -45,21 +53,44 @@ class GeoJsonEventsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Convert scan interval because it now has to be in seconds.
         if legacy_scan_interval and isinstance(legacy_scan_interval, timedelta):
             import_config[CONF_SCAN_INTERVAL] = legacy_scan_interval.total_seconds()
-        identifier = f"{import_config[CONF_URL]}, {import_config.get(CONF_LATITUDE, self.hass.config.latitude)}, {import_config.get(CONF_LONGITUDE, self.hass.config.longitude)}"
-        await self.async_set_unique_id(identifier)
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(title=identifier, data=import_config)
+        url: str = import_config[CONF_URL]
+        latitude: float | None = import_config.get(
+            CONF_LATITUDE, self.hass.config.latitude
+        )
+        longitude: float | None = import_config.get(
+            CONF_LONGITUDE, self.hass.config.longitude
+        )
+        self._async_abort_entries_match(
+            {
+                CONF_URL: url,
+                CONF_LATITUDE: latitude,
+                CONF_LONGITUDE: longitude,
+            }
+        )
+        return self.async_create_entry(
+            title=f"{url}, {latitude}, {longitude}",
+            data={
+                CONF_URL: url,
+                CONF_LATITUDE: latitude,
+                CONF_LONGITUDE: longitude,
+                CONF_RADIUS: import_config.get(CONF_RADIUS, DEFAULT_RADIUS_IN_KM),
+                CONF_SCAN_INTERVAL: import_config.get(
+                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                ),
+            },
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the start of the config flow."""
-        _LOGGER.debug("User input: %s", user_input)
         if not user_input:
             suggested_values: Mapping[str, Any] = {
-                CONF_LATITUDE: self.hass.config.latitude,
-                CONF_LONGITUDE: self.hass.config.longitude,
+                CONF_LOCATION: {
+                    CONF_LATITUDE: self.hass.config.latitude,
+                    CONF_LONGITUDE: self.hass.config.longitude,
+                    CONF_RADIUS: DEFAULT_RADIUS_IN_M,
+                }
             }
             data_schema = self.add_suggested_values_to_schema(
                 DATA_SCHEMA, suggested_values
@@ -69,16 +100,31 @@ class GeoJsonEventsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 data_schema=data_schema,
             )
 
-        latitude = user_input.get(CONF_LATITUDE, self.hass.config.latitude)
-        user_input[CONF_LATITUDE] = latitude
-        longitude = user_input.get(CONF_LONGITUDE, self.hass.config.longitude)
-        user_input[CONF_LONGITUDE] = longitude
-
-        identifier = f"{user_input[CONF_URL]}, {latitude}, {longitude}"
-        await self.async_set_unique_id(identifier)
-        self._abort_if_unique_id_configured()
-
-        scan_interval = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        user_input[CONF_SCAN_INTERVAL] = scan_interval
-
-        return self.async_create_entry(title=identifier, data=user_input)
+        url: str = user_input[CONF_URL]
+        latitude: float | None = user_input.get(CONF_LOCATION, {}).get(CONF_LATITUDE)
+        longitude: float | None = user_input.get(CONF_LOCATION, {}).get(CONF_LONGITUDE)
+        self._async_abort_entries_match(
+            {
+                CONF_URL: url,
+                CONF_LATITUDE: latitude,
+                CONF_LONGITUDE: longitude,
+            }
+        )
+        return self.async_create_entry(
+            title=f"{url}, {latitude}, {longitude}",
+            data={
+                CONF_URL: url,
+                CONF_LATITUDE: latitude,
+                CONF_LONGITUDE: longitude,
+                CONF_RADIUS: DistanceConverter.convert(
+                    user_input.get(CONF_LOCATION, {}).get(
+                        CONF_RADIUS, DEFAULT_RADIUS_IN_M
+                    ),
+                    UnitOfLength.METERS,
+                    UnitOfLength.KILOMETERS,
+                ),
+                CONF_SCAN_INTERVAL: user_input.get(
+                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                ),
+            },
+        )
