@@ -22,6 +22,7 @@ from zwave_js_server.const.command_class.color_switch import (
     TARGET_COLOR_PROPERTY,
     ColorComponent,
 )
+from zwave_js_server.const.command_class.multilevel_switch import SET_TO_PREVIOUS_VALUE
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value
 
@@ -42,7 +43,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
-from .const import DATA_CLIENT, DOMAIN, SWITCH_MULTILEVEL_SET_TO_PREVIOUS_VALUE
+from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 
@@ -335,7 +336,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         if not self._target_brightness:
             return
         if brightness is None:
-            zwave_brightness = SWITCH_MULTILEVEL_SET_TO_PREVIOUS_VALUE
+            zwave_brightness = SET_TO_PREVIOUS_VALUE
         else:
             # Zwave multilevel switches use a range of [0, 99] to control brightness.
             zwave_brightness = byte_to_zwave_brightness(brightness)
@@ -353,7 +354,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             self._target_brightness, zwave_brightness, zwave_transition
         )
         if (
-            zwave_brightness == SWITCH_MULTILEVEL_SET_TO_PREVIOUS_VALUE
+            zwave_brightness == SET_TO_PREVIOUS_VALUE
             and self.info.primary_value.command_class == CommandClass.SWITCH_MULTILEVEL
         ):
             self._set_optimistic_state = True

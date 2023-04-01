@@ -6,6 +6,7 @@ from typing import Any, cast
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import TARGET_VALUE_PROPERTY, CommandClass
+from zwave_js_server.const.command_class.multilevel_switch import SET_TO_PREVIOUS_VALUE
 from zwave_js_server.const.command_class.thermostat import (
     THERMOSTAT_FAN_OFF_PROPERTY,
     THERMOSTAT_FAN_STATE_PROPERTY,
@@ -30,7 +31,7 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from .const import DATA_CLIENT, DOMAIN, SWITCH_MULTILEVEL_SET_TO_PREVIOUS_VALUE
+from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .discovery_data_template import FanValueMapping, FanValueMappingDataTemplate
 from .entity import ZWaveBaseEntity
@@ -121,9 +122,7 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
                     "`percentage` or `preset_mode` must be provided"
                 )
             # If this is a Multilevel Switch CC value, we do an optimistic state update
-            await self.info.node.async_set_value(
-                target_value, SWITCH_MULTILEVEL_SET_TO_PREVIOUS_VALUE
-            )
+            await self.info.node.async_set_value(target_value, SET_TO_PREVIOUS_VALUE)
             self._use_optimistic_state = True
             self.async_write_ha_state()
 
