@@ -6,9 +6,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.repairs.issue_handler import (
-    async_process_repairs_platforms,
-)
 from homeassistant.components.repairs.websocket_api import (
     RepairsFlowIndexView,
     RepairsFlowResourceView,
@@ -116,7 +113,6 @@ async def test_deprecation_repair_flow(
     state = hass.states.get("sensor.notifications")
     assert state is not None
 
-    await async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
 
@@ -219,9 +215,7 @@ async def test_repair_flow_where_entry_already_exists(
     with patch("homeassistant.components.imap.async_setup_entry", return_value=True):
         imap_entry = MockConfigEntry(domain="imap", data=existing_imap_entry_config)
         imap_entry.add_to_hass(hass)
-        await imap_entry.async_setup(hass)
-
-    await async_process_repairs_platforms(hass)
+        await hass.config_entries.async_setup(imap_entry.entry_id)
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
 
