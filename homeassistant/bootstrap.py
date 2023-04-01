@@ -628,6 +628,8 @@ async def _async_set_up_integrations(
         - stage_1_domains
     )
 
+    async_set_domains_to_be_loaded(hass, stage_1_domains)
+
     # Start setup
     if stage_1_domains:
         _LOGGER.info("Setting up stage 1: %s", stage_1_domains)
