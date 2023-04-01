@@ -109,9 +109,11 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
                 HVACMode.FAN_ONLY,
                 HVACMode.DRY,
             ]
+
         elif self.preset_mode == ADVANTAGE_AIR_MYTEMP:
             self._attr_supported_features = ClimateEntityFeature.FAN_MODE
             self._attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT]
+
         elif self.preset_mode == ADVANTAGE_AIR_MYAUTO:
             self._attr_supported_features = (
                 ClimateEntityFeature.FAN_MODE
