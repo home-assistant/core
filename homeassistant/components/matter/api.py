@@ -216,7 +216,7 @@ async def websocket_get_matter_fabrics(
     {
         vol.Required(TYPE): "matter/remove_matter_fabric",
         vol.Required("device_id"): str,
-        vol.Required("fabric_id"): str,
+        vol.Required("fabric_index"): str,
     }
 )
 @websocket_api.async_response
@@ -234,10 +234,8 @@ async def websocket_remove_matter_fabric(
         connection.send_error(msg[ID], "node_not_found", "Node not found")
         return
 
-    if err := await matter.matter_client.remove_matter_fabric(
-        node_id=node_id, fabric_id=msg["fabric_id"]
-    ):
-        connection.send_error(msg[ID], "remove_fabric_failed", err)
-        return
+    await matter.matter_client.remove_matter_fabric(
+        node_id=node_id, fabric_id=msg["fabric_index"]
+    )
 
     connection.send_result(msg[ID])
