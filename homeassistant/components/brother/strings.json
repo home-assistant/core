@@ -41,7 +41,7 @@
         "name": "Color page counter"
       },
       "duplex_unit_page_counter": {
-        "name": "Duplex unit pages counter"
+        "name": "Duplex unit page counter"
       },
       "drum_remaining_life": {
         "name": "Drum remaining life"
