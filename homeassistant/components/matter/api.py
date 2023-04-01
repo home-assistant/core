@@ -13,7 +13,7 @@ from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
 
 from .adapter import MatterAdapter
-from .helpers import get_matter
+from .helpers import get_matter, get_node_id_from_ha_device_id
 
 ID = "id"
 TYPE = "type"
@@ -26,6 +26,9 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_commission_on_network)
     websocket_api.async_register_command(hass, websocket_set_thread_dataset)
     websocket_api.async_register_command(hass, websocket_set_wifi_credentials)
+    websocket_api.async_register_command(hass, websocket_open_commisioning_window)
+    websocket_api.async_register_command(hass, websocket_get_matter_fabrics)
+    websocket_api.async_register_command(hass, websocket_remove_matter_fabric)
 
 
 def async_get_matter_adapter(func: Callable) -> Callable:
@@ -149,4 +152,92 @@ async def websocket_set_wifi_credentials(
     await matter.matter_client.set_wifi_credentials(
         ssid=msg["network_name"], credentials=msg["password"]
     )
+    connection.send_result(msg[ID])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "matter/open_commisioning_window",
+        vol.Required("device_id"): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_matter_adapter
+async def websocket_open_commisioning_window(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    matter: MatterAdapter,
+) -> None:
+    """Open commissioning window."""
+    node_id = await get_node_id_from_ha_device_id(hass, msg["device_id"])
+    if node_id is None:
+        connection.send_error(msg[ID], "node_not_found", "Node not found")
+        return
+
+    (pin, qr_code) = await matter.matter_client.open_commissioning_window(
+        node_id=node_id
+    )
+
+    connection.send_result(msg[ID], {"pin": pin, "qr_code": qr_code})
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "matter/get_matter_fabrics",
+        vol.Required("device_id"): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_matter_adapter
+async def websocket_get_matter_fabrics(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    matter: MatterAdapter,
+) -> None:
+    """Get Matter fabrics."""
+    node_id = await get_node_id_from_ha_device_id(hass, msg["device_id"])
+    if node_id is None:
+        connection.send_error(msg[ID], "node_not_found", "Node not found")
+        return
+
+    fabrics = await matter.matter_client.get_matter_fabrics(node_id=node_id)
+
+    connection.send_result(msg[ID], {"fabrics": fabrics})
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "matter/remove_matter_fabric",
+        vol.Required("device_id"): str,
+        vol.Required("fabric_id"): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_matter_adapter
+async def websocket_remove_matter_fabric(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    matter: MatterAdapter,
+) -> None:
+    """Remove Matter fabric."""
+    node_id = await get_node_id_from_ha_device_id(hass, msg["device_id"])
+    if node_id is None:
+        connection.send_error(msg[ID], "node_not_found", "Node not found")
+        return
+
+    if err := await matter.matter_client.remove_matter_fabric(
+        node_id=node_id, fabric_id=msg["fabric_id"]
+    ):
+        connection.send_error(msg[ID], "remove_fabric_failed", err)
+        return
+
     connection.send_result(msg[ID])

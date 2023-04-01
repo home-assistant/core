@@ -103,3 +103,16 @@ async def get_node_from_device_entry(
     )
 
     return node
+
+
+async def get_node_id_from_ha_device_id(
+    hass: HomeAssistant, ha_device_id: str
+) -> int | None:
+    """Get matter node id from ha device id."""
+    dev_reg = dr.async_get(hass)
+    device = dev_reg.async_get(ha_device_id)
+    if device is None:
+        return None
+    if node := await get_node_from_device_entry(hass, device):
+        return node.node_id
+    return None
