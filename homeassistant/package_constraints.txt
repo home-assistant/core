@@ -25,7 +25,7 @@ ha-av==10.0.0
 hass-nabucasa==0.63.1
 hassil==1.0.6
 home-assistant-bluetooth==1.9.3
-home-assistant-frontend==20230331.0
+home-assistant-frontend==20230401.0
 home-assistant-intents==2023.3.29
 httpx==0.23.3
 ifaddr==0.1.7
@@ -50,7 +50,7 @@ ulid-transform==0.5.1
 voluptuous-serialize==2.6.0
 voluptuous==0.13.1
 yarl==1.8.1
-zeroconf==0.47.4
+zeroconf==0.51.0
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
