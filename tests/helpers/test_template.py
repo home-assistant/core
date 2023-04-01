@@ -185,7 +185,7 @@ def test_raise_exception_on_error(hass: HomeAssistant) -> None:
 
 def test_iterating_all_states(hass: HomeAssistant) -> None:
     """Test iterating all states."""
-    tmpl_str = "{% for state in states %}{{ state.state }}{% endfor %}"
+    tmpl_str = "{% for state in states | sort(attribute='entity_id') %}{{ state.state }}{% endfor %}"
 
     info = render_to_info(hass, tmpl_str)
     assert_result_info(info, "", all_states=True)
@@ -1463,6 +1463,11 @@ def test_is_hidden_entity(
         hass,
     ).async_render()
 
+    assert not template.Template(
+        f"{{{{ ['{visible_entity.entity_id}'] | select('is_hidden_entity') | first }}}}",
+        hass,
+    ).async_render()
+
 
 def test_is_state(hass: HomeAssistant) -> None:
     """Test is_state method."""
@@ -2506,20 +2511,22 @@ async def test_expand(hass: HomeAssistant) -> None:
     hass.states.async_set("test.object", "happy")
 
     info = render_to_info(
-        hass, "{{ expand('test.object') | map(attribute='entity_id') | join(', ') }}"
+        hass,
+        "{{ expand('test.object') | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}",
     )
     assert_result_info(info, "test.object", ["test.object"])
     assert info.rate_limit is None
 
     info = render_to_info(
         hass,
-        "{{ expand('group.new_group') | map(attribute='entity_id') | join(', ') }}",
+        "{{ expand('group.new_group') | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}",
     )
     assert_result_info(info, "", ["group.new_group"])
     assert info.rate_limit is None
 
     info = render_to_info(
-        hass, "{{ expand(states.group) | map(attribute='entity_id') | join(', ') }}"
+        hass,
+        "{{ expand(states.group) | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}",
     )
     assert_result_info(info, "", [], ["group"])
     assert info.rate_limit == template.DOMAIN_STATES_RATE_LIMIT
@@ -2530,13 +2537,14 @@ async def test_expand(hass: HomeAssistant) -> None:
 
     info = render_to_info(
         hass,
-        "{{ expand('group.new_group') | map(attribute='entity_id') | join(', ') }}",
+        "{{ expand('group.new_group') | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}",
     )
     assert_result_info(info, "test.object", {"group.new_group", "test.object"})
     assert info.rate_limit is None
 
     info = render_to_info(
-        hass, "{{ expand(states.group) | map(attribute='entity_id') | join(', ') }}"
+        hass,
+        "{{ expand(states.group) | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}",
     )
     assert_result_info(info, "test.object", {"test.object"}, ["group"])
     assert info.rate_limit == template.DOMAIN_STATES_RATE_LIMIT
@@ -2545,7 +2553,7 @@ async def test_expand(hass: HomeAssistant) -> None:
         hass,
         (
             "{{ expand('group.new_group', 'test.object')"
-            " | map(attribute='entity_id') | join(', ') }}"
+            " | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}"
         ),
     )
     assert_result_info(info, "test.object", {"test.object", "group.new_group"})
@@ -2554,7 +2562,7 @@ async def test_expand(hass: HomeAssistant) -> None:
         hass,
         (
             "{{ ['group.new_group', 'test.object'] | expand"
-            " | map(attribute='entity_id') | join(', ') }}"
+            " | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}"
         ),
     )
     assert_result_info(info, "test.object", {"test.object", "group.new_group"})
@@ -2574,7 +2582,7 @@ async def test_expand(hass: HomeAssistant) -> None:
         hass,
         (
             "{{ states.group.power_sensors.attributes.entity_id | expand "
-            "| map(attribute='state')|map('float')|sum  }}"
+            "| sort(attribute='entity_id') | map(attribute='state')|map('float')|sum  }}"
         ),
     )
     assert_result_info(
@@ -2602,7 +2610,8 @@ async def test_expand(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     info = render_to_info(
-        hass, "{{ expand('light.grouped') | map(attribute='entity_id') | join(', ') }}"
+        hass,
+        "{{ expand('light.grouped') | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}",
     )
     assert_result_info(
         info,
@@ -2624,7 +2633,8 @@ async def test_expand(hass: HomeAssistant) -> None:
         },
     )
     info = render_to_info(
-        hass, "{{ expand('zone.test') | map(attribute='entity_id') | join(', ') }}"
+        hass,
+        "{{ expand('zone.test') | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}",
     )
     assert_result_info(
         info,
@@ -2639,7 +2649,8 @@ async def test_expand(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     info = render_to_info(
-        hass, "{{ expand('zone.test') | map(attribute='entity_id') | join(', ') }}"
+        hass,
+        "{{ expand('zone.test') | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}",
     )
     assert_result_info(
         info,
@@ -2654,7 +2665,8 @@ async def test_expand(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     info = render_to_info(
-        hass, "{{ expand('zone.test') | map(attribute='entity_id') | join(', ') }}"
+        hass,
+        "{{ expand('zone.test') | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}",
     )
     assert_result_info(
         info,
@@ -2704,7 +2716,7 @@ async def test_device_entities(
         hass,
         (
             f"{{{{ device_entities('{device_entry.id}') | expand "
-            "| map(attribute='entity_id') | join(', ') }}"
+            "| sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}"
         ),
     )
     assert_result_info(info, "", ["light.hue_5678"])
@@ -2716,7 +2728,7 @@ async def test_device_entities(
         hass,
         (
             f"{{{{ device_entities('{device_entry.id}') | expand "
-            "| map(attribute='entity_id') | join(', ') }}"
+            "| sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}"
         ),
     )
     assert_result_info(info, "light.hue_5678", ["light.hue_5678"])
@@ -2738,7 +2750,7 @@ async def test_device_entities(
         hass,
         (
             f"{{{{ device_entities('{device_entry.id}') | expand "
-            "| map(attribute='entity_id') | join(', ') }}"
+            "| sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}"
         ),
     )
     assert_result_info(
@@ -3379,7 +3391,7 @@ def test_async_render_to_info_with_complex_branching(hass: HomeAssistant) -> Non
 {%     elif     states.light.a == "on" %}
   {{ states[domain] | list }}
 {%         elif     states('light.b') == "on" %}
-  {{ states[otherdomain] | map(attribute='entity_id') | list }}
+  {{ states[otherdomain] | sort(attribute='entity_id') | map(attribute='entity_id') | list }}
 {% elif states.light.a == "on" %}
   {{ states["nonexist"] | list }}
 {% else %}
@@ -4200,7 +4212,7 @@ async def test_lights(hass: HomeAssistant) -> None:
     """Test we can sort lights."""
 
     tmpl = """
-          {% set lights_on = states.light|selectattr('state','eq','on')|map(attribute='name')|list %}
+          {% set lights_on = states.light|selectattr('state','eq','on')|sort(attribute='entity_id')|map(attribute='name')|list %}
           {% if lights_on|length == 0 %}
             No lights on. Sleep well..
           {% elif lights_on|length == 1 %}
@@ -4303,7 +4315,7 @@ async def test_unavailable_states(hass: HomeAssistant) -> None:
     tpl = template.Template(
         (
             "{{ states | selectattr('state', 'in', ['unavailable','unknown','none']) "
-            "| map(attribute='entity_id') | list | join(', ') }}"
+            "| sort(attribute='entity_id') | map(attribute='entity_id') | list | join(', ') }}"
         ),
         hass,
     )
@@ -4313,7 +4325,7 @@ async def test_unavailable_states(hass: HomeAssistant) -> None:
         (
             "{{ states.light "
             "| selectattr('state', 'in', ['unavailable','unknown','none']) "
-            "| map(attribute='entity_id') | list "
+            "| sort(attribute='entity_id') | map(attribute='entity_id') | list "
             "| join(', ') }}"
         ),
         hass,
