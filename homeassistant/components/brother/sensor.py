@@ -69,7 +69,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key="bw_counter",
         icon="mdi:file-document-outline",
-        translation_key="bw_page_counter",
+        translation_key="bw_pages",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -78,7 +78,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key="color_counter",
         icon="mdi:file-document-outline",
-        translation_key="color_page_counter",
+        translation_key="color_pages",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,

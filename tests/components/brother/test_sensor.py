@@ -330,25 +330,25 @@ async def test_sensors(hass: HomeAssistant) -> None:
     assert entry
     assert entry.unique_id == "0123456789_duplex_unit_pages_counter"
 
-    state = hass.states.get("sensor.hl_l2340dw_b_w_page_counter")
+    state = hass.states.get("sensor.hl_l2340dw_b_w_pages")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:file-document-outline"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UNIT_PAGES
     assert state.state == "709"
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
-    entry = registry.async_get("sensor.hl_l2340dw_b_w_page_counter")
+    entry = registry.async_get("sensor.hl_l2340dw_b_w_pages")
     assert entry
     assert entry.unique_id == "0123456789_bw_counter"
 
-    state = hass.states.get("sensor.hl_l2340dw_color_page_counter")
+    state = hass.states.get("sensor.hl_l2340dw_color_pages")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:file-document-outline"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UNIT_PAGES
     assert state.state == "902"
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
-    entry = registry.async_get("sensor.hl_l2340dw_color_page_counter")
+    entry = registry.async_get("sensor.hl_l2340dw_color_pages")
     assert entry
     assert entry.unique_id == "0123456789_color_counter"
 

@@ -34,11 +34,11 @@
       "page_counter": {
         "name": "Page counter"
       },
-      "bw_page_counter": {
-        "name": "B/W page counter"
+      "bw_pages": {
+        "name": "B/W pages"
       },
-      "color_page_counter": {
-        "name": "Color page counter"
+      "color_pages": {
+        "name": "Color pages"
       },
       "duplex_unit_page_counter": {
         "name": "Duplex unit page counter"
