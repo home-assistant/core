@@ -498,7 +498,7 @@ def _log_object_sources(
 
     objects = gc.get_objects()
     new_objects: list[object] = []
-    new_objects_overflow = 0
+    new_objects_overflow: dict[str, int] = {}
     current_ids = set()
     new_stats: dict[str, int] = {}
     had_new_object_growth = False
@@ -517,7 +517,8 @@ def _log_object_sources(
                 if len(new_objects) < max_objects:
                     new_objects.append(_object)
                 else:
-                    new_objects_overflow += 1
+                    new_objects_overflow.setdefault(object_type, 0)
+                    new_objects_overflow[object_type] += 1
 
         for _object in new_objects:
             had_new_object_growth = True
