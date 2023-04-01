@@ -153,7 +153,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     def hvac_mode(self) -> HVACMode | None:
         """Return the current HVAC modes."""
         if self._ac["state"] == ADVANTAGE_AIR_STATE_ON:
-            return ADVANTAGE_AIR_HVAC_MODES[self._ac["mode"]]
+            return ADVANTAGE_AIR_HVAC_MODES.get(self._ac["mode"])
         return HVACMode.OFF
 
     @property
@@ -269,12 +269,13 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     @callback
     async def async_updated(self, event: Event) -> None:
         """Determine if the entity needs to be reloaded based on state change."""
-        if (new_state := event.data.get("new_state")) is None:
-            return
-        if (old_state := event.data.get("old_state")) is None:
-            return
-        if new_state.attributes.get("preset_mode") != old_state.attributes.get(
-            "preset_mode"
+        new_state = event.data.get("new_state")
+        old_state = event.data.get("old_state")
+        if (
+            new_state
+            and old_state
+            and new_state.attributes.get("preset_mode")
+            != old_state.attributes.get("preset_mode")
         ):
             return
             # self.hass.async_create_task(
