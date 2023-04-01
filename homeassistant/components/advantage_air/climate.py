@@ -257,17 +257,18 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to state changes if required."""
+        await super().async_added_to_hass()
         # If presets are supported
         if self._attr_supported_features & ClimateEntityFeature.PRESET_MODE:
             # Track state changes, as preset changes require a reload
             self.async_on_remove(
                 async_track_state_change_event(
-                    self.hass, self.entity_id, self.async_updated
+                    self.hass, self.entity_id, self.check_preset
                 )
             )
 
     @callback
-    async def async_updated(self, event: Event) -> None:
+    async def check_preset(self, event: Event) -> None:
         """Determine if the entity needs to be reloaded based on state change."""
         new_state = event.data.get("new_state")
         old_state = event.data.get("old_state")
