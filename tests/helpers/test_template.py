@@ -4523,3 +4523,15 @@ async def test_lru_increases_with_many_entities(hass: HomeAssistant) -> None:
     assert template.CACHED_TEMPLATE_NO_COLLECT_LRU.get_size() == int(
         round(mock_entity_count * template.ENTITY_COUNT_GROWTH_FACTOR)
     )
+
+    await hass.async_stop()
+    with patch.object(hass.states, "async_entity_ids_count", return_value=8192):
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=20))
+        await hass.async_block_till_done()
+
+    assert template.CACHED_TEMPLATE_LRU.get_size() == int(
+        round(mock_entity_count * template.ENTITY_COUNT_GROWTH_FACTOR)
+    )
+    assert template.CACHED_TEMPLATE_NO_COLLECT_LRU.get_size() == int(
+        round(mock_entity_count * template.ENTITY_COUNT_GROWTH_FACTOR)
+    )
