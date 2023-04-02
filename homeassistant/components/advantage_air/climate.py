@@ -289,6 +289,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
                 old_preset,
                 new_preset,
             )
+            self._attr_available = False
             self.hass.async_create_task(
                 self.hass.config_entries.async_reload(self._config_entry.entry_id),
                 f"config entry reload {self._config_entry.title} {self._config_entry.domain} {self._config_entry.entry_id}",

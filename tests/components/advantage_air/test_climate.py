@@ -37,7 +37,7 @@ from homeassistant.components.climate import (
     SERVICE_TURN_ON,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -293,3 +293,26 @@ async def test_climate_async_failed_update(
         )
     assert aioclient_mock.mock_calls[-1][0] == "GET"
     assert aioclient_mock.mock_calls[-1][1].path == "/setAircon"
+
+
+async def test_climate_change_preset(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test climate change failure."""
+
+    aioclient_mock.get(
+        TEST_SYSTEM_URL,
+        text=TEST_SYSTEM_DATA,
+    )
+    await add_mock_config(hass)
+
+    entity_id = "climate.myzone"
+
+    state = hass.states.get(entity_id)
+
+    hass.states.async_set(
+        entity_id, state.state, {ATTR_PRESET_MODE: ADVANTAGE_AIR_MYAUTO}
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state != STATE_UNAVAILABLE
