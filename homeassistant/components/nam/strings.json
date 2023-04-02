@@ -154,7 +154,7 @@
         "name": "DHT22 temperature"
       },
       "signal_strength": {
-        "name": "Signal strength"
+        "name": "[%key:component::sensor::entity_component::signal_strength::name%]"
       },
       "last_restart": {
         "name": "Last restart"
