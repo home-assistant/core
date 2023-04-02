@@ -5,7 +5,7 @@ from ast import literal_eval
 import asyncio
 import base64
 import collections.abc
-from collections.abc import Callable, Collection, Generator, Iterable
+from collections.abc import Callable, Collection, Generator, Iterable, MutableMapping
 from contextlib import contextmanager, suppress
 from contextvars import ContextVar
 from datetime import datetime, timedelta
@@ -41,6 +41,7 @@ from jinja2 import pass_context, pass_environment, pass_eval_context
 from jinja2.runtime import AsyncLoopContext, LoopContext
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
+from lru import LRU  # pylint: disable=no-name-in-module
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -49,6 +50,8 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     ATTR_PERSONS,
     ATTR_UNIT_OF_MEASUREMENT,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfLength,
@@ -121,10 +124,63 @@ template_cv: ContextVar[tuple[str, str] | None] = ContextVar(
     "template_cv", default=None
 )
 
+# This should match the maximum number of states that we expect to be
+# stored in the state machine. If the cache is too small we will end
+# up creating and destroying TemplateState objects too often which
+# will cause a lot of GC activity and slow down the system.
 CACHED_TEMPLATE_STATES = 512
+
 EVAL_CACHE_SIZE = 512
 
 MAX_CUSTOM_TEMPLATE_SIZE = 5 * 1024 * 1024
+
+CACHED_TEMPLATE_LRU: MutableMapping[State, TemplateState] = LRU(CACHED_TEMPLATE_STATES)
+CACHED_TEMPLATE_NO_COLLECT_LRU: MutableMapping[State, TemplateState] = LRU(
+    CACHED_TEMPLATE_STATES
+)
+
+
+def _template_state_no_collect(hass: HomeAssistant, state: State) -> TemplateState:
+    """Return a TemplateState for a state without collecting."""
+    if template_state := CACHED_TEMPLATE_NO_COLLECT_LRU.get(state):
+        return template_state
+    template_state = _create_template_state_no_collect(hass, state)
+    CACHED_TEMPLATE_NO_COLLECT_LRU[state] = template_state
+    return template_state
+
+
+def _template_state(hass: HomeAssistant, state: State) -> TemplateState:
+    """Return a TemplateState for a state that collects."""
+    if template_state := CACHED_TEMPLATE_LRU.get(state):
+        return template_state
+    template_state = TemplateState(hass, state)
+    CACHED_TEMPLATE_LRU[state] = template_state
+    return template_state
+
+
+def async_setup(hass: HomeAssistant) -> bool:
+    """Set up tracking the template LRUs."""
+
+    @callback
+    def _async_adjust_lru_sizes(_: Any) -> None:
+        """Adjust the lru cache sizes."""
+        new_size = hass.states.async_entity_ids_count()
+        for lru in (CACHED_TEMPLATE_LRU, CACHED_TEMPLATE_NO_COLLECT_LRU):
+            # There is no typing for LRU
+            current_size = lru.get_size()  # type: ignore[attr-defined]
+            if new_size > current_size:
+                lru.set_size(new_size)  # type: ignore[attr-defined]
+
+    from .event import (  # pylint: disable=import-outside-toplevel
+        async_track_time_interval,
+    )
+
+    cancel = async_track_time_interval(
+        hass, _async_adjust_lru_sizes, timedelta(minutes=10)
+    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_adjust_lru_sizes)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, callback(lambda _: cancel()))
+    return True
 
 
 @bind_hass
@@ -969,14 +1025,12 @@ class TemplateStateFromEntityId(TemplateStateBase):
         return f"<template TemplateStateFromEntityId({self._entity_id})>"
 
 
+_create_template_state_no_collect = partial(TemplateState, collect=False)
+
+
 def _collect_state(hass: HomeAssistant, entity_id: str) -> None:
     if (entity_collect := hass.data.get(_RENDER_INFO)) is not None:
         entity_collect.entities.add(entity_id)
-
-
-_template_state_no_collect = lru_cache(maxsize=CACHED_TEMPLATE_STATES)(
-    partial(TemplateState, collect=False)
-)
 
 
 def _state_generator(
@@ -996,9 +1050,6 @@ def _get_state_if_valid(hass: HomeAssistant, entity_id: str) -> TemplateState | 
 
 def _get_state(hass: HomeAssistant, entity_id: str) -> TemplateState | None:
     return _get_template_state_from_state(hass, entity_id, hass.states.get(entity_id))
-
-
-_template_state = lru_cache(maxsize=CACHED_TEMPLATE_STATES)(TemplateState)
 
 
 def _get_template_state_from_state(
