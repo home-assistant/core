@@ -74,7 +74,7 @@ async def async_setup_entry(
     entities: list[ClimateEntity] = []
     if aircons := instance["coordinator"].data.get("aircons"):
         for ac_key, ac_device in aircons.items():
-            entities.append(AdvantageAirAC(instance, ac_key))
+            entities.append(AdvantageAirAC(instance, ac_key, config_entry))
             for zone_key, zone in ac_device["zones"].items():
                 # Only add zone climate control when zone is in temperature control
                 if zone["type"] > 0:
@@ -92,11 +92,13 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     _attr_min_temp = 16
     _attr_preset_modes = [ADVANTAGE_AIR_MYZONE]
 
-    def __init__(self, instance: dict[str, Any], ac_key: str) -> None:
+    def __init__(
+        self, instance: dict[str, Any], ac_key: str, config_entry: ConfigEntry
+    ) -> None:
         """Initialize an AdvantageAir AC unit."""
         super().__init__(instance, ac_key)
         self._attr_unique_id = f'{self.coordinator.data["system"]["rid"]}-{ac_key}'
-        self._initial_preset_mode = self.preset_mode
+        self._config_entry = config_entry
 
         # Set supported features and HVAC modes based on current operating mode
         if self.preset_mode == ADVANTAGE_AIR_MYZONE:
@@ -270,19 +272,27 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     @callback
     async def check_preset(self, event: Event) -> None:
         """Determine if the entity needs to be reloaded based on state change."""
-        new_state = event.data.get("new_state")
-        old_state = event.data.get("old_state")
+
         if (
-            new_state
-            and old_state
-            and new_state.attributes.get("preset_mode")
-            != old_state.attributes.get("preset_mode")
+            (new_state := event.data.get("new_state")) is None
+            or (old_state := event.data.get("old_state")) is None
+            or (new_preset := new_state.attributes.get("preset_mode")) is None
+            or (old_preset := old_state.attributes.get("preset_mode")) is None
         ):
             return
-            # self.hass.async_create_task(
-            #    self.hass.config_entries.async_reload(entry.entry_id),
-            #    f"config entry reload {entry.title} {entry.domain} {entry.entry_id}",
-            # )
+
+        if old_preset != new_preset:
+            # Reload config entry so that this entity can be reloaded
+            _LOGGER.info(
+                "%s changed preset from %s to %s, so a reload is required",
+                self.entity_id,
+                old_preset,
+                new_preset,
+            )
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(self._config_entry.entry_id),
+                f"config entry reload {self._config_entry.title} {self._config_entry.domain} {self._config_entry.entry_id}",
+            )
 
 
 class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
