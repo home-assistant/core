@@ -239,6 +239,7 @@ async def load_registries(hass: core.HomeAssistant) -> None:
 
     # Load the registries and cache the result of platform.uname().processor
     entity.async_setup(hass)
+    template.async_setup(hass)
     await asyncio.gather(
         area_registry.async_load(hass),
         device_registry.async_load(hass),
@@ -292,7 +293,6 @@ async def async_from_config_dict(
         )
         return None
 
-    _async_setup_template_engine(hass)
     await _async_set_up_integrations(hass, config)
 
     stop = monotonic()
@@ -330,16 +330,6 @@ async def async_from_config_dict(
         )
 
     return hass
-
-
-@core.callback
-def _async_setup_template_engine(hass: core.HomeAssistant) -> None:
-    """Set up the template engine."""
-    from .helpers.template import (  # pylint: disable=import-outside-toplevel
-        async_setup as async_setup_template,
-    )
-
-    async_setup_template(hass)
 
 
 @core.callback
