@@ -693,7 +693,7 @@ hole==0.8.0
 holidays==0.21.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230331.0
+home-assistant-frontend==20230401.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.3.29
@@ -1645,7 +1645,7 @@ scapy==2.5.0
 screenlogicpy==0.8.2
 
 # homeassistant.components.backup
-securetar==2022.2.0
+securetar==2023.3.0
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
@@ -1877,6 +1877,9 @@ wallbox==0.4.12
 # homeassistant.components.folder_watcher
 watchdog==2.3.1
 
+# homeassistant.components.voice_assistant
+webrtcvad==2.0.10
+
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.2
 
@@ -1935,7 +1938,7 @@ youless-api==1.0.1
 zamg==0.2.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.47.4
+zeroconf==0.52.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1

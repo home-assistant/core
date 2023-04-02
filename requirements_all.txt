@@ -907,7 +907,7 @@ hole==0.8.0
 holidays==0.21.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230331.0
+home-assistant-frontend==20230401.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.3.29
@@ -2306,7 +2306,7 @@ screenlogicpy==0.8.2
 scsgate==0.1.0
 
 # homeassistant.components.backup
-securetar==2022.2.0
+securetar==2023.3.0
 
 # homeassistant.components.sendgrid
 sendgrid==6.8.2
@@ -2619,6 +2619,9 @@ waterfurnace==1.1.0
 # homeassistant.components.cisco_webex_teams
 webexteamssdk==1.1.1
 
+# homeassistant.components.voice_assistant
+webrtcvad==2.0.10
+
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.2
 
@@ -2692,7 +2695,7 @@ zamg==0.2.2
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.47.4
+zeroconf==0.52.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
