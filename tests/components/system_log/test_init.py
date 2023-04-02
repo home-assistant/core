@@ -437,7 +437,6 @@ async def test_raise_during_log_capture(
 
     raise_during_repr = RaisesDuringRepr()
 
-    # with contextlib.suppress(ValueError):
     _LOGGER.error("raise during repr: %s", raise_during_repr)
     log = find_log(await get_error_log(hass_ws_client), "ERROR")
     assert log is not None
