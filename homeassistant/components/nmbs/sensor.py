@@ -22,6 +22,8 @@ import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
+API_FAILURE = -1
+
 DEFAULT_NAME = "NMBS"
 
 DEFAULT_ICON = "mdi:train"
@@ -164,7 +166,7 @@ class NMBSLiveBoard(SensorEntity):
 
         if (
             liveboard is None
-            or liveboard == -1
+            or liveboard == API_FAILURE
             or liveboard.get("departures") is None
             or liveboard.get("departures").get("number") is None
             or liveboard.get("departures").get("number") == "0"
@@ -293,7 +295,7 @@ class NMBSSensor(SensorEntity):
 
         if (
             connections is None
-            or connections == -1
+            or connections == API_FAILURE
             or connections.get("connection") is None
         ):
             return
