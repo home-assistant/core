@@ -138,6 +138,7 @@ CACHED_TEMPLATE_LRU: MutableMapping[State, TemplateState] = LRU(CACHED_TEMPLATE_
 CACHED_TEMPLATE_NO_COLLECT_LRU: MutableMapping[State, TemplateState] = LRU(
     CACHED_TEMPLATE_STATES
 )
+ENTITY_COUNT_GROWTH_FACTOR = 1.2
 
 
 def _template_state_no_collect(hass: HomeAssistant, state: State) -> TemplateState:
@@ -164,7 +165,9 @@ def async_setup(hass: HomeAssistant) -> bool:
     @callback
     def _async_adjust_lru_sizes(_: Any) -> None:
         """Adjust the lru cache sizes."""
-        new_size = int(hass.states.async_entity_ids_count() * 1.2)
+        new_size = int(
+            round(hass.states.async_entity_ids_count() * ENTITY_COUNT_GROWTH_FACTOR)
+        )
         for lru in (CACHED_TEMPLATE_LRU, CACHED_TEMPLATE_NO_COLLECT_LRU):
             # There is no typing for LRU
             current_size = lru.get_size()  # type: ignore[attr-defined]
