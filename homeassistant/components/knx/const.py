@@ -1,8 +1,11 @@
 """Constants for the KNX integration."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from enum import Enum
 from typing import Final, TypedDict
+
+from xknx.telegram import Telegram
 
 from homeassistant.components.climate import (
     PRESET_AWAY,
@@ -76,6 +79,9 @@ DATA_HASS_CONFIG: Final = "knx_hass_config"
 ATTR_COUNTER: Final = "counter"
 ATTR_SOURCE: Final = "source"
 
+AsyncMessageCallbackType = Callable[[Telegram], Awaitable[None]]
+MessageCallbackType = Callable[[Telegram], None]
+
 
 class KNXConfigEntryData(TypedDict, total=False):
     """Config entry for the KNX integration."""
@@ -99,6 +105,17 @@ class KNXConfigEntryData(TypedDict, total=False):
     knxkeys_password: str
     backbone_key: str | None
     sync_latency_tolerance: int | None
+
+
+class KNXBusMonitorMessage(TypedDict):
+    """KNX bus monitor message."""
+
+    destination_address: str
+    payload: str
+    type: str
+    source_address: str
+    direction: str
+    timestamp: str
 
 
 class ColorTempModes(Enum):

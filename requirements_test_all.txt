@@ -777,6 +777,9 @@ justnimbus==0.6.0
 # homeassistant.components.kegtron
 kegtron-ble==0.4.0
 
+# homeassistant.components.knx
+knx_frontend==20221026104517
+
 # homeassistant.components.konnected
 konnected==1.2.0
 

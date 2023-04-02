@@ -91,6 +91,7 @@ from .schema import (
     ga_validator,
     sensor_type_validator,
 )
+from .websocket import register_panel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -222,6 +223,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     conf = dict(conf)
     hass.data[DATA_KNX_CONFIG] = conf
+
     return True
 
 
@@ -303,6 +305,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         knx_module.service_exposure_register_modify,
         schema=SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA,
     )
+
+    await register_panel(hass)
 
     return True
 
