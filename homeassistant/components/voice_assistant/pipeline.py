@@ -197,7 +197,7 @@ class PipelineRun:
             raise SpeechToTextError(
                 code="stt-provider-unsupported-metadata",
                 message=(
-                    f"Provider {engine} does not support input speech "
+                    f"Provider {stt_provider.name} does not support input speech "
                     "to text metadata"
                 ),
             )
