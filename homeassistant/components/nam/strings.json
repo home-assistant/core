@@ -41,7 +41,7 @@
   "entity": {
     "button": {
       "restart": {
-        "name": "Restart"
+        "name": "[%key:component::button::entity_component::restart::name%]"
       }
     },
     "sensor": {
