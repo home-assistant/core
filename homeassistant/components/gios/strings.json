@@ -26,6 +26,7 @@
   "entity": {
     "sensor": {
       "aqi": {
+        "name": "AQI",
         "state": {
           "very_bad": "Very bad",
           "bad": "Bad",
@@ -35,7 +36,17 @@
           "very_good": "Very good"
         }
       },
+      "c6h6": {
+        "name": "Benzene"
+      },
+      "co": {
+        "name": "Carbon monoxide"
+      },
+      "no2": {
+        "name": "Nitrogen dioxide"
+      },
       "no2_index": {
+        "name": "Nitrogen dioxide index",
         "state": {
           "very_bad": "[%key:component::gios::entity::sensor::aqi::state::very_bad%]",
           "bad": "[%key:component::gios::entity::sensor::aqi::state::bad%]",
@@ -44,8 +55,12 @@
           "good": "[%key:component::gios::entity::sensor::aqi::state::good%]",
           "very_good": "[%key:component::gios::entity::sensor::aqi::state::very_good%]"
         }
+      },
+      "o3": {
+        "name": "Ozone"
       },
       "o3_index": {
+        "name": "Ozone index",
         "state": {
           "very_bad": "[%key:component::gios::entity::sensor::aqi::state::very_bad%]",
           "bad": "[%key:component::gios::entity::sensor::aqi::state::bad%]",
@@ -54,8 +69,12 @@
           "good": "[%key:component::gios::entity::sensor::aqi::state::good%]",
           "very_good": "[%key:component::gios::entity::sensor::aqi::state::very_good%]"
         }
+      },
+      "pm10": {
+        "name": "PM10"
       },
       "pm10_index": {
+        "name": "PM10 index",
         "state": {
           "very_bad": "[%key:component::gios::entity::sensor::aqi::state::very_bad%]",
           "bad": "[%key:component::gios::entity::sensor::aqi::state::bad%]",
@@ -64,8 +83,12 @@
           "good": "[%key:component::gios::entity::sensor::aqi::state::good%]",
           "very_good": "[%key:component::gios::entity::sensor::aqi::state::very_good%]"
         }
+      },
+      "pm25": {
+        "name": "PM2.5"
       },
       "pm25_index": {
+        "name": "PM2.5 index",
         "state": {
           "very_bad": "[%key:component::gios::entity::sensor::aqi::state::very_bad%]",
           "bad": "[%key:component::gios::entity::sensor::aqi::state::bad%]",
@@ -75,7 +98,11 @@
           "very_good": "[%key:component::gios::entity::sensor::aqi::state::very_good%]"
         }
       },
+      "so2": {
+        "name": "Sulphur dioxide"
+      },
       "so2_index": {
+        "name": "Sulphur dioxide index",
         "state": {
           "very_bad": "[%key:component::gios::entity::sensor::aqi::state::very_bad%]",
           "bad": "[%key:component::gios::entity::sensor::aqi::state::bad%]",
