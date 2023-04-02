@@ -381,7 +381,7 @@ class WasherDryer(
             "binary_sensor": [door_entity, remote_control, remote_start],
             "switch": program_switches,
             "sensor": program_sensors + op_state_sensor,
-        }    
+        }
 
 
 class CoffeeMaker(DeviceWithOpState, DeviceWithPrograms, DeviceWithRemoteStart):
