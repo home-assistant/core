@@ -18,7 +18,6 @@ from tests.common import async_capture_events, async_fire_time_changed
 
 async def test_button_simple(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX button with default payload."""
-    events = async_capture_events(hass, "state_changed")
     await knx.setup_integration(
         {
             ButtonSchema.PLATFORM: {
@@ -27,9 +26,7 @@ async def test_button_simple(hass: HomeAssistant, knx: KNXTestKit) -> None:
             }
         }
     )
-    assert len(hass.states.async_all()) == 1
-    assert len(events) == 1
-    events.pop()
+    events = async_capture_events(hass, "state_changed")
 
     # press button
     await hass.services.async_call(

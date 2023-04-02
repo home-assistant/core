@@ -1473,6 +1473,11 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "esera_onewire": {
+      "name": "ESERA 1-Wire",
+      "integration_type": "virtual",
+      "supported_by": "onewire"
+    },
     "esphome": {
       "name": "ESPHome",
       "integration_type": "device",
@@ -1818,7 +1823,7 @@
     "frontier_silicon": {
       "name": "Frontier Silicon",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "fully_kiosk": {
@@ -2299,6 +2304,12 @@
           "name": "HomematicIP Cloud"
         }
       }
+    },
+    "homeseer": {
+      "name": "HomeSeer",
+      "iot_standards": [
+        "zwave"
+      ]
     },
     "homewizard": {
       "name": "HomeWizard Energy",
@@ -3073,12 +3084,6 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "magicseaweed": {
-      "name": "Magicseaweed",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
-    },
     "mailgun": {
       "name": "Mailgun",
       "integration_type": "hub",
@@ -3288,12 +3293,6 @@
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "Xbox"
-        },
-        "xbox_live": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "cloud_polling",
-          "name": "Xbox Live"
         }
       }
     },
@@ -3617,7 +3616,7 @@
     "nextcloud": {
       "name": "Nextcloud",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "nextdns": {
@@ -4310,8 +4309,8 @@
     },
     "qbittorrent": {
       "name": "qBittorrent",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "qingping": {
@@ -5056,7 +5055,7 @@
     "snapcast": {
       "name": "Snapcast",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "snips": {
@@ -6069,6 +6068,12 @@
         }
       }
     },
+    "voice_assistant": {
+      "name": "Voice Assistant",
+      "integration_type": "hub",
+      "config_flow": false,
+      "iot_class": "local_push"
+    },
     "voicerss": {
       "name": "VoiceRSS",
       "integration_type": "hub",
@@ -6485,7 +6490,6 @@
   },
   "helper": {
     "counter": {
-      "name": "Counter",
       "integration_type": "helper",
       "config_flow": false
     },
@@ -6504,7 +6508,6 @@
       "config_flow": false
     },
     "input_button": {
-      "name": "Input Button",
       "integration_type": "helper",
       "config_flow": false
     },
@@ -6568,6 +6571,7 @@
     "alert",
     "aurora",
     "cert_expiry",
+    "counter",
     "cpuspeed",
     "demo",
     "derivative",
@@ -6579,6 +6583,7 @@
     "growatt_server",
     "homekit_controller",
     "input_boolean",
+    "input_button",
     "input_datetime",
     "input_number",
     "input_select",

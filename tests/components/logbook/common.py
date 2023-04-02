@@ -6,6 +6,7 @@ from typing import Any
 
 from homeassistant.components import logbook
 from homeassistant.components.logbook import processor
+from homeassistant.components.logbook.models import LogbookConfig
 from homeassistant.components.recorder.models import (
     process_timestamp_to_utc_isoformat,
     ulid_to_bytes_or_none,
@@ -64,7 +65,8 @@ def mock_humanify(hass_, rows):
     ent_reg = er.async_get(hass_)
     event_cache = processor.EventCache({})
     context_lookup = processor.ContextLookup(hass_)
-    external_events = hass_.data.get(logbook.DOMAIN, {})
+    logbook_config = hass_.data.get(logbook.DOMAIN, LogbookConfig({}, None, None))
+    external_events = logbook_config.external_events
     logbook_run = processor.LogbookRun(
         context_lookup,
         external_events,

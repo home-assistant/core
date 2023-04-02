@@ -601,7 +601,8 @@ async def test_zwave_js_event(
         },
     )
 
-    # Test that `node no event data filter` is triggered and `node event data filter` is not
+    # Test that `node no event data filter` is triggered and `node event data
+    # filter` is not
     event = Event(
         type="interview stage completed",
         data={
@@ -649,7 +650,8 @@ async def test_zwave_js_event(
 
     clear_events()
 
-    # Test that `controller no event data filter` is triggered and `controller event data filter` is not
+    # Test that `controller no event data filter` is triggered and `controller event
+    # data filter` is not
     event = Event(
         type="inclusion started",
         data={
@@ -672,7 +674,8 @@ async def test_zwave_js_event(
 
     clear_events()
 
-    # Test that both `controller no event data filter` and `controller event data filter` are triggered
+    # Test that both `controller no event data filter` and `controller event data
+    # filter`` are triggered
     event = Event(
         type="inclusion started",
         data={
@@ -695,7 +698,8 @@ async def test_zwave_js_event(
 
     clear_events()
 
-    # Test that `driver no event data filter` is triggered and `driver event data filter` is not
+    # Test that `driver no event data filter` is triggered and `driver event data
+    # filter` is not
     event = Event(
         type="logging",
         data={
@@ -711,6 +715,7 @@ async def test_zwave_js_event(
             "multiline": False,
             "timestamp": "time",
             "label": "label",
+            "context": {"source": "config"},
         },
     )
     client.driver.receive_event(event)
@@ -727,7 +732,8 @@ async def test_zwave_js_event(
 
     clear_events()
 
-    # Test that both `driver no event data filter` and `driver event data filter` are triggered
+    # Test that both `driver no event data filter` and `driver event data filter`
+    # are triggered
     event = Event(
         type="logging",
         data={
@@ -743,6 +749,7 @@ async def test_zwave_js_event(
             "multiline": False,
             "timestamp": "time",
             "label": "label",
+            "context": {"source": "config"},
         },
     )
     client.driver.receive_event(event)
@@ -862,7 +869,8 @@ async def test_zwave_js_event_bypass_dynamic_validation(
             },
         )
 
-    # Test that `node no event data filter` is triggered and `node event data filter` is not
+    # Test that `node no event data filter` is triggered and `node event data filter`
+    # is not
     event = Event(
         type="interview stage completed",
         data={

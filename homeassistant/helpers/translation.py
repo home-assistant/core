@@ -255,13 +255,16 @@ class _TranslationCache:
             categories.update(resource)
 
         for category in categories:
-            resource_func = (
-                _merge_resources if category == "state" else _build_resources
-            )
             new_resources: Mapping[str, dict[str, Any] | str]
-            new_resources = resource_func(  # type: ignore[assignment]
-                translation_strings, components, category
-            )
+
+            if category in ("state", "entity_component"):
+                new_resources = _merge_resources(
+                    translation_strings, components, category
+                )
+            else:
+                new_resources = _build_resources(
+                    translation_strings, components, category
+                )
 
             for component, resource in new_resources.items():
                 category_cache: dict[str, Any] = cached.setdefault(
@@ -299,7 +302,7 @@ async def async_get_translations(
         components = set(integrations)
     elif config_flow:
         components = (await async_get_config_flows(hass)) - hass.config.components
-    elif category == "state":
+    elif category in ("state", "entity_component"):
         components = set(hass.config.components)
     else:
         # Only 'state' supports merging, so remove platforms from selection

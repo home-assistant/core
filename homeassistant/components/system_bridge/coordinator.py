@@ -186,6 +186,12 @@ class SystemBridgeDataUpdateCoordinator(
                 await self.websocket_client.connect(
                     session=async_get_clientsession(self.hass),
                 )
+
+            self.hass.async_create_task(self._listen_for_data())
+
+            await self.websocket_client.register_data_listener(
+                RegisterDataListener(modules=MODULES)
+            )
         except AuthenticationException as exception:
             self.last_update_success = False
             self.logger.error("Authentication failed for %s: %s", self.title, exception)
@@ -210,12 +216,6 @@ class SystemBridgeDataUpdateCoordinator(
             )
             self.last_update_success = False
             self.async_update_listeners()
-
-        self.hass.async_create_task(self._listen_for_data())
-
-        await self.websocket_client.register_data_listener(
-            RegisterDataListener(modules=MODULES)
-        )
 
         self.last_update_success = True
         self.async_update_listeners()
