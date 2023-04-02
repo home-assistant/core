@@ -1037,7 +1037,18 @@ def _state_generator(
     hass: HomeAssistant, domain: str | None
 ) -> Generator[TemplateState, None, None]:
     """State generator for a domain or all states."""
-    for state in hass.states.async_all(domain):
+    states = hass.states
+    # If domain is None, we want to iterate over all states, but making
+    # a copy of the dict is expensive. So we iterate over the protected
+    # _states dict instead. This is safe because we're not modifying it.
+    # We do not want to expose this method in the public API though to
+    # ensure it does not get misused.
+    container: Iterable[State]
+    if domain is None:
+        container = states._states.values()  # pylint: disable=protected-access
+    else:
+        container = states.async_all(domain)
+    for state in container:
         yield _template_state_no_collect(hass, state)
 
 
