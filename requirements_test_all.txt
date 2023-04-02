@@ -1505,7 +1505,7 @@ python-otbr-api==1.0.9
 python-picnic-api==1.1.0
 
 # homeassistant.components.roborock
-python-roborock==0.1.7
+python-roborock==0.1.10
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.33

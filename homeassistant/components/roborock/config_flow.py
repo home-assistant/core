@@ -22,11 +22,10 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Roborock."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._username = None
+        self._username: str | None = None
         self._errors: dict[str, str] = {}
         self._client: RoborockClient | None = None
         self._auth_method: str | None = None
@@ -35,23 +34,18 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
-        return self._show_email_form(user_input)
-
-    async def async_step_email(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle a flow initialized by the user."""
         self._errors.clear()
 
-        if user_input and user_input[CONF_USERNAME]:
+        if user_input is not None:
             username = user_input[CONF_USERNAME]
             await self.async_set_unique_id(username.lower())
             self._abort_if_unique_id_configured()
             self._username = username
-            client = await self._request_code(username)
+            assert self._username is not None
+            client = await self._request_code(self._username)
             if client:
                 self._client = client
-                return self._show_code_form(user_input)
+                return await self.async_step_code()
         return self._show_email_form(user_input)
 
     async def async_step_code(
@@ -60,23 +54,20 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         self._errors.clear()
 
-        if not user_input:
-            return self._show_email_form()
+        if user_input is not None:
+            code = user_input[CONF_ENTRY_CODE]
+            user_data = await self._code_login(code)
+            if user_data and self._username:
+                return self._create_entry(self._username, user_data)
 
-        username = self._username
-        code = user_input[CONF_ENTRY_CODE]
-        user_data = await self._code_login(code)
-        if user_data and username:
-            return self._create_entry(username, user_data)
-
-        return self._show_code_form(user_input)
+        return self._show_code_form()
 
     def _show_email_form(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Show the configuration form to provide user email."""
         if user_input is None:
             user_input = {}
         return self.async_show_form(
-            step_id="email",
+            step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Required(
@@ -88,17 +79,11 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             last_step=False,
         )
 
-    def _show_code_form(self, user_input: dict[str, Any]) -> FlowResult:
+    def _show_code_form(self) -> FlowResult:
         """Show the configuration form to provide authentication code."""
         return self.async_show_form(
             step_id="code",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_ENTRY_CODE, default=user_input.get(CONF_ENTRY_CODE)
-                    ): str
-                }
-            ),
+            data_schema=vol.Schema({vol.Required(CONF_ENTRY_CODE): str}),
             errors=self._errors,
         )
 

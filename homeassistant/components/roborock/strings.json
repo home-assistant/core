@@ -2,14 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Select an authentication method",
-        "menu_options": {
-          "code": "Login with email authentication code",
-          "password": "Login with password"
-        }
-      },
-      "email": {
-        "description": "Your app credentials",
+        "description": "Enter your Roborock email address.",
         "data": {
           "username": "Email"
         }

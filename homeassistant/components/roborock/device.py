@@ -25,9 +25,9 @@ class RoborockCoordinatedEntity(CoordinatorEntity[RoborockDataUpdateCoordinator]
     ) -> None:
         """Initialize the coordinated Roborock Device."""
         super().__init__(coordinator)
-        self._device_name = device_info.device.name
         self._attr_unique_id = unique_id
-        self._device_id = str(device_info.device.duid)
+        self._device_name = device_info.device.name
+        self._device_id = device_info.device.duid
         self._device_model = device_info.product.model
         self._fw_version = device_info.device.fv
 
