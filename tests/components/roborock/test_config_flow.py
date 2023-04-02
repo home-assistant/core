@@ -19,7 +19,7 @@ async def test_successful_config_flow(hass: HomeAssistant, bypass_api_fixture) -
     )
     # Check that user form requesting username (email) is shown
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "email"
+    assert result["step_id"] == "user"
 
     # Provide email address to config flow
     with patch(
@@ -73,9 +73,8 @@ async def test_restart_no_user_input(hass: HomeAssistant, bypass_api_fixture) ->
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=None
         )
-    # Check config flow is back on email
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "email"
+    assert result["step_id"] == "code"
 
 
 async def test_invalid_code(hass: HomeAssistant, bypass_api_fixture) -> None:
@@ -84,7 +83,7 @@ async def test_invalid_code(hass: HomeAssistant, bypass_api_fixture) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "email"
+    assert result["step_id"] == "user"
 
     with patch(
         "homeassistant.components.roborock.config_flow.RoborockClient.request_code",
@@ -125,7 +124,7 @@ async def test_unknown_user(hass: HomeAssistant, bypass_api_fixture) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "email"
+    assert result["step_id"] == "user"
 
     with patch(
         "homeassistant.components.roborock.config_flow.RoborockClient.request_code",
