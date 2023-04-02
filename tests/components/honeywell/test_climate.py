@@ -72,7 +72,6 @@ async def test_static_attributes(
     assert entry
 
     state = hass.states.get(entity_id)
-    assert state is not None
     assert state.state != STATE_UNAVAILABLE
     assert state.state == HVACMode.OFF
 
