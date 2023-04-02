@@ -4,17 +4,14 @@ from unittest.mock import MagicMock, patch
 
 import aiosomecomfort
 import pytest
+from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.components.climate import (
     ATTR_AUX_HEAT,
-    ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
-    ATTR_HVAC_MODES,
-    ATTR_MAX_TEMP,
-    ATTR_MIN_TEMP,
     ATTR_PRESET_MODE,
-    ATTR_PRESET_MODES,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
@@ -28,14 +25,11 @@ from homeassistant.components.climate import (
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
-    ClimateEntityFeature,
     HVACMode,
 )
 from homeassistant.components.honeywell.climate import SCAN_INTERVAL
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
-    ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -63,7 +57,10 @@ async def test_no_thermostats(
 
 
 async def test_static_attributes(
-    hass: HomeAssistant, device: MagicMock, config_entry: MagicMock
+    hass: HomeAssistant,
+    device: MagicMock,
+    config_entry: MagicMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test static climate attributes."""
     await init_integration(hass, config_entry)
@@ -77,35 +74,8 @@ async def test_static_attributes(
     assert state.state == HVACMode.OFF
 
     attributes = state.attributes
-    assert attributes[ATTR_FRIENDLY_NAME] == entity_id.split(".")[1]
 
-    assert (
-        attributes[ATTR_SUPPORTED_FEATURES]
-        == ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.PRESET_MODE
-        | ClimateEntityFeature.AUX_HEAT
-        | ClimateEntityFeature.FAN_MODE
-        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-        | ClimateEntityFeature.TARGET_HUMIDITY
-    )
-
-    assert attributes[ATTR_HVAC_MODES] == [
-        HVACMode.OFF,
-        HVACMode.HEAT_COOL,
-        HVACMode.COOL,
-        HVACMode.HEAT,
-    ]
-    assert attributes[ATTR_PRESET_MODES] == [
-        PRESET_NONE,
-        PRESET_AWAY,
-        PRESET_HOLD,
-    ]
-    assert attributes[ATTR_MIN_TEMP] == -13.9
-    assert attributes[ATTR_MAX_TEMP] == 1.7
-    assert attributes[ATTR_CURRENT_TEMPERATURE] == -6.7
-    assert attributes[FAN_ACTION] == "idle"
-    assert attributes["permanent_hold"] is False
-    assert attributes["aux_heat"] == "off"
+    assert attributes == snapshot(exclude=props("dr_phase"))
 
 
 async def test_dynamic_attributes(
