@@ -13,7 +13,7 @@ from functools import cache, lru_cache, partial, wraps
 import json
 import logging
 import math
-from operator import attrgetter, contains
+from operator import contains
 import pathlib
 import random
 import re
@@ -983,7 +983,7 @@ def _state_generator(
     hass: HomeAssistant, domain: str | None
 ) -> Generator[TemplateState, None, None]:
     """State generator for a domain or all states."""
-    for state in sorted(hass.states.async_all(domain), key=attrgetter("entity_id")):
+    for state in hass.states.async_all(domain):
         yield _template_state_no_collect(hass, state)
 
 
@@ -1097,7 +1097,7 @@ def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
             _collect_state(hass, entity_id)
             found[entity_id] = entity
 
-    return sorted(found.values(), key=lambda a: a.entity_id)
+    return list(found.values())
 
 
 def device_entities(hass: HomeAssistant, _device_id: str) -> Iterable[str]:
@@ -2285,9 +2285,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["area_devices"] = hassfunction(area_devices)
         self.filters["area_devices"] = pass_context(self.globals["area_devices"])
 
-        self.globals["is_hidden_entity"] = hassfunction(is_hidden_entity)
-        self.tests["is_hidden_entity"] = pass_context(self.globals["is_hidden_entity"])
-
         self.globals["integration_entities"] = hassfunction(integration_entities)
         self.filters["integration_entities"] = pass_context(
             self.globals["integration_entities"]
@@ -2308,6 +2305,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "closest",
                 "distance",
                 "expand",
+                "is_hidden_entity",
                 "is_state",
                 "is_state_attr",
                 "state_attr",
@@ -2331,7 +2329,12 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "area_name",
                 "has_value",
             ]
-            hass_tests = ["has_value"]
+            hass_tests = [
+                "has_value",
+                "is_hidden_entity",
+                "is_state",
+                "is_state_attr",
+            ]
             for glob in hass_globals:
                 self.globals[glob] = unsupported(glob)
             for filt in hass_filters:
@@ -2345,6 +2348,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["closest"] = hassfunction(closest)
         self.filters["closest"] = pass_context(hassfunction(closest_filter))
         self.globals["distance"] = hassfunction(distance)
+        self.globals["is_hidden_entity"] = hassfunction(is_hidden_entity)
+        self.tests["is_hidden_entity"] = pass_eval_context(
+            self.globals["is_hidden_entity"]
+        )
         self.globals["is_state"] = hassfunction(is_state)
         self.tests["is_state"] = pass_eval_context(self.globals["is_state"])
         self.globals["is_state_attr"] = hassfunction(is_state_attr)
