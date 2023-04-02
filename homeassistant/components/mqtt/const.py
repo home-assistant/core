@@ -113,6 +113,7 @@ RELOADABLE_PLATFORMS = [
     Platform.CAMERA,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.DEVICE_TRACKER,
     Platform.FAN,
     Platform.HUMIDIFIER,
     Platform.LIGHT,
