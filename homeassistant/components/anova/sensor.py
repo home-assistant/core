@@ -26,23 +26,27 @@ SENSOR_DESCRIPTIONS: list[SensorEntityDescription] = [
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         icon="mdi:clock-outline",
-        name="Cook Time",
+        translation_key="cook_time",
     ),
-    SensorEntityDescription(key=AnovaPrecisionCookerSensor.STATE, name="State"),
-    SensorEntityDescription(key=AnovaPrecisionCookerSensor.MODE, name="Mode"),
+    SensorEntityDescription(
+        key=AnovaPrecisionCookerSensor.STATE, translation_key="state"
+    ),
+    SensorEntityDescription(
+        key=AnovaPrecisionCookerSensor.MODE, translation_key="mode"
+    ),
     SensorEntityDescription(
         key=AnovaPrecisionCookerSensor.TARGET_TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:thermometer",
-        name="Target Temperature",
+        translation_key="target_temperature",
     ),
     SensorEntityDescription(
         key=AnovaPrecisionCookerSensor.COOK_TIME_REMAINING,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         icon="mdi:clock-outline",
-        name="Cook Time Remaining",
+        translation_key="cook_time_remaining",
     ),
     SensorEntityDescription(
         key=AnovaPrecisionCookerSensor.HEATER_TEMPERATURE,
@@ -50,7 +54,7 @@ SENSOR_DESCRIPTIONS: list[SensorEntityDescription] = [
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:thermometer",
-        name="Heater Temperature",
+        translation_key="heater_temperature",
     ),
     SensorEntityDescription(
         key=AnovaPrecisionCookerSensor.TRIAC_TEMPERATURE,
@@ -58,7 +62,7 @@ SENSOR_DESCRIPTIONS: list[SensorEntityDescription] = [
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:thermometer",
-        name="Triac Temperature",
+        translation_key="triac_temperature",
     ),
     SensorEntityDescription(
         key=AnovaPrecisionCookerSensor.WATER_TEMPERATURE,
@@ -66,7 +70,7 @@ SENSOR_DESCRIPTIONS: list[SensorEntityDescription] = [
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:thermometer",
-        name="Water Temperature",
+        translation_key="water_temperature",
     ),
 ]
 

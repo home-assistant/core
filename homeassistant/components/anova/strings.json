@@ -21,5 +21,33 @@
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "no_devices_found": "No devices were found. Make sure you have at least one Anova device online"
     }
+  },
+  "entity": {
+    "sensor": {
+      "cook_time": {
+        "name": "Cook time"
+      },
+      "state": {
+        "name": "State"
+      },
+      "mode": {
+        "name": "Mode"
+      },
+      "target_temperature": {
+        "name": "Target temperature"
+      },
+      "cook_time_remaining": {
+        "name": "Cook time remaining"
+      },
+      "heater_temperature": {
+        "name": "Heater temperature"
+      },
+      "triac_temperature": {
+        "name": "Triac temperature"
+      },
+      "water_temperature": {
+        "name": "Water temperature"
+      }
+    }
   }
 }
