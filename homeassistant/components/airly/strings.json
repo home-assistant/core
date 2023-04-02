@@ -26,5 +26,42 @@
       "requests_remaining": "Remaining allowed requests",
       "requests_per_day": "Allowed requests per day"
     }
+  },
+  "entity": {
+    "sensor": {
+      "caqi": {
+        "name": "CAQI"
+      },
+      "pm1": {
+        "name": "PM1.0"
+      },
+      "pm25": {
+        "name": "PM2.5"
+      },
+      "pm10": {
+        "name": "PM10"
+      },
+      "humidity": {
+        "name": "Humidity"
+      },
+      "pressure": {
+        "name": "Pressure"
+      },
+      "temperature": {
+        "name": "Temperature"
+      },
+      "co": {
+        "name": "Carbon monoxide"
+      },
+      "no2": {
+        "name": "Nitrogen dioxide"
+      },
+      "so2": {
+        "name": "Sulphur dioxide"
+      },
+      "o3": {
+        "name": "Ozone"
+      }
+    }
   }
 }
