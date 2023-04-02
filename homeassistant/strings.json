@@ -1,5 +1,9 @@
 {
   "common": {
+    "generic": {
+      "model": "Model",
+      "ui_managed": "Managed via UI"
+    },
     "state": {
       "off": "Off",
       "on": "On",

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from xml.etree.ElementTree import ParseError
 
 from pyfritzhome import Fritzhome, FritzhomeDevice, LoginError
 from pyfritzhome.devicetypes.fritzhomeentitybase import FritzhomeEntityBase
@@ -44,14 +43,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CONF_CONNECTIONS: fritz,
     }
 
-    try:
-        await hass.async_add_executor_job(fritz.update_templates)
-    except ParseError:
-        LOGGER.debug("Disable smarthome templates")
-        has_templates = False
-    else:
-        LOGGER.debug("Enable smarthome templates")
-        has_templates = True
+    has_templates = await hass.async_add_executor_job(fritz.has_templates)
+    LOGGER.debug("enable smarthome templates: %s", has_templates)
 
     coordinator = FritzboxDataUpdateCoordinator(hass, entry, has_templates)
 

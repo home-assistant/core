@@ -18,8 +18,6 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-ICON = "mdi:bus-clock"
-
 CONF_APP_ID = "app_id"
 CONF_APP_KEY = "app_key"
 CONF_LINE = "line"
@@ -74,6 +72,7 @@ class TMBSensor(SensorEntity):
     """Implementation of a TMB line/stop Sensor."""
 
     _attr_attribution = "Data provided by Transport Metropolitans de Barcelona"
+    _attr_icon = "mdi:bus-clock"
 
     def __init__(self, ibus_client, stop, line, name):
         """Initialize the sensor."""
@@ -88,11 +87,6 @@ class TMBSensor(SensorEntity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
-
-    @property
-    def icon(self):
-        """Return the icon for the frontend."""
-        return ICON
 
     @property
     def native_unit_of_measurement(self):

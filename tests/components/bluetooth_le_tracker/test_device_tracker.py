@@ -4,7 +4,6 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from bleak import BleakError
-from bleak.backends.scanner import BLEDevice
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.bluetooth_le_tracker import device_tracker
@@ -24,7 +23,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, slugify
 
 from tests.common import async_fire_time_changed
-from tests.components.bluetooth import generate_advertisement_data
+from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 
 class MockBleakClient:
@@ -89,7 +88,7 @@ async def test_preserve_new_tracked_device_name(
             service_data={},
             service_uuids=[],
             source="local",
-            device=BLEDevice(address, None),
+            device=generate_ble_device(address, None),
             advertisement=generate_advertisement_data(local_name="empty"),
             time=0,
             connectable=False,
@@ -114,7 +113,7 @@ async def test_preserve_new_tracked_device_name(
             service_data={},
             service_uuids=[],
             source="local",
-            device=BLEDevice(address, None),
+            device=generate_ble_device(address, None),
             advertisement=generate_advertisement_data(local_name="empty"),
             time=0,
             connectable=False,
@@ -159,7 +158,7 @@ async def test_tracking_battery_times_out(
             service_data={},
             service_uuids=[],
             source="local",
-            device=BLEDevice(address, None),
+            device=generate_ble_device(address, None),
             advertisement=generate_advertisement_data(local_name="empty"),
             time=0,
             connectable=False,
@@ -228,7 +227,7 @@ async def test_tracking_battery_fails(
             service_data={},
             service_uuids=[],
             source="local",
-            device=BLEDevice(address, None),
+            device=generate_ble_device(address, None),
             advertisement=generate_advertisement_data(local_name="empty"),
             time=0,
             connectable=False,
@@ -297,7 +296,7 @@ async def test_tracking_battery_successful(
             service_data={},
             service_uuids=[],
             source="local",
-            device=BLEDevice(address, None),
+            device=generate_ble_device(address, None),
             advertisement=generate_advertisement_data(local_name="empty"),
             time=0,
             connectable=True,

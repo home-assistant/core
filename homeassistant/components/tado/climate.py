@@ -240,7 +240,11 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
         self.zone_id = zone_id
         self.zone_type = zone_type
-        self._unique_id = f"{zone_type} {zone_id} {tado.home_id}"
+
+        self._attr_unique_id = f"{zone_type} {zone_id} {tado.home_id}"
+        self._attr_name = zone_name
+        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+
         self._device_info = device_info
         self._device_id = self._device_info["shortSerialNo"]
 
@@ -287,16 +291,6 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
                 self._async_update_callback,
             )
         )
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self.zone_name
-
-    @property
-    def unique_id(self):
-        """Return the unique id."""
-        return self._unique_id
 
     @property
     def current_humidity(self):

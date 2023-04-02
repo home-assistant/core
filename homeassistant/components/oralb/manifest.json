@@ -11,5 +11,6 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/oralb",
   "iot_class": "local_push",
-  "requirements": ["oralb-ble==0.17.5"]
+  "loggers": ["oralb_ble"],
+  "requirements": ["oralb-ble==0.17.6"]
 }
