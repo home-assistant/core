@@ -3043,7 +3043,9 @@ async def test_async_track_template_result_multiple_templates_mixing_domain(
     template_1 = Template("{{ states.switch.test.state == 'on' }}")
     template_2 = Template("{{ states.switch.test.state == 'on' }}")
     template_3 = Template("{{ states.switch.test.state == 'off' }}")
-    template_4 = Template("{{ states.switch | map(attribute='entity_id') | list }}")
+    template_4 = Template(
+        "{{ states.switch | sort(attribute='entity_id') | map(attribute='entity_id') | list }}"
+    )
 
     refresh_runs = []
 

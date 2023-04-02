@@ -236,7 +236,7 @@ async def _async_setup_component(
                 SLOW_SETUP_WARNING,
             )
 
-        task = None
+        task: Awaitable[bool] | None = None
         result: Any | bool = True
         try:
             if hasattr(component, "async_setup"):
