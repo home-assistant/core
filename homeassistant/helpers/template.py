@@ -1040,9 +1040,12 @@ def _state_generator(
     states = hass.states
     # If domain is None, we want to iterate over all states, but making
     # a copy of the dict is expensive. So we iterate over the protected
-    # _states dict instead. This is safe because we're not modifying it.
+    # _states dict instead. This is safe because we're not modifying it
+    # and everything is happening in the same thread (MainThread).
+    #
     # We do not want to expose this method in the public API though to
     # ensure it does not get misused.
+    #
     container: Iterable[State]
     if domain is None:
         container = states._states.values()  # pylint: disable=protected-access
