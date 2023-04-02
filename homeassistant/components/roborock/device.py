@@ -1,5 +1,7 @@
 """Support for Roborock device base class."""
 
+from typing import Any
+
 from roborock.containers import Status
 from roborock.typing import RoborockCommand, RoborockDeviceInfo
 
@@ -17,9 +19,9 @@ class RoborockCoordinatedEntity(CoordinatorEntity[RoborockDataUpdateCoordinator]
 
     def __init__(
         self,
+        unique_id: str,
         device_info: RoborockDeviceInfo,
         coordinator: RoborockDataUpdateCoordinator,
-        unique_id: str | None = None,
     ) -> None:
         """Initialize the coordinated Roborock Device."""
         super().__init__(coordinator)
@@ -52,6 +54,8 @@ class RoborockCoordinatedEntity(CoordinatorEntity[RoborockDataUpdateCoordinator]
             sw_version=self._fw_version,
         )
 
-    async def send(self, command: RoborockCommand, params=None):
+    async def send(
+        self, command: RoborockCommand, params: dict[str, Any] | list[Any] | None = None
+    ) -> dict:
         """Send a command to a vacuum cleaner."""
         return await self.coordinator.api.send_command(self._device_id, command, params)

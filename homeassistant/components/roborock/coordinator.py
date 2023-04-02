@@ -29,9 +29,8 @@ class RoborockDataUpdateCoordinator(
         """Initialize."""
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
         self.api = client
-        self.platforms: list[str] = []
         self._devices_prop: dict[str, RoborockDeviceProp] = {}
-        self._timeout_countdown = int(self.ACCEPTABLE_NUMBER_OF_TIMEOUTS)
+        self._timeout_countdown = self.ACCEPTABLE_NUMBER_OF_TIMEOUTS
 
     async def release(self) -> None:
         """Disconnect from API."""
@@ -50,7 +49,7 @@ class RoborockDataUpdateCoordinator(
         """Update data via library."""
         self._timeout_countdown = int(self.ACCEPTABLE_NUMBER_OF_TIMEOUTS)
         try:
-            for device_id, _ in self.api.device_map.items():
+            for device_id in self.api.device_map:
                 await self._get_device_prop(device_id)
         except RoborockTimeout as ex:
             if self._devices_prop and self._timeout_countdown > 0:

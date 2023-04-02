@@ -86,15 +86,13 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity, ABC):
     ) -> None:
         """Initialize a vacuum."""
         StateVacuumEntity.__init__(self)
-        RoborockCoordinatedEntity.__init__(self, device, coordinator, unique_id)
-        self.manual_seqnum = 0
-        self._device = device
-        self._coordinator = coordinator
+        RoborockCoordinatedEntity.__init__(self, unique_id, device, coordinator)
+        self._attr_icon = "mdi:robot-vacuum"
 
     @property
     def supported_features(self) -> VacuumEntityFeature:
         """Flag vacuum cleaner features that are supported."""
-        features = (
+        return (
             VacuumEntityFeature.PAUSE
             | VacuumEntityFeature.STOP
             | VacuumEntityFeature.RETURN_HOME
@@ -107,12 +105,6 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity, ABC):
             | VacuumEntityFeature.STATE
             | VacuumEntityFeature.START
         )
-        return features
-
-    @property
-    def icon(self) -> str:
-        """Return the icon of the vacuum cleaner."""
-        return "mdi:robot-vacuum"
 
     @property
     def state(self) -> str | None:
@@ -230,4 +222,4 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity, ABC):
         **kwargs: Any,
     ) -> None:
         """Send a command to a vacuum cleaner."""
-        return await self.send(command, params)
+        await self.send(command, params)
