@@ -5,12 +5,14 @@ import pytest
 
 from homeassistant.components.shopping_list import NoMatchingShoppingListItem
 from homeassistant.components.shopping_list.const import (
+    ATTR_SORT_REVERSE,
     DOMAIN,
     EVENT_SHOPPING_LIST_UPDATED,
     SERVICE_ADD_ITEM,
     SERVICE_CLEAR_COMPLETED_ITEMS,
     SERVICE_COMPLETE_ITEM,
     SERVICE_REMOVE_ITEM,
+    SERVICE_SORT_LIST,
 )
 from homeassistant.components.websocket_api.const import (
     ERR_INVALID_FORMAT,
@@ -730,4 +732,47 @@ async def test_clear_completed_items_service(hass: HomeAssistant, sl_setup) -> N
     )
     await hass.async_block_till_done()
     assert len(hass.data[DOMAIN].items) == 0
+    assert len(events) == 1
+
+
+async def test_sort_list_service(hass: HomeAssistant, sl_setup) -> None:
+    """Test sort_all service."""
+
+    for name in ("zzz", "ddd", "aaa"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ADD_ITEM,
+            {ATTR_NAME: name},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    # sort ascending
+    events = async_capture_events(hass, EVENT_SHOPPING_LIST_UPDATED)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SORT_LIST,
+        {ATTR_SORT_REVERSE: False},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert hass.data[DOMAIN].items[0][ATTR_NAME] == "aaa"
+    assert hass.data[DOMAIN].items[1][ATTR_NAME] == "ddd"
+    assert hass.data[DOMAIN].items[2][ATTR_NAME] == "zzz"
+    assert len(events) == 1
+
+    # sort descending
+    events = async_capture_events(hass, EVENT_SHOPPING_LIST_UPDATED)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SORT_LIST,
+        {ATTR_SORT_REVERSE: True},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert hass.data[DOMAIN].items[0][ATTR_NAME] == "zzz"
+    assert hass.data[DOMAIN].items[1][ATTR_NAME] == "ddd"
+    assert hass.data[DOMAIN].items[2][ATTR_NAME] == "aaa"
     assert len(events) == 1
