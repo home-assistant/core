@@ -164,7 +164,7 @@ def async_setup(hass: HomeAssistant) -> bool:
     @callback
     def _async_adjust_lru_sizes(_: Any) -> None:
         """Adjust the lru cache sizes."""
-        new_size = hass.states.async_entity_ids_count()
+        new_size = int(hass.states.async_entity_ids_count() * 1.2)
         for lru in (CACHED_TEMPLATE_LRU, CACHED_TEMPLATE_NO_COLLECT_LRU):
             # There is no typing for LRU
             current_size = lru.get_size()  # type: ignore[attr-defined]
