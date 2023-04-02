@@ -78,9 +78,14 @@ class BlinkSensor(SensorEntity):
 
     def update(self) -> None:
         """Retrieve sensor data from the camera."""
-        self.data.refresh()
         try:
             self._attr_native_value = self._camera.attributes[self._sensor_key]
+            _LOGGER.debug(
+                "'%s' %s = %s",
+                self._camera.attributes["name"],
+                self._sensor_key,
+                self._attr_native_value,
+            )
         except KeyError:
             self._attr_native_value = None
             _LOGGER.error(

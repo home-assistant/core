@@ -1,6 +1,8 @@
 """Support for Blink system camera control."""
 from __future__ import annotations
 
+import logging
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -19,6 +21,8 @@ from .const import (
     TYPE_CAMERA_ARMED,
     TYPE_MOTION_DETECTED,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 BINARY_SENSORS_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
@@ -74,8 +78,13 @@ class BlinkBinarySensor(BinarySensorEntity):
 
     def update(self) -> None:
         """Update sensor state."""
-        self.data.refresh()
         state = self._camera.attributes[self.entity_description.key]
+        _LOGGER.debug(
+            "'%s' %s = %s",
+            self._camera.attributes["name"],
+            self.entity_description.key,
+            state,
+        )
         if self.entity_description.key == TYPE_BATTERY:
             state = state != "ok"
         self._attr_is_on = state
