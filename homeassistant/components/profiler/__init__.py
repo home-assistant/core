@@ -90,7 +90,7 @@ async def async_setup_entry(  # noqa: C901
 
     async def _async_start_log_objects(call: ServiceCall) -> None:
         if LOG_INTERVAL_SUB in domain_data:
-            domain_data[LOG_INTERVAL_SUB]()
+            raise HomeAssistantError("Object logging already started")
 
         persistent_notification.async_create(
             hass,
@@ -108,14 +108,14 @@ async def async_setup_entry(  # noqa: C901
 
     async def _async_stop_log_objects(call: ServiceCall) -> None:
         if LOG_INTERVAL_SUB not in domain_data:
-            return
+            raise HomeAssistantError("Object logging not running")
 
         persistent_notification.async_dismiss(hass, "profile_object_logging")
         domain_data.pop(LOG_INTERVAL_SUB)()
 
     async def _async_start_object_sources(call: ServiceCall) -> None:
         if LOG_INTERVAL_SUB in domain_data:
-            domain_data[LOG_INTERVAL_SUB]()
+            raise HomeAssistantError("Object logging already started")
 
         persistent_notification.async_create(
             hass,
@@ -151,7 +151,7 @@ async def async_setup_entry(  # noqa: C901
     @callback
     def _async_stop_object_sources(call: ServiceCall) -> None:
         if LOG_INTERVAL_SUB not in domain_data:
-            return
+            raise HomeAssistantError("Object logging not running")
 
         persistent_notification.async_dismiss(hass, "profile_object_source_logging")
         domain_data.pop(LOG_INTERVAL_SUB)()
