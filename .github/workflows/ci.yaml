@@ -1091,6 +1091,7 @@ jobs:
     needs:
       - info
       - pytest
+    timeout-minutes: 10
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.5.0

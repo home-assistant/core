@@ -671,6 +671,19 @@ async def test_migrate_events_context_ids(
                         context_parent_id=None,
                         context_parent_id_bin=None,
                     ),
+                    Events(
+                        event_type="garbage_context_id_event",
+                        event_data=None,
+                        origin_idx=0,
+                        time_fired=None,
+                        time_fired_ts=1677721632.552529,
+                        context_id="adapt_lgt:b'5Cf*':interval:b'0R'",
+                        context_id_bin=None,
+                        context_user_id=None,
+                        context_user_id_bin=None,
+                        context_parent_id=None,
+                        context_parent_id_bin=None,
+                    ),
                 )
             )
 
@@ -695,12 +708,13 @@ async def test_migrate_events_context_ids(
                             "empty_context_id_event",
                             "ulid_context_id_event",
                             "invalid_context_id_event",
+                            "garbage_context_id_event",
                         ]
                     )
                 )
                 .all()
             )
-            assert len(events) == 4
+            assert len(events) == 5
             return {event.event_type: _object_as_dict(event) for event in events}
 
     events_by_type = await instance.async_add_executor_job(_fetch_migrated_events)
@@ -745,6 +759,14 @@ async def test_migrate_events_context_ids(
     assert invalid_context_id_event["context_id_bin"] == b"\x00" * 16
     assert invalid_context_id_event["context_user_id_bin"] is None
     assert invalid_context_id_event["context_parent_id_bin"] is None
+
+    garbage_context_id_event = events_by_type["garbage_context_id_event"]
+    assert garbage_context_id_event["context_id"] is None
+    assert garbage_context_id_event["context_user_id"] is None
+    assert garbage_context_id_event["context_parent_id"] is None
+    assert garbage_context_id_event["context_id_bin"] == b"\x00" * 16
+    assert garbage_context_id_event["context_user_id_bin"] is None
+    assert garbage_context_id_event["context_parent_id_bin"] is None
 
 
 @pytest.mark.parametrize("enable_migrate_context_ids", [True])
@@ -803,6 +825,16 @@ async def test_migrate_states_context_ids(
                         context_parent_id=None,
                         context_parent_id_bin=None,
                     ),
+                    States(
+                        entity_id="state.garbage_context_id",
+                        last_updated_ts=1677721632.552529,
+                        context_id="adapt_lgt:b'5Cf*':interval:b'0R'",
+                        context_id_bin=None,
+                        context_user_id=None,
+                        context_user_id_bin=None,
+                        context_parent_id=None,
+                        context_parent_id_bin=None,
+                    ),
                 )
             )
 
@@ -827,12 +859,13 @@ async def test_migrate_states_context_ids(
                             "state.empty_context_id",
                             "state.ulid_context_id",
                             "state.invalid_context_id",
+                            "state.garbage_context_id",
                         ]
                     )
                 )
                 .all()
             )
-            assert len(events) == 4
+            assert len(events) == 5
             return {state.entity_id: _object_as_dict(state) for state in events}
 
     states_by_entity_id = await instance.async_add_executor_job(_fetch_migrated_states)
@@ -876,6 +909,14 @@ async def test_migrate_states_context_ids(
     assert invalid_context_id["context_id_bin"] == b"\x00" * 16
     assert invalid_context_id["context_user_id_bin"] is None
     assert invalid_context_id["context_parent_id_bin"] is None
+
+    garbage_context_id = states_by_entity_id["state.garbage_context_id"]
+    assert garbage_context_id["context_id"] is None
+    assert garbage_context_id["context_user_id"] is None
+    assert garbage_context_id["context_parent_id"] is None
+    assert garbage_context_id["context_id_bin"] == b"\x00" * 16
+    assert garbage_context_id["context_user_id_bin"] is None
+    assert garbage_context_id["context_parent_id_bin"] is None
 
 
 @pytest.mark.parametrize("enable_migrate_event_type_ids", [True])
@@ -957,7 +998,7 @@ async def test_migrate_entity_ids(
     instance = await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
 
-    def _insert_events():
+    def _insert_states():
         with session_scope(hass=hass) as session:
             session.add_all(
                 (
@@ -979,7 +1020,7 @@ async def test_migrate_entity_ids(
                 )
             )
 
-    await instance.async_add_executor_job(_insert_events)
+    await instance.async_add_executor_job(_insert_states)
 
     await async_wait_recording_done(hass)
     # This is a threadsafe way to add a task to the recorder
@@ -1065,3 +1106,149 @@ async def test_post_migrate_entity_ids(
     assert states_by_state["one_1"] is None
     assert states_by_state["two_2"] is None
     assert states_by_state["two_1"] is None
+
+
+@pytest.mark.parametrize("enable_migrate_entity_ids", [True])
+async def test_migrate_null_entity_ids(
+    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
+) -> None:
+    """Test we can migrate entity_ids to the StatesMeta table."""
+    instance = await async_setup_recorder_instance(hass)
+    await async_wait_recording_done(hass)
+
+    def _insert_states():
+        with session_scope(hass=hass) as session:
+            session.add(
+                States(
+                    entity_id="sensor.one",
+                    state="one_1",
+                    last_updated_ts=1.452529,
+                ),
+            )
+            session.add_all(
+                States(
+                    entity_id=None,
+                    state="empty",
+                    last_updated_ts=time + 1.452529,
+                )
+                for time in range(1000)
+            )
+            session.add(
+                States(
+                    entity_id="sensor.one",
+                    state="one_1",
+                    last_updated_ts=2.452529,
+                ),
+            )
+
+    await instance.async_add_executor_job(_insert_states)
+
+    await async_wait_recording_done(hass)
+    # This is a threadsafe way to add a task to the recorder
+    instance.queue_task(EntityIDMigrationTask())
+    await async_recorder_block_till_done(hass)
+    await async_recorder_block_till_done(hass)
+
+    def _fetch_migrated_states():
+        with session_scope(hass=hass) as session:
+            states = (
+                session.query(
+                    States.state,
+                    States.metadata_id,
+                    States.last_updated_ts,
+                    StatesMeta.entity_id,
+                )
+                .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
+                .all()
+            )
+            assert len(states) == 1002
+            result = {}
+            for state in states:
+                result.setdefault(state.entity_id, []).append(
+                    {
+                        "state_id": state.entity_id,
+                        "last_updated_ts": state.last_updated_ts,
+                        "state": state.state,
+                    }
+                )
+            return result
+
+    states_by_entity_id = await instance.async_add_executor_job(_fetch_migrated_states)
+    assert len(states_by_entity_id[migration._EMPTY_ENTITY_ID]) == 1000
+    assert len(states_by_entity_id["sensor.one"]) == 2
+
+
+@pytest.mark.parametrize("enable_migrate_event_type_ids", [True])
+async def test_migrate_null_event_type_ids(
+    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
+) -> None:
+    """Test we can migrate event_types to the EventTypes table when the event_type is NULL."""
+    instance = await async_setup_recorder_instance(hass)
+    await async_wait_recording_done(hass)
+
+    def _insert_events():
+        with session_scope(hass=hass) as session:
+            session.add(
+                Events(
+                    event_type="event_type_one",
+                    origin_idx=0,
+                    time_fired_ts=1.452529,
+                ),
+            )
+            session.add_all(
+                Events(
+                    event_type=None,
+                    origin_idx=0,
+                    time_fired_ts=time + 1.452529,
+                )
+                for time in range(1000)
+            )
+            session.add(
+                Events(
+                    event_type="event_type_one",
+                    origin_idx=0,
+                    time_fired_ts=2.452529,
+                ),
+            )
+
+    await instance.async_add_executor_job(_insert_events)
+
+    await async_wait_recording_done(hass)
+    # This is a threadsafe way to add a task to the recorder
+
+    instance.queue_task(EventTypeIDMigrationTask())
+    await async_recorder_block_till_done(hass)
+    await async_recorder_block_till_done(hass)
+
+    def _fetch_migrated_events():
+        with session_scope(hass=hass) as session:
+            events = (
+                session.query(Events.event_id, Events.time_fired, EventTypes.event_type)
+                .filter(
+                    Events.event_type_id.in_(
+                        select_event_type_ids(
+                            (
+                                "event_type_one",
+                                migration._EMPTY_EVENT_TYPE,
+                            )
+                        )
+                    )
+                )
+                .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
+                .all()
+            )
+            assert len(events) == 1002
+            result = {}
+            for event in events:
+                result.setdefault(event.event_type, []).append(
+                    {
+                        "event_id": event.event_id,
+                        "time_fired": event.time_fired,
+                        "event_type": event.event_type,
+                    }
+                )
+            return result
+
+    events_by_type = await instance.async_add_executor_job(_fetch_migrated_events)
+    assert len(events_by_type["event_type_one"]) == 2
+    assert len(events_by_type[migration._EMPTY_EVENT_TYPE]) == 1000

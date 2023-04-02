@@ -28,6 +28,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -97,8 +98,8 @@ async def async_setup_platform(
             "Missing resource or schema in configuration. "
             "Add http:// or https:// to your URL"
         )
-    except (asyncio.TimeoutError, aiohttp.ClientError):
-        _LOGGER.error("No route to resource/endpoint: %s", resource)
+    except (asyncio.TimeoutError, aiohttp.ClientError) as exc:
+        raise PlatformNotReady(f"No route to resource/endpoint: {resource}") from exc
 
 
 class RestSwitch(TemplateEntity, SwitchEntity):
