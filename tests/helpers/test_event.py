@@ -3043,7 +3043,9 @@ async def test_async_track_template_result_multiple_templates_mixing_domain(
     template_1 = Template("{{ states.switch.test.state == 'on' }}")
     template_2 = Template("{{ states.switch.test.state == 'on' }}")
     template_3 = Template("{{ states.switch.test.state == 'off' }}")
-    template_4 = Template("{{ states.switch | map(attribute='entity_id') | list }}")
+    template_4 = Template(
+        "{{ states.switch | sort(attribute='entity_id') | map(attribute='entity_id') | list }}"
+    )
 
     refresh_runs = []
 
@@ -3436,6 +3438,28 @@ async def test_track_time_interval(hass: HomeAssistant) -> None:
     async_fire_time_changed(hass, utc_now + timedelta(seconds=30))
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
+
+
+async def test_track_time_interval_name(hass: HomeAssistant) -> None:
+    """Test tracking time interval name.
+
+    This test is to ensure that when a name is passed to async_track_time_interval,
+    that the name can be found in the TimerHandle when stringified.
+    """
+    specific_runs = []
+    unique_string = "xZ13"
+    unsub = async_track_time_interval(
+        hass,
+        callback(lambda x: specific_runs.append(x)),
+        timedelta(seconds=10),
+        unique_string,
+    )
+    scheduled = getattr(hass.loop, "_scheduled")
+    assert any(handle for handle in scheduled if unique_string in str(handle))
+    unsub()
+
+    assert all(handle for handle in scheduled if unique_string not in str(handle))
+    await hass.async_block_till_done()
 
 
 async def test_track_sunrise(hass: HomeAssistant) -> None:

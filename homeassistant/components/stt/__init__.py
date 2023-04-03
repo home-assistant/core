@@ -36,12 +36,20 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def async_get_provider(hass: HomeAssistant, domain: str | None = None) -> Provider:
+def async_get_provider(
+    hass: HomeAssistant, domain: str | None = None
+) -> Provider | None:
     """Return provider."""
-    if domain is None:
-        domain = next(iter(hass.data[DOMAIN]))
+    if domain:
+        return hass.data[DOMAIN].get(domain)
 
-    return hass.data[DOMAIN][domain]
+    if not hass.data[DOMAIN]:
+        return None
+
+    if "cloud" in hass.data[DOMAIN]:
+        return hass.data[DOMAIN]["cloud"]
+
+    return next(iter(hass.data[DOMAIN].values()))
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

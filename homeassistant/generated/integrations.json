@@ -241,7 +241,7 @@
       "iot_class": "local_polling"
     },
     "androidtv": {
-      "name": "Android TV",
+      "name": "Android Debug Bridge",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -925,12 +925,6 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
-    },
-    "darksky": {
-      "name": "Dark Sky",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
     },
     "datadog": {
       "name": "Datadog",
@@ -2305,6 +2299,12 @@
         }
       }
     },
+    "homeseer": {
+      "name": "HomeSeer",
+      "iot_standards": [
+        "zwave"
+      ]
+    },
     "homewizard": {
       "name": "HomeWizard Energy",
       "integration_type": "hub",
@@ -3078,12 +3078,6 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "magicseaweed": {
-      "name": "Magicseaweed",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
-    },
     "mailgun": {
       "name": "Mailgun",
       "integration_type": "hub",
@@ -3293,12 +3287,6 @@
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "Xbox"
-        },
-        "xbox_live": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "cloud_polling",
-          "name": "Xbox Live"
         }
       }
     },
@@ -3622,7 +3610,7 @@
     "nextcloud": {
       "name": "Nextcloud",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "nextdns": {
@@ -4315,8 +4303,8 @@
     },
     "qbittorrent": {
       "name": "qBittorrent",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "qingping": {
@@ -5062,7 +5050,7 @@
     "snapcast": {
       "name": "Snapcast",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "snips": {
@@ -6509,7 +6497,6 @@
       "config_flow": false
     },
     "input_button": {
-      "name": "Input Button",
       "integration_type": "helper",
       "config_flow": false
     },
@@ -6585,6 +6572,7 @@
     "growatt_server",
     "homekit_controller",
     "input_boolean",
+    "input_button",
     "input_datetime",
     "input_number",
     "input_select",
