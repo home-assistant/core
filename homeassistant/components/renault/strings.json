@@ -73,6 +73,11 @@
         "name": "Stop charge"
       }
     },
+    "device_tracker": {
+      "location_device_tracker": {
+        "name": "Location"
+      }
+    },
     "select": {
       "charge_mode": {
         "state": {
