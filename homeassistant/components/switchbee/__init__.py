@@ -92,10 +92,9 @@ async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> Non
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
-    _LOGGER.error("Migrating from version %s", config_entry.version)
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
 
-    # Normalise MAC address of device which also affects entity unique IDs
-    if config_entry.version == 2:
+    if config_entry.version == 1:
         websession = async_get_clientsession(hass, verify_ssl=False)
         old_unique_id = config_entry.unique_id
         api = await get_api_object(
@@ -110,11 +109,12 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         def update_unique_id(entity_entry: RegistryEntry) -> dict[str, str] | None:
             """Update unique ID of entity entry."""
             assert isinstance(old_unique_id, str)
+
             if match := re.match(
-                r"(?:[0-9a-fA-F]:?){12}-(?P<id>\d+)", entity_entry.unique_id
+                rf"(?:{old_unique_id}-(?P<id>\d+)", entity_entry.unique_id
             ):
                 entity_new_unique_id = f'{new_unique_id}-{match.group("id")}'
-                _LOGGER.error(
+                _LOGGER.debug(
                     "Migrating entity %s from %s to new id %s",
                     entity_entry.entity_id,
                     entity_entry.unique_id,
@@ -122,11 +122,11 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 )
                 return {"new_unique_id": entity_new_unique_id}
 
-            _LOGGER.error(entity_entry.unique_id)
             return None
 
-        await async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
-        config_entry.version = 2
+        if new_unique_id:
+            await async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
+            config_entry.version = 2
 
         _LOGGER.info("Migration to version %s successful", config_entry.version)
 
