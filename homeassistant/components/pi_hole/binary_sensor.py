@@ -77,7 +77,7 @@ BINARY_SENSOR_TYPES: tuple[PiHoleBinarySensorEntityDescription, ...] = (
     ),
     PiHoleBinarySensorEntityDescription(
         key="status",
-        name="Status",
+        translation_key="status",
         icon="mdi:pi-hole",
         state_value=lambda api: bool(api.data.get("status") == "enabled"),
     ),
@@ -109,6 +109,7 @@ class PiHoleBinarySensor(PiHoleEntity, BinarySensorEntity):
     """Representation of a Pi-hole binary sensor."""
 
     entity_description: PiHoleBinarySensorEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -123,10 +124,9 @@ class PiHoleBinarySensor(PiHoleEntity, BinarySensorEntity):
         self.entity_description = description
 
         if description.key == "status":
+            self._attr_has_entity_name = False
             self._attr_name = f"{name}"
-        else:
-            self._attr_name = f"{name} {description.name}"
-        self._attr_unique_id = f"{self._server_unique_id}/{description.name}"
+        self._attr_unique_id = f"{self._server_unique_id}/{description.key}"
 
     @property
     def is_on(self) -> bool:
