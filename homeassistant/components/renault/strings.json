@@ -89,15 +89,26 @@
       }
     },
     "sensor": {
-      "plug_state": {
-        "state": {
-          "unplugged": "Unplugged",
-          "plugged": "Plugged in",
-          "plug_error": "Plug error",
-          "plug_unknown": "Plug unknown"
-        }
+      "admissible_charging_power": {
+        "name": "Admissible charging power"
+      },
+      "battery_autonomy": {
+        "name": "Battery autonomy"
+      },
+      "battery_available_energy": {
+        "name": "Battery available energy"
+      },
+      "battery_last_activity": {
+        "name": "Last battery activity"
+      },
+      "battery_level": {
+        "name": "Battery level"
+      },
+      "battery_temperature": {
+        "name": "Battery temperature"
       },
       "charge_state": {
+        "name": "Charge state",
         "state": {
           "not_in_charge": "Not charging",
           "waiting_for_a_planned_charge": "Waiting for planned charge",
@@ -108,6 +119,48 @@
           "charge_error": "Not charging or plugged in",
           "unavailable": "Unavailable"
         }
+      },
+      "charging_power": {
+        "name": "Charging power"
+      },
+      "charging_remaining_time": {
+        "name": "Charging remaining time"
+      },
+      "fuel_autonomy": {
+        "name": "Fuel autonomy"
+      },
+      "fuel_quantity": {
+        "name": "Fuel quantity"
+      },
+      "hvac_last_activity": {
+        "name": "Last HVAC activity"
+      },
+      "hvac_soc_threshold": {
+        "name": "HVAC SoC threshold"
+      },
+      "location_last_activity": {
+        "name": "Last location activity"
+      },
+      "mileage": {
+        "name": "Mileage"
+      },
+      "outside_temperature": {
+        "name": "Outside temperature"
+      },
+      "plug_state": {
+        "name": "Plug state",
+        "state": {
+          "unplugged": "Unplugged",
+          "plugged": "Plugged in",
+          "plug_error": "Plug error",
+          "plug_unknown": "Plug unknown"
+        }
+      },
+      "res_state": {
+        "name": "Remote engine start"
+      },
+      "res_state_code": {
+        "name": "Remote engine start code"
       }
     }
   }

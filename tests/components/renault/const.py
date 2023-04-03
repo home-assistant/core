@@ -160,7 +160,7 @@ MOCK_VEHICLES = {
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP,
-                ATTR_ENTITY_ID: "sensor.reg_number_battery_last_activity",
+                ATTR_ENTITY_ID: "sensor.reg_number_last_battery_activity",
                 ATTR_STATE: "2020-01-12T21:40:16+00:00",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_battery_last_activity",
             },
@@ -231,7 +231,7 @@ MOCK_VEHICLES = {
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP,
-                ATTR_ENTITY_ID: "sensor.reg_number_hvac_last_activity",
+                ATTR_ENTITY_ID: "sensor.reg_number_last_hvac_activity",
                 ATTR_STATE: STATE_UNKNOWN,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_hvac_last_activity",
             },
@@ -395,7 +395,7 @@ MOCK_VEHICLES = {
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP,
-                ATTR_ENTITY_ID: "sensor.reg_number_battery_last_activity",
+                ATTR_ENTITY_ID: "sensor.reg_number_last_battery_activity",
                 ATTR_STATE: "2020-11-17T08:06:48+00:00",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_battery_last_activity",
             },
@@ -466,7 +466,7 @@ MOCK_VEHICLES = {
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP,
-                ATTR_ENTITY_ID: "sensor.reg_number_hvac_last_activity",
+                ATTR_ENTITY_ID: "sensor.reg_number_last_hvac_activity",
                 ATTR_STATE: "2020-12-03T00:00:00+00:00",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_hvac_last_activity",
             },
@@ -481,7 +481,7 @@ MOCK_VEHICLES = {
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP,
-                ATTR_ENTITY_ID: "sensor.reg_number_location_last_activity",
+                ATTR_ENTITY_ID: "sensor.reg_number_last_location_activity",
                 ATTR_STATE: "2020-02-18T16:58:38+00:00",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_location_last_activity",
             },
@@ -630,7 +630,7 @@ MOCK_VEHICLES = {
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP,
-                ATTR_ENTITY_ID: "sensor.reg_number_battery_last_activity",
+                ATTR_ENTITY_ID: "sensor.reg_number_last_battery_activity",
                 ATTR_STATE: "2020-01-12T21:40:16+00:00",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_battery_last_activity",
             },
@@ -713,7 +713,7 @@ MOCK_VEHICLES = {
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP,
-                ATTR_ENTITY_ID: "sensor.reg_number_location_last_activity",
+                ATTR_ENTITY_ID: "sensor.reg_number_last_location_activity",
                 ATTR_STATE: "2020-02-18T16:58:38+00:00",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_location_last_activity",
             },
@@ -830,7 +830,7 @@ MOCK_VEHICLES = {
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP,
-                ATTR_ENTITY_ID: "sensor.reg_number_location_last_activity",
+                ATTR_ENTITY_ID: "sensor.reg_number_last_location_activity",
                 ATTR_STATE: "2020-02-18T16:58:38+00:00",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_location_last_activity",
             },
