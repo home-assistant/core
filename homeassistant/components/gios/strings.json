@@ -26,7 +26,7 @@
   "entity": {
     "sensor": {
       "aqi": {
-        "name": "AQI",
+        "name": "[%key:component::sensor::entity_component::aqi::name%]",
         "state": {
           "very_bad": "Very bad",
           "bad": "Bad",
@@ -40,10 +40,10 @@
         "name": "Benzene"
       },
       "co": {
-        "name": "Carbon monoxide"
+        "name": "[%key:component::sensor::entity_component::carbon_monoxide::name%]"
       },
       "no2": {
-        "name": "Nitrogen dioxide"
+        "name": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]"
       },
       "no2_index": {
         "name": "Nitrogen dioxide index",
@@ -57,7 +57,7 @@
         }
       },
       "o3": {
-        "name": "Ozone"
+        "name": "[%key:component::sensor::entity_component::ozone::name%]"
       },
       "o3_index": {
         "name": "Ozone index",
@@ -71,10 +71,10 @@
         }
       },
       "pm10": {
-        "name": "PM10"
+        "name": "[%key:component::sensor::entity_component::pm10::name%]"
       },
       "pm10_index": {
-        "name": "PM10 index",
+        "name": "Particulate matter 10 μm index",
         "state": {
           "very_bad": "[%key:component::gios::entity::sensor::aqi::state::very_bad%]",
           "bad": "[%key:component::gios::entity::sensor::aqi::state::bad%]",
@@ -85,10 +85,10 @@
         }
       },
       "pm25": {
-        "name": "PM2.5"
+        "name": "[%key:component::sensor::entity_component::pm25::name%]"
       },
       "pm25_index": {
-        "name": "PM2.5 index",
+        "name": "Particulate matter 2.5 μm index",
         "state": {
           "very_bad": "[%key:component::gios::entity::sensor::aqi::state::very_bad%]",
           "bad": "[%key:component::gios::entity::sensor::aqi::state::bad%]",
@@ -99,7 +99,7 @@
         }
       },
       "so2": {
-        "name": "Sulphur dioxide"
+        "name": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
       },
       "so2_index": {
         "name": "Sulphur dioxide index",
