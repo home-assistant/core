@@ -122,10 +122,6 @@ class PiHoleBinarySensor(PiHoleEntity, BinarySensorEntity):
         """Initialize a Pi-hole sensor."""
         super().__init__(api, coordinator, name, server_unique_id)
         self.entity_description = description
-
-        if description.key == "status":
-            self._attr_has_entity_name = False
-            self._attr_name = f"{name}"
         self._attr_unique_id = f"{self._server_unique_id}/{description.key}"
 
     @property
