@@ -85,7 +85,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
     assert state
     assert state.state == "22.0"
     assert (
-        state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Comfort Temperature"
+        state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Comfort temperature"
     )
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     assert ATTR_STATE_CLASS not in state.attributes
@@ -93,7 +93,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
     state = hass.states.get(f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_eco_temperature")
     assert state
     assert state.state == "16.0"
-    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Eco Temperature"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Eco temperature"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     assert ATTR_STATE_CLASS not in state.attributes
 
@@ -104,7 +104,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
     assert state.state == "22.0"
     assert (
         state.attributes[ATTR_FRIENDLY_NAME]
-        == f"{CONF_FAKE_NAME} Next Scheduled Temperature"
+        == f"{CONF_FAKE_NAME} Next scheduled temperature"
     )
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     assert ATTR_STATE_CLASS not in state.attributes
@@ -116,7 +116,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
     assert state.state == "1970-01-01T00:00:00+00:00"
     assert (
         state.attributes[ATTR_FRIENDLY_NAME]
-        == f"{CONF_FAKE_NAME} Next Scheduled Change Time"
+        == f"{CONF_FAKE_NAME} Next scheduled change time"
     )
     assert ATTR_STATE_CLASS not in state.attributes
 
@@ -125,7 +125,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
     assert state.state == PRESET_COMFORT
     assert (
         state.attributes[ATTR_FRIENDLY_NAME]
-        == f"{CONF_FAKE_NAME} Next Scheduled Preset"
+        == f"{CONF_FAKE_NAME} Next scheduled preset"
     )
     assert ATTR_STATE_CLASS not in state.attributes
 
@@ -136,7 +136,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
     assert state.state == PRESET_ECO
     assert (
         state.attributes[ATTR_FRIENDLY_NAME]
-        == f"{CONF_FAKE_NAME} Current Scheduled Preset"
+        == f"{CONF_FAKE_NAME} Current scheduled preset"
     )
     assert ATTR_STATE_CLASS not in state.attributes
 

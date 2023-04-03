@@ -1113,6 +1113,7 @@ async def test_device_class_binary_sensor(
         ("awning", "action.devices.types.AWNING"),
         ("shutter", "action.devices.types.SHUTTER"),
         ("curtain", "action.devices.types.CURTAIN"),
+        ("window", "action.devices.types.WINDOW"),
     ],
 )
 async def test_device_class_cover(

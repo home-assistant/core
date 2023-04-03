@@ -42,6 +42,7 @@ class BinarySwitchPropertyMock(BinarySwitchProperty):
         """Initialize the mock."""
         self._logger = MagicMock()
         self.element_uid = "Test"
+        self.state = False
 
 
 class ConsumptionPropertyMock(ConsumptionProperty):
@@ -233,6 +234,17 @@ class SensorMock(DeviceMock):
         }
 
 
+class SwitchMock(DeviceMock):
+    """devolo Home Control switch device mock."""
+
+    def __init__(self) -> None:
+        """Initialize the mock."""
+        super().__init__()
+        self.binary_switch_property = {
+            "devolo.BinarySwitch:Test": BinarySwitchPropertyMock()
+        }
+
+
 class HomeControlMock(HomeControl):
     """devolo Home Control gateway mock."""
 
@@ -351,5 +363,16 @@ class HomeControlMockSiren(HomeControlMock):
         """Initialize the mock."""
         super().__init__()
         self.devices = {"Test": SirenMock()}
+        self.publisher = Publisher(self.devices.keys())
+        self.publisher.unregister = MagicMock()
+
+
+class HomeControlMockSwitch(HomeControlMock):
+    """devolo Home Control gateway mock with switch device."""
+
+    def __init__(self, **kwargs: Any) -> None:
+        """Initialize the mock."""
+        super().__init__()
+        self.devices = {"Test": SwitchMock()}
         self.publisher = Publisher(self.devices.keys())
         self.publisher.unregister = MagicMock()

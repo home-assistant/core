@@ -54,21 +54,7 @@ async def async_setup_platform(
     """Set up the Frontier Silicon platform.
 
     YAML is deprecated, and imported automatically.
-    SSDP discovery is temporarily retained - to be refactor subsequently.
     """
-    if discovery_info is not None:
-        webfsapi_url = await AFSAPI.get_webfsapi_endpoint(
-            discovery_info["ssdp_description"]
-        )
-        afsapi = AFSAPI(webfsapi_url, DEFAULT_PIN)
-
-        name = await afsapi.get_friendly_name()
-        async_add_entities(
-            [AFSAPIDevice(name, afsapi)],
-            True,
-        )
-
-        return
 
     ir.async_create_issue(
         hass,
@@ -328,7 +314,9 @@ class AFSAPIDevice(MediaPlayerEntity):
             await self.fs_device.set_eq_preset(mode)
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Browse media library and preset stations."""
         if not media_content_id:
