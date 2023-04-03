@@ -71,24 +71,24 @@
         "name": "[%key:component::binary_sensor::entity_component::door::name%]"
       },
       "door_timeout": {
-        "name": "Door timeout"
+        "name": "Timeout"
       },
       "light": {
         "name": "[%key:component::binary_sensor::entity_component::light::name%]"
       },
       "door_unclosed_alarm": {
-        "name": "Door unclosed alarm"
+        "name": "Unclosed alarm"
       },
       "door_unlocked_alarm": {
-        "name": "Door unlocked alarm"
+        "name": "Unlocked alarm"
       },
       "door_auto_lock_paused": {
-        "name": "Door auto-lock paused"
+        "name": "Auto-lock paused"
       }
     },
     "sensor": {
       "bluetooth_signal": {
-        "name": "Bluetooth signal strength"
+        "name": "Bluetooth signal"
       },
       "wifi_signal": {
         "name": "Wi-Fi signal strength"
