@@ -659,8 +659,6 @@ async def test_add_item_service(hass: HomeAssistant, sl_setup) -> None:
         {ATTR_NAME: "beer"},
         blocking=True,
     )
-    await hass.async_block_till_done()
-
     assert len(hass.data[DOMAIN].items) == 1
     assert len(events) == 1
 
@@ -674,15 +672,12 @@ async def test_remove_item_service(hass: HomeAssistant, sl_setup) -> None:
         {ATTR_NAME: "beer"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     await hass.services.async_call(
         DOMAIN,
         SERVICE_ADD_ITEM,
         {ATTR_NAME: "cheese"},
         blocking=True,
     )
-    await hass.async_block_till_done()
-
     assert len(hass.data[DOMAIN].items) == 2
     assert len(events) == 2
 
@@ -692,8 +687,6 @@ async def test_remove_item_service(hass: HomeAssistant, sl_setup) -> None:
         {ATTR_NAME: "beer"},
         blocking=True,
     )
-    await hass.async_block_till_done()
-
     assert len(hass.data[DOMAIN].items) == 1
     assert hass.data[DOMAIN].items[0]["name"] == "cheese"
     assert len(events) == 3
@@ -708,7 +701,6 @@ async def test_clear_completed_items_service(hass: HomeAssistant, sl_setup) -> N
         {ATTR_NAME: "beer"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert len(hass.data[DOMAIN].items) == 1
     assert len(events) == 1
 
@@ -719,7 +711,6 @@ async def test_clear_completed_items_service(hass: HomeAssistant, sl_setup) -> N
         {ATTR_NAME: "beer"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert len(hass.data[DOMAIN].items) == 1
     assert len(events) == 1
 
@@ -730,7 +721,6 @@ async def test_clear_completed_items_service(hass: HomeAssistant, sl_setup) -> N
         {},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert len(hass.data[DOMAIN].items) == 0
     assert len(events) == 1
 
@@ -745,7 +735,6 @@ async def test_sort_list_service(hass: HomeAssistant, sl_setup) -> None:
             {ATTR_NAME: name},
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     # sort ascending
     events = async_capture_events(hass, EVENT_SHOPPING_LIST_UPDATED)
@@ -755,7 +744,6 @@ async def test_sort_list_service(hass: HomeAssistant, sl_setup) -> None:
         {ATTR_REVERSE: False},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert hass.data[DOMAIN].items[0][ATTR_NAME] == "aaa"
     assert hass.data[DOMAIN].items[1][ATTR_NAME] == "ddd"
@@ -770,7 +758,6 @@ async def test_sort_list_service(hass: HomeAssistant, sl_setup) -> None:
         {ATTR_REVERSE: True},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert hass.data[DOMAIN].items[0][ATTR_NAME] == "zzz"
     assert hass.data[DOMAIN].items[1][ATTR_NAME] == "ddd"
