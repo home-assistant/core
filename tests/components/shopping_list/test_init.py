@@ -751,7 +751,6 @@ async def test_sort_list_service(hass: HomeAssistant, sl_setup) -> None:
     assert len(events) == 1
 
     # sort descending
-    events = async_capture_events(hass, EVENT_SHOPPING_LIST_UPDATED)
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SORT,
@@ -762,4 +761,4 @@ async def test_sort_list_service(hass: HomeAssistant, sl_setup) -> None:
     assert hass.data[DOMAIN].items[0][ATTR_NAME] == "zzz"
     assert hass.data[DOMAIN].items[1][ATTR_NAME] == "ddd"
     assert hass.data[DOMAIN].items[2][ATTR_NAME] == "aaa"
-    assert len(events) == 1
+    assert len(events) == 2
