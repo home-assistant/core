@@ -91,7 +91,7 @@
         "name": "Bluetooth signal"
       },
       "wifi_signal": {
-        "name": "Wi-Fi signal strength"
+        "name": "Wi-Fi signal"
       },
       "battery": {
         "name": "[%key:component::sensor::entity_component::battery::name%]"
