@@ -23,8 +23,7 @@ async def test_successful_config_flow(hass: HomeAssistant, bypass_api_fixture) -
 
     # Provide email address to config flow
     with patch(
-        "homeassistant.components.roborock.config_flow.RoborockClient.request_code",
-        return_value=None,
+        "homeassistant.components.roborock.config_flow.RoborockClient.request_code"
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_USERNAME: USER_EMAIL}

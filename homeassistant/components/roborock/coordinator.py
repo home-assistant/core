@@ -36,8 +36,8 @@ class RoborockDataUpdateCoordinator(
         """Disconnect from API."""
         await self.api.async_disconnect()
 
-    async def _get_device_prop(self, device_id: str) -> None:
-        """Get device properties."""
+    async def _update_device_prop(self, device_id: str) -> None:
+        """Update device properties."""
         device_prop = await self.api.get_prop(device_id)
         if device_prop:
             if device_id in self._devices_prop:
@@ -50,7 +50,7 @@ class RoborockDataUpdateCoordinator(
         self._timeout_countdown = int(self.ACCEPTABLE_NUMBER_OF_TIMEOUTS)
         try:
             for device_id in self.api.device_map:
-                await self._get_device_prop(device_id)
+                await self._update_device_prop(device_id)
         except RoborockTimeout as ex:
             if self._devices_prop and self._timeout_countdown > 0:
                 _LOGGER.debug(

@@ -76,7 +76,6 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=self._errors,
-            last_step=False,
         )
 
     def _show_code_form(self) -> FlowResult:

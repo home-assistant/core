@@ -1,13 +1,10 @@
 """Support for Roborock vacuum class."""
-from abc import ABC
 from typing import Any
 
 from roborock.code_mappings import FAN_SPEED_CODES
 from roborock.typing import RoborockCommand, RoborockDeviceInfo
 
 from homeassistant.components.vacuum import (
-    ATTR_BATTERY_ICON,
-    ATTR_FAN_SPEED,
     ATTR_FAN_SPEED_LIST,
     STATE_CLEANING,
     STATE_DOCKED,
@@ -19,7 +16,6 @@ from homeassistant.components.vacuum import (
     VacuumEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_STATE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
@@ -75,7 +71,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity, ABC):
+class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
     """General Representation of a Roborock vacuum."""
 
     def __init__(
@@ -88,11 +84,7 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity, ABC):
         StateVacuumEntity.__init__(self)
         RoborockCoordinatedEntity.__init__(self, unique_id, device, coordinator)
         self._attr_icon = "mdi:robot-vacuum"
-
-    @property
-    def supported_features(self) -> VacuumEntityFeature:
-        """Flag vacuum cleaner features that are supported."""
-        return (
+        self._attr_supported_features = (
             VacuumEntityFeature.PAUSE
             | VacuumEntityFeature.STOP
             | VacuumEntityFeature.RETURN_HOME
@@ -105,66 +97,31 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity, ABC):
             | VacuumEntityFeature.STATE
             | VacuumEntityFeature.START
         )
+        self._attr_fan_speed_list = list(FAN_SPEED_CODES.values())
 
     @property
     def state(self) -> str | None:
         """Return the status of the vacuum cleaner."""
-        if not self._device_status:
-            return None
         return STATE_CODE_TO_STATE.get(self._device_status.state)
 
     @property
     def status(self) -> str | None:
         """Return the status of the vacuum cleaner."""
-        if not self._device_status:
-            return None
         return self._device_status.status
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the vacuum cleaner."""
-        if not self._device_status:
-            return {}
-        data: dict[str, Any] = dict(self._device_status)
-
-        if self.supported_features & VacuumEntityFeature.BATTERY:
-            data[ATTR_BATTERY_LEVEL] = self.battery_level
-            data[ATTR_BATTERY_ICON] = self.battery_icon
-
-        if self.supported_features & VacuumEntityFeature.FAN_SPEED:
-            data[ATTR_FAN_SPEED] = self.fan_speed
-
-        data[ATTR_STATE] = self.state
-        data[ATTR_STATUS] = self.status
-        data[ATTR_ERROR] = self.error
-        data.update(self.capability_attributes)
-
-        return data
 
     @property
     def battery_level(self) -> int | None:
         """Return the battery level of the vacuum cleaner."""
-        if not self._device_status:
-            return None
         return self._device_status.battery
 
     @property
     def fan_speed(self) -> str | None:
         """Return the fan speed of the vacuum cleaner."""
-        if not self._device_status:
-            return None
         return self._device_status.fan_power
-
-    @property
-    def fan_speed_list(self) -> list[str]:
-        """Get the list of available fan speed steps of the vacuum cleaner."""
-        return list(FAN_SPEED_CODES.values())
 
     @property
     def error(self) -> str | None:
         """Get the error str if an error code exists."""
-        if not self._device_status:
-            return None
         return self._device_status.error
 
     @property
@@ -208,11 +165,10 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity, ABC):
         await self.coordinator.async_request_refresh()
 
     async def async_start_pause(self):
-        """Pause cleaning if running."""
+        """Start, pause or resume the cleaning task."""
         if self.state == STATE_CLEANING:
             await self.async_pause()
         else:
-            # Start/resume cleaning.
             await self.async_start()
 
     async def async_send_command(
