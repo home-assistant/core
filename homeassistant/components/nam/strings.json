@@ -46,40 +46,40 @@
     },
     "sensor": {
       "bme280_humidity": {
-        "name": "BME280 humidity"
+        "name": "BME280 [%key:component::sensor::entity_component::humidity::name%]"
       },
       "bme280_pressure": {
-        "name": "BME280 pressure"
+        "name": "BME280 [%key:component::sensor::entity_component::pressure::name%]"
       },
       "bme280_temperature": {
-        "name": "BME280 temperature"
+        "name": "BME280 [%key:component::sensor::entity_component::temperature::name%]"
       },
       "bmp180_pressure": {
-        "name": "BMP180 pressure"
+        "name": "BMP180 [%key:component::sensor::entity_component::pressure::name%]"
       },
       "bmp180_temperature": {
-        "name": "BMP180 temperature"
+        "name": "BMP180 [%key:component::sensor::entity_component::temperature::name%]"
       },
       "bmp280_pressure": {
-        "name": "BMP280 pressure"
+        "name": "BMP280 [%key:component::sensor::entity_component::pressure::name%]"
       },
       "bmp280_temperature": {
-        "name": "BMP280 temperature"
+        "name": "BMP280 [%key:component::sensor::entity_component::temperature::name%]"
       },
       "heca_humidity": {
-        "name": "HECA humidity"
+        "name": "HECA [%key:component::sensor::entity_component::humidity::name%]"
       },
       "heca_temperature": {
-        "name": "HECA temperature"
+        "name": "HECA [%key:component::sensor::entity_component::temperature::name%]"
       },
       "mhz14a_carbon_dioxide": {
-        "name": "MH-Z14A carbon dioxide"
+        "name": "MH-Z14A [%key:component::sensor::entity_component::carbon_dioxide::name%]"
       },
       "pmsx003_caqi": {
-        "name": "PMSx003 CAQI"
+        "name": "PMSx003 Common air quality index"
       },
       "pmsx003_caqi_level": {
-        "name": "PMSx003 CAQI level",
+        "name": "PMSx003 Common air quality index level",
         "state": {
           "very_low": "Very low",
           "low": "Low",
@@ -89,19 +89,19 @@
         }
       },
       "pmsx003_pm1": {
-        "name": "PMSx003 PM1"
+        "name": "PMSx003 [%key:component::sensor::entity_component::pm1::name%]"
       },
       "pmsx003_pm10": {
-        "name": "PMSx003 PM10"
+        "name": "PMSx003 [%key:component::sensor::entity_component::pm10::name%]"
       },
       "pmsx003_pm25": {
-        "name": "PMSx003 PM2.5"
+        "name": "PMSx003 [%key:component::sensor::entity_component::pm25::name%]"
       },
       "sds011_caqi": {
-        "name": "SDS011 CAQI"
+        "name": "SDS011 Common air quality index"
       },
       "sds011_caqi_level": {
-        "name": "SDS011 CAQI level",
+        "name": "SDS011 Common air quality index level",
         "state": {
           "very_low": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::very_low%]",
           "low": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::low%]",
@@ -111,22 +111,22 @@
         }
       },
       "sds011_pm10": {
-        "name": "SDS011 PM10"
+        "name": "SDS011 [%key:component::sensor::entity_component::pm10::name%]"
       },
       "sds011_pm25": {
-        "name": "SDS011 PM2.5"
+        "name": "SDS011 [%key:component::sensor::entity_component::pm25::name%]"
       },
       "sht3x_humidity": {
-        "name": "SHT3X humidity"
+        "name": "SHT3X [%key:component::sensor::entity_component::humidity::name%]"
       },
       "sht3x_temperature": {
-        "name": "SHT3X temperature"
+        "name": "SHT3X [%key:component::sensor::entity_component::temperature::name%]"
       },
       "sps30_caqi": {
-        "name": "SPS30 CAQI"
+        "name": "SPS30 Common air quality index"
       },
       "sps30_caqi_level": {
-        "name": "SPS30 CAQI level",
+        "name": "SPS30 Common air quality index level",
         "state": {
           "very_low": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::very_low%]",
           "low": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::low%]",
@@ -136,22 +136,22 @@
         }
       },
       "sps30_pm1": {
-        "name": "SPS30 PM1"
+        "name": "SPS30 [%key:component::sensor::entity_component::pm1::name%]"
       },
       "sps30_pm10": {
-        "name": "SPS30 PM10"
+        "name": "SPS30 [%key:component::sensor::entity_component::pm10::name%]"
       },
       "sps30_pm25": {
-        "name": "SPS30 PM2.5"
+        "name": "SPS30 [%key:component::sensor::entity_component::pm25::name%]"
       },
       "sps30_pm4": {
-        "name": "SPS30 PM4"
+        "name": "SPS30 Particulate matter 4 μm"
       },
       "dht22_humidity": {
-        "name": "DHT22 humidity"
+        "name": "DHT22 [%key:component::sensor::entity_component::humidity::name%]"
       },
       "dht22_temperature": {
-        "name": "DHT22 temperature"
+        "name": "DHT22 [%key:component::sensor::entity_component::temperature::name%]"
       },
       "signal_strength": {
         "name": "[%key:component::sensor::entity_component::signal_strength::name%]"
