@@ -63,8 +63,8 @@ async def async_setup_entry(
 class LivisiClimate(LivisiEntity, ClimateEntity):
     """Represents the Livisi Climate."""
 
-    _attr_hvac_modes = [HVACMode.AUTO]
-    _attr_hvac_mode = HVACMode.AUTO
+    _attr_hvac_modes = []
+    _attr_hvac_mode = HVACMode.HEAT
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_target_temperature_high = MAX_TEMPERATURE
@@ -86,11 +86,11 @@ class LivisiClimate(LivisiEntity, ClimateEntity):
         self._humidity_capability = self.capabilities["RoomHumidity"]
 
         config = device.get(CAPABILITY_CONFIG, {}).get("RoomSetpoint", {})
-        self._attr_target_temperature_high = float(
-            config.get("maxTemperature", MAX_TEMPERATURE)
+        self._attr_target_temperature_high = config.get(
+            "maxTemperature", MAX_TEMPERATURE
         )
-        self._attr_target_temperature_low = float(
-            config.get("minTemperature", MIN_TEMPERATURE)
+        self._attr_target_temperature_low = config.get(
+            "minTemperature", MIN_TEMPERATURE
         )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
