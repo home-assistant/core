@@ -50,6 +50,11 @@
       "queries_forwarded": { "name": "DNS queries forwarded" },
       "unique_clients": { "name": "DNS unique clients" },
       "unique_domains": { "name": "DNS unique domains" }
+    },
+    "update": {
+      "core_update_available": { "name": "Core update available" },
+      "ftl_update_available": { "name": "FTL update available" },
+      "web_update_available": { "name": "Web update available" }
     }
   }
 }
