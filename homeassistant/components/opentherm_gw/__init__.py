@@ -399,7 +399,7 @@ class OpenThermGatewayDevice:
         self.name = config_entry.data[CONF_NAME]
         self.climate_config = config_entry.options
         self.config_entry_id = config_entry.entry_id
-        self.status: dict[str, Any] = {}
+        self.status = gw_vars.DEFAULT_STATUS
         self.update_signal = f"{DATA_OPENTHERM_GW}_{self.gw_id}_update"
         self.options_update_signal = f"{DATA_OPENTHERM_GW}_{self.gw_id}_options_update"
         self.gateway = pyotgw.OpenThermGateway()
