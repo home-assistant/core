@@ -78,7 +78,7 @@ async def _validate_input(
 class SharkIqConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Shark IQ."""
 
-    VERSION = 1
+    VERSION = 2
 
     async def _async_validate_input(
         self, user_input: Mapping[str, Any]

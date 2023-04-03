@@ -43,6 +43,17 @@ async def test_form(hass: HomeAssistant) -> None:
     mock_setup_entry.assert_called_once()
 
 
+# async def test_migration(hass: HomeAssistant) -> None:
+#     """Test we get the form."""
+
+# ayla_api = get_ayla_api(
+#     username=data[CONF_USERNAME],
+#     password=data[CONF_PASSWORD],
+#     websession=async_get_clientsession(hass),
+#     europe=(data[CONF_REGION] == SHARKIQ_REGION_EUROPE),
+# )
+
+
 @pytest.mark.parametrize(
     ("exc", "base_error"),
     [
