@@ -71,8 +71,8 @@ async def test_setup_with_defaults(hass: HomeAssistant) -> None:
     assert state.name == "Pi-Hole Seen clients"
     assert state.state == "0"
 
-    state = hass.states.get("binary_sensor.pi_hole")
-    assert state.name == "Pi-Hole"
+    state = hass.states.get("binary_sensor.pi_hole_status")
+    assert state.name == "Pi-Hole Status"
     assert state.state == "off"
 
 
