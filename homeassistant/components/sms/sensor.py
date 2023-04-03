@@ -102,6 +102,8 @@ async def async_setup_entry(
 class DeviceSensor(CoordinatorEntity, SensorEntity):
     """Implementation of a device sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, coordinator, description, unique_id, gateway):
         """Initialize the device sensor."""
         super().__init__(coordinator)
