@@ -18,99 +18,99 @@
   },
   "entity": {
     "binary_sensor": {
-      "sensed_binary_sensor_a": {
+      "sensed_a": {
         "name": "Sensed A"
       },
-      "sensed_binary_sensor_b": {
+      "sensed_b": {
         "name": "Sensed B"
       },
-      "sensed_binary_sensor_0": {
+      "sensed_0": {
         "name": "Sensed 0"
       },
-      "sensed_binary_sensor_1": {
+      "sensed_1": {
         "name": "Sensed 1"
       },
-      "sensed_binary_sensor_2": {
+      "sensed_2": {
         "name": "Sensed 2"
       },
-      "sensed_binary_sensor_3": {
+      "sensed_3": {
         "name": "Sensed 3"
       },
-      "sensed_binary_sensor_4": {
+      "sensed_4": {
         "name": "Sensed 4"
       },
-      "sensed_binary_sensor_5": {
+      "sensed_5": {
         "name": "Sensed 5"
       },
-      "sensed_binary_sensor_6": {
+      "sensed_6": {
         "name": "Sensed 6"
       },
-      "sensed_binary_sensor_7": {
+      "sensed_7": {
         "name": "Sensed 7"
       },
-      "hub_short_binary_sensor_0": {
+      "hub_short_0": {
         "name": "Hub short on branch 0"
       },
-      "hub_short_binary_sensor_1": {
+      "hub_short_1": {
         "name": "Hub short on branch 1"
       },
-      "hub_short_binary_sensor_2": {
+      "hub_short_2": {
         "name": "Hub short on branch 2"
       },
-      "hub_short_binary_sensor_3": {
+      "hub_short_3": {
         "name": "Hub short on branch 3"
       }
     },
     "sensor": {
-      "counter_sensor_a": {
+      "counter_a": {
         "name": "Counter A"
       },
-      "counter_sensor_b": {
+      "counter_b": {
         "name": "Counter B"
       },
-      "humidity_sensor": {
+      "humidity": {
         "name": "[%key:component::sensor::entity_component::humidity::name%]"
       },
-      "humidity_sensor_hih3600": {
+      "humidity_hih3600": {
         "name": "HIH3600 humidity"
       },
-      "humidity_sensor_hih4000": {
+      "humidity_hih4000": {
         "name": "HIH4000 humidity"
       },
-      "humidity_sensor_hih5030": {
+      "humidity_hih5030": {
         "name": "HIH5030 humidity"
       },
-      "humidity_sensor_htm1735": {
+      "humidity_htm1735": {
         "name": "HTM1735 humidity"
       },
-      "humidity_sensor_raw": {
+      "humidity_raw": {
         "name": "Raw humidity"
       },
-      "illuminance_sensor": {
+      "illuminance": {
         "name": "[%key:component::sensor::entity_component::illuminance::name%]"
       },
-      "moisture_sensor_1": {
+      "moisture_1": {
         "name": "Moisture 1"
       },
-      "moisture_sensor_2": {
+      "moisture_2": {
         "name": "Moisture 2"
       },
-      "moisture_sensor_3": {
+      "moisture_3": {
         "name": "Moisture 3"
       },
-      "moisture_sensor_4": {
+      "moisture_4": {
         "name": "Moisture 4"
       },
-      "pressure_sensor": {
+      "pressure": {
         "name": "[%key:component::sensor::entity_component::pressure::name%]"
       },
-      "temperature_sensor": {
+      "temperature": {
         "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },
-      "thermocouple_temperature_sensor_k": {
+      "thermocouple_temperature_k": {
         "name": "Thermocouple K temperature"
       },
-      "voltage_sensor": {
+      "voltage": {
         "name": "[%key:component::sensor::entity_component::voltage::name%]"
       },
       "voltage_vad": {
@@ -125,120 +125,120 @@
       "voltage_vis_gradient": {
         "name": "VIS voltage gradient"
       },
-      "wetness_sensor_0": {
+      "wetness_0": {
         "name": "Wetness 0"
       },
-      "wetness_sensor_1": {
+      "wetness_1": {
         "name": "Wetness 1"
       },
-      "wetness_sensor_2": {
+      "wetness_2": {
         "name": "Wetness 2"
       },
-      "wetness_sensor_3": {
+      "wetness_3": {
         "name": "Wetness 3"
       }
     },
     "switch": {
-      "hub_branch_switch_0": {
+      "hub_branch_0": {
         "name": "Hub branch 0"
       },
-      "hub_branch_switch_1": {
+      "hub_branch_1": {
         "name": "Hub branch 1"
       },
-      "hub_branch_switch_2": {
+      "hub_branch_2": {
         "name": "Hub branch 2"
       },
-      "hub_branch_switch_3": {
+      "hub_branch_3": {
         "name": "Hub branch 3"
       },
-      "iad_switch": {
+      "iad": {
         "name": "Current A/D control"
       },
-      "latch_switch_0": {
+      "latch_0": {
         "name": "Latch 0"
       },
-      "latch_switch_1": {
+      "latch_1": {
         "name": "Latch 1"
       },
-      "latch_switch_2": {
+      "latch_2": {
         "name": "Latch 2"
       },
-      "latch_switch_3": {
+      "latch_3": {
         "name": "Latch 3"
       },
-      "latch_switch_4": {
+      "latch_4": {
         "name": "Latch 4"
       },
-      "latch_switch_5": {
+      "latch_5": {
         "name": "Latch 5"
       },
-      "latch_switch_6": {
+      "latch_6": {
         "name": "Latch 6"
       },
-      "latch_switch_7": {
+      "latch_7": {
         "name": "Latch 7"
       },
-      "latch_switch_a": {
+      "latch_a": {
         "name": "Latch A"
       },
-      "latch_switch_b": {
+      "latch_b": {
         "name": "Latch B"
       },
-      "leaf_sensor_switch_0": {
+      "leaf_sensor_0": {
         "name": "Leaf sensor 0"
       },
-      "leaf_sensor_switch_1": {
+      "leaf_sensor_1": {
         "name": "Leaf sensor 1"
       },
-      "leaf_sensor_switch_2": {
+      "leaf_sensor_2": {
         "name": "Leaf sensor 2"
       },
-      "leaf_sensor_switch_3": {
+      "leaf_sensor_3": {
         "name": "Leaf sensor 3"
       },
-      "moisture_sensor_switch_0": {
+      "moisture_sensor_0": {
         "name": "Moisture sensor 0"
       },
-      "moisture_sensor_switch_1": {
+      "moisture_sensor_1": {
         "name": "Moisture sensor 1"
       },
-      "moisture_sensor_switch_2": {
+      "moisture_sensor_2": {
         "name": "Moisture sensor 2"
       },
-      "moisture_sensor_switch_3": {
+      "moisture_sensor_3": {
         "name": "Moisture sensor 3"
       },
-      "pio_switch": {
+      "pio": {
         "name": "Programmed input-output"
       },
-      "pio_switch_0": {
+      "pio_0": {
         "name": "Programmed input-output 0"
       },
-      "pio_switch_1": {
+      "pio_1": {
         "name": "Programmed input-output 1"
       },
-      "pio_switch_2": {
+      "pio_2": {
         "name": "Programmed input-output 2"
       },
-      "pio_switch_3": {
+      "pio_3": {
         "name": "Programmed input-output 3"
       },
-      "pio_switch_4": {
+      "pio_4": {
         "name": "Programmed input-output 4"
       },
-      "pio_switch_5": {
+      "pio_5": {
         "name": "Programmed input-output 5"
       },
-      "pio_switch_6": {
+      "pio_6": {
         "name": "Programmed input-output 6"
       },
-      "pio_switch_7": {
+      "pio_7": {
         "name": "Programmed input-output 7"
       },
-      "pio_switch_a": {
+      "pio_a": {
         "name": "Programmed input-output A"
       },
-      "pio_switch_b": {
+      "pio_b": {
         "name": "Programmed input-output B"
       }
     }

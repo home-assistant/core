@@ -33,7 +33,7 @@ DEVICE_SWITCHES: dict[str, tuple[OneWireEntityDescription, ...]] = {
             key="PIO",
             entity_registry_enabled_default=False,
             read_mode=READ_MODE_BOOL,
-            translation_key="pio_switch",
+            translation_key="pio",
         ),
     ),
     "12": tuple(
@@ -42,7 +42,7 @@ DEVICE_SWITCHES: dict[str, tuple[OneWireEntityDescription, ...]] = {
                 key=f"PIO.{id}",
                 entity_registry_enabled_default=False,
                 read_mode=READ_MODE_BOOL,
-                translation_key=f"pio_switch_{id.lower()}",
+                translation_key=f"pio_{id.lower()}",
             )
             for id in DEVICE_KEYS_A_B
         ]
@@ -51,7 +51,7 @@ DEVICE_SWITCHES: dict[str, tuple[OneWireEntityDescription, ...]] = {
                 key=f"latch.{id}",
                 entity_registry_enabled_default=False,
                 read_mode=READ_MODE_BOOL,
-                translation_key=f"latch_switch_{id.lower()}",
+                translation_key=f"latch_{id.lower()}",
             )
             for id in DEVICE_KEYS_A_B
         ]
@@ -62,7 +62,7 @@ DEVICE_SWITCHES: dict[str, tuple[OneWireEntityDescription, ...]] = {
             entity_registry_enabled_default=False,
             entity_category=EntityCategory.CONFIG,
             read_mode=READ_MODE_BOOL,
-            translation_key="iad_switch",
+            translation_key="iad",
         ),
     ),
     "29": tuple(
@@ -71,7 +71,7 @@ DEVICE_SWITCHES: dict[str, tuple[OneWireEntityDescription, ...]] = {
                 key=f"PIO.{id}",
                 entity_registry_enabled_default=False,
                 read_mode=READ_MODE_BOOL,
-                translation_key=f"pio_switch_{id}",
+                translation_key=f"pio_{id}",
             )
             for id in DEVICE_KEYS_0_7
         ]
@@ -80,7 +80,7 @@ DEVICE_SWITCHES: dict[str, tuple[OneWireEntityDescription, ...]] = {
                 key=f"latch.{id}",
                 entity_registry_enabled_default=False,
                 read_mode=READ_MODE_BOOL,
-                translation_key=f"latch_switch_{id}",
+                translation_key=f"latch_{id}",
             )
             for id in DEVICE_KEYS_0_7
         ]
@@ -90,7 +90,7 @@ DEVICE_SWITCHES: dict[str, tuple[OneWireEntityDescription, ...]] = {
             key=f"PIO.{id}",
             entity_registry_enabled_default=False,
             read_mode=READ_MODE_BOOL,
-            translation_key=f"pio_switch_{id.lower()}",
+            translation_key=f"pio_{id.lower()}",
         )
         for id in DEVICE_KEYS_A_B
     ),
@@ -106,7 +106,7 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireEntityDescription, ...]] = {
             entity_registry_enabled_default=False,
             read_mode=READ_MODE_BOOL,
             entity_category=EntityCategory.CONFIG,
-            translation_key=f"hub_branch_switch_{id}",
+            translation_key=f"hub_branch_{id}",
         )
         for id in DEVICE_KEYS_0_3
     ),
@@ -117,7 +117,7 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireEntityDescription, ...]] = {
                 entity_registry_enabled_default=False,
                 read_mode=READ_MODE_BOOL,
                 entity_category=EntityCategory.CONFIG,
-                translation_key=f"leaf_sensor_switch_{id}",
+                translation_key=f"leaf_sensor_{id}",
             )
             for id in DEVICE_KEYS_0_3
         ]
@@ -127,7 +127,7 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireEntityDescription, ...]] = {
                 entity_registry_enabled_default=False,
                 read_mode=READ_MODE_BOOL,
                 entity_category=EntityCategory.CONFIG,
-                translation_key=f"moisture_sensor_switch_{id}",
+                translation_key=f"moisture_sensor_{id}",
             )
             for id in DEVICE_KEYS_0_3
         ]
