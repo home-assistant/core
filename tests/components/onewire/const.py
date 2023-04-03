@@ -70,7 +70,7 @@ MOCK_OWPROXY_DEVICES = {
         Platform.SWITCH: [
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_ENTITY_ID: "switch.05_111111111111_pio",
+                ATTR_ENTITY_ID: "switch.05_111111111111_programmed_input_output",
                 ATTR_INJECT_READS: b"    1",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "/05.111111111111/PIO",
@@ -150,14 +150,14 @@ MOCK_OWPROXY_DEVICES = {
         Platform.SWITCH: [
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_ENTITY_ID: "switch.12_111111111111_pio_a",
+                ATTR_ENTITY_ID: "switch.12_111111111111_programmed_input_output_a",
                 ATTR_INJECT_READS: b"    1",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "/12.111111111111/PIO.A",
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_ENTITY_ID: "switch.12_111111111111_pio_b",
+                ATTR_ENTITY_ID: "switch.12_111111111111_programmed_input_output_b",
                 ATTR_INJECT_READS: b"    0",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "/12.111111111111/PIO.B",
@@ -404,7 +404,7 @@ MOCK_OWPROXY_DEVICES = {
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
-                ATTR_ENTITY_ID: "switch.26_111111111111_iad",
+                ATTR_ENTITY_ID: "switch.26_111111111111_current_a_d_control",
                 ATTR_INJECT_READS: b"    1",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "/26.111111111111/IAD",
@@ -552,56 +552,56 @@ MOCK_OWPROXY_DEVICES = {
         Platform.SWITCH: [
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_ENTITY_ID: "switch.29_111111111111_pio_0",
+                ATTR_ENTITY_ID: "switch.29_111111111111_programmed_input_output_0",
                 ATTR_INJECT_READS: b"    1",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "/29.111111111111/PIO.0",
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_ENTITY_ID: "switch.29_111111111111_pio_1",
+                ATTR_ENTITY_ID: "switch.29_111111111111_programmed_input_output_1",
                 ATTR_INJECT_READS: b"    0",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "/29.111111111111/PIO.1",
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_ENTITY_ID: "switch.29_111111111111_pio_2",
+                ATTR_ENTITY_ID: "switch.29_111111111111_programmed_input_output_2",
                 ATTR_INJECT_READS: b"    1",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "/29.111111111111/PIO.2",
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_ENTITY_ID: "switch.29_111111111111_pio_3",
+                ATTR_ENTITY_ID: "switch.29_111111111111_programmed_input_output_3",
                 ATTR_INJECT_READS: b"    0",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "/29.111111111111/PIO.3",
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_ENTITY_ID: "switch.29_111111111111_pio_4",
+                ATTR_ENTITY_ID: "switch.29_111111111111_programmed_input_output_4",
                 ATTR_INJECT_READS: b"    1",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "/29.111111111111/PIO.4",
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_ENTITY_ID: "switch.29_111111111111_pio_5",
+                ATTR_ENTITY_ID: "switch.29_111111111111_programmed_input_output_5",
                 ATTR_INJECT_READS: b"    0",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "/29.111111111111/PIO.5",
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_ENTITY_ID: "switch.29_111111111111_pio_6",
+                ATTR_ENTITY_ID: "switch.29_111111111111_programmed_input_output_6",
                 ATTR_INJECT_READS: b"    1",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "/29.111111111111/PIO.6",
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_ENTITY_ID: "switch.29_111111111111_pio_7",
+                ATTR_ENTITY_ID: "switch.29_111111111111_programmed_input_output_7",
                 ATTR_INJECT_READS: b"    0",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "/29.111111111111/PIO.7",
@@ -746,14 +746,14 @@ MOCK_OWPROXY_DEVICES = {
         Platform.SWITCH: [
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_ENTITY_ID: "switch.3a_111111111111_pio_a",
+                ATTR_ENTITY_ID: "switch.3a_111111111111_programmed_input_output_a",
                 ATTR_INJECT_READS: b"    1",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "/3A.111111111111/PIO.A",
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_ENTITY_ID: "switch.3a_111111111111_pio_b",
+                ATTR_ENTITY_ID: "switch.3a_111111111111_programmed_input_output_b",
                 ATTR_INJECT_READS: b"    0",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "/3A.111111111111/PIO.B",
@@ -900,7 +900,7 @@ MOCK_OWPROXY_DEVICES = {
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
-                ATTR_ENTITY_ID: "switch.ef_111111111112_leaf_sensor_0_enable",
+                ATTR_ENTITY_ID: "switch.ef_111111111112_leaf_sensor_0",
                 ATTR_INJECT_READS: b"1",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "/EF.111111111112/moisture/is_leaf.0",
@@ -908,7 +908,7 @@ MOCK_OWPROXY_DEVICES = {
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
-                ATTR_ENTITY_ID: "switch.ef_111111111112_leaf_sensor_1_enable",
+                ATTR_ENTITY_ID: "switch.ef_111111111112_leaf_sensor_1",
                 ATTR_INJECT_READS: b"1",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "/EF.111111111112/moisture/is_leaf.1",
@@ -916,7 +916,7 @@ MOCK_OWPROXY_DEVICES = {
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
-                ATTR_ENTITY_ID: "switch.ef_111111111112_leaf_sensor_2_enable",
+                ATTR_ENTITY_ID: "switch.ef_111111111112_leaf_sensor_2",
                 ATTR_INJECT_READS: b"0",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "/EF.111111111112/moisture/is_leaf.2",
@@ -924,7 +924,7 @@ MOCK_OWPROXY_DEVICES = {
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
-                ATTR_ENTITY_ID: "switch.ef_111111111112_leaf_sensor_3_enable",
+                ATTR_ENTITY_ID: "switch.ef_111111111112_leaf_sensor_3",
                 ATTR_INJECT_READS: b"0",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "/EF.111111111112/moisture/is_leaf.3",
@@ -932,7 +932,7 @@ MOCK_OWPROXY_DEVICES = {
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
-                ATTR_ENTITY_ID: "switch.ef_111111111112_moisture_sensor_0_enable",
+                ATTR_ENTITY_ID: "switch.ef_111111111112_moisture_sensor_0",
                 ATTR_INJECT_READS: b"1",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "/EF.111111111112/moisture/is_moisture.0",
@@ -940,7 +940,7 @@ MOCK_OWPROXY_DEVICES = {
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
-                ATTR_ENTITY_ID: "switch.ef_111111111112_moisture_sensor_1_enable",
+                ATTR_ENTITY_ID: "switch.ef_111111111112_moisture_sensor_1",
                 ATTR_INJECT_READS: b"1",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "/EF.111111111112/moisture/is_moisture.1",
@@ -948,7 +948,7 @@ MOCK_OWPROXY_DEVICES = {
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
-                ATTR_ENTITY_ID: "switch.ef_111111111112_moisture_sensor_2_enable",
+                ATTR_ENTITY_ID: "switch.ef_111111111112_moisture_sensor_2",
                 ATTR_INJECT_READS: b"0",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "/EF.111111111112/moisture/is_moisture.2",
@@ -956,7 +956,7 @@ MOCK_OWPROXY_DEVICES = {
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
-                ATTR_ENTITY_ID: "switch.ef_111111111112_moisture_sensor_3_enable",
+                ATTR_ENTITY_ID: "switch.ef_111111111112_moisture_sensor_3",
                 ATTR_INJECT_READS: b"0",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "/EF.111111111112/moisture/is_moisture.3",
@@ -1015,7 +1015,7 @@ MOCK_OWPROXY_DEVICES = {
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
-                ATTR_ENTITY_ID: "switch.ef_111111111113_hub_branch_0_enable",
+                ATTR_ENTITY_ID: "switch.ef_111111111113_hub_branch_0",
                 ATTR_INJECT_READS: b"1",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "/EF.111111111113/hub/branch.0",
@@ -1023,7 +1023,7 @@ MOCK_OWPROXY_DEVICES = {
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
-                ATTR_ENTITY_ID: "switch.ef_111111111113_hub_branch_1_enable",
+                ATTR_ENTITY_ID: "switch.ef_111111111113_hub_branch_1",
                 ATTR_INJECT_READS: b"0",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "/EF.111111111113/hub/branch.1",
@@ -1031,7 +1031,7 @@ MOCK_OWPROXY_DEVICES = {
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
-                ATTR_ENTITY_ID: "switch.ef_111111111113_hub_branch_2_enable",
+                ATTR_ENTITY_ID: "switch.ef_111111111113_hub_branch_2",
                 ATTR_INJECT_READS: b"1",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "/EF.111111111113/hub/branch.2",
@@ -1039,7 +1039,7 @@ MOCK_OWPROXY_DEVICES = {
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
-                ATTR_ENTITY_ID: "switch.ef_111111111113_hub_branch_3_enable",
+                ATTR_ENTITY_ID: "switch.ef_111111111113_hub_branch_3",
                 ATTR_INJECT_READS: b"0",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "/EF.111111111113/hub/branch.3",

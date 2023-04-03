@@ -137,6 +137,110 @@
       "wetness_sensor_3": {
         "name": "Wetness 3"
       }
+    },
+    "switch": {
+      "hub_branch_switch_0": {
+        "name": "Hub branch 0"
+      },
+      "hub_branch_switch_1": {
+        "name": "Hub branch 1"
+      },
+      "hub_branch_switch_2": {
+        "name": "Hub branch 2"
+      },
+      "hub_branch_switch_3": {
+        "name": "Hub branch 3"
+      },
+      "iad_switch": {
+        "name": "Current A/D control"
+      },
+      "latch_switch_0": {
+        "name": "Latch 0"
+      },
+      "latch_switch_1": {
+        "name": "Latch 1"
+      },
+      "latch_switch_2": {
+        "name": "Latch 2"
+      },
+      "latch_switch_3": {
+        "name": "Latch 3"
+      },
+      "latch_switch_4": {
+        "name": "Latch 4"
+      },
+      "latch_switch_5": {
+        "name": "Latch 5"
+      },
+      "latch_switch_6": {
+        "name": "Latch 6"
+      },
+      "latch_switch_7": {
+        "name": "Latch 7"
+      },
+      "latch_switch_a": {
+        "name": "Latch A"
+      },
+      "latch_switch_b": {
+        "name": "Latch B"
+      },
+      "leaf_sensor_switch_0": {
+        "name": "Leaf sensor 0"
+      },
+      "leaf_sensor_switch_1": {
+        "name": "Leaf sensor 1"
+      },
+      "leaf_sensor_switch_2": {
+        "name": "Leaf sensor 2"
+      },
+      "leaf_sensor_switch_3": {
+        "name": "Leaf sensor 3"
+      },
+      "moisture_sensor_switch_0": {
+        "name": "Moisture sensor 0"
+      },
+      "moisture_sensor_switch_1": {
+        "name": "Moisture sensor 1"
+      },
+      "moisture_sensor_switch_2": {
+        "name": "Moisture sensor 2"
+      },
+      "moisture_sensor_switch_3": {
+        "name": "Moisture sensor 3"
+      },
+      "pio_switch": {
+        "name": "Programmed input-output"
+      },
+      "pio_switch_0": {
+        "name": "Programmed input-output 0"
+      },
+      "pio_switch_1": {
+        "name": "Programmed input-output 1"
+      },
+      "pio_switch_2": {
+        "name": "Programmed input-output 2"
+      },
+      "pio_switch_3": {
+        "name": "Programmed input-output 3"
+      },
+      "pio_switch_4": {
+        "name": "Programmed input-output 4"
+      },
+      "pio_switch_5": {
+        "name": "Programmed input-output 5"
+      },
+      "pio_switch_6": {
+        "name": "Programmed input-output 6"
+      },
+      "pio_switch_7": {
+        "name": "Programmed input-output 7"
+      },
+      "pio_switch_a": {
+        "name": "Programmed input-output A"
+      },
+      "pio_switch_b": {
+        "name": "Programmed input-output B"
+      }
     }
   },
   "options": {
