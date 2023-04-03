@@ -75,7 +75,7 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
                     device_mac = await self.hass.async_add_executor_job(
                         pyobihai.get_device_mac
                     )
-                    await self.async_set_unique_id(device_mac)
+                    await self.async_set_unique_id(device_mac.lower())
                     self._abort_if_unique_id_configured()
 
                     return self.async_create_entry(
@@ -145,7 +145,7 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if pyobihai := await async_validate_creds(self.hass, config):
             device_mac = await self.hass.async_add_executor_job(pyobihai.get_device_mac)
-            await self.async_set_unique_id(device_mac)
+            await self.async_set_unique_id(device_mac.lower())
             self._abort_if_unique_id_configured()
 
             return self.async_create_entry(
