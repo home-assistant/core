@@ -31,6 +31,17 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "dsl_status_binary_sensor": {
+        "name": "DSL status"
+      },
+      "ftth_status_binary_sensor": {
+        "name": "FTTH status"
+      },
+      "wan_status_binary_sensor": {
+        "name": "WAN status"
+      }
+    },
     "sensor": {
       "line_status": {
         "state": {
