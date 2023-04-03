@@ -17,7 +17,14 @@ from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import API_TIMEOUT, DOMAIN, LOGGER, PLATFORMS, SHARKIQ_REGION_EUROPE
+from .const import (
+    API_TIMEOUT,
+    DOMAIN,
+    LOGGER,
+    PLATFORMS,
+    SHARKIQ_REGION_DEFAULT,
+    SHARKIQ_REGION_EUROPE,
+)
 from .update_coordinator import SharkIqUpdateCoordinator
 
 
@@ -43,11 +50,15 @@ async def async_connect_or_timeout(ayla_api: AylaApi) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Initialize the sharkiq platform via config entry."""
+    region_identifier = SHARKIQ_REGION_DEFAULT
+    if hasattr(config_entry.data, CONF_REGION):
+        region_identifier = config_entry.data[CONF_REGION]
+
     ayla_api = get_ayla_api(
         username=config_entry.data[CONF_USERNAME],
         password=config_entry.data[CONF_PASSWORD],
         websession=async_get_clientsession(hass),
-        europe=(config_entry.data[CONF_REGION] == SHARKIQ_REGION_EUROPE),
+        europe=(region_identifier == SHARKIQ_REGION_EUROPE),
     )
 
     try:
