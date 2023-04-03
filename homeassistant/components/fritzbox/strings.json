@@ -38,6 +38,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "alarm": { "name": "Alarm" },
+      "device_lock": { "name": "Button lock via UI" },
+      "lock": { "name": "Button lock on device" }
+    },
     "sensor": {
       "battery": {
         "name": "[%key:component::sensor::entity_component::battery::name%]"
@@ -66,11 +71,6 @@
       "voltage": {
         "name": "[%key:component::sensor::entity_component::voltage::name%]"
       }
-    },
-    "binary_sensor": {
-      "alarm": { "name": "Alarm" },
-      "device_lock": { "name": "Button lock via UI" },
-      "lock": { "name": "Button lock on device" }
     }
   }
 }
