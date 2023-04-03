@@ -13,7 +13,9 @@ from python_otbr_api.pskc import compute_pskc
 
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
     is_multiprotocol_url,
+    multi_pan_addon_using_device,
 )
+from homeassistant.components.homeassistant_yellow import RADIO_DEVICE as YELLOW_RADIO
 from homeassistant.components.zha import api as zha_api
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -23,6 +25,13 @@ from .const import DOMAIN
 
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
+
+INFO_URL_SKY_CONNECT = (
+    "https://skyconnect.home-assistant.io/procedures/enable-multiprotocol/#limitations"
+)
+INFO_URL_YELLOW = (
+    "https://yellow.home-assistant.io/guides/enable-multiprotocol/#limitations"
+)
 
 INSECURE_NETWORK_KEYS = (
     # Thread web UI default
@@ -152,12 +161,16 @@ async def _warn_on_channel_collision(
         delete_issue()
         return
 
+    yellow = await multi_pan_addon_using_device(hass, YELLOW_RADIO)
+    learn_more_url = INFO_URL_YELLOW if yellow else INFO_URL_SKY_CONNECT
+
     ir.async_create_issue(
         hass,
         DOMAIN,
         f"otbr_zha_channel_collision_{otbrdata.entry_id}",
         is_fixable=False,
         is_persistent=False,
+        learn_more_url=learn_more_url,
         severity=ir.IssueSeverity.WARNING,
         translation_key="otbr_zha_channel_collision",
         translation_placeholders={
