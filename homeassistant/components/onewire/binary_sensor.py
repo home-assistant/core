@@ -37,8 +37,8 @@ DEVICE_BINARY_SENSORS: dict[str, tuple[OneWireBinarySensorEntityDescription, ...
         OneWireBinarySensorEntityDescription(
             key=f"sensed.{id}",
             entity_registry_enabled_default=False,
-            name=f"Sensed {id}",
             read_mode=READ_MODE_BOOL,
+            translation_key=f"sensed_binary_sensor_{id.lower()}",
         )
         for id in DEVICE_KEYS_A_B
     ),
@@ -46,8 +46,8 @@ DEVICE_BINARY_SENSORS: dict[str, tuple[OneWireBinarySensorEntityDescription, ...
         OneWireBinarySensorEntityDescription(
             key=f"sensed.{id}",
             entity_registry_enabled_default=False,
-            name=f"Sensed {id}",
             read_mode=READ_MODE_BOOL,
+            translation_key=f"sensed_binary_sensor_{id}",
         )
         for id in DEVICE_KEYS_0_7
     ),
@@ -55,8 +55,8 @@ DEVICE_BINARY_SENSORS: dict[str, tuple[OneWireBinarySensorEntityDescription, ...
         OneWireBinarySensorEntityDescription(
             key=f"sensed.{id}",
             entity_registry_enabled_default=False,
-            name=f"Sensed {id}",
             read_mode=READ_MODE_BOOL,
+            translation_key=f"sensed_binary_sensor_{id.lower()}",
         )
         for id in DEVICE_KEYS_A_B
     ),
@@ -69,10 +69,10 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireBinarySensorEntityDescription, ...]] = {
         OneWireBinarySensorEntityDescription(
             key=f"hub/short.{id}",
             entity_registry_enabled_default=False,
-            name=f"Hub Short on Branch {id}",
             read_mode=READ_MODE_BOOL,
             entity_category=EntityCategory.DIAGNOSTIC,
             device_class=BinarySensorDeviceClass.PROBLEM,
+            translation_key=f"hub_short_binary_sensor_{id}",
         )
         for id in DEVICE_KEYS_0_3
     ),

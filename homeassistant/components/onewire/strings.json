@@ -17,6 +17,50 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "sensed_binary_sensor_a": {
+        "name": "Sensed A"
+      },
+      "sensed_binary_sensor_b": {
+        "name": "Sensed B"
+      },
+      "sensed_binary_sensor_0": {
+        "name": "Sensed 0"
+      },
+      "sensed_binary_sensor_1": {
+        "name": "Sensed 1"
+      },
+      "sensed_binary_sensor_2": {
+        "name": "Sensed 2"
+      },
+      "sensed_binary_sensor_3": {
+        "name": "Sensed 3"
+      },
+      "sensed_binary_sensor_4": {
+        "name": "Sensed 4"
+      },
+      "sensed_binary_sensor_5": {
+        "name": "Sensed 5"
+      },
+      "sensed_binary_sensor_6": {
+        "name": "Sensed 6"
+      },
+      "sensed_binary_sensor_7": {
+        "name": "Sensed 7"
+      },
+      "hub_short_binary_sensor_0": {
+        "name": "Hub short on branch 0"
+      },
+      "hub_short_binary_sensor_1": {
+        "name": "Hub short on branch 1"
+      },
+      "hub_short_binary_sensor_2": {
+        "name": "Hub short on branch 2"
+      },
+      "hub_short_binary_sensor_3": {
+        "name": "Hub short on branch 3"
+      }
+    },
     "sensor": {
       "counter_sensor_a": {
         "name": "Counter A"
