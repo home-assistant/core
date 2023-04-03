@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import datetime
+from socket import gaierror
 from typing import Any
 
+from aiohttp import ClientConnectionError
 import aiosomecomfort
 
 from homeassistant.components.climate import (
@@ -421,10 +423,7 @@ class HoneywellUSThermostat(ClimateEntity):
         try:
             await self._device.refresh()
             self._attr_available = True
-        except (
-            aiosomecomfort.SomeComfortError,
-            OSError,
-        ):
+        except aiosomecomfort.SomeComfortError:
             try:
                 await self._data.client.login()
 
@@ -433,5 +432,13 @@ class HoneywellUSThermostat(ClimateEntity):
                 await self.hass.async_create_task(
                     self.hass.config_entries.async_reload(self._data.entry_id)
                 )
-            except aiosomecomfort.SomeComfortError:
+            except (
+                aiosomecomfort.SomeComfortError,
+                OSError,
+                ClientConnectionError,
+                gaierror,
+            ):
                 self._attr_available = False
+
+        except (OSError, ClientConnectionError, gaierror):
+            self._attr_available = False
