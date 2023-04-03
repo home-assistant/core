@@ -18,5 +18,22 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "kostal_piko_battery_charging_state": {
+        "state": {
+          "charging": "Charging",
+          "discharging": "Discharging"
+        }
+      },
+      "kostal_piko_inverter_operating_state": {
+        "state": {
+          "unknown": "Unknown",
+          "starting": "Starting",
+          "feed_in": "Feed-In"
+        }
+      }
+    }
   }
 }
