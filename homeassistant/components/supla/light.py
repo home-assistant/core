@@ -99,10 +99,12 @@ class SuplaDimmer(SuplaChannel, LightEntity):
 
     @property
     def color_mode(self) -> str | None:
+        """Return the color mode of the light."""
         return ColorMode.BRIGHTNESS
 
     @property
     def supported_color_modes(self) -> set[str] | None:
+        """Flag supported color modes."""
         return {ColorMode.BRIGHTNESS}
 
 
@@ -118,7 +120,6 @@ class SuplaRGBLighting(SuplaChannel, LightEntity):
                 hs_color[0], hs_color[1], brightness
             )
             (r, g, b) = rgb_update_color
-            # Color is set as the hex string of the form "0xRRGGBB"
             color = "0x" + color_util.color_rgb_to_hex(r, g, b)
             await self.async_action("SET_RGBW_PARAMETERS", color=color)
             return
@@ -147,19 +148,20 @@ class SuplaRGBLighting(SuplaChannel, LightEntity):
 
     @property
     def hs_color(self) -> tuple[float, float] | None:
+        """Return the hs color value."""
         state = self.channel_data.get("state")
         if not state or "color" not in state:
             return None
-        # Color is defined as the hex string of the form "0xRRGGBB",
-        # so last 6 chars are extracted from it to remove the prefix.
         hex_color = state.get("color")[-6:]
         rgb_color = color_util.rgb_hex_to_rgb_list(hex_color)
         return color_util.color_RGB_to_hs(rgb_color[0], rgb_color[1], rgb_color[2])
 
     @property
     def color_mode(self) -> str | None:
+        """Return the color mode of the light."""
         return ColorMode.HS
 
     @property
     def supported_color_modes(self) -> set[str] | None:
+        """Flag supported color modes."""
         return {ColorMode.HS}
