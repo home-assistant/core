@@ -18,11 +18,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     PERCENTAGE,
-    TIME_HOURS,
     Platform,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .base_class import TradfriBaseEntity
@@ -78,6 +78,7 @@ SENSOR_DESCRIPTIONS_BATTERY: tuple[TradfriSensorEntityDescription, ...] = (
     TradfriSensorEntityDescription(
         key="battery_level",
         device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value=lambda device: cast(int, device.device_info.battery_level),
     ),
@@ -88,15 +89,16 @@ SENSOR_DESCRIPTIONS_FAN: tuple[TradfriSensorEntityDescription, ...] = (
     TradfriSensorEntityDescription(
         key="aqi",
         name="air quality",
-        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        icon="mdi:air-filter",
         value=_get_air_quality,
     ),
     TradfriSensorEntityDescription(
         key="filter_life_remaining",
         name="filter time left",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TIME_HOURS,
+        native_unit_of_measurement=UnitOfTime.HOURS,
         icon="mdi:clock-outline",
         value=_get_filter_time_left,
     ),
@@ -106,7 +108,7 @@ SENSOR_DESCRIPTIONS_FAN: tuple[TradfriSensorEntityDescription, ...] = (
 @callback
 def _migrate_old_unique_ids(hass: HomeAssistant, old_unique_id: str, key: str) -> None:
     """Migrate unique IDs to the new format."""
-    ent_reg = entity_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
 
     entity_id = ent_reg.async_get_entity_id(Platform.SENSOR, DOMAIN, old_unique_id)
 

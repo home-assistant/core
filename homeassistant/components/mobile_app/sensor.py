@@ -1,15 +1,17 @@
 """Sensor platform for mobile_app."""
 from __future__ import annotations
 
+from datetime import date, datetime
 from typing import Any
 
 from homeassistant.components.sensor import RestoreSensor, SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_WEBHOOK_ID, STATE_UNKNOWN, TEMP_CELSIUS
+from homeassistant.const import CONF_WEBHOOK_ID, STATE_UNKNOWN, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -92,14 +94,14 @@ class MobileAppSensor(MobileAppEntity, RestoreSensor):
                 self.device_class == SensorDeviceClass.TEMPERATURE
                 and sensor_unique_id == "battery_temperature"
             ):
-                self._config[ATTR_SENSOR_UOM] = TEMP_CELSIUS
+                self._config[ATTR_SENSOR_UOM] = UnitOfTemperature.CELSIUS
             return
 
         self._config[ATTR_SENSOR_STATE] = last_sensor_data.native_value
         self._config[ATTR_SENSOR_UOM] = last_sensor_data.native_unit_of_measurement
 
     @property
-    def native_value(self):
+    def native_value(self) -> StateType | date | datetime:
         """Return the state of the sensor."""
         if (state := self._config[ATTR_SENSOR_STATE]) in (None, STATE_UNKNOWN):
             return None
@@ -122,7 +124,7 @@ class MobileAppSensor(MobileAppEntity, RestoreSensor):
         return state
 
     @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement this sensor expresses itself in."""
         return self._config.get(ATTR_SENSOR_UOM)
 

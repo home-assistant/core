@@ -117,9 +117,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_doorbird_device")
 
         chop_ending = "._axis-video._tcp.local."
-        friendly_hostname = discovery_info.name
-        if friendly_hostname.endswith(chop_ending):
-            friendly_hostname = friendly_hostname[: -len(chop_ending)]
+        friendly_hostname = discovery_info.name.removesuffix(chop_ending)
 
         self.context["title_placeholders"] = {
             CONF_NAME: friendly_hostname,

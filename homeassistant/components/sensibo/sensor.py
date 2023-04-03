@@ -21,11 +21,11 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    TEMP_CELSIUS,
+    EntityCategory,
     UnitOfElectricPotential,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -311,7 +311,7 @@ class SensiboMotionSensor(SensiboMotionBaseEntity, SensorEntity):
     def native_unit_of_measurement(self) -> str | None:
         """Add native unit of measurement."""
         if self.entity_description.device_class == SensorDeviceClass.TEMPERATURE:
-            return TEMP_CELSIUS
+            return UnitOfTemperature.CELSIUS
         return self.entity_description.native_unit_of_measurement
 
     @property
@@ -345,15 +345,13 @@ class SensiboDeviceSensor(SensiboDeviceBaseEntity, SensorEntity):
     def native_unit_of_measurement(self) -> str | None:
         """Add native unit of measurement."""
         if self.entity_description.device_class == SensorDeviceClass.TEMPERATURE:
-            return TEMP_CELSIUS
+            return UnitOfTemperature.CELSIUS
         return self.entity_description.native_unit_of_measurement
 
     @property
     def native_value(self) -> StateType | datetime:
         """Return value of sensor."""
         state = self.entity_description.value_fn(self.device_data)
-        if isinstance(state, str):
-            return state.lower()
         return state
 
     @property

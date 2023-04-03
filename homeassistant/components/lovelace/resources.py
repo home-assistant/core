@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional, cast
+from typing import cast
 import uuid
 
 import voluptuous as vol
@@ -71,7 +71,7 @@ class ResourceStorageCollection(collection.StorageCollection):
     async def _async_load_data(self) -> dict | None:
         """Load the data."""
         if (data := await self.store.async_load()) is not None:
-            return cast(Optional[dict], data)
+            return cast(dict | None, data)
 
         # Import it from config.
         try:

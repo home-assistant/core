@@ -125,6 +125,7 @@ class OppleRemote(ZigbeeChannel):
         elif self.cluster.endpoint.model in ("lumi.plug.mmeu01", "lumi.plug.maeu01"):
             self.ZCL_INIT_ATTRS = {
                 "power_outage_memory": True,
+                "consumer_connected": True,
             }
         elif self.cluster.endpoint.model == "aqara.feeder.acn001":
             self.ZCL_INIT_ATTRS = {
@@ -136,6 +137,29 @@ class OppleRemote(ZigbeeChannel):
                 "feeding_mode": True,
                 "serving_size": True,
                 "portion_weight": True,
+            }
+        elif self.cluster.endpoint.model == "lumi.airrtc.agl001":
+            self.ZCL_INIT_ATTRS = {
+                "system_mode": True,
+                "preset": True,
+                "window_detection": True,
+                "valve_detection": True,
+                "valve_alarm": True,
+                "child_lock": True,
+                "away_preset_temperature": True,
+                "window_open": True,
+                "calibrated": True,
+                "schedule": True,
+                "sensor": True,
+            }
+        elif self.cluster.endpoint.model == "lumi.sensor_smoke.acn03":
+            self.ZCL_INIT_ATTRS = {
+                "buzzer_manual_mute": True,
+                "smoke_density": True,
+                "heartbeat_indicator": True,
+                "buzzer_manual_alarm": True,
+                "buzzer": True,
+                "linkage_alarm": True,
             }
 
     async def async_initialize_channel_specific(self, from_cache: bool) -> None:
@@ -224,7 +248,8 @@ class InovelliConfigEntityChannel(ZigbeeChannel):
         "switch_type": False,
         "button_delay": False,
         "smart_bulb_mode": False,
-        "double_tap_up_for_full_brightness": True,
+        "double_tap_up_for_max_brightness": True,
+        "double_tap_down_for_min_brightness": True,
         "led_color_when_on": True,
         "led_color_when_off": True,
         "led_intensity_when_on": True,
@@ -322,3 +347,11 @@ class IkeaAirPurifierChannel(ZigbeeChannel):
             self.async_send_signal(
                 f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", attrid, attr_name, value
             )
+
+
+@registries.CHANNEL_ONLY_CLUSTERS.register(0xFC80)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(0xFC80)
+class IkeaRemote(ZigbeeChannel):
+    """Ikea Matter remote channel."""
+
+    REPORT_CONFIG = ()

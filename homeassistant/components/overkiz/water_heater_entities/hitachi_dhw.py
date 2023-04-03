@@ -15,7 +15,7 @@ from homeassistant.const import (
     PRECISION_WHOLE,
     STATE_OFF,
     STATE_ON,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 
 from ..entity import OverkizEntity
@@ -36,7 +36,7 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
     _attr_max_temp = 70.0
     _attr_precision = PRECISION_WHOLE
 
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.OPERATION_MODE

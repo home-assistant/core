@@ -1,4 +1,4 @@
-"""This library brings support for forked_daapd to Home Assistant."""
+"""Support forked_daapd media player."""
 from __future__ import annotations
 
 import asyncio
@@ -653,8 +653,10 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             futures = []
             for output in self._outputs:
                 futures.append(
-                    self.api.change_output(
-                        output["id"], selected=True, volume=self._tts_volume * 100
+                    asyncio.create_task(
+                        self.api.change_output(
+                            output["id"], selected=True, volume=self._tts_volume * 100
+                        )
                     )
                 )
             await asyncio.wait(futures)
@@ -834,7 +836,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
 
     async def async_browse_media(
         self,
-        media_content_type: str | None = None,
+        media_content_type: MediaType | str | None = None,
         media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
@@ -871,7 +873,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
 
     async def async_get_browse_image(
         self,
-        media_content_type: str,
+        media_content_type: MediaType | str,
         media_content_id: str,
         media_image_id: str | None = None,
     ) -> tuple[bytes | None, str | None]:

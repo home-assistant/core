@@ -178,9 +178,11 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
                 if self.should_report_state:
                     persistent_notification.async_create(
                         self.hass,
-                        f"There was an error reporting state to Alexa ({body['reason']}). "
-                        "Please re-link your Alexa skill via the Alexa app to "
-                        "continue using it.",
+                        (
+                            "There was an error reporting state to Alexa"
+                            f" ({body['reason']}). Please re-link your Alexa skill via"
+                            " the Alexa app to continue using it."
+                        ),
                         "Alexa state reporting disabled",
                         "cloud_alexa_report",
                     )
@@ -339,14 +341,20 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
 
         if to_update:
             tasks.append(
-                alexa_state_report.async_send_add_or_update_message(
-                    self.hass, self, to_update
+                asyncio.create_task(
+                    alexa_state_report.async_send_add_or_update_message(
+                        self.hass, self, to_update
+                    )
                 )
             )
 
         if to_remove:
             tasks.append(
-                alexa_state_report.async_send_delete_message(self.hass, self, to_remove)
+                asyncio.create_task(
+                    alexa_state_report.async_send_delete_message(
+                        self.hass, self, to_remove
+                    )
+                )
             )
 
         try:

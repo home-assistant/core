@@ -10,12 +10,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_WATT_HOUR,
-    UnitOfElectricPotential,
-    UnitOfPower,
-)
+from homeassistant.const import UnitOfElectricPotential, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -70,7 +65,7 @@ TREND_SENSORS: tuple[SmappeePollingSensorEntityDescription, ...] = (
     SmappeePollingSensorEntityDescription(
         key="power_today",
         name="Total consumption - Today",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         sensor_id="power_today",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -78,7 +73,7 @@ TREND_SENSORS: tuple[SmappeePollingSensorEntityDescription, ...] = (
     SmappeePollingSensorEntityDescription(
         key="power_current_hour",
         name="Total consumption - Current hour",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         sensor_id="power_current_hour",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -86,7 +81,7 @@ TREND_SENSORS: tuple[SmappeePollingSensorEntityDescription, ...] = (
     SmappeePollingSensorEntityDescription(
         key="power_last_5_minutes",
         name="Total consumption - Last 5 minutes",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         sensor_id="power_last_5_minutes",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -94,7 +89,7 @@ TREND_SENSORS: tuple[SmappeePollingSensorEntityDescription, ...] = (
     SmappeePollingSensorEntityDescription(
         key="alwayson_today",
         name="Always on - Today",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         sensor_id="alwayson_today",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -123,7 +118,7 @@ SOLAR_SENSORS: tuple[SmappeePollingSensorEntityDescription, ...] = (
     SmappeePollingSensorEntityDescription(
         key="solar_today",
         name="Total production - Today",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         sensor_id="solar_today",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -131,7 +126,7 @@ SOLAR_SENSORS: tuple[SmappeePollingSensorEntityDescription, ...] = (
     SmappeePollingSensorEntityDescription(
         key="solar_current_hour",
         name="Total production - Current hour",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         sensor_id="solar_current_hour",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -317,7 +312,7 @@ async def async_setup_entry(
                     description=SmappeeSensorEntityDescription(
                         key="switch",
                         name=f"{actuator.name} - energy today",
-                        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+                        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                         sensor_id=actuator_id,
                         device_class=SensorDeviceClass.ENERGY,
                         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -341,7 +336,7 @@ class SmappeeSensor(SensorEntity):
         smappee_base,
         service_location,
         description: SmappeeSensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize the Smappee sensor."""
         self.entity_description = description
         self._smappee_base = smappee_base

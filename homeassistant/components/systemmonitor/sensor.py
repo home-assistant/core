@@ -29,9 +29,9 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_OFF,
     STATE_ON,
-    TEMP_CELSIUS,
     UnitOfDataRate,
     UnitOfInformation,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -218,7 +218,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     "processor_temperature": SysMonitorSensorEntityDescription(
         key="processor_temperature",
         name="Processor temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -407,7 +407,10 @@ async def async_setup_sensor_registry_updates(
         """Update all sensors in one executor jump."""
         if _update_lock.locked():
             _LOGGER.warning(
-                "Updating systemmonitor took longer than the scheduled update interval %s",
+                (
+                    "Updating systemmonitor took longer than the scheduled update"
+                    " interval %s"
+                ),
                 scan_interval,
             )
             return

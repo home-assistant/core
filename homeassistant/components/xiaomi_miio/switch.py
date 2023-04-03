@@ -24,10 +24,10 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_MODEL,
     CONF_TOKEN,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -470,9 +470,11 @@ async def async_setup_other_entry(hass, config_entry, async_add_entities):
             hass.data[DATA_KEY][host] = device
         else:
             _LOGGER.error(
-                "Unsupported device found! Please create an issue at "
-                "https://github.com/rytilahti/python-miio/issues "
-                "and provide the following data: %s",
+                (
+                    "Unsupported device found! Please create an issue at "
+                    "https://github.com/rytilahti/python-miio/issues "
+                    "and provide the following data: %s"
+                ),
                 model,
             )
 

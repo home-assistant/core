@@ -85,7 +85,7 @@ class NoboZone(ClimateEntity):
     _attr_target_temperature_step = 1
     # Need to poll to get preset change when in HVACMode.AUTO, so can't set _attr_should_poll = False
 
-    def __init__(self, zone_id, hub: nobo, override_type):
+    def __init__(self, zone_id, hub: nobo, override_type) -> None:
         """Initialize the climate device."""
         self._id = zone_id
         self._nobo = hub
@@ -115,7 +115,8 @@ class NoboZone(ClimateEntity):
         """Set new target HVAC mode, if it's supported."""
         if hvac_mode not in self.hvac_modes:
             raise ValueError(
-                f"Zone {self._id} '{self._attr_name}' called with unsupported HVAC mode '{hvac_mode}'"
+                f"Zone {self._id} '{self._attr_name}' called with unsupported HVAC mode"
+                f" '{hvac_mode}'"
             )
         if hvac_mode == HVACMode.AUTO:
             await self.async_set_preset_mode(PRESET_NONE)

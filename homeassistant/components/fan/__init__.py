@@ -244,7 +244,8 @@ class FanEntity(ToggleEntity):
         preset_modes = self.preset_modes
         if not preset_modes or preset_mode not in preset_modes:
             raise NotValidPresetModeError(
-                f"The preset_mode {preset_mode} is not a valid preset_mode: {preset_modes}"
+                f"The preset_mode {preset_mode} is not a valid preset_mode:"
+                f" {preset_modes}"
             )
 
     def set_direction(self, direction: str) -> None:

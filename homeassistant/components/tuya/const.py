@@ -14,27 +14,18 @@ from homeassistant.const import (
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_CURRENT_MILLIAMPERE,
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_WATT_HOUR,
     LIGHT_LUX,
     PERCENTAGE,
-    PRESSURE_BAR,
-    PRESSURE_HPA,
-    PRESSURE_INHG,
-    PRESSURE_MBAR,
-    PRESSURE_PA,
-    PRESSURE_PSI,
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
     Platform,
+    UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfEnergy,
     UnitOfPower,
+    UnitOfPressure,
+    UnitOfTemperature,
+    UnitOfVolume,
 )
 
 DOMAIN = "tuya"
@@ -182,7 +173,9 @@ class DPCode(StrEnum):
     CUR_VOLTAGE = "cur_voltage"  # Actual voltage
     DECIBEL_SENSITIVITY = "decibel_sensitivity"
     DECIBEL_SWITCH = "decibel_switch"
+    DEHUMIDITY_SET_ENUM = "dehumidify_set_enum"
     DEHUMIDITY_SET_VALUE = "dehumidify_set_value"
+    DISINFECTION = "disinfection"
     DO_NOT_DISTURB = "do_not_disturb"
     DOORCONTACT_STATE = "doorcontact_state"  # Status of door window sensor
     DOORCONTACT_STATE_2 = "doorcontact_state_2"
@@ -217,6 +210,7 @@ class DPCode(StrEnum):
     HUMIDIFIER = "humidifier"  # Humidification
     HUMIDITY = "humidity"  # Humidity
     HUMIDITY_CURRENT = "humidity_current"  # Current humidity
+    HUMIDITY_INDOOR = "humidity_indoor"  # Indoor humidity
     HUMIDITY_SET = "humidity_set"  # Humidity setting
     HUMIDITY_VALUE = "humidity_value"  # Humidity
     IPC_WORK_MODE = "ipc_work_mode"
@@ -336,6 +330,7 @@ class DPCode(StrEnum):
     TEMP_CONTROLLER = "temp_controller"
     TEMP_CURRENT = "temp_current"  # Current temperature in °C
     TEMP_CURRENT_F = "temp_current_f"  # Current temperature in °F
+    TEMP_INDOOR = "temp_indoor"  # Indoor temperature in °C
     TEMP_SET = "temp_set"  # Set the temperature in °C
     TEMP_SET_F = "temp_set_f"  # Set the temperature in °F
     TEMP_UNIT_CONVERT = "temp_unit_convert"  # Temperature unit switching
@@ -363,6 +358,7 @@ class DPCode(StrEnum):
     VOLUME_SET = "volume_set"
     WARM = "warm"  # Heat preservation
     WARM_TIME = "warm_time"  # Heat preservation time
+    WATER = "water"
     WATER_RESET = "water_reset"  # Resetting of water usage days
     WATER_SET = "water_set"  # Water level
     WATERSENSOR_STATE = "watersensor_state"
@@ -429,45 +425,40 @@ UNITS = (
         conversion_fn=lambda x: x / 1000,
     ),
     UnitOfMeasurement(
-        unit=ELECTRIC_CURRENT_AMPERE,
+        unit=UnitOfElectricCurrent.AMPERE,
         aliases={"a", "ampere"},
         device_classes={SensorDeviceClass.CURRENT},
     ),
     UnitOfMeasurement(
-        unit=ELECTRIC_CURRENT_MILLIAMPERE,
+        unit=UnitOfElectricCurrent.MILLIAMPERE,
         aliases={"ma", "milliampere"},
         device_classes={SensorDeviceClass.CURRENT},
-        conversion_unit=ELECTRIC_CURRENT_AMPERE,
+        conversion_unit=UnitOfElectricCurrent.AMPERE,
         conversion_fn=lambda x: x / 1000,
     ),
     UnitOfMeasurement(
-        unit=ENERGY_WATT_HOUR,
+        unit=UnitOfEnergy.WATT_HOUR,
         aliases={"wh", "watthour"},
         device_classes={SensorDeviceClass.ENERGY},
     ),
     UnitOfMeasurement(
-        unit=ENERGY_KILO_WATT_HOUR,
+        unit=UnitOfEnergy.KILO_WATT_HOUR,
         aliases={"kwh", "kilowatt-hour", "kW·h"},
         device_classes={SensorDeviceClass.ENERGY},
     ),
     UnitOfMeasurement(
-        unit=VOLUME_CUBIC_FEET,
+        unit=UnitOfVolume.CUBIC_FEET,
         aliases={"ft3"},
         device_classes={SensorDeviceClass.GAS},
     ),
     UnitOfMeasurement(
-        unit=VOLUME_CUBIC_METERS,
+        unit=UnitOfVolume.CUBIC_METERS,
         aliases={"m3"},
         device_classes={SensorDeviceClass.GAS},
     ),
     UnitOfMeasurement(
         unit=LIGHT_LUX,
         aliases={"lux"},
-        device_classes={SensorDeviceClass.ILLUMINANCE},
-    ),
-    UnitOfMeasurement(
-        unit="lm",
-        aliases={"lum", "lumen"},
         device_classes={SensorDeviceClass.ILLUMINANCE},
     ),
     UnitOfMeasurement(
@@ -513,30 +504,30 @@ UNITS = (
         device_classes={SensorDeviceClass.POWER},
     ),
     UnitOfMeasurement(
-        unit=PRESSURE_BAR,
+        unit=UnitOfPressure.BAR,
         device_classes={SensorDeviceClass.PRESSURE},
     ),
     UnitOfMeasurement(
-        unit=PRESSURE_MBAR,
+        unit=UnitOfPressure.MBAR,
         aliases={"millibar"},
         device_classes={SensorDeviceClass.PRESSURE},
     ),
     UnitOfMeasurement(
-        unit=PRESSURE_HPA,
+        unit=UnitOfPressure.HPA,
         aliases={"hpa", "hectopascal"},
         device_classes={SensorDeviceClass.PRESSURE},
     ),
     UnitOfMeasurement(
-        unit=PRESSURE_INHG,
+        unit=UnitOfPressure.INHG,
         aliases={"inhg"},
         device_classes={SensorDeviceClass.PRESSURE},
     ),
     UnitOfMeasurement(
-        unit=PRESSURE_PSI,
+        unit=UnitOfPressure.PSI,
         device_classes={SensorDeviceClass.PRESSURE},
     ),
     UnitOfMeasurement(
-        unit=PRESSURE_PA,
+        unit=UnitOfPressure.PA,
         device_classes={SensorDeviceClass.PRESSURE},
     ),
     UnitOfMeasurement(
@@ -550,12 +541,12 @@ UNITS = (
         device_classes={SensorDeviceClass.SIGNAL_STRENGTH},
     ),
     UnitOfMeasurement(
-        unit=TEMP_CELSIUS,
+        unit=UnitOfTemperature.CELSIUS,
         aliases={"°c", "c", "celsius", "℃"},
         device_classes={SensorDeviceClass.TEMPERATURE},
     ),
     UnitOfMeasurement(
-        unit=TEMP_FAHRENHEIT,
+        unit=UnitOfTemperature.FAHRENHEIT,
         aliases={"°f", "f", "fahrenheit"},
         device_classes={SensorDeviceClass.TEMPERATURE},
     ),

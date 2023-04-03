@@ -12,8 +12,8 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     PERCENTAGE,
-    PRESSURE_PA,
-    TEMP_CELSIUS,
+    UnitOfPressure,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -40,7 +40,7 @@ async def test_luftdaten_sensors(
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Sensor 12345 Temperature"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
     assert ATTR_ICON not in state.attributes
 
     entry = entity_registry.async_get("sensor.sensor_12345_humidity")
@@ -68,7 +68,7 @@ async def test_luftdaten_sensors(
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Sensor 12345 Pressure"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PRESSURE
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PRESSURE_PA
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPressure.PA
     assert ATTR_ICON not in state.attributes
 
     entry = entity_registry.async_get("sensor.sensor_12345_pressure_at_sealevel")
@@ -84,18 +84,21 @@ async def test_luftdaten_sensors(
     )
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PRESSURE
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PRESSURE_PA
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPressure.PA
     assert ATTR_ICON not in state.attributes
 
-    entry = entity_registry.async_get("sensor.sensor_12345_pm10")
+    entry = entity_registry.async_get("sensor.sensor_12345_particulate_matter_10_mm")
     assert entry
     assert entry.device_id
     assert entry.unique_id == "12345_P1"
 
-    state = hass.states.get("sensor.sensor_12345_pm10")
+    state = hass.states.get("sensor.sensor_12345_particulate_matter_10_mm")
     assert state
     assert state.state == "8.5"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Sensor 12345 PM10"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Sensor 12345 Particulate matter 10 μm"
+    )
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM10
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert (
@@ -104,15 +107,18 @@ async def test_luftdaten_sensors(
     )
     assert ATTR_ICON not in state.attributes
 
-    entry = entity_registry.async_get("sensor.sensor_12345_pm2_5")
+    entry = entity_registry.async_get("sensor.sensor_12345_particulate_matter_2_5_mm")
     assert entry
     assert entry.device_id
     assert entry.unique_id == "12345_P2"
 
-    state = hass.states.get("sensor.sensor_12345_pm2_5")
+    state = hass.states.get("sensor.sensor_12345_particulate_matter_2_5_mm")
     assert state
     assert state.state == "4.07"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Sensor 12345 PM2.5"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Sensor 12345 Particulate matter 2.5 μm"
+    )
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM25
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert (

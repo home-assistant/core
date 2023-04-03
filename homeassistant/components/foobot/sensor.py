@@ -23,7 +23,7 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_USERNAME,
     PERCENTAGE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
@@ -52,7 +52,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="tmp",
         name=ATTR_TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(

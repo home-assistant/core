@@ -9,12 +9,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
-    TEMP_CELSIUS,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfEnergy,
     UnitOfPower,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -26,7 +26,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="temperature",
         name="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -44,7 +44,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="light",
         name="Light",
-        device_class=SensorDeviceClass.ILLUMINANCE,
     ),
     SensorEntityDescription(
         key="noise",
@@ -81,7 +80,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="totalconsum",
         name="Total consumption",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -115,7 +114,7 @@ class BroadlinkSensor(BroadlinkEntity, SensorEntity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, device, description: SensorEntityDescription):
+    def __init__(self, device, description: SensorEntityDescription) -> None:
         """Initialize the sensor."""
         super().__init__(device)
         self.entity_description = description

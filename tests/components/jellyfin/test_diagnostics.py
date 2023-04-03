@@ -1,17 +1,17 @@
 """Test Jellyfin diagnostics."""
-from aiohttp import ClientSession
 
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
-    hass_client: ClientSession,
-):
+    hass_client: ClientSessionGenerator,
+) -> None:
     """Test generating diagnostics for a config entry."""
     entry = init_integration
 

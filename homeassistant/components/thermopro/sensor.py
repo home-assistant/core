@@ -1,8 +1,6 @@
 """Support for thermopro ble sensors."""
 from __future__ import annotations
 
-from typing import Optional, Union
-
 from thermopro_ble import (
     DeviceKey,
     SensorDeviceClass as ThermoProSensorDeviceClass,
@@ -27,7 +25,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -42,7 +40,7 @@ SENSOR_DESCRIPTIONS = {
     ): SensorEntityDescription(
         key=f"{ThermoProSensorDeviceClass.TEMPERATURE}_{Units.TEMP_CELSIUS}",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (ThermoProSensorDeviceClass.HUMIDITY, Units.PERCENTAGE): SensorEntityDescription(
@@ -117,9 +115,7 @@ async def async_setup_entry(
 
 
 class ThermoProBluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[
-        PassiveBluetoothDataProcessor[Optional[Union[float, int]]]
-    ],
+    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[float | int | None]],
     SensorEntity,
 ):
     """Representation of a thermopro ble sensor."""

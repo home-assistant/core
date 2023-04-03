@@ -12,10 +12,9 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 
@@ -40,7 +39,7 @@ NUMBERS: Final = {
     ("device", "valvePos"): BlockNumberDescription(
         key="device|valvepos",
         icon="mdi:pipe-valve",
-        name="Valve Position",
+        name="Valve position",
         native_unit_of_measurement=PERCENTAGE,
         available=lambda block: cast(int, block.valveError) != 1,
         entity_category=EntityCategory.CONFIG,
@@ -93,12 +92,15 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, NumberEntity):
     entity_description: BlockNumberDescription
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         """Return value of number."""
         if self.block is not None:
             return cast(float, self.attribute_value)
 
-        return cast(float, self.last_state)
+        if self.last_state is None:
+            return None
+
+        return cast(float, self.last_state.state)
 
     async def async_set_native_value(self, value: float) -> None:
         """Set value."""
@@ -117,7 +119,8 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, NumberEntity):
         except DeviceConnectionError as err:
             self.coordinator.last_update_success = False
             raise HomeAssistantError(
-                f"Setting state for entity {self.name} failed, state: {params}, error: {repr(err)}"
+                f"Setting state for entity {self.name} failed, state: {params}, error:"
+                f" {repr(err)}"
             ) from err
         except InvalidAuthError:
             self.coordinator.entry.async_start_reauth(self.hass)

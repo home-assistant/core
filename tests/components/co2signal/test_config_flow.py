@@ -20,7 +20,10 @@ async def test_form_home(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with patch("CO2Signal.get_latest", return_value=VALID_PAYLOAD,), patch(
+    with patch(
+        "CO2Signal.get_latest",
+        return_value=VALID_PAYLOAD,
+    ), patch(
         "homeassistant.components.co2signal.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -59,7 +62,10 @@ async def test_form_coordinates(hass: HomeAssistant) -> None:
     )
     assert result2["type"] == FlowResultType.FORM
 
-    with patch("CO2Signal.get_latest", return_value=VALID_PAYLOAD,), patch(
+    with patch(
+        "CO2Signal.get_latest",
+        return_value=VALID_PAYLOAD,
+    ), patch(
         "homeassistant.components.co2signal.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -100,7 +106,10 @@ async def test_form_country(hass: HomeAssistant) -> None:
     )
     assert result2["type"] == FlowResultType.FORM
 
-    with patch("CO2Signal.get_latest", return_value=VALID_PAYLOAD,), patch(
+    with patch(
+        "CO2Signal.get_latest",
+        return_value=VALID_PAYLOAD,
+    ), patch(
         "homeassistant.components.co2signal.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -122,7 +131,7 @@ async def test_form_country(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "err_str,err_code",
+    ("err_str", "err_code"),
     [
         ("Invalid authentication credentials", "invalid_auth"),
         ("API rate limit exceeded.", "api_ratelimit"),

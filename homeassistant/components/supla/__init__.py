@@ -30,6 +30,7 @@ SCAN_INTERVAL = timedelta(seconds=10)
 SUPLA_FUNCTION_HA_CMP_MAP = {
     "CONTROLLINGTHEROLLERSHUTTER": Platform.COVER,
     "CONTROLLINGTHEGATE": Platform.COVER,
+    "CONTROLLINGTHEGARAGEDOOR": Platform.COVER,
     "LIGHTSWITCH": Platform.SWITCH,
 }
 SUPLA_FUNCTION_NONE = "NONE"
@@ -63,7 +64,6 @@ async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     session = async_get_clientsession(hass)
 
     for server_conf in server_confs:
-
         server_address = server_conf[CONF_SERVER]
 
         server = SuplaAPI(server_address, server_conf[CONF_ACCESS_TOKEN], session)
@@ -93,8 +93,7 @@ async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
 
 
 async def discover_devices(hass, hass_config):
-    """
-    Run periodically to discover new devices.
+    """Run periodically to discover new devices.
 
     Currently it is only run at startup.
     """
@@ -196,8 +195,7 @@ class SuplaChannel(CoordinatorEntity):
         return state.get("connected")
 
     async def async_action(self, action, **add_pars):
-        """
-        Run server action.
+        """Run server action.
 
         Actions are currently hardcoded in components.
         Supla's API enables autodiscovery

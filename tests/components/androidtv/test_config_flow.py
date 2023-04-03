@@ -1,5 +1,5 @@
 """Tests for the AndroidTV config flow."""
-import json
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -35,6 +35,7 @@ from homeassistant.components.androidtv.const import (
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
 
 from .patchers import PATCH_ACCESS, PATCH_ISFILE, PATCH_SETUP_ENTRY
 
@@ -47,14 +48,14 @@ INVALID_MAC = "ff:ff:ff:ff:ff:ff"
 HOST = "127.0.0.1"
 VALID_DETECT_RULE = [{"paused": {"media_session_state": 3}}]
 
-# Android TV device with Python ADB implementation
+# Android device with Python ADB implementation
 CONFIG_PYTHON_ADB = {
     CONF_HOST: HOST,
     CONF_PORT: DEFAULT_PORT,
     CONF_DEVICE_CLASS: DEVICE_ANDROIDTV,
 }
 
-# Android TV device with ADB server
+# Android device with ADB server
 CONFIG_ADB_SERVER = {
     CONF_HOST: HOST,
     CONF_PORT: DEFAULT_PORT,
@@ -69,7 +70,7 @@ CONNECT_METHOD = (
 
 
 class MockConfigDevice:
-    """Mock class to emulate Android TV device."""
+    """Mock class to emulate Android device."""
 
     def __init__(self, eth_mac=ETH_MAC, wifi_mac=None):
         """Initialize a fake device to test config flow."""
@@ -82,7 +83,7 @@ class MockConfigDevice:
 
 
 @pytest.mark.parametrize(
-    ["config", "eth_mac", "wifi_mac"],
+    ("config", "eth_mac", "wifi_mac"),
     [
         (CONFIG_PYTHON_ADB, ETH_MAC, None),
         (CONFIG_ADB_SERVER, ETH_MAC, None),
@@ -92,7 +93,12 @@ class MockConfigDevice:
         (CONFIG_ADB_SERVER, ETH_MAC, WIFI_MAC),
     ],
 )
-async def test_user(hass, config, eth_mac, wifi_mac):
+async def test_user(
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    eth_mac: str | None,
+    wifi_mac: str | None,
+) -> None:
     """Test user config."""
     flow_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER, "show_advanced_options": True}
@@ -117,7 +123,7 @@ async def test_user(hass, config, eth_mac, wifi_mac):
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_adbkey(hass):
+async def test_user_adbkey(hass: HomeAssistant) -> None:
     """Test user step with adbkey file."""
     config_data = CONFIG_PYTHON_ADB.copy()
     config_data[CONF_ADBKEY] = ADBKEY
@@ -126,7 +132,6 @@ async def test_user_adbkey(hass):
         CONNECT_METHOD,
         return_value=(MockConfigDevice(), None),
     ), PATCH_ISFILE, PATCH_ACCESS, PATCH_SETUP_ENTRY as mock_setup_entry:
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER, "show_advanced_options": True},
@@ -141,7 +146,7 @@ async def test_user_adbkey(hass):
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_error_both_key_server(hass):
+async def test_error_both_key_server(hass: HomeAssistant) -> None:
     """Test we abort if both adb key and server are provided."""
     config_data = CONFIG_ADB_SERVER.copy()
 
@@ -169,7 +174,7 @@ async def test_error_both_key_server(hass):
         assert result2["data"] == CONFIG_ADB_SERVER
 
 
-async def test_error_invalid_key(hass):
+async def test_error_invalid_key(hass: HomeAssistant) -> None:
     """Test we abort if component is already setup."""
     config_data = CONFIG_PYTHON_ADB.copy()
     config_data[CONF_ADBKEY] = ADBKEY
@@ -197,7 +202,7 @@ async def test_error_invalid_key(hass):
 
 
 @pytest.mark.parametrize(
-    ["config", "eth_mac", "wifi_mac"],
+    ("config", "eth_mac", "wifi_mac"),
     [
         (CONFIG_ADB_SERVER, None, None),
         (CONFIG_PYTHON_ADB, None, None),
@@ -207,7 +212,12 @@ async def test_error_invalid_key(hass):
         (CONFIG_PYTHON_ADB, None, INVALID_MAC),
     ],
 )
-async def test_invalid_mac(hass, config, eth_mac, wifi_mac):
+async def test_invalid_mac(
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    eth_mac: str | None,
+    wifi_mac: str | None,
+) -> None:
     """Test for invalid mac address."""
     with patch(
         CONNECT_METHOD,
@@ -223,7 +233,7 @@ async def test_invalid_mac(hass, config, eth_mac, wifi_mac):
         assert result["reason"] == "invalid_unique_id"
 
 
-async def test_abort_if_host_exist(hass):
+async def test_abort_if_host_exist(hass: HomeAssistant) -> None:
     """Test we abort if component is already setup."""
     MockConfigEntry(
         domain=DOMAIN, data=CONFIG_ADB_SERVER, unique_id=ETH_MAC
@@ -241,7 +251,7 @@ async def test_abort_if_host_exist(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_abort_if_unique_exist(hass):
+async def test_abort_if_unique_exist(hass: HomeAssistant) -> None:
     """Test we abort if component is already setup."""
     config_data = CONFIG_ADB_SERVER.copy()
     config_data[CONF_HOST] = "127.0.0.2"
@@ -264,7 +274,7 @@ async def test_abort_if_unique_exist(hass):
         assert result["reason"] == "already_configured"
 
 
-async def test_on_connect_failed(hass):
+async def test_on_connect_failed(hass: HomeAssistant) -> None:
     """Test when we have errors connecting the router."""
     flow_result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -302,7 +312,7 @@ async def test_on_connect_failed(hass):
         assert result3["data"] == CONFIG_ADB_SERVER
 
 
-async def test_options_flow(hass):
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test config flow options."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -410,7 +420,7 @@ async def test_options_flow(hass):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
-                CONF_RULE_VALUES: json.dumps({"a": "b"}),
+                CONF_RULE_VALUES: {"a": "b"},
             },
         )
         assert result["type"] == data_entry_flow.FlowResultType.FORM
@@ -421,7 +431,7 @@ async def test_options_flow(hass):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
-                CONF_RULE_VALUES: json.dumps(["standby"]),
+                CONF_RULE_VALUES: ["standby"],
             },
         )
         assert result["type"] == data_entry_flow.FlowResultType.FORM
@@ -442,7 +452,7 @@ async def test_options_flow(hass):
             result["flow_id"],
             user_input={
                 CONF_RULE_ID: "rule2",
-                CONF_RULE_VALUES: json.dumps(VALID_DETECT_RULE),
+                CONF_RULE_VALUES: VALID_DETECT_RULE,
             },
         )
         assert result["type"] == data_entry_flow.FlowResultType.FORM

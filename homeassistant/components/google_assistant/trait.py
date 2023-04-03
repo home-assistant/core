@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, TypeVar
 
 from homeassistant.components import (
     alarm_control_panel,
@@ -63,8 +63,7 @@ from homeassistant.const import (
     STATE_STANDBY,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.helpers.network import get_url
@@ -76,7 +75,6 @@ from homeassistant.util.percentage import (
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
-    CHALLENGE_ACK_NEEDED,
     CHALLENGE_FAILED_PIN_NEEDED,
     CHALLENGE_PIN_NEEDED,
     ERR_ALREADY_ARMED,
@@ -162,20 +160,22 @@ COMMAND_SELECT_CHANNEL = f"{PREFIX_COMMANDS}selectChannel"
 COMMAND_LOCATE = f"{PREFIX_COMMANDS}Locate"
 COMMAND_CHARGE = f"{PREFIX_COMMANDS}Charge"
 
-TRAITS = []
+TRAITS: list[type[_Trait]] = []
 
 FAN_SPEED_MAX_SPEED_COUNT = 5
 
+_TraitT = TypeVar("_TraitT", bound="_Trait")
 
-def register_trait(trait):
-    """Decorate a function to register a trait."""
+
+def register_trait(trait: type[_TraitT]) -> type[_TraitT]:
+    """Decorate a class to register a trait."""
     TRAITS.append(trait)
     return trait
 
 
 def _google_temp_unit(units):
     """Return Google temperature unit."""
-    if units == TEMP_FAHRENHEIT:
+    if units == UnitOfTemperature.FAHRENHEIT:
         return "F"
     return "C"
 
@@ -289,7 +289,7 @@ class CameraStreamTrait(_Trait):
     name = TRAIT_CAMERA_STREAM
     commands = [COMMAND_GET_CAMERA_STREAM]
 
-    stream_info = None
+    stream_info: dict[str, str] | None = None
 
     @staticmethod
     def supported(domain, features, device_class, _):
@@ -831,7 +831,7 @@ class TemperatureControlTrait(_Trait):
             "temperatureUnitForUX": _google_temp_unit(
                 self.hass.config.units.temperature_unit
             ),
-            "queryOnlyTemperatureSetting": True,
+            "queryOnlyTemperatureControl": True,
             "temperatureRange": {
                 "minThresholdCelsius": -100,
                 "maxThresholdCelsius": 100,
@@ -845,7 +845,10 @@ class TemperatureControlTrait(_Trait):
         current_temp = self.state.state
         if current_temp not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
             temp = round(
-                TemperatureConverter.convert(float(current_temp), unit, TEMP_CELSIUS), 1
+                TemperatureConverter.convert(
+                    float(current_temp), unit, UnitOfTemperature.CELSIUS
+                ),
+                1,
             )
             response["temperatureSetpointCelsius"] = temp
             response["temperatureAmbientCelsius"] = temp
@@ -951,7 +954,10 @@ class TemperatureSettingTrait(_Trait):
         current_temp = attrs.get(climate.ATTR_CURRENT_TEMPERATURE)
         if current_temp is not None:
             response["thermostatTemperatureAmbient"] = round(
-                TemperatureConverter.convert(current_temp, unit, TEMP_CELSIUS), 1
+                TemperatureConverter.convert(
+                    current_temp, unit, UnitOfTemperature.CELSIUS
+                ),
+                1,
             )
 
         current_humidity = attrs.get(climate.ATTR_CURRENT_HUMIDITY)
@@ -962,27 +968,37 @@ class TemperatureSettingTrait(_Trait):
             if supported & climate.SUPPORT_TARGET_TEMPERATURE_RANGE:
                 response["thermostatTemperatureSetpointHigh"] = round(
                     TemperatureConverter.convert(
-                        attrs[climate.ATTR_TARGET_TEMP_HIGH], unit, TEMP_CELSIUS
+                        attrs[climate.ATTR_TARGET_TEMP_HIGH],
+                        unit,
+                        UnitOfTemperature.CELSIUS,
                     ),
                     1,
                 )
                 response["thermostatTemperatureSetpointLow"] = round(
                     TemperatureConverter.convert(
-                        attrs[climate.ATTR_TARGET_TEMP_LOW], unit, TEMP_CELSIUS
+                        attrs[climate.ATTR_TARGET_TEMP_LOW],
+                        unit,
+                        UnitOfTemperature.CELSIUS,
                     ),
                     1,
                 )
             else:
                 if (target_temp := attrs.get(ATTR_TEMPERATURE)) is not None:
                     target_temp = round(
-                        TemperatureConverter.convert(target_temp, unit, TEMP_CELSIUS), 1
+                        TemperatureConverter.convert(
+                            target_temp, unit, UnitOfTemperature.CELSIUS
+                        ),
+                        1,
                     )
                     response["thermostatTemperatureSetpointHigh"] = target_temp
                     response["thermostatTemperatureSetpointLow"] = target_temp
         else:
             if (target_temp := attrs.get(ATTR_TEMPERATURE)) is not None:
                 response["thermostatTemperatureSetpoint"] = round(
-                    TemperatureConverter.convert(target_temp, unit, TEMP_CELSIUS), 1
+                    TemperatureConverter.convert(
+                        target_temp, unit, UnitOfTemperature.CELSIUS
+                    ),
+                    1,
                 )
 
         return response
@@ -996,9 +1012,9 @@ class TemperatureSettingTrait(_Trait):
 
         if command == COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT:
             temp = TemperatureConverter.convert(
-                params["thermostatTemperatureSetpoint"], TEMP_CELSIUS, unit
+                params["thermostatTemperatureSetpoint"], UnitOfTemperature.CELSIUS, unit
             )
-            if unit == TEMP_FAHRENHEIT:
+            if unit == UnitOfTemperature.FAHRENHEIT:
                 temp = round(temp)
 
             if temp < min_temp or temp > max_temp:
@@ -1017,31 +1033,35 @@ class TemperatureSettingTrait(_Trait):
 
         elif command == COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE:
             temp_high = TemperatureConverter.convert(
-                params["thermostatTemperatureSetpointHigh"], TEMP_CELSIUS, unit
+                params["thermostatTemperatureSetpointHigh"],
+                UnitOfTemperature.CELSIUS,
+                unit,
             )
-            if unit == TEMP_FAHRENHEIT:
+            if unit == UnitOfTemperature.FAHRENHEIT:
                 temp_high = round(temp_high)
 
             if temp_high < min_temp or temp_high > max_temp:
                 raise SmartHomeError(
                     ERR_VALUE_OUT_OF_RANGE,
                     (
-                        f"Upper bound for temperature range should be between "
+                        "Upper bound for temperature range should be between "
                         f"{min_temp} and {max_temp}"
                     ),
                 )
 
             temp_low = TemperatureConverter.convert(
-                params["thermostatTemperatureSetpointLow"], TEMP_CELSIUS, unit
+                params["thermostatTemperatureSetpointLow"],
+                UnitOfTemperature.CELSIUS,
+                unit,
             )
-            if unit == TEMP_FAHRENHEIT:
+            if unit == UnitOfTemperature.FAHRENHEIT:
                 temp_low = round(temp_low)
 
             if temp_low < min_temp or temp_low > max_temp:
                 raise SmartHomeError(
                     ERR_VALUE_OUT_OF_RANGE,
                     (
-                        f"Lower bound for temperature range should be between "
+                        "Lower bound for temperature range should be between "
                         f"{min_temp} and {max_temp}"
                     ),
                 )
@@ -1312,10 +1332,7 @@ class ArmDisArmTrait(_Trait):
 
     def query_attributes(self):
         """Return ArmDisarm query attributes."""
-        if "next_state" in self.state.attributes:
-            armed_state = self.state.attributes["next_state"]
-        else:
-            armed_state = self.state.state
+        armed_state = self.state.attributes.get("next_state", self.state.state)
         response = {"isArmed": armed_state in self.state_to_service}
         if response["isArmed"]:
             response.update({"currentArmLevel": armed_state})
@@ -2111,14 +2128,6 @@ def _verify_pin_challenge(data, state, challenge):
 
     if challenge.get("pin") != data.config.secure_devices_pin:
         raise ChallengeNeeded(CHALLENGE_FAILED_PIN_NEEDED)
-
-
-def _verify_ack_challenge(data, state, challenge):
-    """Verify an ack challenge."""
-    if not data.config.should_2fa(state):
-        return
-    if not challenge or not challenge.get("ack"):
-        raise ChallengeNeeded(CHALLENGE_ACK_NEEDED)
 
 
 MEDIA_COMMAND_SUPPORT_MAPPING = {

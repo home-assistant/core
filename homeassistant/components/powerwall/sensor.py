@@ -14,10 +14,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
 )
@@ -26,7 +26,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, POWERWALL_COORDINATOR
 from .entity import PowerWallEntity
-from .models import PowerwallData, PowerwallRuntimeData
+from .models import PowerwallRuntimeData
 
 _METER_DIRECTION_EXPORT = "export"
 _METER_DIRECTION_IMPORT = "import"
@@ -114,7 +114,7 @@ async def async_setup_entry(
     powerwall_data: PowerwallRuntimeData = hass.data[DOMAIN][config_entry.entry_id]
     coordinator = powerwall_data[POWERWALL_COORDINATOR]
     assert coordinator is not None
-    data: PowerwallData = coordinator.data
+    data = coordinator.data
     entities: list[PowerWallEntity] = [
         PowerWallChargeSensor(powerwall_data),
     ]
@@ -203,7 +203,7 @@ class PowerWallEnergyDirectionSensor(PowerWallEntity, SensorEntity):
     """Representation of an Powerwall Direction Energy sensor."""
 
     _attr_state_class = SensorStateClass.TOTAL
-    _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     _attr_device_class = SensorDeviceClass.ENERGY
 
     def __init__(

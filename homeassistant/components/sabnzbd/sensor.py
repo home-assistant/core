@@ -160,7 +160,7 @@ class SabnzbdSensor(SensorEntity):
         client_name,
         description: SabnzbdSensorEntityDescription,
         entry_id,
-    ):
+    ) -> None:
         """Initialize the sensor."""
 
         self._attr_unique_id = f"{entry_id}_{description.key}"

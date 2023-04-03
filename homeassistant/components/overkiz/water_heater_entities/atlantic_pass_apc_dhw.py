@@ -12,7 +12,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 
 from ..entity import OverkizEntity
 
@@ -20,7 +20,7 @@ from ..entity import OverkizEntity
 class AtlanticPassAPCDHW(OverkizEntity, WaterHeaterEntity):
     """Representation of Atlantic Pass APC DHW."""
 
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.OPERATION_MODE
