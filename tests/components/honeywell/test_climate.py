@@ -70,7 +70,6 @@ async def test_static_attributes(
     assert entry
 
     state = hass.states.get(entity_id)
-    assert state.state != STATE_UNAVAILABLE
     assert state.state == HVACMode.OFF
 
     attributes = state.attributes
@@ -123,8 +122,6 @@ async def test_dynamic_attributes(
     assert attributes["current_humidity"] == 50
 
     device.system_mode = "auto"
-    device.current_temperature = 61
-    device.current_humidity = 50
 
     async_fire_time_changed(
         hass,
@@ -133,6 +130,9 @@ async def test_dynamic_attributes(
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == HVACMode.HEAT_COOL
+    attributes = state.attributes
+    assert attributes["current_temperature"] == 16.1
+    assert attributes["current_humidity"] == 50
 
 
 async def test_mode_service_calls(
