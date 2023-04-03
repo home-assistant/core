@@ -2,7 +2,6 @@
 import asyncio
 from datetime import date, datetime
 import logging
-from typing import Any
 
 import async_timeout
 import pyotgw
