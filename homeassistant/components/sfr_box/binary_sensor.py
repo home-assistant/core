@@ -45,7 +45,7 @@ DSL_SENSOR_TYPES: tuple[SFRBoxBinarySensorEntityDescription[DslInfo], ...] = (
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda x: x.status == "up",
-        translation_key="dsl_status_binary_sensor",
+        translation_key="dsl_status",
     ),
 )
 FTTH_SENSOR_TYPES: tuple[SFRBoxBinarySensorEntityDescription[FtthInfo], ...] = (
@@ -54,7 +54,7 @@ FTTH_SENSOR_TYPES: tuple[SFRBoxBinarySensorEntityDescription[FtthInfo], ...] = (
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda x: x.status == "up",
-        translation_key="ftth_status_binary_sensor",
+        translation_key="ftth_status",
     ),
 )
 WAN_SENSOR_TYPES: tuple[SFRBoxBinarySensorEntityDescription[WanInfo], ...] = (
@@ -63,7 +63,7 @@ WAN_SENSOR_TYPES: tuple[SFRBoxBinarySensorEntityDescription[WanInfo], ...] = (
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda x: x.status == "up",
-        translation_key="wan_status_binary_sensor",
+        translation_key="wan_status",
     ),
 )
 

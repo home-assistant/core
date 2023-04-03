@@ -32,14 +32,19 @@
   },
   "entity": {
     "binary_sensor": {
-      "dsl_status_binary_sensor": {
+      "dsl_status": {
         "name": "DSL status"
       },
-      "ftth_status_binary_sensor": {
+      "ftth_status": {
         "name": "FTTH status"
       },
-      "wan_status_binary_sensor": {
+      "wan_status": {
         "name": "WAN status"
+      }
+    },
+    "button": {
+      "reboot": {
+        "name": "[%key:component::button::entity_component::restart::name%]"
       }
     },
     "sensor": {
