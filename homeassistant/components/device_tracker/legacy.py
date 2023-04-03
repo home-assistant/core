@@ -431,6 +431,8 @@ def async_setup_scanner_platform(
         extra_attributes_uses_executor = hasattr(
             scanner.async_get_extra_attributes, _DEVICE_TRACKER_NATIVE
         )
+        host_name_by_mac: dict[str, str | None] = {}
+        extra_attributes_by_mac: dict[str, dict[str, Any]] = {}
         if device_name_uses_executor or extra_attributes_uses_executor:
             (
                 host_name_by_mac,
@@ -443,9 +445,6 @@ def async_setup_scanner_platform(
                 seen,
                 found_devices,
             )
-        else:
-            host_name_by_mac = {}
-            extra_attributes_by_mac = {}
 
         for mac in found_devices:
             if mac in seen:
