@@ -131,7 +131,9 @@ template_cv: ContextVar[tuple[str, str] | None] = ContextVar(
 #
 # If the cache is too small we will end up creating and destroying
 # TemplateState objects too often which will cause a lot of GC activity
-# and slow down the system.
+# and slow down the system. For systems with a lot of entities, and
+# templates this can reach 100000s of object creations and destructions
+# per minute.
 #
 # Since entity counts may grow over time, we will increase
 # the size if the number of entities grows via _async_adjust_lru_sizes
