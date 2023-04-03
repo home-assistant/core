@@ -34,6 +34,12 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "core_update_available": { "name": "Core update available" },
+      "ftl_update_available": { "name": "FTL update available" },
+      "status": { "name": "Status" },
+      "web_update_available": { "name": "Web update available" }
+    },
     "sensor": {
       "ads_blocked_today": { "name": "Ads blocked today" },
       "ads_percentage_today": { "name": "Ads percentage blocked today" },
