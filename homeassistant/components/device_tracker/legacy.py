@@ -6,7 +6,7 @@ from collections.abc import Callable, Coroutine, Sequence
 from datetime import datetime, timedelta
 import hashlib
 from types import ModuleType
-from typing import Any, Final, Protocol, TypeVar, final
+from typing import Any, Final, Protocol, final
 
 import attr
 import voluptuous as vol
@@ -114,19 +114,6 @@ SERVICE_SEE_PAYLOAD_SCHEMA: Final[vol.Schema] = vol.Schema(
 
 YAML_DEVICES: Final = "known_devices.yaml"
 EVENT_NEW_DEVICE: Final = "device_tracker_new_device"
-
-
-_DEVICE_TRACKER_NATIVE = "_device_tracker_native"
-
-_WrapFuncType = TypeVar(  # pylint: disable=invalid-name
-    "_WrapFuncType", bound=Callable[..., Any]
-)
-
-
-def _device_tracker_native(method: _WrapFuncType) -> _WrapFuncType:
-    """Native device tracker method not overridden."""
-    setattr(method, _DEVICE_TRACKER_NATIVE, True)
-    return method
 
 
 class SeeCallback(Protocol):
@@ -425,11 +412,13 @@ def async_setup_scanner_platform(
         async with update_lock:
             found_devices = await scanner.async_scan_devices()
 
-        device_name_uses_executor = hasattr(
-            scanner.async_get_device_name, _DEVICE_TRACKER_NATIVE
+        device_name_uses_executor = (
+            scanner.async_get_device_name.__func__  # type: ignore[attr-defined]
+            is DeviceScanner.async_get_device_name
         )
-        extra_attributes_uses_executor = hasattr(
-            scanner.async_get_extra_attributes, _DEVICE_TRACKER_NATIVE
+        extra_attributes_uses_executor = (
+            scanner.async_get_extra_attributes.__func__  # type: ignore[attr-defined]
+            is DeviceScanner.async_get_extra_attributes
         )
         host_name_by_mac: dict[str, str | None] = {}
         extra_attributes_by_mac: dict[str, dict[str, Any]] = {}
@@ -933,7 +922,6 @@ class DeviceScanner:
         """Get the name of a device."""
         raise NotImplementedError()
 
-    @_device_tracker_native
     async def async_get_device_name(self, device: str) -> str | None:
         """Get the name of a device."""
         assert (
@@ -945,7 +933,6 @@ class DeviceScanner:
         """Get the extra attributes of a device."""
         raise NotImplementedError()
 
-    @_device_tracker_native
     async def async_get_extra_attributes(self, device: str) -> dict:
         """Get the extra attributes of a device."""
         assert (
