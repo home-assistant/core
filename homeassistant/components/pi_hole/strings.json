@@ -32,5 +32,18 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "ads_blocked_today": { "name": "Ads blocked today" },
+      "ads_percentage_today": { "name": "Ads percentage blocked today" },
+      "clients_ever_seen": { "name": "Seen clients" },
+      "dns_queries_today": { "name": "DNS queries today" },
+      "domains_being_blocked": { "name": "Domains blocked" },
+      "queries_cached": { "name": "DNS queries cached" },
+      "queries_forwarded": { "name": "DNS queries forwarded" },
+      "unique_clients": { "name": "DNS unique clients" },
+      "unique_domains": { "name": "DNS unique domains" }
+    }
   }
 }
