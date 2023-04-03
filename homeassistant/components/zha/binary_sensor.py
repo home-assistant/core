@@ -4,6 +4,7 @@ from __future__ import annotations
 import functools
 from typing import Any
 
+from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.clusters.security import IasZone
 
 from homeassistant.components.binary_sensor import (
@@ -123,6 +124,15 @@ class Opening(BinarySensor):
 
     SENSOR_ATTR = "on_off"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.OPENING
+
+    # this isn't stored in the zigpy database, so we need to restore the last state for now
+    @callback
+    def async_restore_last_state(self, last_state):
+        """Restore previous state."""
+        self._channel.cluster.update_attribute(
+            OnOff.attributes_by_name[self.SENSOR_ATTR].id,
+            last_state.state == STATE_ON,
+        )
 
 
 @MULTI_MATCH(channel_names=CHANNEL_BINARY_INPUT)
