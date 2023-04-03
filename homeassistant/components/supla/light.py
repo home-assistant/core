@@ -1,4 +1,4 @@
-"""Support for Supla lights - dimmer and rgbw"""
+"""Support for Supla lights - dimmer and rgb."""
 from __future__ import annotations
 
 import logging
