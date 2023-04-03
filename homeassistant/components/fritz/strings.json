@@ -52,5 +52,35 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "external_ip": { "name": "External IP" },
+      "external_ipv6": { "name": "External IPv6" },
+      "device_uptime": { "name": "Device Uptime" },
+      "connection_uptime": { "name": "Connection Uptime" },
+      "kb_s_sent": { "name": "Upload Throughput" },
+      "kb_s_received": { "name": "Download Throughput" },
+      "max_kb_s_sent": { "name": "Max Connection Upload Throughput" },
+      "max_kb_s_received": { "name": "Max Connection Download Throughput" },
+      "gb_sent": { "name": "GB sent" },
+      "gb_received": { "name": "GB received" },
+      "link_kb_s_sent": { "name": "Link Upload Throughput" },
+      "link_kb_s_received": { "name": "Link Download Throughput" },
+      "link_noise_margin_sent": { "name": "Link Upload Noise Margin" },
+      "link_noise_margin_received": { "name": "Link Download Noise Margin" },
+      "link_attenuation_sent": { "name": "Link Upload Power Attenuation" },
+      "link_attenuation_received": { "name": "Link Download Power Attenuation" }
+    },
+    "binary_sensor": {
+      "is_connected": { "name": "Connection" },
+      "is_linked": { "name": "Link" }
+    },
+    "button": {
+      "firmware_update": { "name": "Firmware Update" },
+      "reboot": { "name": "Reboot" },
+      "reconnect": { "name": "Reconnect" },
+      "cleanup": { "name": "Cleanup" }
+    }
   }
 }
