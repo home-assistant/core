@@ -60,5 +60,51 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "cpu_other_load": { "name": "CPU Utilization (Other)" },
+      "cpu_user_load": { "name": "CPU Utilization (User)" },
+      "cpu_system_load": { "name": "CPU Utilization (System)" },
+      "cpu_total_load": { "name": "CPU Utilization (Total)" },
+      "cpu_1min_load": { "name": "CPU Load Average (1 min)" },
+      "cpu_5min_load": { "name": "CPU Load Average (5 min)" },
+      "cpu_15min_load": { "name": "CPU Load Average (15 min)" },
+      "memory_real_usage": { "name": "Memory Usage (Real)" },
+      "memory_size": { "name": "Memory Size" },
+      "memory_cached": { "name": "Memory Cached" },
+      "memory_available_swap": { "name": "Memory Available (Swap)" },
+      "memory_available_real": { "name": "Memory Available (Real)" },
+      "memory_total_swap": { "name": "Memory Total (Swap)" },
+      "memory_total_real": { "name": "Memory Total (Real)" },
+      "network_up": { "name": "Upload Throughput" },
+      "network_down": { "name": "Download Throughput" },
+      "volume_status": { "name": "Status" },
+      "volume_size_total": { "name": "Total Size" },
+      "volume_size_used": { "name": "Used Space" },
+      "volume_percentage_used": { "name": "Volume Used" },
+      "volume_disk_temp_avg": { "name": "Average Disk Temp" },
+      "volume_disk_temp_max": { "name": "Maximum Disk Temp" },
+      "disk_smart_status": { "name": "Status (Smart)" },
+      "disk_status": { "name": "Status" },
+      "disk_temp": {
+        "name": "[%key:component::sensor::entity_component::temperature::name%]"
+      },
+      "temperature": {
+        "name": "[%key:component::sensor::entity_component::temperature::name%]"
+      },
+      "uptime": { "name": "Last Boot" }
+    },
+    "binary_sensor": {
+      "status": { "name": "Security Status" },
+      "disk_exceed_bad_sector_thr": { "name": "Exceeded Max Bad Sectors" },
+      "disk_below_remain_life_thr": { "name": "Below Min Remaining Life" }
+    },
+    "switch": {
+      "home_mode": { "name": "Home Mode" }
+    },
+    "update": {
+      "update": { "name": "DSM Update" }
+    }
   }
 }
