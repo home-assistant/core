@@ -124,10 +124,19 @@ template_cv: ContextVar[tuple[str, str] | None] = ContextVar(
     "template_cv", default=None
 )
 
-# This should match the maximum number of states that we expect to be
-# stored in the state machine. If the cache is too small we will end
-# up creating and destroying TemplateState objects too often which
-# will cause a lot of GC activity and slow down the system.
+#
+# CACHED_TEMPLATE_STATES is a rough estimate of the number of entities
+# on a typical system. It is used as the initial size of the LRU cache
+# for TemplateState objects.
+#
+# If the cache is too small we will end up creating and destroying
+# TemplateState objects too often which will cause a lot of GC activity
+# and slow down the system.
+#
+# Since entity counts have grown over time, we will increase
+# the size if the number of entities grows via _async_adjust_lru_sizes
+# at the start of the system and every 10 minutes if needed.
+#
 CACHED_TEMPLATE_STATES = 512
 
 EVAL_CACHE_SIZE = 512
