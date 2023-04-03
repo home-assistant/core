@@ -124,14 +124,11 @@ class InternetBoxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         # Check if already configured
-        info = await self.hass.async_add_executor_job(api.get_info)
+        info = await self.hass.async_add_executor_job(api.get_device_info)
         await self.async_set_unique_id(info["SerialNumber"], raise_on_progress=False)
         self._abort_if_unique_id_configured(updates=config_data)
 
-        if info.get("ModelName") is not None and info.get("DeviceName") is not None:
-            name = f"{info['ModelName']} - {info['DeviceName']}"
-        else:
-            name = info.get("ModelName", DEFAULT_NAME)
+        name = info["ModelName"]
 
         return self.async_create_entry(
             title=name,

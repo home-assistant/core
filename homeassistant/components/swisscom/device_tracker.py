@@ -4,7 +4,6 @@ from __future__ import annotations
 from contextlib import suppress
 import logging
 
-import requests
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
