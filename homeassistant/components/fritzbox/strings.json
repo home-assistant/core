@@ -36,5 +36,41 @@
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "temperature": {
+        "name": "[%key:component::sensor::entity_component::temperature::name%]"
+      },
+      "humidity": {
+        "name": "[%key:component::sensor::entity_component::humidity::name%]"
+      },
+      "battery": {
+        "name": "[%key:component::sensor::entity_component::battery::name%]"
+      },
+      "power_consumption": {
+        "name": "[%key:component::sensor::entity_component::power::name%]"
+      },
+      "voltage": {
+        "name": "[%key:component::sensor::entity_component::voltage::name%]"
+      },
+      "electric_current": {
+        "name": "[%key:component::sensor::entity_component::current::name%]"
+      },
+      "total_energy": {
+        "name": "[%key:component::sensor::entity_component::energy::name%]"
+      },
+      "comfort_temperature": { "name": "Comfort Temperature" },
+      "eco_temperature": { "name": "Eco Temperature" },
+      "nextchange_temperature": { "name": "Next Scheduled Temperature" },
+      "nextchange_time": { "name": "Next Scheduled Change Time" },
+      "nextchange_preset": { "name": "Next Scheduled Preset" },
+      "scheduled_preset": { "name": "Current Scheduled Preset" }
+    },
+    "binary_sensor": {
+      "alarm": { "name": "Alarm" },
+      "lock": { "name": "Button Lock on Device" },
+      "device_lock": { "name": "Button Lock via UI" }
+    }
   }
 }
