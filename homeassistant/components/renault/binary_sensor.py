@@ -87,7 +87,7 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = tuple(
             device_class=BinarySensorDeviceClass.PLUG,
             on_key="plugStatus",
             on_value=PlugState.PLUGGED.value,
-            translation_key="plug_binary_sensor",
+            translation_key="plugged_in",
         ),
         RenaultBinarySensorEntityDescription(
             key="charging",
@@ -95,7 +95,7 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = tuple(
             device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
             on_key="chargingStatus",
             on_value=ChargeState.CHARGE_IN_PROGRESS.value,
-            translation_key="battery_charging_binary_sensor",
+            translation_key="charging",
         ),
         RenaultBinarySensorEntityDescription(
             key="hvac_status",
@@ -103,7 +103,7 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = tuple(
             icon_fn=lambda e: "mdi:fan" if e.is_on else "mdi:fan-off",
             on_key="hvacStatus",
             on_value="on",
-            translation_key="hvac_binary_sensor",
+            translation_key="hvac_status",
         ),
         RenaultBinarySensorEntityDescription(
             key="lock_status",
@@ -112,7 +112,7 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = tuple(
             device_class=BinarySensorDeviceClass.LOCK,
             on_key="lockStatus",
             on_value="unlocked",
-            translation_key="lock_binary_sensor",
+            translation_key="lock_status",
         ),
         RenaultBinarySensorEntityDescription(
             key="hatch_status",
@@ -121,7 +121,7 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = tuple(
             device_class=BinarySensorDeviceClass.DOOR,
             on_key="hatchStatus",
             on_value="open",
-            translation_key="hatch_binary_sensor",
+            translation_key="hatch_status",
         ),
     ]
     + [
@@ -132,7 +132,7 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = tuple(
             device_class=BinarySensorDeviceClass.DOOR,
             on_key=f"doorStatus{door.replace(' ','')}",
             on_value="open",
-            translation_key=f"{door.lower().replace(' ','_')}_door_binary_sensor",
+            translation_key=f"{door.lower().replace(' ','_')}_door_status",
         )
         for door in ("Rear Left", "Rear Right", "Driver", "Passenger")
     ],

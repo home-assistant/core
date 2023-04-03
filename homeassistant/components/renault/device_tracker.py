@@ -55,6 +55,6 @@ DEVICE_TRACKER_TYPES: tuple[RenaultDataEntityDescription, ...] = (
         key="location",
         coordinator="location",
         icon="mdi:car",
-        translation_key="location_device_tracker",
+        translation_key="location",
     ),
 )
