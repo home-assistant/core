@@ -62,6 +62,17 @@
         "name": "Rear right door"
       }
     },
+    "button": {
+      "start_air_conditioner_button": {
+        "name": "Start air conditioner"
+      },
+      "start_charge_button": {
+        "name": "Start charge"
+      },
+      "stop_charge_button": {
+        "name": "Stop charge"
+      }
+    },
     "select": {
       "charge_mode": {
         "state": {
