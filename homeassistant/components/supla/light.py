@@ -2,10 +2,9 @@
 from __future__ import annotations
 
 import logging
+from math import ceil
 from pprint import pformat
 from typing import Any
-
-from math import ceil
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
