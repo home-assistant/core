@@ -517,7 +517,7 @@ energyzero==0.4.1
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env_canada==0.5.29
+env_canada==0.5.30
 
 # homeassistant.components.enphase_envoy
 envoy_reader==0.20.1
@@ -614,7 +614,7 @@ glances_api==0.4.1
 goalzero==0.2.1
 
 # homeassistant.components.goodwe
-goodwe==0.2.29
+goodwe==0.2.30
 
 # homeassistant.components.google_mail
 google-api-python-client==2.71.0
@@ -1938,7 +1938,7 @@ youless-api==1.0.1
 zamg==0.2.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.51.0
+zeroconf==0.53.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
