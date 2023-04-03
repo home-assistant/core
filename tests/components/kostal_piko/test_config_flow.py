@@ -8,11 +8,12 @@ from homeassistant import data_entry_flow
 from homeassistant.components.kostal_piko.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
-async def test_show_empty(hass):
+async def test_show_empty(hass: HomeAssistant) -> None:
     """Test that the form is served empty."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -23,7 +24,7 @@ async def test_show_empty(hass):
     assert result["errors"] == {}
 
 
-async def test_integration_already_setup(hass):
+async def test_integration_already_setup(hass: HomeAssistant) -> None:
     """Test we only allow a single config flow."""
     with patch(
         "homeassistant.components.kostal_piko.Piko.fetch_props",
