@@ -140,7 +140,6 @@ template_cv: ContextVar[tuple[str, str] | None] = ContextVar(
 # at the start of the system and every 10 minutes if needed.
 #
 CACHED_TEMPLATE_STATES = 512
-
 EVAL_CACHE_SIZE = 512
 
 MAX_CUSTOM_TEMPLATE_SIZE = 5 * 1024 * 1024
