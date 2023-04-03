@@ -64,11 +64,10 @@ async def async_setup_entry(
     coordinator: RoborockDataUpdateCoordinator = hass.data[DOMAIN][
         config_entry.entry_id
     ]
-    entities = []
-    for device_id, device_info in coordinator.api.device_map.items():
-        unique_id = slugify(device_id)
-        entities.append(RoborockVacuum(unique_id, device_info, coordinator))
-    async_add_entities(entities)
+    async_add_entities(
+        RoborockVacuum(slugify(device_id), device_info, coordinator)
+        for device_id, device_info in coordinator.api.device_map.items()
+    )
 
 
 class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):

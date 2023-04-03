@@ -35,7 +35,7 @@ async def test_successful_config_flow(hass: HomeAssistant, bypass_api_fixture) -
     # Provide code from email to config flow
     with patch(
         "homeassistant.components.roborock.config_flow.RoborockClient.code_login",
-        return_value=MOCK_CONFIG.get("user_data"),
+        return_value=MOCK_CONFIG["user_data"],
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_ENTRY_CODE: "123456"}
