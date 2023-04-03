@@ -75,7 +75,7 @@ class MockSTT:
         hass: HomeAssistant,
         config: ConfigType,
         discovery_info: DiscoveryInfoType | None = None,
-    ) -> tts.Provider:
+    ) -> stt.Provider:
         """Set up a mock speech component."""
         return MockSttProvider(hass, _TRANSCRIPT)
 
@@ -93,7 +93,7 @@ class MockTTSProvider(tts.Provider):
     @property
     def supported_languages(self) -> list[str]:
         """Return list of supported languages."""
-        return ["en"]
+        return ["en-US"]
 
     @property
     def supported_options(self) -> list[str]:
@@ -264,7 +264,7 @@ async def test_intent_timeout(
                 "start_stage": "intent",
                 "end_stage": "intent",
                 "input": {"text": "Are the lights on?"},
-                "timeout": 0.00001,
+                "timeout": 0.1,
             }
         )
 
@@ -301,7 +301,7 @@ async def test_text_pipeline_timeout(
         await asyncio.sleep(3600)
 
     with patch(
-        "homeassistant.components.voice_assistant.pipeline.PipelineInput._execute",
+        "homeassistant.components.voice_assistant.pipeline.PipelineInput.execute",
         new=sleepy_run,
     ):
         await client.send_json(
@@ -381,7 +381,7 @@ async def test_audio_pipeline_timeout(
         await asyncio.sleep(3600)
 
     with patch(
-        "homeassistant.components.voice_assistant.pipeline.PipelineInput._execute",
+        "homeassistant.components.voice_assistant.pipeline.PipelineInput.execute",
         new=sleepy_run,
     ):
         await client.send_json(
@@ -427,25 +427,8 @@ async def test_stt_provider_missing(
 
         # result
         msg = await client.receive_json()
-        assert msg["success"]
-
-        # run start
-        msg = await client.receive_json()
-        assert msg["event"]["type"] == "run-start"
-        assert msg["event"]["data"] == snapshot
-
-        # stt
-        msg = await client.receive_json()
-        assert msg["event"]["type"] == "stt-start"
-        assert msg["event"]["data"] == snapshot
-
-        # End of audio stream (handler id + empty payload)
-        await client.send_bytes(b"1")
-
-        # stt error
-        msg = await client.receive_json()
-        assert msg["event"]["type"] == "error"
-        assert msg["event"]["data"]["code"] == "stt-provider-missing"
+        assert not msg["success"]
+        assert msg["error"]["code"] == "stt-provider-missing"
 
 
 async def test_stt_stream_failed(

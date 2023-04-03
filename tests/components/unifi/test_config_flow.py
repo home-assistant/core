@@ -76,6 +76,7 @@ DEVICES = [
 WLANS = [
     {"name": "SSID 1"},
     {"name": "SSID 2", "name_combine_enabled": False, "name_combine_suffix": "_IOT"},
+    {"name": "SSID 4", "name_combine_enabled": False},
 ]
 
 DPI_GROUPS = [
@@ -459,17 +460,21 @@ async def test_advanced_option_flow(
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "device_tracker"
     assert not result["last_step"]
-    assert set(
-        result["data_schema"].schema[CONF_SSID_FILTER].options.keys()
-    ).intersection(("SSID 1", "SSID 2", "SSID 2_IOT", "SSID 3"))
-
+    assert list(result["data_schema"].schema[CONF_SSID_FILTER].options.keys()) == [
+        "",
+        "SSID 1",
+        "SSID 2",
+        "SSID 2_IOT",
+        "SSID 3",
+        "SSID 4",
+    ]
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
             CONF_TRACK_CLIENTS: False,
             CONF_TRACK_WIRED_CLIENTS: False,
             CONF_TRACK_DEVICES: False,
-            CONF_SSID_FILTER: ["SSID 1", "SSID 2_IOT", "SSID 3"],
+            CONF_SSID_FILTER: ["SSID 1", "SSID 2_IOT", "SSID 3", "SSID 4"],
             CONF_DETECTION_TIME: 100,
         },
     )
@@ -503,7 +508,7 @@ async def test_advanced_option_flow(
         CONF_TRACK_CLIENTS: False,
         CONF_TRACK_WIRED_CLIENTS: False,
         CONF_TRACK_DEVICES: False,
-        CONF_SSID_FILTER: ["SSID 1", "SSID 2_IOT", "SSID 3"],
+        CONF_SSID_FILTER: ["SSID 1", "SSID 2_IOT", "SSID 3", "SSID 4"],
         CONF_DETECTION_TIME: 100,
         CONF_IGNORE_WIRED_BUG: False,
         CONF_DPI_RESTRICTIONS: False,
