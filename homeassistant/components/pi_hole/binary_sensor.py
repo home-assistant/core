@@ -42,7 +42,7 @@ BINARY_SENSOR_TYPES: tuple[PiHoleBinarySensorEntityDescription, ...] = (
     PiHoleBinarySensorEntityDescription(
         # Deprecated, scheduled to be removed in 2022.6
         key="core_update_available",
-        translation_key="core_update_available",
+        name="Core Update Available",
         entity_registry_enabled_default=False,
         device_class=BinarySensorDeviceClass.UPDATE,
         extra_value=lambda api: {
@@ -54,7 +54,7 @@ BINARY_SENSOR_TYPES: tuple[PiHoleBinarySensorEntityDescription, ...] = (
     PiHoleBinarySensorEntityDescription(
         # Deprecated, scheduled to be removed in 2022.6
         key="web_update_available",
-        translation_key="web_update_available",
+        name="Web Update Available",
         entity_registry_enabled_default=False,
         device_class=BinarySensorDeviceClass.UPDATE,
         extra_value=lambda api: {
@@ -66,7 +66,7 @@ BINARY_SENSOR_TYPES: tuple[PiHoleBinarySensorEntityDescription, ...] = (
     PiHoleBinarySensorEntityDescription(
         # Deprecated, scheduled to be removed in 2022.6
         key="ftl_update_available",
-        translation_key="ftl_update_available",
+        name="FTL Update Available",
         entity_registry_enabled_default=False,
         device_class=BinarySensorDeviceClass.UPDATE,
         extra_value=lambda api: {
