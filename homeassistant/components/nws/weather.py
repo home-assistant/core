@@ -108,6 +108,7 @@ if TYPE_CHECKING:
 class NWSWeather(WeatherEntity):
     """Representation of a weather condition."""
 
+    _attr_attribution = ATTRIBUTION
     _attr_should_poll = False
 
     def __init__(
@@ -153,11 +154,6 @@ class NWSWeather(WeatherEntity):
             self._forecast = self.nws.forecast_hourly
 
         self.async_write_ha_state()
-
-    @property
-    def attribution(self) -> str:
-        """Return the attribution."""
-        return ATTRIBUTION
 
     @property
     def name(self) -> str:

@@ -8,7 +8,6 @@ import logging
 import time
 from typing import TYPE_CHECKING
 
-from sqlalchemy.engine.row import Row
 from sqlalchemy.orm.session import Session
 
 import homeassistant.util.dt as dt_util
@@ -74,7 +73,7 @@ def purge_old_data(
     with session_scope(session=instance.get_session()) as session:
         # Purge a max of SQLITE_MAX_BIND_VARS, based on the oldest states or events record
         has_more_to_purge = False
-        if _purging_legacy_format(session):
+        if instance.use_legacy_events_index and _purging_legacy_format(session):
             _LOGGER.debug(
                 "Purge running in legacy format as there are states with event_id"
                 " remaining"
@@ -459,46 +458,7 @@ def _purge_state_ids(instance: Recorder, session: Session, state_ids: set[int]) 
     _LOGGER.debug("Deleted %s states", deleted_rows)
 
     # Evict eny entries in the old_states cache referring to a purged state
-    _evict_purged_states_from_old_states_cache(instance, state_ids)
-
-
-def _evict_purged_states_from_old_states_cache(
-    instance: Recorder, purged_state_ids: set[int]
-) -> None:
-    """Evict purged states from the old states cache."""
-    # Make a map from old_state_id to entity_id
-    old_states = instance._old_states  # pylint: disable=protected-access
-    old_state_reversed = {
-        old_state.state_id: entity_id
-        for entity_id, old_state in old_states.items()
-        if old_state.state_id
-    }
-
-    # Evict any purged state from the old states cache
-    for purged_state_id in purged_state_ids.intersection(old_state_reversed):
-        old_states.pop(old_state_reversed[purged_state_id], None)
-
-
-def _evict_purged_attributes_from_attributes_cache(
-    instance: Recorder, purged_attributes_ids: set[int]
-) -> None:
-    """Evict purged attribute ids from the attribute ids cache."""
-    # Make a map from attributes_id to the attributes json
-    state_attributes_ids = (
-        instance._state_attributes_ids  # pylint: disable=protected-access
-    )
-    state_attributes_ids_reversed = {
-        attributes_id: attributes
-        for attributes, attributes_id in state_attributes_ids.items()
-    }
-
-    # Evict any purged attributes from the state_attributes_ids cache
-    for purged_attribute_id in purged_attributes_ids.intersection(
-        state_attributes_ids_reversed
-    ):
-        state_attributes_ids.pop(
-            state_attributes_ids_reversed[purged_attribute_id], None
-        )
+    instance.states_manager.evict_purged_state_ids(state_ids)
 
 
 def _purge_batch_attributes_ids(
@@ -512,7 +472,7 @@ def _purge_batch_attributes_ids(
         _LOGGER.debug("Deleted %s attribute states", deleted_rows)
 
     # Evict any entries in the state_attributes_ids cache referring to a purged state
-    _evict_purged_attributes_from_attributes_cache(instance, attributes_ids)
+    instance.state_attributes_manager.evict_purged(attributes_ids)
 
 
 def _purge_batch_data_ids(
@@ -557,7 +517,9 @@ def _purge_old_recorder_runs(
     """Purge all old recorder runs."""
     # Recorder runs is small, no need to batch run it
     deleted_rows = session.execute(
-        delete_recorder_runs_rows(purge_before, instance.run_history.current.run_id)
+        delete_recorder_runs_rows(
+            purge_before, instance.recorder_runs_manager.current.run_id
+        )
     )
     _LOGGER.debug("Deleted %s recorder_runs", deleted_rows)
 
@@ -598,6 +560,7 @@ def _purge_old_entity_ids(instance: Recorder, session: Session) -> None:
 
     # Evict any entries in the event_type cache referring to a purged state
     instance.states_meta_manager.evict_purged(purge_entity_ids)
+    instance.states_manager.evict_purged_entity_ids(purge_entity_ids)
 
 
 def _purge_filtered_data(instance: Recorder, session: Session) -> bool:
@@ -709,14 +672,18 @@ def _purge_filtered_events(
     _LOGGER.debug(
         "Selected %s event_ids to remove that should be filtered", len(event_ids_set)
     )
-    states: list[Row[tuple[int]]] = (
-        session.query(States.state_id).filter(States.event_id.in_(event_ids_set)).all()
-    )
-    if states:
+    if (
+        instance.use_legacy_events_index
+        and (
+            states := session.query(States.state_id)
+            .filter(States.event_id.in_(event_ids_set))
+            .all()
+        )
+        and (state_ids := {state.state_id for state in states})
+    ):
         # These are legacy states that are linked to an event that are no longer
         # created but since we did not remove them when we stopped adding new ones
         # we will need to purge them here.
-        state_ids: set[int] = {state.state_id for state in states}
         _purge_state_ids(instance, session, state_ids)
     _purge_event_ids(session, event_ids_set)
     if unused_data_ids_set := _select_unused_event_data_ids(

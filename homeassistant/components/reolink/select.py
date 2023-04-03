@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from reolink_aio.api import DayNightEnum, Host, SpotlightModeEnum
+from reolink_aio.api import DayNightEnum, Host, SpotlightModeEnum, TrackMethodEnum
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -78,6 +78,17 @@ SELECT_ENTITIES = (
         method=lambda api, ch, mess: api.set_quick_reply(
             ch, file_id=[k for k, v in api.quick_reply_dict(ch).items() if v == mess][0]
         ),
+    ),
+    ReolinkSelectEntityDescription(
+        key="auto_track_method",
+        name="Auto track method",
+        icon="mdi:target-account",
+        translation_key="auto_track_method",
+        entity_category=EntityCategory.CONFIG,
+        get_options=[method.name for method in TrackMethodEnum],
+        supported=lambda api, ch: api.supported(ch, "auto_track_method"),
+        value=lambda api, ch: TrackMethodEnum(api.auto_track_method(ch)).name,
+        method=lambda api, ch, name: api.set_auto_tracking(ch, method=name),
     ),
 )
 

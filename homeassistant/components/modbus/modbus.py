@@ -137,8 +137,10 @@ async def async_modbus_setup(
         for name in hubs:
             if not await hubs[name].async_setup():
                 return False
+        hub_collect = hass.data[DOMAIN]
+    else:
+        hass.data[DOMAIN] = hub_collect = {}
 
-    hass.data[DOMAIN] = hub_collect = {}
     for conf_hub in config[DOMAIN]:
         my_hub = ModbusHub(hass, conf_hub)
         hub_collect[conf_hub[CONF_NAME]] = my_hub
@@ -388,12 +390,12 @@ class ModbusHub:
 
     def _pymodbus_call(
         self, unit: int | None, address: int, value: int | list[int], use_call: str
-    ) -> ModbusResponse:
+    ) -> ModbusResponse | None:
         """Call sync. pymodbus."""
         kwargs = {"slave": unit} if unit else {}
         entry = self._pb_call[use_call]
         try:
-            result = entry.func(address, value, **kwargs)
+            result: ModbusResponse = entry.func(address, value, **kwargs)
         except ModbusException as exception_error:
             self._log_error(str(exception_error))
             return None
