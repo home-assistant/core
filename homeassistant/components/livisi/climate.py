@@ -67,8 +67,6 @@ class LivisiClimate(LivisiEntity, ClimateEntity):
     _attr_hvac_mode = HVACMode.HEAT
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-    _attr_target_temperature_high = MAX_TEMPERATURE
-    _attr_target_temperature_low = MIN_TEMPERATURE
 
     def __init__(
         self,
@@ -86,12 +84,8 @@ class LivisiClimate(LivisiEntity, ClimateEntity):
         self._humidity_capability = self.capabilities["RoomHumidity"]
 
         config = device.get(CAPABILITY_CONFIG, {}).get("RoomSetpoint", {})
-        self._attr_target_temperature_high = config.get(
-            "maxTemperature", MAX_TEMPERATURE
-        )
-        self._attr_target_temperature_low = config.get(
-            "minTemperature", MIN_TEMPERATURE
-        )
+        self._attr_max_temp = config.get("maxTemperature", MAX_TEMPERATURE)
+        self._attr_min_temp = config.get("minTemperature", MIN_TEMPERATURE)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -160,7 +154,7 @@ class LivisiClimate(LivisiEntity, ClimateEntity):
             self._attr_hvac_action = HVACAction.OFF
         elif self._attr_target_temperature > self._attr_current_temperature:
             self._attr_hvac_action = HVACAction.HEATING
-        elif self._attr_target_temperature == self._attr_target_temperature_low:
+        elif self._attr_target_temperature == self._attr_min_temp:
             self._attr_hvac_action = HVACAction.OFF
         else:
             self._attr_hvac_action = HVACAction.IDLE
