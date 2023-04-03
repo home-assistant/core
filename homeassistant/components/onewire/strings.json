@@ -16,6 +16,85 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "counter_sensor_a": {
+        "name": "Counter A"
+      },
+      "counter_sensor_b": {
+        "name": "Counter B"
+      },
+      "humidity_sensor": {
+        "name": "[%key:component::sensor::entity_component::humidity::name%]"
+      },
+      "humidity_sensor_hih3600": {
+        "name": "HIH3600 humidity"
+      },
+      "humidity_sensor_hih4000": {
+        "name": "HIH4000 humidity"
+      },
+      "humidity_sensor_hih5030": {
+        "name": "HIH5030 humidity"
+      },
+      "humidity_sensor_htm1735": {
+        "name": "HTM1735 humidity"
+      },
+      "humidity_sensor_raw": {
+        "name": "Raw humidity"
+      },
+      "illuminance_sensor": {
+        "name": "[%key:component::sensor::entity_component::illuminance::name%]"
+      },
+      "moisture_sensor_1": {
+        "name": "Moisture 1"
+      },
+      "moisture_sensor_2": {
+        "name": "Moisture 2"
+      },
+      "moisture_sensor_3": {
+        "name": "Moisture 3"
+      },
+      "moisture_sensor_4": {
+        "name": "Moisture 4"
+      },
+      "pressure_sensor": {
+        "name": "[%key:component::sensor::entity_component::pressure::name%]"
+      },
+      "temperature_sensor": {
+        "name": "[%key:component::sensor::entity_component::temperature::name%]"
+      },
+      "thermocouple_temperature_sensor_k": {
+        "name": "Thermocouple K temperature"
+      },
+      "voltage_sensor": {
+        "name": "[%key:component::sensor::entity_component::voltage::name%]"
+      },
+      "voltage_vad": {
+        "name": "VAD voltage"
+      },
+      "voltage_vdd": {
+        "name": "VDD voltage"
+      },
+      "voltage_vis": {
+        "name": "VIS voltage difference"
+      },
+      "voltage_vis_gradient": {
+        "name": "VIS voltage gradient"
+      },
+      "wetness_sensor_0": {
+        "name": "Wetness 0"
+      },
+      "wetness_sensor_1": {
+        "name": "Wetness 1"
+      },
+      "wetness_sensor_2": {
+        "name": "Wetness 2"
+      },
+      "wetness_sensor_3": {
+        "name": "Wetness 3"
+      }
+    }
+  },
   "options": {
     "error": {
       "device_not_selected": "Select devices to configure"

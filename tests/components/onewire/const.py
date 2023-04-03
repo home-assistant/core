@@ -312,7 +312,7 @@ MOCK_OWPROXY_DEVICES = {
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
-                ATTR_ENTITY_ID: "sensor.26_111111111111_humidity_hih3600",
+                ATTR_ENTITY_ID: "sensor.26_111111111111_hih3600_humidity",
                 ATTR_INJECT_READS: b"    73.7563",
                 ATTR_STATE: "73.8",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
@@ -322,7 +322,7 @@ MOCK_OWPROXY_DEVICES = {
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
-                ATTR_ENTITY_ID: "sensor.26_111111111111_humidity_hih4000",
+                ATTR_ENTITY_ID: "sensor.26_111111111111_hih4000_humidity",
                 ATTR_INJECT_READS: b"    74.7563",
                 ATTR_STATE: "74.8",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
@@ -332,7 +332,7 @@ MOCK_OWPROXY_DEVICES = {
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
-                ATTR_ENTITY_ID: "sensor.26_111111111111_humidity_hih5030",
+                ATTR_ENTITY_ID: "sensor.26_111111111111_hih5030_humidity",
                 ATTR_INJECT_READS: b"    75.7563",
                 ATTR_STATE: "75.8",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
@@ -342,7 +342,7 @@ MOCK_OWPROXY_DEVICES = {
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
-                ATTR_ENTITY_ID: "sensor.26_111111111111_humidity_htm1735",
+                ATTR_ENTITY_ID: "sensor.26_111111111111_htm1735_humidity",
                 ATTR_INJECT_READS: ProtocolError,
                 ATTR_STATE: STATE_UNKNOWN,
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
@@ -372,7 +372,7 @@ MOCK_OWPROXY_DEVICES = {
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
-                ATTR_ENTITY_ID: "sensor.26_111111111111_voltage_vad",
+                ATTR_ENTITY_ID: "sensor.26_111111111111_vad_voltage",
                 ATTR_INJECT_READS: b"     2.97",
                 ATTR_STATE: "3.0",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
@@ -382,7 +382,7 @@ MOCK_OWPROXY_DEVICES = {
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
-                ATTR_ENTITY_ID: "sensor.26_111111111111_voltage_vdd",
+                ATTR_ENTITY_ID: "sensor.26_111111111111_vdd_voltage",
                 ATTR_INJECT_READS: b"    4.74",
                 ATTR_STATE: "4.7",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
@@ -392,7 +392,7 @@ MOCK_OWPROXY_DEVICES = {
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
-                ATTR_ENTITY_ID: "sensor.26_111111111111_vis",
+                ATTR_ENTITY_ID: "sensor.26_111111111111_vis_voltage_difference",
                 ATTR_INJECT_READS: b"    0.12",
                 ATTR_STATE: "0.1",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
@@ -688,7 +688,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_DEVICE_FILE: "/30.111111111111/typeK/temperature",
-                ATTR_ENTITY_ID: "sensor.30_111111111111_thermocouple_temperature",
+                ATTR_ENTITY_ID: "sensor.30_111111111111_thermocouple_k_temperature",
                 ATTR_INJECT_READS: b"    173.7563",
                 ATTR_STATE: "173.8",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
@@ -708,7 +708,7 @@ MOCK_OWPROXY_DEVICES = {
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
-                ATTR_ENTITY_ID: "sensor.30_111111111111_vis",
+                ATTR_ENTITY_ID: "sensor.30_111111111111_vis_voltage_gradient",
                 ATTR_INJECT_READS: b"    0.12",
                 ATTR_STATE: "0.1",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
@@ -826,7 +826,7 @@ MOCK_OWPROXY_DEVICES = {
             },
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
-                ATTR_ENTITY_ID: "sensor.ef_111111111111_humidity_raw",
+                ATTR_ENTITY_ID: "sensor.ef_111111111111_raw_humidity",
                 ATTR_INJECT_READS: b"    65.541",
                 ATTR_STATE: "65.5",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,

@@ -177,14 +177,12 @@ def get_entities(onewire_hub: OneWireHub) -> list[OneWireSwitch]:
             continue
         for description in get_sensor_types(device_sub_type)[family]:
             device_file = os.path.join(os.path.split(device.path)[0], description.key)
-            name = f"{device_id} {description.name}"
             entities.append(
                 OneWireSwitch(
                     description=description,
                     device_id=device_id,
                     device_file=device_file,
                     device_info=device_info,
-                    name=name,
                     owproxy=onewire_hub.owproxy,
                 )
             )
