@@ -45,7 +45,7 @@ async def async_setup_platform(
                 )
             )
 
-        elif device_name == SUPLA_GATE or device_name == SUPLA_GARAGE_DOOR:
+        elif device_name in {SUPLA_GATE, SUPLA_GARAGE_DOOR}:
             entities.append(
                 SuplaDoor(
                     device,
