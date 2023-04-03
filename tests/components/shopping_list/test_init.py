@@ -5,14 +5,14 @@ import pytest
 
 from homeassistant.components.shopping_list import NoMatchingShoppingListItem
 from homeassistant.components.shopping_list.const import (
-    ATTR_SORT_REVERSE,
+    ATTR_REVERSE,
     DOMAIN,
     EVENT_SHOPPING_LIST_UPDATED,
     SERVICE_ADD_ITEM,
     SERVICE_CLEAR_COMPLETED_ITEMS,
     SERVICE_COMPLETE_ITEM,
     SERVICE_REMOVE_ITEM,
-    SERVICE_SORT_LIST,
+    SERVICE_SORT,
 )
 from homeassistant.components.websocket_api.const import (
     ERR_INVALID_FORMAT,
@@ -751,8 +751,8 @@ async def test_sort_list_service(hass: HomeAssistant, sl_setup) -> None:
     events = async_capture_events(hass, EVENT_SHOPPING_LIST_UPDATED)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SORT_LIST,
-        {ATTR_SORT_REVERSE: False},
+        SERVICE_SORT,
+        {ATTR_REVERSE: False},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -766,8 +766,8 @@ async def test_sort_list_service(hass: HomeAssistant, sl_setup) -> None:
     events = async_capture_events(hass, EVENT_SHOPPING_LIST_UPDATED)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SORT_LIST,
-        {ATTR_SORT_REVERSE: True},
+        SERVICE_SORT,
+        {ATTR_REVERSE: True},
         blocking=True,
     )
     await hass.async_block_till_done()

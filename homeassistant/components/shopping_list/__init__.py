@@ -18,8 +18,8 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.json import JsonArrayType, load_json_array
 
 from .const import (
-    ATTR_SORT_REVERSE,
-    DEFAULT_SORT_REVERSE,
+    ATTR_REVERSE,
+    DEFAULT_REVERSE,
     DOMAIN,
     EVENT_SHOPPING_LIST_UPDATED,
     SERVICE_ADD_ITEM,
@@ -29,7 +29,7 @@ from .const import (
     SERVICE_INCOMPLETE_ALL,
     SERVICE_INCOMPLETE_ITEM,
     SERVICE_REMOVE_ITEM,
-    SERVICE_SORT_LIST,
+    SERVICE_SORT,
 )
 
 ATTR_COMPLETE = "complete"
@@ -42,7 +42,7 @@ PERSISTENCE = ".shopping_list.json"
 SERVICE_ITEM_SCHEMA = vol.Schema({vol.Required(ATTR_NAME): cv.string})
 SERVICE_LIST_SCHEMA = vol.Schema({})
 SERVICE_SORT_SCHEMA = vol.Schema(
-    {vol.Optional(ATTR_SORT_REVERSE, default=DEFAULT_SORT_REVERSE): bool}
+    {vol.Optional(ATTR_REVERSE, default=DEFAULT_REVERSE): bool}
 )
 
 
@@ -119,7 +119,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     async def sort_list_service(call: ServiceCall) -> None:
         """Sort all items by name."""
-        await data.async_sort(call.data[ATTR_SORT_REVERSE])
+        await data.async_sort(call.data[ATTR_REVERSE])
 
     data = hass.data[DOMAIN] = ShoppingData(hass)
     await data.async_load()
@@ -159,7 +159,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_SORT_LIST,
+        SERVICE_SORT,
         sort_list_service,
         schema=SERVICE_SORT_SCHEMA,
     )
