@@ -84,7 +84,7 @@ MOCK_VEHICLES = {
         Platform.BINARY_SENSOR: [
             {
                 ATTR_DEVICE_CLASS: BinarySensorDeviceClass.PLUG,
-                ATTR_ENTITY_ID: "binary_sensor.reg_number_plugged_in",
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_plug",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_plugged_in",
             },
@@ -276,7 +276,7 @@ MOCK_VEHICLES = {
         Platform.BINARY_SENSOR: [
             {
                 ATTR_DEVICE_CLASS: BinarySensorDeviceClass.PLUG,
-                ATTR_ENTITY_ID: "binary_sensor.reg_number_plugged_in",
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_plug",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_plugged_in",
             },
@@ -517,7 +517,7 @@ MOCK_VEHICLES = {
         Platform.BINARY_SENSOR: [
             {
                 ATTR_DEVICE_CLASS: BinarySensorDeviceClass.PLUG,
-                ATTR_ENTITY_ID: "binary_sensor.reg_number_plugged_in",
+                ATTR_ENTITY_ID: "binary_sensor.reg_number_plug",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_plugged_in",
             },

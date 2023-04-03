@@ -33,6 +33,35 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "battery_charging_binary_sensor": {
+        "name": "[%key:component::binary_sensor::entity_component::battery_charging::name%]"
+      },
+      "hatch_binary_sensor": {
+        "name": "Hatch"
+      },
+      "driver_door_binary_sensor": {
+        "name": "Driver door"
+      },
+      "hvac_binary_sensor": {
+        "name": "HVAC"
+      },
+      "lock_binary_sensor": {
+        "name": "[%key:component::binary_sensor::entity_component::lock::name%]"
+      },
+      "passenger_door_binary_sensor": {
+        "name": "Passenger door"
+      },
+      "plug_binary_sensor": {
+        "name": "[%key:component::binary_sensor::entity_component::plug::name%]"
+      },
+      "rear_left_door_binary_sensor": {
+        "name": "Rear left door"
+      },
+      "rear_right_door_binary_sensor": {
+        "name": "Rear right door"
+      }
+    },
     "select": {
       "charge_mode": {
         "state": {
