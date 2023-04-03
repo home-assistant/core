@@ -3,9 +3,11 @@ from __future__ import annotations
 
 from typing import Any
 
+from aiolivisi.const import CAPABILITY_CONFIG
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -61,8 +63,8 @@ async def async_setup_entry(
 class LivisiClimate(LivisiEntity, ClimateEntity):
     """Represents the Livisi Climate."""
 
-    _attr_hvac_modes = [HVACMode.HEAT]
-    _attr_hvac_mode = HVACMode.HEAT
+    _attr_hvac_modes = [HVACMode.AUTO]
+    _attr_hvac_mode = HVACMode.AUTO
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_target_temperature_high = MAX_TEMPERATURE
@@ -82,6 +84,14 @@ class LivisiClimate(LivisiEntity, ClimateEntity):
         self._target_temperature_capability = self.capabilities["RoomSetpoint"]
         self._temperature_capability = self.capabilities["RoomTemperature"]
         self._humidity_capability = self.capabilities["RoomHumidity"]
+
+        config = device.get(CAPABILITY_CONFIG, {}).get("RoomSetpoint", {})
+        self._attr_target_temperature_high = float(
+            config.get("maxTemperature", MAX_TEMPERATURE)
+        )
+        self._attr_target_temperature_low = float(
+            config.get("minTemperature", MIN_TEMPERATURE)
+        )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -116,6 +126,9 @@ class LivisiClimate(LivisiEntity, ClimateEntity):
             self._attr_target_temperature = target_temperature
             self._attr_current_temperature = temperature
             self._attr_current_humidity = humidity
+
+        self._update_hvac_state()
+
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -141,10 +154,22 @@ class LivisiClimate(LivisiEntity, ClimateEntity):
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Do nothing as LIVISI devices do not support changing the hvac mode."""
 
+    def _update_hvac_state(self) -> None:
+        """Calculate current hvac state based on target and current temperature."""
+        if self._attr_current_temperature is None:
+            self._attr_hvac_action = HVACAction.OFF
+        elif self._attr_target_temperature > self._attr_current_temperature:
+            self._attr_hvac_action = HVACAction.HEATING
+        elif self._attr_target_temperature == self._attr_target_temperature_low:
+            self._attr_hvac_action = HVACAction.OFF
+        else:
+            self._attr_hvac_action = HVACAction.IDLE
+
     @callback
     def update_target_temperature(self, target_temperature: float) -> None:
         """Update the target temperature of the climate device."""
         self._attr_target_temperature = target_temperature
+        self._update_hvac_state()
         self.async_write_ha_state()
 
     @callback
