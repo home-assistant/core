@@ -80,6 +80,7 @@
     },
     "select": {
       "charge_mode": {
+        "name": "Charge mode",
         "state": {
           "always": "Instant",
           "always_charging": "Instant",
