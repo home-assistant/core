@@ -8,7 +8,6 @@ from aiolivisi.const import CAPABILITY_CONFIG
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
-    HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
