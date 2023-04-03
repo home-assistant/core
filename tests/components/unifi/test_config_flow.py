@@ -460,11 +460,7 @@ async def test_advanced_option_flow(
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "device_tracker"
     assert not result["last_step"]
-    ssids_after_init = result["data_schema"].schema[CONF_SSID_FILTER].options.keys()
-    assert set(ssids_after_init).intersection(
-        ("SSID 1", "SSID 2", "SSID 2_IOT", "SSID 3", "SSID 4")
-    )
-    assert list(ssids_after_init) == [
+    assert list(result["data_schema"].schema[CONF_SSID_FILTER].options.keys()) == [
         "",
         "SSID 1",
         "SSID 2",
