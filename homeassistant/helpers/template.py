@@ -133,7 +133,7 @@ template_cv: ContextVar[tuple[str, str] | None] = ContextVar(
 # TemplateState objects too often which will cause a lot of GC activity
 # and slow down the system.
 #
-# Since entity counts have grown over time, we will increase
+# Since entity counts may grow over time, we will increase
 # the size if the number of entities grows via _async_adjust_lru_sizes
 # at the start of the system and every 10 minutes if needed.
 #
