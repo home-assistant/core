@@ -114,13 +114,13 @@ class SuplaRGBLighting(SuplaChannel, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         hs_color = kwargs.get(ATTR_HS_COLOR) or self.hs_color
-        brightness = (kwargs.get(ATTR_BRIGHTNESS) or self.brightness) / 255.0 * 100
+        brightness = (kwargs.get(ATTR_BRIGHTNESS) or self.brightness or 0) / 255.0 * 100
         if hs_color and brightness:
             rgb_update_color = color_util.color_hsv_to_RGB(
                 hs_color[0], hs_color[1], brightness
             )
-            (r, g, b) = rgb_update_color
-            color = "0x" + color_util.color_rgb_to_hex(r, g, b)
+            (red, green, blue) = rgb_update_color
+            color = "0x" + color_util.color_rgb_to_hex(red, green, blue)
             await self.async_action("SET_RGBW_PARAMETERS", color=color)
             return
         await self.async_action("TURN_ON")
