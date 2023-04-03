@@ -26,7 +26,6 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_commission_on_network)
     websocket_api.async_register_command(hass, websocket_set_thread_dataset)
     websocket_api.async_register_command(hass, websocket_set_wifi_credentials)
-    websocket_api.async_register_command(hass, websocket_open_commisioning_window)
     websocket_api.async_register_command(hass, websocket_get_matter_fabrics)
     websocket_api.async_register_command(hass, websocket_remove_matter_fabric)
 
@@ -158,35 +157,6 @@ async def websocket_set_wifi_credentials(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "matter/open_commisioning_window",
-        vol.Required("device_id"): str,
-    }
-)
-@websocket_api.async_response
-@async_handle_failed_command
-@async_get_matter_adapter
-async def websocket_open_commisioning_window(
-    hass: HomeAssistant,
-    connection: ActiveConnection,
-    msg: dict[str, Any],
-    matter: MatterAdapter,
-) -> None:
-    """Open commissioning window."""
-    node_id = await get_node_id_from_ha_device_id(hass, msg["device_id"])
-    if node_id is None:
-        connection.send_error(msg[ID], "node_not_found", "Node not found")
-        return
-
-    (pin, qr_code) = await matter.matter_client.open_commissioning_window(
-        node_id=node_id
-    )
-
-    connection.send_result(msg[ID], {"pin": pin, "qr_code": qr_code})
-
-
-@websocket_api.require_admin
-@websocket_api.websocket_command(
-    {
         vol.Required(TYPE): "matter/get_matter_fabrics",
         vol.Required("device_id"): str,
     }
@@ -235,7 +205,7 @@ async def websocket_remove_matter_fabric(
         return
 
     await matter.matter_client.remove_matter_fabric(
-        node_id=node_id, fabric_id=msg["fabric_index"]
+        node_id=node_id, fabric_index=msg["fabric_index"]
     )
 
     connection.send_result(msg[ID])
