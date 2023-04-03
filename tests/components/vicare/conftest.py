@@ -1,7 +1,7 @@
 """Fixtures for ViCare integration tests."""
 from __future__ import annotations
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
@@ -29,7 +29,7 @@ class MockPyViCare:
         for idx, fixture in enumerate(fixtures):
             self.devices.append(
                 PyViCareDeviceConfig(
-                    ViCareServiceMock(
+                    MockViCareService(
                         fixture,
                         f"installationId{idx}",
                         f"serial{idx}",
@@ -52,7 +52,7 @@ class MockPyViCare:
         """Stub oauth login."""
 
 
-class ViCareServiceMock:
+class MockViCareService:
     """PyVicareService mock using a json dump."""
 
     def __init__(
@@ -107,7 +107,7 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 async def mock_vicare_gas_boiler(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> Generator[MagicMock, None, None]:
+) -> AsyncGenerator[MagicMock, None, None]:
     """Return a mocked ViCare API representing a single gas boiler device."""
     fixtures = ["vicare/Vitodens300W.json"]
     with patch(
