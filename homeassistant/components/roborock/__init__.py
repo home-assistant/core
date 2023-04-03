@@ -24,10 +24,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up roborock from a config entry."""
     _LOGGER.debug("Integration async setup entry: %s", entry.as_dict())
 
-    user_data = UserData(entry.data.get(CONF_USER_DATA))
-    base_url = entry.data.get(CONF_BASE_URL)
-    username = entry.data.get(CONF_USERNAME)
-    api_client = RoborockClient(username, base_url)
+    user_data = UserData(entry.data[CONF_USER_DATA])
+    api_client = RoborockClient(
+        entry.data[CONF_USERNAME],
+        entry.data[CONF_BASE_URL]
+    )
     _LOGGER.debug("Getting home data")
     home_data = await api_client.get_home_data(user_data)
     _LOGGER.debug("Got home data %s", home_data)
@@ -52,10 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
