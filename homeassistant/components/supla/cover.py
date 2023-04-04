@@ -10,7 +10,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, SUPLA_COORDINATORS, SUPLA_SERVERS, SuplaEntity
+from . import DOMAIN, SUPLA_COORDINATORS, SUPLA_SERVERS
+from .entity import SuplaEntity
 
 _LOGGER = logging.getLogger(__name__)
 
