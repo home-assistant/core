@@ -220,7 +220,7 @@ class CloudGoogleConfig(AbstractConfig):
         registry_entry = entity_registry.async_get(state.entity_id)
         if not registry_entry:
             # Handle the entity has been removed
-            return
+            return False
 
         assistant_options = registry_entry.options.get(CLOUD_GOOGLE, {})
         return not assistant_options.get(PREF_DISABLE_2FA, DEFAULT_DISABLE_2FA)
