@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_TIME_ZONE,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -44,11 +44,6 @@ LANGUAGE = [
 ]
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
-    """Validate the user input."""
-    return {"title": data[CONF_NAME]}
 
 
 class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -82,8 +77,9 @@ class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
                     break
 
             try:
-                info = await validate_input(self.hass, user_input)
-                return self.async_create_entry(title=info["title"], data=user_input)
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME], data=user_input
+                )
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -138,7 +134,7 @@ class JewishCalendarOptionsFlowHandler(OptionsFlow):
     ) -> FlowResult:
         """Manage the Jewish Calendar options."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(data=user_input)
 
         options = {
             vol.Optional(
