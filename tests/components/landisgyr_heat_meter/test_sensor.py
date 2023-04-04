@@ -21,7 +21,7 @@ API_HEAT_METER_SERVICE = (
     "homeassistant.components.landisgyr_heat_meter.ultraheat_api.HeatMeterService"
 )
 
-mock_response_gj = {
+MOCK_RESPONSE_GJ = {
     "model": "abc",
     "heat_usage_gj": 123.0,
     "heat_usage_mwh": None,
@@ -53,7 +53,7 @@ mock_response_gj = {
     "raw_response": "6.8(0328.872*GJ)6.26(03329.68*m3)9.21(66153690)",
 }
 
-mock_response_mwh = {
+MOCK_RESPONSE_MWH = {
     "model": "abc",
     "heat_usage_gj": None,
     "heat_usage_mwh": 123.0,
@@ -89,8 +89,8 @@ mock_response_mwh = {
 @pytest.mark.parametrize(
     "mock_heat_meter_response",
     [
-        mock_response_gj,
-        mock_response_mwh,
+        MOCK_RESPONSE_GJ,
+        MOCK_RESPONSE_MWH,
     ],
 )
 @patch(API_HEAT_METER_SERVICE)
@@ -133,7 +133,7 @@ async def test_exception_on_polling(mock_heat_meter, hass: HomeAssistant) -> Non
     mock_entry.add_to_hass(hass)
 
     # First setup normally
-    mock_heat_meter_response = HeatMeterResponse(**mock_response_gj)
+    mock_heat_meter_response = HeatMeterResponse(**MOCK_RESPONSE_GJ)
 
     mock_heat_meter().read.return_value = mock_heat_meter_response
 
@@ -154,7 +154,7 @@ async def test_exception_on_polling(mock_heat_meter, hass: HomeAssistant) -> Non
     assert state.state == STATE_UNAVAILABLE
 
     # # Now 'enable' and see if next poll succeeds
-    mock_heat_meter_response = HeatMeterResponse(**mock_response_gj)
+    mock_heat_meter_response = HeatMeterResponse(**MOCK_RESPONSE_GJ)
     mock_heat_meter_response.heat_usage_gj += 1
 
     mock_heat_meter().read.return_value = mock_heat_meter_response
