@@ -195,30 +195,22 @@ async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_fetch_config(hass: HomeAssistant, entry: ConfigEntry) -> dict[str, Any]:
-    """Fetch fresh MQTT yaml config from the hass config."""
-    mqtt_data = get_mqtt_data(hass)
-    hass_config = await conf_util.async_hass_config_yaml(hass)
-    mqtt_data.config = PLATFORM_CONFIG_SCHEMA_BASE(hass_config.get(DOMAIN, {}))
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Load a config entry."""
+    # validate and complete entry config
     try:
-        entry_config = CONFIG_SCHEMA_ENTRY(dict(entry.data))
+        conf = CONFIG_SCHEMA_ENTRY(dict(entry.data))
     except vol.MultipleInvalid as ex:
         raise ConfigEntryError(
             f"The MQTT config entry is invalid, please correct it: {ex}"
         ) from ex
 
-    # Merge yaml config for manual MQTT items with entry data
-    return {**mqtt_data.config, **entry_config}
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Load a config entry."""
-    mqtt_data = get_mqtt_data(hass, True)
-
     # Fetch configuration and add default values
-    conf = await async_fetch_config(hass, entry)
+    mqtt_data = get_mqtt_data(hass)
+    hass_config = await conf_util.async_hass_config_yaml(hass)
+    mqtt_data.config = PLATFORM_CONFIG_SCHEMA_BASE(hass_config.get(DOMAIN, {}))
 
-    await async_create_certificate_temp_files(hass, dict(entry.data))
+    await async_create_certificate_temp_files(hass, conf)
     mqtt_data.client = MQTT(hass, entry, conf)
     # Restore saved subscriptions
     if mqtt_data.subscriptions_to_restore:
