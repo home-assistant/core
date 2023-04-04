@@ -112,6 +112,7 @@ class ExposedEntities:
         if not (registry_entry := entity_registry.async_get(entity_id)):
             raise HomeAssistantError("Unknown entity")
 
+        assistant_options: Mapping[str, Any]
         if (
             assistant_options := registry_entry.options.get(assistant, {})
         ) and assistant_options.get("should_expose") == should_expose:
@@ -143,7 +144,7 @@ class ExposedEntities:
     ) -> dict[str, Mapping[str, Any]]:
         """Get all exposed entities."""
         entity_registry = er.async_get(self._hass)
-        result = {}
+        result: dict[str, Mapping[str, Any]] = {}
 
         for entity_id, entry in entity_registry.entities.items():
             if options := entry.options.get(assistant):
@@ -174,7 +175,7 @@ class ExposedEntities:
         else:
             should_expose = False
 
-        assistant_options = registry_entry.options.get(assistant, {})
+        assistant_options: Mapping[str, Any] = registry_entry.options.get(assistant, {})
         assistant_options = assistant_options | {"should_expose": should_expose}
         entity_registry.async_update_entity_options(
             entity_id, assistant, assistant_options

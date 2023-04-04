@@ -1,5 +1,6 @@
 """The HTTP api to control the cloud integration."""
 import asyncio
+from collections.abc import Mapping
 import dataclasses
 from functools import wraps
 from http import HTTPStatus
@@ -632,6 +633,7 @@ async def google_assistant_update(
         return
 
     disable_2fa = msg[PREF_DISABLE_2FA]
+    assistant_options: Mapping[str, Any]
     if (
         assistant_options := registry_entry.options.get(CLOUD_GOOGLE, {})
     ) and assistant_options.get(PREF_DISABLE_2FA) == disable_2fa:
