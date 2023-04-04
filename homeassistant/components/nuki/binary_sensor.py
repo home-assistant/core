@@ -36,7 +36,7 @@ class NukiDoorsensorEntity(NukiEntity[NukiDevice], BinarySensorEntity):
     """Representation of a Nuki Lock Doorsensor."""
 
     _attr_has_entity_name = True
-    _attr_name = "Door sensor"
+    _attr_translation_key = "door_sensor"
     _attr_device_class = BinarySensorDeviceClass.DOOR
 
     @property
