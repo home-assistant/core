@@ -46,8 +46,7 @@ class SuplaEntity(CoordinatorEntity):
         return state.get("connected")
 
     async def async_action(self, action, **add_pars):
-        """
-        Run server action.
+        """Run server action.
 
         Actions are currently hardcoded in components.
         Supla's API enables autodiscovery
