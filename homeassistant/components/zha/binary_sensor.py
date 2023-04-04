@@ -4,6 +4,7 @@ from __future__ import annotations
 import functools
 from typing import Any
 
+import zigpy.types as t
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.clusters.security import IasZone
 
@@ -125,13 +126,14 @@ class Opening(BinarySensor):
     SENSOR_ATTR = "on_off"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.OPENING
 
-    # this isn't stored in the zigpy database, so we need to restore the last state for now
+    # Client/out cluster attributes aren't stored in the zigpy database, but are properly stored in the runtime cache.
+    # We need to manually restore the last state from the sensor state to the runtime cache for now.
     @callback
     def async_restore_last_state(self, last_state):
-        """Restore previous state."""
+        """Restore previous state to zigpy cache."""
         self._channel.cluster.update_attribute(
             OnOff.attributes_by_name[self.SENSOR_ATTR].id,
-            last_state.state == STATE_ON,
+            t.Bool.true if last_state.state == STATE_ON else t.Bool.false,
         )
 
 
