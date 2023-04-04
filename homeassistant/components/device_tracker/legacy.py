@@ -356,6 +356,27 @@ async def async_create_platform_type(
     return DeviceTrackerPlatform(p_type, platform, p_config)
 
 
+def _load_device_names_and_attributes(
+    scanner: DeviceScanner,
+    device_name_uses_executor: bool,
+    extra_attributes_uses_executor: bool,
+    seen: set[str],
+    found_devices: list[str],
+) -> tuple[dict[str, str | None], dict[str, dict[str, Any]]]:
+    """Load device names and attributes in a single executor job."""
+    host_name_by_mac: dict[str, str | None] = {}
+    extra_attributes_by_mac: dict[str, dict[str, Any]] = {}
+    for mac in found_devices:
+        if device_name_uses_executor and mac not in seen:
+            host_name_by_mac[mac] = scanner.get_device_name(mac)
+        if extra_attributes_uses_executor:
+            try:
+                extra_attributes_by_mac[mac] = scanner.get_extra_attributes(mac)
+            except NotImplementedError:
+                extra_attributes_by_mac[mac] = {}
+    return host_name_by_mac, extra_attributes_by_mac
+
+
 @callback
 def async_setup_scanner_platform(
     hass: HomeAssistant,
@@ -373,7 +394,7 @@ def async_setup_scanner_platform(
     scanner.hass = hass
 
     # Initial scan of each mac we also tell about host name for config
-    seen: Any = set()
+    seen: set[str] = set()
 
     async def async_device_tracker_scan(now: datetime | None) -> None:
         """Handle interval matches."""
@@ -391,15 +412,42 @@ def async_setup_scanner_platform(
         async with update_lock:
             found_devices = await scanner.async_scan_devices()
 
+        device_name_uses_executor = (
+            scanner.async_get_device_name.__func__  # type: ignore[attr-defined]
+            is DeviceScanner.async_get_device_name
+        )
+        extra_attributes_uses_executor = (
+            scanner.async_get_extra_attributes.__func__  # type: ignore[attr-defined]
+            is DeviceScanner.async_get_extra_attributes
+        )
+        host_name_by_mac: dict[str, str | None] = {}
+        extra_attributes_by_mac: dict[str, dict[str, Any]] = {}
+        if device_name_uses_executor or extra_attributes_uses_executor:
+            (
+                host_name_by_mac,
+                extra_attributes_by_mac,
+            ) = await hass.async_add_executor_job(
+                _load_device_names_and_attributes,
+                scanner,
+                device_name_uses_executor,
+                extra_attributes_uses_executor,
+                seen,
+                found_devices,
+            )
+
         for mac in found_devices:
             if mac in seen:
                 host_name = None
             else:
-                host_name = await scanner.async_get_device_name(mac)
+                host_name = host_name_by_mac.get(
+                    mac, await scanner.async_get_device_name(mac)
+                )
                 seen.add(mac)
 
             try:
-                extra_attributes = await scanner.async_get_extra_attributes(mac)
+                extra_attributes = extra_attributes_by_mac.get(
+                    mac, await scanner.async_get_extra_attributes(mac)
+                )
             except NotImplementedError:
                 extra_attributes = {}
 

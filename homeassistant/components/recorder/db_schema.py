@@ -88,6 +88,8 @@ TABLE_STATISTICS_SHORT_TERM = "statistics_short_term"
 STATISTICS_TABLES = ("statistics", "statistics_short_term")
 
 MAX_STATE_ATTRS_BYTES = 16384
+MAX_EVENT_DATA_BYTES = 32768
+
 PSQL_DIALECT = SupportedDialect.POSTGRESQL
 
 ALL_TABLES = [
@@ -327,8 +329,18 @@ class EventData(Base):
     ) -> bytes:
         """Create shared_data from an event."""
         if dialect == SupportedDialect.POSTGRESQL:
-            return json_bytes_strip_null(event.data)
-        return json_bytes(event.data)
+            bytes_result = json_bytes_strip_null(event.data)
+        bytes_result = json_bytes(event.data)
+        if len(bytes_result) > MAX_EVENT_DATA_BYTES:
+            _LOGGER.warning(
+                "Event data for %s exceed maximum size of %s bytes. "
+                "This can cause database performance issues; Event data "
+                "will not be stored",
+                event.event_type,
+                MAX_EVENT_DATA_BYTES,
+            )
+            return b"{}"
+        return bytes_result
 
     @staticmethod
     @lru_cache

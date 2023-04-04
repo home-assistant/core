@@ -18,7 +18,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DOMAIN
-from .renault_coordinator import RenaultDataUpdateCoordinator
+from .coordinator import RenaultDataUpdateCoordinator
 
 LOGGER = logging.getLogger(__name__)
 _T = TypeVar("_T")

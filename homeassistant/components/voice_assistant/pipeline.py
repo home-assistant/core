@@ -16,6 +16,12 @@ from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN
+from .error import (
+    IntentRecognitionError,
+    PipelineError,
+    SpeechToTextError,
+    TextToSpeechError,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,29 +43,6 @@ def async_get_pipeline(
         conversation_engine=None,  # first agent
         tts_engine=None,  # first engine
     )
-
-
-class PipelineError(Exception):
-    """Base class for pipeline errors."""
-
-    def __init__(self, code: str, message: str) -> None:
-        """Set error message."""
-        self.code = code
-        self.message = message
-
-        super().__init__(f"Pipeline error code={code}, message={message}")
-
-
-class SpeechToTextError(PipelineError):
-    """Error in speech to text portion of pipeline."""
-
-
-class IntentRecognitionError(PipelineError):
-    """Error in intent recognition portion of pipeline."""
-
-
-class TextToSpeechError(PipelineError):
-    """Error in text to speech portion of pipeline."""
 
 
 class PipelineEventType(StrEnum):
@@ -91,6 +74,9 @@ class PipelineEvent:
             "timestamp": self.timestamp,
             "data": self.data or {},
         }
+
+
+PipelineEventCallback = Callable[[PipelineEvent], None]
 
 
 @dataclass
@@ -146,7 +132,7 @@ class PipelineRun:
     pipeline: Pipeline
     start_stage: PipelineStage
     end_stage: PipelineStage
-    event_callback: Callable[[PipelineEvent], None]
+    event_callback: PipelineEventCallback
     language: str = None  # type: ignore[assignment]
     runner_data: Any | None = None
     stt_provider: stt.Provider | None = None
