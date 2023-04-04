@@ -1,7 +1,7 @@
 """Matter cover."""
 from __future__ import annotations
 
-from enum import Enum
+from enum import IntEnum
 from typing import Any
 
 from chip.clusters import Objects as clusters
@@ -26,13 +26,13 @@ from .models import MatterDiscoverySchema
 OPERATIONAL_STATUS_MASK = 0b11
 
 
-class OperationalStatus(Enum):
+class OperationalStatus(IntEnum):
     """Currently ongoing operations enumeration for coverings, as defined in the Matter spec."""
 
-    covering_is_currently_not_moving = 0b00
-    covering_is_currently_opening = 0b01
-    covering_is_currently_closing = 0b10
-    reserved = 0b11
+    COVERING_IS_CURRENTLY_NOT_MOVING = 0b00
+    COVERING_IS_CURRENTLY_OPENING = 0b01
+    COVERING_IS_CURRENTLY_CLOSING = 0b10
+    RESERVED = 0b11
 
 
 async def async_setup_entry(
@@ -119,10 +119,10 @@ class MatterCover(MatterEntity, CoverEntity):
 
         state = operational_status & OPERATIONAL_STATUS_MASK
         match state:
-            case OperationalStatus.covering_is_currently_opening.value:
+            case OperationalStatus.COVERING_IS_CURRENTLY_OPENING:
                 self._attr_is_opening = True
                 self._attr_is_closing = False
-            case OperationalStatus.covering_is_currently_closing.value:
+            case OperationalStatus.COVERING_IS_CURRENTLY_CLOSING:
                 self._attr_is_opening = False
                 self._attr_is_closing = True
             case _:
@@ -149,6 +149,5 @@ DISCOVERY_SCHEMAS = [
             clusters.WindowCovering.Attributes.CurrentPositionLiftPercentage,
             clusters.WindowCovering.Attributes.OperationalStatus,
         ),
-        optional_attributes=(),
     ),
 ]
