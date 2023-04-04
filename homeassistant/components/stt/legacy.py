@@ -60,9 +60,6 @@ def async_setup_legacy(
 
         try:
             provider = await platform.async_get_engine(hass, p_config, discovery_info)
-            if provider is None:
-                _LOGGER.error("Error setting up platform %s", p_type)
-                return
 
             provider.name = p_type
             provider.hass = hass
