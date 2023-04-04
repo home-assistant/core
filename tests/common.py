@@ -1375,7 +1375,7 @@ async def assert_registries_and_states_for_config_entry(
         entity_registry, config_entry.entry_id
     )
     if platform:
-        entity_entries = [e for e in entity_entries if e.domain == platform]
+        entity_entries = [ent for ent in entity_entries if ent.domain == platform]
     assert entity_entries == snapshot
 
     # If some entities are disabled, enable them and reload before checking states
