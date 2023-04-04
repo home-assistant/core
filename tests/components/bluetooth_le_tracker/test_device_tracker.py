@@ -79,9 +79,7 @@ async def test_do_not_see_device_if_time_not_updated(
 
     with patch(
         "homeassistant.components.bluetooth.async_discovered_service_info"
-    ) as mock_async_discovered_service_info, patch.object(
-        device_tracker, "MIN_SEEN_NEW", 3
-    ):
+    ) as mock_async_discovered_service_info:
         device = BluetoothServiceInfoBleak(
             name=name,
             address=address,
@@ -117,10 +115,7 @@ async def test_do_not_see_device_if_time_not_updated(
 
         # Advance time to trigger updates
         time_after_consider_home = dt_util.utcnow() + config[CONF_CONSIDER_HOME] / 2
-        with patch(
-            "homeassistant.components.device_tracker.legacy.dt_util.utcnow",
-            return_value=time_after_consider_home,
-        ):
+        with freeze_time(time_after_consider_home):
             async_fire_time_changed(hass, time_after_consider_home)
             await hass.async_block_till_done()
 
@@ -148,9 +143,7 @@ async def test_see_device_if_time_updated(
 
     with patch(
         "homeassistant.components.bluetooth.async_discovered_service_info"
-    ) as mock_async_discovered_service_info, patch.object(
-        device_tracker, "MIN_SEEN_NEW", 3
-    ):
+    ) as mock_async_discovered_service_info:
         device = BluetoothServiceInfoBleak(
             name=name,
             address=address,
@@ -230,9 +223,7 @@ async def test_preserve_new_tracked_device_name(
 
     with patch(
         "homeassistant.components.bluetooth.async_discovered_service_info"
-    ) as mock_async_discovered_service_info, patch.object(
-        device_tracker, "MIN_SEEN_NEW", 3
-    ):
+    ) as mock_async_discovered_service_info:
         device = BluetoothServiceInfoBleak(
             name=name,
             address=address,
@@ -254,8 +245,7 @@ async def test_preserve_new_tracked_device_name(
             CONF_SCAN_INTERVAL: timedelta(minutes=1),
             CONF_TRACK_NEW: True,
         }
-        result = await async_setup_component(hass, DOMAIN, {DOMAIN: config})
-        assert result
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
 
         # Seen once here; return without name when seen subsequent times
         device = BluetoothServiceInfoBleak(
@@ -300,9 +290,7 @@ async def test_tracking_battery_times_out(
 
     with patch(
         "homeassistant.components.bluetooth.async_discovered_service_info"
-    ) as mock_async_discovered_service_info, patch.object(
-        device_tracker, "MIN_SEEN_NEW", 3
-    ):
+    ) as mock_async_discovered_service_info:
         device = BluetoothServiceInfoBleak(
             name=name,
             address=address,
@@ -369,9 +357,7 @@ async def test_tracking_battery_fails(
 
     with patch(
         "homeassistant.components.bluetooth.async_discovered_service_info"
-    ) as mock_async_discovered_service_info, patch.object(
-        device_tracker, "MIN_SEEN_NEW", 3
-    ):
+    ) as mock_async_discovered_service_info:
         device = BluetoothServiceInfoBleak(
             name=name,
             address=address,
@@ -438,9 +424,7 @@ async def test_tracking_battery_successful(
 
     with patch(
         "homeassistant.components.bluetooth.async_discovered_service_info"
-    ) as mock_async_discovered_service_info, patch.object(
-        device_tracker, "MIN_SEEN_NEW", 3
-    ):
+    ) as mock_async_discovered_service_info:
         device = BluetoothServiceInfoBleak(
             name=name,
             address=address,
