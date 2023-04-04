@@ -197,7 +197,7 @@ async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
-    # validate and complete entry config
+    # validate entry config
     try:
         conf = CONFIG_SCHEMA_ENTRY(dict(entry.data))
     except vol.MultipleInvalid as ex:
@@ -206,11 +206,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ) from ex
 
     # Fetch configuration and add default values
-    mqtt_data = get_mqtt_data(hass)
+    mqtt_data = get_mqtt_data(hass, True)
     hass_config = await conf_util.async_hass_config_yaml(hass)
     mqtt_data.config = PLATFORM_CONFIG_SCHEMA_BASE(hass_config.get(DOMAIN, {}))
 
-    await async_create_certificate_temp_files(hass, conf)
+    await async_create_certificate_temp_files(hass, dict(entry.data))
     mqtt_data.client = MQTT(hass, entry, conf)
     # Restore saved subscriptions
     if mqtt_data.subscriptions_to_restore:
