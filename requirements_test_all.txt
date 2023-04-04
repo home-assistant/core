@@ -693,7 +693,7 @@ hole==0.8.0
 holidays==0.21.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230401.0
+home-assistant-frontend==20230403.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.3.29
@@ -1128,7 +1128,7 @@ pybravia==0.3.2
 pycfdns==2.0.1
 
 # homeassistant.components.cast
-pychromecast==13.0.6
+pychromecast==13.0.7
 
 # homeassistant.components.comfoconnect
 pycomfoconnect==0.5.1
@@ -1472,9 +1472,6 @@ python-bsblan==0.5.11
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.2.14
-
-# homeassistant.components.darksky
-python-forecastio==1.4.0
 
 # homeassistant.components.fully_kiosk
 python-fullykiosk==0.0.12
@@ -1938,7 +1935,7 @@ youless-api==1.0.1
 zamg==0.2.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.53.0
+zeroconf==0.54.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1

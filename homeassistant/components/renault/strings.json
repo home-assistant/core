@@ -33,8 +33,54 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "charging": {
+        "name": "[%key:component::binary_sensor::entity_component::battery_charging::name%]"
+      },
+      "hatch_status": {
+        "name": "Hatch"
+      },
+      "driver_door_status": {
+        "name": "Driver door"
+      },
+      "hvac_status": {
+        "name": "HVAC"
+      },
+      "lock_status": {
+        "name": "[%key:component::binary_sensor::entity_component::lock::name%]"
+      },
+      "passenger_door_status": {
+        "name": "Passenger door"
+      },
+      "plugged_in": {
+        "name": "[%key:component::binary_sensor::entity_component::plug::name%]"
+      },
+      "rear_left_door_status": {
+        "name": "Rear left door"
+      },
+      "rear_right_door_status": {
+        "name": "Rear right door"
+      }
+    },
+    "button": {
+      "start_air_conditioner": {
+        "name": "Start air conditioner"
+      },
+      "start_charge": {
+        "name": "Start charge"
+      },
+      "stop_charge": {
+        "name": "Stop charge"
+      }
+    },
+    "device_tracker": {
+      "location": {
+        "name": "Location"
+      }
+    },
     "select": {
       "charge_mode": {
+        "name": "Charge mode",
         "state": {
           "always": "Instant",
           "always_charging": "Instant",
@@ -43,15 +89,26 @@
       }
     },
     "sensor": {
-      "plug_state": {
-        "state": {
-          "unplugged": "Unplugged",
-          "plugged": "Plugged in",
-          "plug_error": "Plug error",
-          "plug_unknown": "Plug unknown"
-        }
+      "admissible_charging_power": {
+        "name": "Admissible charging power"
+      },
+      "battery_autonomy": {
+        "name": "Battery autonomy"
+      },
+      "battery_available_energy": {
+        "name": "Battery available energy"
+      },
+      "battery_last_activity": {
+        "name": "Last battery activity"
+      },
+      "battery_level": {
+        "name": "Battery level"
+      },
+      "battery_temperature": {
+        "name": "Battery temperature"
       },
       "charge_state": {
+        "name": "Charge state",
         "state": {
           "not_in_charge": "Not charging",
           "waiting_for_a_planned_charge": "Waiting for planned charge",
@@ -62,6 +119,48 @@
           "charge_error": "Not charging or plugged in",
           "unavailable": "Unavailable"
         }
+      },
+      "charging_power": {
+        "name": "Charging power"
+      },
+      "charging_remaining_time": {
+        "name": "Charging remaining time"
+      },
+      "fuel_autonomy": {
+        "name": "Fuel autonomy"
+      },
+      "fuel_quantity": {
+        "name": "Fuel quantity"
+      },
+      "hvac_last_activity": {
+        "name": "Last HVAC activity"
+      },
+      "hvac_soc_threshold": {
+        "name": "HVAC SoC threshold"
+      },
+      "location_last_activity": {
+        "name": "Last location activity"
+      },
+      "mileage": {
+        "name": "Mileage"
+      },
+      "outside_temperature": {
+        "name": "Outside temperature"
+      },
+      "plug_state": {
+        "name": "Plug state",
+        "state": {
+          "unplugged": "Unplugged",
+          "plugged": "Plugged in",
+          "plug_error": "Plug error",
+          "plug_unknown": "Plug unknown"
+        }
+      },
+      "res_state": {
+        "name": "Remote engine start"
+      },
+      "res_state_code": {
+        "name": "Remote engine start code"
       }
     }
   }
