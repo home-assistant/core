@@ -81,7 +81,7 @@ async def test_audio_pipeline(
     assert msg["event"]["data"] == snapshot
 
     # End of audio stream (handler id + empty payload)
-    await client.send_bytes(b"1")
+    await client.send_bytes(bytes([1]))
 
     msg = await client.receive_json()
     assert msg["event"]["type"] == "stt-end"
@@ -308,7 +308,7 @@ async def test_stt_stream_failed(
 ) -> None:
     """Test events from a pipeline run with a non-existent STT provider."""
     with patch(
-        "tests.components.voice_assistant.test_websocket.MockSttProvider.async_process_audio_stream",
+        "tests.components.voice_assistant.conftest.MockSttProvider.async_process_audio_stream",
         new=MagicMock(side_effect=RuntimeError),
     ):
         client = await hass_ws_client(hass)
