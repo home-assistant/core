@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from bleak import BleakError
+from freezegun import freeze_time
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.bluetooth_le_tracker import device_tracker
@@ -89,7 +90,7 @@ async def test_do_not_see_device_if_time_not_updated(
             service_data={},
             service_uuids=[],
             source="local",
-            device=BLEDevice(address, None),
+            device=generate_ble_device(address, None),
             advertisement=generate_advertisement_data(local_name="empty"),
             time=0,
             connectable=False,
@@ -125,10 +126,7 @@ async def test_do_not_see_device_if_time_not_updated(
 
         # Advance time over the consider home threshold and trigger update after the threshold
         time_after_consider_home = dt_util.utcnow() + config[CONF_CONSIDER_HOME]
-        with patch(
-            "homeassistant.components.device_tracker.legacy.dt_util.utcnow",
-            return_value=time_after_consider_home,
-        ):
+        with freeze_time(time_after_consider_home):
             async_fire_time_changed(hass, time_after_consider_home)
             await hass.async_block_till_done()
 
@@ -161,7 +159,7 @@ async def test_see_device_if_time_updated(
             service_data={},
             service_uuids=[],
             source="local",
-            device=BLEDevice(address, None),
+            device=generate_ble_device(address, None),
             advertisement=generate_advertisement_data(local_name="empty"),
             time=0,
             connectable=False,
@@ -187,22 +185,30 @@ async def test_see_device_if_time_updated(
             await hass.async_block_till_done()
 
         # Increment device time so it gets seen in the next update
-        device.time = 1
+        device = BluetoothServiceInfoBleak(
+            name=name,
+            address=address,
+            rssi=-19,
+            manufacturer_data={},
+            service_data={},
+            service_uuids=[],
+            source="local",
+            device=generate_ble_device(address, None),
+            advertisement=generate_advertisement_data(local_name="empty"),
+            time=1,
+            connectable=False,
+        )
+        # Return with name with time = 0 initially
+        mock_async_discovered_service_info.return_value = [device]
         # Advance time to trigger updates
         time_after_consider_home = dt_util.utcnow() + config[CONF_CONSIDER_HOME] / 2
-        with patch(
-            "homeassistant.components.device_tracker.legacy.dt_util.utcnow",
-            return_value=time_after_consider_home,
-        ):
+        with freeze_time(time_after_consider_home):
             async_fire_time_changed(hass, time_after_consider_home)
             await hass.async_block_till_done()
 
         # Advance time over the consider home threshold and trigger update after the threshold
         time_after_consider_home = dt_util.utcnow() + config[CONF_CONSIDER_HOME]
-        with patch(
-            "homeassistant.components.device_tracker.legacy.dt_util.utcnow",
-            return_value=time_after_consider_home,
-        ):
+        with freeze_time(time_after_consider_home):
             async_fire_time_changed(hass, time_after_consider_home)
             await hass.async_block_till_done()
 
