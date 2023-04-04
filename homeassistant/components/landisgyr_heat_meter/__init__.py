@@ -10,7 +10,7 @@ from homeassistant.const import CONF_DEVICE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_registry import async_migrate_entries
 
-from .const import DOMAIN
+from .const import CONF_BATTERY_POWERED, DOMAIN
 from .coordinator import UltraheatCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +25,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     reader = ultraheat_api.UltraheatReader(entry.data[CONF_DEVICE])
     api = ultraheat_api.HeatMeterService(reader)
 
-    coordinator = UltraheatCoordinator(hass, api)
+    try:
+        battery_powered = entry.data[CONF_BATTERY_POWERED]
+    except KeyError:
+        # If the key is not present, we assume battery powered
+        battery_powered = True
+    coordinator = UltraheatCoordinator(hass, api, battery_powered)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 

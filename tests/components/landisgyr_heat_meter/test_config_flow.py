@@ -64,9 +64,18 @@ async def test_manual_entry(mock_heat_meter, hass: HomeAssistant) -> None:
         result["flow_id"], {"device": "/dev/ttyUSB0"}
     )
 
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "battery_powered"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"battery_powered": True}
+    )
+
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "LUGCUH50"
     assert result["data"] == {
+        "battery_powered": True,
         "device": "/dev/ttyUSB0",
         "model": "LUGCUH50",
         "device_number": "123456789",
@@ -91,9 +100,19 @@ async def test_list_entry(mock_port, mock_heat_meter, hass: HomeAssistant) -> No
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"device": port.device}
     )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "battery_powered"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"battery_powered": False}
+    )
+
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "LUGCUH50"
     assert result["data"] == {
+        "battery_powered": False,
         "device": port.device,
         "model": "LUGCUH50",
         "device_number": "123456789",
@@ -126,7 +145,15 @@ async def test_manual_entry_fail(mock_heat_meter, hass: HomeAssistant) -> None:
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "setup_serial_manual_path"
+    assert result["step_id"] == "battery_powered"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"battery_powered": False}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "battery_powered"
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -148,8 +175,17 @@ async def test_list_entry_fail(mock_port, mock_heat_meter, hass: HomeAssistant) 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"device": port.device}
     )
+
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "battery_powered"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"battery_powered": False}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "battery_powered"
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -182,6 +218,14 @@ async def test_already_configured(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"device": port.device}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "battery_powered"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"battery_powered": False}
     )
 
     assert result["type"] == FlowResultType.ABORT

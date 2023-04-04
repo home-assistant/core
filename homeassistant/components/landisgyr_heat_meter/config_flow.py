@@ -17,8 +17,9 @@ from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN, ULTRAHEAT_TIMEOUT
+from .const import CONF_BATTERY_POWERED, DOMAIN, ULTRAHEAT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,25 +37,26 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
+    def __init__(self) -> None:
+        """Initialize the ConfigFlow."""
+        super().__init__()
+        self.dev_path = ""
+        self.battery_powered = None
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Step when setting up serial configuration."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             if user_input[CONF_DEVICE] == CONF_MANUAL_PATH:
                 return await self.async_step_setup_serial_manual_path()
 
-            dev_path = await self.hass.async_add_executor_job(
-                usb.get_serial_by_id, user_input[CONF_DEVICE]
-            )
-            _LOGGER.debug("Using this path : %s", dev_path)
+            self.dev_path = usb.get_serial_by_id(user_input[CONF_DEVICE])
+            _LOGGER.debug("Using this path : %s", self.dev_path)
 
-            try:
-                return await self.validate_and_create_entry(dev_path)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
+            return await self.async_step_battery_powered()
 
         ports = await get_usb_ports(self.hass)
         ports[CONF_MANUAL_PATH] = CONF_MANUAL_PATH
@@ -66,14 +68,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Set path manually."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
-            dev_path = user_input[CONF_DEVICE]
-            try:
-                return await self.validate_and_create_entry(dev_path)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
+            self.dev_path = user_input[CONF_DEVICE]
+            return await self.async_step_battery_powered()
 
         schema = vol.Schema({vol.Required(CONF_DEVICE): str})
         return self.async_show_form(
@@ -82,17 +81,38 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def validate_and_create_entry(self, dev_path):
+    async def async_step_battery_powered(self, user_input=None) -> FlowResult:
+        """Let the user choose if the device is battery powered."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            self.battery_powered = user_input[CONF_BATTERY_POWERED]
+            try:
+                return await self.validate_and_create_entry()
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+
+        schema = vol.Schema(
+            {vol.Required(CONF_BATTERY_POWERED, default=True): cv.boolean}
+        )
+        return self.async_show_form(
+            step_id="battery_powered",
+            data_schema=schema,
+            errors=errors,
+        )
+
+    async def validate_and_create_entry(self):
         """Try to connect to the device path and return an entry."""
-        model, device_number = await self.validate_ultraheat(dev_path)
+        model, device_number = await self.validate_ultraheat(self.dev_path)
 
         _LOGGER.debug("Got model %s and device_number %s", model, device_number)
         await self.async_set_unique_id(f"{device_number}")
         self._abort_if_unique_id_configured()
         data = {
-            CONF_DEVICE: dev_path,
+            CONF_DEVICE: self.dev_path,
             "model": model,
             "device_number": device_number,
+            CONF_BATTERY_POWERED: self.battery_powered,
         }
         return self.async_create_entry(
             title=model,

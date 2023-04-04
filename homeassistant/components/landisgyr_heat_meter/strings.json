@@ -10,6 +10,13 @@
         "data": {
           "device": "[%key:common::config_flow::data::usb_path%]"
         }
+      },
+      "battery_powered": {
+        "title": "Battery or mains",
+        "description": "If the Landis+Gyr is on batteries make sure this is checked and polling will be once daily. Only uncheck this if the device is mains powered and polling will be every hour. Polling can be further customized using automation, if required.",
+        "data": {
+          "battery_powered": "The Landis+Gyr Heat Meter is battery operated"
+        }
       }
     },
     "abort": {

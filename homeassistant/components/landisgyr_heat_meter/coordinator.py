@@ -10,7 +10,7 @@ from ultraheat_api.service import HeatMeterService
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import POLLING_INTERVAL, ULTRAHEAT_TIMEOUT
+from .const import POLLING_INTERVAL_BATTERY, POLLING_INTERVAL_MAINS, ULTRAHEAT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,13 +18,18 @@ _LOGGER = logging.getLogger(__name__)
 class UltraheatCoordinator(DataUpdateCoordinator[HeatMeterResponse]):
     """Coordinator for getting data from the ultraheat api."""
 
-    def __init__(self, hass: HomeAssistant, api: HeatMeterService) -> None:
+    def __init__(
+        self, hass: HomeAssistant, api: HeatMeterService, battery_powered: bool
+    ) -> None:
         """Initialize my coordinator."""
+        polling_interval = (
+            POLLING_INTERVAL_BATTERY if battery_powered else POLLING_INTERVAL_MAINS
+        )
         super().__init__(
             hass,
             _LOGGER,
             name="ultraheat",
-            update_interval=POLLING_INTERVAL,
+            update_interval=polling_interval,
         )
         self.api = api
 

@@ -8,7 +8,10 @@ from syrupy import SnapshotAssertion
 from ultraheat_api.response import HeatMeterResponse
 
 from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
-from homeassistant.components.landisgyr_heat_meter.const import DOMAIN, POLLING_INTERVAL
+from homeassistant.components.landisgyr_heat_meter.const import (
+    DOMAIN,
+    POLLING_INTERVAL_BATTERY,
+)
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -148,18 +151,18 @@ async def test_exception_on_polling(mock_heat_meter, hass: HomeAssistant) -> Non
 
     # Now 'disable' the connection and wait for polling and see if it fails
     mock_heat_meter().read.side_effect = serial.serialutil.SerialException
-    async_fire_time_changed(hass, dt_util.utcnow() + POLLING_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + POLLING_INTERVAL_BATTERY)
     await hass.async_block_till_done()
     state = hass.states.get("sensor.heat_meter_heat_usage_gj")
     assert state.state == STATE_UNAVAILABLE
 
-    # # Now 'enable' and see if next poll succeeds
+    # Now 'enable' and see if next poll succeeds
     mock_heat_meter_response = HeatMeterResponse(**MOCK_RESPONSE_GJ)
     mock_heat_meter_response.heat_usage_gj += 1
 
     mock_heat_meter().read.return_value = mock_heat_meter_response
     mock_heat_meter().read.side_effect = None
-    async_fire_time_changed(hass, dt_util.utcnow() + POLLING_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + POLLING_INTERVAL_BATTERY)
     await hass.async_block_till_done()
     state = hass.states.get("sensor.heat_meter_heat_usage_gj")
     assert state
