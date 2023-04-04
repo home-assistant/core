@@ -1,0 +1,10 @@
+{
+  "domain": "voip",
+  "name": "Voice over IP",
+  "codeowners": ["@balloob", "@synesthesiam"],
+  "dependencies": ["voice_assistant"],
+  "requirements": ["opuslib==3.0.1"],
+  "documentation": "",
+  "iot_class": "local_push",
+  "quality_scale": "internal"
+}
