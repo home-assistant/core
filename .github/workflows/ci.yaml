@@ -434,6 +434,7 @@ jobs:
         shell: bash
         run: |
           . venv/bin/activate
+          shopt -s globstar
           pre-commit run --hook-stage manual prettier --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*}
 
       - name: Register check executables problem matcher
