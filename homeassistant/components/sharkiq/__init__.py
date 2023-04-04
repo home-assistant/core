@@ -60,7 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         username=config_entry.data[CONF_USERNAME],
         password=config_entry.data[CONF_PASSWORD],
         websession=async_get_clientsession(hass),
-        europe=(ayla_region == SHARKIQ_REGION_EUROPE),
+        europe=(config_entry.data[CONF_REGION] == SHARKIQ_REGION_EUROPE),
     )
 
     try:
