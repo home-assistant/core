@@ -33,11 +33,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "door_sensor": {
-        "name": "[%key:component::binary_sensor::entity_component::door::name%]"
-      }
-    },
     "lock": {
       "nuki_lock": {
         "state_attributes": {
