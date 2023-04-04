@@ -11,6 +11,8 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
+from tests.common import assert_registries_and_states_for_config_entry
+
 pytestmark = pytest.mark.usefixtures(
     "system_get_info", "dsl_get_info", "ftth_get_info", "wan_get_info"
 )
@@ -38,15 +40,6 @@ async def test_binary_sensors(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device_entries = dr.async_entries_for_config_entry(
-        device_registry, config_entry.entry_id
+    await assert_registries_and_states_for_config_entry(
+        hass, config_entry, device_registry, entity_registry, snapshot
     )
-    assert device_entries == snapshot
-
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, config_entry.entry_id
-    )
-    assert entity_entries == snapshot
-
-    for entity in entity_entries:
-        assert hass.states.get(entity.entity_id) == snapshot(name=entity.entity_id)
