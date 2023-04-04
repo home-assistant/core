@@ -1,8 +1,8 @@
 """Utility for converting audio to/from RTP + OPUS packets."""
 import audioop
-import logging
 from collections.abc import Iterable
 from dataclasses import dataclass
+import logging
 import random
 import struct
 from typing import Any
@@ -50,7 +50,7 @@ class RtpOpusInput:
         )
 
         assert flags == 0b10000000, "Padding and extension headers not supported"
-        payload_type &= 0x80  # Remove marker bit
+        payload_type &= 0x7F  # Remove marker bit
         assert (
             payload_type == self.opus_payload
         ), f"Expected payload type {self.opus_payload}, got {payload_type}"
@@ -154,7 +154,7 @@ class RtpOpusOutput:
 
     def reset(self):
         """Clear audio buffer and state."""
-        self._audio_buffer = bytes()
+        self._audio_buffer = b""
         self._resample_state = None
 
         # Recommended to start from random offsets to aid encryption

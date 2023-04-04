@@ -1,15 +1,29 @@
 import asyncio
 import functools
 import logging
+import math
+from pathlib import Path
 import socket
 import time
 import wave
-from pathlib import Path
 
-from homeassistant.core import HomeAssistant
+import async_timeout
 
-from .sip import SipDatagramProtocol, CallInfo
-from .rtp_audio import RtpOpusOutput
+from homeassistant.components import stt, tts
+from homeassistant.components.voice_assistant.pipeline import (
+    Pipeline,
+    PipelineEvent,
+    PipelineEventType,
+    PipelineInput,
+    PipelineRun,
+    PipelineStage,
+    async_get_pipeline,
+)
+from homeassistant.components.voice_assistant.vad import VoiceCommandSegmenter
+from homeassistant.core import Context, HomeAssistant
+
+from .rtp_audio import RtpOpusInput, RtpOpusOutput
+from .sip import CallInfo, SipDatagramProtocol
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,21 +47,188 @@ class VoipDatagramProtocol(SipDatagramProtocol):
             rtp_port,
         )
 
-        self.hass.async_create_task(
+        language = self.hass.config.language
+        if language == "en":
+            language = "en-US"
+
+        pipeline = async_get_pipeline(
+            self.hass,
+            language=language,
+        )
+        assert pipeline is not None
+
+        self.hass.async_create_background_task(
             self.hass.loop.create_datagram_endpoint(
-                lambda: MediaOutputDatagramProtocol(
+                lambda: PipelineDatagramProtocol(
                     self.hass,
-                    "/home/hansenm/opt/homeassistant/config/media/apope_lincoln.wav",
-                    silence_before=0.5,
+                    pipeline,
                 ),
                 (rtp_ip, rtp_port),
-            )
+            ),
+            "voip_pipeline",
         )
+
+        # self.hass.async_create_task(
+        #     self.hass.loop.create_datagram_endpoint(
+        #         lambda: MediaOutputDatagramProtocol(
+        #             self.hass,
+        #             "/home/hansenm/opt/homeassistant/config/media/apope_lincoln.wav",
+        #             silence_before=0.5,
+        #         ),
+        #         (rtp_ip, rtp_port),
+        #     )
+        # )
 
         self.answer(call_info, rtp_port)
 
 
+class PipelineDatagramProtocol(asyncio.DatagramProtocol):
+    """Send a WAV file to an RTP client."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        pipeline: Pipeline,
+    ) -> None:
+        self.hass = hass
+        self.pipeline = pipeline
+        self.transport = None
+        self.addr = None
+
+        self._audio_queue: "asyncio.Queue[bytes]" = asyncio.Queue()
+        self._rtp_input = RtpOpusInput()
+        self._rtp_output = RtpOpusOutput()
+        self._pipeline_task: asyncio.Task | None = None
+
+    def connection_made(self, transport):
+        self.transport = transport
+        _LOGGER.debug(
+            "Started pipeline server on %s",
+            self.transport.get_extra_info("sockname"),
+        )
+
+    def datagram_received(self, data, addr):
+        if self.addr is None:
+            self.addr = addr
+
+        if self._pipeline_task is None:
+            # Clear audio queue
+            while not self._audio_queue.empty():
+                self._audio_queue.get_nowait()
+
+            self._pipeline_task = self.hass.async_create_background_task(
+                self._run_pipeline(),
+                "voip_pipeline_run",
+            )
+
+        # STT expects 16Khz mono with 16-bit samples
+        audio_bytes = self._rtp_input.process_packet(
+            data,
+            16000,
+            2,
+            1,
+        )
+        self._audio_queue.put_nowait(audio_bytes)
+
+    async def _run_pipeline(self, timeout: float = 30.0) -> None:
+        _LOGGER.debug("Starting pipeline")
+
+        async def stt_stream():
+            segmenter = VoiceCommandSegmenter()
+            while chunk := await self._audio_queue.get():
+                if not segmenter.process(chunk):
+                    # Voice command is finished
+                    break
+
+                yield chunk
+
+        def event_callback(event: PipelineEvent):
+            if (event.type == PipelineEventType.TTS_END) and event.data:
+                media_id = event.data["tts_output"]["media_id"]
+                self.hass.async_create_background_task(
+                    self._send_audio(media_id),
+                    "voip_pipeline_tts",
+                )
+
+        pipeline_input = PipelineInput(
+            PipelineRun(
+                hass=self.hass,
+                context=Context(),
+                pipeline=self.pipeline,
+                start_stage=PipelineStage.STT,
+                end_stage=PipelineStage.TTS,
+                event_callback=event_callback,
+            ),
+            stt_metadata=stt.SpeechMetadata(
+                language=self.pipeline.language,
+                format=stt.AudioFormats.WAV,
+                codec=stt.AudioCodecs.PCM,
+                bit_rate=stt.AudioBitRates.BITRATE_16,
+                sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                channel=stt.AudioChannels.CHANNEL_MONO,
+            ),
+            stt_stream=stt_stream(),
+        )
+
+        try:
+            await pipeline_input.validate()
+
+            async with async_timeout.timeout(timeout):
+                await pipeline_input.execute()
+        except asyncio.TimeoutError:
+            # Expected after caller hangs up
+            pass
+        finally:
+            # Allow pipeline to run again
+            self._pipeline_task = None
+
+    async def _send_audio(self, media_id: str) -> None:
+        """Sends TTS audio to caller via RTP."""
+        assert self.transport is not None
+        _extension, audio_bytes = await tts.async_get_media_source_audio(
+            self.hass,
+            media_id,
+        )
+
+        # Assume TTS audio is 16Khz 16-bit mono
+        rate = 16000
+        width = 2
+        channels = 1
+        bytes_per_frame = self._rtp_output.opus_frame_size * width * channels
+
+        seconds_per_rtp = self._rtp_output.opus_frame_size / self._rtp_output.opus_rate
+        total_samples = len(audio_bytes) // (width * channels)
+        num_frames = int(
+            math.ceil(
+                total_samples / self._rtp_output.opus_frame_size,
+            )
+        )
+        for i in range(num_frames):
+            offset = i * self._rtp_output.opus_frame_size * width * channels
+            chunk = audio_bytes[offset : offset + bytes_per_frame]
+            for rtp_bytes in self._rtp_output.process_audio(
+                chunk,
+                rate,
+                width,
+                channels,
+                is_end=i >= num_frames,
+            ):
+                self.transport.sendto(rtp_bytes, self.addr)
+
+                # Wait almost the full amount of time for the chunk.
+                #
+                # Sending too fast will cause the phone to skip chunks,
+                # since it doesn't seem to have a very large buffer.
+                #
+                # Sending too slow will cause audio artifacts if there is
+                # network jitter, which is why programs like GStreamer are
+                # much better at this.
+                await asyncio.sleep(seconds_per_rtp * 0.99)
+
+
 class MediaOutputDatagramProtocol(asyncio.DatagramProtocol):
+    """Send a WAV file to an RTP client."""
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -64,7 +245,7 @@ class MediaOutputDatagramProtocol(asyncio.DatagramProtocol):
     def connection_made(self, transport):
         self.transport = transport
         _LOGGER.debug(
-            "Started UDP server on %s",
+            "Started media output server on %s",
             self.transport.get_extra_info("sockname"),
         )
 
@@ -74,6 +255,8 @@ class MediaOutputDatagramProtocol(asyncio.DatagramProtocol):
             return
 
         self._media_sent = True
+
+        # Run in executor since we're doing media encoding and I/O.
         self.hass.async_add_executor_job(
             functools.partial(
                 self._send_media,

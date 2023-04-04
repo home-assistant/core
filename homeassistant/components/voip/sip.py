@@ -4,7 +4,6 @@ from dataclasses import dataclass
 import logging
 import re
 
-
 SIP_PORT = 5060
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,6 +38,7 @@ class SipDatagramProtocol(asyncio.DatagramProtocol):
 
         if method and (method.lower() != "invite"):
             # Not an INVITE message
+            _LOGGER.debug(method)
             return
 
         caller_ip, caller_sip_port = addr
