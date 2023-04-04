@@ -57,7 +57,7 @@ class NoboGlobalSelector(SelectEntity):
 
     _attr_should_poll = False
     _modes = {
-        nobo.API.OVERRIDE_MODE_NORMAL: "normal",
+        nobo.API.OVERRIDE_MODE_NORMAL: "none",
         nobo.API.OVERRIDE_MODE_AWAY: "away",
         nobo.API.OVERRIDE_MODE_COMFORT: "comfort",
         nobo.API.OVERRIDE_MODE_ECO: "eco",
@@ -69,7 +69,7 @@ class NoboGlobalSelector(SelectEntity):
         """Initialize the global override selector."""
         self._nobo = hub
         self._attr_unique_id = f"{hub.hub_serial}"
-        self._attr_name = "global override"
+        self._attr_translation_key = "global_override"
         self._attr_has_entity_name = True
         self._attr_device_class = "nobo_hub__override"
         self._override_type = override_type
@@ -125,7 +125,7 @@ class NoboProfileSelector(SelectEntity):
         self._id = zone_id
         self._nobo = hub
         self._attr_unique_id = f"{hub.hub_serial}:{zone_id}:profile"
-        self._attr_name = "week profile"
+        self._attr_translation_key = "week_profile"
         self._attr_has_entity_name = True
         self._attr_device_info: DeviceInfo = {
             ATTR_IDENTIFIERS: {(DOMAIN, f"{hub.hub_serial}:{zone_id}")},
