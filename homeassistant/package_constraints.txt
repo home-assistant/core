@@ -20,7 +20,7 @@ certifi>=2021.5.30
 ciso8601==2.3.0
 cryptography==40.0.1
 dbus-fast==1.84.2
-fnvhash==0.1.0
+fnv-hash-fast==0.3.1
 ha-av==10.0.0
 hass-nabucasa==0.63.1
 hassil==1.0.6
