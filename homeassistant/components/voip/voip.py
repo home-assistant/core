@@ -98,13 +98,14 @@ class MediaOutputDatagramProtocol(asyncio.DatagramProtocol):
             )
 
             while chunk := wav_file.readframes(self._rtp_output.opus_frame_size):
-                frames_left -= len(chunk)
+                frames_in_chunk = len(chunk) // (width * channels)
+                frames_left -= frames_in_chunk
                 for rtp_bytes in self._rtp_output.process_audio(
                     chunk,
                     rate,
                     width,
                     channels,
-                    is_end=frames_left > 0,
+                    is_end=frames_left <= 0,
                 ):
                     # _LOGGER.debug(len(rtp_bytes))
                     self.transport.sendto(rtp_bytes, addr)
@@ -117,7 +118,7 @@ class MediaOutputDatagramProtocol(asyncio.DatagramProtocol):
                     # Sending too slow will cause audio artifacts if there is
                     # network jitter, which is why programs like GStreamer are
                     # much better at this.
-                    time.sleep(seconds_per_rtp * 0.95)
+                    time.sleep(seconds_per_rtp * 0.99)
 
         # Done
         self.transport.close()
