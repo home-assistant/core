@@ -22,7 +22,7 @@ from .handler import HassIO, HassioAPIError
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(slots=True)
 class HassioServiceInfo(BaseServiceInfo):
     """Prepared info from hassio entries."""
 
