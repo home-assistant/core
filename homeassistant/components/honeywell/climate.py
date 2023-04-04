@@ -1,6 +1,7 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems."""
 from __future__ import annotations
 
+import asyncio
 import datetime
 from socket import gaierror
 from typing import Any
@@ -437,8 +438,9 @@ class HoneywellUSThermostat(ClimateEntity):
                 OSError,
                 ClientConnectionError,
                 gaierror,
+                asyncio.TimeoutError,
             ):
                 self._attr_available = False
 
-        except (OSError, ClientConnectionError, gaierror):
+        except (OSError, ClientConnectionError, gaierror, asyncio.TimeoutError):
             self._attr_available = False
