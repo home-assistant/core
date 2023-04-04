@@ -174,7 +174,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.6.1
+aiohomekit==2.6.3
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -2692,7 +2692,7 @@ zamg==0.2.2
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.53.0
+zeroconf==0.54.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
