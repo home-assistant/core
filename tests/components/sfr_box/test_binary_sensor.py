@@ -9,7 +9,6 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import assert_registries_and_states_for_config_entry
 
@@ -29,8 +28,6 @@ def override_platforms() -> Generator[None, None, None]:
 async def test_binary_sensors(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     system_get_info: SystemInfo,
     net_infra: str,
@@ -40,6 +37,4 @@ async def test_binary_sensors(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    await assert_registries_and_states_for_config_entry(
-        hass, config_entry, device_registry, entity_registry, snapshot
-    )
+    await assert_registries_and_states_for_config_entry(hass, config_entry, snapshot)

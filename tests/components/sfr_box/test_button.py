@@ -11,7 +11,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import assert_registries_and_states_for_config_entry
 
@@ -30,8 +29,6 @@ def override_platforms() -> Generator[None, None, None]:
 async def test_buttons(
     hass: HomeAssistant,
     config_entry_with_auth: ConfigEntry,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test for SFR Box buttons."""
@@ -39,7 +36,7 @@ async def test_buttons(
     await hass.async_block_till_done()
 
     await assert_registries_and_states_for_config_entry(
-        hass, config_entry_with_auth, device_registry, entity_registry, snapshot
+        hass, config_entry_with_auth, snapshot
     )
 
 

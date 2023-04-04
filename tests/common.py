@@ -1357,20 +1357,20 @@ def assert_lists_same(a: list[Any], b: list[Any]) -> None:
 async def assert_registries_and_states_for_config_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     *,
     platform: Platform | None = None,
 ) -> None:
     """Ensure that registry content and state machine match snapshot."""
     # Ensure devices are correctly registered
+    device_registry = dr.async_get(hass)
     device_entries = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
     )
     assert device_entries == snapshot
 
     # Ensure entities are correctly registered, optionally filtered by platform
+    entity_registry = er.async_get(hass)
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, config_entry.entry_id
     )
@@ -1380,9 +1380,9 @@ async def assert_registries_and_states_for_config_entry(
 
     # If some entities are disabled, enable them and reload before checking states
     needs_reload = False
-    for e in entity_entries:
-        if e.disabled:
-            entity_registry.async_update_entity(e.entity_id, **{"disabled_by": None})
+    for ent in entity_entries:
+        if ent.disabled:
+            entity_registry.async_update_entity(ent.entity_id, **{"disabled_by": None})
             needs_reload = True
 
     if needs_reload:
@@ -1390,8 +1390,8 @@ async def assert_registries_and_states_for_config_entry(
         await hass.async_block_till_done()
 
     # Ensure entities states are correct
-    for e in entity_entries:
-        assert hass.states.get(e.entity_id) == snapshot(name=e.entity_id)
+    for ent in entity_entries:
+        assert hass.states.get(ent.entity_id) == snapshot(name=ent.entity_id)
 
 
 _SENTINEL = object()
