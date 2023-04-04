@@ -106,14 +106,14 @@ PRIMARY_MATCH_KEYS = [
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(slots=True)
 class _HaServiceDescription:
     """Keys added by HA."""
 
     x_homeassistant_matching_domains: set[str] = field(default_factory=set)
 
 
-@dataclass
+@dataclass(slots=True)
 class _SsdpServiceDescription:
     """SSDP info with optional keys."""
 
@@ -127,14 +127,14 @@ class _SsdpServiceDescription:
     ssdp_headers: Mapping[str, Any] = field(default_factory=dict)
 
 
-@dataclass
+@dataclass(slots=True)
 class _UpnpServiceDescription:
     """UPnP info."""
 
     upnp: Mapping[str, Any]
 
 
-@dataclass
+@dataclass(slots=True)
 class SsdpServiceInfo(
     _HaServiceDescription,
     _SsdpServiceDescription,
