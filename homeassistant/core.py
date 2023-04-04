@@ -516,7 +516,7 @@ class HomeAssistant:
     def async_create_task(
         self, target: Coroutine[Any, Any, _R], name: str | None = None
     ) -> asyncio.Task[_R]:
-        """Create a task from within the eventloop.
+        """Create a task from within the event loop.
 
         This method must be run in the event loop. If you are using this in your
         integration, use the create task methods on the config entry instead.
@@ -534,7 +534,7 @@ class HomeAssistant:
         target: Coroutine[Any, Any, _R],
         name: str,
     ) -> asyncio.Task[_R]:
-        """Create a task from within the eventloop.
+        """Create a task from within the event loop.
 
         This is a background task which will not block startup and will be
         automatically cancelled on shutdown. If you are using this in your
@@ -1950,7 +1950,11 @@ class Config:
         )
 
     def is_allowed_path(self, path: str) -> bool:
-        """Check if the path is valid for access from outside."""
+        """Check if the path is valid for access from outside.
+
+        This function does blocking I/O and should not be called from the event loop.
+        Use hass.async_add_executor_job to schedule it on the executor.
+        """
         assert path is not None
 
         thepath = pathlib.Path(path)

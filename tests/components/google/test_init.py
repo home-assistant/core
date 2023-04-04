@@ -42,6 +42,7 @@ HassApi = Callable[[], Awaitable[dict[str, Any]]]
 
 TEST_EVENT_SUMMARY = "Test Summary"
 TEST_EVENT_DESCRIPTION = "Test Description"
+TEST_EVENT_LOCATION = "Test Location"
 
 
 def assert_state(actual: State | None, expected: State | None) -> None:
@@ -93,6 +94,7 @@ def add_event_call_service(
                 **params,
                 "summary": TEST_EVENT_SUMMARY,
                 "description": TEST_EVENT_DESCRIPTION,
+                "location": TEST_EVENT_LOCATION,
             },
             target=target,
             blocking=True,
@@ -484,6 +486,7 @@ async def test_add_event_date_in_x(
     assert aioclient_mock.mock_calls[0][2] == {
         "summary": TEST_EVENT_SUMMARY,
         "description": TEST_EVENT_DESCRIPTION,
+        "location": TEST_EVENT_LOCATION,
         "start": {"date": start_date.date().isoformat()},
         "end": {"date": end_date.date().isoformat()},
     }
@@ -524,6 +527,7 @@ async def test_add_event_date(
     assert aioclient_mock.mock_calls[0][2] == {
         "summary": TEST_EVENT_SUMMARY,
         "description": TEST_EVENT_DESCRIPTION,
+        "location": TEST_EVENT_LOCATION,
         "start": {"date": today.isoformat()},
         "end": {"date": end_date.isoformat()},
     }
@@ -564,6 +568,7 @@ async def test_add_event_date_time(
     assert aioclient_mock.mock_calls[0][2] == {
         "summary": TEST_EVENT_SUMMARY,
         "description": TEST_EVENT_DESCRIPTION,
+        "location": TEST_EVENT_LOCATION,
         "start": {
             "dateTime": start_datetime.isoformat(timespec="seconds"),
             "timeZone": "America/Regina",
@@ -597,7 +602,7 @@ async def test_add_event_failure(
 
     with pytest.raises(HomeAssistantError):
         await add_event_call_service(
-            {"start_date": "2022-05-01", "end_date": "2022-05-01"}
+            {"start_date": "2022-05-01", "end_date": "2022-05-02"}
         )
 
 
