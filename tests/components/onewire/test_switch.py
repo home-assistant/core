@@ -1,15 +1,14 @@
 """Tests for 1-Wire switches."""
 from collections.abc import Generator
-import logging
 from unittest.mock import MagicMock, patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_STATE,
     SERVICE_TOGGLE,
     STATE_OFF,
     STATE_ON,
@@ -17,15 +16,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.config_validation import ensure_list
 
-from . import (
-    check_and_enable_disabled_entities,
-    check_device_registry,
-    check_entities,
-    setup_owproxy_mock_devices,
-)
-from .const import ATTR_DEVICE_INFO, ATTR_UNKNOWN_DEVICE, MOCK_OWPROXY_DEVICES
+from . import setup_owproxy_mock_devices
 
 
 @pytest.fixture(autouse=True)
@@ -40,55 +32,72 @@ async def test_switches(
     config_entry: ConfigEntry,
     owproxy: MagicMock,
     device_id: str,
-    caplog: pytest.LogCaptureFixture,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test for 1-Wire switch.
+    """Test for 1-Wire switches."""
+    setup_owproxy_mock_devices(owproxy, Platform.SWITCH, [device_id])
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    This test forces all entities to be enabled.
-    """
-    mock_device = MOCK_OWPROXY_DEVICES[device_id]
-    expected_entities = mock_device.get(Platform.SWITCH, [])
-    expected_devices = ensure_list(mock_device.get(ATTR_DEVICE_INFO))
+    # Ensure devices are correctly registered
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    assert device_entries == snapshot
+
+    # Ensure entities are correctly registered
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    assert entity_entries == snapshot
 
     setup_owproxy_mock_devices(owproxy, Platform.SWITCH, [device_id])
-    with caplog.at_level(logging.WARNING, logger="homeassistant.components.onewire"):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        if mock_device.get(ATTR_UNKNOWN_DEVICE):
-            assert "Ignoring unknown device family/type" in caplog.text
-        else:
-            assert "Ignoring unknown device family/type" not in caplog.text
-
-    check_device_registry(device_registry, expected_devices)
-    assert len(entity_registry.entities) == len(expected_entities)
-    check_and_enable_disabled_entities(entity_registry, expected_entities)
-
-    setup_owproxy_mock_devices(owproxy, Platform.SWITCH, [device_id])
+    # Some entities are disabled, enable them and reload before checking states
+    for ent in entity_entries:
+        entity_registry.async_update_entity(ent.entity_id, **{"disabled_by": None})
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    check_entities(hass, entity_registry, expected_entities)
+    # Ensure entity states are correct
+    states = [hass.states.get(ent.entity_id) for ent in entity_entries]
+    assert states == snapshot
 
-    # Test TOGGLE service
-    for expected_entity in expected_entities:
-        entity_id = expected_entity[ATTR_ENTITY_ID]
 
-        if expected_entity[ATTR_STATE] == STATE_ON:
-            owproxy.return_value.read.side_effect = [b"         0"]
-            expected_entity[ATTR_STATE] = STATE_OFF
-        elif expected_entity[ATTR_STATE] == STATE_OFF:
-            owproxy.return_value.read.side_effect = [b"         1"]
-            expected_entity[ATTR_STATE] = STATE_ON
+@pytest.mark.parametrize("device_id", ["05.111111111111"])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_switch_toggle(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    owproxy: MagicMock,
+    device_id: str,
+) -> None:
+    """Test for 1-Wire switch TOGGLE service."""
+    setup_owproxy_mock_devices(owproxy, Platform.SWITCH, [device_id])
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-        await hass.services.async_call(
-            SWITCH_DOMAIN,
-            SERVICE_TOGGLE,
-            {ATTR_ENTITY_ID: entity_id},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
+    entity_id = "switch.05_111111111111_programmed_input_output"
 
-        state = hass.states.get(entity_id)
-        assert state.state == expected_entity[ATTR_STATE]
+    # Test TOGGLE service to off
+    owproxy.return_value.read.side_effect = [b"         0"]
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TOGGLE,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    # Test TOGGLE service to on
+    owproxy.return_value.read.side_effect = [b"         1"]
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TOGGLE,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_ON
