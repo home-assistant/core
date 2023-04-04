@@ -8,7 +8,7 @@ import email
 import logging
 from typing import Any
 
-from aioimaplib import AUTH, IMAP4_SSL, SELECTED, AioImapException
+from aioimaplib import AUTH, IMAP4_SSL, NONAUTH, SELECTED, AioImapException
 import async_timeout
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -36,10 +36,12 @@ async def connect_to_server(data: Mapping[str, Any]) -> IMAP4_SSL:
     """Connect to imap server and return client."""
     client = IMAP4_SSL(data[CONF_SERVER], data[CONF_PORT])
     await client.wait_hello_from_server()
-    await client.login(data[CONF_USERNAME], data[CONF_PASSWORD])
-    if client.protocol.state != AUTH:
+    if client.protocol.state == NONAUTH:
+        await client.login(data[CONF_USERNAME], data[CONF_PASSWORD])
+    if client.protocol.state not in {AUTH, SELECTED}:
         raise InvalidAuth("Invalid username or password")
-    await client.select(data[CONF_FOLDER])
+    if client.protocol.state == AUTH:
+        await client.select(data[CONF_FOLDER])
     if client.protocol.state != SELECTED:
         raise InvalidFolder(f"Folder {data[CONF_FOLDER]} is invalid")
     return client
