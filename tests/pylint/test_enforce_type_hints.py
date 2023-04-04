@@ -574,7 +574,7 @@ def test_ignore_invalid_entity_properties(
         async def async_lock(
             self,
             **kwargs
-        ) -> bool:
+        ):
             pass
     """,
         "homeassistant.components.pylint_test.lock",
@@ -724,6 +724,7 @@ def test_invalid_mapping_return_type(
         "-> Mapping[str, bool | int]",
         "-> dict[str, Any]",
         "-> dict[str, str]",
+        "-> CustomTypedDict",
     ],
 )
 def test_valid_mapping_return_type(
@@ -737,6 +738,11 @@ def test_valid_mapping_return_type(
 
     class_node = astroid.extract_node(
         f"""
+    from typing import TypedDict
+
+    class CustomTypedDict(TypedDict):
+        pass
+
     class Entity():
         pass
 
@@ -770,7 +776,7 @@ def test_valid_long_tuple(
     # Set ignore option
     type_hint_checker.config.ignore_missing_annotations = False
 
-    class_node, _, _ = astroid.extract_node(
+    class_node, _, _, _ = astroid.extract_node(
         """
     class Entity():
         pass
@@ -784,6 +790,12 @@ def test_valid_long_tuple(
     class TestLight( #@
         LightEntity
     ):
+        @property
+        def hs_color( #@
+            self
+        ) -> tuple[int, int]:
+            pass
+
         @property
         def rgbw_color( #@
             self

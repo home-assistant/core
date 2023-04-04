@@ -342,12 +342,14 @@ def get_next_departure(
                  origin_stop_time.departure_time
         LIMIT :limit
         """
-    result = schedule.engine.execute(
+    result = schedule.engine.connect().execute(
         text(sql_query),
-        origin_station_id=start_station_id,
-        end_station_id=end_station_id,
-        today=now_date,
-        limit=limit,
+        {
+            "origin_station_id": start_station_id,
+            "end_station_id": end_station_id,
+            "today": now_date,
+            "limit": limit,
+        },
     )
 
     # Create lookup timetable for today and possibly tomorrow, taking into
@@ -357,7 +359,8 @@ def get_next_departure(
     yesterday_start = today_start = tomorrow_start = None
     yesterday_last = today_last = ""
 
-    for row in result:
+    for row_cursor in result:
+        row = row_cursor._asdict()
         if row["yesterday"] == 1 and yesterday_date >= row["start_date"]:
             extras = {"day": "yesterday", "first": None, "last": False}
             if yesterday_start is None:
@@ -565,7 +568,7 @@ class GTFSDepartureSensor(SensorEntity):
         return self._available
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self._attributes
 
@@ -800,7 +803,10 @@ class GTFSDepartureSensor(SensorEntity):
     @staticmethod
     def dict_for_table(resource: Any) -> dict:
         """Return a dictionary for the SQLAlchemy resource given."""
-        return {col: getattr(resource, col) for col in resource.__table__.columns}
+        _dict = {}
+        for column in resource.__table__.columns:
+            _dict[column.name] = str(getattr(resource, column.name))
+        return _dict
 
     def append_keys(self, resource: dict, prefix: str | None = None) -> None:
         """Properly format key val pairs to append to attributes."""

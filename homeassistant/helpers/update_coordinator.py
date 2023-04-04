@@ -87,7 +87,14 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
         )
 
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
-        self._job = HassJob(self._handle_refresh_interval)
+        job_name = "DataUpdateCoordinator"
+        type_name = type(self).__name__
+        if type_name != job_name:
+            job_name += f" {type_name}"
+        job_name += f" {name}"
+        if entry := self.config_entry:
+            job_name += f" {entry.title} {entry.domain} {entry.entry_id}"
+        self._job = HassJob(self._handle_refresh_interval, job_name)
         self._unsub_refresh: CALLBACK_TYPE | None = None
         self._request_refresh_task: asyncio.TimerHandle | None = None
         self.last_update_success = True
@@ -141,6 +148,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
             self._unsub_refresh()
             self._unsub_refresh = None
 
+        self._debounced_refresh.async_cancel()
+
     def async_contexts(self) -> Generator[Any, None, None]:
         """Return all registered contexts."""
         yield from (
@@ -156,6 +165,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
         if self.config_entry and self.config_entry.pref_disable_polling:
             return
 
+        # We do not cancel the debouncer here. If the refresh interval is shorter
+        # than the debouncer cooldown, this would cause the debounce to never be called
         if self._unsub_refresh:
             self._unsub_refresh()
             self._unsub_refresh = None

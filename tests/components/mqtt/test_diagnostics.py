@@ -24,16 +24,15 @@ default_config = {
     "keepalive": 60,
     "port": 1883,
     "protocol": "3.1.1",
-    "tls_version": "auto",
     "transport": "tcp",
-    "ws_headers": {},
-    "ws_path": "/",
     "will_message": {
         "payload": "offline",
         "qos": 0,
         "retain": False,
         "topic": "homeassistant/status",
     },
+    "ws_headers": {},
+    "ws_path": "/",
 }
 
 
@@ -268,6 +267,7 @@ async def test_redact_diagnostics(
         "name_by_user": None,
     }
 
+    await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "connected": True,
         "devices": [expected_device],

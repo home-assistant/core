@@ -5,18 +5,16 @@ import copy
 from datetime import datetime, timedelta
 from functools import partial
 import json
-from pathlib import Path
 import ssl
 from typing import Any, TypedDict
 from unittest.mock import ANY, MagicMock, call, mock_open, patch
 
 import pytest
 import voluptuous as vol
-import yaml
 
-from homeassistant import config as hass_config
 from homeassistant.components import mqtt
-from homeassistant.components.mqtt import CONFIG_SCHEMA, debug_info
+from homeassistant.components.mqtt import debug_info
+from homeassistant.components.mqtt.client import EnsureJobAfterCooldown
 from homeassistant.components.mqtt.mixins import MQTT_ENTITY_DEVICE_INFO_SCHEMA
 from homeassistant.components.mqtt.models import MessageCallbackType, ReceiveMessage
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
@@ -24,6 +22,7 @@ from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
+    SERVICE_RELOAD,
     Platform,
     UnitOfTemperature,
 )
@@ -38,11 +37,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from .test_common import (
-    help_test_entry_reload_with_new_config,
-    help_test_reload_with_config,
-    help_test_setup_manual_entity_from_yaml,
-)
+from .test_common import help_test_validate_platform_config
 
 from tests.common import (
     MockConfigEntry,
@@ -118,20 +113,6 @@ def record_calls(calls: list[ReceiveMessage]) -> MessageCallbackType:
         calls.append(msg)
 
     return record_calls
-
-
-@pytest.fixture
-def empty_mqtt_config(
-    hass: HomeAssistant, tmp_path: Path
-) -> Generator[Path, None, None]:
-    """Fixture to provide an empty config from yaml."""
-    new_yaml_config_file = tmp_path / "configuration.yaml"
-    new_yaml_config_file.write_text("")
-
-    with patch.object(
-        hass_config, "YAML_CONFIG_FILE", new_yaml_config_file
-    ) as empty_config:
-        yield empty_config
 
 
 async def test_mqtt_connects_on_home_assistant_mqtt_setup(
@@ -302,8 +283,21 @@ async def test_command_template_value(hass: HomeAssistant) -> None:
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SELECT])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "command_topic": "test/select",
+            "name": "Test Select",
+            "options": ["milk", "beer"],
+            "command_template": '{"option": "{{ value }}", "entity_id": "{{ entity_id }}", "name": "{{ name }}", "this_object_state": "{{ this.state }}"}',
+        }
+    ],
+)
 async def test_command_template_variables(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    config: ConfigType,
 ) -> None:
     """Test the rendering of entity variables."""
     topic = "test/select"
@@ -311,22 +305,10 @@ async def test_command_template_variables(
     fake_state = ha.State("select.test_select", "milk")
     mock_restore_cache(hass, (fake_state,))
 
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
-        {
-            mqtt.DOMAIN: {
-                "select": {
-                    "command_topic": topic,
-                    "name": "Test Select",
-                    "options": ["milk", "beer"],
-                    "command_template": '{"option": "{{ value }}", "entity_id": "{{ entity_id }}", "name": "{{ name }}", "this_object_state": "{{ this.state }}"}',
-                }
-            }
-        },
-    )
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
     await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    async_fire_mqtt_message(hass, "homeassistant/select/bla/config", json.dumps(config))
+    await hass.async_block_till_done()
 
     state = hass.states.get("select.test_select")
     assert state and state.state == "milk"
@@ -817,6 +799,50 @@ def test_entity_device_info_schema() -> None:
         )
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                "sensor": [
+                    {
+                        "name": "test-sensor",
+                        "unique_id": "test-sensor",
+                        "state_topic": "test/state",
+                    }
+                ]
+            }
+        }
+    ],
+)
+async def test_handle_logging_on_writing_the_entity_state(
+    hass: HomeAssistant,
+    mock_hass_config: None,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test on log handling when an error occurs writing the state."""
+    await mqtt_mock_entry_no_yaml_config()
+    await hass.async_block_till_done()
+    async_fire_mqtt_message(hass, "test/state", b"initial_state")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sensor")
+    assert state is not None
+    assert state.state == "initial_state"
+    with patch(
+        "homeassistant.helpers.entity.Entity.async_write_ha_state",
+        side_effect=ValueError("Invalid value for sensor"),
+    ):
+        async_fire_mqtt_message(hass, "test/state", b"payload causing errors")
+        await hass.async_block_till_done()
+        state = hass.states.get("sensor.test_sensor")
+        assert state is not None
+        assert state.state == "initial_state"
+        assert "Invalid value for sensor" in caplog.text
+        assert "Exception raised when updating state of" in caplog.text
+
+
 async def test_receiving_non_utf8_message_gets_logged(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
@@ -926,6 +952,7 @@ async def test_subscribe_with_deprecated_callback_fails(
     hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test the subscription of a topic using deprecated callback signature fails."""
+    await mqtt_mock_entry_no_yaml_config()
 
     async def record_calls(topic: str, payload: ReceivePayloadType, qos: int) -> None:
         """Record calls."""
@@ -943,6 +970,7 @@ async def test_subscribe_deprecated_async_fails(
     hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test the subscription of a topic using deprecated coroutine signature fails."""
+    await mqtt_mock_entry_no_yaml_config()
 
     @callback
     def async_record_calls(topic: str, payload: ReceivePayloadType, qos: int) -> None:
@@ -1218,6 +1246,9 @@ async def test_subscribe_special_characters(
     assert calls[0].payload == payload
 
 
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
 async def test_subscribe_same_topic(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
@@ -1242,26 +1273,35 @@ async def test_subscribe_same_topic(
     def _callback_b(msg: ReceiveMessage) -> None:
         calls_b.append(msg)
 
-    await mqtt.async_subscribe(hass, "test/state", _callback_a)
+    await mqtt.async_subscribe(hass, "test/state", _callback_a, qos=0)
     async_fire_mqtt_message(
         hass, "test/state", "online"
-    )  # Simulate a (retained) message
+    )  # Simulate a (retained) message replaying
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
     await hass.async_block_till_done()
     assert len(calls_a) == 1
     mqtt_client_mock.subscribe.assert_called()
     calls_a = []
     mqtt_client_mock.reset_mock()
 
-    await mqtt.async_subscribe(hass, "test/state", _callback_b)
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
+    await hass.async_block_till_done()
+    await mqtt.async_subscribe(hass, "test/state", _callback_b, qos=1)
     async_fire_mqtt_message(
         hass, "test/state", "online"
-    )  # Simulate a (retained) message
+    )  # Simulate a (retained) message replaying
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
     await hass.async_block_till_done()
     assert len(calls_a) == 1
     assert len(calls_b) == 1
     mqtt_client_mock.subscribe.assert_called()
 
 
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
 async def test_not_calling_unsubscribe_with_active_subscribers(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
@@ -1273,8 +1313,10 @@ async def test_not_calling_unsubscribe_with_active_subscribers(
     # Fake that the client is connected
     mqtt_mock().connected = True
 
-    unsub = await mqtt.async_subscribe(hass, "test/state", record_calls)
-    await mqtt.async_subscribe(hass, "test/state", record_calls)
+    unsub = await mqtt.async_subscribe(hass, "test/state", record_calls, 2)
+    await mqtt.async_subscribe(hass, "test/state", record_calls, 1)
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
     await hass.async_block_till_done()
     assert mqtt_client_mock.subscribe.called
 
@@ -1283,6 +1325,30 @@ async def test_not_calling_unsubscribe_with_active_subscribers(
     assert not mqtt_client_mock.unsubscribe.called
 
 
+async def test_not_calling_subscribe_when_unsubscribed_within_cooldown(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    record_calls: MessageCallbackType,
+) -> None:
+    """Test not calling subscribe() when it is unsubscribed.
+
+    Make sure subscriptions are cleared if unsubscribed before
+    the subscribe cool down period has ended.
+    """
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    # Fake that the client is connected
+    mqtt_mock().connected = True
+
+    unsub = await mqtt.async_subscribe(hass, "test/state", record_calls)
+    unsub()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
+    await hass.async_block_till_done()
+    assert not mqtt_client_mock.subscribe.called
+
+
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
 async def test_unsubscribe_race(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
@@ -1307,13 +1373,15 @@ async def test_unsubscribe_race(
     unsub()
     await mqtt.async_subscribe(hass, "test/state", _callback_b)
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "test/state", "online")
     await hass.async_block_till_done()
     assert not calls_a
     assert calls_b
 
-    # We allow either calls [subscribe, unsubscribe, subscribe] or [subscribe, subscribe]
+    # We allow either calls [subscribe, unsubscribe, subscribe], [subscribe, subscribe] or
+    # when both subscriptions were combined [subscribe]
     expected_calls_1 = [
         call.subscribe("test/state", 0),
         call.unsubscribe("test/state"),
@@ -1323,13 +1391,23 @@ async def test_unsubscribe_race(
         call.subscribe("test/state", 0),
         call.subscribe("test/state", 0),
     ]
-    assert mqtt_client_mock.mock_calls in (expected_calls_1, expected_calls_2)
+    expected_calls_3 = [
+        call.subscribe("test/state", 0),
+    ]
+    assert mqtt_client_mock.mock_calls in (
+        expected_calls_1,
+        expected_calls_2,
+        expected_calls_3,
+    )
 
 
 @pytest.mark.parametrize(
     "mqtt_config_entry_data",
     [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_DISCOVERY: False}],
 )
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
 async def test_restore_subscriptions_on_reconnect(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
@@ -1342,13 +1420,15 @@ async def test_restore_subscriptions_on_reconnect(
     mqtt_mock().connected = True
 
     await mqtt.async_subscribe(hass, "test/state", record_calls)
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
     await hass.async_block_till_done()
     assert mqtt_client_mock.subscribe.call_count == 1
 
     mqtt_client_mock.on_disconnect(None, None, 0)
-    with patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0):
-        mqtt_client_mock.on_connect(None, None, None, 0)
-        await hass.async_block_till_done()
+    mqtt_client_mock.on_connect(None, None, None, 0)
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert mqtt_client_mock.subscribe.call_count == 2
 
 
@@ -1356,6 +1436,9 @@ async def test_restore_subscriptions_on_reconnect(
     "mqtt_config_entry_data",
     [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_DISCOVERY: False}],
 )
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 1.0)
+@patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 1.0)
 async def test_restore_all_active_subscriptions_on_reconnect(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
@@ -1368,14 +1451,15 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     mqtt_mock().connected = True
 
     unsub = await mqtt.async_subscribe(hass, "test/state", record_calls, qos=2)
-    await mqtt.async_subscribe(hass, "test/state", record_calls)
     await mqtt.async_subscribe(hass, "test/state", record_calls, qos=1)
+    await mqtt.async_subscribe(hass, "test/state", record_calls, qos=0)
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
     await hass.async_block_till_done()
 
+    # the subscribtion with the highest QoS should survive
     expected = [
         call("test/state", 2),
-        call("test/state", 0),
-        call("test/state", 1),
     ]
     assert mqtt_client_mock.subscribe.mock_calls == expected
 
@@ -1384,28 +1468,74 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     assert mqtt_client_mock.unsubscribe.call_count == 0
 
     mqtt_client_mock.on_disconnect(None, None, 0)
-    with patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0):
-        mqtt_client_mock.on_connect(None, None, None, 0)
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    mqtt_client_mock.on_connect(None, None, None, 0)
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
+    await hass.async_block_till_done()
 
     expected.append(call("test/state", 1))
     assert mqtt_client_mock.subscribe.mock_calls == expected
 
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    "mqtt_config_entry_data",
+    [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_DISCOVERY: False}],
+)
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 1.0)
+@patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 1.0)
+async def test_subscribed_at_highest_qos(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    record_calls: MessageCallbackType,
+) -> None:
+    """Test the highest qos as assigned when subscribing to the same topic."""
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    # Fake that the client is connected
+    mqtt_mock().connected = True
+
+    await mqtt.async_subscribe(hass, "test/state", record_calls, qos=0)
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))  # cooldown
+    await hass.async_block_till_done()
+    assert mqtt_client_mock.subscribe.mock_calls == [
+        call("test/state", 0),
+    ]
+    mqtt_client_mock.reset_mock()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))  # cooldown
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    await mqtt.async_subscribe(hass, "test/state", record_calls, qos=1)
+    await mqtt.async_subscribe(hass, "test/state", record_calls, qos=2)
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))  # cooldown
+    await hass.async_block_till_done()
+    # the subscribtion with the highest QoS should survive
+    assert mqtt_client_mock.subscribe.mock_calls == [
+        call("test/state", 2),
+    ]
+
 
 async def test_reload_entry_with_restored_subscriptions(
     hass: HomeAssistant,
-    tmp_path: Path,
     mqtt_client_mock: MqttMockPahoClient,
     record_calls: MessageCallbackType,
     calls: list[ReceiveMessage],
 ) -> None:
     """Test reloading the config entry with with subscriptions restored."""
-
+    # Setup the MQTT entry
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
     entry.add_to_hass(hass)
     mqtt_client_mock.connect.return_value = 0
-    assert await mqtt.async_setup_entry(hass, entry)
-    await hass.async_block_till_done()
+    with patch("homeassistant.config.load_yaml_config_file", return_value={}):
+        await entry.async_setup(hass)
 
     await mqtt.async_subscribe(hass, "test-topic", record_calls)
     await mqtt.async_subscribe(hass, "wild/+/card", record_calls)
@@ -1422,10 +1552,10 @@ async def test_reload_entry_with_restored_subscriptions(
     calls.clear()
 
     # Reload the entry
-    config_yaml_new = {}
-    await help_test_entry_reload_with_new_config(hass, tmp_path, config_yaml_new)
-
-    await hass.async_block_till_done()
+    with patch("homeassistant.config.load_yaml_config_file", return_value={}):
+        assert await hass.config_entries.async_reload(entry.entry_id)
+        assert entry.state is ConfigEntryState.LOADED
+        await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "test-topic", "test-payload2")
     async_fire_mqtt_message(hass, "wild/any/card", "wild-card-payload2")
@@ -1439,10 +1569,10 @@ async def test_reload_entry_with_restored_subscriptions(
     calls.clear()
 
     # Reload the entry again
-    config_yaml_new = {}
-    await help_test_entry_reload_with_new_config(hass, tmp_path, config_yaml_new)
-
-    await hass.async_block_till_done()
+    with patch("homeassistant.config.load_yaml_config_file", return_value={}):
+        assert await hass.config_entries.async_reload(entry.entry_id)
+        assert entry.state is ConfigEntryState.LOADED
+        await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "test-topic", "test-payload3")
     async_fire_mqtt_message(hass, "wild/any/card", "wild-card-payload3")
@@ -1455,11 +1585,97 @@ async def test_reload_entry_with_restored_subscriptions(
     assert calls[1].payload == "wild-card-payload3"
 
 
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 2)
+@patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 2)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 2)
+async def test_canceling_debouncer_on_shutdown(
+    hass: HomeAssistant,
+    record_calls: MessageCallbackType,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+) -> None:
+    """Test canceling the debouncer when HA shuts down."""
+
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+
+    # Fake that the client is connected
+    mqtt_mock().connected = True
+
+    await mqtt.async_subscribe(hass, "test/state1", record_calls)
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=0.2))
+    await hass.async_block_till_done()
+
+    await mqtt.async_subscribe(hass, "test/state2", record_calls)
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=0.2))
+    await hass.async_block_till_done()
+
+    await mqtt.async_subscribe(hass, "test/state3", record_calls)
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=0.2))
+    await hass.async_block_till_done()
+
+    await mqtt.async_subscribe(hass, "test/state4", record_calls)
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=0.2))
+    await hass.async_block_till_done()
+
+    await mqtt.async_subscribe(hass, "test/state5", record_calls)
+
+    mqtt_client_mock.subscribe.assert_not_called()
+
+    # Stop HA so the scheduled task will be canceled
+    hass.bus.fire(EVENT_HOMEASSISTANT_STOP)
+    # mock disconnect status
+    mqtt_client_mock.on_disconnect(None, None, 0)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
+    await hass.async_block_till_done()
+    mqtt_client_mock.subscribe.assert_not_called()
+
+
+async def test_canceling_debouncer_normal(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test canceling the debouncer before completion."""
+
+    async def _async_myjob() -> None:
+        await asyncio.sleep(1.0)
+
+    debouncer = EnsureJobAfterCooldown(0.0, _async_myjob)
+    debouncer.async_schedule()
+    await asyncio.sleep(0.01)
+    assert debouncer._task is not None
+    await debouncer.async_cleanup()
+    assert debouncer._task is None
+
+
+async def test_canceling_debouncer_throws(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test canceling the debouncer when HA shuts down."""
+
+    async def _async_myjob() -> None:
+        await asyncio.sleep(1.0)
+
+    debouncer = EnsureJobAfterCooldown(0.0, _async_myjob)
+    debouncer.async_schedule()
+    await asyncio.sleep(0.01)
+    assert debouncer._task is not None
+    # let debouncer._task fail by mocking it
+    with patch.object(debouncer, "_task") as task:
+        task.cancel = MagicMock(return_value=True)
+        await debouncer.async_cleanup()
+        assert "Error cleaning up task" in caplog.text
+        await hass.async_block_till_done()
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
+        await hass.async_block_till_done()
+
+
 async def test_initial_setup_logs_error(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     mqtt_client_mock: MqttMockPahoClient,
-    empty_mqtt_config: Path,
 ) -> None:
     """Test for setup failure if initial client connection fails."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
@@ -1531,21 +1747,30 @@ async def test_publish_error(
         assert "Failed to connect to MQTT server: Out of memory." in caplog.text
 
 
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
 async def test_subscribe_error(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     mqtt_client_mock: MqttMockPahoClient,
     record_calls: MessageCallbackType,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test publish error."""
     await mqtt_mock_entry_no_yaml_config()
     mqtt_client_mock.on_connect(mqtt_client_mock, None, None, 0)
     await hass.async_block_till_done()
-    with pytest.raises(HomeAssistantError):
-        # simulate client is not connected error before subscribing
-        mqtt_client_mock.subscribe.side_effect = lambda *args: (4, None)
-        await mqtt.async_subscribe(hass, "some-topic", record_calls)
+    await hass.async_block_till_done()
+    mqtt_client_mock.reset_mock()
+    # simulate client is not connected error before subscribing
+    mqtt_client_mock.subscribe.side_effect = lambda *args: (4, None)
+    await mqtt.async_subscribe(hass, "some-topic", record_calls)
+    while mqtt_client_mock.subscribe.call_count == 0:
         await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    assert (
+        "Error talking to MQTT: The client is not currently connected." in caplog.text
+    )
 
 
 async def test_handle_message_callback(
@@ -1574,55 +1799,6 @@ async def test_handle_message_callback(
     assert callbacks[0].payload == "test-payload"
 
 
-async def test_setup_override_configuration(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, tmp_path: Path
-) -> None:
-    """Test override setup from configuration entry."""
-    calls_username_password_set = []
-
-    def mock_usename_password_set(username: str, password: str) -> None:
-        calls_username_password_set.append((username, password))
-
-    # Mock password setup from config
-    config = {
-        "username": "someuser",
-        "password": "someyamlconfiguredpassword",
-        "protocol": "3.1",
-    }
-    new_yaml_config_file = tmp_path / "configuration.yaml"
-    new_yaml_config = yaml.dump({mqtt.DOMAIN: config})
-    new_yaml_config_file.write_text(new_yaml_config)
-    assert new_yaml_config_file.read_text() == new_yaml_config
-
-    with patch.object(hass_config, "YAML_CONFIG_FILE", new_yaml_config_file):
-        # Mock config entry
-        entry = MockConfigEntry(
-            domain=mqtt.DOMAIN,
-            data={mqtt.CONF_BROKER: "test-broker", "password": "somepassword"},
-        )
-        entry.add_to_hass(hass)
-
-        with patch("paho.mqtt.client.Client") as mock_client:
-            mock_client().username_pw_set = mock_usename_password_set
-            mock_client.on_connect(return_value=0)
-            await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-            await entry.async_setup(hass)
-            await hass.async_block_till_done()
-
-            assert (
-                "Deprecated configuration settings found in configuration.yaml. "
-                "These settings from your configuration entry will override:"
-                in caplog.text
-            )
-
-            # Check if the protocol was set to 3.1 from configuration.yaml
-            assert mock_client.call_args[1]["protocol"] == 3
-
-            # Check if the password override worked
-            assert calls_username_password_set[0][0] == "someuser"
-            assert calls_username_password_set[0][1] == "somepassword"
-
-
 @patch("homeassistant.components.mqtt.PLATFORMS", [])
 async def test_setup_manual_mqtt_with_platform_key(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
@@ -1637,8 +1813,7 @@ async def test_setup_manual_mqtt_with_platform_key(
             }
         }
     }
-    with pytest.raises(AssertionError):
-        await help_test_setup_manual_entity_from_yaml(hass, config)
+    help_test_validate_platform_config(hass, config)
     assert (
         "Invalid config for [mqtt]: [platform] is an invalid option for [mqtt]"
         in caplog.text
@@ -1651,8 +1826,7 @@ async def test_setup_manual_mqtt_with_invalid_config(
 ) -> None:
     """Test set up a manual MQTT item with an invalid config."""
     config = {mqtt.DOMAIN: {"light": {"name": "test"}}}
-    with pytest.raises(AssertionError):
-        await help_test_setup_manual_entity_from_yaml(hass, config)
+    help_test_validate_platform_config(hass, config)
     assert (
         "Invalid config for [mqtt]: required key not provided @ data['mqtt']['light'][0]['command_topic']."
         " Got None. (See ?, line ?)" in caplog.text
@@ -1665,31 +1839,48 @@ async def test_setup_manual_mqtt_empty_platform(
 ) -> None:
     """Test set up a manual MQTT platform without items."""
     config: ConfigType = {mqtt.DOMAIN: {"light": []}}
-    await help_test_setup_manual_entity_from_yaml(hass, config)
+    help_test_validate_platform_config(hass, config)
     assert "voluptuous.error.MultipleInvalid" not in caplog.text
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [])
+@pytest.mark.parametrize(
+    ("mqtt_config_entry_data", "protocol"),
+    [
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                mqtt.CONF_PROTOCOL: "3.1",
+            },
+            3,
+        ),
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                mqtt.CONF_PROTOCOL: "3.1.1",
+            },
+            4,
+        ),
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                mqtt.CONF_PROTOCOL: "5",
+            },
+            5,
+        ),
+    ],
+)
 async def test_setup_mqtt_client_protocol(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    protocol: int,
 ) -> None:
     """Test MQTT client protocol setup."""
     with patch("paho.mqtt.client.Client") as mock_client:
-        assert await async_setup_component(
-            hass,
-            mqtt.DOMAIN,
-            {
-                mqtt.DOMAIN: {
-                    mqtt.config_integration.CONF_PROTOCOL: "3.1",
-                }
-            },
-        )
-        mock_client.on_connect(return_value=0)
-        await hass.async_block_till_done()
-        await mqtt_mock_entry_with_yaml_config()
+        await mqtt_mock_entry_no_yaml_config()
 
-        # check if protocol setup was correctly
-        assert mock_client.call_args[1]["protocol"] == 3
+    # check if protocol setup was correctly
+    assert mock_client.call_args[1]["protocol"] == protocol
 
 
 @patch("homeassistant.components.mqtt.client.TIMEOUT_ACK", 0.2)
@@ -1755,18 +1946,20 @@ async def test_setup_raises_config_entry_not_ready_if_no_connect_broker(
 
 
 @pytest.mark.parametrize(
-    ("config", "insecure_param"),
+    ("mqtt_config_entry_data", "insecure_param"),
     [
-        ({"certificate": "auto"}, "not set"),
-        ({"certificate": "auto", "tls_insecure": False}, False),
-        ({"certificate": "auto", "tls_insecure": True}, True),
+        ({"broker": "test-broker", "certificate": "auto"}, "not set"),
+        (
+            {"broker": "test-broker", "certificate": "auto", "tls_insecure": False},
+            False,
+        ),
+        ({"broker": "test-broker", "certificate": "auto", "tls_insecure": True}, True),
     ],
 )
 @patch("homeassistant.components.mqtt.PLATFORMS", [])
 async def test_setup_uses_certificate_on_certificate_set_to_auto_and_insecure(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    config: ConfigType,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     insecure_param: bool | str,
 ) -> None:
     """Test setup uses bundled certs when certificate is set to auto and insecure."""
@@ -1784,48 +1977,41 @@ async def test_setup_uses_certificate_on_certificate_set_to_auto_and_insecure(
     with patch("paho.mqtt.client.Client") as mock_client:
         mock_client().tls_set = mock_tls_set
         mock_client().tls_insecure_set = mock_tls_insecure_set
-        assert await async_setup_component(
-            hass,
-            mqtt.DOMAIN,
-            {mqtt.DOMAIN: config},
-        )
+        await mqtt_mock_entry_no_yaml_config()
         await hass.async_block_till_done()
-        await mqtt_mock_entry_with_yaml_config()
 
-        assert calls
+    assert calls
 
-        import certifi
+    import certifi
 
-        expected_certificate = certifi.where()
-        assert calls[0][0] == expected_certificate
+    expected_certificate = certifi.where()
+    assert calls[0][0] == expected_certificate
 
-        # test if insecure is set
-        assert insecure_check["insecure"] == insecure_param
+    # test if insecure is set
+    assert insecure_check["insecure"] == insecure_param
 
 
+@pytest.mark.parametrize(
+    "mqtt_config_entry_data",
+    [
+        {
+            mqtt.CONF_BROKER: "mock-broker",
+            mqtt.CONF_CERTIFICATE: "auto",
+        }
+    ],
+)
 async def test_tls_version(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test setup defaults for tls."""
-    calls = []
-
-    def mock_tls_set(
-        certificate, certfile=None, keyfile=None, tls_version=None
-    ) -> None:
-        calls.append((certificate, certfile, keyfile, tls_version))
-
-    with patch("paho.mqtt.client.Client") as mock_client:
-        mock_client().tls_set = mock_tls_set
-        assert await async_setup_component(
-            hass,
-            mqtt.DOMAIN,
-            {mqtt.DOMAIN: {"certificate": "auto"}},
-        )
-        await hass.async_block_till_done()
-        await mqtt_mock_entry_with_yaml_config()
-
-        assert calls
-        assert calls[0][3] == ssl.PROTOCOL_TLS_CLIENT
+    await mqtt_mock_entry_no_yaml_config()
+    await hass.async_block_till_done()
+    assert (
+        mqtt_client_mock.tls_set.mock_calls[0][2]["tls_version"]
+        == ssl.PROTOCOL_TLS_CLIENT
+    )
 
 
 @pytest.mark.parametrize(
@@ -2072,70 +2258,29 @@ async def test_mqtt_subscribes_topics_on_connect(
     mqtt_client_mock.subscribe.assert_any_call("still/pending", 1)
 
 
-async def test_setup_entry_with_config_override(
+async def test_default_entry_setting_are_applied(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-) -> None:
-    """Test if the MQTT component loads with no config and config entry can be setup."""
-    data = (
-        '{ "device":{"identifiers":["0AFFD2"]},'
-        '  "state_topic": "foobar/sensor",'
-        '  "unique_id": "unique" }'
-    )
-
-    # mqtt present in yaml config
-    assert await async_setup_component(hass, mqtt.DOMAIN, {})
-    await hass.async_block_till_done()
-
-    # User sets up a config entry
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
-    entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Discover a device to verify the entry was setup correctly
-    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
-    await hass.async_block_till_done()
-
-    device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
-    assert device_entry is not None
-
-
-async def test_update_incomplete_entry(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     mqtt_client_mock: MqttMockPahoClient,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test if the MQTT component loads when config entry data is incomplete."""
+    """Test if the MQTT component loads when config entry data not has all default settings."""
     data = (
         '{ "device":{"identifiers":["0AFFD2"]},'
         '  "state_topic": "foobar/sensor",'
         '  "unique_id": "unique" }'
     )
 
-    # Config entry data is incomplete
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={"port": 1234})
-    entry.add_to_hass(hass)
-    # Mqtt present in yaml config
-    config = {"broker": "yaml_broker"}
-    await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
+    # Config entry data is incomplete but valid according the schema
+    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    entry.data = {"broker": "test-broker", "port": 1234}
+    await mqtt_mock_entry_no_yaml_config()
     await hass.async_block_till_done()
 
-    # Config entry data should now be updated
-    assert dict(entry.data) == {
-        "port": 1234,
-        "discovery_prefix": "homeassistant",
-        "broker": "yaml_broker",
-    }
-    # Warnings about broker deprecated, but not about other keys with default values
-    assert (
-        "The 'broker' option is deprecated, please remove it from your configuration"
-        in caplog.text
-    )
-
     # Discover a device to verify the entry was setup correctly
+    # The discovery prefix should be the default
+    # And that the default settings were merged
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
     await hass.async_block_till_done()
 
@@ -2149,12 +2294,15 @@ async def test_fail_no_broker(
     mqtt_client_mock: MqttMockPahoClient,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test if the MQTT component loads when broker configuration is missing."""
+    """Test the MQTT entry setup when broker configuration is missing."""
     # Config entry data is incomplete
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={})
     entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(entry.entry_id)
-    assert "MQTT broker is not configured, please configure it" in caplog.text
+    assert (
+        "The MQTT config entry is invalid, please correct it: required key not provided @ data['broker']"
+        in caplog.text
+    )
 
 
 @pytest.mark.no_fail_on_log_exception
@@ -2979,7 +3127,7 @@ async def test_subscribe_connection_status(
 # This warning and test is to be removed from HA core 2023.6
 async def test_one_deprecation_warning_per_platform(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a deprecation warning is is logged once per platform."""
@@ -2990,8 +3138,6 @@ async def test_one_deprecation_warning_per_platform(
     config2 = copy.deepcopy(config)
     config2["name"] = "test2"
     await async_setup_component(hass, platform, {platform: [config1, config2]})
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
     count = 0
     for record in caplog.records:
         if record.levelname == "ERROR" and (
@@ -3002,19 +3148,11 @@ async def test_one_deprecation_warning_per_platform(
     assert count == 1
 
 
-async def test_config_schema_validation(hass: HomeAssistant) -> None:
-    """Test invalid platform options in the config schema do not pass the config validation."""
-    config = {"mqtt": {"sensor": [{"some_illegal_topic": "mystate/topic/path"}]}}
-    with pytest.raises(vol.MultipleInvalid):
-        CONFIG_SCHEMA(config)
-
-
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
 async def test_unload_config_entry(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
     mqtt_client_mock: MqttMockPahoClient,
-    tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test unloading the MQTT entry."""
@@ -3028,36 +3166,14 @@ async def test_unload_config_entry(
     mqtt_client_mock.reset_mock()
     mqtt.publish(hass, "just_in_time", "published", qos=0, retain=False)
 
-    new_yaml_config_file = tmp_path / "configuration.yaml"
-    new_yaml_config = yaml.dump({})
-    new_yaml_config_file.write_text(new_yaml_config)
-    with patch.object(hass_config, "YAML_CONFIG_FILE", new_yaml_config_file):
-        assert await hass.config_entries.async_unload(mqtt_config_entry.entry_id)
-        new_mqtt_config_entry = mqtt_config_entry
-        mqtt_client_mock.publish.assert_any_call("just_in_time", "published", 0, False)
-        assert new_mqtt_config_entry.state is ConfigEntryState.NOT_LOADED
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_unload(mqtt_config_entry.entry_id)
+    new_mqtt_config_entry = mqtt_config_entry
+    mqtt_client_mock.publish.assert_any_call("just_in_time", "published", 0, False)
+    assert new_mqtt_config_entry.state is ConfigEntryState.NOT_LOADED
+    await hass.async_block_till_done()
     assert not hass.services.has_service(mqtt.DOMAIN, "dump")
     assert not hass.services.has_service(mqtt.DOMAIN, "publish")
     assert "No ACK from MQTT server" not in caplog.text
-
-
-@patch("homeassistant.components.mqtt.PLATFORMS", [])
-async def test_setup_with_disabled_entry(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test setting up the platform with a disabled config entry."""
-    # Try to setup the platform with a disabled config entry
-    config_entry = MockConfigEntry(
-        domain=mqtt.DOMAIN, data={}, disabled_by=ConfigEntryDisabler.USER
-    )
-    config_entry.add_to_hass(hass)
-
-    config: ConfigType = {mqtt.DOMAIN: {}}
-    await async_setup_component(hass, mqtt.DOMAIN, config)
-    await hass.async_block_till_done()
-
-    assert "MQTT will be not available until the config entry is enabled" in caplog.text
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [])
@@ -3074,131 +3190,108 @@ async def test_publish_or_subscribe_without_valid_config_entry(
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
-async def test_reload_entry_with_new_config(
-    hass: HomeAssistant, tmp_path: Path
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            "mqtt": {
+                "light": [
+                    {"name": "test_new_modern", "command_topic": "test-topic_new"}
+                ]
+            }
+        }
+    ],
+)
+async def test_disabling_and_enabling_entry(
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test reloading the config entry with a new yaml config."""
-    config_old = {
-        "mqtt": {"light": [{"name": "test_old1", "command_topic": "test-topic_old"}]}
-    }
-    config_yaml_new = {
-        "mqtt": {
-            "light": [{"name": "test_new_modern", "command_topic": "test-topic_new"}]
-        },
-    }
-    await help_test_setup_manual_entity_from_yaml(hass, config_old)
-    assert hass.states.get("light.test_old1") is not None
+    """Test disabling and enabling the config entry."""
+    await mqtt_mock_entry_no_yaml_config()
+    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    assert entry.state is ConfigEntryState.LOADED
+    # Late discovery of a light
+    config = '{"name": "abc", "command_topic": "test-topic"}'
+    async_fire_mqtt_message(hass, "homeassistant/light/abc/config", config)
 
-    await help_test_entry_reload_with_new_config(hass, tmp_path, config_yaml_new)
-    assert hass.states.get("light.test_old1") is None
+    # Disable MQTT config entry
+    await hass.config_entries.async_set_disabled_by(
+        entry.entry_id, ConfigEntryDisabler.USER
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    assert (
+        "MQTT integration is disabled, skipping setup of discovered item MQTT light"
+        in caplog.text
+    )
+
+    new_mqtt_config_entry = entry
+    assert new_mqtt_config_entry.state is ConfigEntryState.NOT_LOADED
+
+    # Enable the entry again
+    await hass.config_entries.async_set_disabled_by(entry.entry_id, None)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    new_mqtt_config_entry = entry
+    assert new_mqtt_config_entry.state is ConfigEntryState.LOADED
+
     assert hass.states.get("light.test_new_modern") is not None
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
-async def test_disabling_and_enabling_entry(
-    hass: HomeAssistant, tmp_path: Path
-) -> None:
-    """Test disabling and enabling the config entry."""
-    config_old = {
-        "mqtt": {"light": [{"name": "test_old1", "command_topic": "test-topic_old"}]}
-    }
-    config_yaml_new = {
-        "mqtt": {
-            "light": [{"name": "test_new_modern", "command_topic": "test-topic_new"}]
-        },
-    }
-    await help_test_setup_manual_entity_from_yaml(hass, config_old)
-    assert hass.states.get("light.test_old1") is not None
-
-    mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-
-    assert mqtt_config_entry.state is ConfigEntryState.LOADED
-    new_yaml_config_file = tmp_path / "configuration.yaml"
-    new_yaml_config = yaml.dump(config_yaml_new)
-    new_yaml_config_file.write_text(new_yaml_config)
-    assert new_yaml_config_file.read_text() == new_yaml_config
-
-    with patch.object(hass_config, "YAML_CONFIG_FILE", new_yaml_config_file), patch(
-        "paho.mqtt.client.Client"
-    ) as mock_client:
-        mock_client().connect = lambda *args: 0
-
-        # Late discovery of a light
-        config = '{"name": "abc", "command_topic": "test-topic"}'
-        async_fire_mqtt_message(hass, "homeassistant/light/abc/config", config)
-
-        # Disable MQTT config entry
-        await hass.config_entries.async_set_disabled_by(
-            mqtt_config_entry.entry_id, ConfigEntryDisabler.USER
-        )
-
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
-
-        new_mqtt_config_entry = mqtt_config_entry
-        assert new_mqtt_config_entry.state is ConfigEntryState.NOT_LOADED
-        assert hass.states.get("light.test_old1") is None
-
-        # Enable the entry again
-        await hass.config_entries.async_set_disabled_by(
-            mqtt_config_entry.entry_id, None
-        )
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
-        new_mqtt_config_entry = mqtt_config_entry
-        assert new_mqtt_config_entry.state is ConfigEntryState.LOADED
-
-        assert hass.states.get("light.test_old1") is None
-        assert hass.states.get("light.test_new_modern") is not None
-
-
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
 @pytest.mark.parametrize(
-    ("config", "unique"),
+    ("hass_config", "unique"),
     [
         (
-            [
-                {
-                    "name": "test1",
-                    "unique_id": "very_not_unique_deadbeef",
-                    "command_topic": "test-topic_unique",
-                },
-                {
-                    "name": "test2",
-                    "unique_id": "very_not_unique_deadbeef",
-                    "command_topic": "test-topic_unique",
-                },
-            ],
+            {
+                mqtt.DOMAIN: {
+                    "light": [
+                        {
+                            "name": "test1",
+                            "unique_id": "very_not_unique_deadbeef",
+                            "command_topic": "test-topic_unique",
+                        },
+                        {
+                            "name": "test2",
+                            "unique_id": "very_not_unique_deadbeef",
+                            "command_topic": "test-topic_unique",
+                        },
+                    ]
+                }
+            },
             False,
         ),
         (
-            [
-                {
-                    "name": "test1",
-                    "unique_id": "very_unique_deadbeef1",
-                    "command_topic": "test-topic_unique",
-                },
-                {
-                    "name": "test2",
-                    "unique_id": "very_unique_deadbeef2",
-                    "command_topic": "test-topic_unique",
-                },
-            ],
+            {
+                mqtt.DOMAIN: {
+                    "light": [
+                        {
+                            "name": "test1",
+                            "unique_id": "very_unique_deadbeef1",
+                            "command_topic": "test-topic_unique",
+                        },
+                        {
+                            "name": "test2",
+                            "unique_id": "very_unique_deadbeef2",
+                            "command_topic": "test-topic_unique",
+                        },
+                    ]
+                }
+            },
             True,
         ),
     ],
 )
 async def test_setup_manual_items_with_unique_ids(
     hass: HomeAssistant,
-    tmp_path: Path,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
-    config: ConfigType,
     unique: bool,
 ) -> None:
     """Test setup manual items is generating unique id's."""
-    await help_test_setup_manual_entity_from_yaml(
-        hass, {mqtt.DOMAIN: {"light": config}}
-    )
+    await mqtt_mock_entry_no_yaml_config()
 
     assert hass.states.get("light.test1") is not None
     assert (hass.states.get("light.test2") is not None) == unique
@@ -3206,16 +3299,20 @@ async def test_setup_manual_items_with_unique_ids(
 
     # reload and assert again
     caplog.clear()
-    await help_test_entry_reload_with_new_config(
-        hass, tmp_path, {"mqtt": {"light": config}}
+    await hass.services.async_call(
+        "mqtt",
+        SERVICE_RELOAD,
+        {},
+        blocking=True,
     )
+    await hass.async_block_till_done()
 
     assert hass.states.get("light.test1") is not None
     assert (hass.states.get("light.test2") is not None) == unique
     assert bool("Platform mqtt does not generate unique IDs." in caplog.text) != unique
 
 
-async def test_remove_unknown_conf_entry_options(
+async def test_fail_with_unknown_conf_entry_options(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
     caplog: pytest.LogCaptureFixture,
@@ -3234,42 +3331,43 @@ async def test_remove_unknown_conf_entry_options(
     )
 
     entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id) is False
 
-    assert mqtt.client.CONF_PROTOCOL not in entry.data
-    assert (
-        "The following unsupported configuration options were removed from the "
-        "MQTT config entry: {'old_option'}"
-    ) in caplog.text
+    assert ("extra keys not allowed @ data['old_option']") in caplog.text
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            "mqtt": {
+                "light": [
+                    {
+                        "name": "test_manual",
+                        "unique_id": "test_manual_unique_id123",
+                        "command_topic": "test-topic_manual",
+                    }
+                ]
+            }
+        }
+    ],
+)
 async def test_link_config_entry(
-    hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test manual and dynamically setup entities are linked to the config entry."""
-    config_manual = {
-        "mqtt": {
-            "light": [
-                {
-                    "name": "test_manual",
-                    "unique_id": "test_manual_unique_id123",
-                    "command_topic": "test-topic_manual",
-                }
-            ]
-        }
-    }
+    # set up manual item
+    await mqtt_mock_entry_no_yaml_config()
+
+    # set up item through discovery
     config_discovery = {
         "name": "test_discovery",
         "unique_id": "test_discovery_unique456",
         "command_topic": "test-topic_discovery",
     }
-
-    # set up manual item
-    await help_test_setup_manual_entity_from_yaml(hass, config_manual)
-
-    # set up item through discovery
     async_fire_mqtt_message(
         hass, "homeassistant/light/bla/config", json.dumps(config_discovery)
     )
@@ -3296,7 +3394,10 @@ async def test_link_config_entry(
     assert _check_entities() == 2
 
     # reload entry and assert again
-    await help_test_entry_reload_with_new_config(hass, tmp_path, config_manual)
+    with patch("paho.mqtt.client.Client"):
+        await hass.config_entries.async_reload(mqtt_config_entry.entry_id)
+        await hass.async_block_till_done()
+
     # manual set up item should remain
     assert _check_entities() == 1
     # set up item through discovery
@@ -3307,20 +3408,11 @@ async def test_link_config_entry(
     assert _check_entities() == 2
 
     # reload manual configured items and assert again
-    await help_test_reload_with_config(hass, caplog, tmp_path, config_manual)
+    await hass.services.async_call(
+        "mqtt",
+        SERVICE_RELOAD,
+        {},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
     assert _check_entities() == 2
-
-
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
-@pytest.mark.parametrize(
-    "config_manual",
-    [
-        {"mqtt": {"sensor": []}},
-        {"mqtt": {"broker": "test"}},
-    ],
-)
-async def test_setup_manual_entity_from_yaml(
-    hass: HomeAssistant, config_manual: ConfigType
-) -> None:
-    """Test setup with empty platform keys."""
-    await help_test_setup_manual_entity_from_yaml(hass, config_manual)

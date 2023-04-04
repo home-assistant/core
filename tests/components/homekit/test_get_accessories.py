@@ -160,6 +160,15 @@ def test_types(type_name, entity_id, state, attrs, config) -> None:
                 )
             },
         ),
+        (
+            "Door",
+            "cover.door",
+            "open",
+            {
+                ATTR_DEVICE_CLASS: "door",
+                ATTR_SUPPORTED_FEATURES: cover.SUPPORT_SET_POSITION,
+            },
+        ),
     ],
 )
 def test_type_covers(type_name, entity_id, state, attrs) -> None:

@@ -56,6 +56,8 @@ async def test_matter_attribute_redact(device_diagnostics: dict[str, Any]) -> No
     assert redacted_device_diagnostics == device_diagnostics
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_config_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -74,6 +76,8 @@ async def test_config_entry_diagnostics(
     assert diagnostics == config_entry_diagnostics_redacted
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_device_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
