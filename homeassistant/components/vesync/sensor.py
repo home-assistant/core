@@ -75,6 +75,7 @@ def ha_dev_type(device):
 FILTER_LIFE_SUPPORTED = ["LV-PUR131S", "Core200S", "Core300S", "Core400S", "Core600S"]
 AIR_QUALITY_SUPPORTED = ["LV-PUR131S", "Core300S", "Core400S", "Core600S"]
 PM25_SUPPORTED = ["Core300S", "Core400S", "Core600S"]
+HUMIDITY_SUPPORTED = ["LUH-A602S-WUS"]
 
 SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
     VeSyncSensorEntityDescription(
@@ -100,6 +101,15 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.details["air_quality_value"],
         exists_fn=lambda device: sku_supported(device, PM25_SUPPORTED),
+    ),
+    VeSyncSensorEntityDescription(
+        key="humidity",
+        name="Humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda device: device.details["humidity"],
+        exists_fn=lambda device: sku_supported(device, HUMIDITY_SUPPORTED),
     ),
     VeSyncSensorEntityDescription(
         key="power",

@@ -6,6 +6,7 @@ SERVICE_UPDATE_DEVS = "update_devices"
 
 VS_SWITCHES = "switches"
 VS_FANS = "fans"
+VS_HUMIDIFIERS = "humidifiers"
 VS_LIGHTS = "lights"
 VS_SENSORS = "sensors"
 VS_MANAGER = "manager"
@@ -36,4 +37,5 @@ SKU_TO_BASE_DEVICE = {
     "LAP-C601S-WUS": "Core600S",  # Alt ID Model Core600S
     "LAP-C601S-WUSR": "Core600S",  # Alt ID Model Core600S
     "LAP-C601S-WEU": "Core600S",  # Alt ID Model Core600S
+    "LUH-A602S-WUS": "LUH-A602S-WUS",
 }

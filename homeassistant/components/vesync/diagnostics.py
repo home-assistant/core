@@ -23,17 +23,22 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     manager: VeSync = hass.data[DOMAIN][VS_MANAGER]
 
+    fans = [f for f in manager.fans if not hasattr(f, "humidity")]
+    humidifiers = [f for f in manager.fans if hasattr(f, "humidity")]
+
     data = {
         DOMAIN: {
             "bulb_count": len(manager.bulbs),
-            "fan_count": len(manager.fans),
+            "fan_count": len(fans),
+            "humidifier_count": len(humidifiers),
             "outlets_count": len(manager.outlets),
             "switch_count": len(manager.switches),
             "timezone": manager.time_zone,
         },
         "devices": {
             "bulbs": [_redact_device_values(device) for device in manager.bulbs],
-            "fans": [_redact_device_values(device) for device in manager.fans],
+            "fans": [_redact_device_values(device) for device in fans],
+            "humidifiers": [_redact_device_values(device) for device in humidifiers],
             "outlets": [_redact_device_values(device) for device in manager.outlets],
             "switches": [_redact_device_values(device) for device in manager.switches],
         },

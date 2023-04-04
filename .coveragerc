@@ -1384,6 +1384,7 @@ omit =
     homeassistant/components/versasense/*
     homeassistant/components/vesync/common.py
     homeassistant/components/vesync/fan.py
+    homeassistant/components/vesync/humidifier.py
     homeassistant/components/vesync/light.py
     homeassistant/components/vesync/sensor.py
     homeassistant/components/vesync/switch.py

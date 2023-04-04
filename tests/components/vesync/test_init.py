@@ -8,6 +8,7 @@ from homeassistant.components.vesync import async_setup_entry
 from homeassistant.components.vesync.const import (
     DOMAIN,
     VS_FANS,
+    VS_HUMIDIFIERS,
     VS_LIGHTS,
     VS_MANAGER,
     VS_SENSORS,
@@ -69,6 +70,7 @@ async def test_async_setup_entry__no_devices(
     assert hass.data[DOMAIN][VS_MANAGER] == manager
     assert not hass.data[DOMAIN][VS_SWITCHES]
     assert not hass.data[DOMAIN][VS_FANS]
+    assert not hass.data[DOMAIN][VS_HUMIDIFIERS]
     assert not hass.data[DOMAIN][VS_LIGHTS]
     assert not hass.data[DOMAIN][VS_SENSORS]
 
@@ -99,5 +101,37 @@ async def test_async_setup_entry__loads_fans(
     assert hass.data[DOMAIN][VS_MANAGER] == manager
     assert not hass.data[DOMAIN][VS_SWITCHES]
     assert hass.data[DOMAIN][VS_FANS] == [fan]
+    assert not hass.data[DOMAIN][VS_HUMIDIFIERS]
     assert not hass.data[DOMAIN][VS_LIGHTS]
     assert hass.data[DOMAIN][VS_SENSORS] == [fan]
+
+
+async def test_async_setup_entry__loads_humidifiers(
+    hass: HomeAssistant, config_entry: ConfigEntry, manager: VeSync, humidifier
+) -> None:
+    """Test setup connects to vesync and loads humidifier platform."""
+    humidifiers = [humidifier]
+    manager.fans = humidifiers
+    manager._dev_list = {
+        "humidifiers": humidifiers,
+    }
+
+    with patch.object(
+        hass.config_entries, "async_forward_entry_setups"
+    ) as setups_mock, patch.object(
+        hass.config_entries, "async_forward_entry_setup"
+    ) as setup_mock:
+        assert await async_setup_entry(hass, config_entry)
+        # Assert platforms loaded
+        await hass.async_block_till_done()
+        assert setups_mock.call_count == 1
+        assert setups_mock.call_args.args[0] == config_entry
+        assert setups_mock.call_args.args[1] == [Platform.HUMIDIFIER, Platform.SENSOR]
+        assert setup_mock.call_count == 0
+    assert manager.login.call_count == 1
+    assert hass.data[DOMAIN][VS_MANAGER] == manager
+    assert not hass.data[DOMAIN][VS_SWITCHES]
+    assert not hass.data[DOMAIN][VS_FANS]
+    assert hass.data[DOMAIN][VS_HUMIDIFIERS] == [humidifier]
+    assert not hass.data[DOMAIN][VS_LIGHTS]
+    assert hass.data[DOMAIN][VS_SENSORS] == [humidifier]

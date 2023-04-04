@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 import pytest
 from pyvesync import VeSync
 from pyvesync.vesyncbulb import VeSyncBulb
-from pyvesync.vesyncfan import VeSyncAirBypass
+from pyvesync.vesyncfan import VeSyncAirBypass, VeSyncHumid200300S
 from pyvesync.vesyncoutlet import VeSyncOutlet
 from pyvesync.vesyncswitch import VeSyncSwitch
 
@@ -71,6 +71,13 @@ def manager_fixture() -> VeSync:
 def fan_fixture():
     """Create a mock VeSync fan fixture."""
     mock_fixture = Mock(VeSyncAirBypass)
+    return mock_fixture
+
+
+@pytest.fixture(name="humidifier")
+def humidifier_fixture():
+    """Create a mock VeSync humidifier fixture."""
+    mock_fixture = Mock(VeSyncHumid200300S)
     return mock_fixture
 
 
