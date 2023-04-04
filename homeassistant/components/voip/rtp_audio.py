@@ -1,5 +1,6 @@
-"""Utility for converting audio to RTP/OPUS packets."""
+"""Utility for converting audio to/from RTP + OPUS packets."""
 import audioop
+import logging
 from collections.abc import Iterable
 from dataclasses import dataclass
 import random
@@ -7,6 +8,8 @@ import struct
 from typing import Any
 
 import opuslib
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -151,7 +154,7 @@ class RtpOpusOutput:
 
     def reset(self):
         """Clear audio buffer and state."""
-        self._audio_buffer = b""
+        self._audio_buffer = bytes()
         self._resample_state = None
 
         # Recommended to start from random offsets to aid encryption
