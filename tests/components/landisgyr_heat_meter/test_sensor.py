@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import datetime
 from unittest.mock import patch
 
+import pytest
 import serial
 from syrupy import SnapshotAssertion
 
@@ -25,19 +26,49 @@ API_HEAT_METER_SERVICE = (
 class MockHeatMeterResponse:
     """Mock for HeatMeterResponse."""
 
-    heat_usage_gj: float
+    heat_usage_gj: float | None
+    heat_usage_mwh: float | None
     volume_usage_m3: float
-    heat_previous_year_gj: float
+    heat_previous_year_gj: float | None
+    heat_previous_year_mwh: float | None
     device_number: str
     meter_date_time: datetime.datetime
 
 
+@pytest.mark.parametrize(
+    "mock_heat_meter_response",
+    [
+        {
+            "heat_usage_gj": 123.0,
+            "heat_usage_mwh": None,
+            "volume_usage_m3": 456.0,
+            "heat_previous_year_gj": 111.0,
+            "heat_previous_year_mwh": None,
+            "device_number": "devicenr_789",
+            "meter_date_time": dt_util.as_utc(
+                datetime.datetime(2022, 5, 19, 19, 41, 17)
+            ),
+        },
+        {
+            "heat_usage_gj": None,
+            "heat_usage_mwh": 123.0,
+            "volume_usage_m3": 456.0,
+            "heat_previous_year_gj": None,
+            "heat_previous_year_mwh": 111.0,
+            "device_number": "devicenr_789",
+            "meter_date_time": dt_util.as_utc(
+                datetime.datetime(2022, 5, 19, 19, 41, 17)
+            ),
+        },
+    ],
+)
 @patch(API_HEAT_METER_SERVICE)
 async def test_create_sensors(
     mock_heat_meter,
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
+    mock_heat_meter_response,
 ) -> None:
     """Test sensor."""
     entry_data = {
@@ -48,13 +79,7 @@ async def test_create_sensors(
     mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
     mock_entry.add_to_hass(hass)
 
-    mock_heat_meter_response = MockHeatMeterResponse(
-        heat_usage_gj=123.0,
-        volume_usage_m3=456.0,
-        heat_previous_year_gj=111.0,
-        device_number="devicenr_789",
-        meter_date_time=dt_util.as_utc(datetime.datetime(2022, 5, 19, 19, 41, 17)),
-    )
+    mock_heat_meter_response = MockHeatMeterResponse(**mock_heat_meter_response)
 
     mock_heat_meter().read.return_value = mock_heat_meter_response
 
@@ -79,8 +104,10 @@ async def test_exception_on_polling(mock_heat_meter, hass: HomeAssistant) -> Non
     # First setup normally
     mock_heat_meter_response = MockHeatMeterResponse(
         heat_usage_gj=123.0,
+        heat_usage_mwh=None,
         volume_usage_m3=456.0,
         heat_previous_year_gj=111.0,
+        heat_previous_year_mwh=None,
         device_number="devicenr_789",
         meter_date_time=dt_util.as_utc(datetime.datetime(2022, 5, 19, 19, 41, 17)),
     )
@@ -106,8 +133,10 @@ async def test_exception_on_polling(mock_heat_meter, hass: HomeAssistant) -> Non
     # Now 'enable' and see if next poll succeeds
     mock_heat_meter_response = MockHeatMeterResponse(
         heat_usage_gj=124.0,
+        heat_usage_mwh=None,
         volume_usage_m3=457.0,
         heat_previous_year_gj=112.0,
+        heat_previous_year_mwh=None,
         device_number="devicenr_789",
         meter_date_time=dt_util.as_utc(datetime.datetime(2022, 5, 19, 20, 41, 17)),
     )

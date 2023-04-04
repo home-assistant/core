@@ -2,13 +2,18 @@
 from __future__ import annotations
 
 import functools
+from typing import Any
+
+import zigpy.types as t
+from zigpy.zcl.clusters.general import OnOff
+from zigpy.zcl.clusters.security import IasZone
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, Platform
+from homeassistant.const import STATE_ON, EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -116,10 +121,20 @@ class Occupancy(BinarySensor):
 
 @STRICT_MATCH(channel_names=CHANNEL_ON_OFF)
 class Opening(BinarySensor):
-    """ZHA BinarySensor."""
+    """ZHA OnOff BinarySensor."""
 
     SENSOR_ATTR = "on_off"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.OPENING
+
+    # Client/out cluster attributes aren't stored in the zigpy database, but are properly stored in the runtime cache.
+    # We need to manually restore the last state from the sensor state to the runtime cache for now.
+    @callback
+    def async_restore_last_state(self, last_state):
+        """Restore previous state to zigpy cache."""
+        self._channel.cluster.update_attribute(
+            OnOff.attributes_by_name[self.SENSOR_ATTR].id,
+            t.Bool.true if last_state.state == STATE_ON else t.Bool.false,
+        )
 
 
 @MULTI_MATCH(channel_names=CHANNEL_BINARY_INPUT)
@@ -141,10 +156,9 @@ class BinaryInput(BinarySensor):
     manufacturers="Philips",
     models={"SML001", "SML002"},
 )
-class Motion(BinarySensor):
-    """ZHA BinarySensor."""
+class Motion(Opening):
+    """ZHA OnOff BinarySensor with motion device class."""
 
-    SENSOR_ATTR = "on_off"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.MOTION
 
 
@@ -163,6 +177,36 @@ class IASZone(BinarySensor):
     def parse(value: bool | int) -> bool:
         """Parse the raw attribute into a bool state."""
         return BinarySensor.parse(value & 3)  # use only bit 0 and 1 for alarm state
+
+    # temporary code to migrate old IasZone sensors to update attribute cache state once
+    # remove in 2024.4.0
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return state attributes."""
+        return {"migrated_to_cache": True}  # writing new state means we're migrated
+
+    # temporary migration code
+    @callback
+    def async_restore_last_state(self, last_state):
+        """Restore previous state."""
+        # trigger migration if extra state attribute is not present
+        if "migrated_to_cache" not in last_state.attributes:
+            self.migrate_to_zigpy_cache(last_state)
+
+    # temporary migration code
+    @callback
+    def migrate_to_zigpy_cache(self, last_state):
+        """Save old IasZone sensor state to attribute cache."""
+        # previous HA versions did not update the attribute cache for IasZone sensors, so do it once here
+        # a HA state write is triggered shortly afterwards and writes the "migrated_to_cache" extra state attribute
+        if last_state.state == STATE_ON:
+            migrated_state = IasZone.ZoneStatus.Alarm_1
+        else:
+            migrated_state = IasZone.ZoneStatus(0)
+
+        self._channel.cluster.update_attribute(
+            IasZone.attributes_by_name[self.SENSOR_ATTR].id, migrated_state
+        )
 
 
 @MULTI_MATCH(

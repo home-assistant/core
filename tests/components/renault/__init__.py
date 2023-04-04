@@ -92,7 +92,7 @@ def check_entities_unavailable(
     for expected_entity in expected_entities:
         entity_id = expected_entity[ATTR_ENTITY_ID]
         registry_entry = entity_registry.entities.get(entity_id)
-        assert registry_entry is not None
+        assert registry_entry is not None, f"{entity_id} not found in registry"
         assert registry_entry.unique_id == expected_entity[ATTR_UNIQUE_ID]
         state = hass.states.get(entity_id)
         assert state.state == STATE_UNAVAILABLE

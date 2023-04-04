@@ -1,6 +1,7 @@
 """Config flow for Frontier Silicon Media Player integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 from urllib.parse import urlparse
@@ -53,6 +54,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     _name: str
     _webfsapi_url: str
+    _reauth_entry: config_entries.ConfigEntry | None = None  # Only used in reauth flows
 
     async def async_step_import(self, import_info: dict[str, Any]) -> FlowResult:
         """Handle the import of legacy configuration.yaml entries."""
@@ -188,7 +190,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._async_create_entry()
 
         self._set_confirm_only()
-        return self.async_show_form(step_id="confirm")
+        return self.async_show_form(
+            step_id="confirm", description_placeholders={"name": self._name}
+        )
+
+    async def async_step_reauth(self, config: Mapping[str, Any]) -> FlowResult:
+        """Perform reauth upon an API authentication error."""
+        self._webfsapi_url = config[CONF_WEBFSAPI_URL]
+
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+
+        return await self.async_step_device_config()
 
     async def async_step_device_config(
         self, user_input: dict[str, Any] | None = None
@@ -218,6 +232,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception(exception)
             errors["base"] = "unknown"
         else:
+            if self._reauth_entry:
+                self.hass.config_entries.async_update_entry(
+                    self._reauth_entry,
+                    data={CONF_PIN: user_input[CONF_PIN]},
+                )
+                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
+
             unique_id = await afsapi.get_radio_id()
             await self.async_set_unique_id(unique_id, raise_on_progress=False)
             self._abort_if_unique_id_configured()
