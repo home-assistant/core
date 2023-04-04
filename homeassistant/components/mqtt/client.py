@@ -376,7 +376,7 @@ class EnsureJobAfterCooldown:
 class MQTT:
     """Home Assistant MQTT client."""
 
-    _mqttc: mqtt.Client = None  # type: ignore[assignment]
+    _mqttc: mqtt.Client
     _last_subscribe: float
     _mqtt_data: MqttData
 
