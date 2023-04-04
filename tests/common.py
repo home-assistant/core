@@ -1389,9 +1389,9 @@ async def assert_registries_and_states_for_config_entry(
         await hass.config_entries.async_reload(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    # Ensure entities states are correct
-    for ent in entity_entries:
-        assert hass.states.get(ent.entity_id) == snapshot(name=ent.entity_id)
+    # Ensure entity states are correct
+    states = [hass.states.get(ent.entity_id) for ent in entity_entries]
+    assert states == snapshot
 
 
 _SENTINEL = object()
