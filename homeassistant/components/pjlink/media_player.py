@@ -139,12 +139,14 @@ class PjLinkDevice(MediaPlayerEntity):
         self._port = port
         self._password = password
         self._encoding = encoding
-        self._unique_id = unique_id
+        self._source_name_mapping = {}
+        self._attr_name = name
         self._attr_is_volume_muted = False
         self._attr_state = MediaPlayerState.OFF
         self._attr_source = None
         self._attr_source_list = []
         self._attr_available = False
+        self._unique_id = unique_id
 
     def _force_off(self):
         self._attr_state = MediaPlayerState.OFF

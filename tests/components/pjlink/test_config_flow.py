@@ -3,14 +3,17 @@
 from unittest.mock import MagicMock, patch
 
 from pypjlink import Projector
+import pytest
 
 from homeassistant.components.pjlink.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 
 NO_AUTH_RESPONSE = "PJLINK 0\r"
+
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 def mock_projector():
@@ -63,6 +66,6 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
         "name": "new thing",
     }
 
-    registry = entity_registry.async_get(hass)
+    registry = er.async_get(hass)
     entry = registry.async_get("media_player.new_thing")
     assert entry.unique_id == entry.config_entry_id
