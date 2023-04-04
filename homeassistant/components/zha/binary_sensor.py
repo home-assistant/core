@@ -120,7 +120,7 @@ class Occupancy(BinarySensor):
 
 @STRICT_MATCH(channel_names=CHANNEL_ON_OFF)
 class Opening(BinarySensor):
-    """ZHA BinarySensor."""
+    """ZHA OnOff BinarySensor."""
 
     SENSOR_ATTR = "on_off"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.OPENING
@@ -154,10 +154,9 @@ class BinaryInput(BinarySensor):
     manufacturers="Philips",
     models={"SML001", "SML002"},
 )
-class Motion(BinarySensor):
-    """ZHA BinarySensor."""
+class Motion(Opening):
+    """ZHA OnOff BinarySensor with motion device class."""
 
-    SENSOR_ATTR = "on_off"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.MOTION
 
 
