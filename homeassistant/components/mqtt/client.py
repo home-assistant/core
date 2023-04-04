@@ -69,6 +69,7 @@ from .const import (
 from .models import (
     AsyncMessageCallbackType,
     MessageCallbackType,
+    MqttData,
     PublishMessage,
     PublishPayloadType,
     ReceiveMessage,
@@ -116,7 +117,6 @@ async def async_publish(
             f"Cannot publish to topic '{topic}', MQTT is not enabled"
         )
     mqtt_data = get_mqtt_data(hass)
-    assert mqtt_data.client is not None
     outgoing_payload = payload
     if not isinstance(payload, bytes):
         if not encoding:
@@ -167,7 +167,6 @@ async def async_subscribe(
             f"Cannot subscribe to topic '{topic}', MQTT is not enabled"
         )
     mqtt_data = get_mqtt_data(hass)
-    assert mqtt_data.client is not None
     # Support for a deprecated callback type was removed with HA core 2023.3.0
     # The signature validation code can be removed from HA core 2023.5.0
     non_default = 0
@@ -377,21 +376,18 @@ class EnsureJobAfterCooldown:
 class MQTT:
     """Home Assistant MQTT client."""
 
-    _mqttc: mqtt.Client
+    _mqttc: mqtt.Client = None  # type: ignore[assignment]
     _last_subscribe: float
+    _mqtt_data: MqttData
 
     def __init__(
-        self,
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        conf: ConfigType,
+        self, hass: HomeAssistant, config_entry: ConfigEntry, conf: ConfigType
     ) -> None:
         """Initialize Home Assistant MQTT client."""
-        self._mqtt_data = get_mqtt_data(hass)
-
         self.hass = hass
         self.config_entry = config_entry
         self.conf = conf
+
         self._simple_subscriptions: dict[str, list[Subscription]] = {}
         self._wildcard_subscriptions: list[Subscription] = []
         self.connected = False
@@ -417,8 +413,6 @@ class MQTT:
 
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, ha_started)
 
-        self.init_client()
-
         async def async_stop_mqtt(_event: Event) -> None:
             """Stop MQTT component."""
             await self.async_disconnect()
@@ -426,6 +420,14 @@ class MQTT:
         self._cleanup_on_unload.append(
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_mqtt)
         )
+
+    def start(
+        self,
+        mqtt_data: MqttData,
+    ) -> None:
+        """Start Home Assistant MQTT client."""
+        self._mqtt_data = mqtt_data
+        self.init_client()
 
     @property
     def subscriptions(self) -> list[Subscription]:

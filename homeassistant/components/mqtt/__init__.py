@@ -209,14 +209,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Fetch configuration and add default values
     hass_config = await conf_util.async_hass_config_yaml(hass)
     mqtt_yaml = PLATFORM_CONFIG_SCHEMA_BASE(hass_config.get(DOMAIN, {}))
+    client = MQTT(hass, entry, conf)
     if DOMAIN in hass.data:
         mqtt_data = get_mqtt_data(hass)
         mqtt_data.config = mqtt_yaml
+        mqtt_data.client = client
     else:
-        hass.data[DATA_MQTT] = mqtt_data = MqttData(config=mqtt_yaml)
+        hass.data[DATA_MQTT] = mqtt_data = MqttData(config=mqtt_yaml, client=client)
+    client.start(mqtt_data)
 
     await async_create_certificate_temp_files(hass, dict(entry.data))
-    mqtt_data.client = MQTT(hass, entry, conf)
     # Restore saved subscriptions
     if mqtt_data.subscriptions_to_restore:
         mqtt_data.client.async_restore_tracked_subscriptions(
@@ -282,7 +284,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 )
                 return
 
-        assert mqtt_data.client is not None and msg_topic is not None
+        assert msg_topic is not None
         await mqtt_data.client.async_publish(msg_topic, payload, qos, retain)
 
     hass.services.async_register(
@@ -518,7 +520,6 @@ def async_subscribe_connection_status(
 def is_connected(hass: HomeAssistant) -> bool:
     """Return if MQTT client is connected."""
     mqtt_data = get_mqtt_data(hass)
-    assert mqtt_data.client is not None
     return mqtt_data.client.connected
 
 
@@ -536,7 +537,6 @@ async def async_remove_config_entry_device(
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload MQTT dump and publish service when the config entry is unloaded."""
     mqtt_data = get_mqtt_data(hass)
-    assert mqtt_data.client is not None
     mqtt_client = mqtt_data.client
 
     # Unload publish and dump services.
