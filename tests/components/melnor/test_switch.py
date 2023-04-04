@@ -1,9 +1,9 @@
 """Test the Melnor sensors."""
-
 from __future__ import annotations
 
 from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 
 from .conftest import (
     mock_config_entry,
@@ -13,7 +13,7 @@ from .conftest import (
 )
 
 
-async def test_manual_watering_switch_metadata(hass):
+async def test_manual_watering_switch_metadata(hass: HomeAssistant) -> None:
     """Test the manual watering switch."""
 
     entry = mock_config_entry(hass)
@@ -27,7 +27,7 @@ async def test_manual_watering_switch_metadata(hass):
         assert switch.attributes["icon"] == "mdi:sprinkler"
 
 
-async def test_manual_watering_switch_on_off(hass):
+async def test_manual_watering_switch_on_off(hass: HomeAssistant) -> None:
     """Test the manual watering switch."""
 
     entry = mock_config_entry(hass)

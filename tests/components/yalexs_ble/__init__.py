@@ -1,9 +1,8 @@
 """Tests for the Yale Access Bluetooth integration."""
-from bleak.backends.device import BLEDevice
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 
-from tests.components.bluetooth import generate_advertisement_data
+from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 YALE_ACCESS_LOCK_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     name="M1012LU",
@@ -16,7 +15,7 @@ YALE_ACCESS_LOCK_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     service_uuids=[],
     service_data={},
     source="local",
-    device=BLEDevice(address="AA:BB:CC:DD:EE:FF", name="M1012LU"),
+    device=generate_ble_device(address="AA:BB:CC:DD:EE:FF", name="M1012LU"),
     advertisement=generate_advertisement_data(),
     time=0,
     connectable=True,
@@ -34,7 +33,7 @@ LOCK_DISCOVERY_INFO_UUID_ADDRESS = BluetoothServiceInfoBleak(
     service_uuids=[],
     service_data={},
     source="local",
-    device=BLEDevice(address="AA:BB:CC:DD:EE:FF", name="M1012LU"),
+    device=generate_ble_device(address="AA:BB:CC:DD:EE:FF", name="M1012LU"),
     advertisement=generate_advertisement_data(),
     time=0,
     connectable=True,
@@ -51,7 +50,7 @@ OLD_FIRMWARE_LOCK_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     service_uuids=[],
     service_data={},
     source="local",
-    device=BLEDevice(address="AA:BB:CC:DD:EE:FF", name="Aug"),
+    device=generate_ble_device(address="AA:BB:CC:DD:EE:FF", name="Aug"),
     advertisement=generate_advertisement_data(),
     time=0,
     connectable=True,
@@ -69,7 +68,7 @@ NOT_YALE_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     service_uuids=[],
     service_data={},
     source="local",
-    device=BLEDevice(address="AA:BB:CC:DD:EE:FF", name="Aug"),
+    device=generate_ble_device(address="AA:BB:CC:DD:EE:FF", name="Aug"),
     advertisement=generate_advertisement_data(),
     time=0,
     connectable=True,

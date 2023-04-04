@@ -18,7 +18,7 @@ from tests.typing import ClientSessionGenerator
 
 async def test_entry_diagnostics(
     hass: HomeAssistant, hass_client: ClientSessionGenerator, fritz: Mock
-):
+) -> None:
     """Test config entry diagnostics."""
     assert await setup_config_entry(hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0])
 

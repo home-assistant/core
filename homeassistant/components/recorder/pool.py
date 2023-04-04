@@ -5,7 +5,12 @@ import traceback
 from typing import Any
 
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.pool import NullPool, SingletonThreadPool, StaticPool
+from sqlalchemy.pool import (
+    ConnectionPoolEntry,
+    NullPool,
+    SingletonThreadPool,
+    StaticPool,
+)
 
 from homeassistant.helpers.frame import report
 from homeassistant.util.async_ import check_loop
@@ -47,11 +52,10 @@ class RecorderPool(SingletonThreadPool, NullPool):  # type: ignore[misc]
             thread_name == "Recorder" or thread_name.startswith(DB_WORKER_PREFIX)
         )
 
-    # Any can be switched out for ConnectionPoolEntry in the next version of sqlalchemy
-    def _do_return_conn(self, conn: Any) -> Any:
+    def _do_return_conn(self, record: ConnectionPoolEntry) -> Any:
         if self.recorder_or_dbworker:
-            return super()._do_return_conn(conn)
-        conn.close()
+            return super()._do_return_conn(record)
+        record.close()
 
     def shutdown(self) -> None:
         """Close the connection."""
@@ -92,7 +96,7 @@ class RecorderPool(SingletonThreadPool, NullPool):  # type: ignore[misc]
         return super(NullPool, self)._create_connection()
 
 
-class MutexPool(StaticPool):  # type: ignore[misc]
+class MutexPool(StaticPool):
     """A pool which prevents concurrent accesses from multiple threads.
 
     This is used in tests to prevent unsafe concurrent accesses to in-memory SQLite
@@ -102,14 +106,14 @@ class MutexPool(StaticPool):  # type: ignore[misc]
     _reference_counter = 0
     pool_lock: threading.RLock
 
-    def _do_return_conn(self, conn: Any) -> None:
+    def _do_return_conn(self, record: ConnectionPoolEntry) -> Any:
         if DEBUG_MUTEX_POOL_TRACE:
             trace = traceback.extract_stack()
             trace_msg = "\n" + "".join(traceback.format_list(trace[:-1]))
         else:
             trace_msg = ""
 
-        super()._do_return_conn(conn)
+        super()._do_return_conn(record)
         if DEBUG_MUTEX_POOL:
             self._reference_counter -= 1
             _LOGGER.debug(

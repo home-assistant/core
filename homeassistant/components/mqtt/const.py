@@ -33,7 +33,6 @@ CONF_CERTIFICATE = "certificate"
 CONF_CLIENT_KEY = "client_key"
 CONF_CLIENT_CERT = "client_cert"
 CONF_TLS_INSECURE = "tls_insecure"
-CONF_TLS_VERSION = "tls_version"
 
 DATA_MQTT = "mqtt"
 
@@ -114,6 +113,7 @@ RELOADABLE_PLATFORMS = [
     Platform.CAMERA,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.DEVICE_TRACKER,
     Platform.FAN,
     Platform.HUMIDIFIER,
     Platform.LIGHT,

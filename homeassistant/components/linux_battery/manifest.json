@@ -1,9 +1,9 @@
 {
   "domain": "linux_battery",
   "name": "Linux Battery",
-  "documentation": "https://www.home-assistant.io/integrations/linux_battery",
-  "requirements": ["batinfo==0.4.2"],
   "codeowners": ["@fabaff"],
+  "documentation": "https://www.home-assistant.io/integrations/linux_battery",
   "iot_class": "local_polling",
-  "loggers": ["batinfo"]
+  "loggers": ["batinfo"],
+  "requirements": ["batinfo==0.4.2"]
 }

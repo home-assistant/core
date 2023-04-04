@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.onvif import config_flow
+from homeassistant.core import HomeAssistant
 
 from . import (
     HOST,
@@ -66,7 +67,7 @@ def setup_mock_discovery(
     mock_discovery.return_value = services
 
 
-async def test_flow_discovered_devices(hass):
+async def test_flow_discovered_devices(hass: HomeAssistant) -> None:
     """Test that config flow works for discovered devices."""
 
     result = await hass.config_entries.flow.async_init(
@@ -127,7 +128,9 @@ async def test_flow_discovered_devices(hass):
         }
 
 
-async def test_flow_discovered_devices_ignore_configured_manual_input(hass):
+async def test_flow_discovered_devices_ignore_configured_manual_input(
+    hass: HomeAssistant,
+) -> None:
     """Test that config flow discovery ignores configured devices."""
     await setup_onvif_integration(hass)
 
@@ -166,7 +169,7 @@ async def test_flow_discovered_devices_ignore_configured_manual_input(hass):
         assert result["step_id"] == "configure"
 
 
-async def test_flow_discovered_no_device(hass):
+async def test_flow_discovered_no_device(hass: HomeAssistant) -> None:
     """Test that config flow discovery no device."""
     await setup_onvif_integration(hass)
 
@@ -196,7 +199,7 @@ async def test_flow_discovered_no_device(hass):
         assert result["step_id"] == "configure"
 
 
-async def test_flow_discovery_ignore_existing_and_abort(hass):
+async def test_flow_discovery_ignore_existing_and_abort(hass: HomeAssistant) -> None:
     """Test that config flow discovery ignores setup devices."""
     await setup_onvif_integration(hass)
     await setup_onvif_integration(
@@ -253,7 +256,7 @@ async def test_flow_discovery_ignore_existing_and_abort(hass):
         assert result["type"] == data_entry_flow.FlowResultType.ABORT
 
 
-async def test_flow_manual_entry(hass):
+async def test_flow_manual_entry(hass: HomeAssistant) -> None:
     """Test that config flow works for discovered devices."""
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -310,7 +313,7 @@ async def test_flow_manual_entry(hass):
         }
 
 
-async def test_option_flow(hass):
+async def test_option_flow(hass: HomeAssistant) -> None:
     """Test config flow options."""
     entry, _, _ = await setup_onvif_integration(hass)
 

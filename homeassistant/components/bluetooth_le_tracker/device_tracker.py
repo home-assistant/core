@@ -185,8 +185,9 @@ async def async_setup_scanner(  # noqa: C901
                 and now > devs_track_battery[mac] + battery_track_interval
             ):
                 devs_track_battery[mac] = now
-                asyncio.create_task(
-                    _async_see_update_ble_battery(mac, now, service_info)
+                hass.async_create_background_task(
+                    _async_see_update_ble_battery(mac, now, service_info),
+                    "bluetooth_le_tracker.device_tracker-see_update_ble_battery",
                 )
 
         if track_new:

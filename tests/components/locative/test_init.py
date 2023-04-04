@@ -9,6 +9,7 @@ from homeassistant.components import locative
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.locative import DOMAIN, TRACKER_UPDATE
 from homeassistant.config import async_process_ha_core_config
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
 
@@ -47,7 +48,7 @@ async def webhook_id(hass, locative_client):
     return result["result"].data["webhook_id"]
 
 
-async def test_missing_data(locative_client, webhook_id):
+async def test_missing_data(locative_client, webhook_id) -> None:
     """Test missing data."""
     url = f"/api/webhook/{webhook_id}"
 
@@ -107,7 +108,7 @@ async def test_missing_data(locative_client, webhook_id):
     assert req.status == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-async def test_enter_and_exit(hass, locative_client, webhook_id):
+async def test_enter_and_exit(hass: HomeAssistant, locative_client, webhook_id) -> None:
     """Test when there is a known zone."""
     url = f"/api/webhook/{webhook_id}"
 
@@ -176,7 +177,9 @@ async def test_enter_and_exit(hass, locative_client, webhook_id):
     assert state_name == "work"
 
 
-async def test_exit_after_enter(hass, locative_client, webhook_id):
+async def test_exit_after_enter(
+    hass: HomeAssistant, locative_client, webhook_id
+) -> None:
     """Test when an exit message comes after an enter message."""
     url = f"/api/webhook/{webhook_id}"
 
@@ -218,7 +221,7 @@ async def test_exit_after_enter(hass, locative_client, webhook_id):
     assert state.state == "work"
 
 
-async def test_exit_first(hass, locative_client, webhook_id):
+async def test_exit_first(hass: HomeAssistant, locative_client, webhook_id) -> None:
     """Test when an exit message is sent first on a new device."""
     url = f"/api/webhook/{webhook_id}"
 
@@ -239,7 +242,7 @@ async def test_exit_first(hass, locative_client, webhook_id):
     assert state.state == "not_home"
 
 
-async def test_two_devices(hass, locative_client, webhook_id):
+async def test_two_devices(hass: HomeAssistant, locative_client, webhook_id) -> None:
     """Test updating two different devices."""
     url = f"/api/webhook/{webhook_id}"
 
@@ -282,7 +285,9 @@ async def test_two_devices(hass, locative_client, webhook_id):
 @pytest.mark.xfail(
     reason="The device_tracker component does not support unloading yet."
 )
-async def test_load_unload_entry(hass, locative_client, webhook_id):
+async def test_load_unload_entry(
+    hass: HomeAssistant, locative_client, webhook_id
+) -> None:
     """Test that the appropriate dispatch signals are added and removed."""
     url = f"/api/webhook/{webhook_id}"
 

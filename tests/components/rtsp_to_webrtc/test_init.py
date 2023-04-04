@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import base64
-from collections.abc import Awaitable, Callable
 from typing import Any
 from unittest.mock import patch
 
@@ -20,6 +19,7 @@ from .conftest import SERVER_URL, STREAM_SOURCE, ComponentSetup
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import WebSocketGenerator
 
 # The webrtc component does not inspect the details of the offer and answer,
 # and is only a pass through.
@@ -83,7 +83,7 @@ async def test_setup_communication_failure(
 async def test_offer_for_stream_source(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    hass_ws_client: Callable[[...], Awaitable[aiohttp.ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
     mock_camera: Any,
     rtsp_to_webrtc_client: Any,
     setup_integration: ComponentSetup,
@@ -124,7 +124,7 @@ async def test_offer_for_stream_source(
 async def test_offer_failure(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    hass_ws_client: Callable[[...], Awaitable[aiohttp.ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
     mock_camera: Any,
     rtsp_to_webrtc_client: Any,
     setup_integration: ComponentSetup,
@@ -161,7 +161,7 @@ async def test_no_stun_server(
     hass: HomeAssistant,
     rtsp_to_webrtc_client: Any,
     setup_integration: ComponentSetup,
-    hass_ws_client: Callable[[...], Awaitable[aiohttp.ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test successful setup and unload."""
     await setup_integration()
@@ -188,7 +188,7 @@ async def test_stun_server(
     rtsp_to_webrtc_client: Any,
     setup_integration: ComponentSetup,
     config_entry: MockConfigEntry,
-    hass_ws_client: Callable[[...], Awaitable[aiohttp.ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test successful setup and unload."""
     await setup_integration()

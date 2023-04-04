@@ -87,7 +87,9 @@ async def async_setup_august(
     await august_gateway.async_refresh_access_token_if_needed()
 
     hass.data.setdefault(DOMAIN, {})
-    data = hass.data[DOMAIN][config_entry.entry_id] = AugustData(hass, august_gateway)
+    data = hass.data[DOMAIN][config_entry.entry_id] = AugustData(
+        hass, config_entry, august_gateway
+    )
     await data.async_setup()
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
@@ -120,9 +122,10 @@ def _async_trigger_ble_lock_discovery(
 class AugustData(AugustSubscriberMixin):
     """August data object."""
 
-    def __init__(self, hass, august_gateway):
+    def __init__(self, hass, config_entry, august_gateway):
         """Init August data object."""
         super().__init__(hass, MIN_TIME_BETWEEN_DETAIL_UPDATES)
+        self._config_entry = config_entry
         self._hass = hass
         self._august_gateway = august_gateway
         self.activity_stream = None
@@ -188,7 +191,9 @@ class AugustData(AugustSubscriberMixin):
             # Do not prevent setup as the sync can timeout
             # but it is not a fatal error as the lock
             # will recover automatically when it comes back online.
-            asyncio.create_task(self._async_initial_sync())
+            self._config_entry.async_create_background_task(
+                self._hass, self._async_initial_sync(), "august-initial-sync"
+            )
 
     async def _async_initial_sync(self):
         """Attempt to request an initial sync."""

@@ -1,4 +1,6 @@
 """Test reproduce state for Text entities."""
+import pytest
+
 from homeassistant.components.text.const import (
     ATTR_MAX,
     ATTR_MIN,
@@ -7,7 +9,7 @@ from homeassistant.components.text.const import (
     DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
 
 from tests.common import async_mock_service
@@ -16,7 +18,9 @@ VALID_TEXT1 = "Hello"
 VALID_TEXT2 = "World"
 
 
-async def test_reproducing_states(hass, caplog):
+async def test_reproducing_states(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test reproducing Text states."""
 
     hass.states.async_set(

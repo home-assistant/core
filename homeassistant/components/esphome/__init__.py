@@ -36,6 +36,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
+    EntityCategory,
     __version__ as ha_version,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, State, callback
@@ -45,7 +46,7 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.issue_registry import (
@@ -344,7 +345,16 @@ async def async_setup_entry(  # noqa: C901
             disconnect_cb()
         entry_data.disconnect_callbacks = []
         entry_data.available = False
-        entry_data.async_update_device_state(hass)
+        # Clear out the states so that we will always dispatch
+        # the next state update of that type when the device reconnects
+        for state_keys in entry_data.state.values():
+            state_keys.clear()
+        if not hass.is_stopping:
+            # Avoid marking every esphome entity as unavailable on shutdown
+            # since it generates a lot of state changed events and database
+            # writes when we already know we're shutting down and the state
+            # will be cleared anyway.
+            entry_data.async_update_device_state(hass)
 
     async def on_connect_error(err: Exception) -> None:
         """Start reauth flow if appropriate connect error type."""
@@ -759,7 +769,7 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"esphome_{self._entry_id}_on_device_update",
+                self._entry_data.signal_device_updated,
                 self._on_device_update,
             )
         )

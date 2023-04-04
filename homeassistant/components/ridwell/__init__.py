@@ -11,7 +11,7 @@ from homeassistant.helpers import entity_registry as er
 from .const import DOMAIN, LOGGER, SENSOR_TYPE_NEXT_PICKUP
 from .coordinator import RidwellDataUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.SWITCH]
+PLATFORMS: list[Platform] = [Platform.CALENDAR, Platform.SENSOR, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

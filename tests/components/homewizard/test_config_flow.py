@@ -7,6 +7,7 @@ from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.homewizard.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .generator import get_mock_device
@@ -15,7 +16,9 @@ from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_manual_flow_works(hass, aioclient_mock):
+async def test_manual_flow_works(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test config flow accepts user configuration."""
 
     device = get_mock_device()
@@ -49,7 +52,9 @@ async def test_manual_flow_works(hass, aioclient_mock):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_discovery_flow_works(hass, aioclient_mock):
+async def test_discovery_flow_works(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test discovery setup flow works."""
 
     service_info = zeroconf.ZeroconfServiceInfo(
@@ -111,7 +116,7 @@ async def test_discovery_flow_works(hass, aioclient_mock):
 
 
 async def test_discovery_flow_during_onboarding(
-    hass, aioclient_mock: AiohttpClientMocker, mock_onboarding: MagicMock
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_onboarding: MagicMock
 ) -> None:
     """Test discovery setup flow during onboarding."""
 
@@ -154,7 +159,7 @@ async def test_discovery_flow_during_onboarding(
 
 
 async def test_discovery_flow_during_onboarding_disabled_api(
-    hass, aioclient_mock: AiohttpClientMocker, mock_onboarding: MagicMock
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_onboarding: MagicMock
 ) -> None:
     """Test discovery setup flow during onboarding with a disabled API."""
 
@@ -218,7 +223,9 @@ async def test_discovery_flow_during_onboarding_disabled_api(
     assert len(mock_onboarding.mock_calls) == 1
 
 
-async def test_discovery_disabled_api(hass, aioclient_mock):
+async def test_discovery_disabled_api(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test discovery detecting disabled api."""
 
     service_info = zeroconf.ZeroconfServiceInfo(
@@ -266,7 +273,9 @@ async def test_discovery_disabled_api(hass, aioclient_mock):
     assert result["errors"] == {"base": "api_not_enabled"}
 
 
-async def test_discovery_missing_data_in_service_info(hass, aioclient_mock):
+async def test_discovery_missing_data_in_service_info(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test discovery detecting missing discovery info."""
 
     service_info = zeroconf.ZeroconfServiceInfo(
@@ -295,7 +304,9 @@ async def test_discovery_missing_data_in_service_info(hass, aioclient_mock):
     assert result["reason"] == "invalid_discovery_parameters"
 
 
-async def test_discovery_invalid_api(hass, aioclient_mock):
+async def test_discovery_invalid_api(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test discovery detecting invalid_api."""
 
     service_info = zeroconf.ZeroconfServiceInfo(
@@ -324,7 +335,9 @@ async def test_discovery_invalid_api(hass, aioclient_mock):
     assert result["reason"] == "unsupported_api_version"
 
 
-async def test_check_disabled_api(hass, aioclient_mock):
+async def test_check_disabled_api(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test check detecting disabled api."""
 
     def mock_initialize():
@@ -352,7 +365,9 @@ async def test_check_disabled_api(hass, aioclient_mock):
     assert result["errors"] == {"base": "api_not_enabled"}
 
 
-async def test_check_error_handling_api(hass, aioclient_mock):
+async def test_check_error_handling_api(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test check detecting error with api."""
 
     def mock_initialize():
@@ -380,7 +395,9 @@ async def test_check_error_handling_api(hass, aioclient_mock):
     assert result["reason"] == "unknown_error"
 
 
-async def test_check_detects_invalid_api(hass, aioclient_mock):
+async def test_check_detects_invalid_api(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test check detecting device endpoint failed fetching data."""
 
     def mock_initialize():
@@ -408,7 +425,9 @@ async def test_check_detects_invalid_api(hass, aioclient_mock):
     assert result["reason"] == "unsupported_api_version"
 
 
-async def test_check_requesterror(hass, aioclient_mock):
+async def test_check_requesterror(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test check detecting device endpoint failed fetching data due to a requesterror."""
 
     def mock_initialize():
@@ -436,7 +455,9 @@ async def test_check_requesterror(hass, aioclient_mock):
     assert result["errors"] == {"base": "network_error"}
 
 
-async def test_reauth_flow(hass, aioclient_mock):
+async def test_reauth_flow(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test reauth flow while API is enabled."""
 
     mock_entry = MockConfigEntry(
@@ -470,7 +491,9 @@ async def test_reauth_flow(hass, aioclient_mock):
         assert result["reason"] == "reauth_successful"
 
 
-async def test_reauth_error(hass, aioclient_mock):
+async def test_reauth_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test reauth flow while API is still disabled."""
 
     def mock_initialize():

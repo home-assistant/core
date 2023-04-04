@@ -43,20 +43,6 @@
       "problemMatcher": []
     },
     {
-      "label": "Flake8",
-      "type": "shell",
-      "command": "pre-commit run flake8 --all-files",
-      "group": {
-        "kind": "test",
-        "isDefault": true
-      },
-      "presentation": {
-        "reveal": "always",
-        "panel": "new"
-      },
-      "problemMatcher": []
-    },
-    {
       "label": "Ruff",
       "type": "shell",
       "command": "pre-commit run ruff --all-files",

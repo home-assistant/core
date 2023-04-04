@@ -1,14 +1,17 @@
 """Test the Coronavirus config flow."""
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientError
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.coronavirus.const import DOMAIN, OPTION_WORLDWIDE
 from homeassistant.core import HomeAssistant
 
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
-async def test_form(hass: HomeAssistant) -> None:
+
+async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -28,7 +31,7 @@ async def test_form(hass: HomeAssistant) -> None:
         "country": OPTION_WORLDWIDE,
     }
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 4
+    mock_setup_entry.assert_called_once()
 
 
 @patch(

@@ -20,13 +20,13 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.json import JSON_DUMP
 import homeassistant.util.dt as dt_util
 
-from .const import LOGBOOK_ENTITIES_FILTER
+from .const import DOMAIN
 from .helpers import (
     async_determine_event_types,
     async_filter_entities,
     async_subscribe_events,
 )
-from .models import async_event_to_row
+from .models import LogbookConfig, async_event_to_row
 from .processor import EventProcessor
 
 MAX_PENDING_LOGBOOK_EVENTS = 2048
@@ -361,7 +361,8 @@ async def ws_event_stream(
 
     entities_filter: EntityFilter | None = None
     if not event_processor.limited_select:
-        entities_filter = hass.data[LOGBOOK_ENTITIES_FILTER]
+        logbook_config: LogbookConfig = hass.data[DOMAIN]
+        entities_filter = logbook_config.entity_filter
 
     async_subscribe_events(
         hass,

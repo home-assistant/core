@@ -1,5 +1,6 @@
 """Tests for the mobile app integration."""
 from homeassistant.components.mobile_app.const import DATA_DELETED_IDS, DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import CALL_SERVICE
@@ -7,7 +8,9 @@ from .const import CALL_SERVICE
 from tests.common import async_mock_service
 
 
-async def test_unload_unloads(hass, create_registrations, webhook_client):
+async def test_unload_unloads(
+    hass: HomeAssistant, create_registrations, webhook_client
+) -> None:
     """Test we clean up when we unload."""
     # Second config entry is the one without encryption
     config_entry = hass.config_entries.async_entries("mobile_app")[1]
@@ -25,7 +28,7 @@ async def test_unload_unloads(hass, create_registrations, webhook_client):
     assert len(calls) == 1
 
 
-async def test_remove_entry(hass, create_registrations):
+async def test_remove_entry(hass: HomeAssistant, create_registrations) -> None:
     """Test we clean up when we remove entry."""
     for config_entry in hass.config_entries.async_entries("mobile_app"):
         await hass.config_entries.async_remove(config_entry.entry_id)

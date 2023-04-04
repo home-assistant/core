@@ -8,6 +8,7 @@ from homeassistant.components.switch import (
     SERVICE_TURN_ON,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 SWITCH_ENTITY_IDS = ["switch.decorative_lights", "switch.ac"]
@@ -23,7 +24,7 @@ async def setup_comp(hass):
 
 
 @pytest.mark.parametrize("switch_entity_id", SWITCH_ENTITY_IDS)
-async def test_turn_on(hass, switch_entity_id):
+async def test_turn_on(hass: HomeAssistant, switch_entity_id) -> None:
     """Test switch turn on method."""
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -47,7 +48,7 @@ async def test_turn_on(hass, switch_entity_id):
 
 
 @pytest.mark.parametrize("switch_entity_id", SWITCH_ENTITY_IDS)
-async def test_turn_off(hass, switch_entity_id):
+async def test_turn_off(hass: HomeAssistant, switch_entity_id) -> None:
     """Test switch turn off method."""
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -71,7 +72,9 @@ async def test_turn_off(hass, switch_entity_id):
 
 
 @pytest.mark.parametrize("switch_entity_id", SWITCH_ENTITY_IDS)
-async def test_turn_off_without_entity_id(hass, switch_entity_id):
+async def test_turn_off_without_entity_id(
+    hass: HomeAssistant, switch_entity_id
+) -> None:
     """Test switch turn off all switches."""
     await hass.services.async_call(
         SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: "all"}, blocking=True

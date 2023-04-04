@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from homeassistant import config_entries
 from homeassistant.components.hlk_sw16.const import DOMAIN
+from homeassistant.core import HomeAssistant
 
 
 class MockSW16Client:
@@ -47,7 +48,7 @@ async def create_mock_hlk_sw16_connection(fail):
     return client
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -108,7 +109,7 @@ async def test_form(hass):
     assert result4["reason"] == "already_configured"
 
 
-async def test_import(hass):
+async def test_import(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -149,7 +150,7 @@ async def test_import(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_data(hass):
+async def test_form_invalid_data(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -175,7 +176,7 @@ async def test_form_invalid_data(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

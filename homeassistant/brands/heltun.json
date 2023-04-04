@@ -1,0 +1,5 @@
+{
+  "domain": "heltun",
+  "name": "HELTUN",
+  "iot_standards": ["zwave"]
+}

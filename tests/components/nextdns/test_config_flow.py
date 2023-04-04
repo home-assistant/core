@@ -53,7 +53,7 @@ async def test_form_create_entry(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "exc,base_error",
+    ("exc", "base_error"),
     [
         (ApiError("API Error"), "cannot_connect"),
         (InvalidApiKeyError, "invalid_api_key"),

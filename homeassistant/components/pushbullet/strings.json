@@ -15,11 +15,5 @@
         }
       }
     }
-  },
-  "issues": {
-    "deprecated_yaml": {
-      "title": "The Pushbullet YAML configuration is being removed",
-      "description": "Configuring Pushbullet using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the Pushbullet YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
-    }
   }
 }

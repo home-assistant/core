@@ -6,13 +6,20 @@ from unittest.mock import patch
 from aiohttp import ClientSession, ClientWebSocketResponse
 
 from homeassistant.components.websocket_api import const as ws_const
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as util_dt
 
 from . import TEST_IMAGE
 
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
-async def test_upload_image(hass, hass_client, hass_ws_client):
+
+async def test_upload_image(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test we can upload an image."""
     now = util_dt.utcnow()
 

@@ -54,7 +54,7 @@ async def _async_setup_tag(
     hass: HomeAssistant,
     config: ConfigType,
     config_entry: ConfigEntry,
-    discovery_data: dict,
+    discovery_data: DiscoveryInfoType,
 ) -> None:
     """Set up the MQTT tag scanner."""
     discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]

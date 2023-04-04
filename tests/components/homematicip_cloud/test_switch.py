@@ -5,12 +5,13 @@ from homeassistant.components.homematicip_cloud.generic_entity import (
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .helper import async_manipulate_test_data, get_and_check_entity_basics
 
 
-async def test_manually_configured_platform(hass):
+async def test_manually_configured_platform(hass: HomeAssistant) -> None:
     """Test that we do not set up an access point."""
     assert await async_setup_component(
         hass, SWITCH_DOMAIN, {SWITCH_DOMAIN: {"platform": HMIPC_DOMAIN}}
@@ -18,7 +19,7 @@ async def test_manually_configured_platform(hass):
     assert not hass.data.get(HMIPC_DOMAIN)
 
 
-async def test_hmip_switch(hass, default_mock_hap_factory):
+async def test_hmip_switch(hass: HomeAssistant, default_mock_hap_factory) -> None:
     """Test HomematicipSwitch."""
     entity_id = "switch.schrank"
     entity_name = "Schrank"
@@ -55,7 +56,7 @@ async def test_hmip_switch(hass, default_mock_hap_factory):
     assert ha_state.state == STATE_ON
 
 
-async def test_hmip_switch_input(hass, default_mock_hap_factory):
+async def test_hmip_switch_input(hass: HomeAssistant, default_mock_hap_factory) -> None:
     """Test HomematicipSwitch."""
     entity_id = "switch.wohnzimmer_beleuchtung"
     entity_name = "Wohnzimmer Beleuchtung"
@@ -92,7 +93,9 @@ async def test_hmip_switch_input(hass, default_mock_hap_factory):
     assert ha_state.state == STATE_ON
 
 
-async def test_hmip_switch_measuring(hass, default_mock_hap_factory):
+async def test_hmip_switch_measuring(
+    hass: HomeAssistant, default_mock_hap_factory
+) -> None:
     """Test HomematicipSwitchMeasuring."""
     entity_id = "switch.pc"
     entity_name = "Pc"
@@ -130,7 +133,7 @@ async def test_hmip_switch_measuring(hass, default_mock_hap_factory):
     assert ha_state.state == STATE_ON
 
 
-async def test_hmip_group_switch(hass, default_mock_hap_factory):
+async def test_hmip_group_switch(hass: HomeAssistant, default_mock_hap_factory) -> None:
     """Test HomematicipGroupSwitch."""
     entity_id = "switch.strom_group"
     entity_name = "Strom Group"
@@ -170,7 +173,7 @@ async def test_hmip_group_switch(hass, default_mock_hap_factory):
     assert ha_state.attributes[ATTR_GROUP_MEMBER_UNREACHABLE]
 
 
-async def test_hmip_multi_switch(hass, default_mock_hap_factory):
+async def test_hmip_multi_switch(hass: HomeAssistant, default_mock_hap_factory) -> None:
     """Test HomematicipMultiSwitch."""
     entity_id = "switch.jalousien_1_kizi_2_schlazi_channel1"
     entity_name = "Jalousien - 1 KiZi, 2 SchlaZi Channel1"
@@ -223,7 +226,9 @@ async def test_hmip_multi_switch(hass, default_mock_hap_factory):
     assert ha_state.state == STATE_OFF
 
 
-async def test_hmip_wired_multi_switch(hass, default_mock_hap_factory):
+async def test_hmip_wired_multi_switch(
+    hass: HomeAssistant, default_mock_hap_factory
+) -> None:
     """Test HomematicipMultiSwitch."""
     entity_id = "switch.fernseher_wohnzimmer"
     entity_name = "Fernseher (Wohnzimmer)"

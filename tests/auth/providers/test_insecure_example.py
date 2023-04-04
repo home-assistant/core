@@ -40,7 +40,7 @@ def manager(hass, store, provider):
     return AuthManager(hass, store, {(provider.type, provider.id): provider}, {})
 
 
-async def test_create_new_credential(manager, provider):
+async def test_create_new_credential(manager, provider) -> None:
     """Test that we create a new credential."""
     credentials = await provider.async_get_or_create_credentials(
         {"username": "user-test", "password": "password-test"}
@@ -52,7 +52,7 @@ async def test_create_new_credential(manager, provider):
     assert user.is_active
 
 
-async def test_match_existing_credentials(store, provider):
+async def test_match_existing_credentials(store, provider) -> None:
     """See if we match existing users."""
     existing = auth_models.Credentials(
         id=uuid.uuid4(),
@@ -68,19 +68,19 @@ async def test_match_existing_credentials(store, provider):
     assert credentials is existing
 
 
-async def test_verify_username(provider):
+async def test_verify_username(provider) -> None:
     """Test we raise if incorrect user specified."""
     with pytest.raises(insecure_example.InvalidAuthError):
         await provider.async_validate_login("non-existing-user", "password-test")
 
 
-async def test_verify_password(provider):
+async def test_verify_password(provider) -> None:
     """Test we raise if incorrect user specified."""
     with pytest.raises(insecure_example.InvalidAuthError):
         await provider.async_validate_login("user-test", "incorrect-password")
 
 
-async def test_utf_8_username_password(provider):
+async def test_utf_8_username_password(provider) -> None:
     """Test that we create a new credential."""
     credentials = await provider.async_get_or_create_credentials(
         {"username": "🎉", "password": "😎"}

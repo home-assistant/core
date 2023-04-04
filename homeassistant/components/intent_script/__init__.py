@@ -1,7 +1,6 @@
 """Handle intents with scripts."""
 from __future__ import annotations
 
-import copy
 import logging
 
 import voluptuous as vol
@@ -57,8 +56,8 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Activate Alexa component."""
-    intents = copy.deepcopy(config[DOMAIN])
+    """Set up the intent script component."""
+    intents = config[DOMAIN]
     template.attach(hass, intents)
 
     for intent_type, conf in intents.items():

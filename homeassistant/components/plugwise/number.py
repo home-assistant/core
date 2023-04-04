@@ -13,9 +13,8 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -44,9 +43,9 @@ class PlugwiseNumberEntityDescription(
 NUMBER_TYPES = (
     PlugwiseNumberEntityDescription(
         key="maximum_boiler_temperature",
+        translation_key="maximum_boiler_temperature",
         command=lambda api, number, value: api.set_number_setpoint(number, value),
         device_class=NumberDeviceClass.TEMPERATURE,
-        name="Maximum boiler temperature setpoint",
         entity_category=EntityCategory.CONFIG,
         native_max_value_key="upper_bound",
         native_min_value_key="lower_bound",

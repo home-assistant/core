@@ -1,19 +1,19 @@
 """Constants for kraken tests."""
-import pandas
+import pandas as pd
 
-TRADEABLE_ASSET_PAIR_RESPONSE = pandas.DataFrame(
+TRADEABLE_ASSET_PAIR_RESPONSE = pd.DataFrame(
     {"wsname": ["ADA/XBT", "ADA/ETH", "XBT/EUR", "XBT/GBP", "XBT/USD", "XBT/JPY"]},
     columns=["wsname"],
     index=["ADAXBT", "ADAETH", "XBTEUR", "XXBTZGBP", "XXBTZUSD", "XXBTZJPY"],
 )
 
-MISSING_PAIR_TRADEABLE_ASSET_PAIR_RESPONSE = pandas.DataFrame(
+MISSING_PAIR_TRADEABLE_ASSET_PAIR_RESPONSE = pd.DataFrame(
     {"wsname": ["ADA/XBT", "ADA/ETH", "XBT/EUR", "XBT/GBP", "XBT/JPY"]},
     columns=["wsname"],
     index=["ADAXBT", "ADAETH", "XBTEUR", "XXBTZGBP", "XXBTZJPY"],
 )
 
-TICKER_INFORMATION_RESPONSE = pandas.DataFrame(
+TICKER_INFORMATION_RESPONSE = pd.DataFrame(
     {
         "a": [
             [0.000349400, 15949, 15949.000],
@@ -85,7 +85,7 @@ TICKER_INFORMATION_RESPONSE = pandas.DataFrame(
     index=["ADAXBT", "ADAETH", "XBTEUR", "XXBTZGBP", "XXBTZUSD", "XXBTZJPY"],
 )
 
-MISSING_PAIR_TICKER_INFORMATION_RESPONSE = pandas.DataFrame(
+MISSING_PAIR_TICKER_INFORMATION_RESPONSE = pd.DataFrame(
     {
         "a": [
             [0.000349400, 15949, 15949.000],

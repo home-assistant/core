@@ -8,6 +8,7 @@ import logging
 from typing import Any
 
 import voluptuous as vol
+import yarl
 
 from homeassistant import config_entries
 from homeassistant.components.hassio import (
@@ -15,6 +16,7 @@ from homeassistant.components.hassio import (
     AddonInfo,
     AddonManager,
     AddonState,
+    hostname_from_addon_slug,
     is_hassio,
 )
 from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN
@@ -26,6 +28,7 @@ from homeassistant.data_entry_flow import (
     FlowManager,
     FlowResult,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.singleton import singleton
 
 from .const import LOGGER, SILABS_MULTIPROTOCOL_ADDON_SLUG
@@ -63,12 +66,20 @@ class SerialPortSettings:
     flow_control: bool
 
 
-def get_zigbee_socket(hass: HomeAssistant, addon_info: AddonInfo) -> str:
+def get_zigbee_socket() -> str:
     """Return the zigbee socket.
 
     Raises AddonError on error
     """
-    return f"socket://{addon_info.hostname}:9999"
+    hostname = hostname_from_addon_slug(SILABS_MULTIPROTOCOL_ADDON_SLUG)
+    return f"socket://{hostname}:9999"
+
+
+def is_multiprotocol_url(url: str) -> bool:
+    """Return if the URL points at the Multiprotocol add-on."""
+    parsed = yarl.URL(url)
+    hostname = hostname_from_addon_slug(SILABS_MULTIPROTOCOL_ADDON_SLUG)
+    return parsed.host == hostname
 
 
 class BaseMultiPanFlow(FlowHandler, ABC):
@@ -289,7 +300,7 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
                 "new_discovery_info": {
                     "name": self._zha_name(),
                     "port": {
-                        "path": get_zigbee_socket(self.hass, addon_info),
+                        "path": get_zigbee_socket(),
                     },
                     "radio_type": "ezsp",
                 },
@@ -356,3 +367,51 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
         if user_input is None:
             return self.async_show_form(step_id="addon_installed_other_device")
         return self.async_create_entry(title="", data={})
+
+
+async def check_multi_pan_addon(hass: HomeAssistant) -> None:
+    """Check the multi-PAN addon state, and start it if installed but not started.
+
+    Does nothing if Hass.io is not loaded.
+    Raises on error or if the add-on is installed but not started.
+    """
+    if not is_hassio(hass):
+        return
+
+    addon_manager: AddonManager = get_addon_manager(hass)
+    try:
+        addon_info: AddonInfo = await addon_manager.async_get_addon_info()
+    except AddonError as err:
+        _LOGGER.error(err)
+        raise HomeAssistantError from err
+
+    # Request the addon to start if it's not started
+    # addon_manager.async_start_addon returns as soon as the start request has been sent
+    # and does not wait for the addon to be started, so we raise below
+    if addon_info.state == AddonState.NOT_RUNNING:
+        await addon_manager.async_start_addon()
+
+    if addon_info.state not in (AddonState.NOT_INSTALLED, AddonState.RUNNING):
+        _LOGGER.debug("Multi pan addon installed and in state %s", addon_info.state)
+        raise HomeAssistantError
+
+
+async def multi_pan_addon_using_device(hass: HomeAssistant, device_path: str) -> bool:
+    """Return True if the multi-PAN addon is using the given device.
+
+    Returns False if Hass.io is not loaded, the addon is not running or the addon is
+    connected to another device.
+    """
+    if not is_hassio(hass):
+        return False
+
+    addon_manager: AddonManager = get_addon_manager(hass)
+    addon_info: AddonInfo = await addon_manager.async_get_addon_info()
+
+    if addon_info.state != AddonState.RUNNING:
+        return False
+
+    if addon_info.options["device"] != device_path:
+        return False
+
+    return True

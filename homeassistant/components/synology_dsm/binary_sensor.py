@@ -12,9 +12,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DISKS
+from homeassistant.const import CONF_DISKS, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SynoApi
@@ -39,7 +38,7 @@ SECURITY_BINARY_SENSORS: tuple[SynologyDSMBinarySensorEntityDescription, ...] = 
     SynologyDSMBinarySensorEntityDescription(
         api_key=SynoCoreSecurity.API_KEY,
         key="status",
-        name="Security Status",
+        translation_key="status",
         device_class=BinarySensorDeviceClass.SAFETY,
     ),
 )
@@ -48,14 +47,14 @@ STORAGE_DISK_BINARY_SENSORS: tuple[SynologyDSMBinarySensorEntityDescription, ...
     SynologyDSMBinarySensorEntityDescription(
         api_key=SynoStorage.API_KEY,
         key="disk_exceed_bad_sector_thr",
-        name="Exceeded Max Bad Sectors",
+        translation_key="disk_exceed_bad_sector_thr",
         device_class=BinarySensorDeviceClass.SAFETY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SynologyDSMBinarySensorEntityDescription(
         api_key=SynoStorage.API_KEY,
         key="disk_below_remain_life_thr",
-        name="Below Min Remaining Life",
+        translation_key="disk_below_remain_life_thr",
         device_class=BinarySensorDeviceClass.SAFETY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),

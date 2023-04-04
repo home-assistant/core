@@ -20,8 +20,9 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity, EntityCategory
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -108,7 +109,7 @@ class VelbusButtonLight(VelbusEntity, LightEntity):
         self._attr_name = f"LED {self._channel.get_name()}"
 
     @property
-    def is_on(self) -> Any:
+    def is_on(self) -> bool:
         """Return true if the light is on."""
         return self._channel.is_on()
 

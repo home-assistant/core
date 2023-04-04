@@ -5,7 +5,7 @@ from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_ROUTER
 
 
-def get_scanner(hass, config):
+async def async_get_scanner(hass, config):
     """Return a mock scanner."""
     return SCANNER
 

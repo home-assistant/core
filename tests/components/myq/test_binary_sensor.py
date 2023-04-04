@@ -1,11 +1,11 @@
 """The scene tests for the myq platform."""
-
 from homeassistant.const import STATE_ON
+from homeassistant.core import HomeAssistant
 
 from .util import async_init_integration
 
 
-async def test_create_binary_sensors(hass):
+async def test_create_binary_sensors(hass: HomeAssistant) -> None:
     """Test creation of binary_sensors."""
 
     await async_init_integration(hass)

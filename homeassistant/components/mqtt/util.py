@@ -136,12 +136,9 @@ def valid_birth_will(config: ConfigType) -> ConfigType:
     return config
 
 
-def get_mqtt_data(hass: HomeAssistant, ensure_exists: bool = False) -> MqttData:
+def get_mqtt_data(hass: HomeAssistant) -> MqttData:
     """Return typed MqttData from hass.data[DATA_MQTT]."""
     mqtt_data: MqttData
-    if ensure_exists:
-        mqtt_data = hass.data.setdefault(DATA_MQTT, MqttData())
-        return mqtt_data
     mqtt_data = hass.data[DATA_MQTT]
     return mqtt_data
 

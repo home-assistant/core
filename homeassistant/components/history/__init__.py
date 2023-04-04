@@ -168,7 +168,7 @@ class HistoryPeriodView(HomeAssistantView):
         """Fetch significant stats from the database as json."""
         timer_start = time.perf_counter()
 
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             states = history.get_significant_states_with_session(
                 hass,
                 session,

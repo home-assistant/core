@@ -63,6 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     except (
         aiosomecomfort.device.ConnectionError,
         aiosomecomfort.device.ConnectionTimeout,
+        aiosomecomfort.device.SomeComfortError,
         asyncio.TimeoutError,
     ) as ex:
         raise ConfigEntryNotReady(

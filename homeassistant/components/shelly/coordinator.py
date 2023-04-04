@@ -161,6 +161,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         self._last_mode: str | None = None
         self._last_effect: int | None = None
         self._last_input_events_count: dict = {}
+        self._last_target_temp: float | None = None
 
         entry.async_on_unload(
             self.async_add_listener(self._async_device_updates_handler)
@@ -193,6 +194,18 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         for block in self.device.blocks:
             if block.type == "device":
                 cfg_changed = block.cfgChanged
+
+            if self.model == "SHTRV-01":
+                # Reloading the entry is not needed when the target temperature changes
+                if "targetTemp" in block.sensor_ids:
+                    if self._last_target_temp != block.targetTemp:
+                        self._last_cfg_changed = None
+                    self._last_target_temp = block.targetTemp
+                # Reloading the entry is not needed when the mode changes
+                if "mode" in block.sensor_ids:
+                    if self._last_mode != block.mode:
+                        self._last_cfg_changed = None
+                    self._last_mode = block.mode
 
             # For dual mode bulbs ignore change if it is due to mode/effect change
             if self.model in DUAL_MODE_LIGHT_MODELS:

@@ -18,6 +18,7 @@ from homeassistant.const import (
     STATE_OPENING,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MockModuleConnection
@@ -26,7 +27,7 @@ COVER_OUTPUTS = "cover.cover_outputs"
 COVER_RELAYS = "cover.cover_relays"
 
 
-async def test_setup_lcn_cover(hass, entry, lcn_connection):
+async def test_setup_lcn_cover(hass: HomeAssistant, entry, lcn_connection) -> None:
     """Test the setup of cover."""
     for entity_id in (
         COVER_OUTPUTS,
@@ -37,7 +38,7 @@ async def test_setup_lcn_cover(hass, entry, lcn_connection):
         assert state.state == STATE_OPEN
 
 
-async def test_entity_attributes(hass, entry, lcn_connection):
+async def test_entity_attributes(hass: HomeAssistant, entry, lcn_connection) -> None:
     """Test the attributes of an entity."""
     entity_registry = er.async_get(hass)
 
@@ -55,7 +56,9 @@ async def test_entity_attributes(hass, entry, lcn_connection):
 
 
 @patch.object(MockModuleConnection, "control_motors_outputs")
-async def test_outputs_open(control_motors_outputs, hass, lcn_connection):
+async def test_outputs_open(
+    control_motors_outputs, hass: HomeAssistant, lcn_connection
+) -> None:
     """Test the outputs cover opens."""
     state = hass.states.get(COVER_OUTPUTS)
     state.state = STATE_CLOSED
@@ -99,7 +102,9 @@ async def test_outputs_open(control_motors_outputs, hass, lcn_connection):
 
 
 @patch.object(MockModuleConnection, "control_motors_outputs")
-async def test_outputs_close(control_motors_outputs, hass, lcn_connection):
+async def test_outputs_close(
+    control_motors_outputs, hass: HomeAssistant, lcn_connection
+) -> None:
     """Test the outputs cover closes."""
     state = hass.states.get(COVER_OUTPUTS)
     state.state = STATE_OPEN
@@ -143,7 +148,9 @@ async def test_outputs_close(control_motors_outputs, hass, lcn_connection):
 
 
 @patch.object(MockModuleConnection, "control_motors_outputs")
-async def test_outputs_stop(control_motors_outputs, hass, lcn_connection):
+async def test_outputs_stop(
+    control_motors_outputs, hass: HomeAssistant, lcn_connection
+) -> None:
     """Test the outputs cover stops."""
     state = hass.states.get(COVER_OUTPUTS)
     state.state = STATE_CLOSING
@@ -183,7 +190,9 @@ async def test_outputs_stop(control_motors_outputs, hass, lcn_connection):
 
 
 @patch.object(MockModuleConnection, "control_motors_relays")
-async def test_relays_open(control_motors_relays, hass, lcn_connection):
+async def test_relays_open(
+    control_motors_relays, hass: HomeAssistant, lcn_connection
+) -> None:
     """Test the relays cover opens."""
     states = [MotorStateModifier.NOCHANGE] * 4
     states[0] = MotorStateModifier.UP
@@ -226,7 +235,9 @@ async def test_relays_open(control_motors_relays, hass, lcn_connection):
 
 
 @patch.object(MockModuleConnection, "control_motors_relays")
-async def test_relays_close(control_motors_relays, hass, lcn_connection):
+async def test_relays_close(
+    control_motors_relays, hass: HomeAssistant, lcn_connection
+) -> None:
     """Test the relays cover closes."""
     states = [MotorStateModifier.NOCHANGE] * 4
     states[0] = MotorStateModifier.DOWN
@@ -269,7 +280,9 @@ async def test_relays_close(control_motors_relays, hass, lcn_connection):
 
 
 @patch.object(MockModuleConnection, "control_motors_relays")
-async def test_relays_stop(control_motors_relays, hass, lcn_connection):
+async def test_relays_stop(
+    control_motors_relays, hass: HomeAssistant, lcn_connection
+) -> None:
     """Test the relays cover stops."""
     states = [MotorStateModifier.NOCHANGE] * 4
     states[0] = MotorStateModifier.STOP
@@ -311,7 +324,9 @@ async def test_relays_stop(control_motors_relays, hass, lcn_connection):
     assert state.state not in (STATE_CLOSING, STATE_OPENING)
 
 
-async def test_pushed_outputs_status_change(hass, entry, lcn_connection):
+async def test_pushed_outputs_status_change(
+    hass: HomeAssistant, entry, lcn_connection
+) -> None:
     """Test the outputs cover changes its state on status received."""
     device_connection = get_device_connection(hass, (0, 7, False), entry)
     address = LcnAddr(0, 7, False)
@@ -347,7 +362,9 @@ async def test_pushed_outputs_status_change(hass, entry, lcn_connection):
     assert state.state == STATE_CLOSING
 
 
-async def test_pushed_relays_status_change(hass, entry, lcn_connection):
+async def test_pushed_relays_status_change(
+    hass: HomeAssistant, entry, lcn_connection
+) -> None:
     """Test the relays cover changes its state on status received."""
     device_connection = get_device_connection(hass, (0, 7, False), entry)
     address = LcnAddr(0, 7, False)
@@ -387,7 +404,7 @@ async def test_pushed_relays_status_change(hass, entry, lcn_connection):
     assert state.state == STATE_CLOSING
 
 
-async def test_unload_config_entry(hass, entry, lcn_connection):
+async def test_unload_config_entry(hass: HomeAssistant, entry, lcn_connection) -> None:
     """Test the cover is removed when the config entry is unloaded."""
     await hass.config_entries.async_unload(entry.entry_id)
     assert hass.states.get(COVER_OUTPUTS).state == STATE_UNAVAILABLE

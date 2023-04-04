@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from gcal_sync.api import GoogleCalendarService
-from gcal_sync.exceptions import ApiException
+from gcal_sync.exceptions import ApiException, ApiForbiddenException
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -146,6 +146,12 @@ class OAuth2FlowHandler(
         )
         try:
             primary_calendar = await calendar_service.async_get_calendar("primary")
+        except ApiForbiddenException as err:
+            _LOGGER.error(
+                "Error reading primary calendar, make sure Google Calendar API is enabled: %s",
+                err,
+            )
+            return self.async_abort(reason="api_disabled")
         except ApiException as err:
             _LOGGER.error("Error reading primary calendar: %s", err)
             return self.async_abort(reason="cannot_connect")

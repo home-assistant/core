@@ -76,4 +76,5 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
-        return options[CONF_NAME]
+        name: str = options[CONF_NAME]
+        return name

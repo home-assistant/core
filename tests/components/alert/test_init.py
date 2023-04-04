@@ -79,13 +79,13 @@ def mock_notifier(hass: HomeAssistant) -> list[ServiceCall]:
     return async_mock_service(hass, notify.DOMAIN, NOTIFIER)
 
 
-async def test_setup(hass):
+async def test_setup(hass: HomeAssistant) -> None:
     """Test setup method."""
     assert await async_setup_component(hass, DOMAIN, TEST_CONFIG)
     assert hass.states.get(ENTITY_ID).state == STATE_IDLE
 
 
-async def test_fire(hass, mock_notifier):
+async def test_fire(hass: HomeAssistant, mock_notifier: list[ServiceCall]) -> None:
     """Test the alert firing."""
     assert await async_setup_component(hass, DOMAIN, TEST_CONFIG)
     hass.states.async_set("sensor.test", STATE_ON)
@@ -93,7 +93,7 @@ async def test_fire(hass, mock_notifier):
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
 
-async def test_silence(hass, mock_notifier):
+async def test_silence(hass: HomeAssistant, mock_notifier: list[ServiceCall]) -> None:
     """Test silencing the alert."""
     assert await async_setup_component(hass, DOMAIN, TEST_CONFIG)
     hass.states.async_set("sensor.test", STATE_ON)
@@ -116,7 +116,7 @@ async def test_silence(hass, mock_notifier):
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
 
-async def test_reset(hass, mock_notifier):
+async def test_reset(hass: HomeAssistant, mock_notifier: list[ServiceCall]) -> None:
     """Test resetting the alert."""
     assert await async_setup_component(hass, DOMAIN, TEST_CONFIG)
     hass.states.async_set("sensor.test", STATE_ON)
@@ -140,7 +140,7 @@ async def test_reset(hass, mock_notifier):
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
 
-async def test_toggle(hass, mock_notifier):
+async def test_toggle(hass: HomeAssistant, mock_notifier: list[ServiceCall]) -> None:
     """Test toggling alert."""
     assert await async_setup_component(hass, DOMAIN, TEST_CONFIG)
     hass.states.async_set("sensor.test", STATE_ON)
@@ -228,7 +228,9 @@ async def test_no_notifiers(
     assert len(mock_notifier) == 0
 
 
-async def test_sending_non_templated_notification(hass, mock_notifier):
+async def test_sending_non_templated_notification(
+    hass: HomeAssistant, mock_notifier: list[ServiceCall]
+) -> None:
     """Test notifications."""
     assert await async_setup_component(hass, DOMAIN, TEST_CONFIG)
 
@@ -239,7 +241,9 @@ async def test_sending_non_templated_notification(hass, mock_notifier):
     assert last_event.data[notify.ATTR_MESSAGE] == NAME
 
 
-async def test_sending_templated_notification(hass, mock_notifier):
+async def test_sending_templated_notification(
+    hass: HomeAssistant, mock_notifier: list[ServiceCall]
+) -> None:
     """Test templated notification."""
     config = deepcopy(TEST_CONFIG)
     config[DOMAIN][NAME][CONF_ALERT_MESSAGE] = TEMPLATE
@@ -252,7 +256,9 @@ async def test_sending_templated_notification(hass, mock_notifier):
     assert last_event.data[notify.ATTR_MESSAGE] == TEST_ENTITY
 
 
-async def test_sending_templated_done_notification(hass, mock_notifier):
+async def test_sending_templated_done_notification(
+    hass: HomeAssistant, mock_notifier: list[ServiceCall]
+) -> None:
     """Test templated notification."""
     config = deepcopy(TEST_CONFIG)
     config[DOMAIN][NAME][CONF_DONE_MESSAGE] = TEMPLATE
@@ -267,7 +273,9 @@ async def test_sending_templated_done_notification(hass, mock_notifier):
     assert last_event.data[notify.ATTR_MESSAGE] == TEST_ENTITY
 
 
-async def test_sending_titled_notification(hass, mock_notifier):
+async def test_sending_titled_notification(
+    hass: HomeAssistant, mock_notifier: list[ServiceCall]
+) -> None:
     """Test notifications."""
     config = deepcopy(TEST_CONFIG)
     config[DOMAIN][NAME][CONF_TITLE] = TITLE
@@ -280,7 +288,9 @@ async def test_sending_titled_notification(hass, mock_notifier):
     assert last_event.data[notify.ATTR_TITLE] == TEST_TITLE
 
 
-async def test_sending_data_notification(hass, mock_notifier):
+async def test_sending_data_notification(
+    hass: HomeAssistant, mock_notifier: list[ServiceCall]
+) -> None:
     """Test notifications."""
     config = deepcopy(TEST_CONFIG)
     config[DOMAIN][NAME][CONF_DATA] = TEST_DATA
@@ -305,7 +315,7 @@ async def test_skipfirst(hass: HomeAssistant, mock_notifier: list[ServiceCall]) 
     assert len(mock_notifier) == 0
 
 
-async def test_done_message_state_tracker_reset_on_cancel(hass):
+async def test_done_message_state_tracker_reset_on_cancel(hass: HomeAssistant) -> None:
     """Test that the done message is reset when canceled."""
     entity = alert.Alert(hass, *TEST_NOACK)
     entity._cancel = lambda *args: None

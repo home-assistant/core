@@ -9,6 +9,7 @@ from homeassistant.components.alarm_control_panel import (
     CodeFormat,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_ALARM_ARMING, STATE_ALARM_DISARMING
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -55,33 +56,55 @@ class VerisureAlarm(
         """Return the unique ID for this entity."""
         return self.coordinator.entry.data[CONF_GIID]
 
-    async def _async_set_arm_state(self, state: str, code: str | None = None) -> None:
+    async def _async_set_arm_state(
+        self, state: str, command_data: dict[str, str | dict[str, str]]
+    ) -> None:
         """Send set arm state command."""
         arm_state = await self.hass.async_add_executor_job(
-            self.coordinator.verisure.set_arm_state, code, state
+            self.coordinator.verisure.request, command_data
         )
         LOGGER.debug("Verisure set arm state %s", state)
-        transaction = {}
-        while "result" not in transaction:
+        result = None
+        while result is None:
             await asyncio.sleep(0.5)
             transaction = await self.hass.async_add_executor_job(
-                self.coordinator.verisure.get_arm_state_transaction,
-                arm_state["armStateChangeTransactionId"],
+                self.coordinator.verisure.request,
+                self.coordinator.verisure.poll_arm_state(
+                    list(arm_state["data"].values())[0], state
+                ),
+            )
+            result = (
+                transaction.get("data", {})
+                .get("installation", {})
+                .get("armStateChangePollResult", {})
+                .get("result")
             )
 
         await self.coordinator.async_refresh()
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        await self._async_set_arm_state("DISARMED", code)
+        self._attr_state = STATE_ALARM_DISARMING
+        self.async_write_ha_state()
+        await self._async_set_arm_state(
+            "DISARMED", self.coordinator.verisure.disarm(code)
+        )
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        await self._async_set_arm_state("ARMED_HOME", code)
+        self._attr_state = STATE_ALARM_ARMING
+        self.async_write_ha_state()
+        await self._async_set_arm_state(
+            "ARMED_HOME", self.coordinator.verisure.arm_home(code)
+        )
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        await self._async_set_arm_state("ARMED_AWAY", code)
+        self._attr_state = STATE_ALARM_ARMING
+        self.async_write_ha_state()
+        await self._async_set_arm_state(
+            "ARMED_AWAY", self.coordinator.verisure.arm_away(code)
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:

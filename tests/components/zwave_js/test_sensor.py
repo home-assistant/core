@@ -1,6 +1,7 @@
 """Test the Z-Wave JS sensor platform."""
 import copy
 
+import pytest
 from zwave_js_server.const.command_class.meter import MeterType
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
@@ -26,14 +27,15 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     STATE_UNAVAILABLE,
+    EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 
 from .common import (
     AIR_TEMPERATURE_SENSOR,
@@ -51,8 +53,8 @@ from .common import (
 
 
 async def test_numeric_sensor(
-    hass, multisensor_6, express_controls_ezmultipli, integration
-):
+    hass: HomeAssistant, multisensor_6, express_controls_ezmultipli, integration
+) -> None:
     """Test the numeric sensor."""
     state = hass.states.get(AIR_TEMPERATURE_SENSOR)
 
@@ -102,7 +104,9 @@ async def test_numeric_sensor(
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
 
-async def test_energy_sensors(hass, hank_binary_switch, integration):
+async def test_energy_sensors(
+    hass: HomeAssistant, hank_binary_switch, integration
+) -> None:
     """Test power and energy sensors."""
     state = hass.states.get(POWER_SENSOR)
 
@@ -135,7 +139,9 @@ async def test_energy_sensors(hass, hank_binary_switch, integration):
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.CURRENT
 
 
-async def test_disabled_notification_sensor(hass, multisensor_6, integration):
+async def test_disabled_notification_sensor(
+    hass: HomeAssistant, multisensor_6, integration
+) -> None:
     """Test sensor is created from Notification CC and is disabled."""
     ent_reg = er.async_get(hass)
     entity_entry = ent_reg.async_get(NOTIFICATION_MOTION_SENSOR)
@@ -161,8 +167,8 @@ async def test_disabled_notification_sensor(hass, multisensor_6, integration):
 
 
 async def test_disabled_indcator_sensor(
-    hass, climate_radio_thermostat_ct100_plus, integration
-):
+    hass: HomeAssistant, climate_radio_thermostat_ct100_plus, integration
+) -> None:
     """Test sensor is created from Indicator CC and is disabled."""
     ent_reg = er.async_get(hass)
     entity_entry = ent_reg.async_get(INDICATOR_SENSOR)
@@ -172,7 +178,9 @@ async def test_disabled_indcator_sensor(
     assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
-async def test_config_parameter_sensor(hass, lock_id_lock_as_id150, integration):
+async def test_config_parameter_sensor(
+    hass: HomeAssistant, lock_id_lock_as_id150, integration
+) -> None:
     """Test config parameter sensor is created."""
     ent_reg = er.async_get(hass)
     entity_entry = ent_reg.async_get(ID_LOCK_CONFIG_PARAMETER_SENSOR)
@@ -180,7 +188,9 @@ async def test_config_parameter_sensor(hass, lock_id_lock_as_id150, integration)
     assert entity_entry.disabled
 
 
-async def test_node_status_sensor(hass, client, lock_id_lock_as_id150, integration):
+async def test_node_status_sensor(
+    hass: HomeAssistant, client, lock_id_lock_as_id150, integration
+) -> None:
     """Test node status sensor is created and gets updated on node state changes."""
     NODE_STATUS_ENTITY = "sensor.z_wave_module_for_id_lock_150_and_101_node_status"
     node = lock_id_lock_as_id150
@@ -241,13 +251,13 @@ async def test_node_status_sensor(hass, client, lock_id_lock_as_id150, integrati
 
 
 async def test_node_status_sensor_not_ready(
-    hass,
+    hass: HomeAssistant,
     client,
     lock_id_lock_as_id150_not_ready,
     lock_id_lock_as_id150_state,
     integration,
-    caplog,
-):
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test node status sensor is created and available if node is not ready."""
     NODE_STATUS_ENTITY = "sensor.z_wave_module_for_id_lock_150_and_101_node_status"
     node = lock_id_lock_as_id150_not_ready
@@ -287,11 +297,11 @@ async def test_node_status_sensor_not_ready(
 
 
 async def test_reset_meter(
-    hass,
+    hass: HomeAssistant,
     client,
     aeon_smart_switch_6,
     integration,
-):
+) -> None:
     """Test reset_meter service."""
     client.async_send_command.return_value = {}
     client.async_send_command_no_wait.return_value = {}
@@ -338,11 +348,11 @@ async def test_reset_meter(
 
 
 async def test_meter_attributes(
-    hass,
+    hass: HomeAssistant,
     client,
     aeon_smart_switch_6,
     integration,
-):
+) -> None:
     """Test meter entity attributes."""
     state = hass.states.get(METER_ENERGY_SENSOR)
     assert state
@@ -352,7 +362,9 @@ async def test_meter_attributes(
     assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL_INCREASING
 
 
-async def test_special_meters(hass, aeon_smart_switch_6_state, client, integration):
+async def test_special_meters(
+    hass: HomeAssistant, aeon_smart_switch_6_state, client, integration
+) -> None:
     """Test meters that have special handling."""
     node_data = copy.deepcopy(
         aeon_smart_switch_6_state
@@ -419,7 +431,7 @@ async def test_special_meters(hass, aeon_smart_switch_6_state, client, integrati
     assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.MEASUREMENT
 
 
-async def test_unit_change(hass, zp3111, client, integration):
+async def test_unit_change(hass: HomeAssistant, zp3111, client, integration) -> None:
     """Test unit change via metadata updated event is handled by numeric sensors."""
     entity_id = "sensor.4_in_1_sensor_air_temperature"
     state = hass.states.get(entity_id)

@@ -7,6 +7,7 @@ from homeassistant import config_entries
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import discovery
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
 from tests.common import async_fire_time_changed, mock_coro
@@ -53,7 +54,7 @@ async def mock_discovery(hass, discoveries, config=BASE_CONFIG):
     return mock_discover, mock_platform
 
 
-async def test_unknown_service(hass):
+async def test_unknown_service(hass: HomeAssistant) -> None:
     """Test that unknown service is ignored."""
 
     def discover(netdisco, zeroconf_instance, suppress_mdns_types):
@@ -66,7 +67,7 @@ async def test_unknown_service(hass):
     assert not mock_platform.called
 
 
-async def test_load_platform(hass):
+async def test_load_platform(hass: HomeAssistant) -> None:
     """Test load a platform."""
 
     def discover(netdisco, zeroconf_instance, suppress_mdns_types):
@@ -82,7 +83,7 @@ async def test_load_platform(hass):
     )
 
 
-async def test_discover_config_flow(hass):
+async def test_discover_config_flow(hass: HomeAssistant) -> None:
     """Test discovery triggering a config flow."""
     discovery_info = {"hello": "world"}
 

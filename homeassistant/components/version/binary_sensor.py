@@ -9,9 +9,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, __version__ as HA_VERSION
+from homeassistant.const import CONF_NAME, EntityCategory, __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_SOURCE, DEFAULT_NAME, DOMAIN

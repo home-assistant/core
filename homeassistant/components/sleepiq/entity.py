@@ -5,7 +5,7 @@ from typing import TypeVar
 from asyncsleepiq import SleepIQBed, SleepIQSleeper
 
 from homeassistant.core import callback
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -21,7 +21,7 @@ _SleepIQCoordinatorT = TypeVar(
 def device_from_bed(bed: SleepIQBed) -> DeviceInfo:
     """Create a device given a bed."""
     return DeviceInfo(
-        connections={(device_registry.CONNECTION_NETWORK_MAC, bed.mac_addr)},
+        connections={(dr.CONNECTION_NETWORK_MAC, bed.mac_addr)},
         manufacturer="SleepNumber",
         name=bed.name,
         model=bed.model,

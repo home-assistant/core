@@ -1,9 +1,9 @@
 {
   "domain": "bbox",
   "name": "Bbox",
-  "documentation": "https://www.home-assistant.io/integrations/bbox",
-  "requirements": ["pybbox==0.0.5-alpha"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/bbox",
   "iot_class": "local_polling",
-  "loggers": ["pybbox"]
+  "loggers": ["pybbox"],
+  "requirements": ["pybbox==0.0.5-alpha"]
 }

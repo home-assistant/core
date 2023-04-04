@@ -172,7 +172,7 @@ class CoverTemplate(TemplateEntity, CoverEntity):
             self._tilt_script = Script(hass, tilt_action, friendly_name, DOMAIN)
         optimistic = config.get(CONF_OPTIMISTIC)
         self._optimistic = optimistic or (
-            not self._template and not self._position_template
+            optimistic is None and not self._template and not self._position_template
         )
         tilt_optimistic = config.get(CONF_TILT_OPTIMISTIC)
         self._tilt_optimistic = tilt_optimistic or not self._tilt_template
@@ -233,6 +233,9 @@ class CoverTemplate(TemplateEntity, CoverEntity):
             if not self._position_template:
                 self._position = None
 
+            self._is_opening = False
+            self._is_closing = False
+
     @callback
     def _update_position(self, result):
         try:
@@ -270,8 +273,11 @@ class CoverTemplate(TemplateEntity, CoverEntity):
             self._tilt_value = state
 
     @property
-    def is_closed(self) -> bool:
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
+        if self._position is None:
+            return None
+
         return self._position == 0
 
     @property

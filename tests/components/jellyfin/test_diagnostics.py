@@ -11,7 +11,7 @@ async def test_diagnostics(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     hass_client: ClientSessionGenerator,
-):
+) -> None:
     """Test generating diagnostics for a config entry."""
     entry = init_integration
 

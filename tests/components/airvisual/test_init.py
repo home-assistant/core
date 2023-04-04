@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_STATE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from .conftest import (
@@ -39,7 +40,7 @@ from .conftest import (
 from tests.common import MockConfigEntry
 
 
-async def test_migration_1_2(hass, mock_pyairvisual):
+async def test_migration_1_2(hass: HomeAssistant, mock_pyairvisual) -> None:
     """Test migrating from version 1 to 2."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -98,7 +99,7 @@ async def test_migration_1_2(hass, mock_pyairvisual):
     }
 
 
-async def test_migration_2_3(hass, mock_pyairvisual):
+async def test_migration_2_3(hass: HomeAssistant, mock_pyairvisual) -> None:
     """Test migrating from version 2 to 3."""
     entry = MockConfigEntry(
         domain=DOMAIN,

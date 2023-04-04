@@ -8,6 +8,7 @@ from homeassistant.components.number import (
     SERVICE_SET_VALUE,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_ICON
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import (
@@ -24,7 +25,7 @@ from .conftest import (
 )
 
 
-async def test_firmness(hass, mock_asyncsleepiq):
+async def test_firmness(hass: HomeAssistant, mock_asyncsleepiq) -> None:
     """Test the SleepIQ firmness number values for a bed with two sides."""
     entry = await setup_platform(hass, DOMAIN)
     entity_registry = er.async_get(hass)
@@ -82,7 +83,7 @@ async def test_firmness(hass, mock_asyncsleepiq):
     mock_asyncsleepiq.beds[BED_ID].sleepers[0].set_sleepnumber.assert_called_with(42)
 
 
-async def test_actuators(hass, mock_asyncsleepiq):
+async def test_actuators(hass: HomeAssistant, mock_asyncsleepiq) -> None:
     """Test the SleepIQ actuator position values for a bed with adjustable head and foot."""
     entry = await setup_platform(hass, DOMAIN)
     entity_registry = er.async_get(hass)

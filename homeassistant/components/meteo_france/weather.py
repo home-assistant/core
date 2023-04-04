@@ -83,6 +83,7 @@ class MeteoFranceWeather(
 ):
     """Representation of a weather condition."""
 
+    _attr_attribution = ATTRIBUTION
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
     _attr_native_pressure_unit = UnitOfPressure.HPA
@@ -203,8 +204,3 @@ class MeteoFranceWeather(
                     }
                 )
         return forecast_data
-
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return ATTRIBUTION

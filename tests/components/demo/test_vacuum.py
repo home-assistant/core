@@ -36,6 +36,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
@@ -57,7 +58,7 @@ async def setup_demo_vacuum(hass):
     await hass.async_block_till_done()
 
 
-async def test_supported_features(hass):
+async def test_supported_features(hass: HomeAssistant) -> None:
     """Test vacuum supported features."""
     state = hass.states.get(ENTITY_VACUUM_COMPLETE)
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 2047
@@ -107,7 +108,7 @@ async def test_supported_features(hass):
     assert state.attributes.get(ATTR_FAN_SPEED_LIST) == FAN_SPEEDS
 
 
-async def test_methods(hass):
+async def test_methods(hass: HomeAssistant) -> None:
     """Test if methods call the services as expected."""
     hass.states.async_set(ENTITY_VACUUM_BASIC, STATE_ON)
     await hass.async_block_till_done()
@@ -194,7 +195,7 @@ async def test_methods(hass):
     assert state.state == STATE_CLEANING
 
 
-async def test_unsupported_methods(hass):
+async def test_unsupported_methods(hass: HomeAssistant) -> None:
     """Test service calls for unsupported vacuums."""
     hass.states.async_set(ENTITY_VACUUM_NONE, STATE_ON)
     await hass.async_block_till_done()
@@ -266,7 +267,7 @@ async def test_unsupported_methods(hass):
     assert state.state != STATE_CLEANING
 
 
-async def test_services(hass):
+async def test_services(hass: HomeAssistant) -> None:
     """Test vacuum services."""
     # Test send_command
     send_command_calls = async_mock_service(hass, DOMAIN, SERVICE_SEND_COMMAND)
@@ -299,7 +300,7 @@ async def test_services(hass):
     assert call.data[ATTR_FAN_SPEED] == FAN_SPEEDS[0]
 
 
-async def test_set_fan_speed(hass):
+async def test_set_fan_speed(hass: HomeAssistant) -> None:
     """Test vacuum service to set the fan speed."""
     group_vacuums = ",".join(
         [ENTITY_VACUUM_BASIC, ENTITY_VACUUM_COMPLETE, ENTITY_VACUUM_STATE]
@@ -326,7 +327,7 @@ async def test_set_fan_speed(hass):
     assert new_state_state.attributes[ATTR_FAN_SPEED] == FAN_SPEEDS[0]
 
 
-async def test_send_command(hass):
+async def test_send_command(hass: HomeAssistant) -> None:
     """Test vacuum service to send a command."""
     group_vacuums = ",".join([ENTITY_VACUUM_BASIC, ENTITY_VACUUM_COMPLETE])
     old_state_basic = hass.states.get(ENTITY_VACUUM_BASIC)

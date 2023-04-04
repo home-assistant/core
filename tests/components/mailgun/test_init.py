@@ -82,7 +82,7 @@ async def mailgun_events(hass):
 
 async def test_mailgun_webhook_with_missing_signature(
     http_client, webhook_id_with_api_key, mailgun_events
-):
+) -> None:
     """Test that webhook doesn't trigger an event without a signature."""
     event_count = len(mailgun_events)
 
@@ -102,7 +102,7 @@ async def test_mailgun_webhook_with_missing_signature(
 
 async def test_mailgun_webhook_with_different_api_key(
     http_client, webhook_id_with_api_key, mailgun_events
-):
+) -> None:
     """Test that webhook doesn't trigger an event with a wrong signature."""
     timestamp = "1529006854"
     token = "a8ce0edb2dd8301dee6c2405235584e45aa91d1e9f979f3de0"
@@ -130,7 +130,7 @@ async def test_mailgun_webhook_with_different_api_key(
 
 async def test_mailgun_webhook_event_with_correct_api_key(
     http_client, webhook_id_with_api_key, mailgun_events
-):
+) -> None:
     """Test that webhook triggers an event after validating a signature."""
     timestamp = "1529006854"
     token = "a8ce0edb2dd8301dee6c2405235584e45aa91d1e9f979f3de0"
@@ -160,7 +160,7 @@ async def test_mailgun_webhook_event_with_correct_api_key(
 
 async def test_mailgun_webhook_with_missing_signature_without_api_key(
     http_client, webhook_id_without_api_key, mailgun_events
-):
+) -> None:
     """Test that webhook triggers an event without a signature w/o API key."""
     event_count = len(mailgun_events)
 
@@ -184,7 +184,7 @@ async def test_mailgun_webhook_with_missing_signature_without_api_key(
 
 async def test_mailgun_webhook_event_without_an_api_key(
     http_client, webhook_id_without_api_key, mailgun_events
-):
+) -> None:
     """Test that webhook triggers an event if there is no api key."""
     timestamp = "1529006854"
     token = "a8ce0edb2dd8301dee6c2405235584e45aa91d1e9f979f3de0"

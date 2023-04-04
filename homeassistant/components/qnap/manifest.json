@@ -1,9 +1,9 @@
 {
   "domain": "qnap",
   "name": "QNAP",
-  "documentation": "https://www.home-assistant.io/integrations/qnap",
-  "requirements": ["qnapstats==0.4.0"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/qnap",
   "iot_class": "local_polling",
-  "loggers": ["qnapstats"]
+  "loggers": ["qnapstats"],
+  "requirements": ["qnapstats==0.4.0"]
 }

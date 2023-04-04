@@ -25,6 +25,7 @@ class SupportedModels(StrEnum):
     MOTION = "motion"
     HUMIDIFIER = "humidifier"
     LOCK = "lock"
+    BLIND_TILT = "blind_tilt"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -36,6 +37,7 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.CEILING_LIGHT: SupportedModels.CEILING_LIGHT,
     SwitchbotModel.HUMIDIFIER: SupportedModels.HUMIDIFIER,
     SwitchbotModel.LOCK: SupportedModels.LOCK,
+    SwitchbotModel.BLIND_TILT: SupportedModels.BLIND_TILT,
 }
 
 NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {

@@ -261,7 +261,7 @@ class SnmpSwitch(SwitchEntity):
         get_result = await getCmd(
             *self._request_args, ObjectType(ObjectIdentity(self._baseoid))
         )
-        errindication, errstatus, errindex, restable = await get_result
+        errindication, errstatus, errindex, restable = get_result
 
         if errindication:
             _LOGGER.error("SNMP error: %s", errindication)

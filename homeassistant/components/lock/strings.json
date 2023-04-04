@@ -15,10 +15,24 @@
       "unlocked": "{entity_name} unlocked"
     }
   },
-  "state": {
+  "entity_component": {
     "_": {
-      "locked": "[%key:common::state::locked%]",
-      "unlocked": "[%key:common::state::unlocked%]"
+      "name": "[%key:component::lock::title%]",
+      "state": {
+        "jammed": "Jammed",
+        "locked": "[%key:common::state::locked%]",
+        "locking": "Locking",
+        "unlocked": "[%key:common::state::unlocked%]",
+        "unlocking": "Unlocking"
+      },
+      "state_attributes": {
+        "code_format": {
+          "name": "[%key:component::alarm_control_panel::entity_component::_::state_attributes::code_format::name%]"
+        },
+        "changed_by": {
+          "name": "[%key:component::alarm_control_panel::entity_component::_::state_attributes::changed_by::name%]"
+        }
+      }
     }
   }
 }

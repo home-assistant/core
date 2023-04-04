@@ -224,9 +224,27 @@ class HaBleakClientWrapper(BleakClient):
         self.__disconnected_callback = callback
         if self._backend:
             self._backend.set_disconnected_callback(
-                callback,  # type: ignore[arg-type]
+                self._make_disconnected_callback(callback),
                 **kwargs,
             )
+
+    def _make_disconnected_callback(
+        self, callback: Callable[[BleakClient], None] | None
+    ) -> Callable[[], None] | None:
+        """Make the disconnected callback.
+
+        https://github.com/hbldh/bleak/pull/1256
+        The disconnected callback needs to get the top level
+        BleakClientWrapper instance, not the backend instance.
+
+        The signature of the callback for the backend is:
+            Callable[[], None]
+
+        To make this work we need to wrap the callback in a partial
+        that passes the BleakClientWrapper instance as the first
+        argument.
+        """
+        return None if callback is None else partial(callback, self)
 
     async def connect(self, **kwargs: Any) -> bool:
         """Connect to the specified GATT server."""
@@ -235,7 +253,9 @@ class HaBleakClientWrapper(BleakClient):
         wrapped_backend = self._async_get_best_available_backend_and_device(manager)
         self._backend = wrapped_backend.client(
             wrapped_backend.device,
-            disconnected_callback=self.__disconnected_callback,
+            disconnected_callback=self._make_disconnected_callback(
+                self.__disconnected_callback
+            ),
             timeout=self.__timeout,
             hass=manager.hass,
         )

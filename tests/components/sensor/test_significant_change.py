@@ -32,7 +32,7 @@ TEMP_FREEDOM_ATTRS = {
 
 
 @pytest.mark.parametrize(
-    "old_state,new_state,attrs,result",
+    ("old_state", "new_state", "attrs", "result"),
     [
         ("0", "1", AQI_ATTRS, True),
         ("1", "0", AQI_ATTRS, True),
@@ -55,7 +55,9 @@ TEMP_FREEDOM_ATTRS = {
         ("70", "fail", TEMP_FREEDOM_ATTRS, False),
     ],
 )
-async def test_significant_change_temperature(old_state, new_state, attrs, result):
+async def test_significant_change_temperature(
+    old_state, new_state, attrs, result
+) -> None:
     """Detect temperature significant changes."""
     assert (
         significant_change.async_check_significant_change(

@@ -17,6 +17,7 @@ from homeassistant.components.lutron_caseta.const import (
 )
 from homeassistant.components.lutron_caseta.models import LutronCasetaData
 from homeassistant.const import ATTR_DEVICE_ID, CONF_HOST
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import MockBridge
@@ -25,7 +26,7 @@ from tests.common import MockConfigEntry
 from tests.components.logbook.common import MockRow, mock_humanify
 
 
-async def test_humanify_lutron_caseta_button_event(hass):
+async def test_humanify_lutron_caseta_button_event(hass: HomeAssistant) -> None:
     """Test humanifying lutron_caseta_button_events."""
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})

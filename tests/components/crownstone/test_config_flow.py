@@ -176,7 +176,9 @@ async def start_options_flow(
     return await hass.config_entries.options.async_init(entry_id)
 
 
-async def test_no_user_input(crownstone_setup: MockFixture, hass: HomeAssistant):
+async def test_no_user_input(
+    crownstone_setup: MockFixture, hass: HomeAssistant
+) -> None:
     """Test the flow done in the correct way."""
     # test if a form is returned if no input is provided
     result = await hass.config_entries.flow.async_init(
@@ -188,7 +190,9 @@ async def test_no_user_input(crownstone_setup: MockFixture, hass: HomeAssistant)
     assert crownstone_setup.call_count == 0
 
 
-async def test_abort_if_configured(crownstone_setup: MockFixture, hass: HomeAssistant):
+async def test_abort_if_configured(
+    crownstone_setup: MockFixture, hass: HomeAssistant
+) -> None:
     """Test flow with correct login input and abort if sphere already configured."""
     # create mock entry conf
     configured_entry_data = create_mocked_entry_data_conf(
@@ -218,7 +222,7 @@ async def test_abort_if_configured(crownstone_setup: MockFixture, hass: HomeAssi
 
 async def test_authentication_errors(
     crownstone_setup: MockFixture, hass: HomeAssistant
-):
+) -> None:
     """Test flow with wrong auth errors."""
     cloud = get_mocked_crownstone_cloud()
     # side effect: auth error login failed
@@ -243,7 +247,9 @@ async def test_authentication_errors(
     assert crownstone_setup.call_count == 0
 
 
-async def test_unknown_error(crownstone_setup: MockFixture, hass: HomeAssistant):
+async def test_unknown_error(
+    crownstone_setup: MockFixture, hass: HomeAssistant
+) -> None:
     """Test flow with unknown error."""
     cloud = get_mocked_crownstone_cloud()
     # side effect: unknown error
@@ -258,7 +264,7 @@ async def test_unknown_error(crownstone_setup: MockFixture, hass: HomeAssistant)
 
 async def test_successful_login_no_usb(
     crownstone_setup: MockFixture, hass: HomeAssistant
-):
+) -> None:
     """Test a successful login without configuring a USB."""
     entry_data_without_usb = create_mocked_entry_data_conf(
         email="example@homeassistant.com",
@@ -289,7 +295,7 @@ async def test_successful_login_with_usb(
     pyserial_comports_none_types: MockFixture,
     usb_path: MockFixture,
     hass: HomeAssistant,
-):
+) -> None:
     """Test flow with correct login and usb configuration."""
     entry_data_with_usb = create_mocked_entry_data_conf(
         email="example@homeassistant.com",
@@ -341,7 +347,7 @@ async def test_successful_login_with_usb(
 
 async def test_successful_login_with_manual_usb_path(
     crownstone_setup: MockFixture, pyserial_comports: MockFixture, hass: HomeAssistant
-):
+) -> None:
     """Test flow with correct login and usb configuration."""
     entry_data_with_manual_usb = create_mocked_entry_data_conf(
         email="example@homeassistant.com",
@@ -385,7 +391,7 @@ async def test_successful_login_with_manual_usb_path(
 
 async def test_options_flow_setup_usb(
     pyserial_comports: MockFixture, usb_path: MockFixture, hass: HomeAssistant
-):
+) -> None:
     """Test options flow init."""
     configured_entry_data = create_mocked_entry_data_conf(
         email="example@homeassistant.com",
@@ -462,7 +468,7 @@ async def test_options_flow_setup_usb(
     )
 
 
-async def test_options_flow_remove_usb(hass: HomeAssistant):
+async def test_options_flow_remove_usb(hass: HomeAssistant) -> None:
     """Test selecting to set up an USB dongle."""
     configured_entry_data = create_mocked_entry_data_conf(
         email="example@homeassistant.com",
@@ -515,7 +521,7 @@ async def test_options_flow_remove_usb(hass: HomeAssistant):
 
 async def test_options_flow_manual_usb_path(
     pyserial_comports: MockFixture, hass: HomeAssistant
-):
+) -> None:
     """Test flow with correct login and usb configuration."""
     configured_entry_data = create_mocked_entry_data_conf(
         email="example@homeassistant.com",
@@ -574,7 +580,7 @@ async def test_options_flow_manual_usb_path(
     )
 
 
-async def test_options_flow_change_usb_sphere(hass: HomeAssistant):
+async def test_options_flow_change_usb_sphere(hass: HomeAssistant) -> None:
     """Test changing the usb sphere in the options."""
     configured_entry_data = create_mocked_entry_data_conf(
         email="example@homeassistant.com",

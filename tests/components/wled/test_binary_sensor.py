@@ -1,70 +1,47 @@
 """Tests for the WLED binary sensor platform."""
-from unittest.mock import AsyncMock, MagicMock
-
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ICON, STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry
+pytestmark = pytest.mark.usefixtures("init_integration")
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_update_available(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: AsyncMock,
-    init_integration: MockConfigEntry,
-    mock_wled: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the firmware update binary sensor."""
-    entity_registry = er.async_get(hass)
+    assert (state := hass.states.get("binary_sensor.wled_rgb_light_firmware"))
+    assert state == snapshot
 
-    state = hass.states.get("binary_sensor.wled_rgb_light_firmware")
-    assert state
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.UPDATE
-    assert state.state == STATE_ON
-    assert ATTR_ICON not in state.attributes
+    assert (entity_entry := entity_registry.async_get(state.entity_id))
+    assert entity_entry == snapshot
 
-    entry = entity_registry.async_get("binary_sensor.wled_rgb_light_firmware")
-    assert entry
-    assert entry.unique_id == "aabbccddeeff_update"
-    assert entry.entity_category is EntityCategory.DIAGNOSTIC
+    assert entity_entry.device_id
+    assert (device_entry := device_registry.async_get(entity_entry.device_id))
+    assert device_entry == snapshot
 
 
-@pytest.mark.parametrize("mock_wled", ["wled/rgb_websocket.json"], indirect=True)
-async def test_no_update_available(
-    hass: HomeAssistant,
-    entity_registry_enabled_by_default: AsyncMock,
-    init_integration: MockConfigEntry,
-    mock_wled: MagicMock,
-) -> None:
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("device_fixture", ["rgb_websocket"])
+async def test_no_update_available(hass: HomeAssistant) -> None:
     """Test the update binary sensor. There is no update available."""
-    entity_registry = er.async_get(hass)
-
-    state = hass.states.get("binary_sensor.wled_websocket_firmware")
-    assert state
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.UPDATE
+    assert (state := hass.states.get("binary_sensor.wled_websocket_firmware"))
     assert state.state == STATE_OFF
-    assert ATTR_ICON not in state.attributes
-
-    entry = entity_registry.async_get("binary_sensor.wled_websocket_firmware")
-    assert entry
-    assert entry.unique_id == "aabbccddeeff_update"
-    assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
 
 async def test_disabled_by_default(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test that the binary update sensor is disabled by default."""
-    registry = er.async_get(hass)
+    assert not hass.states.get("binary_sensor.wled_rgb_light_firmware")
 
-    state = hass.states.get("binary_sensor.wled_rgb_light_firmware")
-    assert state is None
-
-    entry = registry.async_get("binary_sensor.wled_rgb_light_firmware")
-    assert entry
+    assert (entry := entity_registry.async_get("binary_sensor.wled_rgb_light_firmware"))
     assert entry.disabled
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION

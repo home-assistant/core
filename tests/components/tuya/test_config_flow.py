@@ -65,7 +65,7 @@ def tuya_setup_fixture() -> None:
 
 
 @pytest.mark.parametrize(
-    "app_type,side_effects, project_type",
+    ("app_type", "side_effects", "project_type"),
     [
         ("", [RESPONSE_SUCCESS], 1),
         (TUYA_SMART_APP, [RESPONSE_ERROR, RESPONSE_SUCCESS], 0),
@@ -108,7 +108,7 @@ async def test_user_flow(
     assert not result["result"].unique_id
 
 
-async def test_error_on_invalid_credentials(hass, tuya):
+async def test_error_on_invalid_credentials(hass: HomeAssistant, tuya) -> None:
     """Test when we have invalid credentials."""
 
     result = await hass.config_entries.flow.async_init(

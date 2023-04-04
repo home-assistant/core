@@ -17,6 +17,7 @@ from .conftest import ComponentSetup, ExpectedCredentials
 
 from tests.common import async_fire_time_changed, async_mock_service
 from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 
 async def fetch_api_url(hass_client, url):
@@ -84,7 +85,7 @@ async def test_expired_token_refresh_success(
 
 
 @pytest.mark.parametrize(
-    "expires_at,status,expected_state",
+    ("expires_at", "status", "expected_state"),
     [
         (
             time.time() - 3600,
@@ -121,7 +122,7 @@ async def test_expired_token_refresh_failure(
 
 
 @pytest.mark.parametrize(
-    "configured_language_code,expected_language_code",
+    ("configured_language_code", "expected_language_code"),
     [("", "en-US"), ("en-US", "en-US"), ("es-ES", "es-ES")],
     ids=["default", "english", "spanish"],
 )
@@ -186,7 +187,7 @@ async def test_send_text_commands(
 
 
 @pytest.mark.parametrize(
-    "status,requires_reauth",
+    ("status", "requires_reauth"),
     [
         (
             http.HTTPStatus.UNAUTHORIZED,
@@ -232,7 +233,9 @@ async def test_send_text_command_expired_token_refresh_failure(
 
 
 async def test_send_text_command_media_player(
-    hass: HomeAssistant, setup_integration: ComponentSetup, hass_client
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test send_text_command with media_player."""
     await setup_integration()

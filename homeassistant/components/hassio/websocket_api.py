@@ -116,6 +116,7 @@ async def websocket_supervisor_api(
             method=msg[ATTR_METHOD],
             timeout=msg.get(ATTR_TIMEOUT, 10),
             payload=msg.get(ATTR_DATA, {}),
+            source="core.websocket_api",
         )
 
         if result.get(ATTR_RESULT) == "error":

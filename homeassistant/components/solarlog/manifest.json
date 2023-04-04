@@ -1,10 +1,10 @@
 {
   "domain": "solarlog",
   "name": "Solar-Log",
+  "codeowners": ["@Ernst79"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/solarlog",
-  "codeowners": ["@Ernst79"],
-  "requirements": ["sunwatcher==0.2.1"],
   "iot_class": "local_polling",
-  "loggers": ["sunwatcher"]
+  "loggers": ["sunwatcher"],
+  "requirements": ["sunwatcher==0.2.1"]
 }

@@ -32,7 +32,7 @@ VALID_CONFIG_OLD = {
 }
 
 
-async def test_create_entry(hass):
+async def test_create_entry(hass: HomeAssistant) -> None:
     """Test that the user step works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -63,7 +63,7 @@ async def test_create_entry(hass):
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_auth_error(hass):
+async def test_auth_error(hass: HomeAssistant) -> None:
     """Test that the user step fails."""
     with patch(
         "homeassistant.components.sabnzbd.sab.SabnzbdApi.check_available",

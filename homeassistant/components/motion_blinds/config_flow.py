@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from motionblinds import MotionDiscovery
+from motionblinds import MotionDiscovery, MotionGateway
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -85,6 +85,16 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         mac_address = format_mac(discovery_info.macaddress).replace(":", "")
         await self.async_set_unique_id(mac_address)
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
+
+        gateway = MotionGateway(ip=discovery_info.ip, key="abcd1234-56ef-78")
+        try:
+            # key not needed for GetDeviceList request
+            await self.hass.async_add_executor_job(gateway.GetDeviceList)
+        except Exception:  # pylint: disable=broad-except
+            return self.async_abort(reason="not_motionblinds")
+
+        if not gateway.available:
+            return self.async_abort(reason="not_motionblinds")
 
         short_mac = mac_address[-6:].upper()
         self.context["title_placeholders"] = {

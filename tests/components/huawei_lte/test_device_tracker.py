@@ -15,6 +15,6 @@ from homeassistant.components.huawei_lte import device_tracker
         ("foo_bar", "foo_bar"),
     ),
 )
-def test_better_snakecase(value, expected):
+def test_better_snakecase(value, expected) -> None:
     """Test that better snakecase works better."""
     assert device_tracker._better_snakecase(value) == expected

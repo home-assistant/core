@@ -12,10 +12,9 @@ from zigpy.zcl.foundation import Status
 
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
@@ -185,3 +184,15 @@ class AqaraPetFeederFeedButton(ZHAAttributeButton, id_suffix="feeding"):
     _attribute_name = "feeding"
     _attr_name = "Feed"
     _attribute_value = 1
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="opple_cluster", models={"lumi.sensor_smoke.acn03"}
+)
+class AqaraSelfTestButton(ZHAAttributeButton, id_suffix="self_test"):
+    """Defines a ZHA self-test button for Aqara smoke sensors."""
+
+    _attribute_name = "self_test"
+    _attr_name = "Self-test"
+    _attribute_value = 1
+    _attr_entity_category = EntityCategory.CONFIG

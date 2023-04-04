@@ -1,0 +1,119 @@
+# serializer version: 1
+# name: test_entry_diagnostics[adsl]
+  dict({
+    'data': dict({
+      'dsl': dict({
+        'attenuation_down': 28.5,
+        'attenuation_up': 20.8,
+        'counter': 16,
+        'crc': 0,
+        'line_status': 'No Defect',
+        'linemode': 'ADSL2+',
+        'noise_down': 5.8,
+        'noise_up': 6.0,
+        'rate_down': 5549,
+        'rate_up': 187,
+        'status': 'up',
+        'training': 'Showtime',
+        'uptime': 450796,
+      }),
+      'ftth': dict({
+        'status': 'down',
+        'wanfibre': 'out',
+      }),
+      'system': dict({
+        'alimvoltage': 12251,
+        'current_datetime': '202212282233',
+        'idur': 'RP3P85K',
+        'mac_addr': '**REDACTED**',
+        'net_infra': 'adsl',
+        'net_mode': 'router',
+        'product_id': 'NB6VAC-FXC-r0',
+        'refclient': '',
+        'serial_number': '**REDACTED**',
+        'temperature': 27560,
+        'uptime': 2353575,
+        'version_bootloader': 'NB6VAC-BOOTLOADER-R4.0.8',
+        'version_dsldriver': 'NB6VAC-XDSL-A2pv6F039p',
+        'version_mainfirmware': 'NB6VAC-MAIN-R4.0.44k',
+        'version_rescuefirmware': 'NB6VAC-MAIN-R4.0.44k',
+      }),
+      'wan': dict({
+        'infra': 'adsl',
+        'infra6': '',
+        'ip_addr': '**REDACTED**',
+        'ipv6_addr': '',
+        'mode': 'adsl/routed',
+        'status': 'up',
+        'status6': 'down',
+        'uptime': 297464,
+        'uptime6': None,
+      }),
+    }),
+    'entry': dict({
+      'data': dict({
+        'host': '192.168.0.1',
+      }),
+      'title': 'Mock Title',
+    }),
+  })
+# ---
+# name: test_entry_diagnostics[ftth]
+  dict({
+    'data': dict({
+      'dsl': dict({
+        'attenuation_down': 28.5,
+        'attenuation_up': 20.8,
+        'counter': 16,
+        'crc': 0,
+        'line_status': 'No Defect',
+        'linemode': 'ADSL2+',
+        'noise_down': 5.8,
+        'noise_up': 6.0,
+        'rate_down': 5549,
+        'rate_up': 187,
+        'status': 'up',
+        'training': 'Showtime',
+        'uptime': 450796,
+      }),
+      'ftth': dict({
+        'status': 'down',
+        'wanfibre': 'out',
+      }),
+      'system': dict({
+        'alimvoltage': 12251,
+        'current_datetime': '202212282233',
+        'idur': 'RP3P85K',
+        'mac_addr': '**REDACTED**',
+        'net_infra': 'ftth',
+        'net_mode': 'router',
+        'product_id': 'NB6VAC-FXC-r0',
+        'refclient': '',
+        'serial_number': '**REDACTED**',
+        'temperature': 27560,
+        'uptime': 2353575,
+        'version_bootloader': 'NB6VAC-BOOTLOADER-R4.0.8',
+        'version_dsldriver': 'NB6VAC-XDSL-A2pv6F039p',
+        'version_mainfirmware': 'NB6VAC-MAIN-R4.0.44k',
+        'version_rescuefirmware': 'NB6VAC-MAIN-R4.0.44k',
+      }),
+      'wan': dict({
+        'infra': 'adsl',
+        'infra6': '',
+        'ip_addr': '**REDACTED**',
+        'ipv6_addr': '',
+        'mode': 'adsl/routed',
+        'status': 'up',
+        'status6': 'down',
+        'uptime': 297464,
+        'uptime6': None,
+      }),
+    }),
+    'entry': dict({
+      'data': dict({
+        'host': '192.168.0.1',
+      }),
+      'title': 'Mock Title',
+    }),
+  })
+# ---

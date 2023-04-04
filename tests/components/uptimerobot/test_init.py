@@ -29,7 +29,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 async def test_reauthentication_trigger_in_setup(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-):
+) -> None:
     """Test reauthentication trigger."""
     mock_config_entry = MockConfigEntry(**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA)
     mock_config_entry.add_to_hass(hass)
@@ -61,7 +61,7 @@ async def test_reauthentication_trigger_in_setup(
 
 async def test_reauthentication_trigger_key_read_only(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-):
+) -> None:
     """Test reauthentication trigger."""
     mock_config_entry = MockConfigEntry(
         **MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA_KEY_READ_ONLY
@@ -94,7 +94,7 @@ async def test_reauthentication_trigger_key_read_only(
 
 async def test_reauthentication_trigger_after_setup(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-):
+) -> None:
     """Test reauthentication trigger."""
     mock_config_entry = await setup_uptimerobot_integration(hass)
 
@@ -125,7 +125,7 @@ async def test_reauthentication_trigger_after_setup(
     assert flow["context"]["entry_id"] == mock_config_entry.entry_id
 
 
-async def test_integration_reload(hass: HomeAssistant):
+async def test_integration_reload(hass: HomeAssistant) -> None:
     """Test integration reload."""
     mock_entry = await setup_uptimerobot_integration(hass)
 
@@ -142,7 +142,9 @@ async def test_integration_reload(hass: HomeAssistant):
     assert hass.states.get(UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY).state == STATE_ON
 
 
-async def test_update_errors(hass: HomeAssistant, caplog: pytest.LogCaptureFixture):
+async def test_update_errors(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test errors during updates."""
     await setup_uptimerobot_integration(hass)
 
@@ -179,7 +181,7 @@ async def test_update_errors(hass: HomeAssistant, caplog: pytest.LogCaptureFixtu
     assert "Error fetching uptimerobot data: test error from API" in caplog.text
 
 
-async def test_device_management(hass: HomeAssistant):
+async def test_device_management(hass: HomeAssistant) -> None:
     """Test that we are adding and removing devices for monitors returned from the API."""
     mock_entry = await setup_uptimerobot_integration(hass)
     dev_reg = dr.async_get(hass)

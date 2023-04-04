@@ -182,7 +182,7 @@ async def test_coordinator_retry_right_away_on_discovery_already_setup(
 
 
 @pytest.mark.parametrize(
-    "discovery,title",
+    ("discovery", "title"),
     [
         (FLUX_DISCOVERY, DEFAULT_ENTRY_TITLE),
         (FLUX_DISCOVERY_PARTIAL, DEFAULT_ENTRY_TITLE),

@@ -2,6 +2,7 @@
 import datetime
 from unittest.mock import patch
 
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 VALID_CONFIG_MINIMAL = {
@@ -156,7 +157,7 @@ def get_no_departures_mock():
     }
 
 
-async def test_rmvtransport_min_config(hass):
+async def test_rmvtransport_min_config(hass: HomeAssistant) -> None:
     """Test minimal rmvtransport configuration."""
     with patch(
         "RMVtransport.RMVtransport.get_departures",
@@ -177,7 +178,7 @@ async def test_rmvtransport_min_config(hass):
     assert state.attributes["friendly_name"] == "Frankfurt (Main) Hauptbahnhof"
 
 
-async def test_rmvtransport_name_config(hass):
+async def test_rmvtransport_name_config(hass: HomeAssistant) -> None:
     """Test custom name configuration."""
     with patch(
         "RMVtransport.RMVtransport.get_departures",
@@ -190,7 +191,7 @@ async def test_rmvtransport_name_config(hass):
     assert state.attributes["friendly_name"] == "My Station"
 
 
-async def test_rmvtransport_misc_config(hass):
+async def test_rmvtransport_misc_config(hass: HomeAssistant) -> None:
     """Test misc configuration."""
     with patch(
         "RMVtransport.RMVtransport.get_departures",
@@ -204,7 +205,7 @@ async def test_rmvtransport_misc_config(hass):
     assert state.attributes["line"] == 21
 
 
-async def test_rmvtransport_dest_config(hass):
+async def test_rmvtransport_dest_config(hass: HomeAssistant) -> None:
     """Test destination configuration."""
     with patch(
         "RMVtransport.RMVtransport.get_departures",
@@ -223,7 +224,7 @@ async def test_rmvtransport_dest_config(hass):
     assert state.attributes["departure_time"] == datetime.datetime(2018, 8, 6, 14, 25)
 
 
-async def test_rmvtransport_no_departures(hass):
+async def test_rmvtransport_no_departures(hass: HomeAssistant) -> None:
     """Test for no departures."""
     with patch(
         "RMVtransport.RMVtransport.get_departures",

@@ -5,10 +5,11 @@ from pyaehw4a1 import exceptions
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import hisense_aehw4a1
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
-async def test_creating_entry_sets_up_climate_discovery(hass):
+async def test_creating_entry_sets_up_climate_discovery(hass: HomeAssistant) -> None:
     """Test setting up Hisense AEH-W4A1 loads the climate component."""
     with patch(
         "homeassistant.components.hisense_aehw4a1.config_flow.AehW4a1.discovery",
@@ -32,7 +33,7 @@ async def test_creating_entry_sets_up_climate_discovery(hass):
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_configuring_hisense_w4a1_create_entry(hass):
+async def test_configuring_hisense_w4a1_create_entry(hass: HomeAssistant) -> None:
     """Test that specifying config will create an entry."""
     with patch(
         "homeassistant.components.hisense_aehw4a1.config_flow.AehW4a1.check",
@@ -51,7 +52,9 @@ async def test_configuring_hisense_w4a1_create_entry(hass):
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_configuring_hisense_w4a1_not_creates_entry_for_device_not_found(hass):
+async def test_configuring_hisense_w4a1_not_creates_entry_for_device_not_found(
+    hass: HomeAssistant,
+) -> None:
     """Test that specifying config will not create an entry."""
     with patch(
         "homeassistant.components.hisense_aehw4a1.config_flow.AehW4a1.check",
@@ -70,7 +73,9 @@ async def test_configuring_hisense_w4a1_not_creates_entry_for_device_not_found(h
     assert len(mock_setup.mock_calls) == 0
 
 
-async def test_configuring_hisense_w4a1_not_creates_entry_for_empty_import(hass):
+async def test_configuring_hisense_w4a1_not_creates_entry_for_empty_import(
+    hass: HomeAssistant,
+) -> None:
     """Test that specifying config will not create an entry."""
     with patch(
         "homeassistant.components.hisense_aehw4a1.async_setup_entry",

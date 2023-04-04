@@ -2,8 +2,8 @@
 
 https://github.com/home-assistant/core/issues/26180
 """
-
 from homeassistant.components.fan import FanEntityFeature
+from homeassistant.core import HomeAssistant
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,
@@ -15,7 +15,7 @@ from ..common import (
 )
 
 
-async def test_simpleconnect_fan_setup(hass):
+async def test_simpleconnect_fan_setup(hass: HomeAssistant) -> None:
     """Test that a SIMPLEconnect fan can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "simpleconnect_fan.json")
     await setup_test_accessories(hass, accessories)

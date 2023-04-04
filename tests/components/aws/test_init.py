@@ -2,6 +2,7 @@
 import json
 from unittest.mock import AsyncMock, MagicMock, call, patch as async_patch
 
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
@@ -36,7 +37,7 @@ class MockAioSession:
         return ["us-east-1", "us-east-2", "us-west-1", "us-west-2"]
 
 
-async def test_empty_config(hass):
+async def test_empty_config(hass: HomeAssistant) -> None:
     """Test a default config will be create for empty config."""
     mock_session = MockAioSession()
     with async_patch(
@@ -49,7 +50,7 @@ async def test_empty_config(hass):
     mock_session.get_user.assert_not_awaited()
 
 
-async def test_empty_credential(hass):
+async def test_empty_credential(hass: HomeAssistant) -> None:
     """Test a default config will be create for empty credential section."""
     mock_session = MockAioSession()
     with async_patch(
@@ -79,7 +80,7 @@ async def test_empty_credential(hass):
     mock_session.invoke.assert_awaited_once()
 
 
-async def test_profile_credential(hass):
+async def test_profile_credential(hass: HomeAssistant) -> None:
     """Test credentials with profile name."""
     mock_session = MockAioSession()
     with async_patch(
@@ -114,7 +115,7 @@ async def test_profile_credential(hass):
     mock_session.publish.assert_awaited_once()
 
 
-async def test_access_key_credential(hass):
+async def test_access_key_credential(hass: HomeAssistant) -> None:
     """Test credentials with access key."""
     mock_session = MockAioSession()
     with async_patch(
@@ -156,7 +157,7 @@ async def test_access_key_credential(hass):
     mock_session.publish.assert_awaited_once()
 
 
-async def test_notify_credential(hass):
+async def test_notify_credential(hass: HomeAssistant) -> None:
     """Test notify service can use access key directly."""
     mock_session = MockAioSession()
     with async_patch(
@@ -190,7 +191,7 @@ async def test_notify_credential(hass):
     )
 
 
-async def test_notify_credential_profile(hass):
+async def test_notify_credential_profile(hass: HomeAssistant) -> None:
     """Test notify service can use profile directly."""
     mock_session = MockAioSession()
     with async_patch(
@@ -222,7 +223,7 @@ async def test_notify_credential_profile(hass):
     )
 
 
-async def test_credential_skip_validate(hass):
+async def test_credential_skip_validate(hass: HomeAssistant) -> None:
     """Test credential can skip validate."""
     mock_session = MockAioSession()
     with async_patch(
@@ -249,7 +250,7 @@ async def test_credential_skip_validate(hass):
     mock_session.get_user.assert_not_awaited()
 
 
-async def test_service_call_extra_data(hass):
+async def test_service_call_extra_data(hass: HomeAssistant) -> None:
     """Test service call extra data are parsed properly."""
     mock_session = MockAioSession()
     with async_patch(
@@ -293,7 +294,7 @@ async def test_service_call_extra_data(hass):
     )
 
 
-async def test_events_service_call(hass):
+async def test_events_service_call(hass: HomeAssistant) -> None:
     """Test events service (EventBridge) call works as expected."""
     mock_session = MockAioSession()
     with async_patch(
@@ -346,7 +347,7 @@ async def test_events_service_call(hass):
     )
 
 
-async def test_events_service_call_10_targets(hass):
+async def test_events_service_call_10_targets(hass: HomeAssistant) -> None:
     """Test events service (EventBridge) call works with more than 10 targets."""
     mock_session = MockAioSession()
     with async_patch(

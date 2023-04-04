@@ -33,7 +33,7 @@ def test_setup_params(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_MODE] == "text"
 
 
-async def test_set_value(hass):
+async def test_set_value(hass: HomeAssistant) -> None:
     """Test set value service."""
     await hass.services.async_call(
         DOMAIN,

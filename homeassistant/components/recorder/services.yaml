@@ -51,6 +51,16 @@ purge_entities:
       selector:
         object:
 
+    keep_days:
+      name: Days to keep
+      description: Number of history days to keep in database of matching rows. The default of 0 days will remove all matching rows.
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 365
+          unit_of_measurement: days
+
 disable:
   name: Disable
   description: Stop the recording of events and state changes

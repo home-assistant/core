@@ -1,5 +1,4 @@
 """Test the update coordinator for HomeWizard."""
-
 from unittest.mock import AsyncMock, patch
 
 from homewizard_energy.errors import DisabledError, RequestError
@@ -9,6 +8,7 @@ import pytest
 from homeassistant.components import number
 from homeassistant.components.number import ATTR_VALUE, SERVICE_SET_VALUE
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
@@ -16,8 +16,8 @@ from .generator import get_mock_device
 
 
 async def test_number_entity_not_loaded_when_not_available(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity does not load number when brightness is not available."""
 
     api = get_mock_device()
@@ -39,7 +39,9 @@ async def test_number_entity_not_loaded_when_not_available(
     )
 
 
-async def test_number_loads_entities(hass, mock_config_entry_data, mock_config_entry):
+async def test_number_loads_entities(
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity does load number when brightness is available."""
 
     api = get_mock_device()
@@ -74,7 +76,9 @@ async def test_number_loads_entities(hass, mock_config_entry_data, mock_config_e
     assert not entry.disabled
 
 
-async def test_brightness_level_set(hass, mock_config_entry_data, mock_config_entry):
+async def test_brightness_level_set(
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity turns sets light level."""
 
     api = get_mock_device()
@@ -149,8 +153,8 @@ async def test_brightness_level_set(hass, mock_config_entry_data, mock_config_en
 
 
 async def test_brightness_level_set_catches_requesterror(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity raises HomeAssistantError when RequestError was raised."""
 
     api = get_mock_device()
@@ -185,8 +189,8 @@ async def test_brightness_level_set_catches_requesterror(
 
 
 async def test_brightness_level_set_catches_disablederror(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity raises HomeAssistantError when DisabledError was raised."""
 
     api = get_mock_device()
@@ -221,8 +225,8 @@ async def test_brightness_level_set_catches_disablederror(
 
 
 async def test_brightness_level_set_catches_invalid_value(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity raises ValueError when value was invalid."""
 
     api = get_mock_device()

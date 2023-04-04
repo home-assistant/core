@@ -99,7 +99,7 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._discovered_advs[address] = parsed
 
         if not self._discovered_advs:
-            return self.async_abort(reason="no_unconfigured_devices")
+            return self.async_abort(reason="no_devices_found")
 
         if user_input is not None:
             self._name = name_from_discovery(self._discovered_adv)

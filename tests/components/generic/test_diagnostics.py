@@ -3,11 +3,15 @@ import pytest
 
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.generic.diagnostics import redact_url
+from homeassistant.core import HomeAssistant
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
-async def test_entry_diagnostics(hass, hass_client, setup_entry):
+async def test_entry_diagnostics(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, setup_entry
+) -> None:
     """Test config entry diagnostics."""
 
     assert await get_diagnostics_for_config_entry(hass, hass_client, setup_entry) == {
@@ -52,7 +56,7 @@ async def test_entry_diagnostics(hass, hass_client, setup_entry):
         ),
     ],
 )
-def test_redact_url(url_in, url_out_expected):
+def test_redact_url(url_in, url_out_expected) -> None:
     """Test url redaction."""
     url_out = redact_url(url_in)
     assert url_out == url_out_expected

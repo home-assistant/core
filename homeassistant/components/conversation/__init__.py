@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import re
-from typing import Any
+from typing import Any, TypedDict
 
 import voluptuous as vol
 
@@ -19,6 +19,15 @@ from homeassistant.loader import bind_hass
 
 from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
 from .default_agent import DefaultAgent
+
+__all__ = [
+    "DOMAIN",
+    "async_converse",
+    "async_get_agent_info",
+    "async_set_agent",
+    "async_unset_agent",
+    "async_setup",
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -270,6 +279,31 @@ class ConversationProcessView(http.HomeAssistantView):
         return self.json(result.as_dict())
 
 
+class AgentInfo(TypedDict):
+    """Dictionary holding agent info."""
+
+    id: str
+    name: str
+
+
+@core.callback
+def async_get_agent_info(
+    hass: core.HomeAssistant,
+    agent_id: str | None = None,
+) -> AgentInfo | None:
+    """Get information on the agent or None if not found."""
+    manager = _get_agent_manager(hass)
+
+    if agent_id is None:
+        agent_id = manager.default_agent
+
+    for agent_info in manager.async_get_agent_info():
+        if agent_info["id"] == agent_id:
+            return agent_info
+
+    return None
+
+
 async def async_converse(
     hass: core.HomeAssistant,
     text: str,
@@ -332,12 +366,15 @@ class AgentManager:
 
             return self._builtin_agent
 
+        if agent_id not in self._agents:
+            raise ValueError(f"Agent {agent_id} not found")
+
         return self._agents[agent_id]
 
     @core.callback
-    def async_get_agent_info(self) -> list[dict[str, Any]]:
+    def async_get_agent_info(self) -> list[AgentInfo]:
         """List all agents."""
-        agents = [
+        agents: list[AgentInfo] = [
             {
                 "id": AgentManager.HOME_ASSISTANT_AGENT,
                 "name": "Home Assistant",

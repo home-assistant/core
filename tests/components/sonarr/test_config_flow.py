@@ -191,7 +191,7 @@ async def test_options_flow(
     hass: HomeAssistant,
     mock_setup_entry: None,
     init_integration: MockConfigEntry,
-):
+) -> None:
     """Test updating options."""
     entry = init_integration
 

@@ -256,7 +256,7 @@ class KNXLight(KnxEntity, LightEntity):
         return None
 
     @property
-    def color_mode(self) -> ColorMode | None:
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self._device.supports_xyy_color:
             return ColorMode.XY
@@ -276,7 +276,7 @@ class KNXLight(KnxEntity, LightEntity):
         return ColorMode.ONOFF
 
     @property
-    def supported_color_modes(self) -> set | None:
+    def supported_color_modes(self) -> set[ColorMode]:
         """Flag supported color modes."""
         return {self.color_mode}
 

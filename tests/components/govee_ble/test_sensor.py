@@ -1,6 +1,4 @@
 """Test the Govee BLE sensors."""
-
-
 from homeassistant.components.govee_ble.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.const import (
@@ -8,6 +6,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 
 from . import GVH5075_SERVICE_INFO, GVH5178_SERVICE_INFO_ERROR
 
@@ -15,7 +14,7 @@ from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 
-async def test_sensors(hass):
+async def test_sensors(hass: HomeAssistant) -> None:
     """Test setting up creates the sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -42,7 +41,7 @@ async def test_sensors(hass):
     await hass.async_block_till_done()
 
 
-async def test_gvh5178_error(hass):
+async def test_gvh5178_error(hass: HomeAssistant) -> None:
     """Test H5178 Remote in error marks state as unavailable."""
     entry = MockConfigEntry(
         domain=DOMAIN,

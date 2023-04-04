@@ -168,12 +168,6 @@ class YeelightDevice:
             self._available = True
             if not self._initialized:
                 self._initialized = True
-        except OSError as ex:
-            if self._available:  # just inform once
-                _LOGGER.error(
-                    "Unable to update device %s, %s: %s", self._host, self.name, ex
-                )
-            self._available = False
         except asyncio.TimeoutError as ex:
             _LOGGER.debug(
                 "timed out while trying to update device %s, %s: %s",
@@ -181,6 +175,12 @@ class YeelightDevice:
                 self.name,
                 ex,
             )
+        except OSError as ex:
+            if self._available:  # just inform once
+                _LOGGER.error(
+                    "Unable to update device %s, %s: %s", self._host, self.name, ex
+                )
+            self._available = False
         except BulbException as ex:
             _LOGGER.debug(
                 "Unable to update device %s, %s: %s", self._host, self.name, ex

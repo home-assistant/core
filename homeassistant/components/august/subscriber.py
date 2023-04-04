@@ -38,7 +38,7 @@ class AugustSubscriberMixin:
     def _async_setup_listeners(self):
         """Create interval and stop listeners."""
         self._unsub_interval = async_track_time_interval(
-            self._hass, self._async_refresh, self._update_interval
+            self._hass, self._async_refresh, self._update_interval, "august refresh"
         )
 
         @callback

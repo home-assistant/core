@@ -22,6 +22,7 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfTemperature,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -29,21 +30,22 @@ from homeassistant.util.dt import utcnow
 from . import API_POINT_URL, init_integration
 
 from tests.common import async_fire_time_changed, load_fixture
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_sensor(hass, aioclient_mock):
+async def test_sensor(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Test states of the sensor."""
     await init_integration(hass, aioclient_mock)
     registry = er.async_get(hass)
 
-    state = hass.states.get("sensor.home_caqi")
+    state = hass.states.get("sensor.home_common_air_quality_index")
     assert state
     assert state.state == "7.29"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "CAQI"
     assert state.attributes.get(ATTR_ICON) == "mdi:air-filter"
 
-    entry = registry.async_get("sensor.home_caqi")
+    entry = registry.async_get("sensor.home_common_air_quality_index")
     assert entry
     assert entry.unique_id == "123-456-caqi"
     assert entry.options["sensor"] == {"suggested_display_precision": 0}
@@ -61,7 +63,7 @@ async def test_sensor(hass, aioclient_mock):
     assert entry.unique_id == "123-456-humidity"
     assert entry.options["sensor"] == {"suggested_display_precision": 1}
 
-    state = hass.states.get("sensor.home_pm1_0")
+    state = hass.states.get("sensor.home_particulate_matter_1_mm")
     assert state
     assert state.state == "2.83"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
@@ -72,12 +74,12 @@ async def test_sensor(hass, aioclient_mock):
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM1
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
-    entry = registry.async_get("sensor.home_pm1_0")
+    entry = registry.async_get("sensor.home_particulate_matter_1_mm")
     assert entry
     assert entry.unique_id == "123-456-pm1"
     assert entry.options["sensor"] == {"suggested_display_precision": 0}
 
-    state = hass.states.get("sensor.home_pm2_5")
+    state = hass.states.get("sensor.home_particulate_matter_2_5_mm")
     assert state
     assert state.state == "4.37"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
@@ -88,12 +90,12 @@ async def test_sensor(hass, aioclient_mock):
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM25
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
-    entry = registry.async_get("sensor.home_pm2_5")
+    entry = registry.async_get("sensor.home_particulate_matter_2_5_mm")
     assert entry
     assert entry.unique_id == "123-456-pm25"
     assert entry.options["sensor"] == {"suggested_display_precision": 0}
 
-    state = hass.states.get("sensor.home_pm10")
+    state = hass.states.get("sensor.home_particulate_matter_10_mm")
     assert state
     assert state.state == "6.06"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
@@ -104,7 +106,7 @@ async def test_sensor(hass, aioclient_mock):
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM10
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
-    entry = registry.async_get("sensor.home_pm10")
+    entry = registry.async_get("sensor.home_particulate_matter_10_mm")
     assert entry
     assert entry.unique_id == "123-456-pm10"
     assert entry.options["sensor"] == {"suggested_display_precision": 0}
@@ -199,7 +201,9 @@ async def test_sensor(hass, aioclient_mock):
     assert entry.options["sensor"] == {"suggested_display_precision": 1}
 
 
-async def test_availability(hass, aioclient_mock):
+async def test_availability(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Ensure that we mark the entities unavailable correctly when service is offline."""
     await init_integration(hass, aioclient_mock)
 
@@ -232,7 +236,9 @@ async def test_availability(hass, aioclient_mock):
     assert state.state == "68.35"
 
 
-async def test_manual_update_entity(hass, aioclient_mock):
+async def test_manual_update_entity(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test manual update entity via service homeassistant/update_entity."""
     await init_integration(hass, aioclient_mock)
 

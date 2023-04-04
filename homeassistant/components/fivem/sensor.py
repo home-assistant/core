@@ -1,11 +1,11 @@
 """The FiveM sensor platform."""
 from dataclasses import dataclass
-from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from . import FiveMEntity, FiveMEntityDescription
 from .const import (
@@ -73,6 +73,6 @@ class FiveMSensorEntity(FiveMEntity, SensorEntity):
     entity_description: FiveMSensorEntityDescription
 
     @property
-    def native_value(self) -> Any:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.coordinator.data[self.entity_description.key]

@@ -31,6 +31,19 @@ from .const import (
 )
 from .helpers import is_valid_config_entry
 
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_INCL_FILTER, default=""): cv.string,
+        vol.Optional(CONF_EXCL_FILTER, default=""): cv.string,
+        vol.Optional(CONF_REALTIME): cv.boolean,
+        vol.Optional(CONF_VEHICLE_TYPE): vol.In(VEHICLE_TYPES),
+        vol.Optional(CONF_UNITS): vol.In(UNITS),
+        vol.Optional(CONF_AVOID_TOLL_ROADS): cv.boolean,
+        vol.Optional(CONF_AVOID_SUBSCRIPTION_ROADS): cv.boolean,
+        vol.Optional(CONF_AVOID_FERRIES): cv.boolean,
+    }
+)
+
 
 def default_options(hass: HomeAssistant) -> dict[str, str | bool]:
     """Get the default options."""
@@ -57,43 +70,8 @@ class WazeOptionsFlow(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_INCL_FILTER,
-                        default=self.config_entry.options.get(CONF_INCL_FILTER, ""),
-                    ): cv.string,
-                    vol.Optional(
-                        CONF_EXCL_FILTER,
-                        default=self.config_entry.options.get(CONF_EXCL_FILTER, ""),
-                    ): cv.string,
-                    vol.Optional(
-                        CONF_REALTIME,
-                        default=self.config_entry.options[CONF_REALTIME],
-                    ): cv.boolean,
-                    vol.Optional(
-                        CONF_VEHICLE_TYPE,
-                        default=self.config_entry.options[CONF_VEHICLE_TYPE],
-                    ): vol.In(VEHICLE_TYPES),
-                    vol.Optional(
-                        CONF_UNITS,
-                        default=self.config_entry.options[CONF_UNITS],
-                    ): vol.In(UNITS),
-                    vol.Optional(
-                        CONF_AVOID_TOLL_ROADS,
-                        default=self.config_entry.options[CONF_AVOID_TOLL_ROADS],
-                    ): cv.boolean,
-                    vol.Optional(
-                        CONF_AVOID_SUBSCRIPTION_ROADS,
-                        default=self.config_entry.options[
-                            CONF_AVOID_SUBSCRIPTION_ROADS
-                        ],
-                    ): cv.boolean,
-                    vol.Optional(
-                        CONF_AVOID_FERRIES,
-                        default=self.config_entry.options[CONF_AVOID_FERRIES],
-                    ): cv.boolean,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA, self.config_entry.options
             ),
         )
 

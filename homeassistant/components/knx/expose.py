@@ -161,8 +161,14 @@ class KNXExposeSensor:
         """Set new value on xknx ExposeSensor."""
         try:
             await self.device.set(value)
-        except ConversionError:
-            _LOGGER.exception("Error during sending of expose sensor value")
+        except ConversionError as err:
+            _LOGGER.warning(
+                'Could not expose %s %s value "%s" to KNX: %s',
+                self.entity_id,
+                self.expose_attribute or "state",
+                value,
+                err,
+            )
 
 
 class KNXExposeTime:

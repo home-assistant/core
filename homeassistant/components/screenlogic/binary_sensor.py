@@ -6,8 +6,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ScreenlogicDataUpdateCoordinator
@@ -35,7 +35,6 @@ async def async_setup_entry(
         config_entry.entry_id
     ]
     gateway_data = coordinator.gateway_data
-    chemistry = gateway_data[SL_DATA.KEY_CHEMISTRY]
     config = gateway_data[SL_DATA.KEY_CONFIG]
 
     # Generic binary sensor
@@ -52,6 +51,7 @@ async def async_setup_entry(
     )
 
     if config["equipment_flags"] & EQUIPMENT.FLAG_INTELLICHEM:
+        chemistry = gateway_data[SL_DATA.KEY_CHEMISTRY]
         # IntelliChem alarm sensors
         entities.extend(
             [

@@ -19,7 +19,7 @@ from homeassistant.const import (
     ATTR_NAME,
     EVENT_LOGBOOK_ENTRY,
 )
-from homeassistant.core import Context, Event, HomeAssistant, ServiceCall, callback
+from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
@@ -35,7 +35,6 @@ from . import rest_api, websocket_api
 from .const import (  # noqa: F401
     ATTR_MESSAGE,
     DOMAIN,
-    LOGBOOK_ENTITIES_FILTER,
     LOGBOOK_ENTRY_CONTEXT_ID,
     LOGBOOK_ENTRY_DOMAIN,
     LOGBOOK_ENTRY_ENTITY_ID,
@@ -43,9 +42,8 @@ from .const import (  # noqa: F401
     LOGBOOK_ENTRY_MESSAGE,
     LOGBOOK_ENTRY_NAME,
     LOGBOOK_ENTRY_SOURCE,
-    LOGBOOK_FILTERS,
 )
-from .models import LazyEventPartialState  # noqa: F401
+from .models import LazyEventPartialState, LogbookConfig
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA}, extra=vol.ALLOW_EXTRA
@@ -97,7 +95,6 @@ def async_log_entry(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Logbook setup."""
-    hass.data[DOMAIN] = {}
 
     @callback
     def log_message(service: ServiceCall) -> None:
@@ -134,8 +131,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     else:
         filters = None
         entities_filter = None
-    hass.data[LOGBOOK_FILTERS] = filters
-    hass.data[LOGBOOK_ENTITIES_FILTER] = entities_filter
+
+    external_events: dict[
+        str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
+    ] = {}
+    hass.data[DOMAIN] = LogbookConfig(external_events, filters, entities_filter)
     websocket_api.async_setup(hass)
     rest_api.async_setup(hass, config, filters, entities_filter)
     hass.services.async_register(DOMAIN, "log", log_message, schema=LOG_MESSAGE_SCHEMA)
@@ -149,14 +149,16 @@ async def _process_logbook_platform(
     hass: HomeAssistant, domain: str, platform: Any
 ) -> None:
     """Process a logbook platform."""
+    logbook_config: LogbookConfig = hass.data[DOMAIN]
+    external_events = logbook_config.external_events
 
     @callback
     def _async_describe_event(
         domain: str,
         event_name: str,
-        describe_callback: Callable[[Event], dict[str, Any]],
+        describe_callback: Callable[[LazyEventPartialState], dict[str, Any]],
     ) -> None:
         """Teach logbook how to describe a new event."""
-        hass.data[DOMAIN][event_name] = (domain, describe_callback)
+        external_events[event_name] = (domain, describe_callback)
 
     platform.async_describe_events(hass, _async_describe_event)

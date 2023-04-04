@@ -4,6 +4,7 @@ from unittest.mock import ANY, patch
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SERVICE_TURN_ON
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util.dt import utcnow
@@ -15,7 +16,7 @@ from tests.common import async_fire_time_changed
 uid = "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU-LQ*1JKU1MVWHQL-Z9SCUS85VFXMRGNDCDNDDUVVDKBU31W"
 
 
-async def test_switch_get_state(hass, init_integration):
+async def test_switch_get_state(hass: HomeAssistant, init_integration) -> None:
     """Test states of the switch."""
     init_integration
     registry = er.async_get(hass)
@@ -50,7 +51,7 @@ async def test_switch_get_state(hass, init_integration):
         assert state.state == STATE_ON
 
 
-async def test_switch_set_off(hass, init_integration):
+async def test_switch_set_off(hass: HomeAssistant, init_integration) -> None:
     """Test set off of the switch."""
     init_integration
     registry = er.async_get(hass)
@@ -100,7 +101,7 @@ async def test_switch_set_off(hass, init_integration):
     assert state.state == STATE_OFF
 
 
-async def test_switch_set_on(hass, init_integration):
+async def test_switch_set_on(hass: HomeAssistant, init_integration) -> None:
     """Test set on of the switch."""
     init_integration
     registry = er.async_get(hass)

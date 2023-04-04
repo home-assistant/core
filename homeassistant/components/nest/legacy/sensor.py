@@ -139,7 +139,7 @@ async def async_setup_legacy_entry(
             ]
 
         structures_has_camera = {}
-        for structure, device in nest.cameras():
+        for structure, _ in nest.cameras():
             structures_has_camera[structure] = True
         for structure in structures_has_camera:
             all_sensors += [

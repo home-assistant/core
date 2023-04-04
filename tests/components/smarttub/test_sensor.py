@@ -1,11 +1,12 @@
 """Test the SmartTub sensor platform."""
-
 import pytest
 import smarttub
 
+from homeassistant.core import HomeAssistant
+
 
 @pytest.mark.parametrize(
-    "entity_suffix,expected_state",
+    ("entity_suffix", "expected_state"),
     [
         ("state", "normal"),
         ("flow_switch", "open"),
@@ -15,7 +16,9 @@ import smarttub
         ("cleanup_cycle", "inactive"),
     ],
 )
-async def test_sensor(spa, setup_entry, hass, entity_suffix, expected_state):
+async def test_sensor(
+    spa, setup_entry, hass: HomeAssistant, entity_suffix, expected_state
+) -> None:
     """Test simple sensors."""
 
     entity_id = f"sensor.{spa.brand}_{spa.model}_{entity_suffix}"
@@ -24,7 +27,9 @@ async def test_sensor(spa, setup_entry, hass, entity_suffix, expected_state):
     assert state.state == expected_state
 
 
-async def test_primary_filtration(spa, spa_state, setup_entry, hass):
+async def test_primary_filtration(
+    spa, spa_state, setup_entry, hass: HomeAssistant
+) -> None:
     """Test the primary filtration cycle sensor."""
 
     entity_id = f"sensor.{spa.brand}_{spa.model}_primary_filtration_cycle"
@@ -45,7 +50,9 @@ async def test_primary_filtration(spa, spa_state, setup_entry, hass):
     spa_state.primary_filtration.set.assert_called_with(duration=8, start_hour=1)
 
 
-async def test_secondary_filtration(spa, spa_state, setup_entry, hass):
+async def test_secondary_filtration(
+    spa, spa_state, setup_entry, hass: HomeAssistant
+) -> None:
     """Test the secondary filtration cycle sensor."""
 
     entity_id = f"sensor.{spa.brand}_{spa.model}_secondary_filtration_cycle"

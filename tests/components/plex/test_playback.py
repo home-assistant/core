@@ -3,6 +3,7 @@ from http import HTTPStatus
 from unittest.mock import Mock, patch
 
 import pytest
+import requests_mock
 
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
@@ -13,6 +14,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.plex.const import CONF_SERVER_IDENTIFIER, PLEX_URI_SCHEME
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DEFAULT_DATA, PLEX_DIRECT_URL
@@ -43,12 +45,12 @@ class MockPlexLibrarySection:
 
 
 async def test_media_player_playback(
-    hass,
+    hass: HomeAssistant,
     setup_plex_server,
-    requests_mock,
+    requests_mock: requests_mock.Mocker,
     playqueue_created,
     player_plexweb_resources,
-):
+) -> None:
     """Test playing media on a Plex media_player."""
     requests_mock.get("http://1.2.3.5:32400/resources", text=player_plexweb_resources)
 

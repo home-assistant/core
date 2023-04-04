@@ -1,5 +1,4 @@
 """Test the Developer Credentials integration."""
-
 from __future__ import annotations
 
 from collections.abc import Callable, Generator
@@ -29,7 +28,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, mock_platform
+from tests.common import MockConfigEntry, mock_config_flow, mock_platform
+from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 CLIENT_ID = "some-client-id"
@@ -98,7 +98,7 @@ async def mock_application_credentials_integration(
         yield
 
 
-class FakeConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN):
+class FakeConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
     """Config flow used during tests."""
 
     DOMAIN = TEST_DOMAIN
@@ -115,8 +115,8 @@ def config_flow_handler(
 ) -> Generator[FakeConfigFlow, None, None]:
     """Fixture for a test config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
-    with patch.dict(config_entries.HANDLERS, {TEST_DOMAIN: FakeConfigFlow}):
-        yield FakeConfigFlow
+    with mock_config_flow(TEST_DOMAIN, FakeConfigFlow):
+        yield
 
 
 class OAuthFixture:
@@ -223,13 +223,13 @@ async def ws_client(hass_ws_client: WebSocketGenerator) -> ClientFixture:
     return create_client
 
 
-async def test_websocket_list_empty(ws_client: ClientFixture):
+async def test_websocket_list_empty(ws_client: ClientFixture) -> None:
     """Test websocket list command."""
     client = await ws_client()
     assert await client.cmd_result("list") == []
 
 
-async def test_websocket_create(ws_client: ClientFixture):
+async def test_websocket_create(ws_client: ClientFixture) -> None:
     """Test websocket create command."""
     client = await ws_client()
     result = await client.cmd_result(
@@ -258,7 +258,7 @@ async def test_websocket_create(ws_client: ClientFixture):
     ]
 
 
-async def test_websocket_create_invalid_domain(ws_client: ClientFixture):
+async def test_websocket_create_invalid_domain(ws_client: ClientFixture) -> None:
     """Test websocket create command."""
     client = await ws_client()
     resp = await client.cmd(
@@ -278,7 +278,7 @@ async def test_websocket_create_invalid_domain(ws_client: ClientFixture):
     )
 
 
-async def test_websocket_update_not_supported(ws_client: ClientFixture):
+async def test_websocket_update_not_supported(ws_client: ClientFixture) -> None:
     """Test websocket update command in unsupported."""
     client = await ws_client()
     result = await client.cmd_result(
@@ -303,7 +303,7 @@ async def test_websocket_update_not_supported(ws_client: ClientFixture):
     assert resp["error"].get("message") == "Updates not supported"
 
 
-async def test_websocket_delete(ws_client: ClientFixture):
+async def test_websocket_delete(ws_client: ClientFixture) -> None:
     """Test websocket delete command."""
     client = await ws_client()
 
@@ -328,7 +328,7 @@ async def test_websocket_delete(ws_client: ClientFixture):
     assert await client.cmd_result("list") == []
 
 
-async def test_websocket_delete_item_not_found(ws_client: ClientFixture):
+async def test_websocket_delete_item_not_found(ws_client: ClientFixture) -> None:
     """Test websocket delete command."""
     client = await ws_client()
 
@@ -347,7 +347,7 @@ async def test_websocket_import_config(
     ws_client: ClientFixture,
     config_credential: ClientCredential,
     import_config_credential: Any,
-):
+) -> None:
     """Test websocket list command for an imported credential."""
     client = await ws_client()
 
@@ -374,7 +374,7 @@ async def test_import_duplicate_credentials(
     ws_client: ClientFixture,
     config_credential: ClientCredential,
     import_config_credential: Any,
-):
+) -> None:
     """Exercise duplicate credentials are ignored."""
 
     # Import the test credential again and verify it is not imported twice
@@ -397,7 +397,7 @@ async def test_import_named_credential(
     ws_client: ClientFixture,
     config_credential: ClientCredential,
     import_config_credential: Any,
-):
+) -> None:
     """Test websocket list command for an imported credential."""
     client = await ws_client()
 
@@ -414,7 +414,7 @@ async def test_import_named_credential(
     ]
 
 
-async def test_config_flow_no_credentials(hass):
+async def test_config_flow_no_credentials(hass: HomeAssistant) -> None:
     """Test config flow base case with no credentials registered."""
     result = await hass.config_entries.flow.async_init(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -427,7 +427,7 @@ async def test_config_flow_other_domain(
     hass: HomeAssistant,
     ws_client: ClientFixture,
     authorization_server: AuthorizationServer,
-):
+) -> None:
     """Test config flow ignores credentials for another domain."""
     await setup_application_credentials_integration(
         hass,
@@ -454,7 +454,7 @@ async def test_config_flow(
     hass: HomeAssistant,
     ws_client: ClientFixture,
     oauth_fixture: OAuthFixture,
-):
+) -> None:
     """Test config flow with application credential registered."""
     client = await ws_client()
 
@@ -511,7 +511,7 @@ async def test_config_flow_multiple_entries(
     hass: HomeAssistant,
     ws_client: ClientFixture,
     oauth_fixture: OAuthFixture,
-):
+) -> None:
     """Test config flow with multiple application credentials registered."""
     client = await ws_client()
 
@@ -554,7 +554,7 @@ async def test_config_flow_create_delete_credential(
     hass: HomeAssistant,
     ws_client: ClientFixture,
     oauth_fixture: OAuthFixture,
-):
+) -> None:
     """Test adding and deleting a credential unregisters from the config flow."""
     client = await ws_client()
 
@@ -577,13 +577,13 @@ async def test_config_flow_create_delete_credential(
 
 @pytest.mark.parametrize("config_credential", [DEVELOPER_CREDENTIAL])
 async def test_config_flow_with_config_credential(
-    hass,
-    hass_client_no_auth,
-    aioclient_mock,
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
     oauth_fixture,
     config_credential,
     import_config_credential,
-):
+) -> None:
     """Test config flow with application credential registered."""
     result = await hass.config_entries.flow.async_init(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -596,7 +596,7 @@ async def test_config_flow_with_config_credential(
 
 
 @pytest.mark.parametrize("mock_application_credentials_integration", [None])
-async def test_import_without_setup(hass, config_credential):
+async def test_import_without_setup(hass: HomeAssistant, config_credential) -> None:
     """Test import of credentials without setting up the integration."""
 
     with pytest.raises(ValueError):
@@ -613,7 +613,7 @@ async def test_import_without_setup(hass, config_credential):
 @pytest.mark.parametrize("mock_application_credentials_integration", [None])
 async def test_websocket_without_platform(
     hass: HomeAssistant, ws_client: ClientFixture
-):
+) -> None:
     """Test an integration without the application credential platform."""
     assert await async_setup_component(hass, "application_credentials", {})
     hass.config.components.add(TEST_DOMAIN)
@@ -642,7 +642,7 @@ async def test_websocket_without_platform(
 @pytest.mark.parametrize("mock_application_credentials_integration", [None])
 async def test_websocket_without_authorization_server(
     hass: HomeAssistant, ws_client: ClientFixture
-):
+) -> None:
     """Test platform with incorrect implementation."""
     assert await async_setup_component(hass, "application_credentials", {})
     hass.config.components.add(TEST_DOMAIN)
@@ -679,14 +679,14 @@ async def test_websocket_without_authorization_server(
 
 @pytest.mark.parametrize("config_credential", [DEVELOPER_CREDENTIAL])
 async def test_platform_with_auth_implementation(
-    hass,
-    hass_client_no_auth,
-    aioclient_mock,
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
     oauth_fixture,
     config_credential,
     import_config_credential,
     authorization_server,
-):
+) -> None:
     """Test config flow with custom OAuth2 implementation."""
 
     assert await async_setup_component(hass, "application_credentials", {})
@@ -717,7 +717,7 @@ async def test_platform_with_auth_implementation(
     assert result["data"].get("auth_implementation") == TEST_DOMAIN
 
 
-async def test_websocket_integration_list(ws_client: ClientFixture):
+async def test_websocket_integration_list(ws_client: ClientFixture) -> None:
     """Test websocket integration list command."""
     client = await ws_client()
     with patch(
@@ -734,7 +734,7 @@ async def test_websocket_integration_list(ws_client: ClientFixture):
 
 async def test_name(
     hass: HomeAssistant, ws_client: ClientFixture, oauth_fixture: OAuthFixture
-):
+) -> None:
     """Test a credential with a name set."""
     client = await ws_client()
     result = await client.cmd_result(
@@ -780,7 +780,7 @@ async def test_remove_config_entry_without_app_credentials(
     hass: HomeAssistant,
     ws_client: ClientFixture,
     authorization_server: AuthorizationServer,
-):
+) -> None:
     """Test config entry removal for non-app credentials integration."""
     hass.config.components.add("other_domain")
     config_entry = MockConfigEntry(domain="other_domain")
@@ -797,7 +797,7 @@ async def test_remove_config_entry_without_app_credentials(
     assert "application_credential_id" not in result
 
 
-async def test_websocket_create_strips_whitespace(ws_client: ClientFixture):
+async def test_websocket_create_strips_whitespace(ws_client: ClientFixture) -> None:
     """Test websocket create command with whitespace in the credentials."""
     client = await ws_client()
     result = await client.cmd_result(

@@ -38,7 +38,7 @@
         }
       },
       "apps": {
-        "title": "Configure Android TV Apps",
+        "title": "Configure Android Apps",
         "description": "Configure application id {app_id}",
         "data": {
           "app_name": "Application Name",
@@ -47,7 +47,7 @@
         }
       },
       "rules": {
-        "title": "Configure Android TV state detection rules",
+        "title": "Configure Android state detection rules",
         "description": "Configure detection rule for application id {rule_id}",
         "data": {
           "rule_id": "Application ID",

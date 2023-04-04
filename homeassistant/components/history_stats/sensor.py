@@ -163,13 +163,13 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
     def _process_update(self) -> None:
         """Process an update from the coordinator."""
         state = self.coordinator.data
-        if state is None or state.hours_matched is None:
+        if state is None or state.seconds_matched is None:
             self._attr_native_value = None
             return
 
         if self._type == CONF_TYPE_TIME:
-            self._attr_native_value = round(state.hours_matched, 2)
+            self._attr_native_value = round(state.seconds_matched / 3600, 2)
         elif self._type == CONF_TYPE_RATIO:
-            self._attr_native_value = pretty_ratio(state.hours_matched, state.period)
+            self._attr_native_value = pretty_ratio(state.seconds_matched, state.period)
         elif self._type == CONF_TYPE_COUNT:
             self._attr_native_value = state.match_count

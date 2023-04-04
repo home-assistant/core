@@ -92,7 +92,6 @@ def value_matches_matcher(
     )
 
 
-@callback
 def get_value_id_from_unique_id(unique_id: str) -> str | None:
     """Get the value ID and optional state key from a unique ID.
 
@@ -106,7 +105,6 @@ def get_value_id_from_unique_id(unique_id: str) -> str | None:
     return None
 
 
-@callback
 def get_state_key_from_unique_id(unique_id: str) -> int | None:
     """Get the state key from a unique ID."""
     # If the unique ID has more than two parts, it's a special unique ID. If the last
@@ -119,7 +117,6 @@ def get_state_key_from_unique_id(unique_id: str) -> int | None:
     return None
 
 
-@callback
 def get_value_of_zwave_value(value: ZwaveValue | None) -> Any | None:
     """Return the value of a ZwaveValue."""
     return value.value if value else None
@@ -132,7 +129,7 @@ async def async_enable_statistics(driver: Driver) -> None:
 
 
 @callback
-def update_data_collection_preference(
+def async_update_data_collection_preference(
     hass: HomeAssistant, entry: ConfigEntry, preference: bool
 ) -> None:
     """Update data collection preference on config entry."""
@@ -141,7 +138,6 @@ def update_data_collection_preference(
     hass.config_entries.async_update_entry(entry, data=new_data)
 
 
-@callback
 def get_valueless_base_unique_id(driver: Driver, node: ZwaveNode) -> str:
     """Return the base unique ID for an entity that is not based on a value."""
     return f"{driver.controller.home_id}.{node.node_id}"
@@ -152,13 +148,11 @@ def get_unique_id(driver: Driver, value_id: str) -> str:
     return f"{driver.controller.home_id}.{value_id}"
 
 
-@callback
 def get_device_id(driver: Driver, node: ZwaveNode) -> tuple[str, str]:
     """Get device registry identifier for Z-Wave node."""
     return (DOMAIN, f"{driver.controller.home_id}-{node.node_id}")
 
 
-@callback
 def get_device_id_ext(driver: Driver, node: ZwaveNode) -> tuple[str, str] | None:
     """Get extended device registry identifier for Z-Wave node."""
     if None in (node.manufacturer_id, node.product_type, node.product_id):
@@ -171,7 +165,6 @@ def get_device_id_ext(driver: Driver, node: ZwaveNode) -> tuple[str, str] | None
     )
 
 
-@callback
 def get_home_and_node_id_from_device_entry(
     device_entry: dr.DeviceEntry,
 ) -> tuple[str, int] | None:

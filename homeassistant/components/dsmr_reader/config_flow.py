@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable
-import logging
 from typing import Any
 
 from homeassistant.core import HomeAssistant
@@ -10,8 +9,6 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.config_entry_flow import DiscoveryFlowHandler
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def _async_has_devices(_: HomeAssistant) -> bool:

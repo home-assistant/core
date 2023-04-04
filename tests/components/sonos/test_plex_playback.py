@@ -13,10 +13,11 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.plex import DOMAIN as PLEX_DOMAIN, PLEX_URI_SCHEME
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 
-async def test_plex_play_media(hass, async_autosetup_sonos):
+async def test_plex_play_media(hass: HomeAssistant, async_autosetup_sonos) -> None:
     """Test playing media via the Plex integration."""
     mock_plex_server = Mock()
     mock_lookup = mock_plex_server.lookup_media

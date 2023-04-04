@@ -64,6 +64,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import State
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.util.json import json_loads
 from homeassistant.util.network import is_local
 
 from .config import Config
@@ -138,7 +139,7 @@ class HueUsernameView(HomeAssistantView):
             return self.json_message("Only local IPs allowed", HTTPStatus.UNAUTHORIZED)
 
         try:
-            data = await request.json()
+            data = await request.json(loads=json_loads)
         except ValueError:
             return self.json_message("Invalid JSON", HTTPStatus.BAD_REQUEST)
 

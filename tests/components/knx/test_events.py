@@ -8,7 +8,7 @@ from .conftest import KNXTestKit
 from tests.common import async_capture_events
 
 
-async def test_knx_event(hass: HomeAssistant, knx: KNXTestKit):
+async def test_knx_event(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test the `knx_event` event."""
     test_group_a = "0/4/*"
     test_address_a_1 = "0/4/0"

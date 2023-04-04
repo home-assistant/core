@@ -2,6 +2,7 @@
 import os
 
 from homeassistant.components.folder.sensor import CONF_FOLDER_PATHS
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 CWD = os.path.join(os.path.dirname(__file__))
@@ -24,14 +25,14 @@ def remove_test_file():
         os.rmdir(TEST_DIR)
 
 
-async def test_invalid_path(hass):
+async def test_invalid_path(hass: HomeAssistant) -> None:
     """Test that an invalid path is caught."""
     config = {"sensor": {"platform": "folder", CONF_FOLDER_PATHS: "invalid_path"}}
     assert await async_setup_component(hass, "sensor", config)
     assert len(hass.states.async_entity_ids("sensor")) == 0
 
 
-async def test_valid_path(hass):
+async def test_valid_path(hass: HomeAssistant) -> None:
     """Test for a valid path."""
     if not os.path.isdir(TEST_DIR):
         os.mkdir(TEST_DIR)

@@ -1,12 +1,10 @@
 """Tests for the MicroBot integration."""
 from unittest.mock import patch
 
-from bleak.backends.device import BLEDevice
-
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.const import CONF_ADDRESS
 
-from tests.components.bluetooth import generate_advertisement_data
+from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 DOMAIN = "keymitt_ble"
 
@@ -44,7 +42,7 @@ SERVICE_INFO = BluetoothServiceInfoBleak(
         manufacturer_data={},
         service_uuids=["0000abcd-0000-1000-8000-00805f9b34fb"],
     ),
-    device=BLEDevice("aa:bb:cc:dd:ee:ff", "mibp"),
+    device=generate_ble_device("aa:bb:cc:dd:ee:ff", "mibp"),
     time=0,
     connectable=True,
 )

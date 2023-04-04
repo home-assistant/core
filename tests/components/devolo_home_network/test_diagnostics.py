@@ -19,7 +19,7 @@ from tests.typing import ClientSessionGenerator
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-):
+) -> None:
     """Test config entry diagnostics."""
     entry = configure_integration(hass)
     await hass.config_entries.async_setup(entry.entry_id)

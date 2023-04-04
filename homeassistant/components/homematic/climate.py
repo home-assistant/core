@@ -193,5 +193,5 @@ class HMThermostat(HMDevice, ClimateEntity):
         ):
             self._data[HM_CONTROL_MODE] = None
 
-        for node in self._hmdevice.SENSORNODE.keys():
+        for node in self._hmdevice.SENSORNODE:
             self._data[node] = None

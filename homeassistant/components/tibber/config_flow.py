@@ -16,6 +16,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import DOMAIN
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
+ERR_TIMEOUT = "timeout"
+ERR_CLIENT = "cannot_connect"
+ERR_TOKEN = "invalid_access_token"
 
 
 class TibberConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -43,11 +46,15 @@ class TibberConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await tibber_connection.update_info()
             except asyncio.TimeoutError:
-                errors[CONF_ACCESS_TOKEN] = "timeout"
-            except aiohttp.ClientError:
-                errors[CONF_ACCESS_TOKEN] = "cannot_connect"
+                errors[CONF_ACCESS_TOKEN] = ERR_TIMEOUT
             except tibber.InvalidLogin:
-                errors[CONF_ACCESS_TOKEN] = "invalid_access_token"
+                errors[CONF_ACCESS_TOKEN] = ERR_TOKEN
+            except (
+                aiohttp.ClientError,
+                tibber.RetryableHttpException,
+                tibber.FatalHttpException,
+            ):
+                errors[CONF_ACCESS_TOKEN] = ERR_CLIENT
 
             if errors:
                 return self.async_show_form(

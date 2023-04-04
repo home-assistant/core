@@ -29,6 +29,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
@@ -117,7 +118,7 @@ class MockWs66i:
         self.zones[zone.zone] = AttrDict(zone)
 
 
-async def test_setup_success(hass):
+async def test_setup_success(hass: HomeAssistant) -> None:
     """Test connection success."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_CONFIG, options=MOCK_OPTIONS
@@ -173,7 +174,7 @@ async def _call_media_player_service(hass, name, data):
     )
 
 
-async def test_update(hass):
+async def test_update(hass: HomeAssistant) -> None:
     """Test updating values from ws66i."""
     ws66i = MockWs66i()
     _ = await _setup_ws66i_with_options(hass, ws66i)
@@ -202,7 +203,7 @@ async def test_update(hass):
     assert state.attributes[ATTR_INPUT_SOURCE] == "three"
 
 
-async def test_failed_update(hass):
+async def test_failed_update(hass: HomeAssistant) -> None:
     """Test updating failure from ws66i."""
     ws66i = MockWs66i()
     _ = await _setup_ws66i_with_options(hass, ws66i)
@@ -245,7 +246,7 @@ async def test_failed_update(hass):
     assert state.attributes[ATTR_INPUT_SOURCE] == "three"
 
 
-async def test_supported_features(hass):
+async def test_supported_features(hass: HomeAssistant) -> None:
     """Test supported features property."""
     await _setup_ws66i(hass, MockWs66i())
 
@@ -261,7 +262,7 @@ async def test_supported_features(hass):
     )
 
 
-async def test_source_list(hass):
+async def test_source_list(hass: HomeAssistant) -> None:
     """Test source list property."""
     await _setup_ws66i(hass, MockWs66i())
 
@@ -272,7 +273,7 @@ async def test_source_list(hass):
     )
 
 
-async def test_source_list_with_options(hass):
+async def test_source_list_with_options(hass: HomeAssistant) -> None:
     """Test source list property."""
     await _setup_ws66i_with_options(hass, MockWs66i())
 
@@ -281,7 +282,7 @@ async def test_source_list_with_options(hass):
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == list(MOCK_SOURCE_DIC.values())
 
 
-async def test_select_source(hass):
+async def test_select_source(hass: HomeAssistant) -> None:
     """Test source selection methods."""
     ws66i = MockWs66i()
     await _setup_ws66i_with_options(hass, ws66i)
@@ -294,7 +295,7 @@ async def test_select_source(hass):
     assert ws66i.zones[11].source == 3
 
 
-async def test_source_select(hass):
+async def test_source_select(hass: HomeAssistant) -> None:
     """Test source selection simulated from keypad."""
     ws66i = MockWs66i()
     _ = await _setup_ws66i_with_options(hass, ws66i)
@@ -309,7 +310,7 @@ async def test_source_select(hass):
     assert state.attributes.get(ATTR_INPUT_SOURCE) == "five"
 
 
-async def test_turn_on_off(hass):
+async def test_turn_on_off(hass: HomeAssistant) -> None:
     """Test turning on the zone."""
     ws66i = MockWs66i()
     await _setup_ws66i(hass, ws66i)
@@ -321,7 +322,7 @@ async def test_turn_on_off(hass):
     assert ws66i.zones[11].power
 
 
-async def test_mute_volume(hass):
+async def test_mute_volume(hass: HomeAssistant) -> None:
     """Test mute functionality."""
     ws66i = MockWs66i()
     await _setup_ws66i(hass, ws66i)
@@ -340,7 +341,7 @@ async def test_mute_volume(hass):
     assert ws66i.zones[11].mute
 
 
-async def test_volume_up_down(hass):
+async def test_volume_up_down(hass: HomeAssistant) -> None:
     """Test increasing volume by one."""
     ws66i = MockWs66i()
     _ = await _setup_ws66i(hass, ws66i)
@@ -383,7 +384,7 @@ async def test_volume_up_down(hass):
     assert ws66i.zones[11].volume == MAX_VOL - 1
 
 
-async def test_volume_while_mute(hass):
+async def test_volume_while_mute(hass: HomeAssistant) -> None:
     """Test increasing volume by one."""
     ws66i = MockWs66i()
     _ = await _setup_ws66i(hass, ws66i)
@@ -438,7 +439,7 @@ async def test_volume_while_mute(hass):
     assert not ws66i.zones[11].mute
 
 
-async def test_first_run_with_available_zones(hass):
+async def test_first_run_with_available_zones(hass: HomeAssistant) -> None:
     """Test first run with all zones available."""
     ws66i = MockWs66i()
     await _setup_ws66i(hass, ws66i)
@@ -449,7 +450,7 @@ async def test_first_run_with_available_zones(hass):
     assert not entry.disabled
 
 
-async def test_first_run_with_failing_zones(hass):
+async def test_first_run_with_failing_zones(hass: HomeAssistant) -> None:
     """Test first run with failed zones."""
     ws66i = MockWs66i()
 
@@ -465,7 +466,7 @@ async def test_first_run_with_failing_zones(hass):
     assert entry is None
 
 
-async def test_register_all_entities(hass):
+async def test_register_all_entities(hass: HomeAssistant) -> None:
     """Test run with all entities registered."""
     ws66i = MockWs66i()
     await _setup_ws66i(hass, ws66i)
@@ -479,7 +480,7 @@ async def test_register_all_entities(hass):
     assert not entry.disabled
 
 
-async def test_register_entities_in_1_amp_only(hass):
+async def test_register_entities_in_1_amp_only(hass: HomeAssistant) -> None:
     """Test run with only zones 11-16 registered."""
     ws66i = MockWs66i(fail_zone_check=[21])
     await _setup_ws66i(hass, ws66i)

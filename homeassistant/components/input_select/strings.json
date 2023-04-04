@@ -1,1 +1,20 @@
-{ "title": "Input select" }
+{
+  "title": "Input select",
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::input_select::title%]",
+      "state_attributes": {
+        "editable": {
+          "name": "[%key:common::generic::ui_managed%]",
+          "state": {
+            "true": "[%key:common::state::yes%]",
+            "false": "[%key:common::state::no%]"
+          }
+        },
+        "options": {
+          "name": "[%key:component::select::entity_component::_::state_attributes::options::name%]"
+        }
+      }
+    }
+  }
+}

@@ -1,9 +1,9 @@
 """Test the MicroBot config flow."""
-
 from unittest.mock import ANY, AsyncMock, patch
 
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ADDRESS
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
@@ -25,7 +25,7 @@ def patch_microbot_api():
     )
 
 
-async def test_bluetooth_discovery(hass):
+async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
     """Test discovery via bluetooth with a valid device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -47,7 +47,7 @@ async def test_bluetooth_discovery(hass):
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_bluetooth_discovery_already_setup(hass):
+async def test_bluetooth_discovery_already_setup(hass: HomeAssistant) -> None:
     """Test discovery via bluetooth with a valid device when already setup."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -67,7 +67,7 @@ async def test_bluetooth_discovery_already_setup(hass):
         assert result["reason"] == "already_configured"
 
 
-async def test_user_setup(hass):
+async def test_user_setup(hass: HomeAssistant) -> None:
     """Test the user initiated form with valid mac."""
 
     with patch(
@@ -107,7 +107,7 @@ async def test_user_setup(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_setup_already_configured(hass):
+async def test_user_setup_already_configured(hass: HomeAssistant) -> None:
     """Test the user initiated form with valid mac."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -125,10 +125,10 @@ async def test_user_setup_already_configured(hass):
             DOMAIN, context={"source": SOURCE_USER}
         )
     assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "no_unconfigured_devices"
+    assert result["reason"] == "no_devices_found"
 
 
-async def test_user_no_devices(hass):
+async def test_user_no_devices(hass: HomeAssistant) -> None:
     """Test the user initiated form with valid mac."""
     with patch_microbot_api(), patch(
         "homeassistant.components.keymitt_ble.config_flow.async_discovered_service_info",
@@ -138,10 +138,10 @@ async def test_user_no_devices(hass):
             DOMAIN, context={"source": SOURCE_USER}
         )
     assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "no_unconfigured_devices"
+    assert result["reason"] == "no_devices_found"
 
 
-async def test_no_link(hass):
+async def test_no_link(hass: HomeAssistant) -> None:
     """Test the user initiated form with invalid response."""
 
     with patch_microbot_api(), patch(

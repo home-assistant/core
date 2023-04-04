@@ -1,11 +1,6 @@
 {
   "domain": "snooz",
   "name": "Snooz",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/snooz",
-  "requirements": ["pysnooz==0.8.3"],
-  "dependencies": ["bluetooth_adapters"],
-  "codeowners": ["@AustinBrunkhorst"],
   "bluetooth": [
     {
       "local_name": "Snooz*"
@@ -14,5 +9,10 @@
       "service_uuid": "729f0608-496a-47fe-a124-3a62aaa3fbc0"
     }
   ],
-  "iot_class": "local_push"
+  "codeowners": ["@AustinBrunkhorst"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/snooz",
+  "iot_class": "local_push",
+  "requirements": ["pysnooz==0.8.3"]
 }

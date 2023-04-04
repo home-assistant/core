@@ -5,9 +5,9 @@ from aio_geojson_generic_client import GenericFeed
 from freezegun import freeze_time
 
 from homeassistant.components import geo_location
-from homeassistant.components.geo_json_events.geo_location import (
+from homeassistant.components.geo_json_events.const import (
     ATTR_EXTERNAL_ID,
-    SCAN_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
 )
 from homeassistant.components.geo_location import ATTR_SOURCE
 from homeassistant.const import (
@@ -22,6 +22,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     UnitOfLength,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -58,7 +59,7 @@ def _generate_mock_feed_entry(external_id, title, distance_to_home, coordinates)
     return feed_entry
 
 
-async def test_setup(hass):
+async def test_setup(hass: HomeAssistant) -> None:
     """Test the general setup of the platform."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry("1234", "Title 1", 15.5, (-31.0, 150.0))
@@ -131,7 +132,7 @@ async def test_setup(hass):
                 "OK",
                 [mock_entry_1, mock_entry_4, mock_entry_3],
             )
-            async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
+            async_fire_time_changed(hass, utcnow + DEFAULT_SCAN_INTERVAL)
             await hass.async_block_till_done()
 
             all_states = hass.states.async_all()
@@ -140,7 +141,7 @@ async def test_setup(hass):
             # Simulate an update - empty data, but successful update,
             # so no changes to entities.
             mock_feed_update.return_value = "OK_NO_DATA", None
-            async_fire_time_changed(hass, utcnow + 2 * SCAN_INTERVAL)
+            async_fire_time_changed(hass, utcnow + 2 * DEFAULT_SCAN_INTERVAL)
             await hass.async_block_till_done()
 
             all_states = hass.states.async_all()
@@ -148,14 +149,14 @@ async def test_setup(hass):
 
             # Simulate an update - empty data, removes all entities
             mock_feed_update.return_value = "ERROR", None
-            async_fire_time_changed(hass, utcnow + 3 * SCAN_INTERVAL)
+            async_fire_time_changed(hass, utcnow + 3 * DEFAULT_SCAN_INTERVAL)
             await hass.async_block_till_done()
 
             all_states = hass.states.async_all()
             assert len(all_states) == 0
 
 
-async def test_setup_with_custom_location(hass):
+async def test_setup_with_custom_location(hass: HomeAssistant) -> None:
     """Test the setup with a custom location."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry("1234", "Title 1", 2000.5, (-31.1, 150.1))
@@ -187,7 +188,7 @@ async def test_setup_with_custom_location(hass):
             )
 
 
-async def test_setup_race_condition(hass):
+async def test_setup_race_condition(hass: HomeAssistant) -> None:
     """Test a particular race condition experienced."""
     # 1. Feed returns 1 entry -> Feed manager creates 1 entity.
     # 2. Feed returns error -> Feed manager removes 1 entity.
@@ -226,7 +227,7 @@ async def test_setup_race_condition(hass):
 
         # Simulate an update - empty data, removes all entities
         mock_feed_update.return_value = "ERROR", None
-        async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
+        async_fire_time_changed(hass, utcnow + DEFAULT_SCAN_INTERVAL)
         await hass.async_block_till_done()
 
         all_states = hass.states.async_all()
@@ -236,7 +237,7 @@ async def test_setup_race_condition(hass):
 
         # Simulate an update - 1 entry
         mock_feed_update.return_value = "OK", [mock_entry_1]
-        async_fire_time_changed(hass, utcnow + 2 * SCAN_INTERVAL)
+        async_fire_time_changed(hass, utcnow + 2 * DEFAULT_SCAN_INTERVAL)
         await hass.async_block_till_done()
 
         all_states = hass.states.async_all()
@@ -246,7 +247,7 @@ async def test_setup_race_condition(hass):
 
         # Simulate an update - 1 entry
         mock_feed_update.return_value = "OK", [mock_entry_1]
-        async_fire_time_changed(hass, utcnow + 3 * SCAN_INTERVAL)
+        async_fire_time_changed(hass, utcnow + 3 * DEFAULT_SCAN_INTERVAL)
         await hass.async_block_till_done()
 
         all_states = hass.states.async_all()
@@ -256,7 +257,7 @@ async def test_setup_race_condition(hass):
 
         # Simulate an update - empty data, removes all entities
         mock_feed_update.return_value = "ERROR", None
-        async_fire_time_changed(hass, utcnow + 4 * SCAN_INTERVAL)
+        async_fire_time_changed(hass, utcnow + 4 * DEFAULT_SCAN_INTERVAL)
         await hass.async_block_till_done()
 
         all_states = hass.states.async_all()

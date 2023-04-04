@@ -110,7 +110,7 @@ class DemoManager:
 
 
 class DemoGeolocationEvent(GeolocationEvent):
-    """This represents a demo geolocation event."""
+    """Represents a demo geolocation event."""
 
     _attr_should_poll = False
 

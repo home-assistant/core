@@ -1,5 +1,4 @@
 """Tests for Shelly light platform."""
-
 import pytest
 
 from homeassistant.components.light import (
@@ -24,6 +23,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 
 from . import init_integration, mutate_rpc_device_status
 
@@ -31,7 +31,7 @@ RELAY_BLOCK_ID = 0
 LIGHT_BLOCK_ID = 2
 
 
-async def test_block_device_rgbw_bulb(hass, mock_block_device):
+async def test_block_device_rgbw_bulb(hass: HomeAssistant, mock_block_device) -> None:
     """Test block device RGBW bulb."""
     await init_integration(hass, 1, model="SHBLB-1")
 
@@ -105,7 +105,12 @@ async def test_block_device_rgbw_bulb(hass, mock_block_device):
     assert attributes[ATTR_COLOR_TEMP_KELVIN] == 3500
 
 
-async def test_block_device_rgb_bulb(hass, mock_block_device, monkeypatch, caplog):
+async def test_block_device_rgb_bulb(
+    hass: HomeAssistant,
+    mock_block_device,
+    monkeypatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test block device RGB bulb."""
     monkeypatch.delattr(mock_block_device.blocks[LIGHT_BLOCK_ID], "mode")
     await init_integration(hass, 1, model="SHCB-1")
@@ -197,7 +202,12 @@ async def test_block_device_rgb_bulb(hass, mock_block_device, monkeypatch, caplo
     assert "Effect 'Breath' not supported" in caplog.text
 
 
-async def test_block_device_white_bulb(hass, mock_block_device, monkeypatch, caplog):
+async def test_block_device_white_bulb(
+    hass: HomeAssistant,
+    mock_block_device,
+    monkeypatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test block device white bulb."""
     monkeypatch.delattr(mock_block_device.blocks[LIGHT_BLOCK_ID], "red")
     monkeypatch.delattr(mock_block_device.blocks[LIGHT_BLOCK_ID], "green")
@@ -258,8 +268,8 @@ async def test_block_device_white_bulb(hass, mock_block_device, monkeypatch, cap
     ],
 )
 async def test_block_device_support_transition(
-    hass, mock_block_device, model, monkeypatch
-):
+    hass: HomeAssistant, mock_block_device, model, monkeypatch
+) -> None:
     """Test block device supports transition."""
     monkeypatch.setitem(
         mock_block_device.settings, "fw", "20220809-122808/v1.12-g99f7e0b"
@@ -300,7 +310,9 @@ async def test_block_device_support_transition(
     assert state.state == STATE_OFF
 
 
-async def test_block_device_relay_app_type_light(hass, mock_block_device, monkeypatch):
+async def test_block_device_relay_app_type_light(
+    hass: HomeAssistant, mock_block_device, monkeypatch
+) -> None:
     """Test block device relay in app type set to light mode."""
     monkeypatch.delattr(mock_block_device.blocks[RELAY_BLOCK_ID], "red")
     monkeypatch.delattr(mock_block_device.blocks[RELAY_BLOCK_ID], "green")
@@ -352,14 +364,18 @@ async def test_block_device_relay_app_type_light(hass, mock_block_device, monkey
     assert state.state == STATE_ON
 
 
-async def test_block_device_no_light_blocks(hass, mock_block_device, monkeypatch):
+async def test_block_device_no_light_blocks(
+    hass: HomeAssistant, mock_block_device, monkeypatch
+) -> None:
     """Test block device without light blocks."""
     monkeypatch.setattr(mock_block_device.blocks[LIGHT_BLOCK_ID], "type", "roller")
     await init_integration(hass, 1)
     assert hass.states.get("light.test_name_channel_1") is None
 
 
-async def test_rpc_device_switch_type_lights_mode(hass, mock_rpc_device, monkeypatch):
+async def test_rpc_device_switch_type_lights_mode(
+    hass: HomeAssistant, mock_rpc_device, monkeypatch
+) -> None:
     """Test RPC device with switch in consumption type lights mode."""
     monkeypatch.setitem(
         mock_rpc_device.config["sys"]["ui_data"], "consumption_types", ["lights"]
@@ -385,7 +401,7 @@ async def test_rpc_device_switch_type_lights_mode(hass, mock_rpc_device, monkeyp
     assert hass.states.get("light.test_switch_0").state == STATE_OFF
 
 
-async def test_rpc_light(hass, mock_rpc_device, monkeypatch):
+async def test_rpc_light(hass: HomeAssistant, mock_rpc_device, monkeypatch) -> None:
     """Test RPC light."""
     entity_id = f"{LIGHT_DOMAIN}.test_light_0"
     monkeypatch.delitem(mock_rpc_device.status, "switch:0")

@@ -2,10 +2,11 @@
 from unittest.mock import patch
 
 import homeassistant.components.time_date.sensor as time_date
+from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
 
-async def test_intervals(hass):
+async def test_intervals(hass: HomeAssistant) -> None:
     """Test timing intervals of sensors."""
     device = time_date.TimeDateSensor(hass, "time")
     now = dt_util.utc_from_timestamp(45.5)
@@ -31,7 +32,7 @@ async def test_intervals(hass):
     assert next_time > now
 
 
-async def test_states(hass):
+async def test_states(hass: HomeAssistant) -> None:
     """Test states of sensors."""
     hass.config.set_time_zone("UTC")
 
@@ -67,7 +68,7 @@ async def test_states(hass):
     assert device.state == "2017-05-18T00:54:00"
 
 
-async def test_states_non_default_timezone(hass):
+async def test_states_non_default_timezone(hass: HomeAssistant) -> None:
     """Test states of sensors in a timezone other than UTC."""
     hass.config.set_time_zone("America/New_York")
 
@@ -102,7 +103,7 @@ async def test_states_non_default_timezone(hass):
 
 
 # pylint: disable=no-member
-async def test_timezone_intervals(hass):
+async def test_timezone_intervals(hass: HomeAssistant) -> None:
     """Test date sensor behavior in a timezone besides UTC."""
     hass.config.set_time_zone("America/New_York")
 
@@ -150,7 +151,9 @@ async def test_timezone_intervals(hass):
     "homeassistant.util.dt.utcnow",
     return_value=dt_util.parse_datetime("2017-11-14 02:47:19-00:00"),
 )
-async def test_timezone_intervals_empty_parameter(utcnow_mock, hass):
+async def test_timezone_intervals_empty_parameter(
+    utcnow_mock, hass: HomeAssistant
+) -> None:
     """Test get_interval() without parameters."""
     hass.config.set_time_zone("America/Edmonton")
     device = time_date.TimeDateSensor(hass, "date")
@@ -158,7 +161,7 @@ async def test_timezone_intervals_empty_parameter(utcnow_mock, hass):
     assert next_time.timestamp() == dt_util.as_timestamp("2017-11-14 00:00:00-07:00")
 
 
-async def test_icons(hass):
+async def test_icons(hass: HomeAssistant) -> None:
     """Test attributes of sensors."""
     device = time_date.TimeDateSensor(hass, "time")
     assert device.icon == "mdi:clock"

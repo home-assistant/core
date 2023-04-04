@@ -14,6 +14,7 @@ from homeassistant.components.switcher_kis.const import (
     SERVICE_TURN_ON_WITH_TIMER_NAME,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_validation import time_period_str
 from homeassistant.util import slugify
 
@@ -27,7 +28,9 @@ from .consts import (
 
 
 @pytest.mark.parametrize("mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True)
-async def test_turn_on_with_timer_service(hass, mock_bridge, mock_api, monkeypatch):
+async def test_turn_on_with_timer_service(
+    hass: HomeAssistant, mock_bridge, mock_api, monkeypatch
+) -> None:
     """Test the turn on with timer service."""
     await init_integration(hass)
     assert mock_bridge
@@ -65,7 +68,7 @@ async def test_turn_on_with_timer_service(hass, mock_bridge, mock_api, monkeypat
 
 
 @pytest.mark.parametrize("mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True)
-async def test_set_auto_off_service(hass, mock_bridge, mock_api):
+async def test_set_auto_off_service(hass: HomeAssistant, mock_bridge, mock_api) -> None:
     """Test the set auto off service."""
     await init_integration(hass)
     assert mock_bridge
@@ -90,7 +93,9 @@ async def test_set_auto_off_service(hass, mock_bridge, mock_api):
 
 
 @pytest.mark.parametrize("mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True)
-async def test_set_auto_off_service_fail(hass, mock_bridge, mock_api, caplog):
+async def test_set_auto_off_service_fail(
+    hass: HomeAssistant, mock_bridge, mock_api, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test set auto off service failed."""
     await init_integration(hass)
     assert mock_bridge
@@ -122,7 +127,9 @@ async def test_set_auto_off_service_fail(hass, mock_bridge, mock_api, caplog):
 
 
 @pytest.mark.parametrize("mock_bridge", [[DUMMY_PLUG_DEVICE]], indirect=True)
-async def test_plug_unsupported_services(hass, mock_bridge, mock_api, caplog):
+async def test_plug_unsupported_services(
+    hass: HomeAssistant, mock_bridge, mock_api, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test plug device unsupported services."""
     await init_integration(hass)
     assert mock_bridge

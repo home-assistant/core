@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.core import callback, is_callback
+from homeassistant.core import HomeAssistant, callback, is_callback
 import homeassistant.util.logging as logging_util
 
 
@@ -62,7 +62,7 @@ async def test_logging_with_queue_handler() -> None:
     assert simple_queue.empty()
 
 
-async def test_migrate_log_handler(hass):
+async def test_migrate_log_handler(hass: HomeAssistant) -> None:
     """Test migrating log handlers."""
 
     logging_util.async_activate_log_queue_handler(hass)
@@ -78,7 +78,9 @@ async def test_migrate_log_handler(hass):
 
 
 @pytest.mark.no_fail_on_log_exception
-async def test_async_create_catching_coro(hass, caplog):
+async def test_async_create_catching_coro(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test exception logging of wrapped coroutine."""
 
     async def job():

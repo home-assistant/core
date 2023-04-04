@@ -9,9 +9,11 @@ from homeassistant.components.zwave_js.discovery import (
 from homeassistant.components.zwave_js.discovery_data_template import (
     DynamicCurrentTempClimateDataTemplate,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 
-async def test_iblinds_v2(hass, client, iblinds_v2, integration):
+async def test_iblinds_v2(hass: HomeAssistant, client, iblinds_v2, integration) -> None:
     """Test that an iBlinds v2.0 multilevel switch value is discovered as a cover."""
     node = iblinds_v2
     assert node.device_class.specific.label == "Unused"
@@ -23,7 +25,7 @@ async def test_iblinds_v2(hass, client, iblinds_v2, integration):
     assert state
 
 
-async def test_ge_12730(hass, client, ge_12730, integration):
+async def test_ge_12730(hass: HomeAssistant, client, ge_12730, integration) -> None:
     """Test GE 12730 Fan Controller v2.0 multilevel switch is discovered as a fan."""
     node = ge_12730
     assert node.device_class.specific.label == "Multilevel Power Switch"
@@ -35,7 +37,9 @@ async def test_ge_12730(hass, client, ge_12730, integration):
     assert state
 
 
-async def test_inovelli_lzw36(hass, client, inovelli_lzw36, integration):
+async def test_inovelli_lzw36(
+    hass: HomeAssistant, client, inovelli_lzw36, integration
+) -> None:
     """Test LZW36 Fan Controller multilevel switch endpoint 2 is discovered as a fan."""
     node = inovelli_lzw36
     assert node.device_class.specific.label == "Unused"
@@ -48,8 +52,8 @@ async def test_inovelli_lzw36(hass, client, inovelli_lzw36, integration):
 
 
 async def test_vision_security_zl7432(
-    hass, client, vision_security_zl7432, integration
-):
+    hass: HomeAssistant, client, vision_security_zl7432, integration
+) -> None:
     """Test Vision Security ZL7432 is caught by the device specific discovery."""
     for entity_id in (
         "switch.in_wall_dual_relay_switch",
@@ -61,8 +65,8 @@ async def test_vision_security_zl7432(
 
 
 async def test_lock_popp_electric_strike_lock_control(
-    hass, client, lock_popp_electric_strike_lock_control, integration
-):
+    hass: HomeAssistant, client, lock_popp_electric_strike_lock_control, integration
+) -> None:
     """Test that the Popp Electric Strike Lock Control gets discovered correctly."""
     assert hass.states.get("lock.node_62") is not None
     assert (
@@ -71,12 +75,14 @@ async def test_lock_popp_electric_strike_lock_control(
     )
 
 
-async def test_fortrez_ssa3_siren(hass, client, fortrezz_ssa3_siren, integration):
+async def test_fortrez_ssa3_siren(
+    hass: HomeAssistant, client, fortrezz_ssa3_siren, integration
+) -> None:
     """Test Fortrezz SSA3 siren gets discovered correctly."""
     assert hass.states.get("select.siren_and_strobe_alarm") is not None
 
 
-async def test_firmware_version_range_exception(hass):
+async def test_firmware_version_range_exception(hass: HomeAssistant) -> None:
     """Test FirmwareVersionRange exception."""
     with pytest.raises(ValueError):
         ZWaveDiscoverySchema(
@@ -86,10 +92,52 @@ async def test_firmware_version_range_exception(hass):
         )
 
 
-async def test_dynamic_climate_data_discovery_template_failure(hass, multisensor_6):
+async def test_dynamic_climate_data_discovery_template_failure(
+    hass: HomeAssistant, multisensor_6
+) -> None:
     """Test that initing a DynamicCurrentTempClimateDataTemplate with no data raises."""
     node = multisensor_6
     with pytest.raises(ValueError):
         DynamicCurrentTempClimateDataTemplate().resolve_data(
             node.values[f"{node.node_id}-49-0-Ultraviolet"]
         )
+
+
+async def test_merten_507801(
+    hass: HomeAssistant, client, merten_507801, integration
+) -> None:
+    """Test that Merten 507801 multilevel switch value is discovered as a cover."""
+    node = merten_507801
+    assert node.device_class.specific.label == "Unused"
+
+    state = hass.states.get("light.connect_roller_shutter")
+    assert not state
+
+    state = hass.states.get("cover.connect_roller_shutter")
+    assert state
+
+
+async def test_merten_507801_disabled_enitites(
+    hass: HomeAssistant, client, merten_507801, integration
+) -> None:
+    """Test that Merten 507801 entities created by endpoint 2 are disabled."""
+    registry = er.async_get(hass)
+    entity_ids = [
+        "cover.connect_roller_shutter_2",
+        "select.connect_roller_shutter_local_protection_state_2",
+        "select.connect_roller_shutter_rf_protection_state_2",
+    ]
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state is None
+        entry = registry.async_get(entity_id)
+        assert entry
+        assert entry.disabled
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+        # Test enabling entity
+        updated_entry = registry.async_update_entity(
+            entry.entity_id, **{"disabled_by": None}
+        )
+        assert updated_entry != entry
+        assert updated_entry.disabled is False

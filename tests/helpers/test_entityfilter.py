@@ -369,7 +369,7 @@ def test_filter_schema_include_exclude() -> None:
     assert not filt.empty_filter
 
 
-def test_exlictly_included() -> None:
+def test_explicitly_included() -> None:
     """Test if an entity is explicitly included."""
     conf = {
         "include": {

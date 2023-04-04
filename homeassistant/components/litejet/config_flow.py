@@ -76,7 +76,7 @@ class LiteJetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_data):
+    async def async_step_import(self, import_data: dict[str, Any]) -> FlowResult:
         """Import litejet config from configuration.yaml."""
         return self.async_create_entry(title=import_data[CONF_PORT], data=import_data)
 

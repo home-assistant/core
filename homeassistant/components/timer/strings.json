@@ -1,9 +1,33 @@
 {
-  "state": {
+  "entity_component": {
     "_": {
-      "active": "[%key:common::state::active%]",
-      "idle": "[%key:common::state::idle%]",
-      "paused": "[%key:common::state::paused%]"
+      "name": "Timer",
+      "state": {
+        "active": "[%key:common::state::active%]",
+        "idle": "[%key:common::state::idle%]",
+        "paused": "[%key:common::state::paused%]"
+      },
+      "state_attributes": {
+        "duration": {
+          "name": "Duration"
+        },
+        "editable": {
+          "name": "[%key:common::generic::ui_managed%]",
+          "state": {
+            "true": "[%key:common::state::yes%]",
+            "false": "[%key:common::state::no%]"
+          }
+        },
+        "finishes_at": {
+          "name": "Finishes at"
+        },
+        "remaining": {
+          "name": "Remaining"
+        },
+        "restore": {
+          "name": "Restore"
+        }
+      }
     }
   }
 }

@@ -161,6 +161,7 @@ DEVICE_CLASS_TO_GOOGLE_TYPES = {
     (cover.DOMAIN, cover.CoverDeviceClass.GARAGE): TYPE_GARAGE,
     (cover.DOMAIN, cover.CoverDeviceClass.GATE): TYPE_GARAGE,
     (cover.DOMAIN, cover.CoverDeviceClass.SHUTTER): TYPE_SHUTTER,
+    (cover.DOMAIN, cover.CoverDeviceClass.WINDOW): TYPE_WINDOW,
     (
         humidifier.DOMAIN,
         humidifier.HumidifierDeviceClass.DEHUMIDIFIER,

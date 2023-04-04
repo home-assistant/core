@@ -1,10 +1,9 @@
 """Make sure that Vocolinc Flowerbud is enumerated properly."""
-
 from homeassistant.components.humidifier import HumidifierEntityFeature
 from homeassistant.components.number import NumberMode
 from homeassistant.components.sensor import SensorStateClass
-from homeassistant.const import PERCENTAGE
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.core import HomeAssistant
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,
@@ -16,7 +15,7 @@ from ..common import (
 )
 
 
-async def test_vocolinc_flowerbud_setup(hass):
+async def test_vocolinc_flowerbud_setup(hass: HomeAssistant) -> None:
     """Test that a Vocolinc Flowerbud can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "vocolinc_flowerbud.json")
     await setup_test_accessories(hass, accessories)

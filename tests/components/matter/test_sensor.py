@@ -1,7 +1,7 @@
 """Test Matter sensors."""
 from unittest.mock import MagicMock
 
-from matter_server.common.models.node import MatterNode
+from matter_server.client.models.node import MatterNode
 import pytest
 
 from homeassistant.core import HomeAssistant
@@ -61,6 +61,8 @@ async def temperature_sensor_node_fixture(
     )
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_sensor_null_value(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -79,6 +81,8 @@ async def test_sensor_null_value(
     assert state.state == "unknown"
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_flow_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -97,6 +101,8 @@ async def test_flow_sensor(
     assert state.state == "2.0"
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_humidity_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -115,24 +121,28 @@ async def test_humidity_sensor(
     assert state.state == "40.0"
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_light_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,
     light_sensor_node: MatterNode,
 ) -> None:
     """Test light sensor."""
-    state = hass.states.get("sensor.mock_light_sensor_light")
+    state = hass.states.get("sensor.mock_light_sensor_illuminance")
     assert state
     assert state.state == "1.3"
 
     set_node_attribute(light_sensor_node, 1, 1024, 0, 3000)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("sensor.mock_light_sensor_light")
+    state = hass.states.get("sensor.mock_light_sensor_illuminance")
     assert state
     assert state.state == "2.0"
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_pressure_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -151,6 +161,8 @@ async def test_pressure_sensor(
     assert state.state == "101.0"
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_temperature_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,

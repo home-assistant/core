@@ -1,0 +1,76 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'networks': dict({
+      '1111111122222222': dict({
+        'name': 'OpenThreadDemo',
+        'prefixes': list([
+          'fdad:70bf:e5aa:15dd',
+        ]),
+        'routers': dict({
+        }),
+        'unexpected_routers': list([
+        ]),
+      }),
+      'c3a60fc387c381c286212cc3a5': dict({
+        'name': 'OpenThread HC',
+        'prefixes': list([
+          'fd59:86c6:e5a5::',
+        ]),
+        'routers': dict({
+          'HomeAssistant OpenThreadBorderRouter #0BBF._meshcop._udp.local.': dict({
+            'addresses': list([
+              '127.0.0.1',
+              'fe80::10ed:6406:4ee9:85e5',
+            ]),
+            'model': 'OpenThreadBorderRouter',
+            'neighbours': dict({
+              'fe80::10ed:6406:4ee9:85e5': dict({
+                'lladdr': '00:00:00:00:00:00',
+                'probes': 64,
+                'state': 64,
+              }),
+            }),
+            'routes': dict({
+              'fd59:86c6:e5a5::': dict({
+                'is_nexthop': False,
+                'metrics': 100,
+                'priority': 100,
+              }),
+            }),
+            'server': 'HomeAssistant OpenThreadBorderRouter #0BBF._meshcop._udp.local.',
+            'thread_version': '1.3.0',
+            'vendor': 'HomeAssistant',
+          }),
+          'HomePod._meshcop._udp.local.': dict({
+            'addresses': list([
+              '127.0.0.1',
+              'fe80::10ed:6406:4ee9:85e4',
+            ]),
+            'model': None,
+            'neighbours': dict({
+              'fe80::10ed:6406:4ee9:85e4': dict({
+                'lladdr': '00:00:00:00:00:00',
+                'probes': 64,
+                'state': 64,
+              }),
+            }),
+            'routes': dict({
+              'fd59:86c6:e5a5::': dict({
+                'is_nexthop': True,
+                'metrics': 100,
+                'priority': 100,
+              }),
+            }),
+            'server': 'HomePod._meshcop._udp.local.',
+            'thread_version': '1.2.0',
+            'vendor': 'Apple',
+          }),
+        }),
+        'unexpected_routers': list([
+          'fe80::10ed:6406:4ee9:85e3',
+        ]),
+      }),
+    }),
+  })
+# ---

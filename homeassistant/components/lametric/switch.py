@@ -9,8 +9,8 @@ from demetriek import Device, LaMetricDevice
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -39,7 +39,7 @@ class LaMetricSwitchEntityDescription(
 SWITCHES = [
     LaMetricSwitchEntityDescription(
         key="bluetooth",
-        name="Bluetooth",
+        translation_key="bluetooth",
         icon="mdi:bluetooth",
         entity_category=EntityCategory.CONFIG,
         available_fn=lambda device: device.bluetooth.available,

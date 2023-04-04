@@ -13,7 +13,7 @@ def mock_hass():
 
 
 @pytest.mark.parametrize("result", (object(), {}, []))
-async def test_singleton_async(mock_hass, result):
+async def test_singleton_async(mock_hass, result) -> None:
     """Test singleton with async function."""
 
     @singleton.singleton("test_key")
@@ -29,7 +29,7 @@ async def test_singleton_async(mock_hass, result):
 
 
 @pytest.mark.parametrize("result", (object(), {}, []))
-def test_singleton(mock_hass, result):
+def test_singleton(mock_hass, result) -> None:
     """Test singleton with function."""
 
     @singleton.singleton("test_key")

@@ -1,9 +1,9 @@
 {
   "domain": "zone",
   "name": "Zone",
+  "codeowners": ["@home-assistant/core"],
   "config_flow": false,
   "documentation": "https://www.home-assistant.io/integrations/zone",
-  "codeowners": ["@home-assistant/core"],
-  "quality_scale": "internal",
-  "integration_type": "system"
+  "integration_type": "system",
+  "quality_scale": "internal"
 }

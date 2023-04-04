@@ -1,5 +1,4 @@
 """The tests for the Graphite component."""
-import asyncio
 import socket
 from unittest import mock
 from unittest.mock import patch
@@ -8,6 +7,7 @@ import pytest
 
 from homeassistant.components import graphite
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
@@ -32,14 +32,14 @@ def fixture_mock_time():
         yield mock_time
 
 
-async def test_setup(hass, mock_socket):
+async def test_setup(hass: HomeAssistant, mock_socket) -> None:
     """Test setup."""
     assert await async_setup_component(hass, graphite.DOMAIN, {"graphite": {}})
     assert mock_socket.call_count == 1
     assert mock_socket.call_args == mock.call(socket.AF_INET, socket.SOCK_STREAM)
 
 
-async def test_setup_failure(hass, mock_socket):
+async def test_setup_failure(hass: HomeAssistant, mock_socket) -> None:
     """Test setup fails due to socket error."""
     mock_socket.return_value.connect.side_effect = OSError
     assert not await async_setup_component(hass, graphite.DOMAIN, {"graphite": {}})
@@ -49,7 +49,7 @@ async def test_setup_failure(hass, mock_socket):
     assert mock_socket.return_value.connect.call_count == 1
 
 
-async def test_full_config(hass, mock_gf, mock_socket):
+async def test_full_config(hass: HomeAssistant, mock_gf, mock_socket) -> None:
     """Test setup with full configuration."""
     config = {"graphite": {"host": "foo", "port": 123, "prefix": "me"}}
 
@@ -60,7 +60,7 @@ async def test_full_config(hass, mock_gf, mock_socket):
     assert mock_socket.call_args == mock.call(socket.AF_INET, socket.SOCK_STREAM)
 
 
-async def test_full_udp_config(hass, mock_gf, mock_socket):
+async def test_full_udp_config(hass: HomeAssistant, mock_gf, mock_socket) -> None:
     """Test setup with full configuration and UDP protocol."""
     config = {
         "graphite": {"host": "foo", "port": 123, "protocol": "udp", "prefix": "me"}
@@ -72,7 +72,7 @@ async def test_full_udp_config(hass, mock_gf, mock_socket):
     assert mock_socket.call_count == 0
 
 
-async def test_config_port(hass, mock_gf, mock_socket):
+async def test_config_port(hass: HomeAssistant, mock_gf, mock_socket) -> None:
     """Test setup with invalid port."""
     config = {"graphite": {"host": "foo", "port": 2003}}
 
@@ -82,7 +82,7 @@ async def test_config_port(hass, mock_gf, mock_socket):
     assert mock_socket.call_args == mock.call(socket.AF_INET, socket.SOCK_STREAM)
 
 
-async def test_start(hass, mock_socket, mock_time):
+async def test_start(hass: HomeAssistant, mock_socket, mock_time) -> None:
     """Test the start."""
     mock_time.return_value = 12345
     assert await async_setup_component(hass, graphite.DOMAIN, {"graphite": {}})
@@ -90,9 +90,11 @@ async def test_start(hass, mock_socket, mock_time):
     mock_socket.reset_mock()
 
     await hass.async_start()
+    await hass.async_block_till_done()
 
     hass.states.async_set("test.entity", STATE_ON)
-    await asyncio.sleep(0.1)
+    await hass.async_block_till_done()
+    hass.data[graphite.DOMAIN]._queue.join()
 
     assert mock_socket.return_value.connect.call_count == 1
     assert mock_socket.return_value.connect.call_args == mock.call(("localhost", 2003))
@@ -105,7 +107,7 @@ async def test_start(hass, mock_socket, mock_time):
     assert mock_socket.return_value.close.call_count == 1
 
 
-async def test_shutdown(hass, mock_socket, mock_time):
+async def test_shutdown(hass: HomeAssistant, mock_socket, mock_time) -> None:
     """Test the shutdown."""
     mock_time.return_value = 12345
     assert await async_setup_component(hass, graphite.DOMAIN, {"graphite": {}})
@@ -113,9 +115,11 @@ async def test_shutdown(hass, mock_socket, mock_time):
     mock_socket.reset_mock()
 
     await hass.async_start()
+    await hass.async_block_till_done()
 
     hass.states.async_set("test.entity", STATE_ON)
-    await asyncio.sleep(0.1)
+    await hass.async_block_till_done()
+    hass.data[graphite.DOMAIN]._queue.join()
 
     assert mock_socket.return_value.connect.call_count == 1
     assert mock_socket.return_value.connect.call_args == mock.call(("localhost", 2003))
@@ -133,13 +137,13 @@ async def test_shutdown(hass, mock_socket, mock_time):
     await hass.async_block_till_done()
 
     hass.states.async_set("test.entity", STATE_OFF)
-    await asyncio.sleep(0.1)
+    await hass.async_block_till_done()
 
     assert mock_socket.return_value.connect.call_count == 0
     assert mock_socket.return_value.sendall.call_count == 0
 
 
-async def test_report_attributes(hass, mock_socket, mock_time):
+async def test_report_attributes(hass: HomeAssistant, mock_socket, mock_time) -> None:
     """Test the reporting with attributes."""
     attrs = {"foo": 1, "bar": 2.0, "baz": True, "bat": "NaN"}
     expected = [
@@ -155,9 +159,11 @@ async def test_report_attributes(hass, mock_socket, mock_time):
     mock_socket.reset_mock()
 
     await hass.async_start()
+    await hass.async_block_till_done()
 
     hass.states.async_set("test.entity", STATE_ON, attrs)
-    await asyncio.sleep(0.1)
+    await hass.async_block_till_done()
+    hass.data[graphite.DOMAIN]._queue.join()
 
     assert mock_socket.return_value.connect.call_count == 1
     assert mock_socket.return_value.connect.call_args == mock.call(("localhost", 2003))
@@ -170,7 +176,9 @@ async def test_report_attributes(hass, mock_socket, mock_time):
     assert mock_socket.return_value.close.call_count == 1
 
 
-async def test_report_with_string_state(hass, mock_socket, mock_time):
+async def test_report_with_string_state(
+    hass: HomeAssistant, mock_socket, mock_time
+) -> None:
     """Test the reporting with strings."""
     expected = [
         "ha.test.entity.foo 1.000000 12345",
@@ -183,9 +191,11 @@ async def test_report_with_string_state(hass, mock_socket, mock_time):
     mock_socket.reset_mock()
 
     await hass.async_start()
+    await hass.async_block_till_done()
 
     hass.states.async_set("test.entity", "above_horizon", {"foo": 1.0})
-    await asyncio.sleep(0.1)
+    await hass.async_block_till_done()
+    hass.data[graphite.DOMAIN]._queue.join()
 
     assert mock_socket.return_value.connect.call_count == 1
     assert mock_socket.return_value.connect.call_args == mock.call(("localhost", 2003))
@@ -200,7 +210,8 @@ async def test_report_with_string_state(hass, mock_socket, mock_time):
     mock_socket.reset_mock()
 
     hass.states.async_set("test.entity", "not_float")
-    await asyncio.sleep(0.1)
+    await hass.async_block_till_done()
+    hass.data[graphite.DOMAIN]._queue.join()
 
     assert mock_socket.return_value.connect.call_count == 0
     assert mock_socket.return_value.sendall.call_count == 0
@@ -208,7 +219,9 @@ async def test_report_with_string_state(hass, mock_socket, mock_time):
     assert mock_socket.return_value.close.call_count == 0
 
 
-async def test_report_with_binary_state(hass, mock_socket, mock_time):
+async def test_report_with_binary_state(
+    hass: HomeAssistant, mock_socket, mock_time
+) -> None:
     """Test the reporting with binary state."""
     mock_time.return_value = 12345
     assert await async_setup_component(hass, graphite.DOMAIN, {"graphite": {}})
@@ -216,13 +229,15 @@ async def test_report_with_binary_state(hass, mock_socket, mock_time):
     mock_socket.reset_mock()
 
     await hass.async_start()
+    await hass.async_block_till_done()
 
     expected = [
         "ha.test.entity.foo 1.000000 12345",
         "ha.test.entity.state 1.000000 12345",
     ]
     hass.states.async_set("test.entity", STATE_ON, {"foo": 1.0})
-    await asyncio.sleep(0.1)
+    await hass.async_block_till_done()
+    hass.data[graphite.DOMAIN]._queue.join()
 
     assert mock_socket.return_value.connect.call_count == 1
     assert mock_socket.return_value.connect.call_args == mock.call(("localhost", 2003))
@@ -241,7 +256,8 @@ async def test_report_with_binary_state(hass, mock_socket, mock_time):
         "ha.test.entity.state 0.000000 12345",
     ]
     hass.states.async_set("test.entity", STATE_OFF, {"foo": 1.0})
-    await asyncio.sleep(0.1)
+    await hass.async_block_till_done()
+    hass.data[graphite.DOMAIN]._queue.join()
 
     assert mock_socket.return_value.connect.call_count == 1
     assert mock_socket.return_value.connect.call_args == mock.call(("localhost", 2003))
@@ -255,7 +271,7 @@ async def test_report_with_binary_state(hass, mock_socket, mock_time):
 
 
 @pytest.mark.parametrize(
-    "error, log_text",
+    ("error", "log_text"),
     [
         (OSError, "Failed to send data to graphite"),
         (socket.gaierror, "Unable to connect to host"),
@@ -263,8 +279,13 @@ async def test_report_with_binary_state(hass, mock_socket, mock_time):
     ],
 )
 async def test_send_to_graphite_errors(
-    hass, mock_socket, mock_time, caplog, error, log_text
-):
+    hass: HomeAssistant,
+    mock_socket,
+    mock_time,
+    caplog: pytest.LogCaptureFixture,
+    error,
+    log_text,
+) -> None:
     """Test the sending with errors."""
     mock_time.return_value = 12345
     assert await async_setup_component(hass, graphite.DOMAIN, {"graphite": {}})
@@ -272,10 +293,12 @@ async def test_send_to_graphite_errors(
     mock_socket.reset_mock()
 
     await hass.async_start()
+    await hass.async_block_till_done()
 
     mock_socket.return_value.connect.side_effect = error
 
     hass.states.async_set("test.entity", STATE_ON)
-    await asyncio.sleep(0.1)
+    await hass.async_block_till_done()
+    hass.data[graphite.DOMAIN]._queue.join()
 
     assert log_text in caplog.text

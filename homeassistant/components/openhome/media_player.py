@@ -211,7 +211,7 @@ class OpenhomeDevice(MediaPlayerEntity):
 
     @catch_request_errors()
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Send the play_media command to the media player."""
         if media_source.is_media_source_id(media_id):
@@ -347,7 +347,9 @@ class OpenhomeDevice(MediaPlayerEntity):
         await self._device.set_mute(mute)
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_source.async_browse_media(

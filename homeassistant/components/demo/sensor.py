@@ -126,7 +126,7 @@ async def async_setup_platform(
             ),
             DemoSensor(
                 unique_id="sensor_10",
-                name="Thermostat mode",
+                name=None,
                 state="eco",
                 device_class=SensorDeviceClass.ENUM,
                 state_class=None,
@@ -156,7 +156,7 @@ class DemoSensor(SensorEntity):
     def __init__(
         self,
         unique_id: str,
-        name: str,
+        name: str | None,
         state: StateType,
         device_class: SensorDeviceClass,
         state_class: SensorStateClass | None,
@@ -167,7 +167,10 @@ class DemoSensor(SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         self._attr_device_class = device_class
-        self._attr_name = name
+        if name is not None:
+            self._attr_name = name
+        else:
+            self._attr_has_entity_name = True
         self._attr_native_unit_of_measurement = unit_of_measurement
         self._attr_native_value = state
         self._attr_state_class = state_class

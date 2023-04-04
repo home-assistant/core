@@ -1,4 +1,6 @@
 """The tests for the text component."""
+from typing import Any
+
 import pytest
 
 from homeassistant.components.text import (
@@ -14,7 +16,7 @@ from homeassistant.components.text import (
     _async_set_value,
 )
 from homeassistant.const import MAX_LENGTH_STATE_STATE
-from homeassistant.core import ServiceCall, State
+from homeassistant.core import HomeAssistant, ServiceCall, State
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
 
@@ -41,7 +43,7 @@ class MockTextEntity(TextEntity):
         self._attr_native_value = value
 
 
-async def test_text_default(hass):
+async def test_text_default(hass: HomeAssistant) -> None:
     """Test text entity with defaults."""
     text = MockTextEntity()
     text.hass = hass
@@ -56,7 +58,7 @@ async def test_text_default(hass):
     assert text.state == "test"
 
 
-async def test_text_new_min_max_pattern(hass):
+async def test_text_new_min_max_pattern(hass: HomeAssistant) -> None:
     """Test text entity with new min, max, and pattern."""
     text = MockTextEntity(native_min=-1, native_max=500, pattern=r"[a-z]")
     text.hass = hass
@@ -69,7 +71,7 @@ async def test_text_new_min_max_pattern(hass):
     }
 
 
-async def test_text_set_value(hass):
+async def test_text_set_value(hass: HomeAssistant) -> None:
     """Test text entity with set_value service."""
     text = MockTextEntity(native_min=1, native_max=5, pattern=r"[a-z]")
     text.hass = hass
@@ -96,7 +98,7 @@ async def test_text_set_value(hass):
     assert text.state == "test2"
 
 
-async def test_text_value_outside_bounds(hass):
+async def test_text_value_outside_bounds(hass: HomeAssistant) -> None:
     """Test text entity with value that is outside min and max."""
     with pytest.raises(ValueError):
         _ = MockTextEntity(
@@ -118,10 +120,10 @@ RESTORE_DATA = {
 
 
 async def test_restore_number_save_state(
-    hass,
-    hass_storage,
-    enable_custom_integrations,
-):
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    enable_custom_integrations: None,
+) -> None:
     """Test RestoreNumber."""
     platform = getattr(hass.components, "test.text")
     platform.init(empty=True)
@@ -150,7 +152,7 @@ async def test_restore_number_save_state(
 
 
 @pytest.mark.parametrize(
-    "native_max, native_min, native_value, native_value_type, extra_data",
+    ("native_max", "native_min", "native_value", "native_value_type", "extra_data"),
     [
         (5, 1, "Hello", str, RESTORE_DATA),
         (255, 1, None, type(None), None),
@@ -160,15 +162,15 @@ async def test_restore_number_save_state(
     ],
 )
 async def test_restore_number_restore_state(
-    hass,
-    enable_custom_integrations,
-    hass_storage,
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+    hass_storage: dict[str, Any],
     native_max,
     native_min,
     native_value,
     native_value_type,
     extra_data,
-):
+) -> None:
     """Test RestoreNumber."""
     mock_restore_cache_with_extra_data(hass, ((State("text.test", ""), extra_data),))
 

@@ -84,7 +84,10 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
                 (dr.CONNECTION_NETWORK_MAC, entry_data.device_info.mac_address)
             }
         )
-        if coordinator.supports_update:
+
+        # If the device has deep sleep, we can't assume we can install updates
+        # as the ESP will not be connectable (by design).
+        if coordinator.supports_update and not self._device_info.has_deep_sleep:
             self._attr_supported_features = UpdateEntityFeature.INSTALL
 
     @property
@@ -95,8 +98,16 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
 
     @property
     def available(self) -> bool:
-        """Return if update is available."""
-        return super().available and self._device_info.name in self.coordinator.data
+        """Return if update is available.
+
+        During deep sleep the ESP will not be connectable (by design)
+        and thus, even when unavailable, we'll show it as available.
+        """
+        return (
+            super().available
+            and (self._entry_data.available or self._device_info.has_deep_sleep)
+            and self._device_info.name in self.coordinator.data
+        )
 
     @property
     def installed_version(self) -> str | None:
@@ -130,6 +141,19 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
                 self.hass,
                 self._entry_data.signal_static_info_updated,
                 _static_info_updated,
+            )
+        )
+
+        @callback
+        def _on_device_update() -> None:
+            """Handle update of device state, like availability."""
+            self.async_write_ha_state()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                self._entry_data.signal_device_updated,
+                _on_device_update,
             )
         )
 

@@ -51,7 +51,7 @@ from .utils import (
 
 async def test_select_camera_remove(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, unadopted_camera: Camera
-):
+) -> None:
     """Test removing and re-adding a camera device."""
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
@@ -65,7 +65,7 @@ async def test_select_camera_remove(
 
 async def test_select_light_remove(
     hass: HomeAssistant, ufp: MockUFPFixture, light: Light
-):
+) -> None:
     """Test removing and re-adding a light device."""
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
@@ -79,7 +79,7 @@ async def test_select_light_remove(
 
 async def test_select_viewer_remove(
     hass: HomeAssistant, ufp: MockUFPFixture, viewer: Viewer
-):
+) -> None:
     """Test removing and re-adding a light device."""
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
@@ -93,7 +93,7 @@ async def test_select_viewer_remove(
 
 async def test_select_setup_light(
     hass: HomeAssistant, ufp: MockUFPFixture, light: Light
-):
+) -> None:
     """Test select entity setup for light devices."""
 
     light.light_mode_settings.enable_at = LightModeEnableType.DARK
@@ -120,7 +120,7 @@ async def test_select_setup_light(
 
 async def test_select_setup_viewer(
     hass: HomeAssistant, ufp: MockUFPFixture, viewer: Viewer, liveview: Liveview
-):
+) -> None:
     """Test select entity setup for light devices."""
 
     ufp.api.bootstrap.liveviews = {liveview.id: liveview}
@@ -146,7 +146,7 @@ async def test_select_setup_viewer(
 
 async def test_select_setup_camera_all(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
-):
+) -> None:
     """Test select entity setup for camera devices (all features)."""
 
     await init_entry(hass, ufp, [doorbell])
@@ -172,7 +172,7 @@ async def test_select_setup_camera_all(
 
 async def test_select_setup_camera_none(
     hass: HomeAssistant, ufp: MockUFPFixture, camera: Camera
-):
+) -> None:
     """Test select entity setup for camera devices (no features)."""
 
     await init_entry(hass, ufp, [camera])
@@ -201,7 +201,7 @@ async def test_select_setup_camera_none(
 
 async def test_select_update_liveview(
     hass: HomeAssistant, ufp: MockUFPFixture, viewer: Viewer, liveview: Liveview
-):
+) -> None:
     """Test select entity update (new Liveview)."""
 
     ufp.api.bootstrap.liveviews = {liveview.id: liveview}
@@ -237,7 +237,7 @@ async def test_select_update_liveview(
 
 async def test_select_update_doorbell_settings(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
-):
+) -> None:
     """Test select entity update (new Doorbell Message)."""
 
     await init_entry(hass, ufp, [doorbell])
@@ -283,7 +283,7 @@ async def test_select_update_doorbell_settings(
 
 async def test_select_update_doorbell_message(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
-):
+) -> None:
     """Test select entity update (change doorbell message)."""
 
     await init_entry(hass, ufp, [doorbell])
@@ -317,7 +317,7 @@ async def test_select_update_doorbell_message(
 
 async def test_select_set_option_light_motion(
     hass: HomeAssistant, ufp: MockUFPFixture, light: Light
-):
+) -> None:
     """Test Light Mode select."""
 
     await init_entry(hass, ufp, [light])
@@ -342,7 +342,7 @@ async def test_select_set_option_light_motion(
 
 async def test_select_set_option_light_camera(
     hass: HomeAssistant, ufp: MockUFPFixture, light: Light, camera: Camera
-):
+) -> None:
     """Test Paired Camera select."""
 
     await init_entry(hass, ufp, [light, camera])
@@ -376,7 +376,7 @@ async def test_select_set_option_light_camera(
 
 async def test_select_set_option_camera_recording(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
-):
+) -> None:
     """Test Recording Mode select."""
 
     await init_entry(hass, ufp, [doorbell])
@@ -401,7 +401,7 @@ async def test_select_set_option_camera_recording(
 
 async def test_select_set_option_camera_ir(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
-):
+) -> None:
     """Test Infrared Mode select."""
 
     await init_entry(hass, ufp, [doorbell])
@@ -426,7 +426,7 @@ async def test_select_set_option_camera_ir(
 
 async def test_select_set_option_camera_doorbell_custom(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
-):
+) -> None:
     """Test Doorbell Text select (user defined message)."""
 
     await init_entry(hass, ufp, [doorbell])
@@ -453,7 +453,7 @@ async def test_select_set_option_camera_doorbell_custom(
 
 async def test_select_set_option_camera_doorbell_unifi(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
-):
+) -> None:
     """Test Doorbell Text select (unifi message)."""
 
     await init_entry(hass, ufp, [doorbell])
@@ -495,7 +495,7 @@ async def test_select_set_option_camera_doorbell_unifi(
 
 async def test_select_set_option_camera_doorbell_default(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
-):
+) -> None:
     """Test Doorbell Text select (default message)."""
 
     await init_entry(hass, ufp, [doorbell])
@@ -523,7 +523,7 @@ async def test_select_set_option_camera_doorbell_default(
 
 async def test_select_set_option_viewer(
     hass: HomeAssistant, ufp: MockUFPFixture, viewer: Viewer, liveview: Liveview
-):
+) -> None:
     """Test Liveview select."""
 
     ufp.api.bootstrap.liveviews = {liveview.id: liveview}
@@ -551,7 +551,7 @@ async def test_select_set_option_viewer(
 
 async def test_select_service_doorbell_invalid(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
-):
+) -> None:
     """Test Doorbell Text service (invalid)."""
 
     await init_entry(hass, ufp, [doorbell])
@@ -577,7 +577,7 @@ async def test_select_service_doorbell_invalid(
 
 async def test_select_service_doorbell_success(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
-):
+) -> None:
     """Test Doorbell Text service (success)."""
 
     await init_entry(hass, ufp, [doorbell])
@@ -612,7 +612,7 @@ async def test_select_service_doorbell_with_reset(
     ufp: MockUFPFixture,
     doorbell: Camera,
     fixed_now: datetime,
-):
+) -> None:
     """Test Doorbell Text service (success with reset time)."""
 
     mock_now.return_value = fixed_now

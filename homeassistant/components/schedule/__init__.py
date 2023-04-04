@@ -332,7 +332,7 @@ class Schedule(CollectionEntity):
                         possible_next_event := (
                             datetime.combine(now.date(), timestamp, tzinfo=now.tzinfo)
                             + timedelta(days=day)
-                            if not timestamp == time.max
+                            if timestamp != time.max
                             # Special case for midnight of the following day.
                             else datetime.combine(now.date(), time(), tzinfo=now.tzinfo)
                             + timedelta(days=day + 1)

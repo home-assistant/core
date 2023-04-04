@@ -27,9 +27,9 @@ def async_load_websocket_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, handle_module_log_level)
 
 
+@callback
 @websocket_api.websocket_command({vol.Required("type"): "logger/log_info"})
-@websocket_api.async_response
-async def handle_integration_log_info(
+def handle_integration_log_info(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle integrations logger info."""

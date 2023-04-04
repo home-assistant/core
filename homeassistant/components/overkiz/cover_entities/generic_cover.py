@@ -27,13 +27,11 @@ COMMANDS_STOP_TILT: list[OverkizCommand] = [
 COMMANDS_OPEN: list[OverkizCommand] = [
     OverkizCommand.OPEN,
     OverkizCommand.UP,
-    OverkizCommand.CYCLE,
 ]
 COMMANDS_OPEN_TILT: list[OverkizCommand] = [OverkizCommand.OPEN_SLATS]
 COMMANDS_CLOSE: list[OverkizCommand] = [
     OverkizCommand.CLOSE,
     OverkizCommand.DOWN,
-    OverkizCommand.CYCLE,
 ]
 COMMANDS_CLOSE_TILT: list[OverkizCommand] = [OverkizCommand.CLOSE_SLATS]
 

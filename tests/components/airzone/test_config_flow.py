@@ -145,7 +145,7 @@ async def test_form_duplicated_id(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_connection_error(hass: HomeAssistant):
+async def test_connection_error(hass: HomeAssistant) -> None:
     """Test connection to host error."""
 
     with patch(
@@ -221,7 +221,7 @@ async def test_dhcp_flow_error(hass: HomeAssistant) -> None:
     assert result["reason"] == "cannot_connect"
 
 
-async def test_dhcp_connection_error(hass: HomeAssistant):
+async def test_dhcp_connection_error(hass: HomeAssistant) -> None:
     """Test DHCP connection to host error."""
 
     with patch(

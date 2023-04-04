@@ -1,4 +1,4 @@
-"""This component provides support to the Ring Door Bell camera."""
+"""Component providing support to the Ring Door Bell camera."""
 from __future__ import annotations
 
 from datetime import timedelta

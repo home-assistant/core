@@ -25,9 +25,8 @@ def mock_path():
 
 
 @pytest.fixture
-def mock_device_registry_devices(hass):
+def mock_device_registry_devices(device_registry):
     """Create device registry devices so the device tracker entities are enabled."""
-    dev_reg = dr.async_get(hass)
     config_entry = MockConfigEntry(domain="something_else")
 
     for idx, device in enumerate(
@@ -39,7 +38,7 @@ def mock_device_registry_devices(hass):
             "5E:65:55:00:00:00",
         )
     ):
-        dev_reg.async_get_or_create(
+        device_registry.async_get_or_create(
             name=f"Device {idx}",
             config_entry_id=config_entry.entry_id,
             connections={(dr.CONNECTION_NETWORK_MAC, device)},

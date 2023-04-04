@@ -1,5 +1,6 @@
 """Fixtures for Plex tests."""
-from unittest.mock import patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -16,6 +17,15 @@ from tests.common import MockConfigEntry, load_fixture
 def plex_server_url(entry):
     """Return a protocol-less URL from a config entry."""
     return entry.data[PLEX_SERVER_CONFIG][CONF_URL].split(":", 1)[-1]
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.plex.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 @pytest.fixture(name="album", scope="session")

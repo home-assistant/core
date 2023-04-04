@@ -84,7 +84,7 @@ def ensure_zone(value):
     if value is None:
         raise vol.Invalid("zone value is None")
 
-    if str(value) not in ZONES is None:
+    if str(value) not in ZONES:
         raise vol.Invalid("zone not valid")
 
     return str(value)

@@ -5,7 +5,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
-async def test_create_entry(hass: HomeAssistant):
+async def test_create_entry(hass: HomeAssistant) -> None:
     """Test an entry is created by async_setup."""
     assert len(hass.config_entries.async_entries(thread.DOMAIN)) == 0
     assert await async_setup_component(hass, thread.DOMAIN, {})
@@ -14,7 +14,7 @@ async def test_create_entry(hass: HomeAssistant):
     assert len(hass.config_entries.async_entries(thread.DOMAIN)) == 1
 
 
-async def test_remove_entry(hass: HomeAssistant, thread_config_entry):
+async def test_remove_entry(hass: HomeAssistant, thread_config_entry) -> None:
     """Test removing the entry."""
 
     config_entry = hass.config_entries.async_entries(thread.DOMAIN)[0]

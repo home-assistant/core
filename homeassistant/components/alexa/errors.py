@@ -9,7 +9,7 @@ from .const import API_TEMP_UNITS
 
 
 class UnsupportedProperty(HomeAssistantError):
-    """This entity does not support the requested Smart Home API property."""
+    """Does not support the requested Smart Home API property."""
 
 
 class NoTokenAvailable(HomeAssistantError):

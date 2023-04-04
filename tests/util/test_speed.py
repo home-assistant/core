@@ -63,7 +63,7 @@ def test_convert_nonnumeric_value() -> None:
 
 
 @pytest.mark.parametrize(
-    "from_value, from_unit, expected, to_unit",
+    ("from_value", "from_unit", "expected", "to_unit"),
     [
         # 5 km/h / 1.609 km/mi = 3.10686 mi/h
         (5, UnitOfSpeed.KILOMETERS_PER_HOUR, 3.10686, UnitOfSpeed.MILES_PER_HOUR),
@@ -85,7 +85,7 @@ def test_convert_nonnumeric_value() -> None:
         (5, UnitOfSpeed.FEET_PER_SECOND, 1.524, UnitOfSpeed.METERS_PER_SECOND),
     ],
 )
-def test_convert_different_units(from_value, from_unit, expected, to_unit):
+def test_convert_different_units(from_value, from_unit, expected, to_unit) -> None:
     """Test conversion between units."""
     assert speed_util.convert(from_value, from_unit, to_unit) == pytest.approx(
         expected, rel=1e-4

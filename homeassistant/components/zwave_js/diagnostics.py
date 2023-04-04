@@ -34,16 +34,23 @@ VALUES_TO_REDACT = (
 )
 
 
-def redact_value_of_zwave_value(zwave_value: ValueDataType) -> ValueDataType:
-    """Redact value of a Z-Wave value."""
+def _redacted_value(zwave_value: ValueDataType) -> ValueDataType:
+    """Return redacted value of a Z-Wave value."""
+    redacted_value: ValueDataType = deepcopy(zwave_value)
+    redacted_value["value"] = REDACTED
+    return redacted_value
+
+
+def optionally_redact_value_of_zwave_value(zwave_value: ValueDataType) -> ValueDataType:
+    """Redact value of a Z-Wave value if it matches criteria to redact."""
     # If the value has no value, there is nothing to redact
     if zwave_value.get("value") in (None, ""):
         return zwave_value
+    if zwave_value.get("metadata", {}).get("secret"):
+        return _redacted_value(zwave_value)
     for value_to_redact in VALUES_TO_REDACT:
         if value_matches_matcher(value_to_redact, zwave_value):
-            redacted_value: ValueDataType = deepcopy(zwave_value)
-            redacted_value["value"] = REDACTED
-            return redacted_value
+            return _redacted_value(zwave_value)
     return zwave_value
 
 
@@ -51,7 +58,8 @@ def redact_node_state(node_state: NodeDataType) -> NodeDataType:
     """Redact node state."""
     redacted_state: NodeDataType = deepcopy(node_state)
     redacted_state["values"] = [
-        redact_value_of_zwave_value(zwave_value) for zwave_value in node_state["values"]
+        optionally_redact_value_of_zwave_value(zwave_value)
+        for zwave_value in node_state["values"]
     ]
     return redacted_state
 
@@ -117,7 +125,8 @@ async def async_get_config_entry_diagnostics(
     handshake_msgs = msgs[:-1]
     network_state = msgs[-1]
     network_state["result"]["state"]["nodes"] = [
-        redact_node_state(node) for node in network_state["result"]["state"]["nodes"]
+        redact_node_state(async_redact_data(node, KEYS_TO_REDACT))
+        for node in network_state["result"]["state"]["nodes"]
     ]
     return {"messages": [*handshake_msgs, network_state]}
 
@@ -136,7 +145,6 @@ async def async_get_device_diagnostics(
     entities = get_device_entities(hass, node, device)
     assert client.version
     node_state = redact_node_state(async_redact_data(node.data, KEYS_TO_REDACT))
-    node_state["statistics"] = node.statistics.data
     return {
         "versionInfo": {
             "driverVersion": client.version.driver_version,

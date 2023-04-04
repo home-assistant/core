@@ -12,7 +12,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import CoreState
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -22,7 +22,7 @@ from .helpers import future_timestamp, static_datetime
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_setup_with_config(hass):
+async def test_setup_with_config(hass: HomeAssistant) -> None:
     """Test setup component with config."""
     assert hass.state is CoreState.running
 
@@ -50,7 +50,7 @@ async def test_setup_with_config(hass):
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
 
 
-async def test_update_unique_id(hass):
+async def test_update_unique_id(hass: HomeAssistant) -> None:
     """Test updating a config entry without a unique_id."""
     assert hass.state is CoreState.running
 
@@ -74,7 +74,7 @@ async def test_update_unique_id(hass):
 
 
 @patch("homeassistant.util.dt.utcnow", return_value=static_datetime())
-async def test_unload_config_entry(mock_now, hass):
+async def test_unload_config_entry(mock_now, hass: HomeAssistant) -> None:
     """Test unloading a config entry."""
     assert hass.state is CoreState.running
 
@@ -116,7 +116,7 @@ async def test_unload_config_entry(mock_now, hass):
     assert state is None
 
 
-async def test_delay_load_during_startup(hass):
+async def test_delay_load_during_startup(hass: HomeAssistant) -> None:
     """Test delayed loading of a config entry during startup."""
     hass.state = CoreState.not_running
 

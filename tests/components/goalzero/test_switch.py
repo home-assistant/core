@@ -18,7 +18,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 async def test_switches_states(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-):
+) -> None:
     """Test we get sensor data."""
     await async_init_integration(hass, aioclient_mock)
 

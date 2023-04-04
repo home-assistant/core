@@ -7,6 +7,7 @@ from homeassistant.components.shelly.const import (
     EVENT_SHELLY_CLICK,
 )
 from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import (
     async_entries_for_config_entry,
     async_get as async_get_dev_reg,
@@ -18,7 +19,9 @@ from . import init_integration
 from tests.components.logbook.common import MockRow, mock_humanify
 
 
-async def test_humanify_shelly_click_event_block_device(hass, mock_block_device):
+async def test_humanify_shelly_click_event_block_device(
+    hass: HomeAssistant, mock_block_device
+) -> None:
     """Test humanifying Shelly click event for block device."""
     entry = await init_integration(hass, 1)
     dev_reg = async_get_dev_reg(hass)
@@ -66,7 +69,9 @@ async def test_humanify_shelly_click_event_block_device(hass, mock_block_device)
     )
 
 
-async def test_humanify_shelly_click_event_rpc_device(hass, mock_rpc_device):
+async def test_humanify_shelly_click_event_rpc_device(
+    hass: HomeAssistant, mock_rpc_device
+) -> None:
     """Test humanifying Shelly click event for rpc device."""
     entry = await init_integration(hass, 2)
     dev_reg = async_get_dev_reg(hass)

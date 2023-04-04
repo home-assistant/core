@@ -13,6 +13,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfPower,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -21,7 +22,7 @@ from . import INPUT_SENSOR, OUTPUT_SENSOR
 from tests.common import async_fire_time_changed
 
 
-async def test_sensor_type_input(hass, mock_iotawatt):
+async def test_sensor_type_input(hass: HomeAssistant, mock_iotawatt) -> None:
     """Test input sensors work."""
     assert await async_setup_component(hass, "iotawatt", {})
     await hass.async_block_till_done()
@@ -52,7 +53,7 @@ async def test_sensor_type_input(hass, mock_iotawatt):
     assert hass.states.get("sensor.my_sensor") is None
 
 
-async def test_sensor_type_output(hass, mock_iotawatt):
+async def test_sensor_type_output(hass: HomeAssistant, mock_iotawatt) -> None:
     """Tests the sensor type of Output."""
     mock_iotawatt.getSensors.return_value["sensors"][
         "my_watthour_sensor_key"

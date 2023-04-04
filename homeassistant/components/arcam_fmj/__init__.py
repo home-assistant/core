@@ -1,6 +1,5 @@
 """Arcam component."""
 import asyncio
-from contextlib import suppress
 import logging
 from typing import Any
 
@@ -9,7 +8,7 @@ from arcam.fmj.client import Client
 import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -19,7 +18,6 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     DOMAIN_DATA_ENTRIES,
-    DOMAIN_DATA_TASKS,
     SIGNAL_CLIENT_DATA,
     SIGNAL_CLIENT_STARTED,
     SIGNAL_CLIENT_STOPPED,
@@ -32,37 +30,22 @@ CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
-async def _await_cancel(task: asyncio.Task) -> None:
-    task.cancel()
-    with suppress(asyncio.CancelledError):
-        await task
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the component."""
     hass.data[DOMAIN_DATA_ENTRIES] = {}
-    hass.data[DOMAIN_DATA_TASKS] = {}
-
-    async def _stop(_: Any) -> None:
-        asyncio.gather(
-            *(_await_cancel(task) for task in hass.data[DOMAIN_DATA_TASKS].values())
-        )
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop)
-
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up config entry."""
     entries = hass.data[DOMAIN_DATA_ENTRIES]
-    tasks = hass.data[DOMAIN_DATA_TASKS]
 
     client = Client(entry.data[CONF_HOST], entry.data[CONF_PORT])
     entries[entry.entry_id] = client
 
-    task = asyncio.create_task(_run_client(hass, client, DEFAULT_SCAN_INTERVAL))
-    tasks[entry.entry_id] = task
+    entry.async_create_background_task(
+        hass, _run_client(hass, client, DEFAULT_SCAN_INTERVAL), "arcam_fmj"
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -72,10 +55,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Cleanup before removing config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    task = hass.data[DOMAIN_DATA_TASKS].pop(entry.entry_id)
-    await _await_cancel(task)
-
     hass.data[DOMAIN_DATA_ENTRIES].pop(entry.entry_id)
 
     return unload_ok

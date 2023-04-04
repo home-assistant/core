@@ -2,16 +2,19 @@
 from http import HTTPStatus
 from unittest import mock
 
+import pytest
+
 from homeassistant.components.local_file.const import DOMAIN, SERVICE_UPDATE_FILE_PATH
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_registry
+from tests.typing import ClientSessionGenerator
 
 
-async def test_loading_file(hass, hass_client):
+async def test_loading_file(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test that it loads image from disk."""
-    mock_registry(hass)
-
     with mock.patch("os.path.isfile", mock.Mock(return_value=True)), mock.patch(
         "os.access", mock.Mock(return_value=True)
     ), mock.patch(
@@ -44,10 +47,10 @@ async def test_loading_file(hass, hass_client):
     assert body == "hello"
 
 
-async def test_file_not_readable(hass, caplog):
+async def test_file_not_readable(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test a warning is shown setup when file is not readable."""
-    mock_registry(hass)
-
     with mock.patch("os.path.isfile", mock.Mock(return_value=True)), mock.patch(
         "os.access", mock.Mock(return_value=False)
     ):
@@ -69,7 +72,9 @@ async def test_file_not_readable(hass, caplog):
     assert "mock.file" in caplog.text
 
 
-async def test_camera_content_type(hass, hass_client):
+async def test_camera_content_type(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test local_file camera content_type."""
     cam_config_jpg = {
         "name": "test_jpg",
@@ -133,12 +138,9 @@ async def test_camera_content_type(hass, hass_client):
     assert body == image
 
 
-async def test_update_file_path(hass):
+async def test_update_file_path(hass: HomeAssistant) -> None:
     """Test update_file_path service."""
     # Setup platform
-
-    mock_registry(hass)
-
     with mock.patch("os.path.isfile", mock.Mock(return_value=True)), mock.patch(
         "os.access", mock.Mock(return_value=True)
     ), mock.patch(

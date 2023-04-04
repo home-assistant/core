@@ -68,6 +68,7 @@ SERVICE_REMOTE_DISCONNECT = "remote_disconnect"
 
 SIGNAL_CLOUD_CONNECTION_STATE = "CLOUD_CONNECTION_STATE"
 
+STARTUP_REPAIR_DELAY = 1  # 1 hour
 
 ALEXA_ENTITY_SCHEMA = vol.Schema(
     {
@@ -309,7 +310,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async_call_later(
         hass=hass,
-        delay=timedelta(hours=1),
+        delay=timedelta(hours=STARTUP_REPAIR_DELAY),
         action=async_startup_repairs,
     )
 

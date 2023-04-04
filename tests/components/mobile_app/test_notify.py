@@ -5,10 +5,13 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.mobile_app.const import DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
@@ -135,7 +138,9 @@ async def setup_websocket_channel_only_push(hass, hass_admin_user):
     assert hass.services.has_service("notify", "mobile_app_websocket_push_name")
 
 
-async def test_notify_works(hass, aioclient_mock, setup_push_receiver):
+async def test_notify_works(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_push_receiver
+) -> None:
     """Test notify works."""
     assert hass.services.has_service("notify", "mobile_app_test") is True
     assert await hass.services.async_call(
@@ -155,8 +160,11 @@ async def test_notify_works(hass, aioclient_mock, setup_push_receiver):
 
 
 async def test_notify_ws_works(
-    hass, aioclient_mock, setup_push_receiver, hass_ws_client
-):
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    setup_push_receiver,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test notify works."""
     client = await hass_ws_client(hass)
 
@@ -242,8 +250,11 @@ async def test_notify_ws_works(
 
 
 async def test_notify_ws_confirming_works(
-    hass, aioclient_mock, setup_push_receiver, hass_ws_client
-):
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    setup_push_receiver,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test notify confirming works."""
     client = await hass_ws_client(hass)
 
@@ -328,8 +339,11 @@ async def test_notify_ws_confirming_works(
 
 
 async def test_notify_ws_not_confirming(
-    hass, aioclient_mock, setup_push_receiver, hass_ws_client
-):
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    setup_push_receiver,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test we go via cloud when failed to confirm."""
     client = await hass_ws_client(hass)
 
@@ -368,7 +382,11 @@ async def test_notify_ws_not_confirming(
     assert len(aioclient_mock.mock_calls) == 3
 
 
-async def test_local_push_only(hass, hass_ws_client, setup_websocket_channel_only_push):
+async def test_local_push_only(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    setup_websocket_channel_only_push,
+) -> None:
     """Test a local only push registration."""
     with pytest.raises(HomeAssistantError) as e_info:
         assert await hass.services.async_call(

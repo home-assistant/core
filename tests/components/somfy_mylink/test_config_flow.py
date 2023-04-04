@@ -12,11 +12,12 @@ from homeassistant.components.somfy_mylink.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
-async def test_form_user(hass):
+async def test_form_user(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -52,7 +53,7 @@ async def test_form_user(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_user_already_configured(hass):
+async def test_form_user_already_configured(hass: HomeAssistant) -> None:
     """Test we abort if already configured."""
 
     config_entry = MockConfigEntry(
@@ -87,7 +88,7 @@ async def test_form_user_already_configured(hass):
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_form_invalid_auth(hass):
+async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -114,7 +115,7 @@ async def test_form_invalid_auth(hass):
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -137,7 +138,7 @@ async def test_form_cannot_connect(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_unknown_error(hass):
+async def test_form_unknown_error(hass: HomeAssistant) -> None:
     """Test we handle broad exception."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -160,7 +161,7 @@ async def test_form_unknown_error(hass):
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_options_not_loaded(hass):
+async def test_options_not_loaded(hass: HomeAssistant) -> None:
     """Test options will not display until loaded."""
 
     config_entry = MockConfigEntry(
@@ -179,7 +180,7 @@ async def test_options_not_loaded(hass):
 
 
 @pytest.mark.parametrize("reversed", [True, False])
-async def test_options_with_targets(hass, reversed):
+async def test_options_with_targets(hass: HomeAssistant, reversed) -> None:
     """Test we can configure reverse for a target."""
 
     config_entry = MockConfigEntry(
@@ -233,7 +234,7 @@ async def test_options_with_targets(hass, reversed):
         await hass.async_block_till_done()
 
 
-async def test_form_user_already_configured_from_dhcp(hass):
+async def test_form_user_already_configured_from_dhcp(hass: HomeAssistant) -> None:
     """Test we abort if already configured from dhcp."""
 
     config_entry = MockConfigEntry(
@@ -265,7 +266,7 @@ async def test_form_user_already_configured_from_dhcp(hass):
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_already_configured_with_ignored(hass):
+async def test_already_configured_with_ignored(hass: HomeAssistant) -> None:
     """Test ignored entries do not break checking for existing entries."""
 
     config_entry = MockConfigEntry(
@@ -285,7 +286,7 @@ async def test_already_configured_with_ignored(hass):
     assert result["type"] == "form"
 
 
-async def test_dhcp_discovery(hass):
+async def test_dhcp_discovery(hass: HomeAssistant) -> None:
     """Test we can process the discovery from dhcp."""
 
     result = await hass.config_entries.flow.async_init(

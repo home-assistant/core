@@ -306,7 +306,7 @@ async def test_attributes_paused(
     hass: HomeAssistant,
     mock_now: dt_util.dt.datetime,
     aioclient_mock: AiohttpClientMocker,
-):
+) -> None:
     """Test attributes while paused."""
     await setup_integration(hass, aioclient_mock)
 

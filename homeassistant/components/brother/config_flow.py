@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from brother import Brother, SnmpError, UnsupportedModel
+from brother import Brother, SnmpError, UnsupportedModelError
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
@@ -62,7 +62,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except SnmpError:
                 errors["base"] = "snmp_error"
-            except UnsupportedModel:
+            except UnsupportedModelError:
                 return self.async_abort(reason="unsupported_model")
 
         return self.async_show_form(
@@ -86,7 +86,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.host, snmp_engine=snmp_engine, model=model
             )
             await self.brother.async_update()
-        except UnsupportedModel:
+        except UnsupportedModelError:
             return self.async_abort(reason="unsupported_model")
         except (ConnectionError, SnmpError):
             return self.async_abort(reason="cannot_connect")

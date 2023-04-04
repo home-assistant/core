@@ -20,9 +20,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT, UnitOfVolume
+from homeassistant.const import (
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
+    UnitOfVolume,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
@@ -39,7 +42,6 @@ SENSOR_DESCRIPTIONS = {
         icon="mdi:keg",
         native_unit_of_measurement=UnitOfVolume.LITERS,
         device_class=SensorDeviceClass.VOLUME,
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     KegtronSensorDeviceClass.KEG_TYPE: SensorEntityDescription(
         key=KegtronSensorDeviceClass.KEG_TYPE,
@@ -50,7 +52,6 @@ SENSOR_DESCRIPTIONS = {
         icon="mdi:keg",
         native_unit_of_measurement=UnitOfVolume.LITERS,
         device_class=SensorDeviceClass.VOLUME,
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     KegtronSensorDeviceClass.VOLUME_DISPENSED: SensorEntityDescription(
         key=KegtronSensorDeviceClass.VOLUME_DISPENSED,

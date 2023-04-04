@@ -4,7 +4,7 @@ from __future__ import annotations
 from homeassistant.components.device_tracker import ScannerEntity, SourceType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -37,7 +37,7 @@ async def async_setup_entry(
         coordinator.async_add_listener(router_update)
     )
 
-    registry = entity_registry.async_get(hass)
+    registry = er.async_get(hass)
     restore_entities(registry, coordinator, entry, async_add_entities, tracked)
 
 

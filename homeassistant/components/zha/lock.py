@@ -9,8 +9,12 @@ from homeassistant.components.lock import STATE_LOCKED, STATE_UNLOCKED, LockEnti
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 from homeassistant.helpers.typing import StateType
 
 from .core import discovery
@@ -38,7 +42,7 @@ SERVICE_CLEAR_LOCK_USER_CODE = "clear_lock_user_code"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: entity_platform.AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Zigbee Home Automation Door Lock from config entry."""
     entities_to_create = hass.data[DATA_ZHA][Platform.LOCK]
@@ -52,7 +56,7 @@ async def async_setup_entry(
     )
     config_entry.async_on_unload(unsub)
 
-    platform = entity_platform.async_get_current_platform()
+    platform = async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_SET_LOCK_USER_CODE,

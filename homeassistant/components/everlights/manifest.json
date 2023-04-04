@@ -1,9 +1,9 @@
 {
   "domain": "everlights",
   "name": "EverLights",
-  "documentation": "https://www.home-assistant.io/integrations/everlights",
-  "requirements": ["pyeverlights==0.1.0"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/everlights",
   "iot_class": "local_polling",
-  "loggers": ["pyeverlights"]
+  "loggers": ["pyeverlights"],
+  "requirements": ["pyeverlights==0.1.0"]
 }

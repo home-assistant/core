@@ -50,7 +50,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 
 from .util import async_init_integration
 
@@ -234,7 +234,9 @@ def test_density_to_air_quality() -> None:
     assert density_to_air_quality(200) == 5
 
 
-async def test_async_show_setup_msg(hass, hk_driver, mock_get_source_ip):
+async def test_async_show_setup_msg(
+    hass: HomeAssistant, hk_driver, mock_get_source_ip
+) -> None:
     """Test show setup message as persistence notification."""
     pincode = b"123-45-678"
 
@@ -257,7 +259,7 @@ async def test_async_show_setup_msg(hass, hk_driver, mock_get_source_ip):
     assert pincode.decode() in mock_create.mock_calls[0][1][1]
 
 
-async def test_async_dismiss_setup_msg(hass):
+async def test_async_dismiss_setup_msg(hass: HomeAssistant) -> None:
     """Test dismiss setup message."""
     with patch(
         "homeassistant.components.persistent_notification.async_dismiss",
@@ -270,7 +272,7 @@ async def test_async_dismiss_setup_msg(hass):
     assert mock_dismiss.mock_calls[0][1][1] == "entry_id"
 
 
-async def test_port_is_available(hass):
+async def test_port_is_available(hass: HomeAssistant) -> None:
     """Test we can get an available port and it is actually available."""
     with patch(
         "homeassistant.components.homekit.util.socket.socket",
@@ -303,7 +305,7 @@ async def test_port_is_available(hass):
         assert not async_port_is_available(next_port)
 
 
-async def test_port_is_available_skips_existing_entries(hass):
+async def test_port_is_available_skips_existing_entries(hass: HomeAssistant) -> None:
     """Test we can get an available port and it is actually available."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -380,7 +382,7 @@ async def test_accessory_friendly_name() -> None:
     assert accessory_friendly_name("hass title", accessory) == "Hass title 123"
 
 
-async def test_lock_state_needs_accessory_mode(hass):
+async def test_lock_state_needs_accessory_mode(hass: HomeAssistant) -> None:
     """Test that locks are setup as accessories."""
     hass.states.async_set("lock.mine", "locked")
     assert state_needs_accessory_mode(hass.states.get("lock.mine")) is True

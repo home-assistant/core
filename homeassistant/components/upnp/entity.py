@@ -13,7 +13,6 @@ from .coordinator import UpnpDataUpdateCoordinator
 class UpnpEntityDescription(EntityDescription):
     """UPnP entity description."""
 
-    format: str = "s"
     unique_id: str | None = None
     value_key: str | None = None
 

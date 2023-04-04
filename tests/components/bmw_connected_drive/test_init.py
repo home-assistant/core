@@ -18,7 +18,7 @@ VEHICLE_NAME_SLUG = "i3_rex"
 
 
 @pytest.mark.parametrize(
-    "entitydata,old_unique_id,new_unique_id",
+    ("entitydata", "old_unique_id", "new_unique_id"),
     [
         (
             {
@@ -75,7 +75,7 @@ async def test_migrate_unique_ids(
 
 
 @pytest.mark.parametrize(
-    "entitydata,old_unique_id,new_unique_id",
+    ("entitydata", "old_unique_id", "new_unique_id"),
     [
         (
             {

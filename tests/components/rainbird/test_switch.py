@@ -211,7 +211,7 @@ async def test_irrigation_service(
 
 
 @pytest.mark.parametrize(
-    "yaml_config,config_entry_data",
+    ("yaml_config", "config_entry_data"),
     [
         (
             {

@@ -1,5 +1,4 @@
 """Switch tests for the D-Link Smart Plug integration."""
-from collections.abc import Awaitable, Callable
 
 from homeassistant.components.dlink import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -16,11 +15,12 @@ from homeassistant.setup import async_setup_component
 from .conftest import ComponentSetup
 
 from tests.components.repairs import get_repairs
+from tests.typing import WebSocketGenerator
 
 
 async def test_switch_state(
     hass: HomeAssistant,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[None]],
+    hass_ws_client: WebSocketGenerator,
     setup_integration: ComponentSetup,
 ) -> None:
     """Test we get the switch status."""

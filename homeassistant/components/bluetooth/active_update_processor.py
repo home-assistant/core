@@ -99,6 +99,8 @@ class ActiveBluetoothProcessorCoordinator(
 
     def needs_poll(self, service_info: BluetoothServiceInfoBleak) -> bool:
         """Return true if time to try and poll."""
+        if self.hass.is_stopping:
+            return False
         poll_age: float | None = None
         if self._last_poll:
             poll_age = monotonic_time_coarse() - self._last_poll
@@ -134,7 +136,7 @@ class ActiveBluetoothProcessorCoordinator(
             self._last_poll = monotonic_time_coarse()
 
         if not self.last_poll_successful:
-            self.logger.debug("%s: Polling recovered")
+            self.logger.debug("%s: Polling recovered", self.address)
             self.last_poll_successful = True
 
         for processor in self._processors:

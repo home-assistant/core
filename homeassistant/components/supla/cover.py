@@ -10,12 +10,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, SUPLA_COORDINATORS, SUPLA_SERVERS, SuplaChannel
+from . import DOMAIN, SUPLA_COORDINATORS, SUPLA_SERVERS
+from .entity import SuplaEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 SUPLA_SHUTTER = "CONTROLLINGTHEROLLERSHUTTER"
 SUPLA_GATE = "CONTROLLINGTHEGATE"
+SUPLA_GARAGE_DOOR = "CONTROLLINGTHEGARAGEDOOR"
 
 
 async def async_setup_platform(
@@ -37,16 +39,16 @@ async def async_setup_platform(
 
         if device_name == SUPLA_SHUTTER:
             entities.append(
-                SuplaCover(
+                SuplaCoverEntity(
                     device,
                     hass.data[DOMAIN][SUPLA_SERVERS][server_name],
                     hass.data[DOMAIN][SUPLA_COORDINATORS][server_name],
                 )
             )
 
-        elif device_name == SUPLA_GATE:
+        elif device_name in {SUPLA_GATE, SUPLA_GARAGE_DOOR}:
             entities.append(
-                SuplaGateDoor(
+                SuplaDoorEntity(
                     device,
                     hass.data[DOMAIN][SUPLA_SERVERS][server_name],
                     hass.data[DOMAIN][SUPLA_COORDINATORS][server_name],
@@ -56,7 +58,7 @@ async def async_setup_platform(
     async_add_entities(entities)
 
 
-class SuplaCover(SuplaChannel, CoverEntity):
+class SuplaCoverEntity(SuplaEntity, CoverEntity):
     """Representation of a Supla Cover."""
 
     @property
@@ -90,33 +92,33 @@ class SuplaCover(SuplaChannel, CoverEntity):
         await self.async_action("STOP")
 
 
-class SuplaGateDoor(SuplaChannel, CoverEntity):
-    """Representation of a Supla gate door."""
+class SuplaDoorEntity(SuplaEntity, CoverEntity):
+    """Representation of a Supla door."""
 
     @property
     def is_closed(self) -> bool | None:
-        """Return if the gate is closed or not."""
+        """Return if the door is closed or not."""
         state = self.channel_data.get("state")
         if state and "hi" in state:
             return state.get("hi")
         return None
 
     async def async_open_cover(self, **kwargs: Any) -> None:
-        """Open the gate."""
+        """Open the door."""
         if self.is_closed:
             await self.async_action("OPEN_CLOSE")
 
     async def async_close_cover(self, **kwargs: Any) -> None:
-        """Close the gate."""
+        """Close the door."""
         if not self.is_closed:
             await self.async_action("OPEN_CLOSE")
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
-        """Stop the gate."""
+        """Stop the door."""
         await self.async_action("OPEN_CLOSE")
 
     async def async_toggle(self, **kwargs: Any) -> None:
-        """Toggle the gate."""
+        """Toggle the door."""
         await self.async_action("OPEN_CLOSE")
 
     @property

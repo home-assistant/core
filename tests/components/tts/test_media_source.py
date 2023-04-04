@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
@@ -29,7 +30,7 @@ async def mock_get_tts_audio(hass):
         yield mock_get_tts
 
 
-async def test_browsing(hass):
+async def test_browsing(hass: HomeAssistant) -> None:
     """Test browsing TTS media source."""
     item = await media_source.async_browse_media(hass, "media-source://tts")
     assert item is not None
@@ -65,7 +66,7 @@ async def test_browsing(hass):
         await media_source.async_browse_media(hass, "media-source://tts/non-existing")
 
 
-async def test_resolving(hass, mock_get_tts_audio):
+async def test_resolving(hass: HomeAssistant, mock_get_tts_audio) -> None:
     """Test resolving."""
     media = await media_source.async_resolve_media(
         hass, "media-source://tts/demo?message=Hello%20World", None
@@ -96,7 +97,7 @@ async def test_resolving(hass, mock_get_tts_audio):
     assert mock_get_tts_audio.mock_calls[0][2]["options"] == {"voice": "Paulus"}
 
 
-async def test_resolving_errors(hass):
+async def test_resolving_errors(hass: HomeAssistant) -> None:
     """Test resolving."""
     # No message added
     with pytest.raises(media_source.Unresolvable):

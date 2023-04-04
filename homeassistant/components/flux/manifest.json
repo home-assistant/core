@@ -1,9 +1,9 @@
 {
   "domain": "flux",
   "name": "Flux",
-  "documentation": "https://www.home-assistant.io/integrations/flux",
   "after_dependencies": ["light"],
   "codeowners": [],
-  "quality_scale": "internal",
-  "iot_class": "calculated"
+  "documentation": "https://www.home-assistant.io/integrations/flux",
+  "iot_class": "calculated",
+  "quality_scale": "internal"
 }

@@ -31,6 +31,7 @@ _STATISTIC_MEASURES = [
     selector.SelectOptionDict(value="last", label="Most recently updated"),
     selector.SelectOptionDict(value="range", label="Statistical range"),
     selector.SelectOptionDict(value="sum", label="Sum"),
+    selector.SelectOptionDict(value="product", label="Product"),
 ]
 
 

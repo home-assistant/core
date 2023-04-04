@@ -8,8 +8,9 @@ from homeassistant.components.vera import CONF_CONTROLLER, CONF_LEGACY_UNIQUE_ID
 from homeassistant.const import CONF_EXCLUDE, CONF_LIGHTS, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, mock_registry
+from tests.common import MockConfigEntry
 
 
 async def test_async_step_user_success(hass: HomeAssistant) -> None:
@@ -74,10 +75,9 @@ async def test_async_step_import_success(hass: HomeAssistant) -> None:
 
 
 async def test_async_step_import_success_with_legacy_unique_id(
-    hass: HomeAssistant,
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test import step success with legacy unique id."""
-    entity_registry = mock_registry(hass)
     entity_registry.async_get_or_create(
         domain="switch", platform=DOMAIN, unique_id="12"
     )
@@ -124,7 +124,7 @@ async def test_async_step_finish_error(hass: HomeAssistant) -> None:
         }
 
 
-async def test_options(hass):
+async def test_options(hass: HomeAssistant) -> None:
     """Test updating options."""
     base_url = "http://127.0.0.1/"
     entry = MockConfigEntry(

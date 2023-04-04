@@ -1,15 +1,15 @@
 {
   "domain": "airthings_ble",
   "name": "Airthings BLE",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/airthings_ble",
-  "requirements": ["airthings-ble==0.5.3"],
-  "dependencies": ["bluetooth_adapters"],
-  "codeowners": ["@vincegio"],
-  "iot_class": "local_polling",
   "bluetooth": [
     {
       "manufacturer_id": 820
     }
-  ]
+  ],
+  "codeowners": ["@vincegio"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/airthings_ble",
+  "iot_class": "local_polling",
+  "requirements": ["airthings-ble==0.5.3"]
 }

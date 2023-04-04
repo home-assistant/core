@@ -8,6 +8,7 @@ import voluptuous as vol
 import homeassistant.components.automation as automation
 import homeassistant.components.homeassistant.triggers.time_pattern as time_pattern
 from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -26,7 +27,7 @@ def setup_comp(hass):
     mock_component(hass, "group")
 
 
-async def test_if_fires_when_hour_matches(hass, calls):
+async def test_if_fires_when_hour_matches(hass: HomeAssistant, calls) -> None:
     """Test for firing if hour is matching."""
     now = dt_util.utcnow()
     time_that_will_not_match_right_away = dt_util.utcnow().replace(
@@ -71,7 +72,7 @@ async def test_if_fires_when_hour_matches(hass, calls):
     assert calls[0].data["id"] == 0
 
 
-async def test_if_fires_when_minute_matches(hass, calls):
+async def test_if_fires_when_minute_matches(hass: HomeAssistant, calls) -> None:
     """Test for firing if minutes are matching."""
     now = dt_util.utcnow()
     time_that_will_not_match_right_away = dt_util.utcnow().replace(
@@ -102,7 +103,7 @@ async def test_if_fires_when_minute_matches(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_fires_when_second_matches(hass, calls):
+async def test_if_fires_when_second_matches(hass: HomeAssistant, calls) -> None:
     """Test for firing if seconds are matching."""
     now = dt_util.utcnow()
     time_that_will_not_match_right_away = dt_util.utcnow().replace(
@@ -133,7 +134,9 @@ async def test_if_fires_when_second_matches(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_fires_when_second_as_string_matches(hass, calls):
+async def test_if_fires_when_second_as_string_matches(
+    hass: HomeAssistant, calls
+) -> None:
     """Test for firing if seconds are matching."""
     now = dt_util.utcnow()
     time_that_will_not_match_right_away = dt_util.utcnow().replace(
@@ -166,7 +169,7 @@ async def test_if_fires_when_second_as_string_matches(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_fires_when_all_matches(hass, calls):
+async def test_if_fires_when_all_matches(hass: HomeAssistant, calls) -> None:
     """Test for firing if everything matches."""
     now = dt_util.utcnow()
     time_that_will_not_match_right_away = dt_util.utcnow().replace(
@@ -199,7 +202,7 @@ async def test_if_fires_when_all_matches(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_fires_periodic_seconds(hass, calls):
+async def test_if_fires_periodic_seconds(hass: HomeAssistant, calls) -> None:
     """Test for firing periodically every second."""
     now = dt_util.utcnow()
     time_that_will_not_match_right_away = dt_util.utcnow().replace(
@@ -232,7 +235,7 @@ async def test_if_fires_periodic_seconds(hass, calls):
     assert len(calls) >= 1
 
 
-async def test_if_fires_periodic_minutes(hass, calls):
+async def test_if_fires_periodic_minutes(hass: HomeAssistant, calls) -> None:
     """Test for firing periodically every minute."""
 
     now = dt_util.utcnow()
@@ -266,7 +269,7 @@ async def test_if_fires_periodic_minutes(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_fires_periodic_hours(hass, calls):
+async def test_if_fires_periodic_hours(hass: HomeAssistant, calls) -> None:
     """Test for firing periodically every hour."""
     now = dt_util.utcnow()
     time_that_will_not_match_right_away = dt_util.utcnow().replace(
@@ -299,7 +302,7 @@ async def test_if_fires_periodic_hours(hass, calls):
     assert len(calls) == 1
 
 
-async def test_default_values(hass, calls):
+async def test_default_values(hass: HomeAssistant, calls) -> None:
     """Test for firing at 2 minutes every hour."""
     now = dt_util.utcnow()
     time_that_will_not_match_right_away = dt_util.utcnow().replace(
@@ -341,7 +344,7 @@ async def test_default_values(hass, calls):
     assert len(calls) == 2
 
 
-async def test_invalid_schemas(hass, calls):
+async def test_invalid_schemas(hass: HomeAssistant, calls) -> None:
     """Test invalid schemas."""
     schemas = (
         None,

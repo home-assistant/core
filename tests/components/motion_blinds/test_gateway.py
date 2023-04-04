@@ -4,11 +4,12 @@ from unittest.mock import Mock
 from motionblinds import DEVICE_TYPES_WIFI, BlindType
 
 from homeassistant.components.motion_blinds.gateway import device_name
+from homeassistant.core import HomeAssistant
 
 TEST_BLIND_MAC = "abcdefghujkl0001"
 
 
-async def test_device_name(hass):
+async def test_device_name(hass: HomeAssistant) -> None:
     """test_device_name."""
     blind = Mock()
     blind.blind_type = BlindType.RollerBlind.name

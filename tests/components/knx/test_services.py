@@ -11,7 +11,7 @@ from tests.common import async_capture_events
 
 
 @pytest.mark.parametrize(
-    "service_payload,expected_telegrams,expected_apci",
+    ("service_payload", "expected_telegrams", "expected_apci"),
     [
         # send DPT 1 telegram
         (
@@ -104,7 +104,7 @@ async def test_send(
     service_payload,
     expected_telegrams,
     expected_apci,
-):
+) -> None:
     """Test `knx.send` service."""
     await knx.setup_integration({})
 
@@ -120,7 +120,7 @@ async def test_send(
         await knx.assert_telegram(group_address, payload, expected_apci)
 
 
-async def test_read(hass: HomeAssistant, knx: KNXTestKit):
+async def test_read(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test `knx.read` service."""
     await knx.setup_integration({})
 
@@ -140,7 +140,7 @@ async def test_read(hass: HomeAssistant, knx: KNXTestKit):
     await knx.assert_read("3/3/3")
 
 
-async def test_event_register(hass: HomeAssistant, knx: KNXTestKit):
+async def test_event_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test `knx.event_register` service."""
     events = async_capture_events(hass, "knx_event")
     test_address = "1/2/3"
@@ -193,7 +193,7 @@ async def test_event_register(hass: HomeAssistant, knx: KNXTestKit):
     assert untyped_event_1.data["value"] is None
 
 
-async def test_exposure_register(hass: HomeAssistant, knx: KNXTestKit):
+async def test_exposure_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test `knx.exposure_register` service."""
     test_address = "1/2/3"
     test_entity = "fake.entity"

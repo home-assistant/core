@@ -59,6 +59,7 @@
 - [ ] Local tests pass. **Your PR cannot be merged unless tests pass**
 - [ ] There is no commented out code in this PR.
 - [ ] I have followed the [development checklist][dev-checklist]
+- [ ] I have followed the [perfect PR recommendations][perfect-pr]
 - [ ] The code has been formatted using Black (`black --fast homeassistant tests`)
 - [ ] Tests have been added to verify that the new code works.
 
@@ -107,3 +108,4 @@ To help with the load of incoming pull requests:
 [manifest-docs]: https://developers.home-assistant.io/docs/en/creating_integration_manifest.html
 [quality-scale]: https://developers.home-assistant.io/docs/en/next/integration_quality_scale_index.html
 [docs-repository]: https://github.com/home-assistant/home-assistant.io
+[perfect-pr]: https://developers.home-assistant.io/docs/review-process/#creating-the-perfect-pr

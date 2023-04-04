@@ -1,5 +1,4 @@
 """Support for Alexa skill service end point."""
-import copy
 import hmac
 from http import HTTPStatus
 import logging
@@ -48,7 +47,7 @@ class AlexaFlashBriefingView(http.HomeAssistantView):
     def __init__(self, hass, flash_briefings):
         """Initialize Alexa view."""
         super().__init__()
-        self.flash_briefings = copy.deepcopy(flash_briefings)
+        self.flash_briefings = flash_briefings
         template.attach(hass, self.flash_briefings)
 
     @callback

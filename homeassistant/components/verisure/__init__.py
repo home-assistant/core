@@ -6,9 +6,9 @@ import os
 from pathlib import Path
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EMAIL, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import CONF_EMAIL, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.storage import STORAGE_DIR
 
@@ -34,11 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = VerisureDataUpdateCoordinator(hass, entry=entry)
 
     if not await coordinator.async_login():
-        raise ConfigEntryAuthFailed
-
-    entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, coordinator.async_logout)
-    )
+        raise ConfigEntryNotReady("Could not log in to verisure.")
 
     await coordinator.async_config_entry_first_refresh()
 

@@ -1,5 +1,4 @@
 """The tests for the Input number component."""
-
 from unittest.mock import patch
 
 import pytest
@@ -19,12 +18,13 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_NAME,
 )
-from homeassistant.core import Context, CoreState, State
+from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_restore_cache
+from tests.common import MockUser, mock_restore_cache
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
@@ -96,7 +96,7 @@ async def decrement(hass, entity_id):
     )
 
 
-async def test_config(hass):
+async def test_config(hass: HomeAssistant) -> None:
     """Test config."""
     invalid_configs = [
         None,
@@ -108,7 +108,7 @@ async def test_config(hass):
         assert not await async_setup_component(hass, DOMAIN, {DOMAIN: cfg})
 
 
-async def test_set_value(hass, caplog):
+async def test_set_value(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     """Test set_value method."""
     assert await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"test_1": {"initial": 50, "min": 0, "max": 100}}}
@@ -139,7 +139,7 @@ async def test_set_value(hass, caplog):
     assert float(state.state) == 70
 
 
-async def test_increment(hass):
+async def test_increment(hass: HomeAssistant) -> None:
     """Test increment method."""
     assert await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"test_2": {"initial": 50, "min": 0, "max": 51}}}
@@ -162,7 +162,7 @@ async def test_increment(hass):
     assert float(state.state) == 51
 
 
-async def test_rounding(hass):
+async def test_rounding(hass: HomeAssistant) -> None:
     """Test increment introducing floating point error is rounded."""
     assert await async_setup_component(
         hass,
@@ -182,7 +182,7 @@ async def test_rounding(hass):
     assert float(state.state) == 3.6
 
 
-async def test_decrement(hass):
+async def test_decrement(hass: HomeAssistant) -> None:
     """Test decrement method."""
     assert await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"test_3": {"initial": 50, "min": 49, "max": 100}}}
@@ -205,7 +205,7 @@ async def test_decrement(hass):
     assert float(state.state) == 49
 
 
-async def test_mode(hass):
+async def test_mode(hass: HomeAssistant) -> None:
     """Test mode settings."""
     assert await async_setup_component(
         hass,
@@ -232,7 +232,7 @@ async def test_mode(hass):
     assert state.attributes["mode"] == "slider"
 
 
-async def test_restore_state(hass):
+async def test_restore_state(hass: HomeAssistant) -> None:
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass, (State("input_number.b1", "70"), State("input_number.b2", "200"))
@@ -255,7 +255,7 @@ async def test_restore_state(hass):
     assert float(state.state) == 10
 
 
-async def test_restore_invalid_state(hass):
+async def test_restore_invalid_state(hass: HomeAssistant) -> None:
     """Ensure an invalid restore state is handled."""
     mock_restore_cache(
         hass, (State("input_number.b1", "="), State("input_number.b2", "200"))
@@ -278,7 +278,7 @@ async def test_restore_invalid_state(hass):
     assert float(state.state) == 10
 
 
-async def test_initial_state_overrules_restore_state(hass):
+async def test_initial_state_overrules_restore_state(hass: HomeAssistant) -> None:
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass, (State("input_number.b1", "70"), State("input_number.b2", "200"))
@@ -306,7 +306,7 @@ async def test_initial_state_overrules_restore_state(hass):
     assert float(state.state) == 60
 
 
-async def test_no_initial_state_and_no_restore_state(hass):
+async def test_no_initial_state_and_no_restore_state(hass: HomeAssistant) -> None:
     """Ensure that entity is create without initial and restore feature."""
     hass.state = CoreState.starting
 
@@ -317,7 +317,9 @@ async def test_no_initial_state_and_no_restore_state(hass):
     assert float(state.state) == 0
 
 
-async def test_input_number_context(hass, hass_admin_user):
+async def test_input_number_context(
+    hass: HomeAssistant, hass_admin_user: MockUser
+) -> None:
     """Test that input_number context works."""
     assert await async_setup_component(
         hass, "input_number", {"input_number": {"b1": {"min": 0, "max": 100}}}
@@ -340,7 +342,9 @@ async def test_input_number_context(hass, hass_admin_user):
     assert state2.context.user_id == hass_admin_user.id
 
 
-async def test_reload(hass, hass_admin_user, hass_read_only_user):
+async def test_reload(
+    hass: HomeAssistant, hass_admin_user: MockUser, hass_read_only_user: MockUser
+) -> None:
     """Test reload service."""
     count_start = len(hass.states.async_entity_ids())
     ent_reg = er.async_get(hass)
@@ -412,7 +416,7 @@ async def test_reload(hass, hass_admin_user, hass_read_only_user):
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_3") is None
 
 
-async def test_load_from_storage(hass, storage_setup):
+async def test_load_from_storage(hass: HomeAssistant, storage_setup) -> None:
     """Test set up from storage."""
     assert await storage_setup()
     state = hass.states.get(f"{DOMAIN}.from_storage")
@@ -421,7 +425,7 @@ async def test_load_from_storage(hass, storage_setup):
     assert state.attributes.get(ATTR_EDITABLE)
 
 
-async def test_editable_state_attribute(hass, storage_setup):
+async def test_editable_state_attribute(hass: HomeAssistant, storage_setup) -> None:
     """Test editable attribute."""
     assert await storage_setup(
         config={
@@ -447,7 +451,9 @@ async def test_editable_state_attribute(hass, storage_setup):
     assert not state.attributes.get(ATTR_EDITABLE)
 
 
-async def test_ws_list(hass, hass_ws_client, storage_setup):
+async def test_ws_list(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test listing via WS."""
     assert await storage_setup(
         config={
@@ -479,7 +485,9 @@ async def test_ws_list(hass, hass_ws_client, storage_setup):
     assert result[storage_ent][ATTR_NAME] == "from storage"
 
 
-async def test_ws_delete(hass, hass_ws_client, storage_setup):
+async def test_ws_delete(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test WS delete cleans up entity registry."""
     assert await storage_setup()
 
@@ -504,7 +512,9 @@ async def test_ws_delete(hass, hass_ws_client, storage_setup):
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
 
 
-async def test_update_min_max(hass, hass_ws_client, storage_setup):
+async def test_update_min_max(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test updating min/max updates the state."""
 
     settings = {
@@ -561,7 +571,9 @@ async def test_update_min_max(hass, hass_ws_client, storage_setup):
     assert float(state.state) == 5
 
 
-async def test_ws_create(hass, hass_ws_client, storage_setup):
+async def test_ws_create(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test create WS."""
     assert await storage_setup(items=[])
 
@@ -594,7 +606,7 @@ async def test_ws_create(hass, hass_ws_client, storage_setup):
     assert float(state.state) == 10
 
 
-async def test_setup_no_config(hass, hass_admin_user):
+async def test_setup_no_config(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
     """Test component setup with no config."""
     count_start = len(hass.states.async_entity_ids())
     assert await async_setup_component(hass, DOMAIN, {})

@@ -23,6 +23,7 @@ from homeassistant.helpers.entity_component import (
     DEFAULT_SCAN_INTERVAL,
     EntityComponent,
 )
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
@@ -40,9 +41,12 @@ DOMAIN = "test_domain"
 PLATFORM = "test_platform"
 
 
-async def test_polling_only_updates_entities_it_should_poll(hass):
+async def test_polling_only_updates_entities_it_should_poll(
+    hass: HomeAssistant,
+) -> None:
     """Test the polling of only updated entities."""
     component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
+    await component.async_setup({})
 
     no_poll_ent = MockEntity(should_poll=False)
     no_poll_ent.async_update = Mock()
@@ -61,7 +65,7 @@ async def test_polling_only_updates_entities_it_should_poll(hass):
     assert poll_ent.async_update.called
 
 
-async def test_polling_disabled_by_config_entry(hass):
+async def test_polling_disabled_by_config_entry(hass: HomeAssistant) -> None:
     """Test the polling of only updated entities."""
     entity_platform = MockEntityPlatform(hass)
     entity_platform.config_entry = MockConfigEntry(pref_disable_polling=True)
@@ -72,18 +76,19 @@ async def test_polling_disabled_by_config_entry(hass):
     assert entity_platform._async_unsub_polling is None
 
 
-async def test_polling_updates_entities_with_exception(hass):
+async def test_polling_updates_entities_with_exception(hass: HomeAssistant) -> None:
     """Test the updated entities that not break with an exception."""
     component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
+    await component.async_setup({})
 
     update_ok = []
     update_err = []
 
-    def update_mock():
+    def update_mock() -> None:
         """Mock normal update."""
         update_ok.append(None)
 
-    def update_mock_err():
+    def update_mock_err() -> None:
         """Mock error update."""
         update_err.append(None)
         raise AssertionError("Fake error update")
@@ -109,9 +114,10 @@ async def test_polling_updates_entities_with_exception(hass):
     assert len(update_err) == 1
 
 
-async def test_update_state_adds_entities(hass):
+async def test_update_state_adds_entities(hass: HomeAssistant) -> None:
     """Test if updating poll entities cause an entity to be added works."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
 
     ent1 = MockEntity()
     ent2 = MockEntity(should_poll=True)
@@ -126,9 +132,12 @@ async def test_update_state_adds_entities(hass):
     assert len(hass.states.async_entity_ids()) == 2
 
 
-async def test_update_state_adds_entities_with_update_before_add_true(hass):
+async def test_update_state_adds_entities_with_update_before_add_true(
+    hass: HomeAssistant,
+) -> None:
     """Test if call update before add to state machine."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
 
     ent = MockEntity()
     ent.update = Mock(spec_set=True)
@@ -140,9 +149,12 @@ async def test_update_state_adds_entities_with_update_before_add_true(hass):
     assert ent.update.called
 
 
-async def test_update_state_adds_entities_with_update_before_add_false(hass):
+async def test_update_state_adds_entities_with_update_before_add_false(
+    hass: HomeAssistant,
+) -> None:
     """Test if not call update before add to state machine."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
 
     ent = MockEntity()
     ent.update = Mock(spec_set=True)
@@ -155,10 +167,17 @@ async def test_update_state_adds_entities_with_update_before_add_false(hass):
 
 
 @patch("homeassistant.helpers.entity_platform.async_track_time_interval")
-async def test_set_scan_interval_via_platform(mock_track, hass):
+async def test_set_scan_interval_via_platform(
+    mock_track: Mock, hass: HomeAssistant
+) -> None:
     """Test the setting of the scan interval via platform."""
 
-    def platform_setup(hass, config, add_entities, discovery_info=None):
+    def platform_setup(
+        hass: HomeAssistant,
+        config: ConfigType,
+        add_entities: entity_platform.AddEntitiesCallback,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> None:
         """Test the platform setup."""
         add_entities([MockEntity(should_poll=True)])
 
@@ -176,15 +195,18 @@ async def test_set_scan_interval_via_platform(mock_track, hass):
     assert timedelta(seconds=30) == mock_track.call_args[0][2]
 
 
-async def test_adding_entities_with_generator_and_thread_callback(hass):
+async def test_adding_entities_with_generator_and_thread_callback(
+    hass: HomeAssistant,
+) -> None:
     """Test generator in add_entities that calls thread method.
 
     We should make sure we resolve the generator to a list before passing
     it into an async context.
     """
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
 
-    def create_entity(number):
+    def create_entity(number: int) -> MockEntity:
         """Create entity helper."""
         entity = MockEntity(unique_id=f"unique{number}")
         entity.entity_id = async_generate_entity_id(DOMAIN + ".{}", "Number", hass=hass)
@@ -193,7 +215,7 @@ async def test_adding_entities_with_generator_and_thread_callback(hass):
     await component.async_add_entities(create_entity(i) for i in range(2))
 
 
-async def test_platform_warn_slow_setup(hass):
+async def test_platform_warn_slow_setup(hass: HomeAssistant) -> None:
     """Warn we log when platform setup takes a long time."""
     platform = MockPlatform()
 
@@ -216,14 +238,16 @@ async def test_platform_warn_slow_setup(hass):
         assert mock_call().cancel.called
 
 
-async def test_platform_error_slow_setup(hass, caplog):
+async def test_platform_error_slow_setup(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Don't block startup more than SLOW_SETUP_MAX_WAIT."""
     with patch.object(entity_platform, "SLOW_SETUP_MAX_WAIT", 0):
         called = []
 
         async def setup_platform(*args):
             called.append(1)
-            await asyncio.sleep(1)
+            await asyncio.sleep(0.1)
 
         platform = MockPlatform(async_setup_platform=setup_platform)
         component = EntityComponent(_LOGGER, DOMAIN, hass)
@@ -234,10 +258,14 @@ async def test_platform_error_slow_setup(hass, caplog):
         assert "test_domain.test_platform" not in hass.config.components
         assert "test_platform is taking longer than 0 seconds" in caplog.text
 
+    # Cleanup lingering (setup_platform) task after test is done
+    await asyncio.sleep(0.1)
 
-async def test_updated_state_used_for_entity_id(hass):
+
+async def test_updated_state_used_for_entity_id(hass: HomeAssistant) -> None:
     """Test that first update results used for entity ID generation."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
 
     class MockEntityNameFetcher(MockEntity):
         """Mock entity that fetches a friendly name."""
@@ -253,7 +281,7 @@ async def test_updated_state_used_for_entity_id(hass):
     assert entity_ids[0] == "test_domain.living_room"
 
 
-async def test_parallel_updates_async_platform(hass):
+async def test_parallel_updates_async_platform(hass: HomeAssistant) -> None:
     """Test async platform does not have parallel_updates limit by default."""
     platform = MockPlatform()
 
@@ -279,7 +307,9 @@ async def test_parallel_updates_async_platform(hass):
     assert entity.parallel_updates is None
 
 
-async def test_parallel_updates_async_platform_with_constant(hass):
+async def test_parallel_updates_async_platform_with_constant(
+    hass: HomeAssistant,
+) -> None:
     """Test async platform can set parallel_updates limit."""
     platform = MockPlatform()
     platform.PARALLEL_UPDATES = 2
@@ -306,7 +336,7 @@ async def test_parallel_updates_async_platform_with_constant(hass):
     assert entity.parallel_updates._value == 2
 
 
-async def test_parallel_updates_sync_platform(hass):
+async def test_parallel_updates_sync_platform(hass: HomeAssistant) -> None:
     """Test sync platform parallel_updates default set to 1."""
     platform = MockPlatform()
 
@@ -332,7 +362,7 @@ async def test_parallel_updates_sync_platform(hass):
     assert entity.parallel_updates._value == 1
 
 
-async def test_parallel_updates_no_update_method(hass):
+async def test_parallel_updates_no_update_method(hass: HomeAssistant) -> None:
     """Test platform parallel_updates default set to 0."""
     platform = MockPlatform()
 
@@ -351,7 +381,9 @@ async def test_parallel_updates_no_update_method(hass):
     assert entity.parallel_updates is None
 
 
-async def test_parallel_updates_sync_platform_with_constant(hass):
+async def test_parallel_updates_sync_platform_with_constant(
+    hass: HomeAssistant,
+) -> None:
     """Test sync platform can set parallel_updates limit."""
     platform = MockPlatform()
     platform.PARALLEL_UPDATES = 2
@@ -378,14 +410,15 @@ async def test_parallel_updates_sync_platform_with_constant(hass):
     assert entity.parallel_updates._value == 2
 
 
-async def test_raise_error_on_update(hass):
+async def test_raise_error_on_update(hass: HomeAssistant) -> None:
     """Test the add entity if they raise an error on update."""
     updates = []
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
     entity1 = MockEntity(name="test_1")
     entity2 = MockEntity(name="test_2")
 
-    def _raise():
+    def _raise() -> None:
         """Raise an exception."""
         raise AssertionError
 
@@ -403,9 +436,10 @@ async def test_raise_error_on_update(hass):
     assert entity2.platform is not None
 
 
-async def test_async_remove_with_platform(hass):
+async def test_async_remove_with_platform(hass: HomeAssistant) -> None:
     """Remove an entity from a platform."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
     entity1 = MockEntity(name="test_1")
     await component.async_add_entities([entity1])
     assert len(hass.states.async_entity_ids()) == 1
@@ -413,9 +447,10 @@ async def test_async_remove_with_platform(hass):
     assert len(hass.states.async_entity_ids()) == 0
 
 
-async def test_async_remove_with_platform_update_finishes(hass):
+async def test_async_remove_with_platform_update_finishes(hass: HomeAssistant) -> None:
     """Remove an entity when an update finishes after its been removed."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
     entity1 = MockEntity(name="test_1")
 
     async def _delayed_update(*args, **kwargs):
@@ -425,7 +460,7 @@ async def test_async_remove_with_platform_update_finishes(hass):
 
     # Add, remove, add, remove and make sure no updates
     # cause the entity to reappear after removal
-    for i in range(2):
+    for _ in range(2):
         await component.async_add_entities([entity1])
         assert len(hass.states.async_entity_ids()) == 1
         entity1.async_write_ha_state()
@@ -437,13 +472,16 @@ async def test_async_remove_with_platform_update_finishes(hass):
         assert len(hass.states.async_entity_ids()) == 0
 
 
-async def test_not_adding_duplicate_entities_with_unique_id(hass, caplog):
+async def test_not_adding_duplicate_entities_with_unique_id(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test for not adding duplicate entities.
 
     Also test that the entity registry is not updated for duplicates.
     """
     caplog.set_level(logging.ERROR)
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
 
     ent1 = MockEntity(name="test1", unique_id="not_very_unique")
     await component.async_add_entities([ent1])
@@ -474,18 +512,20 @@ async def test_not_adding_duplicate_entities_with_unique_id(hass, caplog):
     assert entry.original_name == "test1"
 
 
-async def test_using_prescribed_entity_id(hass):
+async def test_using_prescribed_entity_id(hass: HomeAssistant) -> None:
     """Test for using predefined entity ID."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
     await component.async_add_entities(
         [MockEntity(name="bla", entity_id="hello.world")]
     )
     assert "hello.world" in hass.states.async_entity_ids()
 
 
-async def test_using_prescribed_entity_id_with_unique_id(hass):
+async def test_using_prescribed_entity_id_with_unique_id(hass: HomeAssistant) -> None:
     """Test for amending predefined entity ID because currently exists."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
 
     await component.async_add_entities([MockEntity(entity_id="test_domain.world")])
     await component.async_add_entities(
@@ -495,12 +535,16 @@ async def test_using_prescribed_entity_id_with_unique_id(hass):
     assert "test_domain.world_2" in hass.states.async_entity_ids()
 
 
-async def test_using_prescribed_entity_id_which_is_registered(hass):
+async def test_using_prescribed_entity_id_which_is_registered(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test not allowing predefined entity ID that already registered."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
-    registry = mock_registry(hass)
+    await component.async_setup({})
     # Register test_domain.world
-    registry.async_get_or_create(DOMAIN, "test", "1234", suggested_object_id="world")
+    entity_registry.async_get_or_create(
+        DOMAIN, "test", "1234", suggested_object_id="world"
+    )
 
     # This entity_id will be rewritten
     await component.async_add_entities([MockEntity(entity_id="test_domain.world")])
@@ -508,31 +552,39 @@ async def test_using_prescribed_entity_id_which_is_registered(hass):
     assert "test_domain.world_2" in hass.states.async_entity_ids()
 
 
-async def test_name_which_conflict_with_registered(hass):
+async def test_name_which_conflict_with_registered(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test not generating conflicting entity ID based on name."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
-    registry = mock_registry(hass)
+    await component.async_setup({})
 
     # Register test_domain.world
-    registry.async_get_or_create(DOMAIN, "test", "1234", suggested_object_id="world")
+    entity_registry.async_get_or_create(
+        DOMAIN, "test", "1234", suggested_object_id="world"
+    )
 
     await component.async_add_entities([MockEntity(name="world")])
 
     assert "test_domain.world_2" in hass.states.async_entity_ids()
 
 
-async def test_entity_with_name_and_entity_id_getting_registered(hass):
+async def test_entity_with_name_and_entity_id_getting_registered(
+    hass: HomeAssistant,
+) -> None:
     """Ensure that entity ID is used for registration."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
     await component.async_add_entities(
         [MockEntity(unique_id="1234", name="bla", entity_id="test_domain.world")]
     )
     assert "test_domain.world" in hass.states.async_entity_ids()
 
 
-async def test_overriding_name_from_registry(hass):
+async def test_overriding_name_from_registry(hass: HomeAssistant) -> None:
     """Test that we can override a name via the Entity Registry."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
     mock_registry(
         hass,
         {
@@ -554,16 +606,17 @@ async def test_overriding_name_from_registry(hass):
     assert state.name == "Overridden"
 
 
-async def test_registry_respect_entity_namespace(hass):
+async def test_registry_respect_entity_namespace(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test that the registry respects entity namespace."""
-    mock_registry(hass)
     platform = MockEntityPlatform(hass, entity_namespace="ns")
     entity = MockEntity(unique_id="1234", name="Device Name")
     await platform.async_add_entities([entity])
     assert entity.entity_id == "test_domain.ns_device_name"
 
 
-async def test_registry_respect_entity_disabled(hass):
+async def test_registry_respect_entity_disabled(hass: HomeAssistant) -> None:
     """Test that the registry respects entity disabled."""
     mock_registry(
         hass,
@@ -584,9 +637,12 @@ async def test_registry_respect_entity_disabled(hass):
     assert hass.states.async_entity_ids() == []
 
 
-async def test_unique_id_conflict_has_priority_over_disabled_entity(hass, caplog):
+async def test_unique_id_conflict_has_priority_over_disabled_entity(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that an entity that is not unique has priority over a disabled entity."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
     entity1 = MockEntity(
         name="test1", unique_id="not_very_unique", enabled_by_default=False
     )
@@ -606,7 +662,7 @@ async def test_unique_id_conflict_has_priority_over_disabled_entity(hass, caplog
     assert entry.original_name == "test1"
 
 
-async def test_entity_registry_updates_name(hass):
+async def test_entity_registry_updates_name(hass: HomeAssistant) -> None:
     """Test that updates on the entity registry update platform entities."""
     registry = mock_registry(
         hass,
@@ -636,9 +692,10 @@ async def test_entity_registry_updates_name(hass):
     assert state.name == "after update"
 
 
-async def test_setup_entry(hass):
+async def test_setup_entry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test we can setup an entry."""
-    registry = mock_registry(hass)
 
     async def async_setup_entry(hass, config_entry, async_add_entities):
         """Mock setup entry method."""
@@ -656,11 +713,15 @@ async def test_setup_entry(hass):
     full_name = f"{entity_platform.domain}.{config_entry.domain}"
     assert full_name in hass.config.components
     assert len(hass.states.async_entity_ids()) == 1
-    assert len(registry.entities) == 1
-    assert registry.entities["test_domain.test1"].config_entry_id == "super-mock-id"
+    assert len(entity_registry.entities) == 1
+    assert (
+        entity_registry.entities["test_domain.test1"].config_entry_id == "super-mock-id"
+    )
 
 
-async def test_setup_entry_platform_not_ready(hass, caplog):
+async def test_setup_entry_platform_not_ready(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test when an entry is not ready yet."""
     async_setup_entry = Mock(side_effect=PlatformNotReady)
     platform = MockPlatform(async_setup_entry=async_setup_entry)
@@ -679,7 +740,9 @@ async def test_setup_entry_platform_not_ready(hass, caplog):
     assert len(mock_call_later.mock_calls) == 1
 
 
-async def test_setup_entry_platform_not_ready_with_message(hass, caplog):
+async def test_setup_entry_platform_not_ready_with_message(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test when an entry is not ready yet that includes a message."""
     async_setup_entry = Mock(side_effect=PlatformNotReady("lp0 on fire"))
     platform = MockPlatform(async_setup_entry=async_setup_entry)
@@ -700,7 +763,9 @@ async def test_setup_entry_platform_not_ready_with_message(hass, caplog):
     assert len(mock_call_later.mock_calls) == 1
 
 
-async def test_setup_entry_platform_not_ready_from_exception(hass, caplog):
+async def test_setup_entry_platform_not_ready_from_exception(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test when an entry is not ready yet that includes the causing exception string."""
     original_exception = HomeAssistantError("The device dropped the connection")
     platform_exception = PlatformNotReady()
@@ -725,7 +790,7 @@ async def test_setup_entry_platform_not_ready_from_exception(hass, caplog):
     assert len(mock_call_later.mock_calls) == 1
 
 
-async def test_reset_cancels_retry_setup(hass):
+async def test_reset_cancels_retry_setup(hass: HomeAssistant) -> None:
     """Test that resetting a platform will cancel scheduled a setup retry."""
     async_setup_entry = Mock(side_effect=PlatformNotReady)
     platform = MockPlatform(async_setup_entry=async_setup_entry)
@@ -747,7 +812,7 @@ async def test_reset_cancels_retry_setup(hass):
     assert ent_platform._async_cancel_retry_setup is None
 
 
-async def test_reset_cancels_retry_setup_when_not_started(hass):
+async def test_reset_cancels_retry_setup_when_not_started(hass: HomeAssistant) -> None:
     """Test that resetting a platform will cancel scheduled a setup retry when not yet started."""
     hass.state = CoreState.starting
     async_setup_entry = Mock(side_effect=PlatformNotReady)
@@ -772,7 +837,9 @@ async def test_reset_cancels_retry_setup_when_not_started(hass):
     assert ent_platform._async_cancel_retry_setup is None
 
 
-async def test_stop_shutdown_cancels_retry_setup_and_interval_listener(hass):
+async def test_stop_shutdown_cancels_retry_setup_and_interval_listener(
+    hass: HomeAssistant,
+) -> None:
     """Test that shutdown will cancel scheduled a setup retry and interval listener."""
     async_setup_entry = Mock(side_effect=PlatformNotReady)
     platform = MockPlatform(async_setup_entry=async_setup_entry)
@@ -795,7 +862,7 @@ async def test_stop_shutdown_cancels_retry_setup_and_interval_listener(hass):
     assert ent_platform._async_cancel_retry_setup is None
 
 
-async def test_not_fails_with_adding_empty_entities_(hass):
+async def test_not_fails_with_adding_empty_entities_(hass: HomeAssistant) -> None:
     """Test for not fails on empty entities list."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -804,7 +871,7 @@ async def test_not_fails_with_adding_empty_entities_(hass):
     assert len(hass.states.async_entity_ids()) == 0
 
 
-async def test_entity_registry_updates_entity_id(hass):
+async def test_entity_registry_updates_entity_id(hass: HomeAssistant) -> None:
     """Test that updates on the entity registry update platform entities."""
     registry = mock_registry(
         hass,
@@ -836,7 +903,7 @@ async def test_entity_registry_updates_entity_id(hass):
     assert hass.states.get("test_domain.planet") is not None
 
 
-async def test_entity_registry_updates_invalid_entity_id(hass):
+async def test_entity_registry_updates_invalid_entity_id(hass: HomeAssistant) -> None:
     """Test that we can't update to an invalid entity id."""
     registry = mock_registry(
         hass,
@@ -886,7 +953,7 @@ async def test_entity_registry_updates_invalid_entity_id(hass):
     assert hass.states.get("diff_domain.world") is None
 
 
-async def test_device_info_called(hass):
+async def test_device_info_called(hass: HomeAssistant) -> None:
     """Test device info is forwarded correctly."""
     registry = dr.async_get(hass)
     via = registry.async_get_or_create(
@@ -950,7 +1017,7 @@ async def test_device_info_called(hass):
     assert device.via_device_id == via.id
 
 
-async def test_device_info_not_overrides(hass):
+async def test_device_info_not_overrides(hass: HomeAssistant) -> None:
     """Test device info is forwarded correctly."""
     registry = dr.async_get(hass)
     device = registry.async_get_or_create(
@@ -996,7 +1063,9 @@ async def test_device_info_not_overrides(hass):
     assert device2.model == "test-model"
 
 
-async def test_device_info_invalid_url(hass, caplog):
+async def test_device_info_invalid_url(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test device info is forwarded correctly."""
     registry = dr.async_get(hass)
     registry.async_get_or_create(
@@ -1045,7 +1114,9 @@ async def test_device_info_invalid_url(hass, caplog):
     )
 
 
-async def test_device_info_homeassistant_url(hass, caplog):
+async def test_device_info_homeassistant_url(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test device info with homeassistant URL."""
     registry = dr.async_get(hass)
     registry.async_get_or_create(
@@ -1089,7 +1160,9 @@ async def test_device_info_homeassistant_url(hass, caplog):
     assert device.configuration_url == "homeassistant://config/mqtt"
 
 
-async def test_device_info_change_to_no_url(hass, caplog):
+async def test_device_info_change_to_no_url(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test device info changes to no URL."""
     registry = dr.async_get(hass)
     registry.async_get_or_create(
@@ -1134,9 +1207,10 @@ async def test_device_info_change_to_no_url(hass, caplog):
     assert device.configuration_url is None
 
 
-async def test_entity_disabled_by_integration(hass):
+async def test_entity_disabled_by_integration(hass: HomeAssistant) -> None:
     """Test entity disabled by integration."""
     component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
+    await component.async_setup({})
 
     entity_default = MockEntity(unique_id="default")
     entity_disabled = MockEntity(
@@ -1158,7 +1232,7 @@ async def test_entity_disabled_by_integration(hass):
     assert entry_disabled.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
-async def test_entity_disabled_by_device(hass: HomeAssistant):
+async def test_entity_disabled_by_device(hass: HomeAssistant) -> None:
     """Test entity disabled by device."""
 
     connections = {(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")}
@@ -1196,9 +1270,10 @@ async def test_entity_disabled_by_device(hass: HomeAssistant):
     assert entry_disabled.disabled_by is er.RegistryEntryDisabler.DEVICE
 
 
-async def test_entity_hidden_by_integration(hass):
+async def test_entity_hidden_by_integration(hass: HomeAssistant) -> None:
     """Test entity hidden by integration."""
     component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
+    await component.async_setup({})
 
     entity_default = MockEntity(unique_id="default")
     entity_hidden = MockEntity(
@@ -1215,9 +1290,10 @@ async def test_entity_hidden_by_integration(hass):
     assert entry_hidden.hidden_by is er.RegistryEntryHider.INTEGRATION
 
 
-async def test_entity_info_added_to_entity_registry(hass):
+async def test_entity_info_added_to_entity_registry(hass: HomeAssistant) -> None:
     """Test entity info is written to entity registry."""
     component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
+    await component.async_setup({})
 
     entity_default = MockEntity(
         capability_attributes={"max": 100},
@@ -1257,16 +1333,18 @@ async def test_entity_info_added_to_entity_registry(hass):
     )
 
 
-async def test_override_restored_entities(hass):
+async def test_override_restored_entities(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test that we allow overriding restored entities."""
-    registry = mock_registry(hass)
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         "test_domain", "test_domain", "1234", suggested_object_id="world"
     )
 
     hass.states.async_set("test_domain.world", "unavailable", {"restored": True})
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
 
     await component.async_add_entities(
         [MockEntity(unique_id="1234", state="on", entity_id="test_domain.world")], True
@@ -1276,7 +1354,9 @@ async def test_override_restored_entities(hass):
     assert state.state == "on"
 
 
-async def test_platform_with_no_setup(hass, caplog):
+async def test_platform_with_no_setup(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test setting up a platform that does not support setup."""
     entity_platform = MockEntityPlatform(
         hass, domain="mock-integration", platform_name="mock-platform", platform=None
@@ -1290,7 +1370,7 @@ async def test_platform_with_no_setup(hass, caplog):
     )
 
 
-async def test_platforms_sharing_services(hass):
+async def test_platforms_sharing_services(hass: HomeAssistant) -> None:
     """Test platforms share services."""
     entity_platform1 = MockEntityPlatform(
         hass, domain="mock_integration", platform_name="mock_platform", platform=None
@@ -1333,7 +1413,7 @@ async def test_platforms_sharing_services(hass):
     assert entity2 in entities
 
 
-async def test_invalid_entity_id(hass):
+async def test_invalid_entity_id(hass: HomeAssistant) -> None:
     """Test specifying an invalid entity id."""
     platform = MockEntityPlatform(hass)
     entity = MockEntity(entity_id="invalid_entity_id")
@@ -1351,9 +1431,12 @@ class MockBlockingEntity(MockEntity):
         await asyncio.sleep(1000)
 
 
-async def test_setup_entry_with_entities_that_block_forever(hass, caplog):
+async def test_setup_entry_with_entities_that_block_forever(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we cancel adding entities when we reach the timeout."""
-    registry = mock_registry(hass)
 
     async def async_setup_entry(hass, config_entry, async_add_entities):
         """Mock setup entry method."""
@@ -1374,14 +1457,14 @@ async def test_setup_entry_with_entities_that_block_forever(hass, caplog):
     full_name = f"{mock_entity_platform.domain}.{config_entry.domain}"
     assert full_name in hass.config.components
     assert len(hass.states.async_entity_ids()) == 0
-    assert len(registry.entities) == 1
+    assert len(entity_registry.entities) == 1
     assert "Timed out adding entities" in caplog.text
     assert "test_domain.test1" in caplog.text
     assert "test_domain" in caplog.text
     assert "test" in caplog.text
 
 
-async def test_two_platforms_add_same_entity(hass):
+async def test_two_platforms_add_same_entity(hass: HomeAssistant) -> None:
     """Test two platforms in the same domain adding an entity with the same name."""
     entity_platform1 = MockEntityPlatform(
         hass, domain="mock_integration", platform_name="mock_platform", platform=None
@@ -1428,7 +1511,7 @@ class SlowEntity(MockEntity):
 
 
 @pytest.mark.parametrize(
-    "has_entity_name, entity_name, expected_entity_id",
+    ("has_entity_name", "entity_name", "expected_entity_id"),
     (
         (False, "Entity Blu", "test_domain.entity_blu"),
         (False, None, "test_domain.test_qwer"),  # Set to <platform>_<unique_id>
@@ -1437,8 +1520,11 @@ class SlowEntity(MockEntity):
     ),
 )
 async def test_entity_name_influences_entity_id(
-    hass, has_entity_name, entity_name, expected_entity_id
-):
+    hass: HomeAssistant,
+    has_entity_name: bool,
+    entity_name: str | None,
+    expected_entity_id: str,
+) -> None:
     """Test entity_id is influenced by entity name."""
     registry = er.async_get(hass)
 
