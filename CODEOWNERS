@@ -1157,8 +1157,8 @@ build.json @home-assistant/supervisor
 /tests/components/stookwijzer/ @fwestenberg
 /homeassistant/components/stream/ @hunterjm @uvjustin @allenporter
 /tests/components/stream/ @hunterjm @uvjustin @allenporter
-/homeassistant/components/stt/ @pvizeli
-/tests/components/stt/ @pvizeli
+/homeassistant/components/stt/ @home-assistant/core @pvizeli
+/tests/components/stt/ @home-assistant/core @pvizeli
 /homeassistant/components/subaru/ @G-Two
 /tests/components/subaru/ @G-Two
 /homeassistant/components/suez_water/ @ooii
