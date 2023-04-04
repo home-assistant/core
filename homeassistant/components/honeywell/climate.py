@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 import datetime
-from socket import gaierror
 from typing import Any
 
 from aiohttp import ClientConnectionError
@@ -437,10 +436,9 @@ class HoneywellUSThermostat(ClimateEntity):
                 aiosomecomfort.SomeComfortError,
                 OSError,
                 ClientConnectionError,
-                gaierror,
                 asyncio.TimeoutError,
             ):
                 self._attr_available = False
 
-        except (OSError, ClientConnectionError, gaierror, asyncio.TimeoutError):
+        except (OSError, ClientConnectionError, asyncio.TimeoutError):
             self._attr_available = False
