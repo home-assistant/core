@@ -25,7 +25,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
@@ -124,7 +124,9 @@ async def test_setup_timeout(hass: HomeAssistant) -> None:
 
 
 @respx.mock
-async def test_setup_minimum(hass: HomeAssistant) -> None:
+async def test_setup_minimum(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
     """Test setup with minimum configuration."""
     respx.get("http://localhost") % HTTPStatus.OK
     assert await async_setup_component(
@@ -140,6 +142,8 @@ async def test_setup_minimum(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_all(BINARY_SENSOR_DOMAIN)) == 1
+    assert len(hass.states.async_all("binary_sensor")) == 1
+    assert issue_registry.async_get_issue(DOMAIN, "deprecated_platform_yaml")
 
 
 @respx.mock

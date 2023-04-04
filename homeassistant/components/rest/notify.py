@@ -30,10 +30,12 @@ from homeassistant.const import (
     HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import DOMAIN
 
 CONF_DATA = "data"
 CONF_DATA_TEMPLATE = "data_template"
@@ -76,8 +78,21 @@ async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> RestNotificationService:
+) -> RestNotificationService | None:
     """Get the RESTful notification service."""
+    if discovery_info is not None:
+        # Needs to be implemented
+        config = {}
+    else:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_platform_yaml",
+            breaks_in_ha_version="2023.7.0",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_platform_yaml",
+        )
     resource: str = config[CONF_RESOURCE]
     method: str = config[CONF_METHOD]
     headers: dict[str, str] | None = config.get(CONF_HEADERS)

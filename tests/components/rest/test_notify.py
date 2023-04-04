@@ -8,13 +8,16 @@ import homeassistant.components.notify as notify
 from homeassistant.components.rest import DOMAIN
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
 
 
 @respx.mock
-async def test_reload_notify(hass: HomeAssistant) -> None:
+async def test_reload_notify(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
     """Verify we can reload the notify service."""
     respx.get("http://localhost") % 200
 
@@ -32,6 +35,7 @@ async def test_reload_notify(hass: HomeAssistant) -> None:
         },
     )
     await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, "deprecated_platform_yaml")
 
     assert hass.services.has_service(notify.DOMAIN, DOMAIN)
 

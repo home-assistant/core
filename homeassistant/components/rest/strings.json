@@ -1,4 +1,10 @@
 {
+  "issues": {
+    "deprecated_platform_yaml": {
+      "title": "Configuring rest via YAML platform configuration is being removed",
+      "description": "Configuring rest in YAML under the platform key is being removed.\n\nPlease reconfigure under the integration key."
+    }
+  },
   "services": {
     "reload": {
       "name": "[%key:common::action::reload%]",

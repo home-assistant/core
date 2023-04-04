@@ -23,7 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger_template_entity import (
@@ -35,7 +35,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import async_get_config_and_coordinator, create_rest_data_from_config
-from .const import DEFAULT_BINARY_SENSOR_NAME
+from .const import DEFAULT_BINARY_SENSOR_NAME, DOMAIN
 from .data import RestData
 from .entity import RestEntity
 from .schema import BINARY_SENSOR_SCHEMA, RESOURCE_SCHEMA
@@ -71,6 +71,15 @@ async def async_setup_platform(
             hass, BINARY_SENSOR_DOMAIN, discovery_info
         )
     else:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_platform_yaml",
+            breaks_in_ha_version="2023.7.0",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_platform_yaml",
+        )
         conf = config
         coordinator = None
         rest = create_rest_data_from_config(hass, conf)

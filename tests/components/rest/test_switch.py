@@ -40,7 +40,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.trigger_template_entity import CONF_PICTURE
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -103,15 +103,18 @@ async def test_setup_timeout(
     assert "No route to resource/endpoint" in caplog.text
 
 
-@respx.mock
-async def test_setup_minimum(hass: HomeAssistant) -> None:
+async def test_setup_minimum(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
     """Test setup with minimum configuration."""
     route = respx.get(RESOURCE) % HTTPStatus.OK
     config = {SWITCH_DOMAIN: {CONF_PLATFORM: DOMAIN, CONF_RESOURCE: RESOURCE}}
     with assert_setup_component(1, SWITCH_DOMAIN):
         assert await async_setup_component(hass, SWITCH_DOMAIN, config)
         await hass.async_block_till_done()
-    assert route.call_count == 2
+    assert route.call_count == 1
+    assert issue_registry.async_get_issue(DOMAIN, "deprecated_platform_yaml")
 
 
 @respx.mock

@@ -30,7 +30,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers import (
+    config_validation as cv,
+    issue_registry as ir,
+    template,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.trigger_template_entity import (
@@ -40,6 +44,8 @@ from homeassistant.helpers.trigger_template_entity import (
     ManualTriggerEntity,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 CONF_BODY_OFF = "body_off"
@@ -94,6 +100,19 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the RESTful switch."""
+    if discovery_info is not None:
+        # Needs to be implemented
+        config = {}
+    else:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_platform_yaml",
+            breaks_in_ha_version="2023.7.0",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_platform_yaml",
+        )
     resource: str = config[CONF_RESOURCE]
     name = config.get(CONF_NAME) or template.Template(DEFAULT_NAME, hass)
 
