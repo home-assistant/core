@@ -574,6 +574,7 @@ def info_from_service(service: AsyncServiceInfo) -> ZeroconfServiceInfo | None:
     if not host:
         return None
 
+    assert service.server is not None, "server cannot be none if there are addresses"
     return ZeroconfServiceInfo(
         host=host,
         addresses=[str(ip_addr) for ip_addr in ip_addresses],
