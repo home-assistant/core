@@ -61,7 +61,7 @@
       "noise": {
         "name": "Noise"
       },
-      "current_power": {
+      "power": {
         "name": "[%key:component::sensor::entity_component::power::name%]"
       },
       "voltage": {
