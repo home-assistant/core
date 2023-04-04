@@ -1,185 +1,251 @@
-"""UDP server for sending a media file as audio to an RTP client."""
-import asyncio
+"""Utility for converting audio to RTP/OPUS packets."""
 import audioop
 from collections.abc import Iterable
-import logging
-from pathlib import Path
+from dataclasses import dataclass
 import random
 import struct
-import wave
+from typing import Any
 
 import opuslib
 
-from homeassistant.core import HomeAssistant
 
-_OPUS_RATE = 48000
-_OPUS_WIDTH = 2
-_OPUS_CHANNELS = 2
-_OPUS_FRAME_SIZE = 960
-_OPUS_PAYLOAD = 123
+@dataclass
+class RtpOpusInput:
+    """Extracts audio from RTP packets with OPUS."""
 
-_OPUS_BYTES_PER_FRAME = _OPUS_FRAME_SIZE * _OPUS_WIDTH * _OPUS_CHANNELS
+    opus_rate: int = 48000  # Hz
+    opus_width: int = 2  # bytes
+    opus_channels: int = 2
+    opus_frame_size: int = 960  # samples per channel
+    opus_payload: int = 123  # set by GrandStream
 
-_LOGGER = logging.getLogger(__name__)
-
-
-class MediaPlaybackDatagramProtocol(asyncio.DatagramProtocol):
-    """Sends a WAV file as audio to an RTP client."""
-
-    def __init__(
+    def __post_init__(
         self,
-        hass: HomeAssistant,
-        media_path: str | Path,
-        silence_before: float = 0.5,
     ) -> None:
-        self.hass = hass
-        self.transport = None
+        """Initialize encoder and state."""
+        self._decoder = opuslib.api.decoder.create_state(
+            self.opus_rate, self.opus_channels
+        )
+
+    def process_packet(
+        self,
+        rtp_bytes: bytes,
+        rate: int,
+        width: int,
+        channels: int,
+    ) -> bytes:
+        """Extract, decode, and return raw audio from RTP packet."""
+        if channels not in (1, 2):
+            raise ValueError("Only mono and stereo audio is supported")
+
+        # Minimum header size
+        assert len(rtp_bytes) >= 12, "RTP packet is too small"
+
+        # See: https://en.wikipedia.org/wiki/Real-time_Transport_Protocol#Packet_header
+        flags, payload_type, _sequence_num, _timestamp, _ssrc = struct.unpack(
+            ">BBHLL", rtp_bytes[:12]
+        )
+
+        assert flags == 0b10000000, "Padding and extension headers not supported"
+        payload_type &= 0x80  # Remove marker bit
+        assert (
+            payload_type == self.opus_payload
+        ), f"Expected payload type {self.opus_payload}, got {payload_type}"
+
+        # Assume no padding, extension headers, etc.
+        opus_bytes = rtp_bytes[12:]
+
+        # Decode into raw audio.
+        # This will always be 48Khz stereo with 16-bit samples.
+        audio_bytes = opuslib.api.decoder.decode(
+            self._decoder,
+            opus_bytes,
+            len(opus_bytes),
+            self.opus_frame_size,
+            False,  # no forward error correction (fec)
+        )
+
+        # Convert to target sample rate, etc.
+        if channels == 1:
+            # Convert to mono
+            audio_bytes = audioop.tomono(
+                audio_bytes,
+                self.opus_width,
+                1.0,
+                1.0,
+            )
+
+        if rate != self.opus_rate:
+            # Resample
+            audio_bytes, _state = audioop.ratecv(
+                audio_bytes,
+                self.opus_width,
+                channels,
+                self.opus_rate,
+                rate,
+                None,
+            )
+
+        if width != self.opus_width:
+            # Resize
+            audio_bytes = audioop.lin2lin(
+                audio_bytes,
+                self.opus_width,
+                width,
+            )
+
+        return audio_bytes
+
+
+@dataclass
+class RtpOpusOutput:
+    """Prepares audio to send to an RTP client using OPUS."""
+
+    opus_rate: int = 48000  # Hz
+    opus_width: int = 2  # bytes
+    opus_channels: int = 2
+    opus_frame_size: int = 960  # samples per channel
+    opus_payload: int = 123  # set by GrandStream
+    opus_bytes_per_frame: int = 960 * 2 * 2
+
+    _rtp_flags: int = 0b10000000  # v2, no padding/extensions/CSRCs
+    _rtp_sequence_num: int = 0
+    _rtp_timestamp: int = 0
+    _rtp_ssrc: int = 0
+
+    _encoder: opuslib.api.encoder.Encoder = None
+    _audio_buffer: bytes = None  # type: ignore[assignment]
+    _resample_state: Any = None
+
+    def __post_init__(
+        self,
+    ) -> None:
+        """Initialize encoder and state."""
+        self.opus_bytes_per_frame = (
+            self.opus_frame_size * self.opus_width * self.opus_channels
+        )
 
         # Set up OPUS encoder for VoIP
-        self.encoder = opuslib.api.encoder.create_state(
-            _OPUS_RATE,
-            _OPUS_WIDTH,
+        self._encoder = opuslib.api.encoder.create_state(
+            self.opus_rate,
+            self.opus_width,
             opuslib.APPLICATION_VOIP,
         )
         opuslib.api.encoder.encoder_ctl(
-            self.encoder,
+            self._encoder,
             opuslib.api.ctl.set_signal,
             opuslib.SIGNAL_VOICE,
         )
         opuslib.api.encoder.encoder_ctl(
-            self.encoder,
+            self._encoder,
             opuslib.api.ctl.set_bandwidth,
             opuslib.BANDWIDTH_WIDEBAND,  # for 16Khz
         )
         opuslib.api.encoder.encoder_ctl(
-            self.encoder,
+            self._encoder,
             opuslib.api.ctl.set_bitrate,
             20_000,  # 16-20 kbit/s recommended for wideband
         )
 
-        self.silence_before = silence_before
-        self.media_path = Path(media_path)
-        self._media_sent = False
+        self.reset()
 
-    def connection_made(self, transport):
-        self.transport = transport
+    def reset(self):
+        """Clear audio buffer and state."""
+        self._audio_buffer = b""
+        self._resample_state = None
 
-    def datagram_received(self, data, addr):
-        if self._media_sent:
-            return
+        # Recommended to start from random offsets to aid encryption
+        self._rtp_sequence_num = random.randint(0, 2**10)
+        self._rtp_timestamp = random.randint(1, 2**10)
 
-        self._media_sent = True
-        self.hass.create_task(self._send_media(addr))
+        # Change each time
+        self._rtp_ssrc = random.randint(0, 2**32)
 
-    async def _send_media(self, addr):
-        flags = 0b10000000  # v2, no padding/extensions/CSRCs
-        sequence_num = random.randint(0, 2**10)  # start from random offset
-        timestamp = random.randint(1, 2**10)  # start from random timestep
-        ssrc = random.randint(0, 2**32)  # unused
-
-        sec_per_chunk = _OPUS_FRAME_SIZE / _OPUS_RATE
-
-        # Wait before sending
-        await asyncio.sleep(self.silence_before)
-
-        with wave.open(str(self.media_path), "rb") as wav_file:
-            for audio_bytes in _wav_to_chunks(wav_file, _OPUS_FRAME_SIZE):
-                opus_bytes = opuslib.api.encoder.encode(
-                    self.encoder,
-                    audio_bytes,
-                    _OPUS_FRAME_SIZE,
-                    4000,  # recommended in opus docs
-                )
-
-                # See: https://en.wikipedia.org/wiki/Real-time_Transport_Protocol#Packet_header
-                rtp_bytes = struct.pack(
-                    ">BBHLL",
-                    flags,
-                    _OPUS_PAYLOAD,
-                    sequence_num,
-                    timestamp,
-                    ssrc,
-                )
-                self.transport.sendto(rtp_bytes + opus_bytes, addr)
-                sequence_num += 1
-                timestamp += _OPUS_FRAME_SIZE
-
-                # Wait almost the full amount of time for the chunk.
-                #
-                # Sending too fast will cause the phone to skip chunks,
-                # since it doesn't seem to have a very large buffer.
-                #
-                # Sending too slow will cause audio artifacts if there is
-                # network jitter, which is why programs like GStreamer are
-                # much better at this.
-                await asyncio.sleep(sec_per_chunk * 0.95)
-
-        self.transport.close()
-
-
-def _wav_to_chunks(wav_file: wave.Wave_read, samples_per_chunk: int) -> Iterable[bytes]:
-    """Break WAV into fixed-sized chunks and resample."""
-    original_rate = wav_file.getframerate()
-    needs_resample = original_rate != _OPUS_RATE
-    resample_state = None
-
-    original_width = wav_file.getsampwidth()
-    needs_resize = original_width != _OPUS_WIDTH
-
-    original_channels = wav_file.getnchannels()
-    needs_stereo = original_channels != _OPUS_CHANNELS
-
-    audio_buffer = b""
-    while audio_bytes := wav_file.readframes(samples_per_chunk):
-        if needs_resample:
+    def process_audio(
+        self,
+        audio_bytes: bytes,
+        rate: int,
+        width: int,
+        channels: int,
+        is_end: bool = False,
+    ) -> Iterable[bytes]:
+        """Process a chunk of raw audio and yield RTP packet(s)."""
+        if rate != self.opus_rate:
             # Convert to 48Khz
-            audio_bytes, resample_state = audioop.ratecv(
+            audio_bytes, self._resample_state = audioop.ratecv(
                 audio_bytes,
-                original_width,
-                original_channels,
-                original_rate,
-                _OPUS_RATE,
-                resample_state,
+                width,
+                channels,
+                rate,
+                self.opus_rate,
+                self._resample_state,
             )
 
-        if needs_resize:
+        if width != self.opus_width:
             # Adjust sample width
             audio_bytes = audioop.lin2lin(
                 audio_bytes,
-                original_width,
-                _OPUS_WIDTH,
+                width,
+                self.opus_width,
             )
 
-        if needs_stereo:
+        if channels != self.opus_channels:
             # Convert to stereo
             audio_bytes = audioop.tostereo(
                 audio_bytes,
-                _OPUS_WIDTH,
+                self.opus_width,
                 1.0,
                 1.0,
             )
 
-        audio_buffer += audio_bytes
-        num_frames = len(audio_buffer) // _OPUS_BYTES_PER_FRAME
+        self._audio_buffer += audio_bytes
+        if is_end:
+            # Pad with silence
+            bytes_missing = len(self._audio_buffer) % self.opus_bytes_per_frame
+            if bytes_missing > 0:
+                self._audio_buffer += bytes(bytes_missing)
 
-        # Yield chunks with *exactly* the desired number of frames
+        num_frames = len(self._audio_buffer) // self.opus_bytes_per_frame
+
+        # Process chunks with *exactly* the desired number of frames
         for i in range(num_frames):
-            offset = i * _OPUS_BYTES_PER_FRAME
-            yield audio_buffer[offset : offset + _OPUS_BYTES_PER_FRAME]
+            offset = i * self.opus_bytes_per_frame
+            audio_chunk = self._audio_buffer[
+                offset : offset + self.opus_bytes_per_frame
+            ]
+
+            # Encode to OPUS packet
+            opus_bytes = opuslib.api.encoder.encode(
+                self._encoder,
+                audio_chunk,
+                self.opus_frame_size,
+                4000,  # recommended in opus docs
+            )
+
+            # Add RTP header
+            # See: https://en.wikipedia.org/wiki/Real-time_Transport_Protocol#Packet_header
+            rtp_bytes = struct.pack(
+                ">BBHLL",
+                self._rtp_flags,
+                self.opus_payload,
+                self._rtp_sequence_num,
+                self._rtp_timestamp,
+                self._rtp_ssrc,
+            )
+
+            # RTP packet
+            yield rtp_bytes + opus_bytes
+
+            # Next frame
+            self._rtp_sequence_num += 1
+            self._rtp_timestamp += self.opus_frame_size
 
         if num_frames > 0:
             # Remove audio already sent
-            audio_buffer = audio_buffer[num_frames * _OPUS_BYTES_PER_FRAME :]
+            self._audio_buffer = self._audio_buffer[
+                num_frames * self.opus_bytes_per_frame :
+            ]
 
-    # Yield remaining audio in buffer
-    if audio_buffer:
-        if len(audio_buffer) < _OPUS_BYTES_PER_FRAME:
-            # Pad with silence
-            audio_buffer += bytes(_OPUS_BYTES_PER_FRAME - len(audio_buffer))
-
-        num_frames = len(audio_buffer) // _OPUS_BYTES_PER_FRAME
-
-        # Yield chunks with *exactly* the desired number of frames
-        for i in range(num_frames):
-            offset = i * _OPUS_BYTES_PER_FRAME
-            yield audio_buffer[offset : offset + _OPUS_BYTES_PER_FRAME]
+        if is_end:
+            # Clear audio buffer and state
+            self.reset()
