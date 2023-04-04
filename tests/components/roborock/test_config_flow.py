@@ -1,6 +1,7 @@
 """Test Roborock config flow."""
 from unittest.mock import patch
 
+import pytest
 from roborock.exceptions import RoborockException
 
 from homeassistant import config_entries, data_entry_flow
@@ -10,12 +11,27 @@ from homeassistant.core import HomeAssistant
 from .mock_data import MOCK_CONFIG, USER_EMAIL
 
 
-async def config_flow_helper(
+@pytest.mark.parametrize(
+    (
+        "request_code_side_effect",
+        "request_code_errors",
+        "code_login_side_effect",
+        "code_login_errors",
+    ),
+    [
+        (None, {}, RoborockException(), {"base": "invalid_code"}),
+        (None, {}, Exception(), {"base": "unknown"}),
+        (RoborockException(), {"base": "invalid_email"}, None, {}),
+        (Exception(), {"base": "unknown"}, None, {}),
+    ],
+)
+async def test_config_flow_failures(
     hass: HomeAssistant,
-    request_code_side_effect: Exception | None = None,
-    request_code_errors: dict[str, str] | None = None,
-    code_login_side_effect: Exception | None = None,
-    code_login_errors: dict[str, str] | None = None,
+    bypass_api_fixture,
+    request_code_side_effect: Exception | None,
+    request_code_errors: dict[str, str],
+    code_login_side_effect: Exception | None,
+    code_login_errors: dict[str, str],
 ) -> None:
     """Handle applying errors to request code or code login and recovering from the errors."""
     with patch(
@@ -70,39 +86,3 @@ async def config_flow_helper(
     assert result["title"] == USER_EMAIL
     assert result["data"] == MOCK_CONFIG
     assert result["result"]
-
-
-async def test_invalid_code(hass: HomeAssistant, bypass_api_fixture) -> None:
-    """Test a failed config flow due to incorrect code."""
-    await config_flow_helper(
-        hass,
-        code_login_side_effect=RoborockException(),
-        code_login_errors={"base": "invalid_code"},
-    )
-
-
-async def test_code_unknown_error(hass: HomeAssistant, bypass_api_fixture) -> None:
-    """Test a failed config flow due to an unknown error in request code."""
-    await config_flow_helper(
-        hass,
-        code_login_side_effect=Exception(),
-        code_login_errors={"base": "unknown"},
-    )
-
-
-async def test_user_does_not_exist(hass: HomeAssistant, bypass_api_fixture) -> None:
-    """Test a failed config flow due to credential validation failure."""
-    await config_flow_helper(
-        hass,
-        request_code_side_effect=RoborockException(),
-        request_code_errors={"base": "invalid_email"},
-    )
-
-
-async def test_user_unknown_error(hass: HomeAssistant, bypass_api_fixture) -> None:
-    """Test a failed config flow due to an unknown error during code login."""
-    await config_flow_helper(
-        hass,
-        request_code_side_effect=Exception(),
-        request_code_errors={"base": "unknown"},
-    )
