@@ -53,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     if CONF_REGION not in config_entry.data:
         hass.config_entries.async_update_entry(
             config_entry,
-            data={**config_entry.data, CONF_REGION: SHARKIQ_REGION_DEFAULT}
+            data={**config_entry.data, CONF_REGION: SHARKIQ_REGION_DEFAULT},
         )
 
     ayla_api = get_ayla_api(
