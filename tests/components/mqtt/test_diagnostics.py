@@ -31,6 +31,8 @@ default_config = {
         "retain": False,
         "topic": "homeassistant/status",
     },
+    "ws_headers": {},
+    "ws_path": "/",
 }
 
 
@@ -265,6 +267,7 @@ async def test_redact_diagnostics(
         "name_by_user": None,
     }
 
+    await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "connected": True,
         "devices": [expected_device],
