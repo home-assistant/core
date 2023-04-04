@@ -68,16 +68,20 @@ ATTR_SUPPORTED_COLOR_MODES = "supported_color_modes"
 class ColorMode(StrEnum):
     """Possible light color modes."""
 
-    UNKNOWN = "unknown"  # Ambiguous color mode
-    ONOFF = "onoff"  # Must be the only supported mode
-    BRIGHTNESS = "brightness"  # Must be the only supported mode
+    UNKNOWN = "unknown"
+    """Ambiguous color mode"""
+    ONOFF = "onoff"
+    """Must be the only supported mode"""
+    BRIGHTNESS = "brightness"
+    """Must be the only supported mode"""
     COLOR_TEMP = "color_temp"
     HS = "hs"
     XY = "xy"
     RGB = "rgb"
     RGBW = "rgbw"
     RGBWW = "rgbww"
-    WHITE = "white"  # Must *NOT* be the only supported mode
+    WHITE = "white"
+    """Must *NOT* be the only supported mode"""
 
 
 # These COLOR_MODE_* constants are deprecated as of Home Assistant 2022.5.
@@ -405,7 +409,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         base["params"] = data
         return base
 
-    async def async_handle_light_on_service(
+    async def async_handle_light_on_service(  # noqa: C901
         light: LightEntity, call: ServiceCall
     ) -> None:
         """Handle turning a light on.

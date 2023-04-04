@@ -11,6 +11,7 @@ from typing import cast
 from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import py
 import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
 
@@ -1222,7 +1223,9 @@ def test_statistics_runs_initiated(hass_recorder: Callable[..., HomeAssistant]) 
 
 
 @pytest.mark.freeze_time("2022-09-13 09:00:00+02:00")
-def test_compile_missing_statistics(tmpdir, freezer: FrozenDateTimeFactory) -> None:
+def test_compile_missing_statistics(
+    tmpdir: py.path.local, freezer: FrozenDateTimeFactory
+) -> None:
     """Test missing statistics are compiled on startup."""
     now = dt_util.utcnow().replace(minute=0, second=0, microsecond=0)
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
@@ -1482,7 +1485,7 @@ def test_service_disable_states_not_recording(
         )
 
 
-def test_service_disable_run_information_recorded(tmpdir) -> None:
+def test_service_disable_run_information_recorded(tmpdir: py.path.local) -> None:
     """Test that runs are still recorded when recorder is disabled."""
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
@@ -1531,7 +1534,7 @@ class CannotSerializeMe:
 
 
 async def test_database_corruption_while_running(
-    hass: HomeAssistant, tmpdir, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, tmpdir: py.path.local, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we can recover from sqlite3 db corruption."""
 
@@ -1548,7 +1551,7 @@ async def test_database_corruption_while_running(
     await hass.async_block_till_done()
     caplog.clear()
 
-    original_start_time = get_instance(hass).run_history.recording_start
+    original_start_time = get_instance(hass).recorder_runs_manager.recording_start
 
     hass.states.async_set("test.lost", "on", {})
 
@@ -1596,7 +1599,7 @@ async def test_database_corruption_while_running(
     assert state.entity_id == "test.two"
     assert state.state == "on"
 
-    new_start_time = get_instance(hass).run_history.recording_start
+    new_start_time = get_instance(hass).recorder_runs_manager.recording_start
     assert original_start_time < new_start_time
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
@@ -2109,10 +2112,15 @@ async def test_connect_args_priority(hass: HomeAssistant, config_url) -> None:
     assert connect_params[0]["charset"] == "utf8mb4"
 
 
+@pytest.mark.parametrize("core_state", [CoreState.starting, CoreState.running])
 async def test_excluding_attributes_by_integration(
-    recorder_mock: Recorder, hass: HomeAssistant, entity_registry: er.EntityRegistry
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    core_state: CoreState,
 ) -> None:
     """Test that an integration's recorder platform can exclude attributes."""
+    hass.state = core_state
     state = "restoring_from_db"
     attributes = {"test_attr": 5, "excluded": 10}
     mock_platform(
@@ -2128,6 +2136,7 @@ async def test_excluding_attributes_by_integration(
     platform = MockEntityPlatform(hass, platform_name="fake_integration")
     entity_platform = MockEntity(entity_id=entity_id, extra_state_attributes=attributes)
     await platform.async_add_entities([entity_platform])
+    await hass.async_block_till_done()
 
     await async_wait_recording_done(hass)
 

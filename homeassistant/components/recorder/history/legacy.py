@@ -306,9 +306,8 @@ def _significant_states_stmt(
     else:
         stmt += _ignore_domains_filter
         if filters and filters.has_config:
-            entity_filter = filters.states_entity_filter()
             stmt = stmt.add_criteria(
-                lambda q: q.filter(entity_filter), track_on=[filters]
+                lambda q: q.filter(filters.states_entity_filter()), track_on=[filters]  # type: ignore[union-attr]
             )
 
     if schema_version >= 31:
@@ -713,8 +712,9 @@ def _get_states_for_all_stmt(
         )
     stmt += _ignore_domains_filter
     if filters and filters.has_config:
-        entity_filter = filters.states_entity_filter()
-        stmt = stmt.add_criteria(lambda q: q.filter(entity_filter), track_on=[filters])
+        stmt = stmt.add_criteria(
+            lambda q: q.filter(filters.states_entity_filter()), track_on=[filters]  # type: ignore[union-attr]
+        )
     if join_attributes:
         stmt += lambda q: q.outerjoin(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
@@ -742,7 +742,7 @@ def _get_rows_with_session(
         )
 
     if run is None:
-        run = recorder.get_instance(hass).run_history.get(utc_point_in_time)
+        run = recorder.get_instance(hass).recorder_runs_manager.get(utc_point_in_time)
 
     if run is None or process_timestamp(run.start) > utc_point_in_time:
         # History did not run before utc_point_in_time

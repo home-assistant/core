@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 import functools as ft
 import hashlib
 from http import HTTPStatus
@@ -133,6 +134,44 @@ class TTSCache(TypedDict):
 
     filename: str
     voice: bytes
+
+
+@callback
+def async_resolve_engine(hass: HomeAssistant, engine: str | None) -> str | None:
+    """Resolve engine.
+
+    Returns None if no engines found or invalid engine passed in.
+    """
+    manager: SpeechManager = hass.data[DOMAIN]
+
+    if engine is not None:
+        if engine not in manager.providers:
+            return None
+        return engine
+
+    if not manager.providers:
+        return None
+
+    if "cloud" in manager.providers:
+        return "cloud"
+
+    return next(iter(manager.providers))
+
+
+async def async_support_options(
+    hass: HomeAssistant,
+    engine: str,
+    language: str | None = None,
+    options: dict | None = None,
+) -> bool:
+    """Return if an engine supports options."""
+    manager: SpeechManager = hass.data[DOMAIN]
+    try:
+        manager.process_options(engine, language, options)
+    except HomeAssistantError:
+        return False
+
+    return True
 
 
 async def async_get_media_source_audio(
@@ -380,11 +419,12 @@ class SpeechManager:
             raise HomeAssistantError(f"Not supported language {language}")
 
         # Options
-        if provider.default_options and options:
-            merged_options = provider.default_options.copy()
+        if (default_options := provider.default_options) and options:
+            merged_options = dict(default_options)
             merged_options.update(options)
             options = merged_options
-        options = options or provider.default_options
+        if not options:
+            options = None if default_options is None else dict(default_options)
 
         if options is not None:
             supported_options = provider.supported_options or []
@@ -502,7 +542,8 @@ class SpeechManager:
             )
 
         # Save to memory
-        data = self.write_tags(filename, data, provider, message, language, options)
+        if extension == "mp3":
+            data = self.write_tags(filename, data, provider, message, language, options)
         self._async_store_to_memcache(cache_key, filename, data)
 
         if cache:
@@ -664,8 +705,8 @@ class Provider:
         return None
 
     @property
-    def default_options(self) -> dict[str, Any] | None:
-        """Return a dict include default options."""
+    def default_options(self) -> Mapping[str, Any] | None:
+        """Return a mapping with the default options."""
         return None
 
     def get_tts_audio(

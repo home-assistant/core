@@ -116,15 +116,20 @@ LAST_UPDATED_INDEX_TS = "ix_states_last_updated_ts"
 METADATA_ID_LAST_UPDATED_INDEX_TS = "ix_states_metadata_id_last_updated_ts"
 EVENTS_CONTEXT_ID_BIN_INDEX = "ix_events_context_id_bin"
 STATES_CONTEXT_ID_BIN_INDEX = "ix_states_context_id_bin"
+LEGACY_STATES_EVENT_ID_INDEX = "ix_states_event_id"
 CONTEXT_ID_BIN_MAX_LENGTH = 16
 
+MYSQL_COLLATE = "utf8mb4_unicode_ci"
+MYSQL_DEFAULT_CHARSET = "utf8mb4"
+MYSQL_ENGINE = "InnoDB"
+
 _DEFAULT_TABLE_ARGS = {
-    "mysql_default_charset": "utf8mb4",
-    "mysql_collate": "utf8mb4_unicode_ci",
-    "mysql_engine": "InnoDB",
-    "mariadb_default_charset": "utf8mb4",
-    "mariadb_collate": "utf8mb4_unicode_ci",
-    "mariadb_engine": "InnoDB",
+    "mysql_default_charset": MYSQL_DEFAULT_CHARSET,
+    "mysql_collate": MYSQL_COLLATE,
+    "mysql_engine": MYSQL_ENGINE,
+    "mariadb_default_charset": MYSQL_DEFAULT_CHARSET,
+    "mariadb_collate": MYSQL_COLLATE,
+    "mariadb_engine": MYSQL_ENGINE,
 }
 
 
@@ -153,6 +158,7 @@ DOUBLE_TYPE = (
     .with_variant(oracle.DOUBLE_PRECISION(), "oracle")
     .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )
+DOUBLE_PRECISION_TYPE_SQL = "DOUBLE PRECISION"
 
 TIMESTAMP_TYPE = DOUBLE_TYPE
 
@@ -349,7 +355,7 @@ class EventTypes(Base):
     __tablename__ = TABLE_EVENT_TYPES
     event_type_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
     event_type: Mapped[str | None] = mapped_column(
-        String(MAX_LENGTH_EVENT_EVENT_TYPE), index=True
+        String(MAX_LENGTH_EVENT_EVENT_TYPE), index=True, unique=True
     )
 
     def __repr__(self) -> str:
@@ -385,9 +391,7 @@ class States(Base):
     attributes: Mapped[str | None] = mapped_column(
         Text().with_variant(mysql.LONGTEXT, "mysql", "mariadb")
     )  # no longer used for new rows
-    event_id: Mapped[int | None] = mapped_column(  # no longer used for new rows
-        Integer, ForeignKey("events.event_id", ondelete="CASCADE"), index=True
-    )
+    event_id: Mapped[int | None] = mapped_column(Integer)  # no longer used for new rows
     last_changed: Mapped[datetime | None] = mapped_column(
         DATETIME_TYPE
     )  # no longer used for new rows
@@ -601,7 +605,7 @@ class StatesMeta(Base):
     __tablename__ = TABLE_STATES_META
     metadata_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
     entity_id: Mapped[str | None] = mapped_column(
-        String(MAX_LENGTH_STATE_ENTITY_ID), index=True
+        String(MAX_LENGTH_STATE_ENTITY_ID), index=True, unique=True
     )
 
     def __repr__(self) -> str:

@@ -33,6 +33,8 @@ from .store import LocalCalendarStore
 
 _LOGGER = logging.getLogger(__name__)
 
+PRODID = "-//homeassistant.io//local_calendar 1.0//EN"
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -43,6 +45,7 @@ async def async_setup_entry(
     store = hass.data[DOMAIN][config_entry.entry_id]
     ics = await store.async_load()
     calendar = IcsCalendarStream.calendar_from_ics(ics)
+    calendar.prodid = PRODID
 
     name = config_entry.data[CONF_CALENDAR_NAME]
     entity = LocalCalendarEntity(store, calendar, name, unique_id=config_entry.entry_id)
@@ -82,17 +85,16 @@ class LocalCalendarEntity(CalendarEntity):
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
-        events = self._calendar.timeline_tz(dt_util.DEFAULT_TIME_ZONE).overlapping(
-            dt_util.as_local(start_date),
-            dt_util.as_local(end_date),
+        events = self._calendar.timeline_tz(start_date.tzinfo).overlapping(
+            start_date,
+            end_date,
         )
         return [_get_calendar_event(event) for event in events]
 
     async def async_update(self) -> None:
         """Update entity state with the next upcoming event."""
-        events = self._calendar.timeline_tz(dt_util.DEFAULT_TIME_ZONE).active_after(
-            dt_util.now()
-        )
+        now = dt_util.now()
+        events = self._calendar.timeline_tz(now.tzinfo).active_after(now)
         if event := next(events, None):
             self._event = _get_calendar_event(event)
         else:
@@ -196,4 +198,5 @@ def _get_calendar_event(event: Event) -> CalendarEvent:
         uid=event.uid,
         rrule=event.rrule.as_rrule_str() if event.rrule else None,
         recurrence_id=event.recurrence_id,
+        location=event.location,
     )

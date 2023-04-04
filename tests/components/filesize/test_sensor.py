@@ -1,6 +1,8 @@
 """The tests for the filesize sensor."""
 import os
 
+import py
+
 from homeassistant.const import CONF_FILE_PATH, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
@@ -24,7 +26,7 @@ async def test_invalid_path(
 
 
 async def test_valid_path(
-    hass: HomeAssistant, tmpdir: str, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, tmpdir: py.path.local, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test for a valid path."""
     testfile = f"{tmpdir}/file.txt"
@@ -46,7 +48,7 @@ async def test_valid_path(
 
 
 async def test_state_unavailable(
-    hass: HomeAssistant, tmpdir: str, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, tmpdir: py.path.local, mock_config_entry: MockConfigEntry
 ) -> None:
     """Verify we handle state unavailable."""
     testfile = f"{tmpdir}/file.txt"

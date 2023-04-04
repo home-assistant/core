@@ -108,7 +108,10 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
         errors = {}
-        placeholders = {"error": ""}
+        placeholders = {
+            "error": "",
+            "troubleshooting_link": "https://www.home-assistant.io/integrations/reolink/#troubleshooting",
+        }
 
         if user_input is not None:
             if CONF_HOST not in user_input:
