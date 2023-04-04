@@ -70,6 +70,7 @@ from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, recorder as recorder_helper
 from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util import dt as dt_util
+from homeassistant.util.json import json_loads
 
 from .common import (
     async_block_recorder,
@@ -823,6 +824,34 @@ def test_saving_state_with_oversized_attributes(
     assert states[1].state == "on"
     assert states[1].entity_id == "switch.too_big"
     assert states[1].attributes == {}
+
+
+def test_saving_event_with_oversized_data(
+    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test saving events is limited to 32KiB of JSON encoded data."""
+    hass = hass_recorder()
+    massive_dict = {"a": "b" * 32768}
+    event_data = {"test_attr": 5, "test_attr_10": "nice"}
+    hass.bus.fire("test_event", event_data)
+    hass.bus.fire("test_event_too_big", massive_dict)
+    wait_recording_done(hass)
+    events = {}
+
+    with session_scope(hass=hass) as session:
+        for _, data, event_type in (
+            session.query(Events.event_id, EventData.shared_data, EventTypes.event_type)
+            .outerjoin(EventData, Events.data_id == EventData.data_id)
+            .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
+            .where(EventTypes.event_type.in_(["test_event", "test_event_too_big"]))
+        ):
+            events[event_type] = data
+
+    assert "test_event_too_big" in caplog.text
+
+    assert len(events) == 2
+    assert json_loads(events["test_event"]) == event_data
+    assert json_loads(events["test_event_too_big"]) == {}
 
 
 def test_recorder_setup_failure(hass: HomeAssistant) -> None:
