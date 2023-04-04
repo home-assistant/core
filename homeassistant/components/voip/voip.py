@@ -1,10 +1,10 @@
+"""Voice over IP (VoIP) implementation."""
 import asyncio
 import functools
 import logging
 import math
 from pathlib import Path
 import socket
-import time
 import wave
 
 import async_timeout
@@ -29,6 +29,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class VoipDatagramProtocol(SipDatagramProtocol):
+    """UDP server for Voice over IP (VoIP)."""
+
     def __init__(self, hass: HomeAssistant) -> None:
         super().__init__()
         self.hass = hass
@@ -57,7 +59,8 @@ class VoipDatagramProtocol(SipDatagramProtocol):
         )
         assert pipeline is not None
 
-        self.hass.async_create_background_task(
+        # Handle RTP packets in pipeline server
+        self.hass.async_create_task(
             self.hass.loop.create_datagram_endpoint(
                 lambda: PipelineDatagramProtocol(
                     self.hass,
@@ -65,25 +68,25 @@ class VoipDatagramProtocol(SipDatagramProtocol):
                 ),
                 (rtp_ip, rtp_port),
             ),
-            "voip_pipeline",
         )
 
         # self.hass.async_create_task(
         #     self.hass.loop.create_datagram_endpoint(
         #         lambda: MediaOutputDatagramProtocol(
         #             self.hass,
-        #             "/home/hansenm/opt/homeassistant/config/media/apope_lincoln.wav",
+        #             "/path/to/file.wav",
         #             silence_before=0.5,
         #         ),
         #         (rtp_ip, rtp_port),
         #     )
         # )
 
+        # Tell caller to start sending/receiving RTP audio
         self.answer(call_info, rtp_port)
 
 
 class PipelineDatagramProtocol(asyncio.DatagramProtocol):
-    """Send a WAV file to an RTP client."""
+    """Run a voice assistant pipeline in a loop for a VoIP call."""
 
     def __init__(
         self,
@@ -108,6 +111,7 @@ class PipelineDatagramProtocol(asyncio.DatagramProtocol):
         )
 
     def datagram_received(self, data, addr):
+        """Start pipeline and decode RTP + OPUS into raw audio."""
         if self.addr is None:
             self.addr = addr
 
@@ -116,6 +120,7 @@ class PipelineDatagramProtocol(asyncio.DatagramProtocol):
             while not self._audio_queue.empty():
                 self._audio_queue.get_nowait()
 
+            # Run pipeline until voice command finishes, then start over
             self._pipeline_task = self.hass.async_create_background_task(
                 self._run_pipeline(),
                 "voip_pipeline_run",
@@ -130,20 +135,40 @@ class PipelineDatagramProtocol(asyncio.DatagramProtocol):
         )
         self._audio_queue.put_nowait(audio_bytes)
 
-    async def _run_pipeline(self, timeout: float = 30.0) -> None:
+    async def _run_pipeline(
+        self,
+        pipeline_timeout: float = 30.0,
+        audio_timeout: float = 2.0,
+    ) -> None:
+        """Forward audio to pipeline STT and handle TTS."""
         _LOGGER.debug("Starting pipeline")
 
         async def stt_stream():
             segmenter = VoiceCommandSegmenter()
-            while chunk := await self._audio_queue.get():
-                if not segmenter.process(chunk):
-                    # Voice command is finished
-                    break
 
-                yield chunk
+            try:
+                # Timeout if no audio comes in for a while.
+                # This means the caller hung up.
+                while chunk := await asyncio.wait_for(
+                    self._audio_queue.get(),
+                    audio_timeout,
+                ):
+                    if not segmenter.process(chunk):
+                        # Voice command is finished
+                        break
+
+                    yield chunk
+            except asyncio.TimeoutError:
+                # Expected after caller hangs up
+                _LOGGER.debug("Audio timeout")
+
+                if self.transport is not None:
+                    self.transport.close()
+                    self.transport = None
 
         def event_callback(event: PipelineEvent):
             if (event.type == PipelineEventType.TTS_END) and event.data:
+                # Send TTS audio to caller over RTP
                 media_id = event.data["tts_output"]["media_id"]
                 self.hass.async_create_background_task(
                     self._send_audio(media_id),
@@ -173,11 +198,16 @@ class PipelineDatagramProtocol(asyncio.DatagramProtocol):
         try:
             await pipeline_input.validate()
 
-            async with async_timeout.timeout(timeout):
+            # Run pipeline with a timeout
+            async with async_timeout.timeout(pipeline_timeout):
                 await pipeline_input.execute()
         except asyncio.TimeoutError:
             # Expected after caller hangs up
-            pass
+            _LOGGER.debug("Pipeline timeout")
+
+            if self.transport is not None:
+                self.transport.close()
+                self.transport = None
         finally:
             # Allow pipeline to run again
             self._pipeline_task = None
@@ -196,6 +226,7 @@ class PipelineDatagramProtocol(asyncio.DatagramProtocol):
         channels = 1
         bytes_per_frame = self._rtp_output.opus_frame_size * width * channels
 
+        # Split TTS audio into chunks
         seconds_per_rtp = self._rtp_output.opus_frame_size / self._rtp_output.opus_rate
         total_samples = len(audio_bytes) // (width * channels)
         num_frames = int(
@@ -256,19 +287,19 @@ class MediaOutputDatagramProtocol(asyncio.DatagramProtocol):
 
         self._media_sent = True
 
-        # Run in executor since we're doing media encoding and I/O.
-        self.hass.async_add_executor_job(
+        self.hass.async_create_background_task(
             functools.partial(
                 self._send_media,
                 addr,
-            )
+            ),
+            "voip_media",
         )
 
-    def _send_media(self, addr):
+    async def _send_media(self, addr):
         assert self.transport is not None
 
         # Pause before sending to allow time for user to pick up phone.
-        time.sleep(self.silence_before)
+        await asyncio.sleep(self.silence_before)
 
         wav_file: wave.Wave_read = wave.open(self.wav_path, "rb")
         with wav_file:
@@ -301,7 +332,7 @@ class MediaOutputDatagramProtocol(asyncio.DatagramProtocol):
                     # Sending too slow will cause audio artifacts if there is
                     # network jitter, which is why programs like GStreamer are
                     # much better at this.
-                    time.sleep(seconds_per_rtp * 0.99)
+                    await asyncio.sleep(seconds_per_rtp * 0.99)
 
         # Done
         self.transport.close()

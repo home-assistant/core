@@ -18,6 +18,8 @@ _SIP_IP = re.compile(r"^<sip:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):\d+>(;.+)?$")
 
 @dataclass
 class CallInfo:
+    """Information gathered from an INVITE message."""
+
     caller_ip: str
     caller_sip_port: int
     caller_rtp_port: int
@@ -26,6 +28,8 @@ class CallInfo:
 
 
 class SipDatagramProtocol(asyncio.DatagramProtocol):
+    """UDP server for the Session Initiation Protocol (SIP)."""
+
     def __init__(self) -> None:
         self.transport = None
 
@@ -33,12 +37,12 @@ class SipDatagramProtocol(asyncio.DatagramProtocol):
         self.transport = transport
 
     def datagram_received(self, data: bytes, addr):
+        """Handle INVITE SIP messages."""
         message = data.decode()
         method, headers, body = self._parse_sip(message)
 
         if method and (method.lower() != "invite"):
             # Not an INVITE message
-            _LOGGER.debug(method)
             return
 
         caller_ip, caller_sip_port = addr
@@ -141,13 +145,13 @@ class SipDatagramProtocol(asyncio.DatagramProtocol):
 
     def _parse_sip(self, message: str) -> tuple[str | None, dict[str, str], str]:
         """Parse SIP message and return method, headers, and body."""
-        # See: https://datatracker.ietf.org/doc/html/rfc3261
         lines = message.splitlines()
 
         method: str | None = None
         headers: dict[str, str] = {}
         offset: int = 0
 
+        # See: https://datatracker.ietf.org/doc/html/rfc3261
         for i, line in enumerate(lines):
             if line:
                 offset += len(line) + len(_CRLF)
