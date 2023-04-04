@@ -25,10 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Integration async setup entry: %s", entry.as_dict())
 
     user_data = UserData(entry.data[CONF_USER_DATA])
-    api_client = RoborockClient(
-        entry.data[CONF_USERNAME],
-        entry.data[CONF_BASE_URL]
-    )
+    api_client = RoborockClient(entry.data[CONF_USERNAME], entry.data[CONF_BASE_URL])
     _LOGGER.debug("Getting home data")
     home_data = await api_client.get_home_data(user_data)
     _LOGGER.debug("Got home data %s", home_data)

@@ -42,11 +42,24 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             self._username = username
             assert self._username is not None
-            client = await self._request_code(self._username)
-            if client:
+            try:
+                _LOGGER.debug("Requesting code for Roborock account")
+                client = RoborockClient(username)
+                await client.request_code()
+            except RoborockException as ex:
+                _LOGGER.exception(ex)
+                self._errors["base"] = "invalid_email"
+            except Exception as ex:  # pylint: disable=broad-except
+                _LOGGER.exception(ex)
+                self._errors["base"] = "unknown"
+            else:
                 self._client = client
                 return await self.async_step_code()
-        return self._show_email_form(user_input)
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema({vol.Required(CONF_USERNAME): str}),
+            errors=self._errors,
+        )
 
     async def async_step_code(
         self, user_input: dict[str, Any] | None = None
@@ -61,22 +74,6 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self._create_entry(self._username, user_data)
 
         return self._show_code_form()
-
-    def _show_email_form(self, user_input: dict[str, Any] | None = None) -> FlowResult:
-        """Show the configuration form to provide user email."""
-        if user_input is None:
-            user_input = {}
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_USERNAME, default=user_input.get(CONF_USERNAME)
-                    ): str
-                }
-            ),
-            errors=self._errors,
-        )
 
     def _show_code_form(self) -> FlowResult:
         """Show the configuration form to provide authentication code."""
@@ -97,22 +94,6 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_BASE_URL: self._client.base_url,
             },
         )
-
-    async def _request_code(self, username: str) -> RoborockClient | None:
-        """Return the client if credentials are valid."""
-        try:
-            _LOGGER.debug("Requesting code for Roborock account")
-            client = RoborockClient(username)
-            await client.request_code()
-            return client
-        except RoborockException as ex:
-            _LOGGER.exception(ex)
-            self._errors["base"] = "invalid_email"
-            return None
-        except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.exception(ex)
-            self._errors["base"] = "unknown"
-            return None
 
     async def _code_login(self, code: str) -> UserData | None:
         """Return UserData if login code is valid."""

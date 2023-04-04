@@ -23,14 +23,11 @@ class RoborockDataUpdateCoordinator(
 ):
     """Class to manage fetching data from the API."""
 
-    ACCEPTABLE_NUMBER_OF_TIMEOUTS = 3
-
     def __init__(self, hass: HomeAssistant, client: RoborockMqttClient) -> None:
         """Initialize."""
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
         self.api = client
         self._devices_prop: dict[str, RoborockDeviceProp] = {}
-        self._timeout_countdown = self.ACCEPTABLE_NUMBER_OF_TIMEOUTS
 
     async def release(self) -> None:
         """Disconnect from API."""
@@ -47,19 +44,11 @@ class RoborockDataUpdateCoordinator(
 
     async def _async_update_data(self) -> dict[str, RoborockDeviceProp]:
         """Update data via library."""
-        self._timeout_countdown = int(self.ACCEPTABLE_NUMBER_OF_TIMEOUTS)
         try:
             for device_id in self.api.device_map:
                 await self._update_device_prop(device_id)
         except RoborockTimeout as ex:
-            if self._devices_prop and self._timeout_countdown > 0:
-                _LOGGER.debug(
-                    "Timeout updating coordinator. Acceptable timeouts countdown = %s",
-                    self._timeout_countdown,
-                )
-                self._timeout_countdown -= 1
-            else:
-                raise UpdateFailed(ex) from ex
+            raise UpdateFailed(ex) from ex
         except RoborockException as ex:
             raise UpdateFailed(ex) from ex
         if self._devices_prop:
