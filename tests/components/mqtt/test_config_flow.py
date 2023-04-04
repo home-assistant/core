@@ -183,7 +183,7 @@ async def test_user_connection_works(
     assert result["type"] == "form"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"broker": "127.0.0.1", "advanced_options": False}
+        result["flow_id"], {"broker": "127.0.0.1"}
     )
 
     assert result["type"] == "create_entry"
@@ -191,7 +191,6 @@ async def test_user_connection_works(
         "broker": "127.0.0.1",
         "port": 1883,
         "discovery": True,
-        "discovery_prefix": "homeassistant",
     }
     # Check we tried the connection
     assert len(mock_try_connection.mock_calls) == 1
@@ -231,7 +230,6 @@ async def test_user_v5_connection_works(
     assert result["result"].data == {
         "broker": "another-broker",
         "discovery": True,
-        "discovery_prefix": "homeassistant",
         "port": 2345,
         "protocol": "5",
     }
@@ -283,7 +281,7 @@ async def test_manual_config_set(
     assert result["type"] == "form"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"broker": "127.0.0.1"}
+        result["flow_id"], {"broker": "127.0.0.1", "port": "1883"}
     )
 
     assert result["type"] == "create_entry"
@@ -291,7 +289,6 @@ async def test_manual_config_set(
         "broker": "127.0.0.1",
         "port": 1883,
         "discovery": True,
-        "discovery_prefix": "homeassistant",
     }
     # Check we tried the connection, with precedence for config entry settings
     mock_try_connection.assert_called_once_with(
@@ -395,7 +392,6 @@ async def test_hassio_confirm(
         "username": "mock-user",
         "password": "mock-pass",
         "discovery": True,
-        "discovery_prefix": "homeassistant",
     }
     # Check we tried the connection
     assert len(mock_try_connection_success.mock_calls)
