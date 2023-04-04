@@ -28,6 +28,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfRadiation,
     UnitOfSoundPressure,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -265,6 +266,16 @@ class NumberDeviceClass(StrEnum):
     - `psi`
     """
 
+    RADIATION = "radiation"
+    """Radiation.
+
+    Unit of measurement: UnitOfRadiation
+    - `Bq/m³`
+    - `cpm`, `cps`
+    - `µCi/L`, `pCi/L`
+    - `mSv/h`, `µSv/h`
+    """
+
     REACTIVE_POWER = "reactive_power"
     """Reactive power.
 
@@ -416,6 +427,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.PRECIPITATION: set(UnitOfPrecipitationDepth),
     NumberDeviceClass.PRECIPITATION_INTENSITY: set(UnitOfVolumetricFlux),
     NumberDeviceClass.PRESSURE: set(UnitOfPressure),
+    NumberDeviceClass.RADIATION: set(UnitOfRadiation),
     NumberDeviceClass.REACTIVE_POWER: {POWER_VOLT_AMPERE_REACTIVE},
     NumberDeviceClass.SIGNAL_STRENGTH: {
         SIGNAL_STRENGTH_DECIBELS,

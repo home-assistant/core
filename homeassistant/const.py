@@ -316,6 +316,7 @@ DEVICE_CLASS_PM25: Final = "pm25"
 DEVICE_CLASS_POWER_FACTOR: Final = "power_factor"
 DEVICE_CLASS_POWER: Final = "power"
 DEVICE_CLASS_PRESSURE: Final = "pressure"
+DEVICE_CLASS_RADIATION: Final = "radiation"
 DEVICE_CLASS_SIGNAL_STRENGTH: Final = "signal_strength"
 DEVICE_CLASS_SULPHUR_DIOXIDE = "sulphur_dioxide"
 DEVICE_CLASS_TEMPERATURE: Final = "temperature"
@@ -708,6 +709,20 @@ PRESSURE_INHG: Final = "inHg"
 """Deprecated: please use UnitOfPressure.INHG"""
 PRESSURE_PSI: Final = "psi"
 """Deprecated: please use UnitOfPressure.PSI"""
+
+
+# Radiation units
+class UnitOfRadiation(StrEnum):
+    """Radiation units."""
+
+    BECQUEREL_PER_CUBIC_METER = "Bq/m³"
+    COUNT_PER_SECOND = "cps"
+    COUNT_PER_MINUTE = "cpm"
+    MILLISIEVERT_PER_HOUR = "mSv/h"
+    MICROSIEVERT_PER_HOUR = "µSv/h"
+    PICOCURIE_PER_LITER = "pCi/L"
+    MICROCURIE_PER_LITER = "µCi/L"
+
 
 
 # Sound pressure units

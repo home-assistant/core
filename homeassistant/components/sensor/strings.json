@@ -33,6 +33,7 @@
       "is_precipitation": "Current {entity_name} precipitation",
       "is_precipitation_intensity": "Current {entity_name} precipitation intensity",
       "is_pressure": "Current {entity_name} pressure",
+      "is_radiation": "Current {entity_name} radiation level",
       "is_reactive_power": "Current {entity_name} reactive power",
       "is_signal_strength": "Current {entity_name} signal strength",
       "is_sound_pressure": "Current {entity_name} sound pressure",

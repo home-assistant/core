@@ -28,6 +28,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfRadiation,
     UnitOfSoundPressure,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -302,6 +303,15 @@ class SensorDeviceClass(StrEnum):
     - `inHg`
     - `psi`
     """
+    RADIATION = "radiation"
+    """Radiation.
+
+    Unit of measurement: UnitOfRadiation
+    - `Bq/m³`
+    - `cpm`, `cps`
+    - `µCi/L`, `pCi/L`
+    - `mSv/h`, `µSv/h`
+    """
 
     REACTIVE_POWER = "reactive_power"
     """Reactive power.
@@ -517,6 +527,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.PRECIPITATION: set(UnitOfPrecipitationDepth),
     SensorDeviceClass.PRECIPITATION_INTENSITY: set(UnitOfVolumetricFlux),
     SensorDeviceClass.PRESSURE: set(UnitOfPressure),
+    SensorDeviceClass.RADIATION: set(UnitOfRadiation),
     SensorDeviceClass.REACTIVE_POWER: {POWER_VOLT_AMPERE_REACTIVE},
     SensorDeviceClass.SIGNAL_STRENGTH: {
         SIGNAL_STRENGTH_DECIBELS,
@@ -584,6 +595,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.PRECIPITATION: set(SensorStateClass),
     SensorDeviceClass.PRECIPITATION_INTENSITY: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.PRESSURE: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.RADIATION: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.REACTIVE_POWER: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.SIGNAL_STRENGTH: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.SOUND_PRESSURE: {SensorStateClass.MEASUREMENT},
