@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 import pytest
 import zigpy.profiles.zha
+import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.measurement as measurement
 import zigpy.zcl.clusters.security as security
 
@@ -36,6 +37,16 @@ DEVICE_OCCUPANCY = {
         SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.OCCUPANCY_SENSOR,
         SIG_EP_INPUT: [measurement.OccupancySensing.cluster_id],
         SIG_EP_OUTPUT: [],
+    }
+}
+
+
+DEVICE_ONOFF = {
+    1: {
+        SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+        SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.ON_OFF_SENSOR,
+        SIG_EP_INPUT: [],
+        SIG_EP_OUTPUT: [general.OnOff.cluster_id],
     }
 }
 
@@ -212,3 +223,30 @@ async def test_binary_sensor_migration_already_migrated(
     assert entity_id is not None
     assert hass.states.get(entity_id).state == STATE_ON  # matches attribute cache
     assert hass.states.get(entity_id).attributes["migrated_to_cache"]
+
+
+@pytest.mark.parametrize(
+    "restored_state",
+    [
+        STATE_ON,
+        STATE_OFF,
+    ],
+)
+async def test_onoff_binary_sensor_restore_state(
+    hass: HomeAssistant,
+    zigpy_device_mock,
+    core_rs,
+    zha_device_restored,
+    restored_state,
+) -> None:
+    """Test ZHA OnOff binary_sensor restores last state from HA."""
+
+    entity_id = "binary_sensor.fakemanufacturer_fakemodel_opening"
+    core_rs(entity_id, state=restored_state, attributes={})
+
+    zigpy_device = zigpy_device_mock(DEVICE_ONOFF)
+    zha_device = await zha_device_restored(zigpy_device)
+    entity_id = await find_entity_id(Platform.BINARY_SENSOR, zha_device, hass)
+
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == restored_state

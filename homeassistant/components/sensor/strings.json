@@ -197,7 +197,7 @@
       "name": "Ozone"
     },
     "pm1": {
-      "name": "Particulate matter 0.1 μm"
+      "name": "Particulate matter 1 μm"
     },
     "pm10": {
       "name": "Particulate matter 10 μm"

@@ -97,7 +97,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-@dataclass
+@dataclass(slots=True)
 class ZeroconfServiceInfo(BaseServiceInfo):
     """Prepared info from mDNS entries."""
 
@@ -564,44 +564,26 @@ def info_from_service(service: AsyncServiceInfo) -> ZeroconfServiceInfo | None:
             if isinstance(value, bytes):
                 properties[key] = value.decode("utf-8")
 
-    if not (addresses := service.addresses or service.parsed_addresses()):
+    if not (ip_addresses := service.ip_addresses_by_version(IPVersion.All)):
         return None
-    if (host := _first_non_link_local_address(addresses)) is None:
+    host: str | None = None
+    for ip_addr in ip_addresses:
+        if not ip_addr.is_link_local and not ip_addr.is_unspecified:
+            host = str(ip_addr)
+            break
+    if not host:
         return None
 
+    assert service.server is not None, "server cannot be none if there are addresses"
     return ZeroconfServiceInfo(
-        host=str(host),
-        addresses=service.parsed_addresses(),
+        host=host,
+        addresses=[str(ip_addr) for ip_addr in ip_addresses],
         port=service.port,
         hostname=service.server,
         type=service.type,
         name=service.name,
         properties=properties,
     )
-
-
-def _first_non_link_local_address(
-    addresses: list[bytes] | list[str],
-) -> str | None:
-    """Return the first ipv6 or non-link local ipv4 address, preferring IPv4."""
-    for address in addresses:
-        ip_addr = ip_address(address)
-        if (
-            not ip_addr.is_link_local
-            and not ip_addr.is_unspecified
-            and ip_addr.version == 4
-        ):
-            return str(ip_addr)
-    # If we didn't find a good IPv4 address, check for IPv6 addresses.
-    for address in addresses:
-        ip_addr = ip_address(address)
-        if (
-            not ip_addr.is_link_local
-            and not ip_addr.is_unspecified
-            and ip_addr.version == 6
-        ):
-            return str(ip_addr)
-    return None
 
 
 def _suppress_invalid_properties(properties: dict) -> None:

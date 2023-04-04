@@ -1043,7 +1043,6 @@ class FritzBoxBaseCoordinatorEntity(update_coordinator.CoordinatorEntity):
         )
         self.entity_description = description
         self._device_name = device_name
-        self._attr_name = description.name
         self._attr_unique_id = f"{avm_wrapper.unique_id}-{description.key}"
 
     @property
