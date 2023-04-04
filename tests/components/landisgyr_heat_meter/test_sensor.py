@@ -153,10 +153,9 @@ async def test_exception_on_polling(mock_heat_meter, hass: HomeAssistant) -> Non
     state = hass.states.get("sensor.heat_meter_heat_usage_gj")
     assert state.state == STATE_UNAVAILABLE
 
-    # Now 'enable' and see if next poll succeeds
-    mock_response_gj_changed = mock_response_gj
-    mock_response_gj_changed["heat_usage_gj"] = 124.0
-    mock_heat_meter_response = HeatMeterResponse(**mock_response_gj_changed)
+    # # Now 'enable' and see if next poll succeeds
+    mock_heat_meter_response = HeatMeterResponse(**mock_response_gj)
+    mock_heat_meter_response.heat_usage_gj += 1
 
     mock_heat_meter().read.return_value = mock_heat_meter_response
     mock_heat_meter().read.side_effect = None
