@@ -9,7 +9,6 @@ import urllib
 from zoneinfo import ZoneInfo
 
 from aiohttp import ClientSession
-from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -92,7 +91,7 @@ def get_events_fixture(
     return _fetch
 
 
-@freeze_time("2023-01-21 09:32:00")
+@pytest.mark.freeze_time("2023-01-21 09:32:00")
 async def test_get_events(
     hass: HomeAssistant, setup_integration: ComponentSetup, get_events: GetEventsFn
 ) -> None:
