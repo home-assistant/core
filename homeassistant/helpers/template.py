@@ -2173,10 +2173,11 @@ class LoggingUndefined(jinja2.Undefined):
 
 async def async_load_custom_templates(hass: HomeAssistant) -> None:
     """Load all custom jinja files under 5MiB into memory."""
-    return await hass.async_add_executor_job(_load_custom_templates, hass)
+    custom_templates = await hass.async_add_executor_job(_load_custom_templates, hass)
+    _get_hass_loader(hass).sources = custom_templates
 
 
-def _load_custom_templates(hass: HomeAssistant) -> None:
+def _load_custom_templates(hass: HomeAssistant) -> dict[str, str]:
     result = {}
     jinja_path = hass.config.path("custom_templates")
     all_files = [
@@ -2188,8 +2189,7 @@ def _load_custom_templates(hass: HomeAssistant) -> None:
         content = file.read_text()
         path = str(file.relative_to(jinja_path))
         result[path] = content
-
-    _get_hass_loader(hass).sources = result
+    return result
 
 
 @singleton(_HASS_LOADER)
