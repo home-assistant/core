@@ -111,11 +111,12 @@ async def async_publish(
     encoding: str | None = DEFAULT_ENCODING,
 ) -> None:
     """Publish message to a MQTT topic."""
-    mqtt_data = get_mqtt_data(hass, True)
-    if mqtt_data.client is None or not mqtt_config_entry_enabled(hass):
+    if not mqtt_config_entry_enabled(hass):
         raise HomeAssistantError(
             f"Cannot publish to topic '{topic}', MQTT is not enabled"
         )
+    mqtt_data = get_mqtt_data(hass)
+    assert mqtt_data.client is not None
     outgoing_payload = payload
     if not isinstance(payload, bytes):
         if not encoding:
@@ -161,11 +162,12 @@ async def async_subscribe(
 
     Call the return value to unsubscribe.
     """
-    mqtt_data = get_mqtt_data(hass, True)
-    if mqtt_data.client is None or not mqtt_config_entry_enabled(hass):
+    if not mqtt_config_entry_enabled(hass):
         raise HomeAssistantError(
             f"Cannot subscribe to topic '{topic}', MQTT is not enabled"
         )
+    mqtt_data = get_mqtt_data(hass)
+    assert mqtt_data.client is not None
     # Support for a deprecated callback type was removed with HA core 2023.3.0
     # The signature validation code can be removed from HA core 2023.5.0
     non_default = 0

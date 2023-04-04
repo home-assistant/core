@@ -952,6 +952,7 @@ async def test_subscribe_with_deprecated_callback_fails(
     hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test the subscription of a topic using deprecated callback signature fails."""
+    await mqtt_mock_entry_no_yaml_config()
 
     async def record_calls(topic: str, payload: ReceivePayloadType, qos: int) -> None:
         """Record calls."""
@@ -969,6 +970,7 @@ async def test_subscribe_deprecated_async_fails(
     hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test the subscription of a topic using deprecated coroutine signature fails."""
+    await mqtt_mock_entry_no_yaml_config()
 
     @callback
     def async_record_calls(topic: str, payload: ReceivePayloadType, qos: int) -> None:

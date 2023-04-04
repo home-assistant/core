@@ -79,6 +79,7 @@ from .const import (  # noqa: F401
 )
 from .models import (  # noqa: F401
     MqttCommandTemplate,
+    MqttData,
     MqttValueTemplate,
     PublishPayloadType,
     ReceiveMessage,
@@ -206,9 +207,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ) from ex
 
     # Fetch configuration and add default values
-    mqtt_data = get_mqtt_data(hass, True)
     hass_config = await conf_util.async_hass_config_yaml(hass)
-    mqtt_data.config = PLATFORM_CONFIG_SCHEMA_BASE(hass_config.get(DOMAIN, {}))
+    mqtt_yaml = PLATFORM_CONFIG_SCHEMA_BASE(hass_config.get(DOMAIN, {}))
+    if DOMAIN in hass.data:
+        mqtt_data = get_mqtt_data(hass)
+        mqtt_data.config = mqtt_yaml
+    else:
+        hass.data[DATA_MQTT] = mqtt_data = MqttData(config=mqtt_yaml)
 
     await async_create_certificate_temp_files(hass, dict(entry.data))
     mqtt_data.client = MQTT(hass, entry, conf)
