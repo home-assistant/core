@@ -436,6 +436,7 @@ class Template:
         "_limited",
         "_strict",
         "_hash_cache",
+        "_renders",
     )
 
     def __init__(self, template: str, hass: HomeAssistant | None = None) -> None:
@@ -452,6 +453,7 @@ class Template:
         self._limited: bool | None = None
         self._strict: bool | None = None
         self._hash_cache: int = hash(self.template)
+        self._renders: int = 0
 
     @property
     def _env(self) -> TemplateEnvironment:
@@ -521,6 +523,8 @@ class Template:
         If limited is True, the template is not allowed to access any function
         or filter depending on hass or the state machine.
         """
+        self._renders += 1
+
         if self.is_static:
             if not parse_result or self.hass and self.hass.config.legacy_templates:
                 return self.template
@@ -596,6 +600,8 @@ class Template:
 
         This method must be run in the event loop.
         """
+        self._renders += 1
+
         if self.is_static:
             return False
 
@@ -638,6 +644,7 @@ class Template:
         self, variables: TemplateVarsType = None, strict: bool = False, **kwargs: Any
     ) -> RenderInfo:
         """Render the template and collect an entity filter."""
+        self._renders += 1
         assert self.hass and _RENDER_INFO not in self.hass.data
 
         render_info = RenderInfo(self)
@@ -687,6 +694,8 @@ class Template:
 
         This method must be run in the event loop.
         """
+        self._renders += 1
+
         if self.is_static:
             return self.template
 
@@ -750,7 +759,7 @@ class Template:
 
     def __repr__(self) -> str:
         """Representation of Template."""
-        return 'Template("' + self.template + '")'
+        return f"Template<template=({self.template}) renders={self._renders}>"
 
 
 @cache

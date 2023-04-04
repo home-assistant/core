@@ -121,7 +121,7 @@ def test_template_equality() -> None:
     assert hash(template_one) == hash(template_one_1)
     assert hash(template_one) != hash(template_two)
 
-    assert str(template_one_1) == 'Template("{{ template_one }}")'
+    assert str(template_one_1) == "Template<template=({{ template_one }}) renders=0>"
 
     with pytest.raises(TypeError):
         template.Template(["{{ template_one }}"])
