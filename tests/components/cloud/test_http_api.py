@@ -678,7 +678,11 @@ async def test_enabling_remote(
 
 
 async def test_list_google_entities(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, setup_api, mock_cloud_login
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    setup_api,
+    mock_cloud_login,
 ) -> None:
     """Test that we can list Google entities."""
     client = await hass_ws_client(hass)
@@ -694,9 +698,25 @@ async def test_list_google_entities(
         "homeassistant.components.google_assistant.helpers.async_get_entities",
         return_value=[entity, entity2],
     ):
-        await client.send_json({"id": 5, "type": "cloud/google_assistant/entities"})
+        await client.send_json_auto_id({"type": "cloud/google_assistant/entities"})
         response = await client.receive_json()
+    assert response["success"]
+    assert len(response["result"]) == 0
 
+    # Add the entities to the entity registry
+    entity_registry.async_get_or_create(
+        "light", "test", "unique", suggested_object_id="kitchen"
+    )
+    entity_registry.async_get_or_create(
+        "cover", "test", "unique", suggested_object_id="garage"
+    )
+
+    with patch(
+        "homeassistant.components.google_assistant.helpers.async_get_entities",
+        return_value=[entity, entity2],
+    ):
+        await client.send_json_auto_id({"type": "cloud/google_assistant/entities"})
+        response = await client.receive_json()
     assert response["success"]
     assert len(response["result"]) == 2
     assert response["result"][0] == {
@@ -705,6 +725,74 @@ async def test_list_google_entities(
         "traits": ["action.devices.traits.OnOff"],
     }
     assert response["result"][1] == {
+        "entity_id": "cover.garage",
+        "might_2fa": True,
+        "traits": ["action.devices.traits.OpenClose"],
+    }
+
+
+async def test_get_google_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    setup_api,
+    mock_cloud_login,
+) -> None:
+    """Test that we can get a Google entity."""
+    client = await hass_ws_client(hass)
+
+    # Test getting an unknown entity
+    await client.send_json_auto_id(
+        {"type": "cloud/google_assistant/entities/get", "entity_id": "light.kitchen"}
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "not_found",
+        "message": "light.kitchen unknown or not in the entity registry",
+    }
+
+    # Test getting a blocked entity
+    entity_registry.async_get_or_create(
+        "group", "test", "unique", suggested_object_id="all_locks"
+    )
+    hass.states.async_set("group.all_locks", "bla")
+    await client.send_json_auto_id(
+        {"type": "cloud/google_assistant/entities/get", "entity_id": "group.all_locks"}
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "not_supported",
+        "message": "group.all_locks not supported by Google assistant",
+    }
+
+    entity_registry.async_get_or_create(
+        "light", "test", "unique", suggested_object_id="kitchen"
+    )
+    entity_registry.async_get_or_create(
+        "cover", "test", "unique", suggested_object_id="garage"
+    )
+    hass.states.async_set("light.kitchen", "on")
+    hass.states.async_set("cover.garage", "open", {"device_class": "garage"})
+
+    await client.send_json_auto_id(
+        {"type": "cloud/google_assistant/entities/get", "entity_id": "light.kitchen"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "entity_id": "light.kitchen",
+        "might_2fa": False,
+        "traits": ["action.devices.traits.OnOff"],
+    }
+
+    await client.send_json_auto_id(
+        {"type": "cloud/google_assistant/entities/get", "entity_id": "cover.garage"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
         "entity_id": "cover.garage",
         "might_2fa": True,
         "traits": ["action.devices.traits.OpenClose"],
@@ -750,7 +838,11 @@ async def test_update_google_entity(
 
 
 async def test_list_alexa_entities(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, setup_api, mock_cloud_login
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    setup_api,
+    mock_cloud_login,
 ) -> None:
     """Test that we can list Alexa entities."""
     client = await hass_ws_client(hass)
@@ -761,9 +853,22 @@ async def test_list_alexa_entities(
         "homeassistant.components.alexa.entities.async_get_entities",
         return_value=[entity],
     ):
-        await client.send_json({"id": 5, "type": "cloud/alexa/entities"})
+        await client.send_json_auto_id({"id": 5, "type": "cloud/alexa/entities"})
         response = await client.receive_json()
+    assert response["success"]
+    assert len(response["result"]) == 0
 
+    # Add the entity to the entity registry
+    entity_registry.async_get_or_create(
+        "light", "test", "unique", suggested_object_id="kitchen"
+    )
+
+    with patch(
+        "homeassistant.components.alexa.entities.async_get_entities",
+        return_value=[entity],
+    ):
+        await client.send_json_auto_id({"type": "cloud/alexa/entities"})
+        response = await client.receive_json()
     assert response["success"]
     assert len(response["result"]) == 1
     assert response["result"][0] == {

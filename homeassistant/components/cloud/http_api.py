@@ -22,6 +22,7 @@ from homeassistant.components.alexa import (
 from homeassistant.components.google_assistant import helpers as google_helpers
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
+from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -67,6 +68,7 @@ async def async_setup(hass):
     websocket_api.async_register_command(hass, websocket_remote_connect)
     websocket_api.async_register_command(hass, websocket_remote_disconnect)
 
+    websocket_api.async_register_command(hass, google_assistant_get)
     websocket_api.async_register_command(hass, google_assistant_list)
     websocket_api.async_register_command(hass, google_assistant_update)
 
@@ -523,6 +525,54 @@ async def websocket_remote_disconnect(
 
 @websocket_api.require_admin
 @_require_cloud_login
+@websocket_api.websocket_command(
+    {
+        "type": "cloud/google_assistant/entities/get",
+        "entity_id": str,
+    }
+)
+@websocket_api.async_response
+@_ws_handle_cloud_errors
+async def google_assistant_get(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Get data for a single google assistant entity."""
+    cloud = hass.data[DOMAIN]
+    gconf = await cloud.client.get_google_config()
+    entity_registry = er.async_get(hass)
+    entity_id: str = msg["entity_id"]
+    state = hass.states.get(entity_id)
+
+    if not entity_registry.async_is_registered(entity_id) or not state:
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_NOT_FOUND,
+            f"{entity_id} unknown or not in the entity registry",
+        )
+        return
+
+    entity = google_helpers.GoogleEntity(hass, gconf, state)
+    if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES or not entity.is_supported():
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_NOT_SUPPORTED,
+            f"{entity_id} not supported by Google assistant",
+        )
+        return
+
+    result = {
+        "entity_id": entity.entity_id,
+        "traits": [trait.name for trait in entity.traits()],
+        "might_2fa": entity.might_2fa_traits(),
+    }
+
+    connection.send_result(msg["id"], result)
+
+
+@websocket_api.require_admin
+@_require_cloud_login
 @websocket_api.websocket_command({"type": "cloud/google_assistant/entities"})
 @websocket_api.async_response
 @_ws_handle_cloud_errors
@@ -534,11 +584,14 @@ async def google_assistant_list(
     """List all google assistant entities."""
     cloud = hass.data[DOMAIN]
     gconf = await cloud.client.get_google_config()
+    entity_registry = er.async_get(hass)
     entities = google_helpers.async_get_entities(hass, gconf)
 
     result = []
 
     for entity in entities:
+        if not entity_registry.async_is_registered(entity.entity_id):
+            continue
         result.append(
             {
                 "entity_id": entity.entity_id,
@@ -604,11 +657,14 @@ async def alexa_list(
     """List all alexa entities."""
     cloud = hass.data[DOMAIN]
     alexa_config = await cloud.client.get_alexa_config()
+    entity_registry = er.async_get(hass)
     entities = alexa_entities.async_get_entities(hass, alexa_config)
 
     result = []
 
     for entity in entities:
+        if not entity_registry.async_is_registered(entity.entity_id):
+            continue
         result.append(
             {
                 "entity_id": entity.entity_id,
