@@ -8,5 +8,38 @@
         "problem": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
       }
     }
+  },
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "plant_name": "[%key:common::config_flow::data::name%]"
+        }
+      },
+      "sensors": {
+        "data": {
+          "moisture": "[%key:component::sensor::entity_component::moisture::name%]",
+          "temperature": "[%key:component::sensor::entity_component::temperature::name%]",
+          "battery": "[%key:component::sensor::entity_component::battery::name%]",
+          "conductivity": "Conductivity sensor",
+          "brightness": "Brightness sensor"
+        }
+      },
+      "limits": {
+        "title": "Plant limits",
+        "description": "Here you can configure value limits. If the requirements are not met, a problem is reported",
+        "data": {
+          "max_moisture": "Maximum moisture level",
+          "min_moisture": "Minimum moisture level",
+          "max_temperature": "Maximum temperature level",
+          "min_temperature": "Minimum temperature level",
+          "min_battery": "Minimum battery level",
+          "max_conductivity": "Maximum conductivity level",
+          "min_conductivity": "Minimum conductivity level",
+          "max_brightness": "Maximum brightness level",
+          "min_brightness": "Minimum brightness level"
+        }
+      }
+    }
   }
 }

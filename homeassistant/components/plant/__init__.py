@@ -7,6 +7,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.recorder import get_instance, history
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -114,12 +115,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component = EntityComponent[Plant](_LOGGER, DOMAIN, hass)
 
     entities = []
-    for plant_name, plant_config in config[DOMAIN].items():
-        _LOGGER.info("Added plant %s", plant_name)
-        entity = Plant(plant_name, plant_config)
-        entities.append(entity)
+    if config.get(DOMAIN) is not None:
+        for plant_name, plant_config in config[DOMAIN].items():
+            _LOGGER.info("Added plant %s", plant_name)
+            entity = Plant(plant_name, plant_config)
+            entities.append(entity)
 
     await component.async_add_entities(entities)
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up the Plant component."""
+    component = EntityComponent[Plant](_LOGGER, DOMAIN, hass)
+    _LOGGER.info("Added plant %s", entry.title)
+    entity = Plant(entry.title, entry.data)
+    await component.async_add_entities([entity])
     return True
 
 
