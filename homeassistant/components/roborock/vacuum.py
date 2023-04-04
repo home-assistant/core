@@ -73,6 +73,22 @@ async def async_setup_entry(
 class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
     """General Representation of a Roborock vacuum."""
 
+    _attr_icon = "mdi:robot-vacuum"
+    _attr_supported_features = (
+        VacuumEntityFeature.PAUSE
+        | VacuumEntityFeature.STOP
+        | VacuumEntityFeature.RETURN_HOME
+        | VacuumEntityFeature.FAN_SPEED
+        | VacuumEntityFeature.BATTERY
+        | VacuumEntityFeature.STATUS
+        | VacuumEntityFeature.SEND_COMMAND
+        | VacuumEntityFeature.LOCATE
+        | VacuumEntityFeature.CLEAN_SPOT
+        | VacuumEntityFeature.STATE
+        | VacuumEntityFeature.START
+    )
+    _attr_fan_speed_list = list(FAN_SPEED_CODES.values())
+
     def __init__(
         self,
         unique_id: str,
@@ -82,21 +98,6 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
         """Initialize a vacuum."""
         StateVacuumEntity.__init__(self)
         RoborockCoordinatedEntity.__init__(self, unique_id, device, coordinator)
-        self._attr_icon = "mdi:robot-vacuum"
-        self._attr_supported_features = (
-            VacuumEntityFeature.PAUSE
-            | VacuumEntityFeature.STOP
-            | VacuumEntityFeature.RETURN_HOME
-            | VacuumEntityFeature.FAN_SPEED
-            | VacuumEntityFeature.BATTERY
-            | VacuumEntityFeature.STATUS
-            | VacuumEntityFeature.SEND_COMMAND
-            | VacuumEntityFeature.LOCATE
-            | VacuumEntityFeature.CLEAN_SPOT
-            | VacuumEntityFeature.STATE
-            | VacuumEntityFeature.START
-        )
-        self._attr_fan_speed_list = list(FAN_SPEED_CODES.values())
 
     @property
     def state(self) -> str | None:
