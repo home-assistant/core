@@ -62,11 +62,19 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Initialize the sharkiq platform via config entry."""
+    ayla_region = SHARKIQ_REGION_DEFAULT
+    if not hasattr(config_entry.data, CONF_REGION):
+        new = {**config_entry.data}
+        new[CONF_REGION] = ayla_region
+        hass.config_entries.async_update_entry(config_entry, data=new)
+    else:
+        ayla_region = config_entry.data[CONF_REGION]
+
     ayla_api = get_ayla_api(
         username=config_entry.data[CONF_USERNAME],
         password=config_entry.data[CONF_PASSWORD],
         websession=async_get_clientsession(hass),
-        europe=(config_entry.data[CONF_REGION] == SHARKIQ_REGION_EUROPE),
+        europe=(ayla_region == SHARKIQ_REGION_EUROPE),
     )
 
     try:
