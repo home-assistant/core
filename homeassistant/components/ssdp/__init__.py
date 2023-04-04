@@ -107,41 +107,19 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(slots=True)
-class _HaServiceDescription:
-    """Keys added by HA."""
-
-    x_homeassistant_matching_domains: set[str] = field(default_factory=set)
-
-
-@dataclass(slots=True)
-class _SsdpServiceDescription:
-    """SSDP info with optional keys."""
+class SsdpServiceInfo(BaseServiceInfo):
+    """Prepared info from ssdp/upnp entries."""
 
     ssdp_usn: str
     ssdp_st: str
+    upnp: Mapping[str, Any]
     ssdp_location: str | None = None
     ssdp_nt: str | None = None
     ssdp_udn: str | None = None
     ssdp_ext: str | None = None
     ssdp_server: str | None = None
     ssdp_headers: Mapping[str, Any] = field(default_factory=dict)
-
-
-@dataclass(slots=True)
-class _UpnpServiceDescription:
-    """UPnP info."""
-
-    upnp: Mapping[str, Any]
-
-
-@dataclass(slots=True)
-class SsdpServiceInfo(
-    _HaServiceDescription,
-    _SsdpServiceDescription,
-    _UpnpServiceDescription,
-    BaseServiceInfo,
-):
-    """Prepared info from ssdp/upnp entries."""
+    x_homeassistant_matching_domains: set[str] = field(default_factory=set)
 
 
 SsdpChange = Enum("SsdpChange", "ALIVE BYEBYE UPDATE")
