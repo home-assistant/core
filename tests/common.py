@@ -19,7 +19,6 @@ from typing import Any, NoReturn
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
-from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant import auth, bootstrap, config_entries, loader
@@ -35,7 +34,7 @@ from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
 from homeassistant.config import async_process_component_config
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
     EVENT_HOMEASSISTANT_CLOSE,
@@ -43,7 +42,6 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_OFF,
     STATE_ON,
-    Platform,
 )
 from homeassistant.core import (
     CoreState,
@@ -1352,46 +1350,6 @@ def assert_lists_same(a: list[Any], b: list[Any]) -> None:
         assert i in b
     for i in b:
         assert i in a
-
-
-async def assert_registries_and_states_for_config_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    snapshot: SnapshotAssertion,
-    *,
-    platform: Platform | None = None,
-) -> None:
-    """Ensure that registry content and state machine match snapshot."""
-    # Ensure devices are correctly registered
-    device_registry = dr.async_get(hass)
-    device_entries = dr.async_entries_for_config_entry(
-        device_registry, config_entry.entry_id
-    )
-    assert device_entries == snapshot
-
-    # Ensure entities are correctly registered, optionally filtered by platform
-    entity_registry = er.async_get(hass)
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, config_entry.entry_id
-    )
-    if platform:
-        entity_entries = [ent for ent in entity_entries if ent.domain == platform]
-    assert entity_entries == snapshot
-
-    # If some entities are disabled, enable them and reload before checking states
-    needs_reload = False
-    for ent in entity_entries:
-        if ent.disabled:
-            entity_registry.async_update_entity(ent.entity_id, **{"disabled_by": None})
-            needs_reload = True
-
-    if needs_reload:
-        await hass.config_entries.async_reload(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    # Ensure entity states are correct
-    states = [hass.states.get(ent.entity_id) for ent in entity_entries]
-    assert states == snapshot
 
 
 _SENTINEL = object()
