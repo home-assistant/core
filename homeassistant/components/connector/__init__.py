@@ -6,13 +6,14 @@ from datetime import timedelta
 import logging
 from socket import timeout
 
+from connectorlocal.connectorlocal import WIFIMOTORTYPE, ConnectorHub
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .connector_local import WIFIMOTORTYPE, ConnectorHub
 from .const import (
     DOMAIN,
     KEY_COORDINATOR,
@@ -27,18 +28,17 @@ PLATFORMS = ["cover"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up connector from a config entry."""
-    # time.sleep(5)
     hass.data.setdefault(DOMAIN, {})
     host = entry.data[CONF_HOST]
     key = entry.data[CONF_API_KEY]
     connector = ConnectorHub(ip=host, key=key)
+    hub_list = None
 
     if KEY_MULTICAST_LISTENER not in hass.data[DOMAIN]:
         connector.start_receive_data()
-        # multicast = connector
+        hub_list = await connector.device_list()
         hass.data[DOMAIN][KEY_MULTICAST_LISTENER] = connector
 
-        # register stop callback to shutdown listening for local pushes
         def stop_motion_multicast(event):
             """Stop multicast thread."""
             _LOGGER.debug("Shutting down Connector Listener")
@@ -48,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     def update_gateway():
         """Call all updates using one async_add_executor_job."""
-        for device in connector.device_list().values():
+        for device in hub_list.values():
             try:
                 device.update_blinds()
             except timeout:
@@ -66,29 +66,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER,
         name=entry.title,
         update_method=async_update_data,
-        update_interval=timedelta(seconds=60),
+        update_interval=timedelta(seconds=3600),
     )
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        KEY_GATEWAY: connector,
-        KEY_COORDINATOR: coordinator,
-    }
+    await asyncio.sleep(3)
+    if connector.is_connected:
+        hass.data[DOMAIN][entry.entry_id] = {
+            KEY_GATEWAY: connector,
+            KEY_COORDINATOR: coordinator,
+        }
+    else:
+        return False
 
     device_registry = dr.async_get(hass)
-    # Need wait 3S then to get deviceList
-    await asyncio.sleep(3)
-    device_list = connector.device_list()
-    for hub in device_list.values():
-        if hub.devicetype not in WIFIMOTORTYPE:
-            device_registry.async_get_or_create(
-                config_entry_id=entry.entry_id,
-                connections={(dr.CONNECTION_NETWORK_MAC, hub.hub_mac)},
-                identifiers={(DOMAIN, hub.hub_mac)},
-                manufacturer=MANUFACTURER,
-                name=entry.title,
-                model="Wi-Fi bridge",
-                sw_version=hub.hub_version,
-            )
+    if hub_list is not None:
+        for hub in hub_list.values():
+            if hub.devicetype not in WIFIMOTORTYPE:
+                device_registry.async_get_or_create(
+                    config_entry_id=entry.entry_id,
+                    connections={(dr.CONNECTION_NETWORK_MAC, hub.hub_mac)},
+                    identifiers={(DOMAIN, hub.hub_mac)},
+                    manufacturer=MANUFACTURER,
+                    name=entry.title,
+                    model="Wi-Fi bridge",
+                    sw_version=hub.hub_version,
+                )
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
@@ -98,7 +100,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    # hass.data[DOMAIN][entry.entry_id][KEY_GATEWAY].close_receive_data()
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
     if len(hass.data[DOMAIN]) == 1:

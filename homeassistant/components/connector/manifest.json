@@ -7,7 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/connector",
   "homekit": {},
   "iot_class": "local_polling",
-  "requirements": ["pycryptodomex==3.17"],
+  "requirements": ["connectorlocal==0.1.1"],
   "ssdp": [],
   "zeroconf": []
 }

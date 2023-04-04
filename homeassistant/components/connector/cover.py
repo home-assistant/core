@@ -2,6 +2,13 @@
 
 import logging
 
+from connectorlocal.connectorlocal import (
+    ONEWAYWIRELESSMODE,
+    TWOWAYWIRELESSMODE,
+    VENETIANTYPE,
+    WIFIMOTORTYPE,
+)
+
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
@@ -11,11 +18,11 @@ from homeassistant.components.cover import (
 from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .connector_local import ONEWAYWIRELESSMODE, TWOWAYWIRELESSMODE, WIFIMOTORTYPE
 from .const import DOMAIN, KEY_COORDINATOR, KEY_GATEWAY, MANUFACTURER
 
 POSITION_DEVICE_MAP = {
     1: CoverDeviceClass.SHADE,
+    2: CoverDeviceClass.SHUTTER,
     3: CoverDeviceClass.SHADE,
     4: CoverDeviceClass.SHADE,
     6: CoverDeviceClass.SHUTTER,
@@ -39,8 +46,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
     connector = hass.data[DOMAIN][config_entry.entry_id][KEY_GATEWAY]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
-
-    for hub in connector.device_list().values():
+    device_list = await connector.device_list()
+    for hub in device_list.values():
         if hub.devicetype in WIFIMOTORTYPE:
             wifi_motor_type = POSITION_DEVICE_MAP.get(hub.type, CoverDeviceClass.SHADE)
             entities.append(
@@ -52,7 +59,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 )
             )
         else:
-            for blind in hub.blinds.values():
+            for blind in hub.blinds_list.values():
                 blind_type = POSITION_DEVICE_MAP.get(blind.type, CoverDeviceClass.SHADE)
                 if blind.wireless_mode in ONEWAYWIRELESSMODE:
                     entities.append(
@@ -64,14 +71,24 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         )
                     )
                 elif blind.wireless_mode in TWOWAYWIRELESSMODE:
-                    entities.append(
-                        TwoWayDevice(
-                            coordinator=coordinator,
-                            blind=blind,
-                            device_class=blind_type,
-                            config_entry=config_entry,
+                    if blind.type in VENETIANTYPE:
+                        entities.append(
+                            TiltDevice(
+                                coordinator=coordinator,
+                                blind=blind,
+                                device_class=blind_type,
+                                config_entry=config_entry,
+                            )
                         )
-                    )
+                    else:
+                        entities.append(
+                            TwoWayDevice(
+                                coordinator=coordinator,
+                                blind=blind,
+                                device_class=blind_type,
+                                config_entry=config_entry,
+                            )
+                        )
                 else:
                     _LOGGER.info("This wirelessMode not support")
 
