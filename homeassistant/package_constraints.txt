@@ -36,6 +36,7 @@ orjson==3.8.9
 paho-mqtt==1.6.1
 pillow==9.4.0
 pip>=21.0,<23.1
+protobuf==4.22.1
 psutil-home-assistant==0.0.1
 pyOpenSSL==23.1.0
 pyserial==3.5
