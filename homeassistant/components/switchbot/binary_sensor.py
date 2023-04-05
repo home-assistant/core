@@ -25,12 +25,10 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
     ),
     "motion_detected": BinarySensorEntityDescription(
         key="pir_state",
-        translation_key="motion",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
     "contact_open": BinarySensorEntityDescription(
         key="contact_open",
-        translation_key="door_open",
         device_class=BinarySensorDeviceClass.DOOR,
     ),
     "contact_timeout": BinarySensorEntityDescription(
@@ -46,7 +44,6 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
     ),
     "door_open": BinarySensorEntityDescription(
         key="door_status",
-        translation_key="door_open",
         device_class=BinarySensorDeviceClass.DOOR,
     ),
     "unclosed_alarm": BinarySensorEntityDescription(
